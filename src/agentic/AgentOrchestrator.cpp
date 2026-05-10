@@ -3,6 +3,7 @@
 // =============================================================================
 #include "AgentOrchestrator.h"
 #include "../core/rawrxd_subsystem_api.hpp"
+#include "core/thread_lifecycle_registry.h"
 
 // Windows <wingdi.h> defines ERROR as 0 which clashes with LogLevel::ERROR
 #ifdef ERROR
@@ -220,6 +221,8 @@ void AgentOrchestrator::ProcessTaskQueue()
 
     while (true)
     {
+        CHECK_SHUTDOWN_AND_RETURN();
+        
         std::unique_lock<std::mutex> lock(m_mutex);
         m_taskCv.wait(lock, [this, taskWorker] { return !m_taskQueue.empty() || taskWorker->stop.load(); });
 
@@ -405,7 +408,11 @@ AgentOrchestrator::AgentOrchestrator() : m_registry(AgentToolRegistry::Instance(
 {
     m_client = std::make_unique<NativeInferenceClient>(m_nativeConfig);
     if (TaskWorkerState* taskWorker = CreateTaskWorkerState(this)) {
-        taskWorker->thread = std::thread([this]() { ProcessTaskQueue(); });
+        taskWorker->thread = std::thread([this]() {
+            REGISTER_THREAD("AgentOrchestrator", "task queue processor");
+            ProcessTaskQueue();
+            RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
+        });
     }
 
     // Batch 2: Initialize Advanced Agent Coordinator

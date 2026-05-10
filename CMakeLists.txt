@@ -636,6 +636,7 @@ set(SOURCES
     src/core/execution_scheduler.cpp
     src/core/system_integrity_audit_trail.cpp
     src/core/diff_engine.cpp
+    src/core/thread_lifecycle_registry.cpp
     
     # Agentic Decision Tree + CLI Autonomy (Phase 19)
     src/cli/agentic_decision_tree.cpp
@@ -3408,6 +3409,20 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
     message(STATUS "[Titan] RAWRXD_ENABLE_OMEGA_HIP=${RAWRXD_ENABLE_OMEGA_HIP} -> ${_RAWRXD_OMEGA_HIP_ENABLED} (${_RAWRXD_OMEGA_HIP_REASON})")
 
     message(STATUS "[Titan] RawrXD_Titan DLL target wired: 99-export lane + aperture kernels (swap + AVX-512 dispatch + header verify)")
+
+    # Standalone TitanHost worker process for isolated runtime rebuilds.
+    add_executable(RawrXD-TitanHost EXCLUDE_FROM_ALL
+        src/win32app/TitanHost.cpp
+    )
+    set_target_properties(RawrXD-TitanHost PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY bin
+        OUTPUT_NAME RawrXD-TitanHost
+    )
+    target_link_libraries(RawrXD-TitanHost PRIVATE
+        kernel32
+        shell32
+    )
+    add_dependencies(RawrXD-TitanHost RawrXD_Titan)
 endif()
 
 add_executable(rawrxd-monaco-gen
@@ -3432,6 +3447,7 @@ set_target_properties(rawrxd-monaco-gen PROPERTIES
 if(WIN32)
     set(WIN32IDE_SOURCES
         src/win32app/main_win32.cpp
+        src/win32app/startup_sentinels.cpp
         src/win32app/HeadlessIDE.cpp
         src/win32app/HeadlessIDE_AutonomousWorkflowMode.cpp
         src/api_server.cpp
@@ -3456,6 +3472,27 @@ if(WIN32)
         set(WEBVIEW2_DISPATCHER src/asm/webview2_masm64_dispatcher.asm)
         set_source_files_properties(${WEBVIEW2_DISPATCHER} PROPERTIES LANGUAGE ASM_MASM)
         list(APPEND WIN32IDE_SOURCES ${WEBVIEW2_DISPATCHER})
+
+        option(RAWRXD_ENABLE_SOVMEM_MASM "Enable sovereign memory mapper MASM sync/TLS primitives" ON)
+        if(RAWRXD_ENABLE_SOVMEM_MASM)
+            set(SOVMEM_MASM_SOURCE src/compression/sovereign_memory_mapper.asm)
+            set_source_files_properties(${SOVMEM_MASM_SOURCE} PROPERTIES LANGUAGE ASM_MASM)
+            list(APPEND WIN32IDE_SOURCES ${SOVMEM_MASM_SOURCE})
+        endif()
+
+        option(RAWRXD_ENABLE_EXPERTGATING_MASM "Enable expert gating & MEM_COMMIT MASM logic" ON)
+        if(RAWRXD_ENABLE_EXPERTGATING_MASM)
+            set(EXPERTGATING_MASM_SOURCE src/compression/sovereign_expert_gating.asm)
+            set_source_files_properties(${EXPERTGATING_MASM_SOURCE} PROPERTIES LANGUAGE ASM_MASM)
+            list(APPEND WIN32IDE_SOURCES ${EXPERTGATING_MASM_SOURCE})
+        endif()
+
+        option(RAWRXD_ENABLE_IQ2M_MASM "Enable IQ2_M 2.5-bit dequantization AVX2/AVX-512 kernel" ON)
+        if(RAWRXD_ENABLE_IQ2M_MASM)
+            set(IQ2M_MASM_SOURCE src/compression/iq2m_dequant_kernel.asm)
+            set_source_files_properties(${IQ2M_MASM_SOURCE} PROPERTIES LANGUAGE ASM_MASM)
+            list(APPEND WIN32IDE_SOURCES ${IQ2M_MASM_SOURCE})
+        endif()
     endif()
 
     # NOTE:
@@ -3517,7 +3554,9 @@ if(WIN32)
         src/win32app/Win32IDE_Autonomy.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
+        src/win32app/SessionController.cpp
         src/win32app/Win32IDE_Session.cpp
+        src/engine/trace_causal_drain.cpp
         src/win32app/Win32IDE_ChatHistoryPersistence.cpp
         src/agent/project_scoped_chat.cpp
         src/win32app/Win32IDE_FileOps.cpp
@@ -4335,6 +4374,16 @@ if(WIN32)
 
         # Prometheus 800B MoE Weight Loader
         src/inference/PrometheusMoE.cpp
+
+        # Phase 2: Aggressive Memory Architecture
+        # VirtualAlloc reservation + lazy commitment for 26.5GB floor
+        src/compression/virtualalloc_reservation_manager.cpp
+        # INT4 KV unpacking hot-path for 4x memory compression
+        src/compression/int4_kv_dequant_kernel.cpp
+        # IQ2_M 2.5-bit weight dequantization kernel (scalar fallback + batch dispatch)
+        src/compression/iq2m_dequant_kernel.cpp
+        # Phase 3: Hot-path integration bridge (expert gating + selective commit)
+        src/inference/inference_int4kv_bridge.cpp
     )
 
     if(RAWR_HAS_MASM)
@@ -4936,6 +4985,8 @@ if(WIN32)
         src/memory/UnifiedMemoryPool.cpp
         src/InferenceProfiler.cpp
         src/BackendOrchestrator.cpp
+        src/streaming_gguf_loader.cpp
+        src/core/thread_lifecycle_registry.cpp
         src/win32app/TitanIPC.cpp
         src/native_inference_backend.cpp
     )
@@ -5337,13 +5388,20 @@ if(WIN32)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ggml)
     endif()
     
-    # Singularity Core (Pure MASM layer — optional; skip link if lib not built yet)
+    # Singularity Core (Pure MASM layer — optional by default; can be required in strict lanes)
+    option(RAWRXD_REQUIRE_SINGULARITY_CORE "Fail configure if singularity_core.lib is missing" OFF)
     set(_RAWRXD_SINGULARITY_CORE_LIB "${CMAKE_SOURCE_DIR}/build/asm_obj/singularity_core.lib")
     if(EXISTS "${_RAWRXD_SINGULARITY_CORE_LIB}")
         target_link_libraries(RawrXD-Win32IDE PRIVATE "${_RAWRXD_SINGULARITY_CORE_LIB}")
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=1)
     else()
-        message(WARNING "singularity_core.lib not found at ${_RAWRXD_SINGULARITY_CORE_LIB} — Win32IDE links without it (place lib after MASM build).")
+        if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+            message(FATAL_ERROR "[ProductionLane] singularity_core.lib is required in strict production strip mode but not found at ${_RAWRXD_SINGULARITY_CORE_LIB}. Build/stage MASM core first.")
+        elseif(RAWRXD_REQUIRE_SINGULARITY_CORE)
+            message(FATAL_ERROR "singularity_core.lib required but not found at ${_RAWRXD_SINGULARITY_CORE_LIB}. Build/stage MASM core first.")
+        else()
+            message(WARNING "singularity_core.lib not found at ${_RAWRXD_SINGULARITY_CORE_LIB} — Win32IDE links without it (place lib after MASM build).")
+        endif()
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=0)
     endif()
 
@@ -5863,6 +5921,33 @@ if(WIN32)
     )
     add_test(NAME agent_workflow_orchestrator_smoke COMMAND agent_workflow_orchestrator_smoke)
 
+    # Headless ghost-text runtime soak (no HWND/GDI dependency)
+    add_executable(RawrXD-GhostSoak EXCLUDE_FROM_ALL
+        tests/ghost_text_runtime_smoke.cpp
+        src/agentic/OllamaProvider.cpp
+        src/ai/inference_retry_shim.cpp
+    )
+    target_include_directories(RawrXD-GhostSoak PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(RawrXD-GhostSoak PRIVATE
+        kernel32
+        user32
+        winhttp
+        ws2_32
+        ole32
+        oleaut32
+        version
+        Rpcrt4
+        Psapi
+    )
+    set_target_properties(RawrXD-GhostSoak PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-GhostSoak
+    )
+    add_test(NAME RawrXD-GhostSoak COMMAND RawrXD-GhostSoak --iterations 200 --max-inflight 16 --timeout-ms 1500)
+
     add_executable(benchmark_cli EXCLUDE_FROM_ALL
         src/cli_benchmark_main.cpp
         src/streaming/AdaptiveTensorCodec.cpp
@@ -6128,6 +6213,61 @@ if(WIN32)
         OUTPUT_NAME RawrXD-QueryFusionBenchmark
     )
     message(STATUS "[Phase 9] Query Fusion Benchmark target: RawrXD-QueryFusionBenchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Disk Paged Inference Benchmark — storage throughput for large-model paging
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(RawrXD-DiskPagedBench EXCLUDE_FROM_ALL
+        src/tools/disk_paged_inference_benchmark.cpp
+    )
+    target_include_directories(RawrXD-DiskPagedBench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_compile_options(RawrXD-DiskPagedBench PRIVATE /EHsc /W2 /O2)
+    endif()
+    target_link_libraries(RawrXD-DiskPagedBench PRIVATE
+        kernel32
+    )
+    set_target_properties(RawrXD-DiskPagedBench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-DiskPagedBench
+    )
+    message(STATUS "[2T] Disk paged benchmark target: RawrXD-DiskPagedBench")
+
+    option(RAWRXD_SOVEREIGN_CODEC_USE_MASM "Enable sovereign codec MASM fast-path entry points" OFF)
+    set(RAWRXD_SOVEREIGN_CODEC_SOURCES
+        src/compression/sovereign_bitstream_codec.cpp
+    )
+    if(MSVC AND RAWRXD_SOVEREIGN_CODEC_USE_MASM)
+        list(APPEND RAWRXD_SOVEREIGN_CODEC_SOURCES
+            src/compression/sovereign_bitstream_codec_masm_stub.asm
+        )
+    endif()
+
+    add_executable(RawrXD-SovereignCodecParity EXCLUDE_FROM_ALL
+        src/tools/sovereign_codec_parity.cpp
+        ${RAWRXD_SOVEREIGN_CODEC_SOURCES}
+    )
+    target_include_directories(RawrXD-SovereignCodecParity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(RAWRXD_SOVEREIGN_CODEC_USE_MASM)
+        target_compile_definitions(RawrXD-SovereignCodecParity PRIVATE RAWRXD_SOVEREIGN_CODEC_ENABLE_MASM=1)
+    endif()
+    if(MSVC)
+        target_compile_options(RawrXD-SovereignCodecParity PRIVATE /EHsc /W2)
+    endif()
+    target_link_libraries(RawrXD-SovereignCodecParity PRIVATE
+        kernel32
+    )
+    set_target_properties(RawrXD-SovereignCodecParity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-SovereignCodecParity
+    )
+    message(STATUS "[Sovereign] Codec parity target: RawrXD-SovereignCodecParity")
 
 
 

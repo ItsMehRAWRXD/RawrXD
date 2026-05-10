@@ -14,6 +14,7 @@
 #include "patch_rollback_ledger.h"
 
 #include <windows.h>
+#include <tlhelp32.h>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -39,6 +40,9 @@ static constexpr DWORD MINIDUMP_NORMAL         = 0x00000000;
 static constexpr DWORD MINIDUMP_WITH_DATA_SEGS = 0x00000001;
 static constexpr DWORD MINIDUMP_WITH_FULL_MEM  = 0x00000002;
 static constexpr DWORD MINIDUMP_WITH_HANDLE    = 0x00000004;
+
+static constexpr DWORD CRASH_DUMP_INLINE = 0;
+static constexpr DWORD CRASH_DUMP_WORKER = 1;
 
 namespace RawrXD {
 namespace Crash {
@@ -83,6 +87,26 @@ inline std::atomic<int>& GetQuarantinedCount() {
     return *inst;
 }
 #define g_quarantinedCount GetQuarantinedCount()
+
+// Dedicated dump worker state
+static HANDLE g_dumpWorkerThread = nullptr;
+static HANDLE g_dumpRequestEvent = nullptr;
+static HANDLE g_dumpCompleteEvent = nullptr;
+static volatile LONG g_dumpWorkerExit = 0;
+
+struct DumpRequest {
+    char dumpPath[260];
+    DWORD dumpType;
+    DWORD crashThreadId;
+    bool hasException;
+    EXCEPTION_RECORD exceptionRecord;
+    CONTEXT contextRecord;
+    DWORD writeError;
+    uint64_t bytesWritten;
+    bool success;
+};
+
+static DumpRequest g_dumpRequest;
 
 // ============================================================================
 // Helpers
@@ -145,34 +169,256 @@ static void appendCrashManifest(const char* dir, const CrashReport* report) {
 // MiniDump Writer (dynamic DbgHelp.dll)
 // ============================================================================
 
-static bool writeMiniDump(const char* path, EXCEPTION_POINTERS* ep, DWORD dumpType) {
+// Re-entrancy guard for crash dump writing
+static std::atomic_flag s_dumpInProgress = ATOMIC_FLAG_INIT;
+static thread_local bool s_insideDump = false;
+
+// Suspend all other threads to prevent NtGetContextThread deadlock during dump
+static void SuspendAllOtherThreads(DWORD currentTid, DWORD currentPid) {
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) return;
+    
+    THREADENTRY32 te;
+    te.dwSize = sizeof(te);
+    if (Thread32First(hSnapshot, &te)) {
+        do {
+            if (te.th32OwnerProcessID == currentPid && te.th32ThreadID != currentTid) {
+                HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (hThread) {
+                    SuspendThread(hThread);
+                    CloseHandle(hThread);
+                }
+            }
+        } while (Thread32Next(hSnapshot, &te));
+    }
+    CloseHandle(hSnapshot);
+}
+
+// Resume all other threads after dump is complete
+static void ResumeAllOtherThreads(DWORD currentTid, DWORD currentPid) {
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) return;
+    
+    THREADENTRY32 te;
+    te.dwSize = sizeof(te);
+    if (Thread32First(hSnapshot, &te)) {
+        do {
+            if (te.th32OwnerProcessID == currentPid && te.th32ThreadID != currentTid) {
+                HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (hThread) {
+                    ResumeThread(hThread);
+                    CloseHandle(hThread);
+                }
+            }
+        } while (Thread32Next(hSnapshot, &te));
+    }
+    CloseHandle(hSnapshot);
+}
+
+static bool writeMiniDumpImpl(const char* path, EXCEPTION_POINTERS* ep, DWORD dumpType,
+                              DWORD crashThreadId, DWORD* outLastError, uint64_t* outBytesWritten) {
+    if (outLastError) *outLastError = ERROR_SUCCESS;
+    if (outBytesWritten) *outBytesWritten = 0;
+
+    // Guard 1: thread-local prevents same-thread recursion
+    if (s_insideDump) {
+        OutputDebugStringA("[CrashDump] Re-entrant call blocked (thread-local)\n");
+        return false;
+    }
+    s_insideDump = true;
+    
+    // Guard 2: atomic prevents cross-thread double-dump
+    if (s_dumpInProgress.test_and_set()) {
+        s_insideDump = false;
+        OutputDebugStringA("[CrashDump] Concurrent dump in progress, skipping\n");
+        return false;
+    }
+
+    DWORD currentTid = GetCurrentThreadId();
+    DWORD currentPid = GetCurrentProcessId();
+    
+    // Guard 3: suspend all other threads to prevent NtGetContextThread deadlock
+    SuspendAllOtherThreads(currentTid, currentPid);
+
     HMODULE hDbgHelp = LoadLibraryA("dbghelp.dll");
-    if (!hDbgHelp) return false;
+    if (!hDbgHelp) {
+        if (outLastError) *outLastError = GetLastError();
+        return false;
+    }
 
     auto pWriteDump = (MiniDumpWriteDump_t)GetProcAddress(hDbgHelp, "MiniDumpWriteDump");
     if (!pWriteDump) {
+        if (outLastError) *outLastError = GetLastError();
         FreeLibrary(hDbgHelp);
         return false;
     }
 
-    HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, nullptr,
+    HANDLE hFile = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
+        if (outLastError) *outLastError = GetLastError();
         FreeLibrary(hDbgHelp);
         return false;
     }
 
     MINIDUMP_EXCEPTION_INFO_MANUAL mei;
-    mei.ThreadId = GetCurrentThreadId();
+    mei.ThreadId = crashThreadId ? crashThreadId : GetCurrentThreadId();
     mei.ExceptionPointers = ep;
     mei.ClientPointers = FALSE;
 
-    BOOL ok = pWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
-                         hFile, (DWORD)dumpType, &mei, nullptr, nullptr);
+    DWORD lastErr = ERROR_SUCCESS;
+    uint64_t lastBytes = 0;
+
+    const auto attemptDumpWrite = [&](DWORD type, MINIDUMP_EXCEPTION_INFO_MANUAL* info, const char* tag) -> bool {
+        SetFilePointer(hFile, 0, nullptr, FILE_BEGIN);
+        SetEndOfFile(hFile);
+
+        BOOL ok = pWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
+                             hFile, (DWORD)type, info, nullptr, nullptr);
+        const DWORD writeErr = ok ? ERROR_SUCCESS : GetLastError();
+        FlushFileBuffers(hFile);
+
+        LARGE_INTEGER dumpSize{};
+        if (!GetFileSizeEx(hFile, &dumpSize)) {
+            dumpSize.QuadPart = 0;
+        }
+        lastErr = writeErr;
+        lastBytes = (uint64_t)dumpSize.QuadPart;
+
+        if (!ok || dumpSize.QuadPart <= 0) {
+            char dbg[256];
+            snprintf(dbg, sizeof(dbg),
+                     "[RawrXD] MiniDumpWriteDump failed/empty (%s): ok=%lu err=%lu size=%llu\n",
+                     tag ? tag : "unknown", (unsigned long)ok, (unsigned long)writeErr,
+                     (unsigned long long)dumpSize.QuadPart);
+            OutputDebugStringA(dbg);
+            return false;
+        }
+
+        return true;
+    };
+
+    bool wroteDump = attemptDumpWrite((DWORD)dumpType, &mei, "primary");
+    if (!wroteDump && dumpType != MINIDUMP_NORMAL) {
+        wroteDump = attemptDumpWrite(MINIDUMP_NORMAL, &mei, "fallback-normal-with-exception");
+    }
+    if (!wroteDump) {
+        wroteDump = attemptDumpWrite(MINIDUMP_NORMAL, nullptr, "fallback-normal-no-exception");
+    }
 
     CloseHandle(hFile);
     FreeLibrary(hDbgHelp);
-    return ok != FALSE;
+    if (outLastError) *outLastError = lastErr;
+    if (outBytesWritten) *outBytesWritten = lastBytes;
+    return wroteDump;
+}
+
+static bool writeMiniDump(const char* path, EXCEPTION_POINTERS* ep, DWORD dumpType) {
+    return writeMiniDumpImpl(path, ep, dumpType, GetCurrentThreadId(), nullptr, nullptr);
+}
+
+static DWORD WINAPI dumpWorkerProc(LPVOID) {
+    for (;;) {
+        DWORD wr = WaitForSingleObject(g_dumpRequestEvent, INFINITE);
+        if (wr != WAIT_OBJECT_0) {
+            continue;
+        }
+        if (InterlockedCompareExchange(&g_dumpWorkerExit, 0, 0) != 0) {
+            break;
+        }
+
+        EXCEPTION_POINTERS ep{};
+        EXCEPTION_POINTERS* pep = nullptr;
+        if (g_dumpRequest.hasException) {
+            ep.ExceptionRecord = &g_dumpRequest.exceptionRecord;
+            ep.ContextRecord = &g_dumpRequest.contextRecord;
+            pep = &ep;
+        }
+
+        g_dumpRequest.success = writeMiniDumpImpl(g_dumpRequest.dumpPath, pep, g_dumpRequest.dumpType,
+                                                  g_dumpRequest.crashThreadId, &g_dumpRequest.writeError,
+                                                  &g_dumpRequest.bytesWritten);
+        SetEvent(g_dumpCompleteEvent);
+    }
+
+    SetEvent(g_dumpCompleteEvent);
+    return 0;
+}
+
+static void installDumpWorkerIfNeeded() {
+    if (g_dumpWorkerThread && g_dumpRequestEvent && g_dumpCompleteEvent) {
+        return;
+    }
+
+    g_dumpRequestEvent = CreateEventA(nullptr, FALSE, FALSE, nullptr);
+    g_dumpCompleteEvent = CreateEventA(nullptr, TRUE, FALSE, nullptr);
+    if (!g_dumpRequestEvent || !g_dumpCompleteEvent) {
+        if (g_dumpRequestEvent) CloseHandle(g_dumpRequestEvent);
+        if (g_dumpCompleteEvent) CloseHandle(g_dumpCompleteEvent);
+        g_dumpRequestEvent = nullptr;
+        g_dumpCompleteEvent = nullptr;
+        return;
+    }
+
+    InterlockedExchange(&g_dumpWorkerExit, 0);
+    g_dumpWorkerThread = CreateThread(nullptr, 0, dumpWorkerProc, nullptr, 0, nullptr);
+    if (!g_dumpWorkerThread) {
+        CloseHandle(g_dumpRequestEvent);
+        CloseHandle(g_dumpCompleteEvent);
+        g_dumpRequestEvent = nullptr;
+        g_dumpCompleteEvent = nullptr;
+    }
+}
+
+static void uninstallDumpWorker() {
+    if (!g_dumpWorkerThread) {
+        if (g_dumpRequestEvent) { CloseHandle(g_dumpRequestEvent); g_dumpRequestEvent = nullptr; }
+        if (g_dumpCompleteEvent) { CloseHandle(g_dumpCompleteEvent); g_dumpCompleteEvent = nullptr; }
+        return;
+    }
+
+    InterlockedExchange(&g_dumpWorkerExit, 1);
+    if (g_dumpRequestEvent) {
+        SetEvent(g_dumpRequestEvent);
+    }
+    WaitForSingleObject(g_dumpWorkerThread, 2000);
+
+    CloseHandle(g_dumpWorkerThread);
+    g_dumpWorkerThread = nullptr;
+    if (g_dumpRequestEvent) { CloseHandle(g_dumpRequestEvent); g_dumpRequestEvent = nullptr; }
+    if (g_dumpCompleteEvent) { CloseHandle(g_dumpCompleteEvent); g_dumpCompleteEvent = nullptr; }
+}
+
+static bool writeMiniDumpViaWorker(const char* path, EXCEPTION_POINTERS* ep, DWORD dumpType,
+                                   DWORD waitMs, DWORD crashThreadId,
+                                   DWORD* outLastError, uint64_t* outBytesWritten) {
+    if (outLastError) *outLastError = ERROR_INVALID_STATE;
+    if (outBytesWritten) *outBytesWritten = 0;
+
+    if (!g_dumpWorkerThread || !g_dumpRequestEvent || !g_dumpCompleteEvent || !ep ||
+        !ep->ExceptionRecord || !ep->ContextRecord || !path) {
+        return false;
+    }
+
+    memset(&g_dumpRequest, 0, sizeof(g_dumpRequest));
+    safeStrCopy(g_dumpRequest.dumpPath, path, sizeof(g_dumpRequest.dumpPath));
+    g_dumpRequest.dumpType = dumpType;
+    g_dumpRequest.crashThreadId = crashThreadId;
+    g_dumpRequest.hasException = true;
+    memcpy(&g_dumpRequest.exceptionRecord, ep->ExceptionRecord, sizeof(EXCEPTION_RECORD));
+    memcpy(&g_dumpRequest.contextRecord, ep->ContextRecord, sizeof(CONTEXT));
+
+    ResetEvent(g_dumpCompleteEvent);
+    SetEvent(g_dumpRequestEvent);
+    DWORD wr = WaitForSingleObject(g_dumpCompleteEvent, waitMs ? waitMs : 5000);
+    if (wr != WAIT_OBJECT_0) {
+        if (outLastError) *outLastError = WAIT_TIMEOUT;
+        return false;
+    }
+
+    if (outLastError) *outLastError = g_dumpRequest.writeError;
+    if (outBytesWritten) *outBytesWritten = g_dumpRequest.bytesWritten;
+    return g_dumpRequest.success;
 }
 
 // ============================================================================
@@ -296,6 +542,18 @@ static void writeCrashLog(const char* path, const CrashReport& report) {
     writeLiteral(report.patchRollbackAttempted ? "Yes" : "No");
     writeLiteral("\r\nPatch Rollback Succeeded: ");
     writeLiteral(report.patchRollbackSucceeded ? "Yes" : "No");
+    writeLiteral("\r\nMiniDump Last Error: ");
+    writeDecU64((uint64_t)report.miniDumpLastError);
+    writeLiteral("\r\nMiniDump Bytes Written: ");
+    writeDecU64(report.miniDumpBytesWritten);
+    writeLiteral("\r\nMiniDump Writer: ");
+    if (report.miniDumpViaWorkerThread) {
+        writeLiteral("dedicated_thread");
+    } else {
+        writeLiteral("faulting_thread");
+    }
+    writeLiteral("\r\nMiniDump Fallback Inline: ");
+    writeLiteral(report.miniDumpFallbackInline ? "Yes" : "No");
     writeLiteral("\r\n\r\nDump File: ");
     writeBoundedCString(report.dumpPath, sizeof(report.dumpPath));
     writeLiteral("\r\n");
@@ -378,6 +636,10 @@ static LONG WINAPI CathedralCrashFilter(EXCEPTION_POINTERS* ep) {
     report.threadId = GetCurrentThreadId();
     report.processId = GetCurrentProcessId();
     report.timestampMs = getCurrentTimestampMs();
+    report.miniDumpLastError = ERROR_SUCCESS;
+    report.miniDumpBytesWritten = 0;
+    report.miniDumpViaWorkerThread = false;
+    report.miniDumpFallbackInline = false;
 
     // Save all 16 GP registers
     report.registers[0]  = ep->ContextRecord->Rax;
@@ -427,7 +689,34 @@ static LONG WINAPI CathedralCrashFilter(EXCEPTION_POINTERS* ep) {
             case DumpType::Full:   dumpType = MINIDUMP_WITH_FULL_MEM; break;
         }
 
-        writeMiniDump(report.dumpPath, ep, dumpType);
+        DWORD dumpErr = ERROR_SUCCESS;
+        uint64_t dumpBytes = 0;
+        bool wroteDump = false;
+
+        if (g_config.useDedicatedDumpThread) {
+            wroteDump = writeMiniDumpViaWorker(report.dumpPath, ep, dumpType, g_config.dumpWorkerWaitMs,
+                                               report.threadId, &dumpErr, &dumpBytes);
+            report.miniDumpViaWorkerThread = true;
+        }
+
+        if (!wroteDump) {
+            report.miniDumpFallbackInline = report.miniDumpViaWorkerThread;
+            wroteDump = writeMiniDumpImpl(report.dumpPath, ep, dumpType, report.threadId, &dumpErr, &dumpBytes);
+            report.miniDumpViaWorkerThread = false;
+        }
+
+        report.miniDumpLastError = dumpErr;
+        report.miniDumpBytesWritten = dumpBytes;
+
+        char dumpDiag[320];
+        snprintf(dumpDiag, sizeof(dumpDiag),
+                 "[RawrXD] dump_result success=%lu via_worker=%lu fallback_inline=%lu err=%lu bytes=%llu\n",
+                 (unsigned long)(wroteDump ? 1 : 0),
+                 (unsigned long)(report.miniDumpViaWorkerThread ? 1 : 0),
+                 (unsigned long)(report.miniDumpFallbackInline ? 1 : 0),
+                 (unsigned long)report.miniDumpLastError,
+                 (unsigned long long)report.miniDumpBytesWritten);
+        OutputDebugStringA(dumpDiag);
     }
 
     // 3. Write crash log
@@ -481,6 +770,9 @@ static LONG WINAPI CathedralCrashFilter(EXCEPTION_POINTERS* ep) {
 void Install(const CrashConfig& config) {
     g_config = config;
     ensureDumpDirectoryExists(g_config.dumpDirectory);
+    if (g_config.useDedicatedDumpThread) {
+        installDumpWorkerIfNeeded();
+    }
     g_previousFilter = SetUnhandledExceptionFilter(CathedralCrashFilter);
     g_installed.store(true, std::memory_order_release);
     OutputDebugStringA("[RawrXD] Crash containment boundary installed\n");
@@ -490,6 +782,7 @@ void Uninstall() {
     if (g_installed.exchange(false)) {
         SetUnhandledExceptionFilter(g_previousFilter);
         g_previousFilter = nullptr;
+        uninstallDumpWorker();
         OutputDebugStringA("[RawrXD] Crash containment boundary uninstalled\n");
     }
 }

@@ -1089,9 +1089,17 @@ void Win32IDE::showSettingsGUIDialog()
     int x = mainRect.left + (mainRect.right - mainRect.left - w) / 2;
     int y = mainRect.top + (mainRect.bottom - mainRect.top - h) / 2;
 
-    HWND settingsWnd = CreateWindowExA(WS_EX_DLGMODALFRAME, "RawrXD_SettingsGUI", "Settings",
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
+    HWND settingsWnd = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "RawrXD_SettingsGUI", "Settings",
                                        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, x, y, w, h, m_hwndMain,
                                        nullptr, m_hInstance, this);
+    if (!settingsWnd)
+    {
+        const DWORD createErr = GetLastError();
+        appendToOutput("[UI] Failed to create Settings dialog (GetLastError=" + std::to_string(createErr) + ")\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
 
     ShowWindow(settingsWnd, SW_SHOW);
     UpdateWindow(settingsWnd);
@@ -2700,9 +2708,18 @@ void Win32IDE::showMultiFileSearchDialog()
     RECT rc;
     GetWindowRect(m_hwndMain, &rc);
     int w = 350, h = 110;
-    HWND dlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "RawrXD_MultiFileSearch", "Find in Files",
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
+    HWND dlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "RawrXD_MultiFileSearch", "Find in Files",
                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, rc.left + 80, rc.top + 120, w, h, m_hwndMain,
                                nullptr, m_hInstance, this);
+    if (!dlg)
+    {
+        const DWORD createErr = GetLastError();
+        appendToOutput("[UI] Failed to create Find in Files dialog (GetLastError=" + std::to_string(createErr) +
+                           ")\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
     ShowWindow(dlg, SW_SHOW);
     UpdateWindow(dlg);
 }
@@ -2767,9 +2784,18 @@ void Win32IDE::showCICDSettingsDialog()
     }
     RECT rc;
     GetWindowRect(m_hwndMain, &rc);
-    HWND dlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "RawrXD_CICDSettings", "CI/CD Settings",
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
+    HWND dlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "RawrXD_CICDSettings", "CI/CD Settings",
                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, rc.left + 100, rc.top + 100, 450, 360,
                                m_hwndMain, nullptr, m_hInstance, this);
+    if (!dlg)
+    {
+        const DWORD createErr = GetLastError();
+        appendToOutput("[UI] Failed to create CI/CD Settings dialog (GetLastError=" + std::to_string(createErr) +
+                           ")\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
     ShowWindow(dlg, SW_SHOW);
     UpdateWindow(dlg);
 }
@@ -2860,9 +2886,18 @@ void Win32IDE::showModelRegistryDialog()
     }
     RECT rc;
     GetWindowRect(m_hwndMain, &rc);
-    HWND dlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "RawrXD_ModelRegistry", "Model Registry",
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
+    HWND dlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "RawrXD_ModelRegistry", "Model Registry",
                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, rc.left + 120, rc.top + 80, 450, 320,
                                m_hwndMain, nullptr, m_hInstance, this);
+    if (!dlg)
+    {
+        const DWORD createErr = GetLastError();
+        appendToOutput("[UI] Failed to create Model Registry dialog (GetLastError=" + std::to_string(createErr) +
+                           ")\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
     ShowWindow(dlg, SW_SHOW);
     UpdateWindow(dlg);
 }

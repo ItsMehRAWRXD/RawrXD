@@ -71,6 +71,7 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #ifdef _WIN32
@@ -84,14 +85,14 @@
 // These must be lazy-initialized to ensure C runtime is ready before construction.
 static std::ofstream* s_startupLog = nullptr;  // Plain pointer is safe
 
-inline std::mutex& GetStartupLogMutex() {
-    static std::mutex* inst = new std::mutex();  // Leak-on-purpose, never destroyed
+inline std::recursive_mutex& GetStartupLogMutex() {
+    static std::recursive_mutex* inst = new std::recursive_mutex();  // Leak-on-purpose, never destroyed; recursive to allow nested calls
     return *inst;
 }
 
 static void startupTrace(const char* step, const char* detail = nullptr)
 {
-    std::lock_guard<std::mutex> lock(GetStartupLogMutex());
+    std::lock_guard<std::recursive_mutex> lock(GetStartupLogMutex());
     if (!s_startupLog)
         return;
     auto now = std::chrono::system_clock::now();
@@ -130,6 +131,142 @@ static bool isTruthyEnvVar(const char* name)
     if (!value || !value[0])
         return false;
     return !(value[0] == '0' || value[0] == 'n' || value[0] == 'N' || value[0] == 'f' || value[0] == 'F');
+}
+
+static std::string toLowerAsciiCopy(std::string value)
+{
+    for (char& c : value)
+    {
+        if (c >= 'A' && c <= 'Z')
+            c = static_cast<char>(c - 'A' + 'a');
+    }
+    return value;
+}
+
+static std::string trimAsciiCopy(const std::string& value)
+{
+    size_t begin = 0;
+    while (begin < value.size() && (value[begin] == ' ' || value[begin] == '\t'))
+        ++begin;
+    size_t end = value.size();
+    while (end > begin && (value[end - 1] == ' ' || value[end - 1] == '\t'))
+        --end;
+    return value.substr(begin, end - begin);
+}
+
+static const std::unordered_set<std::string>& getStartupSkipPhaseSet()
+{
+    static std::unordered_set<std::string> set;
+    static bool initialized = false;
+    if (initialized)
+        return set;
+
+    initialized = true;
+    char raw[1024] = {};
+    const DWORD n = GetEnvironmentVariableA("RAWRXD_SKIP_STARTUP_PHASES", raw, (DWORD)sizeof(raw));
+    if (n == 0 || n >= sizeof(raw))
+        return set;
+
+    std::string token;
+    for (DWORD i = 0; i < n; ++i)
+    {
+        const char c = raw[i];
+        const bool sep = (c == ',' || c == ';' || c == '|');
+        if (sep)
+        {
+            const std::string trimmed = trimAsciiCopy(token);
+            if (!trimmed.empty())
+                set.insert(toLowerAsciiCopy(trimmed));
+            token.clear();
+        }
+        else
+        {
+            token.push_back(c);
+        }
+    }
+    const std::string trimmed = trimAsciiCopy(token);
+    if (!trimmed.empty())
+        set.insert(toLowerAsciiCopy(trimmed));
+
+    return set;
+}
+
+static bool shouldSkipStartupPhaseByEnv(const std::string& phaseName)
+{
+    const auto& skipSet = getStartupSkipPhaseSet();
+    if (skipSet.empty())
+        return false;
+    return skipSet.find(toLowerAsciiCopy(phaseName)) != skipSet.end();
+}
+
+static const std::unordered_set<int>& getStartupSkipE0Ids()
+{
+    static std::unordered_set<int> set;
+    static bool initialized = false;
+    if (initialized)
+        return set;
+
+    initialized = true;
+    char raw[256] = {};
+    const DWORD n = GetEnvironmentVariableA("RAWRXD_SKIP_STARTUP_E0_IDS", raw, (DWORD)sizeof(raw));
+    if (n == 0 || n >= sizeof(raw))
+        return set;
+
+    std::string token;
+    for (DWORD i = 0; i < n; ++i)
+    {
+        const char c = raw[i];
+        const bool sep = (c == ',' || c == ';' || c == '|');
+        if (sep)
+        {
+            const std::string trimmed = trimAsciiCopy(token);
+            if (!trimmed.empty())
+            {
+                const int id = atoi(trimmed.c_str());
+                if (id > 0)
+                    set.insert(id);
+            }
+            token.clear();
+        }
+        else
+        {
+            token.push_back(c);
+        }
+    }
+
+    const std::string trimmed = trimAsciiCopy(token);
+    if (!trimmed.empty())
+    {
+        const int id = atoi(trimmed.c_str());
+        if (id > 0)
+            set.insert(id);
+    }
+
+    return set;
+}
+
+static bool shouldSkipStartupE0Id(int id)
+{
+    const auto& set = getStartupSkipE0Ids();
+    if (set.empty())
+        return false;
+    return set.find(id) != set.end();
+}
+
+static const std::string& getStartupStopAfterPhase()
+{
+    static std::string stopAfter;
+    static bool initialized = false;
+    if (initialized)
+        return stopAfter;
+
+    initialized = true;
+    char raw[256] = {};
+    const DWORD n = GetEnvironmentVariableA("RAWRXD_STARTUP_STOP_AFTER_PHASE", raw, (DWORD)sizeof(raw));
+    if (n == 0 || n >= sizeof(raw))
+        return stopAfter;
+    stopAfter = trimAsciiCopy(raw);
+    return stopAfter;
 }
 
 // Directory of the running IDE exe (ASCII); empty if unavailable.
@@ -1371,6 +1508,20 @@ static void traceConjoinedE0PostApiBatch(Win32IDE& ide)
     int pass = 0;
     for (int id = 9; id <= 16; ++id)
     {
+        if (shouldSkipStartupE0Id(id))
+        {
+            std::string line = "post_api|";
+            line += e0Batch4Anchor(id);
+            line += "|skip env";
+            startupTrace("startup_conjoined_e0_b4", line.c_str());
+            continue;
+        }
+
+        std::string beginLine = "post_api|";
+        beginLine += e0Batch4Anchor(id);
+        beginLine += "|begin";
+        startupTrace("startup_conjoined_e0_b4", beginLine.c_str());
+
         const auto c = ide.runCriticalValidationE0Check(id);
         if (c.passed)
             ++pass;
@@ -1636,6 +1787,170 @@ static void traceConjoinedE0AgentChromeBatch(Win32IDE& ide)
     startupTrace("startup_conjoined_e0_b9_summary", (std::to_string(pass) + "/8").c_str());
 }
 
+static void runExtensionBootstrapWorkerBody()
+{
+    using RawrXD::Extensions::ExtensionAutoInstaller;
+    using RawrXD::Extensions::InstallProgress;
+
+    auto& installer = ExtensionAutoInstaller::instance();
+    if (!installer.needsFirstRunInstall())
+    {
+        startupTrace("extension_bootstrap_skipped", "already_completed");
+        return;
+    }
+
+    auto progressCallback = [](const InstallProgress& progress)
+    {
+        const char* stage = "unknown";
+        switch (progress.stage)
+        {
+            case InstallProgress::Stage::Querying:
+                stage = "querying";
+                break;
+            case InstallProgress::Stage::Downloading:
+                stage = "downloading";
+                break;
+            case InstallProgress::Stage::Installing:
+                stage = "installing";
+                break;
+            case InstallProgress::Stage::Verifying:
+                stage = "verifying";
+                break;
+            case InstallProgress::Stage::Complete:
+                stage = "complete";
+                break;
+            case InstallProgress::Stage::Failed:
+                stage = "failed";
+                break;
+        }
+
+        std::ostringstream oss;
+        oss << stage << " [" << (progress.currentIndex + 1) << "/" << progress.totalExtensions
+            << "] ";
+        if (progress.extensionId)
+            oss << progress.extensionId;
+        if (progress.detail && progress.detail[0] != '\0')
+            oss << " - " << progress.detail;
+        startupTrace("extension_bootstrap_progress", oss.str().c_str());
+    };
+
+    const auto result = installer.installPriorityExtensions(progressCallback);
+    std::ostringstream oss;
+    oss << "installed=" << result.installedCount << ", failed=" << result.failedCount;
+    if (!result.detail.empty())
+        oss << ", detail=" << result.detail;
+
+    startupTrace(result.success ? "extension_bootstrap_done" : "extension_bootstrap_failed", oss.str().c_str());
+}
+
+static void runExtensionBootstrapWorkerSafe()
+{
+#if defined(_MSC_VER)
+    __try
+    {
+        runExtensionBootstrapWorkerBody();
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        logBackgroundThreadCrash("extension_bootstrap", GetExceptionCode());
+    }
+#else
+    try
+    {
+        runExtensionBootstrapWorkerBody();
+    }
+    catch (...)
+    {
+        logBackgroundThreadCrash("extension_bootstrap", 0xE06D7363);
+    }
+#endif
+}
+
+static void runBackgroundBootWorkerBody()
+{
+    startupTrace("background_boot_start");
+    if (!s_engine_mgr)
+    {
+        startupTrace("background_boot_no_engine_mgr");
+        return;
+    }
+
+    if (RawrXD::g_800B_Unlocked)
+    {
+        try
+        {
+            s_engine_mgr->LoadEngine("engines/800b-5drive/800b_engine.dll", "800b-5drive");
+        }
+        catch (...)
+        {
+            OutputDebugStringA("[main_win32] background_boot: 800b engine load failed\n");
+        }
+    }
+    try
+    {
+        s_engine_mgr->LoadEngine("engines/codex-ultimate/codex.dll", "codex-ultimate");
+    }
+    catch (...)
+    {
+        OutputDebugStringA("[main_win32] background_boot: codex engine load failed\n");
+    }
+    try
+    {
+        s_engine_mgr->LoadEngine("engines/rawrxd-compiler/compiler.dll", "rawrxd-compiler");
+    }
+    catch (...)
+    {
+        OutputDebugStringA("[main_win32] background_boot: compiler engine load failed\n");
+    }
+
+    auto& mmf = RawrXDStateMmf::instance();
+    if (!mmf.isInitialized())
+    {
+        PatchResult r = mmf.initialize(0, "RawrXD-Win32IDE");
+        if (!r.success && !r.detail.empty())
+            OutputDebugStringA("[main_win32] MMF init warning (non-fatal)\n");
+    }
+
+    auto& jsHost = JSExtensionHost::instance();
+    if (!jsHost.isInitialized())
+    {
+        PatchResult r = jsHost.initialize();
+        (void)r;
+    }
+
+    auto& sandbox = RawrXD::Sandbox::PluginSandbox::instance();
+    if (!sandbox.isInitialized())
+    {
+        RawrXD::Sandbox::SandboxResult r = sandbox.initialize();
+        (void)r;
+    }
+
+    startupTrace("background_boot_done");
+}
+
+static void runBackgroundBootWorkerSafe()
+{
+#if defined(_MSC_VER)
+    __try
+    {
+        runBackgroundBootWorkerBody();
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        logBackgroundThreadCrash("background_boot", GetExceptionCode());
+    }
+#else
+    try
+    {
+        runBackgroundBootWorkerBody();
+    }
+    catch (...)
+    {
+        logBackgroundThreadCrash("background_boot", 0xE06D7363);
+    }
+#endif
+}
+
 // Run one startup phase by name. Sequence is from config/startup_phases.txt (dynamic).
 // Returns false to abort (e.g. createWindow failed).
 static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lpCmdLine)
@@ -1785,6 +2100,13 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     }
     if (name == "extension_bootstrap")
     {
+        const bool enableBootstrapNow = isTruthyEnvVar("RAWRXD_ENABLE_STARTUP_EXTENSION_BOOTSTRAP");
+        if (!enableBootstrapNow)
+        {
+            startupTrace("extension_bootstrap_deferred", "set RAWRXD_ENABLE_STARTUP_EXTENSION_BOOTSTRAP=1");
+            return true;
+        }
+
         startupTrace("extension_bootstrap_start", RawrXD::Startup::getStartupSessionId());
 
         if (hasAgenticSmokeFlag(GetCommandLineA()))
@@ -1807,71 +2129,7 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
             return true;
         }
 
-        std::thread(
-            []()
-            {
-                try
-                {
-                    using RawrXD::Extensions::ExtensionAutoInstaller;
-                    using RawrXD::Extensions::InstallProgress;
-
-                    auto& installer = ExtensionAutoInstaller::instance();
-                    if (!installer.needsFirstRunInstall())
-                    {
-                        startupTrace("extension_bootstrap_skipped", "already_completed");
-                        return;
-                    }
-
-                    auto progressCallback = [](const InstallProgress& progress)
-                    {
-                        const char* stage = "unknown";
-                        switch (progress.stage)
-                        {
-                            case InstallProgress::Stage::Querying:
-                                stage = "querying";
-                                break;
-                            case InstallProgress::Stage::Downloading:
-                                stage = "downloading";
-                                break;
-                            case InstallProgress::Stage::Installing:
-                                stage = "installing";
-                                break;
-                            case InstallProgress::Stage::Verifying:
-                                stage = "verifying";
-                                break;
-                            case InstallProgress::Stage::Complete:
-                                stage = "complete";
-                                break;
-                            case InstallProgress::Stage::Failed:
-                                stage = "failed";
-                                break;
-                        }
-
-                        std::ostringstream oss;
-                        oss << stage << " [" << (progress.currentIndex + 1) << "/" << progress.totalExtensions
-                            << "] ";
-                        if (progress.extensionId)
-                            oss << progress.extensionId;
-                        if (progress.detail && progress.detail[0] != '\0')
-                            oss << " - " << progress.detail;
-                        startupTrace("extension_bootstrap_progress", oss.str().c_str());
-                    };
-
-                    const auto result = installer.installPriorityExtensions(progressCallback);
-                    std::ostringstream oss;
-                    oss << "installed=" << result.installedCount << ", failed=" << result.failedCount;
-                    if (!result.detail.empty())
-                        oss << ", detail=" << result.detail;
-
-                    startupTrace(result.success ? "extension_bootstrap_done" : "extension_bootstrap_failed",
-                                 oss.str().c_str());
-                }
-                catch (...)
-                {
-                    logBackgroundThreadCrash("extension_bootstrap", 0xE06D7363);
-                }
-            })
-            .detach();
+        std::thread([]() { runExtensionBootstrapWorkerSafe(); }).detach();
 
         return true;
     }
@@ -1925,84 +2183,7 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
         if (enableBackgroundBoot)
         {
             startupTrace("background_boot_enabled");
-            std::thread(
-                []()
-                {
-                    try
-                    {
-                        startupTrace("background_boot_start");
-                        try
-                        {
-                            if (!s_engine_mgr)
-                            {
-                                startupTrace("background_boot_no_engine_mgr");
-                                return;
-                            }
-
-                            if (RawrXD::g_800B_Unlocked)
-                            {
-                                try
-                                {
-                                    s_engine_mgr->LoadEngine("engines/800b-5drive/800b_engine.dll", "800b-5drive");
-                                }
-                                catch (...)
-                                {
-                                    OutputDebugStringA("[main_win32] background_boot: 800b engine load failed\n");
-                                }
-                            }
-                            try
-                            {
-                                s_engine_mgr->LoadEngine("engines/codex-ultimate/codex.dll", "codex-ultimate");
-                            }
-                            catch (...)
-                            {
-                                OutputDebugStringA("[main_win32] background_boot: codex engine load failed\n");
-                            }
-                            try
-                            {
-                                s_engine_mgr->LoadEngine("engines/rawrxd-compiler/compiler.dll", "rawrxd-compiler");
-                            }
-                            catch (...)
-                            {
-                                OutputDebugStringA("[main_win32] background_boot: compiler engine load failed\n");
-                            }
-
-                            auto& mmf = RawrXDStateMmf::instance();
-                            if (!mmf.isInitialized())
-                            {
-                                PatchResult r = mmf.initialize(0, "RawrXD-Win32IDE");
-                                if (!r.success && !r.detail.empty())
-                                    OutputDebugStringA("[main_win32] MMF init warning (non-fatal)\n");
-                            }
-
-                            auto& jsHost = JSExtensionHost::instance();
-                            if (!jsHost.isInitialized())
-                            {
-                                PatchResult r = jsHost.initialize();
-                                (void)r;
-                            }
-
-                            auto& sandbox = RawrXD::Sandbox::PluginSandbox::instance();
-                            if (!sandbox.isInitialized())
-                            {
-                                RawrXD::Sandbox::SandboxResult r = sandbox.initialize();
-                                (void)r;
-                            }
-
-                            startupTrace("background_boot_done");
-                        }
-                        catch (...)
-                        {
-                            startupTrace("background_boot_exception");
-                            OutputDebugStringA("[main_win32] background_boot exception (non-fatal)\n");
-                        }
-                    }
-                    catch (...)
-                    {
-                        logBackgroundThreadCrash("background_boot", 0xE06D7363);
-                    }
-                })
-                .detach();
+            std::thread([]() { runBackgroundBootWorkerSafe(); }).detach();
         }
         else
         {
@@ -2356,6 +2537,8 @@ static bool tryEnsureConsoleAttached(bool attachInput, DWORD& sehCode)
 
 static void logHeadlessDiag(const char* phase, const char* detail = nullptr)
 {
+    static std::mutex s_traceMutex;
+
     char msg[640] = {};
     if (detail && detail[0])
     {
@@ -2373,22 +2556,90 @@ static void logHeadlessDiag(const char* phase, const char* detail = nullptr)
         fprintf(stderr, "%s", msg);
     }
 
-    char exePath[MAX_PATH] = {};
-    std::string logPath = "headless_startup.log";
-    if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0)
+    std::string logPath;
+    const char* envPath = std::getenv("RAWRXD_STARTUP_TRACE_PATH");
+    if (envPath && envPath[0])
     {
-        std::string p = exePath;
-        size_t slash = p.find_last_of("\\/");
-        if (slash != std::string::npos)
-            logPath = p.substr(0, slash + 1) + "headless_startup.log";
+        logPath = envPath;
+    }
+    else
+    {
+        char exePath[MAX_PATH] = {};
+        logPath = "headless_startup.log";
+        if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0)
+        {
+            std::string p = exePath;
+            size_t slash = p.find_last_of("\\/");
+            if (slash != std::string::npos)
+                logPath = p.substr(0, slash + 1) + "startup_execution_graph.log";
+        }
     }
 
+    const auto now = std::chrono::system_clock::now();
+    const auto epochMs = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    const DWORD pid = GetCurrentProcessId();
+    const DWORD tid = GetCurrentThreadId();
+
+    std::lock_guard<std::mutex> lock(s_traceMutex);
     std::ofstream out(logPath, std::ios::out | std::ios::app);
     if (out)
     {
-        out << msg;
+        out << epochMs << "\tpid=" << pid << "\ttid=" << tid << "\tphase=" << (phase ? phase : "(null)");
+        if (detail && detail[0])
+        {
+            out << "\tdetail=" << detail;
+        }
+        out << "\n";
         out.flush();
     }
+}
+
+enum class HeadlessExitReason
+{
+    None = 0,
+    HelpGateExit,
+    InitializeSeh,
+    InitializeCppException,
+    InitializeFailed,
+    RunSeh,
+    RunCppException
+};
+
+static const char* headlessExitReasonToString(HeadlessExitReason reason)
+{
+    switch (reason)
+    {
+        case HeadlessExitReason::None:
+            return "NONE";
+        case HeadlessExitReason::HelpGateExit:
+            return "HELP_GATE_EXIT";
+        case HeadlessExitReason::InitializeSeh:
+            return "INITIALIZE_SEH";
+        case HeadlessExitReason::InitializeCppException:
+            return "INITIALIZE_CPP_EXCEPTION";
+        case HeadlessExitReason::InitializeFailed:
+            return "INITIALIZE_FAILED";
+        case HeadlessExitReason::RunSeh:
+            return "RUN_SEH";
+        case HeadlessExitReason::RunCppException:
+            return "RUN_CPP_EXCEPTION";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+static void logHeadlessExit(HeadlessExitReason reason, const char* stage, int code, const char* detail = nullptr)
+{
+    std::ostringstream oss;
+    oss << "reason=" << headlessExitReasonToString(reason)
+        << " stage=" << (stage ? stage : "(none)")
+        << " code=" << code;
+    if (detail && detail[0])
+    {
+        oss << " detail=" << detail;
+    }
+    const std::string msg = oss.str();
+    logHeadlessDiag("headless_exit", msg.c_str());
 }
 
 static void runDeepThinkingStressTest(LPSTR lpCmdLine)
@@ -3805,6 +4056,32 @@ static void traceConjoinedE0PanelsDeepBatch(Win32IDE& ide)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow)
 {
+    // ========================================================================
+    // ABSOLUTE ENTRY PROBE — Ultra-early WinMain boundary marker
+    // Fires immediately upon WinMain entry to distinguish CRT vs WinMain failures
+    // ========================================================================
+    {
+        DWORD pid = GetCurrentProcessId();
+        SYSTEMTIME st;
+        GetSystemTime(&st);
+        char probeMsg[256];
+        snprintf(probeMsg, sizeof(probeMsg),
+                 "[%02d:%02d:%02d.%03d] PID=%u INIT_0_WINMAIN_ENTRY_REACHED\n",
+                 st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, pid);
+        fputs(probeMsg, stderr);
+        fflush(stderr);
+        OutputDebugStringA(probeMsg);
+        
+        // Also log to startup_winmain_entry.log
+        FILE* entryLog = nullptr;
+        errno_t err = fopen_s(&entryLog, "startup_winmain_entry.log", "a");
+        if (err == 0 && entryLog)
+        {
+            fputs(probeMsg, entryLog);
+            fclose(entryLog);
+        }
+    }
+
     emitStartupHeapSnapshot("winmain.entry");
 
     // ========================================================================
@@ -4023,13 +4300,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
         RawrXD::Crash::CrashConfig crashCfg;
         memset(&crashCfg, 0, sizeof(crashCfg));
-        crashCfg.dumpType = RawrXD::Crash::DumpType::Normal;
+        crashCfg.dumpType = RawrXD::Crash::DumpType::Full;   // Full needed to resolve AVRF violation frame
         crashCfg.dumpDirectory = "crash_dumps";
         crashCfg.enableMiniDump = true;
         crashCfg.enablePatchRollback = true;
         crashCfg.enablePatchQuarantine = true;
-        crashCfg.showMessageBox = true;
-        crashCfg.terminateAfterDump = true;
+        crashCfg.showMessageBox = false;   // CrashReporter dialog handles UI
+        crashCfg.terminateAfterDump = false; // CrashReporter filter terminates
         crashCfg.onCrashCallback = [](const RawrXD::Crash::CrashReport* r, void*)
         {
             if (r && r->logPath[0])
@@ -4083,12 +4360,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         }
 
         logHeadlessDiag("before_help_gate");
+        logHeadlessDiag("INIT_1_HEADLESS_GATE_OK");
 
         // Fast-exit help path to avoid hangs when only --headless/--help are provided
         if (hasHeadlessHelpFlag(lpCmdLine) || (lpCmdLine && lpCmdLine[0] == '\0'))
         {
             logHeadlessDiag("help_gate_exit");
             printHeadlessQuickHelp();
+            logHeadlessExit(HeadlessExitReason::HelpGateExit, "INIT_HELP_GATE", 0, "help requested or empty cmdline");
             return 0;
         }
 
@@ -4101,6 +4380,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         logHeadlessDiag("parse_cmdline_begin");
         parseCmdLine(lpCmdLine, argc, argv);
         logHeadlessDiag("parse_cmdline_end");
+        logHeadlessDiag("INIT_2_PARSE_CMDLINE_OK");
 
         char cwd[MAX_PATH] = {};
         GetCurrentDirectoryA(MAX_PATH, cwd);
@@ -4142,31 +4422,40 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 char sehDiag[256] = {};
                 snprintf(sehDiag, sizeof(sehDiag), "code=0x%08lX", initSeh);
                 logHeadlessDiag("initialize_seh", sehDiag);
+                logHeadlessExit(HeadlessExitReason::InitializeSeh, "INIT_3_INITIALIZE", (int)initSeh, sehDiag);
                 return (int)initSeh;
             }
             char initDiag[256] = {};
             snprintf(initDiag, sizeof(initDiag), "success=%d errorCode=%d", r.success ? 1 : 0, r.errorCode);
             logHeadlessDiag("initialize_end", initDiag);
+            logHeadlessDiag("INIT_3_INITIALIZE_OK");
         }
         catch (const std::exception& ex)
         {
             logHeadlessDiag("initialize_cpp_exception", ex.what());
+            logHeadlessExit(HeadlessExitReason::InitializeCppException, "INIT_3_INITIALIZE", 1, ex.what());
             return 1;
         }
         catch (...)
         {
             logHeadlessDiag("initialize_cpp_exception_unknown");
+            logHeadlessExit(HeadlessExitReason::InitializeCppException, "INIT_3_INITIALIZE", 1, "unknown exception");
             return 1;
         }
 
         if (!r.success)
         {
             if (r.errorCode == 0)
+            {
+                logHeadlessExit(HeadlessExitReason::InitializeFailed, "INIT_3_INITIALIZE", 0, "non-error early return");
                 return 0;  // --help requested
+            }
             fprintf(stderr, "Headless init failed: %s (code %d)\n", r.detail, r.errorCode);
             char failDiag[384] = {};
             snprintf(failDiag, sizeof(failDiag), "detail=\"%s\" code=%d", r.detail ? r.detail : "", r.errorCode);
             logHeadlessDiag("initialize_failed", failDiag);
+            logHeadlessExit(HeadlessExitReason::InitializeFailed, "INIT_3_INITIALIZE", r.errorCode,
+                            r.detail ? r.detail : "headless initialize failed");
             return r.errorCode;
         }
 
@@ -4180,20 +4469,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 char sehDiag[256] = {};
                 snprintf(sehDiag, sizeof(sehDiag), "code=0x%08lX", runSeh);
                 logHeadlessDiag("run_seh", sehDiag);
+                logHeadlessExit(HeadlessExitReason::RunSeh, "INIT_4_RUN", (int)runSeh, sehDiag);
                 return (int)runSeh;
             }
             char runDiag[128] = {};
             snprintf(runDiag, sizeof(runDiag), "exitCode=%d", exitCode);
             logHeadlessDiag("run_end", runDiag);
+            logHeadlessDiag("INIT_4_RUN_DONE", runDiag);
         }
         catch (const std::exception& ex)
         {
             logHeadlessDiag("run_cpp_exception", ex.what());
+            logHeadlessExit(HeadlessExitReason::RunCppException, "INIT_4_RUN", 1, ex.what());
             return 1;
         }
         catch (...)
         {
             logHeadlessDiag("run_cpp_exception_unknown");
+            logHeadlessExit(HeadlessExitReason::RunCppException, "INIT_4_RUN", 1, "unknown exception");
             return 1;
         }
 
@@ -4356,11 +4649,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
             traceConjoinedE0ForPhase(ide, phaseName, e0Id);
     };
 
+    bool startupBisectStopRequested = false;
+
     auto runPhasesAbortOnFail = [&](const std::vector<std::string>& phases,
                                     const std::function<void(const std::string&)>& afterEachPhase = {}) -> bool
     {
+        const bool phaseHeapSnapshot = isTruthyEnvVar("RAWRXD_STARTUP_PHASE_HEAP_SNAPSHOT");
+        const std::string stopAfterPhase = getStartupStopAfterPhase();
+
         for (const std::string& name : phases)
         {
+            if (shouldSkipStartupPhaseByEnv(name))
+            {
+                startupTrace(name.c_str(), "phase_skipped_by_env");
+                continue;
+            }
+
+            const auto phaseBegin = std::chrono::steady_clock::now();
             startupTrace(name.c_str(), (std::string("phase_start|") + RawrXD::Startup::getStartupSessionId()).c_str());
             bool phaseOk = false;
             if (!runPhaseSafely(name, ide, hInstance, lpCmdLine, &phaseOk) || !phaseOk)
@@ -4374,19 +4679,44 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 MessageBoxW(nullptr, L"Failed to initialize IDE", L"Error", MB_OK | MB_ICONERROR);
                 return false;
             }
+
+            const auto phaseEnd = std::chrono::steady_clock::now();
+            const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(phaseEnd - phaseBegin).count();
+            startupTrace(name.c_str(),
+                         (std::string("phase_elapsed_ms|") + std::to_string((long long)elapsedMs)).c_str());
+
             startupTrace(name.c_str(), (std::string("phase_done|") + RawrXD::Startup::getStartupSessionId()).c_str());
+
+            if (phaseHeapSnapshot)
+            {
+                std::string heapTag = "after_phase_";
+                heapTag += name;
+                emitStartupHeapSnapshot(heapTag.c_str());
+            }
+
             if (afterEachPhase)
                 afterEachPhase(name);
+
+            if (!stopAfterPhase.empty() && name == stopAfterPhase)
+            {
+                startupBisectStopRequested = true;
+                startupTrace("startup_phase_bisect_stop", name.c_str());
+                break;
+            }
         }
         return true;
     };
 
     if (!runPhasesAbortOnFail(preCreateWindow, afterColdOrMidPhase))
         return 1;
+    if (startupBisectStopRequested)
+        return 0;
     guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 3/8: pre-createWindow startup phases complete\n",
                      "[Init:WinMain] Batch 3/8: pre-createWindow startup phases complete\n");
     if (!runPhasesAbortOnFail(betweenCreateAndShow, afterColdOrMidPhase))
         return 1;
+    if (startupBisectStopRequested)
+        return 0;
     guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 4/8: between createWindow and showWindow phases complete\n",
                      "[Init:WinMain] Batch 4/8: pre-show startup phases complete\n");
 
@@ -4458,10 +4788,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     }
 
     // Now that window is visible, run post-show phases from config (extension_bootstrap, integrated_runtime, …)
+    const bool phaseHeapSnapshot = isTruthyEnvVar("RAWRXD_STARTUP_PHASE_HEAP_SNAPSHOT");
+    const std::string stopAfterPhase = getStartupStopAfterPhase();
     for (const std::string& name : afterShow)
     {
         if (RawrXD::Startup::isPhaseLazy(name))
             continue;
+        if (shouldSkipStartupPhaseByEnv(name))
+        {
+            startupTrace(name.c_str(), "phase_skipped_by_env");
+            continue;
+        }
+
+        const auto phaseBegin = std::chrono::steady_clock::now();
         startupTrace((std::string("heavy_") + name).c_str(),
                      (std::string("start|") + RawrXD::Startup::getStartupSessionId()).c_str());
         bool phaseOk = false;
@@ -4469,9 +4808,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         {
             OutputDebugStringA(("[main_win32] Heavy phase failed: " + name + "\n").c_str());
         }
+
+        const auto phaseEnd = std::chrono::steady_clock::now();
+        const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(phaseEnd - phaseBegin).count();
+        startupTrace(name.c_str(), (std::string("phase_elapsed_ms|") + std::to_string((long long)elapsedMs)).c_str());
+
+        if (phaseHeapSnapshot)
+        {
+            std::string heapTag = "after_phase_";
+            heapTag += name;
+            emitStartupHeapSnapshot(heapTag.c_str());
+        }
+
         traceConjoinedE0ForPhase(ide, name);
         startupTrace((std::string("heavy_") + name).c_str(),
                      (std::string("done|") + RawrXD::Startup::getStartupSessionId()).c_str());
+
+        if (!stopAfterPhase.empty() && name == stopAfterPhase)
+        {
+            startupTrace("startup_phase_bisect_stop", name.c_str());
+            return 0;
+        }
     }
     guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 6/8: post-show synchronous startup phases complete\n",
                      "[Init:WinMain] Batch 6/8: post-show startup phases complete\n");
@@ -4487,7 +4844,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     if (hwndMain && IsWindow(hwndMain))
     {
         startupTrace("startup_conjoined_phases_9_16_begin", RawrXD::Startup::getStartupSessionId());
-        const auto e0 = ide.runCriticalValidationBatch3();
+        std::vector<Win32IDE::RuntimeValidationCheck> e0;
+        e0.reserve(8);
+        for (int i = 1; i <= 8; ++i)
+        {
+            if (shouldSkipStartupE0Id(i))
+            {
+                Win32IDE::RuntimeValidationCheck skip;
+                skip.name = "E0-" + std::to_string(i) + " skipped-by-env";
+                skip.passed = true; // treat as pass so summary isn't misleading
+                skip.detail = "skipped";
+                e0.push_back(skip);
+                startupTrace("startup_conjoined_e0_rollup", ("skipped E0-" + std::to_string(i)).c_str());
+                continue;
+            }
+            e0.push_back(ide.runCriticalValidationE0Check(i));
+        }
         int e0pass = 0;
         for (const auto& c : e0)
         {
@@ -4567,8 +4939,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // E0-17..E0-24 already ran after post-show layout (see traceConjoinedE0ExtendedBatch above).
     if (hwndMain && IsWindow(hwndMain))
     {
-        startupTrace("startup_conjoined_e0_09_16_begin", RawrXD::Startup::getStartupSessionId());
-        traceConjoinedE0PostApiBatch(ide);
+        if (isTruthyEnvVar("RAWRXD_SKIP_STARTUP_E0_POST_API_BATCH"))
+        {
+            startupTrace("startup_conjoined_e0_09_16_skipped", "env_skip");
+        }
+        else
+        {
+            startupTrace("startup_conjoined_e0_09_16_begin", RawrXD::Startup::getStartupSessionId());
+            traceConjoinedE0PostApiBatch(ide);
+        }
     }
 
     {

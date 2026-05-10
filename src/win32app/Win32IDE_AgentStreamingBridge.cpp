@@ -38,10 +38,7 @@ std::string s_tokenBuf;
 
 extern "C" {
 
-#ifdef _WIN32
-__declspec(dllexport)
-#endif
-void AgentPanel_AppendMessage(const wchar_t* role, const wchar_t* content) {
+static void AgentPanel_AppendMessage_Impl(const wchar_t* role, const wchar_t* content) {
     std::string r = wideToUtf8(role);
     std::string c = wideToUtf8(content);
     if (r.empty() && c.empty()) return;
@@ -54,10 +51,7 @@ void AgentPanel_AppendMessage(const wchar_t* role, const wchar_t* content) {
     }
 }
 
-#ifdef _WIN32
-__declspec(dllexport)
-#endif
-void AgentPanel_AppendToken(const wchar_t* token) {
+static void AgentPanel_AppendToken_Impl(const wchar_t* token) {
     if (!token) return;
     std::string t = wideToUtf8(token);
     std::string toFlush;
@@ -74,10 +68,7 @@ void AgentPanel_AppendToken(const wchar_t* token) {
     }
 }
 
-#ifdef _WIN32
-__declspec(dllexport)
-#endif
-void AgentPanel_FinalizeStream(void) {
+static void AgentPanel_FinalizeStream_Impl(void) {
     std::string toFlush;
     {
         std::lock_guard<std::mutex> lk(s_tokenBufMtx);
@@ -95,6 +86,42 @@ void AgentPanel_FinalizeStream(void) {
         if (hwnd && IsWindow(hwnd)) {
             PostMessage(hwnd, WM_APP + 112, 0, 0);
         }
+    }
+}
+
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void AgentPanel_AppendMessage(const wchar_t* role, const wchar_t* content) {
+    __try {
+        AgentPanel_AppendMessage_Impl(role, content);
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER) {
+        OutputDebugStringA("[AgentStreamingBridge] AgentPanel_AppendMessage trapped SEH exception\n");
+    }
+}
+
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void AgentPanel_AppendToken(const wchar_t* token) {
+    __try {
+        AgentPanel_AppendToken_Impl(token);
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER) {
+        OutputDebugStringA("[AgentStreamingBridge] AgentPanel_AppendToken trapped SEH exception\n");
+    }
+}
+
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void AgentPanel_FinalizeStream(void) {
+    __try {
+        AgentPanel_FinalizeStream_Impl();
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER) {
+        OutputDebugStringA("[AgentStreamingBridge] AgentPanel_FinalizeStream trapped SEH exception\n");
     }
 }
 

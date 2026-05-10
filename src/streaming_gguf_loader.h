@@ -4,12 +4,13 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace RawrXD
 {
 
-class MappedWindowStreamer;  // Forward declaration
+class MappedWindowStreamer {};  // Placeholder until a concrete mapped streamer is wired in
 
 struct TensorZoneInfo
 {
@@ -104,6 +105,8 @@ class StreamingGGUFLoader : public IGGUFLoader
 
     // Currently loaded zones (can have multiple active zones for pre-loading)
     std::map<std::string, bool> active_zones_;
+    std::map<std::string, uint64_t> tensor_generation_ids_;
+    std::unordered_set<std::string> dirty_tensors_;
     std::string current_zone_;
     uint64_t current_zone_memory_;
 
@@ -132,6 +135,15 @@ class StreamingGGUFLoader : public IGGUFLoader
     template <typename T> bool ReadValue(T& value);
     bool ReadString(std::string& value);
     uint64_t CalculateTensorSize(const std::vector<uint64_t>& shape, GGMLType type) const;
+
+    // ========================================================================
+    // OVERLAPPED I/O PREFETCH ENGINE (Phase 7a — 4 GB/s NVMe saturation)
+    // ========================================================================
+    // Prefetch a zone using Win32 FILE_FLAG_OVERLAPPED + FILE_FLAG_NO_BUFFERING.
+    // Falls back to synchronous LoadZone() if async handle cannot be opened.
+    // Targets 3.98 GB/s sustained throughput on NVMe SSDs.
+    // ========================================================================
+    bool PrefetchZoneAsync(const std::string& zone_name, uint64_t max_memory_mb = 512);
 };
 
 }  // namespace RawrXD

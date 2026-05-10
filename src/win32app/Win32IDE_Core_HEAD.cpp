@@ -3374,20 +3374,31 @@ void Win32IDE::deferredHeavyInitBody()
         OutputDebugStringA("ERROR: ModelSourceResolver init failed (unknown)\n");
     }
 
-    // GPU Backend Bridge — detect and initialize Vulkan compute if available
+    // GPU Backend Bridge — detect and initialize Vulkan compute if available.
+    // RT-01 triage gate: allow deterministic startup isolation without code churn.
     {
-        HMODULE hVulkan = LoadLibraryA("vulkan-1.dll");
-        if (hVulkan)
+        const bool disableVulkanProbe = (std::getenv("RAWRXD_DISABLE_VULKAN_PROBE_STARTUP") != nullptr);
+        if (disableVulkanProbe)
         {
-            m_gpuTextEnabled = true;
-            FreeLibrary(hVulkan);
-            OutputDebugStringA("GPU Backend Bridge: Vulkan ICD detected — GPU compute available\n");
-            appendToOutput("[GPU] Vulkan compute backend detected and ready\n", "Output", OutputSeverity::Info);
+            m_gpuTextEnabled = false;
+            OutputDebugStringA("GPU Backend Bridge: Startup Vulkan probe disabled by RAWRXD_DISABLE_VULKAN_PROBE_STARTUP\n");
+            appendToOutput("[GPU] Startup Vulkan probe disabled by env gate\n", "Output", OutputSeverity::Warning);
         }
         else
         {
-            m_gpuTextEnabled = false;
-            OutputDebugStringA("GPU Backend Bridge: No Vulkan ICD — CPU-only mode\n");
+            HMODULE hVulkan = LoadLibraryA("vulkan-1.dll");
+            if (hVulkan)
+            {
+                m_gpuTextEnabled = true;
+                FreeLibrary(hVulkan);
+                OutputDebugStringA("GPU Backend Bridge: Vulkan ICD detected — GPU compute available\n");
+                appendToOutput("[GPU] Vulkan compute backend detected and ready\n", "Output", OutputSeverity::Info);
+            }
+            else
+            {
+                m_gpuTextEnabled = false;
+                OutputDebugStringA("GPU Backend Bridge: No Vulkan ICD — CPU-only mode\n");
+            }
         }
     }
 

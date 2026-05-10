@@ -16,6 +16,7 @@
 #include "streaming/atc_benchmark.hpp"
 #include "quantization/braided_quantizer_fingerprint.hpp"
 #include <iostream>
+#include "core/thread_lifecycle_registry.h"
 
 using namespace RawrXD;
 using namespace RawrXD::ColorSpace;
@@ -158,19 +159,46 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
     LocalFree(argvW);
 
-    // Create minimal main window
-    IDEWindow window;
-    window.create(nullptr, "RawrXD Agentic IDE Titan Powered", WS_OVERLAPPEDWINDOW | WS_VISIBLE);
-    window.resize(1024, 768);
+    // Install structured exception handler for crash attribution
+    __try {
+        // Create minimal main window
+        IDEWindow window;
+        window.create(nullptr, "RawrXD Agentic IDE Titan Powered", WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+        window.resize(1024, 768);
 
-    // Message Loop
-    MSG msg = {};
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        // Message Loop
+        MSG msg = {};
+        while (GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        // Signal all background threads to exit before destroying shared state
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().RequestShutdown();
+        
+        // Wait for registered background threads with timeout
+        bool allExited = RawrXD::Core::ThreadLifecycleRegistry::Instance().WaitForAllExited(5000);
+        if (!allExited) {
+            OutputDebugStringA("[WinMain] WARNING: Some background threads did not exit within timeout\n");
+        }
+
+        return (int)msg.wParam;
     }
-
-    return (int)msg.wParam;
+    __except (EXCEPTION_EXECUTE_HANDLER) {
+        DWORD code = GetExceptionCode();
+        char crashMsg[256];
+        snprintf(crashMsg, sizeof(crashMsg),
+            "[FATAL] Unhandled exception 0x%08X in WinMain. Thread snapshot:\n%s",
+            code,
+            RawrXD::Core::ThreadLifecycleRegistry::Instance().Snapshot().c_str());
+        OutputDebugStringA(crashMsg);
+        
+        // Attempt graceful shutdown even after exception
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().RequestShutdown();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().WaitForAllExited(2000);
+        
+        return 1;
+    }
 }
 
 

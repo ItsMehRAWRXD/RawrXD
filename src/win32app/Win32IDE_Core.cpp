@@ -1236,6 +1236,35 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             handleNativeStreamTick(wParam, lParam);
             return 0;
 
+        // Apply settings safely on the main (UI) thread.
+        // Background threads must never call applySettings() directly.
+        case WM_APP_APPLY_SETTINGS:
+            applySettings();
+            return 0;
+
+        // Initialize voice chat UI/hotkeys safely on the main thread.
+        case WM_APP_INIT_VOICE_CHAT_UI:
+            initVoiceChat();
+            voiceLoadPreferences();
+            createVoiceChatPanel(m_hwndMain);
+            registerVoiceHotkeys();
+            RegisterHotKey(m_hwndMain, kEmergencyWipeHotkeyId,
+                           MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_NOREPEAT, 'K');
+            updateVoiceStatusBar();
+            return 0;
+
+        // Create VoiceAutomation UI safely on the main thread.
+        case WM_APP_CREATE_VOICE_AUTOMATION_PANEL:
+        {
+            RECT rc{};
+            GetClientRect(m_hwndMain, &rc);
+            extern void Win32IDE_CreateVoiceAutomationPanel(HWND, int, int, int, int);
+            Win32IDE_CreateVoiceAutomationPanel(m_hwndMain, 0, rc.bottom - 80, rc.right, 80);
+            m_voiceAutomationInitialized = true;
+            OutputDebugStringA("Phase 44: VoiceAutomation panel created (UI-thread)\n");
+            return 0;
+        }
+
         // Tier 1: Auto-update notification (WM_APP+501)
         case (WM_APP + 501):
             showUpdateNotification();
@@ -1298,6 +1327,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 // Record model size/load time for status bar + metrics.
                 m_lastLoadedModelOk = true;
                 m_lastLoadedModelPath = result->filepath;
+                m_ollamaModelOverride = result->filepath;
                 m_lastLoadedModelBytes = result->fileBytes;
                 m_lastLoadedModelWallMs = result->wallMs;
                 {
@@ -1327,6 +1357,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
                 const bool hasPendingChat = !m_pendingChatOnLoadMessage.empty();
                 appendModelLoadReadyCopilotTurns(result->filepath, !hasPendingChat);
+
+                if (m_hwndModelSelector && IsWindow(m_hwndModelSelector))
+                {
+                    populateModelSelector();
+                }
 
                 // Ensure status bar reflects newly loaded model (and any TPS changes soon after).
                 PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
@@ -3376,6 +3411,24 @@ void Win32IDE::onCreate(HWND hwnd)
         +[](void* self, HWND)
         {
             auto* ide = static_cast<Win32IDE*>(self);
+            // Initialize SessionController spine + phase barrier + deferred queue.
+            ide->m_sessionController = std::make_unique<rawrxd::session::SessionController>();
+            ide->m_sessionController->Start(ide->m_projectRoot.empty() ? std::filesystem::current_path().string() : ide->m_projectRoot);
+            ide->m_sessionController->SetDeferredDispatch(
+                [ide](const std::string& prompt, std::string* error) -> bool
+                {
+                    if (!ide->m_sessionController->IsExecutionReady(error))
+                        return false;
+                    ide->generateResponseAsync(prompt, [](const std::string&, bool){});
+                    return true;
+                });
+        },
+        this, hwnd, "initSessionController");
+
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND)
+        {
+            auto* ide = static_cast<Win32IDE*>(self);
             // Initialize backend manager and LLM router at startup so Ollama/cloud can be used
             // without requiring a local GGUF to be loaded first (see docs/AGENTIC_AND_MODEL_LOADING_AUDIT.md).
             ide->initBackendManager();
@@ -3504,6 +3557,17 @@ namespace
 bool initializeEnterpriseSubsystems(Win32IDE* ide);
 
 #ifdef _WIN32
+// Exception filter: handle hardware faults but let C++ exceptions (0xE06D7363) propagate
+// so the C++ runtime can properly unwind destructors and avoid heap corruption.
+static LONG WINAPI enterpriseSehFilter(DWORD code, DWORD* outCode)
+{
+    if (code == 0xE06D7363u)  // MSVC C++ exception — do not catch via SEH
+        return EXCEPTION_CONTINUE_SEARCH;
+    if (outCode)
+        *outCode = code;
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 int initializeEnterpriseSubsystemsSehThunk(Win32IDE* ide, DWORD* sehCode)
 {
     __try
@@ -3513,7 +3577,7 @@ int initializeEnterpriseSubsystemsSehThunk(Win32IDE* ide, DWORD* sehCode)
             *sehCode = 0;
         return 1;
     }
-    __except ((sehCode ? (*sehCode = GetExceptionCode()) : 0), EXCEPTION_EXECUTE_HANDLER)
+    __except (enterpriseSehFilter(GetExceptionCode(), sehCode))
     {
         return 0;
     }
@@ -3555,7 +3619,9 @@ bool initializeEnterpriseSubsystemsSafe(Win32IDE* ide)
     LOG_ERROR(sehMsg);
     OutputDebugStringA(sehMsg);
     OutputDebugStringA("\n");
-    PostMessage(ide->getMainWindow(), WM_USER + 200, 0, reinterpret_cast<LPARAM>(_strdup("[Community]")));
+    // NOTE: Do NOT call _strdup/malloc here — the heap may be in an inconsistent state
+    // after a C++ exception was caught via SEH (__except). The PostMessage with the
+    // community badge is deferred to a safe point in deferredHeavyInitBody.
     return false;
 }
 #else
@@ -3573,9 +3639,15 @@ static const DWORD kDeferredInitStackSize = 4 * 1024 * 1024;
 DWORD WINAPI Win32IDE::deferredHeavyInitThreadProc(LPVOID param)
 {
     Win32IDE* self = static_cast<Win32IDE*>(param);
-    DetachedThreadGuard _guard(self->m_activeDetachedThreads, self->m_shuttingDown);
-    if (_guard.cancelled)
+    if (!self)
         return 0;
+
+    // Keep this thread proc teardown-free with respect to instance atomics.
+    // If deferredHeavyInitBody faults and partially corrupts instance state, touching
+    // m_activeDetachedThreads during guard destruction can trigger a second fatal AV.
+    if (self->isShuttingDown())
+        return 0;
+
     sehRunBgThread(bgInitBody, self);
     return 0;
 }
@@ -3628,14 +3700,24 @@ void Win32IDE::deferredHeavyInitBody()
     // ================================================================
     // Enterprise License System — initialize FIRST (gates engine registration)
     // ================================================================
+    bool enterpriseOk = false;
     try
     {
-        initializeEnterpriseSubsystemsSafe(this);
+        enterpriseOk = initializeEnterpriseSubsystemsSafe(this);
     }
     catch (...)
     {
-        OutputDebugStringA("ERROR: Enterprise license init failed\n");
+        // C++ exception from shield code — heap is clean (propagated via EXCEPTION_CONTINUE_SEARCH,
+        // not caught by __except which would corrupt CRT heap state).
+        OutputDebugStringA("ERROR: Enterprise license init failed (C++ exception)\n");
+        LOG_INFO("deferredHeavyInitBody: enterprise init threw C++ exception; continuing\n");
     }
+    // Post the tier badge now that the heap is stable. _strdup must NOT be called inside
+    // initializeEnterpriseSubsystemsSafe's SEH failure path (heap may be unsafe after
+    // catching a C++ exception via __except). We defer it to here where heap is known clean.
+    if (!enterpriseOk)
+        PostMessage(m_hwndMain, WM_USER + 200, 0, reinterpret_cast<LPARAM>(_strdup("[Community]")));
+    LOG_INFO("deferredHeavyInitBody: CHECKPOINT-A past enterprise init\n");
     if (isShuttingDown())
         return;
 
@@ -3649,10 +3731,12 @@ void Win32IDE::deferredHeavyInitBody()
             appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
     };
 
+    LOG_INFO("deferredHeavyInitBody: CHECKPOINT-B before enableAllFeaturesAndWire\n");
     // IDE pipeline — Batch 1/8 (front): 5-tier orchestration before inference/agent wiring.
     try
     {
         enableAllFeaturesAndWire();
+        LOG_INFO("deferredHeavyInitBody: CHECKPOINT-C after enableAllFeaturesAndWire\n");
         idePipelineMilestone("[IDE-Pipeline] Batch 1/8: enableAllFeaturesAndWire (core→AI→agent→build→advanced)\n",
                              "[Init] Batch 1/8: subsystem orchestration (core→AI→agent→build→advanced)\n");
     }
@@ -3755,16 +3839,13 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialise the agentic bridge (needs m_hwndMain, which is set)
-    try
-    {
-        initializeAgenticBridge();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initializeAgenticBridge failed\n");
-    }
-    idePipelineMilestone("[IDE-Pipeline] Batch 4/8: Agentic bridge + AI panel shells\n",
-                         "[Init] Batch 4/8: Agentic bridge + AI panel shells\n");
+    // STARTUP HARDENING: Temporarily disabled during crash investigation.
+    // The agentic bridge has been a recurring crash point; skipping it allows
+    // the IDE to boot and the user can manually initialize it via menu.
+    // TODO: Re-enable once crash root cause is identified.
+    OutputDebugStringA("[StartupHardening] Skipping initializeAgenticBridge during boot\n");
+    idePipelineMilestone("[IDE-Pipeline] Batch 4/8: Agentic bridge SKIPPED (startup hardening)\n",
+                         "[Init] Batch 4/8: Agentic bridge SKIPPED (startup hardening)\n");
 
     // Initialize AI/Extensions panels so menu -> show() creates real UI
     if (isShuttingDown())
@@ -3819,11 +3900,12 @@ void Win32IDE::deferredHeavyInitBody()
     idePipelineMilestone("[IDE-Pipeline] Batch 5/8: Ghost text + failure detector + agent diff panel\n",
                          "[Init] Batch 5/8: Ghost text + failure detector + agent diff panel\n");
 
-    // Load persistent settings from %APPDATA%\RawrXD\settings.json
+    // Load settings on background thread; applySettings() marshaled to main thread via
+    // WM_APP_APPLY_SETTINGS to avoid GDI race on m_backgroundBrush/m_editorFont (RT-01).
     try
     {
         loadSettings();
-        applySettings();
+        SendMessage(m_hwndMain, WM_APP_APPLY_SETTINGS, 0, 0);
     }
     catch (...)
     {
@@ -3938,20 +4020,31 @@ void Win32IDE::deferredHeavyInitBody()
         OutputDebugStringA("ERROR: ModelSourceResolver init failed (unknown)\n");
     }
 
-    // GPU Backend Bridge — detect and initialize Vulkan compute if available
+    // GPU Backend Bridge — detect and initialize Vulkan compute if available.
+    // RT-01 triage gate: allow deterministic startup isolation without code churn.
     {
-        HMODULE hVulkan = LoadLibraryA("vulkan-1.dll");
-        if (hVulkan)
+        const bool disableVulkanProbe = (std::getenv("RAWRXD_DISABLE_VULKAN_PROBE_STARTUP") != nullptr);
+        if (disableVulkanProbe)
         {
-            m_gpuTextEnabled = true;
-            FreeLibrary(hVulkan);
-            OutputDebugStringA("GPU Backend Bridge: Vulkan ICD detected — GPU compute available\n");
-            appendToOutput("[GPU] Vulkan compute backend detected and ready\n", "Output", OutputSeverity::Info);
+            m_gpuTextEnabled = false;
+            OutputDebugStringA("GPU Backend Bridge: Startup Vulkan probe disabled by RAWRXD_DISABLE_VULKAN_PROBE_STARTUP\n");
+            appendToOutput("[GPU] Startup Vulkan probe disabled by env gate\n", "Output", OutputSeverity::Warning);
         }
         else
         {
-            m_gpuTextEnabled = false;
-            OutputDebugStringA("GPU Backend Bridge: No Vulkan ICD — CPU-only mode\n");
+            HMODULE hVulkan = LoadLibraryA("vulkan-1.dll");
+            if (hVulkan)
+            {
+                m_gpuTextEnabled = true;
+                FreeLibrary(hVulkan);
+                OutputDebugStringA("GPU Backend Bridge: Vulkan ICD detected — GPU compute available\n");
+                appendToOutput("[GPU] Vulkan compute backend detected and ready\n", "Output", OutputSeverity::Info);
+            }
+            else
+            {
+                m_gpuTextEnabled = false;
+                OutputDebugStringA("GPU Backend Bridge: No Vulkan ICD — CPU-only mode\n");
+            }
         }
     }
 
@@ -4030,36 +4123,39 @@ void Win32IDE::deferredHeavyInitBody()
         OutputDebugStringA("ERROR: initDecompilerView failed\n");
     }
 
-    // Initialize Phase 33: Voice Chat Engine
-    try
+    // Initialize Phase 33/44 voice stack only when explicitly enabled.
+    // RT-01: startup crashes are still in triage; keeping this opt-in removes a volatile
+    // early-startup path while preserving a switch for targeted validation.
+    const bool enableVoiceStartupInit = (std::getenv("RAWRXD_ENABLE_VOICE_STARTUP_INIT") != nullptr);
+    if (enableVoiceStartupInit)
     {
-        initVoiceChat();
-        voiceLoadPreferences();
-        createVoiceChatPanel(m_hwndMain);
-        registerVoiceHotkeys();
-        RegisterHotKey(m_hwndMain, kEmergencyWipeHotkeyId, MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_NOREPEAT, 'K');
-        updateVoiceStatusBar();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initVoiceChat failed\n");
-    }
+        // Initialize Phase 33: Voice Chat Engine
+        try
+        {
+            // Marshal Phase 33 UI/hotkey init to main thread to avoid worker-thread USER/GDI races.
+            SendMessage(m_hwndMain, WM_APP_INIT_VOICE_CHAT_UI, 0, 0);
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initVoiceChat failed\n");
+        }
 
-    // Initialize Phase 44: Voice Automation (TTS for responses)
-    try
-    {
-        RECT rc;
-        GetClientRect(m_hwndMain, &rc);
-        extern void Win32IDE_CreateVoiceAutomationPanel(HWND, int, int, int, int);
-        Win32IDE_CreateVoiceAutomationPanel(m_hwndMain, 0, rc.bottom - 80, rc.right, 80);
-        extern void Win32IDE_AddVoiceAutomationMenu(HMENU);
-        // Menu items already added in menu creation; just mark initialized
-        m_voiceAutomationInitialized = true;
-        OutputDebugStringA("Phase 44: VoiceAutomation panel created\n");
+        // Initialize Phase 44: Voice Automation (TTS for responses)
+        try
+        {
+            // Marshal to UI thread: creating Win32 controls on the deferred init worker can
+            // race USER/GDI state and has been linked to RT-01 startup crashes.
+            SendMessage(m_hwndMain, WM_APP_CREATE_VOICE_AUTOMATION_PANEL, 0, 0);
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: VoiceAutomation init failed\n");
+        }
     }
-    catch (...)
+    else
     {
-        OutputDebugStringA("ERROR: VoiceAutomation init failed\n");
+        OutputDebugStringA(
+            "[Smoke] Voice startup init skipped (set RAWRXD_ENABLE_VOICE_STARTUP_INIT=1 to enable)\n");
     }
 
     // Initialize Tier 3: Polish (QoL) — smooth caret, ligatures, file watcher, etc.
@@ -4279,6 +4375,7 @@ void Win32IDE::deferredHeavyInitBody()
                              "[Init] E0-7/8: main-window refresh skipped (no main HWND)\n");
     }
 
+    m_deferredHeavyInitComplete.store(true, std::memory_order_release);
     idePipelineMilestone("[IDE-Pipeline] E0-8: deferredHeavyInitBody returning\n",
                          "[Init] E0-8/8: background startup pipeline finished\n");
 }

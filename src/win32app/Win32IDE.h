@@ -83,6 +83,7 @@ struct DownloadProgress;
 #include "Win32IDE_TabManager.h"
 #include "Win32IDE_Types.h"
 #include "Win32IDE_WebView2.h"
+#include "SessionController.h"
 #include "Win32TerminalManager.h"
 #include "../bridge/symbol_index_bridge.hpp"
 #include <nlohmann/json.hpp>
@@ -433,6 +434,7 @@ class Win32IDE
     std::unique_ptr<AutonomousFeatureEngine> m_autonomousFeatureEngine;
     std::unique_ptr<RawrXD::AutonomousIntelligenceOrchestrator> m_autonomousOrchestrator;
     std::unique_ptr<RawrXD::AutonomousModelManager> m_autonomousModelManager;
+    std::unique_ptr<rawrxd::session::SessionController> m_sessionController;
     bool m_multiAgentEnabled = false;                              // Multi-agent orchestration toggle
     // (Removed: std::unique_ptr<SlashRouter> m_slashRouter — replaced by free
     //  RawrXD::SlashRouter namespace in Win32IDE_Commands.cpp.)
@@ -1962,6 +1964,12 @@ class Win32IDE
     static const UINT WM_SAFE_TO_REPLAY = WM_APP + 309;
     /// Posted by restoreSession() to defer startup model restore until UI create pipeline has returned.
     static const UINT WM_STARTUP_RESTORE_MODEL = WM_APP + 310;
+    // Apply settings safely on the main thread (posted from background threads)
+    static const UINT WM_APP_APPLY_SETTINGS = WM_APP + 350;
+    // Initialize voice chat UI/hotkeys safely on the main thread.
+    static const UINT WM_APP_INIT_VOICE_CHAT_UI = WM_APP + 352;
+    // Create VoiceAutomation panel safely on the main thread.
+    static const UINT WM_APP_CREATE_VOICE_AUTOMATION_PANEL = WM_APP + 351;
     /// Posted after chat throughput gauges update so status bar can show ~t/s est (safe from worker threads).
     static const UINT WM_STATUSBAR_REFRESH_COPILOT = WM_APP + 308;
 
@@ -2544,7 +2552,7 @@ class Win32IDE
     SnapState m_activeSnapState = SnapState::None;
     int m_currentMaxTokens;
     std::vector<std::string> m_availableModels;
-    mutable std::mutex m_availableModelsMutex;
+    mutable std::recursive_mutex m_availableModelsMutex;
     std::vector<std::string> m_userModelDirectories;
     std::vector<std::pair<std::string, std::string>> m_chatHistory;  // role, message
     std::string m_lastCopilotUserPrompt;
@@ -5409,6 +5417,7 @@ class Win32IDE
     // ========================================================================
     // IDE SELF-AUDIT & VERIFICATION — Phase 31: CT Scanner / Compliance Auditor
     // ========================================================================
+  public:
     struct RuntimeValidationCheck
     {
         std::string name;
@@ -5416,6 +5425,7 @@ class Win32IDE
         std::string detail;
     };
 
+  private:
     // Lifecycle
     void initAuditSystem();
 
@@ -7481,6 +7491,7 @@ class Win32IDE
     UINT_PTR m_caretBlinkTimer = 0;
 
     // Agent Ollama Client
+    std::atomic<bool> m_deferredHeavyInitComplete{false};  // Set at end of deferredHeavyInitBody; gates network inference
     bool m_ollamaClientInitialized = false;
     bool m_ollamaConnected = false;
     std::string m_ollamaEndpoint = "http://localhost:11435";

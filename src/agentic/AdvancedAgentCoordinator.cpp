@@ -1,5 +1,6 @@
 #include "AdvancedAgentCoordinator.h"
 #include "LockFreeAgentCoordinator.h"
+#include "core/thread_lifecycle_registry.h"
 #include <algorithm>
 #include <numeric>
 #include <random>
@@ -34,9 +35,21 @@ bool AdvancedAgentCoordinator::initialize(const ScalingPolicy& scaling,
     m_running = true;
 
     // Start background threads
-    m_scalingThread = std::thread(&AdvancedAgentCoordinator::scalingLoop, this);
-    m_healthMonitorThread = std::thread(&AdvancedAgentCoordinator::healthMonitoringLoop, this);
-    m_recoveryThread = std::thread(&AdvancedAgentCoordinator::recoveryLoop, this);
+    m_scalingThread = std::thread([this]() {
+        REGISTER_THREAD("AdvancedAgentCoordinator", "scaling loop");
+        scalingLoop();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
+    });
+    m_healthMonitorThread = std::thread([this]() {
+        REGISTER_THREAD("AdvancedAgentCoordinator", "health monitor");
+        healthMonitoringLoop();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
+    });
+    m_recoveryThread = std::thread([this]() {
+        REGISTER_THREAD("AdvancedAgentCoordinator", "recovery loop");
+        recoveryLoop();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
+    });
 
     return true;
 }
@@ -550,6 +563,7 @@ AgentMetrics AdvancedAgentCoordinator::getCoordinatorMetrics() const {
 
 void AdvancedAgentCoordinator::scalingLoop() {
     while (m_running) {
+        CHECK_SHUTDOWN_AND_RETURN();
         std::this_thread::sleep_for(std::chrono::seconds(30));
         evaluateScalingNeeds();
     }
@@ -562,6 +576,7 @@ void AdvancedAgentCoordinator::healthMonitoringLoop() {
     static constexpr int kStaleThresholdSec = 120;
 
     while (m_running) {
+        CHECK_SHUTDOWN_AND_RETURN();
         std::this_thread::sleep_for(std::chrono::seconds(60));
 
         std::vector<std::string> toQuarantine;
@@ -597,6 +612,7 @@ void AdvancedAgentCoordinator::healthMonitoringLoop() {
 
 void AdvancedAgentCoordinator::recoveryLoop() {
     while (m_running) {
+        CHECK_SHUTDOWN_AND_RETURN();
         std::this_thread::sleep_for(std::chrono::seconds(10));
 
         std::lock_guard<std::mutex> lock(m_mutex);

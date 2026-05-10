@@ -320,6 +320,12 @@ void Win32IDE::initBackendManager()
     m_activeBackend = AIBackendType::LocalGGUF;
     m_backendManagerInitialized = true;
 
+    // Signal SessionController that runtime is ready for inference
+    if (m_sessionController)
+    {
+        m_sessionController->MarkPhaseReady();
+    }
+
     logInfo("[BackendSwitcher] Initialized — active backend: " + getActiveBackendName());
 }
 

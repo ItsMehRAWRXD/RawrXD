@@ -454,8 +454,11 @@ bool resolveTitanGhostExports()
         return true;
     }
 
-    static const std::array<const char*, 4> kTitanDllCandidates = {
-        "D:\\rawrxd\\build_smoke_verify2\\bin\\RawrXD_Titan.dll", "D:\\rawrxd\\bin\\RawrXD_Titan.dll",
+    static const std::array<const char*, 6> kTitanDllCandidates = {
+        "D:\\rawrxd\\build-ninja\\bin\\RawrXD_Titan.dll",
+        "D:\\rawrxd\\build_smoke_verify2\\bin\\RawrXD_Titan.dll",
+        "D:\\rawrxd\\bin\\RawrXD_Titan.dll",
+        "D:\\rxdn_ninja\\bin\\RawrXD_Titan.dll",
         "RawrXD_Titan.dll", "bin\\RawrXD_Titan.dll"};
 
     const char* loadedPath = nullptr;
@@ -1906,6 +1909,7 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
 
         if (provider == GhostProviderKind::Titan)
         {
+            const auto titanStart = std::chrono::high_resolution_clock::now();
             if (!m_useTitanKernel)
             {
                 lastReason = "Titan provider disabled (m_useTitanKernel=false)";
@@ -1919,17 +1923,25 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
             std::string titanCompletion = requestTitanGhostTextCompletion(providerContext, language, suffix, filePath,
                                                                           cursorLine, cursorCol, expectedSeq,
                                                                           streamToUi);
+            const auto titanEnd = std::chrono::high_resolution_clock::now();
+            const auto titanMs = std::chrono::duration_cast<std::chrono::milliseconds>(titanEnd - titanStart).count();
             if (!titanCompletion.empty())
             {
+                LOG_INFO("[GhostText] Titan provider succeeded in " + std::to_string(titanMs) + "ms, tokens=" + std::to_string(titanCompletion.size()));
                 std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                 m_ghostTextMetrics.localWins++;
                 return GhostTextCacheEntry{titanCompletion, "", "", false, 0};
             }
-            lastReason = "Titan provider returned empty completion";
+            lastReason = "Titan provider returned empty completion (took " + std::to_string(titanMs) + "ms)";
         }
 
         if (provider == GhostProviderKind::Agentic)
         {
+            if (!m_deferredHeavyInitComplete.load(std::memory_order_acquire))
+            {
+                lastReason = "deferred init not complete; skipping Agentic provider";
+                continue;
+            }
             if (!rawrxd::isAgenticLayerAvailable())
             {
                 lastReason = "Agentic provider unavailable";
@@ -1983,6 +1995,13 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
 
         if (provider == GhostProviderKind::Local)
         {
+            // Do not race against deferredHeavyInitBody: inference client must finish
+            // initialising (including testOllamaConnection) before we attempt any HTTP.
+            if (!m_deferredHeavyInitComplete.load(std::memory_order_acquire))
+            {
+                lastReason = "deferred init not complete; skipping Local provider";
+                continue;
+            }
             // ---- Primary: OrchestratorBridge FIM (uses NativeInferenceClient + FIMPromptBuilder) ----
             {
                 auto& orchBridge = RawrXD::Agent::OrchestratorBridge::Instance();
@@ -2087,7 +2106,7 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
             {
                 auto tokens = m_nativeEngine->Tokenize("Complete the following " + language +
                                                        " code. Output ONLY the completion, "
-                                                       "no explanation, no markdown:\n\n" +
+                                                       "no explanation, no stubs, no markdown:\n\n" +
                                                        context);
 
                 auto generated = m_nativeEngine->Generate(tokens, 64);
@@ -2109,7 +2128,7 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
                 std::string response;
                 std::string prompt = "Complete the following " + language +
                                      " code. "
-                                     "Output ONLY the completion, no explanation, no markdown. "
+                                     "Output ONLY the completion, no explanation, no stubs, no markdown. "
                                      "Maximum 3 lines:\n\n" +
                                      context;
                 if (trySendToOllama(prompt, response))

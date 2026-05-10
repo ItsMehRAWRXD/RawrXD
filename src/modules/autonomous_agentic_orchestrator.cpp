@@ -16,34 +16,46 @@ std::string ToLowerCopy(std::string s) {
 
 namespace RawrXD {
 
+// Free-function safety gate checks (replaces lambdas to avoid std::function destructor crashes).
+static bool CheckFileSystemAccess(const RawrXD::ExecutionContext& ctx, void* /*ctx*/)
+{
+    return std::filesystem::exists(ctx.workspace_path) &&
+           std::filesystem::is_directory(ctx.workspace_path);
+}
+
+static bool CheckMemoryLimit(const RawrXD::ExecutionContext& ctx, void* /*ctx*/)
+{
+    return ctx.max_memory_usage > 0 && ctx.max_memory_usage <= 8ULL * 1024 * 1024 * 1024; // 8GB max
+}
+
+static bool CheckExecutionTimeLimit(const RawrXD::ExecutionContext& ctx, void* /*ctx*/)
+{
+    return ctx.max_execution_time.count() > 0 &&
+           ctx.max_execution_time <= std::chrono::hours(1);
+}
+
 AutonomousAgenticOrchestrator::AutonomousAgenticOrchestrator() {
-    // Initialize default safety gates
-    AddSafetyGate({
+    // Initialize default safety gates using function pointers (no std::function heap allocation).
+    AddSafetyGate(SafetyGate{
         "FileSystemAccess",
-        [](const ExecutionContext& ctx) {
-            return std::filesystem::exists(ctx.workspace_path) && 
-                   std::filesystem::is_directory(ctx.workspace_path);
-        },
+        &CheckFileSystemAccess,
+        nullptr,
         "Workspace path is not accessible or does not exist",
         true
     });
     
-    AddSafetyGate({
+    AddSafetyGate(SafetyGate{
         "MemoryLimit",
-        [](const ExecutionContext& ctx) {
-            // Basic memory check - in production would check actual usage
-            return ctx.max_memory_usage > 0 && ctx.max_memory_usage <= 8ULL * 1024 * 1024 * 1024; // 8GB max
-        },
+        &CheckMemoryLimit,
+        nullptr,
         "Memory limit exceeds safe threshold",
         false
     });
     
-    AddSafetyGate({
+    AddSafetyGate(SafetyGate{
         "ExecutionTimeLimit",
-        [](const ExecutionContext& ctx) {
-            return ctx.max_execution_time.count() > 0 && 
-                   ctx.max_execution_time <= std::chrono::hours(1);
-        },
+        &CheckExecutionTimeLimit,
+        nullptr,
         "Execution time limit exceeds safe threshold",
         false
     });
@@ -60,7 +72,7 @@ bool AutonomousAgenticOrchestrator::Initialize(const ExecutionContext& context) 
     
     // Validate execution context
     for (const auto& gate : safety_gates_) {
-        if (gate.is_critical && !gate.check_function(execution_context_)) {
+        if (gate.is_critical && gate.check_function && !gate.check_function(execution_context_, gate.context)) {
             if (onSafetyViolation) {
                 onSafetyViolation("Initialization", gate.failure_message);
             }
@@ -189,7 +201,7 @@ bool AutonomousAgenticOrchestrator::ExecuteMultiStepPlan(const std::vector<std::
     for (size_t i = 0; i < steps.size(); ++i) {
         // Check safety gates before each step
         for (const auto& gate : gates) {
-            if (!gate.check_function(execution_context_)) {
+            if (gate.check_function && !gate.check_function(execution_context_, gate.context)) {
                 HandleSafetyViolation(gate.failure_message);
                 success = false;
                 break;
@@ -334,7 +346,7 @@ bool AutonomousAgenticOrchestrator::ExecuteSafetyChecks(const ExecutionPlan& pla
     std::lock_guard<std::mutex> lock(safety_mutex_);
     
     for (const auto& gate : safety_gates_) {
-        if (!gate.check_function(execution_context_)) {
+        if (gate.check_function && !gate.check_function(execution_context_, gate.context)) {
             if (gate.is_critical) {
                 HandleSafetyViolation(gate.failure_message);
                 return false;

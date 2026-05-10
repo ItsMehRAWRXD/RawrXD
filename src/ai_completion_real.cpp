@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <string>
+#include "core/thread_lifecycle_registry.h"
 #include <vector>
 #include <iostream>
 #include <thread>
@@ -84,6 +85,7 @@ public:
         }
         
         completion_thread_ = std::thread([this, context, token_callback, complete_callback]() {
+            REGISTER_THREAD("AICompletionEngine", "streaming completion");
             std::string completion = GenerateCompletion(context);
             
             // Stream word by word for smooth UX
@@ -97,6 +99,7 @@ public:
             if (!stop_requested_) {
                 complete_callback();
             }
+            RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
         });
     }
     

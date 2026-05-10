@@ -104,6 +104,19 @@ static bool PlaceholderApertureApisAvailable()
     return pVirtualAlloc2 && pMapViewOfFile3 && pUnmapViewOfFile2;
 }
 
+static bool IsEnvEnabled(const char* name)
+{
+    if (!name || !name[0])
+        return false;
+
+    char value[16] = {};
+    const DWORD len = GetEnvironmentVariableA(name, value, static_cast<DWORD>(sizeof(value)));
+    if (len == 0 || len >= sizeof(value))
+        return false;
+
+    return value[0] != '0';
+}
+
 static FARPROC ResolveKernelProcAddress(const char* procName)
 {
     if (!procName || !procName[0])
@@ -2310,25 +2323,48 @@ bool RawrXDModelLoader::InitializeSlidingWindow(uint64_t fileSize)
                                          ? fileSize
                                          : std::min<uint64_t>(fileSize, effectiveWindowSize);
     const SIZE_T apertureSize = static_cast<SIZE_T>(apertureSizeU64);
+    SYSTEM_INFO si = {};
+    GetSystemInfo(&si);
+    const SIZE_T granularity =
+        static_cast<SIZE_T>(si.dwAllocationGranularity ? si.dwAllocationGranularity : 65536u);
+    const SIZE_T alignedApertureSize =
+        ((apertureSize + granularity - 1) / granularity) * granularity;
+    const bool apertureTrace = IsEnvEnabled("RAWRXD_APERTURE_TRACE");
 
     if (PlaceholderApertureApisAvailable())
     {
         // [ENHANCEMENT] Atomic Placeholder Reservation
         // Reserves virtual address space without triggering commit charge
-        virtualBase = pVirtualAlloc2(GetCurrentProcess(), NULL, apertureSize, MEM_RESERVE | MEM_RESERVE_PLACEHOLDER,
-                                     PAGE_NOACCESS, NULL, 0);
+        if (apertureTrace)
+        {
+            printf("[RawrXD][ApertureTrace] VirtualAlloc2 req_size=%zu (0x%zx) aligned_size=%zu (0x%zx) granularity=%zu (0x%zx) flags=0x%lx protect=0x%lx params=%u\n",
+                   static_cast<size_t>(apertureSize), static_cast<size_t>(apertureSize),
+                   static_cast<size_t>(alignedApertureSize), static_cast<size_t>(alignedApertureSize),
+                   static_cast<size_t>(granularity), static_cast<size_t>(granularity),
+                   static_cast<unsigned long>(MEM_RESERVE | MEM_RESERVE_PLACEHOLDER),
+                   static_cast<unsigned long>(PAGE_NOACCESS), 0u);
+        }
+
+        virtualBase = pVirtualAlloc2(GetCurrentProcess(), NULL, alignedApertureSize,
+                                     MEM_RESERVE | MEM_RESERVE_PLACEHOLDER, PAGE_NOACCESS, NULL, 0);
         if (virtualBase)
         {
             printf("[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved %zu MB placeholder window (zero commit)\n",
-                   apertureSize / (1024 * 1024));
+                   alignedApertureSize / (1024 * 1024));
             // Update windowSize to match the actual allocated placeholder size
-            this->windowSize = apertureSize;
+            this->windowSize = alignedApertureSize;
             m_placeholderApertureActive = true;
             return true;
         }
         else
         {
             DWORD error = GetLastError();
+            if (apertureTrace)
+            {
+                printf("[RawrXD][ApertureTrace] VirtualAlloc2 fail err=%lu req_size=%zu aligned_size=%zu granularity=%zu\n",
+                       error, static_cast<size_t>(apertureSize), static_cast<size_t>(alignedApertureSize),
+                       static_cast<size_t>(granularity));
+            }
             printf("[RawrXD] VirtualAlloc2 with MEM_RESERVE_PLACEHOLDER failed (Error: %lu)\n", error);
         }
     }

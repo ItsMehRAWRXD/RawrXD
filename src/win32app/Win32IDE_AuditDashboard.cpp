@@ -315,7 +315,7 @@ std::vector<Win32IDE::RuntimeValidationCheck> Win32IDE::runCriticalValidationBat
                                      : 0;
         size_t cachedModelCount = 0;
         {
-            std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+            std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
             cachedModelCount = m_availableModels.size();
         }
         const bool modelDiscoveryOk = (modelUiCount > 0) || (cachedModelCount > 0) || !ollamaModels.empty();

@@ -5672,9 +5672,17 @@ void Win32IDE::showFindDialog()
 
     if (!m_hwndFindDialog)
     {
+        // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
         HWND hwndDlg =
-            CreateWindowExW(WS_EX_DLGMODALFRAME, L"STATIC", L"Find", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+            CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Find", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
                             100, 100, 400, 150, m_hwndMain, nullptr, m_hInstance, nullptr);
+        if (!hwndDlg)
+        {
+            const DWORD createErr = GetLastError();
+            appendToOutput("[UI] Failed to create Find dialog (GetLastError=" + std::to_string(createErr) + ")\n",
+                           "Errors", OutputSeverity::Error);
+            return;
+        }
         m_hwndFindDialog = hwndDlg;
 
         CreateWindowExW(0, L"STATIC", L"Find what:", WS_CHILD | WS_VISIBLE, 10, 15, 80, 20, hwndDlg, nullptr,
@@ -5707,9 +5715,17 @@ void Win32IDE::showReplaceDialog()
         return;
     }
 
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
     HWND hwndDlg =
-        CreateWindowExW(WS_EX_DLGMODALFRAME, L"STATIC", L"Replace", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Replace", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
                         100, 100, 400, 200, m_hwndMain, nullptr, m_hInstance, nullptr);
+    if (!hwndDlg)
+    {
+        const DWORD createErr = GetLastError();
+        appendToOutput("[UI] Failed to create Replace dialog (GetLastError=" + std::to_string(createErr) + ")\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
     m_hwndReplaceDialog = hwndDlg;
 
     CreateWindowExW(0, L"STATIC", L"Find what:", WS_CHILD | WS_VISIBLE, 10, 15, 80, 20, hwndDlg, nullptr, m_hInstance,
@@ -6666,9 +6682,18 @@ INT_PTR CALLBACK Win32IDE::ReplaceDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
 
 void Win32IDE::showSnippetManager()
 {
-    HWND hwndDlg = CreateWindowExW(WS_EX_DLGMODALFRAME, L"STATIC", L"Snippet Manager",
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
+    HWND hwndDlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Snippet Manager",
                                    WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 100, 100, 600, 500, m_hwndMain,
                                    nullptr, m_hInstance, nullptr);
+    if (!hwndDlg)
+    {
+        const DWORD createErr = GetLastError();
+        appendToOutput("[UI] Failed to create Snippet Manager dialog (GetLastError=" + std::to_string(createErr) +
+                           ")\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
 
     CreateWindowExW(0, L"STATIC", L"Snippets:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 20, hwndDlg, nullptr, m_hInstance,
                     nullptr);
@@ -7175,6 +7200,47 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
         appendToOutput("Model loaded into Agentic Bridge (streaming GGUF skipped).\n", "Output", OutputSeverity::Info);
     if (ggufOk || bridgeOk)
     {
+        // Ensure native engine is initialized for ghost text completions
+        // This is needed when model is loaded via agentic bridge without GGUF streaming
+        if (!m_nativeEngine)
+        {
+            try
+            {
+                m_nativeEngine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+                auto memPlugin = std::make_shared<RawrXD::Modules::NativeMemoryModule>();
+                m_nativeEngine->RegisterMemoryPlugin(memPlugin);
+                appendToOutput("Initialized Native CPU Inference Engine for ghost text.\n", "Output", OutputSeverity::Info);
+            }
+            catch (const std::exception& e)
+            {
+                appendToOutput(std::string("Failed to init native engine for ghost text: ") + e.what() + "\n", "Errors", OutputSeverity::Warning);
+            }
+        }
+        // Load model into native engine for ghost text completions
+        if (m_nativeEngine && !m_nativeEngineLoaded)
+        {
+            RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine.get());
+            if (!engine->IsModelLoaded())
+            {
+                appendToOutput("Loading model into Native Engine for ghost text: " + filepath + "\n", "Output", OutputSeverity::Info);
+                if (engine->LoadModel(filepath))
+                {
+                    m_nativeEngineLoaded = true;
+                    appendToOutput("✅ Native Engine Model Loaded for ghost text completions.\n", "Output", OutputSeverity::Info);
+                }
+                else
+                {
+                    appendToOutput("⚠️ Native Engine Model Load failed (ghost text will use fallback providers).\n", "Errors", OutputSeverity::Warning);
+                }
+            }
+        }
+        // Enable Titan kernel for ghost text completions when model is loaded
+        // This allows the ghost text provider cascade to use Titan inference
+        if (!m_useTitanKernel)
+        {
+            m_useTitanKernel = true;
+            appendToOutput("✅ Titan Kernel enabled for ghost text completions.\n", "Output", OutputSeverity::Info);
+        }
         // Sync path: no pending replay — WM_SAFE_TO_REPLAY not posted.
         onModelReadyUnified(false);
         appendModelLoadReadyCopilotTurns(filepath, true);
@@ -8851,9 +8917,17 @@ void Win32IDE::showCommitDialog()
         return;
     }
 
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
     HWND hwndDlg =
-        CreateWindowExW(WS_EX_DLGMODALFRAME, L"STATIC", L"Git Commit", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Git Commit", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
                         150, 150, 500, 200, m_hwndMain, nullptr, m_hInstance, nullptr);
+    if (!hwndDlg)
+    {
+        const DWORD createErr = GetLastError();
+        appendToOutput("[UI] Failed to create Git Commit dialog (GetLastError=" + std::to_string(createErr) + ")\n",
+                       "Errors", OutputSeverity::Error);
+        return;
+    }
 
     CreateWindowExW(0, L"STATIC", L"Commit Message:", WS_CHILD | WS_VISIBLE, 10, 10, 120, 20, hwndDlg, nullptr,
                     m_hInstance, nullptr);
@@ -9108,6 +9182,19 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
     SCOPED_METRIC("inference.generate_response");
     METRICS.increment("inference.requests_total");
 
+    // Phase barrier: enqueue if runtime not ready
+    if (m_sessionController)
+    {
+        std::string reason;
+        if (!m_sessionController->IsExecutionReady(&reason))
+        {
+            std::string status;
+            if (m_sessionController->EnqueuePendingInference(prompt, &status))
+                return "[Deferred] " + status;
+            return "[Rejected] " + status;
+        }
+    }
+
     if (m_inferenceRunning.load())
     {
         METRICS.increment("inference.requests_rejected");
@@ -9312,6 +9399,28 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
 {
     METRICS.increment("inference.async_requests_total");
+
+    // Phase barrier: enqueue if runtime not ready
+    if (m_sessionController)
+    {
+        std::string reason;
+        if (!m_sessionController->IsExecutionReady(&reason))
+        {
+            std::string status;
+            if (m_sessionController->EnqueuePendingInference(prompt, &status))
+            {
+                if (callback)
+                    callback("[Deferred] " + status, false);
+            }
+            else
+            {
+                if (callback)
+                    callback("[Rejected] " + status, true);
+            }
+            return;
+        }
+    }
+
     {
         std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
@@ -10710,7 +10819,7 @@ void Win32IDE::populateModelSelector()
     if (!m_hwndModelSelector)
         return;
 
-    std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+    std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
 
     OutputDebugStringA("[ModelDiscovery] populateModelSelector begin\n");
 
@@ -10738,12 +10847,20 @@ void Win32IDE::populateModelSelector()
         }
     };
 
-    // Preserve prior selection if possible
+    // Preserve prior selection if possible; otherwise prefer the explicit override
+    // or the currently loaded local GGUF path.
     std::string previousSelection;
     int prevIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
     if (prevIdx >= 0 && prevIdx < (int)m_availableModels.size())
     {
         previousSelection = m_availableModels[(size_t)prevIdx];
+    }
+    if (previousSelection.empty())
+    {
+        if (!m_ollamaModelOverride.empty())
+            previousSelection = m_ollamaModelOverride;
+        else if (!m_loadedModelPath.empty())
+            previousSelection = m_loadedModelPath;
     }
 
     // Clear existing items
@@ -10849,13 +10966,15 @@ void Win32IDE::populateModelSelector()
         }
     }
 
-    // Restore prior selection when possible
+    // Restore prior selection when possible.
     int selectedIdx = -1;
     if (!previousSelection.empty())
     {
         for (size_t i = 0; i < m_availableModels.size(); ++i)
         {
-            if (m_availableModels[i] == previousSelection)
+            const std::string resolvedCandidate =
+                resolveLocalModelSelectionPath(m_availableModels[i], m_modelPaths, m_userModelDirectories);
+            if (m_availableModels[i] == previousSelection || resolvedCandidate == previousSelection)
             {
                 selectedIdx = (int)i;
                 break;
@@ -11194,7 +11313,7 @@ void Win32IDE::HandleCopilotSend()
     int comboCount = (int)SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
     bool modelsEmpty = false;
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         modelsEmpty = m_availableModels.empty();
     }
     if (comboCount <= 0 || modelsEmpty)
@@ -11202,7 +11321,7 @@ void Win32IDE::HandleCopilotSend()
         OutputDebugStringA("[HandleCopilotSend] model list empty, forcing repopulate\n");
         populateModelSelector();
         comboCount = (int)SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         modelsEmpty = m_availableModels.empty();
     }
 
@@ -11219,7 +11338,7 @@ void Win32IDE::HandleCopilotSend()
     int modelIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
     std::string selectedModel;
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
             modelIdx = 0;
         if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
@@ -11643,7 +11762,19 @@ void Win32IDE::HandleCopilotSend()
                 "(Ensure agentic init completed; local GGUF or Ollama must be reachable.)\n");
         }
         // Local GGUF + agentic: `MinimalAgentController` + tools (parity with RawrEngine `/smoke`, Route C).
-        if (wantsAgenticChat && layerAvailable && selectedLocalModel && isModelLoaded())
+        // DEFENSE: RAWRXD_BYPASS_AGENTIC_CHAT=1 skips the agentic orchestrator path
+        // which crashes in autonomous_agentic_orchestrator.cpp SafetyGate destructor (AV 0xC0000005).
+        // Falls through to generateResponseAsync (local pipeline) which is stable.
+        const bool bypassAgenticChat = []()
+        {
+            const char* v = std::getenv("RAWRXD_BYPASS_AGENTIC_CHAT");
+            return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
+        }();
+        if (bypassAgenticChat)
+        {
+            OutputDebugStringA("[HandleCopilotSend] RAWRXD_BYPASS_AGENTIC_CHAT=1 — skipping agentic path, using generateResponseAsync\n");
+        }
+        else if (wantsAgenticChat && layerAvailable && selectedLocalModel && isModelLoaded())
         {
             rawrxd::MinimalAgenticRequest req;
             req.message = agentRouteUserMessage;
@@ -12396,7 +12527,7 @@ void Win32IDE::onModelSelectionChanged()
 
     std::string selectedModel;
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         if (m_availableModels.empty())
             return;
         if (idx < 0 || idx >= (int)m_availableModels.size())
@@ -16227,11 +16358,15 @@ static HWND RunInputDialog(HWND parent, const wchar_t* title, InputDialogParams*
         if (!s_inputDialogClass)
             return nullptr;
     }
-    HWND dlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE, L"RawrXD_InputDialog", title ? title : L"Input",
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
+    HWND dlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_TOPMOST, L"RawrXD_InputDialog", title ? title : L"Input",
                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 348, 128, parent,
                                nullptr, hInst, params);
     if (!dlg)
+    {
+        OutputDebugStringA("[UI] Failed to create RawrXD_InputDialog window\n");
         return nullptr;
+    }
     ShowWindow(dlg, SW_SHOW);
     return dlg;
 }

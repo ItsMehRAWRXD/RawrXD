@@ -73,8 +73,12 @@ void Win32IDE::initNativeInferenceClient()
         }
     }
 
-    // Test initial connection
-    testOllamaConnection();
+    // STARTUP HARDENING: Skip connection test during boot.
+    // The WinHTTP path has been a recurring crash point; the connection will be
+    // tested lazily when the user actually tries to use AI features.
+    // testOllamaConnection();
+    m_ollamaStatus = "Deferred (startup hardening)";
+    OutputDebugStringA("[StartupHardening] testOllamaConnection deferred\n");
 
     LOG_INFO("Agent Ollama client initialized");
 }
@@ -108,7 +112,7 @@ void Win32IDE::refreshAgenticChatSessionContext()
         std::string tag;
         const int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
         {
-            std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+            std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
             if (idx >= 0 && idx < (int)m_availableModels.size())
             {
                 tag = m_availableModels[idx];
@@ -325,7 +329,7 @@ bool Win32IDE::testOllamaConnection()
                         // simple parse: find "name":"..."
                         size_t discoveredCount = 0;
                         {
-                            std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+                            std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
                             m_availableModels.clear();
                             size_t pos = 0;
                             while ((pos = body.find("\"name\":\"", pos)) != std::string::npos)

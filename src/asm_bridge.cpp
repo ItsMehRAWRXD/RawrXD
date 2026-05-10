@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cmath>
 #include <nlohmann/json.hpp>
+#include "core/thread_lifecycle_registry.h"
 
 // Forward declarations for variables used before definition
 static std::atomic<bool> g_hybrid_gpu_ready{false};
@@ -515,9 +516,12 @@ static std::thread g_pipe_thread;
 extern "C" void StartPipeServer() {
     if (g_pipe_running.exchange(true)) return;
     g_pipe_thread = std::thread([]() {
+        REGISTER_THREAD("asm_bridge", "pipe server");
         while (g_pipe_running.load()) {
+            CHECK_SHUTDOWN_AND_RETURN();
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
     });
 }
 
@@ -1827,10 +1831,13 @@ static std::thread g_raft_thread;
 extern "C" void RaftEventLoop() {
     if (g_raft_running.exchange(true)) return;
     g_raft_thread = std::thread([]() {
+        REGISTER_THREAD("asm_bridge", "raft consensus");
         while (g_raft_running.load()) {
+            CHECK_SHUTDOWN_AND_RETURN();
             // Process Raft consensus events
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
     });
 }
 

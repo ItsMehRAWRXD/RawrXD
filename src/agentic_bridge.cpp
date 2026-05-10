@@ -1,4 +1,5 @@
 #include "agentic_bridge.hpp"
+#include "core/thread_lifecycle_registry.h"
 #include <windows.h>
 #include <winhttp.h>
 #include <sstream>
@@ -61,7 +62,11 @@ bool AIAgenticBridge::Initialize(const std::string& endpoint, const std::string&
     if (status != 200) return false;
     connected_.store(true);
     running_.store(true);
-    workerThread_ = std::thread(&AIAgenticBridge::ProcessQueue, this);
+    workerThread_ = std::thread([this]() {
+        REGISTER_THREAD("AIAgenticBridge", "HTTP queue processor");
+        ProcessQueue();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
+    });
     return true;
 }
 
@@ -180,6 +185,8 @@ double AIAgenticBridge::GetAverageResponseTime() const {
 
 void AIAgenticBridge::ProcessQueue() {
     while (running_.load()) {
+        CHECK_SHUTDOWN_AND_RETURN();
+        
         std::unique_lock<std::mutex> lock(queueMutex_);
         queueCV_.wait(lock, [this] { return !requestQueue_.empty() || !running_.load(); });
         if (!running_.load()) break;

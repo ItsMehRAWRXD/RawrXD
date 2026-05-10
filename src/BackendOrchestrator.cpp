@@ -4,12 +4,14 @@
 #include "gguf_loader.h"
 #include "kernels/kv_accum_avx512.h"
 #include "win32app/TitanIPC.h"
+#include "core/thread_lifecycle_registry.h"
 
 
 #include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <cctype>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -170,11 +172,24 @@ PFN_VirtualAlloc2 GetVirtualAlloc2Ptr()
     static PFN_VirtualAlloc2 fn = []() -> PFN_VirtualAlloc2
     {
         HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
-        if (!kernel32)
+        if (kernel32)
         {
-            return nullptr;
+            if (auto p = reinterpret_cast<PFN_VirtualAlloc2>(GetProcAddress(kernel32, "VirtualAlloc2")))
+            {
+                return p;
+            }
         }
-        return reinterpret_cast<PFN_VirtualAlloc2>(GetProcAddress(kernel32, "VirtualAlloc2"));
+
+        HMODULE kernelBase = GetModuleHandleW(L"KernelBase.dll");
+        if (!kernelBase)
+        {
+            kernelBase = LoadLibraryW(L"KernelBase.dll");
+        }
+        if (kernelBase)
+        {
+            return reinterpret_cast<PFN_VirtualAlloc2>(GetProcAddress(kernelBase, "VirtualAlloc2"));
+        }
+        return nullptr;
     }();
     return fn;
 }
@@ -1344,8 +1359,62 @@ bool reserveSlidingAperture(SIZE_T requested_size, void*& out_view, size_t& out_
         }
     }
     const SIZE_T large_page_alignment = 2ULL * 1024ULL * 1024ULL;
+    const bool apertureTrace = readEnvFlag("RAWRXD_APERTURE_TRACE", false);
 
     PFN_VirtualAlloc2 virtualAlloc2 = GetVirtualAlloc2Ptr();
+    const bool forcePlaceholder = readEnvFlag("RAWRXD_FORCE_PLACEHOLDER", false);
+    static constexpr SIZE_T kPlaceholderThresholdBytes = 32ULL * 1024ULL * 1024ULL * 1024ULL;
+    const bool autoPlaceholder = requested_size >= kPlaceholderThresholdBytes;
+    const bool usePlaceholder = forcePlaceholder || autoPlaceholder;
+
+    if (usePlaceholder && virtualAlloc2)
+    {
+        SIZE_T forced_size = alignUpSize(requested_size, granularity);
+        if (forced_size < min_reserve)
+        {
+            forced_size = min_reserve;
+        }
+
+        if (apertureTrace)
+        {
+            std::ostringstream oss;
+            oss << "[RawrXD][ApertureTrace][BackendOrchestrator] "
+                << (forcePlaceholder ? "FORCE_PLACEHOLDER" : "AUTO_PLACEHOLDER")
+                << " VirtualAlloc2 "
+                << "size=" << static_cast<unsigned long long>(forced_size)
+                << " granularity=" << static_cast<unsigned long long>(granularity)
+                << " flags=0x" << std::hex << static_cast<unsigned long>(MEM_RESERVE | MEM_RESERVE_PLACEHOLDER)
+                << " protect=0x" << static_cast<unsigned long>(PAGE_NOACCESS)
+                << " params=0\n";
+            std::fputs(oss.str().c_str(), stderr);
+            std::fflush(stderr);
+            OutputDebugStringA(oss.str().c_str());
+        }
+
+        void* forced_view = virtualAlloc2(GetCurrentProcess(), nullptr, forced_size,
+                                          MEM_RESERVE | MEM_RESERVE_PLACEHOLDER, PAGE_NOACCESS, nullptr, 0);
+        if (forced_view)
+        {
+            out_view = forced_view;
+            out_reserved_size = static_cast<size_t>(forced_size);
+            out_has_placeholder_reservation = true;
+            RecordGgufAlignmentMode(kAlignModeSys64KB);
+            return true;
+        }
+
+        if (apertureTrace)
+        {
+            const DWORD err = GetLastError();
+            std::ostringstream oss;
+            oss << "[RawrXD][ApertureTrace][BackendOrchestrator] "
+                << (forcePlaceholder ? "FORCE_PLACEHOLDER" : "AUTO_PLACEHOLDER")
+                << " failed err="
+                << static_cast<unsigned long>(err) << "\n";
+            std::fputs(oss.str().c_str(), stderr);
+            std::fflush(stderr);
+            OutputDebugStringA(oss.str().c_str());
+        }
+    }
 
     while (attempt_size >= min_reserve)
     {
@@ -1381,6 +1450,23 @@ bool reserveSlidingAperture(SIZE_T requested_size, void*& out_view, size_t& out_
                 param.Type = MemExtendedParameterAddressRequirements;
                 param.Pointer = &addrReq;
 
+                if (apertureTrace)
+                {
+                    std::ostringstream oss;
+                    oss << "[RawrXD][ApertureTrace][BackendOrchestrator] VirtualAlloc2 "
+                        << "req_size=" << static_cast<unsigned long long>(attempt_size)
+                        << " aligned_size=" << static_cast<unsigned long long>(aligned_attempt_size)
+                        << " alignment=" << static_cast<unsigned long long>(alignment)
+                        << " granularity=" << static_cast<unsigned long long>(granularity)
+                        << " flags=0x" << std::hex
+                        << static_cast<unsigned long>(MEM_RESERVE | MEM_RESERVE_PLACEHOLDER)
+                        << " protect=0x" << static_cast<unsigned long>(PAGE_NOACCESS)
+                        << " params=1\n";
+                    std::fputs(oss.str().c_str(), stderr);
+                    std::fflush(stderr);
+                    OutputDebugStringA(oss.str().c_str());
+                }
+
                 view = virtualAlloc2(GetCurrentProcess(), nullptr, aligned_attempt_size,
                                      MEM_RESERVE | MEM_RESERVE_PLACEHOLDER, PAGE_NOACCESS, &param, 1);
                 if (view)
@@ -1397,6 +1483,21 @@ bool reserveSlidingAperture(SIZE_T requested_size, void*& out_view, size_t& out_
                         RecordGgufAlignmentMode(kAlignModeSys64KB);
                     }
                     return true;
+                }
+
+                if (apertureTrace)
+                {
+                    const DWORD err = GetLastError();
+                    std::ostringstream oss;
+                    oss << "[RawrXD][ApertureTrace][BackendOrchestrator] VirtualAlloc2 fail "
+                        << "err=" << static_cast<unsigned long>(err)
+                        << " aligned_size=" << static_cast<unsigned long long>(aligned_attempt_size)
+                        << " alignment=" << static_cast<unsigned long long>(alignment)
+                        << " granularity=" << static_cast<unsigned long long>(granularity)
+                        << "\n";
+                    std::fputs(oss.str().c_str(), stderr);
+                    std::fflush(stderr);
+                    OutputDebugStringA(oss.str().c_str());
                 }
             }
         }
@@ -1569,8 +1670,10 @@ bool mapShardFileReadOnly(const std::string& path, int device_index, MappedShard
         }
     }
 
+    const bool apertureTrace = readEnvFlag("RAWRXD_APERTURE_TRACE", false);
     const bool allowDirectMap =
-        readEnvFlag("RAWRXD_ALLOW_DIRECT_MAP", false) || readEnvFlag("RAWRXD_HEADLESS_MINIMAL", false);
+        readEnvFlag("RAWRXD_ALLOW_DIRECT_MAP", false) ||
+        (readEnvFlag("RAWRXD_HEADLESS_MINIMAL", false) && !apertureTrace);
     if (!out.view)
     {
         if (!allowDirectMap)
@@ -1994,7 +2097,11 @@ bool BackendOrchestrator::Initialize()
 
     // Start dispatch thread
     m_dispatch_running.store(true);
-    m_dispatch_thread = std::thread(&BackendOrchestrator::DispatchLoop, this);
+    m_dispatch_thread = std::thread([this]() {
+        REGISTER_THREAD("BackendOrchestrator", "inference dispatch loop");
+        DispatchLoop();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
+    });
 
     m_initialized.store(true);
     return true;
@@ -2350,7 +2457,20 @@ bool BackendOrchestrator::ForensicMapProbe(const std::string& path, uint64_t off
 
     uint64_t desired_window = std::max<uint64_t>(window_size, kGgufApertureMinWindowBytes);
     desired_window = std::max<uint64_t>(desired_window, static_cast<uint64_t>(64 * 1024));
-    desired_window = std::min<uint64_t>(desired_window, file_size - aligned_offset);
+
+    // Optional large-file probe mode for synthetic scale validation.
+    // When enabled, request reservation for the full remaining file span
+    // rather than the default small forensic map window.
+    const char* fullProbeEnv = std::getenv("RAWRXD_APERTURE_PROBE_FULL_FILE");
+    const bool fullFileProbe = fullProbeEnv && fullProbeEnv[0] != '0';
+    if (fullFileProbe)
+    {
+        desired_window = file_size - aligned_offset;
+    }
+    else
+    {
+        desired_window = std::min<uint64_t>(desired_window, file_size - aligned_offset);
+    }
     if (desired_window == 0)
     {
         CloseHandle(hMapping);
@@ -2360,6 +2480,35 @@ bool BackendOrchestrator::ForensicMapProbe(const std::string& path, uint64_t off
             *out_reason = "computed zero map window";
         }
         return false;
+    }
+
+    std::string aperture_probe_line;
+    {
+        void* reserve_view = nullptr;
+        size_t reserved_size = 0;
+        bool has_placeholder = false;
+        const bool reserve_ok =
+            reserveSlidingAperture(static_cast<SIZE_T>(desired_window), reserve_view, reserved_size, has_placeholder);
+        const DWORD reserve_err = reserve_ok ? ERROR_SUCCESS : GetLastError();
+
+        std::ostringstream oss;
+        oss << "GGUF_APERTURE_PROBE: request=" << (desired_window / 1024ULL) << "KB"
+            << ", reserve_ok=" << (reserve_ok ? 1 : 0)
+            << ", placeholder=" << (has_placeholder ? 1 : 0)
+            << ", reserved_kb=" << (reserved_size / 1024ULL)
+            << ", error=" << static_cast<unsigned long>(reserve_err) << "\n";
+        aperture_probe_line = oss.str();
+
+        if (reserve_view)
+        {
+            if (!VirtualFree(reserve_view, 0, MEM_RELEASE))
+            {
+                const DWORD release_err = GetLastError();
+                std::ostringstream rel;
+                rel << "[ForensicMapProbe] reserve release failed err=" << release_err << "\n";
+                OutputDebugStringA(rel.str().c_str());
+            }
+        }
     }
 
     void* mapped_view =
@@ -2387,6 +2536,7 @@ bool BackendOrchestrator::ForensicMapProbe(const std::string& path, uint64_t off
     {
         const uint64_t avg_window_kb = desired_window / 1024ULL;
         std::ostringstream oss;
+        oss << aperture_probe_line;
         oss << "GGUF_MAP_STATS: reuses=0, remaps=1, prefetch_kb=0, avg_win=" << avg_window_kb << "KB\n";
         forensic_stats_line = oss.str();
     }
@@ -2537,6 +2687,8 @@ void BackendOrchestrator::DispatchLoop()
 {
     while (m_dispatch_running.load())
     {
+        CHECK_SHUTDOWN_AND_RETURN();
+        
         InferRequest req;
         bool found = false;
         {

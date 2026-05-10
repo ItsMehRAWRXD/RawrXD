@@ -512,6 +512,54 @@ if(NOT TARGET test_speculative_pipeline AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/
     message(STATUS "  ✓ Added test_speculative_pipeline")
 endif()
 
+# Phase 3: INT4 KV Bridge Integration Test
+if(NOT TARGET test_int4kv_bridge_integration AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_int4kv_bridge_integration.cpp")
+    add_executable(test_int4kv_bridge_integration
+        test_int4kv_bridge_integration.cpp
+        ${CMAKE_SOURCE_DIR}/src/inference/inference_int4kv_bridge.cpp
+        ${CMAKE_SOURCE_DIR}/src/compression/virtualalloc_reservation_manager.cpp
+        ${CMAKE_SOURCE_DIR}/src/compression/int4_kv_dequant_kernel.cpp
+        ${CMAKE_SOURCE_DIR}/src/compression/iq2m_dequant_kernel.cpp
+        ${CMAKE_SOURCE_DIR}/src/engine/inference_kernels.cpp
+    )
+    target_include_directories(test_int4kv_bridge_integration PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(test_int4kv_bridge_integration PRIVATE)
+    set_target_properties(test_int4kv_bridge_integration PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(test_int4kv_bridge_integration PRIVATE kernel32)
+    endif()
+    add_test(NAME test_int4kv_bridge_integration COMMAND test_int4kv_bridge_integration)
+    message(STATUS "  ✓ Added test_int4kv_bridge_integration (Phase 3 bridge validation)")
+endif()
+
+# Phase 4: IQ2_M 2.5-bit Dequantization Kernel Test
+if(NOT TARGET test_iq2m_dequant_kernel AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_iq2m_dequant_kernel.cpp")
+    add_executable(test_iq2m_dequant_kernel
+        test_iq2m_dequant_kernel.cpp
+        ${CMAKE_SOURCE_DIR}/src/compression/iq2m_dequant_kernel.cpp
+    )
+    target_include_directories(test_iq2m_dequant_kernel PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(test_iq2m_dequant_kernel PRIVATE)
+    set_target_properties(test_iq2m_dequant_kernel PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(test_iq2m_dequant_kernel PRIVATE kernel32)
+    endif()
+    add_test(NAME test_iq2m_dequant_kernel COMMAND test_iq2m_dequant_kernel)
+    message(STATUS "  ✓ Added test_iq2m_dequant_kernel (Phase 4 IQ2_M kernel validation)")
+endif()
+
 # Extension Host Test
 if(NOT TARGET test_extension_host AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/win32app/test_extension_host.cpp")
     add_executable(test_extension_host

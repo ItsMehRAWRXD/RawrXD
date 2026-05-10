@@ -63,6 +63,50 @@ Agentic::AgenticPlanningOrchestrator* getPlanningOrchestratorReady()
     return orch.getOrchestrator();
 }
 
+bool invokeConfigureModelWithSehGuard(Win32IDE* ide)
+{
+    if (!ide)
+        return false;
+#ifdef _WIN32
+    auto invokeConfigureModelSehThunk = [](Win32IDE* target, DWORD* sehCode) -> bool
+    {
+        __try
+        {
+            target->onAgentConfigureModel();
+            return true;
+        }
+        __except(*sehCode = GetExceptionCode(), EXCEPTION_EXECUTE_HANDLER)
+        {
+            return false;
+        }
+    };
+
+    DWORD sehCode = 0;
+    if (invokeConfigureModelSehThunk(ide, &sehCode))
+        return true;
+
+        HWND hwnd = ide->getMainWindow();
+        if (hwnd && IsWindow(hwnd))
+        {
+            EnableWindow(hwnd, TRUE);
+            SetForegroundWindow(hwnd);
+            MessageBoxA(hwnd,
+                        "Configure Model hit a fatal native exception and was aborted safely.\n"
+                        "Check logs for ntdll/c0000005 details.",
+                        "Agent Error", MB_OK | MB_ICONERROR);
+        }
+        char crashMsg[160] = {};
+        snprintf(crashMsg, sizeof(crashMsg),
+                 "[Agent] onAgentConfigureModel trapped SEH exception 0x%08lX\n",
+                 static_cast<unsigned long>(sehCode));
+        OutputDebugStringA(crashMsg);
+        return false;
+#else
+    ide->onAgentConfigureModel();
+    return true;
+#endif
+}
+
 }  // namespace
 
 // ============================================================================
@@ -1255,7 +1299,8 @@ void Win32IDE::onAgentConfigureModel()
         s_modelDlgClassRegistered = true;
     }
 
-    HWND hwndDlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "RawrXD_ModelDlg", "Configure AI Model",
+    // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
+    HWND hwndDlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "RawrXD_ModelDlg", "Configure AI Model",
                                    WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, dlgX, dlgY, dlgWidth, dlgHeight,
                                    m_hwndMain, nullptr, m_hInstance, nullptr);
 
@@ -1529,7 +1574,7 @@ void Win32IDE::handleAgentCommand(int commandId)
             onAgentExecuteCommand();
             break;
         case IDM_AGENT_CONFIGURE_MODEL:
-            onAgentConfigureModel();
+            (void)invokeConfigureModelWithSehGuard(this);
             break;
         case IDM_AGENT_VIEW_TOOLS:
             onAgentViewTools();

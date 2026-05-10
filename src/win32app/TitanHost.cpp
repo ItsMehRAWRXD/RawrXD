@@ -20,8 +20,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <string>
 #include <vector>
+
+
+
 
 
 // ============================================================================
@@ -172,11 +176,27 @@ typedef int(__stdcall* PFN_LoadModel)(void* engine, const wchar_t* path);
 typedef uint32_t(__stdcall* PFN_SubmitEngine)(void* engine, const char* prompt, size_t maxTok);
 typedef bool(__stdcall* PFN_GetResultEngine)(void* engine, uint32_t reqId, char* buf, size_t len, bool* done);
 typedef const char*(__stdcall* PFN_GetLastError)();
+typedef void(__stdcall* PFN_DestroyEngine)(void* engine);
+
+// Titan ABI (cdecl)
+typedef int(__cdecl* PFN_TitanLoadModel)(const char* modelPath);
+typedef int(__cdecl* PFN_TitanIsLoaded)();
+typedef void(__cdecl* PFN_TitanUnloadModel)();
+typedef int(__cdecl* PFN_TitanPredictChat)(const char* prompt, char* output, int outputMaxLen,
+                                           int maxTokens, float temperature);
 
 // Streaming API: callback receives UTF-8 token text; return false to cancel.
 typedef bool(__cdecl* PFN_StreamCallback)(const char* tokenUtf8, void* userdata);
 typedef bool(__stdcall* PFN_SubmitStreaming)(void* engine, const char* prompt, size_t maxTok,
                                              PFN_StreamCallback cb, void* userdata);
+
+// ServeInference plugin ABI (cdecl)
+typedef int(__cdecl* PFN_ServeVersion)();
+typedef int(__cdecl* PFN_ServeLoadModel)(const char* pathUtf8);
+typedef void(__cdecl* PFN_ServeUnloadModel)();
+typedef int(__cdecl* PFN_ServeGenerate)(const char* promptUtf8, int maxTokens,
+                                        void(__cdecl* onToken)(const char* utf8Fragment, int isLast, void* user),
+                                        void* user);
 
 struct TitanApi
 {
@@ -192,8 +212,19 @@ struct TitanApi
     PFN_SubmitEngine submitEngine = nullptr;
     PFN_GetResultEngine getResultEngine = nullptr;
     PFN_GetLastError getLastError = nullptr;
+    PFN_DestroyEngine destroyEngine = nullptr;
+    // Titan ABI fallback
+    PFN_TitanLoadModel titanLoadModel = nullptr;
+    PFN_TitanIsLoaded titanIsLoaded = nullptr;
+    PFN_TitanUnloadModel titanUnloadModel = nullptr;
+    PFN_TitanPredictChat titanPredictChat = nullptr;
     // Streaming API (optional — preferred when present)
     PFN_SubmitStreaming submitStreaming = nullptr;
+    // ServeInference plugin API (fallback)
+    PFN_ServeVersion serveVersion = nullptr;
+    PFN_ServeLoadModel serveLoadModel = nullptr;
+    PFN_ServeUnloadModel serveUnloadModel = nullptr;
+    PFN_ServeGenerate serveGenerate = nullptr;
 };
 
 static HMODULE TryLoadDll(const wchar_t* candidate)
@@ -218,7 +249,8 @@ static HMODULE TryLoadDll(const wchar_t* candidate)
 static bool BindTitanApi(TitanApi& api)
 {
     const wchar_t* candidates[] = {L"RawrXD_Titan.dll", L"RawrXD_InferenceEngine_Win32.dll",
-                                   L"RawrXD_InferenceEngine.dll"};
+                                   L"RawrXD_InferenceEngine.dll", L"RawrXD_ServeInference.dll",
+                                   L"rawrxd_serve_inference.dll"};
     for (const wchar_t* cand : candidates)
     {
         HMODULE m = TryLoadDll(cand);
@@ -232,9 +264,22 @@ static bool BindTitanApi(TitanApi& api)
         auto subEngine = (PFN_SubmitEngine)GetProcAddress(m, "InferenceEngine_SubmitInference");
         auto getResEngine = (PFN_GetResultEngine)GetProcAddress(m, "InferenceEngine_GetResult");
         auto getLastErr = (PFN_GetLastError)GetProcAddress(m, "GetLastInferenceError");
+        auto destroyEngine = (PFN_DestroyEngine)GetProcAddress(m, "DestroyInferenceEngine");
         auto subStream = (PFN_SubmitStreaming)GetProcAddress(m, "InferenceEngine_SubmitStreaming");
+        auto titanLoadModel = (PFN_TitanLoadModel)GetProcAddress(m, "Titan_LoadModel");
+        auto titanIsLoaded = (PFN_TitanIsLoaded)GetProcAddress(m, "Titan_IsLoaded");
+        auto titanUnloadModel = (PFN_TitanUnloadModel)GetProcAddress(m, "Titan_UnloadModel");
+        auto titanPredictChat = (PFN_TitanPredictChat)GetProcAddress(m, "Titan_PredictChat");
+        auto serveVersion = (PFN_ServeVersion)GetProcAddress(m, "RawrXD_ServeInference_Version");
+        auto serveLoadModel = (PFN_ServeLoadModel)GetProcAddress(m, "RawrXD_ServeInference_LoadModel");
+        auto serveUnloadModel = (PFN_ServeUnloadModel)GetProcAddress(m, "RawrXD_ServeInference_UnloadModel");
+        auto serveGenerate = (PFN_ServeGenerate)GetProcAddress(m, "RawrXD_ServeInference_Generate");
 
-        if ((legacySubmit && legacyResult) || (createEngine && subEngine && getResEngine))
+        const bool hasServeAbi =
+            (serveVersion && serveLoadModel && serveUnloadModel && serveGenerate && serveVersion() == 1);
+        const bool hasTitanAbi = (titanLoadModel && titanPredictChat);
+
+        if ((legacySubmit && legacyResult) || (createEngine && subEngine && getResEngine) || hasServeAbi || hasTitanAbi)
         {
             api.hMod = m;
             api.submit = legacySubmit;
@@ -244,12 +289,52 @@ static bool BindTitanApi(TitanApi& api)
             api.submitEngine = subEngine;
             api.getResultEngine = getResEngine;
             api.getLastError = getLastErr;
+            api.destroyEngine = destroyEngine;
+            api.titanLoadModel = titanLoadModel;
+            api.titanIsLoaded = titanIsLoaded;
+            api.titanUnloadModel = titanUnloadModel;
+            api.titanPredictChat = titanPredictChat;
             api.submitStreaming = subStream;  // optional — nullptr if DLL doesn't export it
+            api.serveVersion = serveVersion;
+            api.serveLoadModel = serveLoadModel;
+            api.serveUnloadModel = serveUnloadModel;
+            api.serveGenerate = serveGenerate;
             return true;
         }
         FreeLibrary(m);
     }
     return false;
+}
+
+static void CleanupTitanApi(TitanApi& api)
+{
+    if (api.modelLoaded)
+    {
+        if (api.titanUnloadModel)
+        {
+            api.titanUnloadModel();
+        }
+        else if (api.serveUnloadModel)
+        {
+            api.serveUnloadModel();
+        }
+        api.modelLoaded = false;
+    }
+
+    if (api.engineHandle)
+    {
+        if (api.destroyEngine)
+        {
+            api.destroyEngine(api.engineHandle);
+        }
+        api.engineHandle = nullptr;
+    }
+
+    if (api.hMod)
+    {
+        FreeLibrary(api.hMod);
+        api.hMod = nullptr;
+    }
 }
 
 // ============================================================================
@@ -269,8 +354,47 @@ static std::wstring Utf8ToWide(const std::string& u8)
     return out;
 }
 
+static std::string WideToUtf8(const std::wstring& w)
+{
+    if (w.empty())
+        return std::string();
+    const int n = WideCharToMultiByte(CP_UTF8, 0, w.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    if (n <= 0)
+        return std::string();
+    std::string out;
+    out.resize(static_cast<size_t>(n - 1));
+    WideCharToMultiByte(CP_UTF8, 0, w.c_str(), -1, &out[0], n, nullptr, nullptr);
+    return out;
+}
+
 static bool LoadModelAtPath(TitanApi& api, const std::wstring& path, std::string& err)
 {
+    if (api.titanLoadModel)
+    {
+        const std::string pathUtf8 = WideToUtf8(path);
+        const int rc = api.titanLoadModel(pathUtf8.c_str());
+        api.modelLoaded = (rc == 0);
+        if (!api.modelLoaded)
+        {
+            err = "Titan_LoadModel failed (code " + std::to_string(rc) + ")";
+            return false;
+        }
+        return true;
+    }
+
+    if (api.serveLoadModel)
+    {
+        const std::string pathUtf8 = WideToUtf8(path);
+        const int rc = api.serveLoadModel(pathUtf8.c_str());
+        api.modelLoaded = (rc == 0);
+        if (!api.modelLoaded)
+        {
+            err = "RawrXD_ServeInference_LoadModel failed (code " + std::to_string(rc) + ")";
+            return false;
+        }
+        return true;
+    }
+
     if (!api.loadModel || !api.engineHandle)
     {
         err = "InferenceEngine_LoadModel unavailable";
@@ -294,6 +418,35 @@ static bool LoadModelAtPath(TitanApi& api, const std::wstring& path, std::string
 
 static bool InitEngine(TitanApi& api, std::string& err)
 {
+    if (api.titanPredictChat)
+    {
+        if (api.titanIsLoaded)
+        {
+            api.modelLoaded = (api.titanIsLoaded() != 0);
+        }
+        if (api.modelLoaded)
+        {
+            return true;
+        }
+
+        wchar_t modelPath[2048] = {};
+        const DWORD envLen = GetEnvironmentVariableW(L"RAWRXD_NATIVE_MODEL_PATH", modelPath, 2048);
+        if (envLen > 0 && envLen < 2048)
+        {
+            return LoadModelAtPath(api, std::wstring(modelPath), err);
+        }
+        err = "No model loaded: use {\"cmd\":\"load_model\",\"path\":...} or set RAWRXD_NATIVE_MODEL_PATH";
+        return false;
+    }
+
+    if (api.serveGenerate)
+    {
+        if (api.modelLoaded)
+            return true;
+        err = "No model loaded: use {\"cmd\":\"load_model\",\"path\":...} or set RAWRXD_NATIVE_MODEL_PATH";
+        return false;
+    }
+
     if (api.createEngine && !api.engineHandle)
     {
         api.engineHandle = api.createEngine();
@@ -341,7 +494,9 @@ static bool RunInference(TitanApi& api, HANDLE hPipe, uint32_t seq, const std::s
 
     const bool useLegacy = (api.submit && api.getResult);
     const bool useWin32 = (api.engineHandle && api.submitEngine && api.getResultEngine);
-    if (!useLegacy && !useWin32)
+    const bool useServe = (api.serveGenerate != nullptr);
+    const bool useTitan = (api.titanPredictChat != nullptr);
+    if (!useLegacy && !useWin32 && !useServe && !useTitan)
     {
         errOut = "No usable inference API after DLL bind";
         return false;
@@ -362,11 +517,14 @@ static bool RunInference(TitanApi& api, HANDLE hPipe, uint32_t seq, const std::s
             }
             else
             {
-                reqId = api.submitEngine(api.engineHandle, currentPrompt.c_str(), maxTokens > 0 ? maxTokens : 256);
-                if (reqId == 0)
+                if (useWin32)
                 {
-                    errOut = "InferenceEngine_SubmitInference failed (returned 0)";
-                    return false;
+                    reqId = api.submitEngine(api.engineHandle, currentPrompt.c_str(), maxTokens > 0 ? maxTokens : 256);
+                    if (reqId == 0)
+                    {
+                        errOut = "InferenceEngine_SubmitInference failed (returned 0)";
+                        return false;
+                    }
                 }
             }
 
@@ -388,37 +546,217 @@ static bool RunInference(TitanApi& api, HANDLE hPipe, uint32_t seq, const std::s
             if (useStreamingApi)
             {
                 StreamCtx ctx{ hPipe, static_cast<uint32_t>(seq), true, {} };
-                auto streamCb = [](const char* tok, void* ud) -> bool {
-                    auto* c = static_cast<StreamCtx*>(ud);
-                    if (!tok || !tok[0]) return true;
-                    c->accumulated += tok;
+                std::string pending;
+                pending.reserve(512);
+
+                auto flushPending = [&](const std::string& payload) -> bool {
+                    if (payload.empty())
+                        return true;
                     std::string frame = "{\"cmd\":\"stream_token\",\"seq\":" +
-                                        std::to_string(c->seq) + ",\"token\":";
-                    // Minimal JSON string escape
+                                        std::to_string(ctx.seq) + ",\"token\":";
                     frame += '"';
-                    for (unsigned char ch : std::string(tok)) {
+                    for (unsigned char ch : payload)
+                    {
                         if (ch == '"') frame += "\\\"";
                         else if (ch == '\\') frame += "\\\\";
                         else if (ch == '\n') frame += "\\n";
                         else if (ch == '\r') frame += "\\r";
-                        else if (ch < 0x20) { char esc[8]; snprintf(esc, sizeof(esc), "\\u%04X", ch); frame += esc; }
+                        else if (ch < 0x20)
+                        {
+                            char esc[8];
+                            snprintf(esc, sizeof(esc), "\\u%04X", ch);
+                            frame += esc;
+                        }
                         else frame += static_cast<char>(ch);
                     }
-                    frame += "\"}}";
-                    if (!PipeWriteFrame(c->pipe, frame)) {
-                        c->pipeOk = false;
-                        return false;  // cancel inference
+                    frame += "\"}";
+                    if (!PipeWriteFrame(ctx.pipe, frame))
+                    {
+                        ctx.pipeOk = false;
+                        return false;
                     }
                     return true;
                 };
+
+                auto streamCb = [](const char* tok, void* ud) -> bool {
+                    auto* c = static_cast<StreamCtx*>(ud);
+                    if (!tok || !tok[0]) return true;
+                    c->accumulated += tok;
+                    return true;
+                };
+
+                auto batchingCb = [&](const char* tok) -> bool {
+                    if (!tok || !tok[0])
+                        return true;
+                    pending += tok;
+                    if (pending.size() >= 256)
+                    {
+                        std::string chunk;
+                        chunk.swap(pending);
+                        return flushPending(chunk);
+                    }
+                    return true;
+                };
+
+                auto streamCbBatched = [](const char* tok, void* ud) -> bool {
+                    auto* fn = static_cast<std::function<bool(const char*)>*>(ud);
+                    return (*fn)(tok);
+                };
+
+                std::function<bool(const char*)> cbHolder = [&](const char* tok) -> bool {
+                    if (!streamCb(tok, &ctx))
+                        return false;
+                    return batchingCb(tok);
+                };
+
                 api.submitStreaming(api.engineHandle, currentPrompt.c_str(),
                                     maxTokens > 0 ? maxTokens : 256,
-                                    streamCb, &ctx);
+                                    streamCbBatched, &cbHolder);
+                if (!pending.empty())
+                {
+                    std::string chunk;
+                    chunk.swap(pending);
+                    if (!flushPending(chunk))
+                    {
+                        errOut = "Pipe write failed during streaming";
+                        return false;
+                    }
+                }
                 if (!ctx.pipeOk) {
                     errOut = "Pipe write failed during streaming";
                     return false;
                 }
                 roundText = ctx.accumulated;
+            }
+            else if (useServe)
+            {
+                struct ServeCtx
+                {
+                    HANDLE pipe;
+                    uint32_t seq;
+                    bool pipeOk;
+                    std::string accumulated;
+                };
+
+                ServeCtx ctx{hPipe, static_cast<uint32_t>(seq), true, {}};
+                std::string pending;
+                pending.reserve(512);
+
+                auto flushPending = [&](const std::string& payload) {
+                    if (payload.empty())
+                        return;
+                    std::string frame =
+                        "{\"cmd\":\"stream_token\",\"seq\":" + std::to_string(ctx.seq) + ",\"token\":";
+                    frame += '"';
+                    for (unsigned char ch : payload)
+                    {
+                        if (ch == '"')
+                            frame += "\\\"";
+                        else if (ch == '\\')
+                            frame += "\\\\";
+                        else if (ch == '\n')
+                            frame += "\\n";
+                        else if (ch == '\r')
+                            frame += "\\r";
+                        else if (ch < 0x20)
+                        {
+                            char esc[8];
+                            snprintf(esc, sizeof(esc), "\\u%04X", ch);
+                            frame += esc;
+                        }
+                        else
+                        {
+                            frame += static_cast<char>(ch);
+                        }
+                    }
+                    frame += "\"}";
+                    if (!PipeWriteFrame(ctx.pipe, frame))
+                    {
+                        ctx.pipeOk = false;
+                    }
+                };
+
+                auto serveCb = [](const char* tok, int /*isLast*/, void* ud) -> void {
+                    auto* pair = static_cast<std::pair<ServeCtx*, std::string*>*>(ud);
+                    ServeCtx* c = pair->first;
+                    std::string* pendingRef = pair->second;
+                    const std::string piece = tok ? std::string(tok) : std::string();
+                    if (piece.empty())
+                        return;
+
+                    c->accumulated += piece;
+                    *pendingRef += piece;
+                    if (pendingRef->size() < 256)
+                        return;
+
+                    std::string frame =
+                        "{\"cmd\":\"stream_token\",\"seq\":" + std::to_string(c->seq) + ",\"token\":";
+                    frame += '"';
+                    for (unsigned char ch : *pendingRef)
+                    {
+                        if (ch == '"')
+                            frame += "\\\"";
+                        else if (ch == '\\')
+                            frame += "\\\\";
+                        else if (ch == '\n')
+                            frame += "\\n";
+                        else if (ch == '\r')
+                            frame += "\\r";
+                        else if (ch < 0x20)
+                        {
+                            char esc[8];
+                            snprintf(esc, sizeof(esc), "\\u%04X", ch);
+                            frame += esc;
+                        }
+                        else
+                        {
+                            frame += static_cast<char>(ch);
+                        }
+                    }
+                    frame += "\"}";
+                    if (!PipeWriteFrame(c->pipe, frame))
+                    {
+                        c->pipeOk = false;
+                    }
+                    pendingRef->clear();
+                };
+
+                std::pair<ServeCtx*, std::string*> serveUd{&ctx, &pending};
+
+                const int rc = api.serveGenerate(
+                    currentPrompt.c_str(), maxTokens > 0 ? static_cast<int>(maxTokens) : 256, serveCb, &serveUd);
+                if (!pending.empty())
+                {
+                    flushPending(pending);
+                    pending.clear();
+                }
+                if (!ctx.pipeOk)
+                {
+                    errOut = "Pipe write failed during ServeInference streaming";
+                    return false;
+                }
+                if (rc != 0)
+                {
+                    errOut = "RawrXD_ServeInference_Generate failed (code " + std::to_string(rc) + ")";
+                    return false;
+                }
+                roundText = ctx.accumulated;
+            }
+            else if (useTitan)
+            {
+                std::vector<char> outBuf(2 * 1024 * 1024, 0);
+                const int rc = api.titanPredictChat(
+                    currentPrompt.c_str(),
+                    outBuf.data(),
+                    static_cast<int>(outBuf.size()),
+                    maxTokens > 0 ? static_cast<int>(maxTokens) : 256,
+                    0.2f);
+                if (rc < 0)
+                {
+                    errOut = "Titan_PredictChat failed (code " + std::to_string(rc) + ")";
+                    return false;
+                }
+                roundText = outBuf.data();
             }
             else
             {
@@ -581,11 +919,28 @@ int main(int /*argc*/, char* /*argv*/[])
     if (wargv)
         LocalFree(wargv);
 
+    if (parentPid == 0)
+    {
+        ExitProcess(4);
+    }
+
+    HANDLE hParent = OpenProcess(SYNCHRONIZE, FALSE, parentPid);
+    if (!hParent)
+    {
+        ExitProcess(4);
+    }
+    if (WaitForSingleObject(hParent, 0) == WAIT_OBJECT_0)
+    {
+        CloseHandle(hParent);
+        ExitProcess(4);
+    }
+
     char pipeName[64];
     snprintf(pipeName, sizeof(pipeName), "\\\\.\\pipe\\RawrXD_TitanHost_%u", parentPid);
 
     // Bind Titan DLL immediately — crash here just kills this small process.
     TitanApi api;
+    std::string currentModelPathUtf8;
     std::string bindErr;
     if (!BindTitanApi(api))
     {
@@ -605,6 +960,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     if (hPipe == INVALID_HANDLE_VALUE)
     {
+        CloseHandle(hParent);
         ExitProcess(3);
     }
 
@@ -613,8 +969,55 @@ int main(int /*argc*/, char* /*argv*/[])
     snprintf(evName, sizeof(evName), "RawrXD_TitanReady_%u", parentPid);
     HANDLE hReady = CreateEventA(nullptr, TRUE, FALSE, evName);
 
-    // Accept one connection (blocking).
-    ConnectNamedPipe(hPipe, nullptr);
+    // Accept one connection, but abort if parent process exits first.
+    OVERLAPPED ov{};
+    ov.hEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    if (!ov.hEvent)
+    {
+        if (hReady)
+            CloseHandle(hReady);
+        CloseHandle(hPipe);
+        CloseHandle(hParent);
+        ExitProcess(5);
+    }
+
+    bool connected = false;
+    if (ConnectNamedPipe(hPipe, &ov))
+    {
+        connected = true;
+    }
+    else
+    {
+        const DWORD connectErr = GetLastError();
+        if (connectErr == ERROR_PIPE_CONNECTED)
+        {
+            connected = true;
+        }
+        else if (connectErr == ERROR_IO_PENDING)
+        {
+            HANDLE waitHandles[2] = {ov.hEvent, hParent};
+            const DWORD wr = WaitForMultipleObjects(2, waitHandles, FALSE, 30000);
+            if (wr == WAIT_OBJECT_0)
+            {
+                connected = true;
+            }
+            else
+            {
+                CancelIoEx(hPipe, &ov);
+            }
+        }
+    }
+
+    CloseHandle(ov.hEvent);
+
+    if (!connected)
+    {
+        if (hReady)
+            CloseHandle(hReady);
+        CloseHandle(hPipe);
+        CloseHandle(hParent);
+        ExitProcess(6);
+    }
 
     if (hReady)
     {
@@ -625,6 +1028,9 @@ int main(int /*argc*/, char* /*argv*/[])
     // Serve requests.
     while (true)
     {
+        if (WaitForSingleObject(hParent, 0) == WAIT_OBJECT_0)
+            break;
+
         std::string req;
         if (!PipeReadFrame(hPipe, req))
             break;  // pipe broken → exit → IDE detects
@@ -658,37 +1064,68 @@ int main(int /*argc*/, char* /*argv*/[])
                     resp = "{" + JsonBool("ok", false) + "," +
                            JsonStr("error", "load_model: UTF-8 path conversion failed") + "}";
                 }
-                else if (!api.createEngine && !api.engineHandle)
-                {
-                    resp = "{" + JsonBool("ok", false) + "," +
-                           JsonStr("error", "load_model: no CreateInferenceEngine in DLL") + "}";
-                }
                 else
                 {
-                    if (!api.engineHandle && api.createEngine)
+                    if (api.modelLoaded && pathU8 != currentModelPathUtf8)
                     {
-                        api.engineHandle = api.createEngine();
+                        if (api.titanUnloadModel)
+                        {
+                            api.titanUnloadModel();
+                            api.modelLoaded = false;
+                        }
+                        else if (api.serveUnloadModel)
+                        {
+                            api.serveUnloadModel();
+                            api.modelLoaded = false;
+                        }
                     }
-                    if (!api.engineHandle)
-                    {
-                        resp = "{" + JsonBool("ok", false) + "," +
-                               JsonStr("error", "CreateInferenceEngine returned null") + "}";
-                    }
-                    else if (!api.loadModel)
-                    {
-                        resp = "{" + JsonBool("ok", false) + "," +
-                               JsonStr("error", "InferenceEngine_LoadModel missing from DLL") + "}";
-                    }
-                    else
+
+                    if (api.serveLoadModel || api.titanLoadModel)
                     {
                         std::string lmErr;
                         if (LoadModelAtPath(api, wpath, lmErr))
                         {
+                            currentModelPathUtf8 = pathU8;
                             resp = "{" + JsonBool("ok", true) + "}";
                         }
                         else
                         {
                             resp = "{" + JsonBool("ok", false) + "," + JsonStr("error", lmErr) + "}";
+                        }
+                    }
+                    else if (!api.createEngine && !api.engineHandle)
+                    {
+                        resp = "{" + JsonBool("ok", false) + "," +
+                               JsonStr("error", "load_model: no CreateInferenceEngine in DLL") + "}";
+                    }
+                    else
+                    {
+                        if (!api.engineHandle && api.createEngine)
+                        {
+                            api.engineHandle = api.createEngine();
+                        }
+                        if (!api.engineHandle)
+                        {
+                            resp = "{" + JsonBool("ok", false) + "," +
+                                   JsonStr("error", "CreateInferenceEngine returned null") + "}";
+                        }
+                        else if (!api.loadModel)
+                        {
+                            resp = "{" + JsonBool("ok", false) + "," +
+                                   JsonStr("error", "InferenceEngine_LoadModel missing from DLL") + "}";
+                        }
+                        else
+                        {
+                            std::string lmErr;
+                            if (LoadModelAtPath(api, wpath, lmErr))
+                            {
+                                currentModelPathUtf8 = pathU8;
+                                resp = "{" + JsonBool("ok", true) + "}";
+                            }
+                            else
+                            {
+                                resp = "{" + JsonBool("ok", false) + "," + JsonStr("error", lmErr) + "}";
+                            }
                         }
                     }
                 }
@@ -727,5 +1164,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     DisconnectNamedPipe(hPipe);
     CloseHandle(hPipe);
+    CloseHandle(hParent);
+    CleanupTitanApi(api);
     return 0;
 }

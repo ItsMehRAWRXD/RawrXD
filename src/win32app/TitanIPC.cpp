@@ -6,8 +6,11 @@
 // are isolated to TitanHost.exe.
 
 #include "TitanIPC.h"
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <sstream>
+#include <vector>
 
 namespace RawrXD
 {
@@ -144,7 +147,13 @@ static bool ExtractBool(const std::string& json, const char* key, bool def = fal
 
 bool TitanProxy::sendFrame(const std::string& json, std::string& outErr)
 {
+    outErr.clear();
+    if (m_hProcess && WaitForSingleObject(m_hProcess, 0) == WAIT_OBJECT_0) { outErr = "TitanProxy: host process already exited"; return false; }
+    if (m_hPipe == INVALID_HANDLE_VALUE) { outErr = "TitanProxy: pipe not connected"; return false; }
+    if (GetFileType(m_hPipe) != FILE_TYPE_PIPE) { outErr = "TitanProxy: handle is not a pipe"; return false; }
+    if (json.empty()) { outErr = "TitanProxy: refusing to send empty frame"; return false; }
     uint32_t len = static_cast<uint32_t>(json.size());
+    if (len > TITAN_PIPE_FRAME_MAX) { outErr = "TitanProxy: frame too large"; return false; }
     DWORD written;
     if (!WriteFile(m_hPipe, &len, sizeof(len), &written, nullptr) || written != sizeof(len))
     {
@@ -161,6 +170,13 @@ bool TitanProxy::sendFrame(const std::string& json, std::string& outErr)
 
 bool TitanProxy::recvFrame(std::string& json, uint32_t timeoutMs, std::string& outErr)
 {
+    outErr.clear();
+    json.clear();
+    if (m_hPipe == INVALID_HANDLE_VALUE) { outErr = "TitanProxy: pipe not connected"; return false; }
+    if (GetFileType(m_hPipe) != FILE_TYPE_PIPE) { outErr = "TitanProxy: handle is not a pipe"; return false; }
+    if (timeoutMs == 0) timeoutMs = TITAN_DEFAULT_TIMEOUT_MS;
+    if (timeoutMs < 50) timeoutMs = 50;
+    if (timeoutMs > 600000) timeoutMs = 600000;
     // Set read timeout via COMMTIMEOUTS-equivalent for named pipe.
     // Named pipes don't support WaitForMultipleObjects on the pipe directly in
     // synchronous mode.  Use PIPE_NOWAIT in a poll loop with a deadline.
@@ -172,12 +188,14 @@ bool TitanProxy::recvFrame(std::string& json, uint32_t timeoutMs, std::string& o
     int lengthPollCount = 0;
     while (true)
     {
+        if (m_hProcess && WaitForSingleObject(m_hProcess, 0) == WAIT_OBJECT_0) { outErr = "TitanProxy: host exited while waiting for frame"; return false; }
         DWORD avail = 0;
         if (!PeekNamedPipe(m_hPipe, nullptr, 0, nullptr, &avail, nullptr))
         {
             outErr = "TitanProxy: PeekNamedPipe failed: " + std::to_string(GetLastError());
             return false;
         }
+        if (avail > (TITAN_PIPE_FRAME_MAX + sizeof(uint32_t))) { outErr = "TitanProxy: pending pipe data exceeds frame cap"; return false; }
         if (avail >= sizeof(uint32_t))
             break;
         if (GetTickCount() >= deadline)
@@ -201,6 +219,7 @@ bool TitanProxy::recvFrame(std::string& json, uint32_t timeoutMs, std::string& o
         outErr = "TitanProxy: ReadFile(len) failed: " + std::to_string(GetLastError());
         return false;
     }
+    if (len < 2) { outErr = "TitanProxy: frame too short"; return false; }
     if (len == 0 || len > TITAN_PIPE_FRAME_MAX)
     {
         outErr = "TitanProxy: invalid frame length: " + std::to_string(len);
@@ -212,6 +231,7 @@ bool TitanProxy::recvFrame(std::string& json, uint32_t timeoutMs, std::string& o
     DWORD total = 0;
     while (total < len)
     {
+        if (m_hProcess && WaitForSingleObject(m_hProcess, 0) == WAIT_OBJECT_0) { outErr = "TitanProxy: host exited while reading payload"; return false; }
         if (GetTickCount() >= deadline)
         {
             outErr = "TitanProxy: recv timeout reading payload";
@@ -242,6 +262,19 @@ bool TitanProxy::recvFrame(std::string& json, uint32_t timeoutMs, std::string& o
 
 bool TitanProxy::ensureHost()
 {
+    m_lastEnsureHostError.clear();
+    if (m_hJob) { CloseHandle(m_hJob); m_hJob = nullptr; }
+
+    if (m_hProcess)
+    {
+        DWORD exitCode = STILL_ACTIVE;
+        if (!GetExitCodeProcess(m_hProcess, &exitCode) || exitCode != STILL_ACTIVE)
+        {
+            CloseHandle(m_hProcess);
+            m_hProcess = nullptr;
+        }
+    }
+
     if (m_hPipe != INVALID_HANDLE_VALUE)
     {
         // Quick liveness check.
@@ -261,43 +294,164 @@ bool TitanProxy::ensureHost()
         m_csInit = true;
     }
 
-    // Find TitanHost.exe next to the current EXE.
+    // Find TitanHost.exe candidates:
+    // 1) explicit env override
+    // 2) sibling build lane release host (build/bin)
+    // 3) next to current IDE exe
+    // 4) sibling build-ninja host
+    // This avoids debug-CRT host mismatches (ucrtbased.dll missing) when multiple lanes coexist.
     wchar_t exePath[MAX_PATH] = {};
     GetModuleFileNameW(nullptr, exePath, MAX_PATH);
     wchar_t* slash = wcsrchr(exePath, L'\\');
     if (!slash)
         slash = wcsrchr(exePath, L'/');
-    std::wstring hostPath;
+    std::wstring exeDir;
     if (slash)
     {
         *(slash + 1) = L'\0';
-        hostPath = std::wstring(exePath) + L"RawrXD-TitanHost.exe";
+        exeDir = std::wstring(exePath);
     }
     else
     {
-        hostPath = L"RawrXD-TitanHost.exe";
+        exeDir = L"";
     }
 
-    // Build command line: TitanHost.exe <current_PID>
-    wchar_t cmdLine[128];
-    swprintf_s(cmdLine, L"\"%ls\" %u", hostPath.c_str(), GetCurrentProcessId());
+    auto parentDir = [](const std::wstring& p) -> std::wstring {
+        if (p.empty())
+            return {};
+        std::wstring t = p;
+        while (!t.empty() && (t.back() == L'\\' || t.back() == L'/'))
+            t.pop_back();
+        const size_t pos = t.find_last_of(L"\\/");
+        if (pos == std::wstring::npos)
+            return {};
+        return t.substr(0, pos);
+    };
+
+    std::vector<std::wstring> hostCandidates;
+
+    const auto addCandidate = [&](const std::wstring& candidate)
+    {
+        if (candidate.empty())
+            return;
+        if (std::find(hostCandidates.begin(), hostCandidates.end(), candidate) != hostCandidates.end())
+            return;
+        hostCandidates.emplace_back(candidate);
+    };
+
+    wchar_t envHost[MAX_PATH] = {};
+    if (GetEnvironmentVariableW(L"RAWRXD_TITAN_HOST_PATH", envHost, MAX_PATH) > 0)
+    {
+        addCandidate(envHost);
+    }
+
+    if (!exeDir.empty())
+    {
+        const std::wstring p1 = parentDir(exeDir);
+        const std::wstring p2 = parentDir(p1);
+        if (!p2.empty())
+        {
+            addCandidate(p2 + L"\\build\\bin\\RawrXD-TitanHost.exe");
+        }
+
+        addCandidate(exeDir + L"RawrXD-TitanHost.exe");
+
+        if (!p2.empty())
+        {
+            addCandidate(p2 + L"\\build-ninja\\bin\\RawrXD-TitanHost.exe");
+        }
+    }
+    else
+    {
+        addCandidate(L"RawrXD-TitanHost.exe");
+    }
+    if (hostCandidates.size() > 16) hostCandidates.resize(16);
+    if (hostCandidates.empty()) { m_lastEnsureHostError = "no TitanHost candidates"; return false; }
 
     // Create event the host will signal when ready.
     char evName[80];
     snprintf(evName, sizeof(evName), "RawrXD_TitanReady_%u", GetCurrentProcessId());
     HANDLE hReady = CreateEventA(nullptr, TRUE, FALSE, evName);
+    if (!hReady) OutputDebugStringA("[TitanProxy] Ready event creation failed; continuing without event sync\n");
+    if (hReady) ResetEvent(hReady);
 
     STARTUPINFOW si{};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi{};
-    if (!CreateProcessW(nullptr, cmdLine, nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
+
+    DWORD lastLaunchError = ERROR_FILE_NOT_FOUND;
+    std::vector<std::wstring> attemptedPaths;
+    bool launched = false;
+    UINT prevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+    for (const auto& hostPath : hostCandidates)
+    {
+        if (hostPath.empty())
+            continue;
+
+        const DWORD attrs = GetFileAttributesW(hostPath.c_str());
+        if (attrs == INVALID_FILE_ATTRIBUTES || (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0)
+            continue;
+
+        attemptedPaths.emplace_back(hostPath);
+
+        wchar_t cmdLine[512] = {};
+        swprintf_s(cmdLine, L"\"%ls\" %u", hostPath.c_str(), GetCurrentProcessId());
+
+        ZeroMemory(&pi, sizeof(pi));
+        if (CreateProcessW(nullptr, cmdLine, nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
+        {
+            launched = true;
+            break;
+        }
+
+        lastLaunchError = GetLastError();
+        if (lastLaunchError == ERROR_BAD_EXE_FORMAT)
+        {
+            OutputDebugStringA("[TitanProxy] TitanHost candidate had bad format/arch mismatch\n");
+        }
+        else if (lastLaunchError == ERROR_MOD_NOT_FOUND)
+        {
+            OutputDebugStringA("[TitanProxy] TitanHost candidate missing runtime dependency (e.g., ucrtbased.dll)\n");
+        }
+    }
+    SetErrorMode(prevErrMode);
+
+    if (!launched)
     {
         if (hReady)
             CloseHandle(hReady);
-        return false;  // host binary not found
+
+        std::ostringstream oss;
+        oss << "CreateProcess failed (GetLastError=" << static_cast<unsigned long>(lastLaunchError)
+            << ")";
+        if (!attemptedPaths.empty())
+        {
+            oss << ", attempted=";
+            for (size_t i = 0; i < attemptedPaths.size(); ++i)
+            {
+                if (i > 0)
+                    oss << " | ";
+                const std::wstring& wp = attemptedPaths[i];
+                std::string narrow(wp.begin(), wp.end());
+                oss << narrow;
+            }
+        }
+        else
+        {
+            oss << ", no host candidate file found";
+        }
+        m_lastEnsureHostError = oss.str();
+        OutputDebugStringA((std::string("[TitanProxy] ") + m_lastEnsureHostError + "\n").c_str());
+        return false;  // host binary missing or dependency load failure
     }
 
+    HANDLE previousProcess = m_hProcess;
+    if (previousProcess && previousProcess != pi.hProcess)
+    {
+        CloseHandle(previousProcess);
+    }
     m_hProcess = pi.hProcess;
+    SetPriorityClass(m_hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
     CloseHandle(pi.hThread);
 
     // Wait up to 10 s for the host to create the pipe and signal ready.
@@ -313,8 +467,10 @@ bool TitanProxy::ensureHost()
 
     // Connect to the pipe.
     std::string pn = pipeName();
+    if (m_hProcess && WaitForSingleObject(m_hProcess, 0) == WAIT_OBJECT_0) { m_lastEnsureHostError = "host exited before pipe connect"; return false; }
     for (int retry = 0; retry < 20; ++retry)
     {
+        if (m_hProcess && WaitForSingleObject(m_hProcess, 0) == WAIT_OBJECT_0) break;
         m_hPipe = CreateFileA(pn.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
         if (m_hPipe != INVALID_HANDLE_VALUE)
             break;
@@ -323,8 +479,38 @@ bool TitanProxy::ensureHost()
             break;
         Sleep(20);
     }
+    if (m_hPipe != INVALID_HANDLE_VALUE)
+    {
+        SetHandleInformation(m_hPipe, HANDLE_FLAG_INHERIT, 0);
+        DWORD pipeMode = PIPE_READMODE_BYTE; SetNamedPipeHandleState(m_hPipe, &pipeMode, nullptr, nullptr);
+        SetNamedPipeHandleState(m_hPipe, nullptr, nullptr, nullptr);
+        return true;
+    }
 
-    return m_hPipe != INVALID_HANDLE_VALUE;
+    DWORD pipeErr = GetLastError();
+    DWORD hostExitCode = STILL_ACTIVE;
+    if (m_hProcess)
+    {
+        GetExitCodeProcess(m_hProcess, &hostExitCode);
+    }
+
+    std::ostringstream oss;
+    oss << "pipe connect failed (CreateFile err=" << static_cast<unsigned long>(pipeErr) << ")"
+        << ", pipe=" << pn;
+    if (hostExitCode != STILL_ACTIVE)
+    {
+        oss << ", host_exit_code=" << static_cast<unsigned long>(hostExitCode);
+    }
+    m_lastEnsureHostError = oss.str();
+
+    if (m_hProcess)
+    {
+        TerminateProcess(m_hProcess, 1);
+        WaitForSingleObject(m_hProcess, 3000);
+        CloseHandle(m_hProcess);
+        m_hProcess = nullptr;
+    }
+    return false;
 }
 
 void TitanProxy::forceKillHost()
@@ -342,6 +528,7 @@ void TitanProxy::forceKillHost()
         m_hProcess = nullptr;
     }
     m_lastLoadedModelPathUtf8.clear();
+    m_lastEnsureHostError.clear();
 }
 
 void TitanProxy::restartHost()
@@ -367,6 +554,7 @@ void TitanProxy::shutdown()
         m_hProcess = nullptr;
     }
     m_lastLoadedModelPathUtf8.clear();
+    m_lastEnsureHostError.clear();
     if (m_csInit)
     {
         DeleteCriticalSection(&m_cs);
@@ -380,11 +568,17 @@ void TitanProxy::shutdown()
 
 bool TitanProxy::loadModel(const std::string& pathUtf8, std::string& error)
 {
+    error.clear();
+    if (pathUtf8.find('\0') != std::string::npos) { error = "TitanProxy::loadModel: embedded NUL in path"; return false; }
+    if (pathUtf8.find('\n') != std::string::npos || pathUtf8.find('\r') != std::string::npos) { error = "TitanProxy::loadModel: invalid newline in path"; return false; }
     if (pathUtf8.empty())
     {
         error = "TitanProxy::loadModel: empty path";
         return false;
     }
+    if (pathUtf8.find_first_not_of(' ') == std::string::npos) { error = "TitanProxy::loadModel: blank path"; return false; }
+    if (pathUtf8.size() < 4) { error = "TitanProxy::loadModel: path too short"; return false; }
+    if (pathUtf8.size() >= 4096) { error = "TitanProxy::loadModel: path too long"; return false; }
     if (!m_csInit)
     {
         InitializeCriticalSection(&m_cs);
@@ -404,7 +598,10 @@ bool TitanProxy::loadModel(const std::string& pathUtf8, std::string& error)
 
     if (!ensureHost())
     {
-        error = "TitanProxy: could not start RawrXD-TitanHost.exe (ensure it is next to the IDE EXE)";
+        error = "TitanProxy: could not start RawrXD-TitanHost.exe. "
+            "Check runtime deps (ucrtbased.dll indicates debug host), "
+            "or set RAWRXD_TITAN_HOST_PATH to a release host binary. Details: " +
+            (m_lastEnsureHostError.empty() ? "(none)" : m_lastEnsureHostError);
         return false;
     }
 
@@ -447,6 +644,20 @@ void TitanProxy::clearLoadedModelCache()
 bool TitanProxy::submit(const std::string& prompt, uint32_t maxTokens, uint32_t timeoutMs, std::string& completion,
                         std::string& metadata, std::string& error)
 {
+    completion.clear();
+    metadata.clear();
+    error.clear();
+    if (prompt.empty()) { error = "TitanProxy: empty prompt"; return false; }
+    if (prompt.find_first_not_of(" \t\r\n") == std::string::npos) { error = "TitanProxy: blank prompt"; return false; }
+    if (prompt.find('\0') != std::string::npos) { error = "TitanProxy: embedded NUL in prompt"; return false; }
+    if (prompt.size() > (TITAN_PIPE_FRAME_MAX / 2)) { error = "TitanProxy: prompt too large"; return false; }
+    if (maxTokens == 0) maxTokens = 256;
+    if (maxTokens < 8) maxTokens = 8;
+    if (!m_tokenCb && maxTokens > 4096) maxTokens = 4096;
+    if (maxTokens > 8192) maxTokens = 8192;
+    if (timeoutMs == 0) timeoutMs = TITAN_DEFAULT_TIMEOUT_MS;
+    if (timeoutMs < 1000) timeoutMs = 1000;
+    if (timeoutMs > 600000) timeoutMs = 600000;
     if (!m_csInit)
     {
         InitializeCriticalSection(&m_cs);
@@ -461,14 +672,22 @@ bool TitanProxy::submit(const std::string& prompt, uint32_t maxTokens, uint32_t 
 
     if (!ensureHost())
     {
-        error = "TitanProxy: could not start RawrXD-TitanHost.exe (ensure it is next to the IDE EXE)";
+        error = "TitanProxy: could not start RawrXD-TitanHost.exe. "
+            "Check runtime deps (ucrtbased.dll indicates debug host), "
+            "or set RAWRXD_TITAN_HOST_PATH to a release host binary. Details: " +
+            (m_lastEnsureHostError.empty() ? "(none)" : m_lastEnsureHostError);
         return false;
     }
 
+    if (m_seq == UINT32_MAX) m_seq = 0;
     uint32_t seq = ++m_seq;
     char reqBuf[64];
     snprintf(reqBuf, sizeof(reqBuf), "{\"cmd\":\"infer\",\"seq\":%u,\"max_tokens\":%u,\"prompt\":", seq, maxTokens);
-    std::string req = std::string(reqBuf) + JsonEscStr(prompt) + "}";
+    const std::string escapedPrompt = JsonEscStr(prompt);
+    std::string req;
+    req.reserve(sizeof(reqBuf) + escapedPrompt.size() + 1);
+    req = std::string(reqBuf) + escapedPrompt + "}";
+    if (req.size() > TITAN_PIPE_FRAME_MAX) { error = "TitanProxy: request frame too large"; return false; }
 
     std::string sendErr;
     if (!sendFrame(req, sendErr))
@@ -537,6 +756,7 @@ bool TitanProxy::submit(const std::string& prompt, uint32_t maxTokens, uint32_t 
                 toolSeq = static_cast<uint32_t>(atoi(resp.c_str() + p));
             }
         }
+        if (toolSeq == 0) toolSeq = seq;
         uint32_t toolRound = 0;
         {
             std::string needle = "\"round\":";
@@ -549,7 +769,10 @@ bool TitanProxy::submit(const std::string& prompt, uint32_t maxTokens, uint32_t 
                 toolRound = static_cast<uint32_t>(atoi(resp.c_str() + p));
             }
         }
+        if (toolRound > 255) toolRound = 255;
         std::string payload = ExtractStr(resp, "payload");
+        if (payload.empty()) payload = "{}";
+        if (payload.size() > (TITAN_PIPE_FRAME_MAX / 2)) payload.resize(TITAN_PIPE_FRAME_MAX / 2);
 
         // Execute tool via registered callback (Writer side in the IDE).
         std::string toolResult;
@@ -561,12 +784,15 @@ bool TitanProxy::submit(const std::string& prompt, uint32_t maxTokens, uint32_t 
         {
             toolResult = "{\"error\":\"no tool_call handler registered\"}";
         }
+        if (toolResult.empty()) toolResult = "{}";
+        if (toolResult.size() > (TITAN_PIPE_FRAME_MAX / 2)) toolResult.resize(TITAN_PIPE_FRAME_MAX / 2);
 
         // Escape result and send tool_result frame back to TitanHost.
         char hdrBuf[64];
         snprintf(hdrBuf, sizeof(hdrBuf), "{\"cmd\":\"tool_result\",\"seq\":%u,\"round\":%u,\"result\":", toolSeq,
                  toolRound);
         std::string toolResp = std::string(hdrBuf) + JsonEscStr(toolResult) + "}";
+        if (toolResp.size() > TITAN_PIPE_FRAME_MAX) { error = "TitanProxy: tool_result frame too large"; return false; }
         std::string sendErr2;
         if (!sendFrame(toolResp, sendErr2))
         {
@@ -586,6 +812,8 @@ bool TitanProxy::submit(const std::string& prompt, uint32_t maxTokens, uint32_t 
     {
         completion = ExtractStr(resp, "completion");
         metadata = ExtractStr(resp, "metadata");
+        if (metadata.empty()) metadata = "{}";
+        if (completion.size() > TITAN_PIPE_FRAME_MAX) completion.resize(TITAN_PIPE_FRAME_MAX);
         return true;
     }
     // Check for fatal flag — host is exiting; pipe will break soon.
@@ -594,17 +822,20 @@ bool TitanProxy::submit(const std::string& prompt, uint32_t maxTokens, uint32_t 
     error = ExtractStr(resp, "error");
     if (error.empty())
         error = "TitanProxy: unknown error from host";
+    if (error.size() > 2048) error.resize(2048);
     if (fatal)
     {
         // Close pipe handle so next submit() call re-spawns a fresh host.
         CloseHandle(m_hPipe);
         m_hPipe = INVALID_HANDLE_VALUE;
+        m_lastLoadedModelPathUtf8.clear();
     }
     return false;
 }
 
 bool TitanProxy::ping(std::string& buildInfo)
 {
+    buildInfo.clear();
     if (!m_csInit)
     {
         InitializeCriticalSection(&m_cs);
@@ -619,7 +850,9 @@ bool TitanProxy::ping(std::string& buildInfo)
 
     if (!ensureHost())
     {
-        buildInfo = "(TitanHost not running)";
+        buildInfo = "(TitanHost not running; " +
+                    (m_lastEnsureHostError.empty() ? std::string("host launch failed") : m_lastEnsureHostError) +
+                    ")";
         return false;
     }
     std::string req = "{\"cmd\":\"ping\"}";
@@ -629,7 +862,11 @@ bool TitanProxy::ping(std::string& buildInfo)
     std::string resp;
     if (!recvFrame(resp, 5000, err))
         return false;
+    if (resp.size() > TITAN_PIPE_FRAME_MAX) return false;
     buildInfo = ExtractStr(resp, "build");
+    if (buildInfo.empty()) buildInfo = "TitanHost/unknown";
+    if (buildInfo.size() > 256) buildInfo.resize(256);
+    if (buildInfo.find('\0') != std::string::npos) buildInfo = "TitanHost/invalid-build-string";
     return ExtractBool(resp, "pong", false);
 }
 

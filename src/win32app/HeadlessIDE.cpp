@@ -11,7 +11,9 @@
 // ============================================================================
 
 #include "HeadlessIDE.h"
+#include "headless_subsystem_gate.h"
 #include "../../include/chain_of_thought_engine.h"
+#include "core/thread_lifecycle_registry.h"
 #include "../agentic_engine.h"
 #include "../core/instructions_provider.hpp"
 #include "IDEWiringAutoMapper.h"
@@ -76,6 +78,123 @@ constexpr size_t kMaxHeadlessHttpResponseBytes = 1024 * 1024;
 constexpr size_t kMaxHeadlessSearchMatches = 1000;
 constexpr DWORD kHeadlessHttpRecvTimeoutMs = 2000;
 constexpr int kHeadlessNativeTimeoutMs = 5000;
+
+static std::mutex g_startupTraceMutex;
+
+static std::string resolveStartupTracePath()
+{
+    const char* envPath = std::getenv("RAWRXD_STARTUP_TRACE_PATH");
+    if (envPath && envPath[0])
+    {
+        return std::string(envPath);
+    }
+
+    char exePath[MAX_PATH] = {};
+    if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0)
+    {
+        std::string p = exePath;
+        size_t slash = p.find_last_of("\\/");
+        if (slash != std::string::npos)
+        {
+            return p.substr(0, slash + 1) + "startup_execution_graph.log";
+        }
+    }
+
+    return "startup_execution_graph.log";
+}
+
+static void traceStartupGraph(const char* phase, const char* detail = nullptr)
+{
+    if (!phase || !phase[0])
+        return;
+
+    const auto now = std::chrono::system_clock::now();
+    const auto epochMs = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    const DWORD pid = GetCurrentProcessId();
+    const DWORD tid = GetCurrentThreadId();
+
+    std::lock_guard<std::mutex> lock(g_startupTraceMutex);
+    std::ofstream out(resolveStartupTracePath(), std::ios::out | std::ios::app);
+    if (!out)
+        return;
+
+    out << epochMs << "\tpid=" << pid << "\ttid=" << tid << "\tphase=" << phase;
+    if (detail && detail[0])
+    {
+        out << "\tdetail=" << detail;
+    }
+    out << "\n";
+}
+
+enum class StartupExitReason
+{
+    None = 0,
+    ArgParseFail,
+    WinsockInitFail,
+    EngineInitFail,
+    ConfigLoadFail,
+    ModelLoadFail,
+    ServerSocketFail,
+    ServerBindFail,
+    ServerListenFail,
+    ServerStartFail,
+    UnknownFatal
+};
+
+static const char* startupExitReasonToString(StartupExitReason reason)
+{
+    switch (reason)
+    {
+        case StartupExitReason::None:
+            return "NONE";
+        case StartupExitReason::ArgParseFail:
+            return "ARG_PARSE_FAIL";
+        case StartupExitReason::WinsockInitFail:
+            return "WINSOCK_INIT_FAIL";
+        case StartupExitReason::EngineInitFail:
+            return "ENGINE_INIT_FAIL";
+        case StartupExitReason::ConfigLoadFail:
+            return "CONFIG_LOAD_FAIL";
+        case StartupExitReason::ModelLoadFail:
+            return "MODEL_LOAD_FAIL";
+        case StartupExitReason::ServerSocketFail:
+            return "SERVER_SOCKET_FAIL";
+        case StartupExitReason::ServerBindFail:
+            return "SERVER_BIND_FAIL";
+        case StartupExitReason::ServerListenFail:
+            return "SERVER_LISTEN_FAIL";
+        case StartupExitReason::ServerStartFail:
+            return "SERVER_START_FAIL";
+        case StartupExitReason::UnknownFatal:
+            return "UNKNOWN_FATAL";
+        default:
+            return "UNMAPPED_REASON";
+    }
+}
+
+static void traceStartupEarlyExit(StartupExitReason reason, const char* stage, const char* detail = nullptr)
+{
+    std::ostringstream oss;
+    oss << "reason=" << startupExitReasonToString(reason);
+    if (stage && stage[0])
+    {
+        oss << " stage=" << stage;
+    }
+    if (detail && detail[0])
+    {
+        oss << " detail=" << detail;
+    }
+
+    const std::string payload = oss.str();
+    traceStartupGraph("headless.early_exit", payload.c_str());
+
+    FILE* f = fopen("headless_server.log", "a");
+    if (f)
+    {
+        fprintf(f, "EARLY_EXIT %s\n", payload.c_str());
+        fclose(f);
+    }
+}
 
 static std::string extractOllamaChatMessageContent(const std::string& rawResp)
 {
@@ -1787,15 +1906,24 @@ HeadlessIDE::~HeadlessIDE()
 // ============================================================================
 HeadlessResult HeadlessIDE::initialize(int argc, char* argv[])
 {
+    traceStartupGraph("INIT_1_ARGS_PARSE_BEGIN");
     HeadlessResult r = parseArgs(argc, argv);
     if (!r.success)
+    {
+        traceStartupEarlyExit(StartupExitReason::ArgParseFail, "INIT_1_ARGS_PARSE", r.detail ? r.detail : "parseArgs failed");
         return r;
+    }
+    traceStartupGraph("INIT_1_ARGS_PARSE_OK");
+
+    traceStartupGraph("INIT_2_CONFIG_APPLY_BEGIN");
     return initialize(m_config);
 }
 
 HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
 {
     m_config = config;
+    traceStartupGraph("headless.initialize.begin");
+    traceStartupGraph("INIT_2_CONFIG_APPLY_OK");
 
     // Breadcrumb file: trace headless init for hang diagnostics
     {
@@ -1815,6 +1943,15 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
         {
             fprintf(f, "CONFIG mode=%d enableServer=%d port=%d bind=%s\n", (int)m_config.mode,
                     m_config.enableServer ? 1 : 0, m_config.port, m_config.bindAddress.c_str());
+            fclose(f);
+        }
+    }
+
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f)
+        {
+            fprintf(f, "TRACE_AFTER_CONFIG starting readEnvFlag calls\n");
             fclose(f);
         }
     }
@@ -1850,17 +1987,29 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
     }
 
     // Initialize WinSock (required for HTTP server + remote backends)
+    traceStartupGraph("INIT_3_WINSOCK_BEGIN");
+    traceStartupGraph("headless.winsock.begin");
     HeadlessResult wr = initWinsock();
+    traceStartupGraph("headless.winsock.end", wr.success ? "success" : "failure");
     if (!wr.success)
+    {
+        traceStartupEarlyExit(StartupExitReason::WinsockInitFail, "INIT_3_WINSOCK", wr.detail ? wr.detail : "initWinsock failed");
         return wr;
+    }
+    traceStartupGraph("INIT_3_WINSOCK_OK");
 
     // Initialize engines
+    traceStartupGraph("INIT_4_ENGINES_BEGIN");
+    traceStartupGraph("headless.engines.begin");
     HeadlessResult er = initEngines();
+    traceStartupGraph("headless.engines.end", er.success ? "success" : "failure");
     if (!er.success)
     {
+        traceStartupEarlyExit(StartupExitReason::EngineInitFail, "INIT_4_ENGINES", er.detail ? er.detail : "initEngines degraded");
         m_outputSink->appendOutput(er.detail, OutputSeverity::Warning);
         // Non-fatal: engines are optional, server can run without them
     }
+    traceStartupGraph("INIT_4_ENGINES_OK");
 
     // Initialize subsystems — all are non-fatal
     const bool minimalHeadless = readEnvFlag("RAWRXD_HEADLESS_MINIMAL", true);
@@ -1868,7 +2017,9 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
 
     auto tryInit = [this](HeadlessResult (HeadlessIDE::*fn)(), const char* name)
     {
+        traceStartupGraph("headless.subsystem.begin", name);
         HeadlessResult r = (this->*fn)();
+        traceStartupGraph("headless.subsystem.end", r.success ? name : "failure");
         if (!r.success)
         {
             std::ostringstream oss;
@@ -1880,6 +2031,7 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
 
     if (minimalHeadless)
     {
+        traceStartupGraph("headless.profile", "minimal");
         m_outputSink->appendOutput(
             "Headless minimal profile active (RAWRXD_HEADLESS_MINIMAL=1): skipping optional subsystem threads",
             OutputSeverity::Info);
@@ -1887,68 +2039,129 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
     }
     else
     {
-        tryInit(&HeadlessIDE::initBackendManager, "BackendManager");
-        tryInit(&HeadlessIDE::initLLMRouter, "LLMRouter");
-        tryInit(&HeadlessIDE::initFailureDetection, "FailureDetection");
-        tryInit(&HeadlessIDE::initAgentHistory, "AgentHistory");
-        tryInit(&HeadlessIDE::initAsmSemantic, "AsmSemantic");
+        traceStartupGraph("headless.profile", "full");
+        // In full profile, defer ALL subsystem initialization until AFTER model load
+        // to prevent callback-into-subsystem crashes during gguf_load_model.
+        auto& gate = HeadlessSubsystemGate::Instance();
+        gate.Clear();
+
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "BackendManager");
+            HeadlessResult r = initBackendManager();
+            traceStartupGraph("headless.subsystem.end", r.success ? "BackendManager" : "failure");
+            return r.success;
+        });
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "LLMRouter");
+            HeadlessResult r = initLLMRouter();
+            traceStartupGraph("headless.subsystem.end", r.success ? "LLMRouter" : "failure");
+            return r.success;
+        });
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "FailureDetection");
+            HeadlessResult r = initFailureDetection();
+            traceStartupGraph("headless.subsystem.end", r.success ? "FailureDetection" : "failure");
+            return r.success;
+        });
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "AgentHistory");
+            HeadlessResult r = initAgentHistory();
+            traceStartupGraph("headless.subsystem.end", r.success ? "AgentHistory" : "failure");
+            return r.success;
+        });
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "AsmSemantic");
+            HeadlessResult r = initAsmSemantic();
+            traceStartupGraph("headless.subsystem.end", r.success ? "AsmSemantic" : "failure");
+            return r.success;
+        });
         const bool enableHeadlessLsp = readEnvFlag("RAWRXD_HEADLESS_ENABLE_LSP", false);
         if (enableHeadlessLsp)
         {
-            tryInit(&HeadlessIDE::initLSPClient, "LSPClient");
+            gate.RegisterPostLoad([this]() -> bool {
+                traceStartupGraph("headless.subsystem.begin", "LSPClient");
+                HeadlessResult r = initLSPClient();
+                traceStartupGraph("headless.subsystem.end", r.success ? "LSPClient" : "failure");
+                return r.success;
+            });
         }
-        else
-        {
-            m_outputSink->appendOutput(
-                "LSPClient: disabled in headless by default (set RAWRXD_HEADLESS_ENABLE_LSP=1 to enable)",
-                OutputSeverity::Debug);
-        }
-        tryInit(&HeadlessIDE::initHybridBridge, "HybridBridge");
-        tryInit(&HeadlessIDE::initMultiResponse, "MultiResponse");
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "HybridBridge");
+            HeadlessResult r = initHybridBridge();
+            traceStartupGraph("headless.subsystem.end", r.success ? "HybridBridge" : "failure");
+            return r.success;
+        });
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "MultiResponse");
+            HeadlessResult r = initMultiResponse();
+            traceStartupGraph("headless.subsystem.end", r.success ? "MultiResponse" : "failure");
+            return r.success;
+        });
         if (m_expGovernorEnabled)
         {
-            tryInit(&HeadlessIDE::initPhase10, "Phase10-ExecGovernor");
-            m_expGovernorActivated = m_phase10Initialized;
-            if (m_expGovernorActivated)
-            {
-                m_outputSink->appendOutput("[EXPERIMENTAL] governor_activated=true (RAWRXD_ENABLE_GOVERNOR=1)",
-                                           OutputSeverity::Info);
-            }
+            gate.RegisterPostLoad([this]() -> bool {
+                traceStartupGraph("headless.subsystem.begin", "Phase10-ExecGovernor");
+                HeadlessResult r = initPhase10();
+                traceStartupGraph("headless.subsystem.end", r.success ? "Phase10-ExecGovernor" : "failure");
+                m_expGovernorActivated = m_phase10Initialized;
+                if (m_expGovernorActivated)
+                {
+                    m_outputSink->appendOutput("[EXPERIMENTAL] governor_activated=true (RAWRXD_ENABLE_GOVERNOR=1)",
+                                               OutputSeverity::Info);
+                }
+                return r.success;
+            });
         }
-        else
-        {
-            m_outputSink->appendOutput("[EXPERIMENTAL] governor_activated=false (RAWRXD_ENABLE_GOVERNOR=0)",
-                                       OutputSeverity::Debug);
-        }
-        tryInit(&HeadlessIDE::initPhase11, "Phase11-Swarm");
-        tryInit(&HeadlessIDE::initPhase12, "Phase12-NativeDebug");
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "Phase11-Swarm");
+            HeadlessResult r = initPhase11();
+            traceStartupGraph("headless.subsystem.end", r.success ? "Phase11-Swarm" : "failure");
+            return r.success;
+        });
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "Phase12-NativeDebug");
+            HeadlessResult r = initPhase12();
+            traceStartupGraph("headless.subsystem.end", r.success ? "Phase12-NativeDebug" : "failure");
+            return r.success;
+        });
         if (m_expHotpatchEnabled)
         {
-            tryInit(&HeadlessIDE::initHotpatch, "Hotpatch");
-            m_expHotpatchActivated = m_hotpatchInitialized;
-            if (m_expHotpatchActivated)
-            {
-                m_outputSink->appendOutput("[EXPERIMENTAL] hotpatch70b_activated=true (RAWRXD_ENABLE_70B_HOTPATCH=1)",
-                                           OutputSeverity::Info);
-            }
+            gate.RegisterPostLoad([this]() -> bool {
+                traceStartupGraph("headless.subsystem.begin", "Hotpatch");
+                HeadlessResult r = initHotpatch();
+                traceStartupGraph("headless.subsystem.end", r.success ? "Hotpatch" : "failure");
+                m_expHotpatchActivated = m_hotpatchInitialized;
+                if (m_expHotpatchActivated)
+                {
+                    m_outputSink->appendOutput("[EXPERIMENTAL] hotpatch70b_activated=true (RAWRXD_ENABLE_70B_HOTPATCH=1)",
+                                               OutputSeverity::Info);
+                }
+                return r.success;
+            });
         }
-        else
+        if (m_expLayerEvictionEnabled)
         {
-            m_outputSink->appendOutput("[EXPERIMENTAL] hotpatch70b_activated=false (RAWRXD_ENABLE_70B_HOTPATCH=0)",
-                                       OutputSeverity::Debug);
+            gate.RegisterPostLoad([this]() -> bool {
+                if (m_hotpatchInitialized)
+                {
+                    m_expLayerEvictionActivated = true;
+                    m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=true (RAWRXD_ENABLE_LAYER_EVICTION=1)",
+                                               OutputSeverity::Info);
+                }
+                else
+                {
+                    m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=false (waiting on hotpatch init)",
+                                               OutputSeverity::Debug);
+                }
+                return true;
+            });
         }
-        if (m_expLayerEvictionEnabled && m_hotpatchInitialized)
-        {
-            m_expLayerEvictionActivated = true;
-            m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=true (RAWRXD_ENABLE_LAYER_EVICTION=1)",
-                                       OutputSeverity::Info);
-        }
-        else if (m_expLayerEvictionEnabled)
-        {
-            m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=false (waiting on hotpatch init)",
-                                       OutputSeverity::Debug);
-        }
-        tryInit(&HeadlessIDE::initInstructions, "Instructions");
+        gate.RegisterPostLoad([this]() -> bool {
+            traceStartupGraph("headless.subsystem.begin", "Instructions");
+            HeadlessResult r = initInstructions();
+            traceStartupGraph("headless.subsystem.end", r.success ? "Instructions" : "failure");
+            return r.success;
+        });
     }
 
     // Quantum feature markers (no-op wiring; status/log visibility)
@@ -1972,20 +2185,47 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
     }
 
     // Load model if specified
+    traceStartupGraph("INIT_5_MODEL_STAGE_BEGIN");
     if (!m_config.modelPath.empty())
     {
+        traceStartupGraph("headless.model_load.begin", m_config.modelPath.c_str());
         if (!loadModel(m_config.modelPath))
         {
+            traceStartupGraph("headless.model_load.end", "failure");
+            traceStartupEarlyExit(StartupExitReason::ModelLoadFail, "INIT_5_MODEL_LOAD", m_config.modelPath.c_str());
             return HeadlessResult::error("Failed to load model", 2);
         }
+        traceStartupGraph("headless.model_load.end", "success");
+
+        // In full profile, run deferred subsystem init NOW that model is valid
+        if (!m_headlessMinimal)
+        {
+            traceStartupGraph("headless.subsystem_gate.begin", "post_load");
+            auto& gate = HeadlessSubsystemGate::Instance();
+            if (!gate.RunPostLoad())
+            {
+                traceStartupGraph("headless.subsystem_gate.end", "failure");
+                m_outputSink->appendOutput("Post-load subsystem gate failed", OutputSeverity::Warning);
+            }
+            else
+            {
+                traceStartupGraph("headless.subsystem_gate.end", "success");
+            }
+        }
     }
+    traceStartupGraph("INIT_5_MODEL_STAGE_OK");
 
     // Load settings
+    traceStartupGraph("INIT_6_SETTINGS_STAGE_BEGIN");
     if (!m_config.settingsFile.empty())
     {
+        traceStartupGraph("headless.settings.begin", m_config.settingsFile.c_str());
         loadSettings(m_config.settingsFile);
+        traceStartupGraph("headless.settings.end", "done");
     }
+    traceStartupGraph("INIT_6_SETTINGS_STAGE_OK");
 
+    traceStartupGraph("headless.initialize.ready");
     m_outputSink->appendOutput("Headless IDE initialized successfully.", OutputSeverity::Info);
 
     // Breadcrumb: init complete
@@ -3014,6 +3254,11 @@ bool HeadlessIDE::loadModel(const std::string& filepath)
 
         // Expose the resolved model path for native Win32 inference DLL shims.
         SetEnvironmentVariableA("RAWRXD_NATIVE_MODEL_PATH", localPath.c_str());
+
+        // TitanHost bridge is optional for forensic probe paths.
+        // Keep forensic lanes isolated to avoid child-process startup faults
+        // masking memory-map telemetry collection.
+        if (!m_config.forensicMapOnly && !m_config.exitAfterLoad)
         {
             std::string titanErr;
             if (!RawrXD::TitanProxy::instance().loadModel(localPath, titanErr))
@@ -4337,6 +4582,8 @@ void HeadlessIDE::startServer()
     if (m_serverRunning.load())
         return;
 
+    traceStartupGraph("INIT_7_SERVER_START_BEGIN");
+
     auto logStatus = [this](const std::string& msg)
     {
         m_outputSink->appendOutput(msg.c_str(), OutputSeverity::Error);
@@ -4355,6 +4602,7 @@ void HeadlessIDE::startServer()
     if (m_serverSocket == INVALID_SOCKET)
     {
         logStatus("Failed to create server socket");
+        traceStartupEarlyExit(StartupExitReason::ServerSocketFail, "INIT_7_SERVER_SOCKET", "socket() returned INVALID_SOCKET");
         return;
     }
 
@@ -4369,32 +4617,45 @@ void HeadlessIDE::startServer()
 
     if (bind(m_serverSocket, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR)
     {
+        const int wsaErr = WSAGetLastError();
         std::string msg = "Failed to bind to " + m_config.bindAddress + ":" + std::to_string(m_config.port) +
-                          " (WSA=" + std::to_string(WSAGetLastError()) + ")";
+                          " (WSA=" + std::to_string(wsaErr) + ")";
         logStatus(msg);
+        traceStartupEarlyExit(StartupExitReason::ServerBindFail, "INIT_7_SERVER_BIND", msg.c_str());
         closesocket(m_serverSocket);
         m_serverSocket = INVALID_SOCKET;
         m_serverRunning.store(false);
         return;
     }
 
+    traceStartupGraph("INIT_7_SERVER_BIND_OK");
+
     if (listen(m_serverSocket, SOMAXCONN) == SOCKET_ERROR)
     {
+        const int wsaErr = WSAGetLastError();
         std::string msg = "Failed to listen on " + m_config.bindAddress + ":" + std::to_string(m_config.port) +
-                          " (WSA=" + std::to_string(WSAGetLastError()) + ")";
+                          " (WSA=" + std::to_string(wsaErr) + ")";
         logStatus(msg);
+        traceStartupEarlyExit(StartupExitReason::ServerListenFail, "INIT_7_SERVER_LISTEN", msg.c_str());
         closesocket(m_serverSocket);
         m_serverSocket = INVALID_SOCKET;
         m_serverRunning.store(false);
         return;
     }
+
+    traceStartupGraph("INIT_7_SERVER_LISTEN_OK");
 
     m_serverRunning.store(true);
 
     std::string msg = "HTTP server listening on " + m_config.bindAddress + ":" + std::to_string(m_config.port);
     m_outputSink->appendOutput(msg.c_str(), OutputSeverity::Info);
+    traceStartupGraph("INIT_7_SERVER_READY", msg.c_str());
 
-    m_serverThread = std::thread(&HeadlessIDE::serverLoop, this);
+    m_serverThread = std::thread([this]() {
+        REGISTER_THREAD("HeadlessIDE", "HTTP server loop");
+        serverLoop();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
+    });
 }
 
 void HeadlessIDE::stopServer()
@@ -4402,6 +4663,7 @@ void HeadlessIDE::stopServer()
     if (!m_serverRunning.load())
         return;
     m_serverRunning.store(false);
+    RawrXD::Core::ThreadLifecycleRegistry::Instance().RequestShutdown();
     if (m_serverSocket != INVALID_SOCKET)
     {
         closesocket(m_serverSocket);
@@ -4417,6 +4679,7 @@ void HeadlessIDE::stopServer()
         {
             m_serverThread.join();
         }
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkJoined(m_serverThread.get_id());
     }
     m_outputSink->appendOutput("HTTP server stopped", OutputSeverity::Info);
 }
@@ -4630,35 +4893,39 @@ void HeadlessIDE::handleClient(SOCKET clientFd)
         responseBody = "{\"success\":false,\"error\":\"method_not_allowed\"}";
     };
 
-    if (isMutatingMethod(method) && getHeadlessRequireAuthForWrites())
+    try
     {
-        if (getHeadlessAuthToken().empty())
+        if (isMutatingMethod(method) && getHeadlessRequireAuthForWrites())
         {
-            statusCode = 503;
-            responseBody = "{\"success\":false,\"error\":\"auth_token_not_configured\"}";
+            if (getHeadlessAuthToken().empty())
+            {
+                statusCode = 503;
+                responseBody = "{\"success\":false,\"error\":\"auth_token_not_configured\"}";
+            }
+            else if (!hasMatchingBearerToken(headers))
+            {
+                statusCode = 401;
+                responseBody = "{\"success\":false,\"error\":\"unauthorized\"}";
+            }
         }
-        else if (!hasMatchingBearerToken(headers))
+        else if (!getHeadlessAuthToken().empty() && !isPublicRouteNoAuthRequired(path) &&
+                 !hasMatchingBearerToken(headers))
         {
             statusCode = 401;
             responseBody = "{\"success\":false,\"error\":\"unauthorized\"}";
         }
-    }
-    else if (!getHeadlessAuthToken().empty() && !isPublicRouteNoAuthRequired(path) && !hasMatchingBearerToken(headers))
-    {
-        statusCode = 401;
-        responseBody = "{\"success\":false,\"error\":\"unauthorized\"}";
-    }
-    else if (!allowHeadlessRequestByRateLimit(clientIdentity, method, path, retryAfterSeconds))
-    {
-        statusCode = 429;
-        std::ostringstream oss;
-        oss << "{\"success\":false,\"error\":\"rate_limited\",\"retry_after_seconds\":" << retryAfterSeconds << "}";
-        responseBody = oss.str();
-    }
-    else if (path == "/api/status" || path == "/api/headless/status")
-    {
-        responseBody = getFullStatusDump();
-    }
+        else if (!allowHeadlessRequestByRateLimit(clientIdentity, method, path, retryAfterSeconds))
+        {
+            statusCode = 429;
+            std::ostringstream oss;
+            oss << "{\"success\":false,\"error\":\"rate_limited\",\"retry_after_seconds\":"
+                << retryAfterSeconds << "}";
+            responseBody = oss.str();
+        }
+        else if (path == "/api/status" || path == "/api/headless/status")
+        {
+            responseBody = getFullStatusDump();
+        }
     else if (path == "/api/version")
     {
         responseBody = "{\"version\":\"" + jsonEscape(std::string(VERSION)) + "\",\"phase\":\"" +
@@ -7419,10 +7686,36 @@ void HeadlessIDE::handleClient(SOCKET clientFd)
             }
         }
     }
-    else
+        else
+        {
+            statusCode = 404;
+            responseBody = "{\"error\":\"Not found\",\"path\":\"" + jsonEscape(path) + "\"}";
+        }
+    }
+    catch (const std::exception& ex)
     {
-        statusCode = 404;
-        responseBody = "{\"error\":\"Not found\",\"path\":\"" + jsonEscape(path) + "\"}";
+        statusCode = 500;
+        responseBody = "{\"success\":false,\"error\":\"internal_error\",\"detail\":\"" +
+                       jsonEscape(ex.what()) + "\"}";
+
+        FILE* f = fopen("headless_server.log", "a");
+        if (f)
+        {
+            fprintf(f, "ROUTE_EXCEPTION method=%s path=%s error=%s\n", method.c_str(), path.c_str(), ex.what());
+            fclose(f);
+        }
+    }
+    catch (...)
+    {
+        statusCode = 500;
+        responseBody = "{\"success\":false,\"error\":\"internal_error\",\"detail\":\"unknown exception\"}";
+
+        FILE* f = fopen("headless_server.log", "a");
+        if (f)
+        {
+            fprintf(f, "ROUTE_EXCEPTION method=%s path=%s error=unknown\n", method.c_str(), path.c_str());
+            fclose(f);
+        }
     }
 
     // Send HTTP response
@@ -7711,11 +8004,13 @@ int HeadlessIDE::runServerMode()
 {
     if (m_config.enableServer)
     {
+        traceStartupGraph("headless.server_mode.start");
         startServer();
         if (!m_serverRunning.load())
         {
             m_outputSink->appendOutput("HTTP server failed to start; exiting headless server mode.",
                                        OutputSeverity::Error);
+            traceStartupEarlyExit(StartupExitReason::ServerStartFail, "RUN_SERVER_MODE", "m_serverRunning=false after startServer");
             FILE* f = fopen("headless_server.log", "a");
             if (f)
             {
@@ -7744,6 +8039,19 @@ int HeadlessIDE::runServerMode()
         if (f)
         {
             fprintf(f, "RUN_SERVER_LOOP_ENTER\n");
+               // If exit-after-load mode, exit immediately after starting server
+               if (m_config.exitAfterLoad)
+               {
+                   m_outputSink->appendOutput("Exiting after load complete (--exit-after-load mode).", OutputSeverity::Info);
+                   FILE* f = fopen("headless_server.log", "a");
+                   if (f)
+                   {
+                       fprintf(f, "RUN_SERVER_EXIT exit_after_load\n");
+                       fclose(f);
+                   }
+                   requestShutdown();
+               }
+
             fclose(f);
         }
     }

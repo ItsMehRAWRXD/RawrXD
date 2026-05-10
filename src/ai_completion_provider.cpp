@@ -7,6 +7,7 @@
  */
 
 #include "ai_completion_provider.h"
+#include "core/thread_lifecycle_registry.h"
 #include <iostream>
 #include <sstream>
 #include <thread>
@@ -146,7 +147,9 @@ void AICompletionProvider::requestCompletions(
 
     // Launch async thread
     std::thread([this]() {
+        REGISTER_THREAD("AICompletionProvider", "async completion request");
         this->onCompletionRequest();
+        RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
     }).detach();
 }
 

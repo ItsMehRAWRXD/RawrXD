@@ -65,7 +65,7 @@ void Win32IDE::initModelDiscovery()
     m_modelDiscoveryEnabled = true;
     m_modelDiscoveryPaths = DEFAULT_MODEL_PATHS;
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         m_availableModels.clear();
     }
     m_modelPaths.clear();
@@ -108,7 +108,7 @@ void Win32IDE::shutdownModelDiscovery()
 {
     m_modelDiscoveryEnabled = false;
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         m_availableModels.clear();
     }
     m_modelPaths.clear();
@@ -122,7 +122,7 @@ void Win32IDE::scanForModels()
     }
 
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         m_availableModels.clear();
     }
     m_modelPaths.clear();
@@ -132,7 +132,7 @@ void Win32IDE::scanForModels()
 
     auto scanPass = [this]()
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         for (const auto& rawBasePath : m_modelDiscoveryPaths)
         {
             try
@@ -190,7 +190,7 @@ void Win32IDE::scanForModels()
     scanPass();
     bool discoveredAny = false;
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         discoveredAny = !m_availableModels.empty();
     }
     if (!discoveredAny)
@@ -202,7 +202,7 @@ void Win32IDE::scanForModels()
 
     size_t discoveredCount = 0;
     {
-        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         discoveredCount = m_availableModels.size();
     }
     LOG_INFO(std::string("Model discovery completed. Found ") + std::to_string(discoveredCount) + " models");
@@ -210,7 +210,7 @@ void Win32IDE::scanForModels()
 
 std::vector<std::string> Win32IDE::getAvailableModels() const
 {
-    std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+    std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
     return m_availableModels;
 }
 

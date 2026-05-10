@@ -133,6 +133,9 @@ class TitanProxy
     TokenCb m_tokenCb;
     ToolCallCb m_toolCallCb;
 
+    // Last host launch/connect failure details for user-facing diagnostics.
+    std::string m_lastEnsureHostError;
+
     // Last path successfully sent to TitanHost (avoids redundant load_model frames).
     std::string m_lastLoadedModelPathUtf8;
 

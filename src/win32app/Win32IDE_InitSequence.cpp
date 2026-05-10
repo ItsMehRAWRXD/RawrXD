@@ -145,8 +145,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         crashCfg.enableMiniDump = true;
         crashCfg.enablePatchRollback = true;
         crashCfg.enablePatchQuarantine = true;
-        crashCfg.showMessageBox = true;
-        crashCfg.terminateAfterDump = true;
+        crashCfg.showMessageBox = false;   // CrashReporter dialog handles UI
+        crashCfg.terminateAfterDump = false; // CrashReporter filter terminates
         crashCfg.onCrashCallback = nullptr;
         crashCfg.callbackUserData = nullptr;
         RawrXD::Crash::Install(crashCfg);
