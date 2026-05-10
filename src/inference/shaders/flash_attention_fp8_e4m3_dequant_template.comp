@@ -1,10 +1,8 @@
 // ============================================================================
-// flash_attention_fp8_e4m3_dequant.glsl — Reference E4M3 → float32 (GLSL 450)
+// flash_attention_fp8_e4m3_dequant_template.comp — Reference E4M3 → float32
 // ============================================================================
-// Compile to SPIR-V with glslangValidator. Intended to mirror host
-// RawrXD::Quantization::SovereignFP8Quantizer E4M3 decode (OCP: exp=15,mant=7 => NaN).
-// Accumulate in fp32 after dequant; WMMA / native FP8 is a separate fast path once
-// validated against this reference in your RDNA3 pipeline.
+// glslangValidator -V --target-env vulkan1.3 this_file.comp -o e4m3_dequant.spv
+// Mirrors host RawrXD::Quantization E4M3 decode (OCP NaN: exp=15, mant=7).
 // ============================================================================
 
 #version 450
@@ -39,10 +37,20 @@ float e4m3_u8_to_f32(uint u8)
     return uintBitsToFloat(bits);
 }
 
-// Example: unpack one byte from a packed SSBO u32 lane (thread supplies byte index 0..3).
 float dequant_e4m3_byte(uint packed_u32, uint byte_idx, float inv_scale)
 {
     const uint shift = byte_idx * 8u;
     const uint u8 = bitfieldExtract(packed_u32, int(shift), 8);
     return e4m3_u8_to_f32(u8) * inv_scale;
+}
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+    const uint lane = gl_LocalInvocationIndex;
+    const float f = e4m3_u8_to_f32(lane & 0xFFu);
+    if (f != f)
+    {
+        return;
+    }
 }
