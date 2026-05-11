@@ -5305,7 +5305,6 @@ if(WIN32)
             $<$<CONFIG:Release>:/OPT:ICF>
             $<$<CONFIG:Release>:/INCREMENTAL:NO>
             $<$<CONFIG:Release>:/LTCG:OFF>
-            $<$<CONFIG:Release>:/MERGE:.rdata=.text>
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
