@@ -178,7 +178,7 @@ endif()
 # Keep LTCG globally, but avoid executable-only/defaultlib overrides here.
 # /NODEFAULTLIB + /ENTRY + /SUBSYSTEM must not leak into DLL targets.
 if(MSVC)
-    add_link_options(/LTCG)
+    add_link_options($<$<NOT:$<CONFIG:Release>>:/LTCG>)
 endif()
 
 # WebView2 and WIL are expected under this optional local SDK path.
@@ -572,6 +572,78 @@ endif()
 
 if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
     add_custom_target(rawrxd-fp8-shader-spv DEPENDS ${RAWRXD_FP8_SHADER_SPV})
+endif()
+
+# FlashAttention FP8 minimal passthrough (Vulkan path in flash_attention_vulkan_fp8.cpp)
+set(RAWRXD_FA8_MINIMAL_COMP "${CMAKE_SOURCE_DIR}/src/inference/shaders/flash_attention_fp8_minimal_test.comp")
+set(RAWRXD_FA8_MINIMAL_SPV "${CMAKE_SOURCE_DIR}/src/inference/shaders/flash_attention_fp8_minimal_test.spv")
+
+if(RAWRXD_GLSLANG_VALIDATOR)
+    add_custom_command(
+        OUTPUT ${RAWRXD_FA8_MINIMAL_SPV}
+        COMMAND ${RAWRXD_GLSLANG_VALIDATOR}
+                -V
+                --target-env vulkan1.3
+                -o ${RAWRXD_FA8_MINIMAL_SPV}
+                ${RAWRXD_FA8_MINIMAL_COMP}
+        DEPENDS ${RAWRXD_FA8_MINIMAL_COMP}
+        COMMENT "Compiling flash_attention_fp8_minimal_test.comp -> SPIR-V (Sovereign FA8)"
+        VERBATIM
+    )
+elseif(RAWRXD_GLSLC)
+    add_custom_command(
+        OUTPUT ${RAWRXD_FA8_MINIMAL_SPV}
+        COMMAND ${RAWRXD_GLSLC}
+                -fshader-stage=compute
+                --target-env=vulkan1.3
+                -O
+                ${RAWRXD_FA8_MINIMAL_COMP}
+                -o ${RAWRXD_FA8_MINIMAL_SPV}
+        DEPENDS ${RAWRXD_FA8_MINIMAL_COMP}
+        COMMENT "Compiling flash_attention_fp8_minimal_test.comp with glslc -> SPIR-V"
+        VERBATIM
+    )
+else()
+    message(STATUS "[FA8] glslangValidator/glslc not found; flash_attention_fp8_minimal_test.spv will not be auto-regenerated")
+endif()
+
+if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
+    add_custom_target(rawrxd-fa8-minimal-spv DEPENDS ${RAWRXD_FA8_MINIMAL_SPV})
+endif()
+
+# FlashAttention FP8 tiled scaffold (online softmax + LDS path; not wired to dispatch yet)
+set(RAWRXD_FA8_TILED_COMP "${CMAKE_SOURCE_DIR}/src/inference/shaders/flash_attention_fp8_tiled.comp")
+set(RAWRXD_FA8_TILED_SPV "${CMAKE_SOURCE_DIR}/src/inference/shaders/flash_attention_fp8_tiled.spv")
+
+if(RAWRXD_GLSLANG_VALIDATOR)
+    add_custom_command(
+        OUTPUT ${RAWRXD_FA8_TILED_SPV}
+        COMMAND ${RAWRXD_GLSLANG_VALIDATOR}
+                -V
+                --target-env vulkan1.3
+                -o ${RAWRXD_FA8_TILED_SPV}
+                ${RAWRXD_FA8_TILED_COMP}
+        DEPENDS ${RAWRXD_FA8_TILED_COMP}
+        COMMENT "Compiling flash_attention_fp8_tiled.comp -> SPIR-V (tiled scaffold)"
+        VERBATIM
+    )
+elseif(RAWRXD_GLSLC)
+    add_custom_command(
+        OUTPUT ${RAWRXD_FA8_TILED_SPV}
+        COMMAND ${RAWRXD_GLSLC}
+                -fshader-stage=compute
+                --target-env=vulkan1.3
+                -O
+                ${RAWRXD_FA8_TILED_COMP}
+                -o ${RAWRXD_FA8_TILED_SPV}
+        DEPENDS ${RAWRXD_FA8_TILED_COMP}
+        COMMENT "Compiling flash_attention_fp8_tiled.comp with glslc -> SPIR-V"
+        VERBATIM
+    )
+endif()
+
+if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
+    add_custom_target(rawrxd-fa8-tiled-spv DEPENDS ${RAWRXD_FA8_TILED_SPV})
 endif()
 
 set(_RAWR_ASM_FEATURE_DEFINITIONS
@@ -3568,6 +3640,10 @@ if(WIN32)
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
+        src/win32app/Win32IDE_SlashCommands.cpp
+        src/win32app/Win32IDE_MirrorGate.cpp
+        src/win32app/Win32IDE_ProjectRagLite.cpp
+        src/win32app/ghost_completion_parse.cpp
         src/win32app/Win32IDE_Titan_Heartbeat.cpp
         src/win32app/Win32IDE_OutlinePanel.cpp
         src/win32app/Win32IDE_GoToLine.cpp
@@ -5147,6 +5223,13 @@ if(WIN32)
         src/ggml-cpu/arch/x86/repack.cpp
     )
 
+    if(TARGET rawrxd-fa8-minimal-spv)
+        add_dependencies(RawrXD-Win32IDE rawrxd-fa8-minimal-spv)
+    endif()
+    if(TARGET rawrxd-fa8-tiled-spv)
+        add_dependencies(RawrXD-Win32IDE rawrxd-fa8-tiled-spv)
+    endif()
+
     target_include_directories(RawrXD-Win32IDE PRIVATE
         src/ggml-cpu
         src/bridge
@@ -5216,7 +5299,13 @@ if(WIN32)
         set(_IDE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-Win32IDE.map")
         target_link_options(RawrXD-Win32IDE PRIVATE
             /LARGEADDRESSAWARE
-            /DEBUG:FULL
+            $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:/DEBUG:FULL>
+            $<$<CONFIG:Release>:/DEBUG:NONE>
+            $<$<CONFIG:Release>:/OPT:REF>
+            $<$<CONFIG:Release>:/OPT:ICF>
+            $<$<CONFIG:Release>:/INCREMENTAL:NO>
+            $<$<CONFIG:Release>:/LTCG:OFF>
+            $<$<CONFIG:Release>:/MERGE:.rdata=.text>
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
@@ -6717,6 +6806,43 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
     )
 endif()
+
+# ============================================================================
+# RawrXD_Inference.exe — Hybrid Sovereign Inference Kernel
+# ============================================================================
+# Standalone executable that:
+#   - Calls MASM privilege escalation (RawrXD_EnableSeLockMemoryPrivilege)
+#   - Initializes SovereignPager for large-page memory management
+#   - Loads GGUF weights directly (zero-copy)
+#   - Bypasses Ollama and REST API entirely
+# Run: psexec -s -i RawrXD_Inference.exe --model "bg40-unleashed.bin"
+# ============================================================================
+add_executable(RawrXD_Inference
+    src/sovereign_inference/RawrXD_Inference.cpp
+    src/compression/sovereign_pager.cpp
+    src/asm/model_streamer_x64.asm
+)
+
+target_include_directories(RawrXD_Inference PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src/compression
+)
+
+target_compile_features(RawrXD_Inference PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(RawrXD_Inference PRIVATE /EHsc /W3 /O2 /arch:AVX2)
+    enable_language(ASM_MASM)
+    set_source_files_properties(src/asm/model_streamer_x64.asm PROPERTIES LANGUAGE ASM_MASM)
+endif()
+
+target_link_libraries(RawrXD_Inference PRIVATE kernel32 advapi32 dstorage d3d12 dxgi)
+
+set_target_properties(RawrXD_Inference PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
 
 # ============================================================================
 # FP8 Verifier Test Suite (Scalar vs FP8 Numerical Validation)
