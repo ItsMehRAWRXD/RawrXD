@@ -1,5 +1,6 @@
 #include "agentic_bridge.hpp"
 #include "core/thread_lifecycle_registry.h"
+#include "cpu_inference_engine.h"
 #include <windows.h>
 #include <winhttp.h>
 #include <sstream>
@@ -42,28 +43,12 @@ AIAgenticBridge::~AIAgenticBridge() { Shutdown(); }
 bool AIAgenticBridge::Initialize(const std::string& endpoint, const std::string& defaultModel) {
     endpoint_ = endpoint;
     currentModel_ = defaultModel;
-    HttpScope scope;
-    scope.hSession = WinHttpOpen(L"RawrXD-IDE/1.0",
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!scope.hSession) return false;
-    std::wstring host, path; INTERNET_PORT port;
-    if (!CrackUrl(endpoint, host, port, path)) return false;
-    scope.hConnect = WinHttpConnect(scope.hSession, host.c_str(), port, 0);
-    if (!scope.hConnect) return false;
-    scope.hRequest = WinHttpOpenRequest(scope.hConnect, L"GET", L"/api/tags",
-        nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-    if (!scope.hRequest) return false;
-    if (!WinHttpSendRequest(scope.hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-        WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) return false;
-    if (!WinHttpReceiveResponse(scope.hRequest, nullptr)) return false;
-    DWORD status = 0, statusSz = sizeof(status);
-    WinHttpQueryHeaders(scope.hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-        WINHTTP_HEADER_NAME_BY_INDEX, &status, &statusSz, WINHTTP_NO_HEADER_INDEX);
-    if (status != 200) return false;
+    // Use native CPUInferenceEngine — no Ollama connectivity required.
+    // The engine must already be loaded via CPUInferenceEngine::GetSharedInstance().
     connected_.store(true);
     running_.store(true);
     workerThread_ = std::thread([this]() {
-        REGISTER_THREAD("AIAgenticBridge", "HTTP queue processor");
+        REGISTER_THREAD("AIAgenticBridge", "native inference queue processor");
         ProcessQueue();
         RawrXD::Core::ThreadLifecycleRegistry::Instance().MarkExited(std::this_thread::get_id());
     });
@@ -210,74 +195,32 @@ void AIAgenticBridge::ProcessQueue() {
 
 bool AIAgenticBridge::CallOllamaAPI(const std::string& prompt, std::string& response,
     std::shared_ptr<std::atomic<bool>> cancelFlag) {
-    HttpScope scope;
-    scope.hSession = WinHttpOpen(L"RawrXD-IDE/1.0",
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!scope.hSession) return false;
-    std::wstring host, path; INTERNET_PORT port;
-    if (!CrackUrl(endpoint_, host, port, path)) return false;
-    scope.hConnect = WinHttpConnect(scope.hSession, host.c_str(), port, 0);
-    if (!scope.hConnect) return false;
-    scope.hRequest = WinHttpOpenRequest(scope.hConnect, L"POST", L"/api/generate",
-        nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-    if (!scope.hRequest) return false;
-    // Build JSON payload (no external dep)
+    // Route through native CPUInferenceEngine — same path as CLI/GUI, zero Ollama dependency.
+    auto engine = CPUInferenceEngine::GetSharedInstance();
+    if (!engine || !engine->IsModelLoaded()) {
+        return false;
+    }
+
     const std::string safePrompt = prompt.empty() ? std::string(" ") : prompt;
-    std::string jsonData = "{\"model\":\"" + currentModel_ + "\",\"prompt\":\"";
-    for (char c : safePrompt) {
-        if (c == '"')  { jsonData += "\\\""; continue; }
-        if (c == '\\') { jsonData += "\\\\"; continue; }
-        if (c == '\n') { jsonData += "\\n";  continue; }
-        if (c == '\r') { jsonData += "\\r";  continue; }
-        if (c == '\t') { jsonData += "\\t";  continue; }
-        jsonData += c;
+    auto input_tokens = engine->Tokenize(safePrompt);
+    if (input_tokens.empty()) {
+        return false;
     }
-    jsonData += "\",\"stream\":false,\"options\":{\"num_ctx\":1024,\"num_predict\":256,\"num_batch\":64,\"use_mmap\":false}}";
-    std::wstring headers = L"Content-Type: application/json\r\n";
-    if (!WinHttpSendRequest(scope.hRequest, headers.c_str(), (DWORD)headers.size(),
-        (LPVOID)jsonData.data(), (DWORD)jsonData.size(), (DWORD)jsonData.size(), 0)) return false;
-    if (!WinHttpReceiveResponse(scope.hRequest, nullptr)) return false;
-    DWORD status = 0, statusSz = sizeof(status);
-    WinHttpQueryHeaders(scope.hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-        WINHTTP_HEADER_NAME_BY_INDEX, &status, &statusSz, WINHTTP_NO_HEADER_INDEX);
-    if (status != 200) return false;
-    std::string fullResponse;
-    DWORD size = 0;
-    do {
-        if (cancelFlag && cancelFlag->load()) return false;
-        size = 0;
-        if (!WinHttpQueryDataAvailable(scope.hRequest, &size) || size == 0) break;
-        std::string chunk(size, '\0');
-        DWORD downloaded = 0;
-        if (!WinHttpReadData(scope.hRequest, chunk.data(), size, &downloaded)) break;
-        chunk.resize(downloaded);
-        fullResponse += chunk;
-    } while (size > 0);
-    // Extract "response" field from JSON
-    size_t rpos = fullResponse.find("\"response\":");
-    if (rpos == std::string::npos) return false;
-    size_t q1 = fullResponse.find('"', rpos + 11);
-    if (q1 == std::string::npos) return false;
-    size_t q2 = q1 + 1;
-    while (q2 < fullResponse.size()) {
-        if (fullResponse[q2] == '\\' && q2 + 1 < fullResponse.size()) { q2 += 2; continue; }
-        if (fullResponse[q2] == '"') break;
-        q2++;
-    }
-    if (q2 >= fullResponse.size()) return false;
-    std::string raw = fullResponse.substr(q1 + 1, q2 - q1 - 1);
-    // Unescape
+
     response.clear();
-    response.reserve(raw.size());
-    for (size_t i = 0; i < raw.size(); ++i) {
-        if (raw[i] == '\\' && i + 1 < raw.size()) {
-            char n = raw[++i];
-            if (n == 'n') response += '\n';
-            else if (n == 't') response += '\t';
-            else if (n == 'r') response += '\r';
-            else response += n;
-        } else { response += raw[i]; }
-    }
+    engine->GenerateStreaming(
+        input_tokens,
+        256,
+        [&](const std::string& token) {
+            if (cancelFlag && cancelFlag->load()) {
+                engine->RequestCancelGeneration();
+                return;
+            }
+            response += token;
+        },
+        []() {}
+    );
+    engine->ResetCancelGeneration();
     return !response.empty();
 }
 
