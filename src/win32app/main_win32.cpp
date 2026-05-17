@@ -38,8 +38,20 @@
 #include "../p2p/SystemIntegrityProver.h"
 #include "HeadlessIDE.h"
 #include "Win32IDE.h"
+#include "Win32IDE_Phase19_2_Soak.h"
+#include "Win32IDE_TBA_LinkGraph.h"
+#include "Win32IDE_GGUFManifold.h"
+#include "Win32IDE_KVApertureProbe.h"
+#include "Win32IDE_TextEngineProbe.h"
+#include "Win32IDE_ContextGovernor.h"
+#include "Win32IDE_ActionGraph.h"
+#include "Win32IDE_ExecutionTruth.h"
+#include "Win32IDE_ParityEngine.h"
+#include "Win32IDE_TokenTickProbe.h"
+#include "../../include/pulse_ring_buffer.h"
 #include "Win32IDE_AgenticBrowser.h"
 #include "WindowVisibilityHelpers.h"
+#include "../sovereign/sovereign_smoketests.h"
 #include <commctrl.h>
 #include <dbghelp.h>
 #include <shellscalingapi.h>
@@ -56,9 +68,25 @@
 #include "../skill_system/SkillSystemBuildIntegration.h"
 #include "rawrxd/runtime/RuntimeSurfaceBootstrap.hpp"
 #include <algorithm>
+#include "../../include/sovereign_abi.h"
+
+extern "C" PVOID CALLBACK Sovereign_VEH_Handler(PEXCEPTION_POINTERS pExc);
+
+// Definition of the sovereign telemetry bus
+PulseRingBuffer g_pulseRing;
+SovereignPulseBuffer g_SovereignPulse;
+
+extern "C" {
+    uint32_t g_Metrics_Faults = 0;
+    uint64_t g_Sovereign_RecoveryRIP = 0;
+    uint64_t g_CrashEpoch_RIP = 0;
+    uint32_t g_CrashEpoch_Code = 0;
+    void Lazarus_OnSignal();
+}
+
 #include <chrono>
-#include <csignal>
 #include <condition_variable>
+#include <csignal>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -74,6 +102,11 @@
 #include <unordered_set>
 #include <vector>
 
+namespace rawrxd::ghost_pipeline_probe
+{
+int runGhostPipelineProbeCli();
+}
+
 #ifdef _WIN32
 #pragma comment(lib, "winhttp.lib")
 #endif
@@ -85,8 +118,10 @@
 // These must be lazy-initialized to ensure C runtime is ready before construction.
 static std::ofstream* s_startupLog = nullptr;  // Plain pointer is safe
 
-inline std::recursive_mutex& GetStartupLogMutex() {
-    static std::recursive_mutex* inst = new std::recursive_mutex();  // Leak-on-purpose, never destroyed; recursive to allow nested calls
+inline std::recursive_mutex& GetStartupLogMutex()
+{
+    static std::recursive_mutex* inst =
+        new std::recursive_mutex();  // Leak-on-purpose, never destroyed; recursive to allow nested calls
     return *inst;
 }
 
@@ -517,6 +552,59 @@ static void logBackgroundThreadCrash(const char* lane, DWORD code)
 }
 
 // ============================================================================
+// Background-thread AV guard — catches null-call crashes on background threads
+// (spawned by deferred init subsystems) and terminates just that thread instead
+// of crashing the whole process.  Main thread is excluded so real failures are
+// still visible.  Installed via AddVectoredExceptionHandler in WinMain.
+// ============================================================================
+static DWORD s_mainThreadId = 0;
+static HWND s_mainWindowHwnd = nullptr;  // Set from WinMain to allow VEH to post messages
+// Thread-local: pointer to current IDE instance (set before spawning deferred init worker)
+static thread_local void* tls_ideInstance = nullptr;
+
+static LONG WINAPI bgThreadAvExceptionFilter(EXCEPTION_POINTERS* ep)
+{
+    if (!ep || !ep->ExceptionRecord)
+        return EXCEPTION_CONTINUE_SEARCH;
+    const DWORD code = ep->ExceptionRecord->ExceptionCode;
+    // Only intercept access violations (0xC0000005) on background threads.
+    if (code == EXCEPTION_ACCESS_VIOLATION && s_mainThreadId != 0 &&
+        GetCurrentThreadId() != s_mainThreadId)
+    {
+        char msg[384];
+        snprintf(msg, sizeof(msg),
+                 "[RawrXD] Background thread AV (code=0x%08lX, tid=%lu) caught by VEH guard; "
+                 "thread terminated gracefully — IDE continues.\n",
+                 code, static_cast<unsigned long>(GetCurrentThreadId()));
+        OutputDebugStringA(msg);
+        FILE* f = fopen("rawrxd_crash.log", "a");
+        if (f)
+        {
+            fprintf(f, "BG_THREAD_AV: code=0x%08lX tid=%lu\n", code,
+                    static_cast<unsigned long>(GetCurrentThreadId()));
+            fclose(f);
+        }
+        
+        // If this is a deferred init worker thread (tls_ideInstance is set), 
+        // signal the IDE that init failed so it can show a retry UI
+        if (tls_ideInstance != nullptr && s_mainWindowHwnd != nullptr && IsWindow(s_mainWindowHwnd))
+        {
+            // Post message to main window so it can handle the init failure
+            PostMessageA(s_mainWindowHwnd, WM_APP + 114 /* WM_DEFERRED_INIT_FAILED */, 0, 0);
+        }
+        
+        ExitThread(1);  // kill only this background thread; process and IDE survive
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+// Helper to set thread-local IDE pointer for VEH crash detection
+void setDeferredInitWorkerTLS(void* idePtr)
+{
+    tls_ideInstance = idePtr;
+}
+
+// ============================================================================
 // Set CWD to exe directory — ensures crash_dumps, config, plugins, engines
 // resolve correctly when launched from Explorer, shortcuts, or other CWD.
 // ============================================================================
@@ -658,14 +746,27 @@ static bool hasSelfTestFlag(LPSTR lpCmdLine)
     return strstr(lpCmdLine, "--selftest") != nullptr;
 }
 
+static bool hasSovereignSmokeFlag(LPSTR lpCmdLine)
+{
+    if (!lpCmdLine)
+        return false;
+    return strstr(lpCmdLine, "--sovereign-smoke") != nullptr;
+}
+
 static bool hasAgenticSmokeFlag(LPSTR lpCmdLine)
 {
     if (!lpCmdLine)
         return false;
     // --agentic-smoke is the canonical flag; --smoke-test is the user-facing alias.
     // Both route to the same bounded, deterministic runAgenticSmokeTestExit().
-    return strstr(lpCmdLine, "--agentic-smoke") != nullptr ||
-           strstr(lpCmdLine, "--smoke-test") != nullptr;
+    return strstr(lpCmdLine, "--agentic-smoke") != nullptr || strstr(lpCmdLine, "--smoke-test") != nullptr;
+}
+
+static bool hasAgentWalSmokeFlag(LPSTR lpCmdLine)
+{
+    if (!lpCmdLine)
+        return false;
+    return strstr(lpCmdLine, "--agent-wal-smoke") != nullptr;
 }
 
 static bool hasChatUiSmokeFlag(LPSTR lpCmdLine)
@@ -789,20 +890,19 @@ static int runStartupSelfTest()
         {
             CommandContext ctx{};
             ctx.rawInput = "";
-            ctx.args     = "";
-            ctx.commandId      = id;
-            ctx.isGui          = false;
-            ctx.isHeadless     = true;
-            ctx.outputFn       = selfTestOutputSink;
+            ctx.args = "";
+            ctx.commandId = id;
+            ctx.isGui = false;
+            ctx.isHeadless = true;
+            ctx.outputFn = selfTestOutputSink;
             ctx.outputUserData = &diag;
             auto result = RawrXD::Dispatch::dispatchByGuiId(id, ctx);
             // OK or HANDLER_ERROR (no args) = handler is linked and callable → pass.
             // PRECOND_FAIL (feature gated at runtime) is also acceptable for a headless probe.
             // Fail only on: NOT_FOUND (unregistered), NULL_HANDLER (link gap), WRONG_EXPOSURE.
-            const bool linked =
-                result.status == RawrXD::Dispatch::DispatchStatus::OK ||
-                result.status == RawrXD::Dispatch::DispatchStatus::HANDLER_ERROR ||
-                result.status == RawrXD::Dispatch::DispatchStatus::PRECOND_FAIL;
+            const bool linked = result.status == RawrXD::Dispatch::DispatchStatus::OK ||
+                                result.status == RawrXD::Dispatch::DispatchStatus::HANDLER_ERROR ||
+                                result.status == RawrXD::Dispatch::DispatchStatus::PRECOND_FAIL;
             if (!linked)
             {
                 ok = false;
@@ -906,6 +1006,14 @@ static void exportCommandArtifacts(const char* proofTag)
     CreateDirectoryA("..\\..\\docs", nullptr);
     RawrXD::Dispatch::exportCommandUsageJson("..\\..\\logs\\command_usage_runtime.json");
     RawrXD::Dispatch::exportCommandMapMarkdown("..\\..\\docs\\COMMAND_MAP.md", proofTag);
+}
+
+// Harness probes must hard-exit: Prometheus/static init threads otherwise block -Wait in CI.
+static void finishHarnessProbe(const char* proofTag, int rc)
+{
+    exportCommandArtifacts(proofTag);
+    FreeConsole();
+    ExitProcess(static_cast<UINT>(rc));
 }
 
 static std::string jsonEscape(const std::string& s)
@@ -1159,6 +1267,49 @@ static void parseCmdLine(LPSTR lpCmdLine, int& argc, char**& argv)
     argv = ptrs.data();
 }
 
+/// Recover the user's argument tail from `GetCommandLineA()` (skip argv0). Prefer this over `WinMain`'s
+/// `lpCmdLine` alone: some hosts pass an empty or incomplete `lpCmdLine` while the full OS command line
+/// still contains `--test-*` flags.
+static LPSTR effectiveWinMainCmdLineArgs(LPSTR lpCmdLine)
+{
+    static std::string s_tail;
+    s_tail.clear();
+
+    LPSTR full = GetCommandLineA();
+    if (full && full[0])
+    {
+        const char* p = full;
+        if (*p == '"')
+        {
+            for (++p; *p && *p != '"'; ++p)
+            {
+            }
+            if (*p == '"')
+            {
+                ++p;
+            }
+        }
+        else
+        {
+            while (*p && *p != ' ')
+            {
+                ++p;
+            }
+        }
+        while (*p == ' ' || *p == '\t')
+        {
+            ++p;
+        }
+        s_tail.assign(p);
+    }
+
+    if (!s_tail.empty())
+    {
+        return s_tail.data();
+    }
+    return (lpCmdLine && lpCmdLine[0]) ? lpCmdLine : nullptr;
+}
+
 // ============================================================================
 // AutoFix CLI — runs QuantumOrchestrator::executeAutoFix and emits telemetry
 // ============================================================================
@@ -1284,13 +1435,15 @@ static CodexUltimate* s_codex = nullptr;       // Plain pointer, safe
 // Self-hosting backend — Ollama-compatible API server backed by native MASM kernels.
 // LAZY SINGLETON: AppState has std::string, std::atomic, std::shared_ptr, std::unique_ptr members
 // All of these have non-trivial constructors that require C runtime to be initialized
-inline AppState& GetApiAppState() {
+inline AppState& GetApiAppState()
+{
     static AppState* inst = new AppState();  // Leak-on-purpose, never destroyed
     return *inst;
 }
 #define s_apiAppState GetApiAppState()
 
-inline std::unique_ptr<APIServer>& GetApiServer() {
+inline std::unique_ptr<APIServer>& GetApiServer()
+{
     static std::unique_ptr<APIServer>* inst = new std::unique_ptr<APIServer>();
     return *inst;
 }
@@ -1326,8 +1479,10 @@ static void guiShutdownMilestone(Win32IDE* ide, const char* debugLine, const cha
 
 // Lines before Win32IDE exists: always debugger + ide_startup.log; System tab replay once HWND is valid.
 // LAZY SINGLETON: std::vector has non-trivial constructor, must be lazy-initialized
-inline std::vector<std::pair<std::string, std::string>>& GetEarlyWinMainReplay() {
-    static std::vector<std::pair<std::string, std::string>>* inst = new std::vector<std::pair<std::string, std::string>>();
+inline std::vector<std::pair<std::string, std::string>>& GetEarlyWinMainReplay()
+{
+    static std::vector<std::pair<std::string, std::string>>* inst =
+        new std::vector<std::pair<std::string, std::string>>();
     return *inst;
 }
 #define s_earlyWinMainReplay GetEarlyWinMainReplay()  // Backward-compatible accessor
@@ -1825,8 +1980,7 @@ static void runExtensionBootstrapWorkerBody()
         }
 
         std::ostringstream oss;
-        oss << stage << " [" << (progress.currentIndex + 1) << "/" << progress.totalExtensions
-            << "] ";
+        oss << stage << " [" << (progress.currentIndex + 1) << "/" << progress.totalExtensions << "] ";
         if (progress.extensionId)
             oss << progress.extensionId;
         if (progress.detail && progress.detail[0] != '\0')
@@ -1990,10 +2144,27 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
 
         // Sovereign Universal (Hardware Scout) - Phase: 1-Interrogation
         // Detect VRAM/AVX-512 before engine startup to map GPU or CPU kernels.
-        auto profile = RawrXD::Core::HardwareScout::GetCurrentProfile();
-        startupTrace("init_hardware_scout", RawrXD::Core::HardwareScout::TierToString(profile.tier));
+        // Wrap in try-catch to prevent deadlock exceptions from aborting startup.
+        try
+        {
+            auto profile = RawrXD::Core::HardwareScout::GetCurrentProfile();
+            startupTrace("init_hardware_scout", RawrXD::Core::HardwareScout::TierToString(profile.tier));
+        }
+        catch (const std::exception& ex)
+        {
+            startupTrace("init_hardware_scout_failed", ex.what());
+            OutputDebugStringA((std::string("[main_win32] HardwareScout non-fatal: ") + ex.what() + "\n").c_str());
+        }
+        catch (...)
+        {
+            startupTrace("init_hardware_scout_failed", "unknown");
+            OutputDebugStringA("[main_win32] HardwareScout unknown exception (non-fatal)\n");
+        }
 
         // Sovereign integrity attestation — async; skip in CI/smoke via RAWRXD_SKIP_STARTUP_ATTEST=1.
+        // Note: AttestQuick() may throw std::system_error (EDEADLK) if mutex deadlock detected.
+        // We catch C++ exceptions to prevent startup abort. SEH exceptions are not caught here
+        // to avoid C2712/C2713 errors from mixing exception handling models.
         {
             char skipAttest[8] = {};
             const DWORD n =
@@ -2007,7 +2178,7 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
                 std::thread(
                     []()
                     {
-                        __try
+                        try
                         {
                             const bool ok = SystemIntegrityProver::Instance().AttestQuick();
                             if (!ok)
@@ -2019,9 +2190,14 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
                                 OutputDebugStringA("[main_win32] Sovereign integrity attestation passed.\n");
                             }
                         }
-                        __except (EXCEPTION_EXECUTE_HANDLER)
+                        catch (const std::exception& ex)
                         {
-                            logBackgroundThreadCrash("startup_attestation", GetExceptionCode());
+                            // EDEADLK (resource deadlock) and other C++ exceptions are non-fatal.
+                            OutputDebugStringA((std::string("[main_win32] integrity attestation non-fatal: ") + ex.what() + "\n").c_str());
+                        }
+                        catch (...)
+                        {
+                            OutputDebugStringA("[main_win32] integrity attestation unknown exception (non-fatal)\n");
                         }
                     })
                     .detach();
@@ -2164,48 +2340,58 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
             startupTrace("createWindow_FAILED");
             return false;
         }
+        s_mainWindowHwnd = ide.getMainWindow();  // Set for VEH to post WM_DEFERRED_INIT_FAILED
         startupTrace("createWindow_ok");
-        pumpMessages();
-        s_engine_mgr = new EngineManager();
-        s_codex = new CodexUltimate();
-        ide.setEngineManager(s_engine_mgr);
-        ide.setCodexUltimate(s_codex);
-        pumpMessages();
-
-        // Initialize file watcher for file explorer
-        ide.initFileWatcher();
-
-        // High-risk bootstrap lane (engine + MMF + JS + sandbox).
-        // Default OFF to avoid startup heap corruption; opt-in with:
-        //   RAWRXD_ENABLE_BACKGROUND_BOOT=1
-        const char* bgBoot = std::getenv("RAWRXD_ENABLE_BACKGROUND_BOOT");
-        const bool enableBackgroundBoot = (bgBoot && bgBoot[0] == '1');
-        if (enableBackgroundBoot)
+        try
         {
-            startupTrace("background_boot_enabled");
-            std::thread([]() { runBackgroundBootWorkerSafe(); }).detach();
+            pumpMessages();
+            s_engine_mgr = new EngineManager();
+            s_codex = new CodexUltimate();
+            ide.setEngineManager(s_engine_mgr);
+            ide.setCodexUltimate(s_codex);
+            pumpMessages();
+
+            // Initialize file watcher for file explorer.
+            // Treat failures as non-fatal so window creation remains authoritative.
+            ide.initFileWatcher();
+
+            // High-risk bootstrap lane (engine + MMF + JS + sandbox).
+            // Default OFF to avoid startup heap corruption; opt-in with:
+            //   RAWRXD_ENABLE_BACKGROUND_BOOT=1
+            const char* bgBoot = std::getenv("RAWRXD_ENABLE_BACKGROUND_BOOT");
+            const bool enableBackgroundBoot = (bgBoot && bgBoot[0] == '1');
+            if (enableBackgroundBoot)
+            {
+                startupTrace("background_boot_enabled");
+                std::thread([]() { runBackgroundBootWorkerSafe(); }).detach();
+            }
+            else
+            {
+                startupTrace("background_boot_deferred");
+                OutputDebugStringA("[main_win32] background_boot disabled by default (set "
+                                   "RAWRXD_ENABLE_BACKGROUND_BOOT=1 to enable)\n");
+            }
         }
-        else
+        catch (const std::exception& ex)
         {
-            startupTrace("background_boot_deferred");
-            OutputDebugStringA(
-                "[main_win32] background_boot disabled by default (set RAWRXD_ENABLE_BACKGROUND_BOOT=1 to enable)\n");
+            startupTrace("createWindow_post_init_nonfatal", ex.what());
+            OutputDebugStringA((std::string("[main_win32] createWindow post-init non-fatal: ") + ex.what() + "\n")
+                                   .c_str());
+        }
+        catch (...)
+        {
+            startupTrace("createWindow_post_init_nonfatal", "unknown_exception");
+            OutputDebugStringA("[main_win32] createWindow post-init unknown non-fatal exception\n");
         }
         return true;
     }
     if (name == "enterprise_license")
     {
-        const char* safeMode = std::getenv("RAWRXD_SAFE_MODE");
-        if (safeMode && safeMode[0] == '1')
-        {
-            startupTrace("enterprise_license_skipped", "safe_mode");
-            return true;
-        }
-        // MASM / V1 bridge first so V2 initialize can merge entitlements (800B bit, tier).
-        const bool masmOk = RawrXD::EnterpriseLicense::initialize();
-        startupTrace("enterprise_license_masm", masmOk ? "ok" : "degraded");
-        const auto v2r = RawrXD::License::EnterpriseLicenseV2::Instance().initialize();
-        startupTrace("enterprise_license_v2", v2r.success ? "ok" : (v2r.detail ? v2r.detail : "err"));
+        // Skip enterprise license init entirely during startup — license subsystem has a
+        // deadlock-prone mutex (EDEADLK) that blocks the UI thread.  License is checked
+        // lazily when features are first accessed, so startup can proceed safely.
+        startupTrace("enterprise_license_skipped", "deferred_anti_deadlock");
+        OutputDebugStringA("[main_win32] enterprise_license: skipping at startup to prevent EDEADLK deadlock\n");
         return true;
     }
     if (name == "showWindow")
@@ -2631,8 +2817,7 @@ static const char* headlessExitReasonToString(HeadlessExitReason reason)
 static void logHeadlessExit(HeadlessExitReason reason, const char* stage, int code, const char* detail = nullptr)
 {
     std::ostringstream oss;
-    oss << "reason=" << headlessExitReasonToString(reason)
-        << " stage=" << (stage ? stage : "(none)")
+    oss << "reason=" << headlessExitReasonToString(reason) << " stage=" << (stage ? stage : "(none)")
         << " code=" << code;
     if (detail && detail[0])
     {
@@ -2692,7 +2877,7 @@ static void runDeepThinkingStressTest(LPSTR lpCmdLine)
 
 static bool hasFeatureProbeFlag(LPSTR lpCmdLine)
 {
-    if (!lpCmdLine)
+    if (!lpCmdLine || !lpCmdLine[0])
         return false;
     return strstr(lpCmdLine, "--test-peek-view") != nullptr || strstr(lpCmdLine, "--test-autosave") != nullptr ||
            strstr(lpCmdLine, "--test-terminal-split") != nullptr || strstr(lpCmdLine, "--test-ghost-text") != nullptr ||
@@ -2932,8 +3117,8 @@ static int runAgenticSmokeTestExit()
     {
         char tempDir2[MAX_PATH] = {};
         GetTempPathA(MAX_PATH, tempDir2);
-        std::string msPath = std::string(tempDir2) + "rawrxd_ms_smoke_" +
-                             std::to_string(GetCurrentProcessId()) + ".tmp";
+        std::string msPath =
+            std::string(tempDir2) + "rawrxd_ms_smoke_" + std::to_string(GetCurrentProcessId()) + ".tmp";
         auto& reg = RawrXD::Agent::AgentToolRegistry::Instance();
         bool msOk = true;
         std::string msErr;
@@ -2941,10 +3126,14 @@ static int runAgenticSmokeTestExit()
         // step 1 – write_file
         {
             nlohmann::json a;
-            a["path"]    = msPath;
+            a["path"] = msPath;
             a["content"] = "step1";
             auto r = reg.Dispatch("write_file", a);
-            if (!r.success) { msOk = false; msErr = "write_file step1: " + r.output; }
+            if (!r.success)
+            {
+                msOk = false;
+                msErr = "write_file step1: " + r.output;
+            }
         }
 
         // step 2 – read_file, verify content
@@ -2964,7 +3153,7 @@ static int runAgenticSmokeTestExit()
         if (msOk)
         {
             nlohmann::json a;
-            a["path"]      = std::string(tempDir2);
+            a["path"] = std::string(tempDir2);
             a["recursive"] = false;
             auto r = reg.Dispatch("list_dir", a);
             if (!r.success || r.output.empty())
@@ -2978,11 +3167,15 @@ static int runAgenticSmokeTestExit()
         if (msOk)
         {
             nlohmann::json a;
-            a["path"]       = msPath;
+            a["path"] = msPath;
             a["old_string"] = "step1";
             a["new_string"] = "step4-revised";
             auto r = reg.Dispatch("replace_in_file", a);
-            if (!r.success) { msOk = false; msErr = "replace_in_file step4: " + r.output; }
+            if (!r.success)
+            {
+                msOk = false;
+                msErr = "replace_in_file step4: " + r.output;
+            }
         }
 
         // step 5 – verify revised content.  Use a second path so the 1500ms
@@ -2994,7 +3187,7 @@ static int runAgenticSmokeTestExit()
             // Copy the modified msPath to msPath2 via write_file so step-5
             // reads from a distinct cache key.
             nlohmann::json wa;
-            wa["path"]    = msPath2;
+            wa["path"] = msPath2;
             wa["content"] = "step4-revised";
             reg.Dispatch("write_file", wa);  // best-effort; step 5 validates
 
@@ -3033,8 +3226,15 @@ static int runAgenticSmokeTestExit()
             nlohmann::json a;
             a["layer"] = "all";
             auto r = reg.Dispatch("hotpatch_status", a);
-            if (!r.success) { hpOk = false; hpErr = "hotpatch_status: " + r.output; }
-            else { fprintf(stdout, "[agentic-smoke] PASS: hotpatch_status\n"); }
+            if (!r.success)
+            {
+                hpOk = false;
+                hpErr = "hotpatch_status: " + r.output;
+            }
+            else
+            {
+                fprintf(stdout, "[agentic-smoke] PASS: hotpatch_status\n");
+            }
         }
 
         // step 2 – list_hotpatches (observability baseline)
@@ -3043,30 +3243,42 @@ static int runAgenticSmokeTestExit()
             nlohmann::json a;
             a["layer"] = "all";
             auto r = reg.Dispatch("list_hotpatches", a);
-            if (!r.success) { hpOk = false; hpErr = "list_hotpatches: " + r.output; }
-            else { fprintf(stdout, "[agentic-smoke] PASS: list_hotpatches\n"); }
+            if (!r.success)
+            {
+                hpOk = false;
+                hpErr = "list_hotpatches: " + r.output;
+            }
+            else
+            {
+                fprintf(stdout, "[agentic-smoke] PASS: list_hotpatches\n");
+            }
         }
 
         // step 3 – apply_hotpatch NOP to our own process (state mutation)
         // We patch a dummy function in this translation unit.
-        static volatile uint8_t s_hotpatchSmokeDummy = 0x90; // NOP placeholder
+        static volatile uint8_t s_hotpatchSmokeDummy = 0x90;  // NOP placeholder
         auto dummyAddr = reinterpret_cast<uintptr_t>(&s_hotpatchSmokeDummy);
         std::string addrHex = "0x" + std::to_string(dummyAddr);
         bool hpApplyOk = false;
         if (hpOk)
         {
             nlohmann::json a;
-            a["layer"]  = "memory";
+            a["layer"] = "memory";
             a["target"] = addrHex;
-            a["data"]   = "CC";               // int3 (single-byte, easily reversible)
+            a["data"] = "CC";  // int3 (single-byte, easily reversible)
             auto r = reg.Dispatch("apply_hotpatch", a);
-            if (r.success) {
+            if (r.success)
+            {
                 hpApplyOk = true;
                 fprintf(stdout, "[agentic-smoke] PASS: apply_hotpatch\n");
-            } else if (r.output.find("LICENSE") != std::string::npos ||
-                       r.output.find("Professional license") != std::string::npos) {
+            }
+            else if (r.output.find("LICENSE") != std::string::npos ||
+                     r.output.find("Professional license") != std::string::npos)
+            {
                 fprintf(stdout, "[agentic-smoke] SKIP: apply_hotpatch (license tier)\n");
-            } else {
+            }
+            else
+            {
                 hpOk = false;
                 hpErr = "apply_hotpatch: " + r.output;
             }
@@ -3078,8 +3290,15 @@ static int runAgenticSmokeTestExit()
             nlohmann::json a;
             a["layer"] = "all";
             auto r = reg.Dispatch("list_hotpatches", a);
-            if (!r.success) { hpOk = false; hpErr = "list_hotpatches post-apply: " + r.output; }
-            else { fprintf(stdout, "[agentic-smoke] PASS: list_hotpatches post-apply\n"); }
+            if (!r.success)
+            {
+                hpOk = false;
+                hpErr = "list_hotpatches post-apply: " + r.output;
+            }
+            else
+            {
+                fprintf(stdout, "[agentic-smoke] PASS: list_hotpatches post-apply\n");
+            }
         }
 
         // step 5 – revert_hotpatch (reversibility) — only if apply succeeded
@@ -3088,8 +3307,15 @@ static int runAgenticSmokeTestExit()
             nlohmann::json a;
             a["target"] = addrHex;
             auto r = reg.Dispatch("revert_hotpatch", a);
-            if (!r.success) { hpOk = false; hpErr = "revert_hotpatch: " + r.output; }
-            else { fprintf(stdout, "[agentic-smoke] PASS: revert_hotpatch\n"); }
+            if (!r.success)
+            {
+                hpOk = false;
+                hpErr = "revert_hotpatch: " + r.output;
+            }
+            else
+            {
+                fprintf(stdout, "[agentic-smoke] PASS: revert_hotpatch\n");
+            }
         }
         else if (hpOk && !hpApplyOk)
         {
@@ -3107,7 +3333,8 @@ static int runAgenticSmokeTestExit()
     if (!isTruthyEnvVar("RAWRXD_AGENTIC_SMOKE_LIVE"))
     {
         fprintf(stdout, "[agentic-smoke] SKIP: live Ollama (set RAWRXD_AGENTIC_SMOKE_LIVE=1)\n");
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        auto elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
         fprintf(stdout, "[smoke] result=PASS duration_ms=%lld ollama=skip models=0\n", (long long)elapsed);
         return 0;
     }
@@ -3116,7 +3343,8 @@ static int runAgenticSmokeTestExit()
     if (!queryLocalOllamaEndpoint(L"/api/tags", tagsBody) || tagsBody.empty())
     {
         fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — /api/tags unreachable\n");
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        auto elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
         fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=unreachable models=0\n", (long long)elapsed);
         return 3;
     }
@@ -3124,18 +3352,23 @@ static int runAgenticSmokeTestExit()
     if (!parseFirstOllamaModelName(tagsBody, model))
     {
         fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — no model in /api/tags\n");
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        auto elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
         fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=no_models models=0\n", (long long)elapsed);
         return 3;
     }
 
     // Count models in tags response for telemetry
     {
-        try {
+        try
+        {
             nlohmann::json j = nlohmann::json::parse(tagsBody);
             if (j.contains("models") && j["models"].is_array())
                 modelCount = static_cast<int>(j["models"].size());
-        } catch (...) {}
+        }
+        catch (...)
+        {
+        }
     }
 
     nlohmann::json body;
@@ -3149,8 +3382,10 @@ static int runAgenticSmokeTestExit()
     if (!postLocalOllamaChatJson(body.dump(), raw))
     {
         fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — /api/chat POST failed\n");
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-        fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=chat_fail models=%d\n", (long long)elapsed, modelCount);
+        auto elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=chat_fail models=%d\n", (long long)elapsed,
+                modelCount);
         return 3;
     }
     try
@@ -3167,8 +3402,11 @@ static int runAgenticSmokeTestExit()
             if (content.find("ok") != std::string::npos)
             {
                 fprintf(stdout, "[agentic-smoke] PASS: live ollama model=%s\n", model.c_str());
-                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-                fprintf(stdout, "[smoke] result=PASS duration_ms=%lld ollama=OK models=%d\n", (long long)elapsed, modelCount);
+                auto elapsed =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0)
+                        .count();
+                fprintf(stdout, "[smoke] result=PASS duration_ms=%lld ollama=OK models=%d\n", (long long)elapsed,
+                        modelCount);
                 return 0;
             }
         }
@@ -3178,18 +3416,31 @@ static int runAgenticSmokeTestExit()
     }
     fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — response did not contain OK\n");
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-    fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=bad_response models=%d\n", (long long)elapsed, modelCount);
+    fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=bad_response models=%d\n", (long long)elapsed,
+            modelCount);
     return 3;
 }
 
 static bool getArgValue(int argc, char** argv, const char* key, std::string& out)
 {
+    const size_t keyLen = std::strlen(key);
     for (int i = 0; i < argc; ++i)
     {
-        if (argv[i] && strcmp(argv[i], key) == 0 && i + 1 < argc && argv[i + 1])
+        if (!argv[i])
+            continue;
+        if (std::strcmp(argv[i], key) == 0 && i + 1 < argc && argv[i + 1])
         {
             out = argv[i + 1];
             return true;
+        }
+        if (keyLen > 0 && std::strncmp(argv[i], key, keyLen) == 0 && argv[i][keyLen] == '=')
+        {
+            const char* val = argv[i] + keyLen + 1;
+            if (val && val[0])
+            {
+                out = val;
+                return true;
+            }
         }
     }
     return false;
@@ -3381,8 +3632,7 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         (void)getArgValue(argc, argv, "--test-model", modelPath);
     if (modelPath.empty())
     {
-        fprintf(stderr,
-                "[chat-smoke-headless] FAIL: missing model path (set RAWRXD_SMOKE_MODEL or --test-model).\n");
+        fprintf(stderr, "[chat-smoke-headless] FAIL: missing model path (set RAWRXD_SMOKE_MODEL or --test-model).\n");
         return 2;
     }
 
@@ -3410,12 +3660,9 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
     smokeMaxTokens = std::max(1, getArgInt(argc, argv, "--test-max-tokens", smokeMaxTokens));
     SetEnvironmentVariableA("RAWRXD_SMOKE_MAX_TOKENS", std::to_string(smokeMaxTokens).c_str());
 
-        fprintf(stdout,
-            "[SMOKE] start model=%s max_tokens=%d timeout_ms=%d\n",
-            modelPath.c_str(),
-            smokeMaxTokens,
+    fprintf(stdout, "[SMOKE] start model=%s max_tokens=%d timeout_ms=%d\n", modelPath.c_str(), smokeMaxTokens,
             timeoutMs);
-        fflush(stdout);
+    fflush(stdout);
 
     if (!envVarPresent("RAWRXD_PIPELINE_STRICT"))
         SetEnvironmentVariableA("RAWRXD_PIPELINE_STRICT", "1");
@@ -3461,17 +3708,13 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         return 3;
     }
 
-    fprintf(stdout,
-            "[SMOKE] post-embedding checkpoint reached (model loaded). load_only=%d cpu_only=%d skip_gpu=%d\n",
-            smokeLoadOnly ? 1 : 0,
-            smokeCpuOnly ? 1 : 0,
-            smokeSkipGpu ? 1 : 0);
+    fprintf(stdout, "[SMOKE] post-embedding checkpoint reached (model loaded). load_only=%d cpu_only=%d skip_gpu=%d\n",
+            smokeLoadOnly ? 1 : 0, smokeCpuOnly ? 1 : 0, smokeSkipGpu ? 1 : 0);
     fflush(stdout);
 
     if (smokeLoadOnly)
     {
-        fprintf(stdout,
-                "[SMOKE] load-only mode active via RAWRXD_SMOKE_LOAD_ONLY=1; skipping execution dispatch.\n");
+        fprintf(stdout, "[SMOKE] load-only mode active via RAWRXD_SMOKE_LOAD_ONLY=1; skipping execution dispatch.\n");
         fflush(stdout);
         return 0;
     }
@@ -3483,40 +3726,38 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
     int tokenCount = 0;
     const bool triageBreak = isTruthyEnvVar("RAWRXD_SMOKE_CRASH_TRIAGE_BREAK");
 
-    ide.generateResponseAsync(
-        prompt,
-        [&](const std::string& chunk, bool complete)
-        {
-            std::lock_guard<std::mutex> lk(doneMu);
-            {
-                std::ostringstream oss;
-                oss << "[TOKEN] ctx=" << static_cast<const void*>(&ide)
-                    << " len=" << chunk.size()
-                    << " complete=" << (complete ? 1 : 0)
-                    << "\n";
-                OutputDebugStringA(oss.str().c_str());
-            }
-            if (!chunk.empty())
-            {
-                ++tokenCount;
-                fprintf(stdout, "%s", chunk.c_str());
-            }
-            if (!chunk.empty() && !triageBreak)
-            {
-                // no-op: keep behavior explicit when triage break is off
-            }
-            if (!chunk.empty() && triageBreak && !IsDebuggerPresent())
-            {
-                OutputDebugStringA("[FATAL] triage break requested but debugger is not attached\n");
-            }
-            if (complete)
-            {
-                fprintf(stdout, "\n[PIPELINE_END] completed=1 tokens=%d\n", tokenCount);
-                fflush(stdout);
-                done = true;
-                doneCv.notify_one();
-            }
-        });
+    ide.generateResponseAsync(prompt,
+                              [&](const std::string& chunk, bool complete)
+                              {
+                                  std::lock_guard<std::mutex> lk(doneMu);
+                                  {
+                                      std::ostringstream oss;
+                                      oss << "[TOKEN] ctx=" << static_cast<const void*>(&ide) << " len=" << chunk.size()
+                                          << " complete=" << (complete ? 1 : 0) << "\n";
+                                      OutputDebugStringA(oss.str().c_str());
+                                  }
+                                  if (!chunk.empty())
+                                  {
+                                      ++tokenCount;
+                                      fprintf(stdout, "%s", chunk.c_str());
+                                  }
+                                  if (!chunk.empty() && !triageBreak)
+                                  {
+                                      // no-op: keep behavior explicit when triage break is off
+                                  }
+                                  if (!chunk.empty() && triageBreak && !IsDebuggerPresent())
+                                  {
+                                      OutputDebugStringA(
+                                          "[FATAL] triage break requested but debugger is not attached\n");
+                                  }
+                                  if (complete)
+                                  {
+                                      fprintf(stdout, "\n[PIPELINE_END] completed=1 tokens=%d\n", tokenCount);
+                                      fflush(stdout);
+                                      done = true;
+                                      doneCv.notify_one();
+                                  }
+                              });
 
     {
         std::unique_lock<std::mutex> lk(doneMu);
@@ -3563,8 +3804,7 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         {
             if (tokenCount > 0)
             {
-                fprintf(stderr,
-                        "[chat-smoke-headless] WARN: trace not written: %s (inference completed; continuing)\n",
+                fprintf(stderr, "[chat-smoke-headless] WARN: trace not written: %s (inference completed; continuing)\n",
                         tracePath.c_str());
                 return 0;
             }
@@ -3573,8 +3813,7 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         }
         if (tokenCount > 0)
         {
-            fprintf(stderr,
-                    "[chat-smoke-headless] WARN: trace empty: %s (inference completed; continuing)\n",
+            fprintf(stderr, "[chat-smoke-headless] WARN: trace empty: %s (inference completed; continuing)\n",
                     tracePath.c_str());
             return 0;
         }
@@ -3582,10 +3821,8 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         return 6;
     }
 
-    fprintf(stdout,
-            "\n[chat-smoke-headless] PASS: no-window chat path completed; trace=%s bytes=%llu\n",
-            tracePath.c_str(),
-            static_cast<unsigned long long>(traceBytes));
+    fprintf(stdout, "\n[chat-smoke-headless] PASS: no-window chat path completed; trace=%s bytes=%llu\n",
+            tracePath.c_str(), static_cast<unsigned long long>(traceBytes));
     fflush(stdout);
     return 0;
 }
@@ -3610,9 +3847,8 @@ static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
     std::string modelPath;
     if (!getArgValue(argc, argv, "--test-model", modelPath) || modelPath.empty())
     {
-        fprintf(stderr,
-                "[chat-ui-smoke] FAIL: missing --test-model <path-to-gguf>\n"
-                "[chat-ui-smoke] Example: --chat-ui-smoke-noninteractive --test-model F:\\models\\my.gguf\n");
+        fprintf(stderr, "[chat-ui-smoke] FAIL: missing --test-model <path-to-gguf>\n"
+                        "[chat-ui-smoke] Example: --chat-ui-smoke-noninteractive --test-model F:\\models\\my.gguf\n");
         return 2;
     }
 
@@ -3629,15 +3865,9 @@ static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
     const bool forceCpu = hasFlag("--force-cpu");
     const bool noUiBinding = hasFlag("--no-ui-binding");
 
-        fprintf(stdout,
-                "[SMOKE] start model=%s max_tokens=%d timeout_ms=%d no_stream=%d force_cpu=%d no_ui_binding=%d\n",
-            modelPath.c_str(),
-            maxTokens,
-                timeoutMs,
-                noStream ? 1 : 0,
-                forceCpu ? 1 : 0,
-                noUiBinding ? 1 : 0);
-        fflush(stdout);
+    fprintf(stdout, "[SMOKE] start model=%s max_tokens=%d timeout_ms=%d no_stream=%d force_cpu=%d no_ui_binding=%d\n",
+            modelPath.c_str(), maxTokens, timeoutMs, noStream ? 1 : 0, forceCpu ? 1 : 0, noUiBinding ? 1 : 0);
+    fflush(stdout);
 
     if (!envVarPresent("RAWRXD_PIPELINE_STRICT"))
     {
@@ -4065,13 +4295,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         SYSTEMTIME st;
         GetSystemTime(&st);
         char probeMsg[256];
-        snprintf(probeMsg, sizeof(probeMsg),
-                 "[%02d:%02d:%02d.%03d] PID=%u INIT_0_WINMAIN_ENTRY_REACHED\n",
-                 st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, pid);
+        snprintf(probeMsg, sizeof(probeMsg), "[%02d:%02d:%02d.%03d] PID=%u INIT_0_WINMAIN_ENTRY_REACHED\n", st.wHour,
+                 st.wMinute, st.wSecond, st.wMilliseconds, pid);
         fputs(probeMsg, stderr);
         fflush(stderr);
         OutputDebugStringA(probeMsg);
-        
+
+#if defined(RAWRXD_IDE_PROBE_GATES) && RAWRXD_IDE_PROBE_GATES
+        fputs("[Win32IDE] ProbeGates=ON SovereignHarness=EXTERNAL GGUFFallback=link_fallbacks\n", stderr);
+#else
+        fputs("[Win32IDE] ProbeGates=OFF SovereignHarness=EXTERNAL GGUFFallback=link_fallbacks\n", stderr);
+#endif
+        fflush(stderr);
+
         // Also log to startup_winmain_entry.log
         FILE* entryLog = nullptr;
         errno_t err = fopen_s(&entryLog, "startup_winmain_entry.log", "a");
@@ -4089,6 +4325,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // Required for crash_dumps, config, plugins, engines when launched from
     // Explorer, shortcuts, or different CWD. Prevents silent failures on init.
     // ========================================================================
+    s_mainThreadId = GetCurrentThreadId();
+
+    // ========================================================================
+    // TELEPORTATION SHIELD — Sovereign Vectored Exception Handler Initialization
+    // Architect: Gemini / Reverse Engineer
+    // Note: Registered as FIRST handler (1) to intercept BEFORE standard filters.
+    // ========================================================================
+    AddVectoredExceptionHandler(1 /* First */, (PVECTORED_EXCEPTION_HANDLER)Sovereign_VEH_Handler);
+
+    AddVectoredExceptionHandler(0 /* last-chance */, bgThreadAvExceptionFilter);
     setCwdToExeDirectory();
     applyCurrentFileContextCliOverride(lpCmdLine);
     earlyWinMainMilestone("winmain_early_b1",
@@ -4122,12 +4368,280 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                           "[IDE-Pipeline:WinMain-Early] Batch 2/8: RichEdit + common controls v6 primed\n",
                           "[Init:WinMain-Early] Batch 2/8: system control libraries loaded and initialized\n");
 
+    // Track B: zero-allocation native text layout engine probe (pre-GUI, no GPU).
+    if (HasTextEngineProbeFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        if (!getArgValue(argc, argv, "--text-engine-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[text-engine] FAIL: missing --text-engine-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--text-engine-cycles", 50));
+        const int rc = RunTextEngineProbe(telemetryPath.c_str(), cycles);
+        finishHarnessProbe("--text-engine-probe", rc);
+    }
+
+    // Lane H: Token-per-Tick inference scheduler (pre-GUI).
+    if (HasTokenTickFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--token-tick-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[token-tick] FAIL: missing --token-tick-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--token-tick-cycles", 50));
+        const int tickHz = std::max(1, getArgInt(argc, argv, "--tick-hz", 64));
+        const int tokensPerTick = std::max(1, getArgInt(argc, argv, "--tokens-per-tick", 1));
+        const int specDepth = std::max(0, getArgInt(argc, argv, "--speculative-depth", 5));
+        const int rc = RunTokenTickProbe(telemetryPath.c_str(), quietVa, cycles, static_cast<std::uint32_t>(tickHz),
+                                         static_cast<std::uint32_t>(tokensPerTick),
+                                         static_cast<std::uint32_t>(specDepth));
+        finishHarnessProbe("--token-tick-probe", rc);
+    }
+
+    // Lane G: Cellular parity engine link closure (pre-GUI).
+    if (HasParityEngineFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--parity-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[parity-engine] FAIL: missing --parity-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--parity-cycles", 50));
+        const int laneWidth = std::max(1, getArgInt(argc, argv, "--parity-lane-width", 8));
+        const int rc = RunParityEngineProbe(telemetryPath.c_str(), quietVa, cycles,
+                                            static_cast<std::uint32_t>(laneWidth));
+        finishHarnessProbe("--parity-engine-probe", rc);
+    }
+
+    // Lane F: ExecutionTruth link closure (pre-GUI).
+    if (HasExecutionTruthFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--truth-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[execution-truth] FAIL: missing --truth-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--truth-cycles", 50));
+        const int rc = RunExecutionTruth(telemetryPath.c_str(), quietVa, cycles);
+        finishHarnessProbe("--execution-truth-probe", rc);
+    }
+
+    // Lane E: SovereignActionGraph link closure (pre-GUI).
+    if (HasSovereignActionGraphFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--action-graph-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[action-graph] FAIL: missing --action-graph-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--action-graph-cycles", 50));
+        const int rc = RunSovereignActionGraph(telemetryPath.c_str(), quietVa, cycles);
+        finishHarnessProbe("--action-graph-probe", rc);
+    }
+
+    // Lane D: SovereignContextGovernor link closure (pre-GUI).
+    if (HasSovereignContextGovernorFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--governor-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[context-governor] FAIL: missing --governor-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--governor-cycles", 50));
+        const int rc = RunSovereignContextGovernor(telemetryPath.c_str(), quietVa, cycles);
+        finishHarnessProbe("--context-governor-probe", rc);
+    }
+
+    // Lane C: Vulkan KV aperture hardware probe (pre-GUI, before host manifold).
+    if (HasKVApertureProbeFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        std::string bytesText;
+        if (!getArgValue(argc, argv, "--kv-aperture-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[kv-aperture] FAIL: missing --kv-aperture-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--kv-aperture-cycles", 25));
+        std::uint64_t bytes = 0;
+        if (getArgValue(argc, argv, "--kv-aperture-bytes", bytesText) && !bytesText.empty())
+        {
+            bytes = static_cast<std::uint64_t>(_strtoui64(bytesText.c_str(), nullptr, 0));
+        }
+        const int rc = RunKVApertureProbe(telemetryPath.c_str(), quietVa, cycles, bytes);
+        finishHarnessProbe("--kv-aperture-probe", rc);
+    }
+
+    // Lane C: GGUF manifold / KV aperture harness (pre-GUI).
+    if (HasGGUFManifoldFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--manifold-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[gguf-manifold] FAIL: missing --manifold-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--manifold-cycles", 50));
+        const int rc = RunGGUFManifoldProbe(telemetryPath.c_str(), quietVa, cycles);
+        finishHarnessProbe("--gguf-manifold-probe", rc);
+    }
+
+    // Lane B: TBA link-graph harness (pre-GUI, no WinSock).
+    if (HasTBALinkGraphFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--tba-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[tba-link-graph] FAIL: missing --tba-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--tba-cycles", 100));
+        const int rc = RunTBALinkGraph(telemetryPath.c_str(), quietVa, cycles);
+        finishHarnessProbe("--tba-link-graph", rc);
+    }
+
+    // Phase 19.2 soak harness (pre-GUI).
+    if (HasPhase19_2SoakFlag(nullptr))
+    {
+        ensureConsoleAttached(true);
+        int argc = 0;
+        char** argv = nullptr;
+        parseCmdLine(lpCmdLine, argc, argv);
+        std::string telemetryPath;
+        std::string quietZoneText;
+        if (!getArgValue(argc, argv, "--soak-telemetry", telemetryPath) || telemetryPath.empty())
+        {
+            fprintf(stderr, "[phase19.2-soak] FAIL: missing --soak-telemetry <path.json>\n");
+            FreeConsole();
+            return 2;
+        }
+        std::uint64_t quietVa = 0;
+        if (getArgValue(argc, argv, "--expect-quiet-zone", quietZoneText) && !quietZoneText.empty())
+        {
+            quietVa = static_cast<std::uint64_t>(_strtoui64(quietZoneText.c_str(), nullptr, 0));
+        }
+        const int cycles = std::max(1, getArgInt(argc, argv, "--soak-cycles", 100));
+        const int rc = RunPhase19_2Soak(telemetryPath.c_str(), quietVa, cycles);
+        finishHarnessProbe("--soak-telemetry", rc);
+    }
+
     // Fast smoke: must run before bootstrapRuntimeSurface / integrity / GUI — same tool registry as agent chat.
     if (hasAgenticSmokeFlag(lpCmdLine))
     {
         ensureConsoleAttached(true);
         const int rc = runAgenticSmokeTestExit();
         exportCommandArtifacts("--agentic-smoke");
+        FreeConsole();
+        return rc;
+    }
+
+    if (hasAgentWalSmokeFlag(lpCmdLine))
+    {
+        ensureConsoleAttached(true);
+        const int rc = runAgentWalCliSmokeTest();
+        exportCommandArtifacts("--agent-wal-smoke");
+        std::fflush(stdout);
+        std::fflush(stderr);
         FreeConsole();
         return rc;
     }
@@ -4177,10 +4691,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return rc;
     }
 
-    if (hasFeatureProbeFlag(lpCmdLine))
+    if (lpCmdLine && strstr(lpCmdLine, "--test-ghost-pipeline"))
     {
         ensureConsoleAttached(true);
-        int rc = runFeatureProbeCLI(hInstance, lpCmdLine);
+        const int rc = rawrxd::ghost_pipeline_probe::runGhostPipelineProbeCli();
+        std::fflush(stdout);
+        std::fflush(stderr);
+        FreeConsole();
+        return rc;
+    }
+
+    LPSTR cmdArgsForProbes = effectiveWinMainCmdLineArgs(lpCmdLine);
+    if (hasFeatureProbeFlag(cmdArgsForProbes))
+    {
+        ensureConsoleAttached(true);
+        int rc = runFeatureProbeCLI(hInstance, cmdArgsForProbes);
         FreeConsole();
         return rc;
     }
@@ -4300,13 +4825,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
         RawrXD::Crash::CrashConfig crashCfg;
         memset(&crashCfg, 0, sizeof(crashCfg));
-        crashCfg.dumpType = RawrXD::Crash::DumpType::Full;   // Full needed to resolve AVRF violation frame
+        crashCfg.dumpType = RawrXD::Crash::DumpType::Full;  // Full needed to resolve AVRF violation frame
         crashCfg.dumpDirectory = "crash_dumps";
         crashCfg.enableMiniDump = true;
         crashCfg.enablePatchRollback = true;
         crashCfg.enablePatchQuarantine = true;
-        crashCfg.showMessageBox = false;   // CrashReporter dialog handles UI
-        crashCfg.terminateAfterDump = false; // CrashReporter filter terminates
+        crashCfg.showMessageBox = false;      // CrashReporter dialog handles UI
+        crashCfg.terminateAfterDump = false;  // CrashReporter filter terminates
         crashCfg.onCrashCallback = [](const RawrXD::Crash::CrashReport* r, void*)
         {
             if (r && r->logPath[0])
@@ -4514,6 +5039,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return rc;
     }
 
+    if (hasSovereignSmokeFlag(lpCmdLine))
+    {
+        if (s_startupLog)
+        {
+            startupTrace("sovereign_smoke_mode");
+            s_startupLog->close();
+            delete s_startupLog;
+            s_startupLog = nullptr;
+        }
+        ensureConsoleAttached(true);
+        int rc = RawrXD::Tests::RunSmoketests(nullptr);
+        exportCommandArtifacts("--sovereign-smoke");
+        FreeConsole();
+        return rc;
+    }
+
     earlyWinMainMilestone("winmain_early_e0_1",
                           "[IDE-Pipeline:WinMain-Early] E0-1/8: startup self-test CLI route not selected\n",
                           "[Init:WinMain-Early] E0-1/8: --selftest fast path skipped\n");
@@ -4576,11 +5117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     {
         const std::string commit = getEnvValueA("RAWRXD_BUILD_COMMIT");
         char buildStamp[256] = {};
-        snprintf(buildStamp,
-                 sizeof(buildStamp),
-                 "[BUILD] %s %s | commit=%s\n",
-                 __DATE__,
-                 __TIME__,
+        snprintf(buildStamp, sizeof(buildStamp), "[BUILD] %s %s | commit=%s\n", __DATE__, __TIME__,
                  commit.empty() ? "unknown" : commit.c_str());
         OutputDebugStringA(buildStamp);
     }
@@ -4593,20 +5130,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // First 520 lines of skill context ALWAYS injected regardless of model
     // ========================================================================
     {
-        try
+        if (std::getenv("RAWRXD_DISABLE_SKILL_SYSTEM_STARTUP") != nullptr)
         {
-            RawrXD::SkillSystem::InitializeSkillSystem();
-            OutputDebugStringA("[main_win32] Skill system initialized + prompt warming pre-seeded\n");
+            OutputDebugStringA("[main_win32] Skill system startup disabled by RAWRXD_DISABLE_SKILL_SYSTEM_STARTUP\n");
         }
-        catch (const std::exception& e)
+        else
         {
-            OutputDebugStringA("[main_win32] Skill system initialization failed (non-fatal): ");
-            OutputDebugStringA(e.what());
-            OutputDebugStringA("\n");
-        }
-        catch (...)
-        {
-            OutputDebugStringA("[main_win32] Skill system initialization failed (non-fatal): unknown exception\n");
+            try
+            {
+                const bool skillSystemOk = RawrXD::SkillSystem::InitializeSkillSystem();
+                if (skillSystemOk)
+                {
+                    OutputDebugStringA("[main_win32] Skill system initialized + prompt warming pre-seeded\n");
+                }
+                else
+                {
+                    OutputDebugStringA(
+                        "[main_win32] Skill system initialization returned failure; continuing with skill injection pass-through\n");
+                }
+            }
+            catch (const std::exception& e)
+            {
+                OutputDebugStringA("[main_win32] Skill system initialization failed (non-fatal): ");
+                OutputDebugStringA(e.what());
+                OutputDebugStringA("\n");
+            }
+            catch (...)
+            {
+                OutputDebugStringA("[main_win32] Skill system initialization failed (non-fatal): unknown exception\n");
+            }
         }
     }
 
@@ -4670,13 +5222,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
             bool phaseOk = false;
             if (!runPhaseSafely(name, ide, hInstance, lpCmdLine, &phaseOk) || !phaseOk)
             {
+                startupTrace("startup_phase_failed", name.c_str());
                 if (s_startupLog)
                 {
                     s_startupLog->close();
                     delete s_startupLog;
                     s_startupLog = nullptr;
                 }
-                MessageBoxW(nullptr, L"Failed to initialize IDE", L"Error", MB_OK | MB_ICONERROR);
+                std::wstring phaseW(name.begin(), name.end());
+                std::wstring msg = L"Failed to initialize IDE in startup phase: ";
+                msg += phaseW;
+                MessageBoxW(nullptr, msg.c_str(), L"Error", MB_OK | MB_ICONERROR);
                 return false;
             }
 
@@ -4852,7 +5408,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
             {
                 Win32IDE::RuntimeValidationCheck skip;
                 skip.name = "E0-" + std::to_string(i) + " skipped-by-env";
-                skip.passed = true; // treat as pass so summary isn't misleading
+                skip.passed = true;  // treat as pass so summary isn't misleading
                 skip.detail = "skipped";
                 e0.push_back(skip);
                 startupTrace("startup_conjoined_e0_rollup", ("skipped E0-" + std::to_string(i)).c_str());
@@ -5264,4 +5820,3 @@ int runSelftest(HWND hwnd)
     }
     return code;
 }
-

@@ -4790,6 +4790,10 @@ if(WIN32)
         "Allow stub/link-fallback units in RawrXD-Win32IDE agentic path"
         ON
     )
+    option(RAWRXD_ENABLE_IDE_PROBE_GATES
+        "Enable lightweight Win32IDE probe gate translation units (sovereign/harness stacks stay external)"
+        ON
+    )
     if(NOT RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
         message(WARNING
             "[Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs (strict lane). "
@@ -5178,8 +5182,7 @@ if(WIN32)
         src/win32app/rawrxd_collab_crdt_impl.cpp
         # Link-closure: ModelInvoker implementation
         src/agent/model_invoker.cpp
-        # Link-closure: GGUFRunner Qt-style callbacks implementation + kernel link shims
-        src/llm_adapter/ggufrunner_impl.cpp
+        # GGUFRunner callbacks/kernel shims: ggufrunner_link_fallbacks.cpp (avoid LNK2005 vs ggufrunner_impl.cpp)
         # Link-closure: LlamaNativeBridge used by SovereignInferenceClient
         src/inference/RawrXD_LlamaNative.cpp
         # Live telemetry collector for CreditGovernor dashboard
@@ -5205,6 +5208,64 @@ if(WIN32)
         src/features/missing_features.cpp
     )
 
+    # Win32IDE link-closure: probe harnesses, runtime/agentic providers, extension/VCS (fixes LNK2019)
+    list(APPEND WIN32IDE_SOURCES
+        src/win32app/Win32IDE_Phase19_2_Soak.cpp
+        src/win32app/Win32IDE_TBA_LinkGraph.cpp
+        src/win32app/Win32IDE_GGUFManifold.cpp
+        src/win32app/Win32IDE_ContextGovernor.cpp
+        src/runtime/SovereignContextGovernor.cpp
+        src/win32app/Win32IDE_ActionGraph.cpp
+        src/runtime/SovereignActionGraph_link.cpp
+        src/win32app/Win32IDE_ExecutionTruth.cpp
+        src/agentic/observability/ExecutionTruth_link.cpp
+        src/win32app/Win32IDE_ParityEngine.cpp
+        src/runtime/SovereignParityEngine.cpp
+        src/ui/rawrxd_software_raster.cpp
+        src/ui/rawrxd_text_engine.cpp
+        src/ui/rawrxd_linestream_raster.cpp
+        src/ui/rawrxd_linestrip_cache.cpp
+        src/ui/rawrxd_rle_raster.cpp
+        src/ui/rawrxd_syntax_bridge.cpp
+        src/ui/rawrxd_workspace_matrix.cpp
+        src/win32app/Win32IDE_BuildProvenance.cpp
+        src/win32app/Win32NeuralBridge.cpp
+        src/win32app/Win32IDE_LineStripEditor.cpp
+        src/win32app/Win32IDE_SyntaxLayoutBridge.cpp
+        src/win32app/Win32IDE_WiringHandlers.cpp
+        src/win32app/Win32IDE_AgentCursorOverlay.cpp
+        src/ui/SidebarStagingPanel.cpp
+        src/win32app/ExtensionEngine_bridge.cpp
+        src/win32app/ExtensionHostIpcBridge.cpp
+        src/ui/agent_cursor_renderer.cpp
+        src/win32app/Win32IDE_TitanPressureLink.cpp
+        src/agentic/AgenticRouterBridge.cpp
+        src/agentic/agentic_router_bridge_lsp_adapter.cpp
+        src/vcs/Win32GitPipe.cpp
+        src/vcs/GitProviderTypes.cpp
+        src/agentic/agentic_condition_evaluator.cpp
+        src/agentic/agentic_planning_persistence.cpp
+        src/agentic/lazarus_dispatcher.cpp
+        src/agentic/observability/Metrics.cpp
+        src/win32app/Win32IDE_Swarm.cpp
+        src/win32app/RawrXD_AgentKernel.cpp
+    )
+    if(RAWR_HAS_MASM)
+        list(APPEND WIN32IDE_EXTRA_ASM
+            src/asm/sovereign_guard.asm
+            src/asm/trinity_beacon_arbiter.asm
+            src/asm/sovereign_media.asm
+            src/x64/GGUF_UNIFIED_FINALIZER_CORE.asm
+            src/win32app/ExtensionEngine.asm
+            src/asm/RawrXD_Agent_Dispatch.asm
+        )
+        set_source_files_properties(
+            src/win32app/ExtensionEngine.asm
+            src/asm/RawrXD_Agent_Dispatch.asm
+            PROPERTIES LANGUAGE ASM_MASM
+        )
+    endif()
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM}
         src/ggml.c
         src/ggml-alloc.c
@@ -5222,6 +5283,21 @@ if(WIN32)
         src/ggml-cpu/arch/x86/quants.c
         src/ggml-cpu/arch/x86/repack.cpp
     )
+
+    if(RAWRXD_ENABLE_IDE_PROBE_GATES)
+        target_sources(RawrXD-Win32IDE PRIVATE
+            src/win32app/Win32IDE_KVApertureProbeGate.cpp
+            src/win32app/Win32IDE_TextEngineProbeGate.cpp
+            src/win32app/Win32IDE_TokenTickProbeGate.cpp
+            src/win32app/Win32IDE_SovereignSmokeGate.cpp
+        )
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_IDE_PROBE_GATES=1)
+        message(STATUS "[Win32IDE] IDE probe gates enabled (RAWRXD_ENABLE_IDE_PROBE_GATES=ON)")
+    else()
+        target_sources(RawrXD-Win32IDE PRIVATE src/win32app/Win32IDE_ProbeGatesDisabled.cpp)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_IDE_PROBE_GATES=0 RAWRXD_DISABLE_IDE_PROBES=1)
+        message(STATUS "[Win32IDE] IDE probe gates disabled — CLI probe flags are no-ops")
+    endif()
 
     if(TARGET rawrxd-fa8-minimal-spv)
         add_dependencies(RawrXD-Win32IDE rawrxd-fa8-minimal-spv)
@@ -5473,7 +5549,7 @@ if(WIN32)
     endif()
     
     # Link RE library into Win32IDE
-    target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD-RE-Library)
+    target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD-RE-Library imm32)
     if(TARGET ggml)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ggml)
     endif()

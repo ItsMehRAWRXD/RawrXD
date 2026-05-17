@@ -169,6 +169,12 @@ obj/
 
 # === SWE Bench artifacts ===
 reports/*
+!reports/win32ide/
+!reports/win32ide/link-baseline.json
+!reports/win32ide/imports.txt
+!reports/win32ide/sections.txt
+!reports/win32ide/binary-size.txt
+reports/win32ide/symbols.map
 !reports/BENCHMARK_CONFIG.json
 !reports/*.baseline.json
 reports/_tmp_*.json
@@ -184,6 +190,11 @@ CMakeFiles/
 
 # === Logs ===
 *.trace
+
+# === Legacy Ollama archive (historical only) ===
+archive/legacy_logs/
+*ollama*.log
+*ollama_logs_export_*.txt
 
 # === Windows linker artifacts ===
 *.pdb
