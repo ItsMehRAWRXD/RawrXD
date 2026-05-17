@@ -3,7 +3,7 @@ name: Win32IDE Link Integrity
 
 on:
   pull_request:
-    branches: [main, dev, feature/*]
+    branches: [main, dev, "feature/*", "backup/*", "chore/*"]
     paths:
       - "CMakeLists.txt"
       - "src/win32app/**"
