@@ -39,8 +39,6 @@ bool AgenticErrorHandler::containsCI(const std::string& haystack, const std::str
 
 AgenticErrorHandler::AgenticErrorHandler()
 {
-    fprintf(stderr, "[AgenticErrorHandler] Initialized - Ready for error handling and recovery\n");
-
     // Set up default recovery policies
     setRecoveryPolicy(RecoveryPolicy{
         ErrorType::ExecutionError,
@@ -90,8 +88,6 @@ AgenticErrorHandler::AgenticErrorHandler()
 
 AgenticErrorHandler::~AgenticErrorHandler()
 {
-    fprintf(stderr, "[AgenticErrorHandler] Destroyed - Handled %d errors with %d successful recoveries\n",
-            m_totalErrors, m_successfulRecoveries);
 }
 
 void AgenticErrorHandler::initialize(AgenticObservability* obs, AgenticLoopState* state)
@@ -256,8 +252,6 @@ bool AgenticErrorHandler::backtrack(const std::string& targetStateId)
 {
     if (!m_state) return false;
 
-    fprintf(stderr, "[AgenticErrorHandler] Backtracking to state: %s\n", targetStateId.c_str());
-
     // In production, would restore from checkpoint
     return true;
 }
@@ -266,7 +260,6 @@ bool AgenticErrorHandler::fallback(const std::string& errorId, const std::string
 {
     for (auto& errorContext : m_errorHistory) {
         if (errorContext.errorId == errorId) {
-            fprintf(stderr, "[AgenticErrorHandler] Executing fallback for %s\n", errorId.c_str());
             return true;
         }
     }
@@ -472,7 +465,6 @@ void AgenticErrorHandler::checkCircuitBreaker(const std::string& component)
         breaker->isTripped = true;
         breaker->tripTime = std::chrono::system_clock::now();
 
-        fprintf(stderr, "[AgenticErrorHandler] Circuit breaker tripped for %s\n", component.c_str());
         if (m_circuitBreakerCb) {
             m_circuitBreakerCb(component, m_circuitBreakerUd);
         }
@@ -496,21 +488,17 @@ bool AgenticErrorHandler::executeRetryStrategy(
         }
 
         if (operation()) {
-            fprintf(stderr, "[AgenticErrorHandler] Retry succeeded for %s\n", context.errorId.c_str());
             m_totalRecoveries++;
             return true;
         }
     }
 
-    fprintf(stderr, "[AgenticErrorHandler] All retry attempts failed for %s\n", context.errorId.c_str());
     m_totalRecoveries++;
     return false;
 }
 
 bool AgenticErrorHandler::executeBacktrackStrategy(const ErrorContext& context)
 {
-    fprintf(stderr, "[AgenticErrorHandler] Backtracking from error %s\n", context.errorId.c_str());
-
     if (m_state) {
         // Restore from checkpoint
         nlohmann::json snapshot = m_state->getLastSnapshot();
@@ -527,8 +515,6 @@ bool AgenticErrorHandler::executeBacktrackStrategy(const ErrorContext& context)
 
 bool AgenticErrorHandler::executeFallbackStrategy(const ErrorContext& context)
 {
-    fprintf(stderr, "[AgenticErrorHandler] Executing fallback for %s\n", context.errorId.c_str());
-
     // Use alternative code path
     m_totalRecoveries++;
     return true;
@@ -536,11 +522,6 @@ bool AgenticErrorHandler::executeFallbackStrategy(const ErrorContext& context)
 
 void AgenticErrorHandler::executeEscalateStrategy(const ErrorContext& context)
 {
-    fprintf(stderr, "[AgenticErrorHandler] Escalating error %s - Type: %d - Message: %s\n",
-            context.errorId.c_str(),
-            static_cast<int>(context.type),
-            context.message.c_str());
-
     // Would notify higher-level handlers or administrators
 }
 

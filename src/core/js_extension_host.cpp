@@ -299,6 +299,24 @@ std::vector<std::string> jsonGetStringArray(const std::string& json, const std::
     return result;
 }
 
+std::string jsonEscape(const std::string& value) {
+    std::string out;
+    out.reserve(value.size() + 8);
+    for (char ch : value) {
+        switch (ch) {
+            case '\\': out += "\\\\"; break;
+            case '"': out += "\\\""; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                out.push_back(ch);
+                break;
+        }
+    }
+    return out;
+}
+
 // Read entire file into string
 std::string readFileToString(const char* path) {
     HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr,
@@ -417,6 +435,7 @@ PatchResult JSExtensionHost::initialize() {
 
     // ---- Bind vscode.* API ----
     bindVSCodeAPI(ctx);
+    registerDefaultNativeDispatch();
 
     // ---- Bind global helpers ----
     // console.log, console.warn, console.error
@@ -670,11 +689,95 @@ void JSExtensionHost::bindVSCodeAPI(void* ctx) {
     bindVSCodeTasks(ctx);
     bindVSCodeEnv(ctx);
     bindVSCodeExtensions(ctx);
+    bindNativeDispatchTable(ctx);
 
     JS_SetPropertyStr(cx, global, "vscode", vscode);
     JS_FreeValue(cx, global);
 
     OutputDebugStringA("[JSExtensionHost] vscode.* API bound to QuickJS context\n");
+}
+
+void JSExtensionHost::bindNativeDispatchTable(void* ctx) {
+    JSContext* cx = static_cast<JSContext*>(ctx);
+    if (!cx) return;
+
+    JSValue global = JS_GetGlobalObject(cx);
+    JSValue bridge = JS_NewObject(cx);
+
+    JS_SetPropertyStr(cx, bridge, "invoke",
+        JS_NewCFunction(cx, [](JSContext* c, JSValue this_val, int argc, JSValue* argv) -> JSValue {
+            if (argc < 1) return JS_UNDEFINED;
+            auto* host = static_cast<JSExtensionHost*>(JS_GetContextOpaque(c));
+            if (!host) return JS_UNDEFINED;
+
+            const char* opName = JS_ToCString(c, argv[0]);
+            const char* payload = (argc >= 2) ? JS_ToCString(c, argv[1]) : nullptr;
+            if (!opName) {
+                if (payload) JS_FreeCString(c, payload);
+                return JS_UNDEFINED;
+            }
+
+            std::string extensionId = host->getExtensionIdForContext(c);
+            std::string outJson;
+            PatchResult result = host->invokeNativeDispatch(
+                extensionId.c_str(), opName, payload ? payload : "", &outJson);
+
+            JS_FreeCString(c, opName);
+            if (payload) JS_FreeCString(c, payload);
+
+            if (!result.success) {
+                return JS_UNDEFINED;
+            }
+            return JS_NewString(c, outJson.c_str());
+        }, "invoke", 2));
+
+    JS_SetPropertyStr(cx, bridge, "listOps",
+        JS_NewCFunction(cx, [](JSContext* c, JSValue this_val, int argc, JSValue* argv) -> JSValue {
+            auto* host = static_cast<JSExtensionHost*>(JS_GetContextOpaque(c));
+            if (!host) return JS_NewArray(c);
+            std::string extensionId = host->getExtensionIdForContext(c);
+            std::vector<std::string> ops;
+            host->getNativeDispatchOperations(extensionId.c_str(), &ops);
+
+            JSValue arr = JS_NewArray(c);
+            for (uint32_t i = 0; i < static_cast<uint32_t>(ops.size()); ++i) {
+                JS_SetPropertyUint32(c, arr, i, JS_NewString(c, ops[i].c_str()));
+            }
+            return arr;
+        }, "listOps", 0));
+
+    JS_SetPropertyStr(cx, bridge, "hasPermission",
+        JS_NewCFunction(cx, [](JSContext* c, JSValue this_val, int argc, JSValue* argv) -> JSValue {
+            if (argc < 1) return JS_FALSE;
+            auto* host = static_cast<JSExtensionHost*>(JS_GetContextOpaque(c));
+            if (!host) return JS_FALSE;
+            const char* opName = JS_ToCString(c, argv[0]);
+            if (!opName) return JS_FALSE;
+
+            std::string extensionId = host->getExtensionIdForContext(c);
+            std::vector<std::string> ops;
+            host->getNativeDispatchOperations(extensionId.c_str(), &ops);
+
+            bool allowed = false;
+            for (const auto& op : ops) {
+                if (op == opName) {
+                    allowed = true;
+                    break;
+                }
+            }
+
+            JS_FreeCString(c, opName);
+            return JS_NewBool(c, allowed ? 1 : 0);
+        }, "hasPermission", 1));
+
+    JS_SetPropertyStr(cx, global, "__rawrxdNative", JS_DupValue(cx, bridge));
+    JSValue extContext = JS_GetPropertyStr(cx, global, "__extensionContext");
+    if (!JS_IsUndefined(extContext) && !JS_IsNull(extContext)) {
+        JS_SetPropertyStr(cx, extContext, "nativeBridge", JS_DupValue(cx, bridge));
+    }
+    JS_FreeValue(cx, extContext);
+    JS_FreeValue(cx, bridge);
+    JS_FreeValue(cx, global);
 }
 
 void JSExtensionHost::bindVSCodeCommands(void* ctx) {
@@ -2115,6 +2218,12 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     state->apiCallCount = 0;
     state->jsContext = nullptr;
     state->jsModule = nullptr;
+    state->nativePermissionMask = 0;
+
+    std::vector<std::string> nativePermissions =
+        jsonGetStringArray(pkgJson, "rawrxdNativePermissions");
+    state->grantedNativePermissions = nativePermissions;
+    state->nativePermissionMask = parseNativePermissionMask(nativePermissions);
 
     // ---- Pre-analyze requires ----
     std::string mainSource = readFileToString(mainPath.c_str());
@@ -2520,6 +2629,178 @@ PatchResult JSExtensionHost::registerModuleResolver(const char* moduleName,
         PolyfillDescriptor::Strategy::FullShim,
         jsSource,
         100);
+}
+
+std::string JSExtensionHost::getExtensionIdForContext(void* jsCtx) const {
+    if (!jsCtx) return "";
+    std::lock_guard<std::mutex> lock(m_extensionsMutex);
+    for (const auto& [id, state] : m_extensions) {
+        if (state && state->jsContext == jsCtx) {
+            return id;
+        }
+    }
+    return "";
+}
+
+uint32_t JSExtensionHost::parseNativePermissionMask(const std::vector<std::string>& permissions) const {
+    uint32_t mask = 0;
+    for (const auto& perm : permissions) {
+        if (perm == "telemetry" || perm == "native.telemetry") {
+            mask |= NativePermTelemetry;
+        } else if (perm == "workspace.read" || perm == "native.workspace.read") {
+            mask |= NativePermWorkspaceRead;
+        } else if (perm == "window.notify" || perm == "native.window.notify") {
+            mask |= NativePermWindowNotify;
+        }
+    }
+    return mask;
+}
+
+bool JSExtensionHost::hasNativePermission(const JSExtensionState* state, uint32_t requiredMask) const {
+    if (!state) return false;
+    if (requiredMask == NativePermNone) return true;
+    return (state->nativePermissionMask & requiredMask) == requiredMask;
+}
+
+PatchResult JSExtensionHost::invokeNativeDispatch(const char* extensionId,
+                                                   const char* opName,
+                                                   const char* payload,
+                                                   std::string* outJson) {
+    if (!extensionId || !opName || !outJson) {
+        return PatchResult::error("Invalid native dispatch parameters");
+    }
+
+    std::string payloadStr = payload ? payload : "";
+
+    uint32_t permissionMask = 0;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        auto it = m_extensions.find(extensionId);
+        if (it == m_extensions.end() || !it->second) {
+            return PatchResult::error("Native dispatch denied: unknown extension context");
+        }
+        permissionMask = it->second->nativePermissionMask;
+    }
+
+    NativeDispatchEntry entry;
+    {
+        std::lock_guard<std::mutex> lock(m_nativeDispatchMutex);
+        auto it = m_nativeDispatch.find(opName);
+        if (it == m_nativeDispatch.end()) {
+            return PatchResult::error("Native dispatch op not found");
+        }
+        entry = it->second;
+    }
+
+    if ((permissionMask & entry.requiredPermissions) != entry.requiredPermissions) {
+        return PatchResult::error("Native dispatch denied: missing permission");
+    }
+
+    std::string resultJson;
+    PatchResult result = entry.handler(payloadStr, resultJson);
+    if (!result.success) {
+        return result;
+    }
+    *outJson = resultJson;
+    return PatchResult::ok("Native dispatch executed");
+}
+
+void JSExtensionHost::getNativeDispatchOperations(const char* extensionId,
+                                                   std::vector<std::string>* outOps) const {
+    if (!extensionId || !outOps) return;
+    outOps->clear();
+
+    uint32_t permissionMask = 0;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        auto it = m_extensions.find(extensionId);
+        if (it == m_extensions.end() || !it->second) {
+            return;
+        }
+        permissionMask = it->second->nativePermissionMask;
+    }
+
+    std::lock_guard<std::mutex> lock(m_nativeDispatchMutex);
+    for (const auto& [opName, entry] : m_nativeDispatch) {
+        if ((permissionMask & entry.requiredPermissions) == entry.requiredPermissions) {
+            outOps->push_back(opName);
+        }
+    }
+}
+
+void JSExtensionHost::registerDefaultNativeDispatch() {
+    std::lock_guard<std::mutex> lock(m_nativeDispatchMutex);
+    if (!m_nativeDispatch.empty()) {
+        return;
+    }
+
+    m_nativeDispatch["host.ping"] = {
+        NativePermNone,
+        [](const std::string& payload, std::string& outJson) -> PatchResult {
+            outJson = "{\"ok\":true,\"op\":\"host.ping\",\"echo\":\"" +
+                jsonEscape(payload) + "\"}";
+            return PatchResult::ok("ping");
+        }
+    };
+
+    m_nativeDispatch["host.getStats"] = {
+        NativePermNone,
+        [this](const std::string& payload, std::string& outJson) -> PatchResult {
+            (void)payload;
+            Stats stats = getStats();
+            std::ostringstream os;
+            os << "{\"ok\":true"
+               << ",\"jsExtensionsLoaded\":" << stats.jsExtensionsLoaded
+               << ",\"jsExtensionsActive\":" << stats.jsExtensionsActive
+               << ",\"totalJSApiCalls\":" << stats.totalJSApiCalls
+               << ",\"totalScriptExecutions\":" << stats.totalScriptExecutions
+               << ",\"polyfillsUsed\":" << stats.polyfillsUsed
+               << ",\"requireCalls\":" << stats.requireCalls
+               << ",\"timersCreated\":" << stats.timersCreated
+               << ",\"eventsDispatched\":" << stats.eventsDispatched
+               << ",\"avgActivationTimeMs\":" << stats.avgActivationTimeMs
+               << "}";
+            outJson = os.str();
+            return PatchResult::ok("stats");
+        }
+    };
+
+    m_nativeDispatch["workspace.findFiles"] = {
+        NativePermWorkspaceRead,
+        [](const std::string& payload, std::string& outJson) -> PatchResult {
+            const char* includePattern = payload.empty() ? "*" : payload.c_str();
+            VSCodeUri outUris[128] = {};
+            size_t outCount = 0;
+            auto result = vscode::workspace::findFiles(includePattern, "", 128,
+                outUris, 128, &outCount);
+            if (!result.success) {
+                return PatchResult::error("workspace.findFiles failed");
+            }
+
+            std::ostringstream os;
+            os << "{\"ok\":true,\"op\":\"workspace.findFiles\",\"count\":"
+               << outCount << ",\"files\":[";
+            for (size_t i = 0; i < outCount; ++i) {
+                if (i > 0) os << ',';
+                os << "\"" << jsonEscape(outUris[i].fsPath()) << "\"";
+            }
+            os << "]}";
+            outJson = os.str();
+            return PatchResult::ok("workspace.findFiles");
+        }
+    };
+
+    m_nativeDispatch["window.notify"] = {
+        NativePermWindowNotify,
+        [](const std::string& payload, std::string& outJson) -> PatchResult {
+            if (payload.empty()) {
+                return PatchResult::error("window.notify payload cannot be empty");
+            }
+            vscode::window::showInformationMessage(payload.c_str(), nullptr, 0, nullptr);
+            outJson = "{\"ok\":true,\"op\":\"window.notify\"}";
+            return PatchResult::ok("window.notify");
+        }
+    };
 }
 
 // ============================================================================

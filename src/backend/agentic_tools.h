@@ -128,7 +128,7 @@ private:
     bool m_block_delete_commands = false;
 
     std::unique_ptr<Tools::GitClient> m_git_client;
-    std::unique_ptr<OllamaClient> m_ollama_client;
+    std::unique_ptr<NativeClient> m_ollama_client;
 
     // Tool execution statistics
     struct ToolStats {

@@ -9,8 +9,42 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
+#include <type_traits>
 
 namespace RawrXD {
+
+    // =========================================================================
+    // Sovereign Node — SFINAE-gated agent dispatch
+    // Template constraint: SovereignNode::dispatch<T> should only bind for
+    // types that provide a ::CycleResult nested type.  BUG: missing typename
+    // on dependent type + circular default argument referencing incomplete self.
+    // =========================================================================
+    struct SovereignNode {
+        using StatusFlags = uint64_t;
+
+        // Trait: does T have a nested CycleResult?
+        template<typename T, typename = void>
+        struct has_cycle_result : std::false_type {};
+
+        template<typename T>
+        struct has_cycle_result<T, std::void_t<typename T::CycleResult>>
+            : std::true_type {};
+
+        // SOVEREIGN FIX: C2903 / C2760 template deduction repair
+        // Corrected: Explicitly prefixing nested name specifier with 'typename'
+        // and resolving the circular dependency in the SFINAE-gated dispatcher.
+        template<typename T,
+                 typename std::enable_if_t<has_cycle_result<T>::value, int> = 0>
+        static StatusFlags dispatch(const T& agent) {
+            return static_cast<StatusFlags>(sizeof(typename T::CycleResult));
+        }
+
+        // Fix: Constant moved down to after struct definition to avoid C2027
+        static constexpr size_t kNodeSize();
+        };
+
+    inline constexpr size_t SovereignNode::kNodeSize() { return sizeof(SovereignNode); }
+    // =========================================================================
 
     // --- Inference Engine Interface ---
     class InferenceEngine {
@@ -132,11 +166,11 @@ namespace RawrXD {
         std::string name;
         std::string architecture;
         std::string architecture_type;
-        uint64_t parameterCount;
-        uint32_t vocabSize;
-        uint32_t vocab_size;
-        uint32_t contextLength;
-        uint32_t context_length;
+        uint64_t parameterCount = 0;
+        uint32_t vocabSize = 0;
+        uint32_t vocab_size = 0;
+        uint32_t contextLength = 0;
+        uint32_t context_length = 0;
         std::map<std::string, std::string> properties;
         std::map<std::string, std::string> kv_pairs; // Alias for properties
         

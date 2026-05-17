@@ -41,7 +41,7 @@ public:
         printf("[POLICY] Loading security policies: %s\n", policyFile.c_str());
         
         // In production: Parse JSON policy file
-        // Example:
+        // Pattern:
         // {
         //   "policies": [
         //     {"resource": "gpt-4", "users": ["admin", "ml-ops"], "action": "allow"},

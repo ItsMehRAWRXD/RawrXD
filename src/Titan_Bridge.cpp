@@ -65,6 +65,7 @@ extern "C" {
         std::cout << "[Titan] Inference Thread Started." << std::endl;
         
         // Main Loop
+        int idlePollCount = 0;
         while (!ctx->shouldExit) {
             // Check for prompt from Pipe Server (via global g_InputState)
             if (g_InputState == 1) {
@@ -113,8 +114,14 @@ extern "C" {
 
                  // Signal Completion
                  g_InputState = 0;
+                 idlePollCount = 0;
             }
-            Sleep(10);
+            if (idlePollCount < 32) {
+                Sleep(0);
+            } else {
+                Sleep(1);
+            }
+            ++idlePollCount;
         }
         
         return 0;

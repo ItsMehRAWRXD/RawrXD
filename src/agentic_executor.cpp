@@ -72,8 +72,6 @@ void AgenticExecutor::setWorkspaceRoot(const std::filesystem::path& root) {
 void AgenticExecutor::logMessage(const std::string& msg) {
     if (m_onLogMessage)
         m_onLogMessage(msg.c_str(), m_callbackContext);
-    else
-        std::cerr << "[AgenticExecutor] " << msg << "\n";
 }
 
 void AgenticExecutor::errorOccurred(const std::string& msg) {

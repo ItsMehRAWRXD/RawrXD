@@ -109,6 +109,7 @@ class RawrXDModelLoader
     void* GetCurrentViewBase() const;
     void* GetCurrentView() const;
     void SetPrefetchEnabled(bool enabled) { m_prefetchEnabled = enabled; }
+    bool IsPrefetchEnabled() const { return m_prefetchEnabled; }
     void SetWorkingSetLockEnabled(bool enabled) { m_workingSetLockEnabled = enabled; }
     void SetSilencePrivilegeWarnings(bool enabled) { m_silencePrivilegeWarnings = enabled; }
     bool HintRange(uint64_t offset, size_t size);
@@ -125,6 +126,11 @@ class RawrXDModelLoader
     bool m_workingSetLockEnabled = false;
     bool m_workingSetLocked = false;
     bool m_silencePrivilegeWarnings = false;
+
+    // Cached incidental window: avoids repeated MapViewOfFile/UnmapViewOfFile
+    void*    m_incCache       = nullptr;  // MapViewOfFile base
+    uint64_t m_incCacheStart  = 0;        // file offset of cached map start
+    size_t   m_incCacheSize   = 0;        // size of cached region
 
     // Sliding window memory mapping for large files
     void* virtualBase;    // Reserved virtual address space
@@ -158,6 +164,9 @@ class RawrXDModelLoader
     uint64_t m_streamingRangeStart = 0;
     uint64_t m_streamingRangeEnd = 0;
     size_t m_streamingLockedWindowSize = 0;
+    size_t m_streamingPressureCapBytes = 0;
+    std::uint32_t m_prefetchOomFailureStreak = 0;
+    bool m_prefetchSuppressedForStreaming = false;
 
     /// Serialize compute window (MapWindow) vs prefetch window (MapPrefetchWindow) for safe dual mapping.
     mutable std::mutex m_slidingWindowMutex;
@@ -188,9 +197,12 @@ class RawrXDModelLoader
     int n_heads_kv = 0;
     int n_ctx = 0;
     int vocab_size = 0;
+    std::vector<std::string> vocab;  // Token strings from GGUF
     int n_ffn = 0;  // feed_forward_length (0 = infer from dim*4)
     int n_experts = 0;
     int n_experts_used = 0;
+      int eos_token_id = 2;    // from tokenizer.ggml.eos_token_id
+      int bos_token_id = 1;    // from tokenizer.ggml.bos_token_id
     std::string m_metadataArchitecture;
     std::string m_metadataTokenizerModel;
     uint32_t m_metadataFileType = 0xFFFFFFFFu;  // GGUF file_type identifier
@@ -216,10 +228,13 @@ class RawrXDModelLoader
     int getKVHeads() const { return n_heads_kv; }
     int getCtx() const { return n_ctx; }
     int getVocabSize() const { return vocab_size; }
+    const std::vector<std::string>& getVocab() const { return vocab; }
     int getFFNDim() const { return n_ffn; }
     int getExperts() const { return n_experts; }
     /// MoE metadata (`expert_used_count`); 0 if unset — callers may fall back to a small default.
     int getExpertsUsedCount() const { return n_experts_used; }
+      int getEOSTokenId() const { return eos_token_id; }
+      int getBOSTokenId() const { return bos_token_id; }
     /// True if \p name appears in the loaded tensor map (does not materialize weights).
     [[nodiscard]] bool hasTensorNamed(const std::string& name) const;
 
@@ -281,12 +296,13 @@ class RawrXDModelLoader
     void recordSwarmPinBackoffCycle() const;
     bool MapIncidentalWindow(uint64_t offset, size_t size, void*& viewBase, uint8_t*& dataPtr);
     void UnmapIncidentalWindow(void* viewBase);
+    void FlushIncidentalCache();
     void BeginStreamingRange(uint64_t offset, size_t size);
     void EndStreamingRange();
-    // Internal demonstration / self-test helper
+    // Internal self-test helper
     void RunInternalSelfTest();
 
-    // Sovereign capabilities demonstration
+    // Sovereign capabilities
     void DemonstrateSovereignCapabilities();
 
     // Backend mode and file type validation

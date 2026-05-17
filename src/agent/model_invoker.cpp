@@ -1,430 +1,537 @@
-/**
- * @file model_invoker.cpp
- * @brief LLM invocation layer for wish-to-plan transformation (Qt-free)
- *
- * HTTP transport delegated to StlHttpClient (llm_http_client.hpp)
- * which handles WinHTTP on Windows and curl on POSIX.
- * Supports Ollama, Claude, and OpenAI backends.
- *
- * Post-Qt fix: futures are now retained via StlHttpClient/ChainStep
- * to prevent premature destruction that Qt's event loop hid.
- */
-#include "model_invoker.hpp"
-#include "llm_http_client.hpp"
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <filesystem>
-#include <future>
-#include <regex>
+// =============================================================================
+// test_orchestrator_modules.cpp — Regression Tests for Orchestrator Modules
+// =============================================================================
+
 #include <string>
 #include <vector>
+#include <cassert>
+#include <cstdint>
+#include <chrono>
+#include <sstream>
+#include <fstream>
+#include <functional>
+#include <filesystem>
 
-#include <nlohmann/json.hpp>
+#include "ToolRegistry.h"
+#include "FIMPromptBuilder.h"
+#include "NativeInferenceClient.h"
+#include "AgentOrchestrator.h"
+#include "DiskRecoveryAgent.h"
 
-// SCAFFOLD_289: Model invoker
+using namespace RawrXD::Agent;
+using namespace RawrXD::Recovery;
 
-namespace fs = std::filesystem;
-using json = nlohmann::json;
+static int g_testsPassed = 0;
+static int g_testsFailed = 0;
+static int g_testsSkipped = 0;
 
-// ---------------------------------------------------------------------------
-// HTTP helper — thin wrapper over StlHttpClient for backward compat
-// ---------------------------------------------------------------------------
-namespace {
+struct TestResult {
+    bool passed;
+    std::string name;
+    std::string detail;
+    double elapsed_ms;
+};
 
-/// Synchronous HTTP POST returning the response body (empty on error).
-/// Delegates to StlHttpClient singleton for proper async/future support.
-std::string httpPost(const std::string& url, const std::string& body,
-                     const std::string& apiKey = {},
-                     const std::string& extraHeaderKey = {},
-                     const std::string& extraHeaderVal = {},
-                     int timeoutMs = 30000) {
-    HttpRequest req;
-    req.method         = "POST";
-    req.url            = url;
-    req.body           = body;
-    req.apiKey         = apiKey;
-    req.extraHeaderKey = extraHeaderKey;
-    req.extraHeaderVal = extraHeaderVal;
-    req.timeoutMs      = timeoutMs;
+static std::vector<TestResult> g_results;
 
-    HttpResponse resp = StlHttpClient::instance().send(req);
-    if (resp.success) return resp.body;
+#define TEST_ASSERT(cond, name) do { \
+    if (!(cond)) { \
+        g_testsFailed++; \
+        g_results.push_back({false, name, #cond, 0}); \
+        return; \
+    } \
+} while(0)
 
-    fprintf(stderr, "[WARN] [ModelInvoker] HTTP POST failed: %s (HTTP %d, %dms)\n",
-            resp.error.c_str(), resp.statusCode, resp.latencyMs);
-    return {};
+#define TEST_ASSERT_EQ(a, b, name) do { \
+    if ((a) != (b)) { \
+        g_testsFailed++; \
+        g_results.push_back({false, name, "mismatch", 0}); \
+        return; \
+    } \
+} while(0)
+
+#define TEST_PASS(name) do { \
+    g_testsPassed++; \
+    g_results.push_back({true, name, "", 0}); \
+} while(0)
+
+#define TEST_SKIP(name, reason) do { \
+    g_testsSkipped++; \
+} while(0)
+
+// ==========================================================================
+// § 1. ToolRegistry — X-Macro Enum & Schema Generation
+// ==========================================================================
+
+void test_xmacro_enum_count() {
+    // The X-Macro should generate exactly 11 tools (including disk_recovery)
+    auto count = static_cast<uint32_t>(ToolId::_COUNT);
+    TEST_ASSERT(count == 11, "X-Macro generates 11 ToolId values");
+    TEST_PASS("xmacro_enum_count");
 }
 
-} // namespace
-
-// ---------------------------------------------------------------------------
-// ModelInvoker
-// ---------------------------------------------------------------------------
-
-void ModelInvoker::setLLMBackend(const std::string& backend,
-                                  const std::string& endpoint,
-                                  const std::string& apiKey) {
-    m_backend  = backend;
-    m_endpoint = endpoint;
-    m_apiKey   = apiKey;
-
-    std::string be = backend;
-    std::transform(be.begin(), be.end(), be.begin(),
-                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-    if (be == "ollama")       m_model = "mistral";
-    else if (be == "claude")  m_model = "claude-3-sonnet-20240229";
-    else if (be == "openai")  m_model = "gpt-4o";
-    else if (be == "openai-turbo") m_model = "gpt-4-turbo";
-
-    fprintf(stderr, "[INFO] [ModelInvoker] Backend: %s @ %s (model: %s)\n",
-            backend.c_str(), endpoint.c_str(), m_model.c_str());
+void test_registry_singleton() {
+    auto& reg1 = AgentToolRegistry::Instance();
+    auto& reg2 = AgentToolRegistry::Instance();
+    TEST_ASSERT(&reg1 == &reg2, "Registry is a singleton");
+    TEST_PASS("registry_singleton");
 }
 
-void ModelInvoker::setSystemPromptTemplate(const std::string& t) {
-    m_customSystemPrompt = t;
+void test_registry_list_tools() {
+    auto& reg = AgentToolRegistry::Instance();
+    auto tools = reg.ListTools();
+    TEST_ASSERT(tools.size() == 11, "ListTools returns 11 tools");
+
+    // Check specific tool names exist
+    bool hasReadFile = false, hasDiskRecovery = false;
+    for (const auto& t : tools) {
+        if (t == "read_file") hasReadFile = true;
+        if (t == "disk_recovery") hasDiskRecovery = true;
+    }
+    TEST_ASSERT(hasReadFile, "read_file tool registered");
+    TEST_ASSERT(hasDiskRecovery, "disk_recovery tool registered");
+    TEST_PASS("registry_list_tools");
 }
 
-void ModelInvoker::setCodebaseEmbeddings(const std::map<std::string, float>& e) {
-    m_codebaseEmbeddings = e;
+void test_registry_schemas_valid() {
+    auto& reg = AgentToolRegistry::Instance();
+    json schemas = reg.GetToolSchemas();
+    TEST_ASSERT(schemas.size() == 11, "GetToolSchemas returns 11 entries");
+
+    // Each schema should have type=function with function.name and function.parameters
+    for (size_t i = 0; i < schemas.size(); ++i) {
+        const auto& s = schemas[i];
+        TEST_ASSERT(s.contains("type"), "Schema has type field");
+        TEST_ASSERT(s.contains("function"), "Schema has function field");
+        const auto& fn = s["function"];
+        TEST_ASSERT(fn.contains("name"), "Function has name");
+        TEST_ASSERT(fn.contains("description"), "Function has description");
+        TEST_ASSERT(fn.contains("parameters"), "Function has parameters");
+    }
+    TEST_PASS("registry_schemas_valid");
 }
 
-// ---------------------------------------------------------------------------
-LLMResponse ModelInvoker::invoke(const InvocationParams& params) {
-    // Cache
-    if (m_cachingEnabled) {
-        std::string key = getCacheKey(params);
-        LLMResponse cached = getCachedResponse(key);
-        if (cached.success) {
-            fprintf(stderr, "[INFO] [ModelInvoker] Cache hit: %s\n",
-                    params.wish.substr(0, 60).c_str());
-            return cached;
-        }
+void test_registry_dispatch_read_file() {
+    auto& reg = AgentToolRegistry::Instance();
+
+    // Create a temp file for testing
+    std::string tempPath = (std::filesystem::temp_directory_path() / "rawrxd_test_read.txt").string();
+    {
+        std::ofstream ofs(tempPath);
+        ofs << "Hello, RawrXD!";
     }
 
-    fprintf(stderr, "[INFO] [ModelInvoker] Invoking LLM: %s\n",
-            params.wish.substr(0, 80).c_str());
-    m_isInvoking = true;
-    if (onPlanGenerationStarted) onPlanGenerationStarted(params.wish);
+    json args;
+    args["path"] = tempPath;
+    auto result = reg.Dispatch("read_file", args);
+    TEST_ASSERT(result.success, "read_file dispatch succeeds");
+    TEST_ASSERT(result.output == "Hello, RawrXD!", "read_file returns correct content");
+    TEST_ASSERT(result.elapsed_ms >= 0, "elapsed_ms is non-negative");
 
-    LLMResponse response;
-
-    try {
-        std::string userMsg = buildUserMessage(params);
-        json llmResp;
-
-        std::string be = m_backend;
-        std::transform(be.begin(), be.end(), be.begin(),
-                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-        if (be == "ollama")
-            llmResp = sendOllamaRequest(m_model, userMsg, params.maxTokens, params.temperature);
-        else if (be == "claude")
-            llmResp = sendClaudeRequest(userMsg, params.maxTokens, params.temperature);
-        else if (be == "openai" || be == "openai-turbo")
-            llmResp = sendOpenAIRequest(userMsg, params.maxTokens, params.temperature);
-        else {
-            response.error = "Unknown backend: " + m_backend;
-            m_isInvoking = false;
-            return response;
-        }
-
-        // --- Fallback chain: if primary backend returned empty, try alternatives ---
-        if (llmResp.empty() && !m_apiKey.empty()) {
-            fprintf(stderr, "[WARN] [ModelInvoker] Primary backend '%s' failed, attempting fallback chain\n",
-                    be.c_str());
-
-            // Fallback 1: OpenAI GPT-4o
-            if (be != "openai") {
-                std::string savedModel = m_model;
-                m_model = "gpt-4o";
-                llmResp = sendOpenAIRequest(userMsg, params.maxTokens, params.temperature);
-                if (!llmResp.empty()) {
-                    be = "openai"; // Update for response parsing below
-                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to GPT-4o succeeded\n");
-                } else {
-                    m_model = savedModel;
-                }
-            }
-
-            // Fallback 2: GPT-4-turbo if GPT-4o also failed
-            if (llmResp.empty() && m_model != "gpt-4-turbo") {
-                std::string savedModel = m_model;
-                m_model = "gpt-4-turbo";
-                llmResp = sendOpenAIRequest(userMsg, params.maxTokens, params.temperature);
-                if (!llmResp.empty()) {
-                    be = "openai";
-                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to GPT-4-turbo succeeded\n");
-                } else {
-                    m_model = savedModel;
-                }
-            }
-
-            // Fallback 3: Ollama local
-            if (llmResp.empty() && be != "ollama" && !m_endpoint.empty()) {
-                std::string savedModel = m_model;
-                m_model = "mistral";
-                llmResp = sendOllamaRequest(m_model, userMsg, params.maxTokens, params.temperature);
-                if (!llmResp.empty()) {
-                    be = "ollama";
-                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to Ollama/mistral succeeded\n");
-                } else {
-                    m_model = savedModel;
-                }
-            }
-        }
-
-        if (llmResp.empty()) {
-            response.error = "Empty response from LLM";
-            m_isInvoking = false;
-            if (onInvocationError) onInvocationError(response.error, true);
-            return response;
-        }
-
-        // Parse backend-specific format
-        if (be == "ollama") {
-            response.rawOutput  = llmResp.value("response", "");
-            response.tokensUsed = llmResp.value("eval_count", 0)
-                                + llmResp.value("prompt_eval_count", 0);
-        } else if (be == "claude") {
-            auto content = llmResp.value("content", json::array());
-            if (!content.empty())
-                response.rawOutput = content.at(0).value("text", "");
-            if (llmResp.contains("usage"))
-                response.tokensUsed = llmResp.at("usage").value("output_tokens", 0);
-        } else if (be == "openai") {
-            auto choices = llmResp.value("choices", json::array());
-            if (!choices.empty())
-                response.rawOutput = choices.at(0).value("message", json{}).value("content", "");
-            if (llmResp.contains("usage"))
-                response.tokensUsed = llmResp.at("usage").value("completion_tokens", 0);
-        }
-
-        fprintf(stderr, "[INFO] [ModelInvoker] Response (%d tokens): %.200s\n",
-                response.tokensUsed, response.rawOutput.c_str());
-
-        response.parsedPlan = parsePlan(response.rawOutput);
-
-        if (!validatePlanSanity(response.parsedPlan)) {
-            response.error   = "Plan failed sanity checks";
-            response.success = false;
-            m_isInvoking = false;
-            if (onInvocationError) onInvocationError(response.error, true);
-            return response;
-        }
-
-        response.success   = true;
-        response.reasoning = llmResp.value("reasoning", "");
-
-        if (m_cachingEnabled) cacheResponse(getCacheKey(params), response);
-
-    } catch (const std::exception& e) {
-        response.error   = std::string("Exception: ") + e.what();
-        response.success = false;
-        if (onInvocationError) onInvocationError(response.error, false);
-    }
-
-    m_isInvoking = false;
-    return response;
+    // Cleanup
+    std::filesystem::remove(tempPath);
+    TEST_PASS("registry_dispatch_read_file");
 }
 
-void ModelInvoker::invokeAsync(const InvocationParams& params) {
-    // Post-Qt fix: Use std::async + retain the future as member.
-    // Qt's deleteLater() auto-managed reply lifetime; STL requires explicit
-    // future retention or the destructor blocks/cancels the async operation.
-    m_asyncFuture = std::async(std::launch::async, [this, params]() {
-        LLMResponse resp = invoke(params);
-        if (onPlanGenerated) onPlanGenerated(resp);
-    });
+void test_registry_dispatch_write_file() {
+    auto& reg = AgentToolRegistry::Instance();
+
+    std::string tempPath = (std::filesystem::temp_directory_path() / "rawrxd_test_write.txt").string();
+
+    json args;
+    args["path"] = tempPath;
+    args["content"] = "Written by test";
+    auto result = reg.Dispatch("write_file", args);
+    TEST_ASSERT(result.success, "write_file dispatch succeeds");
+
+    // Verify content
+    std::ifstream ifs(tempPath);
+    std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    TEST_ASSERT(content == "Written by test", "write_file content is correct");
+
+    std::filesystem::remove(tempPath);
+    TEST_PASS("registry_dispatch_write_file");
 }
 
-void ModelInvoker::cancelPendingRequest() {
-    m_isInvoking = false;
-    fprintf(stderr, "[INFO] [ModelInvoker] Request cancelled\n");
+void test_registry_dispatch_unknown_tool() {
+    auto& reg = AgentToolRegistry::Instance();
+
+    json args;
+    auto result = reg.Dispatch("nonexistent_tool", args);
+    TEST_ASSERT(!result.success, "Unknown tool returns failure");
+    TEST_ASSERT(result.output.find("Unknown tool") != std::string::npos, "Error mentions unknown");
+    TEST_PASS("registry_dispatch_unknown_tool");
 }
 
-// ---------------------------------------------------------------------------
-// Prompt building
-// ---------------------------------------------------------------------------
-std::string ModelInvoker::buildSystemPrompt(const std::vector<std::string>& tools) {
-    std::string p = R"(You are an intelligent IDE agent for the RawrXD code generation framework.
+void test_registry_validation_missing_required() {
+    auto& reg = AgentToolRegistry::Instance();
 
-Your role is to transform natural language wishes into structured action plans that can be executed by an automated system.
-
-# Available Tools
-)";
-    for (const auto& t : tools) p += "- " + t + "\n";
-
-    p += R"(
-# Response Format
-Respond with a valid JSON array of actions. Each action must have:
-- type: string (action type name)
-- target: string (file, command, or target)
-- params: object (action-specific parameters)
-- description: string (human-readable description)
-
-# Constraints
-- Do NOT suggest destructive operations without explicit user intent
-- Always break complex tasks into manageable steps
-- Use existing patterns found in the codebase
-)";
-    return p;
+    json emptyArgs;
+    auto result = reg.Dispatch("read_file", emptyArgs);
+    TEST_ASSERT(!result.success, "Missing required param returns failure");
+    TEST_ASSERT(result.output.find("path") != std::string::npos ||
+                result.output.find("Validation") != std::string::npos,
+                "Error mentions the missing parameter");
+    TEST_PASS("registry_validation_missing_required");
 }
 
-std::string ModelInvoker::buildUserMessage(const InvocationParams& params) {
-    std::string msg = "User Wish: " + params.wish + "\n\n";
-    if (!params.context.empty())
-        msg += "Context: " + params.context + "\n\n";
-    if (!params.codebaseContext.empty())
-        msg += "Relevant Codebase:\n" + params.codebaseContext + "\n\n";
-    msg += "Please generate a structured action plan. Respond with ONLY valid JSON array.";
-    return msg;
+void test_registry_stats() {
+    auto& reg = AgentToolRegistry::Instance();
+
+    uint64_t invocations = reg.GetTotalInvocations();
+    uint64_t errors = reg.GetTotalErrors();
+    // After previous tests, should have some invocations
+    TEST_ASSERT(invocations > 0, "Invocation count > 0 after dispatches");
+    // We had at least one error (unknown tool, validation fail)
+    TEST_ASSERT(errors >= 1, "Error count tracks failures");
+    TEST_PASS("registry_stats");
 }
 
-// ---------------------------------------------------------------------------
-// Backend-specific HTTP calls
-// ---------------------------------------------------------------------------
-json ModelInvoker::sendOllamaRequest(const std::string& model,
-                                      const std::string& prompt,
-                                      int maxTokens, double temperature) {
-    json payload = nlohmann::json::object({
-        {"model",       model},
-        {"prompt",      prompt},
-        {"temperature", temperature},
-        {"num_predict", maxTokens},
-        {"stream",      false}
-    });
+void test_registry_system_prompt() {
+    auto& reg = AgentToolRegistry::Instance();
 
-    std::string url = m_endpoint + "/api/generate";
-    fprintf(stderr, "[INFO] [ModelInvoker] POST %s\n", url.c_str());
-    std::string resp = httpPost(url, payload.dump(), {}, {}, {}, 30000);
-
-    if (resp.empty()) return {};
-    try { return json::parse(resp); }
-    catch (const std::exception& e) {
-        fprintf(stderr, "[WARN] [ModelInvoker] Ollama JSON parse error: %s\n", e.what());
-        return {};
-    }
+    std::string prompt = reg.GetSystemPrompt("d:\\rawrxd", {"main.cpp", "ToolRegistry.h"});
+    TEST_ASSERT(!prompt.empty(), "System prompt is non-empty");
+    TEST_ASSERT(prompt.find("RawrXD Agent") != std::string::npos, "Prompt identifies as RawrXD Agent");
+    TEST_ASSERT(prompt.find("d:\\rawrxd") != std::string::npos, "Prompt includes CWD");
+    TEST_ASSERT(prompt.find("main.cpp") != std::string::npos, "Prompt lists open files");
+    TEST_PASS("registry_system_prompt");
 }
 
-json ModelInvoker::sendClaudeRequest(const std::string& prompt,
-                                      int maxTokens, double temperature) {
-    json payload = nlohmann::json::object({
-        {"model",      m_model},
-        {"max_tokens", maxTokens},
-        {"temperature", temperature},
-        {"messages",   json::array({nlohmann::json::object({{"role", "user"}, {"content", prompt}})}) }
-    });
+// ==========================================================================
+// § 2. FIMPromptBuilder — Fill-in-Middle Prompt Construction
+// ==========================================================================
 
-    std::string resp = httpPost("https://api.anthropic.com/v1/messages",
-                                payload.dump(), m_apiKey,
-                                "x-api-key", m_apiKey, 30000);
-    // Note: Claude uses x-api-key header, not Bearer token; we send both
+void test_fim_build_basic() {
+    FIMPromptBuilder builder;
+    builder.SetFormat(FIMFormat::Qwen);
+    builder.SetMaxContextTokens(4096);
 
-    if (resp.empty()) return {};
-    try { return json::parse(resp); }
-    catch (const std::exception& e) {
-        fprintf(stderr, "[WARN] [ModelInvoker] Claude JSON parse error: %s\n", e.what());
-        return {};
-    }
+    EditorContext ctx;
+    ctx.filename = "test.cpp";
+    ctx.filepath = "d:\\project\\test.cpp";
+    ctx.language = "cpp";
+    ctx.cursor_line = 2;
+    ctx.cursor_column = 0;
+    ctx.full_content = "#include <iostream>\n\nint main() { return 0; }\n";
+
+    auto result = builder.Build(ctx);
+    TEST_ASSERT(result.success, "FIM build succeeds");
+    TEST_ASSERT(!result.prompt.formatted_prompt.empty(), "Formatted prompt is non-empty");
+    TEST_ASSERT(result.prompt.estimated_tokens > 0, "Token estimate > 0");
+    TEST_PASS("fim_build_basic");
 }
 
-json ModelInvoker::sendOpenAIRequest(const std::string& prompt,
-                                      int maxTokens, double temperature) {
-    json payload = nlohmann::json::object({
-        {"model",      m_model},
-        {"max_tokens", maxTokens},
-        {"temperature", temperature},
-        {"messages",   json::array({nlohmann::json::object({{"role", "user"}, {"content", prompt}})}) }
-    });
+void test_fim_build_empty_content() {
+    FIMPromptBuilder builder;
+    EditorContext ctx;
+    ctx.full_content = "";
+    ctx.cursor_line = 0;
 
-    std::string resp = httpPost("https://api.openai.com/v1/chat/completions",
-                                payload.dump(), m_apiKey, {}, {}, 30000);
-
-    if (resp.empty()) return {};
-    try { return json::parse(resp); }
-    catch (const std::exception& e) {
-        fprintf(stderr, "[WARN] [ModelInvoker] OpenAI JSON parse error: %s\n", e.what());
-        return {};
-    }
+    auto result = builder.Build(ctx);
+    TEST_ASSERT(!result.success, "Empty content returns failure");
+    TEST_ASSERT(result.error.find("Empty") != std::string::npos, "Error mentions empty");
+    TEST_PASS("fim_build_empty_content");
 }
 
-// ---------------------------------------------------------------------------
-// Plan parsing
-// ---------------------------------------------------------------------------
-json ModelInvoker::parsePlan(const std::string& llmOutput) {
-    // Strategy 1: Extract ```json ... ``` block
-    std::regex jsonBlock(R"(```(?:json)?\s*\n?([\s\S]*?)\n?```)");
-    std::smatch match;
-    if (std::regex_search(llmOutput, match, jsonBlock)) {
-        try {
-            auto doc = json::parse(match[1].str());
-            if (doc.is_array()) return doc;
-        } catch (...) {}
-    }
+void test_fim_build_invalid_cursor() {
+    FIMPromptBuilder builder;
+    EditorContext ctx;
+    ctx.full_content = "some code";
+    ctx.cursor_line = -5;
 
-    // Strategy 2: Parse entire output
-    try {
-        auto doc = json::parse(llmOutput);
-        if (doc.is_array()) return doc;
-    } catch (...) {}
-
-    // Strategy 3: Fallback
-    fprintf(stderr, "[WARN] [ModelInvoker] Failed to parse plan from LLM output\n");
-    return json::array({nlohmann::json::object({
-        {"type",        "user_input"},
-        {"description", llmOutput.substr(0, 500)}
-    })});
+    auto result = builder.Build(ctx);
+    TEST_ASSERT(!result.success, "Negative cursor returns failure");
+    TEST_PASS("fim_build_invalid_cursor");
 }
 
-bool ModelInvoker::validatePlanSanity(const json& plan) {
-    if (!plan.is_array() || plan.empty()) {
-        fprintf(stderr, "[WARN] [ModelInvoker] Empty plan\n");
-        return false;
-    }
+void test_fim_qwen_format_tokens() {
+    FIMPromptBuilder builder;
+    builder.SetFormat(FIMFormat::Qwen);
+    builder.SetMaxContextTokens(2048);
 
-    int count = 0;
-    std::vector<std::string> seen;
-    for (size_t i = 0; i < plan.size(); ++i) {
-        const auto& action = plan.at(i);
-        if (!action.is_object()) return false;
-        std::string type = action.value("type", "");
+    EditorContext ctx;
+    ctx.filename = "example.py";
+    ctx.filepath = "example.py";
+    ctx.language = "python";
+    ctx.cursor_line = 1;
+    ctx.cursor_column = 0;
+    ctx.full_content = "def hello():\n    pass\n";
 
-        if (type == "file_delete" || type == "format_drive" || type == "system_reboot") {
-            fprintf(stderr, "[WARN] [ModelInvoker] Dangerous op: %s\n", type.c_str());
-            return false;
-        }
-
-        std::string target = action.value("target", "");
-        if (!target.empty() &&
-            std::find(seen.begin(), seen.end(), target) != seen.end()) {
-            fprintf(stderr, "[WARN] [ModelInvoker] Circular dep on: %s\n", target.c_str());
-            return false;
-        }
-        seen.push_back(target);
-
-        if (++count > 100) {
-            fprintf(stderr, "[WARN] [ModelInvoker] Plan too large\n");
-            return false;
-        }
-    }
-    return true;
+    auto result = builder.Build(ctx);
+    TEST_ASSERT(result.success, "Qwen FIM build succeeds");
+    // Qwen uses <|fim_prefix|> / <|fim_suffix|> / <|fim_middle|>
+    auto& fp = result.prompt.formatted_prompt;
+    TEST_ASSERT(fp.find("fim_prefix") != std::string::npos ||
+                fp.find("fim_suffix") != std::string::npos ||
+                fp.find("prefix") != std::string::npos,
+                "Formatted prompt contains FIM tokens");
+    TEST_PASS("fim_qwen_format_tokens");
 }
 
-// ---------------------------------------------------------------------------
-// Cache
-// ---------------------------------------------------------------------------
-std::string ModelInvoker::getCacheKey(const InvocationParams& params) const {
-    return params.wish.substr(0, 100);
+void test_fim_build_from_parts() {
+    FIMPromptBuilder builder;
+    builder.SetFormat(FIMFormat::Qwen);
+    builder.SetMaxContextTokens(1024);
+
+    auto result = builder.BuildFromParts("int x = ", ";", "test.cpp");
+    TEST_ASSERT(result.success, "BuildFromParts succeeds");
+    TEST_ASSERT(result.prompt.prefix_lines >= 1, "Has prefix lines");
+    TEST_PASS("fim_build_from_parts");
 }
 
-LLMResponse ModelInvoker::getCachedResponse(const std::string& key) const {
-    auto it = m_responseCache.find(key);
-    if (it != m_responseCache.end()) return it->second;
-    return {};
+void test_fim_prefix_ratio() {
+    FIMPromptBuilder builder;
+    builder.SetPrefixRatio(0.8f);
+    builder.SetMaxContextTokens(100);
+
+    // Create content large enough to require trimming
+    std::string bigContent;
+    for (int i = 0; i < 200; i++) bigContent += "line " + std::to_string(i) + "\n";
+
+    EditorContext ctx;
+    ctx.filename = "big.txt";
+    ctx.filepath = "big.txt";
+    ctx.cursor_line = 100;
+    ctx.cursor_column = 0;
+    ctx.full_content = bigContent;
+
+    auto result = builder.Build(ctx);
+    TEST_ASSERT(result.success, "Large content FIM build succeeds");
+    TEST_ASSERT(result.prompt.estimated_tokens <= 120, "Token count is reasonably bounded");
+    TEST_PASS("fim_prefix_ratio");
 }
 
-void ModelInvoker::cacheResponse(const std::string& key, const LLMResponse& resp) {
-    m_responseCache[key] = resp;
+// ==========================================================================
+// § 3. NativeInferenceClient — Config Validation (no server needed)
+// ==========================================================================
+
+void test_ollama_config_defaults() {
+    NativeInferenceConfig cfg;
+    TEST_ASSERT(cfg.host == "127.0.0.1", "Default host is localhost");
+    TEST_ASSERT(cfg.port == 11434, "Default port is 11434");
+    TEST_ASSERT(!cfg.chat_model.empty(), "Default chat model is set");
+    TEST_ASSERT(!cfg.fim_model.empty(), "Default FIM model is set");
+    TEST_ASSERT(cfg.timeout_ms > 0, "Default timeout > 0");
+    TEST_PASS("ollama_config_defaults");
+}
+
+void test_ollama_client_construction() {
+    NativeInferenceConfig cfg;
+    cfg.host = "127.0.0.1";
+    cfg.port = 11434;
+
+    // Construction should not throw or crash
+    NativeInferenceClient client(cfg);
+    TEST_PASS("ollama_client_construction");
+}
+
+void test_ollama_cancel_before_stream() {
+    NativeInferenceConfig cfg;
+    NativeInferenceClient client(cfg);
+
+    // Cancel when nothing is running should be safe
+    client.CancelStream();
+    TEST_PASS("ollama_cancel_before_stream");
+}
+
+// ==========================================================================
+// § 4. AgentOrchestrator — Session Management
+// ==========================================================================
+
+void test_orchestrator_construction() {
+    // Should create without crashing
+    AgentOrchestrator orch;
+    TEST_PASS("orchestrator_construction");
+}
+
+void test_orchestrator_config() {
+    AgentOrchestrator orch;
+    OrchestratorConfig cfg;
+    cfg.max_tool_rounds = 20;
+    cfg.max_conversation_tokens = 16000;
+    cfg.working_directory = "d:\\rawrxd";
+    cfg.auto_build_after_edit = true;
+    cfg.auto_diagnostics = true;
+
+    orch.SetConfig(cfg);
+    TEST_PASS("orchestrator_config");
+}
+
+void test_orchestrator_cancel() {
+    AgentOrchestrator orch;
+
+    // Cancel when nothing is running should be safe
+    orch.Cancel();
+    TEST_PASS("orchestrator_cancel");
+}
+
+// ==========================================================================
+// § 5. DiskRecoveryAgent — C++ Wrapper (no hardware required)
+// ==========================================================================
+
+void test_recovery_agent_construction() {
+    DiskRecoveryAgent agent;
+    TEST_ASSERT(!agent.IsInitialized(), "Agent starts uninitialized");
+    TEST_ASSERT(!agent.IsKeyExtracted(), "No key extracted on construction");
+    TEST_ASSERT(agent.GetBridgeType() == BridgeType::Unknown, "Bridge type is Unknown");
+    TEST_PASS("recovery_agent_construction");
+}
+
+void test_recovery_agent_stats_uninitialized() {
+    DiskRecoveryAgent agent;
+    auto stats = agent.GetStats();
+    TEST_ASSERT(stats.goodSectors == 0, "Zero good sectors when uninitialized");
+    TEST_ASSERT(stats.badSectors == 0, "Zero bad sectors when uninitialized");
+    TEST_ASSERT(stats.currentLBA == 0, "Zero current LBA when uninitialized");
+    TEST_ASSERT(stats.totalSectors == 0, "Zero total sectors when uninitialized");
+    TEST_PASS("recovery_agent_stats_uninitialized");
+}
+
+void test_recovery_agent_abort_safe() {
+    DiskRecoveryAgent agent;
+    // Abort on uninitialized agent should be safe (no-op)
+    agent.Abort();
+    TEST_PASS("recovery_agent_abort_safe");
+}
+
+void test_recovery_agent_move_semantics() {
+    DiskRecoveryAgent agent1;
+    DiskRecoveryAgent agent2 = std::move(agent1);
+    TEST_ASSERT(!agent2.IsInitialized(), "Moved-to agent has same state");
+    TEST_PASS("recovery_agent_move_semantics");
+}
+
+void test_recovery_stats_progress() {
+    RecoveryStats stats;
+    stats.goodSectors = 100;
+    stats.badSectors = 5;
+    stats.currentLBA = 500;
+    stats.totalSectors = 1000;
+
+    double pct = stats.ProgressPercent();
+    TEST_ASSERT(pct >= 49.9 && pct <= 50.1, "ProgressPercent computes correctly");
+
+    RecoveryStats empty;
+    empty.totalSectors = 0;
+    empty.currentLBA = 0;
+    TEST_ASSERT(empty.ProgressPercent() == 0.0, "Zero totalSectors gives 0%");
+    TEST_PASS("recovery_stats_progress");
+}
+
+void test_recovery_result_factories() {
+    auto ok = RecoveryResult::ok("Success");
+    TEST_ASSERT(ok.success, "ok() returns success=true");
+    TEST_ASSERT(ok.detail == "Success", "ok() detail matches");
+    TEST_ASSERT(ok.errorCode == 0, "ok() errorCode is 0");
+
+    auto err = RecoveryResult::error("Failed", 42);
+    TEST_ASSERT(!err.success, "error() returns success=false");
+    TEST_ASSERT(err.errorCode == 42, "error() preserves errorCode");
+    TEST_PASS("recovery_result_factories");
+}
+
+// ==========================================================================
+// § 6. ToolExecResult — Factory Pattern Validation
+// ==========================================================================
+
+void test_tool_exec_result_ok() {
+    auto r = ToolExecResult::ok("output data", 12.5);
+    TEST_ASSERT(r.success, "ok() is successful");
+    TEST_ASSERT(r.output == "output data", "ok() preserves output");
+    TEST_ASSERT(r.exit_code == 0, "ok() exit_code is 0");
+    TEST_ASSERT(r.elapsed_ms == 12.5, "ok() preserves elapsed_ms");
+    TEST_PASS("tool_exec_result_ok");
+}
+
+void test_tool_exec_result_error() {
+    auto r = ToolExecResult::error("bad things", -3);
+    TEST_ASSERT(!r.success, "error() is failure");
+    TEST_ASSERT(r.output == "bad things", "error() preserves message");
+    TEST_ASSERT(r.exit_code == -3, "error() preserves exit code");
+    TEST_PASS("tool_exec_result_error");
+}
+
+// ==========================================================================
+// § 7. Disk Recovery Tool Integration (via ToolRegistry dispatch)
+// ==========================================================================
+
+void test_disk_recovery_tool_stats_action() {
+    auto& reg = AgentToolRegistry::Instance();
+
+    json args;
+    args["action"] = "stats";
+    auto result = reg.Dispatch("disk_recovery", args);
+    // Should succeed even without hardware (returns zeroed stats)
+    TEST_ASSERT(result.success, "disk_recovery stats succeeds without hardware");
+    TEST_ASSERT(result.output.find("Good:") != std::string::npos, "Stats output has Good field");
+    TEST_PASS("disk_recovery_tool_stats_action");
+}
+
+void test_disk_recovery_tool_invalid_action() {
+    auto& reg = AgentToolRegistry::Instance();
+
+    json args;
+    args["action"] = "invalid_blah";
+    auto result = reg.Dispatch("disk_recovery", args);
+    TEST_ASSERT(!result.success, "Invalid action returns failure");
+    TEST_ASSERT(result.output.find("Unknown action") != std::string::npos, "Error mentions unknown");
+    TEST_PASS("disk_recovery_tool_invalid_action");
+}
+
+void test_disk_recovery_tool_missing_action() {
+    auto& reg = AgentToolRegistry::Instance();
+
+    json args;
+    auto result = reg.Dispatch("disk_recovery", args);
+    TEST_ASSERT(!result.success, "Missing action returns failure");
+    TEST_PASS("disk_recovery_tool_missing_action");
+}
+
+// ==========================================================================
+// Test Runner
+// ==========================================================================
+
+int main() {
+    test_xmacro_enum_count();
+    test_registry_singleton();
+    test_registry_list_tools();
+    test_registry_schemas_valid();
+    test_registry_dispatch_read_file();
+    test_registry_dispatch_write_file();
+    test_registry_dispatch_unknown_tool();
+    test_registry_validation_missing_required();
+    test_registry_stats();
+    test_registry_system_prompt();
+
+    test_fim_build_basic();
+    test_fim_build_empty_content();
+    test_fim_build_invalid_cursor();
+    test_fim_qwen_format_tokens();
+    test_fim_build_from_parts();
+    test_fim_prefix_ratio();
+
+    test_ollama_config_defaults();
+    test_ollama_client_construction();
+    test_ollama_cancel_before_stream();
+
+    test_orchestrator_construction();
+    test_orchestrator_config();
+    test_orchestrator_cancel();
+
+    test_recovery_agent_construction();
+    test_recovery_agent_stats_uninitialized();
+    test_recovery_agent_abort_safe();
+    test_recovery_agent_move_semantics();
+    test_recovery_stats_progress();
+    test_recovery_result_factories();
+
+    test_tool_exec_result_ok();
+    test_tool_exec_result_error();
+
+    test_disk_recovery_tool_stats_action();
+    test_disk_recovery_tool_invalid_action();
+    test_disk_recovery_tool_missing_action();
+
+    return g_testsFailed > 0 ? 1 : 0;
 }

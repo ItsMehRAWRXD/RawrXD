@@ -123,9 +123,9 @@ class GGUFLoader : public RawrXD::IGGUFLoader
     // Implementation of new methods to avoid abstract class issues
     size_t GetTensorByteSize(const RawrXD::TensorInfo& tensor) const override { return tensor.size; }
     std::string GetTypeString(RawrXD::GGMLType type) const override { return "f32"; }
-    bool BuildTensorIndex() override { return true; }
-    bool LoadZone(const std::string& zone_name, uint64_t max_memory_mb = 512) override { return true; }
-    bool UnloadZone(const std::string& zone_name) override { return true; }
+    bool BuildTensorIndex() override;
+    bool LoadZone(const std::string& zone_name, uint64_t max_memory_mb = 512) override;
+    bool UnloadZone(const std::string& zone_name) override;
     bool LoadTensorZone(const std::string& tensor_name, std::vector<uint8_t>& data) override;
     uint64_t GetFileSize() const override;
     uint64_t GetCurrentMemoryUsage() const override { return 0; }
@@ -191,6 +191,9 @@ class GGUFLoader : public RawrXD::IGGUFLoader
     RawrXD::GGUFMetadata metadata_;
     std::vector<RawrXD::TensorInfo> tensors_;
     std::vector<std::string> unsupported_types_;
+
+    uint64_t tensor_info_offset = 0;
+    uint64_t data_base_offset = 0;
 
     void* mappedView = nullptr;
 

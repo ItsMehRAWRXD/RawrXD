@@ -28,6 +28,7 @@ public:
     ~ChatInterface();
     
     void sendMessage(const std::string& text);
+    void addMessage(const std::string& role, const std::string& content);
     std::vector<Message> getHistory() const;
     void clearHistory();
     

@@ -7,7 +7,7 @@
 #include "quantum_multi_model_agent_cycling.hpp"
 #include "quantum_agent_orchestrator.hpp"
 #include "quantum_dynamic_time_manager.hpp"
-#include "../agentic/AgentOllamaClient.h"
+#include "../agentic/NativeInferenceClient.h"
 #include "../core/perf_telemetry.hpp"
 #include "../asm/ai_agent_masm_bridge.hpp"
 #include <functional>
@@ -32,13 +32,13 @@
 // ---------------------------------------------------------------------------
 // Internal: Lazily-initialized LLM client for deep thinking inference
 // ---------------------------------------------------------------------------
-static RawrXD::Agent::AgentOllamaClient& getThinkingLLM() {
-    static RawrXD::Agent::OllamaConfig cfg;
+static RawrXD::Agent::NativeInferenceClient& getThinkingLLM() {
+    static RawrXD::Agent::NativeInferenceConfig cfg;
     // chat_model left empty — auto-detected from Ollama /api/tags
     cfg.temperature = 0.3f;
     cfg.max_tokens  = 4096;
     cfg.timeout_ms  = 60000;
-    static RawrXD::Agent::AgentOllamaClient client(cfg);
+    static RawrXD::Agent::NativeInferenceClient client(cfg);
     return client;
 }
 
@@ -85,11 +85,7 @@ AgenticDeepThinkingEngine::AgenticDeepThinkingEngine()
     , m_safety_threshold(0.95f)
 {
     // Initialize quantum subsystems
-    if (!getMultiModelCycling().initializeAgents()) {
-        std::cerr << "[DeepThinking] Warning: Failed to initialize multi-model agent cycling" << std::endl;
-    }
-    
-    std::cout << "[DeepThinking] Quantum Deep Thinking Engine initialized with autonomous capabilities" << std::endl;
+    getMultiModelCycling().initializeAgents();
 }
 
 AgenticDeepThinkingEngine::~AgenticDeepThinkingEngine() {
@@ -139,9 +135,6 @@ AgenticDeepThinkingEngine::ThinkingResult AgenticDeepThinkingEngine::think(const
                 );
                 
                 result.generatedTodos = improvement_todos;
-                
-                std::cout << "[DeepThinking] Generated " << improvement_todos.size() 
-                          << " improvement todos from audit findings" << std::endl;
             }
         }
         
@@ -168,7 +161,7 @@ AgenticDeepThinkingEngine::ThinkingResult AgenticDeepThinkingEngine::think(const
         m_thinkingCache[cacheKey] = result;
 
     } catch (const std::exception& e) {
-        std::cerr << "[DeepThinking] Error during thinking: " << e.what() << std::endl;
+        // Error during thinking
         {   std::lock_guard<std::mutex> lock(m_statsMutex);
             m_stats.failedThinking++;
         }
@@ -1988,7 +1981,7 @@ std::vector<std::string> AgenticDeepThinkingEngine::listFilesRecursive(const std
             } catch (...) { continue; }
         }
     } catch (const std::exception& e) {
-        std::cerr << "[DeepThinking] listFilesRecursive error: " << e.what() << std::endl;
+        // listFilesRecursive error
     }
     return files;
 }
@@ -2547,11 +2540,8 @@ AgenticDeepThinkingEngine::MultiAgentResult AgenticDeepThinkingEngine::thinkMult
     int cycleMultiplier = std::clamp(context.cycleMultiplier, 1, 8);
     enhancedContext.maxIterations = context.maxIterations * cycleMultiplier;
     
-    if (m_detailedLogging) {
-        std::cout << "[MultiAgent] Spawning " << agentCount << " agents with "
-                  << enhancedContext.maxIterations << " max iterations (base: "
-                  << context.maxIterations << " x " << cycleMultiplier << ")\n";
-    }
+    (void)agentCount;
+    (void)enhancedContext;
 
     // Set up agent models
     std::vector<std::string> agentModels;
@@ -2588,7 +2578,7 @@ AgenticDeepThinkingEngine::MultiAgentResult AgenticDeepThinkingEngine::thinkMult
                 std::lock_guard<std::mutex> lock(resultsMutex);
                 agentResults[i] = agentRes;
             } catch (const std::exception& e) {
-                std::cerr << "[MultiAgent] Agent " << i << " failed: " << e.what() << "\n";
+                // Agent failed
                 std::lock_guard<std::mutex> lock(resultsMutex);
                 agentResults[i].agentId = i;
                 agentResults[i].modelName = agentModels[i];
@@ -2662,13 +2652,6 @@ AgenticDeepThinkingEngine::MultiAgentResult AgenticDeepThinkingEngine::thinkMult
     multiResult.consensusResult.elapsedMilliseconds = 
         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 
-    if (m_detailedLogging) {
-        std::cout << "[MultiAgent] Consensus: " << (multiResult.consensusReached ? "YES" : "NO")
-                  << " (confidence: " << std::fixed << std::setprecision(1)
-                  << multiResult.consensusConfidence * 100.0f << "%)\n";
-        std::cout << "[MultiAgent] Elapsed: " << multiResult.consensusResult.elapsedMilliseconds << "ms\n";
-    }
-
     // Track multi-agent telemetry
     if (auto* tc = TelemetryCollector::instance()) {
         tc->trackFeatureUsage("deep_thinking.multi_agent");
@@ -2691,7 +2674,7 @@ AgenticDeepThinkingEngine::AgentResult AgenticDeepThinkingEngine::runSingleAgent
     result.agreementScore = 0.0f;
 
     if (m_detailedLogging) {
-        std::cout << "[Agent-" << agentId << "] Starting with model: " << model << "\n";
+        // Agent starting
     }
 
     // Per-agent model: use setModel() or default thinking engine
@@ -2699,11 +2682,7 @@ AgenticDeepThinkingEngine::AgentResult AgenticDeepThinkingEngine::runSingleAgent
     // Run standard think() with the enhanced context
     result.result = think(context);
     
-    if (m_detailedLogging) {
-        std::cout << "[Agent-" << agentId << "] Completed with confidence: "
-                  << std::fixed << std::setprecision(1)
-                  << result.result.overallConfidence * 100.0f << "%\n";
-    }
+    (void)agentId;
 
     return result;
 }

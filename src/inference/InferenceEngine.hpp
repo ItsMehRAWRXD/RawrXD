@@ -7,6 +7,14 @@
 // src/inference/InferenceEngine.hpp and expect this simple API.
 class InferenceEngine {
 public:
+    // Accepts a null or typed config pointer; ignored in this shim.
+    explicit InferenceEngine(void* /*config*/) {}
+public:
+    // Alias expected by test targets that call Initialize instead of loadModel.
+    bool Initialize(const std::string& modelPath) { return loadModel(modelPath); }
+    int GetVocabSize() const { return 0; }
+    int GetEmbeddingDim() const { return 0; }
+
     bool loadModel(const std::string& modelPath) {
         m_modelPath = modelPath;
         if (m_modelPath.empty()) {

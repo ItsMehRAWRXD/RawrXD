@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 
 AgentHotPatcher::AgentHotPatcher() {
     m_enabled = false;
-    m_debugLogging = false;
+    m_logging = false;
     m_idCounter = 0;
 }
 
@@ -82,8 +82,8 @@ bool AgentHotPatcher::isHotPatchingEnabled() const {
     return m_enabled;
 }
 
-void AgentHotPatcher::setDebugLogging(bool enabled) {
-    m_debugLogging = enabled;
+void AgentHotPatcher::setLogging(bool enabled) {
+    m_logging = enabled;
 }
 
 JsonValue AgentHotPatcher::getCorrectionStatistics() const {

@@ -108,7 +108,7 @@ std::string QueryOllamaAPI(
             0);
 
         if (!hConnect) {
-            std::cerr << "[HTTP] Failed to connect to Ollama at localhost:11434\n";
+            std::cerr << "[HTTP] Failed to connect to Ollama at localhost:11435\n";
             WinHttpCloseHandle(hSession);
             return "";
         }
@@ -335,7 +335,7 @@ Options:
   --max-mode              Enable max mode (32K+ context)
   --deep-thinking         Enable deep thinking mode
   --deep-research         Enable deep research mode
-  --no-refusal            Enable no refusal mode
+    --no-refusal            Enable direct-response mode
   --autocorrect           Enable auto-correction
   --context-size <size>   Set context size (4k/32k/64k/128k/256k/512k/1m)
   --governor              Enable overclock governor
@@ -374,7 +374,7 @@ MODE TOGGLES:
   /maxmode <on|off>       - Toggle max mode
   /deepthinking <on|off>  - Toggle deep thinking
   /deepresearch <on|off>  - Toggle deep research
-  /norefusal <on|off>     - Toggle no refusal
+    /norefusal <on|off>     - Toggle direct-response mode
   /autocorrect <on|off>   - Toggle auto-correction
 
 SHELL COMMANDS:
@@ -453,7 +453,7 @@ For more help: https://github.com/ItsMehRAWRXD/RawrXD/wiki
     // Initialize API server
     state.api_server = std::make_unique<APIServer>(state);
     state.api_server->Start(11434);
-    std::cout << "[API] Server started on http://localhost:11434" << std::endl;
+    std::cout << "[API] Server started on http://localhost:11435" << std::endl;
     
     // Initialize governor if requested
     if (state.enable_overclock_governor) {

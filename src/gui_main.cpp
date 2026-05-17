@@ -132,8 +132,6 @@ std::expected<void, std::string> GUIMain::initialize(HINSTANCE hInstance) {
     // I can't assign to the result of `getEditor()`.
     // I will comment out the assignment for now to let it compile, or assume `m_ide` already has it interactively.
     
-    spdlog::info("GUI initialized successfully");
-    
     return {};
 }
 

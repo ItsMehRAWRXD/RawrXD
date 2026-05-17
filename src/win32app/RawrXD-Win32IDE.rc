@@ -29,6 +29,13 @@ END
 
 1 RT_MANIFEST "RawrXD-Win32IDE.manifest"
 
+// Icons
+IDI_APP_ICON ICON "..\\..\\src\\res\\app.ico"
+
+// Bitmaps
+IDB_TOOLBAR BITMAP "..\\..\\src\\res\\toolbar.bmp"
+IDB_SIDEBAR BITMAP "..\\..\\src\\res\\sidebar.bmp"
+
 // Used by DialogBoxParamA(..., "AGENT_PROMPT_DLG", ...) across agent / planning / LSP rename paths.
 // Control IDs: 101 = caption static, 102 = single-line edit (filled by WM_INITDIALOG handlers in code).
 LANGUAGE 9, 1

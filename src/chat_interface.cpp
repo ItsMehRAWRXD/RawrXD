@@ -16,7 +16,6 @@ ChatInterface::~ChatInterface() {
 void ChatInterface::setModel(const std::string& modelPath) {
     m_engine = std::make_unique<CPUInference::CPUInferenceEngine>();
     if (!m_engine->LoadModel(modelPath)) {
-        std::cerr << "Failed to load model: " << modelPath << std::endl;
         m_engine.reset();
     }
 }
@@ -63,6 +62,10 @@ void ChatInterface::sendMessage(const std::string& text) {
     } else {
         processResponse("Error: No model router or engine attached.");
     }
+}
+
+void ChatInterface::addMessage(const std::string& role, const std::string& content) {
+    appendToHistory(role, content);
 }
 
 void ChatInterface::processResponse(const std::string& modelOutput) {

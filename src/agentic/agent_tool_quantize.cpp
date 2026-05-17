@@ -99,10 +99,6 @@ static bool quantize_tensor_nq1(const float* f32_data, uint64_t n_elements,
                                  uint32_t admm_iter, bool verbose,
                                  const char* tensor_name) {
     if (n_elements % QK_NQ1 != 0) {
-        if (verbose) {
-            fprintf(stderr, "[NanoQuant] SKIP tensor '%s': n_elements=%llu not divisible by %d\n",
-                    tensor_name, (unsigned long long)n_elements, QK_NQ1);
-        }
         return false;
     }
     
@@ -116,23 +112,10 @@ static bool quantize_tensor_nq1(const float* f32_data, uint64_t n_elements,
     double dt = std::chrono::duration<double>(t1 - t0).count();
     
     if (blocks_done != n_blocks) {
-        fprintf(stderr, "[NanoQuant] ERROR tensor '%s': expected %llu blocks, got %llu\n",
-                tensor_name, (unsigned long long)n_blocks, (unsigned long long)blocks_done);
         return false;
     }
     
     *out_n_blocks = n_blocks;
-    
-    if (verbose) {
-        uint64_t f32_bytes = n_elements * sizeof(float);
-        uint64_t nq1_bytes = n_blocks * BLOCK_NQ1_SIZE;
-        float ratio = static_cast<float>(f32_bytes) / static_cast<float>(nq1_bytes);
-        fprintf(stdout, "[NanoQuant] %-40s | %8llu el | %s | %.2fx | %.3fs\n",
-                tensor_name,
-                (unsigned long long)n_elements,
-                admm_iter > 0 ? "ADMM" : "FAST",
-                ratio, dt);
-    }
     
     return true;
 }
@@ -145,8 +128,6 @@ static bool quantize_tensor_nq_r4(float* f32_data, uint32_t rows, uint32_t cols,
                                    uint32_t rank, bool verbose,
                                    const char* tensor_name) {
     if (rank == 0 || rank > NQM_MAX_RANK) {
-        fprintf(stderr, "[NanoQuant] ERROR tensor '%s': invalid rank %u (must be 1-%d)\n",
-                tensor_name, rank, NQM_MAX_RANK);
         return false;
     }
     
@@ -159,15 +140,6 @@ static bool quantize_tensor_nq_r4(float* f32_data, uint32_t rows, uint32_t cols,
     double dt = std::chrono::duration<double>(t1 - t0).count();
     
     *out_size = bytes_written;
-    
-    if (verbose) {
-        uint64_t f32_bytes = static_cast<uint64_t>(rows) * cols * sizeof(float);
-        float bpe = (bytes_written > 0)
-            ? (static_cast<float>(bytes_written) * 8.0f) / (static_cast<float>(rows) * cols)
-            : 0.0f;
-        fprintf(stdout, "[NanoQuant] %-40s | %ux%u rank-%u | %.4f bpe | %.3fs\n",
-                tensor_name, rows, cols, rank, bpe, dt);
-    }
     
     return true;
 }

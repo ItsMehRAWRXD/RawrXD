@@ -1,0 +1,83 @@
+╔════════════════════════════════════════════════╗
+║    RawrXD SWE-bench Evaluation Harness         ║
+║    Purpose: Validate Phase 2 Adaptation       ║
+╚════════════════════════════════════════════════╝
+
+Loaded 4 instances
+
+[INFO] Initializing minimal Ollama HTTP client...
+Available Ollama models:
+  phi3:mini
+  deepseek-r1:8b
+  bigdaddyg-no-refuse-q4_k_m:latest
+  copilot-bigdaddyg-f32-from-q4:latest
+  bigdaddyg-f32-from-q4:latest
+  codestral:22b
+  bigdaddyg-god-fast:latest
+  bigdaddyg-16gb-balanced:latest
+  bigdaddyg-16gb-v2:latest
+  bigdaddyg-16gb-fixed:latest
+  bigdaddyg-16gb:latest
+  bigdaddyg-god:latest
+  bigdaddyg-alldrive:latest
+  bigdaddyg-comprehensive:latest
+  bigdaddyg-personalized:latest
+  gpt-oss:120b
+  gemma3:27b
+  gpt-oss:20b
+  ministral-3:latest
+  codellama:latest
+  deepseek-coder:latest
+  qwen2.5-coder:latest
+  qwen2.5-coder:1.5b
+  qwen3-coder:30b
+  dolphin3:latest
+  gemma3:latest
+  quantumide-performance:latest
+  quantumide-feature:latest
+  quantumide-security:latest
+  quantumide-architect:latest
+  unlocked-60M:latest
+  unlocked-125M:latest
+  unlocked-1B:latest
+  unlocked-350M:latest
+  llama3-comprehensive-agentic:latest
+  bigdaddy-balanced-agentic:latest
+  cheetah-speed-agentic:latest
+  bigdaddyg-q2k-ultra-productive:latest
+  cheetah-stealth-agentic-q5km-full:latest
+  cheetah-stealth-agentic-5gb:latest
+  llama3.2:3b
+  bigdaddyg-q2-ultra:latest
+  bigdaddyg-cheetah:latest
+  bigdaddy-7b-cheetah:latest
+  bg40-f32:latest
+  huihui_ai/llama3.3-abliterated:latest
+  mannix/llama3.1-8b-abliterated:latest
+  bg-test:latest
+  bg-ide-agentic:latest
+  bg40-unleashed:latest
+  bg40-f32-from-q4:latest
+  bg40:latest
+  hf.co/bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M
+  hf.co/bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF:Q4_K_M
+  hf.co/bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF:Q3_K_S
+  hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:Q4_K_M
+  hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest
+  qwen2.5:7b
+  llama2:latest
+  bigdaddyg-personalized-agentic:latest
+  cheetah-stealth-agentic:latest
+  bigdaddyg-agentic:latest
+  bigdaddyg-fast-agentic:latest
+  llama3:latest
+  qwen3:4b
+  qwen3-vl:4b
+  qwen3:8b
+  phi:latest
+  bigdaddyg-fast:latest
+  cheetah-stealth:latest
+  bigdaddyg:latest
+  gemma3:1b
+  gemma3:12b
+  llama3.2:latest

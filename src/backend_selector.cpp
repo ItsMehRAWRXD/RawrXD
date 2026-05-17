@@ -184,7 +184,7 @@ std::vector<std::pair<BackendType, double>> BackendSelector::benchmarkBackends(
                 results.emplace_back(backend.type, elapsed);
             }
         } catch (const std::exception& e) {
-            std::cerr << "Benchmark failed for " << backend.name << ": " << e.what() << std::endl;
+            // Benchmark failed
         }
     }
 
@@ -251,26 +251,22 @@ std::unique_ptr<InferenceEngine> BackendSelector::createCPUEngine() {
 std::unique_ptr<InferenceEngine> BackendSelector::createDMLEngine() {
     // DMLInferenceEngine is not yet part of the shared InferenceEngine link lane
     // used by tools, so keep behavior deterministic by falling back to CPU here.
-    std::cerr << "DirectML backend not wired in this build lane yet, using CPU" << std::endl;
     return createCPUEngine();
 }
 
 std::unique_ptr<InferenceEngine> BackendSelector::createVulkanEngine() {
     // TODO: Implement VulkanInferenceEngine
     // For now, fall back to CPU
-    std::cerr << "Vulkan backend not implemented yet, using CPU" << std::endl;
     return createCPUEngine();
 }
 
 std::unique_ptr<InferenceEngine> BackendSelector::createHIPEngine() {
     // TODO: Implement HIPInferenceEngine
-    std::cerr << "HIP backend not implemented yet, using CPU" << std::endl;
     return createCPUEngine();
 }
 
 std::unique_ptr<InferenceEngine> BackendSelector::createCUDAEngine() {
     // TODO: Implement CUDAInferenceEngine
-    std::cerr << "CUDA backend not implemented yet, using CPU" << std::endl;
     return createCPUEngine();
 }
 

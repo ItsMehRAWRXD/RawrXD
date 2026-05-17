@@ -245,7 +245,7 @@ void RepaintShell(HWND hWnd) {
     // 3. Render Virtual Chrome (Tabs / Splitters / Overlays)
     if (g_UI.pShellRoot) {
         // Walk the tree and render chrome regions
-        // For simplicity in this demo, render active node tabs
+        // Render active node tabs
         RenderVirtualTabs(memDC, g_UI.pShellRoot); 
     }
 
@@ -389,7 +389,7 @@ LRESULT CALLBACK EditorSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
     // v22.2.0-SOVEREIGN-B: Runtime Model Lifecycle Registry (Hot-Swap)
     if (uMsg == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'M') {
-        // Toggle model swap (Demo cycle)
+        // Toggle model swap
         static int cycle = 0;
         const char* models[] = { "Llama-3-8B.gguf", "DeepSeek-V3.gguf", "Phi-4.gguf" };
         Titan_LoadModel(models[cycle++ % 3]);

@@ -58,12 +58,10 @@ AICompletionProvider::~AICompletionProvider() {
 
 bool AICompletionProvider::initialize(const std::string& modelPath, const std::string& tokenizerPath) {
     if (!loadModel(modelPath)) {
-        std::cerr << "[AICompletion] Failed to load model: " << modelPath << std::endl;
         return false;
     }
 
     if (!loadTokenizer(tokenizerPath)) {
-        std::cerr << "[AICompletion] Failed to load tokenizer: " << tokenizerPath << std::endl;
         return false;
     }
 
@@ -72,7 +70,6 @@ bool AICompletionProvider::initialize(const std::string& modelPath, const std::s
 }
 
 bool AICompletionProvider::loadModel(const std::string& modelPath) {
-    std::cout << "[AICompletion] Loading model: " << modelPath << std::endl;
     auto* engine = new CPUInference::CPUInferenceEngine();
     if (!engine->LoadModel(modelPath)) {
         delete engine;
@@ -86,7 +83,6 @@ bool AICompletionProvider::loadModel(const std::string& modelPath) {
 }
 
 bool AICompletionProvider::loadTokenizer(const std::string& tokenizerPath) {
-    std::cout << "[AICompletion] Loading tokenizer: " << tokenizerPath << std::endl;
     if (m_modelHandle) {
         m_tokenizerHandle = m_modelHandle;
         return true;

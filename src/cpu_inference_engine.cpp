@@ -5,16 +5,33 @@
 // ============================================================================
 #include "cpu_inference_engine.h"
 #include "rawrxd_inference.h"
+#include "rawr_circular_sdma.h"
+#include "kernels/dequant_q6k_avx512.h"
+#include "kernels/kv_accum_avx512.h"
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
+#include <immintrin.h>
 #include <iostream>
+#include <limits>
 #include <mutex>
 #include <thread>
 
+extern "C" {
+    uint64_t g_sdma_flip_count = 0;
+    uint64_t g_sdma_wait_cycles = 0;
+    uint64_t g_expert_cache_hits = 0;
+    uint64_t g_expert_cache_misses = 0;
+    uint64_t g_sovereign_bar_base = 0;
+    volatile unsigned long long g_rawrxd_mailbox_data_seq = 0;
+    volatile unsigned long long g_rawrxd_mailbox_consumed_seq = 0;
+    volatile unsigned long long g_rawrxd_mailbox_frame_ready = 0;
+}
 
 namespace RawrXD
 {
@@ -23,6 +40,446 @@ namespace RawrXD
 // File-scope inference backend (the REAL compute chain)
 // ============================================================================
 static RawrXDInference s_inferenceBackend;
+
+namespace
+{
+constexpr size_t kMaxContextTokens = 1'000'000;
+constexpr size_t kMaxKvCacheBytes = 8ull * 1024ull * 1024ull * 1024ull;
+
+constexpr uint32_t kRxaMagic = 0x21584152u;     // "RXA!"
+constexpr uint32_t kRxaVersion1 = 0x00010000u;  // v1.0
+constexpr uint8_t kRxaAlgRaw = 0;
+
+#pragma pack(push, 1)
+struct RxaHeaderV1
+{
+    uint32_t magic;
+    uint32_t version;
+    uint32_t flags;
+    uint32_t blockSize;
+    uint64_t uncompressedSize;
+    uint32_t blockCount;
+    uint32_t reserved;
+};
+
+struct RxaBlockEntryV1
+{
+    uint64_t offset;
+    uint32_t compressedSize;
+    uint32_t uncompressedSize;
+    uint32_t crc32c;
+    uint8_t algorithm;
+    uint8_t reserved[3];
+};
+#pragma pack(pop)
+
+bool hasRxaExtension(const std::string& modelPath)
+{
+    std::error_code ec;
+    const std::filesystem::path p(modelPath);
+    std::string ext = p.extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return !ec && ext == ".rxa";
+}
+
+class Utf8StreamSanitizer
+{
+  public:
+    std::string Consume(const std::string& chunk)
+    {
+        pending_ += chunk;
+        return Extract(false);
+    }
+
+    std::string Finish()
+    {
+        std::string out = Extract(true);
+        pending_.clear();
+        return out;
+    }
+
+  private:
+    static bool IsContinuation(unsigned char c)
+    {
+        return (c & 0xC0u) == 0x80u;
+    }
+
+    std::string Extract(bool finalChunk)
+    {
+        std::string out;
+        size_t i = 0;
+
+        while (i < pending_.size())
+        {
+            const unsigned char c0 = static_cast<unsigned char>(pending_[i]);
+            if (c0 <= 0x7Fu)
+            {
+                out.push_back(static_cast<char>(c0));
+                ++i;
+                continue;
+            }
+
+            auto need = [&](size_t count) -> bool { return (i + count) <= pending_.size(); };
+
+            if (c0 >= 0xC2u && c0 <= 0xDFu)
+            {
+                if (!need(2))
+                {
+                    if (!finalChunk)
+                        break;
+                    ++i;
+                    continue;
+                }
+                const unsigned char c1 = static_cast<unsigned char>(pending_[i + 1]);
+                if (IsContinuation(c1))
+                {
+                    out.append(pending_, i, 2);
+                    i += 2;
+                }
+                else
+                {
+                    ++i;
+                }
+                continue;
+            }
+
+            if (c0 >= 0xE0u && c0 <= 0xEFu)
+            {
+                if (!need(3))
+                {
+                    if (!finalChunk)
+                        break;
+                    ++i;
+                    continue;
+                }
+
+                const unsigned char c1 = static_cast<unsigned char>(pending_[i + 1]);
+                const unsigned char c2 = static_cast<unsigned char>(pending_[i + 2]);
+                bool ok = false;
+                if (c0 == 0xE0u)
+                    ok = (c1 >= 0xA0u && c1 <= 0xBFu) && IsContinuation(c2);
+                else if (c0 == 0xEDu)
+                    ok = (c1 >= 0x80u && c1 <= 0x9Fu) && IsContinuation(c2);
+                else
+                    ok = IsContinuation(c1) && IsContinuation(c2);
+
+                if (ok)
+                {
+                    out.append(pending_, i, 3);
+                    i += 3;
+                }
+                else
+                {
+                    ++i;
+                }
+                continue;
+            }
+
+            if (c0 >= 0xF0u && c0 <= 0xF4u)
+            {
+                if (!need(4))
+                {
+                    if (!finalChunk)
+                        break;
+                    ++i;
+                    continue;
+                }
+
+                const unsigned char c1 = static_cast<unsigned char>(pending_[i + 1]);
+                const unsigned char c2 = static_cast<unsigned char>(pending_[i + 2]);
+                const unsigned char c3 = static_cast<unsigned char>(pending_[i + 3]);
+                bool ok = false;
+                if (c0 == 0xF0u)
+                    ok = (c1 >= 0x90u && c1 <= 0xBFu) && IsContinuation(c2) && IsContinuation(c3);
+                else if (c0 == 0xF4u)
+                    ok = (c1 >= 0x80u && c1 <= 0x8Fu) && IsContinuation(c2) && IsContinuation(c3);
+                else
+                    ok = IsContinuation(c1) && IsContinuation(c2) && IsContinuation(c3);
+
+                if (ok)
+                {
+                    out.append(pending_, i, 4);
+                    i += 4;
+                }
+                else
+                {
+                    ++i;
+                }
+                continue;
+            }
+
+            ++i;
+        }
+
+        if (i > 0)
+            pending_.erase(0, i);
+        if (finalChunk && !pending_.empty())
+            pending_.clear();
+
+        return out;
+    }
+
+    std::string pending_;
+};
+
+std::string sanitizeUtf8Lossy(const std::string& input)
+{
+    Utf8StreamSanitizer sanitizer;
+    std::string out = sanitizer.Consume(input);
+    out += sanitizer.Finish();
+    return out;
+}
+
+bool isRxaHeaderValid(const RxaHeaderV1& header)
+{
+    if (header.magic != kRxaMagic)
+        return false;
+    if (header.version != kRxaVersion1)
+        return false;
+    if (header.blockSize < 4096 || header.blockSize > (64u * 1024u * 1024u))
+        return false;
+    if (header.blockCount == 0 || header.blockCount > (8u * 1024u * 1024u))
+        return false;
+    if (header.uncompressedSize == 0 || header.uncompressedSize > (256ull * 1024ull * 1024ull * 1024ull))
+        return false;
+    return true;
+}
+
+bool extractRxaToTempGguf(const std::string& rxaPath, std::string& outGgufPath, std::string& outError)
+{
+    outGgufPath.clear();
+    outError.clear();
+
+    std::ifstream in(rxaPath, std::ios::binary);
+    if (!in.is_open())
+    {
+        outError = "unable to open RXA archive";
+        return false;
+    }
+
+    RxaHeaderV1 header{};
+    in.read(reinterpret_cast<char*>(&header), sizeof(header));
+    if (!in.good() || !isRxaHeaderValid(header))
+    {
+        outError = "invalid RXA header";
+        return false;
+    }
+
+    std::vector<RxaBlockEntryV1> entries(header.blockCount);
+    in.read(reinterpret_cast<char*>(entries.data()), static_cast<std::streamsize>(entries.size() * sizeof(RxaBlockEntryV1)));
+    if (!in.good())
+    {
+        outError = "failed to read RXA block index";
+        return false;
+    }
+
+    std::error_code ec;
+    const std::filesystem::path sourcePath(rxaPath);
+    const std::filesystem::path tempRoot = std::filesystem::temp_directory_path(ec);
+    if (ec)
+    {
+        outError = "failed to resolve temp directory";
+        return false;
+    }
+
+    const std::string cacheName = sourcePath.stem().string() + ".streamed.gguf";
+    const std::filesystem::path cachePath = tempRoot / cacheName;
+
+    const bool cacheExists = std::filesystem::exists(cachePath, ec) && !ec;
+    if (cacheExists)
+    {
+        const uint64_t cachedSize = std::filesystem::file_size(cachePath, ec);
+        if (!ec && cachedSize == header.uncompressedSize)
+        {
+            const auto sourceTime = std::filesystem::last_write_time(sourcePath, ec);
+            if (!ec)
+            {
+                const auto cacheTime = std::filesystem::last_write_time(cachePath, ec);
+                if (!ec && cacheTime >= sourceTime)
+                {
+                    outGgufPath = cachePath.string();
+                    return true;
+                }
+            }
+        }
+    }
+
+    std::ofstream out(cachePath, std::ios::binary | std::ios::trunc);
+    if (!out.is_open())
+    {
+        outError = "unable to create cached GGUF output";
+        return false;
+    }
+
+    std::vector<char> compressed;
+    uint64_t writtenTotal = 0;
+
+    for (uint32_t i = 0; i < header.blockCount; ++i)
+    {
+        const RxaBlockEntryV1& entry = entries[i];
+        if (entry.algorithm != kRxaAlgRaw)
+        {
+            outError = "unsupported RXA compression algorithm in archive";
+            return false;
+        }
+        if (entry.compressedSize < entry.uncompressedSize)
+        {
+            outError = "corrupt RXA block size metadata";
+            return false;
+        }
+
+        compressed.resize(entry.compressedSize);
+        in.seekg(static_cast<std::streamoff>(entry.offset), std::ios::beg);
+        if (!in.good())
+        {
+            outError = "invalid RXA block offset";
+            return false;
+        }
+
+        in.read(compressed.data(), static_cast<std::streamsize>(entry.compressedSize));
+        if (!in.good())
+        {
+            outError = "failed to read RXA block payload";
+            return false;
+        }
+
+        out.write(compressed.data(), static_cast<std::streamsize>(entry.uncompressedSize));
+        if (!out.good())
+        {
+            outError = "failed to stream RXA block to GGUF cache";
+            return false;
+        }
+
+        writtenTotal += entry.uncompressedSize;
+    }
+
+    out.flush();
+    if (!out.good())
+    {
+        outError = "failed to flush streamed GGUF cache";
+        return false;
+    }
+
+    if (writtenTotal != header.uncompressedSize)
+    {
+        outError = "RXA output size mismatch";
+        return false;
+    }
+
+    outGgufPath = cachePath.string();
+    return true;
+}
+
+bool checkedMulSize(size_t a, size_t b, size_t& out)
+{
+    if (a == 0 || b == 0)
+    {
+        out = 0;
+        return true;
+    }
+    if (a > (std::numeric_limits<size_t>::max() / b))
+    {
+        return false;
+    }
+    out = a * b;
+    return true;
+}
+
+bool utf8ToWideChecked(const std::string& utf8, std::wstring& wide)
+{
+    wide.clear();
+    if (utf8.empty())
+        return false;
+
+    const int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, nullptr, 0);
+    if (len <= 0)
+        return false;
+
+    wide.resize(static_cast<size_t>(len));
+    const int conv = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, &wide[0], len);
+    if (conv <= 0)
+    {
+        wide.clear();
+        return false;
+    }
+    if (!wide.empty() && wide.back() == L'\0')
+        wide.pop_back();
+    return !wide.empty();
+}
+
+inline float DotProductF32(const float* a, const float* b, int n)
+{
+    if (!a || !b || n <= 0)
+        return 0.0f;
+
+#if defined(__AVX512F__)
+    int i = 0;
+    __m512 acc = _mm512_setzero_ps();
+    for (; i + 16 <= n; i += 16)
+    {
+        const __m512 va = _mm512_loadu_ps(a + i);
+        const __m512 vb = _mm512_loadu_ps(b + i);
+        acc = _mm512_fmadd_ps(va, vb, acc);
+    }
+    float sum = _mm512_reduce_add_ps(acc);
+    for (; i < n; ++i)
+        sum += a[i] * b[i];
+    return sum;
+#else
+    float sum = 0.0f;
+    for (int i = 0; i < n; ++i)
+        sum += a[i] * b[i];
+    return sum;
+#endif
+}
+
+inline bool KvHotPathTelemetryEnabled()
+{
+    static int enabled = -1;
+    if (enabled < 0)
+    {
+        char value[8] = {};
+        const DWORD len = GetEnvironmentVariableA("RAWRXD_KV_HOTPATH_TIMER", value, static_cast<DWORD>(sizeof(value)));
+        enabled = (len > 0 && len < sizeof(value) && value[0] != '0') ? 1 : 0;
+    }
+    return enabled != 0;
+}
+
+inline void AccumulateScaledKVHotPath(float* dst, const float* src, float scale, int n)
+{
+    if (!dst || !src || n <= 0)
+    {
+        return;
+    }
+
+    if (scale == 1.0f)
+    {
+        KernelOps::AccumulateKV(src, dst, n);
+        return;
+    }
+
+    KernelOps::AccumulateScaledKV(src, dst, n, scale);
+}
+}  // namespace
+
+[[nodiscard]] static bool ConvertTokensToU32Checked(const std::vector<int32_t>& in, std::vector<uint32_t>& out,
+                                                    const char* caller)
+{
+    out.clear();
+    out.reserve(in.size());
+    for (size_t i = 0; i < in.size(); ++i)
+    {
+        const int32_t tok = in[i];
+        if (tok < 0)
+        {
+            printf("[CPUInferenceEngine] ERROR: %s received negative token %d at index %zu\n", caller, tok, i);
+            out.clear();
+            return false;
+        }
+        out.push_back(static_cast<uint32_t>(tok));
+    }
+    return true;
+}
 
 // ============================================================================
 // Shared CPUInferenceEngine (single facade; matches single s_inferenceBackend).
@@ -70,40 +527,32 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
         return false;
     }
 
-    // UTF-8 → wchar_t for the loader
-    std::wstring wpath;
-    int len = MultiByteToWideChar(CP_UTF8, 0, model_path.c_str(), -1, nullptr, 0);
-    if (len > 0)
+    std::string effectiveModelPath = model_path;
+    if (hasRxaExtension(model_path))
     {
-        wpath.resize(len);
-        MultiByteToWideChar(CP_UTF8, 0, model_path.c_str(), -1, &wpath[0], len);
-        if (!wpath.empty() && wpath.back() == L'\0')
-            wpath.pop_back();
+        std::string extractedPath;
+        std::string extractError;
+        if (!extractRxaToTempGguf(model_path, extractedPath, extractError))
+        {
+            m_lastLoadErrorMessage = "RXA stream extraction failed: " + extractError;
+            printf("[CPUInferenceEngine] RXA extraction failed for %s: %s\n", model_path.c_str(), extractError.c_str());
+            return false;
+        }
+        effectiveModelPath = extractedPath;
+        printf("[CPUInferenceEngine] RXA stream extraction complete: %s -> %s\n", model_path.c_str(), effectiveModelPath.c_str());
     }
 
-    // Locate tokenizer files alongside the model
-    namespace fs = std::filesystem;
-    fs::path modelDir = fs::path(model_path).parent_path();
-    std::string vocabPath = (modelDir / "tokenizer.json").string();
-    std::string mergesPath = (modelDir / "merges.txt").string();
-
-    // Fallback: check current directory
-    if (!fs::exists(vocabPath))
-        vocabPath = "tokenizer.json";
-    if (!fs::exists(mergesPath))
-        mergesPath = "merges.txt";
-
-    printf("[CPUInferenceEngine] Loading model: %s\n", model_path.c_str());
-    printf("[CPUInferenceEngine] Stage: initialize backend\n");
-
+    printf("[CPUInferenceEngine] Loading model: %s\n", effectiveModelPath.c_str());
+    printf("[CPUInferenceEngine] Stage: initialize backend (GPU will be attempted first, with CPU fallback)\n");
     try
     {
-        if (s_inferenceBackend.Initialize(wpath.c_str(), vocabPath.c_str(), mergesPath.c_str()))
+        // Try GPU-accelerated path first
+        if (s_inferenceBackend.Initialize(effectiveModelPath))
         {
-            m_modelLoaded = true;
             m_lastLoadErrorMessage.clear();
+            m_modelLoaded = true;
 
-            // Propagate metadata from backend to facade members
+            // Propagate metadata from backend
             int bvs = s_inferenceBackend.getVocabSize();
             int bdim = s_inferenceBackend.getDim();
             int blay = s_inferenceBackend.getLayers();
@@ -112,7 +561,6 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             m_embeddingDim = (bdim > 0) ? bdim : 4096;
             m_numLayers = (blay > 0) ? blay : 32;
             m_numHeads = (bhd > 0) ? bhd : 32;
-
             // Try to load Titan ASM DLL if available
             if (m_useTitanAssembly && !m_hTitanDLL)
             {
@@ -131,7 +579,7 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
                     }
                     if (fnTitan_LoadModel && m_pTitanContext)
                     {
-                        fnTitan_LoadModel(m_pTitanContext, model_path.c_str());
+                        fnTitan_LoadModel(m_pTitanContext, effectiveModelPath.c_str());
                     }
                 }
             }
@@ -139,26 +587,48 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             printf("[CPUInferenceEngine] Model loaded successfully\n");
             return true;
         }
+        
+        // GPU init failed - capture error and continue with CPU fallback
+        printf("[CPUInferenceEngine] GPU initialization failed, will attempt CPU-only inference mode\n");
+        std::string gpu_error = s_inferenceBackend.GetLastLoadErrorMessage();
+        if (!gpu_error.empty())
+        {
+            printf("[CPUInferenceEngine] GPU error details: %s\n", gpu_error.c_str());
+            m_lastLoadErrorMessage = "GPU unavailable (" + gpu_error + "); inference will run in CPU-only mode";
+        }
+        else
+        {
+            m_lastLoadErrorMessage = "GPU initialization failed; will attempt CPU-only inference mode";
+        }
+        
+        // Note: RawrXDInference _should_ have CPU fallback internally based on RAWR_ENABLE_VULKAN flag
+        // If not available, inference will fail gracefully with detailed error
+        m_modelLoaded = false;
+        return false;
     }
     catch (const std::bad_alloc&)
     {
-        m_lastLoadErrorMessage = "OOM during RawrXDInference::Initialize";
+        m_modelLoaded = false;
+        m_lastLoadErrorMessage = "Out of memory during model initialization (OOM)";
         printf("[CPUInferenceEngine] OOM during backend initialization\n");
         return false;
     }
     catch (const std::exception& e)
     {
-        m_lastLoadErrorMessage = std::string("exception during RawrXDInference::Initialize: ") + e.what();
-        printf("[CPUInferenceEngine] Exception during backend initialization: %s\n", e.what());
+        m_modelLoaded = false;
+        std::string exc_msg = e.what();
+        m_lastLoadErrorMessage = "Exception during model load: " + exc_msg;
+        printf("[CPUInferenceEngine] Exception during backend initialization: %s\n", exc_msg.c_str());
+        return false;
+    }
+    catch (...)
+    {
+        m_modelLoaded = false;
+        m_lastLoadErrorMessage = "Unknown exception during model initialization";
+        printf("[CPUInferenceEngine] Unknown exception during backend initialization\n");
         return false;
     }
 
-    m_lastLoadErrorMessage = s_inferenceBackend.GetLastLoadErrorMessage();
-    if (m_lastLoadErrorMessage.empty())
-    {
-        m_lastLoadErrorMessage = "RawrXDInference::Initialize returned false without detail";
-    }
-    printf("[CPUInferenceEngine] Failed to load model\n");
     return false;
 }
 
@@ -183,7 +653,8 @@ std::vector<int32_t> CPUInferenceEngine::Tokenize(const std::string& text)
 {
     if (!m_modelLoaded || text.empty())
         return {};
-    auto u32_toks = s_inferenceBackend.Tokenize(text);
+    const std::string safeText = sanitizeUtf8Lossy(text);
+    auto u32_toks = s_inferenceBackend.Tokenize(safeText);
     return std::vector<int32_t>(u32_toks.begin(), u32_toks.end());
 }
 
@@ -191,8 +662,10 @@ std::string CPUInferenceEngine::Detokenize(const std::vector<int32_t>& tokens)
 {
     if (!m_modelLoaded || tokens.empty())
         return "";
-    std::vector<uint32_t> u32_toks(tokens.begin(), tokens.end());
-    return s_inferenceBackend.Detokenize(u32_toks);
+    std::vector<uint32_t> u32_toks;
+    if (!ConvertTokensToU32Checked(tokens, u32_toks, "Detokenize"))
+        return "";
+    return sanitizeUtf8Lossy(s_inferenceBackend.Detokenize(u32_toks));
 }
 
 // ============================================================================
@@ -205,13 +678,41 @@ std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_to
     if (input_tokens.empty())
         return {};
 
-    std::vector<uint32_t> toks(input_tokens.begin(), input_tokens.end());
-    auto logits = s_inferenceBackend.ForwardTokens(toks, static_cast<uint32_t>(m_currentPos));
+    std::vector<uint32_t> toks;
+    if (!ConvertTokensToU32Checked(input_tokens, toks, "Eval"))
+        return {};
+    const uint32_t startPos = (m_currentPos < 0) ? 0u : static_cast<uint32_t>(m_currentPos);
+    auto logits = s_inferenceBackend.ForwardTokens(toks, startPos);
     if (!logits.empty())
     {
         m_lastState = logits;
     }
     return m_lastState;
+}
+
+std::string CPUInferenceEngine::DumpTokenTraceSummary(size_t lastNTokens) const
+{
+    return s_inferenceBackend.DumpTokenTraceSummary(lastNTokens);
+}
+
+bool CPUInferenceEngine::DumpTokenTracesToCSV(const std::string& filepath) const
+{
+    if (filepath.empty())
+        return false;
+    s_inferenceBackend.DumpTokenTracesToCSV(filepath.c_str());
+    return true;
+}
+
+void CPUInferenceEngine::ClearTokenTraceBuffer()
+{
+    s_inferenceBackend.GetTokenTraceBuffer().clear();
+}
+
+std::string CPUInferenceEngine::DiagnoseToken(int32_t tokenId) const
+{
+    if (tokenId < 0)
+        return "ERROR: token id must be non-negative";
+    return s_inferenceBackend.DiagnoseToken(static_cast<uint32_t>(tokenId));
 }
 
 void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tokens, int max_tokens,
@@ -241,7 +742,16 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
     max_tokens = std::min(max_tokens, 8192);
 
     auto start = std::chrono::high_resolution_clock::now();
-    m_currentPos = static_cast<int>(input_tokens.size());
+    if (input_tokens.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
+    {
+        printf("[CPUInferenceEngine] Warning: input_tokens.size() %zu exceeds int range, clamping\n",
+               input_tokens.size());
+        m_currentPos = std::numeric_limits<int>::max();
+    }
+    else
+    {
+        m_currentPos = static_cast<int>(input_tokens.size());
+    }
     printf("[CPUInferenceEngine] GenerateStreaming: input_tokens=%llu max_tokens=%d\n",
            static_cast<unsigned long long>(input_tokens.size()), max_tokens);
 
@@ -249,15 +759,24 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
     emitSwarmTelemetryThrottled_(true);
 
     // Stream directly from token IDs to avoid detokenize->retokenize drift.
-    std::vector<uint32_t> u32_toks(input_tokens.begin(), input_tokens.end());
+    std::vector<uint32_t> u32_toks;
+    if (!ConvertTokensToU32Checked(input_tokens, u32_toks, "GenerateStreaming"))
+    {
+        fprintf(stderr, "[GenerateStreaming] DIAGNOSTIC: ConvertTokensToU32Checked failed, returning early\n");
+        if (complete_callback)
+            complete_callback();
+        return;
+    }
+
     try
     {
         s_inferenceBackend.GenerateFromTokens(u32_toks, static_cast<uint32_t>(max_tokens),
                                               [&](uint32_t tok, const std::string& piece)
                                               {
                                                   emitSwarmTelemetryThrottled_(false);
-                                                  if (token_callback && !piece.empty())
-                                                      token_callback(piece);
+                                                  const std::string safePiece = sanitizeUtf8Lossy(piece);
+                                                  if (token_callback && !safePiece.empty())
+                                                      token_callback(safePiece);
                                                   if (token_id_callback)
                                                       token_id_callback(static_cast<int32_t>(tok));
                                                   m_currentPos++;
@@ -309,7 +828,8 @@ void CPUInferenceEngine::SetDeepResearch(bool enabled)
 void CPUInferenceEngine::SetSwarmMode(bool enabled, int chainDepth)
 {
     m_swarmMode = enabled;
-    m_swarmChainDepth = chainDepth;
+    // Prevent divide-by-zero and negative depth in swarm scheduling.
+    m_swarmChainDepth = enabled ? std::max(1, chainDepth) : 1;
 }
 
 // ============================================================================
@@ -317,7 +837,7 @@ void CPUInferenceEngine::SetSwarmMode(bool enabled, int chainDepth)
 // ============================================================================
 void CPUInferenceEngine::SetContextSize(size_t size)
 {
-    m_contextLimit = size;
+    m_contextLimit = (size > kMaxContextTokens) ? kMaxContextTokens : size;
 }
 
 size_t CPUInferenceEngine::GetMemoryUsage() const
@@ -349,11 +869,12 @@ void CPUInferenceEngine::GenerateSwarmStreaming(const std::vector<int32_t>& inpu
 
     std::vector<int32_t> current_tokens = input_tokens;
     int tokens_generated = 0;
-    const int tokens_per_model = max_tokens / m_swarmChainDepth;
+    const int chain_depth = std::max(1, m_swarmChainDepth);
+    const int tokens_per_model = std::max(1, max_tokens / chain_depth);
 
-    printf("[Swarm] Starting chain with %zu models, depth %d\n", m_swarmModels.size(), m_swarmChainDepth);
+    printf("[Swarm] Starting chain with %zu models, depth %d\n", m_swarmModels.size(), chain_depth);
 
-    for (int chain_step = 0; chain_step < m_swarmChainDepth && tokens_generated < max_tokens; ++chain_step)
+    for (int chain_step = 0; chain_step < chain_depth && tokens_generated < max_tokens; ++chain_step)
     {
         // Select model for this step (cycle through available models)
         size_t model_idx = chain_step % m_swarmModels.size();
@@ -368,14 +889,21 @@ void CPUInferenceEngine::GenerateSwarmStreaming(const std::vector<int32_t>& inpu
         for (int batch = 0; batch < speculative_depth; ++batch)
         {
             std::vector<int32_t> batch_tokens;
-            std::vector<uint32_t> prompt_tokens(current_tokens.begin(), current_tokens.end());
+            std::vector<uint32_t> prompt_tokens;
+            if (!ConvertTokensToU32Checked(current_tokens, prompt_tokens, "GenerateSwarmStreaming"))
+            {
+                if (complete_callback)
+                    complete_callback();
+                return;
+            }
             std::vector<uint32_t> generated = model->GenerateFromTokens(
                 prompt_tokens, static_cast<uint32_t>(std::max(1, tokens_per_model / speculative_depth)),
                 [&](uint32_t token_id, const std::string& token_str)
                 {
-                    if (token_callback && !token_str.empty() && batch == 0)
+                    const std::string safeTokenStr = sanitizeUtf8Lossy(token_str);
+                    if (token_callback && !safeTokenStr.empty() && batch == 0)
                     {
-                        token_callback(token_str);
+                        token_callback(safeTokenStr);
                     }
                     batch_tokens.push_back(static_cast<int32_t>(token_id));
                 });
@@ -404,11 +932,27 @@ void CPUInferenceEngine::GenerateSwarmStreaming(const std::vector<int32_t>& inpu
         // Update current tokens for next model
         current_tokens.insert(current_tokens.end(), step_tokens.begin(), step_tokens.end());
 
-        // Limit context
+        // Limit context with safe arithmetic
         if (current_tokens.size() > m_contextLimit)
         {
-            size_t keep_start = current_tokens.size() - m_contextLimit + input_tokens.size();
-            current_tokens = std::vector<int32_t>(current_tokens.begin() + keep_start, current_tokens.end());
+            // Compute: keep_start = current_tokens.size() - m_contextLimit + input_tokens.size()
+            // Safely to avoid unsigned underflow when current_tokens.size() < m_contextLimit
+            size_t keep_start = 0;
+            size_t excess = current_tokens.size() - m_contextLimit;
+            if (input_tokens.size() > excess)
+            {
+                // Preserve as much input context as possible
+                keep_start = 0;
+            }
+            else
+            {
+                // Remove early tokens, preserving input context
+                keep_start = excess;
+            }
+            if (keep_start < current_tokens.size())
+            {
+                current_tokens = std::vector<int32_t>(current_tokens.begin() + keep_start, current_tokens.end());
+            }
         }
     }
 
@@ -430,6 +974,12 @@ bool CPUInferenceEngine::LoadSwarmFromDirectory(const std::string& directoryPath
 {
     namespace fs = std::filesystem;
     fs::path dirPath(directoryPath);
+
+    if (maxModels <= 0)
+    {
+        m_lastLoadErrorMessage = "maxModels must be > 0";
+        return false;
+    }
 
     if (!fs::exists(dirPath) || !fs::is_directory(dirPath))
     {
@@ -470,31 +1020,9 @@ bool CPUInferenceEngine::LoadSwarmModels(const std::vector<std::string>& modelPa
     {
         auto model = std::make_unique<RawrXDInference>();
 
-        // Convert to wide string
-        std::wstring wpath;
-        int len = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, nullptr, 0);
-        if (len > 0)
-        {
-            wpath.resize(len);
-            MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wpath[0], len);
-            if (!wpath.empty() && wpath.back() == L'\0')
-                wpath.pop_back();
-        }
-
-        // Locate tokenizer files
-        namespace fs = std::filesystem;
-        fs::path modelDir = fs::path(path).parent_path();
-        std::string vocabPath = (modelDir / "tokenizer.json").string();
-        std::string mergesPath = (modelDir / "merges.txt").string();
-
-        if (!fs::exists(vocabPath))
-            vocabPath = "tokenizer.json";
-        if (!fs::exists(mergesPath))
-            mergesPath = "merges.txt";
-
         printf("[Swarm] Loading model %zu/%zu: %s\n", m_swarmModels.size() + 1, modelPaths.size(), path.c_str());
 
-        if (!model->Initialize(wpath.c_str(), vocabPath.c_str(), mergesPath.c_str()))
+        if (!model->Initialize(path))
         {
             m_lastLoadErrorMessage = "Failed to load swarm model: " + path;
             m_swarmModels.clear();
@@ -516,7 +1044,7 @@ void CPUInferenceEngine::UpdateWeights(const std::vector<std::vector<float>>& la
 
 void CPUInferenceEngine::SetContextLimit(size_t limit)
 {
-    m_contextLimit = limit;
+    m_contextLimit = (limit > kMaxContextTokens) ? kMaxContextTokens : limit;
 }
 
 void CPUInferenceEngine::RegisterMemoryPlugin(std::shared_ptr<RawrXD::IMemoryPlugin> plugin)
@@ -539,13 +1067,18 @@ std::string CPUInferenceEngine::MoEPackHudStatusLineUtf8() const
     if (!m_modelLoaded)
         return {};
     const MoEPackHudMetrics m = s_inferenceBackend.moEPackHudMetrics();
-    char b[384];
+    char b[512];
     const int n = std::snprintf(
         b, sizeof(b),
-        "MoE pack: hit=%llu miss=%llu fb=%llu | sync=%llu pre=%llu | qdrop=%llu qnr=%llu rowEv=%llu q~=%zu | "
-        "B=%zu evict=%llu rInv=%llu",
+        "MoE pack: hit=%llu miss=%llu fb=%llu | wa=%llu sa=%llu wf=%llu sf=%llu | sync=%llu pre=%llu | "
+        "qdrop=%llu qnr=%llu rowEv=%llu q~=%llu | B=%llu evict=%llu rInv=%llu",
         static_cast<unsigned long long>(m.packHits), static_cast<unsigned long long>(m.packMisses),
-        static_cast<unsigned long long>(m.groupedFallbacks), static_cast<unsigned long long>(m.syncPackInserts),
+        static_cast<unsigned long long>(m.groupedFallbacks),
+        static_cast<unsigned long long>(m.groupedWeightedApplies),
+        static_cast<unsigned long long>(m.groupedSingleExpertApplies),
+        static_cast<unsigned long long>(m.groupedWeightedFallbacks),
+        static_cast<unsigned long long>(m.groupedSingleExpertFallbacks),
+        static_cast<unsigned long long>(m.syncPackInserts),
         static_cast<unsigned long long>(m.prepackInserts), static_cast<unsigned long long>(m.prepackQueueDropped),
         static_cast<unsigned long long>(m.prepackSkippedNotResident),
         static_cast<unsigned long long>(m.packEvictedByPlanRow),
@@ -555,6 +1088,76 @@ std::string CPUInferenceEngine::MoEPackHudStatusLineUtf8() const
     if (n <= 0)
         return {};
     return std::string(b, static_cast<std::size_t>(n));
+}
+
+CPUInferenceEngine::SDMAKineticMetrics CPUInferenceEngine::QuerySDMATelemetry() const
+{
+    SDMAKineticMetrics metrics{};
+    if (!m_modelLoaded)
+        return metrics;
+
+    metrics.flip_count = CircularSDMA::g_sdma_flip_count;
+    metrics.wait_cycles = CircularSDMA::g_sdma_wait_cycles;
+    metrics.cache_hits = CircularSDMA::g_expert_cache_hits;
+    metrics.cache_misses = CircularSDMA::g_expert_cache_misses;
+
+    // Derived metrics
+    const std::uint64_t total_predictions = metrics.cache_hits + metrics.cache_misses;
+    if (total_predictions > 0)
+    {
+        metrics.cache_hit_rate = static_cast<double>(metrics.cache_hits) / static_cast<double>(total_predictions);
+    }
+
+    if (metrics.flip_count > 0)
+    {
+        const double avg_cycles = static_cast<double>(metrics.wait_cycles) / static_cast<double>(metrics.flip_count);
+        constexpr double CPU_GHZ = 2.4;  // Target CPU frequency
+        metrics.avg_wait_ms = avg_cycles / (CPU_GHZ * 1e6);
+        
+        constexpr std::uint64_t MAX_WAIT_CYCLES_32MS = 76'800'000ull;  // 32ms @ 2.4 GHz
+        metrics.within_32ms_target = (avg_cycles < static_cast<double>(MAX_WAIT_CYCLES_32MS));
+    }
+
+    return metrics;
+}
+
+std::string CPUInferenceEngine::SDMAKineticHudStatusLineUtf8() const
+{
+    if (!m_modelLoaded)
+        return {};
+    
+    const SDMAKineticMetrics m = QuerySDMATelemetry();
+    if (m.flip_count == 0)
+        return "SDMA: [inactive]";
+
+    char b[256];
+    const int n = std::snprintf(
+        b, sizeof(b),
+        "SDMA: flips=%llu hit=%.1f%% wait=%.2fms %s",
+        static_cast<unsigned long long>(m.flip_count),
+        m.cache_hit_rate * 100.0,
+        m.avg_wait_ms,
+        m.within_32ms_target ? "[OK]" : "[SLOW]");
+    
+    if (n <= 0)
+        return {};
+    return std::string(b, static_cast<std::size_t>(n));
+}
+
+bool CPUInferenceEngine::CaptureSwarmExpertHeatmap(const RawrXD::Swarm::ExpertHeatmapCaptureParams& params,
+                                                   RawrXD::Swarm::ExpertHeatmapSnapshot& out) const
+{
+    if (!m_modelLoaded)
+    {
+        out = {};
+        return false;
+    }
+    return s_inferenceBackend.CaptureSwarmExpertHeatmap(params, out);
+}
+
+std::uint64_t CPUInferenceEngine::SwarmPlanGeneration() const
+{
+    return s_inferenceBackend.swarmPlanGeneration();
 }
 
 void CPUInferenceEngine::emitSwarmTelemetryThrottled_(bool force)
@@ -589,13 +1192,18 @@ void CPUInferenceEngine::emitSwarmTelemetryThrottled_(bool force)
         static_cast<unsigned long long>(st.evictionRejectedInUse), static_cast<unsigned long long>(st.evictStarvation),
         static_cast<unsigned long long>(st.pinBlockAttempts), static_cast<unsigned long long>(st.pinBlockTimeouts),
         static_cast<unsigned long long>(st.pinBlockLatencyMsTotal), static_cast<unsigned>(st.inUseSliceCount));
-    char moeBuf[400];
+    char moeBuf[512];
     const int nm = std::snprintf(
         moeBuf, sizeof(moeBuf),
-        "[MOE_PACK] hit=%llu miss=%llu fb=%llu sync_i=%llu pre_i=%llu qdrop=%llu qnr=%llu row_ev=%llu q~=%llu "
-        "B=%llu ev=%llu rinv=%llu\n",
+        "[MOE_PACK] hit=%llu miss=%llu fb=%llu wa=%llu sa=%llu wf=%llu sf=%llu sync_i=%llu pre_i=%llu "
+        "qdrop=%llu qnr=%llu row_ev=%llu q~=%llu B=%llu ev=%llu rinv=%llu\n",
         static_cast<unsigned long long>(moem.packHits), static_cast<unsigned long long>(moem.packMisses),
-        static_cast<unsigned long long>(moem.groupedFallbacks), static_cast<unsigned long long>(moem.syncPackInserts),
+        static_cast<unsigned long long>(moem.groupedFallbacks),
+        static_cast<unsigned long long>(moem.groupedWeightedApplies),
+        static_cast<unsigned long long>(moem.groupedSingleExpertApplies),
+        static_cast<unsigned long long>(moem.groupedWeightedFallbacks),
+        static_cast<unsigned long long>(moem.groupedSingleExpertFallbacks),
+        static_cast<unsigned long long>(moem.syncPackInserts),
         static_cast<unsigned long long>(moem.prepackInserts), static_cast<unsigned long long>(moem.prepackQueueDropped),
         static_cast<unsigned long long>(moem.prepackSkippedNotResident),
         static_cast<unsigned long long>(moem.packEvictedByPlanRow),
@@ -638,9 +1246,33 @@ bool CPUInferenceEngine::MatVecQ4(const float* matrix, const float* vector, floa
 // ============================================================================
 float* CPUInferenceEngine::AllocateTensor(size_t size)
 {
-    auto ptr = std::make_unique<float[]>(size);
+    if (size == 0 || size > (std::numeric_limits<size_t>::max() / sizeof(float)))
+    {
+        return nullptr;
+    }
+
+    size_t bytes = 0;
+    if (!checkedMulSize(size, sizeof(float), bytes))
+    {
+        return nullptr;
+    }
+    if (m_totalMemoryAllocated > (std::numeric_limits<size_t>::max() - bytes))
+    {
+        return nullptr;
+    }
+
+    std::unique_ptr<float[]> ptr;
+    try
+    {
+        ptr = std::make_unique<float[]>(size);
+    }
+    catch (const std::bad_alloc&)
+    {
+        return nullptr;
+    }
+
     float* raw = ptr.get();
-    m_totalMemoryAllocated += size * sizeof(float);
+    m_totalMemoryAllocated += bytes;
     m_memoryPool.push_back(std::move(ptr));
     return raw;
 }
@@ -656,10 +1288,40 @@ void CPUInferenceEngine::DeallocateTensor(float* ptr)
 // ============================================================================
 void CPUInferenceEngine::InitKVCache()
 {
+    if (m_numLayers <= 0 || m_embeddingDim <= 0)
+    {
+        m_kv_cache.clear();
+        m_dynamicKVCache = false;
+        return;
+    }
+
     m_kv_cache.resize(m_numLayers);
 
     // Memory-gate bypass: For large contexts, use dynamic allocation instead of pre-allocation
-    size_t initialSize = (m_contextLimit > 1000000) ? 1000000 : m_contextLimit;  // Start with 1M for unlimited
+    size_t initialSize = (m_contextLimit > kMaxContextTokens) ? kMaxContextTokens : m_contextLimit;
+
+    const size_t layers = static_cast<size_t>(m_numLayers);
+    const size_t dim = static_cast<size_t>(m_embeddingDim);
+    size_t perLayerElems = 0;
+    if (!checkedMulSize(initialSize, dim, perLayerElems))
+    {
+        initialSize = 0;
+    }
+    else
+    {
+        size_t perTokenBytes = 0;
+        size_t tmp = 0;
+        bool budgetMulOk = checkedMulSize(layers, dim, tmp) && checkedMulSize(tmp, sizeof(float), tmp) &&
+                           checkedMulSize(tmp, 2, perTokenBytes);
+        if (budgetMulOk && perTokenBytes > 0)
+        {
+            const size_t maxTokensByBudget = kMaxKvCacheBytes / perTokenBytes;
+            if (maxTokensByBudget < initialSize)
+            {
+                initialSize = maxTokensByBudget;
+            }
+        }
+    }
 
     for (auto& layer : m_kv_cache)
     {
@@ -668,7 +1330,7 @@ void CPUInferenceEngine::InitKVCache()
     }
 
     // Mark as using dynamic allocation for large contexts
-    m_dynamicKVCache = (m_contextLimit > 1000000);
+    m_dynamicKVCache = (m_contextLimit >= kMaxContextTokens);
 }
 
 // ============================================================================
@@ -722,6 +1384,8 @@ void CPUInferenceEngine::ApplySoftmax(float* data, int size)
 
 void CPUInferenceEngine::LayerNorm(float* data, int size, float epsilon)
 {
+    if (!data || size <= 0)
+        return;
     float mean = 0.0f;
     for (int i = 0; i < size; i++)
         mean += data[i];
@@ -746,6 +1410,8 @@ void CPUInferenceEngine::GELU(float* data, int size)
 
 void CPUInferenceEngine::RMSNorm(float* data, int size, float epsilon)
 {
+    if (!data || size <= 0)
+        return;
     float ss = 0.0f;
     for (int i = 0; i < size; i++)
         ss += data[i] * data[i];
@@ -756,9 +1422,13 @@ void CPUInferenceEngine::RMSNorm(float* data, int size, float epsilon)
 
 void CPUInferenceEngine::RoPE(float* data, int dim, int pos, int rotary_dim)
 {
-    for (int i = 0; i < rotary_dim; i += 2)
+    if (!data || dim <= 1 || rotary_dim <= 1)
+        return;
+    const int safe_rotary_dim = std::min(rotary_dim, dim);
+    const int even_rotary_dim = safe_rotary_dim - (safe_rotary_dim % 2);
+    for (int i = 0; i < even_rotary_dim; i += 2)
     {
-        float freq = 1.0f / std::pow(10000.0f, static_cast<float>(i) / rotary_dim);
+        float freq = 1.0f / std::pow(10000.0f, static_cast<float>(i) / even_rotary_dim);
         float val = pos * freq;
         float cos_val = std::cos(val);
         float sin_val = std::sin(val);
@@ -772,9 +1442,28 @@ void CPUInferenceEngine::RoPE(float* data, int dim, int pos, int rotary_dim)
 void CPUInferenceEngine::MultiHeadAttention(const float* query, const float* key, const float* value, float* output,
                                             int seq_len, int embed_dim, int num_heads, int layer_idx)
 {
+    (void)layer_idx;
+    if (!query || !key || !value || !output || seq_len <= 0 || embed_dim <= 0 || num_heads <= 0)
+        return;
+    if ((embed_dim % num_heads) != 0)
+        return;
+    const size_t seq_len_u = static_cast<size_t>(seq_len);
+    if (seq_len_u > (std::numeric_limits<size_t>::max() / seq_len_u))
+        return;
+
     int head_dim = embed_dim / num_heads;
     std::vector<float> attn_scores(seq_len * seq_len);
     float scale = 1.0f / std::sqrt(static_cast<float>(head_dim));
+
+    LARGE_INTEGER qpc_freq{};
+    LARGE_INTEGER qpc_batch_start{};
+    LARGE_INTEGER qpc_batch_end{};
+    const bool kv_timer_enabled = KvHotPathTelemetryEnabled();
+    if (kv_timer_enabled)
+    {
+        QueryPerformanceFrequency(&qpc_freq);
+        QueryPerformanceCounter(&qpc_batch_start);
+    }
 
     // Q*K^T scaled
     for (int h = 0; h < num_heads; h++)
@@ -784,11 +1473,9 @@ void CPUInferenceEngine::MultiHeadAttention(const float* query, const float* key
         {
             for (int j = 0; j <= i; j++)
             {  // Causal mask
-                float score = 0.0f;
-                for (int d = 0; d < head_dim; d++)
-                {
-                    score += query[i * embed_dim + offset + d] * key[j * embed_dim + offset + d];
-                }
+                const float* q_ptr = &query[i * embed_dim + offset];
+                const float* k_ptr = &key[j * embed_dim + offset];
+                const float score = DotProductF32(q_ptr, k_ptr, head_dim);
                 attn_scores[i * seq_len + j] = score * scale;
             }
             for (int j = i + 1; j < seq_len; j++)
@@ -800,23 +1487,41 @@ void CPUInferenceEngine::MultiHeadAttention(const float* query, const float* key
         for (int i = 0; i < seq_len; i++)
         {
             ApplySoftmax(&attn_scores[i * seq_len], seq_len);
-            for (int d = 0; d < head_dim; d++)
+            // AVX-512 accelerated equivalent of the scalar accumulation above.
+            float* out_ptr = &output[i * embed_dim + offset];
+            std::fill(out_ptr, out_ptr + head_dim, 0.0f);
+            for (int j = 0; j < seq_len; ++j)
             {
-                float sum = 0.0f;
-                for (int j = 0; j < seq_len; j++)
-                {
-                    sum += attn_scores[i * seq_len + j] * value[j * embed_dim + offset + d];
-                }
-                output[i * embed_dim + offset + d] = sum;
+                const float s = attn_scores[i * seq_len + j];
+                const float* v_ptr = &value[j * embed_dim + offset];
+                AccumulateScaledKVHotPath(out_ptr, v_ptr, s, head_dim);
             }
         }
+    }
+
+    if (kv_timer_enabled && qpc_freq.QuadPart > 0)
+    {
+        QueryPerformanceCounter(&qpc_batch_end);
+        const LONGLONG ticks = qpc_batch_end.QuadPart - qpc_batch_start.QuadPart;
+        const double us = (static_cast<double>(ticks) * 1000000.0) / static_cast<double>(qpc_freq.QuadPart);
+        std::printf("[CPUInferenceEngine] KV hot-path batch_us=%.3f seq=%d embed=%d heads=%d\n", us, seq_len, embed_dim,
+                    num_heads);
     }
 }
 
 void CPUInferenceEngine::FeedForward(const float* input, float* output, int dim)
 {
     // Simple projection stub — real path goes through RawrXDTransformer
-    std::memcpy(output, input, dim * sizeof(float));
+    if (!input || !output || dim <= 0)
+    {
+        return;
+    }
+    size_t bytes = 0;
+    if (!checkedMulSize(static_cast<size_t>(dim), sizeof(float), bytes))
+    {
+        return;
+    }
+    std::memcpy(output, input, bytes);
 }
 
 void CPUInferenceEngine::TransformerLayer(const float* input, float* output, int layer_idx, int seq_len,
@@ -830,8 +1535,17 @@ void CPUInferenceEngine::TransformerLayer(const float* input, float* output, int
         return;
     }
     int dim = m_embeddingDim > 0 ? m_embeddingDim : 4096;
-    size_t sz = static_cast<size_t>(seq_len) * static_cast<size_t>(dim);
-    std::memcpy(output, input, sz * sizeof(float));
+    size_t sz = 0;
+    if (!checkedMulSize(static_cast<size_t>(seq_len), static_cast<size_t>(dim), sz))
+    {
+        return;
+    }
+    size_t bytes = 0;
+    if (!checkedMulSize(sz, sizeof(float), bytes))
+    {
+        return;
+    }
+    std::memcpy(output, input, bytes);
     for (int t = 0; t < seq_len; ++t)
     {
         RMSNorm(output + static_cast<size_t>(t) * dim, dim);
@@ -868,14 +1582,47 @@ void DequantizeF16(const uint8_t* quantized, float* output, int num_elements);
 
 void CPUInferenceEngine::DequantizeTensor(const std::vector<uint8_t>& src, float* dst, size_t size, TensorType type)
 {
+    if (!dst || size == 0)
+    {
+        return;
+    }
+    if (size > static_cast<size_t>(std::numeric_limits<int>::max()))
+    {
+        return;
+    }
+
+    auto safeZeroOut = [&]() {
+        size_t bytes = 0;
+        if (checkedMulSize(size, sizeof(float), bytes))
+        {
+            std::memset(dst, 0, bytes);
+        }
+    };
+
     switch (type)
     {
         case TensorType::Q4_0:
+        {
+            const size_t nblocks = size / 32;
+            if (src.size() < nblocks * 18)
+            {
+                safeZeroOut();
+                return;
+            }
             CPUOps::DequantizeQ4_0(src.data(), dst, static_cast<int>(size));
             break;
+        }
         case TensorType::Q8_0:
+        {
+            const size_t nblocks = size / 32;
+            if (src.size() < nblocks * 34)
+            {
+                safeZeroOut();
+                return;
+            }
             CPUOps::DequantizeQ8_0(src.data(), dst, static_cast<int>(size));
             break;
+        }
         case TensorType::Q4_K:
             CPUOps::DequantizeQ4_K(src.data(), dst, static_cast<int>(size));
             break;
@@ -892,13 +1639,23 @@ void CPUInferenceEngine::DequantizeTensor(const std::vector<uint8_t>& src, float
             CPUOps::DequantizeQ3_K(src.data(), dst, static_cast<int>(size));
             break;
         case TensorType::F16:
+            if (src.size() < size * sizeof(uint16_t))
+            {
+                safeZeroOut();
+                return;
+            }
             CPUOps::DequantizeF16(src.data(), dst, static_cast<int>(size));
             break;
         case TensorType::F32:
+            if (src.size() < size * sizeof(float))
+            {
+                safeZeroOut();
+                return;
+            }
             std::memcpy(dst, src.data(), size * sizeof(float));
             break;
         default:
-            std::memset(dst, 0, size * sizeof(float));
+            safeZeroOut();
             break;
     }
 }
@@ -978,6 +1735,8 @@ void SiLU(float* data, int size)
 
 void LayerNorm(float* data, int size, float epsilon)
 {
+    if (!data || size <= 0)
+        return;
     float mean = 0.0f;
     for (int i = 0; i < size; i++)
         mean += data[i];
@@ -993,6 +1752,8 @@ void LayerNorm(float* data, int size, float epsilon)
 
 void RMSNorm(float* data, int size, float epsilon)
 {
+    if (!data || size <= 0)
+        return;
     float ss = 0.0f;
     for (int i = 0; i < size; i++)
         ss += data[i] * data[i];
@@ -1056,47 +1817,245 @@ void DequantizeQ8_0(const uint8_t* quantized, float* output, int size)
 
 void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    // K-quant super-blocks (256 elements). Simplified dequant.
-    int nblocks = num_elements / 256;
+    // Q4_K: 256-element super-blocks. Layout per block:
+    //   [0..1]   d    (ggml_half / f16): super-block scale multiplier
+    //   [2..3]   dmin (ggml_half / f16): super-block min multiplier
+    //   [4..15]  scales[12]: 8 sub-blocks × (6-bit scale + 6-bit min), packed
+    //   [16..143] qs[128]: 256 packed 4-bit quantized values
+    // Total: 144 bytes per block.
+    static constexpr int BLOCK_BYTES = 144;
+    static constexpr int NUM_SUB  = 8;
+    static constexpr int SUB_ELEMS = 32;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    // Unpack 6-bit scale and min for sub-block j from the 12-byte scales field.
+    // Mirrors GGML get_scale_min_k4().
+    auto get_scale_min = [](const uint8_t* sc, int j,
+                             uint8_t& scale_out, uint8_t& min_out) {
+        if (j < 4) {
+            scale_out = sc[j]   & 0x3F;
+            min_out   = sc[j+4] & 0x3F;
+        } else {
+            scale_out = static_cast<uint8_t>((sc[j+4] & 0x0F) | ((sc[j-4] >> 6) << 4));
+            min_out   = static_cast<uint8_t>((sc[j+4] >> 4)   | ((sc[j]   >> 6) << 4));
+        }
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
     {
-        for (int i = 0; i < 256; i++)
+        const uint8_t* blk = quantized + b * BLOCK_BYTES;
+        uint16_t raw_d, raw_dmin;
+        std::memcpy(&raw_d,    blk,     2);
+        std::memcpy(&raw_dmin, blk + 2, 2);
+        const float d    = f16_to_f32(raw_d);
+        const float dmin = f16_to_f32(raw_dmin);
+        const uint8_t* scales = blk + 4;
+        const uint8_t* qs     = blk + 16;
+
+        for (int j = 0; j < NUM_SUB; j++)
         {
-            output[b * 256 + i] = 0.0f;  // Placeholder — full K-quant decode is complex
+            uint8_t sc, mn;
+            get_scale_min(scales, j, sc, mn);
+            const float d_sc   = d    * static_cast<float>(sc);
+            const float dmin_m = dmin * static_cast<float>(mn);
+            const uint8_t* qs_sub = qs + j * 16;  // 16 bytes → 32 nibbles
+            float* out_sub = output + b * 256 + j * SUB_ELEMS;
+            for (int i = 0; i < 16; i++)
+            {
+                const uint8_t byte = qs_sub[i];
+                out_sub[i * 2]     = static_cast<float>(byte & 0x0F) * d_sc - dmin_m;
+                out_sub[i * 2 + 1] = static_cast<float>((byte >> 4) & 0x0F) * d_sc - dmin_m;
+            }
         }
     }
 }
 
 void DequantizeQ5_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    int nblocks = num_elements / 256;
+    // Q5_K: 256-element super-blocks. Layout per block:
+    //   [0..1]   d    (f16)
+    //   [2..3]   dmin (f16)
+    //   [4..15]  scales[12]: same 6-bit encoding as Q4_K
+    //   [16..47] qh[32]: one high bit per element (256 bits)
+    //   [48..175] qs[128]: low 4 bits per element
+    // Total: 176 bytes per block.
+    static constexpr int BLOCK_BYTES = 176;
+    static constexpr int NUM_SUB  = 8;
+    static constexpr int SUB_ELEMS = 32;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    auto get_scale_min = [](const uint8_t* sc, int j,
+                             uint8_t& scale_out, uint8_t& min_out) {
+        if (j < 4) {
+            scale_out = sc[j]   & 0x3F;
+            min_out   = sc[j+4] & 0x3F;
+        } else {
+            scale_out = static_cast<uint8_t>((sc[j+4] & 0x0F) | ((sc[j-4] >> 6) << 4));
+            min_out   = static_cast<uint8_t>((sc[j+4] >> 4)   | ((sc[j]   >> 6) << 4));
+        }
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
-        for (int i = 0; i < 256; i++)
-            output[b * 256 + i] = 0.0f;
+    {
+        const uint8_t* blk = quantized + b * BLOCK_BYTES;
+        uint16_t raw_d, raw_dmin;
+        std::memcpy(&raw_d,    blk,     2);
+        std::memcpy(&raw_dmin, blk + 2, 2);
+        const float d    = f16_to_f32(raw_d);
+        const float dmin = f16_to_f32(raw_dmin);
+        const uint8_t* scales = blk + 4;
+        const uint8_t* qh     = blk + 16;  // 32 bytes of high bits
+        const uint8_t* qs     = blk + 48;  // 128 bytes of low nibbles
+
+        for (int j = 0; j < NUM_SUB; j++)
+        {
+            uint8_t sc, mn;
+            get_scale_min(scales, j, sc, mn);
+            const float d_sc   = d    * static_cast<float>(sc);
+            const float dmin_m = dmin * static_cast<float>(mn);
+            const uint8_t* qs_sub = qs + j * 16;
+            // qh provides bit (b*256 + j*32 + i) / 8 for element offset (j*32 + i)
+            const int base_elem = j * SUB_ELEMS;
+            float* out_sub = output + b * 256 + base_elem;
+            for (int i = 0; i < SUB_ELEMS; i++)
+            {
+                const int abs_i    = base_elem + i;
+                const int qh_bit   = (qh[abs_i / 8] >> (abs_i % 8)) & 1;
+                const uint8_t byte = qs_sub[i / 2];
+                const int lo4 = (i % 2 == 0) ? (byte & 0x0F) : ((byte >> 4) & 0x0F);
+                const int q5  = lo4 | (qh_bit << 4);  // 0..31
+                out_sub[i] = static_cast<float>(q5) * d_sc - dmin_m;
+            }
+        }
+    }
 }
 
 void DequantizeQ6_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    int nblocks = num_elements / 256;
-    for (int b = 0; b < nblocks; b++)
-        for (int i = 0; i < 256; i++)
-            output[b * 256 + i] = 0.0f;
+    // Use AVX-512 kernel for maximum KV-cache dequant throughput
+    RawrXD::KernelOps::DequantizeQ6K_AVX512(quantized, output, num_elements);
 }
 
 void DequantizeQ2_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    int nblocks = num_elements / 256;
+    // Q2_K: 256-element super-blocks. Layout per block:
+    //   [0..15]  scales[16]: low nibble = scale, high nibble = min, per 16-element sub-block
+    //   [16..79] qs[64]: 2-bit quantized values (4 per byte, 256 total)
+    //   [80..81] d    (f16)
+    //   [82..83] dmin (f16)
+    // Total: 84 bytes per block.
+    static constexpr int BLOCK_BYTES = 84;
+    static constexpr int NUM_SUB  = 16;
+    static constexpr int SUB_ELEMS = 16;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
-        for (int i = 0; i < 256; i++)
-            output[b * 256 + i] = 0.0f;
+    {
+        const uint8_t* blk    = quantized + b * BLOCK_BYTES;
+        const uint8_t* scales = blk;         // 16 bytes
+        const uint8_t* qs     = blk + 16;    // 64 bytes
+        uint16_t raw_d, raw_dmin;
+        std::memcpy(&raw_d,    blk + 80, 2);
+        std::memcpy(&raw_dmin, blk + 82, 2);
+        const float d    = f16_to_f32(raw_d);
+        const float dmin = f16_to_f32(raw_dmin);
+
+        for (int s = 0; s < NUM_SUB; s++)
+        {
+            const float sc  = d    * static_cast<float>(scales[s] & 0x0F);
+            const float mn  = dmin * static_cast<float>(scales[s] >> 4);
+            float* out_sub  = output + b * 256 + s * SUB_ELEMS;
+            // 4 elements packed per byte (2 bits each)
+            for (int i = 0; i < SUB_ELEMS; i++)
+            {
+                const int abs_i  = s * SUB_ELEMS + i;
+                const uint8_t qb = qs[abs_i / 4];
+                const int q2     = (qb >> (2 * (i % 4))) & 3;  // 0..3
+                out_sub[i] = static_cast<float>(q2) * sc - mn;
+            }
+        }
+    }
 }
 
 void DequantizeQ3_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    int nblocks = num_elements / 256;
+    // Q3_K: 256-element super-blocks. Layout per block:
+    //   [0..31]  hmask[32]: high bits (1 bit per element, for 3-bit total)
+    //   [32..95] qs[64]:    low 2 bits per element (packed 4/byte)
+    //   [96..107] scales[12]: 6-bit packed, same layout as Q4_K
+    //   [108..109] d (f16)
+    // Total: 110 bytes per block.
+    static constexpr int BLOCK_BYTES = 110;
+    static constexpr int NUM_SUB  = 8;
+    static constexpr int SUB_ELEMS = 32;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
-        for (int i = 0; i < 256; i++)
-            output[b * 256 + i] = 0.0f;
+    {
+        const uint8_t* blk    = quantized + b * BLOCK_BYTES;
+        const uint8_t* hmask  = blk;         // 32 bytes (1 bit per elem)
+        const uint8_t* qs     = blk + 32;    // 64 bytes (2 bits per elem)
+        const uint8_t* scales = blk + 96;    // 12 bytes (6-bit per sub-block)
+        uint16_t raw_d;
+        std::memcpy(&raw_d, blk + 108, 2);
+        const float d = f16_to_f32(raw_d);
+
+        for (int s = 0; s < NUM_SUB; s++)
+        {
+            // Q3_K uses only a scale (no min): sc = scales[s] & 0x1F (5-bit signed)
+            // The sign is encoded as bit 5 of scales[s]
+            const int8_t sc_raw = static_cast<int8_t>(
+                (scales[s] & 0x0F) | ((scales[s / 4 + 8] >> (2 * (s % 4))) << 4));
+            // Reinterpret 4-bit signed: bit 3 is sign
+            const int sc_signed = (sc_raw > 7) ? (sc_raw - 16) : sc_raw;
+            const float sc = d * static_cast<float>(sc_signed);
+            float* out_sub = output + b * 256 + s * SUB_ELEMS;
+            const int base = s * SUB_ELEMS;
+            for (int i = 0; i < SUB_ELEMS; i++)
+            {
+                const int abs_i  = base + i;
+                // 3-bit value: high bit from hmask, low 2 bits from qs
+                const int hb    = (hmask[abs_i / 8] >> (abs_i % 8)) & 1;
+                const uint8_t qb = qs[abs_i / 4];
+                const int q2    = (qb >> (2 * (abs_i % 4))) & 3;
+                // Reconstruct 3-bit signed (0..7 → -4..3 after bias of 4)
+                const int q3 = q2 | (hb << 2);
+                out_sub[i]   = static_cast<float>(q3 - 4) * sc;
+            }
+        }
+    }
 }
 
 void DequantizeF16(const uint8_t* quantized, float* output, int num_elements)

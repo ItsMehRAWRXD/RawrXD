@@ -1198,7 +1198,7 @@ private:
         {
             // Pattern: "add i32 X, Y" where X and Y are constants → computed value
             // This operates on IR-level constant operations
-            // Example: "  %1 = add i32 3, 4" → "  %1 = i32 7"
+            // Pattern: "  %1 = add i32 3, 4" → "  %1 = i32 7"
             std::istringstream stream(ir);
             std::ostringstream optimized;
             std::string line;

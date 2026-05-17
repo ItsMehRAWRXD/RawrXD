@@ -12,6 +12,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <iostream>
+#include <memory>
 #include <windows.h>
 #include <winhttp.h>
 #include <nlohmann/json.hpp>
@@ -35,20 +36,21 @@ typedef std::function<void()> CompleteCallback;
 class ModelConnection
 {
 public:
-    ModelConnection(const std::string& endpoint = "http://localhost:11434")
+    ModelConnection(const std::string& endpoint = "http://localhost:11435")
         : m_endpoint(endpoint), m_connected(false), m_isProcessing(false),
           m_workerThread(nullptr), m_stopWorker(false)
     {
         // Start worker thread for background I/O
-        m_workerThread = new std::thread(&ModelConnection::workerLoop, this);
+        m_workerThread = std::make_unique<std::thread>(&ModelConnection::workerLoop, this);
     }
 
     ~ModelConnection()
     {
         shutdown();
+        // unique_ptr automatically calls delete on the thread; join before destruction
         if (m_workerThread) {
             m_workerThread->join();
-            delete m_workerThread;
+            // No manual delete needed; unique_ptr handles cleanup
         }
     }
 
@@ -529,7 +531,7 @@ private:
     bool m_connected;
     bool m_isProcessing;
     bool m_stopWorker;
-    std::thread* m_workerThread;
+    std::unique_ptr<std::thread> m_workerThread;
     std::queue<Request> m_requestQueue;
     std::mutex m_requestMutex;
     std::condition_variable m_requestCV;

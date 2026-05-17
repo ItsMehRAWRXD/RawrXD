@@ -94,9 +94,27 @@ bool BeaconClient::registerBeacon(const std::string& componentId, const std::str
 }
 
 bool BeaconClient::unregisterBeacon(const std::string& componentId) {
-    // For unregister, we could implement if needed
-    // For now, just return true
-    return true;
+    if (!m_initialized) {
+        m_lastError = "Beacon client not initialized";
+        return false;
+    }
+
+    nlohmann::json body = {
+        {"componentId", componentId}
+    };
+
+    std::string response;
+    if (!makeHttpRequest("DELETE", "/api/beacon/unregister", body.dump(), response)) {
+        return false;
+    }
+
+    try {
+        auto json = nlohmann::json::parse(response);
+        return json.value("success", false);
+    } catch (...) {
+        m_lastError = "Invalid response from server";
+        return false;
+    }
 }
 
 bool BeaconClient::sendMessage(const std::string& sourceId, const std::string& targetType,

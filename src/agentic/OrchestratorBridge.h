@@ -3,9 +3,10 @@
 // =============================================================================
 #pragma once
 
-#include "AgentOllamaClient.h"
+#include "NativeInferenceClient.h"
 #include "AgentToolHandlers.h"
-#include "PredictionProvider.h"
+// Include OllamaProvider.h for Prediction types (NativeStreamProvider.h redirects to it)
+#include "OllamaProvider.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,7 +23,7 @@ public:
 
     // ---- Initialization (call during CLI startup) ----
     bool Initialize(const std::string& workingDir,
-                    const std::string& ollamaUrl = "http://localhost:11434");
+                    const std::string& ollamaUrl = "http://localhost:11435");
 
     bool IsInitialized() const { return m_initialized; }
 
@@ -55,8 +56,8 @@ private:
 public:
     bool m_initialized = false;
     std::string m_workingDir;
-    std::unique_ptr<AgentOllamaClient> m_ollamaClient;
-    OllamaConfig m_ollamaConfig;
+    std::unique_ptr<NativeInferenceClient> m_nativeClient;
+    NativeInferenceConfig m_nativeConfig;
     int m_maxSteps = 8;
     std::vector<std::string> m_availableModels;
 };

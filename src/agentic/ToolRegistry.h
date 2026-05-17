@@ -16,6 +16,8 @@
 #include <functional>
 #include <mutex>
 #include <atomic>
+#include <unordered_map>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -41,7 +43,45 @@ namespace Agent {
     M(get_coverage,     "Retrieve BBCov/DiffCov coverage data for a file or function to verify logic path changes.") \
     M(run_build,        "Trigger a CMake build with specified target and configuration.") \
     M(apply_hotpatch,   "Apply a runtime hotpatch through the unified hotpatch manager (memory, byte-level, or server layer).") \
-    M(disk_recovery,    "Control the hardware disk recovery agent for dying WD My Book USB bridges (scan, init, extract key, run, abort, stats).")
+    M(disk_recovery,    "Control the hardware disk recovery agent for dying WD My Book USB bridges (scan, init, extract key, run, abort, stats).") \
+    M(git_status,       "Get the current status of the git repository (branch, modified, staged files).") \
+    M(git_diff,         "Get the diff of changes in the repository against a target (default: HEAD).") \
+    M(git_commit,       "Commit staged changes with a descriptive message.") \
+    M(gh_issue_list,    "List GitHub issues for the current repository.") \
+    M(gh_issue_view,    "View details for a GitHub issue by number.") \
+    M(gh_pr_list,       "List GitHub pull requests for the current repository.") \
+    M(gh_pr_view,       "View details for a GitHub pull request by number.") \
+    M(gh_create_pr,     "Create a new GitHub pull request for the current branch.") \
+    M(gh_pr_checks,     "Show CI/status checks for a GitHub pull request.") \
+    M(gh_pr_diff,       "Show unified diff for a GitHub pull request.") \
+    M(gh_pr_review,     "Submit a GitHub pull request review (approve, comment, request_changes).") \
+    M(gh_pr_comment,    "Add a comment to a GitHub pull request.") \
+    M(gh_pr_merge,      "Merge a GitHub pull request with merge/squash/rebase strategy.") \
+    M(propose_multifile_edits, "Plan structured multi-file edits and generate unified diff previews.") \
+    M(preview_multifile_diff, "Preview unified diffs for a structured multi-file edit plan.") \
+    M(apply_multifile_edits, "Apply a structured multi-file edit plan transactionally with rollback metadata.") \
+    M(refactor_rename_symbol, "Rename an identifier across one file or a workspace subtree with word-boundary safety.") \
+    M(asm_assemble,     "Assemble MASM/x64 source code into a PE64 executable using the internal SovereignAssembler.") \
+    M(sys_get_capabilities, "Query host hardware capabilities (CPU/GPU) to determine optimal execution tier (VRAM, AVX-512, etc.).") \
+    M(debug_launch,     "Launch an executable under the native Windows debugger (DbgEng). Returns PID and initial state.") \
+    M(debug_attach,     "Attach the native debugger to a running process by PID.") \
+    M(debug_break,      "Break (pause) the currently debugged process.") \
+    M(debug_continue,   "Continue execution of the paused debugged process.") \
+    M(debug_step_over,  "Step over the current instruction/line in the debugged process.") \
+    M(debug_step_into,  "Step into the current function call in the debugged process.") \
+    M(debug_add_breakpoint, "Add a breakpoint at a symbol name, source file:line, or hex address.") \
+    M(debug_remove_breakpoint, "Remove a breakpoint by its ID number.") \
+    M(debug_stacktrace, "Capture the current call stack with symbol resolution.") \
+    M(debug_registers,  "Capture all x64 register values (RAX-R15, RIP, RFLAGS).") \
+    M(debug_memory,     "Read and display a hex dump of memory at a given address.") \
+    M(debug_disasm,     "Disassemble instructions at a given address with annotations.") \
+    M(debug_analyze,    "Analyze the last exception/crash with AI-generated root cause hypothesis and suggested actions.") \
+    M(debug_snapshot,   "Capture a full debug session snapshot (state, exception, stack, modules) formatted for AI analysis.") \
+    M(debug_suggest_breakpoints, "Get AI-suggested breakpoints based on a problem description (e.g. 'crash', 'memory leak', 'deadlock').") \
+    M(debug_status,     "Get current debugger session status (state, PID, target metadata).") \
+    M(debug_modules,    "List currently loaded modules in the debuggee process.") \
+    M(debug_detach,     "Detach debugger from the current target process.") \
+    M(debug_terminate,  "Terminate the current debuggee process and end session.")
 
 // ---------------------------------------------------------------------------
 // Tool ID enum — auto-generated from X-Macro
@@ -99,7 +139,8 @@ public:
 
     // Generate the full system prompt with tool documentation
     std::string GetSystemPrompt(const std::string& cwd,
-                                const std::vector<std::string>& openFiles) const;
+                                const std::vector<std::string>& openFiles,
+                                std::vector<std::string>* appliedInstructionSources = nullptr) const;
 
     // Dispatch a tool call by name
     ToolExecResult Dispatch(const std::string& tool_name, const json& args);
@@ -118,15 +159,47 @@ public:
     bool ValidateArgs(const std::string& tool_name, const json& args,
                       std::string& error) const;
 
+    // Ranked tool matches for a normalized query string.
+    // similarity ∈ [0,1] using bigram Jaccard.
+    struct IntentMatch {
+        std::string toolName;
+        float       similarity;
+    };
+
+    // Returns the best-matching registered tool for an arbitrary intent string.
+    // If similarity < threshold the first result's name may be empty.
+    // Results are cached — subsequent calls with the same query are O(1).
+    std::vector<IntentMatch> RankByIntent(const std::string& query,
+                                          size_t topK = 3) const;
+
 private:
+    struct CachedToolResult {
+        ToolExecResult result;
+        std::chrono::steady_clock::time_point expiresAt;
+    };
+
     AgentToolRegistry();
     ~AgentToolRegistry() = default;
 
     void InitDescriptors();
+    bool IsResultCacheEligibleTool(const std::string& normalizedTool) const;
+    int ResultCacheTtlMs(const std::string& normalizedTool) const;
+    std::string BuildResultCacheKey(const std::string& normalizedTool, const json& args) const;
 
     mutable std::mutex m_mutex;
     std::vector<ToolDescriptor> m_tools;
     std::unordered_map<std::string, size_t> m_nameIndex;
+
+    // ---- Intent similarity cache ----
+    // Maps normalized query → topK ranked tool names + scores.
+    // Populated lazily on the first Dispatch/RankByIntent call for each
+    // unique query.  Protected by m_mutex.
+    mutable std::unordered_map<std::string, std::vector<IntentMatch>> m_intentCache;
+
+    // ---- Tool result cache ----
+    // Key: normalized tool + canonical args JSON dump.
+    // Stores successful responses for read-only deterministic tools.
+    mutable std::unordered_map<std::string, CachedToolResult> m_toolResultCache;
 };
 
 } // namespace Agent

@@ -17,6 +17,8 @@
 
 #include "ggml.h"
 #include "ggml-alloc.h"
+#include "ai_model_caller_internal.h"
+#include "context_config.h"
 #include <windows.h>
 #include <cmath>
 #include <cstring>
@@ -31,15 +33,7 @@
 enum LogLevel { DEBUG = 0, INFO = 1, WARN = 2, ERROR = 3 };
 
 static void LogMessage(LogLevel level, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    
-    const char* level_str[] = { "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]" };
-    fprintf(stderr, "%s ", level_str[level]);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-
-    va_end(args);
+    // Logging disabled
 }
 
 // ============================================================
@@ -56,17 +50,6 @@ struct KVCache {
 // ============================================================
 // GLOBAL STATE (from both implementations)
 // ============================================================
-// External GGUF loader tensors
-extern "C" {
-    extern void* g_ggml_ctx;
-    extern void* g_model_tensors;
-    extern int g_n_layers;
-    extern int g_n_embd;
-    extern int g_n_head;
-    extern int g_n_vocab;
-    extern int g_n_ctx;
-}
-
 static KVCache g_kv_cache = {};
 static bool g_initialized = false;
 
@@ -96,7 +79,7 @@ struct InferenceContext {
     
     // Hyperparameters
     int n_vocab = 32000;
-    int n_ctx = 4096;
+    int n_ctx = RawrXD::ContextLimits::DEFAULT;
     int n_embd = 4096;
     int n_head = 32;
     int n_layer = 32;

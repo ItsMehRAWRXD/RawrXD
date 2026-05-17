@@ -214,7 +214,7 @@ ExecutionResult HybridCloudManager::executeOnCloud(
         fallback.metadata["cloudFallbackReason"] = "No provider selected";
         return fallback;
     }
-    if (providerId == "ollama") return executeOnOllama(request);
+    if (providerId == "native") return executeOnOllama(request);
     if (providerId == "huggingface") return executeOnHuggingFace(request, modelId);
     if (providerId == "aws") return executeOnAWS(request, modelId);
     if (providerId == "azure") return executeOnAzure(request, modelId);
@@ -227,7 +227,7 @@ ExecutionResult HybridCloudManager::executeOnCloud(
 ExecutionResult HybridCloudManager::executeOnOllama(const ExecutionRequest& request) {
     ExecutionResult result;
     result.requestId = request.requestId;
-    result.executionLocation = "ollama";
+    result.executionLocation = "native";
     result.modelUsed = "ollama/minimal";
     result.response = request.prompt;
     result.tokensUsed = std::max(1, request.maxTokens / 6);
@@ -493,7 +493,7 @@ void HybridCloudManager::onNetworkReplyFinished(void** reply) { (void)reply; }
 void HybridCloudManager::onHealthCheckTimerTimeout() { checkAllProvidersHealth(); }
 
 void HybridCloudManager::setupDefaultProviders() {
-    addProvider({"ollama", "Ollama", "http://127.0.0.1:11434", "", "local", true, true});
+    addProvider({"native", "native", "http://127.0.0.1:11435", "", "local", true, true});
     addProvider({"huggingface", "HuggingFace", "https://api-inference.huggingface.co", "", "global", false, false});
     addProvider({"aws", "AWS Bedrock", "https://bedrock-runtime.amazonaws.com", "", "us-east-1", false, false});
     addProvider({"azure", "Azure OpenAI", "https://azure.microsoft.com", "", "eastus", false, false});

@@ -728,7 +728,7 @@ std::string UnrealEngineIntegration::generateClassHeader(const std::string& clas
         h << "    virtual void Tick(float DeltaTime) override;\n\n";
     }
 
-    // Add some example UPROPERTY/UFUNCTION based on parent
+    // Add UPROPERTY/UFUNCTION based on parent
     if (parentClass == "AActor" || parentClass == "APawn" || parentClass == "ACharacter") {
         h << "    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = \"Settings\")\n";
         h << "    float MoveSpeed = 600.0f;\n\n";

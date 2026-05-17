@@ -1,17 +1,28 @@
 // RawrXD Agentic IDE - Minimal Main
 // Entry point for GUI application
+// VSU Effects: Uses Adobe RGBa color space for professional color accuracy
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
 #include <cstdio>
 #include <fstream>
-#include "debug_logger.h"
+#include "logger.h"
 #include "RawrXD_Window.h"
 #include "RawrXD_Foundation.h"
 #include "universal_model_router.h"
+#include "include/RawrXD_ColorSpace.h"
 
 using namespace RawrXD;
+using namespace RawrXD::ColorSpace;
+
+// Helper to convert AdobeRGBa to COLORREF for Win32 GDI
+inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
+    auto srgb = color.TosRGB();
+    return RGB(static_cast<int>(srgb.r * 255), 
+               static_cast<int>(srgb.g * 255), 
+               static_cast<int>(srgb.b * 255));
+}
 
 class IDEWindow : public Window {
     UniversalModelRouter router;
@@ -29,15 +40,20 @@ public:
         RECT rect;
         GetClientRect(hwnd, &rect);
         
-        FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW+1));
+        // VSU Acrylic background
+        HBRUSH bgBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(VSU::Acrylic::DarkBase));
+        FillRect(hdc, &rect, bgBrush);
+        DeleteObject(bgBrush);
         
         SetBkMode(hdc, TRANSPARENT);
         
-        // Draw Status
+        // Draw Status with VSU text color
+        SetTextColor(hdc, AdobeRGBaToCOLORREF(VSU::Accents::Blue));
         RECT rParam = {10, 10, rect.right, 40};
         DrawTextW(hdc, status.c_str(), -1, &rParam, DT_LEFT);
         
-        // Draw Output
+        // Draw Output with VSU text color
+        SetTextColor(hdc, AdobeRGBaToCOLORREF(AdobeRGBa(0.86f, 0.86f, 0.86f, 1.00f)));
         RECT rOut = {10, 50, rect.right, rect.bottom};
         DrawTextW(hdc, outputText.c_str(), -1, &rOut, DT_LEFT | DT_WORDBREAK);
     }
@@ -47,7 +63,7 @@ public:
             status = "Running Inference via Titan Assembly Engine...";
             update(); // Repaint
              
-            // Simple blocking inference for demo
+            // Simple blocking inference
             // In a real app this would be threaded.
             String prompt = "This is a test of the Titan Engine.";
             
@@ -70,9 +86,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc = 0;
     LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
     LocalFree(argvW);
-    
-    // NOW initialize the logger
-    DebugLogger::getInstance().init("D:\\temp\\ide_startup.log");
 
     // Create minimal main window
     IDEWindow window;

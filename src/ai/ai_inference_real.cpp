@@ -7,6 +7,7 @@
 #include <windows.h>
 
 #include <algorithm>
+#include "context_config.h"
 #include <cstdarg>
 #include <cctype>
 #include <cmath>
@@ -410,7 +411,12 @@ bool LoadModelReal(const char* path) {
     g_model.n_head    = gguf_get_val_u32(g_model.gguf_ctx, find_key("llama.attention.head_count"));
     g_model.n_head_kv = gguf_get_val_u32(g_model.gguf_ctx, find_key("llama.attention.head_count_kv"));
     g_model.n_ff      = gguf_get_val_u32(g_model.gguf_ctx, find_key("llama.feed_forward_length"));
-    g_model.n_ctx     = 8192;
+    {
+        int ctx_key = find_key("llama.context_length");
+        g_model.n_ctx = (ctx_key >= 0)
+            ? static_cast<int32_t>(gguf_get_val_u32(g_model.gguf_ctx, ctx_key))
+            : RawrXD::ContextLimits::DEFAULT;
+    }
 
     // Initialize backend (CPU for compatibility, CUDA/Vulkan if available)
     g_model.backend = ggml_backend_cpu_init();

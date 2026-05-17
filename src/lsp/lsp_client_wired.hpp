@@ -1,9 +1,12 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "lsp_client.hpp"
+#include <map>
+#include "agentic/lsp/LSPClient.hpp"
 
 namespace rawrxd::lsp {
+
+using namespace RawrXD::Agentic;
 
 struct Location {
     std::string uri;
@@ -24,7 +27,7 @@ struct TextEdit {
     std::string newText;
 };
 
-class LSPClientWired : public LSPClient {
+class LSPClientWired : public RawrXD::Agentic::LSPClient {
 public:
     static LSPClientWired& instance() {
         static LSPClientWired instance;

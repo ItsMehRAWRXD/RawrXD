@@ -11,7 +11,7 @@
 
 using json = nlohmann::json;
 
-namespace OllamaIntegration {
+namespace NativeIntegration {
 
 // Global state for async suggester
 static std::thread g_suggester_thread;
@@ -48,7 +48,7 @@ CompletionResponse QueryCompletion(const CompletionRequest& req) {
             0);
 
         if (!hConnect) {
-            result.error_message = "Failed to connect to Ollama (localhost:11434 unreachable)";
+            result.error_message = "Failed to connect to Ollama (localhost:11435 unreachable)";
             WinHttpCloseHandle(hSession);
             return result;
         }
@@ -360,4 +360,4 @@ void StopAsyncSuggester() {
     }
 }
 
-} // namespace OllamaIntegration
+} // namespace NativeIntegration
