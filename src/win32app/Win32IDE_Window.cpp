@@ -141,6 +141,9 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             onSize(LOWORD(lParam), HIWORD(lParam));
             return 0;
 
+        case WM_ERASEBKGND:
+            return 1;
+
         case WM_COMMAND:
             onCommand(hwnd, LOWORD(wParam), (HWND)lParam, HIWORD(wParam));
             return 0;
@@ -183,42 +186,39 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         // expensive runtime wiring cannot block WM_CREATE / CreateWindowEx.
         case WM_APP + 200:
         {
-            LOG_INFO("Deferred startup bootstrap running");
+            LOG_INFO("WM_APP+200: Deferred startup bootstrap");
 
-            // Initialize Agentic Bridge for AI features
-            initializeAgenticBridge();
+            // NOTE: initializeAgenticBridge() is NOT called here.
+            // deferredHeavyInitBody() on the background thread handles it.
+            // A second call here races on m_fullAgenticIDE / m_agenticBridge
+            // and was a confirmed root cause of the startup ACCESS_VIOLATION.
 
-            // Register Swarm Bridge with IAT (Closes Slot 20 Gap) and start swarm
-            if (RawrXD::Bridge::RegisterSwarmBridgeWithIAT())
+            // Register Swarm Bridge with IAT — idempotent via IsBridgeFullyHooked().
+            // If the bg thread committed all slots first, this is a fast no-op.
+            if (!RawrXD::Bridge::IsBridgeFullyHooked())
             {
-                RawrXD::Bridge::SwarmInitConfig config{};
-                config.structSize = sizeof(config);
-                config.maxSubAgents = 8;
-                config.taskTimeoutMs = 30000;
-                config.enableGPUWorkStealing = TRUE;
-                strcpy_s(config.coordinatorModel, "phi3:mini");
-                if (FAILED(RawrXD::Bridge::InitializeSwarmSystem(&config)))
+                if (RawrXD::Bridge::RegisterSwarmBridgeWithIAT())
                 {
-                    OutputDebugStringA("Win32IDE: Swarm system init failed\n");
+                    RawrXD::Bridge::SwarmInitConfig config{};
+                    config.structSize = sizeof(config);
+                    config.maxSubAgents = 8;
+                    config.taskTimeoutMs = 30000;
+                    config.enableGPUWorkStealing = TRUE;
+                    strcpy_s(config.coordinatorModel, "phi3:mini");
+                    if (FAILED(RawrXD::Bridge::InitializeSwarmSystem(&config)))
+                        OutputDebugStringA("Win32IDE: Swarm system init failed\n");
                 }
-            }
-            else
-            {
-                OutputDebugStringA("Win32IDE: Swarm bridge registration failed\n");
+                else
+                {
+                    OutputDebugStringA("Win32IDE: Swarm bridge registration failed\n");
+                }
             }
 
             // Kickstart Inference Engine (Native)
             if (!initializeInference())
-            {
                 LOG_ERROR("Failed to initialize Inference Engine on startup");
-            }
             else
-            {
                 LOG_INFO("Inference Engine initialized successfully");
-            }
-
-            // OrchestratorBridge startup path removed: initialization now relies on
-            // native orchestration flows instead of bridge-based Ollama wiring.
 
             // Initialize Ghost Text (FIM completions)
             initGhostText();
@@ -247,13 +247,39 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             auto* payload = reinterpret_cast<std::string*>(lParam);
             if (payload)
             {
-                appendToOutput(*payload, "Agent", OutputSeverity::Info);
+                constexpr size_t kMaxOutputAppendBytes = 256 * 1024;
+                if (!payload->empty() && payload->size() <= kMaxOutputAppendBytes)
+                    appendToOutput(*payload, "Output", OutputSeverity::Info);
                 delete payload;
             }
             return 0;
         }
 
-        // Deferred agent diff refresh (posted from AgentPanel_FinalizeStream on any thread).
+        case WM_COPILOT_RELOAD_PERSISTED_CHAT_SAFE:
+            reloadPersistedChatHistoryIntoUi();
+            return 0;
+
+        // Agent stream finalize: drain token buffer on UI thread (posted from inference threads).
+        case WM_AGENT_STREAM_FINALIZE_SAFE:
+        {
+            auto* payload = reinterpret_cast<std::string*>(lParam);
+            if (payload)
+            {
+                if (!payload->empty())
+                {
+                    appendToOutput(*payload, "Agent", OutputSeverity::Info);
+                }
+                appendToOutput("\n", "Agent", OutputSeverity::Info);
+                delete payload;
+            }
+            if (bridgeIsAgentPanelReady())
+            {
+                bridgeRefreshAgentDiff();
+            }
+            return 0;
+        }
+
+        // Deferred agent diff refresh (legacy path; prefer WM_AGENT_STREAM_FINALIZE_SAFE).
         case WM_APP + 112:
             if (bridgeIsAgentPanelReady())
                 bridgeRefreshAgentDiff();
@@ -328,11 +354,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
     }
 
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
-void Win32IDE::onCreate(HWND hwnd)
-{
-    LOG_INFO("Main Window Created: Initializing UI Components");
+    if (m_hwndSidebar && IsWindow(m_hwndSidebar) && m_hwndExplorerTree)
+    {
+        refreshFileTree();
+    }
+    return 0;
 
     // 1. Create Layout Components
     // Activity Bar (Leftmost strip)

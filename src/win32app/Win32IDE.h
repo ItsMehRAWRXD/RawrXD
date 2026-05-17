@@ -343,6 +343,9 @@ class Win32IDE
     friend void deferredInitTrampoline(void* self);
     friend void bgInitBody(void* self);
     friend void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM wParam, LPARAM heapResponse);
+    friend void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam);
+    friend void RawrXD_FinishHexMagTelemetryChunk(Win32IDE* ide, LPARAM lParam);
+    friend void RawrXD_FinishHexMagTelemetryDone(Win32IDE* ide, WPARAM wParam);
     friend class RawrXD::D2DSyntaxBridge;
     friend RawrXD::ExtensionPanelWindow* GetOrCreateExtensionPanel(Win32IDE* ide, HWND hwndMain, HINSTANCE hInst);
     friend class AgentEditSession;
@@ -1196,6 +1199,22 @@ class Win32IDE
     void handleGitCommand(int commandId);
     void handleAgentCommand(int commandId);
 
+    // HexMag FastAPI service (services/hexmag) — menu + optional copilot routing
+    void onHexMagStartService();
+    void onHexMagHealthCheck();
+    void onHexMagToggleGgufFallback();
+    void onHexMagToggleRouteCopilotPanel();
+    void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel = false);
+    bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId);
+    void setHexMagStatusBarHint(const std::wstring& text);
+    void refreshHexMagAgentMenuChecks();
+    void ensureHexMagTelemetryTab();
+    void showHexMagTelemetryPanel();
+    void clearHexMagTelemetryPanel();
+    void appendHexMagTelemetryText(const std::wstring& text);
+    void onHexMagShowTelemetryPanel();
+    void onHexMagStartAgentTelemetryStream();
+
     // View Toggle/Show Methods (missing implementations for linker errors)
     void toggleMinimap();
     void toggleFloatingPanel();
@@ -1463,6 +1482,7 @@ class Win32IDE
                                            int dirtyTopLine, int dirtyBottomLine);
     void onLineStripCaretBlinkTimer();
     void paintLineStripOverlay(HDC hdcScreen, const RECT& paintRect);
+    bool ensureLineStripBackbuffer(HDC refDc, int width, int height);
     void maskRichEditForLineStripOverlay();
     bool ensureLineStripEditorInitialized();
     int getEditorLineHeightPx() const;
@@ -1483,6 +1503,8 @@ class Win32IDE
     std::vector<std::uint32_t> m_lineStripRunCounts;
     HDC m_lineStripBakeDc = nullptr;
     HBITMAP m_lineStripBakeBitmap = nullptr;
+    int m_lineStripBakeW = 0;
+    int m_lineStripBakeH = 0;
     std::uint32_t m_lineStripSurfaceW = 0;
     std::uint32_t m_lineStripSurfaceH = 0;
 
@@ -2099,7 +2121,8 @@ class Win32IDE
 
   private:
     static bool smokeDeferredInitActive();
-    /** True when copilot send/receive should run under RAWRXD_SMOKE_DEFERRED_INIT (opt-out: RAWRXD_SMOKE_BLOCK_COPILOT_CHAT=1). */
+    /** True when copilot send/receive should run under RAWRXD_SMOKE_DEFERRED_INIT (opt-out:
+     * RAWRXD_SMOKE_BLOCK_COPILOT_CHAT=1). */
     static bool smokeCopilotChatEnabled();
     mutable std::mutex m_asyncModelLoadMutex;
     bool m_asyncModelLoadRunning = false;
@@ -2313,6 +2336,8 @@ class Win32IDE
     HWND m_hwndStatusBar;
     bool m_aiAvailable = false;  // Set by onAIBackendVerified()
     HWND m_hwndOutputTabs;
+    HWND m_hwndHexMagTelemetry = nullptr;
+    std::atomic<bool> m_hexmagTelemetryStreaming{false};
     HWND m_hwndMinimap;
     HWND m_hwndHelp;
     HWND m_hwndFloatingPanel;
@@ -7704,6 +7729,8 @@ class Win32IDE
     /// Blocking filesystem scan — call only from the discovery worker thread.
     void scanForModels();
     void startAsyncModelDiscoveryScan();
+    /// Blocking refresh used before chat send when the async cache is still empty.
+    void tryRefreshModelDiscoveryForSend();
     void populateModelSelectorFromDiscoveryCache();
     std::vector<std::string> getAvailableModels() const;
     std::vector<std::string> getModelPaths() const;
