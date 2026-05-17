@@ -790,6 +790,7 @@ set(SOURCES
 
     # HTTP Client — WinHTTP/curl async with future retention
     src/agent/llm_http_client.cpp
+    src/agent/hexmag_client.cpp
     src/agent/model_invoker.cpp
     src/agent/planner.cpp
     src/agent/eval_framework.cpp
@@ -3603,6 +3604,7 @@ if(WIN32)
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
+        src/win32app/Win32IDE_HexMag.cpp
         src/win32app/Win32IDE_ChatAutocomplete.cpp
         src/win32app/Win32IDE_CodeCompletion.cpp
         src/win32app/Win32IDE_ChatCommands.cpp
@@ -3660,6 +3662,7 @@ if(WIN32)
         src/agentic/agentic_planning_orchestrator.cpp
         src/agentic/failure_intelligence_orchestrator.cpp
         src/agentic/agentic_orchestrator_integration.cpp
+        src/agentic/agentic_tool_executor_bridge.cpp
         src/agentic/agentic_audit_sink.cpp
         src/agentic/change_impact_analyzer.cpp
         src/agentic/agent_controller_minimal.cpp
@@ -3936,6 +3939,7 @@ if(WIN32)
 
         # HTTP Client — WinHTTP async with future retention (CLI+GUI)
         src/agent/llm_http_client.cpp
+        src/agent/hexmag_client.cpp
         # src/agent/model_invoker.cpp  # Test file - excluded from build
         src/agent/planner.cpp
         src/agent/meta_planner.cpp
@@ -4794,6 +4798,10 @@ if(WIN32)
         "Enable lightweight Win32IDE probe gate translation units (sovereign/harness stacks stay external)"
         ON
     )
+    option(RAWRXD_LINK_GGUF_SOVEREIGN_ASM
+        "Link 4-file GGUF sovereign suite (compression, gearbox, reverse stream) into RawrXD-Win32IDE"
+        OFF
+    )
     if(NOT RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
         message(WARNING
             "[Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs (strict lane). "
@@ -4891,7 +4899,7 @@ if(WIN32)
                src MATCHES "(stub_|_stub\\.(cpp|asm)$|shim_|_shims?\\.(cpp|asm)$|shims?\\.(cpp|asm)$|/stubs\\.(cpp|asm)$)" OR
                src MATCHES "(mock_|fake_|_(mock|fake)\\.(cpp|asm)$)")
                                 # Exact provider-file exemptions for strict Win32IDE link closure.
-                                    if(src MATCHES "ai_agent_masm_stubs\.cpp$|rawr_engine_link_shims\.cpp$|model_loader_fallbacks\.cpp$|rawrxd_native_log_fallback\.cpp$|native_gguf_loader_link_stub\.cpp$|cot_fallback_system\.cpp$|collab_cursor_fallbacks\.cpp$|ggufrunner_link_fallbacks\.cpp$|gpu_dispatch_gate_win32ide_fallback\.cpp$|gguf_d3d12_bridge_link_fallback\.cpp$|rtp_protocol_fallback\.cpp$|quickjs_node_shims\.cpp$|sovereign_gpu_link_stubs\.cpp$")
+                                    if(src MATCHES "ai_agent_masm_stubs\.cpp$|rawr_engine_link_shims\.cpp$|model_loader_fallbacks\.cpp$|rawrxd_native_log_fallback\.cpp$|native_gguf_loader_link_stub\.cpp$|cot_fallback_system(_impl)?\.cpp$|collab_cursor_fallbacks\.cpp$|ggufrunner_link_fallbacks\.cpp$|gpu_dispatch_gate_win32ide_fallback\.cpp$|gguf_d3d12_bridge_link_fallback\.cpp$|rtp_protocol_fallback\.cpp$|quickjs_node_shims\.cpp$|sovereign_gpu_link_stubs\.cpp$")
                                     continue()
                                 endif()
                 list(APPEND STUB_VIOLATIONS "${src}")
@@ -4992,7 +5000,7 @@ if(WIN32)
         foreach(_rawrxd_src IN LISTS WIN32IDE_SOURCES)
             if(_rawrxd_src MATCHES "(_stubs\\.cpp$|/stubs\\.cpp$|_stubs\\.asm$|/stubs\\.asm$|/.*_stub\\.(cpp|asm)$|/stub_.*\\.(cpp|asm)$|/shim_.*\\.(cpp|asm)$|/.*_(mock|fake)\\.(cpp|asm)$|/.*(mock_|fake_).*(\\.cpp|\\.asm)$|/link_stubs_.*\\.(cpp|asm)$|/.*_shims?\\.(cpp|asm)$|/.*_link_shims?\\.(cpp|asm)$|/.*_fallback[^/]*\\.(cpp|asm)$)" OR
                _rawrxd_src MATCHES "(missing_handler|/stubs\\.(cpp|asm)$|_stub\\.(cpp|asm)$|stub_|shim_|shims?\\.(cpp|asm)$|mock_|fake_|_(mock|fake)\\.(cpp|asm)$)")
-                                if(NOT _rawrxd_src MATCHES "ai_agent_masm_stubs\\.cpp$|rawr_engine_link_shims\\.cpp$|model_loader_fallbacks\\.cpp$|rawrxd_native_log_fallback\\.cpp$|native_gguf_loader_link_stub\\.cpp$|cot_fallback_system\\.cpp$|collab_cursor_fallbacks\\.cpp$|ggufrunner_link_fallbacks\\.cpp$|gpu_dispatch_gate_win32ide_fallback\\.cpp$|gguf_d3d12_bridge_link_fallback\\.cpp$|rtp_protocol_fallback\\.cpp$|quickjs_node_shims\\.cpp$|sovereign_gpu_link_stubs\\.cpp$")
+                                if(NOT _rawrxd_src MATCHES "ai_agent_masm_stubs\\.cpp$|rawr_engine_link_shims\\.cpp$|model_loader_fallbacks\\.cpp$|rawrxd_native_log_fallback\\.cpp$|native_gguf_loader_link_stub\\.cpp$|cot_fallback_system(_impl)?\\.cpp$|collab_cursor_fallbacks\\.cpp$|ggufrunner_link_fallbacks\\.cpp$|gpu_dispatch_gate_win32ide_fallback\\.cpp$|gguf_d3d12_bridge_link_fallback\\.cpp$|rtp_protocol_fallback\\.cpp$|quickjs_node_shims\\.cpp$|sovereign_gpu_link_stubs\\.cpp$")
                     list(APPEND _RAWRXD_FORBIDDEN_WIN32IDE_SOURCES_POST "${_rawrxd_src}")
                 endif()
             endif()
@@ -5264,6 +5272,20 @@ if(WIN32)
             src/asm/RawrXD_Agent_Dispatch.asm
             PROPERTIES LANGUAGE ASM_MASM
         )
+        if(RAWRXD_LINK_GGUF_SOVEREIGN_ASM)
+            list(APPEND WIN32IDE_EXTRA_ASM
+                src/x64/GGUF_COMPRESSION_ENGINE.asm
+                src/x64/GGUF_MANUAL_GEARBOX.asm
+                src/x64/GGUF_REVERSE_STREAM.asm
+            )
+            set_source_files_properties(
+                src/x64/GGUF_COMPRESSION_ENGINE.asm
+                src/x64/GGUF_MANUAL_GEARBOX.asm
+                src/x64/GGUF_REVERSE_STREAM.asm
+                PROPERTIES LANGUAGE ASM_MASM
+            )
+            message(STATUS "[Win32IDE] GGUF sovereign ASM suite linked (RAWRXD_LINK_GGUF_SOVEREIGN_ASM=ON)")
+        endif()
     endif()
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM}
@@ -6774,6 +6796,7 @@ message(STATUS "[ContextDecision] Harness target: RawrXD-ContextDecisionHarness"
 add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
     src/agentic/agentic_planning_orchestrator.cpp
     src/agentic/agentic_orchestrator_integration.cpp
+    src/agentic/agentic_tool_executor_bridge.cpp
     src/agentic/agentic_audit_sink.cpp
     src/agentic/observability/Logger.cpp
     src/core/execution_governor.cpp
