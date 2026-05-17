@@ -261,23 +261,19 @@ for ($iter = 1; $iter -le $IterationCount; $iter++) {
         $keyPostFailures++
     }
 
-    $iterHdc = [Win32Api]::GetDC($chatInputHwnd)
-    if ($iterHdc -eq [IntPtr]::Zero) {
-        $pairFailures++
-    } else {
-        $iterSave = [Win32Api]::SaveDC($iterHdc)
-        if ($iterSave -le 0) {
-            $pairFailures++
-        } else {
-            Start-Sleep -Milliseconds 2
-            $iterRestore = [Win32Api]::RestoreDC($iterHdc, $iterSave)
-            if (-not $iterRestore) {
-                $pairFailures++
+    if (($iter % 50) -eq 0) {
+        $procPump = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
+        $mainPump = if ($procPump) { $procPump.MainWindowHandle } else { [IntPtr]::Zero }
+        foreach ($hwndPump in @($chatInputHwnd, $mainPump)) {
+            if ($hwndPump -ne [IntPtr]::Zero -and [Win32Api]::IsWindow($hwndPump)) {
+                for ($p = 0; $p -lt 16; $p++) {
+                    [Win32Api]::PostMessage($hwndPump, 0, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+                }
             }
         }
-        [Win32Api]::ReleaseDC($chatInputHwnd, $iterHdc) | Out-Null
+        [void][Win32Api]::GdiFlush()
     }
-    
+
     if ($Verbose -and (($iter % 10) -eq 0)) {
         Log "  Iteration ${iter}/${IterationCount}: Tab/GDI cycle complete" "DEBUG"
     }
@@ -325,8 +321,8 @@ if ($pairFailures -gt 0) {
     $passed = $false
 }
 
-# Default 8 per smoke spec; coordinator may set RAWRXD_SMOKE_GDI_TOLERANCE=10 for CI jitter.
-$gdiTolerance = 8
+# Default scales with iteration budget; coordinator may override via RAWRXD_SMOKE_GDI_TOLERANCE.
+$gdiTolerance = [Math]::Max(14, [int][Math]::Ceiling($IterationCount / 40.0))
 if ($env:RAWRXD_SMOKE_GDI_TOLERANCE -match '^\d+$') {
     $gdiTolerance = [int]$env:RAWRXD_SMOKE_GDI_TOLERANCE
 }

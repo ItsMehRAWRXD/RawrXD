@@ -3,13 +3,14 @@
 # =============================================================================
 
 param(
-    [string]$BinaryPath = "d:\rxdn_ninja\bin\RawrXD-Win32IDE.exe",
-    [string]$HostPath = "d:\rxdn_ninja\bin\RawrXD-ExtensionHost.exe",
-    [string]$PingPath = "d:\rxdn_ninja\bin\RawrXDIpcPing.exe",
-    [string]$RepoRoot = "D:\rawrxd",
+    [string]$BinaryPath = "",
+    [string]$HostPath = "",
+    [string]$PingPath = "",
+    [string]$RepoRoot = "",
     [int]$IngestWaitMs = 800,
     [int]$PipeWaitSeconds = 20,
-    [switch]$FullSmoke
+    [switch]$FullSmoke,
+    [switch]$Verbose
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,12 +36,36 @@ Log "═════════════════════════
 Log "SCENARIO 4: Live IDE <-> Extension Host Cross-Process IPC"
 Log "════════════════════════════════════════════════════════════════"
 
+$SmokeRoot = $PSScriptRoot
+if (-not $RepoRoot) {
+    $RepoRoot = (Resolve-Path (Join-Path $SmokeRoot "..\..")).Path
+}
+if (-not $BinaryPath) {
+    foreach ($candidate in @(
+            (Join-Path $RepoRoot "build-win32\bin\RawrXD-Win32IDE.exe"),
+            (Join-Path $RepoRoot "build-ninja-final\bin\RawrXD-Win32IDE.exe"),
+            "d:\rxdn_ninja\bin\RawrXD-Win32IDE.exe"
+        )) {
+        if (Test-Path $candidate) { $BinaryPath = $candidate; break }
+    }
+}
+
 if (-not (Test-Path $BinaryPath)) {
     Log "IDE binary missing: $BinaryPath" "ERROR"
     exit 1
 }
 
-$binDir = Split-Path -Parent $BinaryPath
+$smokeVerbose = $Verbose -or ($env:RAWRXD_SMOKE_VERBOSE -eq '1')
+$companions = Resolve-SmokeCompanionBinaries -BinaryPath $BinaryPath -RepoRoot $RepoRoot
+if (-not $HostPath) { $HostPath = $companions.HostPath }
+if (-not $PingPath) { $PingPath = $companions.PingPath }
+$binDir = $companions.BinDir
+if ($smokeVerbose) {
+    Log "Resolved IDE binary: $BinaryPath"
+    Log "Resolved repo root: $($companions.RepoRoot)"
+    Log "Resolved extension host: $HostPath (exists=$(Test-Path $HostPath))"
+    Log "Resolved IPC ping tool: $PingPath (exists=$(Test-Path $PingPath))"
+}
 $ideLogCandidates = @(
     (Join-Path $binDir "RawrXD_IDE.log"),
     (Join-Path $env:APPDATA "RawrXD\ide.log")
@@ -124,8 +149,13 @@ if (Test-Path $HostPath) {
     $clientExit = $LASTEXITCODE
 } else {
     if (Test-Path $buildPingScript) {
-        Log "Building RawrXDIpcPing..."
-        & $buildPingScript -RepoRoot $RepoRoot
+        Log "Building RawrXDIpcPing into $binDir ..."
+        & $buildPingScript -RepoRoot $RepoRoot -OutDir (Join-Path $SmokeRoot "tools")
+        $builtPing = Join-Path $SmokeRoot "tools\RawrXDIpcPing.exe"
+        if (Test-Path $builtPing) {
+            Copy-Item $builtPing (Join-Path $binDir "RawrXDIpcPing.exe") -Force -ErrorAction SilentlyContinue
+            $PingPath = Join-Path $binDir "RawrXDIpcPing.exe"
+        }
     }
     if (Test-Path $PingPath) {
         $clientName = "RawrXDIpcPing"
@@ -133,13 +163,24 @@ if (Test-Path $HostPath) {
         $clientExit = $LASTEXITCODE
     } else {
         Log "No IPC client binary (ExtensionHost or RawrXDIpcPing)" "ERROR"
+        Log "  Expected host: $HostPath" "ERROR"
+        Log "  Expected ping: $PingPath" "ERROR"
         Stop-Process -Id $ideProc.Id -Force -ErrorAction SilentlyContinue
         exit 1
     }
 }
 
 if ($clientExit -ne 0) {
-    Log "$clientName failed with exit code $clientExit" "ERROR"
+    $exitHint = switch ($clientExit) {
+        101 { "pipe not ready (WaitNamedPipe timeout)" }
+        102 { "CreateFile on pipe failed" }
+        103 { "segmenter Begin failed" }
+        104 { "empty wire blob" }
+        105 { "WriteFile failed" }
+        2  { "client binary missing or bad launch environment" }
+        default { "see client tool logs" }
+    }
+    Log "$clientName failed with exit code $clientExit ($exitHint)" "ERROR"
     Stop-Process -Id $ideProc.Id -Force -ErrorAction SilentlyContinue
     exit 1
 }

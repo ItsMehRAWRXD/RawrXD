@@ -6394,6 +6394,7 @@ if(WIN32)
         CXX_STANDARD_REQUIRED ON
     )
     message(STATUS "[Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)")
+    include(${CMAKE_SOURCE_DIR}/cmake/SmokeE2EIPC.cmake)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # RawrXD-MemoryBench — synthetic stress benchmark for the 10-strategy memory

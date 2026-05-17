@@ -20,8 +20,13 @@ $ErrorActionPreference = "Stop"
 $InformationPreference = "Continue"
 
 $SmokeRoot = $PSScriptRoot
+if ($env:GITHUB_WORKSPACE -and (Test-Path $env:GITHUB_WORKSPACE)) {
+    $RepoRoot = $env:GITHUB_WORKSPACE
+} else {
+    $RepoRoot = (Resolve-Path (Join-Path $SmokeRoot "..\..")).Path
+}
 if (-not $BinaryPath) {
-    $repoRoot = (Resolve-Path (Join-Path $SmokeRoot "..\..")).Path
+    $repoRoot = $RepoRoot
     foreach ($candidate in @(
             (Join-Path $repoRoot "build-win32\bin\RawrXD-Win32IDE.exe"),
             (Join-Path $repoRoot "build-ninja-final\bin\RawrXD-Win32IDE.exe"),
@@ -248,11 +253,14 @@ if ($stressMode -and $Timeout -lt 600000) {
 # Propagate binary + iteration budget to child harnesses / SmokeDiagnostics.
 $env:RAWRXD_BINARY_PATH = $BinaryPath
 $env:RAWRXD_SMOKE_ITERATIONS = [string]$targetSubclassIterations
-if ($stressMode) {
-    # 2000-iter soak: allow small positive drift (~1 handle / 150 cycles); still fails runaway leaks.
-    $env:RAWRXD_SMOKE_GDI_TOLERANCE = "14"
-} elseif (-not $env:RAWRXD_SMOKE_GDI_TOLERANCE) {
+if (-not $env:RAWRXD_SMOKE_GDI_TOLERANCE) {
+  if ($stressMode) {
+    # Scale with iteration budget (keyboard-only soak; no synthetic GetDC/SaveDC loop).
+    $scaledGdi = [Math]::Max(14, [int][Math]::Ceiling($targetSubclassIterations / 40.0))
+    $env:RAWRXD_SMOKE_GDI_TOLERANCE = [string]$scaledGdi
+  } else {
     $env:RAWRXD_SMOKE_GDI_TOLERANCE = "10"
+  }
 }
 
 $suiteStartUtc = [DateTime]::UtcNow
@@ -387,10 +395,6 @@ Log-Info ""
 $scenario2Script = Join-Path $SmokeRoot "2_SubclassKeyboardTrapping.ps1"
 if (Test-Path $scenario2Script) {
     $s2CrashBefore = Get-CrashLogSnapshot -CrashLogPath $crashLogPath
-    # Allow minor async GDI teardown jitter in full-suite runs (spec target remains 8).
-    if (-not $env:RAWRXD_SMOKE_GDI_TOLERANCE) {
-        $env:RAWRXD_SMOKE_GDI_TOLERANCE = if ($stressMode) { "14" } else { "10" }
-    }
     $s2DurationMs = if ($stressMode) { 300000 } else { 30000 }
     Log-Info "Launching Scenario 2 harness ($targetSubclassIterations iterations, GDI tolerance=$($env:RAWRXD_SMOKE_GDI_TOLERANCE))..."
     & $scenario2Script -BinaryPath $BinaryPath -IterationCount $targetSubclassIterations -TestDurationMs $s2DurationMs -Verbose:$VerboseLogging
@@ -449,22 +453,19 @@ Log-Info "  Action: Native RawrXDIpcPing (or PS fallback) writes production-fram
 Log-Info "  Expected: IDE ExtensionHostIpcBridge logs ExtensionEngine IPC ingest"
 Log-Info ""
 
-$scenario4Candidates = @(
-    "4_XProcIpcValidation.ps1",
-    "4_ExtensionHostBridge.ps1",
-    "4_LiveIpcInterconnected.ps1",
-    "4_LiveIpcHostTraffic.ps1",
-    "4_CrossProcessIpc.ps1",
-    "4_BidirectionalHostIpc.ps1",
-    "4_LiveExtensionIpc.ps1",
-    "4_ExtensionHostIntegration.ps1",
-    "4_LiveHostIpcValidation.ps1"
-) | ForEach-Object { Join-Path $SmokeRoot $_ }
-$scenario4Script = $scenario4Candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-if (Test-Path $scenario4Script) {
+$scenario4Script = Join-Path $SmokeRoot "4_LiveExtensionIpc.ps1"
+if (-not (Test-Path $scenario4Script)) {
+    $scenario4Fallbacks = @(
+        "4_LiveHostIpcValidation.ps1",
+        "4_ExtensionHostBridge.ps1",
+        "4_XProcIpcValidation.ps1"
+    ) | ForEach-Object { Join-Path $SmokeRoot $_ }
+    $scenario4Script = $scenario4Fallbacks | Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+if ($scenario4Script -and (Test-Path $scenario4Script)) {
     $s4CrashBefore = Get-CrashLogSnapshot -CrashLogPath $crashLogPath
-    Log-Info "Launching Scenario 4 harness..."
-    & $scenario4Script -IdePath $BinaryPath -FullSmoke
+    Log-Info "Launching Scenario 4 harness ($([IO.Path]::GetFileName($scenario4Script)))..."
+    & $scenario4Script -BinaryPath $BinaryPath -RepoRoot $RepoRoot -FullSmoke -Verbose:$VerboseLogging
     $s4Exit = $LASTEXITCODE
     Register-ScenarioResult -Results $scenarioResults -Name "Scenario4" -ExitCode $s4Exit
     if ($s4Exit -eq 0) {

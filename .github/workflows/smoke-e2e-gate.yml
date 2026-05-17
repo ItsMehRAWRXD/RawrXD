@@ -18,8 +18,8 @@ jobs:
         run: cmake -B build-win32 -G Ninja -DCMAKE_BUILD_TYPE=Release
         shell: pwsh
 
-      - name: Build RawrXD-Win32IDE
-        run: cmake --build build-win32 --target RawrXD-Win32IDE -j 8
+      - name: Build Win32 IDE and Scenario 4 IPC companions
+        run: cmake --build build-win32 --target RawrXD-Win32IDE RawrXDIpcPing RawrXD-ExtensionHost -j 8
         shell: pwsh
 
       - name: Execute 5-scenario smoke coordinator

@@ -25,6 +25,52 @@ function Start-RawrIDESmokeProcess {
     return [System.Diagnostics.Process]::Start($psi)
 }
 
+function Resolve-SmokeCompanionBinaries {
+    param(
+        [string]$BinaryPath,
+        [string]$RepoRoot = ""
+    )
+
+    $binDir = Split-Path -Parent $BinaryPath
+    if (-not $RepoRoot) {
+        if ($env:GITHUB_WORKSPACE -and (Test-Path $env:GITHUB_WORKSPACE)) {
+            $RepoRoot = $env:GITHUB_WORKSPACE
+        } else {
+            $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+        }
+    }
+
+    $hostExe = Join-Path $binDir "RawrXD-ExtensionHost.exe"
+    $pingExe = Join-Path $binDir "RawrXDIpcPing.exe"
+
+    $hostCandidates = @(
+        $hostExe,
+        (Join-Path $RepoRoot "build-win32\bin\RawrXD-ExtensionHost.exe"),
+        (Join-Path $RepoRoot "build-ninja-final\bin\RawrXD-ExtensionHost.exe"),
+        "d:\rxdn_ninja\bin\RawrXD-ExtensionHost.exe"
+    )
+    foreach ($c in $hostCandidates) {
+        if ($c -and (Test-Path $c)) { $hostExe = $c; break }
+    }
+
+    $pingCandidates = @(
+        $pingExe,
+        (Join-Path (Split-Path $PSScriptRoot -Parent) "tools\RawrXDIpcPing.exe"),
+        (Join-Path $RepoRoot "build-win32\bin\RawrXDIpcPing.exe"),
+        "d:\rxdn_ninja\bin\RawrXDIpcPing.exe"
+    )
+    foreach ($c in $pingCandidates) {
+        if ($c -and (Test-Path $c)) { $pingExe = $c; break }
+    }
+
+    return @{
+        BinDir   = $binDir
+        HostPath = $hostExe
+        PingPath = $pingExe
+        RepoRoot = $RepoRoot
+    }
+}
+
 function Get-RawrXDCrashLogCandidates {
     param([string]$BinaryPath = 'd:\rxdn_ninja\bin\RawrXD-Win32IDE.exe')
     $dir = Split-Path -Parent $BinaryPath
