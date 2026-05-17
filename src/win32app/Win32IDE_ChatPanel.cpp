@@ -15,12 +15,14 @@
 // Rule:         NO SOURCE FILE IS TO BE SIMPLIFIED
 // =============================================================================
 
+#include "IDELogger.h"
 #include "Win32IDE.h"
 #include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <mutex>
 #include <sstream>
 #include <windows.h>
 
@@ -106,6 +108,38 @@ static FormatConfig GetConfig(Style style)
 }
 }  // namespace PromptFormat
 
+namespace
+{
+std::string MakeChatPanelPreview(const std::string& value, size_t maxLen = 120)
+{
+    std::string preview;
+    preview.reserve(std::min(value.size(), maxLen) + 8);
+    for (char ch : value)
+    {
+        if (preview.size() >= maxLen)
+            break;
+        switch (ch)
+        {
+            case '\r':
+                preview += "\\r";
+                break;
+            case '\n':
+                preview += "\\n";
+                break;
+            case '\t':
+                preview += "\\t";
+                break;
+            default:
+                preview.push_back(ch);
+                break;
+        }
+    }
+    if (value.size() > maxLen)
+        preview += "...";
+    return preview;
+}
+}  // namespace
+
 // =============================================================================
 // ChatMessage — Single conversation message
 // =============================================================================
@@ -120,7 +154,23 @@ struct ChatMessage
     ChatMessage() = default;
     ChatMessage(const std::string& r, const std::string& c) : role(r), content(c)
     {
-        approxTokens = EstimateTokens(c);
+        try
+        {
+            // Validate the string before processing
+            if (c.size() > 0 && c.c_str() != nullptr)
+            {
+                approxTokens = EstimateTokens(c);
+            }
+            else
+            {
+                approxTokens = 0;
+            }
+        }
+        catch (...)
+        {
+            // If token estimation fails, use safe default
+            approxTokens = std::max(1, static_cast<int>(c.size() / 4));
+        }
         timestampMs = GetTickCount64();
     }
 
@@ -130,18 +180,31 @@ struct ChatMessage
         if (text.empty())
             return 0;
 
-        // Count non-space chars vs space chars to estimate code density
-        int nonSpace = 0;
-        for (char c : text)
+        try
         {
-            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')
-                nonSpace++;
-        }
-        float density = text.empty() ? 1.0f : (float)nonSpace / (float)text.size();
+            // Safety check: ensure the string data is accessible and valid
+            if (text.size() > 100000000)  // 100MB sanity limit
+                return static_cast<int>(text.size() / 4) + 1;
 
-        // Higher density (more code/symbols) = fewer chars per token
-        float charsPerToken = (density > 0.85f) ? 3.0f : 4.0f;
-        return static_cast<int>((float)text.size() / charsPerToken) + 1;
+            int nonSpace = 0;
+            for (size_t i = 0; i < text.size(); ++i)
+            {
+                char c = text[i];
+                if (c != ' ' && c != '\n' && c != '\t' && c != '\r')
+                    nonSpace++;
+            }
+            float density = static_cast<float>(nonSpace) / static_cast<float>(text.size());
+
+            // Higher density (more code/symbols) = fewer chars per token
+            float charsPerToken = (density > 0.85f) ? 3.0f : 4.0f;
+            int tokens = static_cast<int>(static_cast<float>(text.size()) / charsPerToken) + 1;
+            return std::max(1, tokens);
+        }
+        catch (...)
+        {
+            // If any exception occurs during processing, return safe estimate
+            return std::max(1, static_cast<int>(text.size() / 4));
+        }
     }
 };
 
@@ -151,52 +214,6 @@ struct ChatMessage
 class ConversationSession
 {
   public:
-    ConversationSession() : m_maxContextTokens(4096), m_promptFormat(PromptFormat::Style::Phi3)
-    {
-        m_sessionId = GenerateSessionId();
-    }
-
-    // ---- Configuration ----
-    void SetMaxContextTokens(int maxTokens) { m_maxContextTokens = maxTokens; }
-    int GetMaxContextTokens() const { return m_maxContextTokens; }
-    void SetPromptFormat(PromptFormat::Style style) { m_promptFormat = style; }
-    PromptFormat::Style GetPromptFormat() const { return m_promptFormat; }
-
-    void SetSystemPrompt(const std::string& prompt)
-    {
-        m_systemPrompt = prompt;
-        m_systemTokens = ChatMessage::EstimateTokens(prompt);
-    }
-    const std::string& GetSystemPrompt() const { return m_systemPrompt; }
-
-    void SetToolDefinitions(const std::string& toolDefs)
-    {
-        m_toolDefinitions = toolDefs;
-        m_toolDefTokens = ChatMessage::EstimateTokens(toolDefs);
-    }
-
-    // ---- Message Management ----
-    void AddUserMessage(const std::string& content)
-    {
-        m_messages.emplace_back("user", content);
-        TruncateIfOverBudget();
-    }
-
-    void AddAssistantMessage(const std::string& content) { m_messages.emplace_back("assistant", content); }
-
-    void AddToolResult(const std::string& toolName, const std::string& result)
-    {
-        ChatMessage msg("tool", result);
-        msg.toolName = toolName;
-        m_messages.push_back(std::move(msg));
-    }
-
-    void ClearHistory() { m_messages.clear(); }
-
-    const std::vector<ChatMessage>& GetMessages() const { return m_messages; }
-    size_t GetMessageCount() const { return m_messages.size(); }
-
-    // ---- Token Budget ----
     struct TokenBudget
     {
         int maxTokens = 0;
@@ -210,16 +227,181 @@ class ConversationSession
         int messagesTruncated = 0;
     };
 
+    ConversationSession() : m_maxContextTokens(4096), m_promptFormat(PromptFormat::Style::Phi3)
+    {
+        m_sessionId = GenerateSessionId();
+    }
+
+    void Reset()
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_sessionId = GenerateSessionId();
+        m_systemPrompt.clear();
+        m_systemTokens = 0;
+        m_toolDefinitions.clear();
+        m_toolDefTokens = 0;
+        m_maxContextTokens = 4096;
+        m_promptFormat = PromptFormat::Style::Phi3;
+        m_messages.clear();
+    }
+
+    // Thread-safe wrapper for adding user messages
+    void AddUserMessageSafe(const std::string& content) { AddUserMessage(content); }
+
+    // Thread-safe GetTokenBudget
+    TokenBudget GetTokenBudgetSafe() const { return GetTokenBudget(); }
+
+    // Thread-safe GetMessages copy
+    std::vector<ChatMessage> GetMessagesCopy() const { return GetMessages(); }
+
+    // ---- Configuration ----
+    void SetMaxContextTokens(int maxTokens)
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_maxContextTokens = maxTokens;
+    }
+    int GetMaxContextTokens() const
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        return m_maxContextTokens;
+    }
+    void SetPromptFormat(PromptFormat::Style style)
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_promptFormat = style;
+    }
+    PromptFormat::Style GetPromptFormat() const
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        return m_promptFormat;
+    }
+
+    void SetSystemPrompt(const std::string& prompt)
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_systemPrompt = prompt;
+        m_systemTokens = ChatMessage::EstimateTokens(prompt);
+    }
+    const std::string& GetSystemPrompt() const { return m_systemPrompt; }
+
+    void SetToolDefinitions(const std::string& toolDefs)
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_toolDefinitions = toolDefs;
+        m_toolDefTokens = ChatMessage::EstimateTokens(toolDefs);
+    }
+
+    // ---- Message Management ----
+    void AddUserMessage(const std::string& content)
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        if (content.empty())
+        {
+            return;  // Ignore empty messages
+        }
+
+        try
+        {
+            constexpr size_t kMaxChatMessageBytes = 1024u * 1024u;  // 1MB limit per message
+
+            // Validate the input string
+            if (content.size() > 100000000)  // 100MB safety check
+            {
+                LOG_ERROR("[ConversationSession] AddUserMessage rejected: content too large (" +
+                          std::to_string(content.size()) + " bytes)");
+                return;
+            }
+
+            const std::string bounded =
+                (content.size() > kMaxChatMessageBytes) ? content.substr(0, kMaxChatMessageBytes) : content;
+
+            LOG_INFO("[ConversationSession] AddUserMessage bytes=" + std::to_string(content.size()) +
+                     " bounded_bytes=" + std::to_string(bounded.size()) + " existing_messages=" +
+                     std::to_string(m_messages.size()) + " preview='" + MakeChatPanelPreview(bounded) + "'");
+
+            // Add the message safely
+            m_messages.emplace_back("user", bounded);
+
+            if (!m_messages.empty())
+            {
+                LOG_DEBUG("[ConversationSession] AddUserMessage appended approx_tokens=" +
+                          std::to_string(m_messages.back().approxTokens) +
+                          " total_messages=" + std::to_string(m_messages.size()));
+            }
+
+            // Truncate if over budget
+            TruncateIfOverBudgetLocked();
+        }
+        catch (...)
+        {
+            LOG_ERROR("[ConversationSession] AddUserMessage exception; cleanup may be needed");
+        }
+    }
+
+    void AddAssistantMessage(const std::string& content)
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        if (content.empty())
+        {
+            return;  // Ignore empty messages
+        }
+        constexpr size_t kMaxChatMessageBytes = 1024u * 1024u;
+        const std::string bounded =
+            (content.size() > kMaxChatMessageBytes) ? content.substr(0, kMaxChatMessageBytes) : content;
+        m_messages.emplace_back("assistant", bounded);
+    }
+
+    void AddToolResult(const std::string& toolName, const std::string& result)
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        if (result.empty())
+        {
+            return;  // Ignore empty results
+        }
+        ChatMessage msg("tool", result);
+        msg.toolName = toolName;
+        if (msg.approxTokens <= 0)
+            msg.approxTokens = 1;
+        m_messages.push_back(std::move(msg));
+    }
+
+    void ClearHistory()
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_messages.clear();
+    }
+
+    std::vector<ChatMessage> GetMessages() const
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        return m_messages;
+    }
+    size_t GetMessageCount() const
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        return m_messages.size();
+    }
+
+    // ---- Token Budget ----
     TokenBudget GetTokenBudget() const
     {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+
         TokenBudget budget;
         budget.maxTokens = m_maxContextTokens;
         budget.systemTokens = m_systemTokens;
         budget.toolDefTokens = m_toolDefTokens;
 
-        for (const auto& msg : m_messages)
+        if (m_messages.empty())
         {
-            budget.historyTokens += msg.approxTokens;
+            budget.historyTokens = 0;
+        }
+        else
+        {
+            for (const auto& msg : m_messages)
+            {
+                budget.historyTokens += msg.approxTokens;
+            }
         }
 
         budget.totalUsed = budget.systemTokens + budget.toolDefTokens + budget.historyTokens;
@@ -234,9 +416,14 @@ class ConversationSession
     // ---- Prompt Building ----
     std::string BuildPrompt(const std::string& userMessage)
     {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+
         auto cfg = PromptFormat::GetConfig(m_promptFormat);
         std::string prompt;
-        prompt.reserve(m_maxContextTokens * 4);  // Pre-size
+        const int safeMaxTokens = (m_maxContextTokens > 0 && m_maxContextTokens <= 2000000) ? m_maxContextTokens : 4096;
+        const size_t reserveHint =
+            static_cast<size_t>(safeMaxTokens) * 4u;
+        prompt.reserve((std::min)(reserveHint, static_cast<size_t>(8 * 1024 * 1024)));
 
         // System prompt
         if (!m_systemPrompt.empty())
@@ -344,24 +531,38 @@ class ConversationSession
     // ---- Session Persistence ----
     bool SaveToFile(const std::string& path) const
     {
+        std::vector<ChatMessage> messagesSnapshot;
+        std::string sessionId;
+        std::string systemPrompt;
+        int maxContextTokens = 0;
+        PromptFormat::Style promptFormat = PromptFormat::Style::ChatML;
+        {
+            std::lock_guard<std::mutex> lock(m_messagesMutex);
+            messagesSnapshot = m_messages;
+            sessionId = m_sessionId;
+            systemPrompt = m_systemPrompt;
+            maxContextTokens = m_maxContextTokens;
+            promptFormat = m_promptFormat;
+        }
+
         std::ofstream f(path, std::ios::binary);
         if (!f.is_open())
             return false;
 
         // Simple JSON-like format
         f << "{\n";
-        f << "  \"session_id\": \"" << EscapeJson(m_sessionId) << "\",\n";
-        f << "  \"max_context_tokens\": " << m_maxContextTokens << ",\n";
-        f << "  \"prompt_format\": " << (int)m_promptFormat << ",\n";
-        f << "  \"system_prompt\": \"" << EscapeJson(m_systemPrompt) << "\",\n";
+        f << "  \"session_id\": \"" << EscapeJson(sessionId) << "\",\n";
+        f << "  \"max_context_tokens\": " << maxContextTokens << ",\n";
+        f << "  \"prompt_format\": " << (int)promptFormat << ",\n";
+        f << "  \"system_prompt\": \"" << EscapeJson(systemPrompt) << "\",\n";
         f << "  \"messages\": [\n";
 
-        for (size_t i = 0; i < m_messages.size(); i++)
+        for (size_t i = 0; i < messagesSnapshot.size(); i++)
         {
-            const auto& msg = m_messages[i];
+            const auto& msg = messagesSnapshot[i];
             f << "    {\"role\": \"" << EscapeJson(msg.role) << "\", \"content\": \"" << EscapeJson(msg.content)
               << "\", \"tokens\": " << msg.approxTokens << ", \"timestamp\": " << msg.timestampMs << "}";
-            if (i + 1 < m_messages.size())
+            if (i + 1 < messagesSnapshot.size())
                 f << ",";
             f << "\n";
         }
@@ -383,20 +584,22 @@ class ConversationSession
             return false;
 
         // Minimal JSON parsing for our known format
-        m_messages.clear();
+        std::vector<ChatMessage> parsedMessages;
+        std::string parsedSessionId;
+        int parsedMaxContextTokens = m_maxContextTokens;
 
         // Extract session_id
         size_t pos = content.find("\"session_id\":");
         if (pos != std::string::npos)
         {
-            m_sessionId = ExtractJsonString(content, pos);
+            parsedSessionId = ExtractJsonString(content, pos);
         }
 
         // Extract max_context_tokens
         pos = content.find("\"max_context_tokens\":");
         if (pos != std::string::npos)
         {
-            m_maxContextTokens = ExtractJsonInt(content, pos);
+            parsedMaxContextTokens = ExtractJsonInt(content, pos);
         }
 
         // Extract messages
@@ -434,12 +637,21 @@ class ConversationSession
 
                     if (!msg.role.empty())
                     {
-                        m_messages.push_back(std::move(msg));
+                        parsedMessages.push_back(std::move(msg));
                     }
 
                     cur = objEnd + 1;
                 }
             }
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(m_messagesMutex);
+            m_messages = std::move(parsedMessages);
+            if (!parsedSessionId.empty())
+                m_sessionId = std::move(parsedSessionId);
+            if (parsedMaxContextTokens > 0)
+                m_maxContextTokens = parsedMaxContextTokens;
         }
 
         return true;
@@ -448,9 +660,19 @@ class ConversationSession
     // ---- Export ----
     std::string ExportAsMarkdown() const
     {
+        std::vector<ChatMessage> messagesSnapshot;
+        std::string sessionId;
+        std::string systemPrompt;
+        {
+            std::lock_guard<std::mutex> lock(m_messagesMutex);
+            messagesSnapshot = m_messages;
+            sessionId = m_sessionId;
+            systemPrompt = m_systemPrompt;
+        }
+
         std::ostringstream md;
         md << "# Conversation Export\n\n";
-        md << "Session: " << m_sessionId << "\n";
+        md << "Session: " << sessionId << "\n";
 
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
@@ -459,12 +681,12 @@ class ConversationSession
         md << "Date: " << std::put_time(&tm_buf, "%Y-%m-%d %H:%M:%S") << "\n\n";
         md << "---\n\n";
 
-        if (!m_systemPrompt.empty())
+        if (!systemPrompt.empty())
         {
-            md << "**System:** " << m_systemPrompt << "\n\n";
+            md << "**System:** " << systemPrompt << "\n\n";
         }
 
-        for (const auto& msg : m_messages)
+        for (const auto& msg : messagesSnapshot)
         {
             if (msg.role == "user")
             {
@@ -486,18 +708,118 @@ class ConversationSession
     const std::string& GetSessionId() const { return m_sessionId; }
 
   private:
-    void TruncateIfOverBudget()
+    // Internal: caller must already hold m_messagesMutex (see AddUserMessage).
+    void TruncateIfOverBudgetLocked()
     {
-        int totalTokens = m_systemTokens + m_toolDefTokens;
-        for (const auto& msg : m_messages)
-            totalTokens += msg.approxTokens;
+        if (m_messages.empty())
+            return;
 
-        // Drop oldest messages (after system/tool) until within budget
-        // Always keep the most recent user message
-        while (totalTokens > m_maxContextTokens && m_messages.size() > 1)
+        try
         {
-            totalTokens -= m_messages.front().approxTokens;
-            m_messages.erase(m_messages.begin());
+            const int safeMaxContextTokens = m_maxContextTokens > 0 ? m_maxContextTokens : 4096;
+
+            long long totalTokens = static_cast<long long>(m_systemTokens) + static_cast<long long>(m_toolDefTokens);
+
+            // Calculate total tokens with safety checks
+            for (size_t idx = 0; idx < m_messages.size(); ++idx)
+            {
+                // Defensive index access with bounds check
+                if (idx >= m_messages.size())
+                    break;
+
+                try
+                {
+                    const auto& msg = m_messages[idx];
+                    const int normalizedTokens =
+                        (msg.approxTokens > 0 && msg.approxTokens < 1000000) ? msg.approxTokens : 1;
+                    totalTokens += static_cast<long long>(normalizedTokens);
+                }
+                catch (...)
+                {
+                    // If accessing a message throws, use safe default
+                    totalTokens += 1;
+                }
+            }
+
+            LOG_INFO("[ConversationSession] TruncateIfOverBudget begin total_tokens=" + std::to_string(totalTokens) +
+                     " safe_max_tokens=" + std::to_string(safeMaxContextTokens) +
+                     " messages=" + std::to_string(m_messages.size()));
+
+            if (totalTokens <= static_cast<long long>(safeMaxContextTokens))
+            {
+                LOG_DEBUG("[ConversationSession] TruncateIfOverBudget no truncation required");
+                return;
+            }
+
+            size_t dropCount = 0;
+            while (totalTokens > static_cast<long long>(safeMaxContextTokens) && (m_messages.size() - dropCount) > 1)
+            {
+                // Safety check: ensure we don't access out of bounds
+                if (dropCount >= m_messages.size())
+                    break;
+
+                try
+                {
+                    const auto& oldest = m_messages[dropCount];
+                    const int oldestTokens = oldest.approxTokens > 0 ? oldest.approxTokens : 1;
+
+                    // Build preview safely without calling potentially unsafe methods on corrupted strings
+                    std::string preview;
+                    try
+                    {
+                        if (!oldest.content.empty() && oldest.content.size() < 10000000)  // Sanity check: 10MB max
+                        {
+                            preview = MakeChatPanelPreview(oldest.content, 80);
+                        }
+                        else
+                        {
+                            preview = "[content too large or empty]";
+                        }
+                    }
+                    catch (...)
+                    {
+                        preview = "[preview unavailable]";
+                    }
+
+                    LOG_DEBUG("[ConversationSession] dropping message index=" + std::to_string(dropCount) + " role='" +
+                              oldest.role + "' tokens=" + std::to_string(oldestTokens) + " preview='" + preview + "'");
+                    totalTokens -= static_cast<long long>(oldestTokens);
+                }
+                catch (...)
+                {
+                    // If we can't process this message, just remove it anyway
+                    LOG_WARNING("[ConversationSession] error processing message at index=" + std::to_string(dropCount) +
+                                " during truncation; removing it safely");
+                    totalTokens -= 1;  // Assume 1 token and move on
+                }
+                ++dropCount;
+            }
+
+            if (dropCount > 0 && dropCount < m_messages.size())
+            {
+                std::vector<ChatMessage> retained;
+                retained.reserve(m_messages.size() - dropCount);
+                for (size_t i = dropCount; i < m_messages.size(); ++i)
+                {
+                    retained.push_back(std::move(m_messages[i]));
+                }
+                m_messages.swap(retained);
+                LOG_INFO("[ConversationSession] TruncateIfOverBudget dropped=" + std::to_string(dropCount) +
+                         " remaining_messages=" + std::to_string(m_messages.size()) +
+                         " remaining_tokens=" + std::to_string(totalTokens));
+            }
+        }
+        catch (...)
+        {
+            LOG_ERROR("[ConversationSession] FATAL exception in TruncateIfOverBudget; clearing all messages");
+            try
+            {
+                m_messages.clear();
+            }
+            catch (...)
+            {
+                // Last-ditch effort to recover
+            }
         }
     }
 
@@ -624,6 +946,7 @@ class ConversationSession
         return numStr.empty() ? 0 : std::stoi(numStr);
     }
 
+    mutable std::mutex m_messagesMutex;  // Protects m_messages and message operations
     std::string m_sessionId;
     std::string m_systemPrompt;
     int m_systemTokens = 0;
@@ -649,11 +972,13 @@ void HandleChatPanel(void* idePtr)
 // =============================================================================
 // File-static session instance. Lifetime bound to the process.
 static ConversationSession s_conversationSession;
+static std::recursive_mutex s_conversationSessionMutex;
 static bool s_sessionInitialized = false;
 
 void Win32IDE::initConversationSession()
 {
-    s_conversationSession = ConversationSession();
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
+    s_conversationSession.Reset();
     s_conversationSession.SetSystemPrompt("You are RawrXD AI, a highly capable coding assistant embedded in the "
                                           "RawrXD Sovereign IDE. You help with code generation, debugging, "
                                           "refactoring, and answering technical questions. Be concise and direct.");
@@ -664,16 +989,29 @@ void Win32IDE::initConversationSession()
 
 void Win32IDE::conversationAddUser(const std::string& content)
 {
+    // Validate input before processing
+    if (content.empty())
+    {
+        return;  // Silently ignore empty input
+    }
+
     // If UI history was loaded from disk but the session was never initialized, rebuild before appending.
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
+    LOG_INFO("[ConversationSession] conversationAddUser start bytes=" + std::to_string(content.size()) +
+             " session_initialized=" + std::string(s_sessionInitialized ? "true" : "false") + " chat_history_size=" +
+             std::to_string(m_chatHistory.size()) + " preview='" + MakeChatPanelPreview(content) + "'");
     if (!s_sessionInitialized && !m_chatHistory.empty())
         rehydrateConversationSessionFromChatHistory();
     if (!s_sessionInitialized)
         initConversationSession();
+
     s_conversationSession.AddUserMessage(content);
+    LOG_INFO("[ConversationSession] conversationAddUser complete");
 }
 
 void Win32IDE::conversationAddAssistant(const std::string& content)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
     if (!s_sessionInitialized && !m_chatHistory.empty())
         rehydrateConversationSessionFromChatHistory();
     if (!s_sessionInitialized)
@@ -683,6 +1021,7 @@ void Win32IDE::conversationAddAssistant(const std::string& content)
 
 void Win32IDE::conversationAddToolResult(const std::string& toolName, const std::string& resultBody)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
     if (!s_sessionInitialized && !m_chatHistory.empty())
         rehydrateConversationSessionFromChatHistory();
     if (!s_sessionInitialized)
@@ -693,6 +1032,7 @@ void Win32IDE::conversationAddToolResult(const std::string& toolName, const std:
 
 std::string Win32IDE::conversationBuildPrompt(const std::string& userMessage)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
     if (!s_sessionInitialized)
         initConversationSession();
     return s_conversationSession.BuildPrompt(userMessage);
@@ -700,6 +1040,7 @@ std::string Win32IDE::conversationBuildPrompt(const std::string& userMessage)
 
 void Win32IDE::conversationDetectModelFormat(const std::string& modelPath)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
     if (!s_sessionInitialized)
         initConversationSession();
     // Redirected to authoritative load pipeline:
@@ -708,6 +1049,7 @@ void Win32IDE::conversationDetectModelFormat(const std::string& modelPath)
 
 void Win32IDE::conversationSetContextWindow(int maxTokens)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
     if (!s_sessionInitialized)
         initConversationSession();
     s_conversationSession.SetMaxContextTokens(maxTokens);
@@ -715,13 +1057,20 @@ void Win32IDE::conversationSetContextWindow(int maxTokens)
 
 void Win32IDE::conversationClear()
 {
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
     s_conversationSession.ClearHistory();
     s_sessionInitialized = false;
 }
 
 void Win32IDE::rehydrateConversationSessionFromChatHistory()
 {
-    s_conversationSession = ConversationSession();
+    if (!smokeCopilotChatEnabled())
+    {
+        return;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(s_conversationSessionMutex);
+    s_conversationSession.Reset();
     const std::string kBaseSystem = "You are RawrXD AI, a highly capable coding assistant embedded in the "
                                     "RawrXD Sovereign IDE. You help with code generation, debugging, "
                                     "refactoring, and answering technical questions. Be concise and direct.";

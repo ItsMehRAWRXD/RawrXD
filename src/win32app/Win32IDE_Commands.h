@@ -10,6 +10,7 @@
 //   3060        View: collaboration
 //   3100–3117   Theme commands
 //   3200–3211   Transparency
+//   40001       Global accelerator: agentic halt (Esc → WM_COMMAND, no menu)
 //   4006–4014   Terminal (kill/split/clear/focus)
 //   4100–4120   Agent loop commands
 //   4150–4162   Autonomy + pipeline
@@ -19,7 +20,9 @@
 //   4271–4280   KnowledgeGraphCore (cross-session learning)
 //   4281–4299   FailureIntelligence Orchestrator (autonomous recovery)
 //   4300–4323   Reverse engineering / decompiler
-//   5001–5004   AI mode toggle controls (IDC_)
+//   5001–5006   AI mode toggles + token/context sliders (IDC_)
+//   5011        Agentic mode checkbox (IDC_)
+//   18710–18713 AI secondary sidebar caption statics (IDC_SIDEBAR_CAP_*)
 //   5037–5081   Backend switcher, LLM router, LSP, UX extras
 //   5200–5208   Plugin system
 //   5300–5321   AI extensions, Monaco/thermal, agent test
@@ -145,6 +148,9 @@
 #define IDM_TERMINAL_CLEAR_ALL 4014
 #define IDM_TERMINAL_NEW_USER 4011
 #define IDM_TERMINAL_NEW_AGENT 4012
+
+// ---- Global accelerators (40001; virtual key → WM_COMMAND; no menu item) ---
+#define ID_ACCEL_GLOBAL_HALT 40001
 
 // ---- Agent loop commands (4100–4120) ---------------------------------------
 #define IDM_AGENT_START_LOOP 4100
@@ -333,6 +339,13 @@
 #define IDC_AI_NO_REFUSAL 5004
 #define IDC_AI_MAX_TOKENS_SLIDER 5005
 #define IDC_AI_CONTEXT_SLIDER 5006
+#define IDC_AI_AGENTIC_MODE 5011
+
+// Secondary AI sidebar — STATIC captions (reflowed in SidebarProcImpl WM_SIZE)
+#define IDC_SIDEBAR_CAP_MODEL 18710
+#define IDC_SIDEBAR_CAP_MODE 18711
+#define IDC_SIDEBAR_CAP_MAXTOKENS 18712
+#define IDC_SIDEBAR_CAP_CONTEXT 18713
 
 // ---- AI Backend Switcher (5037–5047) ----------------------------------------
 #define IDM_BACKEND_SWITCH_LOCAL 5037
@@ -482,9 +495,26 @@
 #define IDM_BUILD_CLEAN 10401
 #define IDM_BUILD_REBUILD 10402
 
+// Tier 2/3 PostMessage IDs (11720, 12101) live as Win32IDE::IDM_TIER2_* constexprs — do not #define here.
+
+// ---- Secondary sidebar / search / metrics (IDC wiring manifest) ------------
+#define IDC_MODEL_EFFORT_LABEL 1212
+#define IDC_EDIT_REVIEW_STATUS_LABEL 14020
+#define IDC_EDIT_REVIEW_PREVIEW 14022
+#define IDC_SETTINGS_CLOSE 9906
+#define IDC_METRICS_TPS 9910
+#define IDC_METRICS_LAT 9911
+#define IDC_METRICS_BATCH 9912
+#define IDC_METRICS_KV 9913
+#define IDC_METRICS_CLOSE 9914
+// Workspace search panel (10901) — not IDC_SEARCH_INPUT (6020 in explorer sidebar)
+#define IDC_WORKSPACE_SEARCH_INPUT 10901
+#define IDC_SEARCH_BTN_FIND 10905
+
 // ---- Custom WM_APP window messages -----------------------------------------
 #define WM_FILE_CHANGED_EXTERNAL (WM_APP + 200)
 #define WM_GHOST_TEXT_READY (WM_APP + 400)
+#define WM_RAWRXD_GHOST_TEXT_CACHE_CLEAR (WM_APP + 438)
 #define WM_USER_GHOST_TOKEN (WM_USER + 101)
 #define WM_USER_GHOST_RENDER (WM_USER + 102)
 #define WM_USER_GHOST_COMPLETE (WM_USER + 103)
@@ -495,7 +525,22 @@
 #define WM_PLAN_READY (WM_APP + 500)
 #define WM_PLAN_STEP_DONE (WM_APP + 501)
 #define WM_PLAN_COMPLETE (WM_APP + 502)
+#define WM_AGENTIC_TELEMETRY_UPDATE (WM_APP + 505)
+#define WM_AGENTIC_TELEMETRY_DONE (WM_APP + 506)
+#define WM_USER_OBSERVABILITY_SYNC (WM_USER + 0x2001)
 #define WM_AGENT_HISTORY_REPLAY_DONE (WM_APP + 600)
+
+// Track B line-strip overlay: deferred strip bake (off WM_PAINT hot path)
+#define LINE_STRIP_SYNC_TIMER_ID 7788
+#define LINE_STRIP_SYNC_DELAY_MS 32
+
+// Agent chat phantom cursor overlay
+#define AGENT_CHAT_CURSOR_TIMER_ID 7789
+#define AGENT_CHAT_CURSOR_TIMER_MS 16
+#define LINE_STRIP_CARET_BLINK_TIMER_ID 7790
+#define LINE_STRIP_CARET_BLINK_MS 500
+#define WM_AGENT_CHAT_CURSOR_TARGET (WM_APP + 117)
+#define WM_AGENT_CHAT_CURSOR_PULSE (WM_APP + 118)
 
 // ---- Utility macro ---------------------------------------------------------
 #ifndef LOG_FUNCTION

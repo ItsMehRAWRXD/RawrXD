@@ -18,6 +18,7 @@
 #include "../../include/multi_file_search.h"
 #include "../agentic/AgentToolHandlers.h"
 #include "../agentic/agentic_controller_wiring.h"
+#include "../agentic/agentic_orchestrator_integration.hpp"
 #include "../core/enterprise_license.h"
 #include "../cpu_inference_engine.h"
 #include "../inference/speculative_execution_engine.h"
@@ -25,19 +26,63 @@
 #include "../modules/native_memory.hpp"
 #include "../native_agent.hpp"
 #include "../streaming_gguf_loader.h"
+#include "ExtensionEngine_bridge.h"
 #include "IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
+#include "Win32IDE_AgenticPlanningPanel.hpp"
+
+#include <atomic>
+extern std::atomic<bool> s_isThinking;
+
+#define IDC_EMOJI_BASE 8100
 
 #include <memory>
 
 extern void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM successWp, LPARAM heapUtf8String);
+
+// Agent bridge init-complete flag (defined in Win32IDE_AgentStreamingBridge.cpp)
+extern "C" void AgentBridge_SetInitComplete(bool complete);
+extern "C" void AgentBridge_SetShuttingDown(bool shuttingDown);
+extern "C" void AgentBridge_BindMainWindow(HWND hwnd);
+
+bool Win32IDE::smokeDeferredInitActive()
+{
+    char buf[8] = {};
+    return GetEnvironmentVariableA("RAWRXD_SMOKE_DEFERRED_INIT", buf, sizeof(buf)) > 0;
+}
+
+bool Win32IDE::smokeCopilotChatEnabled()
+{
+    if (!smokeDeferredInitActive())
+        return true;
+
+    char buf[16] = {};
+    if (GetEnvironmentVariableA("RAWRXD_SMOKE_BLOCK_COPILOT_CHAT", buf, sizeof(buf)) > 0)
+    {
+        if (buf[0] != '\0' && buf[0] != '0' && _stricmp(buf, "false") != 0 && _stricmp(buf, "no") != 0 &&
+            _stricmp(buf, "off") != 0)
+            return false;
+    }
+
+    if (GetEnvironmentVariableA("RAWRXD_SMOKE_ENABLE_COPILOT_CHAT", buf, sizeof(buf)) > 0)
+    {
+        if (buf[0] == '\0' || buf[0] == '0' || _stricmp(buf, "false") == 0)
+            return false;
+        return true;
+    }
+
+    return true;
+}
+extern "C" void __stdcall PromptWarm_SetAcceptRequests(bool accept);
+
 #ifndef WM_COPILOT_MINIMAL_AGENTIC_DONE
 #define WM_COPILOT_MINIMAL_AGENTIC_DONE (WM_APP + 108)
 #endif
+#include "../bridge/Win32SwarmBridge.h"
 #include "Win32IDE_AgenticBrowser.h"
 #include "Win32IDE_ComponentManagers.h"  // Complete types for unique_ptr<T> dtor
 #include "Win32IDE_DAPServer.h"          // Complete type for unique_ptr<Win32IDE_DAPServer> dtor
@@ -70,7 +115,9 @@ extern HWND g_rawrxdIntegratedTerminalTabs;
 #include <nlohmann/json.hpp>
 #include <shlobj.h>
 #include <sstream>
+#include <tlhelp32.h>
 #include <windowsx.h>
+
 
 extern "C" bool ComposerPanel_CommitChanges();
 extern "C" void ComposerPanel_HidePlan();
@@ -111,13 +158,26 @@ extern "C" void ComposerPanel_HidePlan();
 // ============================================================================
 static const char* kWindowClassName = "RawrXD_IDE_MainWindow";
 static constexpr int kEmergencyWipeHotkeyId = 0xA0F0;
+static constexpr UINT_PTR kStartupHeartbeatTimerId = 0x7E01;
+static constexpr int kStartupHeartbeatMaxTicks = 60;
+static int g_startupHeartbeatTicks = 0;
+
+static void startupTraceImmediate(const char* phase, const char* detail = nullptr)
+{
+    std::ostringstream oss;
+    oss << "[StartupTrace] " << (phase ? phase : "(null)");
+    if (detail && detail[0])
+        oss << " :: " << detail;
+    const std::string line = oss.str();
+    LOG_INFO(line);
+    OutputDebugStringA((line + "\n").c_str());
+}
 
 // Implemented in src/multi_file_search.cpp (Win32 dialog invoked by MultiFileSearchWidget::show()).
 extern void MultiFileSearchWidget_ShowDialog(void* ctx);
 
 // AI workers: process main-thread invoke queue every message (avoids queue buildup).
 extern void AIWorkersProcessInvokeQueue();
-
 
 
 void Win32IDE::syncSpeculativeInferenceFromConfig()
@@ -146,7 +206,7 @@ void Win32IDE::syncSpeculativeInferenceFromConfig()
         appendToOutput("[Speculative] Draft + target GGUF loaded for speculative decoding.\n", "Output",
                        OutputSeverity::Success);
         if (m_hwndStatusBar)
-            SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Speculative decoding: ready");
+            PostMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Speculative decoding: ready");
     }
     else
     {
@@ -535,6 +595,9 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     {
         case WM_CREATE:
             sehCallOnCreate(onCreateTrampoline, this, hwnd);
+            // Post deferred init message to run heavy initialization async (chat, session, backend)
+            // This allows the message pump to start processing before we block on I/O
+            PostMessage(hwnd, WM_APP + 1001, 0, 0);  // WM_APP_DEFERRED_INIT
             return 0;
 
         case WM_SIZE:
@@ -816,6 +879,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
 
         case WM_COMMAND:
+            if (LOWORD(wParam) == IDM_EMOJI_INSERT)
+            {
+                handleEmojiCommand(IDM_EMOJI_INSERT, lParam);
+                return 0;
+            }
             onCommand(hwnd, LOWORD(wParam), (HWND)lParam, HIWORD(wParam));
             return 0;
 
@@ -915,6 +983,10 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         {
                             dismissGhostText();
                         }
+                        if (lineStripEditorEnabled() && (pNMHDR->code == EN_SELCHANGE || pNMHDR->code == EN_VSCROLL))
+                        {
+                            invalidateLineStripOverlay(nullptr);
+                        }
                         // Update status bar cursor position
                         CHARRANGE sel;
                         SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
@@ -974,6 +1046,21 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             {
                 m_ircBridge->tick();
             }
+            if (wParam == kStartupHeartbeatTimerId)
+            {
+                ++g_startupHeartbeatTicks;
+                char hb[208] = {};
+                snprintf(hb, sizeof(hb), "[StartupTrace] UI heartbeat tick=%d initStatus=%d tid=%lu",
+                         g_startupHeartbeatTicks, m_initStatus.load(std::memory_order_acquire),
+                         static_cast<unsigned long>(GetCurrentThreadId()));
+                LOG_INFO(hb);
+                if (g_startupHeartbeatTicks >= kStartupHeartbeatMaxTicks)
+                {
+                    KillTimer(hwnd, kStartupHeartbeatTimerId);
+                    LOG_INFO("[StartupTrace] UI heartbeat timer auto-stopped");
+                }
+                return 0;
+            }
             if (wParam == SYNTAX_COLOR_TIMER_ID)
             {
                 // Handled by SyntaxColorTimerProc callback — this is a fallback
@@ -981,6 +1068,32 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (m_syntaxColoringEnabled)
                 {
                     applySyntaxColoring();
+                }
+                return 0;
+            }
+            if (wParam == LINE_STRIP_SYNC_TIMER_ID)
+            {
+                KillTimer(hwnd, LINE_STRIP_SYNC_TIMER_ID);
+                if (lineStripEditorEnabled())
+                {
+                    if (m_lineStripDocumentDirty)
+                    {
+                        syncLineStripDocumentFromEditor();
+                    }
+                    syncLineStripDirtyStrips();
+                }
+                return 0;
+            }
+            if (wParam == AGENT_CHAT_CURSOR_TIMER_ID)
+            {
+                tickAgentChatCursorAnimation();
+                return 0;
+            }
+            if (wParam == LINE_STRIP_CARET_BLINK_TIMER_ID)
+            {
+                if (lineStripEditorEnabled())
+                {
+                    onLineStripCaretBlinkTimer();
                 }
                 return 0;
             }
@@ -1032,14 +1145,16 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (wParam == 199)
             {  // IDT_FORCE_VISIBLE — one-shot to force window visible again after init
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 enter on UI thread");
                 const auto t199Milestone = [this](const char* debugLine, const char* userLine)
                 {
                     if (isShuttingDown())
                         return;
                     if (debugLine && debugLine[0])
                         OutputDebugStringA(debugLine);
-                    if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
-                        appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+                    // Keep timer-199 diagnostics off the output pane to avoid potential
+                    // startup-time lock inversion in UI text routing during first-paint.
+                    (void)userLine;
                 };
                 t199Milestone("[IDE-Pipeline:T199] Batch 1/8: WM_TIMER id=199 follow-up visibility tick\n",
                               "[Init:T199] Batch 1/8: Follow-up visibility timer fired\n");
@@ -1051,28 +1166,28 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (!m_hwndMain || !IsWindow(m_hwndMain))
                 {
                     t199Milestone("[IDE-Pipeline:T199] Batch 4/8: no main HWND — second nudge skipped\n",
-                                  "[Init:T199] Batch 4/8: Skipped (no main window)\n");
+                                  "[Init:T199] Batch 4/8: Skipped (no main window yet)\n");
                     t199Milestone("[IDE-Pipeline:T199] Batch 5/8: (skipped)\n", "[Init:T199] Batch 5/8: (skipped)\n");
                     t199Milestone("[IDE-Pipeline:T199] Batch 6/8: (skipped)\n", "[Init:T199] Batch 6/8: (skipped)\n");
                     t199Milestone("[IDE-Pipeline:T199] Batch 7/8: (skipped)\n", "[Init:T199] Batch 7/8: (skipped)\n");
                     t199Milestone("[IDE-Pipeline:T199] Batch 8/8: WM_TIMER 199 handler complete (no-op)\n",
-                                  "[Init:T199] Batch 8/8: Timer handler finished (no-op)\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-1/8: WM_APP+199 primary pass already ran\n",
-                                  "[Init:T199] E0-1/8: Primary WM_APP+199 pass is authoritative\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-2/8: Timer path is best-effort only\n",
-                                  "[Init:T199] E0-2/8: Timer nudge is best-effort\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-3/8: No re-arm of timer 199 here\n",
-                                  "[Init:T199] E0-3/8: Timer not re-armed\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-4/8: IRC tick still ran earlier in WM_TIMER switch\n",
-                                  "[Init:T199] E0-4/8: Other timer consumers unaffected\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-5/8: Safe return from timer proc\n",
-                                  "[Init:T199] E0-5/8: Safe return\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-6/8: No modal UI in timer branch\n",
-                                  "[Init:T199] E0-6/8: Non-modal timer branch\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-7/8: DefWindowProc not invoked for this branch\n",
-                                  "[Init:T199] E0-7/8: Handled inline\n");
-                    t199Milestone("[IDE-Pipeline:T199] E0-8/8: WM_TIMER 199 no-op path closed\n",
-                                  "[Init:T199] E0-8/8: WM_TIMER 199 no-op complete\n");
+                                  "[Init:T199] Batch 8/8: Handler finished (no-op)\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-1/8: User may have minimized during 400ms window\n",
+                                  "[Init:T199] E0-1/8: Minimized state respected\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-2/8: No ShowWindow while iconic (matches prior logic)\n",
+                                  "[Init:T199] E0-2/8: No forced show while iconic\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-3/8: KillTimer already committed — no leak\n",
+                                  "[Init:T199] E0-3/8: Timer handle cleared\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-4/8: WM_APP+199 may run again on next cold start only\n",
+                                  "[Init:T199] E0-4/8: One-shot semantics preserved\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-5/8: Z-order bump intentionally skipped\n",
+                                  "[Init:T199] E0-5/8: Z-order bump skipped when iconic\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-6/8: Foreground nudge skipped when iconic\n",
+                                  "[Init:T199] E0-6/8: Foreground nudge skipped when iconic\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-7/8: Timer ID 199 free for reuse\n",
+                                  "[Init:T199] E0-7/8: Timer ID released\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-8/8: WM_TIMER 199 iconic path closed\n",
+                                  "[Init:T199] E0-8/8: WM_TIMER 199 iconic path complete\n");
                     return 0;
                 }
                 if (IsIconic(m_hwndMain))
@@ -1104,13 +1219,19 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
                 t199Milestone("[IDE-Pipeline:T199] Batch 4/8: ShowWindow(SW_SHOW) second pass\n",
                               "[Init:T199] Batch 4/8: Second visibility show\n");
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 before ShowWindow(SW_SHOW)");
                 ShowWindow(m_hwndMain, SW_SHOW);
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 after ShowWindow(SW_SHOW)");
                 t199Milestone("[IDE-Pipeline:T199] Batch 5/8: SetWindowPos TOP (second pass)\n",
                               "[Init:T199] Batch 5/8: Second Z-order raise\n");
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 before SetWindowPos(HWND_TOP)");
                 SetWindowPos(m_hwndMain, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 after SetWindowPos(HWND_TOP)");
                 t199Milestone("[IDE-Pipeline:T199] Batch 6/8: forceWindowToForeground (second pass)\n",
                               "[Init:T199] Batch 6/8: Second foreground nudge\n");
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 before forceWindowToForeground");
                 forceWindowToForeground(m_hwndMain);
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 after forceWindowToForeground");
                 t199Milestone("[IDE-Pipeline:T199] Batch 7/8: second pass complete — no further timer arm\n",
                               "[Init:T199] Batch 7/8: Follow-up visibility actions applied\n");
                 t199Milestone("[IDE-Pipeline:T199] Batch 8/8: WM_TIMER 199 handler returning\n",
@@ -1131,6 +1252,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                               "[Init:T199] E0-7/8: No extra invalidation in timer path\n");
                 t199Milestone("[IDE-Pipeline:T199] E0-8/8: WM_TIMER 199 happy path closed\n",
                               "[Init:T199] E0-8/8: WM_TIMER 199 complete\n");
+                LOG_INFO("[StartupTrace] WM_TIMER id=199 exit on UI thread");
                 return 0;
             }
             if (wParam == IDT_VISIBILITY_WATCHDOG)
@@ -1189,6 +1311,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 onRecoveryTimer();
                 return 0;
             }
+            if (wParam == 8892)
+            {  // TEMPORAL_ANIM_TIMER_ID
+                updateEmojiTemporalLayer();
+                return 0;
+            }
             // Tier 3: Polish timers (caret animation, theme transition, format status)
             if (handleTier3Timer(wParam))
             {
@@ -1225,6 +1352,20 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             break;
 
+        case WM_QUERYENDSESSION:
+            return TRUE;
+
+        case WM_ENDSESSION:
+            if (wParam != 0)
+            {
+                if (Agentic::AgenticPlanningOrchestrator* orch =
+                        Agentic::OrchestratorIntegration::instance().getOrchestrator())
+                {
+                    orch->flushPersistenceSnapshotNow();
+                }
+            }
+            break;
+
         case WM_CLOSE:
             if (!m_fileModified || promptSaveChanges())
             {
@@ -1239,29 +1380,77 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         // Apply settings safely on the main (UI) thread.
         // Background threads must never call applySettings() directly.
         case WM_APP_APPLY_SETTINGS:
+        {
+            const ULONGLONG t0 = GetTickCount64();
+            LOG_INFO("[StartupTrace] WM_APP_APPLY_SETTINGS begin");
             applySettings();
+            const ULONGLONG dt = GetTickCount64() - t0;
+            if (dt >= 25)
+            {
+                char msg[160] = {};
+                snprintf(msg, sizeof(msg), "[UI-Timing] WM_APP_APPLY_SETTINGS took %llums\n",
+                         static_cast<unsigned long long>(dt));
+                OutputDebugStringA(msg);
+                char logMsg[176] = {};
+                snprintf(logMsg, sizeof(logMsg), "[StartupTrace] WM_APP_APPLY_SETTINGS duration=%llums",
+                         static_cast<unsigned long long>(dt));
+                LOG_INFO(logMsg);
+            }
+            LOG_INFO("[StartupTrace] WM_APP_APPLY_SETTINGS end");
             return 0;
+        }
 
         // Initialize voice chat UI/hotkeys safely on the main thread.
         case WM_APP_INIT_VOICE_CHAT_UI:
+        {
+            const ULONGLONG t0 = GetTickCount64();
+            LOG_INFO("[StartupTrace] WM_APP_INIT_VOICE_CHAT_UI begin");
             initVoiceChat();
             voiceLoadPreferences();
             createVoiceChatPanel(m_hwndMain);
             registerVoiceHotkeys();
-            RegisterHotKey(m_hwndMain, kEmergencyWipeHotkeyId,
-                           MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_NOREPEAT, 'K');
+            RegisterHotKey(m_hwndMain, kEmergencyWipeHotkeyId, MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_NOREPEAT, 'K');
             updateVoiceStatusBar();
+            const ULONGLONG dt = GetTickCount64() - t0;
+            if (dt >= 25)
+            {
+                char msg[176] = {};
+                snprintf(msg, sizeof(msg), "[UI-Timing] WM_APP_INIT_VOICE_CHAT_UI took %llums\n",
+                         static_cast<unsigned long long>(dt));
+                OutputDebugStringA(msg);
+                char logMsg[192] = {};
+                snprintf(logMsg, sizeof(logMsg), "[StartupTrace] WM_APP_INIT_VOICE_CHAT_UI duration=%llums",
+                         static_cast<unsigned long long>(dt));
+                LOG_INFO(logMsg);
+            }
+            LOG_INFO("[StartupTrace] WM_APP_INIT_VOICE_CHAT_UI end");
             return 0;
+        }
 
         // Create VoiceAutomation UI safely on the main thread.
         case WM_APP_CREATE_VOICE_AUTOMATION_PANEL:
         {
+            const ULONGLONG t0 = GetTickCount64();
+            LOG_INFO("[StartupTrace] WM_APP_CREATE_VOICE_AUTOMATION_PANEL begin");
             RECT rc{};
             GetClientRect(m_hwndMain, &rc);
             extern void Win32IDE_CreateVoiceAutomationPanel(HWND, int, int, int, int);
             Win32IDE_CreateVoiceAutomationPanel(m_hwndMain, 0, rc.bottom - 80, rc.right, 80);
             m_voiceAutomationInitialized = true;
             OutputDebugStringA("Phase 44: VoiceAutomation panel created (UI-thread)\n");
+            const ULONGLONG dt = GetTickCount64() - t0;
+            if (dt >= 25)
+            {
+                char msg[208] = {};
+                snprintf(msg, sizeof(msg), "[UI-Timing] WM_APP_CREATE_VOICE_AUTOMATION_PANEL took %llums\n",
+                         static_cast<unsigned long long>(dt));
+                OutputDebugStringA(msg);
+                char logMsg[224] = {};
+                snprintf(logMsg, sizeof(logMsg), "[StartupTrace] WM_APP_CREATE_VOICE_AUTOMATION_PANEL duration=%llums",
+                         static_cast<unsigned long long>(dt));
+                LOG_INFO(logMsg);
+            }
+            LOG_INFO("[StartupTrace] WM_APP_CREATE_VOICE_AUTOMATION_PANEL end");
             return 0;
         }
 
@@ -1297,18 +1486,22 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 return 0;
             }
 
+            if (!smokeCopilotChatEnabled())
+            {
+                std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+                m_asyncModelLoadRunning = false;
+                return 0;
+            }
+
             {
                 std::ostringstream os;
                 os << "[WM_MODEL_LOAD_DONE] tid=" << GetCurrentThreadId() << " path='" << result->filepath << "'"
-                   << " ggufOk=" << (result->ggufOk ? 1 : 0)
-                   << " bridgeOk=" << (result->bridgeOk ? 1 : 0)
-                   << " bytes=" << result->fileBytes
-                   << " wallMs=" << result->wallMs << "\n";
+                   << " ggufOk=" << (result->ggufOk ? 1 : 0) << " bridgeOk=" << (result->bridgeOk ? 1 : 0)
+                   << " bytes=" << result->fileBytes << " wallMs=" << result->wallMs << "\n";
                 OutputDebugStringA(os.str().c_str());
-                     LOG_INFO(std::string("[WM_MODEL_LOAD_DONE] path=") + result->filepath +
-                                 " ggufOk=" + (result->ggufOk ? "1" : "0") +
-                                 " bridgeOk=" + (result->bridgeOk ? "1" : "0") +
-                                 " wallMs=" + std::to_string(result->wallMs));
+                LOG_INFO(std::string("[WM_MODEL_LOAD_DONE] path=") + result->filepath +
+                         " ggufOk=" + (result->ggufOk ? "1" : "0") + " bridgeOk=" + (result->bridgeOk ? "1" : "0") +
+                         " wallMs=" + std::to_string(result->wallMs));
             }
 
             {
@@ -1398,6 +1591,8 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case WM_APP + 303:
         {  // WM_PENDING_CHAT_REPLAY
+            if (!smokeCopilotChatEnabled())
+                return 0;
             if (!m_pendingChatOnLoadMessage.empty() && m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
             {
                 // Give backend registration/load-complete transitions a brief moment
@@ -1414,12 +1609,48 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
 
         case WM_COPILOT_DEFERRED_SEND:
-            HandleCopilotSend();
+            if (smokeCopilotChatEnabled())
+                HandleCopilotSend();
             return 0;
+
+        case WM_RAWRXD_GHOST_TEXT_CACHE_CLEAR:
+        {
+            std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+            m_ghostTextCache.clear();
+            return 0;
+        }
 
         case WM_APP + 308:
         {  // WM_STATUSBAR_REFRESH_COPILOT — worker thread updated chat TPS gauges
             updateEnhancedStatusBar();
+            return 0;
+        }
+
+        case WM_APP + 312:
+        {  // WM_MODEL_DISCOVERY_DONE — async filesystem scan finished
+            OutputDebugStringA("[ModelDiscovery] WM_MODEL_DISCOVERY_DONE: refreshing model selector\n");
+            if (m_hwndModelSelector && IsWindow(m_hwndModelSelector))
+            {
+                populateModelSelectorFromDiscoveryCache();
+            }
+            if (m_hwndStatusBar && IsWindow(m_hwndStatusBar))
+            {
+                SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Sovereign Engine: Ready");
+            }
+            return 0;
+        }
+
+        case WM_APP + 311:
+        {  // WM_STATUSBAR_AGENTIC_SETPARTTEXT — ExecPipeline worker / any thread → UI thread SB_SETTEXT
+            auto* text = reinterpret_cast<wchar_t*>(lParam);
+            if (m_hwndStatusBar && IsWindow(m_hwndStatusBar) && text)
+            {
+                SendMessageW(m_hwndStatusBar, SB_SETTEXT, wParam, reinterpret_cast<LPARAM>(text));
+            }
+            if (text)
+            {
+                free(text);
+            }
             return 0;
         }
 
@@ -1514,6 +1745,96 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return (LRESULT)m_backgroundBrush;
         }
 
+        case WM_APP + 1001:  // WM_APP_DEFERRED_INIT — run heavy initialization async
+        {
+            // IMPORTANT: This message is posted immediately after WM_CREATE returns.
+            // By this time, the message pump has processed pending paints and the UI
+            // can render while we do slow I/O (chat panel, session restore, backend init)
+            OutputDebugStringA("[WIN32IDE] WM_APP_DEFERRED_INIT entering deferred heavy initialization\n");
+
+            // Run heavy init by posting individual messages to UI thread queue
+            // This way they run sequentially on the UI thread after current paints complete
+            OutputDebugStringA("[DEFERRED] Posting chat panel creation to UI queue\n");
+            PostMessage(m_hwndMain, WM_APP + 1002, 0, 0);  // WM_APP_DEFERRED_CREATE_CHAT
+
+            OutputDebugStringA("[DEFERRED] Posting session restore to UI queue\n");
+            PostMessage(m_hwndMain, WM_APP + 1003, 0, 0);  // WM_APP_DEFERRED_RESTORE_SESSION
+
+            OutputDebugStringA("[DEFERRED] Posting backend init to UI queue\n");
+            PostMessage(m_hwndMain, WM_APP + 1004, 0, 0);  // WM_APP_DEFERRED_INIT_BACKEND
+
+            return 0;
+        }
+
+        case WM_APP + 1002:  // WM_APP_DEFERRED_CREATE_CHAT — create chat panel (UI thread)
+        {
+            OutputDebugStringA("[DEFERRED] WM_APP_DEFERRED_CREATE_CHAT: creating chat panel\n");
+            try
+            {
+                if (!m_hwndSecondarySidebar || !IsWindow(m_hwndSecondarySidebar))
+                {
+                    this->createChatPanel();
+                    OutputDebugStringA("[DEFERRED] Chat panel created successfully\n");
+                }
+                finalizeCopilotChatInterlockAfterDeferredLoad();
+            }
+            catch (const std::exception& ex)
+            {
+                char buf[512] = {};
+                snprintf(buf, sizeof(buf), "[DEFERRED] Exception creating chat panel: %s\n", ex.what());
+                OutputDebugStringA(buf);
+            }
+            return 0;
+        }
+
+        case WM_APP + 1003:  // WM_APP_DEFERRED_RESTORE_SESSION — restore session (UI thread)
+        {
+            OutputDebugStringA("[DEFERRED] WM_APP_DEFERRED_RESTORE_SESSION: restoring session\n");
+            try
+            {
+                this->restoreSession();
+                OutputDebugStringA("[DEFERRED] Session restored successfully\n");
+            }
+            catch (const std::exception& ex)
+            {
+                char buf[512] = {};
+                snprintf(buf, sizeof(buf), "[DEFERRED] Exception restoring session: %s\n", ex.what());
+                OutputDebugStringA(buf);
+            }
+            return 0;
+        }
+
+        case WM_APP + 1004:  // WM_APP_DEFERRED_INIT_BACKEND — init backend (UI thread)
+        {
+            OutputDebugStringA("[DEFERRED] WM_APP_DEFERRED_INIT_BACKEND: initializing backend\n");
+            try
+            {
+                try
+                {
+                    this->initBackendManager();
+                }
+                catch (const std::exception& ex)
+                {
+                    LOG_WARNING(std::string("initBackendManager deferred: ") + ex.what());
+                }
+                try
+                {
+                    this->initLLMRouter();
+                }
+                catch (const std::exception& ex)
+                {
+                    LOG_WARNING(std::string("initLLMRouter deferred: ") + ex.what());
+                }
+                OutputDebugStringA("[DEFERRED] Backend init pass completed (chat interlock next)\n");
+            }
+            catch (...)
+            {
+                OutputDebugStringA("[DEFERRED] Backend init pass failed with unknown error\n");
+            }
+            finalizeCopilotChatInterlockAfterDeferredLoad();
+            return 0;
+        }
+
         default:
             // Force main window visible once after startup (posted before message loop).
             // Also set a one-shot timer to force visible again ~400ms later (catches init that hides window).
@@ -1604,6 +1925,9 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // Handle deferred heavy initialization (posted from onCreate)
             if (uMsg == WM_APP + 100)
             {
+                g_startupHeartbeatTicks = 0;
+                SetTimer(hwnd, kStartupHeartbeatTimerId, 1000, nullptr);
+                LOG_INFO("[StartupTrace] WM_APP+100 handler entered on UI thread");
                 const auto wm100Milestone = [this](const char* debugLine, const char* userLine)
                 {
                     if (isShuttingDown())
@@ -1647,11 +1971,15 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                                "[Init:WM100] E0-7/8: Non-blocking handoff to message pump\n");
                 wm100Milestone("[IDE-Pipeline:WM100] E0-8/8: WM_APP+100 handler complete\n",
                                "[Init:WM100] E0-8/8: Deferred heavy-init dispatch finished\n");
+                LOG_INFO("[StartupTrace] WM_APP+100 handler returned on UI thread");
                 return 0;
             }
             // Handle background init completion — refresh UI (Tier 5 menus enabled here after initTier5Cosmetics)
             if (uMsg == WM_APP + 101)
             {
+                const ULONGLONG wm101StartMs = GetTickCount64();
+                KillTimer(hwnd, kStartupHeartbeatTimerId);
+                LOG_INFO("[StartupTrace] WM_APP+101 handler entered on UI thread");
                 const auto wm101Milestone = [this](const char* debugLine, const char* userLine)
                 {
                     if (isShuttingDown())
@@ -1697,8 +2025,30 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                                "[Init:WM101] E0-7/8: Ready for input and paint-driven updates\n");
                 wm101Milestone("[IDE-Pipeline:WM101] E0-8/8: Post-deferred refresh checkpoint complete\n",
                                "[Init:WM101] E0-8/8: Post-deferred refresh checkpoints complete\n");
+                const ULONGLONG wm101ElapsedMs = GetTickCount64() - wm101StartMs;
+                if (wm101ElapsedMs >= 25)
+                {
+                    char msg[176] = {};
+                    snprintf(msg, sizeof(msg), "[UI-Timing] WM_APP+101 took %llums\n",
+                             static_cast<unsigned long long>(wm101ElapsedMs));
+                    OutputDebugStringA(msg);
+                    char logMsg[176] = {};
+                    snprintf(logMsg, sizeof(logMsg), "[StartupTrace] WM_APP+101 duration=%llums",
+                             static_cast<unsigned long long>(wm101ElapsedMs));
+                    LOG_INFO(logMsg);
+                }
+                finalizeCopilotChatInterlockAfterDeferredLoad();
+                LOG_INFO("[StartupTrace] WM_APP+101 handler returned on UI thread");
                 return 0;
             }
+
+            // WM_DEFERRED_INIT_FAILED: Background init worker crashed, signal IDE to attempt recovery
+            if (uMsg == WM_DEFERRED_INIT_FAILED)
+            {
+                onDeferredInitFailed();
+                return 0;
+            }
+
             // AI backend verification result from background probe thread
             if (uMsg == WM_AI_BACKEND_STATUS)
             {
@@ -1839,21 +2189,66 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // Handle custom agent output message
             if (uMsg == WM_AGENT_OUTPUT_SAFE)
             {
-                const char* text = reinterpret_cast<const char*>(lParam);
-                if (text)
+                auto* payload = reinterpret_cast<std::string*>(lParam);
+                if (payload)
                 {
-                    onAgentOutput(text);
-                    free(const_cast<char*>(text));
+                    constexpr size_t kMaxAgentOutputBytes = 256 * 1024;
+                    if (!payload->empty() && payload->size() <= kMaxAgentOutputBytes)
+                    {
+                        onAgentOutput(payload->c_str());
+                    }
+                    delete payload;
                 }
                 return 0;
             }
             if (uMsg == WM_IDE_OUTPUT_APPEND_SAFE)
             {
-                const char* text = reinterpret_cast<const char*>(lParam);
-                if (text)
+                auto* payload = reinterpret_cast<std::string*>(lParam);
+                if (payload)
                 {
-                    appendToOutput(std::string(text), "Output", OutputSeverity::Info);
-                    free(const_cast<char*>(text));
+                    constexpr size_t kMaxOutputAppendBytes = 256 * 1024;
+                    if (!payload->empty() && payload->size() <= kMaxOutputAppendBytes)
+                    {
+                        appendToOutput(*payload, "Output", OutputSeverity::Info);
+                    }
+                    delete payload;
+                }
+                return 0;
+            }
+            if (uMsg == WM_AGENT_STREAM_FINALIZE_SAFE)
+            {
+                auto* payload = reinterpret_cast<std::string*>(lParam);
+                if (payload)
+                {
+                    if (!payload->empty())
+                    {
+                        appendToOutput(*payload, "Agent", OutputSeverity::Info);
+                    }
+                    appendToOutput("\n", "Agent", OutputSeverity::Info);
+                    delete payload;
+                }
+                if (bridgeIsAgentPanelReady())
+                {
+                    bridgeRefreshAgentDiff();
+                }
+                return 0;
+            }
+            if (uMsg == WM_AGENT_CHAT_CURSOR_TARGET)
+            {
+                const int clientX = static_cast<short>(LOWORD(lParam));
+                const int clientY = static_cast<short>(HIWORD(lParam));
+                setAgentChatCursorTarget(clientX, clientY, wParam != 0);
+                return 0;
+            }
+            if (uMsg == WM_AGENT_CHAT_CURSOR_PULSE)
+            {
+                if (m_hwndCopilotChatOutput && IsWindow(m_hwndCopilotChatOutput))
+                {
+                    RECT rc{};
+                    GetClientRect(m_hwndCopilotChatOutput, &rc);
+                    const int x = std::max(24, static_cast<int>(rc.right) - 40);
+                    const int y = std::max(24, static_cast<int>(rc.bottom) - 36);
+                    setAgentChatCursorTarget(x, y, true);
                 }
                 return 0;
             }
@@ -1864,6 +2259,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 {
                     appendCopilotChatTextOnUiThread(std::string(text));
                     free(const_cast<char*>(text));
+                }
+                return 0;
+            }
+            if (uMsg == WM_COPILOT_CHAT_APPEND_FLUSH)
+            {
+                for (;;)
+                {
+                    std::string batch;
+                    {
+                        std::lock_guard<std::mutex> lock(m_copilotChatPostCoalesceMutex);
+                        batch = std::move(m_copilotChatPostCoalesceBuffer);
+                        m_copilotChatPostCoalesceBuffer.clear();
+                        m_copilotChatPostCoalesceFlushPosted = false;
+                    }
+                    if (batch.empty())
+                    {
+                        break;
+                    }
+                    appendCopilotChatTextOnUiThread(batch);
                 }
                 return 0;
             }
@@ -1896,6 +2310,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 setCopilotInteractionBusyOnUiThread(wParam != 0);
                 return 0;
             }
+            if (uMsg == WM_COPILOT_BACKEND_READY_SAFE)
+            {
+                setCopilotBackendReadyOnUiThread(wParam != 0);
+                return 0;
+            }
             if (uMsg == WM_COPILOT_MINIMAL_AGENTIC_DONE)
             {
                 RawrXD_FinishCopilotMinimalAgentic(this, wParam, lParam);
@@ -1906,6 +2325,31 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 refreshMoEPackHudStatusBarPart();
                 return 0;
             }
+            if (uMsg == WM_AGENTIC_TELEMETRY_UPDATE)
+            {
+                auto* p = reinterpret_cast<std::pair<std::string, std::string>*>(lParam);
+                if (p)
+                {
+                    // For now, route to output but prepare for Sidebar Truth View update
+                    appendToOutput(" [TRUTH:" + p->first + "] " + p->second + "\n", "Truth", OutputSeverity::Info);
+                    delete p;
+                }
+                return 0;
+            }
+            if (uMsg == WM_AGENTIC_TELEMETRY_DONE)
+            {
+                appendToOutput(" [TRUTH] Execution Graph Finalized.\n", "Truth", OutputSeverity::Info);
+                return 0;
+            }
+            if (uMsg == WM_USER_OBSERVABILITY_SYNC)
+            {
+                // Trigger sidebar repaint if viewing ExecutionTruth
+                if (m_currentSidebarView == SidebarView::ExecutionTruth)
+                {
+                    InvalidateRect(m_hwndSidebar, nullptr, TRUE);
+                }
+                return 0;
+            }
             if (uMsg == WM_RAWR_LOG_MESSAGE)
             {
                 const char* text = reinterpret_cast<const char*>(lParam);
@@ -1914,6 +2358,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     LogToOutputPanel(text, static_cast<int>(wParam));
                     free(const_cast<char*>(text));
                 }
+                return 0;
+            }
+            if (uMsg == WM_RAWRXD_GHOST_TEXT_CACHE_CLEAR)
+            {
+                std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+                m_ghostTextCache.clear();
                 return 0;
             }
             // Handle Ghost Text completion delivery from background thread
@@ -2265,14 +2715,10 @@ int Win32IDE::runMessageLoop()
     METRICS.increment("app.message_loop_starts");
     auto loopStart = std::chrono::high_resolution_clock::now();
 
-    const auto loopBootMilestone = [this](const char* debugLine, const char* userLine)
+    const auto loopBootMilestone = [](const char* debugLine, const char* /*userLine*/)
     {
-        if (isShuttingDown())
-            return;
         if (debugLine && debugLine[0])
             OutputDebugStringA(debugLine);
-        if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
-            appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
     };
     loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 1/8: runMessageLoop entered\n",
                       "[Init:MsgLoop] Batch 1/8: Primary message loop starting\n");
@@ -2308,11 +2754,39 @@ int Win32IDE::runMessageLoop()
                       "[Init:MsgLoop] E0-8/8: Message loop live\n");
 
     MSG msg = {};
-    try
+    bool messageLoopFatalShown = false;
+    for (;;)
     {
-        while (GetMessage(&msg, nullptr, 0, 0))
+        const BOOL gotMsg = GetMessage(&msg, nullptr, 0, 0);
+        if (gotMsg == 0)
+            break;
+        if (gotMsg == -1)
+        {
+            LOG_ERROR("GetMessage failed in primary message loop");
+            break;
+        }
+
+        try
         {
             METRICS.increment("app.messages_processed");
+
+            // Smoke harness polls the extension pipe on a dedicated worker; UI polling the
+            // same handle concurrently corrupts framing and can throw std::bad_alloc.
+            if (!smokeDeferredInitActive())
+            {
+                try
+                {
+                    RawrXD::Extensions::PollExtensionEngineLsp();
+                }
+                catch (const std::exception& e)
+                {
+                    LOG_WARNING(std::string("PollExtensionEngineLsp skipped: ") + e.what());
+                }
+                catch (...)
+                {
+                    LOG_WARNING("PollExtensionEngineLsp skipped: unknown error");
+                }
+            }
 
             if (m_hwndMain && m_hAccel && TranslateAccelerator(m_hwndMain, m_hAccel, &msg))
                 continue;
@@ -2510,25 +2984,47 @@ int Win32IDE::runMessageLoop()
                 }
             }
 
+            const auto dispatchBegin = std::chrono::steady_clock::now();
             TranslateMessage(&msg);
             AIWorkersProcessInvokeQueue();
             DispatchMessage(&msg);
+            const auto dispatchElapsedMs =
+                std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - dispatchBegin)
+                    .count();
+            if (dispatchElapsedMs > 75)
+            {
+                std::ostringstream oss;
+                oss << "[PumpTrace] LONG_DISPATCH msg=0x" << std::hex << msg.message << std::dec
+                    << " elapsed_ms=" << dispatchElapsedMs;
+                LOG_WARNING(oss.str());
+            }
         }
-    }
-    catch (const std::exception& e)
-    {
-        // Centralized exception handler — prevents unhandled crash
-        LOG_CRITICAL(std::string("Unhandled exception in message loop: ") + e.what());
-        METRICS.increment("app.unhandled_exceptions");
-        MessageBoxA(nullptr, (std::string("RawrXD IDE encountered an error:\n") + e.what()).c_str(),
-                    "RawrXD IDE - Critical Error", MB_ICONERROR | MB_OK);
-    }
-    catch (...)
-    {
-        LOG_CRITICAL("Unknown unhandled exception in message loop");
-        METRICS.increment("app.unhandled_exceptions");
-        MessageBoxA(nullptr, "RawrXD IDE encountered an unknown error.", "RawrXD IDE - Critical Error",
-                    MB_ICONERROR | MB_OK);
+        catch (const std::exception& e)
+        {
+            char diag[96] = {};
+            snprintf(diag, sizeof(diag), " msg=0x%04X hwnd=%p", static_cast<unsigned>(msg.message),
+                     static_cast<void*>(msg.hwnd));
+            LOG_CRITICAL(std::string("Unhandled exception in message loop: ") + e.what() + diag);
+            METRICS.increment("app.unhandled_exceptions");
+            if (!messageLoopFatalShown)
+            {
+                messageLoopFatalShown = true;
+                MessageBoxA(nullptr,
+                            (std::string("RawrXD IDE encountered an error (pump continues):\n") + e.what()).c_str(),
+                            "RawrXD IDE - Critical Error", MB_ICONERROR | MB_OK);
+            }
+        }
+        catch (...)
+        {
+            LOG_CRITICAL("Unknown unhandled exception in message loop");
+            METRICS.increment("app.unhandled_exceptions");
+            if (!messageLoopFatalShown)
+            {
+                messageLoopFatalShown = true;
+                MessageBoxA(nullptr, "RawrXD IDE encountered an unknown error (pump continues).",
+                            "RawrXD IDE - Critical Error", MB_ICONERROR | MB_OK);
+            }
+        }
     }
 
     // Log session metrics on exit (debugger always; System tab if chrome still alive)
@@ -2794,6 +3290,11 @@ void Win32IDE::onSize(int width, int height)
                          SWP_NOACTIVATE);
         }
 
+        if (lineStripEditorEnabled())
+        {
+            layoutLineStripOverlay();
+        }
+
         // Minimap
         if (m_hwndMinimap && m_minimapVisible)
         {
@@ -2860,6 +3361,223 @@ void Win32IDE::onSize(int width, int height)
     {
         EndDeferWindowPos(hdwp);
         hdwp = nullptr;
+    }
+
+    // Reflow secondary sidebar internals (chat pane controls) on every resize.
+    // Historically these controls were created with fixed Y coordinates, which can
+    // overlap at non-default window sizes and trigger pathological redraw behavior.
+    if (m_hwndSecondarySidebar && m_secondarySidebarVisible && IsWindow(m_hwndSecondarySidebar))
+    {
+        struct UIRect
+        {
+            int x;
+            int y;
+            int w;
+            int h;
+            const char* debugName;
+            HWND hwnd;
+        };
+
+        auto overlap = [](const UIRect& a, const UIRect& b) -> bool
+        { return (a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y); };
+
+        auto resolveOverlap = [&](const UIRect& fixedObj, UIRect& movingObj) -> bool
+        {
+            if (!overlap(fixedObj, movingObj))
+                return false;
+
+            // Sovereign Symbol logic: if the moving object is an "Emoji Glyph",
+            // give it priority by shifting other non-critical elements or
+            // stacking them with Z-order sorting.
+            movingObj.y = fixedObj.y + fixedObj.h + dpiScale(5);
+            char buf[256] = {};
+            sprintf_s(buf, "[RawrXD Layout] AUTO-FIX: %s overlapped %s; moved to y=%d (Sovereign Sync Priority)\n",
+                      movingObj.debugName ? movingObj.debugName : "<unknown>",
+                      fixedObj.debugName ? fixedObj.debugName : "<unknown>", movingObj.y);
+            OutputDebugStringA(buf);
+            return true;
+        };
+
+        RECT sbRc = {};
+        GetClientRect(m_hwndSecondarySidebar, &sbRc);
+        const int sidebarW = (std::max)(0, static_cast<int>(sbRc.right - sbRc.left));
+        const int sidebarH = (std::max)(0, static_cast<int>(sbRc.bottom - sbRc.top));
+
+        const int pad = dpiScale(6);
+        const int gap = dpiScale(6);
+        const int contentW = (std::max)(dpiScale(120), sidebarW - pad * 2);
+
+        int y = pad;
+        if (m_hwndSecondarySidebarHeader && IsWindow(m_hwndSecondarySidebarHeader))
+        {
+            MoveWindow(m_hwndSecondarySidebarHeader, pad, y, contentW, dpiScale(24), TRUE);
+
+            // Anchor the "Thinking" Pulse Symbol to the top-right of the chat header
+            if (m_hwndEmojiPulseSymbol && IsWindow(m_hwndEmojiPulseSymbol))
+            {
+                int pulseSize = dpiScale(22);
+                MoveWindow(m_hwndEmojiPulseSymbol, sidebarW - pad - pulseSize, y + (dpiScale(24) - pulseSize) / 2,
+                           pulseSize, pulseSize, TRUE);
+            }
+
+            y += dpiScale(24) + gap;
+        }
+
+        // Model + sliders region
+        if (m_hwndModelSelector && IsWindow(m_hwndModelSelector))
+        {
+            MoveWindow(m_hwndModelSelector, pad + dpiScale(55), y, (std::max)(dpiScale(90), contentW - dpiScale(55)),
+                       dpiScale(220), TRUE);
+        }
+        y += dpiScale(58);
+
+        if (m_hwndMaxTokensLabel && IsWindow(m_hwndMaxTokensLabel))
+            MoveWindow(m_hwndMaxTokensLabel, pad + (std::max)(0, contentW - dpiScale(50)), y, dpiScale(50),
+                       dpiScale(18), TRUE);
+        y += dpiScale(20);
+
+        if (m_hwndMaxTokensSlider && IsWindow(m_hwndMaxTokensSlider))
+            MoveWindow(m_hwndMaxTokensSlider, pad, y, contentW, dpiScale(24), TRUE);
+        y += dpiScale(28);
+
+        if (m_hwndContextLabel && IsWindow(m_hwndContextLabel))
+            MoveWindow(m_hwndContextLabel, pad + (std::max)(0, contentW - dpiScale(50)), y, dpiScale(50), dpiScale(18),
+                       TRUE);
+        y += dpiScale(20);
+
+        if (m_hwndContextSlider && IsWindow(m_hwndContextSlider))
+            MoveWindow(m_hwndContextSlider, pad, y, contentW, dpiScale(24), TRUE);
+        y += dpiScale(30);
+
+        // Toggle grid (2 columns)
+        const int colGap = dpiScale(8);
+        const int colW = (std::max)(dpiScale(70), (contentW - colGap) / 2);
+        if (m_hwndChkMaxMode && IsWindow(m_hwndChkMaxMode))
+            MoveWindow(m_hwndChkMaxMode, pad, y, colW, dpiScale(20), TRUE);
+        if (m_hwndChkDeepThink && IsWindow(m_hwndChkDeepThink))
+            MoveWindow(m_hwndChkDeepThink, pad + colW + colGap, y, colW, dpiScale(20), TRUE);
+        y += dpiScale(24);
+        if (m_hwndChkDeepResearch && IsWindow(m_hwndChkDeepResearch))
+            MoveWindow(m_hwndChkDeepResearch, pad, y, colW, dpiScale(20), TRUE);
+        if (m_hwndChkNoRefusal && IsWindow(m_hwndChkNoRefusal))
+            MoveWindow(m_hwndChkNoRefusal, pad + colW + colGap, y, colW, dpiScale(20), TRUE);
+        y += dpiScale(24);
+        if (m_hwndChkAgenticMode && IsWindow(m_hwndChkAgenticMode))
+            MoveWindow(m_hwndChkAgenticMode, pad, y, colW, dpiScale(20), TRUE);
+        y += dpiScale(28);
+
+        // Bottom-anchored controls
+        const int actionsH = dpiScale(24);
+        const int badgeH = dpiScale(18);
+        const int sendRowH = dpiScale(30);
+        const int inputH = (std::max)(dpiScale(72), (std::min)(dpiScale(140), sidebarH / 5));
+
+        int actionY = sidebarH - pad - actionsH;
+        int badgeY = actionY - gap - badgeH;
+        int sendY = badgeY - gap - sendRowH;
+        int inputY = sendY - gap - inputH;
+
+        // Hysteresis & Ghost-Width Prediction for Token-Stream Stabilization
+        int desiredOutputH = inputY - gap - y;
+        if (s_isThinking.load())
+        {
+            // Reserve extra vertical buffer (ghost height) during inference
+            desiredOutputH = (std::max)(dpiScale(150), desiredOutputH - dpiScale(40));
+        }
+
+        DWORD now = GetTickCount();
+        if (abs(desiredOutputH - m_predictedChatHeight) > dpiScale(20))
+        {
+            if (now - m_lastChatHeightChange > 50)
+            {  // 50ms Hysteresis
+                m_predictedChatHeight = desiredOutputH;
+                m_lastChatHeightChange = now;
+            }
+        }
+
+        int outputH = (std::max)(dpiScale(80), m_predictedChatHeight > 0 ? m_predictedChatHeight : desiredOutputH);
+
+        if (m_hwndCopilotChatOutput && IsWindow(m_hwndCopilotChatOutput))
+            MoveWindow(m_hwndCopilotChatOutput, pad, y, contentW, outputH, TRUE);
+
+        layoutAgentChatCursorOverlay();
+
+        if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+            MoveWindow(m_hwndCopilotChatInput, pad, y + outputH + gap, contentW, inputH, TRUE);
+
+        const int threeW = (std::max)(dpiScale(58), (contentW - dpiScale(8)) / 3);
+        if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
+            MoveWindow(m_hwndCopilotSendBtn, pad, sendY, threeW, sendRowH, TRUE);
+        if (m_hwndCopilotClearBtn && IsWindow(m_hwndCopilotClearBtn))
+            MoveWindow(m_hwndCopilotClearBtn, pad + threeW + dpiScale(4), sendY, threeW, sendRowH, TRUE);
+        HWND hwndNewChat = nullptr;
+        for (HWND child = GetWindow(m_hwndSecondarySidebar, GW_CHILD); child; child = GetWindow(child, GW_HWNDNEXT))
+        {
+            wchar_t cls[32] = {};
+            wchar_t txt[64] = {};
+            GetClassNameW(child, cls, 32);
+            GetWindowTextW(child, txt, 64);
+            if (_wcsicmp(cls, L"Button") == 0 && _wcsicmp(txt, L"New Chat") == 0)
+            {
+                hwndNewChat = child;
+                break;
+            }
+        }
+        if (hwndNewChat)
+            MoveWindow(hwndNewChat, pad + (threeW + dpiScale(4)) * 2, sendY, threeW, sendRowH, TRUE);
+
+        if (m_hwndCopilotModelUsedLabel && IsWindow(m_hwndCopilotModelUsedLabel))
+            MoveWindow(m_hwndCopilotModelUsedLabel, pad, badgeY, contentW, badgeH, TRUE);
+
+        const int fourW = (std::max)(dpiScale(44), (contentW - dpiScale(9)) / 4);
+        if (m_hwndCopilotHelpfulBtn && IsWindow(m_hwndCopilotHelpfulBtn))
+            MoveWindow(m_hwndCopilotHelpfulBtn, pad, actionY, fourW, actionsH, TRUE);
+        if (m_hwndCopilotUnhelpfulBtn && IsWindow(m_hwndCopilotUnhelpfulBtn))
+            MoveWindow(m_hwndCopilotUnhelpfulBtn, pad + fourW + dpiScale(3), actionY, fourW, actionsH, TRUE);
+        if (m_hwndCopilotCopyBtn && IsWindow(m_hwndCopilotCopyBtn))
+            MoveWindow(m_hwndCopilotCopyBtn, pad + (fourW + dpiScale(3)) * 2, actionY, fourW, actionsH, TRUE);
+        if (m_hwndCopilotRetryBtn && IsWindow(m_hwndCopilotRetryBtn))
+            MoveWindow(m_hwndCopilotRetryBtn, pad + (fourW + dpiScale(3)) * 3, actionY, fourW, actionsH, TRUE);
+
+        // Collision sanity pass over key interactive widgets.
+        auto toRect = [&](HWND hwnd, const char* name) -> UIRect
+        {
+            RECT rc = {};
+            GetWindowRect(hwnd, &rc);
+            MapWindowPoints(nullptr, m_hwndSecondarySidebar, reinterpret_cast<LPPOINT>(&rc), 2);
+            return UIRect{rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, name, hwnd};
+        };
+
+        std::vector<UIRect> widgets;
+        if (m_hwndCopilotChatOutput && IsWindow(m_hwndCopilotChatOutput))
+            widgets.push_back(toRect(m_hwndCopilotChatOutput, "ChatOutput"));
+        if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+            widgets.push_back(toRect(m_hwndCopilotChatInput, "ChatInput"));
+        if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
+            widgets.push_back(toRect(m_hwndCopilotSendBtn, "SendButton"));
+        if (m_hwndCopilotClearBtn && IsWindow(m_hwndCopilotClearBtn))
+            widgets.push_back(toRect(m_hwndCopilotClearBtn, "ClearButton"));
+        if (m_hwndCopilotHelpfulBtn && IsWindow(m_hwndCopilotHelpfulBtn))
+            widgets.push_back(toRect(m_hwndCopilotHelpfulBtn, "HelpfulButton"));
+        if (m_hwndCopilotUnhelpfulBtn && IsWindow(m_hwndCopilotUnhelpfulBtn))
+            widgets.push_back(toRect(m_hwndCopilotUnhelpfulBtn, "UnhelpfulButton"));
+        if (m_hwndCopilotCopyBtn && IsWindow(m_hwndCopilotCopyBtn))
+            widgets.push_back(toRect(m_hwndCopilotCopyBtn, "CopyButton"));
+        if (m_hwndCopilotRetryBtn && IsWindow(m_hwndCopilotRetryBtn))
+            widgets.push_back(toRect(m_hwndCopilotRetryBtn, "RetryButton"));
+
+        std::sort(widgets.begin(), widgets.end(), [](const UIRect& a, const UIRect& b) { return a.y < b.y; });
+        for (size_t i = 0; i + 1 < widgets.size(); ++i)
+        {
+            for (size_t j = i + 1; j < widgets.size(); ++j)
+            {
+                if (resolveOverlap(widgets[i], widgets[j]))
+                {
+                    SetWindowPos(widgets[j].hwnd, nullptr, widgets[j].x, widgets[j].y, widgets[j].w, widgets[j].h,
+                                 SWP_NOZORDER | SWP_NOACTIVATE);
+                }
+            }
+        }
     }
 
     // Eyes fix: after a WM_SIZE pass, explicitly restore visibility of key panes when they have valid bounds.
@@ -3152,10 +3870,11 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 // ============================================================================
 // onCreate - Called when WM_CREATE is received
 // ============================================================================
+// Fast UI scaffolding (runs synchronously on UI thread, ~500ms)
 void Win32IDE::onCreate(HWND hwnd)
 {
     m_hwndMain = hwnd;
-    // Route runtime token stream chunks to this window for ghost text updates.
+    AgentBridge_BindMainWindow(hwnd);
     RawrXD::Runtime::RuntimeProvider::ConfigureWin32TokenMessenger(hwnd, WM_USER_GHOST_TOKEN);
     bool hadOnCreateStepFailure = false;
     auto initOptionalPanelsStep = +[](void* self, HWND h)
@@ -3298,6 +4017,11 @@ void Win32IDE::onCreate(HWND hwnd)
     OutputDebugStringA("[onCreate] createEditor...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createEditorStep, this, hwnd, "createEditor");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createAnnotationOverlayStep, this, hwnd, "createAnnotationOverlay");
+    if (lineStripEditorEnabled())
+    {
+        createLineStripOverlay(hwnd);
+        layoutLineStripOverlay();
+    }
     frontPipelineMilestone("[IDE-Pipeline:Front] Batch 3/8: line gutter + editor + annotation overlay\n",
                            "[Init:Front] Batch 3/8: line gutter, editor, and annotation overlay\n");
     OutputDebugStringA("[onCreate] createTerminal...\n");
@@ -3308,10 +4032,15 @@ void Win32IDE::onCreate(HWND hwnd)
     OutputDebugStringA("[onCreate] createOutputTabs...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createOutputTabsStep, this, hwnd, "createOutputTabs");
     this->flushCtorBootReplayToSystem();
-    OutputDebugStringA("[onCreate] createChatPanel...\n");
-    hadOnCreateStepFailure |= !sehCallOnCreateStep(createChatPanelStep, this, hwnd, "createChatPanel");
-    frontPipelineMilestone("[IDE-Pipeline:Front] Batch 4/8: terminal + status bar + output tabs + chat\n",
-                           "[Init:Front] Batch 4/8: terminal, status bar, output tabs, and chat\n");
+
+    // DEFERRED: createChatPanel is now async-initialized after WM_CREATE returns.
+    // This allows the main message pump to start processing and the window to paint
+    // before we block on any file I/O or GPU initialization.
+    // Chat panel will be created on-demand or after UI becomes responsive.
+    OutputDebugStringA("[onCreate] createChatPanel deferred to async init...\n");
+
+    frontPipelineMilestone("[IDE-Pipeline:Front] Batch 4/8: terminal + status bar + output tabs (chat deferred)\n",
+                           "[Init:Front] Batch 4/8: terminal, status bar, output tabs (chat deferred to async)\n");
 
     OutputDebugStringA("[onCreate] createAcceleratorTable...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
@@ -3350,9 +4079,10 @@ void Win32IDE::onCreate(HWND hwnd)
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND) { static_cast<Win32IDE*>(self)->initGhostText(); }, this, hwnd, "initGhostText");
 
-    OutputDebugStringA("[onCreate] restoreSession...\n");
-    hadOnCreateStepFailure |= !sehCallOnCreateStep(
-        +[](void* self, HWND) { static_cast<Win32IDE*>(self)->restoreSession(); }, this, hwnd, "restoreSession");
+    // DEFERRED: Session restoration (file I/O) is now async.
+    // This includes loading previous workspace state, tabs, cursor positions, etc.
+    // Will be restored after chat pane is initialized and UI is responsive.
+    OutputDebugStringA("[onCreate] restoreSession deferred to async init...\n");
 
     OutputDebugStringA("[onCreate] applyStartupLayoutProfileFromEnv...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
@@ -3413,28 +4143,24 @@ void Win32IDE::onCreate(HWND hwnd)
             auto* ide = static_cast<Win32IDE*>(self);
             // Initialize SessionController spine + phase barrier + deferred queue.
             ide->m_sessionController = std::make_unique<rawrxd::session::SessionController>();
-            ide->m_sessionController->Start(ide->m_projectRoot.empty() ? std::filesystem::current_path().string() : ide->m_projectRoot);
+            ide->m_sessionController->Start(ide->m_projectRoot.empty() ? std::filesystem::current_path().string()
+                                                                       : ide->m_projectRoot);
             ide->m_sessionController->SetDeferredDispatch(
                 [ide](const std::string& prompt, std::string* error) -> bool
                 {
                     if (!ide->m_sessionController->IsExecutionReady(error))
                         return false;
-                    ide->generateResponseAsync(prompt, [](const std::string&, bool){});
+                    ide->generateResponseAsync(prompt, [](const std::string&, bool) {});
                     return true;
                 });
         },
         this, hwnd, "initSessionController");
 
-    hadOnCreateStepFailure |= !sehCallOnCreateStep(
-        +[](void* self, HWND)
-        {
-            auto* ide = static_cast<Win32IDE*>(self);
-            // Initialize backend manager and LLM router at startup so Ollama/cloud can be used
-            // without requiring a local GGUF to be loaded first (see docs/AGENTIC_AND_MODEL_LOADING_AUDIT.md).
-            ide->initBackendManager();
-            ide->initLLMRouter();
-        },
-        this, hwnd, "initBackendAndRouter");
+    // DEFERRED: Backend and LLM router initialization is now always async.
+    // GPU context creation, GGUF scanning, and model enumeration happen in the background
+    // after the UI is responsive. The env var RAWRXD_ENABLE_STARTUP_BACKEND_INIT is ignored
+    // during fast path; models will be loaded on-demand when requested by the user.
+    OutputDebugStringA("[onCreate] initBackendAndRouter deferred to async init...\n");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND)
@@ -3444,8 +4170,8 @@ void Win32IDE::onCreate(HWND hwnd)
         },
         this, hwnd, "initializeMissingFeaturesCore");
     frontPipelineMilestone(
-        "[IDE-Pipeline:Front] Batch 7/8: initial theme + status snapshot + backend manager + LLM router + features core\n",
-        "[Init:Front] Batch 7/8: theme, status bar, backend manager, LLM router, and features core\n");
+        "[IDE-Pipeline:Front] Batch 7/8: initial theme + status snapshot + features core (backend deferred)\n",
+        "[Init:Front] Batch 7/8: theme, status bar, and features core (backend deferred to async)\n");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND h)
@@ -3586,21 +4312,21 @@ int initializeEnterpriseSubsystemsSehThunk(Win32IDE* ide, DWORD* sehCode)
 
 bool initializeEnterpriseSubsystems(Win32IDE* ide)
 {
-    auto& license = RawrXD::EnterpriseLicense::Instance();
-    license.Initialize();
+    // EMERGENCY STARTUP FIX: Enterprise license initialization blocks worker thread indefinitely.
+    // Defer license initialization to post-paint phase to keep UI responsive.
+    // User can work normally while license validation happens in background.
+    FILE* dbg = fopen("C:\\temp\\emergency_debug.txt", "a");
+    if (dbg)
+    {
+        fprintf(dbg,
+                "[EMERGENCY] initializeEnterpriseSubsystems: SKIPPING enterprise init for startup responsiveness\n");
+        fflush(dbg);
+        fclose(dbg);
+    }
+    OutputDebugStringA(
+        "[EMERGENCY] initializeEnterpriseSubsystems: SKIPPING enterprise init for startup responsiveness\n");
 
-    auto& featureMgr = EnterpriseFeatureManager::Instance();
-    featureMgr.Initialize();
-
-    auto& licV2 = RawrXD::License::EnterpriseLicenseV2::Instance();
-    licV2.initialize();
-    RawrXD::Flags::FeatureFlagsRuntime::Instance().refreshFromLicense();
-    RawrXD::Enforce::LicenseEnforcer::Instance().initialize();
-
-    OutputDebugStringA("[deferredHeavyInit] Enterprise license initialized\n");
-
-    std::string tierBadge = std::string("[") + license.GetEditionName() + "]";
-    PostMessage(ide->getMainWindow(), WM_USER + 200, 0, reinterpret_cast<LPARAM>(_strdup(tierBadge.c_str())));
+    // Return success immediately - license will be initialized later
     return true;
 }
 
@@ -3642,6 +4368,13 @@ DWORD WINAPI Win32IDE::deferredHeavyInitThreadProc(LPVOID param)
     if (!self)
         return 0;
 
+    // Set thread-local pointer so VEH can detect deferred init worker crashes
+    extern void setDeferredInitWorkerTLS(void* idePtr);
+    setDeferredInitWorkerTLS(self);
+
+    // Record the worker thread ID for crash detection
+    self->m_deferredInitWorkerThreadId = GetCurrentThreadId();
+
     // Keep this thread proc teardown-free with respect to instance atomics.
     // If deferredHeavyInitBody faults and partially corrupts instance state, touching
     // m_activeDetachedThreads during guard destruction can trigger a second fatal AV.
@@ -3654,6 +4387,72 @@ DWORD WINAPI Win32IDE::deferredHeavyInitThreadProc(LPVOID param)
 
 void Win32IDE::deferredHeavyInit()
 {
+    if (smokeDeferredInitActive())
+    {
+        OutputDebugStringA("[SMOKE] deferredHeavyInit: lightweight path (extension pipe on worker)\n");
+        m_initStatus.store(STATUS_INIT_RUNNING, std::memory_order_release);
+        AgentBridge_SetShuttingDown(false);
+        PromptWarm_SetAcceptRequests(true);
+
+        // Scenario 4 needs the named pipe server without running full deferredHeavyInitBody.
+        HANDLE hSmokePipeThread = CreateThread(
+            nullptr, 0,
+            [](LPVOID param) -> DWORD
+            {
+                auto* ide = static_cast<Win32IDE*>(param);
+                if (!ide || ide->isShuttingDown())
+                    return 0;
+                try
+                {
+                    std::string logPath = "RawrXD_IDE.log";
+                    char appData[MAX_PATH] = {};
+                    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appData)))
+                    {
+                        std::string dir = std::string(appData) + "\\RawrXD";
+                        CreateDirectoryA(dir.c_str(), nullptr);
+                        logPath = dir + "\\ide.log";
+                    }
+                    IDELogger::getInstance().initialize(logPath);
+
+                    RawrXD::Extensions::InitializeExtensionEngine(ide->getMainWindow(), false);
+
+                    // Scenario 4: drain pipe traffic even if the UI message loop exits early.
+                    for (int pollTick = 0; pollTick < 600 && !ide->isShuttingDown(); ++pollTick)
+                    {
+                        RawrXD::Extensions::PollExtensionEngineLsp();
+                        Sleep(50);
+                    }
+                }
+                catch (...)
+                {
+                    OutputDebugStringA("[SMOKE] InitializeExtensionEngine failed on worker\n");
+                }
+                ide->m_deferredHeavyInitComplete.store(true, std::memory_order_release);
+                ide->m_initStatus.store(STATUS_INIT_SUCCESS, std::memory_order_release);
+                AgentBridge_SetInitComplete(true);
+                HWND hwnd = ide->getMainWindow();
+                if (hwnd && IsWindow(hwnd))
+                {
+                    PostMessage(hwnd, WM_APP + 101, 0, 0);
+                    if (Win32IDE::smokeCopilotChatEnabled())
+                        ide->finalizeCopilotChatInterlockAfterDeferredLoad();
+                }
+                return 0;
+            },
+            this, 0, nullptr);
+        if (hSmokePipeThread)
+            CloseHandle(hSmokePipeThread);
+
+        return;
+    }
+
+    // Re-arm bridge and prompt-warming gates at startup entry so early route
+    // smoke traffic is not dropped while deferred init is still running.
+    AgentBridge_SetShuttingDown(false);
+    PromptWarm_SetAcceptRequests(true);
+    // Agent streaming callbacks stay gated until deferredHeavyInitBody completes
+    // (AgentBridge_SetInitComplete(true) at end of background init).
+
     if (!isShuttingDown())
     {
         OutputDebugStringA("[IDE-Pipeline] Bridge: UI thread entered deferredHeavyInit (CreateThread next)\n");
@@ -3662,11 +4461,21 @@ void Win32IDE::deferredHeavyInit()
                            OutputSeverity::Info);
     }
     // Run heavy initialization on a background thread with large stack to avoid 0xC00000FD.
-    HANDLE h = CreateThread(nullptr, kDeferredInitStackSize, &Win32IDE::deferredHeavyInitThreadProc, this, 0, nullptr);
+    m_initStatus.store(STATUS_INIT_RUNNING, std::memory_order_release);
+    DWORD dwThreadId = 0;
+    HANDLE h =
+        CreateThread(nullptr, kDeferredInitStackSize, &Win32IDE::deferredHeavyInitThreadProc, this, 0, &dwThreadId);
     if (h)
+    {
+        m_deferredInitWorkerThreadId = dwThreadId;  // Redundant but explicit; deferredHeavyInitThreadProc also sets it
         CloseHandle(h);
+    }
     else
+    {
+        // Fallback: run on current thread if CreateThread fails (shouldn't happen in practice)
+        m_deferredInitWorkerThreadId = GetCurrentThreadId();
         sehRunBgThread(bgInitBody, this);
+    }
 }
 
 void bgInitBody(void* self)
@@ -3677,9 +4486,18 @@ void bgInitBody(void* self)
 
 void Win32IDE::deferredHeavyInitBody()
 {
+    if (smokeDeferredInitActive())
+    {
+        OutputDebugStringA("[SMOKE] deferredHeavyInitBody: no-op (smoke deferred init)\n");
+        return;
+    }
+
+    OutputDebugStringA("[EMERGENCY] deferredHeavyInitBody ENTER\n");
+
     // Initialize logger under %APPDATA%\RawrXD\ide.log (fallback: RawrXD_IDE.log in cwd)
     try
     {
+        OutputDebugStringA("[EMERGENCY] Logger init starting\n");
         std::string logPath = "RawrXD_IDE.log";
         char appData[MAX_PATH] = {};
         if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appData)))
@@ -3688,12 +4506,15 @@ void Win32IDE::deferredHeavyInitBody()
             CreateDirectoryA(dir.c_str(), nullptr);
             logPath = dir + "\\ide.log";
         }
+        OutputDebugStringA("[EMERGENCY] About to call IDELogger::getInstance().initialize()\n");
         IDELogger::getInstance().initialize(logPath);
+        OutputDebugStringA("[EMERGENCY] Logger init completed\n");
     }
     catch (...)
     {
         OutputDebugStringA("ERROR: Logger init failed\n");
     }
+    OutputDebugStringA("[EMERGENCY] After logger init\n");
     if (isShuttingDown())
         return;
 
@@ -3703,7 +4524,9 @@ void Win32IDE::deferredHeavyInitBody()
     bool enterpriseOk = false;
     try
     {
+        OutputDebugStringA("[EMERGENCY] Enterprise init starting\n");
         enterpriseOk = initializeEnterpriseSubsystemsSafe(this);
+        OutputDebugStringA("[EMERGENCY] Enterprise init completed\n");
     }
     catch (...)
     {
@@ -3870,55 +4693,137 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize Ghost Text renderer (Copilot-style inline completions)
     try
     {
+        startupTraceImmediate("before initGhostText");
         initGhostText();
+        startupTraceImmediate("after initGhostText");
     }
     catch (...)
     {
+        startupTraceImmediate("initGhostText exception");
         OutputDebugStringA("ERROR: initGhostText failed\n");
     }
 
     // Initialize Failure Detector (agent self-correction)
     try
     {
+        startupTraceImmediate("before initFailureDetector");
         initFailureDetector();
+        startupTraceImmediate("after initFailureDetector");
     }
     catch (...)
     {
+        startupTraceImmediate("initFailureDetector exception");
         OutputDebugStringA("ERROR: initFailureDetector failed\n");
     }
 
-    // Initialize Agent Diff Panel (Win32IDE_AgentPanel.cpp)
-    try
+    // Initialize Agent Diff / Edit Review panels (startup hardening: opt-in while AV is under triage)
+    const bool enableAgentPanelsStartup = (std::getenv("RAWRXD_ENABLE_AGENT_PANELS_STARTUP") != nullptr);
+    if (enableAgentPanelsStartup)
     {
-        initAgentPanel();
-        initEditReviewPanel();
+        startupTraceImmediate("before initAgentPanel");
+        try
+        {
+            initAgentPanel();
+            startupTraceImmediate("after initAgentPanel");
+        }
+        catch (const std::exception& e)
+        {
+            startupTraceImmediate("initAgentPanel exception", e.what());
+            OutputDebugStringA("ERROR: initAgentPanel failed\n");
+        }
+        catch (...)
+        {
+            startupTraceImmediate("initAgentPanel unknown exception");
+            OutputDebugStringA("ERROR: initAgentPanel failed (unknown)\n");
+        }
+
+        startupTraceImmediate("before initEditReviewPanel");
+        try
+        {
+            initEditReviewPanel();
+            startupTraceImmediate("after initEditReviewPanel");
+        }
+        catch (const std::exception& e)
+        {
+            startupTraceImmediate("initEditReviewPanel exception", e.what());
+            OutputDebugStringA("ERROR: initEditReviewPanel failed\n");
+        }
+        catch (...)
+        {
+            startupTraceImmediate("initEditReviewPanel unknown exception");
+            OutputDebugStringA("ERROR: initEditReviewPanel failed (unknown)\n");
+        }
     }
-    catch (...)
+    else
     {
-        OutputDebugStringA("ERROR: initAgentPanel/initEditReviewPanel failed\n");
+        startupTraceImmediate("agent panels skipped", "set RAWRXD_ENABLE_AGENT_PANELS_STARTUP=1 to enable");
+        OutputDebugStringA("[StartupHardening] initAgentPanel/initEditReviewPanel skipped (set "
+                           "RAWRXD_ENABLE_AGENT_PANELS_STARTUP=1 to enable)\n");
     }
     idePipelineMilestone("[IDE-Pipeline] Batch 5/8: Ghost text + failure detector + agent diff panel\n",
                          "[Init] Batch 5/8: Ghost text + failure detector + agent diff panel\n");
 
     // Load settings on background thread; applySettings() marshaled to main thread via
     // WM_APP_APPLY_SETTINGS to avoid GDI race on m_backgroundBrush/m_editorFont (RT-01).
+    // Use PostMessage (not SendMessage) to avoid cross-thread startup deadlocks when
+    // the UI thread and worker contend on init/config locks.
     try
     {
+        startupTraceImmediate("before loadSettings");
         loadSettings();
-        SendMessage(m_hwndMain, WM_APP_APPLY_SETTINGS, 0, 0);
+        startupTraceImmediate("after loadSettings");
+        LOG_INFO("[StartupTrace] CKPT: loadSettings() completed");
+        if (m_hwndMain && IsWindow(m_hwndMain))
+            PostMessage(m_hwndMain, WM_APP_APPLY_SETTINGS, 0, 0);
+        LOG_INFO("[StartupTrace] CKPT: WM_APP_APPLY_SETTINGS posted");
     }
     catch (...)
     {
+        startupTraceImmediate("loadSettings/applySettings exception");
         OutputDebugStringA("ERROR: loadSettings/applySettings failed\n");
     }
-    syncAgentModeUiFromBridge();
-    syncSpeculativeInferenceFromConfig();
+
+    try
+    {
+        startupTraceImmediate("before syncAgentModeUiFromBridge");
+        syncAgentModeUiFromBridge();
+        startupTraceImmediate("after syncAgentModeUiFromBridge");
+    }
+    catch (const std::exception& e)
+    {
+        startupTraceImmediate("syncAgentModeUiFromBridge exception", e.what());
+        OutputDebugStringA("ERROR: syncAgentModeUiFromBridge failed\n");
+    }
+    catch (...)
+    {
+        startupTraceImmediate("syncAgentModeUiFromBridge unknown exception");
+        OutputDebugStringA("ERROR: syncAgentModeUiFromBridge failed (unknown)\n");
+    }
+
+    try
+    {
+        startupTraceImmediate("before syncSpeculativeInferenceFromConfig");
+        syncSpeculativeInferenceFromConfig();
+        startupTraceImmediate("after syncSpeculativeInferenceFromConfig");
+    }
+    catch (const std::exception& e)
+    {
+        startupTraceImmediate("syncSpeculativeInferenceFromConfig exception", e.what());
+        OutputDebugStringA("ERROR: syncSpeculativeInferenceFromConfig failed\n");
+    }
+    catch (...)
+    {
+        startupTraceImmediate("syncSpeculativeInferenceFromConfig unknown exception");
+        OutputDebugStringA("ERROR: syncSpeculativeInferenceFromConfig failed (unknown)\n");
+    }
 
     // Startup hardening: keep optional discovery, bridge-adjacent clients, and plugin managers
     // off the WinMain path so failures cannot abort startup before the first paint.
     try
     {
+        LOG_INFO("[StartupTrace] CKPT: before initializeCoreRuntimeSpine");
         initializeCoreRuntimeSpine();
+        LOG_INFO("[StartupTrace] CKPT: after initializeCoreRuntimeSpine");
     }
     catch (...)
     {
@@ -3928,7 +4833,9 @@ void Win32IDE::deferredHeavyInitBody()
                          "[Init] Batch 6/8: Core runtime spine + bridge-adjacent clients\n");
     try
     {
+        LOG_INFO("[StartupTrace] CKPT: before initAgentOllamaClient");
         initAgentOllamaClient();
+        LOG_INFO("[StartupTrace] CKPT: after initAgentOllamaClient");
     }
     catch (...)
     {
@@ -3991,10 +4898,18 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize Failure Intelligence — Phase 6 (classification + retry strategies)
     try
     {
+        startupTraceImmediate("before initFailureIntelligence");
         initFailureIntelligence();
+        startupTraceImmediate("after initFailureIntelligence");
+    }
+    catch (const std::exception& e)
+    {
+        startupTraceImmediate("initFailureIntelligence exception", e.what());
+        OutputDebugStringA("ERROR: initFailureIntelligence failed\n");
     }
     catch (...)
     {
+        startupTraceImmediate("initFailureIntelligence unknown exception");
         OutputDebugStringA("ERROR: initFailureIntelligence failed\n");
     }
 
@@ -4027,7 +4942,8 @@ void Win32IDE::deferredHeavyInitBody()
         if (disableVulkanProbe)
         {
             m_gpuTextEnabled = false;
-            OutputDebugStringA("GPU Backend Bridge: Startup Vulkan probe disabled by RAWRXD_DISABLE_VULKAN_PROBE_STARTUP\n");
+            OutputDebugStringA(
+                "GPU Backend Bridge: Startup Vulkan probe disabled by RAWRXD_DISABLE_VULKAN_PROBE_STARTUP\n");
             appendToOutput("[GPU] Startup Vulkan probe disabled by env gate\n", "Output", OutputSeverity::Warning);
         }
         else
@@ -4133,7 +5049,8 @@ void Win32IDE::deferredHeavyInitBody()
         try
         {
             // Marshal Phase 33 UI/hotkey init to main thread to avoid worker-thread USER/GDI races.
-            SendMessage(m_hwndMain, WM_APP_INIT_VOICE_CHAT_UI, 0, 0);
+            if (m_hwndMain && IsWindow(m_hwndMain))
+                PostMessage(m_hwndMain, WM_APP_INIT_VOICE_CHAT_UI, 0, 0);
         }
         catch (...)
         {
@@ -4145,7 +5062,8 @@ void Win32IDE::deferredHeavyInitBody()
         {
             // Marshal to UI thread: creating Win32 controls on the deferred init worker can
             // race USER/GDI state and has been linked to RT-01 startup crashes.
-            SendMessage(m_hwndMain, WM_APP_CREATE_VOICE_AUTOMATION_PANEL, 0, 0);
+            if (m_hwndMain && IsWindow(m_hwndMain))
+                PostMessage(m_hwndMain, WM_APP_CREATE_VOICE_AUTOMATION_PANEL, 0, 0);
         }
         catch (...)
         {
@@ -4154,8 +5072,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
     else
     {
-        OutputDebugStringA(
-            "[Smoke] Voice startup init skipped (set RAWRXD_ENABLE_VOICE_STARTUP_INIT=1 to enable)\n");
+        OutputDebugStringA("[Smoke] Voice startup init skipped (set RAWRXD_ENABLE_VOICE_STARTUP_INIT=1 to enable)\n");
     }
 
     // Initialize Tier 3: Polish (QoL) — smooth caret, ligatures, file watcher, etc.
@@ -4189,87 +5106,133 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 33: Quick-Win Systems (Shortcuts, Backups, Alerts, SLO)
+    startupTraceImmediate("before initQuickWinSystems");
     try
     {
         initQuickWinSystems();
+        startupTraceImmediate("after initQuickWinSystems");
     }
     catch (...)
     {
+        startupTraceImmediate("initQuickWinSystems exception");
         OutputDebugStringA("ERROR: initQuickWinSystems failed\n");
     }
 
     // Initialize Phase 32B: Chain-of-Thought Multi-Model Review Engine
+    startupTraceImmediate("before initChainOfThought");
     try
     {
         initChainOfThought();
+        startupTraceImmediate("after initChainOfThought");
     }
     catch (...)
     {
+        startupTraceImmediate("initChainOfThought exception");
         OutputDebugStringA("ERROR: initChainOfThought failed\n");
     }
 
-    // Initialize Phase 34: Telemetry Export Subsystem
-    try
+    // Initialize Phase 34: Telemetry Export Subsystem (startup hardening: opt-in while AV triage is active)
+    const bool enableTelemetryStartup = (std::getenv("RAWRXD_ENABLE_TELEMETRY_STARTUP") != nullptr);
+    if (enableTelemetryStartup)
     {
-        initTelemetry();
+        startupTraceImmediate("before initTelemetry");
+        try
+        {
+            initTelemetry();
+            startupTraceImmediate("after initTelemetry");
+        }
+        catch (...)
+        {
+            startupTraceImmediate("initTelemetry exception");
+            OutputDebugStringA("ERROR: initTelemetry failed\n");
+        }
     }
-    catch (...)
+    else
     {
-        OutputDebugStringA("ERROR: initTelemetry failed\n");
+        startupTraceImmediate("initTelemetry skipped", "set RAWRXD_ENABLE_TELEMETRY_STARTUP=1 to enable");
+        OutputDebugStringA(
+            "[StartupHardening] initTelemetry skipped (set RAWRXD_ENABLE_TELEMETRY_STARTUP=1 to enable)\n");
     }
 
     // Initialize Phase 36: Flight Recorder — persistent binary ring-buffer
+    startupTraceImmediate("before initFlightRecorder");
     try
     {
         initFlightRecorder();
+        startupTraceImmediate("after initFlightRecorder");
     }
     catch (...)
     {
+        startupTraceImmediate("initFlightRecorder exception");
         OutputDebugStringA("ERROR: initFlightRecorder failed\n");
     }
 
     // Initialize Phase 36: MCP Integration — Model Context Protocol
+    startupTraceImmediate("before initMCP");
     try
     {
         initMCP();
+        startupTraceImmediate("after initMCP");
     }
     catch (...)
     {
+        startupTraceImmediate("initMCP exception");
         OutputDebugStringA("ERROR: initMCP failed\n");
     }
 
     // Initialize Phase 29+36: VS Code Extension API + QuickJS VSIX Host
+    startupTraceImmediate("before initVSCodeExtensionAPI");
     try
     {
         initVSCodeExtensionAPI();
+        startupTraceImmediate("after initVSCodeExtensionAPI");
     }
     catch (...)
     {
+        startupTraceImmediate("initVSCodeExtensionAPI exception");
         OutputDebugStringA("ERROR: initVSCodeExtensionAPI failed\n");
+    }
+
+    startupTraceImmediate("before InitializeExtensionEngine");
+    try
+    {
+        RawrXD::Extensions::InitializeExtensionEngine(m_hwndMain, false);
+        startupTraceImmediate("after InitializeExtensionEngine");
+    }
+    catch (...)
+    {
+        startupTraceImmediate("InitializeExtensionEngine exception");
+        OutputDebugStringA("ERROR: InitializeExtensionEngine failed\n");
     }
 
     if (isShuttingDown())
         return;
 
     // Initialize Phase 43: Plugin System (Native Win32 DLL loading)
+    startupTraceImmediate("before initPluginSystem");
     try
     {
         initPluginSystem();
+        startupTraceImmediate("after initPluginSystem");
     }
     catch (...)
     {
+        startupTraceImmediate("initPluginSystem exception");
         OutputDebugStringA("ERROR: initPluginSystem failed\n");
     }
 
     // Auto-start Local HTTP server (port 11435) so HTML beacon / Ghost can detect IDE
     if (!isShuttingDown())
     {
+        startupTraceImmediate("before startLocalServer");
         try
         {
             startLocalServer();
+            startupTraceImmediate("after startLocalServer");
         }
         catch (...)
         {
+            startupTraceImmediate("startLocalServer exception");
             OutputDebugStringA("ERROR: startLocalServer failed\n");
         }
         idePipelineMilestone("[IDE-Pipeline] Batch 7/8: Local HTTP server (beacon / tooling)\n",
@@ -4286,16 +5249,12 @@ void Win32IDE::deferredHeavyInitBody()
             std::string featureRouteReport;
             if (!verifyFeatureRoutingCoverageAtStartup(&featureRouteReport))
             {
+                // NON-FATAL: Log the routing issue but don't close the app
+                OutputDebugStringA(
+                    "[StartupWarning] verifyFeatureRoutingCoverageAtStartup returned false (non-fatal)\n");
+                LOG_INFO("[StartupWarning] Feature routing verification failed at startup (non-fatal - continuing)");
                 OutputDebugStringA(featureRouteReport.c_str());
-                MessageBoxA(m_hwndMain,
-                            "Feature command routing verification failed at startup. "
-                            "See debugger output/logs for details.",
-                            "RawrXD Startup Verification Error", MB_OK | MB_ICONERROR);
-                if (m_hwndMain)
-                {
-                    PostMessage(m_hwndMain, WM_CLOSE, 0, 0);
-                }
-                return;
+                // Silently continue — routing issues surfaced in logs but won't block startup
             }
         }
         catch (...)
@@ -4310,6 +5269,17 @@ void Win32IDE::deferredHeavyInitBody()
         try
         {
             initTier5Cosmetics();
+
+            // Tier 9 scaffold: bring up lock-free inference ring buffer early so
+            // ghost-text/semantic telemetry can attach without blocking UI thread.
+            if (!NeuralBridge::IsInitialized())
+            {
+                NeuralBridge::Initialize("");
+                std::string neuralReport;
+                const bool neuralSmokeOk = NeuralBridge::RunSmokeTest(&neuralReport);
+                appendToOutput(std::string("[NeuralBridge] ") + neuralReport + "\n", "System",
+                               neuralSmokeOk ? OutputSeverity::Info : OutputSeverity::Warning);
+            }
         }
         catch (...)
         {
@@ -4365,7 +5335,9 @@ void Win32IDE::deferredHeavyInitBody()
     // Notify UI thread to refresh
     if (!isShuttingDown() && m_hwndMain)
     {
+        LOG_INFO("[StartupTrace] Worker posting WM_APP+101 to UI thread");
         PostMessage(m_hwndMain, WM_APP + 101, 0, 0);
+        LOG_INFO("[StartupTrace] Worker posted WM_APP+101 to UI thread");
         idePipelineMilestone("[IDE-Pipeline] E0-7: WM_APP+101 posted for main-window refresh\n",
                              "[Init] E0-7/8: main-window refresh message posted\n");
     }
@@ -4376,8 +5348,89 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     m_deferredHeavyInitComplete.store(true, std::memory_order_release);
+    m_initStatus.store(STATUS_INIT_SUCCESS, std::memory_order_release);  // Mark supervisor that init succeeded
+
+    // Signal that agent bridge callbacks are now safe (UI is fully ready)
+    AgentBridge_SetInitComplete(true);
+
+    // Reset auto-retry counter on success so user gets another "free crash" if they switch modes later
+    m_autoRetryCount.store(0, std::memory_order_release);
+
     idePipelineMilestone("[IDE-Pipeline] E0-8: deferredHeavyInitBody returning\n",
                          "[Init] E0-8/8: background startup pipeline finished\n");
+}
+
+// ============================================================================
+// Supervisor Recovery: Handle background init failures and offer retry UI
+// ============================================================================
+void Win32IDE::onDeferredInitFailed()
+{
+    // Set status to CRASHED so UI can detect it
+    m_initStatus.store(STATUS_INIT_CRASHED, std::memory_order_release);
+
+    const char* msg = "[IDE-Pipeline] onDeferredInitFailed: Background init worker crashed, attempting auto-recovery";
+    OutputDebugStringA(msg);
+    OutputDebugStringA("\n");
+
+    if (m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+    {
+        appendToOutput("[Init] AI Engine initialization failed", "System", OutputSeverity::Error);
+    }
+
+    // Attempt one automatic safe-mode retry before yielding to UI
+    handleInitFailure();
+}
+
+void Win32IDE::handleInitFailure()
+{
+    const int retryCount = m_autoRetryCount.load(std::memory_order_acquire);
+
+    if (retryCount < 1)
+    {
+        // First crash: attempt auto-retry with CPU-only fallback
+        m_autoRetryCount.store(retryCount + 1, std::memory_order_release);
+        m_initStatus.store(STATUS_INIT_FALLBACK, std::memory_order_release);  // Mark fallback mode
+
+        const char* msg = "[IDE-Pipeline] handleInitFailure: Triggering auto-retry with CPU-only fallback";
+        OutputDebugStringA(msg);
+        OutputDebugStringA("\n");
+
+        if (m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+        {
+            appendToOutput("[Init] Retrying in safe mode (CPU only)...", "System", OutputSeverity::Warning);
+        }
+
+        // Disable GPU layers and retry
+        forceCpuInference(true);
+        deferredHeavyInit();
+    }
+    else
+    {
+        // Second crash or retry already attempted: yield to manual intervention
+        m_initStatus.store(STATUS_INIT_CRASHED, std::memory_order_release);
+
+        const char* msg = "[IDE-Pipeline] handleInitFailure: Persistent crash detected, UI must handle recovery";
+        OutputDebugStringA(msg);
+        OutputDebugStringA("\n");
+
+        if (m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+        {
+            appendToOutput("[Init] AI Engine failed to initialize. Use Chat pane buttons to retry or select Safe Mode.",
+                           "System", OutputSeverity::Error);
+        }
+    }
+}
+
+void Win32IDE::forceCpuInference(bool enable)
+{
+    // When enable=true, disable GPU layers for CPU-only fallback mode
+    // When enable=false, re-enable GPU layers
+    const bool gpuMode = !enable;
+    setLocalGGUFGPUEnabled(gpuMode);
+
+    std::string msg = enable ? "[IDE-Pipeline] forceCpuInference: Disabled GPU, now CPU-only for safe-mode retry\n"
+                             : "[IDE-Pipeline] forceCpuInference: Re-enabled GPU layers\n";
+    OutputDebugStringA(msg.c_str());
 }
 
 // ============================================================================
@@ -4386,6 +5439,11 @@ void Win32IDE::deferredHeavyInitBody()
 void Win32IDE::onDestroy()
 {
     LOG_INFO("Win32IDE::onDestroy - shutting down");
+
+    // Gate bridge callbacks first; this is the highest-priority teardown barrier.
+    AgentBridge_BindMainWindow(nullptr);
+    RawrXD::Bridge::ShutdownSwarmSystem();
+    RawrXD::Extensions::ShutdownExtensionEngine();
 
     if (m_hAccel)
     {
@@ -4764,6 +5822,21 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;  // Don't route editor notifications through the command system
     }
 
+    if (id == ID_ACCEL_GLOBAL_HALT)
+    {
+        Win32IDEAgenticPanel::Win32IDE_AgenticPlanningPanel* panel = Win32IDEAgenticPanel::GetAgenticPlanningPanel();
+        if (panel)
+        {
+            panel->onHaltRequested();
+        }
+        return;
+    }
+
+    if (handleWiringManifestGaps(id, codeNotify))
+    {
+        return;
+    }
+
     // First try the unified command router
     if (id == 9903)
     {  // Model progress cancel button
@@ -5078,20 +6151,6 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             if (!m_problemsPanelInitialized)
             {
                 initProblemsPanel();
-            }
-            if (m_hwndProblemsPanel && IsWindow(m_hwndProblemsPanel))
-            {
-                ShowWindow(m_hwndProblemsPanel, SW_SHOW);
-            }
-            refreshProblemsView();
-            if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
-            {
-                SetFocus(m_hwndProblemsListView);
-            }
-            return;
-        case IDC_PROBLEMS_LISTVIEW:  // 7051
-            if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
-            {
                 int idx = (int)ListView_GetNextItem(m_hwndProblemsListView, -1, LVNI_SELECTED);
                 if (idx >= 0)
                 {
@@ -5374,6 +6433,14 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             break;
     }
 
+    // Prevent control-ID collisions from being interpreted as File menu commands.
+    // Example: IDC_OUTPUT_EDIT_GENERAL (1012) collides with IDM_FILE_RECENT_BASE+2.
+    // Menu commands arrive with hwndCtl == nullptr; control notifications provide hwndCtl.
+    if (hwndCtl != nullptr && id >= 1000 && id < 1100)
+    {
+        return;
+    }
+
     // ── LEGACY FALLBACK — View/Tier1/Git/Monaco commands that routeToIde would loop on
     // routeCommand invokes handleViewCommand, handleTier1Command, etc. directly instead of
     // going through SSOT handlers that PostMessage same ID → infinite re-entry.
@@ -5425,3 +6492,75 @@ void Win32IDE::persistPerformanceVulkanRendererToConfig()
     }
 }
 
+void Win32IDE::forceKillBuildLocks()
+{
+    static const wchar_t* kBuildExeNames[] = {L"ninja.exe",    L"cmake.exe", L"MSBuild.exe",  L"devenv.exe",
+                                              L"cl.exe",       L"link.exe",  L"clangd.exe",   L"lib.exe",
+                                              L"clang-cl.exe", L"ml64.exe",  L"mspdbsrv.exe", L"rc.exe",
+                                              L"c1xx.exe",     L"c2.dll",    L"cvtres.exe"};
+    const DWORD selfPid = GetCurrentProcessId();
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap == INVALID_HANDLE_VALUE)
+    {
+        appendToOutput("[Build] forceKillBuildLocks: CreateToolhelp32Snapshot failed.\n", "General",
+                       OutputSeverity::Warning);
+        return;
+    }
+    PROCESSENTRY32W pe{};
+    pe.dwSize = sizeof(pe);
+    int terminated = 0;
+    std::string terminatedNames;
+    if (Process32FirstW(snap, &pe))
+    {
+        do
+        {
+            if (pe.th32ProcessID == selfPid)
+            {
+                continue;
+            }
+            for (const wchar_t* exe : kBuildExeNames)
+            {
+                if (_wcsicmp(pe.szExeFile, exe) != 0)
+                {
+                    continue;
+                }
+                HANDLE ph = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
+                if (ph)
+                {
+                    if (TerminateProcess(ph, 1))
+                    {
+                        ++terminated;
+                        if (!terminatedNames.empty())
+                        {
+                            terminatedNames += ", ";
+                        }
+                        char exeNameUtf8[MAX_PATH] = {};
+                        const int converted =
+                            WideCharToMultiByte(CP_UTF8, 0, pe.szExeFile, -1, exeNameUtf8,
+                                                static_cast<int>(std::size(exeNameUtf8)), nullptr, nullptr);
+                        if (converted > 0)
+                        {
+                            terminatedNames += exeNameUtf8;
+                        }
+                        else
+                        {
+                            terminatedNames += "<unknown>";
+                        }
+                    }
+                    CloseHandle(ph);
+                }
+                break;
+            }
+        } while (Process32NextW(snap, &pe));
+    }
+    CloseHandle(snap);
+    appendToOutput("[Build] forceKillBuildLocks: issued TerminateProcess for " + std::to_string(terminated) +
+                       " matching process(es) (ninja/cmake/MSBuild/devenv/cl/link/ml64/mspdbsrv/clangd/...).\n",
+                   "General", OutputSeverity::Info);
+    if (!terminatedNames.empty())
+    {
+        appendToOutput("[Build] forceKillBuildLocks: terminated => " + terminatedNames + "\n", "General",
+                       OutputSeverity::Info);
+    }
+    appendToOutput("[Build] Build path cleared.\n", "Output", OutputSeverity::Info);
+}

@@ -1,29 +1,49 @@
 // Win32IDE.cpp - RawrXD Win32 IDE Implementation
 // Build timestamp: 2026-03-31
 #include "Win32IDE.h"
+#include "pulse_ring_buffer.h"
+#include <new>
+
+// Sovereign VEH / Telemetry External Linkage
+extern "C"
+{
+    void* Sovereign_VEH_Handler(PEXCEPTION_POINTERS ExceptionPointers);
+    extern uint64_t g_Sovereign_RecoveryRIP;
+}
+
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
 #include "../../Ship/Win32TerminalScrollback.hpp"
 #include "../../include/PathResolver.h"
+#include "../../include/ProjectRagLite.hpp"
+#include "../../include/WalGutterProgrammaticDepth.hpp"
+#include "../../include/experimental_module8.hpp"
+#include "../../include/missing_features_batch3.hpp"
 #include "../../include/rawrxd_version.h"
 #include "../agentic/AgenticChatSession.h"
 #include "../agentic/AgenticSubmitInference_Fix.h"  // TOOL-AWARE INFERENCE BRIDGE
-#include "../agentic/OllamaProvider.h"              // NativeStreamProvider and deleter
+#include "../agentic/DiffEngine.h"
+#include "../agentic/OllamaProvider.h"  // NativeStreamProvider and deleter
 #include "../agentic/agentic_controller_wiring.h"
 #include "../agentic/slash_command_parser.hpp"
+#include "../compression/sovereign_pager.h"
+#include "../compression/virtualalloc_reservation_manager.h"
+#include "../core/PendingEditReviewGate.hpp"
 #include "../core/command_registry.hpp"
 #include "../core/gpu_backend_bridge.h"
 #include "../core/layer_offload_manager.hpp"
-#include "../core/PendingEditReviewGate.hpp"
 #include "../core/rawr_inference_pipeline.h"
 #include "../cpu_inference_engine.h"
+#include "../ide_constants.h"
 #include "../inference/speculative_execution_engine.h"  // Full type for unique_ptr<SpeculativeExecutionEngine> dtor
 #include "../model_source_resolver.h"
 #include "../modules/ExtensionLoader.hpp"  // Added
 #include "../modules/native_memory.hpp"
 #include "../native_inference_backend.h"
-#include "../rawrxd_model_loader.h"
+#include "../skill_system/SkillSystemBuildIntegration.h"
 #include "../streaming_gguf_loader.h"
+#include "../ui/SidebarStagingPanel.hpp"
 #include "../utils/ErrorReporter.hpp"
+#include "../vulkan_compute.h"
 #include "IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
@@ -33,8 +53,10 @@
 #include "Win32IDE_DAPServer.h"  // Full type for unique_ptr<Win32IDE_DAPServer> dtor
 #include "Win32IDE_ModelDropdownProfile.h"
 #include "Win32IDE_Settings.h"
-#include "../../include/missing_features_batch3.hpp"
-#include "../../include/experimental_module8.hpp"
+#include "Win32NeuralBridge.h"
+#include <new>
+extern "C" void AgentBridge_SetShuttingDown(bool shuttingDown);
+extern "C" void PromptWarm_SetAcceptRequests(bool accept);
 #include "feature_registry_panel.h"
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
@@ -44,6 +66,7 @@
 #include <psapi.h>
 #include <richedit.h>
 #include <windows.h>
+
 
 extern "C" void RawrXD_ApplyCopilotChatEditLimits(HWND output, HWND input);
 
@@ -71,6 +94,7 @@ extern "C" void RawrXD_ApplyCopilotChatEditLimits(HWND output, HWND input);
 HWND g_rawrxdIntegratedTerminalTabs = nullptr;
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
@@ -79,6 +103,7 @@ HWND g_rawrxdIntegratedTerminalTabs = nullptr;
 #include <deque>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <psapi.h>
@@ -154,6 +179,60 @@ static std::wstring utf8ToWide(const std::string& utf8);
 
 namespace
 {
+std::atomic<unsigned long long> g_chatTraceSequence{0};
+
+std::string BoolToLog(bool value)
+{
+    return value ? "true" : "false";
+}
+
+std::string MakeLogPreview(const std::string& value, size_t maxLen = 120)
+{
+    std::string preview;
+    preview.reserve(std::min(value.size(), maxLen) + 8);
+    for (char ch : value)
+    {
+        if (preview.size() >= maxLen)
+            break;
+        switch (ch)
+        {
+            case '\r':
+                preview += "\\r";
+                break;
+            case '\n':
+                preview += "\\n";
+                break;
+            case '\t':
+                preview += "\\t";
+                break;
+            default:
+                preview.push_back(ch);
+                break;
+        }
+    }
+    if (value.size() > maxLen)
+        preview += "...";
+    return preview;
+}
+
+std::string MakePromptSignature(const std::string& text)
+{
+    std::ostringstream oss;
+    oss << "len=" << text.size() << ",hash=0x" << std::hex << std::uppercase << std::hash<std::string>{}(text)
+        << std::dec;
+    return oss.str();
+}
+
+unsigned long long NextChatTraceId()
+{
+    return 1ull + g_chatTraceSequence.fetch_add(1, std::memory_order_relaxed);
+}
+
+// Sovereign Media & DRM Suppression Kernels (x64 MASM)
+extern "C" void Sovereign_Surgical_Manifest_Patch(void* buffer, size_t size);
+extern "C" void Sovereign_MSE_Aperture_Submit(const void* packet, size_t size);
+extern "C" uint64_t Browser_Interlock_Update();
+
 struct PendingInferenceRequest
 {
     std::string prompt;
@@ -167,6 +246,9 @@ constexpr size_t kMaxPendingInferenceRequestsPerIde = 16;
 std::mutex g_chatUtf8CarryMutex;
 std::unordered_map<Win32IDE*, std::string> g_chatUtf8CarryByIde;
 std::mutex g_chatInputBufferMutex;
+
+/// Embedded in editor /fix chat prompt and matched in `HandleCopilotSend` to arm JSON diff consumption.
+constexpr const char kStructuredSlashFixPromptMarker[] = "Respond with ONLY a JSON object";
 
 std::mutex g_terminalCallbackLivenessMutex;
 std::unordered_map<Win32IDE*, std::weak_ptr<std::atomic<bool>>> g_terminalCallbackLivenessByIde;
@@ -347,6 +429,50 @@ std::string resolveLocalModelSelectionPath(const std::string& modelRef,
     return modelRef;
 }
 
+std::string normalizeModelSelectorEntry(const std::string& selectorText,
+                                        const std::vector<std::string>& availableModels)
+{
+    if (selectorText.empty())
+        return selectorText;
+
+    auto trim = [](std::string value)
+    {
+        const size_t first = value.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos)
+            return std::string();
+        const size_t last = value.find_last_not_of(" \t\r\n");
+        return value.substr(first, last - first + 1);
+    };
+
+    const std::string normalizedInput = trim(selectorText);
+    if (normalizedInput.empty())
+        return normalizedInput;
+
+    const std::string lowerInput = rawrxd::ToLowerCopy(normalizedInput);
+
+    for (const auto& model : availableModels)
+    {
+        const std::string label = rawrxd::BuildModelDropdownLabel(model);
+        if (rawrxd::ToLowerCopy(label) == lowerInput)
+            return model;
+    }
+
+    const size_t suffixPos = normalizedInput.find(" - A Carrot > - ");
+    if (suffixPos != std::string::npos)
+    {
+        const std::string baseLabel = trim(normalizedInput.substr(0, suffixPos));
+        const std::string baseLower = rawrxd::ToLowerCopy(baseLabel);
+        for (const auto& model : availableModels)
+        {
+            const std::string displayName = rawrxd::BaseModelDisplayName(model);
+            if (rawrxd::ToLowerCopy(displayName) == baseLower)
+                return model;
+        }
+    }
+
+    return normalizedInput;
+}
+
 bool HasAgenticPrefix(const std::string& prompt)
 {
     return prompt.rfind("/agent", 0) == 0 || prompt.rfind("/agentic", 0) == 0 || prompt.rfind("agentic:", 0) == 0 ||
@@ -491,6 +617,31 @@ std::string SlashCommandShortDescription(const std::string& command)
         return "git operation";
     if (command == "help")
         return "show command help";
+    if (command == "explain")
+        return "explain code with editor context";
+    if (command == "fix")
+        return "fix issues using diagnostics + context";
+    if (command == "test")
+        return "generate tests from editor context";
+    if (command == "doc")
+        return "document code via Agent Chat";
+    if (command == "optimize")
+        return "optimize performance";
+    if (command == "kill-locks")
+        return "terminate stuck ninja/cmake/clangd/MSVC (Ninja Nuke)";
+    if (command == "memory")
+        return "agent memory files";
+    if (command == "taskframe" || command == "framework")
+        return "task execution framework";
+    if (command == "harden" || command == "audit")
+        return "audit harness scaffold";
+    if (command == "language" || command == "lang")
+        return "language / toolchain context";
+    if (command == "context")
+        return "full execution context profile";
+    if (command == "streaming" || command == "streaming status" || command == "streaming autopatch" ||
+        command == "streaming throttle")
+        return "streaming engine control";
     return "command";
 }
 }  // namespace
@@ -550,167 +701,6 @@ enum class VmmRibbonTier : uint8_t
 };
 
 static HICON getVmmLedIcon(VmmRibbonTier tier);
-
-static void appendStreamerPostLoadCheck(Win32IDE* ide, const std::string& ggufPath)
-{
-    if (!ide)
-        return;
-    if (ggufPath.empty())
-        return;
-
-    // Keep this fast: validate huge-page base alignment via RawrXDModelLoader (shared core path),
-    // then update the status ribbon from real map/hint/touch telemetry.
-    const std::wstring wPath = utf8ToWide(ggufPath);
-    if (wPath.empty())
-    {
-        ide->appendToOutput("Streamer self-check: invalid path encoding\n", "System",
-                            Win32IDE::OutputSeverity::Warning);
-        return;
-    }
-
-    const SovereignConfig& cfg = GetSovereignConfig();
-    RawrXDModelLoader loader;
-    loader.SetSilencePrivilegeWarnings(cfg.silence_privilege_warnings);
-    loader.SetPrefetchEnabled(cfg.model_prefetch_enabled);
-    loader.SetWorkingSetLockEnabled(cfg.model_workingset_lock_enabled);
-    if (!loader.Load(wPath.c_str(), VK_NULL_HANDLE, VK_NULL_HANDLE))
-    {
-        ide->appendToOutput("Streamer self-check: loader.Load failed\n", "System", Win32IDE::OutputSeverity::Warning);
-        return;
-    }
-
-    const uint64_t fileSize = loader.GetFileSizeBytes();
-    const size_t mapSize2mb = 2u * 1024u * 1024u;
-    const uint64_t off0 = 0;
-    const uint64_t off1 = (fileSize > (mapSize2mb + 4096ull)) ? (fileSize - mapSize2mb - 4096ull) : 0ull;
-
-    auto getPageFaultCount = []() -> uint64_t
-    {
-        PROCESS_MEMORY_COUNTERS pmc{};
-        pmc.cb = sizeof(pmc);
-        if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
-            return 0;
-        return static_cast<uint64_t>(pmc.PageFaultCount);
-    };
-
-    auto getIoCounters = []() -> IO_COUNTERS
-    {
-        IO_COUNTERS io{};
-        (void)GetProcessIoCounters(GetCurrentProcess(), &io);
-        return io;
-    };
-
-    auto oneMap = [&](uint64_t off, size_t sz, bool doHint, bool updateVmmRibbon) -> bool
-    {
-        const uint64_t pf0 = getPageFaultCount();
-        const IO_COUNTERS io0 = getIoCounters();
-
-        const uint64_t t0 = qpcNowU64();
-        void* p = loader.MapWindow(off, sz);
-        const uint64_t t1 = qpcNowU64();
-        if (!p)
-            return false;
-
-        bool aligned2mb = true;
-        if (loader.UsingLargePages())
-        {
-            const uintptr_t base = reinterpret_cast<uintptr_t>(loader.GetCurrentViewBase());
-            aligned2mb = ((base & 0x1FFFFFull) == 0);
-        }
-
-        bool hintOk = false;
-        if (doHint)
-            hintOk = loader.HintRange(off, sz);
-
-        // "Touch" a cache line to force any first-touch faults to materialize here.
-        const uint64_t u0 = qpcNowU64();
-        volatile uint64_t* v = reinterpret_cast<volatile uint64_t*>(p);
-        const uint64_t sink = v[0];
-        (void)sink;
-        const uint64_t u1 = qpcNowU64();
-
-        const uint64_t pf1 = getPageFaultCount();
-        const IO_COUNTERS io1 = getIoCounters();
-        const uint64_t pfDelta = (pf1 >= pf0) ? (pf1 - pf0) : 0;
-        const uint64_t ioReadOpsDelta =
-            (io1.ReadOperationCount >= io0.ReadOperationCount) ? (io1.ReadOperationCount - io0.ReadOperationCount) : 0;
-        const uint64_t ioReadBytesDelta =
-            (io1.ReadTransferCount >= io0.ReadTransferCount) ? (io1.ReadTransferCount - io0.ReadTransferCount) : 0;
-
-        if (updateVmmRibbon && ide->getStatusBar())
-        {
-            const bool pf = cfg.model_prefetch_enabled;
-            const bool lp = loader.UsingLargePages();
-            wchar_t buf[160]{};
-            wchar_t tip[256]{};
-            VmmRibbonTier tier = VmmRibbonTier::Red;
-            if (lp && pf)
-                tier = VmmRibbonTier::Green;
-            else if (!lp && pf)
-                tier = VmmRibbonTier::Yellow;
-            else if (lp && !pf)
-                tier = VmmRibbonTier::Gray;
-            else
-                tier = VmmRibbonTier::Red;
-            HICON ico = getVmmLedIcon(tier);
-
-            const wchar_t* gpuAsm =
-#if defined(RAWRXD_HAS_SOVEREIGN_GPU_ASM) && (RAWRXD_HAS_SOVEREIGN_GPU_ASM != 0)
-                L"ACTIVE";
-#else
-                L"FALLBACK";
-#endif
-
-            // Permanent ribbon is "glanceable" tier text; deep-dive numbers go in tooltip.
-            const wchar_t* tierText = L"[Legacy]";
-            if (lp && pf)
-                tierText = L"[2MB + PF]";
-            else if (!lp && pf)
-                tierText = L"[4KB + PF]";
-            else if (lp && !pf)
-                tierText = L"[2MB]";
-            else
-                tierText = L"[Legacy]";
-
-            _snwprintf_s(buf, _countof(buf), _TRUNCATE, L"VMM: %s  GPU-ASM:%s", tierText, gpuAsm);
-            _snwprintf_s(tip, _countof(tip), _TRUNCATE,
-                         L"VMM diagnostics: pf\u0394=%llu, ioR=%llu ops / %llu bytes, touch=%.2f ms, map=%.2f ms",
-                         static_cast<unsigned long long>(pfDelta), static_cast<unsigned long long>(ioReadOpsDelta),
-                         static_cast<unsigned long long>(ioReadBytesDelta), qpcDeltaToMs(u1 - u0),
-                         qpcDeltaToMs(t1 - t0));
-            SendMessageW(ide->getStatusBar(), SB_SETTEXT, 2, (LPARAM)buf);
-            // Status bar tooltips (requires common controls v6; ignored if unsupported)
-            SendMessageW(ide->getStatusBar(), SB_SETTIPTEXTW, 2, (LPARAM)tip);
-            if (ico)
-                SendMessageW(ide->getStatusBar(), SB_SETICON, 2, (LPARAM)ico);
-        }
-
-        loader.UnmapWindow();
-
-        std::ostringstream ss;
-        ss << "Streamer self-check: off=" << off << " map_ms=" << qpcDeltaToMs(t1 - t0)
-           << " largePages=" << (loader.UsingLargePages() ? "1" : "0") << " aligned2mb=" << (aligned2mb ? "1" : "0")
-           << " hint=" << (hintOk ? "1" : "0") << "\n";
-        ide->appendToOutput(ss.str(), "System",
-                            (aligned2mb || !loader.UsingLargePages()) ? Win32IDE::OutputSeverity::Info
-                                                                      : Win32IDE::OutputSeverity::Warning);
-        return (!loader.UsingLargePages() || aligned2mb);
-    };
-
-    // Alignment + mapping sanity at start/end.
-    const bool okA = oneMap(off0, mapSize2mb, false, true);
-    const bool okB = oneMap(off1, mapSize2mb, false, true);
-
-    // Warm-up: map a small early window and issue a hint to prefetch within it.
-    (void)oneMap(off0, 64u * 1024u * 1024u, true, true);
-
-    if (okA && okB)
-        ide->appendToOutput("Streamer self-check: PASS\n", "System", Win32IDE::OutputSeverity::Info);
-    else
-        ide->appendToOutput("Streamer self-check: FAIL\n", "System", Win32IDE::OutputSeverity::Warning);
-
-    // Status bar part 2 is updated by the per-window ribbon path above.
-}
 
 static HICON createLedIcon(COLORREF rgb)
 {
@@ -1155,8 +1145,7 @@ static std::string extractDisplayTextFromBackendPayload(const std::string& paylo
     };
 
     const std::string normalizedTopLevel = stripSseDataPrefix(trimmed);
-    if (!normalizedTopLevel.empty() &&
-        (normalizedTopLevel.front() == '{' || normalizedTopLevel.front() == '['))
+    if (!normalizedTopLevel.empty() && (normalizedTopLevel.front() == '{' || normalizedTopLevel.front() == '['))
     {
         const std::string extracted = parseAndExtract(normalizedTopLevel);
         if (!extracted.empty())
@@ -1474,6 +1463,10 @@ static void logRawResponseHexPreview(const std::string& response)
 #ifndef IDC_MODEL_EFFORT_LABEL
 #define IDC_MODEL_EFFORT_LABEL 1212
 #endif
+
+#ifndef IDC_EMOJI_BASE
+#define IDC_EMOJI_BASE 8100
+#endif
 #ifndef IDC_AI_MAX_TOKENS_SLIDER
 #define IDC_AI_MAX_TOKENS_SLIDER 5005
 #endif
@@ -1491,9 +1484,6 @@ static void logRawResponseHexPreview(const std::string& response)
 #endif
 #ifndef IDC_AI_NO_REFUSAL
 #define IDC_AI_NO_REFUSAL 5010
-#endif
-#ifndef IDC_AI_AGENTIC_MODE
-#define IDC_AI_AGENTIC_MODE 5011
 #endif
 
 // Panel (Bottom) - Terminal, Output, Problems, Debug Console
@@ -1636,7 +1626,7 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_AGENT_CONFIGURE_MODEL 4102
 #define IDM_AGENT_VIEW_TOOLS 4103
 #define IDM_AGENT_VIEW_STATUS 4104
-#define IDM_AGENT_TOGGLE_FILE_CONTEXT 4168  // Toggle current file context analysis
+#define IDM_AGENT_TOGGLE_FILE_CONTEXT 4168      // Toggle current file context analysis
 #define IDM_AGENT_AUTONOMOUS_COMMUNICATOR 4163  // free slot; 4106=IDM_AGENT_MEMORY, 4110=IDM_SUBAGENT_CHAIN
 #define IDM_PLAN_ORCHESTRATOR_START 4164
 #define IDM_PLAN_ORCHESTRATOR_STOP 4165
@@ -1684,6 +1674,7 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
       m_hwndIncludePattern(nullptr), m_hwndExcludePattern(nullptr), m_searchInProgress(false),
       // Source Control View
       m_hwndSCMFileList(nullptr), m_hwndSCMToolbar(nullptr), m_hwndSCMMessageBox(nullptr),
+      m_hwndVcsStagingPanel(nullptr),
       // Debug View
       m_hwndDebugConfigs(nullptr), m_hwndDebugToolbar(nullptr), m_hwndDebugVariables(nullptr),
       m_hwndDebugCallStack(nullptr), m_hwndDebugConsole(nullptr), m_debuggingActive(false),
@@ -1713,7 +1704,18 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
       m_hwndModelProgressBar(nullptr), m_hwndModelProgressLabel(nullptr), m_hwndModelProgressContainer(nullptr),
       m_hwndModelCancelBtn(nullptr), m_sessionRestored(false), m_annotationsVisible(true), m_annotationFont(nullptr),
       m_hwndAnnotationOverlay(nullptr), m_nativePipelineReady(false), m_tabManager(nullptr), m_inferenceRunning(false),
-      m_inferenceStopRequested(false)
+      m_inferenceStopRequested(false),
+      // ================= Chat Subsystem Integration (A2.1) ===================
+      m_nativeEngineLoaded(false), m_chatMessageRenderer(nullptr), m_chatCommandRouter(nullptr),
+      m_chatIpcDelegation(nullptr), m_chatInputGhostRenderer(nullptr), m_chatPersistencePool(nullptr),
+      m_hwndChatPanel(nullptr), m_hwndChatInput(nullptr), m_hwndChatOutput(nullptr), m_hwndChatSendBtn(nullptr),
+      m_hwndChatClearBtn(nullptr), m_hwndChatGhostOverlay(nullptr), m_oldChatInputProc(nullptr),
+      m_oldChatOutputProc(nullptr), m_oldChatSendBtnProc(nullptr), m_oldChatClearBtnProc(nullptr),
+      m_chatIpcSendBuffer(), m_chatIpcRecvBuffer(), m_chatIpcActive(false), m_chatIpcSendPending(false),
+      m_chatIpcRecvPending(false), m_chatPersistenceFilePath(), m_chatPersistenceActive(false),
+      m_chatPersistenceDirty(false), m_chatContextHistory(), m_chatContextUser(), m_chatContextAssistant(),
+      m_chatContextSystem(), m_chatTokenBudget(4096), m_chatTokenUsed(0), m_chatRecoveryState(ChatRecoveryState::None),
+      m_chatGdiSaveCount(0), m_chatGdiRestoreCount(0), m_chatSubsystemInitialized(false)
 {
     // ============================================================
     // MINIMAL CONSTRUCTOR — all heavy init deferred to onCreate()
@@ -1747,7 +1749,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 4/8: Ollama localhost defaults installed\n",
                          "[Init:Ctor] Batch 4/8: default Ollama base URL and model override initialized\n");
 
-    m_nativeEngineLoaded = false;
     ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 5/8: native engine slot marked unloaded (lazy bind)\n",
                          "[Init:Ctor] Batch 5/8: native engine loaded flag cleared until backend wiring\n");
 
@@ -1841,6 +1842,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_SAVEAS, L"Save &As");
     AppendMenuW(hFileMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_LOAD_MODEL, L"Load &Model (GGUF)...");
+    AppendMenuW(hFileMenu, MF_STRING, IDM_REFRESH_MODELS, L"&Refresh Models...");
     AppendMenuW(hFileMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_EXIT, L"E&xit");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hFileMenu, L"&File");
@@ -2073,6 +2075,8 @@ void Win32IDE::createMenuBar(HWND hwnd)
 
     // Shortcuts & SLO (Tier 5)
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_KILL_BUILD_LOCKS,
+                L"Kill Stuck &Build Tools (Ninja, CMake, MSVC...)\tCtrl+Shift+Alt+K");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_QW_SHORTCUT_EDITOR, L"\u2328 &Keyboard Shortcuts...\tCtrl+K Ctrl+S");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_SHORTCUT_SHOW, L"Keyboard Shortcut &Editor...");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_QW_SLO_DASHBOARD, L"&SLO Dashboard...");
@@ -2692,6 +2696,11 @@ void Win32IDE::createEditor(HWND hwnd)
         {
             SetPropW(m_hwndEditor, kEditorProcProp, (HANDLE)oldEditorProc);
         }
+    }
+
+    if (lineStripEditorEnabled())
+    {
+        createLineStripOverlay(hwnd);
     }
 }
 
@@ -4028,16 +4037,30 @@ void Win32IDE::onTerminalError(int paneId, const std::string& error)
 
 std::string Win32IDE::getWindowText(HWND hwnd)
 {
-    int length = GetWindowTextLengthW(hwnd);
-    if (length <= 0)
+    if (!hwnd || !IsWindow(hwnd))
         return {};
-    std::wstring wtext(length + 1, L'\0');
-    GetWindowTextW(hwnd, &wtext[0], length + 1);
-    wtext.resize(length);
-    return wideToUtf8(wtext.c_str());
+
+    constexpr int kMaxWindowTextChars = 4 * 1024 * 1024;
+    int length = GetWindowTextLengthW(hwnd);
+    if (length <= 0 || length > kMaxWindowTextChars)
+        return {};
+
+    try
+    {
+        std::wstring wtext(static_cast<size_t>(length) + 1, L'\0');
+        const int copied = GetWindowTextW(hwnd, wtext.data(), length + 1);
+        if (copied <= 0)
+            return {};
+        wtext.resize(static_cast<size_t>(copied));
+        return wideToUtf8(wtext.c_str());
+    }
+    catch (const std::bad_alloc&)
+    {
+        return {};
+    }
 }
 
-std::string Win32IDE::getRichEditDocumentUtf8(HWND hwnd)
+std::string Win32IDE::getRichEditDocumentUtf8(HWND hwnd) const
 {
     if (!hwnd || !IsWindow(hwnd))
         return {};
@@ -4045,7 +4068,8 @@ std::string Win32IDE::getRichEditDocumentUtf8(HWND hwnd)
     gtl.flags = GTL_DEFAULT;
     gtl.codepage = CP_UNICODE;
     const LONG nchars = static_cast<LONG>(SendMessage(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0));
-    if (nchars <= 0)
+    constexpr LONG kMaxRichEditChars = 4 * 1024 * 1024;
+    if (nchars <= 0 || nchars > kMaxRichEditChars)
         return {};
     std::vector<wchar_t> wbuf(static_cast<size_t>(nchars) + 2, L'\0');
     GETTEXTEX gt{};
@@ -4059,6 +4083,51 @@ std::string Win32IDE::getRichEditDocumentUtf8(HWND hwnd)
         return {};
     wbuf[static_cast<size_t>(copied)] = L'\0';
     return wideToUtf8(wbuf.data());
+}
+
+std::string Win32IDE::snapshotWalOriginalContentForPath(const std::string& pathUtf8) const
+{
+    if (pathUtf8.empty())
+        return {};
+
+    const auto sameLogicalPath = [](const std::string& canonicalUtf8, const std::string& candidateUtf8) -> bool
+    {
+        if (canonicalUtf8.empty() || candidateUtf8.empty())
+            return false;
+        if (_stricmp(canonicalUtf8.c_str(), candidateUtf8.c_str()) == 0)
+            return true;
+        namespace fs = std::filesystem;
+        std::error_code eca;
+        std::error_code ecb;
+        const fs::path ca = fs::weakly_canonical(fs::u8path(canonicalUtf8), eca);
+        const fs::path cb = fs::weakly_canonical(fs::u8path(candidateUtf8), ecb);
+        if (eca || ecb)
+            return false;
+        return _stricmp(ca.string().c_str(), cb.string().c_str()) == 0;
+    };
+
+    if (!m_currentFile.empty() && sameLogicalPath(pathUtf8, m_currentFile))
+    {
+        if (m_hwndEditor && IsWindow(m_hwndEditor))
+            return getRichEditDocumentUtf8(m_hwndEditor);
+    }
+
+    for (const auto& tab : m_editorTabs)
+    {
+        if (!tab.filePath.empty() && sameLogicalPath(pathUtf8, tab.filePath))
+            return tab.content;
+    }
+
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    if (!fs::exists(pathUtf8, ec))
+        return {};
+    std::ifstream in(pathUtf8, std::ios::binary);
+    if (!in.is_open())
+        return {};
+    std::ostringstream o;
+    o << in.rdbuf();
+    return o.str();
 }
 
 // UTF-8 byte offset <-> UTF-16 character index for Rich Edit
@@ -5673,9 +5742,9 @@ void Win32IDE::showFindDialog()
     if (!m_hwndFindDialog)
     {
         // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
-        HWND hwndDlg =
-            CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Find", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-                            100, 100, 400, 150, m_hwndMain, nullptr, m_hInstance, nullptr);
+        HWND hwndDlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Find",
+                                       WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 100, 100, 400, 150, m_hwndMain,
+                                       nullptr, m_hInstance, nullptr);
         if (!hwndDlg)
         {
             const DWORD createErr = GetLastError();
@@ -5716,9 +5785,9 @@ void Win32IDE::showReplaceDialog()
     }
 
     // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
-    HWND hwndDlg =
-        CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Replace", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-                        100, 100, 400, 200, m_hwndMain, nullptr, m_hInstance, nullptr);
+    HWND hwndDlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Replace",
+                                   WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 100, 100, 400, 200, m_hwndMain,
+                                   nullptr, m_hInstance, nullptr);
     if (!hwndDlg)
     {
         const DWORD createErr = GetLastError();
@@ -7047,6 +7116,15 @@ LRESULT CALLBACK Win32IDE::FileExplorerContainerProc(HWND hwnd, UINT uMsg, WPARA
                     }
                     return 0;
                 }
+                case TVN_SELCHANGEDW:
+                {
+                    NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
+                    if (pnmtv && pnmtv->itemNew.hItem)
+                    {
+                        pThis->onFileTreeSelect(pnmtv->itemNew.hItem);
+                    }
+                    return 0;
+                }
                 case NM_DBLCLK:
                     pThis->onFileExplorerDoubleClick();
                     return 0;
@@ -7209,11 +7287,13 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
                 m_nativeEngine = RawrXD::CPUInferenceEngine::GetSharedInstance();
                 auto memPlugin = std::make_shared<RawrXD::Modules::NativeMemoryModule>();
                 m_nativeEngine->RegisterMemoryPlugin(memPlugin);
-                appendToOutput("Initialized Native CPU Inference Engine for ghost text.\n", "Output", OutputSeverity::Info);
+                appendToOutput("Initialized Native CPU Inference Engine for ghost text.\n", "Output",
+                               OutputSeverity::Info);
             }
             catch (const std::exception& e)
             {
-                appendToOutput(std::string("Failed to init native engine for ghost text: ") + e.what() + "\n", "Errors", OutputSeverity::Warning);
+                appendToOutput(std::string("Failed to init native engine for ghost text: ") + e.what() + "\n", "Errors",
+                               OutputSeverity::Warning);
             }
         }
         // Load model into native engine for ghost text completions
@@ -7222,15 +7302,18 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
             RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine.get());
             if (!engine->IsModelLoaded())
             {
-                appendToOutput("Loading model into Native Engine for ghost text: " + filepath + "\n", "Output", OutputSeverity::Info);
+                appendToOutput("Loading model into Native Engine for ghost text: " + filepath + "\n", "Output",
+                               OutputSeverity::Info);
                 if (engine->LoadModel(filepath))
                 {
                     m_nativeEngineLoaded = true;
-                    appendToOutput("✅ Native Engine Model Loaded for ghost text completions.\n", "Output", OutputSeverity::Info);
+                    appendToOutput("✅ Native Engine Model Loaded for ghost text completions.\n", "Output",
+                                   OutputSeverity::Info);
                 }
                 else
                 {
-                    appendToOutput("⚠️ Native Engine Model Load failed (ghost text will use fallback providers).\n", "Errors", OutputSeverity::Warning);
+                    appendToOutput("⚠️ Native Engine Model Load failed (ghost text will use fallback providers).\n",
+                                   "Errors", OutputSeverity::Warning);
                 }
             }
         }
@@ -7384,12 +7467,10 @@ void Win32IDE::asyncModelLoadWorker(std::string path)
     {
         std::ostringstream os;
         os << "[AsyncModelLoad] load finished ggufOk=" << (result->ggufOk ? 1 : 0)
-           << " bridgeOk=" << (result->bridgeOk ? 1 : 0)
-           << " wallMs=" << result->wallMs << "\n";
+           << " bridgeOk=" << (result->bridgeOk ? 1 : 0) << " wallMs=" << result->wallMs << "\n";
         OutputDebugStringA(os.str().c_str());
         LOG_INFO(std::string("[AsyncModelLoad] load finished ggufOk=") + (result->ggufOk ? "1" : "0") +
-                 " bridgeOk=" + (result->bridgeOk ? "1" : "0") +
-                 " wallMs=" + std::to_string(result->wallMs));
+                 " bridgeOk=" + (result->bridgeOk ? "1" : "0") + " wallMs=" + std::to_string(result->wallMs));
     }
 
     if (!self->m_hwndMain || !IsWindow(self->m_hwndMain) ||
@@ -7432,14 +7513,16 @@ void Win32IDE::onModelReadyUnified(bool shouldReplay)
 
 void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
 {
+    if (!smokeCopilotChatEnabled())
+        return;
+
     if (filepath.empty())
         return;
 
     {
         std::ostringstream os;
         os << "[AsyncModelLoad] request tid=" << GetCurrentThreadId() << " path='" << filepath << "'"
-           << " shuttingDown=" << (isShuttingDown() ? 1 : 0)
-           << " hwndMain=" << static_cast<const void*>(m_hwndMain)
+           << " shuttingDown=" << (isShuttingDown() ? 1 : 0) << " hwndMain=" << static_cast<const void*>(m_hwndMain)
            << "\n";
         OutputDebugStringA(os.str().c_str());
         LOG_INFO(std::string("[AsyncModelLoad] request ") + filepath);
@@ -7622,10 +7705,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             const size_t memNow = m_ggufLoader->GetCurrentMemoryUsage();
             std::ostringstream zlog;
             zlog << "[ZONE_OK] name=embedding ptr=" << static_cast<const void*>(m_ggufLoader.get())
-                 << " size=" << memNow
-                 << " tensors=" << tensorsNow.size()
-                 << " zones=" << loadedZones.size()
-                 << "\n";
+                 << " size=" << memNow << " tensors=" << tensorsNow.size() << " zones=" << loadedZones.size() << "\n";
             OutputDebugStringA(zlog.str().c_str());
         }
     }
@@ -8054,15 +8134,29 @@ void Win32IDE::expandTreeNode(HTREEITEM hItem)
 
 std::string Win32IDE::getSelectedFilePath()
 {
-    HTREEITEM hSelected = TreeView_GetSelection(m_hwndFileExplorer);
-    if (!hSelected)
+    HWND hTree = (m_hwndFileTree && IsWindow(m_hwndFileTree)) ? m_hwndFileTree : m_hwndFileExplorer;
+    if (!hTree)
+    {
         return "";
+    }
+
+    HTREEITEM hSelected = TreeView_GetSelection(hTree);
+    if (!hSelected)
+    {
+        return "";
+    }
+
+    const std::string mapped = getTreeItemPath(hSelected);
+    if (!mapped.empty())
+    {
+        return mapped;
+    }
 
     TVITEMW item = {};
     item.hItem = hSelected;
     item.mask = TVIF_PARAM;
 
-    if (SendMessageW(m_hwndFileExplorer, TVM_GETITEM, 0, (LPARAM)&item) && item.lParam)
+    if (SendMessageW(hTree, TVM_GETITEM, 0, (LPARAM)&item) && item.lParam)
     {
         return std::string(reinterpret_cast<char*>(item.lParam));
     }
@@ -8371,6 +8465,18 @@ bool Win32IDE::isModelLoaded() const
 
 std::string Win32IDE::sendMessageToModel(const std::string& message)
 {
+    return sendMessageToModelInternal(message, false, 512);
+}
+
+std::string Win32IDE::sendMessageToModelWithoutChatHistory(const std::string& message)
+{
+    const int cap = (std::max)(1024, (std::min)(8192, static_cast<int>(m_inferenceConfig.maxTokens) * 4));
+    return sendMessageToModelInternal(message, true, cap);
+}
+
+std::string Win32IDE::sendMessageToModelInternal(const std::string& message, bool suppressChatHistory,
+                                                 int localGenerateCap)
+{
     const auto engine = m_nativeEngine ? m_nativeEngine : RawrXD::CPUInferenceEngine::GetSharedInstance();
     const bool canChat = isModelLoaded();
     if (!canChat)
@@ -8407,7 +8513,8 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
         std::string resp = routeWithIntelligence(message);
         if (!resp.empty() && resp.find("[Backend Error]") != 0)
         {
-            recordChatTurn(message, resp);
+            if (!suppressChatHistory)
+                recordChatTurn(message, resp);
             return resp;
         }
     }
@@ -8416,16 +8523,19 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
     if (engine && engine->IsModelLoaded())
     {
         auto tokens = engine->Tokenize(message);
-        auto output_tokens = engine->Generate(tokens, 512);
+        const int genCap = (std::max)(64, localGenerateCap);
+        auto output_tokens = engine->Generate(tokens, genCap);
         std::string response = engine->Detokenize(output_tokens);
-        recordChatTurn(message, response);
+        if (!suppressChatHistory)
+            recordChatTurn(message, response);
         return response;
     }
 
     std::string llmResponse;
     if (trySendToOllama(message, llmResponse))
     {
-        recordChatTurn(message, llmResponse);
+        if (!suppressChatHistory)
+            recordChatTurn(message, llmResponse);
         return llmResponse;
     }
 
@@ -8437,19 +8547,23 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
         AgentResponse r = m_agenticBridge->ExecuteAgentCommand(message);
         if (r.type == AgentResponseType::TOOL_CALL && !r.content.empty())
         {
-            conversationDetectModelFormat(m_loadedModelPath.empty() ? std::string("local") : m_loadedModelPath);
-            if (m_inferenceConfig.contextWindow > 0)
-                conversationSetContextWindow(m_inferenceConfig.contextWindow);
-            conversationAddUser(message);
-            m_chatHistory.push_back({"user", message});
-            persistChatTurnToDisk("user", message);
-            const std::string tname = r.toolName.empty() ? std::string("tool") : r.toolName;
-            recordToolTurnInChatHistory(tname, r.content, "result");
+            if (!suppressChatHistory)
+            {
+                conversationDetectModelFormat(m_loadedModelPath.empty() ? std::string("local") : m_loadedModelPath);
+                if (m_inferenceConfig.contextWindow > 0)
+                    conversationSetContextWindow(m_inferenceConfig.contextWindow);
+                conversationAddUser(message);
+                m_chatHistory.push_back({"user", message});
+                persistChatTurnToDisk("user", message);
+                const std::string tname = r.toolName.empty() ? std::string("tool") : r.toolName;
+                recordToolTurnInChatHistory(tname, r.content, "result");
+            }
             return r.content;
         }
         if (r.type != AgentResponseType::AGENT_ERROR && !r.content.empty())
         {
-            recordChatTurn(message, r.content);
+            if (!suppressChatHistory)
+                recordChatTurn(message, r.content);
             return r.content;
         }
         if (r.type == AgentResponseType::AGENT_ERROR && !r.content.empty())
@@ -8464,7 +8578,7 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
     if (!detail.empty())
     {
         return "Error: Inference unavailable — " + detail +
-               "\n(Check tokenizer.json / merges.txt beside the GGUF, arch support, and free RAM.)\n";
+               "\n(Check tokenizer.json / merges.txt beside the GGUF, arch support, or free RAM.)\n";
     }
     return "Error: No inference backend produced a response. Load a GGUF (File > Load Model), or configure "
            "Ollama/backend in Backend Switcher.\n";
@@ -8918,9 +9032,9 @@ void Win32IDE::showCommitDialog()
     }
 
     // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
-    HWND hwndDlg =
-        CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Git Commit", WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-                        150, 150, 500, 200, m_hwndMain, nullptr, m_hInstance, nullptr);
+    HWND hwndDlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"Git Commit",
+                                   WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 150, 150, 500, 200, m_hwndMain,
+                                   nullptr, m_hInstance, nullptr);
     if (!hwndDlg)
     {
         const DWORD createErr = GetLastError();
@@ -9280,9 +9394,9 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
         }
         if (escPrompt.empty())
             escPrompt = " ";
-        std::string body = std::string("{\"model\":\"") + modelTag +
-                           "\",\"prompt\":\"" + escPrompt +
-                           "\",\"stream\":false,\"options\":{\"num_ctx\":1024,\"num_predict\":256,\"num_batch\":64,\"use_mmap\":false}}";
+        std::string body = std::string("{\"model\":\"") + modelTag + "\",\"prompt\":\"" + escPrompt +
+                           "\",\"stream\":false,\"options\":{\"num_ctx\":1024,\"num_predict\":256,\"num_batch\":64,"
+                           "\"use_mmap\":false}}";
         std::wstring wHeaders = L"Content-Type: application/json";
         BOOL bResults = WinHttpSendRequest(hRequest, wHeaders.c_str(), (DWORD)-1L, (LPVOID)body.c_str(),
                                            (DWORD)body.size(), (DWORD)body.size(), 0);
@@ -9398,7 +9512,15 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
 
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
 {
+    const unsigned long long traceId = NextChatTraceId();
+    const std::string promptSig = MakePromptSignature(prompt);
     METRICS.increment("inference.async_requests_total");
+    LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] generateResponseAsync begin " + promptSig + " preview='" +
+             MakeLogPreview(prompt) + "' loaded_model='" + m_loadedModelPath + "'");
+
+    OutputDebugStringA(("[generateResponseAsync] Starting for traceId: " + std::to_string(traceId) + " prompt: '" +
+                        MakeLogPreview(prompt, 50) + "' loaded_model: '" + m_loadedModelPath + "'\n")
+                           .c_str());
 
     // Phase barrier: enqueue if runtime not ready
     if (m_sessionController)
@@ -9407,6 +9529,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
         if (!m_sessionController->IsExecutionReady(&reason))
         {
             std::string status;
+            LOG_WARNING("[ChatTrace#" + std::to_string(traceId) + "] execution not ready reason='" + reason + "'");
             if (m_sessionController->EnqueuePendingInference(prompt, &status))
             {
                 if (callback)
@@ -9432,6 +9555,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             if (queuedDepth == 0)
             {
                 METRICS.increment("inference.async_requests_rejected");
+                LOG_WARNING("[ChatTrace#" + std::to_string(traceId) + "] inference queue full; rejecting request " +
+                            promptSig);
                 if (callback)
                 {
                     callback("System busy: inference queue is full. Please retry.", true);
@@ -9440,6 +9565,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             else
             {
                 METRICS.increment("inference.async_requests_queued");
+                LOG_INFO("[ChatTrace#" + std::to_string(traceId) +
+                         "] inference already running; queued depth=" + std::to_string(queuedDepth));
             }
             return;
         }
@@ -9453,7 +9580,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
     // Launch dedicated inference thread using Native Agentic Bridge
     m_inferenceThread = std::thread(
-        [this, prompt]()
+        [this, prompt, traceId, promptSig]()
         {
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
             auto finishAndScheduleNext = [this]()
@@ -9471,6 +9598,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             };
             if (_guard.cancelled)
             {
+                LOG_WARNING("[ChatTrace#" + std::to_string(traceId) + "] worker cancelled before start");
                 finishAndScheduleNext();
                 return;
             }
@@ -9498,33 +9626,61 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
                 }();
 
+                LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] worker start " + promptSig +
+                         " smoke_chat=" + BoolToLog(smokeChatMode) + " smoke_no_stream=" + BoolToLog(smokeNoStream) +
+                         " smoke_no_ui_binding=" + BoolToLog(smokeNoUiBinding));
+
                 if (!m_agenticBridge)
                 {
+                    OutputDebugStringA("[generateResponseAsync] AgenticBridge is null, attempting to ensure model\n");
                     if (!smokeChatMode && !m_loadedModelPath.empty() && looksLikeLocalModelPath(m_loadedModelPath))
+                    {
+                        OutputDebugStringA(("[generateResponseAsync] Calling ensureAgenticBridgeHasModel for: '" +
+                                            m_loadedModelPath + "'\n")
+                                               .c_str());
                         ensureAgenticBridgeHasModel(m_loadedModelPath);
+                    }
                     if (!m_agenticBridge)
                     {
-                        if (!smokeChatMode)
-                        {
-                            if (m_inferenceCallback)
-                                m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
-                            finishAndScheduleNext();
-                            return;
-                        }
-                        OutputDebugStringA("[SMOKE] bypassing Agentic Bridge precondition; pipeline path will be used\n");
+                        OutputDebugStringA(
+                            "[AsyncBridge] Agentic Bridge unavailable; standard-chat fallback path will be used\n");
+                        LOG_WARNING("[ChatTrace#" + std::to_string(traceId) +
+                                    "] agentic bridge unavailable after ensure; fallback remains possible");
+                        OutputDebugStringA(
+                            ("[generateResponseAsync] AgenticBridge still null after ensure, loadedModelPath: '" +
+                             m_loadedModelPath + "'\n")
+                                .c_str());
                     }
+                    else
+                    {
+                        OutputDebugStringA("[generateResponseAsync] AgenticBridge successfully obtained\n");
+                    }
+                }
+                else
+                {
+                    OutputDebugStringA("[generateResponseAsync] AgenticBridge already available\n");
                 }
                 if (m_agenticBridge && !m_loadedModelPath.empty())
                 {
+                    OutputDebugStringA(("[generateResponseAsync] AgenticBridge available, loadedModelPath: '" +
+                                        m_loadedModelPath + "'\n")
+                                           .c_str());
                     if (looksLikeLocalModelPath(m_loadedModelPath))
                     {
                         const bool needsLocalLoad = m_agenticBridge->GetCurrentModel() != m_loadedModelPath ||
                                                     !m_agenticBridge->HasUsableBackend();
+                        OutputDebugStringA(("[generateResponseAsync] Local model path detected, needsLocalLoad: " +
+                                            std::string(needsLocalLoad ? "true" : "false") + " currentModel: '" +
+                                            m_agenticBridge->GetCurrentModel() + "' hasUsableBackend: " +
+                                            std::string(m_agenticBridge->HasUsableBackend() ? "true" : "false") + "\n")
+                                               .c_str());
                         if (needsLocalLoad)
                         {
                             OutputDebugStringA(("[AsyncBridge] Loading selected local model on worker thread: " +
                                                 m_loadedModelPath + "\n")
                                                    .c_str());
+                            LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] bridge loading local model '" +
+                                     m_loadedModelPath + "'");
                             if (!ensureAgenticBridgeHasModel(m_loadedModelPath))
                             {
                                 const std::string detail =
@@ -9533,11 +9689,28 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                                     detail.empty() ? ("Error: Failed to load selected model: " + m_loadedModelPath)
                                                    : ("Error: Failed to load selected model: " + m_loadedModelPath +
                                                       " | " + detail);
+                                LOG_ERROR("[ChatTrace#" + std::to_string(traceId) +
+                                          "] local model load failed error='" + error + "'");
+                                OutputDebugStringA(
+                                    ("[generateResponseAsync] Model load failed: " + error + "\n").c_str());
                                 if (m_inferenceCallback)
                                     m_inferenceCallback(error, true);
                                 finishAndScheduleNext();
                                 return;
                             }
+                            else
+                            {
+                                OutputDebugStringA("[generateResponseAsync] Model load successful\n");
+                                OutputDebugStringA(
+                                    ("[generateResponseAsync] After load - currentModel: '" +
+                                     m_agenticBridge->GetCurrentModel() + "' hasUsableBackend: " +
+                                     std::string(m_agenticBridge->HasUsableBackend() ? "true" : "false") + "\n")
+                                        .c_str());
+                            }
+                        }
+                        else
+                        {
+                            OutputDebugStringA("[generateResponseAsync] No local load needed\n");
                         }
                     }
                     else if (m_agenticBridge->GetCurrentModel() != m_loadedModelPath)
@@ -9545,6 +9718,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         m_agenticBridge->SetModel(m_loadedModelPath);
                         OutputDebugStringA(
                             ("[AsyncBridge] Desired remote model updated: " + m_loadedModelPath + "\n").c_str());
+                        LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] updated bridge remote model to '" +
+                                 m_loadedModelPath + "'");
                     }
                 }
 
@@ -9555,67 +9730,82 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 const bool localPipelineForce = pipelineStrict || looksLikeLocalModelPath(m_loadedModelPath);
                 if (pipelineStrict)
                     OutputDebugStringA("[PIPELINE STRICT] enabled via RAWRXD_PIPELINE_STRICT=1\n");
+                LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] route setup pipeline_strict=" +
+                         BoolToLog(pipelineStrict) + " local_pipeline_force=" + BoolToLog(localPipelineForce) +
+                         " bridge_present=" + BoolToLog(m_agenticBridge != nullptr) + " loaded_model='" +
+                         m_loadedModelPath + "'");
 
                 // Set callback to route NativeAgent stream to the UI
                 if (m_agenticBridge)
                 {
                     m_agenticBridge->SetOutputCallback(
-                        [this, backendMissingNativeApi](const std::string& type, const std::string& msg)
+                        [this, backendMissingNativeApi, traceId](const std::string& type, const std::string& msg)
                         {
                             if (m_inferenceStopRequested.load() || isShuttingDown())
                                 return;
 
-                        // PROBE A: raw callback entry
-                        {
-                            std::string probe = "[PROBE-A] BridgeCB type=" + type +
-                                                " msg_len=" + std::to_string(msg.size()) +
-                                                " preview=" + msg.substr(0, std::min(msg.size(), (size_t)60)) + "\n";
-                            OutputDebugStringA(probe.c_str());
-                        }
+                            // PROBE A: raw callback entry
+                            {
+                                std::string probe =
+                                    "[PROBE-A] BridgeCB type=" + type + " msg_len=" + std::to_string(msg.size()) +
+                                    " preview=" + msg.substr(0, std::min(msg.size(), (size_t)60)) + "\n";
+                                OutputDebugStringA(probe.c_str());
+                            }
 
-                        // Only stream textual payload categories into chat rendering.
-                        if (type != "stream" && type != "agent")
-                        {
-                            std::string drop =
-                                "[CopilotBridgeDrop] type=" + type + " len=" + std::to_string(msg.size()) + "\n";
-                            OutputDebugStringA(drop.c_str());
-                            return;
-                        }
+                            // Only stream textual payload categories into chat rendering.
+                            if (type != "stream" && type != "agent")
+                            {
+                                std::string drop =
+                                    "[CopilotBridgeDrop] type=" + type + " len=" + std::to_string(msg.size()) + "\n";
+                                OutputDebugStringA(drop.c_str());
+                                LOG_DEBUG("[ChatTrace#" + std::to_string(traceId) + "] bridge callback dropped type='" +
+                                          type + "' len=" + std::to_string(msg.size()) + " preview='" +
+                                          MakeLogPreview(msg, 80) + "'");
+                                return;
+                            }
 
-                        const bool isNativeApiMissing =
-                            msg.find("Native inference API unavailable") != std::string::npos ||
-                            msg.find("[BackendError]") != std::string::npos;
+                            const bool isNativeApiMissing =
+                                msg.find("Native inference API unavailable") != std::string::npos ||
+                                msg.find("[BackendError]") != std::string::npos;
 
-                        // Defer fallback until command returns to avoid callback re-entrancy.
-                        if (isNativeApiMissing)
-                        {
-                            backendMissingNativeApi->store(true);
-                            return;
-                        }
+                            // Defer fallback until command returns to avoid callback re-entrancy.
+                            if (isNativeApiMissing)
+                            {
+                                backendMissingNativeApi->store(true);
+                                LOG_WARNING("[ChatTrace#" + std::to_string(traceId) +
+                                            "] bridge callback reported backend missing; deferring fallback");
+                                return;
+                            }
 
-                        if (looksLikeTokenIdSequencePayload(msg))
-                        {
-                            std::string warn =
-                                "[CopilotBridgeDrop] token-id payload suppressed len=" + std::to_string(msg.size()) +
-                                "\n";
-                            OutputDebugStringA(warn.c_str());
-                            return;
-                        }
+                            if (looksLikeTokenIdSequencePayload(msg))
+                            {
+                                std::string warn = "[CopilotBridgeDrop] token-id payload suppressed len=" +
+                                                   std::to_string(msg.size()) + "\n";
+                                OutputDebugStringA(warn.c_str());
+                                LOG_DEBUG("[ChatTrace#" + std::to_string(traceId) +
+                                          "] suppressed token-id payload len=" + std::to_string(msg.size()));
+                                return;
+                            }
 
-                        // PROBE A2: after all filters - about to fire m_inferenceCallback
-                        {
-                            std::string probe =
-                                "[PROBE-A2] Firing m_inferenceCallback msg_len=" + std::to_string(msg.size()) + "\n";
-                            OutputDebugStringA(probe.c_str());
-                        }
+                            // PROBE A2: after all filters - about to fire m_inferenceCallback
+                            {
+                                std::string probe =
+                                    "[PROBE-A2] Firing m_inferenceCallback msg_len=" + std::to_string(msg.size()) +
+                                    "\n";
+                                OutputDebugStringA(probe.c_str());
+                            }
 
-                        // "stream" type is what we send to chat UI
+                            // "stream" type is what we send to chat UI
                             if (m_inferenceCallback)
                             {
                                 m_currentInferenceResponse += msg;
                                 OutputDebugStringA(("[ChatAccum] bridge path accumulated_len=" +
                                                     std::to_string(m_currentInferenceResponse.size()) + "\n")
                                                        .c_str());
+                                LOG_DEBUG("[ChatTrace#" + std::to_string(traceId) + "] bridge callback type='" + type +
+                                          "' len=" + std::to_string(msg.size()) + " preview='" +
+                                          MakeLogPreview(msg, 80) +
+                                          "' accum_len=" + std::to_string(m_currentInferenceResponse.size()));
                                 m_inferenceCallback(msg, false);
                             }
                         });
@@ -9624,12 +9814,20 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 {
                     OutputDebugStringA(
                         "[SMOKE] Agentic Bridge unavailable at dispatch boundary; relying on local pipeline path\n");
+                    LOG_WARNING(
+                        "[ChatTrace#" + std::to_string(traceId) +
+                        "] no bridge at dispatch boundary; local_pipeline_force=" + BoolToLog(localPipelineForce));
                     if (!localPipelineForce)
                     {
                         if (m_inferenceCallback)
                         {
-                            m_inferenceCallback("Error: Agentic Bridge unavailable and pipeline path not forced.",
-                                                true);
+                            std::string fallback = generateResponse(prompt);
+                            m_currentInferenceResponse = fallback;
+                            LOG_INFO(
+                                "[ChatTrace#" + std::to_string(traceId) +
+                                "] used synchronous generateResponse fallback len=" + std::to_string(fallback.size()) +
+                                " preview='" + MakeLogPreview(fallback, 100) + "'");
+                            m_inferenceCallback(fallback, true);
                         }
                         finishAndScheduleNext();
                         return;
@@ -9644,10 +9842,13 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 bool pipelineHandled = false;
                 if (localPipelineForce && !m_inferenceStopRequested.load() && !isShuttingDown())
                 {
+                    LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] entering unified local pipeline");
                     const std::string initErr = RawrXD::initInferencePipeline(m_loadedModelPath);
                     if (!initErr.empty())
                     {
                         OutputDebugStringA(("[InferencePipeline] init failed: " + initErr + "\n").c_str());
+                        LOG_ERROR("[ChatTrace#" + std::to_string(traceId) + "] unified pipeline init failed error='" +
+                                  initErr + "'");
                         if (m_inferenceCallback)
                             m_inferenceCallback("Error: unified local pipeline init failed: " + initErr, true);
                         finishAndScheduleNext();
@@ -9656,9 +9857,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
                     OutputDebugStringA("[PROBE-B] Using unified InferencePipeline (CLI path, forced)\n");
                     RawrXD::PipelineRequest pipeReq;
-                    pipeReq.model       = m_loadedModelPath;
-                    pipeReq.prompt      = prompt;
-                    pipeReq.numPredict  = m_inferenceConfig.maxTokens > 0 ? m_inferenceConfig.maxTokens : 512;
+                    pipeReq.model = m_loadedModelPath;
+                    pipeReq.prompt = prompt;
+                    pipeReq.numPredict = m_inferenceConfig.maxTokens > 0 ? m_inferenceConfig.maxTokens : 512;
                     char smokeMaxBuf[32] = {};
                     const DWORD smokeMaxLen = GetEnvironmentVariableA("RAWRXD_SMOKE_MAX_TOKENS", smokeMaxBuf,
                                                                       static_cast<DWORD>(sizeof(smokeMaxBuf)));
@@ -9670,24 +9871,22 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         std::ostringstream bridge;
                         bridge << "[ZONE_BRIDGE] name=embedding ctx=" << static_cast<const void*>(this)
                                << " tensor_base=" << static_cast<const void*>(m_ggufLoader.get())
-                               << " num_predict=" << pipeReq.numPredict
-                               << "\n";
+                               << " num_predict=" << pipeReq.numPredict << "\n";
                         OutputDebugStringA(bridge.str().c_str());
                     }
                     if (!m_ggufLoader)
                     {
                         crashTriageBreakIfAttached("[FATAL] zone bridge has null loader pointer\n");
                     }
-                    pipeReq.temperature = m_inferenceConfig.temperature > 0.0f
-                                             ? m_inferenceConfig.temperature : 0.7f;
-                    pipeReq.stream      = !smokeNoStream;
+                    pipeReq.temperature = m_inferenceConfig.temperature > 0.0f ? m_inferenceConfig.temperature : 0.7f;
+                    pipeReq.stream = !smokeNoStream;
                     // Seed conversation history into messages[] for multi-turn context.
                     {
                         std::lock_guard<std::mutex> hLock(m_outputMutex);
                         for (const auto& turn : m_chatHistory)
                         {
                             RawrXD::InferenceMessage msg;
-                            msg.role    = turn.first;
+                            msg.role = turn.first;
                             msg.content = turn.second;
                             pipeReq.messages.push_back(std::move(msg));
                         }
@@ -9695,64 +9894,71 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
                     pipelineHandled = RawrXD::runLocalInferencePipeline(
                         pipeReq,
-                        {
-                            // onToken — stream to chat UI (same contract as m_inferenceCallback)
-                            [this, smokeNoUiBinding](const std::string& token, bool done)
-                            {
-                                if (m_inferenceStopRequested.load() || isShuttingDown())
-                                    return;
-                                {
-                                    std::ostringstream tlog;
-                                    tlog << "[TOKEN] ctx=" << static_cast<const void*>(this)
-                                         << " len=" << token.size()
-                                         << " done=" << (done ? 1 : 0)
-                                         << "\n";
-                                    OutputDebugStringA(tlog.str().c_str());
-                                }
-                                if (!token.empty() && m_inferenceCallback)
-                                {
-                                    OutputDebugStringA(("[PIPELINE TOKEN] " + token + "\n").c_str());
-                                    m_currentInferenceResponse += token;
-                                    if (!smokeNoUiBinding)
-                                        m_inferenceCallback(token, false);
-                                }
-                                if (!token.empty() && smokeNoUiBinding)
-                                    m_currentInferenceResponse += token;
-                                if (!token.empty() && !m_inferenceCallback)
-                                {
-                                    crashTriageBreakIfAttached("[FATAL] NULL callback at token dispatch\n");
-                                }
-                                if (done)
-                                    OutputDebugStringA("[PIPELINE TOKEN] <done=true>\n");
-                            },
-                            // onComplete
-                            [this, smokeNoUiBinding](const std::string& /*accum*/)
-                            {
-                                {
-                                    std::ostringstream elog;
-                                    elog << "[PIPELINE_END] completed=1 tokens=" << m_currentInferenceResponse.size()
-                                         << "\n";
-                                    OutputDebugStringA(elog.str().c_str());
-                                }
-                                if (m_inferenceCallback && !smokeNoUiBinding)
-                                    m_inferenceCallback({}, true);
-                            },
-                            // onError — fail closed for local forced pipeline.
-                            [this](const std::string& err)
-                            {
-                                OutputDebugStringA(("[InferencePipeline] error: " + err + "\n").c_str());
-                            }
-                        });
+                        {// onToken — stream to chat UI (same contract as m_inferenceCallback)
+                         [this, smokeNoUiBinding, traceId](const std::string& token, bool done)
+                         {
+                             if (m_inferenceStopRequested.load() || isShuttingDown())
+                                 return;
+                             {
+                                 std::ostringstream tlog;
+                                 tlog << "[TOKEN] ctx=" << static_cast<const void*>(this) << " len=" << token.size()
+                                      << " done=" << (done ? 1 : 0) << "\n";
+                                 OutputDebugStringA(tlog.str().c_str());
+                             }
+                             if (!token.empty() && m_inferenceCallback)
+                             {
+                                 OutputDebugStringA(("[PIPELINE TOKEN] " + token + "\n").c_str());
+                                 m_currentInferenceResponse += token;
+                                 LOG_DEBUG("[ChatTrace#" + std::to_string(traceId) +
+                                           "] pipeline token len=" + std::to_string(token.size()) +
+                                           " done=" + BoolToLog(done) + " preview='" + MakeLogPreview(token, 80) +
+                                           "' accum_len=" + std::to_string(m_currentInferenceResponse.size()));
+                                 if (!smokeNoUiBinding)
+                                     m_inferenceCallback(token, false);
+                             }
+                             if (!token.empty() && smokeNoUiBinding)
+                                 m_currentInferenceResponse += token;
+                             if (!token.empty() && !m_inferenceCallback)
+                             {
+                                 crashTriageBreakIfAttached("[FATAL] NULL callback at token dispatch\n");
+                             }
+                             if (done)
+                                 OutputDebugStringA("[PIPELINE TOKEN] <done=true>\n");
+                         },
+                         // onComplete
+                         [this, smokeNoUiBinding, traceId](const std::string& accum)
+                         {
+                             {
+                                 std::ostringstream elog;
+                                 elog << "[PIPELINE_END] completed=1 tokens=" << m_currentInferenceResponse.size()
+                                      << "\n";
+                                 OutputDebugStringA(elog.str().c_str());
+                             }
+                             LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] pipeline complete accum_len=" +
+                                      std::to_string(m_currentInferenceResponse.size()) +
+                                      " final_len=" + std::to_string(accum.size()));
+                             if (m_inferenceCallback && !smokeNoUiBinding)
+                                 m_inferenceCallback({}, true);
+                         },
+                         // onError — fail closed for local forced pipeline.
+                         [this, traceId](const std::string& err)
+                         {
+                             OutputDebugStringA(("[InferencePipeline] error: " + err + "\n").c_str());
+                             LOG_ERROR("[ChatTrace#" + std::to_string(traceId) + "] pipeline error='" + err + "'");
+                         }});
 
                     if (pipelineHandled)
                     {
                         OutputDebugStringA("[PROBE-B2] InferencePipeline completed; skipping ExecuteAgentCommand\n");
+                        LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] unified local pipeline handled request");
                     }
                     else
                     {
-                        const std::string errMsg =
-                            "Error: unified local pipeline generation failed (bridge fallback disabled for local-model parity test).";
+                        const std::string errMsg = "Error: unified local pipeline generation failed (bridge fallback "
+                                                   "disabled for local-model parity test).";
                         OutputDebugStringA("[InferencePipeline] returned false (local force mode fail-closed)\n");
+                        LOG_ERROR("[ChatTrace#" + std::to_string(traceId) +
+                                  "] unified local pipeline returned false in fail-closed mode");
                         if (m_inferenceCallback)
                             m_inferenceCallback(errMsg, true);
                         finishAndScheduleNext();
@@ -9762,237 +9968,206 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
                 if (!pipelineHandled)
                 {
-                if (!m_agenticBridge)
-                {
-                    if (m_inferenceCallback)
+                    if (!m_agenticBridge)
                     {
-                        m_inferenceCallback("Error: Agentic Bridge unavailable and pipeline path did not complete.",
-                                            true);
-                    }
-                    finishAndScheduleNext();
-                    return;
-                }
-                // Execute via agent bridge (supports /edit, /think, etc.)
-                OutputDebugStringA("[PROBE-B] Calling ExecuteAgentCommand\n");
-                m_agenticBridge->ExecuteAgentCommand(prompt);
-                {
-                    std::string probe = "[PROBE-B2] ExecuteAgentCommand returned. accumulated_len=" +
-                                        std::to_string(m_currentInferenceResponse.size()) +
-                                        " backendMissing=" + (backendMissingNativeApi->load() ? "1" : "0") + "\n";
-                    OutputDebugStringA(probe.c_str());
-                }
-
-                if (!m_inferenceStopRequested.load() && backendMissingNativeApi->load())
-                {
-                    bool routeCHandledByMinimalAgent = false;
-                    const bool hasAgenticPrefix = HasAgenticPrefix(prompt);
-                    const bool bridgeAgenticMode = m_agenticBridge && m_agenticBridge->IsAgenticMode();
-                    const bool wantsAgentic = hasAgenticPrefix || bridgeAgenticMode || m_agenticFunctionCallingMode;
-                    const bool layerAvailable = rawrxd::isAgenticLayerAvailable();
-                    const bool strictLocalSwarm = []()
-                    {
-                        char buf[12] = {};
-                        const DWORD n =
-                            GetEnvironmentVariableA("RAWRXD_FORCE_LOCAL_SWARM", buf, static_cast<DWORD>(sizeof(buf)));
-                        return n > 0 &&
-                               (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T' || buf[0] == 'y' || buf[0] == 'Y');
-                    }();
-
-                    OutputDebugStringA(
-                        ("ROUTE_CHECK: route=C-main-fallback, wantsAgentic=" + std::to_string(wantsAgentic ? 1 : 0) +
-                         ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
-                            .c_str());
-
-                    // Route C parity with Route B: try tool-aware agentic bridge before legacy SubmitInference
-                    // fallback.
-                    if (wantsAgentic && layerAvailable)
-                    {
-                        // ========== NEW: Use AgenticInferenceBridge for tool-aware inference ==========
-                        using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
-
-                        auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(prompt,       // User message
-                                                                                    "codestral",  // Default model
-                                                                                    4096);        // Max tokens
-
-                        if (bridgeResult.success)
+                        if (m_inferenceCallback)
                         {
-                            // Tool-aware inference succeeded
-                            std::string response = bridgeResult.response;
-
-                            if (bridgeResult.usedTools)
-                            {
-                                // Format tool execution trace for display
-                                std::string toolTrace = "\n\n[Tool Execution Trace]\n";
-                                toolTrace += "Iterations: " + std::to_string(bridgeResult.toolIterations) + "\n";
-                                if (!bridgeResult.toolTrace.empty())
-                                {
-                                    for (const auto& record : bridgeResult.toolTrace)
-                                    {
-                                        toolTrace += "- " + record.toolName + " [" +
-                                                     std::string(record.success ? "ok" : "error") + "]\n";
-                                    }
-                                }
-                                response += toolTrace;
-                            }
-
-                            if (m_inferenceCallback)
-                            {
-                                m_currentInferenceResponse += response;
-                                m_inferenceCallback(response, false);
-                            }
-                            routeCHandledByMinimalAgent = true;
-                            OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback resolved via bridge; tools=" +
-                                                std::to_string(bridgeResult.usedTools ? 1 : 0) +
-                                                " iterations=" + std::to_string(bridgeResult.toolIterations) + "\n")
-                                                   .c_str());
+                            std::string fallback = generateResponse(prompt);
+                            m_currentInferenceResponse = fallback;
+                            LOG_INFO("[ChatTrace#" + std::to_string(traceId) +
+                                     "] bridge absent post-pipeline; generateResponse fallback len=" +
+                                     std::to_string(fallback.size()) + " preview='" + MakeLogPreview(fallback, 100) +
+                                     "'");
+                            m_inferenceCallback(fallback, true);
                         }
-                        else
+                        finishAndScheduleNext();
+                        return;
+                    }
+                    // Execute via agent bridge (supports /edit, /think, etc.)
+                    OutputDebugStringA("[PROBE-B] Calling ExecuteAgentCommand\n");
+                    LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] executing agent bridge command");
+                    m_agenticBridge->ExecuteAgentCommand(prompt);
+                    {
+                        std::string probe = "[PROBE-B2] ExecuteAgentCommand returned. accumulated_len=" +
+                                            std::to_string(m_currentInferenceResponse.size()) +
+                                            " backendMissing=" + (backendMissingNativeApi->load() ? "1" : "0") + "\n";
+                        OutputDebugStringA(probe.c_str());
+                    }
+                    LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] ExecuteAgentCommand returned accum_len=" +
+                             std::to_string(m_currentInferenceResponse.size()) +
+                             " backend_missing=" + BoolToLog(backendMissingNativeApi->load()));
+
+                    if (!m_inferenceStopRequested.load() && backendMissingNativeApi->load())
+                    {
+                        bool routeCHandledByMinimalAgent = false;
+                        const bool hasAgenticPrefix = HasAgenticPrefix(prompt);
+                        const bool bridgeAgenticMode = m_agenticBridge && m_agenticBridge->IsAgenticMode();
+                        const bool wantsAgentic = hasAgenticPrefix || bridgeAgenticMode || m_agenticFunctionCallingMode;
+                        const bool layerAvailable = rawrxd::isAgenticLayerAvailable();
+                        const bool strictLocalSwarm = []()
                         {
-                            // Bridge failed try minimal agent fallback (preserves backward compat)
-                            OutputDebugStringA(
-                                ("ROUTE_CHECK: bridge failed (" + bridgeResult.error + "), trying minimal agent\n")
-                                    .c_str());
+                            char buf[12] = {};
+                            const DWORD n = GetEnvironmentVariableA("RAWRXD_FORCE_LOCAL_SWARM", buf,
+                                                                    static_cast<DWORD>(sizeof(buf)));
+                            return n > 0 &&
+                                   (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T' || buf[0] == 'y' || buf[0] == 'Y');
+                        }();
 
-                            const std::string strippedPrompt = StripAgenticPrefixForRouteParity(prompt);
-                            rawrxd::MinimalAgenticRequest req;
-                            req.message = strippedPrompt.empty() ? prompt : strippedPrompt;
-                            if (m_agenticBridge)
+                        OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback, wantsAgentic=" +
+                                            std::to_string(wantsAgentic ? 1 : 0) +
+                                            ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
+                                               .c_str());
+                        LOG_WARNING("[ChatTrace#" + std::to_string(traceId) +
+                                    "] Route C fallback engaged wants_agentic=" + BoolToLog(wantsAgentic) +
+                                    " layer_available=" + BoolToLog(layerAvailable));
+
+                        // Route C parity with Route B: try tool-aware agentic bridge before legacy SubmitInference
+                        // fallback.
+                        if (wantsAgentic && layerAvailable)
+                        {
+                            // ========== NEW: Use AgenticInferenceBridge for tool-aware inference ==========
+                            using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
+
+                            auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(prompt,       // User message
+                                                                                        "codestral",  // Default model
+                                                                                        4096);        // Max tokens
+
+                            if (bridgeResult.success)
                             {
-                                std::string sid = m_agenticBridge->GetAgenticSessionId();
-                                if (sid.empty())
+                                // Tool-aware inference succeeded
+                                std::string response = bridgeResult.response;
+
+                                if (bridgeResult.usedTools)
                                 {
-                                    sid = "win32ide-routec";
-                                    m_agenticBridge->SetAgenticSessionId(sid);
+                                    // Format tool execution trace for display
+                                    std::string toolTrace = "\n\n[Tool Execution Trace]\n";
+                                    toolTrace += "Iterations: " + std::to_string(bridgeResult.toolIterations) + "\n";
+                                    if (!bridgeResult.toolTrace.empty())
+                                    {
+                                        for (const auto& record : bridgeResult.toolTrace)
+                                        {
+                                            toolTrace += "- " + record.toolName + " [" +
+                                                         std::string(record.success ? "ok" : "error") + "]\n";
+                                        }
+                                    }
+                                    response += toolTrace;
                                 }
-                                req.session_id = sid;
 
-                                req.model_path = m_agenticBridge->GetCurrentModel();
-                                if (req.model_path.empty())
-                                    req.model_path = m_loadedModelPath;
-                            }
-                            else
-                            {
-                                req.session_id = "win32ide-routec";
-                                req.model_path = m_loadedModelPath;
-                            }
-                            req.enable_tools = true;
-                            req.max_iterations = 10;
-                            req.workspace_root = workspaceDirectoryForChatPersistence();
-
-                            const auto miniResp = rawrxd::processAgenticRequest(req);
-                            if (miniResp.success)
-                            {
-                                std::string routed = FormatMinimalAgenticResponseForChat(miniResp);
                                 if (m_inferenceCallback)
                                 {
-                                    m_currentInferenceResponse += routed;
-                                    m_inferenceCallback(routed, false);
+                                    m_currentInferenceResponse += response;
+                                    m_inferenceCallback(response, false);
                                 }
                                 routeCHandledByMinimalAgent = true;
-                                OutputDebugStringA(
-                                    "ROUTE_CHECK: route=C-main-fallback resolved via minimal agent fallback\n");
+                                OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback resolved via bridge; tools=" +
+                                                    std::to_string(bridgeResult.usedTools ? 1 : 0) +
+                                                    " iterations=" + std::to_string(bridgeResult.toolIterations) + "\n")
+                                                       .c_str());
+                                LOG_INFO(
+                                    "[ChatTrace#" + std::to_string(traceId) +
+                                    "] Route C bridge fallback succeeded tools=" + BoolToLog(bridgeResult.usedTools) +
+                                    " iterations=" + std::to_string(bridgeResult.toolIterations) +
+                                    " response_len=" + std::to_string(response.size()));
                             }
                             else
                             {
-                                if (strictLocalSwarm)
+                                // Bridge failed try minimal agent fallback (preserves backward compat)
+                                OutputDebugStringA(
+                                    ("ROUTE_CHECK: bridge failed (" + bridgeResult.error + "), trying minimal agent\n")
+                                        .c_str());
+                                LOG_WARNING("[ChatTrace#" + std::to_string(traceId) +
+                                            "] Route C tool-aware bridge failed error='" + bridgeResult.error +
+                                            "'; trying minimal agent");
+
+                                const std::string strippedPrompt = StripAgenticPrefixForRouteParity(prompt);
+                                rawrxd::MinimalAgenticRequest req;
+                                req.message = strippedPrompt.empty() ? prompt : strippedPrompt;
+                                if (m_agenticBridge)
                                 {
-                                    const std::string failClosed =
-                                        miniResp.error.empty()
-                                            ? "Error: Strict local swarm mode blocked Route C legacy fallback"
-                                            : miniResp.error;
+                                    std::string sid = m_agenticBridge->GetAgenticSessionId();
+                                    if (sid.empty())
+                                    {
+                                        sid = "win32ide-routec";
+                                        m_agenticBridge->SetAgenticSessionId(sid);
+                                    }
+                                    req.session_id = sid;
+
+                                    req.model_path = m_agenticBridge->GetCurrentModel();
+                                    if (req.model_path.empty())
+                                        req.model_path = m_loadedModelPath;
+                                }
+                                else
+                                {
+                                    req.session_id = "win32ide-routec";
+                                    req.model_path = m_loadedModelPath;
+                                }
+                                req.enable_tools = true;
+                                req.max_iterations = 10;
+                                req.workspace_root = workspaceDirectoryForChatPersistence();
+
+                                const auto miniResp = rawrxd::processAgenticRequest(req);
+                                if (miniResp.success)
+                                {
+                                    std::string routed = FormatMinimalAgenticResponseForChat(miniResp);
                                     if (m_inferenceCallback)
                                     {
-                                        m_currentInferenceResponse += failClosed;
-                                        m_inferenceCallback(failClosed, false);
+                                        m_currentInferenceResponse += routed;
+                                        m_inferenceCallback(routed, false);
                                     }
                                     routeCHandledByMinimalAgent = true;
                                     OutputDebugStringA(
-                                        ("ROUTE_CHECK: route=C-main-fallback fail-closed under strict local swarm: " +
-                                         failClosed + "\n")
-                                            .c_str());
+                                        "ROUTE_CHECK: route=C-main-fallback resolved via minimal agent fallback\n");
+                                    LOG_INFO("[ChatTrace#" + std::to_string(traceId) +
+                                             "] Route C minimal agent fallback succeeded response_len=" +
+                                             std::to_string(routed.size()));
                                 }
-                                OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback minimal agent failed: " +
-                                                    miniResp.error + "\n")
-                                                       .c_str());
+                                else
+                                {
+                                    if (strictLocalSwarm)
+                                    {
+                                        const std::string failClosed =
+                                            miniResp.error.empty()
+                                                ? "Error: Strict local swarm mode blocked Route C legacy fallback"
+                                                : miniResp.error;
+                                        if (m_inferenceCallback)
+                                        {
+                                            m_currentInferenceResponse += failClosed;
+                                            m_inferenceCallback(failClosed, false);
+                                        }
+                                        routeCHandledByMinimalAgent = true;
+                                        OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback fail-closed under "
+                                                            "strict local swarm: " +
+                                                            failClosed + "\n")
+                                                               .c_str());
+                                        LOG_WARNING("[ChatTrace#" + std::to_string(traceId) +
+                                                    "] Route C strict local swarm fail-closed error='" + failClosed +
+                                                    "'");
+                                    }
+                                    OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback minimal agent failed: " +
+                                                        miniResp.error + "\n")
+                                                           .c_str());
+                                    LOG_WARNING("[ChatTrace#" + std::to_string(traceId) +
+                                                "] Route C minimal agent fallback failed error='" + miniResp.error +
+                                                "'");
+                                }
                             }
                         }
-                    }
 
-                    if (routeCHandledByMinimalAgent)
-                    {
-                        OutputDebugStringA("[ChatFallback] Route C minimal agent handled request; skipping "
-                                           "SubmitInference fallback\n");
-                    }
-                    else
-                    {
-
-                        OutputDebugStringA("[ChatFallback] Native API missing reported by bridge; switching to "
-                                           "registered backend path\n");
-                        if (!RawrXD::InitializeAgenticChatBackend())
+                        if (routeCHandledByMinimalAgent)
                         {
-                            OutputDebugStringA("[ChatFallback] ERROR: InitializeAgenticChatBackend failed\n");
-                            std::string fallback = generateResponse(prompt);
-                            if (fallback.empty())
-                                fallback = "[FallbackError] Unable to generate response via native or remote backend.";
-                            if (m_inferenceCallback)
-                                m_inferenceCallback(fallback, false);
+                            OutputDebugStringA("[ChatFallback] Route C minimal agent handled request; skipping "
+                                               "SubmitInference fallback\n");
                         }
                         else
                         {
-                            RawrXD::INativeInferenceBackend* backend = RawrXD::BackendRegistry::GetBackend();
-                            RawrXD::GenerationConfig cfg;
-                            cfg.max_tokens = m_inferenceConfig.maxTokens;
-                            cfg.temperature = m_inferenceConfig.temperature;
-                            cfg.top_k = m_inferenceConfig.topK;
-                            cfg.top_p = m_inferenceConfig.topP;
 
-                            std::vector<int> prompt_tokens;
-                            prompt_tokens.reserve(prompt.size());
-                            for (unsigned char c : prompt)
-                                prompt_tokens.push_back(static_cast<int>(c));
-
-                            OutputDebugStringA(("[ChatFallback] SubmitInference prompt_bytes=" +
-                                                std::to_string(prompt_tokens.size()) + "\n")
-                                                   .c_str());
-                            if (prompt_tokens.empty())
+                            OutputDebugStringA("[ChatFallback] Native API missing reported by bridge; switching to "
+                                               "registered backend path\n");
+                            if (!RawrXD::InitializeAgenticChatBackend())
                             {
-                                OutputDebugStringA("[ChatFallback] ERROR: Empty token list (prompt_tokens)\n");
-                            }
-                            else
-                            {
-                                const size_t sampleN = std::min<size_t>(prompt_tokens.size(), 5);
-                                for (size_t i = 0; i < sampleN; ++i)
-                                {
-                                    OutputDebugStringA(("[ChatFallback] token[" + std::to_string(i) +
-                                                        "]=" + std::to_string(prompt_tokens[i]) + "\n")
-                                                           .c_str());
-                                }
-                            }
-
-                            bool submitted = false;
-                            for (int attempt = 1; attempt <= 2 && !submitted; ++attempt)
-                            {
-                                backend = RawrXD::BackendRegistry::GetBackend();
-                                const bool backendReady = backend && backend->IsAvailable();
-                                OutputDebugStringA(
-                                    ("[ChatFallback] SubmitInference attempt=" + std::to_string(attempt) +
-                                     " backend_ready=" + std::string(backendReady ? "1" : "0") + "\n")
-                                        .c_str());
-                                if (backendReady)
-                                {
-                                    submitted = backend->SubmitInference(prompt_tokens, cfg);
-                                }
-
-                                if (!submitted && attempt < 2)
-                                {
-                                    OutputDebugStringA(
-                                        "[ChatFallback] SubmitInference not ready; waiting 350ms before retry\n");
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(350));
-                                }
-                            }
-                            if (!submitted)
-                            {
-                                OutputDebugStringA("[ChatFallback] ERROR: SubmitInference failed\n");
+                                OutputDebugStringA("[ChatFallback] ERROR: InitializeAgenticChatBackend failed\n");
+                                LOG_ERROR("[ChatTrace#" + std::to_string(traceId) +
+                                          "] InitializeAgenticChatBackend failed; using generateResponse fallback");
                                 std::string fallback = generateResponse(prompt);
                                 if (fallback.empty())
                                     fallback =
@@ -10002,62 +10177,141 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                             }
                             else
                             {
-                                OutputDebugStringA("[ChatFallback] SubmitInference accepted - entering poll loop\n");
-                                int poll_count = 0;
-                                for (;;)
+                                RawrXD::INativeInferenceBackend* backend = RawrXD::BackendRegistry::GetBackend();
+                                RawrXD::GenerationConfig cfg;
+                                cfg.max_tokens = m_inferenceConfig.maxTokens;
+                                cfg.temperature = m_inferenceConfig.temperature;
+                                cfg.top_k = m_inferenceConfig.topK;
+                                cfg.top_p = m_inferenceConfig.topP;
+
+                                std::vector<int> prompt_tokens;
+                                prompt_tokens.reserve(prompt.size());
+                                for (unsigned char c : prompt)
+                                    prompt_tokens.push_back(static_cast<int>(c));
+
+                                OutputDebugStringA(("[ChatFallback] SubmitInference prompt_bytes=" +
+                                                    std::to_string(prompt_tokens.size()) + "\n")
+                                                       .c_str());
+                                LOG_INFO(
+                                    "[ChatTrace#" + std::to_string(traceId) +
+                                    "] SubmitInference fallback prompt_bytes=" + std::to_string(prompt_tokens.size()));
+                                if (prompt_tokens.empty())
                                 {
-                                    ++poll_count;
-                                    if ((poll_count % 20) == 0)
+                                    OutputDebugStringA("[ChatFallback] ERROR: Empty token list (prompt_tokens)\n");
+                                }
+                                else
+                                {
+                                    const size_t sampleN = std::min<size_t>(prompt_tokens.size(), 5);
+                                    for (size_t i = 0; i < sampleN; ++i)
+                                    {
+                                        OutputDebugStringA(("[ChatFallback] token[" + std::to_string(i) +
+                                                            "]=" + std::to_string(prompt_tokens[i]) + "\n")
+                                                               .c_str());
+                                    }
+                                }
+
+                                bool submitted = false;
+                                for (int attempt = 1; attempt <= 2 && !submitted; ++attempt)
+                                {
+                                    backend = RawrXD::BackendRegistry::GetBackend();
+                                    const bool backendReady = backend && backend->IsAvailable();
+                                    OutputDebugStringA(
+                                        ("[ChatFallback] SubmitInference attempt=" + std::to_string(attempt) +
+                                         " backend_ready=" + std::string(backendReady ? "1" : "0") + "\n")
+                                            .c_str());
+                                    if (backendReady)
+                                    {
+                                        submitted = backend->SubmitInference(prompt_tokens, cfg);
+                                    }
+                                    LOG_DEBUG("[ChatTrace#" + std::to_string(traceId) + "] SubmitInference attempt=" +
+                                              std::to_string(attempt) + " backend_ready=" + BoolToLog(backendReady) +
+                                              " submitted=" + BoolToLog(submitted));
+
+                                    if (!submitted && attempt < 2)
                                     {
                                         OutputDebugStringA(
-                                            ("[ChatFallback] Poll #" + std::to_string(poll_count) + "\n").c_str());
+                                            "[ChatFallback] SubmitInference not ready; waiting 350ms before retry\n");
+                                        std::this_thread::sleep_for(std::chrono::milliseconds(350));
                                     }
-
-                                    if (m_inferenceStopRequested.load() || isShuttingDown())
+                                }
+                                if (!submitted)
+                                {
+                                    OutputDebugStringA("[ChatFallback] ERROR: SubmitInference failed\n");
+                                    LOG_ERROR("[ChatTrace#" + std::to_string(traceId) +
+                                              "] SubmitInference failed; using generateResponse fallback");
+                                    std::string fallback = generateResponse(prompt);
+                                    if (fallback.empty())
+                                        fallback =
+                                            "[FallbackError] Unable to generate response via native or remote backend.";
+                                    if (m_inferenceCallback)
+                                        m_inferenceCallback(fallback, false);
+                                }
+                                else
+                                {
+                                    OutputDebugStringA(
+                                        "[ChatFallback] SubmitInference accepted - entering poll loop\n");
+                                    int poll_count = 0;
+                                    for (;;)
                                     {
-                                        OutputDebugStringA("[ChatFallback] Poll cancelled due to stop/shutdown\n");
-                                        backend->Cancel();
-                                        break;
-                                    }
-
-                                    std::string text;
-                                    bool done = false;
-                                    if (backend->GetResult(text, done))
-                                    {
-                                        OutputDebugStringA(("[ChatFallback] GetResult returned done=" +
-                                                            std::string(done ? "true" : "false") +
-                                                            " text_len=" + std::to_string(text.size()) + "\n")
-                                                               .c_str());
-                                        if (!text.empty() && m_inferenceCallback)
+                                        ++poll_count;
+                                        if ((poll_count % 20) == 0)
                                         {
-                                            m_currentInferenceResponse += text;
-                                            OutputDebugStringA(("[ChatAccum] fallback path accumulated_len=" +
-                                                                std::to_string(m_currentInferenceResponse.size()) +
-                                                                "\n")
-                                                                   .c_str());
-                                            OutputDebugStringA(("[ChatFallback] Forwarding text to chat callback len=" +
-                                                                std::to_string(text.size()) + "\n")
-                                                                   .c_str());
-                                            m_inferenceCallback(text, false);
+                                            OutputDebugStringA(
+                                                ("[ChatFallback] Poll #" + std::to_string(poll_count) + "\n").c_str());
                                         }
-                                        if (done)
+
+                                        if (m_inferenceStopRequested.load() || isShuttingDown())
                                         {
-                                            OutputDebugStringA("[ChatFallback] Generation done - exiting poll loop\n");
+                                            OutputDebugStringA("[ChatFallback] Poll cancelled due to stop/shutdown\n");
+                                            backend->Cancel();
                                             break;
                                         }
-                                    }
-                                    else if ((poll_count % 40) == 0)
-                                    {
-                                        OutputDebugStringA("[ChatFallback] GetResult returned false (no data yet)\n");
-                                    }
 
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+                                        std::string text;
+                                        bool done = false;
+                                        if (backend->GetResult(text, done))
+                                        {
+                                            OutputDebugStringA(("[ChatFallback] GetResult returned done=" +
+                                                                std::string(done ? "true" : "false") +
+                                                                " text_len=" + std::to_string(text.size()) + "\n")
+                                                                   .c_str());
+                                            LOG_DEBUG("[ChatTrace#" + std::to_string(traceId) +
+                                                      "] SubmitInference poll result done=" + BoolToLog(done) +
+                                                      " text_len=" + std::to_string(text.size()) + " preview='" +
+                                                      MakeLogPreview(text, 80) + "'");
+                                            if (!text.empty() && m_inferenceCallback)
+                                            {
+                                                m_currentInferenceResponse += text;
+                                                OutputDebugStringA(("[ChatAccum] fallback path accumulated_len=" +
+                                                                    std::to_string(m_currentInferenceResponse.size()) +
+                                                                    "\n")
+                                                                       .c_str());
+                                                OutputDebugStringA(
+                                                    ("[ChatFallback] Forwarding text to chat callback len=" +
+                                                     std::to_string(text.size()) + "\n")
+                                                        .c_str());
+                                                m_inferenceCallback(text, false);
+                                            }
+                                            if (done)
+                                            {
+                                                OutputDebugStringA(
+                                                    "[ChatFallback] Generation done - exiting poll loop\n");
+                                                break;
+                                            }
+                                        }
+                                        else if ((poll_count % 40) == 0)
+                                        {
+                                            OutputDebugStringA(
+                                                "[ChatFallback] GetResult returned false (no data yet)\n");
+                                        }
+
+                                        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                } // end if (!pipelineHandled)
+                }  // end if (!pipelineHandled)
 
                 // Phase 4B: Choke Point 4 — hookPostGeneration after streaming inference
                 // Note: For streaming responses, the full output was already sent via callback.
@@ -10069,6 +10323,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     OutputDebugStringA(
                         ("[ChatAccum] final accumulated_len=" + std::to_string(accumulatedResponse.size()) + "\n")
                             .c_str());
+                    LOG_INFO("[ChatTrace#" + std::to_string(traceId) +
+                             "] worker finishing accumulated_len=" + std::to_string(accumulatedResponse.size()) +
+                             " stop_requested=" + BoolToLog(m_inferenceStopRequested.load()));
                     if (!accumulatedResponse.empty())
                     {
                         FailureClassification inferenceFailure = hookPostGeneration(accumulatedResponse, prompt);
@@ -10090,11 +10347,14 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 finishAndScheduleNext();
                 if (completionCb && !isShuttingDown())
                 {
+                    LOG_INFO("[ChatTrace#" + std::to_string(traceId) + "] dispatching final completion callback");
                     completionCb("", true);  // Finalize
                 }
             }
             catch (const std::exception& e)
             {
+                LOG_ERROR("[ChatTrace#" + std::to_string(traceId) + "] worker exception='" + std::string(e.what()) +
+                          "'");
                 auto completionCb = m_inferenceCallback;
                 finishAndScheduleNext();
                 if (completionCb && !isShuttingDown())
@@ -10104,6 +10364,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             }
             catch (...)
             {
+                LOG_ERROR("[ChatTrace#" + std::to_string(traceId) + "] worker crashed with unknown exception");
                 auto completionCb = m_inferenceCallback;
                 finishAndScheduleNext();
                 if (completionCb && !isShuttingDown())
@@ -10571,8 +10832,9 @@ void Win32IDE::createChatPanel()
         return;
     }
 
-    m_hwndSecondarySidebar = CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", L"", WS_CHILD | WS_VISIBLE, 0, 0, 300, 600,
-                                             m_hwndMain, (HMENU)IDC_SECONDARY_SIDEBAR, m_hInstance, nullptr);
+    m_hwndSecondarySidebar =
+        CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0,
+                        0, 300, 600, m_hwndMain, (HMENU)IDC_SECONDARY_SIDEBAR, m_hInstance, nullptr);
 
     if (!m_hwndSecondarySidebar)
     {
@@ -10584,6 +10846,11 @@ void Win32IDE::createChatPanel()
     m_hwndSecondarySidebarHeader = CreateWindowExW(0, L"STATIC", L"AI Chat", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 5, 290,
                                                    25, m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
 
+    // Sovereign Symbol Engine - "Thinking" Pulse Anchor (0xE012)
+    m_hwndEmojiPulseSymbol =
+        CreateWindowExW(0, L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 260, 5, 24, 24, m_hwndSecondarySidebar,
+                        (HMENU)(IDC_EMOJI_BASE + 0x12), m_hInstance, nullptr);
+
     HFONT hFont = CreateFontW(-dpiScale(14), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                               CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
     if (m_hwndSecondarySidebarHeader)
@@ -10591,15 +10858,17 @@ void Win32IDE::createChatPanel()
         SendMessage(m_hwndSecondarySidebarHeader, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
-    CreateWindowExW(0, L"STATIC", L"Model:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 35, 50, 18, m_hwndSecondarySidebar,
-                    nullptr, m_hInstance, nullptr);
+    m_hwndSidebarCaptionModel =
+        CreateWindowExW(0, L"STATIC", L"Model:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 35, 50, 18, m_hwndSecondarySidebar,
+                        (HMENU)IDC_SIDEBAR_CAP_MODEL, m_hInstance, nullptr);
 
     m_hwndModelSelector =
         CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL, 60, 35, 250, 200,
                         m_hwndSecondarySidebar, (HMENU)IDC_MODEL_SELECTOR, m_hInstance, nullptr);
 
-    CreateWindowExW(0, L"STATIC", L"Mode:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 61, 50, 18, m_hwndSecondarySidebar,
-                    nullptr, m_hInstance, nullptr);
+    m_hwndSidebarCaptionMode =
+        CreateWindowExW(0, L"STATIC", L"Mode:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 61, 50, 18, m_hwndSecondarySidebar,
+                        (HMENU)IDC_SIDEBAR_CAP_MODE, m_hInstance, nullptr);
     HWND hwndModeSelector =
         CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 60, 60, 250, 180,
                         m_hwndSecondarySidebar, (HMENU)IDC_MODEL_MODE_SELECTOR, m_hInstance, nullptr);
@@ -10635,8 +10904,9 @@ void Win32IDE::createChatPanel()
         SendMessage(hwndEffortLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
-    CreateWindowExW(0, L"STATIC", L"Max Tokens:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 105, 80, 18,
-                    m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndSidebarCaptionMaxTokens =
+        CreateWindowExW(0, L"STATIC", L"Max Tokens:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 105, 80, 18,
+                        m_hwndSecondarySidebar, (HMENU)IDC_SIDEBAR_CAP_MAXTOKENS, m_hInstance, nullptr);
 
     m_hwndMaxTokensLabel = CreateWindowExW(0, L"STATIC", L"512", WS_CHILD | WS_VISIBLE | SS_RIGHT, 245, 105, 50, 18,
                                            m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
@@ -10645,8 +10915,9 @@ void Win32IDE::createChatPanel()
         CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 125, 290, 25,
                         m_hwndSecondarySidebar, (HMENU)IDC_AI_MAX_TOKENS_SLIDER, m_hInstance, nullptr);
 
-    CreateWindowExW(0, L"STATIC", L"Context:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 155, 80, 18, m_hwndSecondarySidebar,
-                    nullptr, m_hInstance, nullptr);
+    m_hwndSidebarCaptionContext =
+        CreateWindowExW(0, L"STATIC", L"Context:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 155, 80, 18,
+                        m_hwndSecondarySidebar, (HMENU)IDC_SIDEBAR_CAP_CONTEXT, m_hInstance, nullptr);
 
     m_hwndContextLabel = CreateWindowExW(0, L"STATIC", L"4K", WS_CHILD | WS_VISIBLE | SS_RIGHT, 245, 155, 50, 18,
                                          m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
@@ -10654,6 +10925,15 @@ void Win32IDE::createChatPanel()
     m_hwndContextSlider =
         CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 175, 290, 25,
                         m_hwndSecondarySidebar, (HMENU)IDC_AI_CONTEXT_SLIDER, m_hInstance, nullptr);
+
+    if (m_hwndSidebarCaptionModel)
+        SendMessage(m_hwndSidebarCaptionModel, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndSidebarCaptionMode)
+        SendMessage(m_hwndSidebarCaptionMode, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndSidebarCaptionMaxTokens)
+        SendMessage(m_hwndSidebarCaptionMaxTokens, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndSidebarCaptionContext)
+        SendMessage(m_hwndSidebarCaptionContext, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     if (m_hwndContextSlider)
     {
@@ -10706,20 +10986,20 @@ void Win32IDE::createChatPanel()
     if (m_hwndChkAgenticMode)
         SendMessage(m_hwndChkAgenticMode, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-    m_hwndCopilotChatOutput =
-        CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
-                        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL, 5, chatY, 290,
-                        180, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
+    m_hwndCopilotChatOutput = CreateWindowExW(
+        WS_EX_CLIENTEDGE, L"EDIT", L"",
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL, 5, chatY,
+        290, 180, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
 
     if (m_hwndCopilotChatOutput)
     {
         SendMessage(m_hwndCopilotChatOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
-    m_hwndCopilotChatInput =
-        CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
-                        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL, 5, 415, 290,
-                        85, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_INPUT, m_hInstance, nullptr);
+    m_hwndCopilotChatInput = CreateWindowExW(
+        WS_EX_CLIENTEDGE, L"EDIT", L"",
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL, 5, 415,
+        290, 85, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_INPUT, m_hInstance, nullptr);
 
     if (m_hwndCopilotChatInput)
     {
@@ -10733,9 +11013,8 @@ void Win32IDE::createChatPanel()
         ChatAutocomplete_Attach(m_hwndCopilotChatInput, m_hInstance);
     }
 
-    m_hwndCopilotSendBtn =
-        CreateWindowExW(0, L"BUTTON", L"Send", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 505, 92, 30,
-                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
+    m_hwndCopilotSendBtn = CreateWindowExW(0, L"BUTTON", L"Send", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 505, 92, 30,
+                                           m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
 
     if (m_hwndCopilotSendBtn)
     {
@@ -10757,9 +11036,9 @@ void Win32IDE::createChatPanel()
         SetWindowLongPtr(m_hwndCopilotClearBtn, GWLP_USERDATA, (LONG_PTR)this);
     }
 
-    HWND hwndNewChatBtn = CreateWindowExW(0, L"BUTTON", L"New Chat", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 199, 505,
-                                          92, 30, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_NEW_CHAT_BTN, m_hInstance,
-                                          nullptr);
+    HWND hwndNewChatBtn =
+        CreateWindowExW(0, L"BUTTON", L"New Chat", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 199, 505, 92, 30,
+                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_NEW_CHAT_BTN, m_hInstance, nullptr);
     if (hwndNewChatBtn)
     {
         SendMessage(hwndNewChatBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -10796,6 +11075,7 @@ void Win32IDE::createChatPanel()
         SendMessage(m_hwndCopilotRetryBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     RawrXD_ApplyCopilotChatEditLimits(m_hwndCopilotChatOutput, m_hwndCopilotChatInput);
+    createAgentChatCursorOverlay();
     reloadPersistedChatHistoryIntoUi();
 
     if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar))
@@ -10812,48 +11092,40 @@ void Win32IDE::createChatPanel()
     updateSecondarySidebarContent();
     ShowWindow(m_hwndSecondarySidebar, SW_SHOW);
     UpdateWindow(m_hwndSecondarySidebar);
+
+    RECT rcSidebar{};
+    if (GetClientRect(m_hwndSecondarySidebar, &rcSidebar))
+    {
+        SendMessage(m_hwndSecondarySidebar, WM_SIZE, 0,
+                    MAKELPARAM((WORD)(rcSidebar.right - rcSidebar.left), (WORD)(rcSidebar.bottom - rcSidebar.top)));
+    }
 }
 
-void Win32IDE::populateModelSelector()
+void Win32IDE::populateModelSelectorFromDiscoveryCache()
 {
     if (!m_hwndModelSelector)
         return;
 
-    std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
-
-    OutputDebugStringA("[ModelDiscovery] populateModelSelector begin\n");
-
-    auto addModelDirectory = [this](const std::string& rawDir)
+    std::vector<std::string> models;
+    std::vector<std::string> paths;
     {
-        const size_t first = rawDir.find_first_not_of(" \t\r\n\"");
-        if (first == std::string::npos)
-            return;
-
-        const size_t last = rawDir.find_last_not_of(" \t\r\n\"");
-        const std::string candidate = rawDir.substr(first, last - first + 1);
-        if (candidate.empty())
-            return;
-
-        std::error_code ec;
-        if (!std::filesystem::exists(candidate, ec))
-            return;
-
-        if (std::find(m_userModelDirectories.begin(), m_userModelDirectories.end(), candidate) ==
-            m_userModelDirectories.end())
+        std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
+        if (!m_modelDiscoveryCacheReady.load(std::memory_order_acquire) || m_availableModels.empty())
         {
-            std::string dbg = "[ModelDiscovery] add directory: " + candidate + "\n";
-            OutputDebugStringA(dbg.c_str());
-            m_userModelDirectories.push_back(candidate);
+            OutputDebugStringA("[ModelDiscovery] populateModelSelectorFromDiscoveryCache: cache not ready\n");
+            return;
         }
-    };
+        models = m_availableModels;
+        paths = m_modelPaths;
+    }
 
-    // Preserve prior selection if possible; otherwise prefer the explicit override
-    // or the currently loaded local GGUF path.
+    OutputDebugStringA("[ModelDiscovery] populateModelSelectorFromDiscoveryCache begin\n");
+
     std::string previousSelection;
     int prevIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    if (prevIdx >= 0 && prevIdx < (int)m_availableModels.size())
+    if (prevIdx >= 0 && prevIdx < (int)models.size())
     {
-        previousSelection = m_availableModels[(size_t)prevIdx];
+        previousSelection = models[(size_t)prevIdx];
     }
     if (previousSelection.empty())
     {
@@ -10863,118 +11135,22 @@ void Win32IDE::populateModelSelector()
             previousSelection = m_loadedModelPath;
     }
 
-    // Clear existing items
     SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
 
-    m_availableModels.clear();
-
-    m_userModelDirectories.erase(std::remove_if(m_userModelDirectories.begin(), m_userModelDirectories.end(),
-                                                [](const std::string& dir)
-                                                {
-                                                    std::error_code ec;
-                                                    return !std::filesystem::exists(dir, ec);
-                                                }),
-                                 m_userModelDirectories.end());
-
-    static const std::vector<std::string> kCommonModelDirs = {"D:\\OllamaModels", "F:\\OllamaModels", "D:\\models",
-                                                              "F:\\models"};
-    for (const auto& candidate : kCommonModelDirs)
-    {
-        addModelDirectory(candidate);
-    }
-
-    const DWORD envLen = GetEnvironmentVariableA("OLLAMA_MODELS", nullptr, 0);
-    if (envLen > 1)
-    {
-        std::string envValue(static_cast<size_t>(envLen), '\0');
-        const DWORD copied = GetEnvironmentVariableA("OLLAMA_MODELS", envValue.data(), envLen);
-        if (copied > 0)
-        {
-            envValue.resize(copied);
-            size_t start = 0;
-            while (start <= envValue.size())
-            {
-                const size_t end = envValue.find(';', start);
-                addModelDirectory(envValue.substr(start, end == std::string::npos ? std::string::npos : end - start));
-                if (end == std::string::npos)
-                    break;
-                start = end + 1;
-            }
-        }
-    }
-
-    const DWORD envRawrLen = GetEnvironmentVariableA("RAWRXD_MODELS_PATH", nullptr, 0);
-    if (envRawrLen > 1)
-    {
-        std::string envValue(static_cast<size_t>(envRawrLen), '\0');
-        const DWORD copied = GetEnvironmentVariableA("RAWRXD_MODELS_PATH", envValue.data(), envRawrLen);
-        if (copied > 0)
-        {
-            envValue.resize(copied);
-            size_t start = 0;
-            while (start <= envValue.size())
-            {
-                const size_t end = envValue.find(';', start);
-                addModelDirectory(envValue.substr(start, end == std::string::npos ? std::string::npos : end - start));
-                if (end == std::string::npos)
-                    break;
-                start = end + 1;
-            }
-        }
-    }
-
-    if (!m_loadedModelPath.empty())
-    {
-        addModelDirectory(std::filesystem::path(m_loadedModelPath).parent_path().string());
-    }
-
-    // Use backend directory listing for each user-selected directory
-    for (const auto& dir : m_userModelDirectories)
-    {
-        std::vector<std::string> modelsFromDir = getModelsFromDirectory(dir);
-        std::string dbg = "[ModelDiscovery] " + dir + " -> " + std::to_string(modelsFromDir.size()) + " model(s)\n";
-        OutputDebugStringA(dbg.c_str());
-        for (const auto& model : modelsFromDir)
-        {
-            m_availableModels.push_back(model);
-        }
-    }
-
-    if (m_availableModels.empty())
-    {
-        m_availableModels.push_back("llama2");
-        m_availableModels.push_back("mistral");
-        m_availableModels.push_back("neural-chat");
-        m_availableModels.push_back("dolphin-mixtral");
-    }
-
-    // Remove duplicates
-    std::sort(m_availableModels.begin(), m_availableModels.end());
-    auto last = std::unique(m_availableModels.begin(), m_availableModels.end());
-    m_availableModels.erase(last, m_availableModels.end());
-
-    // Populate combobox
-    for (const auto& model : m_availableModels)
+    for (const auto& model : models)
     {
         const std::string uiLabel = rawrxd::BuildModelDropdownLabel(model);
-        const LRESULT addRes =
-            SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(uiLabel).c_str());
-        if (addRes == CB_ERR || addRes == CB_ERRSPACE)
-        {
-            std::string dbg = "[ModelDiscovery] CB_ADDSTRING failed for: " + model + "\n";
-            OutputDebugStringA(dbg.c_str());
-        }
+        SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(uiLabel).c_str());
     }
 
-    // Restore prior selection when possible.
     int selectedIdx = -1;
     if (!previousSelection.empty())
     {
-        for (size_t i = 0; i < m_availableModels.size(); ++i)
+        for (size_t i = 0; i < models.size(); ++i)
         {
             const std::string resolvedCandidate =
-                resolveLocalModelSelectionPath(m_availableModels[i], m_modelPaths, m_userModelDirectories);
-            if (m_availableModels[i] == previousSelection || resolvedCandidate == previousSelection)
+                resolveLocalModelSelectionPath(models[i], paths, m_userModelDirectories);
+            if (models[i] == previousSelection || resolvedCandidate == previousSelection)
             {
                 selectedIdx = (int)i;
                 break;
@@ -10982,32 +11158,53 @@ void Win32IDE::populateModelSelector()
         }
     }
 
-    // Set selected item
-    if (!m_availableModels.empty())
+    if (!models.empty())
     {
         if (selectedIdx < 0)
             selectedIdx = 0;
         SendMessage(m_hwndModelSelector, CB_SETCURSEL, selectedIdx, 0);
     }
 
-    const int uiCount = (int)SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
-    if (uiCount <= 0)
-    {
-        OutputDebugStringA("[ModelDiscovery] ui_count=0 after populate, applying hard fallback entries\n");
-        static const char* kFallbackModels[] = {"phi3mini.gguf", "llama2", "mistral", "neural-chat"};
-        m_availableModels.assign(kFallbackModels, kFallbackModels + 4);
-        for (const auto* fallbackModel : kFallbackModels)
-        {
-            const std::string uiLabel = rawrxd::BuildModelDropdownLabel(fallbackModel);
-            SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(uiLabel).c_str());
-        }
-        SendMessage(m_hwndModelSelector, CB_SETCURSEL, 0, 0);
-    }
-
     const int finalUiCount = (int)SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
-    std::string dbg = "[ModelDiscovery] complete available=" + std::to_string(m_availableModels.size()) +
+    std::string dbg = "[ModelDiscovery] cache populate complete available=" + std::to_string(models.size()) +
                       " ui_count=" + std::to_string(finalUiCount) + "\n";
     OutputDebugStringA(dbg.c_str());
+}
+
+void Win32IDE::populateModelSelector()
+{
+    if (!m_hwndModelSelector)
+        return;
+
+    if (m_modelDiscoveryCacheReady.load(std::memory_order_acquire))
+    {
+        populateModelSelectorFromDiscoveryCache();
+        return;
+    }
+
+    OutputDebugStringA("[ModelDiscovery] populateModelSelector: cache pending, showing placeholders only\n");
+
+    std::string previousSelection;
+    int prevIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+    if (prevIdx >= 0)
+    {
+        wchar_t buf[512]{};
+        if (SendMessageW(m_hwndModelSelector, CB_GETLBTEXT, (WPARAM)prevIdx, (LPARAM)buf) != CB_ERR)
+        {
+            previousSelection = wideToUtf8(buf);
+        }
+    }
+
+    SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
+
+    static const char* kPlaceholderModels[] = {"phi3mini.gguf", "llama2", "mistral", "neural-chat"};
+    for (const auto* fallbackModel : kPlaceholderModels)
+    {
+        const std::string uiLabel = rawrxd::BuildModelDropdownLabel(fallbackModel);
+        SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(uiLabel).c_str());
+    }
+    SendMessage(m_hwndModelSelector, CB_SETCURSEL, 0, 0);
+    OutputDebugStringA("[ModelDiscovery] populateModelSelector placeholders done\n");
 }
 
 std::vector<std::string> Win32IDE::getModelsFromDirectory(const std::string& directory)
@@ -11054,6 +11251,25 @@ std::vector<std::string> Win32IDE::getModelsFromDirectory(const std::string& dir
                     if (ext == ".gguf" || ext == ".bin" || ext == ".ggml")
                     {
                         models.push_back(fullPath);
+                    }
+                    else if (ext.empty())
+                    {
+                        // Extensionless file (e.g. Ollama sha256 blob) — sniff GGUF magic
+                        std::error_code szEc;
+                        const auto fileSize = entry.file_size(szEc);
+                        if (!szEc && fileSize >= 8)
+                        {
+                            std::ifstream probe(entry.path(), std::ios::binary);
+                            if (probe.is_open())
+                            {
+                                uint32_t magic = 0;
+                                probe.read(reinterpret_cast<char*>(&magic), 4);
+                                if (magic == 0x46465547u)  // "GGUF" little-endian
+                                {
+                                    models.push_back(fullPath);
+                                }
+                            }
+                        }
                     }
                 }
                 else if (ec)
@@ -11201,16 +11417,29 @@ void Win32IDE::postDeferredCopilotSend()
 
 void Win32IDE::HandleCopilotSend()
 {
-    try
-    {
+    if (!smokeCopilotChatEnabled())
+        return;
+
     // [BOUNDARY-POINT LOGGING] Chat send entry
     OutputDebugStringA("[Win32IDE::HandleCopilotSend] ENTRY\n");
+    const unsigned long long traceId = NextChatTraceId();
+
+    // Atomic Stage 1 Pulse
+    g_pulseRing.Log(1, 0);
 
     SCOPED_METRIC("chat.send_message");
     METRICS.increment("chat.messages_sent");
 
     if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput)
         return;
+
+    if (!m_copilotBackendReady)
+    {
+        appendToOutput("\n[Info] AI backend is still initializing. Please wait for readiness.\n", "Output",
+                       OutputSeverity::Info);
+        OutputDebugStringA("[HandleCopilotSend] blocked: backend not ready\n");
+        return;
+    }
 
     const int inputLen = GetWindowTextLengthW(m_hwndCopilotChatInput);
     if (inputLen <= 0)
@@ -11226,17 +11455,26 @@ void Win32IDE::HandleCopilotSend()
     }
     std::wstring effectiveInput(inputBuffer.data());
     if (!effectiveInput.empty() && effectiveInput.front() != L'/')
-    {
         effectiveInput = resolveSymbolAtMentions(effectiveInput);
+
+    {
+        char pulse[192] = {};
+        _snprintf_s(pulse, sizeof(pulse), _TRUNCATE,
+                    "[BRIDGE_PULSE] Stage1/UI Ingest: extracted_len=%d trace_id=%llu\\n", inputLen, traceId);
+        OutputDebugStringA(pulse);
     }
 
     const std::string userMessage = wideToUtf8(effectiveInput);
+    const std::string userMessageSig = MakePromptSignature(userMessage);
 
     if (userMessage.empty())
     {
         LOG_WARNING("Empty message - ignoring");
         return;
     }
+
+    LOG_INFO("[ChatSend#" + std::to_string(traceId) + "] begin " + userMessageSig + " preview='" +
+             MakeLogPreview(userMessage) + "'");
 
     m_lastCopilotUserPrompt = userMessage;
 
@@ -11281,12 +11519,15 @@ void Win32IDE::HandleCopilotSend()
         }
     }
 
+    syncStructuredSlashCopilotFixExpectationForUserMessage(userMessage);
+
     bool expectedIdle = false;
     if (!m_chatSendInFlight.compare_exchange_strong(expectedIdle, true))
     {
         appendToOutput("\n[Info] Previous request still in progress. Please wait for completion.\n", "Output",
                        OutputSeverity::Info);
         OutputDebugStringA("[HandleCopilotSend] send ignored: another request already in flight\n");
+        LOG_WARNING("[ChatSend#" + std::to_string(traceId) + "] blocked because another request is in flight");
         return;
     }
 
@@ -11306,6 +11547,7 @@ void Win32IDE::HandleCopilotSend()
         appendToOutput("\n[Error] Model selector unavailable. Please reopen AI Chat pane.\n", "Output",
                        OutputSeverity::Error);
         OutputDebugStringA("[HandleCopilotSend] model selector unavailable\n");
+        LOG_ERROR("[ChatSend#" + std::to_string(traceId) + "] model selector unavailable");
         releaseSendInFlight();
         return;
     }
@@ -11330,6 +11572,7 @@ void Win32IDE::HandleCopilotSend()
         appendToOutput("\n[Error] No models discovered. Configure OLLAMA_MODELS/RAWRXD_MODELS_PATH and reopen chat.\n",
                        "Output", OutputSeverity::Error);
         OutputDebugStringA("[HandleCopilotSend] aborting send due to empty model list\n");
+        LOG_ERROR("[ChatSend#" + std::to_string(traceId) + "] no models available after repopulate");
         releaseSendInFlight();
         return;
     }
@@ -11337,22 +11580,52 @@ void Win32IDE::HandleCopilotSend()
     // Get selected model
     int modelIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
     std::string selectedModel;
+    std::string modelSelectorText;
+    const int selectorTextLen = GetWindowTextLengthW(m_hwndModelSelector);
+    if (selectorTextLen > 0)
+    {
+        std::vector<wchar_t> selectorBuffer(static_cast<size_t>(selectorTextLen) + 1, L'\0');
+        GetWindowTextW(m_hwndModelSelector, selectorBuffer.data(), selectorTextLen + 1);
+        modelSelectorText = wideToUtf8(selectorBuffer.data());
+    }
     {
         std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
-        if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
-            modelIdx = 0;
-        if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
+        const std::string normalizedSelectorText = normalizeModelSelectorEntry(modelSelectorText, m_availableModels);
+        const bool hasFreeformSelectorText = !normalizedSelectorText.empty();
+        if (modelIdx >= 0 && modelIdx < (int)m_availableModels.size())
         {
-            appendToOutput("\n[Error] No models available in cache after repopulate.\n", "Output",
-                           OutputSeverity::Error);
-            OutputDebugStringA("[HandleCopilotSend] cache empty after repopulate\n");
-            releaseSendInFlight();
-            return;
+            selectedModel = m_availableModels[modelIdx];
         }
-        selectedModel = m_availableModels[modelIdx];
+        else if (hasFreeformSelectorText)
+        {
+            selectedModel = normalizedSelectorText;
+        }
+        else
+        {
+            modelIdx = 0;
+            if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
+            {
+                // Route-only resilience: keep chat path alive even if model cache is empty.
+                // This avoids hard send drops in smoke and allows deferred/local model loaders
+                // to hydrate later without losing user-visible turn flow.
+                selectedModel = "route-only";
+                OutputDebugStringA("[HandleCopilotSend] cache empty after repopulate; using route-only fallback\n");
+            }
+            else
+            {
+                selectedModel = m_availableModels[modelIdx];
+            }
+        }
+
+        if (selectedModel.empty() && !m_availableModels.empty())
+        {
+            modelIdx = 0;
+            selectedModel = m_availableModels[0];
+        }
     }
     std::string selectedModelResolved =
-        resolveLocalModelSelectionPath(selectedModel, m_modelPaths, m_userModelDirectories);
+        selectedModel.empty() ? std::string()
+                              : resolveLocalModelSelectionPath(selectedModel, m_modelPaths, m_userModelDirectories);
     if (selectedModelResolved != selectedModel)
     {
         OutputDebugStringA(
@@ -11373,23 +11646,31 @@ void Win32IDE::HandleCopilotSend()
             !std::filesystem::exists(std::filesystem::path(selectedModelResolved), modelPathEc);
         if (localModelPathMissing)
         {
-            appendToOutput("\n[Error] Selected GGUF model path is missing. Please open/select a valid .gguf model and retry.\n",
+            appendToOutput("\n[Error] Selected GGUF model path is missing. Please open/select a valid .gguf model "
+                           "and retry.\n",
                            "Errors", OutputSeverity::Error);
             appendCopilotChatTextOnUiThread(
                 "\n[Error] Selected GGUF model is unavailable. Please choose/open a valid .gguf model first.\n");
-            OutputDebugStringA(("[HandleCopilotSend] invalid local model path='" + selectedModelResolved +
-                                "' ec='" + modelPathEc.message() + "'\n")
+            OutputDebugStringA(("[HandleCopilotSend] invalid local model path='" + selectedModelResolved + "' ec='" +
+                                modelPathEc.message() + "'\n")
                                    .c_str());
+            LOG_ERROR("[ChatSend#" + std::to_string(traceId) + "] selected local model path missing path='" +
+                      selectedModelResolved + "' ec='" + modelPathEc.message() + "'");
             releaseSendInFlight();
             return;
         }
     }
 
+    LOG_INFO("[ChatSend#" + std::to_string(traceId) + "] model selected idx=" + std::to_string(modelIdx) +
+             " selector_text='" + modelSelectorText + "' selected='" + selectedModel + "' resolved='" +
+             selectedModelResolved + "' local=" + BoolToLog(selectedLocalModel) + " loaded='" + m_loadedModelPath +
+             "' loaded_ready=" + BoolToLog(isModelLoaded()));
+
     if (m_hwndCopilotModelUsedLabel && IsWindow(m_hwndCopilotModelUsedLabel))
     {
         const std::string modelSuffix = selectedModelResolved.empty() ? selectedModel : selectedModelResolved;
-        const std::string badge = modelSuffix.empty() ? "GPT-5.3-Codex • 0.9x"
-                                                      : "GPT-5.3-Codex • 0.9x | " + modelSuffix;
+        const std::string badge =
+            modelSuffix.empty() ? "GPT-5.3-Codex • 0.9x" : "GPT-5.3-Codex • 0.9x | " + modelSuffix;
         SetWindowTextW(m_hwndCopilotModelUsedLabel, utf8ToWide(badge).c_str());
     }
 
@@ -11423,9 +11704,11 @@ void Win32IDE::HandleCopilotSend()
             {
                 appendToOutput("\n[Info] Model is loading — your message will be sent automatically when ready.\n",
                                "Output", OutputSeverity::Info);
-                appendCopilotChatTextOnUiThread(
-                    "\n[Info] Model is loading. Your message is queued and will be sent automatically when ready.\n");
+                appendCopilotChatTextOnUiThread("\n[Info] Model is loading. Your message is queued and will be "
+                                                "sent automatically when ready.\n");
                 OutputDebugStringA("[HandleCopilotSend] queued pending chat; model still loading\n");
+                LOG_INFO("[ChatSend#" + std::to_string(traceId) +
+                         "] queued message while model load already in progress");
                 releaseSendInFlight();
                 return;
             }
@@ -11438,6 +11721,8 @@ void Win32IDE::HandleCopilotSend()
             OutputDebugStringA(("[HandleCopilotSend] selected local model not ready; kicking async load path=" +
                                 selectedModelResolved + "\n")
                                    .c_str());
+            LOG_INFO("[ChatSend#" + std::to_string(traceId) +
+                     "] selected local model not ready; starting async load path='" + selectedModelResolved + "'");
             loadModelFromPathAsync(selectedModelResolved);
             releaseSendInFlight();
             return;
@@ -11455,6 +11740,8 @@ void Win32IDE::HandleCopilotSend()
             OutputDebugStringA(("[HandleCopilotSend] deferring send during local model warmup window age_ms=" +
                                 std::to_string(nowTick - readyTick) + "\n")
                                    .c_str());
+            LOG_INFO("[ChatSend#" + std::to_string(traceId) +
+                     "] deferred by warmup guard age_ms=" + std::to_string(nowTick - readyTick));
             PostMessage(m_hwndMain, WM_PENDING_CHAT_REPLAY, 0, 0);
             releaseSendInFlight();
             return;
@@ -11484,7 +11771,8 @@ void Win32IDE::HandleCopilotSend()
     // Shared TTFT tracking: written once on first token, read at completion for ESP display.
     auto firstTokenElapsedMs = std::make_shared<std::atomic<long long>>(-1);
     auto recordCopilotThroughputAtComplete =
-        [this, firstTokenElapsedMs](const std::chrono::steady_clock::time_point& startedAt, const std::string& accumulatedUtf8)
+        [this, firstTokenElapsedMs](const std::chrono::steady_clock::time_point& startedAt,
+                                    const std::string& accumulatedUtf8)
     {
         if (accumulatedUtf8.empty())
         {
@@ -11512,21 +11800,22 @@ void Win32IDE::HandleCopilotSend()
         if (ttftMs >= 0)
         {
             std::snprintf(espBuf, sizeof(espBuf),
-                "\n\u2500\u2500 %.2f tok/sec  \u2022  %lld tokens  \u2022  %.2fs to first token  \u2022  Stop reason: EOS Token Found\n",
-                tps, estTokenCount, static_cast<double>(ttftMs) / 1000.0);
+                          "\n\u2500\u2500 %.2f tok/sec  \u2022  %lld tokens  \u2022  %.2fs to first token  \u2022  "
+                          "Stop reason: EOS Token Found\n",
+                          tps, estTokenCount, static_cast<double>(ttftMs) / 1000.0);
         }
         else
         {
             std::snprintf(espBuf, sizeof(espBuf),
-                "\n\u2500\u2500 %.2f tok/sec  \u2022  %lld tokens  \u2022  Stop reason: EOS Token Found\n",
-                tps, estTokenCount);
+                          "\n\u2500\u2500 %.2f tok/sec  \u2022  %lld tokens  \u2022  Stop reason: EOS Token Found\n",
+                          tps, estTokenCount);
         }
         appendCopilotChatTextOnUiThread(std::string(espBuf));
         // ─────────────────────────────────────────────────────────────────────
     };
     auto firstResponseActivityLogged = std::make_shared<std::atomic<bool>>(false);
-    auto markFirstResponseActivity =
-        [sendStart, firstResponseActivityLogged, firstTokenElapsedMs](const char* source, size_t payloadLen, bool complete)
+    auto markFirstResponseActivity = [sendStart, firstResponseActivityLogged,
+                                      firstTokenElapsedMs](const char* source, size_t payloadLen, bool complete)
     {
         if (firstResponseActivityLogged->exchange(true))
             return;
@@ -11582,20 +11871,19 @@ void Win32IDE::HandleCopilotSend()
         {
             if (complete)
             {
-                // On completion with no payload, render whatever was accumulated
-                if (!m_streamingTokenAccumulator.empty())
+                const std::string finalText = m_streamingTokenAccumulator;
+                // Completion runs on the inference worker thread. Marshal the final rich-edit rewrite and
+                // conversation/history mutations back onto the UI thread to avoid cross-thread UI access.
+                if (!finalText.empty())
                 {
-                    replaceLastStreamingBlockWithMarkdown(m_streamingTokenAccumulator);
-                    conversationAddAssistant(m_streamingTokenAccumulator);
-                    m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
-                    persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
-                    m_lastCopilotAssistantResponse = m_streamingTokenAccumulator;
-                    recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
-                    m_streamingTokenAccumulator.clear();
+                    recordCopilotThroughputAtComplete(*sendStart, finalText);
+                    postAgenticAssistantFinalSafe(finalText, finalText);
+                    return;
                 }
                 OutputDebugStringA("[ChatUi] onResponse received empty completion marker\n");
                 m_nativeStreamingActive = false;
                 releaseSendInFlight();
+                notifyCopilotChatCompletedUnlessSidebarFocused();
             }
             return;
         }
@@ -11625,20 +11913,20 @@ void Win32IDE::HandleCopilotSend()
         if (!isUsable)
         {
             OutputDebugStringA(("[ChatUi] chunk skipped (suppressed or empty) complete=" +
-                                std::string(complete ? "true" : "false") + "\n").c_str());
+                                std::string(complete ? "true" : "false") + "\n")
+                                   .c_str());
             if (complete)
             {
-                if (!m_streamingTokenAccumulator.empty())
+                const std::string finalText = m_streamingTokenAccumulator;
+                if (!finalText.empty())
                 {
-                    replaceLastStreamingBlockWithMarkdown(m_streamingTokenAccumulator);
-                    conversationAddAssistant(m_streamingTokenAccumulator);
-                    m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
-                    persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
-                    recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
-                    m_streamingTokenAccumulator.clear();
+                    recordCopilotThroughputAtComplete(*sendStart, finalText);
+                    postAgenticAssistantFinalSafe(finalText, finalText);
+                    return;
                 }
                 m_nativeStreamingActive = false;
                 releaseSendInFlight();
+                notifyCopilotChatCompletedUnlessSidebarFocused();
             }
             return;
         }
@@ -11651,7 +11939,7 @@ void Win32IDE::HandleCopilotSend()
         if (needsPrefix)
         {
             m_nativeStreamingActive = true;
-            m_streamingWrittenWchars = 0; // reset wide-char counter at stream start
+            m_streamingWrittenWchars = 0;  // reset wide-char counter at stream start
         }
         std::string displayResp = (needsPrefix ? "Copilot: " : "") + safe;
         appendCopilotChatTextOnUiThread(displayResp);
@@ -11659,19 +11947,16 @@ void Win32IDE::HandleCopilotSend()
 
         if (complete)
         {
-            // Replace raw streaming block with formatted markdown rendering
-            if (!m_streamingTokenAccumulator.empty())
+            const std::string finalText = m_streamingTokenAccumulator;
+            if (!finalText.empty())
             {
-                replaceLastStreamingBlockWithMarkdown(m_streamingTokenAccumulator);
-                conversationAddAssistant(m_streamingTokenAccumulator);
-                m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
-                persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
-                m_lastCopilotAssistantResponse = m_streamingTokenAccumulator;
-                recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
-                m_streamingTokenAccumulator.clear();
+                recordCopilotThroughputAtComplete(*sendStart, finalText);
+                postAgenticAssistantFinalSafe(finalText, finalText);
+                return;
             }
             m_nativeStreamingActive = false;
             releaseSendInFlight();
+            notifyCopilotChatCompletedUnlessSidebarFocused();
         }
     };
 
@@ -11682,6 +11967,12 @@ void Win32IDE::HandleCopilotSend()
     const bool layerAvailable = rawrxd::isAgenticLayerAvailable();
     const std::string agentRouteUserMessage =
         hasAgenticPrefix ? StripAgenticPrefixForRouteParity(userMessage) : userMessage;
+    LOG_INFO("[ChatSend#" + std::to_string(traceId) + "] route decision has_agentic_prefix=" +
+             BoolToLog(hasAgenticPrefix) + " bridge_agentic_mode=" + BoolToLog(bridgeAgenticMode) +
+             " function_calling_mode=" + BoolToLog(m_agenticFunctionCallingMode) +
+             " wants_agentic=" + BoolToLog(wantsAgenticChat) + " layer_available=" + BoolToLog(layerAvailable) +
+             " agentic_bridge_present=" + BoolToLog(m_agenticBridge != nullptr) + " agent_prompt='" +
+             MakeLogPreview(agentRouteUserMessage) + "'");
 
     // Ollama HTTP + `AgenticChatSession` cannot drive local GGUF weights — route loaded models through
     // `generateResponseAsync` (AgenticBridge, minimal agentic layer, native backends).
@@ -11700,34 +11991,40 @@ void Win32IDE::HandleCopilotSend()
         // Use agentic chat session with function calling (route stripped prompt; history keeps full user line)
         m_agenticChatSession->RunTurnAsync(
             agentRouteUserMessage,
-            [this, clearInputOnce, markFirstResponseActivity](const std::string& chunk)
+            [this, clearInputOnce, markFirstResponseActivity, traceId](const std::string& chunk)
             {
                 // Handle streaming content chunks — accumulate for markdown
                 if (!m_hwndCopilotChatOutput)
                     return;
                 markFirstResponseActivity("agentic_chunk", chunk.size(), false);
                 clearInputOnce();
+                LOG_DEBUG("[ChatSend#" + std::to_string(traceId) + "] agentic chunk len=" +
+                          std::to_string(chunk.size()) + " preview='" + MakeLogPreview(chunk, 80) + "'");
                 m_streamingTokenAccumulator += chunk;
                 appendCopilotChatTextOnUiThread(chunk);
             },
-            [this, clearInputOnce, markFirstResponseActivity](const std::string& tool_name)
+            [this, clearInputOnce, markFirstResponseActivity, traceId](const std::string& tool_name)
             {
                 // Worker thread — UI text marshals via `appendCopilotChatTextOnUiThread`; history via PostMessage.
                 if (!m_hwndCopilotChatOutput)
                     return;
                 markFirstResponseActivity("agentic_tool_start", tool_name.size(), false);
                 clearInputOnce();
+                LOG_INFO("[ChatSend#" + std::to_string(traceId) + "] tool start '" + tool_name + "'");
                 std::string displayStatus = "\n[Running " + tool_name + "...]\n";
                 appendCopilotChatTextOnUiThread(displayStatus);
                 const std::string tn = tool_name.empty() ? std::string("tool") : tool_name;
                 postCopilotRecordToolTurnSafe(tn, std::string("[started]"));
             },
-            [this, clearInputOnce, markFirstResponseActivity](const std::string& tool_name, const std::string& result)
+            [this, clearInputOnce, markFirstResponseActivity, traceId](const std::string& tool_name,
+                                                                       const std::string& result)
             {
                 if (!m_hwndCopilotChatOutput)
                     return;
                 markFirstResponseActivity("agentic_tool_result", result.size(), false);
                 clearInputOnce();
+                LOG_INFO("[ChatSend#" + std::to_string(traceId) + "] tool result '" + tool_name +
+                         "' len=" + std::to_string(result.size()) + " preview='" + MakeLogPreview(result, 100) + "'");
                 std::string displayResult = "[" + tool_name + " Result]:\n" + result + "\n";
                 appendCopilotChatTextOnUiThread(displayResult);
 
@@ -11735,11 +12032,14 @@ void Win32IDE::HandleCopilotSend()
                 const std::string bodyForStore = result.empty() ? std::string("(no output)") : result;
                 postCopilotRecordToolTurnSafe(tn, bodyForStore);
             },
-            [this, clearInputOnce, markFirstResponseActivity, releaseSendInFlight, sendStart,
+            [this, clearInputOnce, markFirstResponseActivity, releaseSendInFlight, sendStart, traceId,
              recordCopilotThroughputAtComplete](const std::string& final_response)
             {
                 markFirstResponseActivity("agentic_final", final_response.size(), true);
                 clearInputOnce();
+                LOG_INFO("[ChatSend#" + std::to_string(traceId) +
+                         "] agentic final len=" + std::to_string(final_response.size()) + " preview='" +
+                         MakeLogPreview(final_response, 100) + "'");
 
                 if (!m_hwndCopilotChatOutput)
                 {
@@ -11760,6 +12060,8 @@ void Win32IDE::HandleCopilotSend()
             appendCopilotChatTextOnUiThread(
                 "\n[Agentic] Tool layer not ready yet — using standard chat for this message. "
                 "(Ensure agentic init completed; local GGUF or Ollama must be reachable.)\n");
+            LOG_WARNING("[ChatSend#" + std::to_string(traceId) +
+                        "] wants agentic chat but layer unavailable; falling back to standard path");
         }
         // Local GGUF + agentic: `MinimalAgentController` + tools (parity with RawrEngine `/smoke`, Route C).
         // DEFENSE: RAWRXD_BYPASS_AGENTIC_CHAT=1 skips the agentic orchestrator path
@@ -11772,7 +12074,10 @@ void Win32IDE::HandleCopilotSend()
         }();
         if (bypassAgenticChat)
         {
-            OutputDebugStringA("[HandleCopilotSend] RAWRXD_BYPASS_AGENTIC_CHAT=1 — skipping agentic path, using generateResponseAsync\n");
+            OutputDebugStringA("[HandleCopilotSend] RAWRXD_BYPASS_AGENTIC_CHAT=1 — skipping agentic path, using "
+                               "generateResponseAsync\n");
+            LOG_INFO("[ChatSend#" + std::to_string(traceId) +
+                     "] RAWRXD_BYPASS_AGENTIC_CHAT active; using standard async path");
         }
         else if (wantsAgenticChat && layerAvailable && selectedLocalModel && isModelLoaded())
         {
@@ -11799,7 +12104,7 @@ void Win32IDE::HandleCopilotSend()
 
             HWND hwndMain = m_hwndMain;
             std::thread(
-                [this, req, hwndMain]()
+                [this, req, hwndMain, traceId]()
                 {
                     if (isShuttingDown())
                         return;
@@ -11830,6 +12135,10 @@ void Win32IDE::HandleCopilotSend()
                     METRICS.increment("chat.minimal_agentic.worker_completed", 1);
                     METRICS.gauge("chat.minimal_agentic.last_tool_calls",
                                   static_cast<double>(miniResp.tool_calls_made));
+                    LOG_INFO("[ChatSend#" + std::to_string(traceId) + "] minimal agentic worker done success=" +
+                             BoolToLog(miniResp.success) + " tool_calls=" + std::to_string(miniResp.tool_calls_made) +
+                             " response_len=" + std::to_string(miniResp.final_message.size()) + " error='" +
+                             miniResp.error + "'");
                     const bool ok = miniResp.success;
                     const int tc = std::min(65535, std::max(0, miniResp.tool_calls_made));
                     auto* heap = new rawrxd::MinimalAgenticResponse(std::move(miniResp));
@@ -11845,23 +12154,8 @@ void Win32IDE::HandleCopilotSend()
             return;
         }
         // Generate response using traditional method (GGUF async / Ollama bridge)
+        LOG_INFO("[ChatSend#" + std::to_string(traceId) + "] dispatching generateResponseAsync");
         generateResponseAsync(userMessage, onResponse);
-    }
-    }
-    catch (const std::exception& ex)
-    {
-        OutputDebugStringA(("[HandleCopilotSend] C++ exception: " + std::string(ex.what()) + "\n").c_str());
-        appendToOutput(std::string("\n[Error] Chat send failed with exception: ") + ex.what() + "\n", "Errors",
-                       OutputSeverity::Error);
-        m_chatSendInFlight.store(false);
-        setCopilotInteractionBusyOnUiThread(false);
-    }
-    catch (...)
-    {
-        OutputDebugStringA("[HandleCopilotSend] Unknown exception\n");
-        appendToOutput("\n[Error] Chat send failed with an unknown exception.\n", "Errors", OutputSeverity::Error);
-        m_chatSendInFlight.store(false);
-        setCopilotInteractionBusyOnUiThread(false);
     }
 }
 
@@ -11983,13 +12277,368 @@ bool Win32IDE::tryAutocompleteSlashCommand()
     return false;
 }
 
+namespace
+{
+std::wstring editorRangeTextWideForSlash(HWND hwndEditor, LONG start, LONG end)
+{
+    if (!hwndEditor || end <= start)
+        return L"";
+
+    std::wstring text;
+    text.resize(static_cast<size_t>(end - start) + 1);
+
+    TEXTRANGEW tr = {};
+    tr.chrg.cpMin = start;
+    tr.chrg.cpMax = end;
+    tr.lpstrText = text.data();
+
+    SendMessageW(hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+    text.resize(wcslen(text.c_str()));
+    return text;
+}
+
+std::string sliceSurroundingLinesUtf8FromWide(const std::wstring& w, int line0, int halfWindow)
+{
+    if (w.empty())
+        return {};
+    std::vector<size_t> lineStarts;
+    lineStarts.push_back(0);
+    for (size_t i = 0; i < w.size(); ++i)
+    {
+        if (w[i] == L'\n')
+            lineStarts.push_back(i + 1);
+        else if (w[i] == L'\r')
+        {
+            if (i + 1 < w.size() && w[i + 1] == L'\n')
+            {
+                lineStarts.push_back(i + 2);
+                ++i;
+            }
+            else
+            {
+                lineStarts.push_back(i + 1);
+            }
+        }
+    }
+    const int n = static_cast<int>(lineStarts.size());
+    if (n <= 0)
+        return wideToUtf8(w);
+    int row = line0;
+    if (row < 0)
+        row = 0;
+    if (row >= n)
+        row = n - 1;
+    const int lo = (std::max)(0, row - halfWindow);
+    const int hi = (std::min)(n - 1, row + halfWindow);
+    const size_t a = lineStarts[static_cast<size_t>(lo)];
+    const size_t b = (hi + 1 < n) ? lineStarts[static_cast<size_t>(hi + 1)] : w.size();
+    if (b <= a)
+        return {};
+    return wideToUtf8(w.substr(a, b - a));
+}
+
+std::string editorIdentifierUnderCaretUtf8(HWND hwndEditor)
+{
+    if (!hwndEditor)
+        return {};
+    CHARRANGE sel = {};
+    SendMessageW(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    const int line = static_cast<int>(SendMessageW(hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0));
+    const LONG ls = static_cast<LONG>(SendMessageW(hwndEditor, EM_LINEINDEX, line, 0));
+    if (ls < 0)
+        return {};
+    const LONG ll = static_cast<LONG>(SendMessageW(hwndEditor, EM_LINELENGTH, ls, 0));
+    if (ll <= 0)
+        return {};
+    const std::wstring lineW = editorRangeTextWideForSlash(hwndEditor, ls, ls + ll);
+    const int col = static_cast<int>(sel.cpMin - ls);
+    if (col < 0 || col > static_cast<int>(lineW.size()))
+        return {};
+    int a = col;
+    while (a > 0)
+    {
+        const wchar_t ch = lineW[static_cast<size_t>(a - 1)];
+        if (iswalnum(static_cast<wint_t>(ch)) != 0 || ch == L'_')
+            --a;
+        else
+            break;
+    }
+    int b = col;
+    while (b < static_cast<int>(lineW.size()))
+    {
+        const wchar_t ch = lineW[static_cast<size_t>(b)];
+        if (iswalnum(static_cast<wint_t>(ch)) != 0 || ch == L'_')
+            ++b;
+        else
+            break;
+    }
+    if (a == b)
+        return {};
+    return wideToUtf8(lineW.substr(static_cast<size_t>(a), static_cast<size_t>(b - a)));
+}
+}  // namespace
+
+// Comment prefix for RichEdit helpers (slash /doc stub, editorToggleCommentSelection). External linkage so LTCG/link
+// always resolves a single symbol (some toolchains referenced it as non-static during incremental links).
+std::string editorCommentPrefixForPath(const std::string& filePath)
+{
+    std::string ext;
+    const size_t dot = filePath.find_last_of('.');
+    if (dot != std::string::npos)
+        ext = filePath.substr(dot);
+
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
+
+    if (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c" || ext == ".h" || ext == ".hpp" || ext == ".hh" ||
+        ext == ".hxx" || ext == ".js" || ext == ".jsx" || ext == ".ts" || ext == ".tsx" || ext == ".java" ||
+        ext == ".cs" || ext == ".swift" || ext == ".kt" || ext == ".m" || ext == ".mm")
+        return "//";
+
+    if (ext == ".py" || ext == ".ps1" || ext == ".sh" || ext == ".rb" || ext == ".yml" || ext == ".yaml")
+        return "#";
+
+    if (ext == ".asm" || ext == ".s" || ext == ".inc")
+        return ";";
+
+    if (ext == ".sql" || ext == ".lua")
+        return "--";
+
+    return "//";
+}
+
+namespace
+{
+void trimAsciiWhitespaceInPlace(std::string& s)
+{
+    auto isSpace = [](unsigned char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; };
+    while (!s.empty() && isSpace(static_cast<unsigned char>(s.front())))
+        s.erase(s.begin());
+    while (!s.empty() && isSpace(static_cast<unsigned char>(s.back())))
+        s.pop_back();
+}
+
+static std::string stripOptionalCodeFence(std::string s)
+{
+    trimAsciiWhitespaceInPlace(s);
+    const size_t fence = s.find("```");
+    if (fence == std::string::npos)
+        return s;
+    size_t start = fence + 3;
+    while (start < s.size() && s[start] != '\n' && s[start] != '\r')
+        ++start;
+    if (start < s.size() && s[start] == '\r')
+        ++start;
+    if (start < s.size() && s[start] == '\n')
+        ++start;
+    const size_t end = s.rfind("```");
+    if (end == std::string::npos || end <= start)
+        return s;
+    std::string mid = s.substr(start, end - start);
+    trimAsciiWhitespaceInPlace(mid);
+    return mid.empty() ? s : mid;
+}
+}  // namespace
+
+void Win32IDE::executeDirectSlashFixFromEditor(HWND editor, const rawrxd::ghost_completion::GhostCompletionContext& ctx,
+                                               const std::string& diagnosticsBlock, const std::string& extraUserFocus)
+{
+    namespace fs = std::filesystem;
+    if (!editor || !IsWindow(editor))
+        return;
+
+    if (m_currentFile.empty())
+    {
+        appendToOutput("\n[Direct /fix] Save the file to disk first (needs a path for diff + WAL).\n", "Output",
+                       OutputSeverity::Warning);
+        return;
+    }
+    std::error_code ec;
+    if (!fs::exists(fs::path(m_currentFile), ec))
+    {
+        appendToOutput("\n[Direct /fix] File is not on disk yet — save before running /fix.\n", "Output",
+                       OutputSeverity::Warning);
+        return;
+    }
+
+    const std::string originalFull = getWindowText(editor);
+    constexpr size_t kMaxDirectFixBytes = 512 * 1024;
+    if (originalFull.size() > kMaxDirectFixBytes)
+    {
+        appendToOutput("\n[Direct /fix] File too large for direct lane (limit 512 KiB). Use Agent Chat instead.\n",
+                       "Output", OutputSeverity::Warning);
+        return;
+    }
+
+    if (!isModelLoaded())
+    {
+        appendToOutput("\n[Direct /fix] No model loaded — load a GGUF or configure Ollama, then retry.\n", "Output",
+                       OutputSeverity::Warning);
+        return;
+    }
+
+    {
+        std::string ragRoot = m_projectRoot;
+        if (ragRoot.empty())
+            ragRoot = m_settings.workingDirectory;
+        rawrxd::rag_lite::requestBackgroundScan(std::move(ragRoot));
+    }
+    const std::string ragLiteCtx = rawrxd::rag_lite::buildPromptInjection(originalFull, 12000);
+
+    std::ostringstream prompt;
+    prompt << "You are an IDE code-fix assistant. Output ONLY the complete fixed source file.\n";
+    prompt << "No markdown prose before or after. You may wrap the file in a single ```" << ctx.languageId
+           << " fenced block.\n";
+    prompt << "Preserve structure and style; make minimal changes that resolve diagnostics.\n\n";
+    if (!ragLiteCtx.empty())
+        prompt << ragLiteCtx << "\n";
+    if (!extraUserFocus.empty())
+        prompt << "User focus: " << extraUserFocus << "\n\n";
+    if (!diagnosticsBlock.empty())
+    {
+        prompt << diagnosticsBlock << "\n";
+    }
+    {
+        const std::string lspBridge = formatLspBridgeContextForSlashFix(editor, m_currentFile);
+        if (!lspBridge.empty())
+        {
+            prompt << lspBridge << "\n";
+        }
+    }
+    prompt << "Full file (" << ctx.languageId << "):\n```" << ctx.languageId << "\n" << originalFull << "\n```\n";
+
+    appendToOutput("\n[Direct /fix] Running model (no chat) — staging diff in Agent panel…\n", "Output",
+                   OutputSeverity::Info);
+    LOG_INFO("[Direct /fix] invoke model path=" + m_currentFile);
+
+    const std::string raw = sendMessageToModelWithoutChatHistory(prompt.str());
+    if (raw.empty() || raw.rfind("Error:", 0) == 0)
+    {
+        appendToOutput(std::string("\n[Direct /fix] Model failed: ") + (raw.empty() ? "(empty)" : raw) + "\n", "Output",
+                       OutputSeverity::Error);
+        return;
+    }
+
+    std::string proposed = stripOptionalCodeFence(raw);
+    trimAsciiWhitespaceInPlace(proposed);
+    if (proposed.empty())
+    {
+        appendToOutput("\n[Direct /fix] Model returned empty fix.\n", "Output", OutputSeverity::Warning);
+        return;
+    }
+    if (proposed == originalFull)
+    {
+        appendToOutput("\n[Direct /fix] Model returned text identical to the original — nothing to stage.\n", "Output",
+                       OutputSeverity::Info);
+        return;
+    }
+
+    if (!stageDirectFixAgentProposal(m_currentFile, originalFull, proposed, "direct /fix"))
+    {
+        appendToOutput("\n[Direct /fix] Failed to stage proposal (see log).\n", "Output", OutputSeverity::Error);
+        return;
+    }
+
+    const bool mirrorOk = validateCurrentAgentSessionMirrorGate();
+    ensureAgentDiffPanelVisible();
+    refreshAgentDiffDisplay();
+    if (!mirrorOk)
+    {
+        appendToOutput(
+            "\n[Direct /fix] Staged with MirrorGate failure — review compiler output in the Agent panel; Accept All is "
+            "disabled until the proposal compiles.\n",
+            "Output", OutputSeverity::Warning);
+    }
+    else
+    {
+        appendToOutput("\n[Direct /fix] Staged — review the Agent diff panel, then Accept All or Reject All. "
+                       "Ctrl+Shift+Z rolls back "
+                       "after accept.\n",
+                       "Output", OutputSeverity::Info);
+    }
+}
+
+namespace
+{
+std::string buildEditorSlashVulkanReport()
+{
+    std::ostringstream o;
+    VulkanCompute vc;
+    if (!vc.Initialize())
+    {
+        o << "[Vulkan] Initialize() failed — SDK/driver unavailable or no compute device.\n";
+        return o.str();
+    }
+    const VulkanDeviceInfo& di = vc.GetDeviceInfo();
+    o << "[Vulkan] device: " << di.device_name << "\n";
+    o << "  vendor_id=0x" << std::hex << di.vendor_id << " device_id=0x" << di.device_id << std::dec << "\n";
+    o << "  AMD GPU: " << (vc.IsAMDDevice() ? "yes" : "no") << "  compute_queue_family=" << di.compute_queue_family
+      << "\n";
+    o << "  FP8 tiled flash-attn pipeline ready: " << (vc.IsFlashAttentionFP8TiledPipelineReady() ? "yes" : "no")
+      << "\n";
+    const VulkanKernelStats& st = vc.GetStats();
+    o << "  stats: dispatch=" << st.dispatch_count.load(std::memory_order_relaxed)
+      << " matmul=" << st.matmul_count.load(std::memory_order_relaxed)
+      << " attn=" << st.attention_count.load(std::memory_order_relaxed)
+      << " errors=" << st.error_count.load(std::memory_order_relaxed) << "\n";
+    vc.Cleanup();
+    return o.str();
+}
+
+std::string buildEditorSlashPagerReport()
+{
+    std::ostringstream o;
+    o << "[Sovereign /pager] process + reservation snapshot\n";
+    auto& rm = RawrXD::Compression::VirtualAllocReservationManager::Instance();
+    o << "  VirtualAllocReservationManager: reserved=" << rm.GetTotalReservedBytes()
+      << " B  committed=" << rm.GetTotalCommittedBytes() << " B\n";
+    {
+        const uint32_t pref = rm.GetPreferredNumaNode();
+        o << "  reservation NUMA policy: ";
+        if (pref == RawrXD::Compression::VirtualAllocReservationManager::kPreferredNumaNodeAuto)
+        {
+            o << "auto (VirtualAllocExNuma uses current CPU node per ReserveBlock)\n";
+        }
+        else
+        {
+            o << "pinned node " << pref << "\n";
+        }
+    }
+
+    PROCESS_MEMORY_COUNTERS_EX pmc = {};
+    pmc.cb = sizeof(pmc);
+    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc)))
+    {
+        o << "  working_set=" << pmc.WorkingSetSize << " B  private_bytes=" << pmc.PrivateUsage << " B\n";
+    }
+
+    ULONG highestNuma = 0;
+    if (GetNumaHighestNodeNumber(&highestNuma))
+    {
+        o << "  NUMA highest node index: " << highestNuma << "\n";
+    }
+    PROCESSOR_NUMBER procNum = {};
+    GetCurrentProcessorNumberEx(&procNum);
+    o << "  current processor: group=" << static_cast<int>(procNum.Group)
+      << " number=" << static_cast<int>(procNum.Number) << "\n";
+    USHORT node = 0;
+    if (GetNumaProcessorNodeEx(&procNum, &node))
+    {
+        o << "  current processor NUMA node: " << node << "\n";
+    }
+
+    o << "  SovereignPager: no heap instance bound to Win32IDE (tier LRU totals N/A in-process).\n";
+    o << sov::formatPagerLastLoadTelemetryReport();
+    return o.str();
+}
+}  // namespace
+
 void Win32IDE::ensureSlashOverlayCreated()
 {
     if (m_hwndSlashOverlayPopup && IsWindow(m_hwndSlashOverlayPopup))
     {
         return;
     }
-    if (!m_hwndMain || !IsWindow(m_hwndMain) || !m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+    if (!m_hwndMain || !IsWindow(m_hwndMain))
     {
         return;
     }
@@ -12026,6 +12675,7 @@ void Win32IDE::hideSlashOverlay()
     }
     m_slashOverlayCommands.clear();
     m_slashOverlaySelectedIndex = 0;
+    m_slashOverlayEditorMode = false;
 }
 
 bool Win32IDE::isSlashOverlayVisible() const
@@ -12033,8 +12683,73 @@ bool Win32IDE::isSlashOverlayVisible() const
     return m_hwndSlashOverlayPopup && IsWindow(m_hwndSlashOverlayPopup) && IsWindowVisible(m_hwndSlashOverlayPopup);
 }
 
-void Win32IDE::refreshSlashOverlay(const std::string& userMessage)
+void Win32IDE::syncEditorSlashOverlayFromEditor(HWND editor)
 {
+    if (!editor || editor != m_hwndEditor || !IsWindow(editor))
+    {
+        return;
+    }
+
+    CHARRANGE sel = {};
+    SendMessageW(editor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    if (sel.cpMin != sel.cpMax)
+    {
+        hideSlashOverlay();
+        return;
+    }
+
+    const int line = (int)SendMessageW(editor, EM_LINEFROMCHAR, sel.cpMin, 0);
+    const LONG lineStart = (LONG)SendMessageW(editor, EM_LINEINDEX, line, 0);
+    if (lineStart < 0)
+    {
+        hideSlashOverlay();
+        return;
+    }
+
+    const std::wstring wPrefix = editorRangeTextWideForSlash(editor, lineStart, sel.cpMin);
+    const size_t slashPos = wPrefix.find(L'/');
+    if (slashPos == std::wstring::npos)
+    {
+        hideSlashOverlay();
+        return;
+    }
+    for (size_t i = 0; i < slashPos; ++i)
+    {
+        if (!iswspace(static_cast<wint_t>(wPrefix[i])))
+        {
+            hideSlashOverlay();
+            return;
+        }
+    }
+
+    std::wstring tail = wPrefix.substr(slashPos);
+    if (tail.find(L' ') != std::wstring::npos)
+    {
+        hideSlashOverlay();
+        return;
+    }
+
+    const std::string userMessage = wideToUtf8(tail);
+    if (userMessage.empty() || userMessage.front() != '/')
+    {
+        hideSlashOverlay();
+        return;
+    }
+
+    refreshSlashOverlay(userMessage, editor);
+}
+
+void Win32IDE::refreshSlashOverlay(const std::string& userMessage, HWND editorPositionAnchor)
+{
+    if (!editorPositionAnchor)
+    {
+        m_slashOverlayEditorMode = false;
+    }
+    else
+    {
+        m_slashOverlayEditorMode = true;
+    }
+
     if (userMessage.empty() || userMessage.front() != '/')
     {
         hideSlashOverlay();
@@ -12053,6 +12768,7 @@ void Win32IDE::refreshSlashOverlay(const std::string& userMessage)
     ensureSlashOverlayCreated();
     if (!m_hwndSlashOverlayPopup || !m_hwndSlashOverlayList)
     {
+        hideSlashOverlay();
         return;
     }
 
@@ -12100,12 +12816,68 @@ void Win32IDE::refreshSlashOverlay(const std::string& userMessage)
         SetWindowTextW(m_hwndSlashOverlayPreview, preview.c_str());
     }
 
-    RECT inputRc{};
-    GetWindowRect(m_hwndCopilotChatInput, &inputRc);
-    const int width = static_cast<int>(std::max(420L, inputRc.right - inputRc.left));
+    int x = 0;
+    int y = 0;
+    int width = 520;
     const int height = 220;
-    const int x = inputRc.left;
-    const int y = inputRc.top - height - 6;
+
+    if (editorPositionAnchor && IsWindow(editorPositionAnchor))
+    {
+        CHARRANGE sel = {};
+        SendMessageW(editorPositionAnchor, EM_EXGETSEL, 0, (LPARAM)&sel);
+        POINTL pt = {};
+        const LRESULT posRes = SendMessageW(editorPositionAnchor, EM_POSFROMCHAR, (WPARAM)sel.cpMin, (LPARAM)&pt);
+        if (posRes < 0 || (pt.x == -1 && pt.y == -1))
+        {
+            hideSlashOverlay();
+            return;
+        }
+        POINT scr = {pt.x, pt.y};
+        ClientToScreen(editorPositionAnchor, &scr);
+
+        TEXTMETRICW tm = {};
+        HDC hdcEd = GetDC(editorPositionAnchor);
+        if (hdcEd)
+        {
+            GetTextMetricsW(hdcEd, &tm);
+            ReleaseDC(editorPositionAnchor, hdcEd);
+        }
+        const int lineH = tm.tmHeight + tm.tmExternalLeading;
+        RECT edRc = {};
+        GetClientRect(editorPositionAnchor, &edRc);
+        width = (std::max)(420, static_cast<int>(edRc.right - 20));
+        x = scr.x;
+        y = scr.y + (std::max)(lineH, 16);
+    }
+    else
+    {
+        if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+        {
+            hideSlashOverlay();
+            return;
+        }
+        RECT inputRc = {};
+        GetWindowRect(m_hwndCopilotChatInput, &inputRc);
+        width = static_cast<int>(std::max(420L, inputRc.right - inputRc.left));
+        x = inputRc.left;
+        y = inputRc.top - height - 6;
+    }
+
+    RECT popupRc = {x, y, x + width, y + height};
+    HMONITOR hm = MonitorFromRect(&popupRc, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi = {sizeof(mi)};
+    if (hm && GetMonitorInfoW(hm, &mi))
+    {
+        if (popupRc.right > mi.rcWork.right)
+            x = mi.rcWork.right - width;
+        if (popupRc.bottom > mi.rcWork.bottom)
+            y = mi.rcWork.top + 8;
+        if (x < mi.rcWork.left)
+            x = mi.rcWork.left;
+        if (y < mi.rcWork.top)
+            y = mi.rcWork.top;
+    }
+
     SetWindowPos(m_hwndSlashOverlayPopup, HWND_TOPMOST, x, y, width, height, SWP_NOACTIVATE | SWP_SHOWWINDOW);
 }
 
@@ -12156,7 +12928,7 @@ bool Win32IDE::handleSlashOverlayKey(WPARAM key)
 
 bool Win32IDE::applySlashOverlaySelection()
 {
-    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput) || m_slashOverlayCommands.empty())
+    if (m_slashOverlayCommands.empty())
     {
         return false;
     }
@@ -12167,11 +12939,959 @@ bool Win32IDE::applySlashOverlaySelection()
         return false;
     }
 
+    if (m_slashOverlayEditorMode && m_hwndEditor && IsWindow(m_hwndEditor))
+    {
+        CHARRANGE sel = {};
+        SendMessageW(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+        if (sel.cpMin != sel.cpMax)
+        {
+            return false;
+        }
+
+        const int line = (int)SendMessageW(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+        const LONG lineStart = (LONG)SendMessageW(m_hwndEditor, EM_LINEINDEX, line, 0);
+        if (lineStart < 0)
+        {
+            return false;
+        }
+
+        const std::wstring wPrefix = editorRangeTextWideForSlash(m_hwndEditor, lineStart, sel.cpMin);
+        const size_t slashPos = wPrefix.find(L'/');
+        if (slashPos == std::wstring::npos)
+        {
+            return false;
+        }
+        for (size_t i = 0; i < slashPos; ++i)
+        {
+            if (!iswspace(static_cast<wint_t>(wPrefix[i])))
+            {
+                return false;
+            }
+        }
+
+        const LONG slashCp = lineStart + static_cast<LONG>(slashPos);
+        const std::string routedSlashCmd = m_slashOverlayCommands[m_slashOverlaySelectedIndex];
+        const std::wstring completed = utf8ToWide(std::string("/") + routedSlashCmd + " ");
+        CHARRANGE repl = {slashCp, sel.cpMin};
+        SendMessageW(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&repl);
+        SendMessageW(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)completed.c_str());
+        hideSlashOverlay();
+        onEditorContentChanged();
+        routeEditorSlashCommandAfterInsert(routedSlashCmd, m_hwndEditor);
+        return true;
+    }
+
+    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+    {
+        return false;
+    }
+
     const std::wstring completed =
         utf8ToWide(std::string("/") + m_slashOverlayCommands[m_slashOverlaySelectedIndex] + " ");
     SetWindowTextW(m_hwndCopilotChatInput, completed.c_str());
     SendMessageW(m_hwndCopilotChatInput, EM_SETSEL, static_cast<WPARAM>(completed.size()),
                  static_cast<LPARAM>(completed.size()));
+    hideSlashOverlay();
+    return true;
+}
+
+void Win32IDE::ensureCopilotChatPanelVisible()
+{
+    if (!m_secondarySidebarVisible)
+        toggleSecondarySidebar();
+}
+
+void Win32IDE::postPromptToCopilotChat(const std::string& promptUtf8)
+{
+    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+        return;
+    ensureCopilotChatPanelVisible();
+    const std::wstring w = utf8ToWide(promptUtf8);
+    {
+        std::lock_guard<std::mutex> inputLock(g_chatInputBufferMutex);
+        SetWindowTextW(m_hwndCopilotChatInput, w.c_str());
+        SendMessageW(m_hwndCopilotChatInput, EM_SETSEL, static_cast<WPARAM>(w.size()), static_cast<LPARAM>(w.size()));
+    }
+    if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+        SetFocus(m_hwndCopilotChatInput);
+    postDeferredCopilotSend();
+}
+
+void Win32IDE::syncStructuredSlashCopilotFixExpectationForUserMessage(const std::string& userMessageUtf8)
+{
+    const bool startsWithFix = userMessageUtf8.size() >= 4 && userMessageUtf8.compare(0, 4, "/fix") == 0;
+    const bool hasMarker = userMessageUtf8.find(kStructuredSlashFixPromptMarker) != std::string::npos;
+    const bool looksLikeStructuredFixPrompt = startsWithFix && hasMarker;
+
+    if (m_armStructuredSlashCopilotFixNextSend)
+    {
+        m_armStructuredSlashCopilotFixNextSend = false;
+        m_expectStructuredSlashCopilotFixPending = looksLikeStructuredFixPrompt && !m_currentFile.empty();
+        if (m_expectStructuredSlashCopilotFixPending)
+        {
+            m_structuredSlashCopilotFixTargetFile = m_currentFile;
+        }
+    }
+    else if (!looksLikeStructuredFixPrompt)
+    {
+        m_expectStructuredSlashCopilotFixPending = false;
+    }
+}
+
+std::string Win32IDE::loadUtf8FileForStructuredFix(const std::string& path) const
+{
+    if (path.empty())
+    {
+        return {};
+    }
+    std::ifstream in(path, std::ios::binary);
+    if (!in)
+    {
+        return {};
+    }
+    std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    return content;
+}
+
+std::string Win32IDE::getDocumentTextForStructuredSlashCopilotFixTarget() const
+{
+    if (m_structuredSlashCopilotFixTargetFile.empty())
+    {
+        return {};
+    }
+    if (!m_currentFile.empty() && _stricmp(m_structuredSlashCopilotFixTargetFile.c_str(), m_currentFile.c_str()) == 0)
+    {
+        return getEditorText();
+    }
+    return loadUtf8FileForStructuredFix(m_structuredSlashCopilotFixTargetFile);
+}
+
+void Win32IDE::maybeConsumeStructuredSlashCopilotFixFromAssistantText(const std::string& assistantPlainText)
+{
+    if (!m_expectStructuredSlashCopilotFixPending)
+    {
+        return;
+    }
+    m_expectStructuredSlashCopilotFixPending = false;
+
+    if (m_structuredSlashCopilotFixTargetFile.empty() || assistantPlainText.empty())
+    {
+        return;
+    }
+
+    const auto payload = rawrxd::ghost_completion::tryParseStructuredAiFixFromModelResponse(assistantPlainText);
+    if (!payload)
+    {
+        appendToOutput("[Slash /fix] Model reply was not a usable JSON diff (see chat). Edit manually or retry.\n",
+                       "Agent", OutputSeverity::Warning);
+        return;
+    }
+
+    const std::string before = getDocumentTextForStructuredSlashCopilotFixTarget();
+    const auto after = rawrxd::ghost_completion::applyStructuredAiLineDiffsUtf8(before, payload->edits);
+    if (!after)
+    {
+        appendToOutput("[Slash /fix] JSON diff lines did not match the file (check 1-based line numbers and exact "
+                       "\"old\" text).\n",
+                       "Agent", OutputSeverity::Warning);
+        return;
+    }
+    if (*after == before)
+    {
+        appendToOutput("[Slash /fix] Applied diff matches original — nothing queued.\n", "Agent", OutputSeverity::Info);
+        return;
+    }
+
+    const std::string summary =
+        payload->explanation.empty() ? std::string("Structured /fix proposal.") : payload->explanation;
+
+    // Same “direct lane” as executeDirectSlashFixFromEditor: full-file diff in Agent panel + Accept All (+ AI-WAL).
+    if (stageDirectFixAgentProposal(m_structuredSlashCopilotFixTargetFile, before, *after, summary))
+    {
+        const bool mirrorOk = validateCurrentAgentSessionMirrorGate();
+        ensureAgentDiffPanelVisible();
+        refreshAgentDiffDisplay();
+        if (!mirrorOk)
+        {
+            appendToOutput(
+                std::string("[Slash /fix] Staged — MirrorGate reports compile errors (Accept All disabled). ") +
+                    summary + "\n",
+                "Agent", OutputSeverity::Warning);
+        }
+        else
+        {
+            appendToOutput(std::string("[Slash /fix] Staged in Agent panel — review diff and click Accept All: ") +
+                               summary + "\n",
+                           "Agent", OutputSeverity::Info);
+        }
+    }
+    else
+    {
+        (void)queueFilePendingEdit(RawrXD::Review::EditSource::Agent, RawrXD::Review::EditType::Replace,
+                                   m_structuredSlashCopilotFixTargetFile, before, *after);
+        appendToOutput(std::string("[Slash /fix] Agent panel staging failed; queued for edit review instead: ") +
+                           summary + "\n",
+                       "Agent", OutputSeverity::Warning);
+    }
+}
+
+std::string Win32IDE::formatDiagnosticsForChatPrompt(const std::string& filePath) const
+{
+    if (filePath.empty())
+        return {};
+    const std::string uri = filePathToUri(filePath);
+    const auto diags = getDiagnosticsForFile(uri);
+    std::ostringstream o;
+    o << "LSP diagnostics (" << diags.size() << "):\n";
+    for (const auto& d : diags)
+    {
+        o << "- L" << (d.range.start.line + 1) << ":" << (d.range.start.character + 1) << " sev=" << d.severity << " ["
+          << d.source << "] " << d.message << "\n";
+    }
+    return o.str();
+}
+
+namespace
+{
+std::string stripLspHoverMarkdownForPrompt(std::string s)
+{
+    for (;;)
+    {
+        const size_t a = s.find("```");
+        if (a == std::string::npos)
+        {
+            break;
+        }
+        const size_t b = s.find("```", a + 3);
+        if (b == std::string::npos)
+        {
+            s.erase(a);
+            break;
+        }
+        s.erase(a, b - a + 3);
+    }
+    for (size_t p = 0; (p = s.find("**", p)) != std::string::npos;)
+    {
+        s.erase(p, 2);
+    }
+    for (char& c : s)
+    {
+        if (c == '`')
+        {
+            c = '\'';
+        }
+    }
+    return s;
+}
+
+bool isSlashBridgeKeyword(std::string_view id, Win32IDE::LSPLanguage lang)
+{
+    auto eq = [id](const char* kw) { return id == kw; };
+    switch (lang)
+    {
+        case Win32IDE::LSPLanguage::Python:
+            return eq("def") || eq("class") || eq("import") || eq("from") || eq("as") || eq("pass") || eq("return") ||
+                   eq("if") || eq("elif") || eq("else") || eq("for") || eq("while") || eq("try") || eq("except") ||
+                   eq("finally") || eq("with") || eq("lambda") || eq("async") || eq("await") || eq("None") ||
+                   eq("True") || eq("False") || eq("and") || eq("or") || eq("not") || eq("in") || eq("is");
+        case Win32IDE::LSPLanguage::TypeScript:
+            return eq("const") || eq("let") || eq("var") || eq("function") || eq("return") || eq("if") || eq("else") ||
+                   eq("for") || eq("while") || eq("class") || eq("interface") || eq("type") || eq("import") ||
+                   eq("export") || eq("from") || eq("async") || eq("await") || eq("new") || eq("this") ||
+                   eq("extends") || eq("implements") || eq("namespace") || eq("enum") || eq("switch") || eq("case") ||
+                   eq("default") || eq("break") || eq("continue") || eq("throw") || eq("try") || eq("catch") ||
+                   eq("finally");
+        case Win32IDE::LSPLanguage::Cpp:
+        default:
+            return eq("alignas") || eq("alignof") || eq("asm") || eq("auto") || eq("bool") || eq("break") ||
+                   eq("case") || eq("catch") || eq("char") || eq("class") || eq("concept") || eq("const") ||
+                   eq("constexpr") || eq("consteval") || eq("constinit") || eq("continue") || eq("decltype") ||
+                   eq("default") || eq("delete") || eq("do") || eq("double") || eq("else") || eq("enum") ||
+                   eq("explicit") || eq("export") || eq("extern") || eq("false") || eq("float") || eq("for") ||
+                   eq("friend") || eq("goto") || eq("if") || eq("inline") || eq("int") || eq("long") || eq("mutable") ||
+                   eq("namespace") || eq("new") || eq("noexcept") || eq("nullptr") || eq("operator") || eq("private") ||
+                   eq("protected") || eq("public") || eq("register") || eq("requires") || eq("return") || eq("short") ||
+                   eq("signed") || eq("sizeof") || eq("static") || eq("struct") || eq("switch") || eq("template") ||
+                   eq("this") || eq("thread_local") || eq("throw") || eq("true") || eq("try") || eq("typedef") ||
+                   eq("typeid") || eq("typename") || eq("union") || eq("unsigned") || eq("using") || eq("virtual") ||
+                   eq("void") || eq("volatile") || eq("wchar_t") || eq("while");
+    }
+}
+
+/// UTF-16 code unit column starts for identifiers on one source line (Windows `wchar_t` path).
+std::vector<int> identifierHoverColumnsOnLineWide(const std::wstring& lineW, Win32IDE::LSPLanguage lang)
+{
+    std::vector<int> cols;
+    std::unordered_set<std::string> seenSpellings;
+    for (size_t i = 0; i < lineW.size();)
+    {
+        const wchar_t ch = lineW[i];
+        if (!((ch >= L'A' && ch <= L'Z') || (ch >= L'a' && ch <= L'z') || ch == L'_'))
+        {
+            ++i;
+            continue;
+        }
+        const size_t st = i;
+        while (i < lineW.size())
+        {
+            const wchar_t c = lineW[i];
+            if (!((c >= L'0' && c <= L'9') || (c >= L'A' && c <= L'Z') || (c >= L'a' && c <= L'z') || c == L'_'))
+            {
+                break;
+            }
+            ++i;
+        }
+        std::string id = wideToUtf8(lineW.substr(st, i - st));
+        if (id.empty() || isSlashBridgeKeyword(id, lang))
+        {
+            continue;
+        }
+        if (!seenSpellings.insert(id).second)
+        {
+            continue;
+        }
+        cols.push_back(static_cast<int>(st));
+        if (cols.size() >= 8)
+        {
+            break;
+        }
+    }
+    return cols;
+}
+}  // namespace
+
+std::string Win32IDE::formatLspBridgeContextForSlashFix(HWND editor, const std::string& filePath)
+{
+    if (!editor || !IsWindow(editor) || filePath.empty())
+    {
+        return {};
+    }
+    const LSPLanguage lang = detectLanguageForFile(filePath);
+    if (lang >= LSPLanguage::Count || m_lspStatuses[static_cast<size_t>(lang)].state != LSPServerState::Running)
+    {
+        return {};
+    }
+
+    const std::string uri = filePathToUri(filePath);
+    CHARRANGE sel = {};
+    SendMessageW(editor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+    const int lineIndex = static_cast<int>(SendMessageW(editor, EM_EXLINEFROMCHAR, 0, sel.cpMin));
+    const int lineStart = static_cast<int>(SendMessageW(editor, EM_LINEINDEX, lineIndex, 0));
+    const int column = (lineStart >= 0) ? static_cast<int>(sel.cpMin - lineStart) : 0;
+
+    const int lineCount = static_cast<int>(SendMessageW(editor, EM_GETLINECOUNT, 0, 0));
+    const LONG leExclusive = (lineIndex + 1 < lineCount)
+                                 ? static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, lineIndex + 1, 0))
+                                 : GetWindowTextLengthW(editor);
+    const std::wstring lineWide = editorRangeTextWideForSlash(editor, static_cast<LONG>(lineStart), leExclusive);
+
+    std::ostringstream o;
+
+    const LSPHoverInfo cursorHover = lspHover(uri, lineIndex, std::max(0, column));
+    if (cursorHover.valid)
+    {
+        std::string h = stripLspHoverMarkdownForPrompt(cursorHover.contents);
+        if (h.size() > 2000)
+        {
+            h.resize(2000);
+            h += "\n...(truncated)";
+        }
+        o << "Hover at cursor (L" << (lineIndex + 1) << ":" << (column + 1) << "):\n" << h << "\n";
+    }
+
+    int tokenHovers = 0;
+    constexpr int kMaxTokenHovers = 5;
+    const std::vector<int> idCols = identifierHoverColumnsOnLineWide(lineWide, lang);
+    for (int colPos : idCols)
+    {
+        if (tokenHovers >= kMaxTokenHovers)
+        {
+            break;
+        }
+        if (colPos == column)
+        {
+            continue;
+        }
+        const LSPHoverInfo th = lspHover(uri, lineIndex, std::max(0, colPos));
+        if (!th.valid)
+        {
+            continue;
+        }
+        std::string h = stripLspHoverMarkdownForPrompt(th.contents);
+        if (h.size() > 1400)
+        {
+            h.resize(1400);
+            h += "\n...(truncated)";
+        }
+        o << "Hover at token on same line (L" << (lineIndex + 1) << ":" << (colPos + 1) << "):\n" << h << "\n";
+        ++tokenHovers;
+    }
+
+    const auto diags = getDiagnosticsForFile(uri);
+    int diagHoversAdded = 0;
+    int lastErrLine = -1;
+    for (const auto& d : diags)
+    {
+        if (d.severity != 1)
+        {
+            continue;
+        }
+        const int errLine = d.range.start.line;
+        if (errLine < 0)
+        {
+            continue;
+        }
+        if (errLine == lineIndex)
+        {
+            continue;
+        }
+        if (errLine == lastErrLine)
+        {
+            continue;
+        }
+        lastErrLine = errLine;
+        const int errChar = std::max(0, d.range.start.character);
+        const LSPHoverInfo dh = lspHover(uri, errLine, errChar);
+        if (dh.valid)
+        {
+            std::string h = stripLspHoverMarkdownForPrompt(dh.contents);
+            if (h.size() > 1200)
+            {
+                h.resize(1200);
+                h += "\n...(truncated)";
+            }
+            o << "Hover at diagnostic (L" << (errLine + 1) << ":" << (errChar + 1) << "):\n" << h << "\n";
+            if (++diagHoversAdded >= 2)
+            {
+                break;
+            }
+        }
+    }
+
+    const auto typeLocs = lspTypeDefinition(uri, lineIndex, std::max(0, column));
+    if (!typeLocs.empty())
+    {
+        const std::string tpath = uriToFilePath(typeLocs[0].uri);
+        o << "Type definition: ";
+        o << (tpath.empty() ? typeLocs[0].uri : tpath);
+        o << " @ L" << (typeLocs[0].range.start.line + 1) << ":" << (typeLocs[0].range.start.character + 1) << "\n";
+    }
+
+    std::string body = o.str();
+    trimAsciiWhitespaceInPlace(body);
+    if (body.empty())
+    {
+        return {};
+    }
+    return std::string("[Project Symbols]\n") + body + "\n";
+}
+
+rawrxd::ghost_completion::GhostCompletionContext Win32IDE::buildGhostCompletionContextFromEditor(HWND editor)
+{
+    std::vector<std::string> symNames;
+    const std::string path = m_currentFile;
+    bool lspOk = false;
+    std::string lang = "text";
+
+    if (!path.empty())
+    {
+        const LSPLanguage l = detectLanguageForFile(path);
+        if (l < LSPLanguage::Count)
+        {
+            if (l == LSPLanguage::Cpp)
+                lang = "cpp";
+            else if (l == LSPLanguage::Python)
+                lang = "python";
+            else if (l == LSPLanguage::TypeScript)
+                lang = "typescript";
+            lspOk = m_lspStatuses[static_cast<size_t>(l)].state == LSPServerState::Running;
+            if (lspOk)
+            {
+                const auto syms = lspDocumentSymbols(filePathToUri(path));
+                symNames.reserve(std::min<size_t>(syms.size(), 256));
+                for (const auto& s : syms)
+                {
+                    std::string row = s.name;
+                    if (!s.detail.empty())
+                    {
+                        row += '\t';
+                        row += s.detail;
+                    }
+                    symNames.push_back(std::move(row));
+                    if (symNames.size() >= 128)
+                        break;
+                }
+            }
+        }
+    }
+
+    CHARRANGE sel = {};
+    SendMessageW(editor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    const int line0 = static_cast<int>(SendMessageW(editor, EM_LINEFROMCHAR, sel.cpMin, 0));
+    const LONG ls = static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, line0, 0));
+    const int col = (ls >= 0) ? static_cast<int>(sel.cpMin - ls) : 0;
+
+    const int tlen = GetWindowTextLengthW(editor);
+    std::wstring wbuf;
+    if (tlen > 0)
+    {
+        wbuf.resize(static_cast<size_t>(tlen) + 1);
+        GetWindowTextW(editor, wbuf.data(), tlen + 1);
+        wbuf.resize(static_cast<size_t>(tlen));
+    }
+    const std::string surrounding = sliceSurroundingLinesUtf8FromWide(wbuf, line0, 25);
+
+    auto ctx = rawrxd::ghost_completion::GhostCompletionContext::build(path, line0 + 1, col, symNames, surrounding,
+                                                                       lang, lspOk);
+    if (lspOk && editor && IsWindow(editor) && !path.empty())
+    {
+        ctx.lspSymbolDigest = formatLspBridgeContextForSlashFix(editor, path);
+    }
+    return ctx;
+}
+
+std::string Win32IDE::parseSlashCommandTailFromCaretLine(HWND editor, const std::string& cmdLower) const
+{
+    if (!editor || !IsWindow(editor) || cmdLower.empty())
+    {
+        return {};
+    }
+
+    CHARRANGE sel = {};
+    SendMessageW(editor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+    const int lineIdx = static_cast<int>(SendMessageW(editor, EM_LINEFROMCHAR, sel.cpMin, 0));
+    const LONG ls = static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, lineIdx, 0));
+    if (ls < 0)
+    {
+        return {};
+    }
+    const int lc = static_cast<int>(SendMessageW(editor, EM_GETLINECOUNT, 0, 0));
+    const LONG leExclusive = (lineIdx + 1 < lc) ? static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, lineIdx + 1, 0))
+                                                : GetWindowTextLengthW(editor);
+
+    std::wstring w = editorRangeTextWideForSlash(editor, ls, leExclusive);
+    while (!w.empty() && (w.back() == L'\r' || w.back() == L'\n'))
+    {
+        w.pop_back();
+    }
+    std::string line = wideToUtf8(w);
+    trimAsciiWhitespaceInPlace(line);
+
+    const std::string prefix = std::string("/") + cmdLower;
+    if (line.size() < prefix.size())
+    {
+        return {};
+    }
+    if (line.compare(0, prefix.size(), prefix) != 0)
+    {
+        return {};
+    }
+    if (line.size() == prefix.size())
+    {
+        return {};
+    }
+    if (!std::isspace(static_cast<unsigned char>(line[prefix.size()])))
+    {
+        return {};
+    }
+    std::string tail = line.substr(prefix.size() + 1);
+    trimAsciiWhitespaceInPlace(tail);
+    return tail;
+}
+
+bool Win32IDE::postEditorSlashChatPrompt(const std::string& cmdIn, HWND editor, const std::string& extraUserText)
+{
+    if (!editor || !IsWindow(editor))
+    {
+        return false;
+    }
+    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+    {
+        appendToOutput("\n[Slash] Agent Chat is not available. Use View → Agent Chat (Ctrl+L).\n", "Output",
+                       OutputSeverity::Warning);
+        return false;
+    }
+
+    std::string c = cmdIn;
+    std::transform(c.begin(), c.end(), c.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+    auto ctx = buildGhostCompletionContextFromEditor(editor);
+    std::string lspSymbolsOutsideCodeFence;
+    if (c == "fix")
+    {
+        lspSymbolsOutsideCodeFence = std::move(ctx.lspSymbolDigest);
+        ctx.lspSymbolDigest.clear();
+    }
+    const std::string frag = ctx.toPromptFragment(4096);
+
+    std::string focus;
+    if (!extraUserText.empty())
+    {
+        focus = "User focus: ";
+        focus += extraUserText;
+        focus += "\n\n";
+    }
+
+    if (c == "explain")
+    {
+        std::string prompt = "/explain\n\n";
+        prompt += focus;
+        prompt += "Explain this code:\n\n```";
+        prompt += ctx.languageId;
+        prompt += "\n";
+        prompt += frag;
+        prompt += "\n```\n";
+        postPromptToCopilotChat(prompt);
+        return true;
+    }
+    if (c == "fix")
+    {
+        namespace fs = std::filesystem;
+        if (m_currentFile.empty())
+        {
+            appendToOutput("\n[Slash /fix] Open or save a file first (needs a path for review + WAL).\n", "Output",
+                           OutputSeverity::Warning);
+            return false;
+        }
+        std::error_code ec;
+        if (!fs::exists(fs::path(m_currentFile), ec))
+        {
+            appendToOutput("\n[Slash /fix] Save the file to disk first.\n", "Output", OutputSeverity::Warning);
+            return false;
+        }
+        const std::string di = formatDiagnosticsForChatPrompt(m_currentFile);
+        std::string prompt = "/fix\n\n";
+        prompt += focus;
+        prompt += "Fix issues in this code. ";
+        prompt += kStructuredSlashFixPromptMarker;
+        prompt += " with this shape (no prose outside the JSON):\n";
+        prompt += "{\n";
+        prompt += "  \"explanation\": \"brief description of fix\",\n";
+        prompt += "  \"diff\": [\n";
+        prompt += "    {\"line\": <1-based line number>, \"old\": \"exact single-line text as in file\", \"new\": "
+                  "\"replacement single line\"}\n";
+        prompt += "  ]\n";
+        prompt += "}\n\n";
+        prompt += "Apply edits in any order; each \"old\" must match the current line text exactly (UTF-8, no line "
+                  "breaks in old/new).\n\n";
+        if (!di.empty())
+        {
+            prompt += di;
+            prompt += "\n";
+        }
+        if (!lspSymbolsOutsideCodeFence.empty())
+        {
+            prompt += lspSymbolsOutsideCodeFence;
+            prompt += "\n";
+        }
+        prompt += "```";
+        prompt += ctx.languageId;
+        prompt += "\n";
+        prompt += frag;
+        prompt += "\n```\n";
+        m_armStructuredSlashCopilotFixNextSend = true;
+        postPromptToCopilotChat(prompt);
+        return true;
+    }
+    if (c == "test")
+    {
+        std::string prompt = "/test\n\n";
+        prompt += focus;
+        prompt += "Generate focused unit tests for the code around the cursor. Match the project's style.\n\n```";
+        prompt += ctx.languageId;
+        prompt += "\n";
+        prompt += frag;
+        prompt += "\n```\n";
+        postPromptToCopilotChat(prompt);
+        return true;
+    }
+    if (c == "doc")
+    {
+        std::string prompt = "/doc\n\n";
+        prompt += focus;
+        prompt += "Write documentation for this code (comments, docstrings, or markdown as appropriate).\n\n```";
+        prompt += ctx.languageId;
+        prompt += "\n";
+        prompt += frag;
+        prompt += "\n```\n";
+        postPromptToCopilotChat(prompt);
+        return true;
+    }
+    if (c == "optimize")
+    {
+        std::string prompt = "/optimize\n\n";
+        prompt += focus;
+        prompt += "Suggest performance optimizations for this code without changing observable behavior.\n\n```";
+        prompt += ctx.languageId;
+        prompt += "\n";
+        prompt += frag;
+        prompt += "\n```\n";
+        postPromptToCopilotChat(prompt);
+        return true;
+    }
+
+    appendToOutput(std::string("\n[Slash] Unknown chat command: /") + c + "\n", "Output", OutputSeverity::Warning);
+    return false;
+}
+
+void Win32IDE::removeEditorLineContainingCaret(HWND editor)
+{
+    if (!editor || !IsWindow(editor))
+        return;
+    CHARRANGE sel = {};
+    SendMessageW(editor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    const int line = static_cast<int>(SendMessageW(editor, EM_LINEFROMCHAR, sel.cpMin, 0));
+    const LONG ls = static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, line, 0));
+    if (ls < 0)
+        return;
+    const int lc = static_cast<int>(SendMessageW(editor, EM_GETLINECOUNT, 0, 0));
+    const LONG le = (line + 1 < lc) ? static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, line + 1, 0))
+                                    : GetWindowTextLengthW(editor);
+    CHARRANGE del = {ls, le};
+    SendMessageW(editor, EM_EXSETSEL, 0, (LPARAM)&del);
+    SendMessageW(editor, EM_REPLACESEL, TRUE, (LPARAM)L"");
+}
+
+bool Win32IDE::applyEditorDocCommentStubForSlashDoc(HWND editor)
+{
+    if (!editor || !IsWindow(editor))
+        return false;
+
+    CHARRANGE sel = {};
+    SendMessageW(editor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    const int line = static_cast<int>(SendMessageW(editor, EM_LINEFROMCHAR, sel.cpMin, 0));
+    const LONG ls = static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, line, 0));
+    if (ls < 0)
+        return false;
+    const int lc = static_cast<int>(SendMessageW(editor, EM_GETLINECOUNT, 0, 0));
+    const LONG leExclusive = (line + 1 < lc) ? static_cast<LONG>(SendMessageW(editor, EM_LINEINDEX, line + 1, 0))
+                                             : GetWindowTextLengthW(editor);
+
+    std::wstring raw = editorRangeTextWideForSlash(editor, ls, leExclusive);
+    while (!raw.empty() && (raw.back() == L'\r' || raw.back() == L'\n'))
+        raw.pop_back();
+
+    size_t p = 0;
+    while (p < raw.size() && iswspace(static_cast<wint_t>(raw[p])) != 0)
+        ++p;
+    if (p >= raw.size() || raw[p] != L'/')
+        return false;
+    if (raw.compare(p, 4, L"/doc") != 0)
+        return false;
+    const size_t after = p + 4;
+    if (after < raw.size() && raw[after] != L' ' && raw[after] != L'\t')
+        return false;
+
+    const std::wstring indent = raw.substr(0, p);
+    const std::string pref = editorCommentPrefixForPath(m_currentFile);
+
+    std::wstring block;
+    if (pref == "//" || pref == "/*")
+        block = indent + L"/// @brief TODO\n" + indent + L"///\n";
+    else if (pref == "#")
+        block = indent + L"# TODO: document\n";
+    else if (pref == ";")
+        block = indent + L"; TODO: document\n";
+    else if (pref == "--")
+        block = indent + L"-- TODO: document\n";
+    else
+        block = indent + L"// TODO: document\n";
+
+    CHARRANGE r = {ls, leExclusive};
+    SendMessageW(editor, EM_EXSETSEL, 0, (LPARAM)&r);
+    SendMessageW(editor, EM_REPLACESEL, TRUE, (LPARAM)block.c_str());
+    return true;
+}
+
+void Win32IDE::routeEditorSlashCommandAfterInsert(const std::string& commandCanon, HWND editor)
+{
+    if (!editor || !IsWindow(editor))
+        return;
+
+    std::string c = commandCanon;
+    std::transform(c.begin(), c.end(), c.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+    // /refactor: capture caret line while the `/refactor …` line is still present (LSP symbol lookup is 0-based).
+    if (c == "refactor")
+    {
+        CHARRANGE sel = {};
+        SendMessageW(editor, EM_EXGETSEL, 0, (LPARAM)&sel);
+        const int line0 = static_cast<int>(SendMessageW(editor, EM_LINEFROMCHAR, sel.cpMin, 0));
+
+        std::string needle;
+        if (!m_currentFile.empty())
+        {
+            const auto syms = lspDocumentSymbols(filePathToUri(m_currentFile));
+            for (const auto& s : syms)
+            {
+                if (line0 >= s.location.range.start.line && line0 <= s.location.range.end.line)
+                {
+                    needle = s.name;
+                    break;
+                }
+            }
+        }
+        if (needle.empty())
+            needle = editorIdentifierUnderCaretUtf8(editor);
+
+        const auto ctx = buildGhostCompletionContextFromEditor(editor);
+        const std::string frag = ctx.toPromptFragment(4096);
+
+        if (!needle.empty() && m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+        {
+            ensureCopilotChatPanelVisible();
+            SetWindowTextW(m_hwndCopilotChatInput, utf8ToWide(needle).c_str());
+            routeCommand(5904);
+        }
+
+        std::string prompt =
+            "/refactor simplify\n\nPropose a refactor plan from this context (symbols + surrounding code).\n\n```";
+        prompt += ctx.languageId;
+        prompt += "\n";
+        prompt += frag;
+        prompt += "\n```\n";
+        postPromptToCopilotChat(prompt);
+        removeEditorLineContainingCaret(editor);
+        onEditorContentChanged();
+        return;
+    }
+
+    if (c == "explain" || c == "fix" || c == "test" || c == "doc" || c == "optimize")
+    {
+        const std::string tail = parseSlashCommandTailFromCaretLine(editor, c);
+        removeEditorLineContainingCaret(editor);
+        onEditorContentChanged();
+        (void)postEditorSlashChatPrompt(c, editor, tail);
+        return;
+    }
+}
+
+bool Win32IDE::tryExecuteEditorSlashLine(HWND hwndEditor)
+{
+    if (!hwndEditor || !IsWindow(hwndEditor))
+    {
+        return false;
+    }
+
+    CHARRANGE sel = {};
+    SendMessageW(hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+    const int lineCount = static_cast<int>(SendMessageW(hwndEditor, EM_GETLINECOUNT, 0, 0));
+    const int line = static_cast<int>(SendMessageW(hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0));
+    const LONG lineStart = static_cast<LONG>(SendMessageW(hwndEditor, EM_LINEINDEX, line, 0));
+    if (lineStart < 0)
+    {
+        return false;
+    }
+    const LONG lineLen = static_cast<LONG>(SendMessageW(hwndEditor, EM_LINELENGTH, lineStart, 0));
+    const LONG lineEndContent = lineStart + lineLen;
+    LONG lineEndExclusive = lineEndContent;
+    if (line + 1 < lineCount)
+    {
+        lineEndExclusive = static_cast<LONG>(SendMessageW(hwndEditor, EM_LINEINDEX, line + 1, 0));
+    }
+
+    std::wstring wline = editorRangeTextWideForSlash(hwndEditor, lineStart, lineEndContent);
+    std::string lineUtf8 = wideToUtf8(wline);
+    trimAsciiWhitespaceInPlace(lineUtf8);
+    if (lineUtf8.size() < 2 || lineUtf8[0] != '/')
+    {
+        return false;
+    }
+
+    const size_t sp = lineUtf8.find(' ');
+    std::string cmd = (sp == std::string::npos) ? lineUtf8.substr(1) : lineUtf8.substr(1, sp - 1);
+    std::transform(cmd.begin(), cmd.end(), cmd.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    std::string reportHeader;
+    std::string reportBody;
+    bool removeSlashLineAtEnd = true;
+    bool appendSlashReport = true;
+    const char* slashOutputChannel = "Output";
+    if (cmd == "vulkan")
+    {
+        reportHeader = "\n=== /vulkan ===\n";
+        reportBody = buildEditorSlashVulkanReport();
+    }
+    else if (cmd == "pager")
+    {
+        reportHeader = "\n=== /pager ===\n";
+        reportBody = buildEditorSlashPagerReport();
+    }
+    else if (cmd == "kill-locks" || cmd == "kill_locks" || cmd == "nuke-locks")
+    {
+        appendToOutput("\n=== /kill-locks (Ninja Nuke) ===\n", "Output", OutputSeverity::Info);
+        forceKillBuildLocks();
+        appendSlashReport = false;
+    }
+    else if (cmd == "clear")
+    {
+        reportHeader = "\n=== /clear ===\n";
+        reportBody = "Ghost dismissed; inline completion cache cleared.\n";
+        dismissGhostTextPublic();
+        if (getMainWindow() && IsWindow(getMainWindow()))
+        {
+            (void)PostMessageW(getMainWindow(), WM_RAWRXD_GHOST_TEXT_CACHE_CLEAR, 0, 0);
+        }
+    }
+    else if (cmd == "fix")
+    {
+        std::string tail;
+        if (sp != std::string::npos)
+        {
+            tail = lineUtf8.substr(sp + 1);
+            trimAsciiWhitespaceInPlace(tail);
+        }
+        removeEditorLineContainingCaret(hwndEditor);
+        onEditorContentChanged();
+        removeSlashLineAtEnd = false;
+        if (!postEditorSlashChatPrompt("fix", hwndEditor, tail))
+        {
+            return false;
+        }
+        reportHeader = "\n=== /fix ===\n";
+        reportBody = "Sent structured /fix to Agent Chat (JSON diff → review queue).\n";
+    }
+    else if (cmd == "explain" || cmd == "test" || cmd == "doc" || cmd == "optimize")
+    {
+        if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+        {
+            appendToOutput("\n[Slash] Agent Chat is not available. Use View → Agent Chat (Ctrl+L).\n", "Output",
+                           OutputSeverity::Warning);
+            return false;
+        }
+        std::string tail;
+        if (sp != std::string::npos)
+        {
+            tail = lineUtf8.substr(sp + 1);
+            trimAsciiWhitespaceInPlace(tail);
+        }
+        removeEditorLineContainingCaret(hwndEditor);
+        onEditorContentChanged();
+        removeSlashLineAtEnd = false;
+        if (!postEditorSlashChatPrompt(cmd, hwndEditor, tail))
+        {
+            return false;
+        }
+        reportHeader = std::string("\n=== /") + cmd + " ===\n";
+        reportBody = "Sent request to Agent Chat (editor context).\n";
+    }
+    else
+    {
+        return false;
+    }
+
+    if (appendSlashReport)
+    {
+        appendToOutput(reportHeader + reportBody, slashOutputChannel, OutputSeverity::Info);
+    }
+
+    if (removeSlashLineAtEnd)
+    {
+        SendMessageW(hwndEditor, EM_SETSEL, static_cast<WPARAM>(lineStart), static_cast<LPARAM>(lineEndExclusive));
+        SendMessageW(hwndEditor, EM_REPLACESEL, TRUE, reinterpret_cast<LPARAM>(L""));
+        onEditorContentChanged();
+    }
     hideSlashOverlay();
     return true;
 }
@@ -12337,6 +14057,14 @@ LRESULT CALLBACK Win32IDE::CopilotButtonProc(HWND hwnd, UINT uMsg, WPARAM wParam
 
 void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length)
 {
+    // [BRIDGE_PULSE] Stage 5/UI Render Arrival
+    char traceBuffer[256];
+    DWORD mainThreadId = GetWindowThreadProcessId(m_hwndMain, nullptr);
+    sprintf_s(traceBuffer,
+              "[BRIDGE_PULSE] Stage 5/UI Render: Received %zu bytes. Current ThreadID: %lu, Main ThreadID: %lu\n",
+              length, GetCurrentThreadId(), mainThreadId);
+    OutputDebugStringA(traceBuffer);
+
     if (!m_hwndCopilotChatOutput || !token)
         return;
 
@@ -12370,6 +14098,11 @@ void Win32IDE::appendCopilotChatTextOnUiThread(const std::string& text)
     // Temporary diagnostics: verify whether text reaches the final UI append boundary.
     OutputDebugStringA(("CHAT_APPEND_RAW: [" + text + "]\n").c_str());
 
+    uint64_t cycles = PulseGetCycles();
+    char latencyBuf[128];
+    sprintf_s(latencyBuf, "[NANO_LATENCY] appendChat Entry: %llu\n", cycles);
+    OutputDebugStringA(latencyBuf);
+
     if (m_hwndMain && GetWindowThreadProcessId(m_hwndMain, nullptr) != GetCurrentThreadId())
     {
         postCopilotChatAppendSafe(text);
@@ -12402,6 +14135,85 @@ void Win32IDE::clearCopilotInputOnUiThread()
     SetWindowTextW(m_hwndCopilotChatInput, L"");
 }
 
+void Win32IDE::postCopilotBackendReadySafe(bool ready)
+{
+    if (isShuttingDown() || !m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+    PostMessage(m_hwndMain, WM_COPILOT_BACKEND_READY_SAFE, ready ? 1 : 0, 0);
+}
+
+void Win32IDE::finalizeCopilotChatInterlockAfterDeferredLoad()
+{
+    if (isShuttingDown())
+        return;
+
+    if (!m_hwndSecondarySidebar || !IsWindow(m_hwndSecondarySidebar) || !m_hwndCopilotChatOutput ||
+        !IsWindow(m_hwndCopilotChatOutput))
+    {
+        createChatPanel();
+    }
+
+    const bool initOk = m_deferredHeavyInitComplete.load(std::memory_order_acquire) ||
+                        m_initStatus.load(std::memory_order_acquire) == STATUS_INIT_SUCCESS;
+    // Unlock send/receive once the panel exists; per-send path reports model/backend errors.
+    setCopilotBackendReadyOnUiThread(true);
+
+    if (!initOk)
+    {
+        appendCopilotChatTextOnUiThread(
+            "\n[Chat] Engine still warming up — you can send now; responses may queue until init finishes.\n");
+    }
+
+    reloadPersistedChatHistoryIntoUi();
+
+    int outLen = 0;
+    if (m_hwndCopilotChatOutput && IsWindow(m_hwndCopilotChatOutput))
+        outLen = GetWindowTextLengthW(m_hwndCopilotChatOutput);
+
+    if (outLen <= 0)
+    {
+        appendCopilotChatTextOnUiThread(
+            "\n[Chat] Ready — type a message and press Send (or Enter in the input box).\n");
+    }
+}
+
+void Win32IDE::setCopilotBackendReadyOnUiThread(bool ready)
+{
+    if (!m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+
+    if (GetWindowThreadProcessId(m_hwndMain, nullptr) != GetCurrentThreadId())
+    {
+        postCopilotBackendReadySafe(ready);
+        return;
+    }
+
+    m_copilotBackendReady = ready;
+    OutputDebugStringA(ready ? "[INTERLOCK] Copilot backend READY; enabling chat controls\n"
+                             : "[INTERLOCK] Copilot backend NOT_READY; locking chat controls\n");
+
+    const BOOL enableInteraction = (m_copilotBackendReady && !m_copilotInteractionBusy) ? TRUE : FALSE;
+    if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
+        EnableWindow(m_hwndCopilotSendBtn, enableInteraction);
+    if (m_hwndCopilotRetryBtn && IsWindow(m_hwndCopilotRetryBtn))
+        EnableWindow(m_hwndCopilotRetryBtn, enableInteraction);
+    if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+    {
+        EnableWindow(m_hwndCopilotChatInput, enableInteraction);
+        if (!m_copilotBackendReady)
+        {
+            SetWindowTextW(m_hwndCopilotChatInput, L"Initializing Engine (7800 XT)...");
+        }
+        else
+        {
+            wchar_t current[128] = {};
+            GetWindowTextW(m_hwndCopilotChatInput, current, static_cast<int>(std::size(current)));
+            if (wcscmp(current, L"Initializing Engine (7800 XT)...") == 0)
+                SetWindowTextW(m_hwndCopilotChatInput, L"");
+        }
+    }
+}
+
 void Win32IDE::setCopilotInteractionBusyOnUiThread(bool busy)
 {
     if (!m_hwndMain || !IsWindow(m_hwndMain))
@@ -12413,14 +14225,18 @@ void Win32IDE::setCopilotInteractionBusyOnUiThread(bool busy)
         return;
     }
 
+    m_copilotInteractionBusy = busy;
+
+    const BOOL enableInteraction = (m_copilotBackendReady && !m_copilotInteractionBusy) ? TRUE : FALSE;
+
     if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
-        EnableWindow(m_hwndCopilotSendBtn, busy ? FALSE : TRUE);
+        EnableWindow(m_hwndCopilotSendBtn, enableInteraction);
 
     if (m_hwndCopilotRetryBtn && IsWindow(m_hwndCopilotRetryBtn))
-        EnableWindow(m_hwndCopilotRetryBtn, busy ? FALSE : TRUE);
+        EnableWindow(m_hwndCopilotRetryBtn, enableInteraction);
 
     if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
-        EnableWindow(m_hwndCopilotChatInput, busy ? FALSE : TRUE);
+        EnableWindow(m_hwndCopilotChatInput, enableInteraction);
 }
 
 void Win32IDE::postCopilotChatAppendSafe(const std::string& text)
@@ -12428,10 +14244,32 @@ void Win32IDE::postCopilotChatAppendSafe(const std::string& text)
     if (isShuttingDown() || !m_hwndMain || text.empty())
         return;
 
-    char* copy = _strdup(text.c_str());
-    if (copy)
+    bool needPost = false;
     {
-        PostMessage(m_hwndMain, WM_COPILOT_CHAT_APPEND_SAFE, 0, (LPARAM)copy);
+        std::lock_guard<std::mutex> lock(m_copilotChatPostCoalesceMutex);
+        constexpr size_t kMaxCopilotCoalesceBytes = 8 * 1024 * 1024;
+        if (m_copilotChatPostCoalesceBuffer.size() + text.size() > kMaxCopilotCoalesceBytes)
+        {
+            const size_t drop = (m_copilotChatPostCoalesceBuffer.size() + text.size()) - kMaxCopilotCoalesceBytes;
+            if (drop >= m_copilotChatPostCoalesceBuffer.size())
+                m_copilotChatPostCoalesceBuffer.clear();
+            else
+                m_copilotChatPostCoalesceBuffer.erase(0, drop);
+        }
+        m_copilotChatPostCoalesceBuffer += text;
+        if (!m_copilotChatPostCoalesceFlushPosted)
+        {
+            m_copilotChatPostCoalesceFlushPosted = true;
+            needPost = true;
+        }
+    }
+    if (needPost)
+    {
+        if (!PostMessageW(m_hwndMain, WM_COPILOT_CHAT_APPEND_FLUSH, 0, 0))
+        {
+            std::lock_guard<std::mutex> lock(m_copilotChatPostCoalesceMutex);
+            m_copilotChatPostCoalesceFlushPosted = false;
+        }
     }
 }
 
@@ -12494,10 +14332,12 @@ void Win32IDE::applyAgenticAssistantFinalOnUiThread(std::string streamAccumulato
     m_chatHistory.push_back({"assistant", finalAssistantText});
     persistChatTurnToDisk("assistant", finalAssistantText);
     m_lastCopilotAssistantResponse = finalAssistantText;
+    maybeConsumeStructuredSlashCopilotFixFromAssistantText(finalAssistantText);
     m_streamingTokenAccumulator.clear();
     m_chatSendInFlight.store(false);
     setCopilotInteractionBusyOnUiThread(false);
     updateEnhancedStatusBar();
+    notifyCopilotChatCompletedUnlessSidebarFocused();
 }
 
 void Win32IDE::postCopilotInputClearSafe()
@@ -12516,23 +14356,119 @@ void Win32IDE::postCopilotInteractionBusySafe(bool busy)
     PostMessage(m_hwndMain, WM_COPILOT_INTERACTION_BUSY_SAFE, busy ? 1 : 0, 0);
 }
 
+void Win32IDE::postAgenticTelemetryUpdateSafe(const std::string& type, const std::string& message)
+{
+    if (isShuttingDown() || !m_hwndMain)
+        return;
+    auto* p = new std::pair<std::string, std::string>(type, message);
+    if (!PostMessageW(m_hwndMain, WM_AGENTIC_TELEMETRY_UPDATE, 0, reinterpret_cast<LPARAM>(p)))
+    {
+        delete p;
+    }
+}
+
+void Win32IDE::postAgenticTelemetryDoneSafe()
+{
+    if (isShuttingDown() || !m_hwndMain)
+        return;
+    PostMessageW(m_hwndMain, WM_AGENTIC_TELEMETRY_DONE, 0, 0);
+}
+
+namespace
+{
+bool win32SubtreeContainsFocus(HWND root)
+{
+    if (!root || !IsWindow(root))
+    {
+        return false;
+    }
+    HWND focus = GetFocus();
+    if (!focus)
+    {
+        return false;
+    }
+    return focus == root || IsChild(root, focus) != FALSE;
+}
+}  // namespace
+
+void Win32IDE::notifyCopilotChatCompletedUnlessSidebarFocused()
+{
+    if (isShuttingDown() || !m_hwndMain || !IsWindow(m_hwndMain))
+    {
+        return;
+    }
+    HWND fg = GetForegroundWindow();
+    const bool ideForeground = fg && (fg == m_hwndMain || IsChild(m_hwndMain, fg) != FALSE);
+    if (ideForeground && m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar) &&
+        win32SubtreeContainsFocus(m_hwndSecondarySidebar))
+    {
+        return;
+    }
+    FLASHWINFO fi = {sizeof(fi), m_hwndMain, FLASHW_ALL | FLASHW_TIMERNOFG, 5, 0};
+    FlashWindowEx(&fi);
+    MessageBeep(MB_ICONASTERISK);
+}
+
+void Win32IDE::notifyAgentLoopCompletedUnlessAgentChromeFocused()
+{
+    if (isShuttingDown() || !m_hwndMain || !IsWindow(m_hwndMain))
+    {
+        return;
+    }
+    HWND fg = GetForegroundWindow();
+    const bool ideForeground = fg && (fg == m_hwndMain || IsChild(m_hwndMain, fg) != FALSE);
+    if (ideForeground)
+    {
+        const HWND agentChrome[] = {m_hwndAgentDiffPanel,    m_hwndAgentStatusLabel,  m_hwndAgentSummaryEdit,
+                                    m_hwndAgentAcceptAllBtn, m_hwndAgentRejectAllBtn, m_hwndAgentNewSessionBtn};
+        for (HWND h : agentChrome)
+        {
+            if (h && IsWindow(h) && win32SubtreeContainsFocus(h))
+            {
+                return;
+            }
+        }
+    }
+    FLASHWINFO fi = {sizeof(fi), m_hwndMain, FLASHW_ALL | FLASHW_TIMERNOFG, 5, 0};
+    FlashWindowEx(&fi);
+    MessageBeep(MB_ICONASTERISK);
+}
+
 void Win32IDE::onModelSelectionChanged()
 {
     if (!m_hwndModelSelector || !IsWindow(m_hwndModelSelector))
         return;
 
     int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    if (idx == CB_ERR)
-        return;
 
     std::string selectedModel;
     {
         std::lock_guard<std::recursive_mutex> modelListLock(m_availableModelsMutex);
         if (m_availableModels.empty())
             return;
+
         if (idx < 0 || idx >= (int)m_availableModels.size())
-            return;
-        selectedModel = m_availableModels[idx];
+        {
+            std::string selectorText;
+            const int selectorTextLen = GetWindowTextLengthW(m_hwndModelSelector);
+            if (selectorTextLen > 0)
+            {
+                std::vector<wchar_t> selectorBuffer(static_cast<size_t>(selectorTextLen) + 1, L'\0');
+                GetWindowTextW(m_hwndModelSelector, selectorBuffer.data(), selectorTextLen + 1);
+                selectorText = wideToUtf8(selectorBuffer.data());
+            }
+
+            selectedModel = normalizeModelSelectorEntry(selectorText, m_availableModels);
+            if (selectedModel.empty())
+            {
+                selectedModel = m_availableModels[0];
+                SendMessage(m_hwndModelSelector, CB_SETCURSEL, 0, 0);
+            }
+        }
+        else
+        {
+            selectedModel = m_availableModels[idx];
+        }
     }
 
     m_ollamaModelOverride = selectedModel;
@@ -12566,9 +14502,8 @@ void Win32IDE::onModelSelectionChanged()
         }
         else
         {
-            OutputDebugStringA(("[ModelSelection] auto-loading local model path=" +
-                                m_ollamaModelOverride + "\n")
-                                   .c_str());
+            OutputDebugStringA(
+                ("[ModelSelection] auto-loading local model path=" + m_ollamaModelOverride + "\n").c_str());
             appendToOutput("[ModelSelection] Selected local model: " + m_ollamaModelOverride +
                                "\n[ModelSelection] Triggering background load...\n",
                            "Output", OutputSeverity::Info);
@@ -12661,6 +14596,252 @@ void Win32IDE::handleModelBrowse()
 // Line Number Gutter, Minimap, Breadcrumb, and other UI components.
 // ============================================================================
 
+namespace
+{
+
+bool aiWalValidCharRange(const CHARRANGE& r)
+{
+    return r.cpMin >= 0 && r.cpMax >= r.cpMin;
+}
+
+std::vector<std::string> splitLinesUtf8NoCr(const std::string& s)
+{
+    std::vector<std::string> lines;
+    std::string cur;
+    for (unsigned char uc : s)
+    {
+        const char c = static_cast<char>(uc);
+        if (c == '\n')
+        {
+            lines.push_back(std::move(cur));
+            cur.clear();
+        }
+        else if (c != '\r')
+        {
+            cur += c;
+        }
+    }
+    lines.push_back(std::move(cur));
+    return lines;
+}
+
+size_t lineCountNewlinesPlusOne(const std::string& s)
+{
+    if (s.empty())
+    {
+        return 1;
+    }
+    size_t n = 1;
+    for (unsigned char uc : s)
+    {
+        if (static_cast<char>(uc) == '\n')
+        {
+            ++n;
+        }
+    }
+    return n;
+}
+
+void mergeFullTextDiffLines1Based(const std::string& oldUtf8, const std::string& newUtf8, std::set<int>& out)
+{
+    auto ol = splitLinesUtf8NoCr(oldUtf8);
+    auto nl = splitLinesUtf8NoCr(newUtf8);
+    if (ol.empty() && !nl.empty())
+    {
+        for (size_t k = 0; k < nl.size(); ++k)
+        {
+            out.insert(static_cast<int>(k) + 1);
+        }
+        return;
+    }
+    if (!ol.empty() && nl.empty())
+    {
+        for (size_t k = 0; k < ol.size(); ++k)
+        {
+            out.insert(static_cast<int>(k) + 1);
+        }
+        return;
+    }
+    size_t i = 0;
+    size_t j = 0;
+    while (i < ol.size() && j < nl.size() && ol[i] == nl[j])
+    {
+        ++i;
+        ++j;
+    }
+    size_t bi = ol.size();
+    size_t bj = nl.size();
+    while (bi > i && bj > j && ol[bi - 1] == nl[bj - 1])
+    {
+        --bi;
+        --bj;
+    }
+    for (size_t k = i; k < bi; ++k)
+    {
+        out.insert(static_cast<int>(k) + 1);
+    }
+}
+
+/// Lines (1-based) in **newUtf8** that differ from oldUtf8 (prefix/suffix trimmed). Used for post-apply WAL gutter.
+void mergeFullTextDiffNewLines1Based(const std::string& oldUtf8, const std::string& newUtf8, std::set<int>& out)
+{
+    auto ol = splitLinesUtf8NoCr(oldUtf8);
+    auto nl = splitLinesUtf8NoCr(newUtf8);
+    if (ol.empty() && !nl.empty())
+    {
+        for (size_t k = 0; k < nl.size(); ++k)
+            out.insert(static_cast<int>(k) + 1);
+        return;
+    }
+    if (!ol.empty() && nl.empty())
+    {
+        return;
+    }
+    size_t i = 0;
+    size_t j = 0;
+    while (i < ol.size() && j < nl.size() && ol[i] == nl[j])
+    {
+        ++i;
+        ++j;
+    }
+    size_t bi = ol.size();
+    size_t bj = nl.size();
+    while (bi > i && bj > j && ol[bi - 1] == nl[bj - 1])
+    {
+        --bi;
+        --bj;
+    }
+    for (size_t k = j; k < bj; ++k)
+        out.insert(static_cast<int>(k) + 1);
+}
+
+void mergeEditorRangeGutterLines(HWND editor, const CHARRANGE& range, const std::string& oldChunk,
+                                 const std::string& newChunk, std::set<int>& out)
+{
+    if (!editor || !IsWindow(editor) || !aiWalValidCharRange(range))
+    {
+        return;
+    }
+    const int line0 = static_cast<int>(SendMessageW(editor, EM_EXLINEFROMCHAR, 0, static_cast<LPARAM>(range.cpMin)));
+    const int start1 = line0 + 1;
+    const size_t n = (std::max)(lineCountNewlinesPlusOne(oldChunk), lineCountNewlinesPlusOne(newChunk));
+    const int count = static_cast<int>((std::max)(static_cast<size_t>(1), n));
+    for (int k = 0; k < count; ++k)
+    {
+        out.insert(start1 + k);
+    }
+}
+
+}  // namespace
+
+std::set<int> Win32IDE::computeAiWalGutterLines1BasedForCurrentFile() const
+{
+    std::set<int> out;
+    if (m_currentFile.empty())
+    {
+        return out;
+    }
+    for (const auto& ed : m_pendingEdits)
+    {
+        if (ed.state != RawrXD::Review::EditState::Pending)
+        {
+            continue;
+        }
+        if (ed.file != m_currentFile)
+        {
+            continue;
+        }
+        switch (ed.type)
+        {
+            case RawrXD::Review::EditType::Replace:
+            case RawrXD::Review::EditType::Insert:
+                if (ed.editorHandle && ed.editorHandle == m_hwndEditor && aiWalValidCharRange(ed.oldRange))
+                {
+                    mergeEditorRangeGutterLines(m_hwndEditor, ed.oldRange, ed.oldText, ed.newText, out);
+                }
+                else
+                {
+                    mergeFullTextDiffLines1Based(ed.oldText, ed.newText, out);
+                }
+                break;
+            case RawrXD::Review::EditType::Delete:
+                mergeFullTextDiffLines1Based(ed.oldText, std::string(), out);
+                break;
+            case RawrXD::Review::EditType::Create:
+                mergeFullTextDiffLines1Based(std::string(), ed.newText, out);
+                break;
+            case RawrXD::Review::EditType::Rename:
+            default:
+                break;
+        }
+    }
+    return out;
+}
+
+bool Win32IDE::isWalGutterHistoryHighlighted(int line1Based) const
+{
+    return !m_walGutterHistoryLines1Based.empty() &&
+           std::binary_search(m_walGutterHistoryLines1Based.begin(), m_walGutterHistoryLines1Based.end(), line1Based);
+}
+
+void Win32IDE::invalidateWalGutterHistoryIfEditorDrifted()
+{
+    if (rawrxd::wal_gutter::programmaticMutationDepth() > 0)
+        return;
+    if (m_walGutterHistoryLines1Based.empty())
+        return;
+    if (!m_hwndEditor || !IsWindow(m_hwndEditor))
+        return;
+    const std::string cur = getRichEditDocumentUtf8(m_hwndEditor);
+    if (cur == m_walGutterDriftBaselineUtf8)
+        return;
+    m_walGutterHistoryLines1Based.clear();
+    m_walGutterDriftBaselineUtf8.clear();
+    updateLineNumbers();
+}
+
+void Win32IDE::clearWalGutterHistoryVisualState()
+{
+    if (m_walGutterHistoryLines1Based.empty() && m_walGutterDriftBaselineUtf8.empty())
+        return;
+    m_walGutterHistoryLines1Based.clear();
+    m_walGutterDriftBaselineUtf8.clear();
+    updateLineNumbers();
+}
+
+void Win32IDE::refreshWalGutterHighlightsFromHistory()
+{
+    m_walGutterHistoryLines1Based.clear();
+    m_walGutterDriftBaselineUtf8.clear();
+    if (m_aiEditTransactionHistory.empty() || m_currentFile.empty())
+    {
+        updateLineNumbers();
+        return;
+    }
+    if (!m_hwndEditor || !IsWindow(m_hwndEditor))
+    {
+        updateLineNumbers();
+        return;
+    }
+    const std::string postUtf8 = getRichEditDocumentUtf8(m_hwndEditor);
+    const AIEditTransaction& tx = m_aiEditTransactionHistory.back();
+    std::set<int> uniq;
+    for (const auto& f : tx.files)
+    {
+        if (_stricmp(f.path.c_str(), m_currentFile.c_str()) != 0)
+            continue;
+        if (f.op == AIFileRollbackRecord::Op::Replace || f.op == AIFileRollbackRecord::Op::Create)
+            mergeFullTextDiffNewLines1Based(f.originalContent, postUtf8, uniq);
+    }
+    if (!uniq.empty())
+    {
+        m_walGutterHistoryLines1Based.assign(uniq.begin(), uniq.end());
+        std::sort(m_walGutterHistoryLines1Based.begin(), m_walGutterHistoryLines1Based.end());
+        m_walGutterDriftBaselineUtf8 = postUtf8;
+    }
+    updateLineNumbers();
+}
+
 // --- Line Number Gutter ---
 void Win32IDE::createLineNumberGutter(HWND hwndParent)
 {
@@ -12710,6 +14891,8 @@ void Win32IDE::paintLineNumbers(HDC hdc, RECT& rc)
     DeleteObject(bgBrush);
 
     int visibleLines = (rc.bottom - rc.top) / lineHeight + 1;
+
+    const std::set<int> aiWalLines = computeAiWalGutterLines1BasedForCurrentFile();
 
     // Get Git status for current file
     char gitStatus = ' ';
@@ -12790,6 +14973,24 @@ void Win32IDE::paintLineNumbers(HDC hdc, RECT& rc)
             LineTo(hdc, arrowX + 5, arrowY + 3);
             SelectObject(hdc, oldAP);
             DeleteObject(arrowPen);
+        }
+
+        const bool walPending = !aiWalLines.empty() && aiWalLines.count(lineNum) > 0;
+        const bool walHistory = isWalGutterHistoryHighlighted(lineNum);
+        // Committed WAL (v1.2.0): 3px royal blue, left of the 4px pending-review bar.
+        if (walHistory)
+        {
+            RECT walBar = {rc.right - 31, i * lineHeight + 1, rc.right - 28, (i + 1) * lineHeight - 1};
+            HBRUSH walBrush = CreateSolidBrush(RGB(65, 105, 225));
+            FillRect(hdc, &walBar, walBrush);
+            DeleteObject(walBrush);
+        }
+        if (walPending)
+        {
+            RECT aiBar = {rc.right - 26, i * lineHeight + 1, rc.right - 22, (i + 1) * lineHeight - 1};
+            HBRUSH aiBrush = CreateSolidBrush(RGB(64, 130, 220));
+            FillRect(hdc, &aiBar, aiBrush);
+            DeleteObject(aiBrush);
         }
 
         if (lineNum == m_currentLine)
@@ -13110,8 +15311,7 @@ void Win32IDE::onTabChanged()
             SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide(tab.displayName).c_str());
         }
 
-        // Update line numbers
-        updateLineNumbers();
+        refreshWalGutterHighlightsFromHistory();
     }
 }
 
@@ -13293,7 +15493,7 @@ void Win32IDE::loadTabsState()
                 {
                     SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide(tab.displayName).c_str());
                 }
-                updateLineNumbers();
+                refreshWalGutterHighlightsFromHistory();
             }
         }
     }
@@ -13640,24 +15840,27 @@ void Win32IDE::postAgentOutputSafe(const std::string& text)
 {
     if (isShuttingDown())
         return;
-    // Allocate a copy of the string for cross-thread messaging
-    // The WM_AGENT_OUTPUT_SAFE handler will free this via free()
-    char* copy = _strdup(text.c_str());
-    if (copy && m_hwndMain)
-    {
-        PostMessage(m_hwndMain, WM_AGENT_OUTPUT_SAFE, 0, (LPARAM)copy);
-    }
+    if (!m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+    auto* payload = new (std::nothrow) std::string(text);
+    if (!payload)
+        return;
+    if (!PostMessage(m_hwndMain, WM_AGENT_OUTPUT_SAFE, 0, reinterpret_cast<LPARAM>(payload)))
+        delete payload;
 }
 
 void Win32IDE::postOutputPanelSafe(const std::string& text)
 {
     if (isShuttingDown())
         return;
-    char* copy = _strdup(text.c_str());
-    if (copy && m_hwndMain)
-    {
-        PostMessage(m_hwndMain, WM_IDE_OUTPUT_APPEND_SAFE, 0, (LPARAM)copy);
-    }
+    if (!m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+    // WM_IDE_OUTPUT_APPEND_SAFE handlers own a heap std::string* (not char*).
+    auto* payload = new (std::nothrow) std::string(text);
+    if (!payload)
+        return;
+    if (!PostMessage(m_hwndMain, WM_IDE_OUTPUT_APPEND_SAFE, 0, reinterpret_cast<LPARAM>(payload)))
+        delete payload;
 }
 
 void Win32IDE::wireLayerProgressToOutputPanel()
@@ -14741,20 +16944,7 @@ namespace
 {
 std::wstring getEditorRangeTextW(HWND hwndEditor, LONG start, LONG end)
 {
-    if (!hwndEditor || end <= start)
-        return L"";
-
-    std::wstring text;
-    text.resize(static_cast<size_t>(end - start) + 1);
-
-    TEXTRANGEW tr = {};
-    tr.chrg.cpMin = start;
-    tr.chrg.cpMax = end;
-    tr.lpstrText = text.data();
-
-    SendMessageW(hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
-    text.resize(wcslen(text.c_str()));
-    return text;
+    return editorRangeTextWideForSlash(hwndEditor, start, end);
 }
 
 bool editorMoveByWord(HWND hwndEditor, bool forward, bool extendSelection)
@@ -14915,32 +17105,6 @@ bool editorMoveCurrentLine(HWND hwndEditor, bool moveDown)
     SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&out);
     SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
     return true;
-}
-
-std::string editorCommentPrefixForPath(const std::string& filePath)
-{
-    std::string ext;
-    const size_t dot = filePath.find_last_of('.');
-    if (dot != std::string::npos)
-        ext = filePath.substr(dot);
-
-    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
-
-    if (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c" || ext == ".h" || ext == ".hpp" || ext == ".hh" ||
-        ext == ".hxx" || ext == ".js" || ext == ".jsx" || ext == ".ts" || ext == ".tsx" || ext == ".java" ||
-        ext == ".cs" || ext == ".swift" || ext == ".kt" || ext == ".m" || ext == ".mm")
-        return "//";
-
-    if (ext == ".py" || ext == ".ps1" || ext == ".sh" || ext == ".rb" || ext == ".yml" || ext == ".yaml")
-        return "#";
-
-    if (ext == ".asm" || ext == ".s" || ext == ".inc")
-        return ";";
-
-    if (ext == ".sql" || ext == ".lua")
-        return "--";
-
-    return "//";
 }
 
 bool editorToggleCommentSelection(HWND hwndEditor, const std::string& currentFile)
@@ -15121,13 +17285,32 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
     {
         switch (uMsg)
         {
+            case WM_IME_STARTCOMPOSITION:
+            case WM_IME_COMPOSITION:
+            {
+                LRESULT result = oldProc ? CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam)
+                                         : DefWindowProcW(hwnd, uMsg, wParam, lParam);
+                if (pThis->lineStripEditorEnabled())
+                {
+                    pThis->syncLineStripImeComposition();
+                    pThis->invalidateLineStripOverlay(nullptr);
+                }
+                return result;
+            }
+
             case WM_VSCROLL:
+            case WM_HSCROLL:
             case WM_MOUSEWHEEL:
                 // After scroll, sync line numbers and minimap
                 if (oldProc)
                 {
                     LRESULT result = CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
                     pThis->updateLineNumbers();
+                    if (pThis->lineStripEditorEnabled())
+                    {
+                        pThis->layoutLineStripOverlay();
+                        pThis->invalidateLineStripOverlay(nullptr);
+                    }
                     if (pThis->m_minimapVisible)
                         pThis->updateMinimap();
                     if (pThis->m_ghostTextVisible)
@@ -15155,10 +17338,49 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 const bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
                 const bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 
+                // AI / LSP workspace-edit undo atom (command WAL). If no WAL entry, RichEdit handles Ctrl+Shift+Z as
+                // redo.
+                if (ctrl && shift && !alt && (wParam == 'Z' || wParam == 'z'))
+                {
+                    if (pThis->rollbackLastAIEditTransaction())
+                    {
+                        pThis->onEditorContentChanged();
+                        return 0;
+                    }
+                }
+
+                if (!ctrl && !alt && !shift && wParam == VK_RETURN)
+                {
+                    if (pThis->tryExecuteEditorSlashLine(hwnd))
+                    {
+                        return 0;
+                    }
+                }
+
+                if (pThis->isSlashOverlayVisible() && pThis->m_slashOverlayEditorMode)
+                {
+                    const bool shiftTab = (wParam == VK_TAB && shift);
+                    if (!shiftTab && (wParam == VK_TAB || wParam == VK_UP || wParam == VK_DOWN || wParam == VK_ESCAPE ||
+                                      wParam == VK_RETURN))
+                    {
+                        if (pThis->handleSlashOverlayKey(wParam))
+                        {
+                            return 0;
+                        }
+                    }
+                }
+
                 // Route existing multi-cursor keymap through the editor subclass.
                 if (pThis->handleMultiCursorKeyDown(wParam, ctrl, shift, alt))
                 {
                     pThis->onEditorContentChanged();
+                    return 0;
+                }
+
+                // Ghost text (Tab / Esc / Ctrl+Space / Ctrl+Right partial accept) before Ctrl+arrow word nav so
+                // Ctrl+Right commits the next ghost chunk instead of moving the caret.
+                if (pThis->handleGhostTextKey((UINT)wParam, ctrl, shift))
+                {
                     return 0;
                 }
 
@@ -15192,11 +17414,6 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                         return 0;
                 }
 
-                // Ghost text key handling — Tab accepts, Esc dismisses, other keys dismiss
-                if (pThis->handleGhostTextKey((UINT)wParam))
-                {
-                    return 0;  // Ghost text consumed the key
-                }
                 // F1 — Command Palette (VS Code)
                 if (!ctrl && !shift && !alt && wParam == VK_F1)
                 {
@@ -15263,6 +17480,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
             case WM_LBUTTONUP:
             {
                 pThis->updateLiveSymbolPromptContextFromEditor();
+                pThis->syncEditorSlashOverlayFromEditor(hwnd);
                 break;
             }
 
@@ -15377,7 +17595,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
             case WM_CHAR:
             {
                 wchar_t typedChar = static_cast<wchar_t>(wParam);
-                
+
                 // ─── Phase 1b: Symbol Index Bridge trigger detection ───────────
                 // Detect completion triggers (::, ., ->, identifier start)
                 // and query the SymbolIndexBridge for ranked candidates.
@@ -15388,55 +17606,57 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                     SendMessageW(hwnd, EM_EXGETSEL, 0, (LPARAM)&sel);
                     int line = (int)SendMessageW(hwnd, EM_LINEFROMCHAR, sel.cpMin, 0);
                     int col = sel.cpMin - (int)SendMessageW(hwnd, EM_LINEINDEX, line, 0);
-                    
+
                     // Get current file content for trigger detection
                     int textLen = GetWindowTextLengthW(hwnd);
                     std::wstring text;
-                    if (textLen > 0) {
+                    if (textLen > 0)
+                    {
                         text.resize(textLen + 1);
                         GetWindowTextW(hwnd, text.data(), textLen + 1);
                         text.resize(textLen);
                     }
-                    
+
                     // Convert to UTF-8 for bridge
                     std::string utf8Text;
-                    if (!text.empty()) {
+                    if (!text.empty())
+                    {
                         int needed = WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, nullptr, 0, nullptr, nullptr);
-                        if (needed > 0) {
+                        if (needed > 0)
+                        {
                             utf8Text.resize(needed - 1);
                             WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, &utf8Text[0], needed, nullptr, nullptr);
                         }
                     }
-                    
+
                     // Detect trigger
                     auto trigger = pThis->m_symbolIndexBridge->detectTrigger(utf8Text, sel.cpMin);
-                    
+
                     if (trigger.kind != rawrxd::bridge::TriggerKind::None)
                     {
                         // Query completions from bridge
-                        auto candidates = pThis->m_symbolIndexBridge->queryCompletions(
-                            pThis->m_currentFile, trigger.prefix, line, col);
-                        
+                        auto candidates = pThis->m_symbolIndexBridge->queryCompletions(pThis->m_currentFile,
+                                                                                       trigger.prefix, line, col);
+
                         if (!candidates.empty())
                         {
                             // Store candidates for ghost text renderer (Phase 1c)
                             pThis->m_symbolBridgeCandidates = std::move(candidates);
                             pThis->m_symbolBridgeTrigger = trigger;
-                            
+
                             // Signal that completions are ready
                             // Ghost text renderer will pick these up in WM_PAINT
                             pThis->m_symbolBridgeReady = true;
-                            
+
                             // Debug output
                             char dbg[256];
-                            snprintf(dbg, sizeof(dbg),
-                                "[SymbolBridge] Trigger='%s' kind=%d candidates=%zu\n",
-                                trigger.prefix.c_str(), (int)trigger.kind, pThis->m_symbolBridgeCandidates.size());
+                            snprintf(dbg, sizeof(dbg), "[SymbolBridge] Trigger='%s' kind=%d candidates=%zu\n",
+                                     trigger.prefix.c_str(), (int)trigger.kind, pThis->m_symbolBridgeCandidates.size());
                             OutputDebugStringA(dbg);
                         }
                     }
                 }
-                
+
                 if (pThis->m_ghostTextVisible)
                 {
                     pThis->handleGhostTextTypedChar(typedChar);
@@ -15451,6 +17671,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 {
                     LRESULT result = CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
                     pThis->onEditorContentChanged();
+                    pThis->syncEditorSlashOverlayFromEditor(hwnd);
                     return result;
                 }
                 break;
@@ -15559,8 +17780,8 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                         const int cntAfter = (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
                                                  ? (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0)
                                                  : -1;
-                        std::string dbg = "[SidebarProcImpl] WM_SHOWWINDOW repopulate model count=" +
-                                          std::to_string(cntAfter) + "\n";
+                        std::string dbg =
+                            "[SidebarProcImpl] WM_SHOWWINDOW repopulate model count=" + std::to_string(cntAfter) + "\n";
                         OutputDebugStringA(dbg.c_str());
                     }
                 }
@@ -15605,6 +17826,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
         case WM_PAINT:
         {
+            uint64_t paintStart = PulseGetCycles();
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             RECT rc;
@@ -15615,7 +17837,22 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
             FillRect(hdc, &rc, hBrush);
             DeleteObject(hBrush);
 
+            // ── KAIROS UI SYNTHESIS (Batch 3) ──
+            // If Truth Divergence is detected by the Context Governor, signals flash here.
+            // We use the Sovereign Atlas (MASM) for zero-overhead diagnostic icons.
+            if (pThis && pThis->m_emojiSupportInitialized)
+            {
+                // Example: Render Symbol 0x90 (Temporal Lock) when waiting on hardware
+                // RawrXD_Emoji_Atlas_AlphaBlit(hdc, 0x90, 10, 10, 255);
+            }
+
             EndPaint(hwnd, &ps);
+
+            uint64_t paintEnd = PulseGetCycles();
+            if (g_pulseRing.instance().isActive())
+            {
+                g_pulseRing.Log(6, static_cast<uint32_t>(paintEnd - paintStart));  // Stage 6: UI Render/Paint Latency
+            }
             return 0;
         }
 
@@ -15675,8 +17912,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 {
                     OutputDebugStringA("[SidebarProcImpl] New Chat clicked\n");
                     pThis->HandleCopilotClear();
-                    pThis->appendCopilotChatTextOnUiThread(
-                        "\n[Chat] Started a new chat. Model and mode are ready.\n");
+                    pThis->appendCopilotChatTextOnUiThread("\n[Chat] Started a new chat. Model and mode are ready.\n");
                     if (pThis->m_hwndCopilotChatInput && IsWindow(pThis->m_hwndCopilotChatInput))
                         SetFocus(pThis->m_hwndCopilotChatInput);
                     return 0;
@@ -15684,21 +17920,20 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 else if (controlId == IDC_COPILOT_HELPFUL_BTN)
                 {
                     ++pThis->m_copilotHelpfulCount;
-                    pThis->appendToOutput("[ChatFeedback] Helpful +1 (helpful=" +
-                                              std::to_string(pThis->m_copilotHelpfulCount) +
-                                              ", unhelpful=" + std::to_string(pThis->m_copilotUnhelpfulCount) + ")\n",
-                                          "Output", OutputSeverity::Info);
+                    pThis->appendToOutput(
+                        "[ChatFeedback] Helpful +1 (helpful=" + std::to_string(pThis->m_copilotHelpfulCount) +
+                            ", unhelpful=" + std::to_string(pThis->m_copilotUnhelpfulCount) + ")\n",
+                        "Output", OutputSeverity::Info);
                     pThis->appendCopilotChatTextOnUiThread("\n[Feedback] Marked as helpful.\n");
                     return 0;
                 }
                 else if (controlId == IDC_COPILOT_UNHELPFUL_BTN)
                 {
                     ++pThis->m_copilotUnhelpfulCount;
-                    pThis->appendToOutput("[ChatFeedback] Unhelpful +1 (helpful=" +
-                                              std::to_string(pThis->m_copilotHelpfulCount) +
-                                              ", unhelpful=" + std::to_string(pThis->m_copilotUnhelpfulCount) +
-                                              ")\n",
-                                          "Output", OutputSeverity::Warning);
+                    pThis->appendToOutput(
+                        "[ChatFeedback] Unhelpful +1 (helpful=" + std::to_string(pThis->m_copilotHelpfulCount) +
+                            ", unhelpful=" + std::to_string(pThis->m_copilotUnhelpfulCount) + ")\n",
+                        "Output", OutputSeverity::Warning);
                     pThis->appendCopilotChatTextOnUiThread("\n[Feedback] Marked as unhelpful.\n");
                     return 0;
                 }
@@ -15889,7 +18124,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 const int fullW = (std::max)(0, panelW - margin * 2);
                 int topY = headerH + margin;
 
-                HDWP hdwp = BeginDeferWindowPos(12);
+                HDWP hdwp = BeginDeferWindowPos(28);
                 auto moveControl = [&](HWND control, int x, int y, int w, int h)
                 {
                     if (!control || !IsWindow(control))
@@ -15905,22 +18140,66 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
                 moveControl(pThis->m_hwndSecondarySidebarHeader, 0, 0, panelW, headerH);
 
-                // If model selector controls exist in this build lane, lay them out responsively.
                 HWND hwndBrowseBtn = GetDlgItem(hwnd, IDC_MODEL_BROWSE_BTN);
                 HWND hwndModeSelector = GetDlgItem(hwnd, IDC_MODEL_MODE_SELECTOR);
                 HWND hwndEffortLabel = GetDlgItem(hwnd, IDC_MODEL_EFFORT_LABEL);
                 HWND hwndNewChatBtn = GetDlgItem(hwnd, IDC_COPILOT_NEW_CHAT_BTN);
+
                 if (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
                 {
-                    const int selectorY = pThis->dpiScale(34);
-                    const int modeW = pThis->dpiScale(118);
-                    const int selectorW = (std::max)(pThis->dpiScale(96), fullW - modeW - gap);
-                    moveControl(pThis->m_hwndModelSelector, margin, selectorY, selectorW, pThis->dpiScale(240));
-                    moveControl(hwndModeSelector, margin + selectorW + gap, selectorY, modeW, pThis->dpiScale(240));
-                    moveControl(hwndEffortLabel, margin, selectorY + pThis->dpiScale(26), fullW, pThis->dpiScale(18));
-                    moveControl(hwndBrowseBtn, margin + selectorW + gap, selectorY + pThis->dpiScale(26), modeW,
-                                pThis->dpiScale(24));
-                    topY = (std::max)(topY, selectorY + pThis->dpiScale(56) + margin);
+                    int y = topY;
+                    const int labelW = pThis->dpiScale(52);
+                    const int rowGap = pThis->dpiScale(4);
+                    const int comboRowH = pThis->dpiScale(22);
+                    const int browseW = pThis->dpiScale(76);
+                    const int capH = pThis->dpiScale(18);
+                    const int sliderH = pThis->dpiScale(25);
+                    const int valW = pThis->dpiScale(50);
+                    const int chkH = pThis->dpiScale(22);
+                    const int halfChkW = (std::max)(1, (fullW - gap) / 2);
+
+                    moveControl(pThis->m_hwndSidebarCaptionModel, margin, y, labelW, comboRowH);
+                    const int selectorW = (std::max)(pThis->dpiScale(96), fullW - labelW - gap);
+                    moveControl(pThis->m_hwndModelSelector, margin + labelW + gap, y, selectorW, pThis->dpiScale(240));
+                    y += comboRowH + rowGap;
+
+                    moveControl(pThis->m_hwndSidebarCaptionMode, margin, y, labelW, comboRowH);
+                    moveControl(hwndModeSelector, margin + labelW + gap, y, fullW - labelW - gap, pThis->dpiScale(240));
+                    y += comboRowH + rowGap;
+
+                    if (hwndBrowseBtn && IsWindow(hwndBrowseBtn))
+                    {
+                        moveControl(hwndEffortLabel, margin, y, (std::max)(0, fullW - browseW - gap), capH);
+                        moveControl(hwndBrowseBtn, margin + fullW - browseW, y, browseW, capH);
+                    }
+                    else
+                    {
+                        moveControl(hwndEffortLabel, margin, y, fullW, capH);
+                    }
+                    y += capH + margin;
+
+                    moveControl(pThis->m_hwndSidebarCaptionMaxTokens, margin, y, pThis->dpiScale(96), capH);
+                    moveControl(pThis->m_hwndMaxTokensLabel, margin + fullW - valW, y, valW, capH);
+                    y += capH + rowGap;
+                    moveControl(pThis->m_hwndMaxTokensSlider, margin, y, fullW, sliderH);
+                    y += sliderH + margin;
+
+                    moveControl(pThis->m_hwndSidebarCaptionContext, margin, y, pThis->dpiScale(96), capH);
+                    moveControl(pThis->m_hwndContextLabel, margin + fullW - valW, y, valW, capH);
+                    y += capH + rowGap;
+                    moveControl(pThis->m_hwndContextSlider, margin, y, fullW, sliderH);
+                    y += sliderH + margin;
+
+                    moveControl(pThis->m_hwndChkMaxMode, margin, y, halfChkW, chkH);
+                    moveControl(pThis->m_hwndChkDeepThink, margin + halfChkW + gap, y, halfChkW, chkH);
+                    y += chkH + rowGap;
+                    moveControl(pThis->m_hwndChkDeepResearch, margin, y, halfChkW, chkH);
+                    moveControl(pThis->m_hwndChkNoRefusal, margin + halfChkW + gap, y, halfChkW, chkH);
+                    y += chkH + rowGap;
+                    moveControl(pThis->m_hwndChkAgenticMode, margin, y, halfChkW, chkH);
+                    y += chkH + margin;
+
+                    topY = y;
                 }
 
                 const int buttonW = (std::max)(pThis->dpiScale(72), (fullW - gap * 2) / 3);
@@ -16359,9 +18638,9 @@ static HWND RunInputDialog(HWND parent, const wchar_t* title, InputDialogParams*
             return nullptr;
     }
     // WS_EX_TOPMOST keeps dialog visible during screenshot attempts (focus theft protection)
-    HWND dlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_TOPMOST, L"RawrXD_InputDialog", title ? title : L"Input",
-                               WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 348, 128, parent,
-                               nullptr, hInst, params);
+    HWND dlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_TOPMOST, L"RawrXD_InputDialog",
+                               title ? title : L"Input", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT,
+                               CW_USEDEFAULT, 348, 128, parent, nullptr, hInst, params);
     if (!dlg)
     {
         OutputDebugStringA("[UI] Failed to create RawrXD_InputDialog window\n");
@@ -16398,5 +18677,29 @@ bool Win32IDE::DialogBoxWithInput(const wchar_t* title, const wchar_t* prompt, w
 }
 
 // Destructor definition - must be in .cpp where NativeStreamProvider is complete
-Win32IDE::~Win32IDE() = default;
+Win32IDE::~Win32IDE()
+{
+    AgentBridge_SetShuttingDown(true);
+    PromptWarm_SetAcceptRequests(false);
+    try
+    {
+        RawrXD::SkillSystem::ShutdownSkillSystem();
+    }
+    catch (...)
+    {
+    }
 
+    shutdownLineStripEditor();
+    shutdownAgentChatCursorOverlay();
+    clearAgenticLspConditionWiring();
+    if (m_hwndVcsStagingPanel && IsWindow(m_hwndVcsStagingPanel))
+    {
+        RawrXD::UI::drainPendingVcsIndexSnapshots(m_hwndVcsStagingPanel);
+        DestroyWindow(m_hwndVcsStagingPanel);
+        m_hwndVcsStagingPanel = nullptr;
+    }
+    if (NeuralBridge::IsInitialized())
+    {
+        NeuralBridge::Shutdown();
+    }
+}

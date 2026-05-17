@@ -51,17 +51,20 @@
 #include "../../include/missing_features_batch3.hpp"
 #include "../../include/missing_features_batch6.hpp"
 #include "../../include/missing_features_batch7.hpp"
+#include "Win32NeuralBridge.h"
+
 namespace RawrXD
 {
 struct DownloadProgress;
 }  // namespace RawrXD
+#include "../../include/GhostCompletionContext.h"
 #include "../../include/plugin_system/win32_plugin_loader.h"
 #include "../../include/slash_router.h"
-#include "../autonomous_feature_engine.h"
+#include "../agentic/agent_controller_minimal.h"
 #include "../autonomous_feature_engine.h"
 #include "../autonomous_intelligence_orchestrator.h"
 #include "../autonomous_model_manager.h"
-#include "../agentic/agent_controller_minimal.h"
+#include "../bridge/symbol_index_bridge.hpp"
 #include "../full_agentic_ide/FullAgenticIDE.h"
 #include "../gguf_loader.h"
 #include "../model_source_resolver.h"
@@ -74,6 +77,7 @@ struct DownloadProgress;
 #include "../streaming_gguf_loader.h"
 #include "IDELogger.h"
 #include "PendingEditReview.h"
+#include "SessionController.h"
 #include "TransparentRenderer.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_AgenticIntegration.h"
@@ -83,10 +87,13 @@ struct DownloadProgress;
 #include "Win32IDE_TabManager.h"
 #include "Win32IDE_Types.h"
 #include "Win32IDE_WebView2.h"
-#include "SessionController.h"
 #include "Win32TerminalManager.h"
-#include "../bridge/symbol_index_bridge.hpp"
+#include "rawrxd/agent_cursor_types.h"
+#include "rawrxd/rawrxd_linestream_raster.h"
+#include "rawrxd/rawrxd_software_raster.h"
+#include "rawrxd/rawrxd_workspace_matrix.h"
 #include <nlohmann/json.hpp>
+
 
 using json = nlohmann::json;
 
@@ -100,10 +107,11 @@ namespace rawrxd
 {
 class SpeculativeExecutionEngine;
 class IDEFeatures;
-}
+}  // namespace rawrxd
 
 #include <array>
 #include <atomic>
+#include <deque>
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -135,9 +143,9 @@ struct Win32IDEAgenticCopilotFinalEnvelope
 #include "../core/native_inference_pipeline.hpp"
 #include "../core/problems_aggregator.hpp"
 #include "../modules/ExtensionLoader.hpp"
-#include "ExtensionInstaller.hpp"
 #include "../modules/vscode_extension_api.h"
 #include "../ui/tool_action_status.h"
+#include "ExtensionInstaller.hpp"
 #include <climits>
 #include <condition_variable>
 
@@ -306,7 +314,12 @@ struct RefactoringOption
 };
 
 // Forward declaration for D2D syntax bridge friend access
-namespace RawrXD { class D2DSyntaxBridge; }
+namespace RawrXD
+{
+class D2DSyntaxBridge;
+}
+
+class AgentEditSession;  // Win32IDE_AgentPanel.cpp — friend for private WAL nested types
 
 // Win32IDE main application class
 class Win32IDE
@@ -332,8 +345,14 @@ class Win32IDE
     friend void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM wParam, LPARAM heapResponse);
     friend class RawrXD::D2DSyntaxBridge;
     friend RawrXD::ExtensionPanelWindow* GetOrCreateExtensionPanel(Win32IDE* ide, HWND hwndMain, HINSTANCE hInst);
+    friend class AgentEditSession;
 
   public:
+    // WAL rollbacks: full definitions in Win32IDE_Types.h; aliases keep Win32IDE:: qualified names stable for TUs that
+    // include only Win32IDE.h.
+    using AIFileRollbackRecord = ::AIFileRollbackRecord;
+    using AIEditTransaction = ::AIEditTransaction;
+
     RawrXD::ExtensionInstaller* getExtensionInstaller() { return m_extensionInstaller.get(); }
     void runWorkspaceSearchFromDialog(const std::string& query);
     void deferredHeavyInitBody();  // SEH-safe body, called from bg thread via sehRunBgThread
@@ -357,10 +376,10 @@ class Win32IDE
 
     enum class ExecutionMode
     {
-        Safe = 0,       // Shadow mode: propose only, no auto-apply
-        Normal = 1,     // Standard: apply after user confirmation
-        Unsafe = 2,     // Direct apply: no confirmation, auto-execute
-        Kernel = 3      // System-level: requires explicit compile-time gate
+        Safe = 0,    // Shadow mode: propose only, no auto-apply
+        Normal = 1,  // Standard: apply after user confirmation
+        Unsafe = 2,  // Direct apply: no confirmation, auto-execute
+        Kernel = 3   // System-level: requires explicit compile-time gate
     };
 
     // ---- Hybrid completion result (moved here to fix forward-reference) ----
@@ -400,6 +419,10 @@ class Win32IDE
     HWND getSidebar() const { return m_hwndSidebar; }
     HWND getEditor() const { return m_hwndEditor; }
     HWND getStatusBar() const { return m_hwndStatusBar; }
+    /// Posted from worker threads: `lParam` is `_wcsdup` wide text; handler runs `SB_SETTEXT` and `free`s it.
+    static constexpr UINT WM_STATUSBAR_AGENTIC_SETPARTTEXT = WM_APP + 311;
+    /// Thread-safe status bar update (heap-copies `text` for the UI thread).
+    void postStatusBarSetPartTextW(unsigned int partIndex, const std::wstring& text);
     HWND getActivityBar() const { return m_hwndActivityBar; }
     HWND getLineNumbers() const { return m_hwndLineNumbers; }
     HWND getTabBar() const { return m_hwndTabBar; }
@@ -417,7 +440,11 @@ class Win32IDE
 
     // Execution mode accessors
     ExecutionMode getExecutionMode() const { return m_executionMode; }
-    void setExecutionMode(ExecutionMode mode) { m_executionMode = mode; updateExecutionModeStatusBar(); }
+    void setExecutionMode(ExecutionMode mode)
+    {
+        m_executionMode = mode;
+        updateExecutionModeStatusBar();
+    }
     std::string getExecutionModeLabel() const;
     void updateExecutionModeStatusBar();
 
@@ -428,19 +455,19 @@ class Win32IDE
 
     // Agentic Framework — Full Agentic IDE owns the bridge (single entry point: src/full_agentic_ide/)
     std::unique_ptr<full_agentic_ide::FullAgenticIDE> m_fullAgenticIDE;
-    AgenticBridge* m_agenticBridge = nullptr;                      // Non-owning; set from m_fullAgenticIDE->getBridge()
-    std::unique_ptr<Win32IDE_AgenticIntegration> m_agenticIntegration; // Execution safety + patch + verification layer
-    std::unique_ptr<RawrXD::PlanOrchestrator> m_planOrchestrator;  // Autonomous task planning and execution
+    AgenticBridge* m_agenticBridge = nullptr;  // Non-owning; set from m_fullAgenticIDE->getBridge()
+    std::unique_ptr<Win32IDE_AgenticIntegration> m_agenticIntegration;  // Execution safety + patch + verification layer
+    std::unique_ptr<RawrXD::PlanOrchestrator> m_planOrchestrator;       // Autonomous task planning and execution
     std::unique_ptr<AutonomousFeatureEngine> m_autonomousFeatureEngine;
     std::unique_ptr<RawrXD::AutonomousIntelligenceOrchestrator> m_autonomousOrchestrator;
     std::unique_ptr<RawrXD::AutonomousModelManager> m_autonomousModelManager;
     std::unique_ptr<rawrxd::session::SessionController> m_sessionController;
-    bool m_multiAgentEnabled = false;                              // Multi-agent orchestration toggle
+    bool m_multiAgentEnabled = false;  // Multi-agent orchestration toggle
     // (Removed: std::unique_ptr<SlashRouter> m_slashRouter — replaced by free
     //  RawrXD::SlashRouter namespace in Win32IDE_Commands.cpp.)
     void initializeAutonomousSystems();
     void UpdateAutonomyStatus();
-    
+
     // Unified Command Router Methods
     // Nested LSP completion item used by the Win32IDE pipeline (do not confuse
     // with ::LSPCompletionItem in agentic/lsp/LSPClient.hpp).
@@ -451,6 +478,16 @@ class Win32IDE
         std::string insertText;
         int kind = 0;
         bool isSnippet = false;
+        /// Optional `textDocument/completion` TextEdit range (for future replace-range apply).
+        struct TextEdit
+        {
+            int startLine = -1;
+            int startChar = -1;
+            int endLine = -1;
+            int endChar = -1;
+            std::string newText;
+            bool valid = false;
+        } textEdit;
     };
     // Compile-fix shims for code added in the Unified Command Router merge.
     // Definitions live in Win32IDE_Core.cpp.
@@ -467,7 +504,7 @@ class Win32IDE
     void QueryAutonomousAgent(const char* query);
     void ExecuteSlashCommand(const char* command);
     void OnChatSubmit(const std::string& text);
-    
+
     void initializeAgenticBridge();
     bool ensureAgenticBridgeHasModel(const std::string& path);
     void initializeAutonomy();
@@ -663,16 +700,16 @@ class Win32IDE
     void initFileWatcher();
     void shutdownFileWatcher();
 
-        // Missing Features Core Integration (facade over src/features/missing_features.hpp)
-        void initializeMissingFeaturesCore();
-        void syncMissingFeaturesFileContext(const std::string& filePath);
-        void syncMissingFeaturesWorkspaceContext(const std::string& workspacePath);
-        bool isMissingFeaturesCoreReady() const;
+    // Missing Features Core Integration (facade over src/features/missing_features.hpp)
+    void initializeMissingFeaturesCore();
+    void syncMissingFeaturesFileContext(const std::string& filePath);
+    void syncMissingFeaturesWorkspaceContext(const std::string& workspacePath);
+    bool isMissingFeaturesCoreReady() const;
 
   private:
     EngineManager* m_engineManager = nullptr;
     CodexUltimate* m_codexUltimate = nullptr;
-        std::shared_ptr<rawrxd::IDEFeatures> m_missingFeaturesCore;
+    std::shared_ptr<rawrxd::IDEFeatures> m_missingFeaturesCore;
 
     // Window procedure
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -682,6 +719,9 @@ class Win32IDE
     void onCreate(HWND hwnd);
     void deferredHeavyInit();
     static DWORD WINAPI deferredHeavyInitThreadProc(LPVOID param);
+    void handleInitFailure();             // Supervisor: called when background init thread crashes
+    void forceCpuInference(bool enable);  // Helper to disable GPU layers for safe-mode retry
+    void onDeferredInitFailed();          // WM_DEFERRED_INIT_FAILED handler
     void onDestroy();
     void onSize(int width, int height);
     void onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
@@ -855,13 +895,24 @@ class Win32IDE
     struct PendingEditEntry;
 
     void acceptGhostText();
+    bool acceptPartialGhostWord();
     void onGhostTextTimer();
-    void onPrefetchIdleTimer();        // Fires after 150ms idle to trigger speculative prefetch
-    void triggerSpeculativePrefetch(); // Background completion request to mask first-token latency
+    void onPrefetchIdleTimer();         // Fires after 150ms idle to trigger speculative prefetch
+    void triggerSpeculativePrefetch();  // Background completion request to mask first-token latency
     void renderSuggestionTint(HDC hdc);
     void renderGhostText(HDC hdc);
-    bool handleGhostTextKey(UINT vk);
+    bool handleGhostTextKey(UINT vk, bool ctrlDown = false, bool shiftDown = false);
     bool handleGhostTextTypedChar(wchar_t ch);
+    /// `/vulkan`, `/pager`, `/kill-locks`, `/clear`, `/explain`, `/fix`, `/test`, `/doc`, `/optimize` on Enter (where
+    /// applicable).
+    bool tryExecuteEditorSlashLine(HWND hwndEditor);
+    /// `/explain`: open Agent Chat and send a prompt built from GhostCompletionContext.
+    bool executeEditorSlashExplainLine(HWND hwndEditor, const std::string& extraUserText);
+    /// Shared chat prompts for editor slash commands (explain/fix/test/doc/optimize). Returns false if chat
+    /// unavailable.
+    bool postEditorSlashChatPrompt(const std::string& cmdLower, HWND editor, const std::string& extraUserText = {});
+    /// Tail after `/cmd ` on the caret line (empty if none).
+    std::string parseSlashCommandTailFromCaretLine(HWND editor, const std::string& cmdLower) const;
     void updateGhostDiffOverlayUi(const POINTL& anchorPt);
     void hideGhostDiffOverlayUi();
     void destroyGhostDiffOverlayUi();
@@ -1394,11 +1445,59 @@ class Win32IDE
     SyntaxLanguage m_syntaxLanguage;
     bool m_inBlockComment;  // Tracks multi-line comment state across lines
 
+    // Track B line-strip presentation (RAWRXD_SOFTWARE_BLIT_RASTER + RAWRXD_LINE_STRIP_CACHE)
+    bool lineStripEditorEnabled() const;
+    void createLineStripOverlay(HWND hwndParent);
+    void layoutLineStripOverlay();
+    void shutdownLineStripEditor();
+    void onEditorLineStripContentChanged();
+    void syncLineStripDocumentFromEditor();
+    void syncLineStripDirtyStrips();
+    void invalidateLineStripOverlay(const RECT* optionalLineRect);
+    void syncLineStripImeComposition();
+    void updateLineStripGhostCaretMargin();
+    void paintLineStripGhostTextParity(rawrxd::ui::SoftwareRenderSurface* surface, int firstVisibleLine, int lineHeight,
+                                       int cellWidth, int horzScroll, int viewportStartY);
+    void paintLineStripDiagnosticSquiggles(rawrxd::ui::SoftwareRenderSurface* surface, int firstVisibleLine,
+                                           int lineHeight, int cellWidth, int horzScroll, int viewportStartY,
+                                           int dirtyTopLine, int dirtyBottomLine);
+    void onLineStripCaretBlinkTimer();
+    void paintLineStripOverlay(HDC hdcScreen, const RECT& paintRect);
+    void maskRichEditForLineStripOverlay();
+    bool ensureLineStripEditorInitialized();
+    int getEditorLineHeightPx() const;
+    static LRESULT CALLBACK LineStripOverlayProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    HWND m_hwndLineStripOverlay = nullptr;
+    bool m_lineStripEditorReady = false;
+    bool m_lineStripDocumentDirty = true;
+    rawrxd::ui::SoftwareRasterWorkspace m_lineStripRaster{};
+    rawrxd::ui::SoftwareRenderSurface m_lineStripSurface{};
+    rawrxd::ui::LineStreamWorkspace m_lineStripStream{};
+    rawrxd::ui::SovereignWorkspaceController m_lineStripController{};
+    std::vector<std::string> m_lineStripOwnedLines;
+    std::vector<rawrxd::ui::DocumentLine> m_lineStripDocLines;
+    std::vector<std::uint32_t> m_lineStripLineVersions;
+    std::vector<rawrxd::ui::SyntaxColorRun> m_lineStripRuns;
+    std::vector<const rawrxd::ui::SyntaxColorRun*> m_lineStripRunTable;
+    std::vector<std::uint32_t> m_lineStripRunCounts;
+    HDC m_lineStripBakeDc = nullptr;
+    HBITMAP m_lineStripBakeBitmap = nullptr;
+    std::uint32_t m_lineStripSurfaceW = 0;
+    std::uint32_t m_lineStripSurfaceH = 0;
+
     // Line Number Gutter
     void createLineNumberGutter(HWND hwndParent);
     void updateLineNumbers();
     static LRESULT CALLBACK LineNumberProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void paintLineNumbers(HDC hdc, RECT& rc);
+    /// 1-based lines in the open file touched by a pending review-gate edit (AI / ghost / LSP WAL preview).
+    std::set<int> computeAiWalGutterLines1BasedForCurrentFile() const;
+    /// Top deque WAL txn vs on-disk / editor buffer (after accept); baseline cleared on drift or session reset.
+    void refreshWalGutterHighlightsFromHistory();
+    void invalidateWalGutterHistoryIfEditorDrifted();
+    void clearWalGutterHistoryVisualState();
+    bool isWalGutterHistoryHighlighted(int line1Based) const;
 
   public:
     struct LayoutProfile;
@@ -1459,6 +1558,9 @@ class Win32IDE
     std::string captureProfileBundleV1(const std::string& baselineLabel = "baseline_a", int sampleSeconds = 30);
     /** Writes `performance.vulkanRenderer` to rawrxd.config.json (cwd, else exe dir). */
     void persistPerformanceVulkanRendererToConfig();
+    /// Best-effort terminate common build tool processes (ninja/cmake/MSBuild/devenv/cl/link/clangd) — use when Ninja
+    /// reports recompaction / file locks. Does not terminate the IDE process.
+    void forceKillBuildLocks();
 
     // Agent Inline Annotations
     enum class AnnotationSeverity
@@ -1599,9 +1701,10 @@ class Win32IDE
     HWND m_hwndCommandPaletteList;
     bool m_commandPaletteVisible;
     WNDPROC m_oldCommandPaletteInputProc;
-    std::vector<CommandPaletteItem> m_commandRegistry;    // reserved large upfront to avoid realloc invalidation
-    std::vector<CommandPaletteItem> m_filteredCommands;   // mirrors registry; also reserved
-    std::vector<std::string> m_filteredExtensionCommandIds; // parallel to m_filteredCommands: empty=builtin, non-empty=extension command ID
+    std::vector<CommandPaletteItem> m_commandRegistry;   // reserved large upfront to avoid realloc invalidation
+    std::vector<CommandPaletteItem> m_filteredCommands;  // mirrors registry; also reserved
+    std::vector<std::string>
+        m_filteredExtensionCommandIds;  // parallel to m_filteredCommands: empty=builtin, non-empty=extension command ID
     std::vector<std::vector<int>> m_fuzzyMatchPositions;  // per-item match highlight positions
     uint64_t m_commandRegistryVersion = 0;                // bump on rebuild to detect stale filtered indexes
     uint64_t m_filteredVersion = 0;                       // version of current filtered list
@@ -1610,7 +1713,10 @@ class Win32IDE
     // Utility
     std::string getWindowText(HWND hwnd);
     /// Full RichEdit contents as UTF-8 (avoids WM_GETTEXT length limits on terminal buffers).
-    std::string getRichEditDocumentUtf8(HWND hwnd);
+    std::string getRichEditDocumentUtf8(HWND hwnd) const;
+    /// Pre-apply snapshot for WAL: active RichEdit if this path is the open document, else in-memory tab
+    /// buffer, else bytes on disk. Used so AI rollback matches what the user saw, not stale disk.
+    std::string snapshotWalOriginalContentForPath(const std::string& pathUtf8) const;
     void setWindowText(HWND hwnd, const std::string& text);
     void appendText(HWND hwnd, const std::string& text);
     void syncEditorToGpuSurface();
@@ -1709,7 +1815,8 @@ class Win32IDE
         GitHub = 7,
         GitHubPullRelease = 8,
         Accounts = 9,
-        Manage = 10
+        Manage = 10,
+        ExecutionTruth = 11
     };
 
     struct LayoutProfile
@@ -1964,6 +2071,8 @@ class Win32IDE
     static const UINT WM_SAFE_TO_REPLAY = WM_APP + 309;
     /// Posted by restoreSession() to defer startup model restore until UI create pipeline has returned.
     static const UINT WM_STARTUP_RESTORE_MODEL = WM_APP + 310;
+    /// Background model-discovery scan finished; populate selector on UI thread.
+    static const UINT WM_MODEL_DISCOVERY_DONE = WM_APP + 312;
     // Apply settings safely on the main thread (posted from background threads)
     static const UINT WM_APP_APPLY_SETTINGS = WM_APP + 350;
     // Initialize voice chat UI/hotkeys safely on the main thread.
@@ -1988,8 +2097,10 @@ class Win32IDE
     void asyncModelLoadWorker(std::string filepath);
 
 
-
   private:
+    static bool smokeDeferredInitActive();
+    /** True when copilot send/receive should run under RAWRXD_SMOKE_DEFERRED_INIT (opt-out: RAWRXD_SMOKE_BLOCK_COPILOT_CHAT=1). */
+    static bool smokeCopilotChatEnabled();
     mutable std::mutex m_asyncModelLoadMutex;
     bool m_asyncModelLoadRunning = false;
 
@@ -2005,8 +2116,9 @@ class Win32IDE
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::string m_streamingTokenAccumulator;  // Accumulates tokens for markdown rendering on completion
-    int m_streamingWrittenWchars = 0;          // Wide-char count written to RichEdit during active stream (for replace-range math)
-    bool m_nativeStreamingActive = false;     // True while native AI tokens are arriving
+    int m_streamingWrittenWchars =
+        0;  // Wide-char count written to RichEdit during active stream (for replace-range math)
+    bool m_nativeStreamingActive = false;  // True while native AI tokens are arriving
     std::thread m_inferenceThread;
     std::mutex m_inferenceMutex;
     std::function<void(const std::string&, bool)> m_inferenceCallback;
@@ -2026,6 +2138,10 @@ class Win32IDE
     std::shared_ptr<RawrXD::CPUInferenceEngine> m_nativeEngine;
     bool m_nativeEngineLoaded = false;
     std::mutex m_outputMutex;
+    /// Worker-thread copilot chat appends coalesce here; `WM_COPILOT_CHAT_APPEND_FLUSH` drains on the UI thread.
+    std::mutex m_copilotChatPostCoalesceMutex;
+    std::string m_copilotChatPostCoalesceBuffer;
+    bool m_copilotChatPostCoalesceFlushPosted = false;
 
     // Native Inference Pipeline — zero-dependency local AI core
     std::unique_ptr<RawrXD::NativeInferencePipeline> m_nativePipeline;
@@ -2112,6 +2228,9 @@ class Win32IDE
     WNDPROC m_oldLineNumberProc;
     int m_lineNumberWidth;  // Width of the gutter in pixels
     int m_currentLine;      // Current cursor line (1-based)
+    std::vector<int> m_walGutterHistoryLines1Based;
+    /// UTF-8 snapshot of the editor/disk body used for the last WAL gutter diff; drift clears highlights.
+    std::string m_walGutterDriftBaselineUtf8;
 
     // Ghost Text / Inline Completion
     bool m_ghostTextEnabled = true;
@@ -2120,11 +2239,65 @@ class Win32IDE
     int m_ghostTextStartPos = -1;  // Character position where ghost text starts
     HWND m_hwndGhostDiffOverlay = nullptr;
     bool m_ghostDiffOverlayVisible = false;
+    bool m_ghostMirrorGateBroken = false;
+    std::string m_ghostMirrorGateReason;
     UINT_PTR m_ghostTextTimer = 0;
     std::mutex m_ghostTextMutex;
     std::thread m_ghostTextThread;
     std::atomic<bool> m_ghostTextRunning{false};
     std::atomic<bool> m_ghostTextStopRequested{false};
+
+    // ================= Chat Subsystem Integration (A1.1) ===================
+    // Core chat subsystem component pointers and state
+    class CChatMessageRenderer* m_chatMessageRenderer = nullptr;
+    class CChatCommandRouter* m_chatCommandRouter = nullptr;
+    class CChatIpcDelegation* m_chatIpcDelegation = nullptr;
+    class CChatInputGhostRenderer* m_chatInputGhostRenderer = nullptr;
+    // Chat persistence pool and transactional file mapping engine
+    class Win32IDE_ChatPersistencePool* m_chatPersistencePool = nullptr;
+    // Chat subsystem state
+    HWND m_hwndChatPanel = nullptr;
+    HWND m_hwndChatInput = nullptr;
+    HWND m_hwndChatOutput = nullptr;
+    HWND m_hwndChatSendBtn = nullptr;
+    HWND m_hwndChatClearBtn = nullptr;
+    HWND m_hwndChatGhostOverlay = nullptr;
+    WNDPROC m_oldChatInputProc = nullptr;
+    WNDPROC m_oldChatOutputProc = nullptr;
+    WNDPROC m_oldChatSendBtnProc = nullptr;
+    WNDPROC m_oldChatClearBtnProc = nullptr;
+    // Chat IPC state
+    std::vector<uint8_t> m_chatIpcSendBuffer;
+    std::vector<uint8_t> m_chatIpcRecvBuffer;
+    std::atomic<bool> m_chatIpcActive{false};
+    std::atomic<bool> m_chatIpcSendPending{false};
+    std::atomic<bool> m_chatIpcRecvPending{false};
+    // Chat transactional file mapping state
+    std::wstring m_chatPersistenceFilePath;
+    std::atomic<bool> m_chatPersistenceActive{false};
+    std::atomic<bool> m_chatPersistenceDirty{false};
+    // Chat context aggregation
+    std::vector<std::string> m_chatContextHistory;
+    std::string m_chatContextUser;
+    std::string m_chatContextAssistant;
+    std::string m_chatContextSystem;
+    // Chat token budgeting
+    int m_chatTokenBudget = 4096;
+    int m_chatTokenUsed = 0;
+    // Chat recovery state machine
+    enum class ChatRecoveryState
+    {
+        None,
+        Pending,
+        Recovering,
+        Complete
+    };
+    ChatRecoveryState m_chatRecoveryState = ChatRecoveryState::None;
+    // Chat GDI SaveDC/RestoreDC tracking
+    int m_chatGdiSaveCount = 0;
+    int m_chatGdiRestoreCount = 0;
+    // Chat subsystem initialization flag
+    bool m_chatSubsystemInitialized = false;
 
     // Symbol Index Bridge (Rust Parser v2 integration)
     std::unique_ptr<rawrxd::bridge::SymbolIndexBridge> m_symbolIndexBridge;
@@ -2372,6 +2545,8 @@ class Win32IDE
     HWND m_hwndSCMFileList;
     HWND m_hwndSCMToolbar;
     HWND m_hwndSCMMessageBox;
+    /// Optional `RawrXD.VcsStagingPanel` host (see `SidebarStagingPanel.cpp`); drained on shutdown before destroy.
+    HWND m_hwndVcsStagingPanel = nullptr;
 
     // Run and Debug View
     HWND m_hwndDebugConfigs;
@@ -2514,6 +2689,7 @@ class Win32IDE
     // Secondary Sidebar (Right) - AI Chat / Copilot area
     HWND m_hwndSecondarySidebar;
     HWND m_hwndSecondarySidebarHeader;
+    HWND m_hwndEmojiPulseSymbol;  // Sovereign Symbol Engine - Ghost Anchor
 
     // Downloads Panel
     std::unique_ptr<DownloadsPanelWindow> m_downloadsPanel;
@@ -2523,6 +2699,10 @@ class Win32IDE
 
     HWND m_hwndCopilotChatInput;
     HWND m_hwndCopilotChatOutput;
+    HWND m_hwndAgentChatCursorOverlay = nullptr;
+    rawrxd::ui::AgentVirtualCursor m_agentChatCursor{};
+    long m_agentChatCursorPrevX = 0;
+    long m_agentChatCursorPrevY = 0;
     HWND m_hwndCopilotSendBtn;
     HWND m_hwndCopilotClearBtn;
     HWND m_hwndCopilotModelUsedLabel = nullptr;
@@ -2530,7 +2710,13 @@ class Win32IDE
     HWND m_hwndCopilotUnhelpfulBtn = nullptr;
     HWND m_hwndCopilotCopyBtn = nullptr;
     HWND m_hwndCopilotRetryBtn = nullptr;
+    bool m_copilotBackendReady = false;
+    bool m_copilotInteractionBusy = false;
     HWND m_hwndModelSelector;
+    HWND m_hwndSidebarCaptionModel = nullptr;
+    HWND m_hwndSidebarCaptionMode = nullptr;
+    HWND m_hwndSidebarCaptionMaxTokens = nullptr;
+    HWND m_hwndSidebarCaptionContext = nullptr;
     HWND m_hwndMaxTokensSlider;
     HWND m_hwndMaxTokensLabel;
 
@@ -2549,6 +2735,122 @@ class Win32IDE
 
     bool m_secondarySidebarVisible;
     int m_secondarySidebarWidth;
+    int m_predictedChatHeight = 0;     // Ghost-Width Prediction for Token-Stream Stabilization
+    DWORD m_lastChatHeightChange = 0;  // Hysteresis timestamp
+
+    // Batch 3: Sovereign Moat - Cross-Module Symbolic Linking
+    struct SymbolLink
+    {
+        std::wstring filePath;
+        int lineNumber;
+        std::wstring description;
+        std::wstring lastMetadata;  // Batch 4: Shadow-Memory Metadata Cache
+        uint64_t lastUpdateTick;
+    };
+    std::unordered_map<int, SymbolLink> m_sovereignSymbolLinks;  // SymbolID -> Location
+    mutable std::mutex m_symbolLinkMutex;
+
+    // Batch 4: Shadow-Memory Tooltip Management
+    HWND m_hwndSymbolTooltip = nullptr;
+    void updateSymbolMetadata(int symbolId, const std::wstring& metadata);
+    void showSymbolTooltip(int symbolId, const RECT& rect);
+    void hideSymbolTooltip();
+
+    // Batch 5: Incremental Patch Engine (Transactional Veracity)
+    enum class PatchStatus
+    {
+        Idle,
+        InProgress,
+        Verified,
+        Divergence,
+        RolledBack
+    };
+    struct PatchTransaction
+    {
+        uint64_t transactionId;
+        std::wstring filePath;
+        PatchStatus status;
+        std::string prePatchContent;          // WARM tier shadow-copy
+        std::vector<std::string> operations;  // Segmented JSON ops
+    };
+    std::unordered_map<uint64_t, PatchTransaction> m_activePatches;
+    mutable std::mutex m_patchMutex;
+
+    void applyIncrementalPatch(const std::string& segmentedJson);
+    void rollbackTransaction(uint64_t transactionId);
+    void updatePatchSymbol(PatchStatus status);
+
+    // Batch 6: AST Indexer & Semantic Offsets
+    struct SemanticSymbol
+    {
+        std::wstring name;
+        std::wstring type;  // function, struct, class
+        int line;
+        std::wstring filePath;
+    };
+    std::vector<SemanticSymbol> m_workspaceTopology;
+    mutable std::mutex m_topologyMutex;
+
+    void scanWorkspaceTopology();
+    void updateTopologySymbol();
+    int resolveSemanticLine(const std::wstring& symbolName, const std::wstring& filePath);
+
+    // Batch 7: Project Reality Sync (KAIROS Watcher)
+    void onFilesystemEvent(const std::wstring& filePath);
+    bool isPathInActiveContext(const std::wstring& filePath) const;
+    void refreshHotTierMetadata(int symbolId);
+
+    // IOCP / Reality-Watch State
+    std::unordered_set<std::wstring> m_activeContextPaths;  // Files in HOT/WARM tiers
+    mutable std::mutex m_contextMutex;
+
+// ========================================================================
+// Batch 8: Deep-Fix Mission - Hardware Handshake & Aperture Telemetry
+// ========================================================================
+#pragma pack(push, 1)
+    struct ApertureTelemetry
+    {
+        uint32_t vram_pressure;     // 0-100 percentage
+        uint32_t iocp_queue_depth;  // Pending IO operations
+        uint32_t bus_latency_ps;    // Picoseconds (BAR access)
+        uint32_t metabolic_pulse;   // 8892 synchronized heartbeat
+    };
+#pragma pack(pop)
+
+    // ========================================================================
+    // Batch 9: Speculative Branch Engine (Autonomous Multi-Attempt execution)
+    // ========================================================================
+    enum class BranchStatus
+    {
+        Staged,
+        Compiling,
+        Failed,
+        Success,
+        SelectionCandidate
+    };
+    struct SpeculativeBranch
+    {
+        uint32_t branchId;
+        std::wstring description;
+        BranchStatus status;
+        float compileScore;           // 0.0 to 1.0
+        std::string patchJson;        // The candidate patch
+        std::wstring tempSourcePath;  // Shadow file for compilation testing
+    };
+    std::vector<SpeculativeBranch> m_speculativeBranches;
+    uint32_t m_activeBranchSelectionId = 0;
+
+    void initiateSpeculativeSession(const std::string& intent);
+    void evaluateBranchQuality(uint32_t branchId);
+    void commitBestBranch();
+
+    ApertureTelemetry m_apertureState = {0, 0, 0, 0};
+    mutable std::mutex m_apertureMutex;
+
+    void updateApertureTelemetry(const ApertureTelemetry& state);
+    uint32_t calculateAdaptiveIocpTimeout() const;
+    void onApertureDataReceived(const ApertureTelemetry& data);
+
     SnapState m_activeSnapState = SnapState::None;
     int m_currentMaxTokens;
     std::vector<std::string> m_availableModels;
@@ -2557,6 +2859,10 @@ class Win32IDE
     std::vector<std::pair<std::string, std::string>> m_chatHistory;  // role, message
     std::string m_lastCopilotUserPrompt;
     std::string m_lastCopilotAssistantResponse;
+    /// Next chat send from `postEditorSlashChatPrompt("/fix")` arms structured JSON diff consumption.
+    bool m_armStructuredSlashCopilotFixNextSend = false;
+    bool m_expectStructuredSlashCopilotFixPending = false;
+    std::string m_structuredSlashCopilotFixTargetFile;
     int m_copilotHelpfulCount = 0;
     int m_copilotUnhelpfulCount = 0;
     /// Last workspace path passed to RawrXD_Agent_InitProjectChat (avoid re-init on every turn).
@@ -2581,6 +2887,8 @@ class Win32IDE
     std::string m_lastSlashStatusHint;
     std::vector<std::string> m_slashOverlayCommands;
     int m_slashOverlaySelectedIndex = 0;
+    /// When true, slash overlay list is anchored to the code editor (not chat input); apply replaces editor text.
+    bool m_slashOverlayEditorMode = false;
     HWND m_hwndSlashOverlayPopup = nullptr;
     HWND m_hwndSlashOverlayList = nullptr;
     HWND m_hwndSlashOverlayPreview = nullptr;
@@ -2776,6 +3084,9 @@ class Win32IDE
 
     // Model Chat Interface
     std::string sendMessageToModel(const std::string& message);
+    /// Same routing as sendMessageToModel but does not persist chat history; uses a larger local generate cap for
+    /// code-sized outputs (e.g. direct /fix).
+    std::string sendMessageToModelWithoutChatHistory(const std::string& message);
     void toggleChatMode();
     void appendChatMessage(const std::string& user, const std::string& message);
     bool trySendToOllama(const std::string& prompt, std::string& outResponse);
@@ -2913,6 +3224,15 @@ class Win32IDE
     // AI CHAT PANEL IMPLEMENTATION (public: turnkey Load Model → Copilot chat + agentic tools)
     // ========================================================================
     void createChatPanel();
+    void createAgentChatCursorOverlay();
+    void layoutAgentChatCursorOverlay();
+    void shutdownAgentChatCursorOverlay();
+    void setAgentChatCursorTarget(int clientX, int clientY, bool show = true);
+    void hideAgentChatCursor();
+    void tickAgentChatCursorAnimation();
+    void invalidateAgentChatCursorBounds();
+    void paintAgentChatCursorOverlay(HDC hdc, const RECT& paintRect);
+    static LRESULT CALLBACK AgentChatCursorOverlayProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void HandleCopilotSend();
     /** Post WM_COPILOT_DEFERRED_SEND so send runs outside chat EDIT/button subclass stack. */
     void postDeferredCopilotSend();
@@ -2924,16 +3244,39 @@ class Win32IDE
     void ensureSlashOverlayCreated();
     void hideSlashOverlay();
     bool isSlashOverlayVisible() const;
-    void refreshSlashOverlay(const std::string& userMessage);
+    void refreshSlashOverlay(const std::string& userMessage, HWND editorPositionAnchor = nullptr);
+    void syncEditorSlashOverlayFromEditor(HWND editor);
     bool handleSlashOverlayKey(WPARAM key);
     bool applySlashOverlaySelection();
+    void ensureCopilotChatPanelVisible();
+    void postPromptToCopilotChat(const std::string& promptUtf8);
+    rawrxd::ghost_completion::GhostCompletionContext buildGhostCompletionContextFromEditor(HWND editor);
+    /// Staged compile gate (compile_commands.json). Returns true if skipped, passed, or gate disabled.
+    bool mirrorCompileGateValidate(const std::string& sourceFileAbs, const std::string& proposedUtf8,
+                                   std::string& errOut);
+    void setGhostMirrorGateBroken(bool on, const std::string& reasonUtf8);
+    void routeEditorSlashCommandAfterInsert(const std::string& commandCanon, HWND editor);
+    std::string formatDiagnosticsForChatPrompt(const std::string& filePath) const;
+    std::string formatLspBridgeContextForSlashFix(HWND editor, const std::string& filePath);
+    bool applyEditorDocCommentStubForSlashDoc(HWND editor);
+    void removeEditorLineContainingCaret(HWND editor);
     void appendCopilotChatTextOnUiThread(const std::string& text);
     void clearCopilotInputOnUiThread();
+    void setCopilotBackendReadyOnUiThread(bool ready);
+    void postCopilotBackendReadySafe(bool ready);
+    /** After deferred init + chat panel exist: enable send/receive interlock and surface readiness. */
+    void finalizeCopilotChatInterlockAfterDeferredLoad();
     void setCopilotInteractionBusyOnUiThread(bool busy);
     void postCopilotChatAppendSafe(const std::string& text);
     void postCopilotInputClearSafe();
     void postCopilotInteractionBusySafe(bool busy);
+    void postAgenticTelemetryUpdateSafe(const std::string& type, const std::string& message);
+    void postAgenticTelemetryDoneSafe();
     void postCopilotRecordToolTurnSafe(const std::string& toolName, const std::string& resultBody);
+    /// Flash taskbar + system beep when Copilot/chat streaming finishes while focus is not in the AI sidebar.
+    void notifyCopilotChatCompletedUnlessSidebarFocused();
+    /// Same for bounded agent loop — suppressed only while focus is on agent diff / accept controls.
+    void notifyAgentLoopCompletedUnlessAgentChromeFocused();
     void recordPersistedToolTurnOnUiThread(const std::string& toolName, const std::string& resultBody);
     void postAgenticAssistantFinalSafe(const std::string& streamAccumulatorSnapshot,
                                        const std::string& finalAssistantText);
@@ -2948,6 +3291,12 @@ class Win32IDE
     void finishCopilotAgenticSendState();
     /// Applies `MinimalAgenticResponse` (including per-step `tool_steps`) to chat UI + project-scoped persistence.
     void applyMinimalAgenticCompletion(rawrxd::MinimalAgenticResponse response);
+    /// After chat validation: pairs arm flag with the structured /fix prompt or clears stale expectations.
+    void syncStructuredSlashCopilotFixExpectationForUserMessage(const std::string& userMessageUtf8);
+    /// If a structured /fix turn is pending, parse assistant JSON, queue `queueFilePendingEdit`, clear pending flag.
+    void maybeConsumeStructuredSlashCopilotFixFromAssistantText(const std::string& assistantPlainText);
+    std::string loadUtf8FileForStructuredFix(const std::string& path) const;
+    std::string getDocumentTextForStructuredSlashCopilotFixTarget() const;
 
     // Chat Integration — ConversationSession bridge (impl in Win32IDE_ChatPanel.cpp)
     void initConversationSession();
@@ -2979,6 +3328,10 @@ class Win32IDE
     void useChatPromptForVideoStudio();
     void openVideoStudioOutputFolder();
     static LRESULT CALLBACK VideoStudioProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    void executeDirectSlashFixFromEditor(HWND editor, const rawrxd::ghost_completion::GhostCompletionContext& ctx,
+                                         const std::string& diagnosticsBlock, const std::string& extraUserFocus);
+    std::string sendMessageToModelInternal(const std::string& message, bool suppressChatHistory, int localGenerateCap);
 
   private:
     // Debugger Execution Control
@@ -3028,7 +3381,9 @@ class Win32IDE
 #define WM_AGENT_OUTPUT_SAFE (WM_APP + 102)
 #define WM_IDE_OUTPUT_APPEND_SAFE (WM_APP + 103)
 #define WM_IDE_MOE_PACK_STATUS_REFRESH (WM_APP + 104)
-#define WM_COPILOT_CHAT_APPEND_SAFE (WM_APP + 105)
+#define WM_AGENT_STREAM_FINALIZE_SAFE (WM_APP + 105)
+/// Legacy direct chat append (prefer WM_COPILOT_CHAT_APPEND_FLUSH coalescing path).
+#define WM_COPILOT_CHAT_APPEND_SAFE (WM_APP + 116)
 #define WM_COPILOT_INPUT_CLEAR_SAFE (WM_APP + 106)
 #define WM_COPILOT_INTERACTION_BUSY_SAFE (WM_APP + 107)
 /// Marshal agentic tool results to the UI thread so `m_chatHistory` + disk stay ordered with assistant turns.
@@ -3037,6 +3392,13 @@ class Win32IDE
 #define WM_COPILOT_AGENTIC_ASSISTANT_FINAL (WM_APP + 110)
 /// Leave chat control wndproc stack before running HandleCopilotSend (avoids nested SendMessage / apparent UI freeze).
 #define WM_COPILOT_DEFERRED_SEND (WM_APP + 111)
+/// Batched flush for `postCopilotChatAppendSafe` (many worker posts coalesce into one UI append per pump).
+#define WM_COPILOT_CHAT_APPEND_FLUSH (WM_APP + 115)
+/// Reload persisted project chat on the UI thread after startup window construction completes.
+#define WM_COPILOT_RELOAD_PERSISTED_CHAT_SAFE (WM_APP + 113)
+/// Deferred init worker thread crashed — UI should offer retry/safe-mode options.
+#define WM_DEFERRED_INIT_FAILED (WM_APP + 114)
+#define WM_COPILOT_BACKEND_READY_SAFE (WM_APP + 119)
     void onAgentOutput(const char* text);
     void postAgentOutputSafe(const std::string& text);
     /** Thread-safe: appends to Output tab on the UI thread (inference may run on workers). */
@@ -3053,11 +3415,11 @@ class Win32IDE
     GhostTextCacheEntry requestGhostTextCompletion(const std::string& context, const std::string& language);
     std::string requestTitanGhostTextCompletion(const std::string& context, const std::string& language,
                                                 const std::string& suffix, const std::string& filePath, int cursorLine,
-                                                                int cursorCol, uint64_t expectedSeq = 0, bool streamToUi = false);
+                                                int cursorCol, uint64_t expectedSeq = 0, bool streamToUi = false);
     GhostTextCacheEntry requestGhostTextCompletion(const std::string& context, const std::string& language,
                                                    const std::string& suffix, const std::string& filePath,
-                                                                    int cursorLine, int cursorCol, uint64_t expectedSeq = 0,
-                                                                    bool streamToUi = false);
+                                                   int cursorLine, int cursorCol, uint64_t expectedSeq = 0,
+                                                   bool streamToUi = false);
     bool startTitanAgentInferenceAsync(const std::string& prompt, uint32_t timeoutMs = 120000, bool stageOnly = false);
     bool startTitanAgentInferenceAsync(const std::string& prefix, const std::string& suffix);
     void cancelTitanAgentInferenceAsync();
@@ -3071,6 +3433,9 @@ class Win32IDE
     void onGhostTextRenderMessage();
     void onGhostTextComplete(uint64_t sessionId, const char* completionText);
     void dismissGhostText();
+    /// When ghost overlay is visible but ranked candidates are empty (AI/Titan path), mirror ghost into one entry so
+    /// TAB/Ctrl+Space match the pixels.
+    void syncGhostVisibleToCompletionCandidates();
     void scheduleTitanDraftPrefetch();
     void invalidateTitanDraftPrefetch();
     void toggleGhostText();
@@ -3218,6 +3583,12 @@ class Win32IDE
     void agentAcceptAll();
     void agentRejectAll();
     void refreshAgentDiffDisplay();
+    void ensureAgentDiffPanelVisible();
+    /// Replaces the in-memory agent session with a single full-file proposal (direct /fix lane).
+    bool stageDirectFixAgentProposal(const std::string& path, const std::string& original, const std::string& proposed,
+                                     const std::string& reasoning);
+    /// Runs MirrorGate on all staged proposed files; on failure sets session diagnostic and disables Accept All.
+    bool validateCurrentAgentSessionMirrorGate();
     std::string getAgentSessionSummary() const;
     void renderAgentDiffPanel(HDC hdc, RECT panelRect);
     static LRESULT CALLBACK AgentDiffPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -3253,31 +3624,35 @@ class Win32IDE
         std::string newPath;
         FILETIME fileWriteTime{};
         bool hasFileWriteTime = false;
+        /// Non-zero when this pending edit was queued as part of a single LSP WorkspaceEdit batch (undo atom).
+        uint64_t workspaceBatchId = 0;
+        bool workspaceBatchResolutionCounted = false;
     };
+
+    // Multi-file command-pattern WAL for LSP / agent workspace edits (Ctrl+Shift+Z rolls back one batch).
+    friend bool agentPanelWalRestoreDisk(const AIFileRollbackRecord& r);
+    friend int runAgentWalCliSmokeTest();
 
     void initEditReviewPanel();
     void refreshEditReviewPanel();
     void rebuildPendingEditReviewList();
     void onPendingEditSelectionChanged();
     void queueNavigatorPendingEdit(RawrXD::Review::PendingEditRequest* request);
-    uint64_t queueEditorPendingEdit(RawrXD::Review::EditSource source, RawrXD::Review::EditType type,
-                                    HWND editorHandle, const CHARRANGE& oldRange, const std::string& oldText,
-                                    const std::string& newText, const std::string& filePath,
-                                    bool replaceAll = false);
+    uint64_t queueEditorPendingEdit(RawrXD::Review::EditSource source, RawrXD::Review::EditType type, HWND editorHandle,
+                                    const CHARRANGE& oldRange, const std::string& oldText, const std::string& newText,
+                                    const std::string& filePath, bool replaceAll = false);
     uint64_t queueFilePendingEdit(RawrXD::Review::EditSource source, RawrXD::Review::EditType type,
-                                  const std::string& filePath, const std::string& oldText,
-                                  const std::string& newText, const std::string& newPath = std::string());
+                                  const std::string& filePath, const std::string& oldText, const std::string& newText,
+                                  const std::string& newPath = std::string());
     void updateGhostTextPendingEditPreview(const std::string& textToInsert);
-    void clearGhostTextPendingEdit(
-        RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
+    void clearGhostTextPendingEdit(RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
     bool approvePendingEdit(uint64_t id);
-    void declinePendingEdit(uint64_t id,
-                            RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
+    void declinePendingEdit(uint64_t id, RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
     void approveAllPendingEdits();
-    void declineAllPendingEdits(
-        RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
+    void declineAllPendingEdits(RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
     void selectNextPendingEdit();
     void refreshPendingEditStaleStates();
+    bool rollbackLastAIEditTransaction();
     std::string getPendingEditSummary() const;
     std::string buildPendingEditDiffPreview(const std::string& filePath, const std::string& oldText,
                                             const std::string& newText) const;
@@ -3293,6 +3668,21 @@ class Win32IDE
     std::vector<PendingEditEntry> m_pendingEdits;
     uint64_t m_nextPendingEditId = 1;
     uint64_t m_activeGhostPendingEditId = 0;
+
+    uint64_t m_activeWorkspaceEditBatchId = 0;
+    uint64_t m_nextWorkspaceEditBatchId = 0;
+    int m_applyWorkspaceEditDepth = 0;
+    uint64_t m_nextAIEditTransactionId = 1;
+    std::unordered_map<uint64_t, size_t> m_workspaceBatchOutstanding;
+    std::unordered_map<uint64_t, std::vector<AIFileRollbackRecord>> m_workspaceBatchRollbacks;
+    std::deque<AIEditTransaction> m_aiEditTransactionHistory;
+    static constexpr size_t kMaxAIEditTransactionHistory = 50;
+
+    void pushAIEditTransaction(AIEditTransaction&& tx);
+    void flushAIWorkspaceBatch(uint64_t batchId);
+    void accountWorkspaceBatchIfNeeded(PendingEditEntry& edit, bool committedSuccessfully,
+                                       const std::string* editorDocumentUtf8BeforeApply = nullptr);
+    bool tryMakeAIFileRollbackRecord(const PendingEditEntry& edit, AIFileRollbackRecord& out) const;
 
     // Resolved Ollama model (used by GhostText, AI caller)
     std::string getResolvedOllamaModel() const;
@@ -3336,6 +3726,7 @@ class Win32IDE
     void generateAgentPlan(const std::string& goal);
     void onPlanReady(int stepCount, PlanStep* steps);
     void showPlanApprovalDialog();
+    void layoutPlanApprovalDialog(int clientW, int clientH);
     void executePlan();
     void onPlanStepDone(int stepIndex, int result);
     void onPlanComplete(bool success);
@@ -3360,6 +3751,7 @@ class Win32IDE
     /// E05 — AgenticPlanningOrchestrator tool lane (JSON payloads from ExecutionPlan::actions).
     std::string executeAgentPlanStepViaBridge(const PlanStep& step);
     void wireAgenticOrchestratorIntegration();
+    void clearAgenticLspConditionWiring();
 
     // Plan state
     AgentPlan m_currentPlan;
@@ -3545,10 +3937,10 @@ class Win32IDE
     struct AIBackendConfig
     {
         AIBackendType type = AIBackendType::LocalGGUF;
-        std::string name;      // Human-readable label ("Local GGUF", "native", etc.)
-        std::string endpoint;  // Base URL (e.g., "http://localhost:11435", "https://api.openai.com")
-        std::string model;     // Model identifier (e.g., "llama3.2", "gpt-4o", "claude-sonnet-4-20250514")
-        std::string apiKey;    // API key for remote backends (empty for local)
+        std::string name;             // Human-readable label ("Local GGUF", "native", etc.)
+        std::string endpoint;         // Base URL (e.g., "http://localhost:11435", "https://api.openai.com")
+        std::string model;            // Model identifier (e.g., "llama3.2", "gpt-4o", "claude-sonnet-4-20250514")
+        std::string apiKey;           // API key for remote backends (empty for local)
         bool localGpuEnabled = true;  // LocalGGUF runtime GPU/ASM acceleration toggle
         bool enabled = true;
         int timeoutMs = 30000;     // Request timeout
@@ -4037,10 +4429,15 @@ class Win32IDE
 
         struct ResourceOperation
         {
-            enum class Type { Create, Rename, Delete };
+            enum class Type
+            {
+                Create,
+                Rename,
+                Delete
+            };
             Type type;
-            std::string uri;       // Target for Create/Delete, Source for Rename
-            std::string newUri;    // Target for Rename
+            std::string uri;     // Target for Create/Delete, Source for Rename
+            std::string newUri;  // Target for Rename
             bool overwrite = false;
             bool ignoreIfExists = false;
             bool recursive = false;
@@ -4095,6 +4492,10 @@ class Win32IDE
         uint64_t totalServerRestarts = 0;
         uint64_t totalInlayHintRequests = 0;
         uint64_t totalCodeActionRequests = 0;
+        /// Agentic `agenticConditionQueryDefinitionAt` recovery (SYMBOL_RESOLVES path).
+        uint64_t agenticDefinitionRecoveryDidChangeCount = 0;
+        uint64_t agenticDefinitionRecoveryNuclearCount = 0;
+        uint64_t agenticDefinitionSyncExhaustedCount = 0;
     };
 
     // LSP Client — lifecycle
@@ -4133,10 +4534,15 @@ class Win32IDE
 
     // Core LSP features (10+)
     std::vector<LSPLocation> lspGotoDefinition(const std::string& uri, int line, int character);
+    /// Bounded synchronous 	extDocument/definition for agentic SYMBOL_RESOLVES (fail-closed).
+    bool agenticConditionQueryDefinitionAt(const std::string& workspaceRootUtf8, const std::string& absFileUtf8,
+                                           int line0Based, int character0Based, int timeoutMs, std::string& outDetail);
     std::vector<LSPLocation> lspFindReferences(const std::string& uri, int line, int character);
     LSPWorkspaceEdit lspRenameSymbol(const std::string& uri, int line, int character, const std::string& newName);
     LSPHoverInfo lspHover(const std::string& uri, int line, int character);
     std::vector<LSPCompletionItem> lspCompletion(const std::string& uri, int line, int character);
+    /// Enrich a completion item when the server uses `data` + `completionItem/resolve`.
+    nlohmann::json resolveLspCompletionItem(LSPLanguage lang, const nlohmann::json& item, int timeoutMs = 2000);
     LSPSignatureHelpInfo lspSignatureHelp(const std::string& uri, int line, int character, int triggerKind = 1);
     std::vector<SemanticToken> lspSemanticTokensFull(const std::string& uri);
     std::vector<LSPWorkspaceEdit::TextEdit> lspDocumentFormatting(const std::string& filePath);
@@ -5126,6 +5532,7 @@ class Win32IDE
 #define IDM_HOTPATCH_TOGGLE_ALL 9016
 #define IDM_HOTPATCH_SHOW_PROXY_STATS 9017
 #define IDM_HOTPATCH_SET_TARGET_TPS 9018
+#define IDM_REFRESH_MODELS 9019
 
 // ========================================================================
 // WEBVIEW2 + MONACO EDITOR COMMANDS — Phase 26 (9100 range)
@@ -6750,6 +7157,9 @@ class Win32IDE
     bool handleTier3CosmeticsCommand(int commandId);
     bool handleTier3CosmeticsTimer(UINT_PTR timerId);
 
+    /// Central dispatch for the 18 wiring-manifest gap IDs (menu/control → handler).
+    bool handleWiringManifestGaps(int controlId, UINT codeNotify);
+
     // Composite paint helpers (called from gutter / editor paint)
     void paintTier3CosmeticsGutter(HDC hdc, const RECT& gutterRect);
     void paintTier3CosmeticsEditor(HDC hdc, const RECT& editorRect);
@@ -7287,10 +7697,14 @@ class Win32IDE
     void setOllamaEndpoint(const std::string& endpoint);
     std::string getOllamaEndpoint() const;
 
+  public:
     // Model Discovery
     void initModelDiscovery();
     void shutdownModelDiscovery();
+    /// Blocking filesystem scan — call only from the discovery worker thread.
     void scanForModels();
+    void startAsyncModelDiscoveryScan();
+    void populateModelSelectorFromDiscoveryCache();
     std::vector<std::string> getAvailableModels() const;
     std::vector<std::string> getModelPaths() const;
     bool isModelDiscoveryEnabled() const;
@@ -7299,9 +7713,7 @@ class Win32IDE
 
     // Output-pane startup banner (extensions + local model surface)
     void emitStartupBanner();
-    void logModelRequestUsage(const std::string& modelId,
-                              size_t promptTokens,
-                              size_t completionTokens,
+    void logModelRequestUsage(const std::string& modelId, size_t promptTokens, size_t completionTokens,
                               double durationMs);
     bool m_startupBannerEmitted = false;
 
@@ -7378,10 +7790,13 @@ class Win32IDE
 
     // 49. Emoji Support
     void initEmojiSupport();
-    bool handleEmojiCommand(int commandId);
+    bool handleEmojiCommand(int commandId, LPARAM lParam = 0);
     void cmdEmojiPicker();
     void cmdEmojiConfig();
     void cmdEmojiTest();
+    void cmdJumpToSymbolSource(int symbolId);
+    void updateEmojiTemporalLayer();
+    void registerSymbolLink(int symbolId, const std::wstring& path, int line, const std::wstring& desc = L"");
 
     // 50. Crash Reporter
     void initCrashReporter();
@@ -7490,8 +7905,23 @@ class Win32IDE
     int m_caretBlinkRate = 500;
     UINT_PTR m_caretBlinkTimer = 0;
 
-    // Agent Ollama Client
-    std::atomic<bool> m_deferredHeavyInitComplete{false};  // Set at end of deferredHeavyInitBody; gates network inference
+    // Agent Ollama Client + Deferred Init Supervisor
+    std::atomic<bool> m_deferredHeavyInitComplete{
+        false};  // Set at end of deferredHeavyInitBody; gates network inference
+
+    // Supervisor pattern: track init status and auto-retry attempts
+    enum DeferredInitStatus : int
+    {
+        STATUS_INIT_PENDING = 0,  // Not yet started
+        STATUS_INIT_RUNNING = 1,  // Background worker thread active
+        STATUS_INIT_CRASHED = 2,  // VEH caught exception on worker thread
+        STATUS_INIT_SUCCESS = 3,  // Completed successfully
+        STATUS_INIT_FALLBACK = 4  // Retrying with CPU-only fallback
+    };
+    std::atomic<int> m_initStatus{STATUS_INIT_PENDING};
+    std::atomic<int> m_autoRetryCount{0};    // Track auto-retry attempts (0-1 allowed)
+    DWORD m_deferredInitWorkerThreadId = 0;  // Thread ID of deferred init worker for crash detection
+
     bool m_ollamaClientInitialized = false;
     bool m_ollamaConnected = false;
     std::string m_ollamaEndpoint = "http://localhost:11435";
@@ -7501,6 +7931,8 @@ class Win32IDE
     // Model Discovery
     bool m_modelDiscoveryEnabled = false;
     std::vector<std::string> m_modelDiscoveryPaths;
+    std::atomic<bool> m_modelDiscoveryScanRunning{false};
+    std::atomic<bool> m_modelDiscoveryCacheReady{false};
     std::vector<std::string> m_modelPaths;
 
     // Enterprise Stress Tests
@@ -7566,27 +7998,44 @@ class Win32IDE
 // Document Links, Hover, Signature Help, Rename, Extract, Organize Imports,
 // Code Lens, Inlay Hints, Color Decorations, Bookmarks, TODO Parser,
 // Spell Checker, Clipboard History.
-inline rawrxd::IDEFeatures3& GetIDEFeatures3() {
+inline rawrxd::IDEFeatures3& GetIDEFeatures3()
+{
     static rawrxd::IDEFeatures3 instance;
     static bool initialized = false;
-    if (!initialized) { instance.initialize(); initialized = true; }
+    if (!initialized)
+    {
+        instance.initialize();
+        initialized = true;
+    }
     return instance;
 }
 
-inline rawrxd::IDEFeatures6& GetIDEFeatures6() {
+inline rawrxd::IDEFeatures6& GetIDEFeatures6()
+{
     static rawrxd::IDEFeatures6 instance;
     static bool initialized = false;
-    if (!initialized) { instance.initialize(); initialized = true; }
+    if (!initialized)
+    {
+        instance.initialize();
+        initialized = true;
+    }
     return instance;
 }
 
-inline rawrxd::IDEFeatures7& GetIDEFeatures7() {
+inline rawrxd::IDEFeatures7& GetIDEFeatures7()
+{
     static rawrxd::IDEFeatures7 instance;
     static bool initialized = false;
-    if (!initialized) { instance.initialize(); initialized = true; }
+    if (!initialized)
+    {
+        instance.initialize();
+        initialized = true;
+    }
     return instance;
 }
+
+/// CLI: `RawrXD-Win32IDE.exe --agent-wal-smoke` — filesystem-only atomic apply / rollback self-test.
+int runAgentWalCliSmokeTest();
 
 // Global IDE instance for C-callable bridges (agent streaming, etc.). Set in initProblemsPanel().
 extern Win32IDE* g_pMainIDE;
-

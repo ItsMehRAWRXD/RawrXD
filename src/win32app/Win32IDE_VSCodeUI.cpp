@@ -5,8 +5,8 @@
 #include "IDEConfig.h"
 #include "Win32IDE.h"
 #include <algorithm>
-#include <commctrl.h>
 #include <cmath>
+#include <commctrl.h>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -15,6 +15,7 @@
 #include <map>
 #include <richedit.h>
 #include <sstream>
+
 
 extern "C" void RawrXD_ApplyCopilotChatEditLimits(HWND output, HWND input);
 
@@ -126,8 +127,8 @@ std::string sanitizeChatText(const std::string& input)
 
 // VSU (Visual Studio UI) Effect Rendering with Adobe RGBa Support
 // Includes Acrylic, Mica, and elevation shadow effects for modern IDE appearance
-#include "../include/RawrXD_ColorSpace.h"
 #include "../../RawrXD_Renderer_D2D.h"
+#include "../include/RawrXD_ColorSpace.h"
 
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
@@ -201,7 +202,7 @@ static const AdobeRGBa VSCODE_ACTIVITY_BAR_BG = VSU::Acrylic::DarkBase;         
 static const AdobeRGBa VSCODE_ACTIVITY_BAR_ACTIVE = VSU::Mica::DarkTint;                   // Mica dark tint
 static const AdobeRGBa VSCODE_ACTIVITY_BAR_HOVER = AdobeRGBa(0.35f, 0.36f, 0.37f, 0.95f);  // Hover with alpha
 static const AdobeRGBa VSCODE_ACTIVITY_BAR_ICON = AdobeRGBa(0.80f, 0.80f, 0.80f, 1.00f);   // Icon color
-static const AdobeRGBa VSCODE_ACTIVITY_BAR_INDICATOR = VSU::Accents::Blue;                // Active indicator
+static const AdobeRGBa VSCODE_ACTIVITY_BAR_INDICATOR = VSU::Accents::Blue;                 // Active indicator
 
 // Sidebar and Panel with VSU Acrylic effects
 static const AdobeRGBa VSCODE_SIDEBAR_BG = VSU::Acrylic::SidebarTint;
@@ -217,11 +218,10 @@ static const AdobeRGBa SHADOW_ELEVATION_04 = VSU::Shadows::Shadow04;
 static const AdobeRGBa SHADOW_ELEVATION_08 = VSU::Shadows::Shadow08;
 
 // Helper to convert AdobeRGBa to COLORREF for legacy Win32 controls
-inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
+inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color)
+{
     auto srgb = color.TosRGB();
-    return RGB(static_cast<int>(srgb.r * 255), 
-               static_cast<int>(srgb.g * 255), 
-               static_cast<int>(srgb.b * 255));
+    return RGB(static_cast<int>(srgb.r * 255), static_cast<int>(srgb.g * 255), static_cast<int>(srgb.b * 255));
 }
 
 // Unicode icons for Activity Bar (simple ASCII fallbacks)
@@ -316,9 +316,8 @@ LRESULT CALLBACK Win32IDE::ActivityBarButtonProc(HWND hwnd, UINT uMsg, WPARAM wP
             int buttonIndex = dis->CtlID - IDC_ACTBAR_EXPLORER;
 
             // Draw background with VSU Acrylic effect
-            AdobeRGBa bgColor = (buttonIndex == pThis->m_activeActivityBarButton) 
-                ? VSCODE_ACTIVITY_BAR_ACTIVE 
-                : VSCODE_ACTIVITY_BAR_BG;
+            AdobeRGBa bgColor =
+                (buttonIndex == pThis->m_activeActivityBarButton) ? VSCODE_ACTIVITY_BAR_ACTIVE : VSCODE_ACTIVITY_BAR_BG;
 
             if (dis->itemState & ODS_SELECTED)
             {
@@ -644,6 +643,20 @@ void Win32IDE::applyMinimalAgenticCompletion(rawrxd::MinimalAgenticResponse r)
         rehydrateConversationSessionFromChatHistory();
         updateSecondarySidebarContent();
         updateEnhancedStatusBar();
+        std::string rawAssistantForStructuredFix;
+        for (auto it = r.transcript_delta.rbegin(); it != r.transcript_delta.rend(); ++it)
+        {
+            if (it->role == "assistant")
+            {
+                rawAssistantForStructuredFix = it->content;
+                break;
+            }
+        }
+        if (!rawAssistantForStructuredFix.empty())
+        {
+            maybeConsumeStructuredSlashCopilotFixFromAssistantText(rawAssistantForStructuredFix);
+        }
+        notifyCopilotChatCompletedUnlessSidebarFocused();
         return;
     }
 
@@ -667,6 +680,14 @@ void Win32IDE::applyMinimalAgenticCompletion(rawrxd::MinimalAgenticResponse r)
     {
         text = std::string("[Agentic] ") + r.error + (text.empty() ? std::string() : std::string("\n") + text);
     }
+    if (!r.final_message.empty())
+    {
+        maybeConsumeStructuredSlashCopilotFixFromAssistantText(r.final_message);
+    }
+    else if (!text.empty())
+    {
+        maybeConsumeStructuredSlashCopilotFixFromAssistantText(text);
+    }
     if (!text.empty())
     {
         appendCopilotResponse(text);
@@ -677,6 +698,7 @@ void Win32IDE::applyMinimalAgenticCompletion(rawrxd::MinimalAgenticResponse r)
         updateSecondarySidebarContent();
     }
     updateEnhancedStatusBar();
+    notifyCopilotChatCompletedUnlessSidebarFocused();
 }
 
 void Win32IDE::appendCopilotResponse(const std::string& response)
@@ -690,6 +712,11 @@ void Win32IDE::appendCopilotResponse(const std::string& response)
 
 void Win32IDE::appendModelLoadReadyCopilotTurns(const std::string& filepath, bool assistantWelcome)
 {
+    if (!smokeCopilotChatEnabled())
+    {
+        return;
+    }
+
     if (!filepath.empty())
     {
         namespace fs = std::filesystem;
