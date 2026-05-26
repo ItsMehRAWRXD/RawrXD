@@ -26,7 +26,7 @@
 #include "../modules/native_memory.hpp"
 #include "../native_agent.hpp"
 #include "../streaming_gguf_loader.h"
-#include "ExtensionEngine_bridge.h"
+//#include "ExtensionEngine_bridge.h"
 #include "IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
@@ -1358,11 +1358,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_ENDSESSION:
             if (wParam != 0)
             {
-                if (Agentic::AgenticPlanningOrchestrator* orch =
-                        Agentic::OrchestratorIntegration::instance().getOrchestrator())
-                {
-                    orch->flushPersistenceSnapshotNow();
-                }
+                // if (Agentic::AgenticPlanningOrchestrator* orch =
+                //        Agentic::OrchestratorIntegration::instance().getOrchestrator())
+                //{
+                //    orch->flushPersistenceSnapshotNow();
+                //}
             }
             break;
 
@@ -2776,7 +2776,7 @@ int Win32IDE::runMessageLoop()
             {
                 try
                 {
-                    RawrXD::Extensions::PollExtensionEngineLsp();
+                    // RawrXD::Extensions::PollExtensionEngineLsp();
                 }
                 catch (const std::exception& e)
                 {
@@ -3479,11 +3479,11 @@ void Win32IDE::onSize(int width, int height)
 
         // Hysteresis & Ghost-Width Prediction for Token-Stream Stabilization
         int desiredOutputH = inputY - gap - y;
-        if (s_isThinking.load())
-        {
-            // Reserve extra vertical buffer (ghost height) during inference
-            desiredOutputH = (std::max)(dpiScale(150), desiredOutputH - dpiScale(40));
-        }
+        // if (s_isThinking.load())
+        // {
+        //     // Reserve extra vertical buffer (ghost height) during inference
+        //     desiredOutputH = (std::max)(dpiScale(150), desiredOutputH - dpiScale(40));
+        // }
 
         DWORD now = GetTickCount();
         if (abs(desiredOutputH - m_predictedChatHeight) > dpiScale(20))
@@ -3629,7 +3629,7 @@ void Win32IDE::onSize(int width, int height)
         InvalidateRect(m_hwndMain, nullptr, TRUE);
     }
 
-    Win32IDE_AgenticBrowser_Relayout();
+    // Win32IDE_AgenticBrowser_Relayout();
 }
 
 void Win32IDE::applySovereignSnapPreset(int basePixels, const wchar_t* presetName, bool persistSession)
@@ -4414,12 +4414,12 @@ void Win32IDE::deferredHeavyInit()
                     }
                     IDELogger::getInstance().initialize(logPath);
 
-                    RawrXD::Extensions::InitializeExtensionEngine(ide->getMainWindow(), false);
+                    // RawrXD::Extensions::InitializeExtensionEngine(ide->getMainWindow(), false);
 
                     // Scenario 4: drain pipe traffic even if the UI message loop exits early.
                     for (int pollTick = 0; pollTick < 600 && !ide->isShuttingDown(); ++pollTick)
                     {
-                        RawrXD::Extensions::PollExtensionEngineLsp();
+                        // RawrXD::Extensions::PollExtensionEngineLsp();
                         Sleep(50);
                     }
                 }
@@ -5196,7 +5196,7 @@ void Win32IDE::deferredHeavyInitBody()
     startupTraceImmediate("before InitializeExtensionEngine");
     try
     {
-        RawrXD::Extensions::InitializeExtensionEngine(m_hwndMain, false);
+        // RawrXD::Extensions::InitializeExtensionEngine(m_hwndMain, false);
         startupTraceImmediate("after InitializeExtensionEngine");
     }
     catch (...)
@@ -5272,14 +5272,14 @@ void Win32IDE::deferredHeavyInitBody()
 
             // Tier 9 scaffold: bring up lock-free inference ring buffer early so
             // ghost-text/semantic telemetry can attach without blocking UI thread.
-            if (!NeuralBridge::IsInitialized())
-            {
-                NeuralBridge::Initialize("");
-                std::string neuralReport;
-                const bool neuralSmokeOk = NeuralBridge::RunSmokeTest(&neuralReport);
-                appendToOutput(std::string("[NeuralBridge] ") + neuralReport + "\n", "System",
-                               neuralSmokeOk ? OutputSeverity::Info : OutputSeverity::Warning);
-            }
+            // if (!NeuralBridge::IsInitialized())
+            // {
+            //     NeuralBridge::Initialize("");
+            //     std::string neuralReport;
+            //     const bool neuralSmokeOk = NeuralBridge::RunSmokeTest(&neuralReport);
+            //     appendToOutput(std::string("[NeuralBridge] ") + neuralReport + "\n", "System",
+            //                    neuralSmokeOk ? OutputSeverity::Info : OutputSeverity::Warning);
+            // }
         }
         catch (...)
         {
@@ -5443,7 +5443,7 @@ void Win32IDE::onDestroy()
     // Gate bridge callbacks first; this is the highest-priority teardown barrier.
     AgentBridge_BindMainWindow(nullptr);
     RawrXD::Bridge::ShutdownSwarmSystem();
-    RawrXD::Extensions::ShutdownExtensionEngine();
+    // RawrXD::Extensions::ShutdownExtensionEngine();
 
     if (m_hAccel)
     {
@@ -5824,11 +5824,13 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
     if (id == ID_ACCEL_GLOBAL_HALT)
     {
-        Win32IDEAgenticPanel::Win32IDE_AgenticPlanningPanel* panel = Win32IDEAgenticPanel::GetAgenticPlanningPanel();
+        /*
+        Win32IDE_AgenticPlanningPanel* panel = GetAgenticPlanningPanel();
         if (panel)
         {
             panel->onHaltRequested();
         }
+        */
         return;
     }
 

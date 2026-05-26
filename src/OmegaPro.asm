@@ -990,3 +990,5 @@ start:
     call MainMenu
     invoke ExitProcess, 0
 end start
+
+END

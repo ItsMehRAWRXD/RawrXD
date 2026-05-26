@@ -1,0 +1,25 @@
+; Sovereign_Action_Dispatcher.asm — Production
+include Sovereign_Common.inc
+extern g_ApiTable : SOVEREIGN_API_TABLE
+
+.code
+; RCX = Opcode (0x01: Write to Disk, 0x02: Network/Exit)
+PUBLIC Action_Dispatch
+Action_Dispatch PROC
+    cmp rcx, 01h
+    je @handle_write
+    cmp rcx, 02h
+    je @handle_exit
+    ret
+
+@handle_write:
+    ; Placeholder for WriteFile implementation using [g_ApiTable.pWriteFile]
+    ; Uses pre-mapped File Handle from pSwarm/pTPS
+    ret
+
+@handle_exit:
+    ; Trigger clean teardown
+    call Sovereign_Shutdown_Final
+    ret
+Action_Dispatch ENDP
+END

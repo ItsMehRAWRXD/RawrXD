@@ -1,6 +1,7 @@
 // IDE link gate: main_win32 references KV aperture probe entry points.
 // Full Vulkan aperture harness lives in dedicated tools; IDE build uses no-op gate.
 
+#include <cstdint>
 #include "Win32IDE_KVApertureProbe.h"
 
 #include <cstdio>

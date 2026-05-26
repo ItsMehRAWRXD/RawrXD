@@ -1222,3 +1222,5 @@ Menu proc; local c:DWORD; @@m: invoke Print, addr szBanner; invoke Print, addr s
 
 ; Entry
 start: invoke GetStdHandle, STD_INPUT_HANDLE; mov hIn, eax; invoke GetStdHandle, STD_OUTPUT_HANDLE; mov hOut, eax; call Menu; invoke ExitProcess, 0; end start
+
+END

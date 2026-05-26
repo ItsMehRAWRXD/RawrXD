@@ -163,3 +163,5 @@ dma_exec_vk:
     ; Vulkan DMA: AVX-512 non-temporal GPU-bound transfer
     push rsi
     push rdi
+
+END

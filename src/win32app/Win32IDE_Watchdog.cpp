@@ -38,7 +38,7 @@ DWORD WINAPI Win32IDE::VisibilityWatchdogThread(LPVOID param)
         // shutdown during the 2 s wait.  Exit immediately rather than touching
         // the (potentially partially destroyed) window hierarchy.
         if (InterlockedCompareExchange(&ide->m_watchdogRunning, 1, 1) != 1) break;
-        if (ide->m_shuttingDown.load(std::memory_order_acquire))            break;
+        // if (ide->m_shuttingDown.load(std::memory_order_acquire))            break;
 
         // ── 1. Minimized recovery ────────────────────────────────────────────
         if (IsIconic(hwnd)) {

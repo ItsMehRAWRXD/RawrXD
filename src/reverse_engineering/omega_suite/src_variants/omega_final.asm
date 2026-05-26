@@ -661,3 +661,4 @@ start:
     invoke MainLoop
     invoke ExitProcess, 0
 end start
+END

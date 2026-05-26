@@ -37,13 +37,22 @@ if exist "%VSWHERE%" (
 )
 
 REM Verify ml64.exe is available
-where ml64.exe >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] ml64.exe not found in PATH
-    echo         Install Visual Studio with "Desktop development with C++" workload
-    exit /b 1
+set "ML64_PATH=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
+if exist "!ML64_PATH!" (
+    set "ML64=!ML64_PATH!"
+    for %%I in ("!ML64!") do set "VC_BIN_PATH=%%~dpI"
+    set "LINKER=!VC_BIN_PATH!link.exe"
+    echo [OK] Using hardened ML64 path: !ML64_PATH!
+    echo [OK] Using hardened Linker path: !LINKER!
+) else (
+    where ml64.exe >nul 2>&1
+    if errorlevel 1 (
+        echo [ERROR] ml64.exe not found.
+        exit /b 1
+    )
+    set "ML64=ml64.exe"
+    set "LINKER=link.exe"
 )
-echo [OK] ml64.exe found
 
 REM Set working directory
 cd /d "%~dp0"
@@ -73,14 +82,14 @@ goto :build_%BUILD_TARGET%
 :build_all
 :build_ide
 echo [BUILD] RawrXD_Sovereign_Monolith.asm
-ml64.exe /c /Fo build\RawrXD_Sovereign_Monolith.obj RawrXD_Sovereign_Monolith.asm
+"!ML64!" /c /Fo build\RawrXD_Sovereign_Monolith.obj RawrXD_Sovereign_Monolith.asm
 if errorlevel 1 (
     echo [FAIL] Assembly failed: RawrXD_Sovereign_Monolith.asm
     exit /b 1
 )
 echo [OK] Assembled: RawrXD_Sovereign_Monolith.obj
 
-link.exe /ENTRY:Start /SUBSYSTEM:WINDOWS /NODEFAULTLIB /OUT:build\RawrXD_IDE.exe build\RawrXD_Sovereign_Monolith.obj
+"!LINKER!" /ENTRY:Start /SUBSYSTEM:WINDOWS /NODEFAULTLIB /OUT:build\RawrXD_IDE.exe build\RawrXD_Sovereign_Monolith.obj
 if errorlevel 1 (
     echo [FAIL] Link failed: RawrXD_IDE.exe
     exit /b 1

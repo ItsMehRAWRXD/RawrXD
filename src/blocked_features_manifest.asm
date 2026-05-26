@@ -164,3 +164,4 @@
 ; END OF MANIFEST
 ;=============================================================================</content>
 <parameter name="filePath">d:\rawrxd\src\blocked_features_manifest.txt
+END

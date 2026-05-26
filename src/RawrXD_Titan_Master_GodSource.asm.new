@@ -1,0 +1,123 @@
+include Sovereign_Common.inc
+
+extern g_ApiTable : SOVEREIGN_API_TABLE
+extern pTPS : qword
+extern pGov : qword
+
+extern Sovereign_PEB_Bootstrap:proc
+extern Sovereign_IPC_Bootstrap:proc
+extern Sovereign_LoadModel_Disk:proc
+extern Sovereign_Shutdown_Final:proc
+extern GGUF_ParseHeader:proc
+extern Kernel_DotProduct_Int8:proc
+extern Inference_Dispatch_Layer:proc
+extern Action_Dispatch:proc
+extern KV_Write_Token:proc
+
+.DATA
+    msg_boot    db "SOVEREIGN v24: PEB-Bootstrap Sequence Initiated...", 13, 10, 0
+    msg_ready   db "SOVEREIGN v24: Monolith Active.", 13, 10, 0
+    msg_infer   db "SOVEREIGN v24: Inference Governor Active.", 13, 10, 0
+    
+    ALIGN 8
+    hStdOut     dq 0
+    written     dq 0
+    pGGUFBase   dq 0
+
+.CODE
+
+Print PROC
+    push rsi
+    push rbx
+    sub rsp, 40
+    mov rsi, rcx
+    xor rbx, rbx
+loc_len:
+    cmp byte ptr [rsi+rbx], 0
+    je loc_out
+    inc rbx
+    jmp loc_len
+loc_out:
+    mov rcx, -11 ; STD_OUTPUT_HANDLE
+    call [g_ApiTable.pGetStdHandle]
+    mov hStdOut, rax
+    
+    mov rcx, rax
+    mov rdx, rsi
+    mov r8, rbx
+    lea r9, written
+    mov qword ptr [rsp+32], 0
+    call [g_ApiTable.pWriteFile]
+    
+    add rsp, 40
+    pop rbx
+    pop rsi
+    ret
+Print ENDP
+
+main PROC
+    sub rsp, 40
+
+    call Sovereign_PEB_Bootstrap
+    lea rcx, msg_boot
+    call Print
+
+    call Sovereign_IPC_Bootstrap
+    lea rcx, msg_ready
+    call Print
+
+    call Sovereign_LoadModel_Disk
+    test rax, rax
+    jz loc_shutdown
+
+    lea rcx, msg_infer
+    call Print
+
+TITAN_LOOP:
+    pause
+    mov rax, [pGov]
+    test rax, rax
+    jz TITAN_LOOP
+    
+    mov ebx, dword ptr [rax + GOV_COMMAND_OFFSET]
+    cmp ebx, 300
+    je loc_shutdown
+    
+    cmp ebx, 100
+    jne TITAN_LOOP
+    
+    mov rcx, [rax + GOV_LAYER_INDEX_OFFSET]
+    xor rdx, rdx
+    call Inference_Dispatch_Layer
+    
+    extern Sampler_ArgMax : proc
+    mov rcx, [pTPS]
+    add rcx, TPS_SCRATCH_ZONE_OFFSET
+    mov rdx, 32000
+    call Sampler_ArgMax
+    
+    mov rbx, [pGov]
+    mov [rbx + 10h], rax
+
+    mov rax, [pGov]
+    mov rcx, qword ptr [rax + 10h]
+    mov rdx, qword ptr [rax + 20h]
+    mov r8, qword ptr [rax + 28h]
+    mov r9, rdx
+    call KV_Write_Token
+    
+    mov rax, [pGov]
+    call Action_Dispatch
+    
+    mov rax, [pGov]
+    mov dword ptr [rax + GOV_COMMAND_OFFSET], 0 
+    
+    jmp TITAN_LOOP
+
+loc_shutdown:
+    call Sovereign_Shutdown_Final
+    add rsp, 40
+    ret
+main ENDP
+
+END

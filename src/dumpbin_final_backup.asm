@@ -2335,3 +2335,5 @@ szFmtResFilename    db "res_%04X_%04X_%04X.bin", 0
 szFmtResExtracted   db "[+] Extracted: %s", 0Dh, 0Ah, 0
 
 END main
+
+END

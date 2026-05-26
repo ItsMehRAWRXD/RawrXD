@@ -338,3 +338,4 @@ RunFullAnalysis PROC
     mov ecx, OFFSET szStatusDecomp
     call Print
    
+END

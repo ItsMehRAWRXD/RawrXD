@@ -1242,8 +1242,8 @@ void CLI_InitializeSlashRouter(void* inferenceEngine, void* agenticEngine)
     RawrXD::CLI::InitializeCLISlashRouter(
         std::shared_ptr<RawrXD::CPUInferenceEngine>(
             static_cast<RawrXD::CPUInferenceEngine*>(inferenceEngine)),
-        std::shared_ptr<AgenticEngine>(
-            static_cast<AgenticEngine*>(agenticEngine))
+        std::shared_ptr<RawrXD::AgenticEngine>(
+            static_cast<RawrXD::AgenticEngine*>(agenticEngine))
     );
 }
 

@@ -1287,3 +1287,5 @@ szTemplateIncludes      BYTE    "#include <windows.h>", 13, 10
                         BYTE    "#include <stdbool.h>", 13, 10, 13, 10, 0
 
 END main
+
+END

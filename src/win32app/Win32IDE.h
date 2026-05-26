@@ -29,14 +29,6 @@
 #define WM_AI_BACKEND_STATUS (WM_USER + 0x500)  // wParam: 1=connected 0=offline
 #endif
 
-#ifndef _Return_type_success_
-#define _Return_type_success_(expr)
-#endif
-
-#ifndef CALLBACK
-#define CALLBACK __stdcall
-#endif
-
 // Keep common-control/dialog headers in implementation files to reduce
 // transitive WinSDK surface in this mega-header.
 
@@ -93,10 +85,6 @@ struct DownloadProgress;
 #include "rawrxd/rawrxd_software_raster.h"
 #include "rawrxd/rawrxd_workspace_matrix.h"
 #include <nlohmann/json.hpp>
-
-
-using json = nlohmann::json;
-
 
 class Win32IDE;
 void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide);
@@ -326,7 +314,6 @@ class Win32IDE
 {
     friend class AgenticBridge;
     friend class Win32IDE_DAPServer;
-    friend class Win32IDE_DAPServer;
     friend class Win32IDE_TabManager;
     friend class Win32IDE_AgenticBridge;
     friend class Win32IDE_Autonomy;
@@ -350,12 +337,33 @@ class Win32IDE
     friend RawrXD::ExtensionPanelWindow* GetOrCreateExtensionPanel(Win32IDE* ide, HWND hwndMain, HINSTANCE hInst);
     friend class AgentEditSession;
 
-  public:
+  private:
     // WAL rollbacks: full definitions in Win32IDE_Types.h; aliases keep Win32IDE:: qualified names stable for TUs that
     // include only Win32IDE.h.
-    using AIFileRollbackRecord = ::AIFileRollbackRecord;
+
     using AIEditTransaction = ::AIEditTransaction;
 
+    enum class ExecutionMode
+    {
+        Safe = 0,    // Shadow mode: propose only, no auto-apply
+        Normal = 1,  // Standard: apply after user confirmation
+        Unsafe = 2,  // Direct apply: no confirmation, auto-execute
+        Kernel = 3   // System-level: requires explicit compile-time gate
+    };
+
+  public:
+    // ---- Hybrid completion result (moved here to fix forward-reference) ----
+    struct HybridCompletionItem
+    {
+        std::string label;
+        std::string detail;
+        std::string insertText;
+        std::string source;  // "lsp", "ai", "asm", "merged"
+        float confidence = 0.0f;
+        int sortOrder = 0;
+    };
+
+  public:
     RawrXD::ExtensionInstaller* getExtensionInstaller() { return m_extensionInstaller.get(); }
     void runWorkspaceSearchFromDialog(const std::string& query);
     void deferredHeavyInitBody();  // SEH-safe body, called from bg thread via sehRunBgThread
@@ -375,25 +383,6 @@ class Win32IDE
         Output = 1,
         Problems = 2,
         DebugConsole = 3
-    };
-
-    enum class ExecutionMode
-    {
-        Safe = 0,    // Shadow mode: propose only, no auto-apply
-        Normal = 1,  // Standard: apply after user confirmation
-        Unsafe = 2,  // Direct apply: no confirmation, auto-execute
-        Kernel = 3   // System-level: requires explicit compile-time gate
-    };
-
-    // ---- Hybrid completion result (moved here to fix forward-reference) ----
-    struct HybridCompletionItem
-    {
-        std::string label;
-        std::string detail;
-        std::string insertText;
-        std::string source;  // "lsp", "ai", "asm", "merged"
-        float confidence = 0.0f;
-        int sortOrder = 0;
     };
 
     Win32IDE(HINSTANCE hInstance);
@@ -904,7 +893,7 @@ class Win32IDE
     void triggerSpeculativePrefetch();  // Background completion request to mask first-token latency
     void renderSuggestionTint(HDC hdc);
     void renderGhostText(HDC hdc);
-    bool handleGhostTextKey(UINT vk, bool ctrlDown = false, bool shiftDown = false);
+    bool handleGhostTextKey(UINT vk, bool ctrlDown = false, bool shiftDown = false, bool altDown = false);
     bool handleGhostTextTypedChar(wchar_t ch);
     /// `/vulkan`, `/pager`, `/kill-locks`, `/clear`, `/explain`, `/fix`, `/test`, `/doc`, `/optimize` on Enter (where
     /// applicable).

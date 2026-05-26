@@ -176,3 +176,5 @@ PeWriter_Init ENDP
 ; Emitter_Init
 ; rcx: EmitterContext*
 ; rdx: buffer (passed in r8)
+
+END

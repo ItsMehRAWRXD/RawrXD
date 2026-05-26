@@ -378,3 +378,5 @@ externdef printf:proc
 externdef _getch:proc
 
 end main
+
+END

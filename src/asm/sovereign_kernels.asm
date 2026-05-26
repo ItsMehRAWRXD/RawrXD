@@ -3,7 +3,7 @@
 ; Pure x64 MASM (ml64.exe). Zero CRT. AVX2 + F16C.
 ; Real compute primitives for sovereign CPU inference fallback.
 ; ============================================================================
-.code
+.CODE
 OPTION DOTNAME
 
 ; ----------------------------------------------------------------------------
@@ -249,7 +249,7 @@ mv_done:
     ret
 Sovereign_MatVec_F32_AVX2 ENDP
 
-.data
+.DATA
 ALIGN 16
 mask_0F     db 16 dup(0Fh), 16 dup(0Fh)
 center_8    dd 8 dup(8.0)

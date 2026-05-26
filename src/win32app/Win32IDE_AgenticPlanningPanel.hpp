@@ -17,8 +17,7 @@ class AgenticPlanningOrchestrator;
 struct ExecutionPlan;
 }  // namespace Agentic
 
-namespace Win32IDE
-{
+// Removed namespace Win32IDE to fix C2757
 
 class Win32IDE_AgenticPlanningPanel
 {
@@ -101,5 +100,3 @@ class Win32IDE_AgenticPlanningPanel
 };
 
 Win32IDE_AgenticPlanningPanel* GetAgenticPlanningPanel();
-
-}  // namespace Win32IDE

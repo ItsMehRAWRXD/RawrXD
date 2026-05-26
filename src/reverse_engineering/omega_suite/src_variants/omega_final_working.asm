@@ -697,3 +697,4 @@ start:
     ; Exit
     INVOKE ExitProcess, 0
 end start
+END

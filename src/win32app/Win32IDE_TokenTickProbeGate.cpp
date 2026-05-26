@@ -1,5 +1,6 @@
 // IDE link gate: token-per-tick harness entry points (Lane H).
 
+#include <cstdint>
 #include "Win32IDE_TokenTickProbe.h"
 
 #include <cstdio>

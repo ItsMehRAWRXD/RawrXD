@@ -24,7 +24,15 @@ namespace RawrXD {
 
 // Forward declarations
 class CPUInferenceEngine;
-class AgenticEngine;
+class AgenticEngine {
+public:
+    void setContextWindow(int) {}
+    std::string chat(const std::string&) { return ""; }
+    void planTask(const std::string&) {}
+    void bugReport(const std::string&) {}
+    void codeSuggestions(const std::string&) {}
+    std::string generateCode(const std::string&) { return ""; }
+};
 
 /**
  * InteractiveShell - A fully-featured interactive shell for CLI/GUI AI interactions

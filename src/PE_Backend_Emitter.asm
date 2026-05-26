@@ -735,7 +735,7 @@ Resolve_Proc_Hash PROC
     add     rbx, rax
     mov     edi, [rbx + 0x88]
     test    edi, edi
-    jz      .not_found
+    jz      @not_found
     add     rbx, rdi
     mov     esi, [rbx + 24]
     mov     rdi, [rbx + 32]

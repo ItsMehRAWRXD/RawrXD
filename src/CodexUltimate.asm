@@ -1558,3 +1558,5 @@ szFuncTemplate          BYTE    "%s %s(void); // Export ordinal: %d", 13, 10, 0
 szSourceEntry           BYTE    "    src/%s.c", 13, 10, 0
 
 END main
+
+END

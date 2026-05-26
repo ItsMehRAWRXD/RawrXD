@@ -733,6 +733,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 0;
 
         case WM_KEYDOWN:
+            // Cmd+K Quick Edit
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_SHIFT) & 0x8000) &&
+                !(GetKeyState(VK_MENU) & 0x8000) && (wParam == 'K'))
+            {
+                wchar_t instructionBuffer[1024] = {};
+                if (DialogBoxWithInput(L"Agentic Quick Edit", L"Provide edit instructions:", instructionBuffer, 1024))
+                {
+                    int utf8len = WideCharToMultiByte(CP_UTF8, 0, instructionBuffer, -1, NULL, 0, NULL, NULL);
+                    if (utf8len > 0)
+                    {
+                        std::string instr(utf8len, 0);
+                        WideCharToMultiByte(CP_UTF8, 0, instructionBuffer, -1, &instr[0], utf8len, NULL, NULL);
+                        instr.pop_back(); // Remove null terminator
+                        postEditorSlashChatPrompt("fix", m_hwndEditor, instr);
+                    }
+                }
+                return 0;
+            }
+
             // Command Palette from main window (e.g. when frame has focus)
             if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000) && (wParam == 'P'))
             {

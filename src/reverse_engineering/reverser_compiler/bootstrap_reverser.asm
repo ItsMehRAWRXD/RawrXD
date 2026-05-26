@@ -458,3 +458,5 @@ section .data
     binary_op_code db "    pop rbx", 10, "    pop rax", 10, "    add rax, rbx", 10, "    push rax", 10, 0
     literal_code db "    mov rax, 42", 10, "    push rax", 10, 0
     identifier_code db "    ; identifier", 10, 0
+
+END

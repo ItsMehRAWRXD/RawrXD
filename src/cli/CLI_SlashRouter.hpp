@@ -67,6 +67,8 @@ public:
     std::string sendMessageToModel(const std::string& prompt);
     bool loadModelFromPath(const std::string& path);
     
+    bool m_currentFileContextEnabled = false;
+
     // Current File Context Toggle
     bool isCurrentFileContextEnabled() const { return m_currentFileContextEnabled; }
     void setCurrentFileContextEnabled(bool enabled) { m_currentFileContextEnabled = enabled; }

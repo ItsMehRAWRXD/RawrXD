@@ -329,3 +329,4 @@ start:
     invoke main_loop
     invoke ExitProcess, 0
 end start
+END

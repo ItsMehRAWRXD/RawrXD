@@ -1264,3 +1264,4 @@ start:
     INVOKE MainLoop
     INVOKE ExitProcess, 0
 end start
+END

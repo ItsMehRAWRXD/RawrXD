@@ -999,3 +999,5 @@ szTemplateIncludes      BYTE    "#include <windows.h>", 13, 10, 0
 szStatusError           BYTE    "Error loading file", 13, 10, 0
 
 END main
+
+END

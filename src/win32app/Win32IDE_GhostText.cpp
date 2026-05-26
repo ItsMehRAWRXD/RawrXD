@@ -3476,7 +3476,7 @@ void Win32IDE::renderGhostText(HDC hdc)
 // KEY HANDLER — intercepts Tab/Esc in editor subclass
 // ============================================================================
 
-bool Win32IDE::handleGhostTextKey(UINT vk)
+bool Win32IDE::handleGhostTextKey(UINT vk, bool ctrlDown, bool shiftDown, bool altDown)
 {
     if (vk == VK_ESCAPE)
     {
@@ -3497,6 +3497,32 @@ bool Win32IDE::handleGhostTextKey(UINT vk)
 
     if (!m_ghostTextVisible)
         return false;
+
+    if (altDown && !ctrlDown && !shiftDown)
+    {
+        if (vk == VK_OEM_6) // Alt+]
+        {
+            std::lock_guard<std::mutex> lock(m_completionCandidatesMutex);
+            if (m_completionCandidates.size() > 1) {
+                m_completionSelectedIndex = (m_completionSelectedIndex + 1) % m_completionCandidates.size();
+                m_ghostTextCommitContent = trimGhostText(m_completionCandidates[m_completionSelectedIndex].insertText);
+                m_ghostTextContent = m_ghostTextCommitContent;
+                InvalidateRect(m_hwndEditor, nullptr, FALSE);
+            }
+            return true;
+        }
+        else if (vk == VK_OEM_4) // Alt+[
+        {
+            std::lock_guard<std::mutex> lock(m_completionCandidatesMutex);
+            if (m_completionCandidates.size() > 1) {
+                m_completionSelectedIndex = (m_completionSelectedIndex + m_completionCandidates.size() - 1) % m_completionCandidates.size();
+                m_ghostTextCommitContent = trimGhostText(m_completionCandidates[m_completionSelectedIndex].insertText);
+                m_ghostTextContent = m_ghostTextCommitContent;
+                InvalidateRect(m_hwndEditor, nullptr, FALSE);
+            }
+            return true;
+        }
+    }
 
     if (vk == VK_TAB)
     {

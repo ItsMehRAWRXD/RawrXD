@@ -5,11 +5,13 @@
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 add_test([=[smoke_test_measurement_integration]=] "D:/rawrxd/build-ninja/bin/smoke_test_measurement_integration.exe")
-set_tests_properties([=[smoke_test_measurement_integration]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/CMakeLists.txt;5820;add_test;D:/rawrxd/CMakeLists.txt;0;")
+set_tests_properties([=[smoke_test_measurement_integration]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/CMakeLists.txt;6066;add_test;D:/rawrxd/CMakeLists.txt;0;")
 add_test([=[e2e_integration_test]=] "D:/rawrxd/build-ninja/bin/e2e_integration_test.exe")
-set_tests_properties([=[e2e_integration_test]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/CMakeLists.txt;5836;add_test;D:/rawrxd/CMakeLists.txt;0;")
+set_tests_properties([=[e2e_integration_test]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/CMakeLists.txt;6082;add_test;D:/rawrxd/CMakeLists.txt;0;")
 add_test([=[agent_workflow_orchestrator_smoke]=] "D:/rawrxd/build-ninja/bin/agent_workflow_orchestrator_smoke.exe")
-set_tests_properties([=[agent_workflow_orchestrator_smoke]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/CMakeLists.txt;5864;add_test;D:/rawrxd/CMakeLists.txt;0;")
+set_tests_properties([=[agent_workflow_orchestrator_smoke]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/CMakeLists.txt;6110;add_test;D:/rawrxd/CMakeLists.txt;0;")
+add_test([=[RawrXD-GhostSoak]=] "D:/rawrxd/build-ninja/bin/RawrXD-GhostSoak.exe" "--iterations" "200" "--max-inflight" "16" "--timeout-ms" "1500")
+set_tests_properties([=[RawrXD-GhostSoak]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/CMakeLists.txt;6137;add_test;D:/rawrxd/CMakeLists.txt;0;")
 subdirs("src")
 subdirs("src/reverse_engineering")
 subdirs("src/tools/tokenizer_roundtrip_test")

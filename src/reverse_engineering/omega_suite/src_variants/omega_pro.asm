@@ -123,3 +123,5 @@ MM proc; local c:DWORD; @@m: invoke P, addr szV; invoke P, addr szM; call RI; mo
 
 main proc; invoke GetStdHandle, STD_INPUT_HANDLE; mov hIn, eax; invoke GetStdHandle, STD_OUTPUT_HANDLE; mov hOut, eax; call MM; invoke ExitProcess, 0; main endp
 end main
+
+END

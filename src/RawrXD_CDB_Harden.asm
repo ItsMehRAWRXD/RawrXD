@@ -1081,10 +1081,10 @@ SwarmV24D_Elastic_Stream_Reconciliation PROC
     lock add [rdi + 256], 1 ; Atomic Increment SequenceID
     mov eax, [rsi + 12]     ; Get PacketSequence
     cmp eax, [rdi + 256]
-    jne .BufferPending      ; Out-of-order arrival -> Staging Buffer
+    jne @BufferPending      ; Out-of-order arrival -> Staging Buffer
     call UI_Surface3_CommitToken
     ret
-.BufferPending:
+@BufferPending:
     ; Stage for re-ordering logic...
     ret
 SwarmV24D_Elastic_Stream_Reconciliation ENDP
@@ -1095,14 +1095,14 @@ align 16
 SwarmV24D_Multiplex_Session_Fence PROC
     mov rax, cr8            ; Check Task Priority
     cmp rax, 15
-    jne .Exit
+    jne @Exit
     lock bts qword ptr [g_TensorMeshLock], 0 ; Atomic Spinlock for 140B weight access
     jc .Spin
     ret
-.Spin:
+@Spin:
     pause
     jmp SwarmV24D_Multiplex_Session_Fence
-.Exit:
+@Exit:
     ret
 SwarmV24D_Multiplex_Session_Fence ENDP
 
@@ -1130,9 +1130,9 @@ SwarmV24D_Stream_Jitter_Compensation PROC
     rdtsc
     sub rax, [g_LastTokenTSC]
     cmp rax, [g_TargetTokenDelta]
-    jb .Wait
+    jb @Wait
     ret
-.Wait:
+@Wait:
     pause
     jmp SwarmV24D_Stream_Jitter_Compensation
 SwarmV24D_Stream_Jitter_Compensation ENDP
@@ -1181,9 +1181,9 @@ SwarmV27_Deep_History_Folding ENDP
 align 16
 SwarmV27_Autonomous_Relinker PROC
     call RX_CRC64_Verify_Active_Text
-    jnz .PatchRequired
+    jnz @PatchRequired
     ret
-.PatchRequired:
+@PatchRequired:
     call PE_Emitter_HotPatch_Internal
     ret
 SwarmV27_Autonomous_Relinker ENDP

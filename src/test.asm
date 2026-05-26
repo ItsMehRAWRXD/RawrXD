@@ -1,0 +1,9 @@
+include
+Sovereign_Common.inc
+.code
+main
+proc
+ret
+main
+endp
+end

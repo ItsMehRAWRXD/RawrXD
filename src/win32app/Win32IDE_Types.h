@@ -582,3 +582,19 @@ struct AgentHistoryStats
     int ghostTextAccepted = 0;
     int totalDurationMs = 0;
 };
+
+struct AIFileRollbackRecord {
+    enum class Op {
+        Create,
+        Replace,
+        Delete
+    };
+    std::string path;
+    Op op;
+    std::string originalContent;
+};
+
+struct AIEditTransaction {
+    std::vector<AIFileRollbackRecord> files;
+    uint64_t txId;
+};

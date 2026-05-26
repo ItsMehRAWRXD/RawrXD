@@ -128,6 +128,18 @@ gHasF16C        DWORD 0
 .DATA?
 
 ALIGN 16
+; Ensure tensors are isolated on page boundaries
+Tensor_DeQuant_Buffer dd 938940 dup(?) 
+
+.DATA
+ALIGN 16
+RedZone_Guard db 4096 dup(0CCh)
+.DATA? 
+
+ALIGN 16
+Next_Component_Buffer db 4096 dup(?)
+
+ALIGN 16
 hStdout         QWORD ?
 dwBytesWritten  DWORD ?
 numBuf          BYTE 64 DUP(?)
@@ -321,18 +333,16 @@ detect_cpu ENDP
 ; Value = (nibble - 8) * scale
 ;==============================================================================
 dequant_q4_0_scalar PROC FRAME
-    push    rbp
-    .pushreg rbp
-    mov     rbp, rsp
-    .setframe rbp, 0
-    sub     rsp, 28h
-    .allocstack 28h
     push    rbx
     .pushreg rbx
     push    rsi
     .pushreg rsi
     push    rdi
     .pushreg rdi
+    push    rbp
+    .pushreg rbp
+    sub     rsp, 20h
+    .allocstack 20h
     .endprolog
 
     mov     rsi, rcx            ; block ptr
@@ -416,42 +426,39 @@ dequant_q4_0_scalar PROC FRAME
     ; Now dequantize 16 quant bytes = 32 values
     ; quants start at offset 2
     add     rsi, 2
+    lea     rbx, [rsi + 16]     ; End pointer for input (exclusive)
 
-    xor     ebx, ebx            ; quant byte index
 @@q4_loop:
-    cmp     ebx, 16
-    jge     @@q4_done
+    cmp     rsi, rbx
+    jae     @@q4_done
 
-    movzx   eax, BYTE PTR [rsi+rbx]
+    movzx   eax, BYTE PTR [rsi]
 
-    ; Low nibble → value index = ebx*2
+    ; Low nibble → output at [rdi]
     mov     ecx, eax
     and     ecx, 0Fh
     sub     ecx, 8              ; center around 0
     cvtsi2ss xmm1, ecx
     mulss   xmm1, xmm0
-    mov     ecx, ebx
-    shl     ecx, 1              ; output index = ebx*2
-    movss   DWORD PTR [rdi+rcx*4], xmm1
+    movss   DWORD PTR [rdi], xmm1
 
-    ; High nibble → value index = ebx*2 + 1
+    ; High nibble → output at [rdi+4]
     shr     eax, 4
     sub     eax, 8
     cvtsi2ss xmm1, eax
     mulss   xmm1, xmm0
-    mov     ecx, ebx
-    shl     ecx, 1
-    inc     ecx                 ; output index = ebx*2 + 1
-    movss   DWORD PTR [rdi+rcx*4], xmm1
+    movss   DWORD PTR [rdi+4], xmm1
 
-    inc     ebx
+    add     rsi, 1
+    add     rdi, 8
     jmp     @@q4_loop
 
 @@q4_done:
+    add     rsp, 20h
+    pop     rbp
     pop     rdi
     pop     rsi
     pop     rbx
-    leave
     ret
 dequant_q4_0_scalar ENDP
 
@@ -462,12 +469,8 @@ dequant_q4_0_scalar ENDP
 ; RDX = output float32 array
 ;==============================================================================
 dequant_q4_0_avx2 PROC FRAME
-    push    rbp
-    .pushreg rbp
-    mov     rbp, rsp
-    .setframe rbp, 0
-    sub     rsp, 20h
-    .allocstack 20h
+    sub     rsp, 28h
+    .allocstack 28h
     .endprolog
 
     ; Check AVX2 available
@@ -531,14 +534,13 @@ dequant_q4_0_avx2 PROC FRAME
     vmovups YMMWORD PTR [rdx+96], ymm6  ; store values 24-31
 
     vzeroupper
-    leave
+    add     rsp, 28h
     ret
 
 @@fallback_scalar:
     ; Fall through to scalar version
-    call    dequant_q4_0_scalar
-    leave
-    ret
+    add     rsp, 28h
+    jmp     dequant_q4_0_scalar
 dequant_q4_0_avx2 ENDP
 
 ;==============================================================================
@@ -554,12 +556,6 @@ dequant_q4_0_avx2 ENDP
 ; RCX = block ptr, RDX = output float32[256]
 ;==============================================================================
 dequant_q5_k_scalar PROC FRAME
-    push    rbp
-    .pushreg rbp
-    mov     rbp, rsp
-    .setframe rbp, 0
-    sub     rsp, 48h
-    .allocstack 48h
     push    rbx
     .pushreg rbx
     push    rsi
@@ -574,6 +570,8 @@ dequant_q5_k_scalar PROC FRAME
     .pushreg r14
     push    r15
     .pushreg r15
+    sub     rsp, 30h
+    .allocstack 30h
     .endprolog
 
     mov     rsi, rcx            ; block ptr
@@ -591,125 +589,94 @@ dequant_q5_k_scalar PROC FRAME
     vcvtph2ps xmm1, xmm1       ; xmm1 = dmin (f32)
     movss   DWORD PTR [rsp+18h], xmm1   ; save dmin
 
-    ; Process 8 sub-blocks of 32 values each
-    ; Scales at offset 4, qh at offset 20, qs at offset 52
-    xor     r12d, r12d          ; sub-block index (0..7)
+    ; Setting up hardware boundary pointers and loop state
+    xor     r12, r12            ; r12 = sub_index (0..7)
+    lea     r14, [rsi+48]       ; r14 = qs_ptr Base
+    lea     r10, [rsi+16]       ; r10 = qh_ptr Base
+    lea     r9,  [rdi+1024]     ; r9  = out_end_ptr (Boundary)
 
 @@q5_subblock:
-    cmp     r12d, 8
-    jge     @@q5_done
+    cmp     rdi, r9             ; Boundary check
+    jae     @@q5_done
 
-    ; Get scale and min for this sub-block
-    ; scales: 12 bytes at offset 4 (indices 0..11). sub*2 must be < 12.
-    mov     eax, r12d
-    shl     eax, 1              ; sub * 2
-    cmp     eax, 12
-    jge     @@q5_scale_zero     ; sub >= 6: scale array overflow
-    movzx   r13d, BYTE PTR [rsi+4+rax]     ; raw scale byte
+    ; Fixed-Displacement Scaling Access
+    mov     rax, r12
+    shl     rax, 1
+    cmp     rax, 12
+    jge     @@q5_scale_zero     ; Safety boundary
 
-    ; sc = scales[sub*2] & 0x3F
-    mov     r14d, r13d
-    and     r14d, 3Fh           ; 6-bit scale
+    movzx   r13d, BYTE PTR [rsi+4+rax]
+    mov     ebx, r13d
+    and     ebx, 3Fh            ; ebx = sc
 
-    ; m = scales[sub*2+1] & 0x3F
-    movzx   r15d, BYTE PTR [rsi+5+rax]
-    and     r15d, 3Fh           ; 6-bit min
+    movzx   r15d, BYTE PTR [rsi+5+r12]
+    and     r15d, 3Fh           ; r15d = m
     jmp     @@q5_got_scale
 
 @@q5_scale_zero:
-    xor     r14d, r14d          ; sc = 0
-    xor     r15d, r15d          ; m = 0
+    xor     ebx, ebx
+    xor     r15d, r15d
+
 @@q5_got_scale:
+    cvtsi2ss xmm2, ebx
+    movss   xmm3, DWORD PTR [rsp+10h]
+    mulss   xmm2, xmm3          ; xmm2 = d * sc
 
-    ; Effective scale = d * sc
-    cvtsi2ss xmm2, r14d
-    movss   xmm3, DWORD PTR [rsp+10h]  ; d
-    mulss   xmm2, xmm3                  ; xmm2 = d * sc
-
-    ; Effective min = dmin * m
     cvtsi2ss xmm3, r15d
-    movss   xmm4, DWORD PTR [rsp+18h]  ; dmin
-    mulss   xmm3, xmm4                  ; xmm3 = dmin * m
+    movss   xmm4, DWORD PTR [rsp+18h]
+    mulss   xmm3, xmm4          ; xmm3 = dmin * m
 
-    ; Process 32 values in this sub-block
-    ; qs offset for this sub-block: 48 + sub*16
-    mov     eax, r12d
-    shl     eax, 4              ; sub * 16
-    add     eax, 48
-    mov     r14d, eax           ; qs_offset
+    ; Pointer-End Walk Prep
+    lea     rbx, [r14+16]       ; rbx = qs_ptr_end for this subblock
 
-    ; qh offset: 16 + sub*4
-    mov     eax, r12d
-    shl     eax, 2              ; sub * 4
-    add     eax, 16
-    mov     r15d, eax           ; qh_offset
+    ; Fast Bit-Stream Extraction (Replaces IMUL/address math)
+    mov     eax, DWORD PTR [r10] ; Load 32-bit qh stream directly
+    mov     ecx, eax
+    and     ecx, 0FFFFh          ; ecx = Low nibble bits
+    shr     eax, 16              
+    mov     edx, eax             ; edx = High nibble bits
 
-    xor     ebx, ebx            ; value pair index (0..15)
 @@q5_pair:
-    cmp     ebx, 16
-    jge     @@q5_next_sub
+    cmp     r14, rbx
+    jae     @@q5_next_sub
 
-    ; Read quant byte (2 values packed)
-    movzx   eax, BYTE PTR [rsi+r14]
-    inc     r14d
+    movzx   eax, BYTE PTR [r14]  ; Streaming Load qs
+    inc     r14                  ; Pointer-walk qs
 
-    ; Read 5th bit from qh
-    mov     ecx, ebx
-    shr     ecx, 3              ; qh byte index
-    add     ecx, r15d
-    movzx   edx, BYTE PTR [rsi+rcx]
-    mov     ecx, ebx
-    and     ecx, 7              ; bit position
-
-    ;--- Low nibble (value index = sub*32 + pair*2) ---
+    ; --- Low nibble ---
     mov     r8d, eax
-    and     r8d, 0Fh            ; 4 low bits
-    ; Get 5th bit
-    bt      edx, ecx
+    and     r8d, 0Fh
+    shr     ecx, 1               ; Stream 5th bit into CF
     jnc     @@no_bit5_lo
-    or      r8d, 10h            ; set bit 4 (5th bit of value)
+    or      r8d, 10h             ; Apply 5th bit
 @@no_bit5_lo:
-    ; value = d*sc*(q5) - dmin*m
     cvtsi2ss xmm5, r8d
-    mulss   xmm5, xmm2         ; d*sc*q5
-    subss   xmm5, xmm3         ; - dmin*m
+    mulss   xmm5, xmm2
+    subss   xmm5, xmm3
+    movss   DWORD PTR [rdi], xmm5 ; Streaming Store output
+    add     rdi, 4                ; Pointer-walk output
 
-    ; Store
-    mov     ecx, r12d
-    shl     ecx, 5              ; sub * 32
-    mov     r8d, ebx
-    shl     r8d, 1              ; pair * 2
-    add     ecx, r8d
-    movss   DWORD PTR [rdi+rcx*4], xmm5
-
-    ;--- High nibble (value index = sub*32 + pair*2 + 1) ---
+    ; --- High nibble ---
     shr     eax, 4
-    ; 5th bit for high nibble — use next bit position
-    mov     r8d, ebx
-    add     r8d, 16             ; high nibble bits are in upper half
-    mov     r9d, r8d
-    shr     r9d, 3
-    add     r9d, r15d
-    movzx   r10d, BYTE PTR [rsi+r9]
-    and     r8d, 7
-    bt      r10d, r8d
+    shr     edx, 1               ; Stream 5th bit into CF
     jnc     @@no_bit5_hi
-    or      eax, 10h
+    or      eax, 10h             ; Apply 5th bit
 @@no_bit5_hi:
     cvtsi2ss xmm5, eax
     mulss   xmm5, xmm2
     subss   xmm5, xmm3
-    inc     ecx                 ; next value slot
-    movss   DWORD PTR [rdi+rcx*4], xmm5
+    movss   DWORD PTR [rdi], xmm5 ; Streaming Store output
+    add     rdi, 4                ; Pointer-walk output
 
-    inc     ebx
     jmp     @@q5_pair
 
 @@q5_next_sub:
-    inc     r12d
+    inc     r12                  ; Next subblock
+    add     r10, 4               ; Pointer-walk qh_ptr
     jmp     @@q5_subblock
 
 @@q5_done:
+    add     rsp, 30h
     pop     r15
     pop     r14
     pop     r13
@@ -717,7 +684,6 @@ dequant_q5_k_scalar PROC FRAME
     pop     rdi
     pop     rsi
     pop     rbx
-    leave
     ret
 dequant_q5_k_scalar ENDP
 
@@ -729,12 +695,6 @@ dequant_q5_k_scalar ENDP
 ; All row-major.
 ;==============================================================================
 simd_matmul_f32 PROC FRAME
-    push    rbp
-    .pushreg rbp
-    mov     rbp, rsp
-    .setframe rbp, 0
-    sub     rsp, 48h
-    .allocstack 48h
     push    rbx
     .pushreg rbx
     push    rsi
@@ -749,71 +709,75 @@ simd_matmul_f32 PROC FRAME
     .pushreg r14
     push    r15
     .pushreg r15
+    sub     rsp, 30h
+    .allocstack 30h
     .endprolog
 
     mov     rsi, rcx            ; A
     mov     rdi, rdx            ; B
-    mov     r15, r8             ; C
+    mov     r9, r8              ; C
     mov     r12d, r9d           ; M
-    mov     r13d, DWORD PTR [rbp+30h]   ; K (5th param on stack)
-    mov     r14d, DWORD PTR [rbp+38h]   ; N (6th param on stack)
+    mov     r13d, DWORD PTR [rsp+30h+38h+28h]   ; K (5th param)
+    mov     r14d, DWORD PTR [rsp+30h+38h+30h]   ; N (6th param)
 
-    ; For each row i of A
-    xor     ebx, ebx            ; i = 0
+    ; Calculate Strides
+    mov     eax, r13d
+    shl     rax, 2
+    mov     r13, rax            ; r13 = stride_A (K * 4)
+
+    mov     eax, r14d
+    shl     rax, 2
+    mov     r14, rax            ; r14 = stride_B (N * 4)
+
+    ; Calculate Absolute End Boundaries
+    mov     eax, r12d
+    mul     r13                 ; rax = M * stride_A
+    lea     r12, [rsi + rax]    ; r12 = A_end (Boundary)
+
+    lea     rdx, [rdi + r14]    ; rdx = B_col_end (Boundary)
+    mov     r10, rsi            ; r10 = A_row_ptr
+
 @@mm_row:
-    cmp     ebx, r12d
-    jge     @@mm_done
+    cmp     r10, r12
+    jae     @@mm_done
 
-    ; For each column j of B
-    xor     ecx, ecx            ; j = 0
+    mov     rcx, rdi            ; rcx = B_col_ptr
 @@mm_col:
-    cmp     ecx, r14d
-    jge     @@mm_next_row
+    cmp     rcx, rdx
+    jae     @@mm_next_row
 
-    ; Compute C[i][j] = sum over k: A[i][k] * B[k][j]
-    vxorps  ymm0, ymm0, ymm0   ; accumulator
+    vxorps  xmm0, xmm0, xmm0    ; xmm0 = temp sum
 
-    xor     edx, edx            ; k = 0
+    lea     r15, [r10 + r13]    ; r15 = A_row_end
+    mov     rax, r10            ; rax = A_ptr
+    mov     r11, rcx            ; r11 = B_ptr
 
 @@mm_scalar_k:
-    cmp     edx, r13d
-    jge     @@mm_hsum
+    cmp     rax, r15
+    jae     @@mm_hsum
 
-    ; A[i][k]
-    mov     eax, ebx
-    imul    eax, r13d
-    add     eax, edx
-    vmovss  xmm1, DWORD PTR [rsi+rax*4]
-
-    ; B[k][j]
-    mov     eax, edx
-    imul    eax, r14d
-    add     eax, ecx
-    vmovss  xmm2, DWORD PTR [rdi+rax*4]
-
-    ; FMA: acc += A[i][k] * B[k][j]
+    vmovss  xmm1, DWORD PTR [rax]
+    vmovss  xmm2, DWORD PTR [r11]
     vfmadd231ss xmm0, xmm1, xmm2
 
-    inc     edx
+    add     rax, 4              ; Pointer-walk A
+    add     r11, r14            ; Pointer-walk B
     jmp     @@mm_scalar_k
 
 @@mm_hsum:
-    ; Store C[i][j]
-    mov     eax, ebx
-    imul    eax, r14d
-    add     eax, ecx
-    vmovss  DWORD PTR [r15+rax*4], xmm0
-
-    inc     ecx
+    vmovss  DWORD PTR [r9], xmm0
+    add     r9, 4               ; Pointer-walk C output stream
+    add     rcx, 4              ; Pointer-walk B col base
     jmp     @@mm_col
 
 @@mm_next_row:
-    inc     ebx
+    add     r10, r13            ; Pointer-walk A row base
     jmp     @@mm_row
 
 @@mm_done:
     vzeroupper
 
+    add     rsp, 30h
     pop     r15
     pop     r14
     pop     r13
@@ -821,7 +785,6 @@ simd_matmul_f32 PROC FRAME
     pop     rdi
     pop     rsi
     pop     rbx
-    leave
     ret
 simd_matmul_f32 ENDP
 
@@ -834,30 +797,29 @@ simd_matmul_f32 ENDP
 ; Returns: xmm0 = dot product result
 ;==============================================================================
 vec_dot_q4_0 PROC FRAME
-    push    rbp
-    .pushreg rbp
-    mov     rbp, rsp
-    .setframe rbp, 0
-    sub     rsp, 38h
-    .allocstack 38h
     push    rbx
     .pushreg rbx
     push    rsi
     .pushreg rsi
     push    rdi
     .pushreg rdi
+    sub     rsp, 20h
+    .allocstack 20h
     .endprolog
 
     mov     rsi, rcx            ; A blocks
     mov     rdi, rdx            ; B blocks
-    mov     ebx, r8d            ; block count
+
+    ; Address 18-byte scale issue via LEA cascade (no IMUL)
+    lea     eax, [r8d + r8d*8]  ; eax = count * 9
+    add     eax, eax            ; eax = count * 18
+    lea     rbx, [rsi + rax]    ; RBX = boundary for A blocks (exclusive)
 
     vxorps  xmm0, xmm0, xmm0   ; total accumulator
 
-    xor     ecx, ecx            ; block index
 @@dot_block:
-    cmp     ecx, ebx
-    jge     @@dot_done
+    cmp     rsi, rbx
+    jae     @@dot_done
 
     ; Get scale_a and scale_b
     movzx   eax, WORD PTR [rsi]
@@ -872,14 +834,18 @@ vec_dot_q4_0 PROC FRAME
 
     ; Dot product of quantized values (integer arithmetic)
     xor     r8d, r8d            ; sum of products
-    xor     r9d, r9d            ; byte index
+
+    ; Pointer-End Walk setup for inner loop
+    lea     rcx, [rsi+2]       ; A ptr
+    lea     r12, [rsi+18]      ; A end ptr
+    lea     rdx, [rdi+2]       ; B ptr
 
 @@dot_byte:
-    cmp     r9d, 16
-    jge     @@dot_accumulate
+    cmp     rcx, r12
+    jae     @@dot_accumulate
 
-    movzx   eax, BYTE PTR [rsi+2+r9]
-    movzx   edx, BYTE PTR [rdi+2+r9]
+    movzx   eax, BYTE PTR [rcx]
+    movzx   edx, BYTE PTR [rdx]
 
     ; Low nibbles
     mov     r10d, eax
@@ -899,7 +865,8 @@ vec_dot_q4_0 PROC FRAME
     imul    eax, edx
     add     r8d, eax
 
-    inc     r9d
+    inc     rcx
+    inc     rdx
     jmp     @@dot_byte
 
 @@dot_accumulate:
@@ -911,14 +878,13 @@ vec_dot_q4_0 PROC FRAME
     ; Advance to next block
     add     rsi, Q4_0_BLOCK_SIZE
     add     rdi, Q4_0_BLOCK_SIZE
-    inc     ecx
     jmp     @@dot_block
 
 @@dot_done:
+    add     rsp, 20h
     pop     rdi
     pop     rsi
     pop     rbx
-    leave
     ret
 vec_dot_q4_0 ENDP
 

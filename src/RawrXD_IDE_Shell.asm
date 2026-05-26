@@ -518,21 +518,21 @@ IDE_LoadRichEdit PROC FRAME
     lea rcx, [szRichEdit]
     LoadLibraryA
     test rax, rax
-    jnz .re_done
+    jnz @re_done
 
     ; Fallback: RICHED32.DLL (Win 95+)
     lea rcx, [szRichEditFallback]
     LoadLibraryA
     test rax, rax
-    jz .re_fail
+    jz @re_fail
 
-.re_done:
+@re_done:
     mov [g_IDE.hRichEditLib], rax
     add rsp, 32
     pop rbx
     ret
 
-.re_fail:
+@re_fail:
     xor rax, rax
     mov [g_IDE.hRichEditLib], rax
     add rsp, 32
@@ -573,7 +573,7 @@ IDE_CreateFonts PROC FRAME
     call qword ptr [__imp_CreateFontA]
     add rsp, 80
     test rax, rax
-    jnz .font_ok
+    jnz @font_ok
     ; Fall back to Consolas
     sub rsp, 80
     mov rcx, IDE_DEFAULT_FONT_SIZE
@@ -589,7 +589,7 @@ IDE_CreateFonts PROC FRAME
     mov qword ptr [rsp+72], rax
     call qword ptr [__imp_CreateFontA]
     add rsp, 80
-.font_ok:
+@font_ok:
     mov [g_IDE.hFont], rax
 
     ; Status bar font: Segoe UI 9pt
@@ -992,7 +992,7 @@ IDE_CreateChildWindows PROC FRAME
     mov [g_IDE.hEditor], rax
     ; Apply font to editor
     test rax, rax
-    jz .cw_no_editor
+    jz @cw_no_editor
     mov rcx, rax
     mov edx, WM_SETFONT
     mov r8, [g_IDE.hFont]
@@ -1004,7 +1004,7 @@ IDE_CreateChildWindows PROC FRAME
     xor r8, r8
     mov r9d, CLR_EDITOR_BG
     SendMessageA
-.cw_no_editor:
+@cw_no_editor:
 
     ; ---- Sidebar ----
     ; A RichEdit acting as file explorer / agent log for now
@@ -1029,7 +1029,7 @@ IDE_CreateChildWindows PROC FRAME
     add rsp, 72
     mov [g_IDE.hSidebar], rax
     test rax, rax
-    jz .cw_no_sidebar
+    jz @cw_no_sidebar
     mov rcx, rax
     mov edx, WM_SETFONT
     mov r8, [g_IDE.hFont]
@@ -1040,7 +1040,7 @@ IDE_CreateChildWindows PROC FRAME
     xor r8, r8
     mov r9d, CLR_SIDEBAR_BG
     SendMessageA
-.cw_no_sidebar:
+@cw_no_sidebar:
 
     ; ---- Status bar ----
     sub rsp, 72
@@ -1063,21 +1063,21 @@ IDE_CreateChildWindows PROC FRAME
     add rsp, 72
     mov [g_IDE.hStatusBar], rax
     test rax, rax
-    jz .cw_no_status
+    jz @cw_no_status
     mov rcx, rax
     mov edx, WM_SETFONT
     mov r8, [g_IDE.hStatusFont]
     mov r9d, 1
     SendMessageA
-.cw_no_status:
+@cw_no_status:
 
     ; Set focus to editor
     mov rcx, [g_IDE.hEditor]
     test rcx, rcx
-    jz .cw_done
+    jz @cw_done
     SetFocus
 
-.cw_done:
+@cw_done:
     add rsp, 48
     pop r15
     pop r14
@@ -1115,7 +1115,7 @@ IDE_DoLayout PROC FRAME
     ; Toolbar: full width, top
     mov rcx, [g_IDE.hToolbar]
     test rcx, rcx
-    jz .dl_no_toolbar
+    jz @dl_no_toolbar
     sub rsp, 32
     xor edx, edx                    ; x
     xor r8, r8                      ; y
@@ -1124,12 +1124,12 @@ IDE_DoLayout PROC FRAME
     mov dword ptr [rsp+36], 1       ; bRepaint
     call qword ptr [__imp_MoveWindow]
     add rsp, 32
-.dl_no_toolbar:
+@dl_no_toolbar:
 
     ; Status bar: full width, bottom
     mov rcx, [g_IDE.hStatusBar]
     test rcx, rcx
-    jz .dl_no_status
+    jz @dl_no_status
     sub rsp, 32
     xor edx, edx
     mov r8d, r13d
@@ -1139,7 +1139,7 @@ IDE_DoLayout PROC FRAME
     mov dword ptr [rsp+36], 1
     call qword ptr [__imp_MoveWindow]
     add rsp, 32
-.dl_no_status:
+@dl_no_status:
 
     ; Sidebar: left side, below toolbar, above statusbar
     mov eax, r13d
@@ -1147,9 +1147,9 @@ IDE_DoLayout PROC FRAME
     sub eax, IDE_STATUSBAR_HEIGHT
     mov rcx, [g_IDE.hSidebar]
     test rcx, rcx
-    jz .dl_no_sidebar
+    jz @dl_no_sidebar
     cmp [g_IDE.isSidebarVisible], 0
-    je .dl_sidebar_hidden
+    je @dl_sidebar_hidden
     sub rsp, 32
     xor edx, edx                    ; x
     mov r8d, IDE_TOOLBAR_HEIGHT     ; y
@@ -1158,8 +1158,8 @@ IDE_DoLayout PROC FRAME
     mov dword ptr [rsp+36], 1
     call qword ptr [__imp_MoveWindow]
     add rsp, 32
-    jmp .dl_no_sidebar
-.dl_sidebar_hidden:
+    jmp @dl_no_sidebar
+@dl_sidebar_hidden:
     sub rsp, 32
     xor edx, edx
     xor r8, r8
@@ -1169,28 +1169,28 @@ IDE_DoLayout PROC FRAME
     mov dword ptr [rsp+36], 1
     call qword ptr [__imp_MoveWindow]
     add rsp, 32
-.dl_no_sidebar:
+@dl_no_sidebar:
 
     ; Editor: right of sidebar, below toolbar+tabbar, above statusbar
     mov edi, r12d
     cmp [g_IDE.isSidebarVisible], 0
-    je .dl_editor_no_sidebar
+    je @dl_editor_no_sidebar
     sub edi, IDE_SIDEBAR_WIDTH      ; editor width
-.dl_editor_no_sidebar:
+@dl_editor_no_sidebar:
     mov esi, r13d
     sub esi, IDE_TOOLBAR_HEIGHT
     sub esi, IDE_STATUSBAR_HEIGHT
     sub esi, IDE_TABBAR_HEIGHT      ; editor height
     mov rcx, [g_IDE.hEditor]
     test rcx, rcx
-    jz .dl_done
+    jz @dl_done
     sub rsp, 32
     ; x = sidebar width (or 0 if hidden), y = toolbar + tabbar
     mov edx, IDE_SIDEBAR_WIDTH
     cmp [g_IDE.isSidebarVisible], 0
-    jne .dl_e_x_ok
+    jne @dl_e_x_ok
     xor edx, edx
-.dl_e_x_ok:
+@dl_e_x_ok:
     mov r8d, IDE_TOOLBAR_HEIGHT
     add r8d, IDE_TABBAR_HEIGHT
     mov r9d, edi
@@ -1199,7 +1199,7 @@ IDE_DoLayout PROC FRAME
     call qword ptr [__imp_MoveWindow]
     add rsp, 32
 
-.dl_done:
+@dl_done:
     add rsp, 48
     pop r13
     pop r12
@@ -1227,13 +1227,13 @@ IDE_UpdateTitle PROC FRAME
     ; dirty flag string
     mov al, [g_IDE.isDirty]
     test al, al
-    jz .title_clean
+    jz @title_clean
     lea r9, [szUnsaved]
-    jmp .title_wsprintf
-.title_clean:
+    jmp @title_wsprintf
+@title_clean:
     xor r9, r9
     lea r9, [.szEmpty]
-.title_wsprintf:
+@title_wsprintf:
     call qword ptr [__imp_wsprintfA]
     add rsp, 32
     mov rcx, [g_IDE.hMainWnd]
@@ -1243,7 +1243,7 @@ IDE_UpdateTitle PROC FRAME
     add rsp, 32+256
     pop rbx
     ret
-.szEmpty: BYTE 0
+@szEmpty: BYTE 0
 IDE_UpdateTitle ENDP
 
 ;==============================================================================
@@ -1260,7 +1260,7 @@ IDE_SetStatus PROC FRAME
     mov rbx, rcx
     mov rcx, [g_IDE.hStatusBar]
     test rcx, rcx
-    jz .ss_done
+    jz @ss_done
     sub rsp, 32
     mov rdx, rbx
     call qword ptr [__imp_SetWindowTextA]
@@ -1272,7 +1272,7 @@ IDE_SetStatus PROC FRAME
     ; SetTimer(hWnd, TIMER_STATUS_CLEAR, 5000, NULL)
     call qword ptr [__imp_ExitProcess]  ; placeholder for SetTimer
     add rsp, 32
-.ss_done:
+@ss_done:
     add rsp, 32
     pop rbx
     ret
@@ -1330,26 +1330,26 @@ IDE_FileOpen PROC FRAME
     ; Call GetOpenFileNameA (from comdlg32.dll — resolve dynamically)
     mov rax, [g_hComdlg32]
     test rax, rax
-    jnz .fo_have_comdlg
+    jnz @fo_have_comdlg
     lea rcx, [.szComdlg32]
     LoadLibraryA
     mov [g_hComdlg32], rax
     test rax, rax
-    jz .fo_cancel
+    jz @fo_cancel
     mov rcx, rax
     lea rdx, [.szGetOpenFileName]
     GetProcAddress
     mov [g_fnGetOpenFileName], rax
-.fo_have_comdlg:
+@fo_have_comdlg:
     mov rax, [g_fnGetOpenFileName]
     test rax, rax
-    jz .fo_cancel
+    jz @fo_cancel
     sub rsp, 32
     mov rcx, rbx
     call rax
     add rsp, 32
     test eax, eax
-    jz .fo_cancel
+    jz @fo_cancel
 
     ; Copy path from OFN buffer to g_IDE.currentFile
     sub rsp, 32
@@ -1370,7 +1370,7 @@ IDE_FileOpen PROC FRAME
     call qword ptr [__imp_CreateFileA]
     add rsp, 40
     cmp rax, INVALID_HANDLE_VALUE
-    je .fo_cancel
+    je @fo_cancel
     mov rsi, rax                ; hFile
 
     ; Get file size
@@ -1380,9 +1380,9 @@ IDE_FileOpen PROC FRAME
     call qword ptr [__imp_GetFileSize]
     add rsp, 32
     test eax, eax
-    jz .fo_close
+    jz @fo_close
     cmp eax, 8388608            ; limit 8MB for editor
-    ja .fo_close
+    ja @fo_close
     mov r12d, eax               ; fileSize
 
     ; Allocate read buffer
@@ -1397,7 +1397,7 @@ IDE_FileOpen PROC FRAME
     call qword ptr [__imp_HeapAlloc]
     add rsp, 32
     test rax, rax
-    jz .fo_close
+    jz @fo_close
     mov rdi, rax                ; fileBuffer
 
     ; ReadFile
@@ -1410,7 +1410,7 @@ IDE_FileOpen PROC FRAME
     call qword ptr [__imp_ReadFile]
     add rsp, 40
     test eax, eax
-    jz .fo_free
+    jz @fo_free
 
     ; Set editor text via WM_SETTEXT
     sub rsp, 32
@@ -1429,7 +1429,7 @@ IDE_FileOpen PROC FRAME
     lea rcx, [szOpened]
     call IDE_SetStatus
 
-.fo_free:
+@fo_free:
     sub rsp, 32
     call qword ptr [__imp_GetProcessHeap]
     add rsp, 32
@@ -1440,22 +1440,22 @@ IDE_FileOpen PROC FRAME
     call qword ptr [__imp_HeapFree]
     add rsp, 32
 
-.fo_close:
+@fo_close:
     sub rsp, 32
     mov rcx, rsi
     call qword ptr [__imp_CloseHandle]
     add rsp, 32
 
-.fo_cancel:
+@fo_cancel:
     add rsp, 32 + 1024 + 88
     pop rdi
     pop rsi
     pop rbx
     ret
 
-.szOpenTitle:       BYTE "Open File", 0
-.szComdlg32:        BYTE "comdlg32.dll", 0
-.szGetOpenFileName: BYTE "GetOpenFileNameA", 0
+@szOpenTitle:       BYTE "Open File", 0
+@szComdlg32:        BYTE "comdlg32.dll", 0
+@szGetOpenFileName: BYTE "GetOpenFileNameA", 0
 IDE_FileOpen ENDP
 
 ; Globals for comdlg32 dynamic loading
@@ -1479,12 +1479,12 @@ IDE_FileSave PROC FRAME
 
     ; Check if we have a file name
     cmp byte ptr [g_IDE.currentFile], 0
-    jne .fs_have_name
+    jne @fs_have_name
     ; No name yet: show save-as dialog
     call IDE_FileSaveAs
-    jmp .fs_done
+    jmp @fs_done
 
-.fs_have_name:
+@fs_have_name:
     ; Get text length from editor
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
@@ -1494,7 +1494,7 @@ IDE_FileSave PROC FRAME
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
     test rax, rax
-    jz .fs_done
+    jz @fs_done
     mov r12, rax                ; textLen
     inc r12                     ; +1 for NUL
 
@@ -1509,7 +1509,7 @@ IDE_FileSave PROC FRAME
     call qword ptr [__imp_HeapAlloc]
     add rsp, 32
     test rax, rax
-    jz .fs_done
+    jz @fs_done
     mov rdi, rax
 
     ; Get text from editor via WM_GETTEXT
@@ -1533,7 +1533,7 @@ IDE_FileSave PROC FRAME
     call qword ptr [__imp_CreateFileA]
     add rsp, 40
     cmp rax, INVALID_HANDLE_VALUE
-    je .fs_free
+    je @fs_free
     mov rsi, rax
 
     ; WriteFile
@@ -1559,7 +1559,7 @@ IDE_FileSave PROC FRAME
     lea rcx, [szSaved]
     call IDE_SetStatus
 
-.fs_free:
+@fs_free:
     sub rsp, 32
     call qword ptr [__imp_GetProcessHeap]
     add rsp, 32
@@ -1570,7 +1570,7 @@ IDE_FileSave PROC FRAME
     call qword ptr [__imp_HeapFree]
     add rsp, 32
 
-.fs_done:
+@fs_done:
     add rsp, 48
     pop rdi
     pop rsi
@@ -1591,18 +1591,18 @@ IDE_FileSaveAs PROC FRAME
     ; populating currentFile. Full dialog follows GetSaveFileName flow.
     ; If currentFile is empty, default to "untitled.asm"
     cmp byte ptr [g_IDE.currentFile], 0
-    jne .sa_have
+    jne @sa_have
     lea rcx, [g_IDE.currentFile]
     lea rdx, [.szUntitled]
     sub rsp, 32
     call qword ptr [__imp_lstrcpyA]
     add rsp, 32
-.sa_have:
+@sa_have:
     call IDE_FileSave
     add rsp, 32
     pop rbx
     ret
-.szUntitled: BYTE "untitled.asm", 0
+@szUntitled: BYTE "untitled.asm", 0
 IDE_FileSaveAs ENDP
 
 ;==============================================================================
@@ -1623,7 +1623,7 @@ IDE_AgentThread PROC FRAME
     lea r12, [rsp + 48]             ; token receive buffer (2048 bytes)
     lea rbx, [g_IDE]
 
-.agt_loop:
+@agt_loop:
     ; Wait for agent event or 100ms timeout
     sub rsp, 32
     mov rcx, [rbx].IDE_STATE.hAgentEvent
@@ -1633,7 +1633,7 @@ IDE_AgentThread PROC FRAME
 
     ; Check if agent still running
     cmp [rbx].IDE_STATE.isAgentRunning, 0
-    je .agt_exit
+    je @agt_exit
 
     ; Read tokens from IPC ring
     sub rsp, 32
@@ -1643,7 +1643,7 @@ IDE_AgentThread PROC FRAME
     call IPC_ReadMessage
     add rsp, 32
     test eax, eax
-    jz .agt_loop
+    jz @agt_loop
 
     ; Append to editor (move to end of text, insert)
     sub rsp, 32
@@ -1669,9 +1669,9 @@ IDE_AgentThread PROC FRAME
     xor r9, r9
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .agt_loop
+    jmp @agt_loop
 
-.agt_exit:
+@agt_exit:
     xor eax, eax
     add rsp, 48 + 2048
     pop r13
@@ -1691,14 +1691,14 @@ IDE_StartAgent PROC FRAME
     .endprolog
 
     cmp [g_IDE.isAgentRunning], 1
-    je .sa_already
+    je @sa_already
 
     ; Initialize IPC
     lea rcx, [g_IDE.hIPC]
     mov edx, 0                      ; GUI side
     call IPC_Initialize
     test eax, eax
-    jz .sa_fail
+    jz @sa_fail
 
     ; Create wakeup event
     xor ecx, ecx
@@ -1709,7 +1709,7 @@ IDE_StartAgent PROC FRAME
     call qword ptr [__imp_CreateEventA]
     add rsp, 32
     test rax, rax
-    jz .sa_fail
+    jz @sa_fail
     mov [g_IDE.hAgentEvent], rax
 
     ; Mark running before thread start
@@ -1727,21 +1727,21 @@ IDE_StartAgent PROC FRAME
     add rsp, 40
     mov [g_IDE.hAgentThread], rax
     test rax, rax
-    jnz .sa_ok
+    jnz @sa_ok
 
     ; Thread failed: reset
     mov [g_IDE.isAgentRunning], 0
-    jmp .sa_fail
+    jmp @sa_fail
 
-.sa_ok:
+@sa_ok:
     lea rcx, [szAgentConnected]
     call IDE_SetStatus
-    jmp .sa_done
-.sa_fail:
+    jmp @sa_done
+@sa_fail:
     lea rcx, [szAgentStopped]
     call IDE_SetStatus
-.sa_already:
-.sa_done:
+@sa_already:
+@sa_done:
     add rsp, 32
     pop rbx
     ret
@@ -1760,11 +1760,11 @@ IDE_StopAgent PROC FRAME
     mov [g_IDE.isAgentRunning], 0
     mov rcx, [g_IDE.hAgentEvent]
     test rcx, rcx
-    jz .stop_ipc
+    jz @stop_ipc
     sub rsp, 32
     call qword ptr [__imp_SetEvent]
     add rsp, 32
-.stop_ipc:
+@stop_ipc:
     call IPC_Shutdown
     lea rcx, [szAgentStopped]
     call IDE_SetStatus
@@ -1789,7 +1789,7 @@ IDE_HandleCommand PROC FRAME
     mov r12d, ecx
 
     cmp r12d, ID_FILE_NEW
-    jne .cmd_1
+    jne @cmd_1
     ; New: clear editor, reset title
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
@@ -1801,29 +1801,29 @@ IDE_HandleCommand PROC FRAME
     mov byte ptr [g_IDE.currentFile], 0
     mov [g_IDE.isDirty], 0
     call IDE_UpdateTitle
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_1:
+@cmd_1:
     cmp r12d, ID_FILE_OPEN
-    jne .cmd_2
+    jne @cmd_2
     call IDE_FileOpen
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_2:
+@cmd_2:
     cmp r12d, ID_FILE_SAVE
-    jne .cmd_3
+    jne @cmd_3
     call IDE_FileSave
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_3:
+@cmd_3:
     cmp r12d, ID_FILE_SAVE_AS
-    jne .cmd_4
+    jne @cmd_4
     call IDE_FileSaveAs
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_4:
+@cmd_4:
     cmp r12d, ID_FILE_EXIT
-    jne .cmd_5
+    jne @cmd_5
     sub rsp, 32
     mov rcx, [g_IDE.hMainWnd]
     mov edx, WM_CLOSE
@@ -1831,11 +1831,11 @@ IDE_HandleCommand PROC FRAME
     xor r9, r9
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_5:
+@cmd_5:
     cmp r12d, ID_EDIT_UNDO
-    jne .cmd_6
+    jne @cmd_6
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
     mov edx, 0101h              ; EM_UNDO
@@ -1843,11 +1843,11 @@ IDE_HandleCommand PROC FRAME
     xor r9, r9
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_6:
+@cmd_6:
     cmp r12d, ID_EDIT_REDO
-    jne .cmd_7
+    jne @cmd_7
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
     mov edx, 0C96h              ; EM_REDO (RichEdit only)
@@ -1855,11 +1855,11 @@ IDE_HandleCommand PROC FRAME
     xor r9, r9
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_7:
+@cmd_7:
     cmp r12d, ID_EDIT_CUT
-    jne .cmd_8
+    jne @cmd_8
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
     mov edx, 0300h              ; WM_CUT
@@ -1867,11 +1867,11 @@ IDE_HandleCommand PROC FRAME
     xor r9, r9
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_8:
+@cmd_8:
     cmp r12d, ID_EDIT_COPY
-    jne .cmd_9
+    jne @cmd_9
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
     mov edx, 0301h              ; WM_COPY
@@ -1879,11 +1879,11 @@ IDE_HandleCommand PROC FRAME
     xor r9, r9
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_9:
+@cmd_9:
     cmp r12d, ID_EDIT_PASTE
-    jne .cmd_10
+    jne @cmd_10
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
     mov edx, 0302h              ; WM_PASTE
@@ -1891,11 +1891,11 @@ IDE_HandleCommand PROC FRAME
     xor r9, r9
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_10:
+@cmd_10:
     cmp r12d, ID_VIEW_SIDEBAR
-    jne .cmd_11
+    jne @cmd_11
     xor [g_IDE.isSidebarVisible], 1
     sub rsp, 32
     call qword ptr [__imp_GetProcessHeap]
@@ -1907,23 +1907,23 @@ IDE_HandleCommand PROC FRAME
     xor r8, r8
     call qword ptr [__imp_InvalidateRect]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_11:
+@cmd_11:
     cmp r12d, ID_AGENT_RUN
-    jne .cmd_12
+    jne @cmd_12
     call IDE_StartAgent
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_12:
+@cmd_12:
     cmp r12d, ID_AGENT_STOP
-    jne .cmd_13
+    jne @cmd_13
     call IDE_StopAgent
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_13:
+@cmd_13:
     cmp r12d, ID_AGENT_CLEAR
-    jne .cmd_14
+    jne @cmd_14
     sub rsp, 32
     mov rcx, [g_IDE.hEditor]
     mov edx, 000Ch
@@ -1931,11 +1931,11 @@ IDE_HandleCommand PROC FRAME
     lea r9, [.szEmpty]
     call qword ptr [__imp_SendMessageA]
     add rsp, 32
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_14:
+@cmd_14:
     cmp r12d, ID_BUILD_BUILD
-    jne .cmd_15
+    jne @cmd_15
     ; Trigger build via IPC message to agent
     sub rsp, 32
     mov rcx, [g_IDE.hIPC]
@@ -1946,11 +1946,11 @@ IDE_HandleCommand PROC FRAME
     add rsp, 32
     lea rcx, [szBuildOK]
     call IDE_SetStatus
-    jmp .cmd_done
+    jmp @cmd_done
 
-.cmd_15:
+@cmd_15:
     cmp r12d, ID_HELP_ABOUT
-    jne .cmd_done
+    jne @cmd_done
     sub rsp, 32
     mov rcx, [g_IDE.hMainWnd]
     lea rdx, [szAbout]
@@ -1959,12 +1959,12 @@ IDE_HandleCommand PROC FRAME
     call qword ptr [__imp_MessageBoxA]
     add rsp, 32
 
-.cmd_done:
+@cmd_done:
     add rsp, 32
     pop r12
     pop rbx
     ret
-.szEmpty: BYTE 0
+@szEmpty: BYTE 0
 IDE_HandleCommand ENDP
 
 ;==============================================================================
@@ -1996,40 +1996,40 @@ IDE_WndProc PROC FRAME
     mov r14, r9                     ; lParam
 
     cmp r12d, WM_CREATE
-    je .wm_create
+    je @wm_create
 
     cmp r12d, WM_SIZE
-    je .wm_size
+    je @wm_size
 
     cmp r12d, WM_COMMAND
-    je .wm_command
+    je @wm_command
 
     cmp r12d, WM_PAINT
-    je .wm_paint
+    je @wm_paint
 
     cmp r12d, WM_CTLCOLOREDIT
-    je .wm_ctlcolor_edit
+    je @wm_ctlcolor_edit
 
     cmp r12d, WM_CTLCOLORSTATIC
-    je .wm_ctlcolor_static
+    je @wm_ctlcolor_static
 
     cmp r12d, WM_GETMINMAXINFO
-    je .wm_getminmax
+    je @wm_getminmax
 
     cmp r12d, WM_ERASEBKGND
-    je .wm_erase
+    je @wm_erase
 
     cmp r12d, WM_CLOSE
-    je .wm_close
+    je @wm_close
 
     cmp r12d, WM_DESTROY
-    je .wm_destroy
+    je @wm_destroy
 
     ; Fall through to DefWindowProc
-    jmp .wm_default
+    jmp @wm_default
 
 ;-------- WM_CREATE --------
-.wm_create:
+@wm_create:
     ; Store hInst
     mov rcx, [g_IDE.hInstance]
     ; Load GDI resources
@@ -2056,10 +2056,10 @@ IDE_WndProc PROC FRAME
     ; Update title
     call IDE_UpdateTitle
     xor rax, rax
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_SIZE --------
-.wm_size:
+@wm_size:
     ; lParam lo16 = width, hi16 = height
     movzx eax, r14w
     mov [g_IDE.clientWidth], eax
@@ -2073,17 +2073,17 @@ IDE_WndProc PROC FRAME
     mov r8d, [g_IDE.clientHeight]
     call IDE_DoLayout
     xor rax, rax
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_COMMAND --------
-.wm_command:
+@wm_command:
     movzx ecx, r13w                 ; command ID = LOWORD(wParam)
     call IDE_HandleCommand
     xor rax, rax
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_PAINT --------
-.wm_paint:
+@wm_paint:
     ; Paint toolbar and tab bar areas (dark theme)
     sub rsp, 128                    ; PAINTSTRUCT buffer
     mov rcx, rbx
@@ -2109,10 +2109,10 @@ IDE_WndProc PROC FRAME
     EndPaint
     add rsp, 128
     xor rax, rax
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_CTLCOLOREDIT --------
-.wm_ctlcolor_edit:
+@wm_ctlcolor_edit:
     ; Dark theme for edit controls
     mov rax, r8                     ; hDC = wParam
     sub rsp, 32
@@ -2124,10 +2124,10 @@ IDE_WndProc PROC FRAME
     SetBkColor
     add rsp, 32
     mov rax, [g_IDE.hBrushEditor]
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_CTLCOLORSTATIC --------
-.wm_ctlcolor_static:
+@wm_ctlcolor_static:
     ; Status bar and toolbar static coloring
     mov rax, r8
     sub rsp, 32
@@ -2139,28 +2139,28 @@ IDE_WndProc PROC FRAME
     SetBkColor
     add rsp, 32
     mov rax, [g_IDE.hBrushStatus]
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_GETMINMAXINFO --------
-.wm_getminmax:
+@wm_getminmax:
     ; Enforce minimum window size
     mov rax, r14
     mov dword ptr [rax + 24], IDE_MIN_WIDTH   ; ptMinTrackSize.x
     mov dword ptr [rax + 28], IDE_MIN_HEIGHT  ; ptMinTrackSize.y
     xor rax, rax
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_ERASEBKGND --------
-.wm_erase:
+@wm_erase:
     ; Suppress default erase to avoid flicker
     mov rax, 1
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_CLOSE --------
-.wm_close:
+@wm_close:
     ; Check unsaved changes
     cmp [g_IDE.isDirty], 0
-    je .wm_close_ok
+    je @wm_close_ok
     sub rsp, 32
     mov rcx, rbx
     lea rdx, [.szUnsavedConfirm]
@@ -2169,18 +2169,18 @@ IDE_WndProc PROC FRAME
     MessageBoxA
     add rsp, 32
     cmp eax, 6                      ; IDYES
-    jne .wm_done
-.wm_close_ok:
+    jne @wm_done
+@wm_close_ok:
     call IDE_StopAgent
     sub rsp, 32
     mov rcx, rbx
     call qword ptr [__imp_DestroyWindow]
     add rsp, 32
     xor rax, rax
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- WM_DESTROY --------
-.wm_destroy:
+@wm_destroy:
     ; Cleanup GDI objects
     sub rsp, 32
     mov rcx, [g_IDE.hFont]
@@ -2201,10 +2201,10 @@ IDE_WndProc PROC FRAME
     xor ecx, ecx
     PostQuitMessage
     xor rax, rax
-    jmp .wm_done
+    jmp @wm_done
 
 ;-------- Default --------
-.wm_default:
+@wm_default:
     sub rsp, 32
     mov rcx, rbx
     mov edx, r12d
@@ -2213,7 +2213,7 @@ IDE_WndProc PROC FRAME
     DefWindowProcA
     add rsp, 32
 
-.wm_done:
+@wm_done:
     add rsp, 48
     pop r15
     pop r14
@@ -2226,9 +2226,9 @@ IDE_WndProc PROC FRAME
 
 ; Toolbar rect (updated by WM_SIZE — static for paint placeholder)
 ALIGN 4
-.rc_toolbar:    DD 0, 0, 4096, IDE_TOOLBAR_HEIGHT
-.rc_tabbar:     DD 0, IDE_TOOLBAR_HEIGHT, 4096, (IDE_TOOLBAR_HEIGHT + IDE_TABBAR_HEIGHT)
-.szUnsavedConfirm: BYTE "You have unsaved changes. Exit anyway?", 0
+@rc_toolbar:    DD 0, 0, 4096, IDE_TOOLBAR_HEIGHT
+@rc_tabbar:     DD 0, IDE_TOOLBAR_HEIGHT, 4096, (IDE_TOOLBAR_HEIGHT + IDE_TABBAR_HEIGHT)
+@szUnsavedConfirm: BYTE "You have unsaved changes. Exit anyway?", 0
 
 IDE_WndProc ENDP
 
@@ -2305,7 +2305,7 @@ IDEShellMain PROC FRAME
     RegisterClassExA
     add rsp, 32
     test eax, eax
-    jz .wsm_fail
+    jz @wsm_fail
 
     ; Build menu bar
     call IDE_CreateMenu
@@ -2329,7 +2329,7 @@ IDEShellMain PROC FRAME
     CreateWindowExA
     add rsp, 72
     test rax, rax
-    jz .wsm_fail
+    jz @wsm_fail
     mov [g_IDE.hMainWnd], rax
     mov rbx, rax                    ; hWnd
 
@@ -2346,7 +2346,7 @@ IDEShellMain PROC FRAME
 
     ; Message loop
     lea rsi, [rsp + 128]            ; MSG_STRUCT buffer
-.msg_loop:
+@msg_loop:
     sub rsp, 32
     mov rcx, rsi
     xor edx, edx
@@ -2355,9 +2355,9 @@ IDEShellMain PROC FRAME
     GetMessageA
     add rsp, 32
     test eax, eax
-    jz .msg_exit
+    jz @msg_exit
     cmp eax, -1
-    je .wsm_fail
+    je @wsm_fail
     sub rsp, 32
     mov rcx, rsi
     TranslateMessage
@@ -2366,9 +2366,9 @@ IDEShellMain PROC FRAME
     mov rcx, rsi
     DispatchMessageA
     add rsp, 32
-    jmp .msg_loop
+    jmp @msg_loop
 
-.msg_exit:
+@msg_exit:
     movzx eax, word ptr [rsi + 16]  ; MSG.wParam (exit code)
     add rsp, 200h
     pop r13
@@ -2376,7 +2376,7 @@ IDEShellMain PROC FRAME
     pop rbx
     ret
 
-.wsm_fail:
+@wsm_fail:
     mov eax, 1
     add rsp, 200h
     pop r13
@@ -2386,7 +2386,7 @@ IDEShellMain PROC FRAME
 
 ; INITCOMMONCONTROLSEX
 ALIGN 4
-.iccex: DD 8, 0FFFFh              ; dwSize=8, dwICC=all classes
+@iccex: DD 8, 0FFFFh              ; dwSize=8, dwICC=all classes
 
 IDEShellMain ENDP
 

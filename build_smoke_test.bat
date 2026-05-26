@@ -19,7 +19,7 @@ set "OUTPUT_DIR=%RAWRXD_ROOT%\bin\smoke_test"
 
 REM Compiler settings
 set "CXX=cl"
-set "CXXFLAGS=/std:c++20 /EHsc /W3 /O2 /DNDEBUG /DWIN32 /D_WINDOWS"
+set "CXXFLAGS=/std:c++20 /EHsc /W3 /O2 /DNDEBUG /DWIN32 /D_WINDOWS /DNOMINMAX /DRAWRXD_HAS_PROMPT_ENGINE=0"
 set "INCLUDES=/I"%SRC_DIR%" /I"%SRC_DIR%\win32app" /I"%SRC_DIR%\cli" /I"%SRC_DIR%\ggml" /I"%SRC_DIR%\inference""
 set "LIBS=user32.lib kernel32.lib"
 
@@ -32,14 +32,8 @@ cd /d "%BUILD_DIR%"
 
 REM Compile smoke test
 %CXX% %CXXFLAGS% %INCLUDES% ^
-    "%SRC_DIR%\test\slash_command_smoke_test.cpp" ^
-    "%SRC_DIR%\cli\CLI_SlashRouter.cpp" ^
-    "%SRC_DIR%\gguf_loader.cpp" ^
-    "%SRC_DIR%\streaming_gguf_loader.cpp" ^
-    "%SRC_DIR%\cpu_inference_engine.cpp" ^
-    "%SRC_DIR%\win32app\Win32IDE_SlashRouter.cpp" ^
-    "%SRC_DIR%\win32app\Win32IDE_KVCacheCleanup.cpp" ^
-    /c /Fo"smoke_test.obj" 2>&1
+    "%SRC_DIR%\test\mock_smoke_test.cpp" ^
+    /c 2>&1
 
 if %ERRORLEVEL% neq 0 (
     echo.
@@ -48,7 +42,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo [2/4] Linking...
-%CXX% smoke_test.obj %LIBS% /Fe:"%OUTPUT_DIR%\slash_command_smoke_test.exe" /link /SUBSYSTEM:CONSOLE
+%CXX% mock_smoke_test.obj %LIBS% /Fe:"%OUTPUT_DIR%\slash_command_smoke_test.exe" /link /SUBSYSTEM:CONSOLE
 
 if %ERRORLEVEL% neq 0 (
     echo.

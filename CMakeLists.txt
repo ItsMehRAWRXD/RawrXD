@@ -4551,7 +4551,7 @@ if(WIN32)
     # =========================================================================
     set(RAWRXD_HAS_PROMPT_ENGINE_FLAG 0)
     if(RAWR_HAS_MASM)
-        set(PROMPT_ENGINE_ASM src/asm/RawrXD_DynamicPromptEngine.asm)
+        set(PROMPT_ENGINE_ASM src/asm/RawrXD_DynamicPromptEngine.asm src/asm/RawrXD_DynamicPromptEngine_Templates.asm)
         set_source_files_properties(${PROMPT_ENGINE_ASM} PROPERTIES LANGUAGE ASM_MASM)
 
         if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)

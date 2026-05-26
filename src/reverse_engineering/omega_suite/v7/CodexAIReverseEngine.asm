@@ -1204,3 +1204,5 @@ szPromptInput           BYTE    "Target binary: ", 0
 szErrorLoad             BYTE    "[-] Failed to load target", 13, 10, 0
 
 END main
+
+END

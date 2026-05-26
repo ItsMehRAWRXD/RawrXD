@@ -1,0 +1,5 @@
+Microsoft (R) Incremental Linker Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe 
+C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe : fatal error LNK1107: invalid or corrupt file: cannot read at 0x300

@@ -175,10 +175,10 @@ section .data
 InitializeVulkan:
     mov rax, vulkan_instance
     test rax, rax
-    jnz .already_initialized
+    jnz @already_initialized
     mov rax, 1
     mov vulkan_instance, rax
-.already_initialized:
+@already_initialized:
     ret
 
 ; SelectPhysicalDevice: Real physical device selection
@@ -186,10 +186,10 @@ InitializeVulkan:
 SelectPhysicalDevice:
     mov rax, physical_device
     test rax, rax
-    jnz .already_selected
+    jnz @already_selected
     mov rax, 1
     mov physical_device, rax
-.already_selected:
+@already_selected:
     ret
 
 ; CreateLogicalDevice: Real logical device creation
@@ -197,10 +197,10 @@ SelectPhysicalDevice:
 CreateLogicalDevice:
     mov rax, logical_device
     test rax, rax
-    jnz .already_created
+    jnz @already_created
     mov rax, 1
     mov logical_device, rax
-.already_created:
+@already_created:
     ret
 
 ; QuantQ4_0: Real Q4_0 quantization logic (port of ggml-quants.c)
@@ -778,3 +778,4 @@ AllocationError:
 QuantizationError:
     mov rax, -2  ; Quantization failed
     ret
+END

@@ -112,3 +112,5 @@ MM proc; local c:DWORD, a:DWORD, s:DWORD; @@m: invoke P, addr szW; invoke P, add
 ; Entry
 main proc; invoke GetStdHandle, STD_INPUT_HANDLE; mov hIn, eax; invoke GetStdHandle, STD_OUTPUT_HANDLE; mov hOut, eax; call MM; invoke ExitProcess, 0; main endp
 end main
+
+END

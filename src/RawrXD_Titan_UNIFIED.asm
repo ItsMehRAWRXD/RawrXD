@@ -25,7 +25,7 @@ pCreateFileA                DQ 0
 pCreateFileMappingA         DQ 0
 pMapViewOfFile              DQ 0
 pUnmapViewOfFile            DQ 0
-pGetFileSizeEx              DQ 0
+pGetFileSize              DQ 0
 pVirtualAlloc               DQ 0
 pCloseHandle                DQ 0
 
@@ -156,7 +156,7 @@ Initialize_Sovereign_APIs PROC
     
     mov rcx, CRC32_GetFileSizeEx
     call Resolve_API_By_CRC32
-    mov pGetFileSizeEx, rax
+    mov pGetFileSize, rax
     
     mov rcx, CRC32_VirtualAlloc
     call Resolve_API_By_CRC32
@@ -643,7 +643,7 @@ Titan_LoadModel PROC FRAME
     sub rsp, 32
     mov rcx, rax
     lea rdx, [rbp-16]
-    call pGetFileSizeEx
+    call pGetFileSize
     add rsp, 32
     mov rax, [rbp-16]
     mov [rbx+TitanContext.cbFile], rax

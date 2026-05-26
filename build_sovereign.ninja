@@ -1,0 +1,26 @@
+# Sovereign Build - No-CRT Metal Linkage
+ninja_required_version = 1.3
+
+rule asm
+  command = C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /Fo $out $in
+
+rule link
+  command = C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe /OUT:$out /ENTRY:XR_Production_Entry /SUBSYSTEM:CONSOLE /NODEFAULTLIB "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\kernel32.Lib" $in
+
+build Sovereign_OS_Core.obj: asm src/asm/Sovereign_OS_Core.asm
+build Sovereign_Runtime.obj: asm src/asm/Sovereign_Runtime_Bootstrap.asm
+build Sovereign_Final.obj: asm src/asm/Sovereign_Final_Linkage.asm
+build TestBench.obj: asm src/asm/Sovereign_TestBench_Harness.asm
+build ManifestGen.obj: asm src/asm/Sovereign_Manifest_Generator.asm
+build DAGCompiler.obj: asm src/asm/Sovereign_OS_DAG_Compiler.asm
+build FaultHandler.obj: asm src/asm/Sovereign_Fault_Handler.asm
+build UltraHFT.obj: asm src/asm/Sovereign_Ultra_HFT.asm
+build StreamIngest.obj: asm src/asm/Sovereign_Stream_Ingest.asm
+
+build RawrXD_Engine_Sovereign.exe: link Sovereign_OS_Core.obj Sovereign_Runtime.obj Sovereign_Final.obj TestBench.obj ManifestGen.obj DAGCompiler.obj FaultHandler.obj UltraHFT.obj MemoryGuard.obj Sovereign_Stability_Baseline.obj Sovereign_Runtime_Run.obj Sovereign_Execution_Graph_ABI.obj Sovereign_AppendLog_SHA256NI.obj StreamIngest.obj
+
+build MemoryGuard.obj: asm src/asm/Sovereign_OS_MemoryGuard.asm
+build Sovereign_Stability_Baseline.obj: asm src/asm/Sovereign_Stability_Baseline.asm 
+build Sovereign_Runtime_Run.obj: asm src/asm/Sovereign_Runtime_Run.asm  
+build Sovereign_Execution_Graph_ABI.obj: asm src/asm/Sovereign_Execution_Graph_ABI.asm  
+build Sovereign_AppendLog_SHA256NI.obj: asm src/asm/Sovereign_AppendLog_SHA256NI.asm 

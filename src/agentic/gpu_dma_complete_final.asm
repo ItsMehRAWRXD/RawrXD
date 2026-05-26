@@ -59748,10 +59748,15 @@ dequant_q4_0_avx2 PROC FRAME
 
     mov rsi, rcx                    ; src
     mov rdi, rdx                    ; dst
-    mov rbx, r8                     ; nblocks
 
-    test rbx, rbx
+    test r8, r8
     jz dq4_avx2_done
+
+    ; Pointer-End Walk Setup
+    ; 18 bytes per block
+    mov rax, 18
+    imul rax, r8
+    lea rbx, [rsi + rax]            ; rbx = End Pointer (exclusive)
 
     vmovdqu ymm5, YMMWORD PTR [Q4_LO_MASK]  ; nibble mask: 0x0F
     vmovdqu ymm6, YMMWORD PTR [Q4_OFFSET]   ; offset: 8
@@ -59817,8 +59822,8 @@ dq4_avx2_block_loop:
     vmovups [rdi], ymm0
     add rdi, 32
 
-    dec rbx
-    jnz dq4_avx2_block_loop
+    cmp rsi, rbx
+    jb dq4_avx2_block_loop
 
 dq4_avx2_done:
     vzeroupper

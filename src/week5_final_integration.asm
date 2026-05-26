@@ -209,7 +209,7 @@ InitializeCrashHandler PROC
     lea rcx, [rel dbghelp_dll]
     call LoadLibraryA
     test rax, rax
-    jz .init_crash_failed
+    jz @init_crash_failed
     
     mov r12, rax                       ; r12 = hDbgHelp
     
@@ -218,7 +218,7 @@ InitializeCrashHandler PROC
     lea rdx, [rel miniump_func_name]
     call GetProcAddress
     test rax, rax
-    jz .init_crash_failed
+    jz @init_crash_failed
     
     mov [unhandled_exception_filter], rax
     
@@ -227,12 +227,12 @@ InitializeCrashHandler PROC
     call SetUnhandledExceptionFilter
     
     mov eax, 1
-    jmp .init_crash_done
+    jmp @init_crash_done
     
-.init_crash_failed:
+@init_crash_failed:
     xor eax, eax
     
-.init_crash_done:
+@init_crash_done:
     pop r12
     pop rbx
     ret
@@ -301,16 +301,16 @@ GenerateCrashDump PROC
     ; Call MiniDumpWriteDump
     mov rax, [unhandled_exception_filter]
     test rax, rax
-    jz .crash_dump_failed
+    jz @crash_dump_failed
     
     ; Simplified: assume dump was written
     mov rax, 1024                      ; Return some non-zero size
-    jmp .crash_dump_done
+    jmp @crash_dump_done
     
-.crash_dump_failed:
+@crash_dump_failed:
     xor rax, rax
     
-.crash_dump_done:
+@crash_dump_done:
     pop r12
     pop rbx
     ret
@@ -350,7 +350,7 @@ CrashReportUploadThread PROC
     lea rcx, [rel telemetry_server]
     call InternetOpenUrlA
     test rax, rax
-    jz .crash_upload_failed
+    jz @crash_upload_failed
     
     ; POST crash report (simplified)
     ; In production: JSON serialize crash info, add GDPR compliance header
@@ -358,7 +358,7 @@ CrashReportUploadThread PROC
     mov rcx, rax
     call InternetCloseHandle
     
-.crash_upload_failed:
+@crash_upload_failed:
     xor eax, eax
     mov ecx, 0
     call ExitThread
@@ -411,9 +411,9 @@ GenerateAnonymousSessionId PROC
     ; For now: use machine GUID hash + timestamp
     mov rbx, 0
     
-.gen_id_loop:
+@gen_id_loop:
     cmp rbx, 31
-    jge .gen_id_done
+    jge @gen_id_done
     
     ; Generate pseudo-random hex digit
     mov rax, rbx
@@ -426,15 +426,15 @@ GenerateAnonymousSessionId PROC
     ; Convert remainder to hex digit
     add dl, '0'
     cmp dl, '9'
-    jle .gen_id_store
+    jle @gen_id_store
     add dl, 'A' - '0' - 10
     
-.gen_id_store:
+@gen_id_store:
     mov [r12 + rbx], dl
     inc rbx
-    jmp .gen_id_loop
+    jmp @gen_id_loop
     
-.gen_id_done:
+@gen_id_done:
     mov byte [r12 + 31], 0             ; Null terminate
     
     pop r12
@@ -454,7 +454,7 @@ RecordTelemetryEvent PROC
     
     ; Check if telemetry enabled (user opt-in)
     cmp byte [telemetry_enabled], 1
-    jne .telemetry_skip
+    jne @telemetry_skip
     
     ; Lock telemetry queue
     lea rcx, [rel telemetry_lock]
@@ -463,7 +463,7 @@ RecordTelemetryEvent PROC
     ; Check if queue has space
     mov eax, [telemetry_count]
     cmp eax, TELEMETRY_BATCH_SIZE - 1
-    jge .telemetry_full
+    jge @telemetry_full
     
     ; Add event to queue
     lea rbx, [rel telemetry_queue]
@@ -496,17 +496,17 @@ RecordTelemetryEvent PROC
     call LeaveCriticalSection
     
     mov eax, 1
-    jmp .telemetry_done
+    jmp @telemetry_done
     
-.telemetry_full:
+@telemetry_full:
     lea rcx, [rel telemetry_lock]
     call LeaveCriticalSection
     xor eax, eax
     
-.telemetry_skip:
+@telemetry_skip:
     xor eax, eax
     
-.telemetry_done:
+@telemetry_done:
     pop r12
     pop rbx
     ret
@@ -518,7 +518,7 @@ RecordTelemetryEvent ENDP
 ; Output: None
 TelemetryFlushThread PROC
     
-.telemetry_flush_loop:
+@telemetry_flush_loop:
     ; Sleep 60 seconds
     mov ecx, TELEMETRY_FLUSH_INTERVAL
     call Sleep
@@ -526,7 +526,7 @@ TelemetryFlushThread PROC
     ; Check if we have events to flush
     mov eax, [telemetry_count]
     test eax, eax
-    jz .telemetry_flush_loop
+    jz @telemetry_flush_loop
     
     ; Flush telemetry batch
     lea rcx, [rel telemetry_queue]
@@ -536,7 +536,7 @@ TelemetryFlushThread PROC
     ; Clear queue
     mov dword [telemetry_count], 0
     
-    jmp .telemetry_flush_loop
+    jmp @telemetry_flush_loop
     ret
 TelemetryFlushThread ENDP
 
@@ -561,19 +561,19 @@ UploadTelemetryBatch PROC
     lea rcx, [rel telemetry_server]
     call InternetOpenUrlA
     test rax, rax
-    jz .telemetry_upload_failed
+    jz @telemetry_upload_failed
     
     ; Send POST request (simplified)
     mov rcx, rax
     call InternetCloseHandle
     
     mov eax, 1
-    jmp .telemetry_upload_done
+    jmp @telemetry_upload_done
     
-.telemetry_upload_failed:
+@telemetry_upload_failed:
     xor eax, eax
     
-.telemetry_upload_done:
+@telemetry_upload_done:
     pop r12
     pop rbx
     ret
@@ -610,13 +610,13 @@ InitializeAutoUpdater ENDP
 ; Output: None
 UpdateCheckerThread PROC
     
-.update_check_loop:
+@update_check_loop:
     ; Check if enough time has passed since last check
     call GetTickCount
     mov rdx, [last_update_check]
     sub rax, rdx
     cmp rax, UPDATE_CHECK_INTERVAL
-    jl .update_wait
+    jl @update_wait
     
     ; Time to check for update
     lea rcx, [rel update_result]
@@ -624,19 +624,19 @@ UpdateCheckerThread PROC
     
     ; If update available, show notification
     cmp [update_result.available], 1
-    jne .update_check_loop
+    jne @update_check_loop
     
     ; Show notification (asynchronously)
     lea rcx, [rel update_result]
     call ShowUpdateNotification
     
-    jmp .update_check_loop
+    jmp @update_check_loop
     
-.update_wait:
+@update_wait:
     ; Sleep 5 minutes and try again
     mov ecx, 300000
     call Sleep
-    jmp .update_check_loop
+    jmp @update_check_loop
     ret
 UpdateCheckerThread ENDP
 
@@ -656,7 +656,7 @@ CheckForUpdates PROC
     mov r8, INTERNET_FLAG_RELOAD
     call InternetOpenUrlA
     test rax, rax
-    jz .check_update_failed
+    jz @check_update_failed
     
     mov rbx, rax                       ; rbx = hInternet
     
@@ -666,7 +666,7 @@ CheckForUpdates PROC
     mov r8, 4096
     call InternetReadFile
     test rax, rax
-    jz .check_update_close
+    jz @check_update_close
     
     ; Parse JSON response
     lea rcx, [rel update_response_buffer]
@@ -677,11 +677,11 @@ CheckForUpdates PROC
     call GetTickCount
     mov [last_update_check], rax
     
-.check_update_close:
+@check_update_close:
     mov rcx, rbx
     call InternetCloseHandle
     
-.check_update_failed:
+@check_update_failed:
     pop r12
     pop rbx
     ret
@@ -851,39 +851,39 @@ PopulateMenus ENDP
 WndProc PROC
     
     cmp edx, WM_COMMAND
-    je .handle_command
+    je @handle_command
     
     cmp edx, WM_CREATE
-    je .handle_create
+    je @handle_create
     
     cmp edx, WM_DESTROY
-    je .handle_destroy
+    je @handle_destroy
     
     cmp edx, WM_PAINT
-    je .handle_paint
+    je @handle_paint
     
     ; Default handler
     mov rcx, r9
     call DefWindowProcA
     ret
     
-.handle_command:
+@handle_command:
     ; Dispatch to menu command handler
     mov rcx, r8w                       ; Low word = menu ID
     lea rdx, [rel WndProc_Command]
     jmp [rdx]
     
-.handle_create:
+@handle_create:
     mov [window_ctx.hwnd], rcx
     xor eax, eax
     ret
     
-.handle_destroy:
+@handle_destroy:
     call PostQuitMessage
     xor eax, eax
     ret
     
-.handle_paint:
+@handle_paint:
     lea rcx, [rel ps]
     call BeginPaint
     ; Render UI here
@@ -901,49 +901,49 @@ WndProc ENDP
 WndProc_Command PROC
     
     cmp rcx, IDM_FILE_NEW
-    je .cmd_file_new
+    je @cmd_file_new
     
     cmp rcx, IDM_FILE_OPEN
-    je .cmd_file_open
+    je @cmd_file_open
     
     cmp rcx, IDM_FILE_EXIT
-    je .cmd_file_exit
+    je @cmd_file_exit
     
     cmp rcx, IDM_EDIT_UNDO
-    je .cmd_edit_undo
+    je @cmd_edit_undo
     
     cmp rcx, IDM_AI_AUTOCOMPLETE
-    je .cmd_ai_autocomplete
+    je @cmd_ai_autocomplete
     
     cmp rcx, IDM_HELP_ABOUT
-    je .cmd_help_about
+    je @cmd_help_about
     
     ret
     
-.cmd_file_new:
+@cmd_file_new:
     call NewFile
     ret
     
-.cmd_file_open:
+@cmd_file_open:
     call OpenFileDialog
     ret
     
-.cmd_file_exit:
+@cmd_file_exit:
     mov rcx, [window_ctx.hwnd]
     mov edx, 0
     mov r8d, 0
     call SendMessageA
     ret
     
-.cmd_edit_undo:
+@cmd_edit_undo:
     call UndoLastAction
     ret
     
-.cmd_ai_autocomplete:
+@cmd_ai_autocomplete:
     call AIAutoComplete
     ret
     
-.cmd_help_about:
+@cmd_help_about:
     call ShowAboutDialog
     ret
     
@@ -979,7 +979,7 @@ StartPerformanceCounter PROC
     ; Find free counter slot
     mov rax, [perf_counter_count]
     cmp rax, 64
-    jge .perf_counter_full
+    jge @perf_counter_full
     
     ; Initialize counter
     lea rbx, [rel perf_counters]
@@ -1004,7 +1004,7 @@ StartPerformanceCounter PROC
     pop rbx
     ret
     
-.perf_counter_full:
+@perf_counter_full:
     mov rax, -1
     pop rbx
     ret
@@ -1018,7 +1018,7 @@ StopPerformanceCounter PROC
     push rbx
     
     cmp rcx, [perf_counter_count]
-    jge .perf_stop_invalid
+    jge @perf_stop_invalid
     
     ; Get counter
     lea rbx, [rel perf_counters]
@@ -1045,7 +1045,7 @@ StopPerformanceCounter PROC
     pop rbx
     ret
     
-.perf_stop_invalid:
+@perf_stop_invalid:
     mov rax, -1
     pop rbx
     ret
@@ -1071,7 +1071,7 @@ LoadConfiguration PROC
     lea r10, [rel hKeyConfig]
     call RegOpenKeyExA
     test eax, eax
-    jnz .config_not_found
+    jnz @config_not_found
     
     ; Load version
     lea rcx, [rel hKeyConfig]
@@ -1094,13 +1094,13 @@ LoadConfiguration PROC
     call RegCloseKey
     
     mov eax, 1
-    jmp .config_done
+    jmp @config_done
     
-.config_not_found:
+@config_not_found:
     ; Create default config
     xor eax, eax
     
-.config_done:
+@config_done:
     pop r12
     pop rbx
     ret
@@ -1121,7 +1121,7 @@ SaveConfiguration PROC
     lea r10, [rel hKeyConfig]
     call RegOpenKeyExA
     test eax, eax
-    jnz .config_save_failed
+    jnz @config_save_failed
     
     ; Save version
     lea rcx, [rel hKeyConfig]
@@ -1144,12 +1144,12 @@ SaveConfiguration PROC
     call RegCloseKey
     
     mov eax, 1
-    jmp .config_save_done
+    jmp @config_save_done
     
-.config_save_failed:
+@config_save_failed:
     xor eax, eax
     
-.config_save_done:
+@config_save_done:
     pop rbx
     ret
 SaveConfiguration ENDP
@@ -1169,7 +1169,7 @@ PublicProc PROC
     ; 1. Initialize crash handler
     call InitializeCrashHandler
     test eax, eax
-    jz .init_failed
+    jz @init_failed
     
     ; 2. Load configuration
     call LoadConfiguration
@@ -1188,12 +1188,12 @@ PublicProc PROC
     
     ; All systems initialized
     mov eax, 1
-    jmp .init_done
+    jmp @init_done
     
-.init_failed:
+@init_failed:
     xor eax, eax
     
-.init_done:
+@init_done:
     pop r12
     pop rbx
     ret

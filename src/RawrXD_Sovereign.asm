@@ -95,19 +95,19 @@ RawrXD_Main ENDP
 MainWndProc PROC
     ; rcx: hWnd, rdx: uMsg, r8: wParam, r9: lParam
     cmp rdx, 2              ; WM_DESTROY
-    je .msg_destroy
+    je @msg_destroy
     cmp rdx, 5              ; WM_SIZE
-    je .msg_size
+    je @msg_size
     
     jmp DefWindowProcA
 
-.msg_destroy:
+@msg_destroy:
     xor rcx, rcx
     call PostQuitMessage
     xor rax, rax
     ret
 
-.msg_size:
+@msg_size:
     ; Forward to UI Engine for layout adjustment
     mov rcx, rcx            ; hWnd
     call ResizeRawrXDLanes

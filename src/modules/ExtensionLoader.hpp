@@ -144,10 +144,10 @@ private:
         // Use LoadLibraryExW with the wide path we already built.
         // LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR lets the extension resolve its own
         // sibling DLLs; LOAD_LIBRARY_SEARCH_SYSTEM32 ensures system DLLs are
-        // still reachable.
+        // still reachable. LOAD_LIBRARY_SEARCH_DEFAULT_DIRS includes the app path.
         HMODULE hMod = LoadLibraryExW(
             wDllPath.c_str(), nullptr,
-            LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+            LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
         if (!hMod) {
             std::cout << "[ExtensionLoader] Failed to load: "
                       << dllPath << " (error " << GetLastError() << ")" << std::endl;
