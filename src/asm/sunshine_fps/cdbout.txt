@@ -1,0 +1,96 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4188 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: "d:\rawrxd\src\asm\sunshine_fps\SunshineFPS.exe" 
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff6`1b380000 00007ff6`1b39e000   image00007ff6`1b380000
+ModLoad: 00007fff`f58a0000 00007fff`f5b07000   ntdll.dll
+ModLoad: 00007fff`f4f10000 00007fff`f4fd9000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007fff`f22d0000 00007fff`f26c7000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007fff`750a0000 00007fff`751af000   C:\WINDOWS\SYSTEM32\OPENGL32.dll
+ModLoad: 00007fff`f56f0000 00007fff`f5799000   C:\WINDOWS\System32\msvcrt.dll
+ModLoad: 00007fff`f3800000 00007fff`f38b6000   C:\WINDOWS\System32\ADVAPI32.dll
+ModLoad: 00007fff`f5260000 00007fff`f5307000   C:\WINDOWS\System32\sechost.dll
+ModLoad: 00007fff`f5140000 00007fff`f5258000   C:\WINDOWS\System32\RPCRT4.dll
+ModLoad: 00007fff`f5460000 00007fff`f5626000   C:\WINDOWS\System32\USER32.dll
+ModLoad: 00007fff`f2820000 00007fff`f2847000   C:\WINDOWS\System32\win32u.dll
+ModLoad: 00007fff`f3db0000 00007fff`f3ddb000   C:\WINDOWS\System32\GDI32.dll
+ModLoad: 00007fff`f2a80000 00007fff`f2bac000   C:\WINDOWS\System32\gdi32full.dll
+ModLoad: 00007fff`f2850000 00007fff`f28f3000   C:\WINDOWS\System32\msvcp_win.dll
+ModLoad: 00007fff`f26d0000 00007fff`f281b000   C:\WINDOWS\System32\ucrtbase.dll
+ModLoad: 00007fff`f39b0000 00007fff`f3d33000   C:\WINDOWS\System32\combase.dll
+ModLoad: 00007fff`747a0000 00007fff`747cd000   C:\WINDOWS\SYSTEM32\GLU32.dll
+ModLoad: 00007fff`efe90000 00007fff`efed5000   C:\WINDOWS\SYSTEM32\dxcore.dll
+(1600.330): Break instruction exception - code 80000003 (first chance)
+ntdll!LdrpDoDebuggerBreak+0x35:
+00007fff`f59bf58d cc              int     3
+0:000> cdb: Reading initial command 'g; k; q'
+ModLoad: 00007fff`f5100000 00007fff`f5132000   C:\WINDOWS\System32\IMM32.DLL
+(1600.330): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+*** WARNING: Unable to verify checksum for d:\rawrxd\src\asm\sunshine_fps\SunshineFPS.exe
+Child-SP          RetAddr               Call Site
+00000079`e816fd98 00007ff6`1b38432d     SunshineFPS+0x18c6
+00000079`e816fda0 00007ff6`1b384325     SunshineFPS+0x432d
+00000079`e816fda8 00000079`e816f778     SunshineFPS+0x4325
+00000079`e816fdb0 00007ff6`1b384010     0x00000079`e816f778
+00000079`e816fdb8 00007ff6`1b381919     SunshineFPS+0x4010
+00000079`e816fdc0 00007ff6`1b38432d     SunshineFPS+0x1919
+00000079`e816fdc8 00000079`e816f778     SunshineFPS+0x432d
+00000079`e816fdd0 00007ff6`1b384325     0x00000079`e816f778
+00000079`e816fdd8 00007ff6`1b384010     SunshineFPS+0x4325
+00000079`e816fde0 00007ff6`1b381de1     SunshineFPS+0x4010
+00000079`e816fde8 00007fff`f4f431cd     SunshineFPS+0x1de1
+00000079`e816fdf0 00007ff6`1b382092     KERNEL32!CreateThreadStub+0x3d
+00000079`e816fe40 00000000`00000000     SunshineFPS+0x2092
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'

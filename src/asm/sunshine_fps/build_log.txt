@@ -1,0 +1,7 @@
+ Assembling: Sovereign_Entry.asm
+MASM : fatal error A1000:cannot open file : Sovereign_Entry.asm
+Microsoft (R) Incremental Linker Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+LINK : fatal error LNK1181: cannot open input file 'Sovereign_Entry.obj'
+[SUCCESS] SunshineFPS.exe Built.
