@@ -84,34 +84,192 @@ Process_ZeroG_Packet PROC
     vpbroadcastw zmm9,  word ptr [KYBER_QINV_CONST]
     lea r10, KYBER_TWIDDLE_FACTORS
 
-    ; Phase 3: Layer 1 cross-register butterflies (representative pass)
+    ; Phase 3: Layer 1 cross-register butterflies (stride 128, distance 512 bytes)
+    ; Twiddle indices: 0, 0, 0, 0 (single twiddle broadcast to all pairs)
     vpbroadcastw zmm10, word ptr [r10 + 0]
     KYBER_BUTTERFLY_32L zmm0, zmm4, zmm10, zmm11, zmm12, zmm8, zmm9
-
-    vpbroadcastw zmm10, word ptr [r10 + 2]
     KYBER_BUTTERFLY_32L zmm1, zmm5, zmm10, zmm11, zmm12, zmm8, zmm9
-
-    vpbroadcastw zmm10, word ptr [r10 + 4]
     KYBER_BUTTERFLY_32L zmm2, zmm6, zmm10, zmm11, zmm12, zmm8, zmm9
-
-    vpbroadcastw zmm10, word ptr [r10 + 6]
     KYBER_BUTTERFLY_32L zmm3, zmm7, zmm10, zmm11, zmm12, zmm8, zmm9
 
-    ; Phase 4: Layer 4-7 in-register permutation pipeline controls
+    ; Phase 4: Layer 2 cross-register butterflies (stride 64, distance 256 bytes)
+    ; Twiddle indices: 0, 2, 4, 6 (four distinct twiddles)
+    vpbroadcastw zmm10, word ptr [r10 + 0]
+    KYBER_BUTTERFLY_32L zmm0, zmm2, zmm10, zmm11, zmm12, zmm8, zmm9
+    vpbroadcastw zmm10, word ptr [r10 + 2]
+    KYBER_BUTTERFLY_32L zmm1, zmm3, zmm10, zmm11, zmm12, zmm8, zmm9
+    vpbroadcastw zmm10, word ptr [r10 + 4]
+    KYBER_BUTTERFLY_32L zmm4, zmm6, zmm10, zmm11, zmm12, zmm8, zmm9
+    vpbroadcastw zmm10, word ptr [r10 + 6]
+    KYBER_BUTTERFLY_32L zmm5, zmm7, zmm10, zmm11, zmm12, zmm8, zmm9
+
+    ; Phase 5: Layer 3 cross-register butterflies (stride 32, distance 128 bytes)
+    ; Twiddle indices: 0, 2, 4, 6, 8, 10, 12, 14 (eight distinct twiddles)
+    vpbroadcastw zmm10, word ptr [r10 + 0]
+    KYBER_BUTTERFLY_32L zmm0, zmm1, zmm10, zmm11, zmm12, zmm8, zmm9
+    vpbroadcastw zmm10, word ptr [r10 + 2]
+    KYBER_BUTTERFLY_32L zmm2, zmm3, zmm10, zmm11, zmm12, zmm8, zmm9
+    vpbroadcastw zmm10, word ptr [r10 + 4]
+    KYBER_BUTTERFLY_32L zmm4, zmm5, zmm10, zmm11, zmm12, zmm8, zmm9
+    vpbroadcastw zmm10, word ptr [r10 + 6]
+    KYBER_BUTTERFLY_32L zmm6, zmm7, zmm10, zmm11, zmm12, zmm8, zmm9
+
+    ; Phase 6: Layer 4-7 in-register permutation pipeline controls
     vmovdqu64 zmm14, zmmword ptr [PERM_MASK_LAYER5]
     vmovdqu64 zmm15, zmmword ptr [PERM_MASK_LAYER6]
 
-    ; Example in-register invocation sequence for a packed register pair
-    vpbroadcastw zmm10, word ptr [r10 + 32]
-    KYBER_BUTTERFLY_32L zmm0, zmm1, zmm10, zmm11, zmm12, zmm8, zmm9
+    ; Phase 7: Layer 4 intra-register butterflies (stride 16, vshufi64x2 shuffle)
+    ; Operate on adjacent 128-bit lanes within each 512-bit register
+    ; Twiddle indices: 16, 18, 20, 22 (broadcast within lane pairs)
+    vpbroadcastw zmm10, word ptr [r10 + 16]
+    vshufi64x2 zmm16, zmm0, zmm0, 0B1h  ; Swap adjacent 128-bit lanes
+    vshufi64x2 zmm17, zmm1, zmm1, 0B1h
+    KYBER_BUTTERFLY_32L zmm0, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm1, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 18]
+    vshufi64x2 zmm16, zmm2, zmm2, 0B1h
+    vshufi64x2 zmm17, zmm3, zmm3, 0B1h
+    KYBER_BUTTERFLY_32L zmm2, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm3, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 20]
+    vshufi64x2 zmm16, zmm4, zmm4, 0B1h
+    vshufi64x2 zmm17, zmm5, zmm5, 0B1h
+    KYBER_BUTTERFLY_32L zmm4, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm5, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 22]
+    vshufi64x2 zmm16, zmm6, zmm6, 0B1h
+    vshufi64x2 zmm17, zmm7, zmm7, 0B1h
+    KYBER_BUTTERFLY_32L zmm6, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm7, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
 
-    ; Phase 5: Strict normalization pass to canonical ring representation
+    ; Phase 8: Layer 5 intra-register butterflies (stride 8, vpermd shuffle)
+    ; Operate on adjacent 64-bit qword pairs using PERM_MASK_LAYER5
+    ; Twiddle indices: 24, 26, 28, 30, 32, 34, 36, 38
+    vpbroadcastw zmm10, word ptr [r10 + 24]
+    vpermd zmm16, zmm14, zmm0
+    vpermd zmm17, zmm14, zmm1
+    KYBER_BUTTERFLY_32L zmm0, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm1, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 26]
+    vpermd zmm16, zmm14, zmm2
+    vpermd zmm17, zmm14, zmm3
+    KYBER_BUTTERFLY_32L zmm2, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm3, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 28]
+    vpermd zmm16, zmm14, zmm4
+    vpermd zmm17, zmm14, zmm5
+    KYBER_BUTTERFLY_32L zmm4, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm5, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 30]
+    vpermd zmm16, zmm14, zmm6
+    vpermd zmm17, zmm14, zmm7
+    KYBER_BUTTERFLY_32L zmm6, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm7, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+
+    ; Phase 9: Layer 6 intra-register butterflies (stride 4, vpermw shuffle)
+    ; Operate on adjacent 32-bit dword pairs using PERM_MASK_LAYER6
+    ; Twiddle indices: 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70
+    vpbroadcastw zmm10, word ptr [r10 + 40]
+    vpermw zmm16, zmm15, zmm0
+    vpermw zmm17, zmm15, zmm1
+    KYBER_BUTTERFLY_32L zmm0, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm1, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 42]
+    vpermw zmm16, zmm15, zmm2
+    vpermw zmm17, zmm15, zmm3
+    KYBER_BUTTERFLY_32L zmm2, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm3, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 44]
+    vpermw zmm16, zmm15, zmm4
+    vpermw zmm17, zmm15, zmm5
+    KYBER_BUTTERFLY_32L zmm4, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm5, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 46]
+    vpermw zmm16, zmm15, zmm6
+    vpermw zmm17, zmm15, zmm7
+    KYBER_BUTTERFLY_32L zmm6, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    KYBER_BUTTERFLY_32L zmm7, zmm17, zmm10, zmm11, zmm12, zmm8, zmm9
+
+    ; Phase 10: Layer 7 intra-register butterflies (stride 2, adjacent word pairs)
+    ; Final layer operates on adjacent 16-bit word pairs within each lane
+    ; Twiddle indices: 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102
+    ; Uses vpsrlq/vpsllq for in-register pair extraction
+    vpbroadcastw zmm10, word ptr [r10 + 72]
+    vpsrlq zmm16, zmm0, 16
+    vpsllq zmm17, zmm0, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm0, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 74]
+    vpsrlq zmm16, zmm1, 16
+    vpsllq zmm17, zmm1, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm1, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 76]
+    vpsrlq zmm16, zmm2, 16
+    vpsllq zmm17, zmm2, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm2, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 78]
+    vpsrlq zmm16, zmm3, 16
+    vpsllq zmm17, zmm3, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm3, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 80]
+    vpsrlq zmm16, zmm4, 16
+    vpsllq zmm17, zmm4, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm4, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 82]
+    vpsrlq zmm16, zmm5, 16
+    vpsllq zmm17, zmm5, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm5, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 84]
+    vpsrlq zmm16, zmm6, 16
+    vpsllq zmm17, zmm6, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm6, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+    
+    vpbroadcastw zmm10, word ptr [r10 + 86]
+    vpsrlq zmm16, zmm7, 16
+    vpsllq zmm17, zmm7, 48
+    vpsrlq zmm17, zmm17, 48
+    KYBER_BUTTERFLY_32L zmm7, zmm16, zmm10, zmm11, zmm12, zmm8, zmm9
+
+    ; Phase 11: Strict normalization pass to canonical ring representation [0, q-1]
     KYBER_STRICT_NORMALIZE_32L zmm0, zmm11, zmm12, zmm8
     KYBER_STRICT_NORMALIZE_32L zmm1, zmm11, zmm12, zmm8
+    KYBER_STRICT_NORMALIZE_32L zmm2, zmm11, zmm12, zmm8
+    KYBER_STRICT_NORMALIZE_32L zmm3, zmm11, zmm12, zmm8
+    KYBER_STRICT_NORMALIZE_32L zmm4, zmm11, zmm12, zmm8
+    KYBER_STRICT_NORMALIZE_32L zmm5, zmm11, zmm12, zmm8
+    KYBER_STRICT_NORMALIZE_32L zmm6, zmm11, zmm12, zmm8
+    KYBER_STRICT_NORMALIZE_32L zmm7, zmm11, zmm12, zmm8
 
-    ; Phase 6: Non-temporal eviction
-    vmovntdq zmmword ptr [rdi + 0], zmm0
-    vmovntdq zmmword ptr [rdi + 64], zmm1
+    ; Phase 12: Non-temporal eviction (full 512-byte state)
+    vmovntdq zmmword ptr [rdi +   0], zmm0
+    vmovntdq zmmword ptr [rdi +  64], zmm1
+    vmovntdq zmmword ptr [rdi + 128], zmm2
+    vmovntdq zmmword ptr [rdi + 192], zmm3
+    vmovntdq zmmword ptr [rdi + 256], zmm4
+    vmovntdq zmmword ptr [rdi + 320], zmm5
+    vmovntdq zmmword ptr [rdi + 384], zmm6
+    vmovntdq zmmword ptr [rdi + 448], zmm7
 
     ; Phase 7: Memory barrier
     sfence
