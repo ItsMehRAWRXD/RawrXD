@@ -3,17 +3,19 @@
 // PHASE-29: C++ Interface to MASM PQC Kernels
 // Target: 70B @ 150TPS via AVX-512 Vectorized NTT
 // ------------------------------------------------------------------------------
-// Zero-dependency standard C++17/20 header. Maps assembly procedures to C++
-// types using extern "C" linkage for ABI compatibility.
-//
-// CRITICAL: All buffers MUST be 64-byte aligned (use _aligned_malloc or
-// equivalent). vmovdqa64 will #GP fault on unaligned addresses.
+// Zero-dependency header for MASM ABI compatibility.
+// CRITICAL: All buffers MUST be 64-byte aligned (use _aligned_malloc).
 // ==============================================================================
 
 #pragma once
-#include <cstdint>
-#include <cstdlib>
 
+// C++ standard headers MUST be included BEFORE extern "C" to avoid template linkage issues
+#ifdef __cplusplus
+#include <atomic>
+#include <memory>
+#endif
+
+// C linkage block for MASM function declarations
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -337,7 +339,6 @@ int SwarmV29_Verify_Integrity(
 // -- Cache-Line Aligned Sync Block (False Sharing Prevention) --
 
 #ifdef __cplusplus
-#include <atomic>
 
 namespace SwarmV29 {
 
@@ -377,7 +378,6 @@ void SwarmV29_Quantum_Residue_Purge(void* buffer, uint64_t size);
 // C++ Helper: Aligned Memory Allocation
 // ==============================================================================
 #ifdef __cplusplus
-#include <memory>
 
 namespace SwarmV29 {
 
