@@ -1,0 +1,102 @@
+[ASSEMBLING] Globals...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Globals.asm
+[ASSEMBLING] PEB Loader...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: Sovereign_PEB_Loader.asm
+[ASSEMBLING] Heap...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: Sovereign_Heap.asm
+[ASSEMBLING] Elite Scanner (Masked)...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Elite_Scanner.asm
+[ASSEMBLING] Hardware Lite (Audit + ScanPattern)...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: Sovereign_Hardware_Lite.asm
+[ASSEMBLING] Ring Bridge...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Ring_Bridge.asm
+[ASSEMBLING] Model Loader...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: Sovereign_Model_Loader.asm
+[ASSEMBLING] Action Dispatcher...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: Sovereign_Action_Dispatcher.asm
+[ASSEMBLING] Elite Stubs...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: Sovereign_Elite_Stubs.asm
+[ASSEMBLING] Bootstrap Core...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Bootstrap_Core.asm
+[ASSEMBLING] Registry Manager...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Registry_Manager.asm
+[ASSEMBLING] Cache Pulse...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_AES_Cache_Pulse.asm
+[ASSEMBLING] Jitter Probe...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Jitter_Probe.asm
+[ASSEMBLING] Compiler Pass...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Compiler_Pass.asm
+[ASSEMBLING] Watchdog...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Watchdog_Lean.asm
+[ASSEMBLING] Execution Graph Logic...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm\Sovereign_Execution_Graph_Logic.asm
+[ASSEMBLING] Main Orchestrator...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: Sovereign_Main.asm
+[LINKING] Sovereign_Elite_Production.exe...
+Microsoft (R) Incremental Linker Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Sovereign_Main.obj : error LNK2019: unresolved external symbol Sovereign_GEMM_Q4_F32_Pipelined referenced in function Sovereign_Benchmark_Suite
+Sovereign_Hardware_Lite.obj : error LNK2001: unresolved external symbol Sovereign_GEMM_Q4_F32_Pipelined
+Sovereign_Main.obj : error LNK2019: unresolved external symbol g_hStdOut referenced in function Probe
+Sovereign_Main.obj : error LNK2019: unresolved external symbol g_pWriteFile referenced in function Probe
+Sovereign_Jitter_Probe.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Watchdog_Lean.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Globals.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Elite_Scanner.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Bootstrap_Core.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Registry_Manager.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Hardware_Lite.obj : error LNK2019: unresolved external symbol g_DispatchTable referenced in function Sovereign_Hardware_Audit
+Sovereign_Hardware_Lite.obj : error LNK2019: unresolved external symbol Sovereign_GEMM_Q4_F32 referenced in function Sovereign_Hardware_Audit
+Sovereign_Elite_Production.exe : fatal error LNK1120: 6 unresolved externals

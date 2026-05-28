@@ -209,6 +209,7 @@ RawrXD_MapModelView2MB PROC FRAME
     ; Align offset down to 64KB and expand map size by delta
     mov     rax, r11
     and     rax, ALIGN_64K_MASK             ; alignedOffset
+    push    r13                             ; Save outBaseOrError*
     mov     r13, rax
     mov     r14, r11
     sub     r14, r13                        ; delta = offset - alignedOffset
@@ -222,8 +223,9 @@ RawrXD_MapModelView2MB PROC FRAME
     mov     r8, rax
     shr     r8, 32                          ; off_hi
     mov     r9d, eax                        ; off_lo
-    mov     qword ptr [rsp+20h], r15         ; 5th arg: mapSize
+    mov     qword ptr [rsp+28h], r15         ; 5th arg: mapSize (note: adjust for push r13)
     call    MapViewOfFile
+    pop     r13                             ; Restore outBaseOrError*
     test    rax, rax
     jz      @fail_last_error
 

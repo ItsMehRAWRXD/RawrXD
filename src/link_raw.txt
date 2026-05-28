@@ -1,0 +1,14 @@
+Microsoft (R) Incremental Linker Version 14.50.35723.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Sovereign_Elite_Scanner.obj : error LNK2005: Sovereign_SIMD_Scanner_Masked already defined in Sovereign_Globals.obj
+Sovereign_Ring_Bridge.obj : error LNK2005: Ring_Push_Atomic already defined in Sovereign_Globals.obj
+Sovereign_Bootstrap_Core.obj : error LNK2005: Sovereign_Bootstrap_Core already defined in Sovereign_Globals.obj
+Sovereign_Globals.obj : error LNK2019: unresolved external symbol Sovereign_AVX512_Tail_Scan referenced in function Sovereign_SIMD_Scanner_Masked
+Sovereign_Watchdog_Lean.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Elite_Scanner.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Bootstrap_Core.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Registry_Manager.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Jitter_Probe.obj : error LNK2001: unresolved external symbol Print
+Sovereign_Watchdog_Lean.obj : error LNK2019: unresolved external symbol Titan_Peak_Cycles referenced in function Sovereign_Watchdog_Profile_Lean_V2
+Sovereign_Elite_Test.exe : fatal error LNK1120: 3 unresolved externals

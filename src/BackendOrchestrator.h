@@ -147,6 +147,28 @@ struct SovereignScalingConfig {
     int  kv_mid_tokens = 4096;
 };
 
+// ─── Disk-Paged Streaming Defaults (v1.0 Production Tuple) ────────────────────
+// Validated 2026-05-28: 10.19 GiB/s sustained throughput
+// Architecture: Event-based (WaitForMultipleObjects), max depth 64
+struct DiskPagedDefaults {
+    static constexpr uint64_t kWindowBytes      = 192ULL * 1024 * 1024;  // 192 MB
+    static constexpr uint32_t kPrefetchDepth    = 64;                     // Windows API max
+    static constexpr uint32_t kWarmPasses     = 1;
+    static constexpr bool     kNoBuffering    = true;
+    static constexpr uint64_t kSectorSize       = 4096;
+    static constexpr uint64_t kStagingFootprint = kWindowBytes * kPrefetchDepth; // 12.0 GB
+};
+
+// ─── IOCP v2.0 Migration Scaffold (Depth 96+ target) ──────────────────────────
+struct IocpStreamingConfig {
+    static constexpr uint64_t kWindowBytes      = 192ULL * 1024 * 1024;  // 192 MB
+    static constexpr uint32_t kTargetDepth      = 96;                    // IOCP enables >64
+    static constexpr uint32_t kWarmPasses     = 1;
+    static constexpr bool     kNoBuffering    = true;
+    static constexpr uint32_t kThreadPoolSize   = 4;                     // Completion threads
+    static constexpr uint64_t kStagingFootprint = kWindowBytes * kTargetDepth; // 18.4 GB
+};
+
 // ─── Speculative decoding config ─────────────────────────────────────────────
 struct SpecDecodingConfig {
     std::string draft_model_path;   // small fast model for draft tokens

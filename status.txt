@@ -1,0 +1,98 @@
+On branch chore/sovereign-audit-cleanup
+Your branch is ahead of 'rawrxda/sovereign/push-20260526-125126' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	Atomic Core Milestone Achieved - Google Gemini.html
+	Atomic Core Milestone Achieved - Google Gemini_files/
+	Deploy-SovereignAssets.ps1
+	bench/
+	build_sovereign.ps1
+	macros.txt
+	patch_hardening.py
+	patch_hardening_2.py
+	patch_hardening_3.py
+	run_phi_smoke.bat
+	src/Sovereign_Activator.asm
+	src/Sovereign_Console.asm
+	src/Sovereign_Console_Ring.asm
+	src/Sovereign_GEMM_Q4_F32.asm
+	src/Sovereign_GEMM_Q4_F32_Pipelined.asm
+	src/Sovereign_KV_Core.asm
+	src/asm/Deploy-SovereignAssets.ps1
+	src/asm/Sovereign_ABI_Contract.inc
+	src/asm/Sovereign_Activator_SwiGLU.asm
+	src/asm/Sovereign_Allocator.asm
+	src/asm/Sovereign_Allocator.inc
+	src/asm/Sovereign_Atomics.inc
+	src/asm/Sovereign_Beacon_Shadow_Map.asm
+	src/asm/Sovereign_Boot.asm
+	src/asm/Sovereign_Branch_Model.inc
+	src/asm/Sovereign_CacheLine_Model.inc
+	src/asm/Sovereign_ChaosForge_v1.0.0.asm
+	src/asm/Sovereign_Coherence_Fence.asm
+	src/asm/Sovereign_ConfigLexer.asm
+	src/asm/Sovereign_ConfigParser.asm
+	src/asm/Sovereign_ConfigStore.asm
+	src/asm/Sovereign_ConfigTest.asm
+	src/asm/Sovereign_Context.asm
+	src/asm/Sovereign_Core_Affinity.asm
+	src/asm/Sovereign_DAG_Executor.asm
+	src/asm/Sovereign_DMA_Ingest.asm
+	src/asm/Sovereign_Dispatch.asm
+	src/asm/Sovereign_Dispatch.inc
+	src/asm/Sovereign_Entry.asm
+	src/asm/Sovereign_Entry_Hybrid.asm
+	src/asm/Sovereign_Execution_Lanes.asm
+	src/asm/Sovereign_Fabric_Scheduler.asm
+	src/asm/Sovereign_FrameABI.inc
+	src/asm/Sovereign_GEMM_Q4_F32.asm
+	src/asm/Sovereign_GGUF_Schema_Runtime.inc
+	src/asm/Sovereign_Ghost_Trace.asm
+	src/asm/Sovereign_Hardening_Core.asm
+	src/asm/Sovereign_Hardware.asm
+	src/asm/Sovereign_InitDAG.asm
+	src/asm/Sovereign_Interrupts.asm
+	src/asm/Sovereign_Kernel_VectorDispatch.asm
+	src/asm/Sovereign_KeyGen_Utility.asm
+	src/asm/Sovereign_License_Payload.inc
+	src/asm/Sovereign_Loader.asm
+	src/asm/Sovereign_Memory_Arena.asm
+	src/asm/Sovereign_Monolith_Complete.asm
+	src/asm/Sovereign_Omni_Engine.asm
+	src/asm/Sovereign_Parity.asm
+	src/asm/Sovereign_Platform.inc
+	src/asm/Sovereign_Prefetch_Scheduler.asm
+	src/asm/Sovereign_Register_Map.inc
+	src/asm/Sovereign_Registry.asm
+	src/asm/Sovereign_Runtime_Orchestrator.asm
+	src/asm/Sovereign_SEH_Core.inc
+	src/asm/Sovereign_SHAM.asm
+	src/asm/Sovereign_Security.asm
+	src/asm/Sovereign_Security.inc
+	src/asm/Sovereign_Security_Fix.asm
+	src/asm/Sovereign_Security_Harness.asm
+	src/asm/Sovereign_Speculative_Engine.asm
+	src/asm/Sovereign_Stream.asm
+	src/asm/Sovereign_StreamBridge.asm
+	src/asm/Sovereign_Stream_Safe_Iterator.asm
+	src/asm/Sovereign_StreamingBridge.asm
+	src/asm/Sovereign_Syscall_Gate.asm
+	src/asm/Sovereign_Syscall_Tiers.inc
+	src/asm/Sovereign_Telemetry.asm
+	src/asm/Sovereign_Topology.asm
+	src/asm/audit_models.ps1
+	src/asm/generate_sovereign_license.ps1
+	src/build_diag_main.txt
+	src/build_output_full.txt
+	src/elite_build_output.txt
+	src/fallback_stubs.asm
+	src/get_unresolved.bat
+	src/link_errors.txt
+	src/link_raw.txt
+	src/ml64_errors.txt
+	src/run_output.txt
+	status.txt
+
+nothing added to commit but untracked files present (use "git add" to track)

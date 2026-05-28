@@ -1,0 +1,47 @@
+[ELITE] Sovereign Production Orchestrator: Multi-Module Mode ACTIVE.
+[ELITE] Mapping Model: D:\codestral22b.gguf
+[PHASE1] magic=0x46554747 version=3 tensors=507 kv=25
+[ELITE] Model Loader: Tensor Index Built Successfully.
+[PHASE2] Tensor TOC (first 5):
+[DIAG] pIndex=0x00000200BFC90000
+
+[DIAG] loader_r13=0x00007FF749F1481C pIdxFieldAddr=0x00007FF749F14880
+[DIAG] mallocRet=0x00000200BFC90000 pIdxReadbackInLoader=0x00000200BFC90000
+[DIAG] heap[0..88]: 0000000000000011  00000200CFD54A55  2D85B88E70E67727  0000000000000002  0000000000001800  0000000000008000  0000000000000000  0000000000000000  000000000000000C  0000000000000000  00000200CFD5C060  
+[DIAG] rsi-before-loop=0x00000200BFC90000
+  token_embd.weight type=12 ndim=2 ne=[6144,32768] hash=0x2D85B88E70E67727 pData=0x00000200CFD5C060
+  blk.0.attn_norm.weight type=0 ndim=1 ne=[6144,0] hash=0x0D0025484F51A2A8 pData=0x00000200D695C060
+  blk.0.ffn_down.weight type=13 ndim=2 ne=[16384,6144] hash=0x709506AE03C54EC7 pData=0x00000200D6962060
+  blk.0.ffn_gate.weight type=12 ndim=2 ne=[6144,16384] hash=0xDF7E6511B2AAF43E pData=0x00000200DAB62060
+  blk.0.ffn_up.weight type=12 ndim=2 ne=[6144,16384] hash=0xFC00EE7AA0947050 pData=0x00000200DE162060
+[PHASE3] Full Index Audit:
+  valid=507/507 first_bad_idx=FFFFFFFFFFFFFFFF
+  weight_base=0x00000200CFCA0000 weight_end=0x00000203C2682060
+  type_hist: F32=113, F16=0, Q4_0=0, Q8_0=0, Q4_K=382, Q5_K=11, Q6_K=1, Q8_K=0
+  token_embd.weight: FOUND idx=0 n_elem=201326592 pData=0x00000200CFD5C060
+[PHASE6] Sovereign Compute Core Integration:
+  GEMM_Q4_F32:  [STATUS: LINKED]
+  RMSNorm_F32:  [STATUS: LINKED]
+  Activator:    [STATUS: LINKED]
+[ELITE] Sovereign Execution Complete. Check Output Logs.
+0000000000000000
+  [PHASE4] Memory Bandwidth Benchmark:
+  cold_pass: 3859 ms, 12073 MB processed, 3128 MB/s
+  hot_pass:  422 ms, 12073 MB processed, 28609 MB/s
+  checksum=0x3A87CD30B0F3EBD7
+  estimated TPS ceiling (Q4_K, 27 GB/s): 2 TPS
+[PHASE5] AVX-512 Streaming Sweep:
+  cpu_flags=0x00000000000001FF
+  avx512_hot: 297 ms, 12073 MB processed, 40649 MB/s
+  zmm_checksum=0x31FC604AAE28F0A7
+  speedup vs scalar hot: 1.42x
+  estimated TPS ceiling (AVX-512, 39 GB/s): 3 TPS
+[ELITE] SIMD Scanner: Commencing Hardware Audit...
+[PHASE6] Sovereign Compute Core Integration:
+  GEMM_Q4_F32:  [STATUS: LINKED]
+  RMSNorm_F32:  [STATUS: LINKED]
+  Activator:    [STATUS: LINKED]
+Y
+[ELITE] Sovereign Execution Complete. Check Output Logs.
+X
+#

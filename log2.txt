@@ -1,0 +1,2 @@
+03299ec75 Harden Sunshine Compositor WGL Bootstrap
+132d77098 Sovereign: fix Win64 ABI shadow-space clobber in print PROCs + Phase 2 TOC dump

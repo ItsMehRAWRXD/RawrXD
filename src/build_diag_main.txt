@@ -1,0 +1,1 @@
+ Assembling: d:\rawrxd\src\Sovereign_Main.asm

@@ -142,7 +142,7 @@ static bool ggufSkipArray(std::ifstream& f, uint32_t version) {
     uint64_t arrCount = 0;
     if (version == 1) { uint32_t c = 0; f.read(reinterpret_cast<char*>(&c), 4); arrCount = c; }
     else              { f.read(reinterpret_cast<char*>(&arrCount), 8); }
-    if (!f.good() || arrCount > 16000000ULL) return false;
+    if (!f.good() || arrCount > 256000000ULL) return false;
     const size_t esz = ggufValTypeBytes(arrType);
     if (esz > 0) {
         f.seekg(static_cast<std::streamoff>(arrCount * esz), std::ios::cur);
@@ -222,9 +222,10 @@ bool preflightMemory(const std::string& modelPath, const std::string& mode, std:
     }
 
     const uint64_t availRam = mem.ullAvailPhys;
-    const uint64_t ramLimit = static_cast<uint64_t>(static_cast<double>(availRam) * 0.80);
+    // Allow models to take up to 98% of available physical memory, eliminating the strict 20% overhead requirement
+    const uint64_t ramLimit = static_cast<uint64_t>(static_cast<double>(availRam) * 0.98);
     if (modelBytes > ramLimit) {
-        reason = "insufficient RAM headroom (20% reserve)";
+        reason = "insufficient RAM headroom (2% reserve)";
         return false;
     }
 

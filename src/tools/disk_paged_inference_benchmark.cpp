@@ -21,16 +21,41 @@
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
+#include <atomic>
+#include <limits>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
+
+#if defined(_MSC_VER)
+#include <immintrin.h>
+#endif
 
 namespace {
 
 // Physical sector size assumed for FILE_FLAG_NO_BUFFERING alignment.
 static constexpr uint64_t kSectorSize = 4096;
+static constexpr uint64_t kCacheLineSize = 64;
+
+enum class PrefetchMode {
+    Disk,
+    Resident,
+    Bridge,
+    Both,
+};
+
+const char* prefetchModeName(PrefetchMode mode) {
+    switch (mode) {
+    case PrefetchMode::Disk: return "disk";
+    case PrefetchMode::Resident: return "resident";
+    case PrefetchMode::Bridge: return "bridge";
+    case PrefetchMode::Both: return "both";
+    }
+    return "disk";
+}
 
 inline uint64_t alignUp(uint64_t v, uint64_t align) {
     return (v + align - 1) & ~(align - 1);
@@ -42,8 +67,13 @@ struct Args {
     uint64_t sequentialBytes = 8ull * 1024ull * 1024ull * 1024ull;  // 8 GB cap
     uint64_t randomOps = 256;
     uint64_t bytesPerToken = 1100ull * 1024ull * 1024ull * 1024ull; // 2T Q4 pessimistic
+    uint64_t residentWindowBytes = 0; // 0 = sequentialBytes cap
     uint32_t seed = 1337;
     uint32_t prefetchDepth = 4;   // overlapped in-flight reads
+    uint32_t residentPasses = 6;
+    uint32_t residentThreads = 0;  // 0 = hardware_concurrency
+    uint32_t bridgeWarmPasses = 1;
+    PrefetchMode prefetchMode = PrefetchMode::Disk;
     bool noBuffering = false;     // FILE_FLAG_NO_BUFFERING (bypass OS cache)
     bool skipSequential = false;
     bool skipRandom = false;
@@ -57,13 +87,20 @@ struct Result {
     uint64_t sequentialBytesRead = 0;
     uint64_t randomBytesRead = 0;
     uint64_t prefetchBytesRead = 0;
+    uint64_t bridgeWarmBytesRead = 0;
+    uint64_t bridgeWarmChecksum = 0;
+    uint64_t residentPrefetchBytesRead = 0;
+    uint64_t residentPrefetchChecksum = 0;
     double sequentialGbps = 0.0;
     double randomGbps = 0.0;
     double prefetchGbps = 0.0;      // overlapped pipelined read bandwidth
+    double bridgeWarmGbps = 0.0;    // warm staging-buffer traversal after cold read
+    double residentPrefetchGbps = 0.0; // resident mapped memory traversal bandwidth
     double estimatedSeqTps = 0.0;
     double estimatedRndTps = 0.0;
     double estimatedPrefetchTps = 0.0;
     double wallMs = 0.0;
+    uint32_t residentPrefetchThreads = 0;
 };
 
 double bytesToGB(uint64_t bytes) {
@@ -107,13 +144,25 @@ std::string toJson(const Args& a, const Result& r) {
     oss << "\"sequential_bytes_read\":" << r.sequentialBytesRead << ",";
     oss << "\"random_ops\":" << a.randomOps << ",";
     oss << "\"random_bytes_read\":" << r.randomBytesRead << ",";
+    oss << "\"prefetch_mode\":\"" << prefetchModeName(a.prefetchMode) << "\",";
     oss << "\"prefetch_depth\":" << a.prefetchDepth << ",";
     oss << "\"prefetch_bytes_read\":" << r.prefetchBytesRead << ",";
+    oss << "\"bridge_warm_passes\":" << a.bridgeWarmPasses << ",";
+    oss << "\"bridge_warm_bytes_read\":" << r.bridgeWarmBytesRead << ",";
+    oss << "\"bridge_warm_checksum\":" << r.bridgeWarmChecksum << ",";
+    oss << "\"resident_window_bytes\":" << a.residentWindowBytes << ",";
+    oss << "\"resident_passes\":" << a.residentPasses << ",";
+    oss << "\"resident_threads_requested\":" << a.residentThreads << ",";
+    oss << "\"resident_prefetch_threads\":" << r.residentPrefetchThreads << ",";
+    oss << "\"resident_prefetch_bytes_read\":" << r.residentPrefetchBytesRead << ",";
+    oss << "\"resident_prefetch_checksum\":" << r.residentPrefetchChecksum << ",";
     oss << "\"no_buffering\":" << (a.noBuffering ? "true" : "false") << ",";
     oss << "\"bytes_per_token\":" << a.bytesPerToken << ",";
     oss << "\"sequential_gbps\":" << std::fixed << std::setprecision(6) << r.sequentialGbps << ",";
     oss << "\"random_gbps\":" << std::fixed << std::setprecision(6) << r.randomGbps << ",";
     oss << "\"prefetch_gbps\":" << std::fixed << std::setprecision(6) << r.prefetchGbps << ",";
+    oss << "\"bridge_warm_gbps\":" << std::fixed << std::setprecision(6) << r.bridgeWarmGbps << ",";
+    oss << "\"resident_prefetch_gbps\":" << std::fixed << std::setprecision(6) << r.residentPrefetchGbps << ",";
     oss << "\"estimated_seq_tps\":" << std::fixed << std::setprecision(6) << r.estimatedSeqTps << ",";
     oss << "\"estimated_rnd_tps\":" << std::fixed << std::setprecision(6) << r.estimatedRndTps << ",";
     oss << "\"estimated_prefetch_tps\":" << std::fixed << std::setprecision(6) << r.estimatedPrefetchTps << ",";
@@ -156,6 +205,8 @@ bool parseArgs(int argc, char** argv, Args& out, std::string& err) {
             if (!readU64(out.randomOps)) return false;
         } else if (a == "--bytes-per-token") {
             if (!readU64(out.bytesPerToken)) return false;
+        } else if (a == "--resident-window-bytes") {
+            if (!readU64(out.residentWindowBytes)) return false;
         } else if (a == "--seed") {
             uint64_t tmp = 0;
             if (!readU64(tmp)) return false;
@@ -163,7 +214,37 @@ bool parseArgs(int argc, char** argv, Args& out, std::string& err) {
         } else if (a == "--prefetch-depth") {
             uint64_t tmp = 0;
             if (!readU64(tmp)) return false;
-            out.prefetchDepth = static_cast<uint32_t>(std::max<uint64_t>(1, std::min<uint64_t>(tmp, 64)));
+            out.prefetchDepth = static_cast<uint32_t>(std::max<uint64_t>(1, std::min<uint64_t>(tmp, 256)));
+        } else if (a == "--resident-passes") {
+            uint64_t tmp = 0;
+            if (!readU64(tmp)) return false;
+            out.residentPasses = static_cast<uint32_t>(std::max<uint64_t>(1, std::min<uint64_t>(tmp, 1024)));
+        } else if (a == "--resident-threads") {
+            uint64_t tmp = 0;
+            if (!readU64(tmp)) return false;
+            out.residentThreads = static_cast<uint32_t>(std::min<uint64_t>(tmp, 128));
+        } else if (a == "--bridge-warm-passes") {
+            uint64_t tmp = 0;
+            if (!readU64(tmp)) return false;
+            out.bridgeWarmPasses = static_cast<uint32_t>(std::max<uint64_t>(1, std::min<uint64_t>(tmp, 1024)));
+        } else if (a == "--prefetch-mode") {
+            if (i + 1 >= argc) {
+                err = "Missing value for --prefetch-mode";
+                return false;
+            }
+            const std::string mode = argv[++i];
+            if (mode == "disk") {
+                out.prefetchMode = PrefetchMode::Disk;
+            } else if (mode == "resident") {
+                out.prefetchMode = PrefetchMode::Resident;
+            } else if (mode == "bridge") {
+                out.prefetchMode = PrefetchMode::Bridge;
+            } else if (mode == "both") {
+                out.prefetchMode = PrefetchMode::Both;
+            } else {
+                err = "Invalid --prefetch-mode (expected disk, resident, bridge, or both)";
+                return false;
+            }
         } else if (a == "--no-buffering") {
             out.noBuffering = true;
         } else if (a == "--skip-sequential") {
@@ -188,6 +269,9 @@ bool parseArgs(int argc, char** argv, Args& out, std::string& err) {
     out.sequentialBytes = std::max<uint64_t>(out.windowBytes, out.sequentialBytes);
     out.randomOps = std::max<uint64_t>(1, out.randomOps);
     out.bytesPerToken = std::max<uint64_t>(1, out.bytesPerToken);
+    if (out.residentWindowBytes != 0) {
+        out.residentWindowBytes = std::max<uint64_t>(kCacheLineSize, out.residentWindowBytes);
+    }
     return true;
 }
 
@@ -227,18 +311,27 @@ bool readAt(HANDLE h, uint64_t offset, void* dst, uint32_t bytes, std::string& e
 struct OverlappedSlot {
     OVERLAPPED ov{};
     HANDLE event = INVALID_HANDLE_VALUE;
-    std::vector<uint8_t> buf;
     uint64_t offset = 0;
     uint32_t requested = 0;
     bool inFlight = false;
 };
 
+inline void softwarePrefetch(const uint8_t* ptr);
+uint64_t warmTouchBuffer(const uint8_t* data, uint32_t bytes, uint32_t passes);
+
 bool runPrefetchPipeline(HANDLE h, uint64_t fileBytes, const Args& a,
-                         uint64_t& outBytesRead, double& outSec, std::string& outErr) {
+                         uint64_t& outBytesRead, double& outSec, std::string& outErr,
+                         bool bridgeWarmTouch = false,
+                         uint64_t* outBridgeWarmBytes = nullptr,
+                         double* outBridgeWarmSec = nullptr,
+                         uint64_t* outBridgeWarmChecksum = nullptr) {
     outBytesRead = 0;
     outSec = 1e-9;
+    if (outBridgeWarmBytes) *outBridgeWarmBytes = 0;
+    if (outBridgeWarmSec) *outBridgeWarmSec = 1e-9;
+    if (outBridgeWarmChecksum) *outBridgeWarmChecksum = 0;
 
-    const uint32_t depth = std::max<uint32_t>(1, std::min<uint32_t>(a.prefetchDepth, 64));
+    const uint32_t depth = std::max<uint32_t>(1, std::min<uint32_t>(a.prefetchDepth, 256));
 
     // Chunk size must be sector-aligned when using FILE_FLAG_NO_BUFFERING.
     uint64_t chunkRaw = std::min<uint64_t>(a.windowBytes, 128ull * 1024ull * 1024ull);
@@ -268,21 +361,8 @@ bool runPrefetchPipeline(HANDLE h, uint64_t fileBytes, const Args& a,
             return false;
         }
         events[i] = slots[i].event;
-        // VirtualAlloc gives sector-aligned memory suitable for NO_BUFFERING.
-        void* mem = VirtualAlloc(nullptr, bufSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        if (!mem) {
-            for (uint32_t j = 0; j <= i; ++j) CloseHandle(slots[j].event);
-            outErr = "VirtualAlloc failed for prefetch buffer";
-            return false;
-        }
-        slots[i].buf.assign(reinterpret_cast<uint8_t*>(mem),
-                            reinterpret_cast<uint8_t*>(mem) + bufSize);
-        VirtualFree(mem, 0, MEM_RELEASE);
-        // Keep the actual data in a VirtualAlloc region accessible to ReadFile.
-        // Re-allocate properly: store raw pointer in a parallel array.
     }
 
-    // Re-use vectors with VirtualAlloc-backed buffers.
     std::vector<uint8_t*> rawBufs(depth, nullptr);
     for (uint32_t i = 0; i < depth; ++i) {
         rawBufs[i] = static_cast<uint8_t*>(
@@ -293,7 +373,6 @@ bool runPrefetchPipeline(HANDLE h, uint64_t fileBytes, const Args& a,
             outErr = "VirtualAlloc (raw) failed for prefetch buffer";
             return false;
         }
-        slots[i].buf.clear(); // not used; raw pointer used instead
         ResetEvent(slots[i].event);
     }
 
@@ -382,6 +461,23 @@ bool runPrefetchPipeline(HANDLE h, uint64_t fileBytes, const Args& a,
         --inFlight;
         totalRead += got;
 
+        if (bridgeWarmTouch && got > 0) {
+            const auto warmStart = std::chrono::high_resolution_clock::now();
+            const uint64_t checksum = warmTouchBuffer(rawBufs[idx], got, a.bridgeWarmPasses);
+            const auto warmEnd = std::chrono::high_resolution_clock::now();
+            if (outBridgeWarmBytes) {
+                *outBridgeWarmBytes += static_cast<uint64_t>(got) * std::max<uint32_t>(1, a.bridgeWarmPasses);
+            }
+            if (outBridgeWarmSec) {
+                *outBridgeWarmSec +=
+                    std::chrono::duration_cast<std::chrono::duration<double>>(warmEnd - warmStart).count();
+            }
+            if (outBridgeWarmChecksum) {
+                *outBridgeWarmChecksum ^= checksum + 0x9e3779b97f4a7c15ull + (*outBridgeWarmChecksum << 6) +
+                                          (*outBridgeWarmChecksum >> 2);
+            }
+        }
+
         // Issue next chunk into this slot.
         if (nextOffset < readTarget) {
             if (issueRead(idx, nextOffset)) {
@@ -399,6 +495,187 @@ bool runPrefetchPipeline(HANDLE h, uint64_t fileBytes, const Args& a,
         CloseHandle(slots[i].event);
         if (rawBufs[i]) VirtualFree(rawBufs[i], 0, MEM_RELEASE);
     }
+    return true;
+}
+
+using BenchPrefetchVirtualMemoryFn = BOOL(WINAPI*)(HANDLE, ULONG_PTR, PWIN32_MEMORY_RANGE_ENTRY, ULONG);
+
+BenchPrefetchVirtualMemoryFn getBenchPrefetchVirtualMemoryFn() {
+    static BenchPrefetchVirtualMemoryFn fn = []() -> BenchPrefetchVirtualMemoryFn {
+        HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+        if (!kernel32) {
+            return nullptr;
+        }
+        return reinterpret_cast<BenchPrefetchVirtualMemoryFn>(GetProcAddress(kernel32, "PrefetchVirtualMemory"));
+    }();
+    return fn;
+}
+
+inline void softwarePrefetch(const uint8_t* ptr) {
+#if defined(_MSC_VER)
+    _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0);
+#elif defined(__GNUC__) || defined(__clang__)
+    __builtin_prefetch(ptr, 0, 3);
+#else
+    (void)ptr;
+#endif
+}
+
+uint64_t warmTouchBuffer(const uint8_t* data, uint32_t bytes, uint32_t passes) {
+    if (!data || bytes == 0) {
+        return 0;
+    }
+
+    const uint32_t usable = bytes & ~(static_cast<uint32_t>(kCacheLineSize) - 1u);
+    if (usable == 0) {
+        return data[0];
+    }
+
+    uint64_t checksum = 0;
+    const uint32_t passCount = std::max<uint32_t>(1, passes);
+    for (uint32_t pass = 0; pass < passCount; ++pass) {
+        for (uint32_t off = 0; off < usable; off += static_cast<uint32_t>(kCacheLineSize)) {
+            const uint32_t pf = off + 4096;
+            if (pf < usable) {
+                softwarePrefetch(data + pf);
+            }
+            checksum += *reinterpret_cast<const uint64_t*>(data + off);
+        }
+    }
+    return checksum;
+}
+
+bool runResidentMappedPrefetch(const Args& a, uint64_t fileBytes,
+                               uint64_t& outBytesRead, double& outSec,
+                               uint64_t& outChecksum, uint32_t& outThreads,
+                               std::string& outErr) {
+    outBytesRead = 0;
+    outSec = 1e-9;
+    outChecksum = 0;
+    outThreads = 0;
+
+    uint64_t mapBytes = a.residentWindowBytes ? a.residentWindowBytes : a.sequentialBytes;
+    mapBytes = std::min<uint64_t>(mapBytes, fileBytes);
+    mapBytes &= ~(kCacheLineSize - 1);
+    if (mapBytes == 0) {
+        outErr = "Resident prefetch: mapped byte target is zero after cache-line alignment";
+        return false;
+    }
+    if (mapBytes > static_cast<uint64_t>(std::numeric_limits<SIZE_T>::max())) {
+        outErr = "Resident prefetch: mapped byte target exceeds SIZE_T";
+        return false;
+    }
+    if (mapBytes > std::numeric_limits<uint64_t>::max() / std::max<uint32_t>(1, a.residentPasses)) {
+        outErr = "Resident prefetch: byte counter overflow";
+        return false;
+    }
+
+    HANDLE h = CreateFileA(a.modelPath.c_str(), GENERIC_READ,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE,
+                           nullptr, OPEN_EXISTING,
+                           FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+                           nullptr);
+    if (h == INVALID_HANDLE_VALUE) {
+        outErr = "Resident prefetch: CreateFileA failed";
+        return false;
+    }
+
+    HANDLE mapping = CreateFileMappingA(h, nullptr, PAGE_READONLY, 0, 0, nullptr);
+    if (!mapping) {
+        CloseHandle(h);
+        outErr = "Resident prefetch: CreateFileMappingA failed";
+        return false;
+    }
+
+    uint8_t* base = static_cast<uint8_t*>(MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, static_cast<SIZE_T>(mapBytes)));
+    if (!base) {
+        CloseHandle(mapping);
+        CloseHandle(h);
+        outErr = "Resident prefetch: MapViewOfFile failed";
+        return false;
+    }
+
+    if (auto fn = getBenchPrefetchVirtualMemoryFn()) {
+        WIN32_MEMORY_RANGE_ENTRY range{};
+        range.VirtualAddress = base;
+        range.NumberOfBytes = static_cast<SIZE_T>(mapBytes);
+        fn(GetCurrentProcess(), 1, &range, 0);
+    }
+
+    uint64_t warmChecksum = 0;
+    for (uint64_t off = 0; off < mapBytes; off += kSectorSize) {
+        warmChecksum += base[off];
+    }
+    warmChecksum += base[mapBytes - kCacheLineSize];
+
+    const uint64_t lineCount = mapBytes / kCacheLineSize;
+    uint32_t hwThreads = std::thread::hardware_concurrency();
+    if (hwThreads == 0) {
+        hwThreads = 1;
+    }
+    uint32_t threadCount = a.residentThreads ? a.residentThreads : hwThreads;
+    threadCount = std::max<uint32_t>(1, std::min<uint32_t>(threadCount, 128));
+    threadCount = static_cast<uint32_t>(std::min<uint64_t>(threadCount, lineCount));
+    if (threadCount == 0) {
+        threadCount = 1;
+    }
+
+    std::vector<std::thread> workers;
+    std::vector<uint64_t> checksums(threadCount, 0);
+    std::atomic<uint32_t> ready{0};
+    std::atomic<bool> start{false};
+    workers.reserve(threadCount);
+
+    const uint64_t linesPerThread = (lineCount + threadCount - 1) / threadCount;
+    for (uint32_t t = 0; t < threadCount; ++t) {
+        const uint64_t startLine = std::min<uint64_t>(lineCount, static_cast<uint64_t>(t) * linesPerThread);
+        const uint64_t endLine = std::min<uint64_t>(lineCount, startLine + linesPerThread);
+        workers.emplace_back([&, t, startLine, endLine]() {
+            ready.fetch_add(1, std::memory_order_release);
+            while (!start.load(std::memory_order_acquire)) {
+                YieldProcessor();
+            }
+
+            uint64_t local = 0;
+            const uint8_t* begin = base + startLine * kCacheLineSize;
+            const uint8_t* end = base + endLine * kCacheLineSize;
+            for (uint32_t pass = 0; pass < a.residentPasses; ++pass) {
+                for (const uint8_t* cursor = begin; cursor < end; cursor += kCacheLineSize) {
+                    if (cursor + 4096 < end) {
+                        softwarePrefetch(cursor + 4096);
+                    }
+                    local += *reinterpret_cast<const uint64_t*>(cursor);
+                }
+            }
+            checksums[t] = local;
+        });
+    }
+
+    while (ready.load(std::memory_order_acquire) < threadCount) {
+        SwitchToThread();
+    }
+
+    const auto pStart = std::chrono::high_resolution_clock::now();
+    start.store(true, std::memory_order_release);
+    for (auto& worker : workers) {
+        worker.join();
+    }
+    const auto pEnd = std::chrono::high_resolution_clock::now();
+
+    uint64_t checksum = warmChecksum;
+    for (uint64_t value : checksums) {
+        checksum ^= value + 0x9e3779b97f4a7c15ull + (checksum << 6) + (checksum >> 2);
+    }
+
+    UnmapViewOfFile(base);
+    CloseHandle(mapping);
+    CloseHandle(h);
+
+    outSec = std::max(1e-9,
+        std::chrono::duration_cast<std::chrono::duration<double>>(pEnd - pStart).count());
+    outBytesRead = mapBytes * static_cast<uint64_t>(a.residentPasses);
+    outChecksum = checksum;
+    outThreads = threadCount;
     return true;
 }
 
@@ -490,10 +767,13 @@ Result run(const Args& a) {
 
     CloseHandle(h);
 
-    // ---- Prefetch pipeline pass (overlapped async, attempts to saturate bus) ----
-    if (!a.skipPrefetch) {
+    // ---- Prefetch pipeline pass (overlapped async, attempts to saturate storage bus) ----
+    const bool wantsDiskPrefetch = a.prefetchMode == PrefetchMode::Disk || a.prefetchMode == PrefetchMode::Bridge ||
+                                   a.prefetchMode == PrefetchMode::Both;
+    const bool wantsResidentPrefetch = a.prefetchMode == PrefetchMode::Resident || a.prefetchMode == PrefetchMode::Both;
+    if (!a.skipPrefetch && wantsDiskPrefetch) {
         // Re-open with FILE_FLAG_OVERLAPPED (+ optionally FILE_FLAG_NO_BUFFERING).
-        DWORD asyncFlags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED;
+        DWORD asyncFlags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN;
         if (a.noBuffering) {
             asyncFlags |= FILE_FLAG_NO_BUFFERING;
         }
@@ -506,8 +786,12 @@ Result run(const Args& a) {
         }
 
         double prefSec = 1e-9;
+        double bridgeWarmSec = 1e-9;
         std::string prefErr;
-        if (!runPrefetchPipeline(hAsync, r.fileBytes, a, r.prefetchBytesRead, prefSec, prefErr)) {
+        const bool bridgeWarmTouch = a.prefetchMode == PrefetchMode::Bridge;
+        if (!runPrefetchPipeline(hAsync, r.fileBytes, a, r.prefetchBytesRead, prefSec, prefErr,
+                                 bridgeWarmTouch, &r.bridgeWarmBytesRead, &bridgeWarmSec,
+                                 &r.bridgeWarmChecksum)) {
             CloseHandle(hAsync);
             r.error = "Prefetch pipeline failed: " + prefErr;
             return r;
@@ -515,8 +799,31 @@ Result run(const Args& a) {
         CloseHandle(hAsync);
 
         r.prefetchGbps = bytesToGB(r.prefetchBytesRead) / prefSec;
+        if (r.bridgeWarmBytesRead > 0) {
+            r.bridgeWarmGbps = bytesToGB(r.bridgeWarmBytesRead) / std::max(1e-9, bridgeWarmSec);
+        }
         r.estimatedPrefetchTps = static_cast<double>(r.prefetchBytesRead) / prefSec /
                                  static_cast<double>(a.bytesPerToken);
+    }
+
+    // ---- Resident mapped prefetch pass (cache-hot/RAM traversal, not disk bandwidth) ----
+    if (!a.skipPrefetch && wantsResidentPrefetch) {
+        double residentSec = 1e-9;
+        std::string residentErr;
+        if (!runResidentMappedPrefetch(a, r.fileBytes, r.residentPrefetchBytesRead, residentSec,
+                                       r.residentPrefetchChecksum, r.residentPrefetchThreads,
+                                       residentErr)) {
+            r.error = "Resident prefetch failed: " + residentErr;
+            return r;
+        }
+
+        r.residentPrefetchGbps = bytesToGB(r.residentPrefetchBytesRead) / residentSec;
+        if (a.prefetchMode == PrefetchMode::Resident) {
+            r.prefetchBytesRead = r.residentPrefetchBytesRead;
+            r.prefetchGbps = r.residentPrefetchGbps;
+            r.estimatedPrefetchTps = static_cast<double>(r.prefetchBytesRead) / residentSec /
+                                     static_cast<double>(a.bytesPerToken);
+        }
     }
 
     const auto wallEnd = std::chrono::high_resolution_clock::now();
@@ -532,7 +839,14 @@ void printUsage() {
               << "  --window-bytes <n>             Read chunk/window size (default 64MB)\n"
               << "  --sequential-bytes <n>         Sequential read cap (default 8GB)\n"
               << "  --random-ops <n>               Random window operations (default 256)\n"
+              << "  --prefetch-mode <disk|resident|bridge|both>\n"
+              << "                                 disk = overlapped file I/O, resident = mapped RAM/cache-hot sweep\n"
+              << "                                 bridge = disk read into warm staging buffers + checksum touch\n"
               << "  --prefetch-depth <n>           Async overlapped in-flight reads (default 4)\n"
+              << "  --bridge-warm-passes <n>       Warm staging-buffer touches per completed read (default 1)\n"
+              << "  --resident-window-bytes <n>    Resident mapped sweep size (default sequential cap)\n"
+              << "  --resident-passes <n>          Resident sweep repetitions (default 6)\n"
+              << "  --resident-threads <n>         Resident sweep worker threads (default HW concurrency)\n"
               << "  --no-buffering                 Use FILE_FLAG_NO_BUFFERING (bypass OS cache)\n"
               << "  --skip-sequential              Skip the buffered sequential pass\n"
               << "  --skip-random                  Skip the buffered random pass\n"
@@ -570,8 +884,12 @@ int main(int argc, char** argv) {
               << " seq_gbps=" << r.sequentialGbps
               << " rnd_gbps=" << r.randomGbps
               << " prefetch_gbps=" << r.prefetchGbps
-              << " (depth=" << args.prefetchDepth
+              << " (mode=" << prefetchModeName(args.prefetchMode)
+              << ",depth=" << args.prefetchDepth
               << (args.noBuffering ? ",nobuf" : "") << ")"
+              << " bridge_warm_gbps=" << r.bridgeWarmGbps
+              << " resident_prefetch_gbps=" << r.residentPrefetchGbps
+              << " resident_threads=" << r.residentPrefetchThreads
               << " est_seq_tps=" << r.estimatedSeqTps
               << " est_rnd_tps=" << r.estimatedRndTps
               << " est_prefetch_tps=" << r.estimatedPrefetchTps

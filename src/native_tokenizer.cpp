@@ -16,11 +16,11 @@
 #include <limits.h>
 
 // ── Max sizes (static allocation to avoid heap fragmentation) ─────────────────
-#define NT_MAX_VOCAB        65536
-#define NT_MAX_MERGES       65536
+#define NT_MAX_VOCAB        262144
+#define NT_MAX_MERGES       262144
 #define NT_MAX_TOKEN_LEN    256
 #define NT_MAX_TOKENS_OUT   8192
-#define NT_HASH_BUCKETS     131101   // prime
+#define NT_HASH_BUCKETS     524309   // prime
 
 // ── Internal structures ────────────────────────────────────────────────────────
 

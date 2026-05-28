@@ -168,15 +168,16 @@ Scheduler_Start PROC
     mov     rbp, rsp
     push    rbx
 
-    ; Acquire spinlock
+    ; Acquire FIFO ticket lock
     lea     rbx, [g_scheduler_lock]
 sst_spin:
-    xor     eax, eax
-    mov     ecx, 1
-    lock cmpxchg DWORD PTR [rbx], ecx
+    mov     eax, 1
+    lock xadd DWORD PTR [rbx], eax      ; eax = my ticket, [rbx] = next ticket
+sst_wait:
+    cmp     eax, DWORD PTR [rbx + 4]    ; wait until now-serving == my ticket
     je      sst_locked
     pause
-    jmp     sst_spin
+    jmp     sst_wait
 sst_locked:
 
     ; If already running (state==1), release lock, return 0
@@ -186,8 +187,7 @@ sst_locked:
     jne     sst_do
 
     ; Already running - release lock, return failure
-    mov     DWORD PTR [rbx], 0
-    mfence
+    inc     DWORD PTR [rbx + 4]
     xor     eax, eax                    ; return 0 (failure)
     pop     rbx
     pop     rbp
@@ -213,9 +213,8 @@ sst_do:
     lea     rcx, [g_scheduler_task_count]
     mov     DWORD PTR [rcx], 0
 
-    ; Release spinlock
-    mov     DWORD PTR [rbx], 0
-    mfence
+    ; Release ticket lock
+    inc     DWORD PTR [rbx + 4]
 
     mov     eax, 1                      ; return 1 (success)
     pop     rbx
@@ -230,15 +229,16 @@ ALIGN_16
 Scheduler_Stop PROC
     push    rbx
 
-    ; Acquire spinlock
+    ; Acquire FIFO ticket lock
     lea     rbx, [g_scheduler_lock]
 ssp_spin:
-    xor     eax, eax
-    mov     ecx, 1
-    lock cmpxchg DWORD PTR [rbx], ecx
+    mov     eax, 1
+    lock xadd DWORD PTR [rbx], eax      ; eax = my ticket, [rbx] = next ticket
+ssp_wait:
+    cmp     eax, DWORD PTR [rbx + 4]    ; wait until now-serving == my ticket
     je      ssp_locked
     pause
-    jmp     ssp_spin
+    jmp     ssp_wait
 ssp_locked:
 
     ; If not running or paused, release lock, return
@@ -250,8 +250,7 @@ ssp_locked:
     je      ssp_do
 
     ; Not running/paused - release lock, return
-    mov     DWORD PTR [rbx], 0
-    mfence
+    inc     DWORD PTR [rbx + 4]
     pop     rbx
     ret
 
@@ -268,9 +267,8 @@ ssp_do:
     lea     rcx, [g_scheduler_task_count]
     mov     DWORD PTR [rcx], 0
 
-    ; Release spinlock
-    mov     DWORD PTR [rbx], 0
-    mfence
+    ; Release ticket lock
+    inc     DWORD PTR [rbx + 4]
 
     pop     rbx
     ret
@@ -283,15 +281,16 @@ ALIGN_16
 Scheduler_Pause PROC
     push    rbx
 
-    ; Acquire spinlock
+    ; Acquire FIFO ticket lock
     lea     rbx, [g_scheduler_lock]
 spa_spin:
-    xor     eax, eax
-    mov     ecx, 1
-    lock cmpxchg DWORD PTR [rbx], ecx
+    mov     eax, 1
+    lock xadd DWORD PTR [rbx], eax      ; eax = my ticket, [rbx] = next ticket
+spa_wait:
+    cmp     eax, DWORD PTR [rbx + 4]    ; wait until now-serving == my ticket
     je      spa_locked
     pause
-    jmp     spa_spin
+    jmp     spa_wait
 spa_locked:
 
     ; If state != 1 (not running), release lock, return
@@ -301,8 +300,7 @@ spa_locked:
     je      spa_do
 
     ; Not running - release lock, return
-    mov     DWORD PTR [rbx], 0
-    mfence
+    inc     DWORD PTR [rbx + 4]
     pop     rbx
     ret
 
@@ -311,9 +309,8 @@ spa_do:
     lea     rcx, [g_scheduler_state]
     mov     DWORD PTR [rcx], 2
 
-    ; Release spinlock
-    mov     DWORD PTR [rbx], 0
-    mfence
+    ; Release ticket lock
+    inc     DWORD PTR [rbx + 4]
 
     pop     rbx
     ret
@@ -326,15 +323,16 @@ ALIGN_16
 Scheduler_Resume PROC
     push    rbx
 
-    ; Acquire spinlock
+    ; Acquire FIFO ticket lock
     lea     rbx, [g_scheduler_lock]
 sre_spin:
-    xor     eax, eax
-    mov     ecx, 1
-    lock cmpxchg DWORD PTR [rbx], ecx
+    mov     eax, 1
+    lock xadd DWORD PTR [rbx], eax      ; eax = my ticket, [rbx] = next ticket
+sre_wait:
+    cmp     eax, DWORD PTR [rbx + 4]    ; wait until now-serving == my ticket
     je      sre_locked
     pause
-    jmp     sre_spin
+    jmp     sre_wait
 sre_locked:
 
     ; If state != 2 (not paused), release lock, return
@@ -344,8 +342,7 @@ sre_locked:
     je      sre_do
 
     ; Not paused - release lock, return
-    mov     DWORD PTR [rbx], 0
-    mfence
+    inc     DWORD PTR [rbx + 4]
     pop     rbx
     ret
 
@@ -354,9 +351,8 @@ sre_do:
     lea     rcx, [g_scheduler_state]
     mov     DWORD PTR [rcx], 1
 
-    ; Release spinlock
-    mov     DWORD PTR [rbx], 0
-    mfence
+    ; Release ticket lock
+    inc     DWORD PTR [rbx + 4]
 
     pop     rbx
     ret
@@ -444,7 +440,6 @@ Heartbeat_Stop PROC
     ; Set g_heartbeat_active to 0
     lea     rcx, [g_heartbeat_active]
     mov     DWORD PTR [rcx], 0
-    mfence
 
     ; Zero g_heartbeat_last_tsc
     lea     rcx, [g_heartbeat_last_tsc]
@@ -575,7 +570,6 @@ Atomic_Load64 ENDP
 ALIGN_16
 Atomic_Store64 PROC
     mov     QWORD PTR [rcx], rdx
-    mfence
     ret
 Atomic_Store64 ENDP
 
@@ -1323,7 +1317,10 @@ g_scheduler_state       DWORD   0       ; 0=stopped, 1=running, 2=paused
 g_scheduler_task_head   QWORD   0       ; Head of task ring buffer
 g_scheduler_task_tail   QWORD   0       ; Tail of task ring buffer
 g_scheduler_task_count  DWORD   0       ; Number of pending tasks
-g_scheduler_lock        DWORD   0       ; Spinlock for scheduler
+ALIGN 64
+g_scheduler_lock        DWORD   0       ; Ticket lock: next ticket
+g_scheduler_serving     DWORD   0       ; Ticket lock: now serving
+g_scheduler_lock_pad    BYTE    56 DUP(0)
 g_scheduler_epoch       QWORD   0       ; TSC at scheduler start
 
 ; Heartbeat state

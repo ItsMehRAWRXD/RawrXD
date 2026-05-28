@@ -1,0 +1,7 @@
+remote: 
+remote: GitHub found 704 vulnerabilities on ItsMehRAWRXD/RawrXDA's default branch (8 critical, 229 high, 383 moderate, 84 low). To find out more, visit:        
+remote:      https://github.com/ItsMehRAWRXD/RawrXDA/security/dependabot        
+remote: 
+To https://github.com/ItsMehRAWRXD/RawrXDA.git
+ + 260e601eb...03299ec75 chore/sovereign-audit-cleanup -> chore/sovereign-audit-cleanup (forced update)
+branch 'chore/sovereign-audit-cleanup' set up to track 'rawrxda/chore/sovereign-audit-cleanup'.
