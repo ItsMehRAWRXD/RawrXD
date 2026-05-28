@@ -170,6 +170,17 @@ void Titan_Trigger_0G_Hijack(void);
 /// Manual reset of the hijack flag (if Process_ZeroG_Packet does not self-clear).
 void Titan_Clear_0G_Hijack(void);
 
+/// Process Zero-G Packet (Full NTT Transform)
+/// Executes the complete 7-layer Kyber-1024 NTT transform on a 512-byte packet.
+/// Called by the orchestrator when HijackFlag is set, or can be called directly.
+/// @param source      64-byte aligned source buffer (512 bytes = 256 coefficients)
+/// @param destination 64-byte aligned destination buffer (512 bytes)
+/// @return 0 on success, 0xC0000005 on null pointer
+uint64_t Process_ZeroG_Packet(
+    uint64_t* source,
+    uint64_t* destination
+);
+
 // -- Inverse NTT (INTT) Pipeline (Phase-29c) --
 
 /// INTT Butterfly (Inverse Cooley-Tukey)

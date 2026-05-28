@@ -331,6 +331,62 @@ TestResult Benchmark_Butterfly() {
 }
 
 // ==============================================================================
+// Test: Zero-G Packet Processing (Full NTT Transform)
+// ==============================================================================
+TestResult Test_ZeroG_Packet_NTT() {
+    TestResult result = {"ZeroG_Packet_NTT", false, 0, nullptr};
+    
+    const uint64_t packet_size = 512;  // 256 coefficients * 2 bytes
+    const uint64_t num_coeffs = 256;
+    
+    // Allocate aligned buffers
+    uint16_t* source = (uint16_t*)ALIGNED_ALLOC(packet_size);
+    uint16_t* dest = (uint16_t*)ALIGNED_ALLOC(packet_size);
+    
+    if (!source || !dest) {
+        result.error_message = "Memory allocation failed";
+        ALIGNED_FREE(source);
+        ALIGNED_FREE(dest);
+        return result;
+    }
+    
+    // Initialize with Kyber coefficients (0 to Q-1)
+    for (uint64_t i = 0; i < num_coeffs; i++) {
+        source[i] = (uint16_t)(i % KYBER_Q);
+    }
+    
+    // Execute full NTT transform
+    uint64_t transform_result = Process_ZeroG_Packet(
+        (uint64_t*)source,
+        (uint64_t*)dest
+    );
+    
+    if (transform_result != 0) {
+        result.error_message = "Process_ZeroG_Packet returned error";
+        ALIGNED_FREE(source);
+        ALIGNED_FREE(dest);
+        return result;
+    }
+    
+    // Verify canonical bounds [0, Q-1]
+    bool bounds_ok = true;
+    for (uint64_t i = 0; i < num_coeffs; i++) {
+        if (dest[i] >= KYBER_Q) {
+            printf("[ERROR] Coefficient %llu out of bounds: %u (max %d)\n",
+                   i, dest[i], KYBER_Q - 1);
+            bounds_ok = false;
+            break;
+        }
+    }
+    
+    ALIGNED_FREE(source);
+    ALIGNED_FREE(dest);
+    
+    result.passed = bounds_ok;
+    return result;
+}
+
+// ==============================================================================
 // Main Test Runner
 // ==============================================================================
 int main(int argc, char* argv[]) {
@@ -354,6 +410,7 @@ int main(int argc, char* argv[]) {
         Test_BitReverse(),
         Test_Brutal_Pack_Unpack(),
         Test_Verification_Integrity(),
+        Test_ZeroG_Packet_NTT(),
         Benchmark_Butterfly()
     };
     
