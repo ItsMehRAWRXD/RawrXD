@@ -141,14 +141,14 @@ patch["parameterValue"] = 0.7;
 ### Build Targets
 
 ```bash
-# Main executable (Qt IDE + all hotpatchers)
-cmake --build . --config Release --target RawrXD-QtShell  # → build/bin/Release/RawrXD-QtShell.exe (1.49 MB)
+# Main executable (Win32 IDE + all hotpatchers)
+cmake --build . --config Release --target RawrXD-Win32IDE  # → build/bin/Release/RawrXD-Win32IDE.exe
 
 # Test gate (self-testing components)
 cmake --build . --config Release --target self_test_gate
 
-# Quant utilities library
-cmake --build . --config Release --target quant_utils
+# Core engine library
+cmake --build . --config Release --target RawrEngine
 ```
 
 ### Build System Notes
