@@ -377,7 +377,9 @@ SDMAFlushCache PROC
     jmp     @@loop
     
 @@done:
-    mfence                      ; Memory fence
+    ; Beaconism-Aligned: sfence is sufficient for clflush visibility.
+    ; mfence is overkill for store-only ordering and banned per ADR-003.
+    sfence                      ; Memory fence for store visibility
     ret
 SDMAFlushCache ENDP
 

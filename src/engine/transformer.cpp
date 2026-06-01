@@ -42,20 +42,39 @@ TransformerLayer::TransformerLayer(int d, int nh, int nkv, int hidden)
     cache_pos = 0;
     total_tokens_seen = 0;
     
-    // Allocate KV cache
+    // Allocate KV cache using VirtualAlloc for VirtualLock capability
     max_seq_len = 4096;
     int kv_dim = std::max(1, n_kv_heads) * head_dim;
+    size_t kv_cache_bytes = max_seq_len * kv_dim * sizeof(float);
+    size_t kv_cache_q8_bytes = max_seq_len * kv_dim * sizeof(int8_t);
+    size_t scales_bytes = max_seq_len * sizeof(float);
     
-    // Legacy FP32 KV cache (kept for backward compat)
-    k_cache = new float[max_seq_len * kv_dim]();
-    v_cache = new float[max_seq_len * kv_dim]();
+    // Legacy FP32 KV cache — VirtualAlloc for VirtualLock
+    k_cache = (float*)VirtualAlloc(nullptr, kv_cache_bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    v_cache = (float*)VirtualAlloc(nullptr, kv_cache_bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (k_cache) memset(k_cache, 0, kv_cache_bytes);
+    if (v_cache) memset(v_cache, 0, kv_cache_bytes);
     
-    // int8 quantized KV cache — 4x less memory than FP32
-    k_cache_q8 = new int8_t[max_seq_len * kv_dim]();
-    v_cache_q8 = new int8_t[max_seq_len * kv_dim]();
-    k_cache_scales = new float[max_seq_len]();
-    v_cache_scales = new float[max_seq_len]();
+    // int8 quantized KV cache
+    k_cache_q8 = (int8_t*)VirtualAlloc(nullptr, kv_cache_q8_bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    v_cache_q8 = (int8_t*)VirtualAlloc(nullptr, kv_cache_q8_bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (k_cache_q8) memset(k_cache_q8, 0, kv_cache_q8_bytes);
+    if (v_cache_q8) memset(v_cache_q8, 0, kv_cache_q8_bytes);
+    
+    k_cache_scales = (float*)VirtualAlloc(nullptr, scales_bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    v_cache_scales = (float*)VirtualAlloc(nullptr, scales_bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (k_cache_scales) memset(k_cache_scales, 0, scales_bytes);
+    if (v_cache_scales) memset(v_cache_scales, 0, scales_bytes);
+    
     use_quantized_kv = true;  // Default: use quantized path
+    
+    // VirtualLock KV cache to prevent OS paging during inference
+    if (k_cache) VirtualLock(k_cache, kv_cache_bytes);
+    if (v_cache) VirtualLock(v_cache, kv_cache_bytes);
+    if (k_cache_q8) VirtualLock(k_cache_q8, kv_cache_q8_bytes);
+    if (v_cache_q8) VirtualLock(v_cache_q8, kv_cache_q8_bytes);
+    if (k_cache_scales) VirtualLock(k_cache_scales, scales_bytes);
+    if (v_cache_scales) VirtualLock(v_cache_scales, scales_bytes);
     
     // Pre-allocate ALL scratch buffers — these persist for the layer's lifetime
     scratch_tmp.resize(dim, 0.0f);
@@ -72,12 +91,12 @@ TransformerLayer::TransformerLayer(int d, int nh, int nkv, int hidden)
 }
 
 TransformerLayer::~TransformerLayer() {
-    delete[] k_cache;
-    delete[] v_cache;
-    delete[] k_cache_q8;
-    delete[] v_cache_q8;
-    delete[] k_cache_scales;
-    delete[] v_cache_scales;
+    if (k_cache) VirtualFree(k_cache, 0, MEM_RELEASE);
+    if (v_cache) VirtualFree(v_cache, 0, MEM_RELEASE);
+    if (k_cache_q8) VirtualFree(k_cache_q8, 0, MEM_RELEASE);
+    if (v_cache_q8) VirtualFree(v_cache_q8, 0, MEM_RELEASE);
+    if (k_cache_scales) VirtualFree(k_cache_scales, 0, MEM_RELEASE);
+    if (v_cache_scales) VirtualFree(v_cache_scales, 0, MEM_RELEASE);
 }
 
 void TransformerLayer::forward(float* x, int pos, int seq_len) {

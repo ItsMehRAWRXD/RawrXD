@@ -7,6 +7,7 @@
 #include "loader/tensor_filter.h"
 #include "rawrxd_tokenizer.h"
 #include "streaming_gguf_loader.h"
+#include "streaming_gguf_loader_enhanced.h"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -556,7 +557,7 @@ CPUInferenceEngine::CPUInferenceEngine()
     : m_numLayers(0), m_numHeads(0), m_embeddingDim(0), m_vocabSize(0),
       m_threadCount(std::thread::hardware_concurrency()), m_modelLoaded(false), m_contextLimit(4096), m_currentPos(0)
 {
-    m_loader = std::make_unique<StreamingGGUFLoader>();
+    m_loader = std::make_unique<EnhancedStreamingGGUFLoader>();
 }
 
 CPUInferenceEngine::~CPUInferenceEngine() {}
@@ -792,6 +793,70 @@ bool CPUInferenceEngine::LoadModel(const std::string& path)
     }
     std::cout << "Model Loaded Successfully.\n";
 
+    // ========================================================================
+    // IOCP Layer Streaming Initialization
+    // ========================================================================
+    // Initialize explicit async I/O for layer streaming. This bypasses the OS
+    // demand-paging scheduler and gives us deterministic prefetch behavior.
+    // For models that fit in RAM (70B Q4_K_M ~40GB < 64GB), we pin all layers.
+    // For larger models, we use the ring buffer to stream layers on demand.
+    // ========================================================================
+    EnhancedStreamingGGUFLoader* enhancedLoader = dynamic_cast<EnhancedStreamingGGUFLoader*>(m_loader.get());
+    if (enhancedLoader) {
+        if (enhancedLoader->InitializeIocpStreaming(path)) {
+            std::cout << "[IOCP] Layer streaming active.\n";
+
+            // Calculate total model size from layer offsets
+            uint64_t total_model_bytes = 0;
+            for (int i = 0; i < m_numLayers; ++i) {
+                total_model_bytes += enhancedLoader->iocp_context_.layer_offsets[i].second;
+            }
+            // Add embeddings and output
+            total_model_bytes += enhancedLoader->iocp_context_.layer_offsets[0].second; // embeddings
+            total_model_bytes += enhancedLoader->iocp_context_.layer_offsets.back().second; // output
+
+            const uint64_t ram_budget = 64ULL * 1024 * 1024 * 1024; // 64 GB
+            const bool fits_in_ram = (total_model_bytes < ram_budget);
+
+            if (fits_in_ram) {
+                std::cout << "[IOCP] Model fits in RAM (" << (total_model_bytes / (1024*1024*1024))
+                          << " GB < 64 GB). Pinning all layers with VirtualLock...\n";
+
+                // Pin all layers in RAM
+                for (int i = 0; i < m_numLayers; ++i) {
+                    enhancedLoader->PrefetchLayerAsync(i);
+                    enhancedLoader->WaitForLayerReady(i, 30000);
+                    enhancedLoader->PinLayerInRam(i);
+                }
+                // Pin embeddings (layer 0 in offset table) and output (last layer)
+                enhancedLoader->PinLayerInRam(0);
+                enhancedLoader->PinLayerInRam(static_cast<uint32_t>(enhancedLoader->iocp_context_.layer_offsets.size() - 1));
+
+                std::cout << "[IOCP] All layers pinned. Cold disk stream bypassed.\n";
+            } else {
+                std::cout << "[IOCP] Model exceeds RAM (" << (total_model_bytes / (1024*1024*1024))
+                          << " GB > 64 GB). Using ring buffer streaming.\n";
+
+                // Pin only embeddings and output layers
+                enhancedLoader->PrefetchLayerAsync(0);
+                enhancedLoader->WaitForLayerReady(0, 30000);
+                enhancedLoader->PinLayerInRam(0);
+
+                uint32_t lastLayer = static_cast<uint32_t>(enhancedLoader->iocp_context_.layer_offsets.size() - 1);
+                enhancedLoader->PrefetchLayerAsync(lastLayer);
+                enhancedLoader->WaitForLayerReady(lastLayer, 30000);
+                enhancedLoader->PinLayerInRam(lastLayer);
+
+                // Prefetch first few layers into ring buffer
+                for (int i = 0; i < std::min(4, m_numLayers); ++i) {
+                    enhancedLoader->PrefetchLayerAsync(i);
+                }
+            }
+        } else {
+            std::cerr << "[IOCP] Layer streaming initialization failed. Falling back to mmap.\n";
+        }
+    }
+
     m_modelLoaded = true;
     InitKVCache();
     return true;
@@ -936,6 +1001,22 @@ std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_to
     {
         if (!m_transformerLayers[layerIdx])
             continue;
+
+        // ========================================================================
+        // IOCP Layer Prefetch: Issue read for layer N+2 while computing layer N
+        // ========================================================================
+        // This hides disk latency by overlapping I/O with compute.
+        // For models pinned in RAM, PrefetchLayerAsync returns immediately.
+        // For streaming models, this ensures the next layer is ready before we need it.
+        // ========================================================================
+        EnhancedStreamingGGUFLoader* enhancedLoader = dynamic_cast<EnhancedStreamingGGUFLoader*>(m_loader.get());
+        if (enhancedLoader && enhancedLoader->IsIocpStreamingActive()) {
+            int prefetchIdx = layerIdx + 2; // Lookahead depth = 2 layers
+            if (prefetchIdx < m_numLayers) {
+                enhancedLoader->PrefetchLayerAsync(static_cast<uint32_t>(prefetchIdx));
+            }
+        }
+
         TransformerLayerMain(x.data(), y.data(), layerIdx, /*seq_len=*/1);
         x.swap(y);
     }

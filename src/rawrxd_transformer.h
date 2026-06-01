@@ -10,6 +10,10 @@
 #include <string>
 #include <vector>
 
+namespace RawrXD {
+    class EnhancedStreamingGGUFLoader;
+}
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -218,6 +222,9 @@ class RawrXDTransformer
     /** Optional: layer forward progress (e.g. "[STEP] Layer …"). Safe to invoke from worker threads. */
     void SetProgressCallback(std::function<void(const std::string&)> cb) { m_layerProgressCb = std::move(cb); }
 
+    /** Optional: IOCP streaming loader for explicit async layer prefetch (bypasses OS demand-paging). */
+    void SetStreamingLoader(RawrXD::EnhancedStreamingGGUFLoader* loader) { m_streamingLoader = loader; }
+
     /** Optional: dual-window swarm (onLayerCompute* on inference thread; prefetch I/O on scheduler thread). */
     void SetSwarmScheduler(RawrXD::Swarm::ISwarmScheduler* scheduler);
 
@@ -281,6 +288,7 @@ class RawrXDTransformer
     Config config;
     VkDevice device;
     RawrXDModelLoader* loader;
+    RawrXD::EnhancedStreamingGGUFLoader* m_streamingLoader = nullptr;
     std::function<void(const std::string&)> m_layerProgressCb;
     RawrXD::Swarm::ISwarmScheduler* m_swarmScheduler = nullptr;
     RawrXD::Swarm::SwarmPlanSliceIndex m_swarmPlanSliceIndex{};

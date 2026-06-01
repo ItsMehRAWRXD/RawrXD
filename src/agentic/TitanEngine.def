@@ -1,0 +1,21 @@
+; Titan Engine Export Definition File
+; Use this when building as a DLL for clean symbol exports
+;
+; Link with: link /DLL /DEF:TitanEngine.def /OUT:TitanEngine.dll titan_engine.obj kernel32.lib ntdll.lib
+
+LIBRARY TitanEngine
+
+EXPORTS
+    ; Core initialization and shutdown
+    Titan_InitializeDMA
+    Titan_ShutdownDMA
+    
+    ; Statistics and monitoring
+    Titan_GetDMAStats
+    
+    ; Kernel execution
+    Titan_ExecuteComputeKernel
+    
+    ; DMA operations
+    Titan_PerformCopy
+    Titan_PerformDMA

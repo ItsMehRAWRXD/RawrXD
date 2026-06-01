@@ -38,6 +38,14 @@ bool EnhancedStreamingGGUFLoader::Open(const std::string& filepath)
         return false;
     }
     
+    // Cache wide-char path for IOCP operations
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, filepath.c_str(), -1, nullptr, 0);
+    if (wlen > 0) {
+        std::vector<wchar_t> wbuf(wlen);
+        MultiByteToWideChar(CP_UTF8, 0, filepath.c_str(), -1, wbuf.data(), wlen);
+        model_filepath_ = wbuf.data();
+    }
+    
     // Start prefetch worker thread
     if (!prefetch_thread_.joinable()) {
         prefetch_shutdown_ = false;
@@ -509,6 +517,623 @@ bool EnhancedStreamingGGUFLoader::LoadWithIOring(uint32_t zone_id, std::vector<u
     CloseHandle(hFile);
     
     return bytesRead >= size;
+}
+
+// ============================================================================
+// IOCP LAYER STREAMING (v2.0 — Explicit Async I/O Ring Buffer)
+// ============================================================================
+// Replaces kernel demand-paging with explicit overlapped reads.
+// Targets 10.19 GiB/s sustained throughput on NVMe Gen4.
+// ============================================================================
+
+bool EnhancedStreamingGGUFLoader::InitializeIocpStreaming(const std::string& filepath)
+{
+    if (iocp_context_.hIOCP != nullptr) {
+        return true; // Already initialized
+    }
+
+    // Open file with FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED
+    // This bypasses the OS page cache and requires sector-aligned buffers
+    HANDLE hFile = CreateFileA(
+        filepath.c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN,
+        nullptr);
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        std::cerr << "[IOCP] Failed to open file: " << filepath << " (Error: " << GetLastError() << ")" << std::endl;
+        return false;
+    }
+
+    // Create IOCP with concurrency = number of logical processors
+    // We bind the file handle to the IOCP so all completions arrive here
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    const DWORD concurrency = sysInfo.dwNumberOfProcessors;
+
+    HANDLE hIOCP = CreateIoCompletionPort(
+        INVALID_HANDLE_VALUE,  // Create new IOCP
+        nullptr,             // No existing port
+        0,                   // Completion key (unused)
+        concurrency);        // Concurrent threads
+
+    if (!hIOCP) {
+        std::cerr << "[IOCP] CreateIoCompletionPort failed: " << GetLastError() << std::endl;
+        CloseHandle(hFile);
+        return false;
+    }
+
+    // Associate file handle with IOCP
+    if (!CreateIoCompletionPort(hFile, hIOCP, 0, 0)) {
+        std::cerr << "[IOCP] Failed to associate file handle: " << GetLastError() << std::endl;
+        CloseHandle(hIOCP);
+        CloseHandle(hFile);
+        return false;
+    }
+
+    iocp_context_.hFile = hFile;
+    iocp_context_.hIOCP = hIOCP;
+    iocp_context_.shutdown.store(false, std::memory_order_release);
+    iocp_context_.compute_layer.store(0, std::memory_order_release);
+    iocp_context_.prefetch_layer.store(0, std::memory_order_release);
+
+    // Initialize ring buffer slots
+    for (uint32_t i = 0; i < IocpStreamingContext::kSlotCount; ++i) {
+        IocpLayerSlot& slot = iocp_context_.slots[i];
+        slot.layer_id = 0;
+        slot.file_offset = 0;
+        slot.byte_size = 0;
+        slot.buffer = nullptr;
+        slot.buffer_capacity = 0;
+        slot.ready.store(false, std::memory_order_release);
+        slot.in_flight.store(false, std::memory_order_release);
+        slot.hEvent = nullptr;
+        memset(&slot.ov, 0, sizeof(slot.ov));
+    }
+
+    // Build layer offset table from tensor index
+    if (!BuildLayerOffsetTable()) {
+        std::cerr << "[IOCP] Failed to build layer offset table" << std::endl;
+        CloseHandle(hIOCP);
+        CloseHandle(hFile);
+        iocp_context_.hIOCP = nullptr;
+        iocp_context_.hFile = INVALID_HANDLE_VALUE;
+        return false;
+    }
+
+    // Spawn IOCP completion thread (pure Win32 — no std::thread in hot path)
+    iocp_context_.hPrefetchThread = CreateThread(
+        nullptr,              // Default security
+        0,                    // Default stack
+        IocpCompletionThreadProc,
+        this,                 // Parameter
+        0,                    // Creation flags
+        &iocp_context_.prefetchThreadId);
+
+    if (!iocp_context_.hPrefetchThread) {
+        std::cerr << "[IOCP] Failed to spawn completion thread: " << GetLastError() << std::endl;
+        CloseHandle(hIOCP);
+        CloseHandle(hFile);
+        iocp_context_.hIOCP = nullptr;
+        iocp_context_.hFile = INVALID_HANDLE_VALUE;
+        return false;
+    }
+
+    std::cout << "[IOCP] Layer streaming initialized: " << filepath << std::endl;
+    std::cout << "[IOCP] Slots: " << IocpStreamingContext::kSlotCount
+              << ", Concurrency: " << concurrency
+              << ", Layers: " << iocp_context_.layer_offsets.size() << std::endl;
+    return true;
+}
+
+void EnhancedStreamingGGUFLoader::ShutdownIocpStreaming()
+{
+    if (iocp_context_.hIOCP == nullptr) {
+        return;
+    }
+
+    // Signal shutdown
+    iocp_context_.shutdown.store(true, std::memory_order_release);
+
+    // Post a dummy completion to wake the completion thread
+    if (iocp_context_.hIOCP) {
+        PostQueuedCompletionStatus(iocp_context_.hIOCP, 0, 0, nullptr);
+    }
+
+    // Wait for completion thread to exit
+    if (iocp_context_.hPrefetchThread) {
+        WaitForSingleObject(iocp_context_.hPrefetchThread, 5000);
+        CloseHandle(iocp_context_.hPrefetchThread);
+        iocp_context_.hPrefetchThread = nullptr;
+    }
+
+    // Free all slot buffers
+    for (uint32_t i = 0; i < IocpStreamingContext::kSlotCount; ++i) {
+        IocpLayerSlot& slot = iocp_context_.slots[i];
+        if (slot.buffer) {
+            VirtualFree(slot.buffer, 0, MEM_RELEASE);
+            slot.buffer = nullptr;
+            slot.buffer_capacity = 0;
+        }
+        if (slot.hEvent) {
+            CloseHandle(slot.hEvent);
+            slot.hEvent = nullptr;
+        }
+    }
+
+    // Close handles
+    if (iocp_context_.hIOCP) {
+        CloseHandle(iocp_context_.hIOCP);
+        iocp_context_.hIOCP = nullptr;
+    }
+    if (iocp_context_.hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(iocp_context_.hFile);
+        iocp_context_.hFile = INVALID_HANDLE_VALUE;
+    }
+
+    iocp_context_.layer_offsets.clear();
+    std::cout << "[IOCP] Layer streaming shutdown complete" << std::endl;
+}
+
+DWORD WINAPI EnhancedStreamingGGUFLoader::IocpCompletionThreadProc(LPVOID param)
+{
+    EnhancedStreamingGGUFLoader* self = static_cast<EnhancedStreamingGGUFLoader*>(param);
+    IocpStreamingContext& ctx = self->iocp_context_;
+
+    while (!ctx.shutdown.load(std::memory_order_acquire)) {
+        DWORD bytesTransferred = 0;
+        ULONG_PTR completionKey = 0;
+        LPOVERLAPPED lpOv = nullptr;
+
+        // Block until an I/O completes or shutdown is posted
+        BOOL success = GetQueuedCompletionStatus(
+            ctx.hIOCP,
+            &bytesTransferred,
+            &completionKey,
+            &lpOv,
+            INFINITE);
+
+        if (!success) {
+            const DWORD err = GetLastError();
+            if (lpOv == nullptr && err == ERROR_ABANDONED_WAIT_0) {
+                // IOCP was closed — exit
+                break;
+            }
+            if (lpOv == nullptr) {
+                // Timeout or shutdown posted
+                continue;
+            }
+            // Actual I/O error — find which slot
+            for (uint32_t i = 0; i < IocpStreamingContext::kSlotCount; ++i) {
+                if (&ctx.slots[i].ov == lpOv) {
+                    ctx.slots[i].in_flight.store(false, std::memory_order_release);
+                    ctx.slots[i].ready.store(false, std::memory_order_release);
+                    std::cerr << "[IOCP] Slot " << i << " I/O error: " << err << std::endl;
+                    break;
+                }
+            }
+            continue;
+        }
+
+        // Find which slot completed
+        for (uint32_t i = 0; i < IocpStreamingContext::kSlotCount; ++i) {
+            if (&ctx.slots[i].ov == lpOv) {
+                IocpLayerSlot& slot = ctx.slots[i];
+                slot.in_flight.store(false, std::memory_order_release);
+                slot.ready.store(true, std::memory_order_release);
+
+                // Signal the event for WaitForLayerReady
+                if (slot.hEvent) {
+                    SetEvent(slot.hEvent);
+                }
+
+                // Update metrics
+                {
+                    std::lock_guard<std::mutex> lock(self->metrics_mutex_);
+                    self->metrics_.total_io_bytes += bytesTransferred;
+                }
+
+                // std::cout << "[IOCP] Slot " << i << " layer " << slot.layer_id
+                //           << " completed: " << bytesTransferred << " bytes" << std::endl;
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
+
+bool EnhancedStreamingGGUFLoader::BuildLayerOffsetTable()
+{
+    iocp_context_.layer_offsets.clear();
+
+    // Get all tensors and group by layer
+    auto tensors = GetTensorIndex();
+    std::map<int, std::vector<TensorRef>> layer_tensors;
+
+    for (const auto& tensor : tensors) {
+        int layer_num = -1;
+        // Parse "blk.N." prefix
+        const std::string& name = tensor.name;
+        if (name.rfind("blk.", 0) == 0) {
+            size_t dot = name.find('.', 4);
+            if (dot != std::string::npos) {
+                try {
+                    layer_num = std::stoi(name.substr(4, dot - 4));
+                } catch (...) {
+                    layer_num = -1;
+                }
+            }
+        }
+
+        if (layer_num >= 0) {
+            layer_tensors[layer_num].push_back(tensor);
+        }
+    }
+
+    if (layer_tensors.empty()) {
+        std::cerr << "[IOCP] No layer tensors found in model" << std::endl;
+        return false;
+    }
+
+    // Build offset table: for each layer, find min offset and total size
+    for (const auto& [layer_num, tensors_in_layer] : layer_tensors) {
+        uint64_t min_offset = UINT64_MAX;
+        uint64_t max_end = 0;
+        for (const auto& t : tensors_in_layer) {
+            if (t.offset < min_offset) min_offset = t.offset;
+            uint64_t end = t.offset + t.size;
+            if (end > max_end) max_end = end;
+        }
+        uint64_t total_size = max_end - min_offset;
+        // Sector-align
+        uint64_t aligned_size = ((total_size + IocpStreamingContext::kSectorSize - 1)
+                                 / IocpStreamingContext::kSectorSize) * IocpStreamingContext::kSectorSize;
+        iocp_context_.layer_offsets.push_back({min_offset, aligned_size});
+    }
+
+    // Also add embedding layer (layer -1) and output layer (layer -2)
+    uint64_t embed_offset = 0, embed_size = 0;
+    uint64_t output_offset = 0, output_size = 0;
+    for (const auto& tensor : tensors) {
+        if (tensor.name == "token_embd.weight" || tensor.name == "model.embed_tokens.weight") {
+            embed_offset = tensor.offset;
+            embed_size = tensor.size;
+        }
+        if (tensor.name == "output.weight" || tensor.name == "lm_head.weight") {
+            output_offset = tensor.offset;
+            output_size = tensor.size;
+        }
+    }
+
+    if (embed_size > 0) {
+        uint64_t aligned = ((embed_size + IocpStreamingContext::kSectorSize - 1)
+                            / IocpStreamingContext::kSectorSize) * IocpStreamingContext::kSectorSize;
+        iocp_context_.layer_offsets.insert(iocp_context_.layer_offsets.begin(), {embed_offset, aligned});
+    }
+    if (output_size > 0) {
+        uint64_t aligned = ((output_size + IocpStreamingContext::kSectorSize - 1)
+                            / IocpStreamingContext::kSectorSize) * IocpStreamingContext::kSectorSize;
+        iocp_context_.layer_offsets.push_back({output_offset, aligned});
+    }
+
+    return !iocp_context_.layer_offsets.empty();
+}
+
+uint32_t EnhancedStreamingGGUFLoader::FindFreeSlot()
+{
+    for (uint32_t i = 0; i < IocpStreamingContext::kSlotCount; ++i) {
+        if (!iocp_context_.slots[i].in_flight.load(std::memory_order_acquire)
+            && !iocp_context_.slots[i].ready.load(std::memory_order_acquire)) {
+            return i;
+        }
+    }
+    return UINT32_MAX; // No free slot
+}
+
+uint32_t EnhancedStreamingGGUFLoader::FindSlotForLayer(uint32_t layer_id)
+{
+    for (uint32_t i = 0; i < IocpStreamingContext::kSlotCount; ++i) {
+        if (iocp_context_.slots[i].layer_id == layer_id
+            && iocp_context_.slots[i].ready.load(std::memory_order_acquire)) {
+            return i;
+        }
+    }
+    return UINT32_MAX;
+}
+
+bool EnhancedStreamingGGUFLoader::IssueLayerRead(uint32_t slot_idx)
+{
+    if (slot_idx >= IocpStreamingContext::kSlotCount) {
+        return false;
+    }
+
+    IocpLayerSlot& slot = iocp_context_.slots[slot_idx];
+    uint32_t layer_id = slot.layer_id;
+
+    if (layer_id >= iocp_context_.layer_offsets.size()) {
+        return false;
+    }
+
+    const auto& [offset, size] = iocp_context_.layer_offsets[layer_id];
+
+    // Ensure buffer is large enough (sector-aligned)
+    if (slot.buffer_capacity < size) {
+        if (slot.buffer) {
+            VirtualFree(slot.buffer, 0, MEM_RELEASE);
+        }
+        slot.buffer = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (!slot.buffer) {
+            std::cerr << "[IOCP] VirtualAlloc failed for slot " << slot_idx << std::endl;
+            return false;
+        }
+        slot.buffer_capacity = size;
+    }
+
+    // Reset state
+    slot.ready.store(false, std::memory_order_release);
+    slot.in_flight.store(true, std::memory_order_release);
+    if (slot.hEvent) {
+        ResetEvent(slot.hEvent);
+    }
+
+    // Setup OVERLAPPED
+    memset(&slot.ov, 0, sizeof(slot.ov));
+    slot.ov.Offset = static_cast<DWORD>(offset & 0xFFFFFFFF);
+    slot.ov.OffsetHigh = static_cast<DWORD>(offset >> 32);
+    slot.ov.hEvent = nullptr; // IOCP doesn't use events
+
+    // Issue async read
+    DWORD bytesRead = 0;
+    BOOL result = ReadFile(
+        iocp_context_.hFile,
+        slot.buffer,
+        static_cast<DWORD>(size),
+        &bytesRead,
+        &slot.ov);
+
+    if (!result && GetLastError() != ERROR_IO_PENDING) {
+        slot.in_flight.store(false, std::memory_order_release);
+        std::cerr << "[IOCP] ReadFile failed for layer " << layer_id
+                  << " (Error: " << GetLastError() << ")" << std::endl;
+        return false;
+    }
+
+    // ReadFile returned synchronously or pending — both are OK
+    return true;
+}
+
+bool EnhancedStreamingGGUFLoader::CompleteLayerRead(uint32_t slot_idx, DWORD bytes_transferred)
+{
+    if (slot_idx >= IocpStreamingContext::kSlotCount) {
+        return false;
+    }
+    IocpLayerSlot& slot = iocp_context_.slots[slot_idx];
+    slot.in_flight.store(false, std::memory_order_release);
+    slot.ready.store(true, std::memory_order_release);
+    if (slot.hEvent) {
+        SetEvent(slot.hEvent);
+    }
+    return true;
+}
+
+bool EnhancedStreamingGGUFLoader::PrefetchLayerAsync(uint32_t layer_id)
+{
+    if (iocp_context_.hIOCP == nullptr) {
+        return false;
+    }
+    if (layer_id >= iocp_context_.layer_offsets.size()) {
+        return false;
+    }
+
+    // Check if layer is already resident (RAM_Locked or VRAM)
+    {
+        std::lock_guard<std::mutex> lock(residency_mutex_);
+        if (layer_id < layer_residency_.size()) {
+            if (layer_residency_[layer_id].residency != LayerResidency::Disk) {
+                return true; // Already resident
+            }
+        }
+    }
+
+    // Find a free slot
+    uint32_t slot_idx = FindFreeSlot();
+    if (slot_idx == UINT32_MAX) {
+        // Evict oldest slot (simple LRU: lowest layer_id)
+        uint32_t oldest = 0;
+        for (uint32_t i = 1; i < IocpStreamingContext::kSlotCount; ++i) {
+            if (iocp_context_.slots[i].layer_id < iocp_context_.slots[oldest].layer_id) {
+                oldest = i;
+            }
+        }
+        slot_idx = oldest;
+
+        // Wait for it to complete if in flight
+        if (iocp_context_.slots[slot_idx].in_flight.load(std::memory_order_acquire)) {
+            WaitForSingleObject(iocp_context_.slots[slot_idx].hEvent, 5000);
+        }
+    }
+
+    // Reclaim the slot
+    IocpLayerSlot& slot = iocp_context_.slots[slot_idx];
+    slot.ready.store(false, std::memory_order_release);
+    slot.layer_id = layer_id;
+    slot.byte_size = iocp_context_.layer_offsets[layer_id].second;
+    slot.file_offset = iocp_context_.layer_offsets[layer_id].first;
+
+    // Create event for this slot if not exists
+    if (!slot.hEvent) {
+        slot.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    }
+    ResetEvent(slot.hEvent);
+
+    // Issue the read
+    if (!IssueLayerRead(slot_idx)) {
+        return false;
+    }
+
+    iocp_context_.prefetch_layer.store(layer_id, std::memory_order_release);
+    return true;
+}
+
+bool EnhancedStreamingGGUFLoader::WaitForLayerReady(uint32_t layer_id, uint32_t timeout_ms)
+{
+    if (iocp_context_.hIOCP == nullptr) {
+        return false;
+    }
+
+    // Fast path: check if already resident
+    uint32_t slot_idx = FindSlotForLayer(layer_id);
+    if (slot_idx != UINT32_MAX) {
+        IocpLayerSlot& slot = iocp_context_.slots[slot_idx];
+        if (slot.ready.load(std::memory_order_acquire)) {
+            return true;
+        }
+        // Wait for completion
+        if (slot.hEvent) {
+            DWORD waitResult = WaitForSingleObject(slot.hEvent, timeout_ms);
+            return (waitResult == WAIT_OBJECT_0);
+        }
+        return false;
+    }
+
+    // Layer not in any slot — issue synchronous read
+    slot_idx = FindFreeSlot();
+    if (slot_idx == UINT32_MAX) {
+        // No free slot — evict oldest
+        uint32_t oldest = 0;
+        for (uint32_t i = 1; i < IocpStreamingContext::kSlotCount; ++i) {
+            if (iocp_context_.slots[i].layer_id < iocp_context_.slots[oldest].layer_id) {
+                oldest = i;
+            }
+        }
+        slot_idx = oldest;
+        if (iocp_context_.slots[slot_idx].in_flight.load(std::memory_order_acquire)) {
+            WaitForSingleObject(iocp_context_.slots[slot_idx].hEvent, timeout_ms);
+        }
+    }
+
+    // Setup and issue read
+    IocpLayerSlot& slot = iocp_context_.slots[slot_idx];
+    slot.layer_id = layer_id;
+    slot.byte_size = iocp_context_.layer_offsets[layer_id].second;
+    slot.file_offset = iocp_context_.layer_offsets[layer_id].first;
+    if (!slot.hEvent) {
+        slot.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    }
+    ResetEvent(slot.hEvent);
+
+    if (!IssueLayerRead(slot_idx)) {
+        return false;
+    }
+
+    // Wait for completion
+    DWORD waitResult = WaitForSingleObject(slot.hEvent, timeout_ms);
+    return (waitResult == WAIT_OBJECT_0);
+}
+
+void* EnhancedStreamingGGUFLoader::GetLayerBuffer(uint32_t layer_id, uint64_t* out_size)
+{
+    uint32_t slot_idx = FindSlotForLayer(layer_id);
+    if (slot_idx == UINT32_MAX) {
+        return nullptr;
+    }
+    IocpLayerSlot& slot = iocp_context_.slots[slot_idx];
+    if (!slot.ready.load(std::memory_order_acquire)) {
+        return nullptr;
+    }
+    if (out_size) {
+        *out_size = slot.byte_size;
+    }
+    return slot.buffer;
+}
+
+bool EnhancedStreamingGGUFLoader::PinLayerInRam(uint32_t layer_id)
+{
+    if (layer_id >= iocp_context_.layer_offsets.size()) {
+        return false;
+    }
+
+    // Ensure layer is loaded
+    if (!WaitForLayerReady(layer_id, 30000)) {
+        std::cerr << "[IOCP] PinLayerInRam: layer " << layer_id << " failed to load" << std::endl;
+        return false;
+    }
+
+    void* buffer = GetLayerBuffer(layer_id, nullptr);
+    if (!buffer) {
+        return false;
+    }
+
+    // VirtualLock the buffer pages
+    SIZE_T size = static_cast<SIZE_T>(iocp_context_.layer_offsets[layer_id].second);
+    if (!VirtualLock(buffer, size)) {
+        std::cerr << "[IOCP] VirtualLock failed for layer " << layer_id
+                  << " (Error: " << GetLastError() << ")" << std::endl;
+        return false;
+    }
+
+    // Update residency tracking
+    {
+        std::lock_guard<std::mutex> lock(residency_mutex_);
+        if (layer_id >= layer_residency_.size()) {
+            layer_residency_.resize(layer_id + 1);
+        }
+        layer_residency_[layer_id].residency = LayerResidency::RAM_Locked;
+        layer_residency_[layer_id].host_ptr = buffer;
+        layer_residency_[layer_id].size_bytes = size;
+    }
+
+    std::cout << "[IOCP] Layer " << layer_id << " pinned in RAM (VirtualLock)" << std::endl;
+    return true;
+}
+
+bool EnhancedStreamingGGUFLoader::UnpinLayer(uint32_t layer_id)
+{
+    if (layer_id >= layer_residency_.size()) {
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(residency_mutex_);
+    if (layer_residency_[layer_id].residency != LayerResidency::RAM_Locked) {
+        return true; // Not pinned — nothing to do
+    }
+
+    void* buffer = layer_residency_[layer_id].host_ptr;
+    SIZE_T size = static_cast<SIZE_T>(layer_residency_[layer_id].size_bytes);
+
+    if (buffer && size > 0) {
+        VirtualUnlock(buffer, size);
+    }
+
+    layer_residency_[layer_id].residency = LayerResidency::Disk;
+    layer_residency_[layer_id].host_ptr = nullptr;
+    layer_residency_[layer_id].size_bytes = 0;
+
+    std::cout << "[IOCP] Layer " << layer_id << " unpinned from RAM" << std::endl;
+    return true;
+}
+
+bool EnhancedStreamingGGUFLoader::SetLayerResidency(uint32_t layer_id, LayerResidency residency)
+{
+    std::lock_guard<std::mutex> lock(residency_mutex_);
+    if (layer_id >= layer_residency_.size()) {
+        layer_residency_.resize(layer_id + 1);
+    }
+    layer_residency_[layer_id].residency = residency;
+    return true;
+}
+
+LayerResidency EnhancedStreamingGGUFLoader::GetLayerResidency(uint32_t layer_id) const
+{
+    std::lock_guard<std::mutex> lock(residency_mutex_);
+    if (layer_id >= layer_residency_.size()) {
+        return LayerResidency::Disk;
+    }
+    return layer_residency_[layer_id].residency;
 }
 
 // ============================================================================

@@ -602,6 +602,12 @@ class RawrXDInference
         transformer.SetProgressCallback(std::move(cb));
     }
 
+    /** Wire IOCP streaming loader for explicit async layer prefetch. */
+    void SetStreamingLoader(RawrXD::EnhancedStreamingGGUFLoader* loader)
+    {
+        transformer.SetStreamingLoader(loader);
+    }
+
     /// Loader VMM / multi-slot pressure (for IDE telemetry).
     [[nodiscard]] RawrXDModelLoader::SlidingWindowTelemetry loaderSlidingWindowTelemetry() const
     {

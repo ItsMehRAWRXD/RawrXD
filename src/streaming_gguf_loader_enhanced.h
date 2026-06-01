@@ -51,6 +51,61 @@ struct IORingContext {
     IORingContext() = default;
 };
 
+// ============================================================================
+// IOCP v2.0 Layer Streaming — Explicit Async I/O Ring Buffer
+// ============================================================================
+// Replaces kernel demand-paging with explicit overlapped reads.
+// Targets 10.19 GiB/s sustained throughput on NVMe Gen4.
+// ============================================================================
+
+struct IocpLayerSlot {
+    uint32_t layer_id = 0;           // Which transformer layer this slot holds
+    uint64_t file_offset = 0;        // Offset in GGUF file
+    uint64_t byte_size = 0;          // Size of layer weights
+    void*    buffer = nullptr;       // Sector-aligned VirtualAlloc buffer
+    uint64_t buffer_capacity = 0;    // Allocated buffer size (sector-aligned)
+    OVERLAPPED ov = {};              // Win32 overlapped state
+    HANDLE   hEvent = nullptr;       // Manual-reset event for completion
+    std::atomic<bool> ready{false};  // Set true by IOCP completion thread
+    std::atomic<bool> in_flight{false}; // Set true when issued, false on completion
+};
+
+struct IocpStreamingContext {
+    HANDLE hFile = INVALID_HANDLE_VALUE;      // FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED
+    HANDLE hIOCP = nullptr;                   // IOCP handle
+    HANDLE hPrefetchThread = nullptr;         // Win32 thread handle (not std::thread)
+    DWORD  prefetchThreadId = 0;
+    
+    // Ring buffer of layer slots (double-buffered for ping-pong)
+    static constexpr uint32_t kSlotCount = 4;   // Layer N-1, N, N+1, N+2
+    IocpLayerSlot slots[kSlotCount];
+    
+    // Current compute position
+    std::atomic<uint32_t> compute_layer{0};   // Layer currently being computed
+    std::atomic<uint32_t> prefetch_layer{0};  // Layer being prefetched
+    std::atomic<bool>     shutdown{false};
+    
+    // Sector alignment for FILE_FLAG_NO_BUFFERING
+    static constexpr uint32_t kSectorSize = 4096;
+    
+    // Layer offset table (populated at load time)
+    std::vector<std::pair<uint64_t, uint64_t>> layer_offsets; // {offset, size} per layer
+};
+
+// Layer residency state for asymmetric offloading
+enum class LayerResidency : uint8_t {
+    Disk = 0,      // On cold storage — must stream via IOCP
+    RAM_Locked,    // Pinned in physical RAM via VirtualLock
+    VRAM           // Offloaded to GPU (managed by Vulkan/HIP backend)
+};
+
+struct LayerResidencyInfo {
+    LayerResidency residency = LayerResidency::Disk;
+    void* host_ptr = nullptr;      // Valid if RAM_Locked or Disk (staging)
+    void* device_ptr = nullptr;    // Valid if VRAM
+    uint64_t size_bytes = 0;
+};
+
 // Tensor shard for parallel device loading
 struct TensorShard {
     int32_t device_id = -1;            // GPU 0-N or CPU -1
@@ -143,6 +198,27 @@ public:
     bool DisableIOring();
     bool IsIOringEnabled() const { return ioring_context_.enabled; }
     
+    // ---- IOCP Layer Streaming (v2.0) ----
+    bool InitializeIocpStreaming(const std::string& filepath);
+    void ShutdownIocpStreaming();
+    bool IsIocpStreamingActive() const { return iocp_context_.hIOCP != nullptr; }
+    size_t GetLayerOffsetCount() const { return iocp_context_.layer_offsets.size(); }
+    bool BuildLayerOffsetTable();
+    
+    // Wait for a specific layer to be resident (blocking with timeout)
+    bool WaitForLayerReady(uint32_t layer_id, uint32_t timeout_ms = 5000);
+    
+    // Get pointer to layer weights (valid after WaitForLayerReady returns true)
+    void* GetLayerBuffer(uint32_t layer_id, uint64_t* out_size = nullptr);
+    
+    // Pin layer weights in physical RAM (VirtualLock)
+    bool PinLayerInRam(uint32_t layer_id);
+    bool UnpinLayer(uint32_t layer_id);
+    
+    // Asymmetric offloading: assign residency per layer
+    bool SetLayerResidency(uint32_t layer_id, LayerResidency residency);
+    LayerResidency GetLayerResidency(uint32_t layer_id) const;
+    
     // ---- Huge Pages ----
     bool AllocateHugePages(uint64_t total_size_mb = 1024);
     void* AllocateHugePage(uint64_t size);
@@ -186,6 +262,12 @@ private:
     // ---- I/O Optimization ----
     NVMeIOContext nvme_context_;
     IORingContext ioring_context_;
+    IocpStreamingContext iocp_context_;
+    
+    // ---- Layer Residency Tracking ----
+    std::vector<LayerResidencyInfo> layer_residency_;
+    std::vector<std::string> layer_zone_names_;   // zone name per layer
+    mutable std::mutex residency_mutex_;
     
     // ---- Huge Pages ----
     void* huge_page_pool_ = nullptr;
@@ -216,6 +298,18 @@ private:
     // ---- Performance ----
     PerformanceMetrics metrics_;
     mutable std::mutex metrics_mutex_;
+    
+    // ---- IOCP Layer Streaming Internals ----
+    static DWORD WINAPI IocpCompletionThreadProc(LPVOID param);
+    bool IssueLayerRead(uint32_t slot_idx);
+    bool CompleteLayerRead(uint32_t slot_idx, DWORD bytes_transferred);
+    uint32_t FindFreeSlot();
+    uint32_t FindSlotForLayer(uint32_t layer_id);
+    bool BuildLayerOffsetTable();
+    
+    // ---- File path (duplicated from base for IOCP access) ----
+    std::wstring model_filepath_;
+    std::unordered_map<uint32_t, std::pair<uint64_t, uint64_t>> zone_offsets_;
     
     // ---- Helper Methods ----
     void InitializeNVMeIfAvailable();

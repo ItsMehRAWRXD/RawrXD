@@ -1068,7 +1068,8 @@ Titan_PerformDMA PROC FRAME
     rep movsb
 
 @@dma_vk_done:
-    mfence                                  ; Full memory barrier for GPU visibility
+    ; Beaconism-Aligned: sfence already flushed WC buffers.
+    ; mfence is redundant and banned per ADR-003.
     pop rdi
     pop rsi
     xor ebx, ebx                            ; Success

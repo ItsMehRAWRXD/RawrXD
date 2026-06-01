@@ -1063,6 +1063,51 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             }
 
             printf("[CPUInferenceEngine] Model loaded successfully\n");
+
+            // ========================================================================
+            // IOCP Layer Streaming: Initialize explicit async I/O for cold-storage models
+            // ========================================================================
+            // If the model is on cold storage (not fully resident in RAM), initialize
+            // IOCP streaming to bypass OS demand-paging and hide disk latency.
+            // For models <64GB on a 64GB system, we pin all layers in RAM.
+            // ========================================================================
+            if (m_loader)
+            {
+                if (m_loader->InitializeIocpStreaming(effectiveModelPath))
+                {
+                    printf("[CPUInferenceEngine] IOCP streaming initialized for: %s\n", effectiveModelPath.c_str());
+                    // Build layer offset table from tensor names (blk.N.*)
+                    if (m_loader->BuildLayerOffsetTable())
+                    {
+                        printf("[CPUInferenceEngine] Layer offset table built (%zu layers)\n",
+                               m_loader->GetLayerOffsetCount());
+                        // For models that fit in RAM, pin all layers to avoid streaming overhead
+                        MEMORYSTATUSEX ms{};
+                        ms.dwLength = sizeof(ms);
+                        GlobalMemoryStatusEx(&ms);
+                        const size_t totalPhysMB = static_cast<size_t>(ms.ullTotalPhys >> 20);
+                        const size_t modelSizeMB = m_loader->GetCurrentMemoryUsage() >> 20;
+                        if (modelSizeMB > 0 && modelSizeMB < (totalPhysMB / 2))
+                        {
+                            printf("[CPUInferenceEngine] Model fits in RAM (%zu MB < %zu MB available). Pinning all layers...\n",
+                                   modelSizeMB, totalPhysMB / 2);
+                            for (uint32_t layerId = 0; layerId < static_cast<uint32_t>(m_numLayers); ++layerId)
+                            {
+                                m_loader->PinLayerInRam(layerId);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        printf("[CPUInferenceEngine] WARN: Failed to build layer offset table\n");
+                    }
+                }
+                else
+                {
+                    printf("[CPUInferenceEngine] IOCP streaming not available (model may be mmap-resident)\n");
+                }
+            }
+
             return true;
         }
         

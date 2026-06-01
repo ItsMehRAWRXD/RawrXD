@@ -688,6 +688,7 @@ set(SOURCES
     src/agent_policy.cpp
     src/agent_explainability.cpp
     src/streaming_gguf_loader.cpp
+    src/streaming_gguf_loader_enhanced.cpp
     src/utils/Diagnostics.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp

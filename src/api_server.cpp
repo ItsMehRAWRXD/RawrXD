@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <random>
 #include <filesystem>
+#include <cstdlib>
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -73,6 +74,162 @@ static std::string EscapeJsonString(const std::string& input, size_t max_len = 0
         }
     }
     return result;
+}
+
+static bool EnvFlagEnabled(const char* name, bool default_value = false) {
+    const char* val = std::getenv(name);
+    if (!val || !*val) {
+        return default_value;
+    }
+    std::string s(val);
+    for (char& c : s) {
+        c = static_cast<char>(::tolower(static_cast<unsigned char>(c)));
+    }
+    return s == "1" || s == "true" || s == "yes" || s == "on";
+}
+
+static std::string EnvOrDefault(const char* name, const std::string& default_value) {
+    const char* val = std::getenv(name);
+    if (!val || !*val) {
+        return default_value;
+    }
+    return std::string(val);
+}
+
+static int EnvIntOrDefault(const char* name, int default_value) {
+    const char* val = std::getenv(name);
+    if (!val || !*val) {
+        return default_value;
+    }
+    try {
+        return std::stoi(val);
+    } catch (...) {
+        return default_value;
+    }
+}
+
+struct BalancerCallResult {
+    bool ok = false;
+    int status_code = 0;
+    int latency_ms = 0;
+    std::string body;
+    std::string node_id;
+    std::string balancer_latency;
+    std::string error;
+};
+
+static BalancerCallResult CallShadowBalancer(
+    const std::string& path,
+    const std::string& request_body,
+    const std::string& request_id,
+    int timeout_ms,
+    const std::string& host,
+    int port) {
+    BalancerCallResult out;
+    auto start = std::chrono::steady_clock::now();
+
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-ShadowBalancer/1.0",
+                                     WINHTTP_ACCESS_TYPE_NO_PROXY,
+                                     WINHTTP_NO_PROXY_NAME,
+                                     WINHTTP_NO_PROXY_BYPASS,
+                                     0);
+    if (!hSession) {
+        out.error = "WinHttpOpen failed: " + std::to_string(GetLastError());
+        return out;
+    }
+
+    WinHttpSetTimeouts(hSession, timeout_ms, timeout_ms, timeout_ms, timeout_ms);
+
+    std::wstring whost(host.begin(), host.end());
+    HINTERNET hConnect = WinHttpConnect(hSession, whost.c_str(), static_cast<INTERNET_PORT>(port), 0);
+    if (!hConnect) {
+        out.error = "WinHttpConnect failed: " + std::to_string(GetLastError());
+        WinHttpCloseHandle(hSession);
+        return out;
+    }
+
+    std::wstring wpath(path.begin(), path.end());
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", wpath.c_str(), NULL,
+                                            WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (!hRequest) {
+        out.error = "WinHttpOpenRequest failed: " + std::to_string(GetLastError());
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return out;
+    }
+
+    std::wstring headers = L"Content-Type: application/json\r\n";
+    headers += L"X-Rawr-Shadow-Id: ";
+    headers += std::wstring(request_id.begin(), request_id.end());
+    headers += L"\r\n";
+
+    BOOL sent = WinHttpSendRequest(
+        hRequest,
+        headers.c_str(),
+        -1L,
+        (LPVOID)request_body.c_str(),
+        static_cast<DWORD>(request_body.size()),
+        static_cast<DWORD>(request_body.size()),
+        0);
+
+    if (!sent) {
+        out.error = "WinHttpSendRequest failed: " + std::to_string(GetLastError());
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return out;
+    }
+
+    BOOL received = WinHttpReceiveResponse(hRequest, NULL);
+    if (!received) {
+        out.error = "WinHttpReceiveResponse failed: " + std::to_string(GetLastError());
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return out;
+    }
+
+    DWORD status_code = 0;
+    DWORD status_size = sizeof(status_code);
+    WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                        WINHTTP_HEADER_NAME_BY_INDEX, &status_code, &status_size, WINHTTP_NO_HEADER_INDEX);
+    out.status_code = static_cast<int>(status_code);
+
+    wchar_t node_buf[128] = {0};
+    DWORD node_size = sizeof(node_buf);
+    if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_CUSTOM, L"X-Rawr-Node-ID", node_buf, &node_size, WINHTTP_NO_HEADER_INDEX)) {
+        std::wstring wnode(node_buf);
+        out.node_id.assign(wnode.begin(), wnode.end());
+    }
+
+    wchar_t lat_buf[128] = {0};
+    DWORD lat_size = sizeof(lat_buf);
+    if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_CUSTOM, L"X-Rawr-Balancer-Latency", lat_buf, &lat_size, WINHTTP_NO_HEADER_INDEX)) {
+        std::wstring wlat(lat_buf);
+        out.balancer_latency.assign(wlat.begin(), wlat.end());
+    }
+
+    DWORD avail = 0;
+    do {
+        avail = 0;
+        if (!WinHttpQueryDataAvailable(hRequest, &avail) || avail == 0) {
+            break;
+        }
+        std::vector<char> buf(avail + 1, 0);
+        DWORD downloaded = 0;
+        if (WinHttpReadData(hRequest, buf.data(), avail, &downloaded) && downloaded > 0) {
+            out.body.append(buf.data(), downloaded);
+        }
+    } while (avail > 0);
+
+    out.ok = (out.status_code >= 200 && out.status_code < 300 && !out.body.empty());
+    auto end = std::chrono::steady_clock::now();
+    out.latency_ms = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return out;
 }
 
 // Forward declarations for static helpers defined later in this file
@@ -305,11 +462,56 @@ void APIServer::HandleChatCompletionsRequest(const std::string& request, std::st
         
         LogApiOperation("DEBUG", "CHAT_REQUEST", "Processing " + std::to_string(messages.size()) + " messages");
         
-        // Generate chat completion
-        std::string completion = GenerateChatCompletion(messages);
-        
-        // Create OpenAI-compatible response
-        response = CreateChatCompletionResponse(completion, parsed_request);
+        const bool shadow_mode = EnvFlagEnabled("RAWRXD_BALANCER_SHADOW_MODE", false);
+        const bool balancer_primary = EnvFlagEnabled("RAWRXD_BALANCER_PRIMARY", false);
+        const std::string balancer_host = EnvOrDefault("RAWRXD_BALANCER_HOST", "localhost");
+        const int balancer_port = EnvIntOrDefault("RAWRXD_BALANCER_PORT", 12639);
+        const int balancer_timeout_ms = EnvIntOrDefault("RAWRXD_BALANCER_TIMEOUT_MS", 500);
+
+        static std::atomic<uint64_t> s_shadow_id{0};
+        const uint64_t sid = s_shadow_id.fetch_add(1, std::memory_order_relaxed);
+        const std::string shadow_id = "shadow-" + std::to_string(GetTickCount64()) + "-" + std::to_string(sid);
+
+        BalancerCallResult balancer_result;
+        if (shadow_mode || balancer_primary) {
+            balancer_result = CallShadowBalancer(
+                "/v1/chat/completions",
+                request,
+                shadow_id,
+                balancer_timeout_ms,
+                balancer_host,
+                balancer_port);
+
+            if (balancer_result.ok) {
+                LogApiOperation("INFO", "BALANCER_CALL",
+                    "id=" + shadow_id +
+                    " mode=" + std::string(balancer_primary ? "primary" : "shadow") +
+                    " status=" + std::to_string(balancer_result.status_code) +
+                    " latency_ms=" + std::to_string(balancer_result.latency_ms) +
+                    (balancer_result.node_id.empty() ? "" : " node=" + balancer_result.node_id) +
+                    (balancer_result.balancer_latency.empty() ? "" : " balancer_latency=" + balancer_result.balancer_latency));
+            } else {
+                LogApiOperation("WARN", "BALANCER_CALL",
+                    "id=" + shadow_id +
+                    " mode=" + std::string(balancer_primary ? "primary" : "shadow") +
+                    " failed=" + (balancer_result.error.empty() ? "unknown" : balancer_result.error));
+            }
+        }
+
+        // Primary path behavior:
+        // - Shadow mode: keep existing direct inference response to caller.
+        // - Balancer primary mode: use balancer response when healthy; fallback to direct inference on timeout/error.
+        if (balancer_primary && balancer_result.ok) {
+            response = balancer_result.body;
+        } else {
+            if (balancer_primary && !balancer_result.ok) {
+                LogApiOperation("WARN", "BALANCER_FALLBACK",
+                    "id=" + shadow_id + " falling back to direct inference path");
+            }
+
+            std::string completion = GenerateChatCompletion(messages);
+            response = CreateChatCompletionResponse(completion, parsed_request);
+        }
         
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - start_time);

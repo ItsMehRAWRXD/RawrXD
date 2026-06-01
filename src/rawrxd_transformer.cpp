@@ -1812,6 +1812,20 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 }
             }
 
+            // ========================================================================
+            // IOCP Layer Prefetch: Issue async read for layer N+2 while computing layer N
+            // ========================================================================
+            // This hides disk latency by overlapping I/O with compute.
+            // For models pinned in RAM, PrefetchLayerAsync returns immediately.
+            // For streaming models, this ensures the next layer is ready before we need it.
+            // ========================================================================
+            if (m_streamingLoader && m_streamingLoader->IsIocpStreamingActive()) {
+                int prefetchIdx = l + 2; // Lookahead depth = 2 layers
+                if (prefetchIdx < config.n_layers) {
+                    m_streamingLoader->PrefetchLayerAsync(static_cast<uint32_t>(prefetchIdx));
+                }
+            }
+
             if (stepTraceLoggingEnabled() && ((l % 5) == 0 || l == config.n_layers - 1))
             {
                 char stepBuf[192];
