@@ -23,6 +23,10 @@ export interface AuditEvent {
   telemetryType?: string;
   telemetrySeverity?: 'LOW' | 'HIGH' | 'CRITICAL';
   hashedPrompt?: string;
+  peHash?: string; // SHA-256 of code buffer for pe_writer audit trail
+  peFileHash?: string; // SHA-256 of the emitted PE file on disk
+  threatScore?: number; // 0-100 structural threat score from BinaryThreatScanner
+  threatFlags?: string[]; // e.g. ['W_X_VIOLATION', 'NOP_SLED_DETECTED']
 }
 
 type AuditChangeCallback = (events: AuditEvent[]) => void;

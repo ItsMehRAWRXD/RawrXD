@@ -1,4 +1,5 @@
 import { LowRiskToolAdapter } from './LowRiskToolAdapter';
+import { PeWriterAdapter } from './PeWriterAdapter';
 import { governanceEnforcer } from '../telemetry/GovernanceEnforcer';
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -67,6 +68,7 @@ const TOOL_MANIFEST: ToolManifestEntry[] = [
   { name: 'rollback_release', description: 'Rollback release', riskLevel: 'HIGH' },
   { name: 'manage_secrets', description: 'Manage secret material', riskLevel: 'HIGH' },
   { name: 'update_ci_workflow', description: 'Modify CI workflow', riskLevel: 'HIGH' },
+  { name: 'pe_writer', description: 'Emit raw PE32+ binary via MASM emitter (HIGH risk — HITL required)', riskLevel: 'HIGH' },
 ];
 
 const createDeniedTool = (entry: ToolManifestEntry): ToolDefinition => ({
@@ -103,6 +105,13 @@ const createToolDefinition = (entry: ToolManifestEntry): ToolDefinition => {
     return {
       ...entry,
       execute: LowRiskToolAdapter.writeFile,
+    };
+  }
+
+  if (entry.name === 'pe_writer') {
+    return {
+      ...entry,
+      execute: PeWriterAdapter.emitBinary,
     };
   }
 

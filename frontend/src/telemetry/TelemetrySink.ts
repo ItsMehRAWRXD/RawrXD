@@ -21,7 +21,8 @@ export type TelemetryEventType =
   | 'USER_DENIED'
   | 'ENGINE_PAUSED'
   | 'ENGINE_RESUMED'
-  | 'TOOL_WRITE_FILE_SUCCESS';
+  | 'TOOL_WRITE_FILE_SUCCESS'
+  | 'BINARY_THREAT_BLOCKED';
 export type TelemetrySeverity = 'LOW' | 'HIGH' | 'CRITICAL';
 
 export interface TelemetryEvent {

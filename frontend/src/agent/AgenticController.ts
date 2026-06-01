@@ -381,7 +381,31 @@ export class AgenticController {
         paramsPreview: this.buildParamsPreview(proposal.params),
         executionStatus: execResult.status,
         message: execResult.message,
+        peHash: proposal.toolName === 'pe_writer'
+          ? (execResult.output as { codeHash?: string } | undefined)?.codeHash
+          : undefined,
+        peFileHash: proposal.toolName === 'pe_writer'
+          ? (execResult.output as { peHash?: string } | undefined)?.peHash
+          : undefined,
+        threatScore: proposal.toolName === 'pe_writer'
+          ? (execResult.output as { threatScore?: number } | undefined)?.threatScore
+          : undefined,
+        threatFlags: proposal.toolName === 'pe_writer'
+          ? (execResult.output as { threatFlags?: string[] } | undefined)?.threatFlags
+          : undefined,
       });
+
+      // Day 21: If BinaryThreatScanner blocked the emission, trigger governance enforcement
+      if (proposal.toolName === 'pe_writer' && execResult.status === 'DENIED' && execResult.message.includes('BinaryThreatScanner')) {
+        void TelemetrySink.log(
+          {
+            type: 'BINARY_THREAT_BLOCKED',
+            severity: 'CRITICAL',
+          },
+          `BINARY_THREAT:${proposal.toolName}:${(execResult.output as { threatFlags?: string[] } | undefined)?.threatFlags?.join(',') ?? 'UNKNOWN'}`
+        );
+      }
+
       return execResult;
     } catch (error) {
       this.setStatus('FAULT');

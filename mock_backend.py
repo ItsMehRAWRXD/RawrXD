@@ -622,6 +622,154 @@ class StatusHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"error": str(exc), "path": write_path})
             return
 
+        if parsed_path.path == "/tool/pe_writer":
+            if self.engine.get_status().get("agentic_paused"):
+                self.send_response(423)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+                self.send_header("Access-Control-Allow-Headers", "Content-Type")
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "error": "ENGINE_PAUSED_FOR_HITL",
+                    "action": "resume_or_resolve_pending_approval",
+                }).encode("utf-8"))
+                return
+
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length) if length > 0 else b"{}"
+            try:
+                body = json.loads(raw.decode("utf-8"))
+            except Exception:
+                self._send_json(400, {"error": "Invalid JSON body"})
+                return
+
+            output_path = str(body.get("output_path") or "").strip()
+            code_buffer_b64 = str(body.get("code_buffer") or "").strip()
+            entry_point_rva = int(body.get("entry_point_rva", 0x1000))
+            subsystem = int(body.get("subsystem", 3))
+
+            if not output_path:
+                self._send_json(400, {"error": "output_path is required"})
+                return
+            if not code_buffer_b64:
+                self._send_json(400, {"error": "code_buffer is required"})
+                return
+
+            try:
+                import base64
+                import hashlib
+
+                code_bytes = base64.b64decode(code_buffer_b64)
+                code_hash = hashlib.sha256(code_bytes).hexdigest()
+
+                target = self._safe_path(output_path)
+                if target.exists() and target.is_dir():
+                    self._send_json(400, {"error": "path points to a directory", "path": output_path})
+                    return
+
+                target.parent.mkdir(parents=True, exist_ok=True)
+
+                # Minimal PE32+ header (260 bytes) + code buffer
+                pe_header = bytearray(260)
+                # DOS header
+                pe_header[0:2] = b'MZ'
+                pe_header[0x3C:0x40] = (0x40).to_bytes(4, 'little')
+                # PE signature
+                pe_header[0x40:0x44] = b'PE\x00\x00'
+                # File header
+                pe_header[0x44:0x46] = (0x8664).to_bytes(2, 'little')  # AMD64
+                pe_header[0x46:0x48] = (3).to_bytes(2, 'little')       # 3 sections
+                pe_header[0x50:0x52] = (0x00F0).to_bytes(2, 'little') # Optional header size
+                pe_header[0x52:0x54] = (0x0022).to_bytes(2, 'little') # Characteristics
+                # Optional header (PE32+)
+                pe_header[0x54:0x56] = (0x020B).to_bytes(2, 'little') # Magic
+                pe_header[0x70:0x74] = entry_point_rva.to_bytes(4, 'little')
+                pe_header[0x74:0x78] = (0x1000).to_bytes(4, 'little') # BaseOfCode
+                pe_header[0x78:0x80] = (0x0000000140000000).to_bytes(8, 'little') # ImageBase
+                pe_header[0x80:0x84] = (0x1000).to_bytes(4, 'little') # SectionAlignment
+                pe_header[0x84:0x88] = (0x200).to_bytes(4, 'little')  # FileAlignment
+                pe_header[0xA0:0xA4] = (0x4000).to_bytes(4, 'little') # SizeOfImage
+                pe_header[0xA4:0xA8] = (0x400).to_bytes(4, 'little')   # SizeOfHeaders
+                pe_header[0xB0:0xB2] = subsystem.to_bytes(2, 'little') # Subsystem
+                pe_header[0xB8:0xC0] = (0x100000).to_bytes(8, 'little') # StackReserve
+                pe_header[0xC0:0xC8] = (0x1000).to_bytes(8, 'little')   # StackCommit
+                pe_header[0xC8:0xD0] = (0x100000).to_bytes(8, 'little') # HeapReserve
+                pe_header[0xD0:0xD8] = (0x1000).to_bytes(8, 'little')   # HeapCommit
+                pe_header[0xDC:0xE0] = (0x10).to_bytes(4, 'little')   # NumberOfRvaAndSizes
+                # Section headers
+                pe_header[0xE0:0xE8] = b'.text\x00\x00\x00'
+                pe_header[0xE8:0xEC] = len(code_bytes).to_bytes(4, 'little')
+                pe_header[0xEC:0xF0] = (0x1000).to_bytes(4, 'little')
+                pe_header[0xF0:0xF4] = ((len(code_bytes) + 0x1FF) // 0x200 * 0x200).to_bytes(4, 'little')
+                pe_header[0xF4:0xF8] = (0x400).to_bytes(4, 'little')
+                pe_header[0xFC:0x100] = (0x60000020).to_bytes(4, 'little') # CODE|EXECUTE|READ
+                pe_header[0x100:0x108] = b'.rdata\x00\x00'
+                pe_header[0x108:0x10C] = (0x1000).to_bytes(4, 'little')
+                pe_header[0x10C:0x110] = (0x2000).to_bytes(4, 'little')
+                pe_header[0x110:0x114] = (0x200).to_bytes(4, 'little')
+                pe_header[0x114:0x118] = (0x600).to_bytes(4, 'little')
+                pe_header[0x11C:0x120] = (0x40000040).to_bytes(4, 'little') # INITIALIZED|READ
+                pe_header[0x120:0x128] = b'.data\x00\x00\x00'
+                pe_header[0x128:0x12C] = (0x1000).to_bytes(4, 'little')
+                pe_header[0x12C:0x130] = (0x3000).to_bytes(4, 'little')
+                pe_header[0x130:0x134] = (0x200).to_bytes(4, 'little')
+                pe_header[0x134:0x138] = (0x800).to_bytes(4, 'little')
+                pe_header[0x13C:0x140] = (0xC0000040).to_bytes(4, 'little') # INITIALIZED|READ|WRITE
+
+                # Pad header to 0x400 bytes, append code
+                pe_data = pe_header + code_bytes
+                with open(target, "wb") as handle:
+                    handle.write(pe_data)
+
+                pe_hash = hashlib.sha256(pe_data).hexdigest()
+
+                self._send_json(200, {
+                    "outputPath": output_path,
+                    "bytesWritten": len(pe_data),
+                    "peHash": pe_hash,
+                    "codeHash": code_hash,
+                })
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc), "path": output_path})
+            return
+
+        if parsed_path.path == "/tool/verify_pe_hash":
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length) if length > 0 else b"{}"
+            try:
+                body = json.loads(raw.decode("utf-8"))
+            except Exception:
+                self._send_json(400, {"error": "Invalid JSON body"})
+                return
+
+            file_path = str(body.get("file_path") or "").strip()
+            expected_hash = str(body.get("expected_hash") or "").strip()
+
+            if not file_path:
+                self._send_json(400, {"error": "file_path is required"})
+                return
+            if not expected_hash:
+                self._send_json(400, {"error": "expected_hash is required"})
+                return
+
+            try:
+                import hashlib
+                target = self._safe_path(file_path)
+                if not target.exists() or not target.is_file():
+                    self._send_json(404, {"error": "File not found", "path": file_path})
+                    return
+
+                actual_hash = hashlib.sha256(target.read_bytes()).hexdigest()
+                self._send_json(200, {
+                    "verified": actual_hash.lower() == expected_hash.lower(),
+                    "actualHash": actual_hash,
+                    "expectedHash": expected_hash,
+                })
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc), "path": file_path})
+            return
+
         if parsed_path.path != "/inference/stream":
             self.send_response(404)
             self.send_header("Content-Type", "text/plain")

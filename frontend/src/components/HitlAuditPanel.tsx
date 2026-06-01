@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { auditLogService, AuditEvent } from '../telemetry/AuditLogService';
 import { governanceEnforcer } from '../telemetry/GovernanceEnforcer';
+import { engineService } from '../engine/EngineService';
 
 const formatTime = (epochMs: number): string => {
   const d = new Date(epochMs);
@@ -57,6 +58,10 @@ const renderEnforcementBadge = (event: AuditEvent): React.ReactNode | null => {
 export const HitlAuditPanel: React.FC = () => {
   const [events, setEvents] = useState<AuditEvent[]>(() => auditLogService.getEvents());
   const [enforcementCount, setEnforcementCount] = useState(0);
+  const [verifyState, setVerifyState] = useState<Record<
+    string,
+    { status: 'idle' | 'verifying' | 'verified' | 'mismatch'; actualHash?: string }
+  >>({});
 
   const complianceSnapshot = auditLogService.exportComplianceReport();
 
@@ -93,6 +98,25 @@ export const HitlAuditPanel: React.FC = () => {
     a.download = `compliance-report-${payload.generatedAtEpochMs}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleVerifyHash = async (eventId: string, filePath: string, expectedHash: string) => {
+    setVerifyState((prev) => ({ ...prev, [eventId]: { status: 'verifying' } }));
+    try {
+      const result = await engineService.verifyPeHash(filePath, expectedHash);
+      setVerifyState((prev) => ({
+        ...prev,
+        [eventId]: {
+          status: result.verified ? 'verified' : 'mismatch',
+          actualHash: result.actualHash,
+        },
+      }));
+    } catch {
+      setVerifyState((prev) => ({
+        ...prev,
+        [eventId]: { status: 'mismatch', actualHash: 'error' },
+      }));
+    }
   };
 
   return (
@@ -138,6 +162,29 @@ export const HitlAuditPanel: React.FC = () => {
               {event.reason && <div className="hitl-audit-detail">Intent: {event.reason}</div>}
               {event.paramsPreview && <div className="hitl-audit-detail">Params: {event.paramsPreview}</div>}
               {event.message && <div className="hitl-audit-detail">Message: {event.message}</div>}
+              {event.peFileHash && (
+                <div className="hitl-audit-detail">
+                  PE File Hash: {event.peFileHash.slice(0, 16)}…
+                  <button
+                    className="hitl-verify-hash-btn"
+                    onClick={() => handleVerifyHash(event.id, (event.paramsPreview ? JSON.parse(event.paramsPreview).outputPath : '') || 'build/emit.exe', event.peFileHash || '')}
+                    disabled={verifyState[event.id]?.status === 'verifying'}
+                  >
+                    {verifyState[event.id]?.status === 'verifying'
+                      ? 'Verifying…'
+                      : verifyState[event.id]?.status === 'verified'
+                        ? '✅ Verified'
+                        : verifyState[event.id]?.status === 'mismatch'
+                          ? '❌ Mismatch'
+                          : 'Verify Hash'}
+                  </button>
+                  {verifyState[event.id]?.actualHash && (
+                    <span className="hitl-verify-hash-actual">
+                      Actual: {verifyState[event.id].actualHash?.slice(0, 16)}…
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

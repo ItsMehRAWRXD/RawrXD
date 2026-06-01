@@ -362,6 +362,53 @@ export class EngineService {
   }
 
   /**
+   * HIGH-risk tool adapter: emit a raw PE32+ binary via the MASM PEWriter.
+   * Requires HITL approval. The backend captures the code-buffer hash in the
+   * audit trail before any bytes are written to disk.
+   */
+  public async toolPeWriter(
+    outputPath: string,
+    codeBufferBase64: string,
+    entryPointRva = 0x1000,
+    subsystem = 3
+  ): Promise<{ outputPath: string; bytesWritten: number; peHash: string }> {
+    const response = await fetch(`${this.endpoint}/tool/pe_writer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        output_path: outputPath,
+        code_buffer: codeBufferBase64,
+        entry_point_rva: entryPointRva,
+        subsystem,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`POST /tool/pe_writer HTTP ${response.status}`);
+    }
+
+    return (await response.json()) as { outputPath: string; bytesWritten: number; peHash: string };
+  }
+
+  /**
+   * Forensic verification: re-compute the SHA-256 hash of a PE file on disk
+   * and compare it to the hash recorded in the audit log at emission time.
+   */
+  public async verifyPeHash(filePath: string, expectedHash: string): Promise<{ verified: boolean; actualHash: string }> {
+    const response = await fetch(`${this.endpoint}/tool/verify_pe_hash`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_path: filePath, expected_hash: expectedHash }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`POST /tool/verify_pe_hash HTTP ${response.status}`);
+    }
+
+    return (await response.json()) as { verified: boolean; actualHash: string };
+  }
+
+  /**
    * Stream inference tokens from engine endpoint.
    * Server emits SSE-style lines in response body: data: { ...json... }
    */
