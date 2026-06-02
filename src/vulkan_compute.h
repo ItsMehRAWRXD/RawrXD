@@ -17,6 +17,17 @@
 #include <atomic>
 #include <mutex>
 
+#if defined(__has_include)
+#if __has_include(<vulkan/vulkan.h>)
+#include <vulkan/vulkan.h>
+#define RAWRXD_VULKAN_TYPES_FROM_SDK 1
+#endif
+#endif
+
+#ifndef RAWRXD_VULKAN_TYPES_FROM_SDK
+#define RAWRXD_VULKAN_TYPES_FROM_SDK 0
+#endif
+
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -75,6 +86,15 @@ struct VkPhysicalDeviceMemoryProperties {
 #define VK_NULL_HANDLE 0
 #endif
 #endif
+
+#ifndef RAWRXD_ALLOW_VULKAN_TYPE_STUBS
+#define RAWRXD_ALLOW_VULKAN_TYPE_STUBS 0
+#endif
+
+// Prevent silent ODR/layout drift: all translation units that use VulkanCompute
+// must agree on SDK Vulkan types instead of local fallback stubs.
+static_assert(RAWRXD_ALLOW_VULKAN_TYPE_STUBS || (RAWRXD_VULKAN_TYPES_FROM_SDK == 1),
+              "ODR guard: Vulkan stubs are active for VulkanCompute. Ensure <vulkan/vulkan.h> is visible to this translation unit or define RAWRXD_ALLOW_VULKAN_TYPE_STUBS=1 explicitly.");
 
 // =============================================================================
 // VulkanTensor — GPU-resident tensor descriptor
@@ -197,6 +217,8 @@ public:
     // ---- v1.3 P2P VRAM Sharing ----
     bool ExportBufferKMT(uint32_t buffer_idx, HANDLE& kmt_handle);
     bool ImportBufferKMT(HANDLE kmt_handle, size_t size, uint32_t& buffer_idx);
+    bool ReleaseImportedBufferKMT(uint32_t buffer_idx);
+    int64_t GetActiveImportCount() const;
     bool CreateTimelineSemaphore(VkSemaphore& semaphore, uint64_t initial_value = 0);
     bool ExportTimelineSemaphoreKMT(VkSemaphore semaphore, HANDLE& kmt_handle);
     bool ImportTimelineSemaphoreKMT(HANDLE kmt_handle, VkSemaphore& semaphore);
@@ -363,6 +385,7 @@ private:
         VkDeviceMemory memory;
         size_t size;
         bool is_exportable;
+        bool is_imported;
         HANDLE kmt_handle;
         uint32_t deviceOrdinal; // v1.3 production lock
     };
@@ -407,7 +430,16 @@ private:
 
     // ---- Performance Counters ----
     VulkanKernelStats   stats_;
+    std::atomic<int64_t> m_active_kmt_imports{0};
+    bool                import_guards_enabled_ = true;
 };
+
+// =============================================================================
+// Vulkan Validation Breadcrumb — in-process exit-path tracer
+// =============================================================================
+extern "C" void RawrXD_SetVulkanTraceBreadcrumb(uint32_t value);
+extern "C" uint32_t RawrXD_GetVulkanTraceBreadcrumb(void);
+extern "C" volatile uint32_t* RawrXD_GetVulkanTraceBreadcrumbAddress(void);
 
 // =============================================================================
 // C-callable exports for MASM/ASM bridge (defined in vulkan_compute.cpp)

@@ -1,0 +1,303 @@
+Opened log file 'D:\rawrxd\bench\vulkan_validation_tax\cdb_iter36054_capture_av.txt'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4188 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\rawrxd\scripts\benchmark_vulkan_validation_tax_ab.ps1 -Iterations 50000 -Repeats 1
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff7`c1a50000 00007ff7`c1abf000   powershell.exe
+ModLoad: 00007ffd`87f40000 00007ffd`881a6000   ntdll.dll
+ModLoad: 00007ffd`87430000 00007ffd`874f9000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007ffd`853b0000 00007ffd`857aa000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007ffd`877f0000 00007ffd`87899000   C:\WINDOWS\System32\msvcrt.dll
+ModLoad: 00007ffd`868b0000 00007ffd`86989000   C:\WINDOWS\System32\OLEAUT32.dll
+ModLoad: 00007ffd`85b40000 00007ffd`85be3000   C:\WINDOWS\System32\msvcp_win.dll
+ModLoad: 00007ffd`01620000 00007ffd`0163e000   C:\WINDOWS\SYSTEM32\ATL.DLL
+ModLoad: 00007ffd`85260000 00007ffd`853ac000   C:\WINDOWS\System32\ucrtbase.dll
+ModLoad: 00007ffd`878b0000 00007ffd`87a77000   C:\WINDOWS\System32\USER32.dll
+ModLoad: 00007ffd`86fe0000 00007ffd`87363000   C:\WINDOWS\System32\combase.dll
+ModLoad: 00007ffd`857b0000 00007ffd`857d7000   C:\WINDOWS\System32\win32u.dll
+ModLoad: 00007ffd`87b80000 00007ffd`87c98000   C:\WINDOWS\System32\RPCRT4.dll
+ModLoad: 00007ffd`86000000 00007ffd`8602b000   C:\WINDOWS\System32\GDI32.dll
+ModLoad: 00007ffd`87370000 00007ffd`87426000   C:\WINDOWS\System32\ADVAPI32.dll
+ModLoad: 00007ffd`85a10000 00007ffd`85b3b000   C:\WINDOWS\System32\gdi32full.dll
+ModLoad: 00007ffd`87680000 00007ffd`8772a000   C:\WINDOWS\System32\sechost.dll
+ModLoad: 00007ffd`869b0000 00007ffd`86b48000   C:\WINDOWS\System32\OLE32.dll
+ModLoad: 00007ffd`6e5d0000 00007ffd`6e63d000   C:\WINDOWS\SYSTEM32\mscoree.dll
+ModLoad: 00007ffd`85e90000 00007ffd`85ec2000   C:\WINDOWS\System32\IMM32.DLL
+ModLoad: 00007ffd`6e530000 00007ffd`6e5cb000   C:\Windows\Microsoft.NET\Framework64\v4.0.30319\mscoreei.dll
+ModLoad: 00007ffd`87a80000 00007ffd`87ae7000   C:\WINDOWS\System32\SHLWAPI.dll
+ModLoad: 00007ffd`83f30000 00007ffd`83f4b000   C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+ModLoad: 00007ffd`7e990000 00007ffd`7e99b000   C:\WINDOWS\SYSTEM32\VERSION.dll
+ModLoad: 00007ffd`6c530000 00007ffd`6ced4000   C:\Windows\Microsoft.NET\Framework64\v4.0.30319\clr.dll
+ModLoad: 00007ffd`6c460000 00007ffd`6c52e000   C:\WINDOWS\SYSTEM32\ucrtbase_clr0400.dll
+ModLoad: 00007ffd`6de80000 00007ffd`6de9b000   C:\WINDOWS\SYSTEM32\VCRUNTIME140_CLR0400.dll
+ModLoad: 00007ffd`6ee40000 00007ffd`6ee4c000   C:\WINDOWS\SYSTEM32\VCRUNTIME140_1_CLR0400.dll
+(39e0.67e0): Unknown exception - code 04242420 (first chance)
+ModLoad: 00007ffd`87500000 00007ffd`87508000   C:\WINDOWS\System32\psapi.dll
+ModLoad: 00007ffd`6a920000 00007ffd`6bf2f000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\mscorlib\50abde036072b0b49b01ecf91d35cf89\mscorlib.ni.dll
+ModLoad: 00007ffd`85960000 00007ffd`85a08000   C:\WINDOWS\System32\bcryptPrimitives.dll
+ModLoad: 00007ffd`063c0000 00007ffd`06fe4000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System\bab1c747a49a8b036c463f419b08ae9a\System.ni.dll
+ModLoad: 00007ffd`04fb0000 00007ffd`05a35000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Core\9fc8316f5938c99b78f5b348f798bc96\System.Core.ni.dll
+ModLoad: 00007ffc`c7e50000 00007ffc`c7f78000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\Microsoft.Pb378ec07#\f6cfaa6d46e7d6a89ac4ae1036839620\Microsoft.PowerShell.ConsoleHost.ni.dll
+ModLoad: 00007ffd`847b0000 00007ffd`847cb000   C:\WINDOWS\SYSTEM32\CRYPTSP.dll
+ModLoad: 00007ffd`83e90000 00007ffd`83ec9000   C:\WINDOWS\system32\rsaenh.dll
+ModLoad: 00007ffd`847d0000 00007ffd`847dc000   C:\WINDOWS\SYSTEM32\CRYPTBASE.dll
+ModLoad: 00007ffd`850c0000 00007ffd`850ea000   C:\WINDOWS\SYSTEM32\bcrypt.dll
+ModLoad: 00007ffc`ede00000 00007ffc`eff14000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Manaa57fc8cc#\60c6e5b6244cbce95732c2aa055cda3d\System.Management.Automation.ni.dll
+ModLoad: 00007ffd`87730000 00007ffd`877de000   C:\WINDOWS\System32\clbcatq.dll
+ModLoad: 00007ffd`86120000 00007ffd`868a4000   C:\WINDOWS\System32\shell32.dll
+ModLoad: 00007ffd`82d80000 00007ffd`83600000   C:\WINDOWS\SYSTEM32\windows.storage.dll
+ModLoad: 00007ffd`87ca0000 00007ffd`87d96000   C:\WINDOWS\System32\SHCORE.dll
+ModLoad: 00007ffd`87500000 00007ffd`87508000   C:\WINDOWS\System32\psapi.dll
+ModLoad: 00007ffd`851d0000 00007ffd`85253000   C:\WINDOWS\System32\wintrust.dll
+ModLoad: 00007ffd`857e0000 00007ffd`85958000   C:\WINDOWS\System32\CRYPT32.dll
+ModLoad: 00007ffd`848e0000 00007ffd`848f3000   C:\WINDOWS\SYSTEM32\MSASN1.dll
+ModLoad: 00007ffd`60bd0000 00007ffd`60bed000   C:\WINDOWS\SYSTEM32\amsi.dll
+ModLoad: 00007ffd`84580000 00007ffd`845b3000   C:\WINDOWS\SYSTEM32\USERENV.dll
+ModLoad: 00007ffd`84540000 00007ffd`8456f000   C:\WINDOWS\SYSTEM32\gpapi.dll
+ModLoad: 00007ffd`850f0000 00007ffd`85119000   C:\WINDOWS\SYSTEM32\profapi.dll
+ModLoad: 00007ffd`84870000 00007ffd`848da000   C:\WINDOWS\SYSTEM32\wldp.dll
+ModLoad: 00007ffd`60b20000 00007ffd`60bc3000   C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.26040.7-0\MpOav.dll
+ModLoad: 00007ffc`cb6d0000 00007ffc`cb771000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\Microsoft.Mf49f6405#\688abbb1893935eb27298d0fd180ee55\Microsoft.Management.Infrastructure.ni.dll
+ModLoad: 00007ffd`03ca0000 00007ffd`04551000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Xml\35e2f203f295ba9937bc8cff530b5ec0\System.Xml.ni.dll
+ModLoad: 00007ffd`80560000 00007ffd`80578000   C:\Windows\System32\MSISIP.DLL
+ModLoad: 00007ffd`80540000 00007ffd`8055b000   C:\Windows\System32\wshext.dll
+ModLoad: 00007ffd`804d0000 00007ffd`80536000   C:\Windows\System32\AppxSip.dll
+ModLoad: 00007ffd`578d0000 00007ffd`57ab1000   C:\WINDOWS\SYSTEM32\OpcServices.DLL
+onecore\printscan\appxpackaging\signing\src\appxsip.cpp(612)\AppxSip.dll!00007FFD804D4EA2: (caller: 00007FFD8584AC31) ReturnHr(1) tid(67e0) 80070032 The request is not supported.
+ModLoad: 00007ffd`7d440000 00007ffd`7d5a6000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Management\fec6f64bb9ff9791e87c0d07413239e8\System.Management.ni.dll
+ModLoad: 00007ffc`c7ce0000 00007ffc`c7e48000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Dired13b18a9#\b63f48c10187279d4965ad9d37a77f74\System.DirectoryServices.ni.dll
+ModLoad: 00007ffd`027f0000 00007ffd`02841000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Numerics\736401ffff2c09f3e656b5516f8b8f2f\System.Numerics.ni.dll
+onecore\printscan\appxpackaging\signing\src\appxbundlesip.cpp(693)\AppxSip.dll!00007FFD804D5502: (caller: 00007FFD8584AC31) ReturnHr(2) tid(67e0) 80070032 The request is not supported.
+ModLoad: 00007ffd`66660000 00007ffd`66724000   C:\Windows\System32\Windows.StateRepositoryPS.dll
+ModLoad: 00007ffd`01b10000 00007ffd`02493000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Data\af0d5cb8bba4c61ab0ea8dedacd07fd6\System.Data.ni.dll
+ModLoad: 00007ffd`017a0000 00007ffd`01b0a000   C:\WINDOWS\Microsoft.Net\assembly\GAC_64\System.Data\v4.0_4.0.0.0__b77a5c561934e089\System.Data.dll
+ModLoad: 00007ffd`87af0000 00007ffd`87b70000   C:\WINDOWS\System32\WS2_32.dll
+onecore\printscan\appxpackaging\signing\src\extensionssip.cpp(181)\AppxSip.dll!00007FFD804F7F8D: (caller: 00007FFD804F893F) ReturnHr(3) tid(67e0) 80070032 The request is not supported.
+ModLoad: 00007ffd`804c0000 00007ffd`804cd000   C:\Windows\System32\pwrshsip.dll
+ModLoad: 00007ffd`04560000 00007ffd`04693000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Configuration\9fedd98105e41897ab641c7f8b75f3ee\System.Configuration.ni.dll
+ModLoad: 00007ffd`6c330000 00007ffd`6c45f000   C:\Windows\Microsoft.NET\Framework64\v4.0.30319\clrjit.dll
+ModLoad: 00007ffc`d0900000 00007ffc`d0962000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\Microsoft.P6f792626#\022dcdd4bf59b1dd00fc2081589d6c22\Microsoft.PowerShell.Security.ni.dll
+ModLoad: 00007ffd`4fee0000 00007ffd`4ffbb000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Transactions\cc5bd0db2a788fe8a10d4c5187a38bbe\System.Transactions.ni.dll
+ModLoad: 00007ffd`748d0000 00007ffd`7491f000   C:\WINDOWS\Microsoft.Net\assembly\GAC_64\System.Transactions\v4.0_4.0.0.0__b77a5c561934e089\System.Transactions.dll
+(39e0.5f28): CLR exception - code e0434352 (first chance)
+ModLoad: 00007ffd`823d0000 00007ffd`823dd000   C:\WINDOWS\SYSTEM32\secur32.dll
+ModLoad: 00007ffd`841e0000 00007ffd`84229000   C:\WINDOWS\SYSTEM32\SSPICLI.DLL
+(39e0.5f28): CLR exception - code e0434352 (first chance)
+(39e0.5f28): CLR exception - code e0434352 (first chance)
+(39e0.5f28): CLR exception - code e0434352 (first chance)
+ModLoad: 00007ffd`753e0000 00007ffd`7559e000   C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.26040.7-0\MPCLIENT.DLL
+(39e0.67e0): C++ EH exception - code e06d7363 (first chance)
+(39e0.67e0): C++ EH exception - code e06d7363 (first chance)
+(39e0.67e0): C++ EH exception - code e06d7363 (first chance)
+(39e0.67e0): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 00007ffd`82440000 00007ffd`824ea000   C:\WINDOWS\system32\uxtheme.dll
+onecore\printscan\appxpackaging\signing\src\appxsip.cpp(612)\AppxSip.dll!00007FFD804D4EA2: (caller: 00007FFD8584AC31) ReturnHr(4) tid(6110) 80070032 The request is not supported.
+onecore\printscan\appxpackaging\signing\src\appxbundlesip.cpp(693)\AppxSip.dll!00007FFD804D5502: (caller: 00007FFD8584AC31) ReturnHr(5) tid(6110) 80070032 The request is not supported.
+onecore\printscan\appxpackaging\signing\src\extensionssip.cpp(181)\AppxSip.dll!00007FFD804F7F8D: (caller: 00007FFD804F893F) ReturnHr(6) tid(6110) 80070032 The request is not supported.
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+ModLoad: 00007ffc`c7410000 00007ffc`c7646000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\Microsoft.Pae3498d9#\9fb4cecd8d802611099aa2a71ff41d22\Microsoft.PowerShell.Commands.Management.ni.dll
+ModLoad: 00007ffc`ccfb0000 00007ffc`ccfdd000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\System.Confe64a9051#\b327967ce769cc8ec9856ed3ad585937\System.Configuration.Install.ni.dll
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+ModLoad: 00007ffc`97eb0000 00007ffc`98c52000   C:\WINDOWS\assembly\NativeImages_v4.0.30319_64\Microsoft.P521220ea#\e085cf2d994bf709366746829aadf6cd\Microsoft.PowerShell.Commands.Utility.ni.dll
+ModLoad: 00007ffd`83910000 00007ffd`83943000   C:\WINDOWS\SYSTEM32\iphlpapi.dll
+ModLoad: 00007ffd`83950000 00007ffd`83a9a000   C:\WINDOWS\SYSTEM32\DNSAPI.dll
+ModLoad: 00007ffd`842d0000 00007ffd`842dd000   C:\WINDOWS\SYSTEM32\DSPARSE.dll
+ModLoad: 00007ffd`87510000 00007ffd`8751a000   C:\WINDOWS\System32\NSI.dll
+ModLoad: 00007ffd`7e9b0000 00007ffd`7e9cd000   C:\WINDOWS\SYSTEM32\dhcpcsvc6.DLL
+ModLoad: 00007ffd`7e150000 00007ffd`7e175000   C:\WINDOWS\SYSTEM32\dhcpcsvc.DLL
+ModLoad: 00007ffd`80760000 00007ffd`8076e000   C:\WINDOWS\SYSTEM32\WINNSI.DLL
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00007ff7`7d090000 00007ff7`7d1fa000   RawrXD-VulkanValidationTax.exe
+ModLoad: 00007ffd`87f40000 00007ffd`881a6000   ntdll.dll
+ModLoad: 00007ffd`737f0000 00007ffd`73862000   C:\WINDOWS\System32\verifier.dll
+Page heap: pid 0x2128: page heap enabled with flags 0x3.
+ModLoad: 00007ffd`87430000 00007ffd`874f9000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007ffd`853b0000 00007ffd`857aa000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007ffd`61de0000 00007ffd`61f8a000   C:\WINDOWS\SYSTEM32\vulkan-1.dll
+ModLoad: 00007ffd`87370000 00007ffd`87426000   C:\WINDOWS\System32\ADVAPI32.dll
+ModLoad: 00007ffd`84dc0000 00007ffd`84e11000   C:\WINDOWS\SYSTEM32\CFGMGR32.dll
+ModLoad: 00007ffd`877f0000 00007ffd`87899000   C:\WINDOWS\System32\msvcrt.dll
+ModLoad: 00007ffd`85260000 00007ffd`853ac000   C:\WINDOWS\System32\ucrtbase.dll
+ModLoad: 00007ffd`87680000 00007ffd`8772a000   C:\WINDOWS\System32\sechost.dll
+ModLoad: 00007ffd`87b80000 00007ffd`87c98000   C:\WINDOWS\System32\RPCRT4.dll
+ModLoad: 00007ffd`86000000 00007ffd`8602b000   C:\WINDOWS\System32\gdi32.dll
+ModLoad: 00007ffd`857b0000 00007ffd`857d7000   C:\WINDOWS\System32\win32u.dll
+ModLoad: 00007ffd`85a10000 00007ffd`85b3b000   C:\WINDOWS\System32\gdi32full.dll
+ModLoad: 00007ffd`85b40000 00007ffd`85be3000   C:\WINDOWS\System32\msvcp_win.dll
+ModLoad: 00007ffd`878b0000 00007ffd`87a77000   C:\WINDOWS\System32\USER32.dll
+ModLoad: 00007ffd`85e90000 00007ffd`85ec2000   C:\WINDOWS\System32\IMM32.DLL
+ModLoad: 00007ffd`82570000 00007ffd`826aa000   C:\WINDOWS\system32\dxgi.dll
+ModLoad: 00007ffd`84f80000 00007ffd`84fde000   C:\WINDOWS\SYSTEM32\powrprof.dll
+ModLoad: 00007ffd`84f60000 00007ffd`84f74000   C:\WINDOWS\SYSTEM32\UMPDC.dll
+ModLoad: 00007ffd`736e0000 00007ffd`736fd000   C:\WINDOWS\SYSTEM32\windows.staterepositorycore.dll
+ModLoad: 00007ffd`82520000 00007ffd`82564000   C:\WINDOWS\SYSTEM32\dxcore.dll
+ModLoad: 00007ffd`82960000 00007ffd`82974000   C:\WINDOWS\SYSTEM32\resourcepolicyclient.dll
+ModLoad: 00007ffd`74820000 00007ffd`7487f000   C:\WINDOWS\SYSTEM32\directxdatabasehelper.dll
+ModLoad: 00007ffd`86fe0000 00007ffd`87363000   C:\WINDOWS\System32\combase.dll
+ModLoad: 00007ffd`83f30000 00007ffd`83f4b000   C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+ModLoad: 00007ffd`85960000 00007ffd`85a08000   C:\WINDOWS\System32\bcryptPrimitives.dll
+ModLoad: 00007ffc`f3630000 00007ffc`f991e000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amdvlk64.dll
+ModLoad: 00007ffd`76df0000 00007ffd`76e26000   C:\WINDOWS\SYSTEM32\WINMM.dll
+ModLoad: 00007ffd`850c0000 00007ffd`850ea000   C:\WINDOWS\SYSTEM32\bcrypt.dll
+ModLoad: 00007ffd`86b50000 00007ffd`86fd7000   C:\WINDOWS\System32\SETUPAPI.dll
+ModLoad: 00007ffc`e79c0000 00007ffc`eddfc000   C:\WINDOWS\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amdvlk64.dll
+ModLoad: 00007ffd`73b00000 00007ffd`73b4d000   C:\ProgramData\obs-studio-hook\graphics-hook64.dll
+ModLoad: 00007ffd`826d0000 00007ffd`826ff000   C:\WINDOWS\SYSTEM32\dwmapi.dll
+ModLoad: 00007ffd`84d80000 00007ffd`84dad000   C:\WINDOWS\SYSTEM32\DEVOBJ.dll
+ModLoad: 00007ffd`86120000 00007ffd`868a4000   C:\WINDOWS\System32\SHELL32.dll
+ModLoad: 00007ffd`82d80000 00007ffd`83600000   C:\WINDOWS\SYSTEM32\windows.storage.dll
+ModLoad: 00007ffd`87ca0000 00007ffd`87d96000   C:\WINDOWS\System32\SHCORE.dll
+ModLoad: 00007ffd`87a80000 00007ffd`87ae7000   C:\WINDOWS\System32\shlwapi.dll
+ModLoad: 00007ffd`869b0000 00007ffd`86b48000   C:\WINDOWS\System32\ole32.dll
+ModLoad: 00007ffd`851d0000 00007ffd`85253000   C:\WINDOWS\System32\WINTRUST.dll
+ModLoad: 00007ffd`857e0000 00007ffd`85958000   C:\WINDOWS\System32\CRYPT32.dll
+ModLoad: 00007ffd`848e0000 00007ffd`848f3000   C:\WINDOWS\SYSTEM32\MSASN1.dll
+ModLoad: 00000000`59020000 00000000`5917e000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amdenc64.dll
+ModLoad: 00007ffd`73b50000 00007ffd`73b8c000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amdihk64.dll
+ModLoad: 00000000`592a0000 00000000`593f4000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200691.inf_amd64_84c885aed7de6324\B026021\amdenc64.dll
+[OBS] graphics-hook.dll loaded against process: RawrXD-VulkanValidationTax.exe
+[OBS] (half life scientist) everything..  seems to be in order
+ModLoad: 00007ffd`82440000 00007ffd`824ea000   C:\WINDOWS\system32\uxtheme.dll
+ModLoad: 00007ffd`87520000 00007ffd`8767d000   C:\WINDOWS\System32\MSCTF.dll
+[OBS] OBS_CreateDevice: could not get device address for vkCreateSwapchainKHR
+[OBS] OBS_CreateDevice: could not get device address for vkDestroySwapchainKHR
+[OBS] OBS_CreateDevice: could not get device address for vkQueuePresentKHR
+[OBS] OBS_CreateDevice: could not get device address for vkGetSwapchainImagesKHR
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+(39e0.6110): CLR exception - code e0434352 (first chance)
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00007ff7`7d090000 00007ff7`7d1fa000   RawrXD-VulkanValidationTax.exe
+ModLoad: 00007ffd`87f40000 00007ffd`881a6000   ntdll.dll
+ModLoad: 00007ffd`737f0000 00007ffd`73862000   C:\WINDOWS\System32\verifier.dll
+Page heap: pid 0x4720: page heap enabled with flags 0x3.
+ModLoad: 00007ffd`87430000 00007ffd`874f9000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007ffd`853b0000 00007ffd`857aa000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007ffd`61de0000 00007ffd`61f8a000   C:\WINDOWS\SYSTEM32\vulkan-1.dll
+ModLoad: 00007ffd`87370000 00007ffd`87426000   C:\WINDOWS\System32\ADVAPI32.dll
+ModLoad: 00007ffd`84dc0000 00007ffd`84e11000   C:\WINDOWS\SYSTEM32\CFGMGR32.dll
+ModLoad: 00007ffd`877f0000 00007ffd`87899000   C:\WINDOWS\System32\msvcrt.dll
+ModLoad: 00007ffd`85260000 00007ffd`853ac000   C:\WINDOWS\System32\ucrtbase.dll
+ModLoad: 00007ffd`87680000 00007ffd`8772a000   C:\WINDOWS\System32\sechost.dll
+ModLoad: 00007ffd`87b80000 00007ffd`87c98000   C:\WINDOWS\System32\RPCRT4.dll
+ModLoad: 00007ffd`86000000 00007ffd`8602b000   C:\WINDOWS\System32\gdi32.dll
+ModLoad: 00007ffd`857b0000 00007ffd`857d7000   C:\WINDOWS\System32\win32u.dll
+ModLoad: 00007ffd`85a10000 00007ffd`85b3b000   C:\WINDOWS\System32\gdi32full.dll
+ModLoad: 00007ffd`85b40000 00007ffd`85be3000   C:\WINDOWS\System32\msvcp_win.dll
+ModLoad: 00007ffd`878b0000 00007ffd`87a77000   C:\WINDOWS\System32\USER32.dll
+ModLoad: 00007ffd`85e90000 00007ffd`85ec2000   C:\WINDOWS\System32\IMM32.DLL
+ModLoad: 00007ffd`82570000 00007ffd`826aa000   C:\WINDOWS\system32\dxgi.dll
+ModLoad: 00007ffd`84f80000 00007ffd`84fde000   C:\WINDOWS\SYSTEM32\powrprof.dll
+ModLoad: 00007ffd`84f60000 00007ffd`84f74000   C:\WINDOWS\SYSTEM32\UMPDC.dll
+ModLoad: 00007ffd`736e0000 00007ffd`736fd000   C:\WINDOWS\SYSTEM32\windows.staterepositorycore.dll
+ModLoad: 00007ffd`82520000 00007ffd`82564000   C:\WINDOWS\SYSTEM32\dxcore.dll
+ModLoad: 00007ffd`82960000 00007ffd`82974000   C:\WINDOWS\SYSTEM32\resourcepolicyclient.dll
+ModLoad: 00007ffd`74820000 00007ffd`7487f000   C:\WINDOWS\SYSTEM32\directxdatabasehelper.dll
+ModLoad: 00007ffd`86fe0000 00007ffd`87363000   C:\WINDOWS\System32\combase.dll
+ModLoad: 00007ffd`83f30000 00007ffd`83f4b000   C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+ModLoad: 00007ffd`85960000 00007ffd`85a08000   C:\WINDOWS\System32\bcryptPrimitives.dll
+ModLoad: 00007ffc`f3630000 00007ffc`f991e000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amdvlk64.dll
+ModLoad: 00007ffd`86b50000 00007ffd`86fd7000   C:\WINDOWS\System32\SETUPAPI.dll
+ModLoad: 00007ffd`76df0000 00007ffd`76e26000   C:\WINDOWS\SYSTEM32\WINMM.dll
+ModLoad: 00007ffd`850c0000 00007ffd`850ea000   C:\WINDOWS\SYSTEM32\bcrypt.dll
+ModLoad: 00007ffc`e79c0000 00007ffc`eddfc000   C:\WINDOWS\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amdvlk64.dll
+ModLoad: 00007ffd`73b00000 00007ffd`73b4d000   C:\ProgramData\obs-studio-hook\graphics-hook64.dll
+ModLoad: 00007ffd`826d0000 00007ffd`826ff000   C:\WINDOWS\SYSTEM32\dwmapi.dll
+ModLoad: 00007ffd`84d80000 00007ffd`84dad000   C:\WINDOWS\SYSTEM32\DEVOBJ.dll
+ModLoad: 00007ffd`86120000 00007ffd`868a4000   C:\WINDOWS\System32\SHELL32.dll
+ModLoad: 00007ffd`82d80000 00007ffd`83600000   C:\WINDOWS\SYSTEM32\windows.storage.dll
+ModLoad: 00007ffd`87ca0000 00007ffd`87d96000   C:\WINDOWS\System32\SHCORE.dll
+ModLoad: 00007ffd`87a80000 00007ffd`87ae7000   C:\WINDOWS\System32\shlwapi.dll
+ModLoad: 00007ffd`869b0000 00007ffd`86b48000   C:\WINDOWS\System32\ole32.dll
+ModLoad: 00007ffd`851d0000 00007ffd`85253000   C:\WINDOWS\System32\WINTRUST.dll
+ModLoad: 00007ffd`857e0000 00007ffd`85958000   C:\WINDOWS\System32\CRYPT32.dll
+ModLoad: 00007ffd`848e0000 00007ffd`848f3000   C:\WINDOWS\SYSTEM32\MSASN1.dll
+ModLoad: 00000000`59020000 00000000`5917e000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amdenc64.dll
+ModLoad: 00007ffd`73b50000 00007ffd`73b8c000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amdihk64.dll
+ModLoad: 00000000`592a0000 00000000`593f4000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200691.inf_amd64_84c885aed7de6324\B026021\amdenc64.dll
+[OBS] graphics-hook.dll loaded against process: RawrXD-VulkanValidationTax.exe
+[OBS] (half life scientist) everything..  seems to be in order
+ModLoad: 00007ffd`82440000 00007ffd`824ea000   C:\WINDOWS\system32\uxtheme.dll
+ModLoad: 00007ffd`87520000 00007ffd`8767d000   C:\WINDOWS\System32\MSCTF.dll
+[OBS] OBS_CreateDevice: could not get device address for vkCreateSwapchainKHR
+[OBS] OBS_CreateDevice: could not get device address for vkDestroySwapchainKHR
+[OBS] OBS_CreateDevice: could not get device address for vkQueuePresentKHR
+[OBS] OBS_CreateDevice: could not get device address for vkGetSwapchainImagesKHR
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'

@@ -14,6 +14,7 @@
 #include "logging/logger.h"
 #include "metrics/metrics.h"
 #include "tracing/tracer.h"
+#include "backend_lane_type.h"
 
 // Forward declarations for AI components
 class CompletionEngine;

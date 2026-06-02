@@ -1,0 +1,40 @@
+=================================================================
+Vulkan KMT Validation Tax Benchmark
+iterations=50000
+mode=guards-on
+=================================================================
+[guards-on] begin
+Found device 0: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 1: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Selected device: AMD Radeon RX 7800 XT
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon RX 7800 XT
+AMD Device: Yes
+Compute Queue Family: 0
+Allocated buffer 0 with 1024 bytes (Exportable)
+v1.3 P2P: Exported KMT handle 0000000080000502 for buffer 0
+[guards-on] iter=1 breadcrumb=0x00000201
+[guards-on] iter=2 breadcrumb=0x00000202
+[guards-on] iter=3 breadcrumb=0x00000203
+[guards-on] iter=4 breadcrumb=0x00000204
+[guards-on] iter=5 breadcrumb=0x00000205
+[guards-on] iter=6 breadcrumb=0x00000206
+[guards-on] iter=7 breadcrumb=0x00000207
+[guards-on] progress=1000 breadcrumb=0x00000301
+[guards-on] progress=2000 breadcrumb=0x00000302
+[guards-on] progress=3000 breadcrumb=0x00000303
+[guards-on] progress=4000 breadcrumb=0x00000304
+[guards-on] progress=5000 breadcrumb=0x00000305
+[guards-on] progress=6000 breadcrumb=0x00000306
+[guards-on] progress=7000 breadcrumb=0x00000307
+[guards-on] progress=8000 breadcrumb=0x00000308
+[guards-on] progress=9000 breadcrumb=0x00000309
+[guards-on] progress=10000 breadcrumb=0x0000030A
+[guards-on] progress=11000 breadcrumb=0x0000030B
+[guards-on] progress=12000 breadcrumb=0x0000030C
+[guards-on] progress=13000 breadcrumb=0x0000030D
+[guards-on] progress=14000 breadcrumb=0x0000030E
+[guards-on] progress=15000 breadcrumb=0x0000030F
+[guards-on] progress=16000 breadcrumb=0x00000310
+[guards-on] progress=17000 breadcrumb=0x00000311
+[guards-on] progress=18000 breadcrumb=0x00000312

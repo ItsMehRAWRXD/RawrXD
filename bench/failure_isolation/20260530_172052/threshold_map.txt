@@ -1,0 +1,3 @@
+FAIL: gptoss20b_ctx5121024_ngl33_r1 Exit= Assert=False Notes=error: invalid parameter for argument: -c
+FAIL: TinyLlama-1.1B-Q4_0_ctx5121024_ngl33_r1 Exit= Assert=False Notes=error: invalid parameter for argument: -c
+FAIL: tinyllama_fresh_ctx5121024_ngl33_r1 Exit= Assert=False Notes=error: invalid parameter for argument: -c

@@ -1,0 +1,16 @@
+sxe av
+g
+.ecxr
+.echo ===REGS===
+r
+.echo ===STACK===
+kv
+.echo ===DT_RSI===
+dt RawrXD_VulkanValidationTax!* @rsi
+.echo ===DT_ADDR===
+dt @rsi
+.echo ===LOCALS===
+dv
+.echo ===DISASM===
+u @rip L16
+q

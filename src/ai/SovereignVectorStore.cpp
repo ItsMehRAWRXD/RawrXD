@@ -7,7 +7,7 @@
 // ============================================================================
 
 #include "SovereignVectorStore.h"
-#include "../editor/SovereignGapBuffer.h"  // For R15Allocator
+#include "editor/SovereignGapBuffer.h"  // For R15Allocator
 #include <algorithm>
 #include <cmath>
 #include <sstream>

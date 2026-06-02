@@ -1,0 +1,75 @@
+=================================================================
+Vulkan KMT Validation Tax Benchmark
+iterations=50000
+mode=guards-on
+=================================================================
+[guards-on] begin
+Found device 0: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 1: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Selected device: AMD Radeon RX 7800 XT
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon RX 7800 XT
+AMD Device: Yes
+Compute Queue Family: 0
+Allocated buffer 0 with 1024 bytes (Exportable)
+v1.3 P2P: Exported KMT handle 00000000400015C2 for buffer 0
+[guards-on] iter=1 breadcrumb=0x00000201
+[guards-on] iter=2 breadcrumb=0x00000202
+[guards-on] iter=3 breadcrumb=0x00000203
+[guards-on] iter=4 breadcrumb=0x00000204
+[guards-on] iter=5 breadcrumb=0x00000205
+[guards-on] iter=6 breadcrumb=0x00000206
+[guards-on] iter=7 breadcrumb=0x00000207
+[guards-on] progress=1000 breadcrumb=0x00000301
+[guards-on] progress=2000 breadcrumb=0x00000302
+[guards-on] progress=3000 breadcrumb=0x00000303
+[guards-on] progress=4000 breadcrumb=0x00000304
+[guards-on] progress=5000 breadcrumb=0x00000305
+[guards-on] progress=6000 breadcrumb=0x00000306
+[guards-on] progress=7000 breadcrumb=0x00000307
+[guards-on] progress=8000 breadcrumb=0x00000308
+[guards-on] progress=9000 breadcrumb=0x00000309
+[guards-on] progress=10000 breadcrumb=0x0000030A
+[guards-on] progress=11000 breadcrumb=0x0000030B
+[guards-on] progress=12000 breadcrumb=0x0000030C
+[guards-on] progress=13000 breadcrumb=0x0000030D
+[guards-on] progress=14000 breadcrumb=0x0000030E
+[guards-on] progress=15000 breadcrumb=0x0000030F
+[guards-on] progress=16000 breadcrumb=0x00000310
+[guards-on] progress=17000 breadcrumb=0x00000311
+[guards-on] progress=18000 breadcrumb=0x00000312
+[guards-on] progress=19000 breadcrumb=0x00000313
+[guards-on] progress=20000 breadcrumb=0x00000314
+[guards-on] progress=21000 breadcrumb=0x00000315
+[guards-on] progress=22000 breadcrumb=0x00000316
+[guards-on] progress=23000 breadcrumb=0x00000317
+[guards-on] progress=24000 breadcrumb=0x00000318
+[guards-on] progress=25000 breadcrumb=0x00000319
+[guards-on] progress=26000 breadcrumb=0x0000031A
+[guards-on] progress=27000 breadcrumb=0x0000031B
+[guards-on] progress=28000 breadcrumb=0x0000031C
+[guards-on] progress=29000 breadcrumb=0x0000031D
+[guards-on] progress=30000 breadcrumb=0x0000031E
+[guards-on] progress=31000 breadcrumb=0x0000031F
+[guards-on] progress=32000 breadcrumb=0x00000320
+[guards-on] progress=33000 breadcrumb=0x00000321
+[guards-on] progress=34000 breadcrumb=0x00000322
+[guards-on] progress=35000 breadcrumb=0x00000323
+[guards-on] progress=36000 breadcrumb=0x00000324
+[guards-on] progress=37000 breadcrumb=0x00000325
+[guards-on] progress=38000 breadcrumb=0x00000326
+[guards-on] progress=39000 breadcrumb=0x00000327
+[guards-on] progress=40000 breadcrumb=0x00000328
+[guards-on] progress=41000 breadcrumb=0x00000329
+[guards-on] progress=42000 breadcrumb=0x0000032A
+[guards-on] progress=43000 breadcrumb=0x0000032B
+[guards-on] progress=44000 breadcrumb=0x0000032C
+[guards-on] progress=45000 breadcrumb=0x0000032D
+[guards-on] progress=46000 breadcrumb=0x0000032E
+[guards-on] progress=47000 breadcrumb=0x0000032F
+[guards-on] progress=48000 breadcrumb=0x00000330
+[guards-on] progress=49000 breadcrumb=0x00000331
+[guards-on] end
+[guards-on] breadcrumb_addr=0x7FF77D1E7B90 breadcrumb_value=0x0000002F
+guards-on:  total=72661.337 ms  per-iter=1453.227 us  active-imports=0
+===============================================================

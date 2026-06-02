@@ -964,6 +964,7 @@ CPUInferenceEngine* CPUInferenceEngine::getInstance()
 // ============================================================================
 CPUInferenceEngine::CPUInferenceEngine() {
     m_measurement_collector = std::make_unique<RawrXD::Inference::MeasurementCollector>();
+    m_loader = std::make_unique<EnhancedStreamingGGUFLoader>();
 }
 CPUInferenceEngine::~CPUInferenceEngine()
 {
@@ -1063,6 +1064,9 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             }
 
             printf("[CPUInferenceEngine] Model loaded successfully\n");
+
+            // Wire IOCP streaming loader into the transformer for explicit async layer prefetch
+            s_inferenceBackend.SetStreamingLoader(m_loader.get());
 
             // ========================================================================
             // IOCP Layer Streaming: Initialize explicit async I/O for cold-storage models

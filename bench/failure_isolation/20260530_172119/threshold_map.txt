@@ -1,0 +1,12 @@
+FAIL: gptoss20b_ctx512_ngl0_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\gptoss20b.gguf'
+FAIL: gptoss20b_ctx512_ngl33_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\gptoss20b.gguf'
+FAIL: gptoss20b_ctx1024_ngl0_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\gptoss20b.gguf'
+FAIL: gptoss20b_ctx1024_ngl33_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\gptoss20b.gguf'
+FAIL: TinyLlama-1.1B-Q4_0_ctx512_ngl0_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf'
+FAIL: TinyLlama-1.1B-Q4_0_ctx512_ngl33_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf'
+FAIL: TinyLlama-1.1B-Q4_0_ctx1024_ngl0_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf'
+FAIL: TinyLlama-1.1B-Q4_0_ctx1024_ngl33_r1 Exit= Assert=False Notes=main: error: failed to load model 'D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf'
+FAIL: tinyllama_fresh_ctx512_ngl0_r1 Exit= Assert=False Notes=
+FAIL: tinyllama_fresh_ctx512_ngl33_r1 Exit= Assert=False Notes=
+FAIL: tinyllama_fresh_ctx1024_ngl0_r1 Exit= Assert=False Notes=
+FAIL: tinyllama_fresh_ctx1024_ngl33_r1 Exit= Assert=False Notes=

@@ -1,0 +1,15 @@
+=================================================================
+Vulkan KMT Validation Tax Benchmark
+iterations=100000
+mode=guards-on
+=================================================================
+[guards-on] begin
+Found device 0: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 1: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Selected device: AMD Radeon RX 7800 XT
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon RX 7800 XT
+AMD Device: Yes
+Compute Queue Family: 0
+Allocated buffer 0 with 1024 bytes (Exportable)
+v1.3 P2P: Exported KMT handle 00000000C0002042 for buffer 0

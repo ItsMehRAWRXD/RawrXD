@@ -1,0 +1,32 @@
+[AMD-GPU] DX12 compute queue creation failed, but device is valid.
+[AMD-GPU] DX12 backend initialized.
+[AMD-GPU] AMD features detected: 0x7ffd
+  WMMA: YES
+  MFMA: no
+  InfinityCache: YES
+  PackedFP16: YES
+  INT8DP4: YES
+  AsyncCompute: YES
+[AMD-GPU] AMDGPUAccelerator initialized.
+  GPU: AMD Radeon RX 7800 XT
+  Vendor: 0x1002 Device: 0x747e
+  VRAM: 16177 MB
+  CUs: 48
+  Backend: DX12 Compute
+  AMD Features: 0x7ffd
+  GPU Enabled: YES
+[AMD-GPU] Triggering GPU warmup (anti-lag)...
+[AMD-GPU] Warmup complete: 21ms (matmul=11710us memcpy=637us)
+2026-05-30 15:31:08 [INFO] [Win32IDE_Breadcrumbs] Breadcrumb bar created
+[ExtensionLoader] Scan complete: 15 extension(s) found
+[ExtensionLoader] No DLL found for native extension: Continue.continue-1.3.38
+[ExtensionLoader] No DLL found for native extension: GitHub.copilot
+[ExtensionLoader] No DLL found for native extension: GitHub.copilot-1.388.0
+[ExtensionLoader] No DLL found for native extension: GitHub.copilot-chat-0.43.2026040705
+[ExtensionLoader] No DLL found for native extension: amazonwebservices.amazon-q-vscode
+[ExtensionLoader] No DLL found for native extension: amazonwebservices.amazon-q-vscode-2.0.0
+[ExtensionLoader] No DLL found for native extension: ms-python.python-2026.5.2026032701
+[ExtensionLoader] No DLL found for native extension: ms-vscode.cpptools-1.31.4
+[ExtensionLoader] No DLL found for native extension: ms-vscode.cpptools-extension-pack-1.5.1
+[ExtensionLoader] No DLL found for native extension: rust-lang.rust-analyzer-0.4.2861
+[ExtensionLoader] LoadNativeModules summary: 0 loaded, 10 failed, 5 non-native

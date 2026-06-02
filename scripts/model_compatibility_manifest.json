@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-05-30T00:00:00Z",
+  "notes": "Model compatibility and integrity expectations for local llama-vulkan benchmarks.",
+  "models": [
+    {
+      "name": "phi3mini",
+      "path": "D:\\phi3mini.gguf",
+      "expectedLoad": true
+    },
+    {
+      "name": "TinyLlama-1.1B-Q4_0",
+      "path": "D:\\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf",
+      "expectedLoad": false,
+      "minSizeBytes": 600000000,
+      "reason": "Known truncated/corrupt artifact in current environment."
+    },
+    {
+      "name": "gptoss20b",
+      "path": "D:\\gptoss20b.gguf",
+      "expectedLoad": false,
+      "reason": "Unsupported architecture (gptoss) in current llama build."
+    },
+    {
+      "name": "ministral3",
+      "path": "D:\\ministral3.gguf",
+      "expectedLoad": false,
+      "reason": "Tensor-count mismatch in current artifact/build pairing."
+    }
+  ]
+}

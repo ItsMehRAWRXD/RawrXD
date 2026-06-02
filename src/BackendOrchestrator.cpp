@@ -703,6 +703,457 @@ bool looksLikeBinaryInferencePayload(const std::string& text)
     return false;
 }
 
+std::string trimTrailingWhitespaceCopy(std::string value)
+{
+    while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r' ||
+                              value.back() == '\n'))
+    {
+        value.pop_back();
+    }
+    return value;
+}
+
+std::string escapeJsonString(const std::string& input)
+{
+    std::string out;
+    out.reserve(input.size());
+    for (char ch : input)
+    {
+        switch (ch)
+        {
+            case '\\':
+                out += "\\\\";
+                break;
+            case '"':
+                out += "\\\"";
+                break;
+            case '\n':
+                out += "\\n";
+                break;
+            case '\r':
+                out += "\\r";
+                break;
+            case '\t':
+                out += "\\t";
+                break;
+            default:
+                out.push_back(ch);
+                break;
+        }
+    }
+    return out;
+}
+
+std::string withBackendMetadata(const std::string& metadata, BackendLaneType lane)
+{
+    const std::string backend = BackendLaneTypeName(lane);
+    const std::uint32_t backendCode = BackendLaneTypeCode(lane);
+    const std::string trimmed = trimAsciiCopy(metadata);
+    if (trimmed.empty())
+    {
+        return std::string("{\"backend\":\"") + backend + "\",\"backend_lane_code\":" +
+               std::to_string(backendCode) + "}";
+    }
+
+    const bool hasBackend = trimmed.find("\"backend\"") != std::string::npos;
+    const bool hasLaneCode = trimmed.find("\"backend_lane_code\"") != std::string::npos;
+    if (hasBackend && hasLaneCode)
+    {
+        return trimmed;
+    }
+
+    if (trimmed.front() == '{' && trimmed.back() == '}')
+    {
+        if (trimmed.size() == 2)
+        {
+            return std::string("{\"backend\":\"") + backend + "\",\"backend_lane_code\":" +
+                   std::to_string(backendCode) + "}";
+        }
+
+        std::string patched = trimmed.substr(0, trimmed.size() - 1);
+        if (!hasBackend)
+        {
+            patched += ",\"backend\":\"" + backend + "\"";
+        }
+        if (!hasLaneCode)
+        {
+            patched += ",\"backend_lane_code\":" + std::to_string(backendCode);
+        }
+        patched += "}";
+        return patched;
+    }
+
+    return std::string("{\"backend\":\"") + backend + "\",\"backend_lane_code\":" +
+           std::to_string(backendCode) + ",\"raw_metadata\":\"" + escapeJsonString(trimmed) + "\"}";
+}
+
+std::wstring utf8ToWide(const std::string& value)
+{
+    if (value.empty())
+    {
+        return std::wstring();
+    }
+
+    const int needed = MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, nullptr, 0);
+    if (needed <= 1)
+    {
+        return std::wstring();
+    }
+
+    std::wstring out(static_cast<size_t>(needed), L'\0');
+    const int converted = MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, out.data(), needed);
+    if (converted <= 1)
+    {
+        return std::wstring();
+    }
+    out.resize(static_cast<size_t>(converted - 1));
+    return out;
+}
+
+std::string wideToUtf8(const std::wstring& value)
+{
+    if (value.empty())
+    {
+        return std::string();
+    }
+
+    const int needed = WideCharToMultiByte(CP_UTF8, 0, value.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    if (needed <= 1)
+    {
+        return std::string();
+    }
+
+    std::string out(static_cast<size_t>(needed), '\0');
+    const int converted =
+        WideCharToMultiByte(CP_UTF8, 0, value.c_str(), -1, out.data(), needed, nullptr, nullptr);
+    if (converted <= 1)
+    {
+        return std::string();
+    }
+    out.resize(static_cast<size_t>(converted - 1));
+    return out;
+}
+
+std::string extractStandaloneCompletion(const std::string& output)
+{
+    if (output.empty())
+    {
+        return std::string();
+    }
+
+    const std::string marker = "[Inference] Generating";
+    const size_t markerPos = output.find(marker);
+    if (markerPos == std::string::npos)
+    {
+        return trimTrailingWhitespaceCopy(output);
+    }
+
+    const size_t afterMarkerNewline = output.find('\n', markerPos);
+    if (afterMarkerNewline == std::string::npos || afterMarkerNewline + 1 >= output.size())
+    {
+        return trimTrailingWhitespaceCopy(output);
+    }
+
+    std::string body = output.substr(afterMarkerNewline + 1);
+
+    // Trim trailing summary line emitted by standalone mode: "[N tokens generated]".
+    const size_t trailer = body.rfind("\n[");
+    if (trailer != std::string::npos)
+    {
+        const size_t trailerEnd = body.find(']', trailer + 2);
+        if (trailerEnd != std::string::npos)
+        {
+            const std::string summary = body.substr(trailer + 2, trailerEnd - (trailer + 2));
+            if (summary.find("tokens generated") != std::string::npos)
+            {
+                body = body.substr(0, trailer);
+            }
+        }
+    }
+
+    return trimTrailingWhitespaceCopy(body);
+}
+
+std::wstring quoteCmdArg(const std::wstring& value)
+{
+    // Win32 argument quoting compatible with CommandLineToArgvW.
+    if (value.empty())
+    {
+        return L"\"\"";
+    }
+
+    bool needsQuotes = false;
+    for (wchar_t ch : value)
+    {
+        if (ch == L' ' || ch == L'\t' || ch == L'\"')
+        {
+            needsQuotes = true;
+            break;
+        }
+    }
+    if (!needsQuotes)
+    {
+        return value;
+    }
+
+    std::wstring out;
+    out.push_back(L'\"');
+    int backslashRun = 0;
+    for (wchar_t ch : value)
+    {
+        if (ch == L'\\')
+        {
+            ++backslashRun;
+            continue;
+        }
+        if (ch == L'\"')
+        {
+            out.append(static_cast<size_t>(backslashRun * 2 + 1), L'\\');
+            out.push_back(L'\"');
+            backslashRun = 0;
+            continue;
+        }
+        if (backslashRun > 0)
+        {
+            out.append(static_cast<size_t>(backslashRun), L'\\');
+            backslashRun = 0;
+        }
+        out.push_back(ch);
+    }
+    if (backslashRun > 0)
+    {
+        out.append(static_cast<size_t>(backslashRun * 2), L'\\');
+    }
+    out.push_back(L'\"');
+    return out;
+}
+
+bool resolveInferenceEngineExecutable(std::wstring& outExePath)
+{
+    namespace fs = std::filesystem;
+
+    outExePath.clear();
+
+    wchar_t envExe[MAX_PATH] = {};
+    const DWORD envLen = GetEnvironmentVariableW(L"RAWRXD_INFERENCE_ENGINE_EXE", envExe,
+                                                  static_cast<DWORD>(std::size(envExe)));
+    if (envLen > 0 && envLen < std::size(envExe))
+    {
+        fs::path p(envExe);
+        if (fs::exists(p))
+        {
+            outExePath = p.wstring();
+            return true;
+        }
+    }
+
+    wchar_t exePath[MAX_PATH] = {};
+    const DWORD len = GetModuleFileNameW(nullptr, exePath, static_cast<DWORD>(std::size(exePath)));
+    if (len == 0 || len >= std::size(exePath))
+    {
+        return false;
+    }
+
+    fs::path hostExe(exePath);
+    const fs::path hostDir = hostExe.parent_path();
+
+    std::vector<fs::path> candidates;
+    candidates.push_back(hostDir / L"RawrXD-InferenceEngine.exe");
+
+    fs::path repoRoot = hostDir;
+    if (repoRoot.filename() == L"bin")
+    {
+        repoRoot = repoRoot.parent_path();
+    }
+    if (repoRoot.filename() == L"build")
+    {
+        repoRoot = repoRoot.parent_path();
+    }
+
+    candidates.push_back(repoRoot / L"build" / L"bin" / L"RawrXD-InferenceEngine.exe");
+    candidates.push_back(repoRoot / L"build-ninja" / L"bin" / L"RawrXD-InferenceEngine.exe");
+    candidates.push_back(repoRoot / L"build-ninja-max" / L"bin" / L"RawrXD-InferenceEngine.exe");
+    candidates.push_back(repoRoot / L"build_ggufplan" / L"bin" / L"RawrXD-InferenceEngine.exe");
+
+    for (const auto& candidate : candidates)
+    {
+        std::error_code ec;
+        if (fs::exists(candidate, ec) && !ec)
+        {
+            outExePath = candidate.wstring();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool runInferenceViaStandaloneExe(const std::string& prompt, uint32_t timeoutMs, std::string& completion,
+                                  std::string& metadata, std::string& error)
+{
+    std::wstring engineExe;
+    if (!resolveInferenceEngineExecutable(engineExe))
+    {
+        error = "RawrXD-InferenceEngine.exe not found";
+        return false;
+    }
+
+    std::wstring modelPathWide;
+    wchar_t envModel[2048] = {};
+    const DWORD envLen = GetEnvironmentVariableW(L"RAWRXD_NATIVE_MODEL_PATH", envModel,
+                                                  static_cast<DWORD>(std::size(envModel)));
+    if (envLen > 0 && envLen < std::size(envModel))
+    {
+        modelPathWide.assign(envModel);
+    }
+    else
+    {
+        const std::string preferredModel = BackendOrchestrator::Instance().GetPreferredLoadedModelPath();
+        modelPathWide = utf8ToWide(preferredModel);
+    }
+
+    if (modelPathWide.empty())
+    {
+        error = "No model path available for RawrXD-InferenceEngine.exe (set RAWRXD_NATIVE_MODEL_PATH)";
+        return false;
+    }
+
+    SECURITY_ATTRIBUTES sa{};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+
+    HANDLE hRead = nullptr;
+    HANDLE hWrite = nullptr;
+    if (!CreatePipe(&hRead, &hWrite, &sa, 0))
+    {
+        error = "CreatePipe failed for standalone inference process";
+        return false;
+    }
+    SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    si.hStdOutput = hWrite;
+    si.hStdError = hWrite;
+
+    PROCESS_INFORMATION pi{};
+    std::wstring cmdLine = quoteCmdArg(engineExe) + L" --model " + quoteCmdArg(modelPathWide) + L" --prompt " +
+                           quoteCmdArg(utf8ToWide(prompt)) + L" --max-tokens 256";
+
+    std::vector<wchar_t> cmdBuf(cmdLine.begin(), cmdLine.end());
+    cmdBuf.push_back(L'\0');
+
+    const auto start = std::chrono::steady_clock::now();
+    const BOOL created = CreateProcessW(engineExe.c_str(), cmdBuf.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW,
+                                        nullptr, nullptr, &si, &pi);
+
+    CloseHandle(hWrite);
+    hWrite = nullptr;
+
+    if (!created)
+    {
+        CloseHandle(hRead);
+        error = "CreateProcessW failed for RawrXD-InferenceEngine.exe";
+        return false;
+    }
+
+    std::string output;
+    output.reserve(4096);
+    constexpr DWORD kPollMs = 10;
+
+    bool timedOut = false;
+    while (true)
+    {
+        DWORD available = 0;
+        if (PeekNamedPipe(hRead, nullptr, 0, nullptr, &available, nullptr) && available > 0)
+        {
+            char buffer[4096];
+            DWORD toRead = (std::min)(available, static_cast<DWORD>(sizeof(buffer)));
+            DWORD readBytes = 0;
+            if (ReadFile(hRead, buffer, toRead, &readBytes, nullptr) && readBytes > 0)
+            {
+                output.append(buffer, buffer + readBytes);
+            }
+        }
+
+        const DWORD waitRc = WaitForSingleObject(pi.hProcess, kPollMs);
+        if (waitRc == WAIT_OBJECT_0)
+        {
+            break;
+        }
+
+        if (timeoutMs > 0)
+        {
+            const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                       std::chrono::steady_clock::now() - start)
+                                       .count();
+            if (elapsedMs >= static_cast<long long>(timeoutMs))
+            {
+                timedOut = true;
+                break;
+            }
+        }
+    }
+
+    if (timedOut)
+    {
+        TerminateProcess(pi.hProcess, 1);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        CloseHandle(hRead);
+        error = "RawrXD-InferenceEngine.exe timed out";
+        return false;
+    }
+
+    for (;;)
+    {
+        char buffer[4096];
+        DWORD readBytes = 0;
+        if (!ReadFile(hRead, buffer, sizeof(buffer), &readBytes, nullptr) || readBytes == 0)
+        {
+            break;
+        }
+        output.append(buffer, buffer + readBytes);
+    }
+
+    DWORD exitCode = 0;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    CloseHandle(hRead);
+
+    output = trimTrailingWhitespaceCopy(output);
+    if (output.empty())
+    {
+        error = "RawrXD-InferenceEngine.exe returned empty output";
+        return false;
+    }
+
+    if (exitCode != 0)
+    {
+        error = "RawrXD-InferenceEngine.exe exited non-zero: " + std::to_string(exitCode) + " output=" + output;
+        return false;
+    }
+
+    completion = extractStandaloneCompletion(output);
+    if (completion.empty())
+    {
+        error = "RawrXD-InferenceEngine.exe produced no completion payload";
+        return false;
+    }
+    const auto elapsedNs =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count();
+    std::ostringstream oss;
+    oss << "{\"prompt_eval_count\":0,\"eval_count\":0,\"eval_duration\":" << elapsedNs
+        << ",\"total_duration\":" << elapsedNs << ",\"engine_path\":\"" << wideToUtf8(engineExe)
+        << "\"}";
+    metadata = withBackendMetadata(oss.str(), BackendLaneType::StandaloneExe);
+    return true;
+}
+
 bool RunNativeInferenceSync(const std::string& prompt, uint32_t timeoutMs, std::string& completion,
                             std::string& metadata, std::string& error)
 {
@@ -751,7 +1202,10 @@ bool RunNativeInferenceSync(const std::string& prompt, uint32_t timeoutMs, std::
             const bool ok =
                 RawrXD::TitanProxy::instance().submit(prompt, 256, effectiveTimeout, completion, metadata, error);
             if (ok)
+            {
+                metadata = withBackendMetadata(metadata, BackendLaneType::TitanHost);
                 return true;
+            }
             // Host not available (binary missing) — fall through to in-process.
             if (error.find("could not start") == std::string::npos)
             {
@@ -772,6 +1226,12 @@ bool RunNativeInferenceSync(const std::string& prompt, uint32_t timeoutMs, std::
 
     if (!legacyApiReady && !win32ApiReady)
     {
+        // Final fallback: direct executable lane for integration-phase orchestration.
+        if (runInferenceViaStandaloneExe(prompt, timeoutMs, completion, metadata, error))
+        {
+            return true;
+        }
+
         if (api.sawWin32Symbols && api.engineCreateFailed)
         {
             error = "Native inference API unavailable (Win32 symbols found, CreateInferenceEngine failed)";
@@ -912,7 +1372,7 @@ bool RunNativeInferenceSync(const std::string& prompt, uint32_t timeoutMs, std::
             std::ostringstream oss;
             oss << "{\"prompt_eval_count\":0,\"eval_count\":0,\"eval_duration\":" << elapsedNs
                 << ",\"total_duration\":" << elapsedNs << "}";
-            metadata = oss.str();
+            metadata = withBackendMetadata(oss.str(), BackendLaneType::NativeDll);
             return true;
         }
 

@@ -58,6 +58,40 @@ bool getEnvVarString(const char* name, std::string& out) {
     return true;
 }
 
+bool getEnvFlag(const char* name) {
+    std::string value;
+    if (!getEnvVarString(name, value)) {
+        return false;
+    }
+
+    value = toLowerCopy(value);
+    return value == "1" || value == "true" || value == "yes" || value == "on";
+}
+
+bool hasInstanceLayer(const char* layer_name) {
+    if (!layer_name || !layer_name[0]) {
+        return false;
+    }
+
+    uint32_t layer_count = 0;
+    if (vkEnumerateInstanceLayerProperties(&layer_count, nullptr) != VK_SUCCESS || layer_count == 0) {
+        return false;
+    }
+
+    std::vector<VkLayerProperties> layers(layer_count);
+    if (vkEnumerateInstanceLayerProperties(&layer_count, layers.data()) != VK_SUCCESS) {
+        return false;
+    }
+
+    for (const auto& layer : layers) {
+        if (std::strcmp(layer.layerName, layer_name) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool resolveMatMulSpvPathFromEnv(std::string& out_path) {
     out_path.clear();
 
@@ -80,6 +114,24 @@ bool resolveMatMulSpvPathFromEnv(std::string& out_path) {
 
 } // namespace
 
+namespace {
+
+volatile uint32_t g_VulkanTraceBreadcrumb = 0;
+
+} // namespace
+
+extern "C" void RawrXD_SetVulkanTraceBreadcrumb(uint32_t value) {
+    g_VulkanTraceBreadcrumb = value;
+}
+
+extern "C" uint32_t RawrXD_GetVulkanTraceBreadcrumb(void) {
+    return g_VulkanTraceBreadcrumb;
+}
+
+extern "C" volatile uint32_t* RawrXD_GetVulkanTraceBreadcrumbAddress(void) {
+    return &g_VulkanTraceBreadcrumb;
+}
+
 // SCAFFOLD_105: Vulkan compute backend init
 
 
@@ -94,6 +146,8 @@ VulkanCompute::~VulkanCompute() {
 }
 
 bool VulkanCompute::Initialize() {
+    import_guards_enabled_ = !getEnvFlag("RAWRXD_VULKAN_IMPORT_GUARDS_OFF");
+
     if (!CreateInstance()) {
         std::cerr << "Failed to create Vulkan instance" << std::endl;
         return false;
@@ -398,6 +452,18 @@ bool VulkanCompute::CreateInstance() {
     VkInstanceCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     create_info.pApplicationInfo = &app_info;
+
+    const char* validation_layer = "VK_LAYER_KHRONOS_validation";
+    if (getEnvFlag("RAWRXD_VULKAN_VALIDATION")) {
+        if (!hasInstanceLayer(validation_layer)) {
+            std::cerr << "RAWRXD_VULKAN_VALIDATION requested but VK_LAYER_KHRONOS_validation is unavailable" << std::endl;
+            return false;
+        }
+
+        create_info.enabledLayerCount = 1;
+        create_info.ppEnabledLayerNames = &validation_layer;
+        std::cerr << "v1.3 P2P: Vulkan validation enabled for instance creation" << std::endl;
+    }
 
     if (vkCreateInstance(&create_info, nullptr, &instance_) != VK_SUCCESS) {
         std::cerr << "Failed to create Vulkan instance" << std::endl;
@@ -790,6 +856,7 @@ bool VulkanCompute::AllocateBuffer(size_t size, uint32_t& buffer_idx, size_t& me
     meta.memory = memory;
     meta.size = size;
     meta.is_exportable = export_kmt;
+    meta.is_imported = false;
     meta.kmt_handle = nullptr;
     meta.deviceOrdinal = device_info_.device_index; // v1.3 cluster affinity
     allocated_buffers_.push_back(meta);
@@ -858,6 +925,7 @@ bool VulkanCompute::AllocateZeroCopyBuffer(size_t size, uint32_t& buffer_idx, vo
     meta.memory = memory;
     meta.size = size;
     meta.is_exportable = export_kmt;
+    meta.is_imported = false;
     meta.kmt_handle = nullptr;
     meta.deviceOrdinal = device_info_.device_index; // v1.3 cluster affinity
     allocated_buffers_.push_back(meta);
@@ -902,7 +970,18 @@ bool VulkanCompute::ExportBufferKMT(uint32_t buffer_idx, HANDLE& kmt_handle) {
 }
 
 bool VulkanCompute::ImportBufferKMT(HANDLE kmt_handle, size_t size, uint32_t& buffer_idx) {
-    if (!device_ || !kmt_handle) return false;
+    buffer_idx = UINT32_MAX;
+
+    if (!device_) {
+        std::cerr << "v1.3 P2P: ImportBufferKMT rejected before vkAllocateMemory because device is null" << std::endl;
+        return false;
+    }
+
+    if (!kmt_handle || kmt_handle == INVALID_HANDLE_VALUE || size == 0) {
+        std::cerr << "v1.3 P2P: ImportBufferKMT rejected before vkAllocateMemory because handle="
+                  << kmt_handle << " size=" << size << std::endl;
+        return false;
+    }
 
     VkBuffer buffer;
     VkDeviceMemory memory;
@@ -923,6 +1002,12 @@ bool VulkanCompute::ImportBufferKMT(HANDLE kmt_handle, size_t size, uint32_t& bu
     VkMemoryRequirements mem_reqs;
     vkGetBufferMemoryRequirements(device_, buffer, &mem_reqs);
 
+    if (mem_reqs.size == 0 || mem_reqs.memoryTypeBits == 0) {
+        std::cerr << "v1.3 P2P: ImportBufferKMT rejected because Vulkan reported empty memory requirements" << std::endl;
+        vkDestroyBuffer(device_, buffer, nullptr);
+        return false;
+    }
+
     VkImportMemoryWin32HandleInfoKHR import_info{};
     import_info.sType = VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_KHR;
     import_info.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT;
@@ -934,12 +1019,34 @@ bool VulkanCompute::ImportBufferKMT(HANDLE kmt_handle, size_t size, uint32_t& bu
     alloc_info.allocationSize = mem_reqs.size;
     alloc_info.memoryTypeIndex = FindMemoryType(mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    if (vkAllocateMemory(device_, &alloc_info, nullptr, &memory) != VK_SUCCESS) {
+    if (getEnvFlag("RAWRXD_VULKAN_IMPORT_DIAGNOSTIC")) {
+        std::cerr << "v1.3 P2P: ImportBufferKMT preflight handle=0x"
+                  << std::hex << reinterpret_cast<uintptr_t>(kmt_handle)
+                  << std::dec << " size=" << size
+                  << " vkAllocationSize=" << mem_reqs.size
+                  << " vkAlignment=" << mem_reqs.alignment
+                  << " sizeModAlignment=" << (mem_reqs.alignment ? (mem_reqs.size % mem_reqs.alignment) : 0)
+                  << " memoryTypeIndex=" << alloc_info.memoryTypeIndex << std::endl;
+    }
+
+    if (alloc_info.memoryTypeIndex == UINT32_MAX) {
+        std::cerr << "v1.3 P2P: Failed to find import-capable device-local memory type (bits=0x"
+                  << std::hex << mem_reqs.memoryTypeBits << std::dec << ")" << std::endl;
         vkDestroyBuffer(device_, buffer, nullptr);
         return false;
     }
 
-    vkBindBufferMemory(device_, buffer, memory, 0);
+    if (vkAllocateMemory(device_, &alloc_info, nullptr, &memory) != VK_SUCCESS) {
+        std::cerr << "v1.3 P2P: vkAllocateMemory import path failed for KMT handle; rejecting without fallback" << std::endl;
+        vkDestroyBuffer(device_, buffer, nullptr);
+        return false;
+    }
+
+    if (vkBindBufferMemory(device_, buffer, memory, 0) != VK_SUCCESS) {
+        vkFreeMemory(device_, memory, nullptr);
+        vkDestroyBuffer(device_, buffer, nullptr);
+        return false;
+    }
 
     buffer_idx = static_cast<uint32_t>(allocated_buffers_.size());
     BufferMeta meta{};
@@ -947,12 +1054,71 @@ bool VulkanCompute::ImportBufferKMT(HANDLE kmt_handle, size_t size, uint32_t& bu
     meta.memory = memory;
     meta.size = size;
     meta.is_exportable = false; // Imported is not re-exportable in this logic
+    meta.is_imported = true;
     meta.kmt_handle = kmt_handle;
     meta.deviceOrdinal = device_info_.device_index; // v1.3 cluster affinity
     allocated_buffers_.push_back(meta);
+
+    m_active_kmt_imports.fetch_add(1, std::memory_order_relaxed);
+    if (getEnvFlag("RAWRXD_VULKAN_IMPORT_DIAGNOSTIC")) {
+        const int64_t active_live = GetActiveImportCount();
+        const bool back_is_imported = !allocated_buffers_.empty() && allocated_buffers_.back().is_imported;
+        std::cerr << "v1.3 P2P: active imported buffers after import = "
+                  << active_live << " (back.is_imported=" << back_is_imported << ")" << std::endl;
+    }
     
-    std::cout << "v1.3 P2P: Imported KMT handle " << kmt_handle << " as buffer " << buffer_idx << std::endl;
+    if (getEnvFlag("RAWRXD_VULKAN_IMPORT_DIAGNOSTIC")) {
+        std::cout << "v1.3 P2P: Imported KMT handle " << kmt_handle << " as buffer " << buffer_idx << std::endl;
+    }
     return true;
+}
+
+bool VulkanCompute::ReleaseImportedBufferKMT(uint32_t buffer_idx) {
+    if (device_ == nullptr) {
+        std::cerr << "v1.3 P2P: ReleaseImportedBufferKMT rejected because device is null" << std::endl;
+        return false;
+    }
+
+    if (buffer_idx >= allocated_buffers_.size()) {
+        std::cerr << "v1.3 P2P: ReleaseImportedBufferKMT rejected because buffer index is out of range" << std::endl;
+        return false;
+    }
+
+    BufferMeta& meta = allocated_buffers_[buffer_idx];
+    if (!meta.is_imported || meta.buffer == nullptr || meta.memory == nullptr) {
+        std::cerr << "v1.3 P2P: ReleaseImportedBufferKMT rejected because buffer is not an active import" << std::endl;
+        return false;
+    }
+
+    vkDestroyBuffer(device_, meta.buffer, nullptr);
+    vkFreeMemory(device_, meta.memory, nullptr);
+    meta.buffer = nullptr;
+    meta.memory = nullptr;
+    meta.size = 0;
+    meta.is_imported = false;
+    meta.kmt_handle = nullptr;
+
+    m_active_kmt_imports.fetch_sub(1, std::memory_order_relaxed);
+    if (getEnvFlag("RAWRXD_VULKAN_IMPORT_DIAGNOSTIC")) {
+        const int64_t active_live = GetActiveImportCount();
+        const bool back_is_imported = !allocated_buffers_.empty() && allocated_buffers_.back().is_imported;
+        std::cerr << "v1.3 P2P: active imported buffers after release = "
+                  << active_live << " (back.is_imported=" << back_is_imported << ")" << std::endl;
+    }
+    if (getEnvFlag("RAWRXD_VULKAN_IMPORT_DIAGNOSTIC")) {
+        std::cout << "v1.3 P2P: Released imported KMT buffer " << buffer_idx << std::endl;
+    }
+    return true;
+}
+
+int64_t VulkanCompute::GetActiveImportCount() const {
+    int64_t active = 0;
+    for (const auto& meta : allocated_buffers_) {
+        if (meta.is_imported && meta.buffer != nullptr && meta.memory != nullptr) {
+            ++active;
+        }
+    }
+    return active;
 }
 
 bool VulkanCompute::CreateTimelineSemaphore(VkSemaphore& semaphore, uint64_t initial_value) {
@@ -1935,7 +2101,7 @@ bool VulkanCompute::AllocateKVCache(uint32_t num_layers, uint32_t max_seq_len, u
             ClearKVCache();
             return false;
         }
-        kv_cache_buffers_[layer * 2] = {k_buffer, k_memory, cache_size, false, nullptr};
+        kv_cache_buffers_[layer * 2] = {k_buffer, k_memory, cache_size, false, false, nullptr, device_info_.device_index};
         
         // Zero-initialize K cache
         std::vector<float> zeros(max_seq_len * head_dim, 0.0f);
@@ -1953,7 +2119,7 @@ bool VulkanCompute::AllocateKVCache(uint32_t num_layers, uint32_t max_seq_len, u
             ClearKVCache();
             return false;
         }
-        kv_cache_buffers_[layer * 2 + 1] = {v_buffer, v_memory, cache_size, false, nullptr};
+        kv_cache_buffers_[layer * 2 + 1] = {v_buffer, v_memory, cache_size, false, false, nullptr, device_info_.device_index};
         
         // Zero-initialize V cache
         if (!CopyHostToBuffer(zeros.data(), v_buffer, cache_size)) {
@@ -2261,13 +2427,16 @@ uint32_t VulkanCompute::FindMemoryType(uint32_t type_filter, VkMemoryPropertyFla
 
 void VulkanCompute::Cleanup() {
     if (device_) {
+        RawrXD_SetVulkanTraceBreadcrumb(0x10);
         vkDeviceWaitIdle(device_);
+        RawrXD_SetVulkanTraceBreadcrumb(0x11);
         
         // Clean up KV cache
         ClearKVCache();
         
         // Clean up async command buffer pool
         CleanupCommandBufferPool();
+        RawrXD_SetVulkanTraceBreadcrumb(0x12);
         
         // Clean up shaders and pipelines
         for (auto& shader : shaders_) {
@@ -2334,9 +2503,13 @@ void VulkanCompute::Cleanup() {
             vkDestroyCommandPool(device_, command_pool_, nullptr);
             command_pool_ = nullptr;
         }
+        RawrXD_SetVulkanTraceBreadcrumb(0x13);
         
         // Clean up allocated buffers
         for (auto& meta : allocated_buffers_) {
+            if (meta.is_imported) {
+                m_active_kmt_imports.fetch_sub(1, std::memory_order_relaxed);
+            }
             if (meta.buffer) {
                 vkDestroyBuffer(device_, meta.buffer, nullptr);
             }
@@ -2345,17 +2518,26 @@ void VulkanCompute::Cleanup() {
             }
         }
         allocated_buffers_.clear();
+        RawrXD_SetVulkanTraceBreadcrumb(0x14);
+
+        if (m_active_kmt_imports.load(std::memory_order_relaxed) != 0) {
+            std::cerr << "Warning: active KMT import counter did not return to zero during Cleanup()" << std::endl;
+            m_active_kmt_imports.store(0, std::memory_order_relaxed);
+        }
         
         // Clean up uploaded tensors
         ReleaseTensors();
+        RawrXD_SetVulkanTraceBreadcrumb(0x15);
         
         vkDestroyDevice(device_, nullptr);
         device_ = nullptr;
+        RawrXD_SetVulkanTraceBreadcrumb(0x16);
     }
     
     if (instance_) {
         vkDestroyInstance(instance_, nullptr);
         instance_ = nullptr;
+        RawrXD_SetVulkanTraceBreadcrumb(0x17);
     }
     
     std::cout << "Vulkan resources cleaned up successfully" << std::endl;

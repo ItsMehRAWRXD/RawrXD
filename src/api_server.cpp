@@ -28,6 +28,7 @@
 #include <random>
 #include <filesystem>
 #include <cstdlib>
+#include <cstring>  // For strrchr, strcpy
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -44,12 +45,59 @@
 #pragma comment(lib, "winhttp.lib")
 
 // Structured logging helper with timestamp and severity
+// BULLETPROOF OBSERVABILITY: console fallback + forced flush + env detection
 static void LogApiOperation(const std::string& severity, const std::string& operation, const std::string& details) {
     auto now = std::chrono::system_clock::now();
     auto time_t = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
     ss << std::put_time(std::gmtime(&time_t), "%Y-%m-%dT%H:%M:%SZ");
-    fprintf(stderr, "[%s] [%s] %s: %s\n", ss.str().c_str(), severity.c_str(), operation.c_str(), details.c_str());
+    const std::string line = "[" + ss.str() + "] [" + severity + "] " + operation + ": " + details;
+
+    // Console fallback: both stderr and stdout for maximum visibility
+    fprintf(stderr, "%s\n", line.c_str());
+    fprintf(stdout, "%s\n", line.c_str());
+    fflush(stderr);
+    fflush(stdout);
+
+    // File sink with forced flush — use GetEnvironmentVariableA for GUI process reliability
+    char logFileBuf[MAX_PATH] = {};
+    DWORD envLen = GetEnvironmentVariableA("RAWRXD_API_LOG_FILE", logFileBuf, MAX_PATH);
+    const char* logFile = (envLen > 0 && envLen < MAX_PATH) ? logFileBuf : nullptr;
+    
+    // Fallback: if env var not set, use a default path for smoke testing
+    char defaultLogPath[MAX_PATH] = {};
+    if (!logFile || !*logFile) {
+        // Try to construct a default path in the same directory as the executable
+        DWORD exeLen = GetModuleFileNameA(nullptr, defaultLogPath, MAX_PATH);
+        if (exeLen > 0 && exeLen < MAX_PATH) {
+            // Find last backslash and replace filename with log name
+            char* lastSlash = strrchr(defaultLogPath, '\\');
+            if (lastSlash) {
+                strcpy(lastSlash + 1, "api_shadow_smoke.log");
+                logFile = defaultLogPath;
+            }
+        }
+    }
+    
+    if (logFile && *logFile) {
+        static std::mutex s_apiLogFileMutex;
+        std::lock_guard<std::mutex> lock(s_apiLogFileMutex);
+        std::ofstream out(logFile, std::ios::app);
+        if (out.is_open()) {
+            out << line << std::endl;  // endl forces flush
+        } else {
+            fprintf(stderr, "[OBSERVABILITY] Failed to open log file: %s\n", logFile);
+            fflush(stderr);
+        }
+    } else {
+        // Environment detection: log that we're NOT seeing the env var
+        static bool envWarningLogged = false;
+        if (!envWarningLogged) {
+            fprintf(stderr, "[OBSERVABILITY] RAWRXD_API_LOG_FILE not set or empty (GetEnvironmentVariableA returned %lu)\n", envLen);
+            fflush(stderr);
+            envWarningLogged = true;
+        }
+    }
 }
 
 // Safe JSON string escaping: escape all control chars + quotes + backslash
@@ -468,12 +516,37 @@ void APIServer::HandleChatCompletionsRequest(const std::string& request, std::st
         const int balancer_port = EnvIntOrDefault("RAWRXD_BALANCER_PORT", 12639);
         const int balancer_timeout_ms = EnvIntOrDefault("RAWRXD_BALANCER_TIMEOUT_MS", 500);
 
+        // --- BEGIN DIAGNOSTIC LOGGING PATCH ---
+        // ALWAYS print these values to verify env var detection
+        {
+            const char* logPath = std::getenv("RAWRXD_API_LOG_FILE");
+            std::cout << "[BALANCER_DIAGNOSTIC] === ENV CHECK ===" << std::endl;
+            std::cout << "[BALANCER_DIAGNOSTIC] RAWRXD_API_LOG_FILE env: " << (logPath ? logPath : "NULL") << std::endl;
+            std::cout << "[BALANCER_DIAGNOSTIC] shadow_mode=" << shadow_mode << " balancer_primary=" << balancer_primary << std::endl;
+            std::cout << "[BALANCER_DIAGNOSTIC] host=" << balancer_host << " port=" << balancer_port << std::endl;
+            std::cout << "[BALANCER_DIAGNOSTIC] Will enter balancer block? " << ((shadow_mode || balancer_primary) ? "YES" : "NO") << std::endl;
+            std::cout.flush();
+        }
+        // --- END DIAGNOSTIC LOGGING PATCH ---
+
         static std::atomic<uint64_t> s_shadow_id{0};
         const uint64_t sid = s_shadow_id.fetch_add(1, std::memory_order_relaxed);
         const std::string shadow_id = "shadow-" + std::to_string(GetTickCount64()) + "-" + std::to_string(sid);
 
         BalancerCallResult balancer_result;
+
         if (shadow_mode || balancer_primary) {
+            // --- BEGIN DIAGNOSTIC LOGGING PATCH ---
+            // Pre-call: Log that we're entering the balancer path
+            {
+                const char* logPath = std::getenv("RAWRXD_API_LOG_FILE");
+                std::cout << "[BALANCER_DIAGNOSTIC] Mode: " << (balancer_primary ? "primary" : "shadow") << std::endl;
+                std::cout << "[BALANCER_DIAGNOSTIC] RAWRXD_API_LOG_FILE env: " << (logPath ? logPath : "NULL") << std::endl;
+                std::cout << "[BALANCER_DIAGNOSTIC] Calling balancer at " << balancer_host << ":" << balancer_port << std::endl;
+                std::cout.flush();
+            }
+            // --- END DIAGNOSTIC LOGGING PATCH ---
+
             balancer_result = CallShadowBalancer(
                 "/v1/chat/completions",
                 request,
@@ -481,6 +554,34 @@ void APIServer::HandleChatCompletionsRequest(const std::string& request, std::st
                 balancer_timeout_ms,
                 balancer_host,
                 balancer_port);
+
+            // --- BEGIN DIAGNOSTIC LOGGING PATCH ---
+            // Post-call: Log the actual results with forced flush
+            {
+                const char* logPath = std::getenv("RAWRXD_API_LOG_FILE");
+                std::cout << "[BALANCER_DIAGNOSTIC] Call completed. ok=" << balancer_result.ok 
+                          << " status=" << balancer_result.status_code 
+                          << " node=" << balancer_result.node_id << std::endl;
+
+                if (logPath) {
+                    std::ofstream logFile(logPath, std::ios::app);
+                    if (logFile.is_open()) {
+                        logFile << "[BALANCER_CALL] id=" << shadow_id
+                                << " mode=" << (balancer_primary ? "primary" : "shadow")
+                                << " node=" << balancer_result.node_id
+                                << " status=" << balancer_result.status_code
+                                << " latency_ms=" << balancer_result.latency_ms << std::endl;
+                        logFile.flush(); // Force sync to disk
+                        std::cout << "[BALANCER_DIAGNOSTIC] Log flushed to file: " << logPath << std::endl;
+                    } else {
+                        std::cout << "[BALANCER_DIAGNOSTIC] ERROR: Could not open file: " << logPath << std::endl;
+                    }
+                } else {
+                    std::cout << "[BALANCER_DIAGNOSTIC] WARNING: RAWRXD_API_LOG_FILE not set" << std::endl;
+                }
+                std::cout.flush(); // Ensure console output is seen
+            }
+            // --- END DIAGNOSTIC LOGGING PATCH ---
 
             if (balancer_result.ok) {
                 LogApiOperation("INFO", "BALANCER_CALL",

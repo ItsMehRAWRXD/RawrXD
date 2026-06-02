@@ -1,0 +1,4 @@
+.ecxr
+dd linker_ir_harness_crash!g_TraceBreadcrumb L1
+dd linker_ir_harness_crash!g_CoffLinkerRunStage L1
+r rax rbx rcx rdx rip; kv; q

@@ -1,0 +1,15 @@
+sxe av
+g
+.echo ===REGS===
+r
+.echo ===STACK===
+kv
+.echo ===EXT_HEAP_RSI===
+!ext.heap -p -a @rsi
+.echo ===EXT_HEAP_RSI_PLUS_590===
+!ext.heap -p -a @rsi+590
+.echo ===ADDRESS_RSI===
+!address @rsi
+.echo ===ADDRESS_FAULT===
+!address @rsi+590
+q

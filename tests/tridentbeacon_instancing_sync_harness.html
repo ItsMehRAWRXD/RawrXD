@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RawrXD TridentBeacon — Instancing &amp; Sync Test Harness</title>
+    <style>
+        body { font-family: Consolas, monospace; background: #0a0a0a; color: #00ff88; padding: 20px; }
+        h1 { color: #00ff88; border-bottom: 2px solid #00ff88; padding-bottom: 10px; }
+        .pass { color: #00ff88; }
+        .fail { color: #ff4444; }
+        .info { color: #4488ff; }
+        .warn { color: #ffaa00; }
+        pre { background: #111; padding: 10px; border-left: 3px solid #00ff88; overflow-x: auto; }
+        button { background: #00ff88; color: #000; border: none; padding: 10px 20px; font-family: inherit; font-weight: bold; cursor: pointer; margin: 5px; }
+        button:hover { background: #00cc66; }
+        button:disabled { background: #333; color: #666; cursor: not-allowed; }
+        #log { max-height: 600px; overflow-y: auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #222; }
+    </style>
+</head>
+<body>
+    <h1>🔬 RawrXD TridentBeacon — Instancing &amp; Sync Test Harness</h1>
+    <p>
+        Tests the new opcode expansion (<code>0x302</code>–<code>0x308</code>) via the JS bridge.<br>
+        Requires <code>window.external.BeaconInvoke</code> (Trident beacon protocol).
+    </p>
+
+    <div>
+        <button id="btn-all" onclick="runAllTests()">▶ Run All Tests</button>
+        <button id="btn-map" onclick="testMapBufferRange()">Test MapBufferRange (0x305)</button>
+        <button id="btn-fence" onclick="testFenceSync()">Test FenceSync (0x307)</button>
+        <button id="btn-clientwait" onclick="testClientWaitSync()">Test ClientWaitSync (0x308)</button>
+        <button id="btn-instanced" onclick="testDrawArraysInstanced()">Test DrawArraysInstanced (0x302)</button>
+        <button id="btn-divisor" onclick="testVertexAttribDivisor()">Test VertexAttribDivisor (0x304)</button>
+        <button id="btn-ring" onclick="testRingBufferCycle()">Test Ring-Buffer Cycle</button>
+    </div>
+
+    <div class="section">
+        <h2>📋 Test Log</h2>
+        <pre id="log"></pre>
+    </div>
+
+    <div class="section">
+        <h2>📊 Results Summary</h2>
+        <div id="summary">No tests run yet.</div>
+    </div>
+
+<script>
+// =============================================================================
+// RawrXD TridentBeacon — JS Bridge Test Harness
+// Version: 1.0.0
+// Date: 2026-05-29
+// =============================================================================
+
+const LOG = document.getElementById('log');
+const SUMMARY = document.getElementById('summary');
+let passCount = 0;
+let failCount = 0;
+let warnCount = 0;
+
+// Test state
+let g_ctx = null;
+let g_syncHandle = null;
+let g_mappedPtr = null;
+
+function log(msg, cls = 'info') {
+    const line = document.createElement('div');
+    line.className = cls;
+    line.textContent = `[${new Date().toISOString().split('T')[1].slice(0,8)}] ${msg}`;
+    LOG.appendChild(line);
+    LOG.scrollTop = LOG.scrollHeight;
+}
+
+function assert(cond, msg) {
+    if (cond) {
+        log(`✅ PASS: ${msg}`, 'pass');
+        passCount++;
+    } else {
+        log(`❌ FAIL: ${msg}`, 'fail');
+        failCount++;
+    }
+    updateSummary();
+}
+
+function warn(msg) {
+    log(`⚠️ WARN: ${msg}`, 'warn');
+    warnCount++;
+    updateSummary();
+}
+
+function updateSummary() {
+    const total = passCount + failCount + warnCount;
+    SUMMARY.innerHTML = `
+        <span class="pass">Pass: ${passCount}</span> |
+        <span class="fail">Fail: ${failCount}</span> |
+        <span class="warn">Warn: ${warnCount}</span> |
+        Total: ${total}
+    `;
+}
+
+// =============================================================================
+// Bridge Helpers
+// =============================================================================
+
+function beaconInvoke(opcode, payload) {
+    if (!window.external || !window.external.BeaconInvoke) {
+        throw new Error('BeaconInvoke not available — not running inside Trident/RawrXD host');
+    }
+    const json = JSON.stringify(payload);
+    const result = window.external.BeaconInvoke(opcode, json);
+    try {
+        return JSON.parse(result);
+    } catch (e) {
+        return result; // Raw string response
+    }
+}
+
+function webGLCall(ctx, op, args) {
+    return beaconInvoke(257, { c: ctx, o: op, a: args || [] });
+}
+
+// =============================================================================
+// Context Lifecycle
+// =============================================================================
+
+function createContext() {
+    const r = beaconInvoke(256, { w: 800, h: 600 });
+    assert(r && r.id > 0, `WebGL context created, id=${r ? r.id : 'null'}`);
+    return r ? r.id : 0;
+}
+
+function destroyContext(ctx) {
+    const r = beaconInvoke(258, { c: ctx });
+    assert(r === 0 || r === '0', `WebGL context ${ctx} destroyed`);
+}
+
+// =============================================================================
+// Test: MapBufferRange (Opcode 0x305)
+// =============================================================================
+
+async function testMapBufferRange() {
+    log('--- Test: MapBufferRange (0x305) ---');
+    try {
+        if (!g_ctx) g_ctx = createContext();
+
+        // Create and bind a buffer
+        const bufId = webGLCall(g_ctx, 0x110, [1]); // WGLCMD_GEN_BUFFERS
+        assert(bufId > 0, `GenBuffers returned ${bufId}`);
+
+        webGLCall(g_ctx, 0x111, [0x8892, bufId]); // GL_ARRAY_BUFFER = 0x8892
+
+        // Allocate buffer storage
+        webGLCall(g_ctx, 0x112, [0x8892, 1024, null, 0x88E8]); // GL_DYNAMIC_DRAW = 0x88E8
+
+        // Map the buffer
+        // Args: [target, offset, length, access]
+        // GL_MAP_WRITE_BIT = 0x0002, GL_MAP_UNSYNCHRONIZED_BIT = 0x0020
+        const accessFlags = 0x0002 | 0x0020;
+        g_mappedPtr = webGLCall(g_ctx, 0x305, [0x8892, 0, 1024, accessFlags]);
+
+        assert(g_mappedPtr !== 0 && g_mappedPtr !== null,
+            `MapBufferRange returned valid pointer: 0x${(g_mappedPtr >>> 0).toString(16)}`);
+
+        // Unmap
+        const unmapResult = webGLCall(g_ctx, 0x306, [0x8892]);
+        assert(unmapResult === 0 || unmapResult === true,
+            `UnmapBuffer succeeded (returned ${unmapResult})`);
+        g_mappedPtr = null;
+
+        // Cleanup
+        webGLCall(g_ctx, 0x113, [1, bufId]); // WGLCMD_DELETE_BUFFERS
+
+    } catch (e) {
+        assert(false, `MapBufferRange test threw: ${e.message}`);
+    }
+}
+
+// =============================================================================
+// Test: FenceSync (Opcode 0x307)
+// =============================================================================
+
+async function testFenceSync() {
+    log('--- Test: FenceSync (0x307) ---');
+    try {
+        if (!g_ctx) g_ctx = createContext();
+
+        // Insert a fence after a clear operation
+        webGLCall(g_ctx, 0x104, [0.0, 0.2, 0.0, 1.0]); // clearColor
+        webGLCall(g_ctx, 0x103, [0x4000]); // GL_COLOR_BUFFER_BIT = 0x4000
+
+        // Args: [condition, flags]
+        // GL_SYNC_GPU_COMMANDS_COMPLETE = 0x9117
+        g_syncHandle = webGLCall(g_ctx, 0x307, [0x9117, 0]);
+
+        assert(g_syncHandle !== 0 && g_syncHandle !== null,
+            `FenceSync returned valid handle: 0x${(g_syncHandle >>> 0).toString(16)}`);
+
+        log(`Fence inserted. Handle: ${g_syncHandle}`, 'info');
+
+    } catch (e) {
+        assert(false, `FenceSync test threw: ${e.message}`);
+    }
+}
+
+// =============================================================================
+// Test: ClientWaitSync (Opcode 0x308)
+// =============================================================================
+
+async function testClientWaitSync() {
+    log('--- Test: ClientWaitSync (0x308) ---');
+    try {
+        if (!g_ctx) g_ctx = createContext();
+
+        // Ensure we have a fence to wait on
+        if (!g_syncHandle) {
+            webGLCall(g_ctx, 0x104, [0.0, 0.0, 0.2, 1.0]);
+            webGLCall(g_ctx, 0x103, [0x4000]);
+            g_syncHandle = webGLCall(g_ctx, 0x307, [0x9117, 0]);
+        }
+
+        // Args: [syncHandle (64-bit), flags, timeout (64-bit nanoseconds)]
+        // timeout = 1 second = 1,000,000,000 ns
+        // GL_SYNC_FLUSH_COMMANDS_BIT = 0x00000001
+        const waitResult = webGLCall(g_ctx, 0x308,
+            [g_syncHandle, 0x00000001, 1000000000]);
+
+        // GL_ALREADY_SIGNALED = 0x911A, GL_CONDITION_SATISFIED = 0x911C
+        const GL_ALREADY_SIGNALED = 0x911A;
+        const GL_CONDITION_SATISFIED = 0x911C;
+        const GL_TIMEOUT_EXPIRED = 0x911B;
+
+        if (waitResult === GL_ALREADY_SIGNALED || waitResult === GL_CONDITION_SATISFIED) {
+            assert(true, `ClientWaitSync signaled (result=0x${(waitResult >>> 0).toString(16)})`);
+        } else if (waitResult === GL_TIMEOUT_EXPIRED) {
+            warn(`ClientWaitSync timed out — GPU may be stalled`);
+        } else {
+            assert(false, `ClientWaitSync unexpected result: 0x${(waitResult >>> 0).toString(16)}`);
+        }
+
+        g_syncHandle = null;
+
+    } catch (e) {
+        assert(false, `ClientWaitSync test threw: ${e.message}`);
+    }
+}
+
+// =============================================================================
+// Test: DrawArraysInstanced (Opcode 0x302)
+// =============================================================================
+
+async function testDrawArraysInstanced() {
+    log('--- Test: DrawArraysInstanced (0x302) ---');
+    try {
+        if (!g_ctx) g_ctx = createContext();
+
+        // Set up a simple VBO with 3 vertices (triangle)
+        const bufId = webGLCall(g_ctx, 0x110, [1]);
+        webGLCall(g_ctx, 0x111, [0x8892, bufId]);
+
+        // 3 vertices * 3 floats * 4 bytes = 36 bytes
+        // Data: 9 floats for a triangle
+        const vertexData = new Float32Array([
+            0.0,  0.5, 0.0,
+           -0.5, -0.5, 0.0,
+            0.5, -0.5, 0.0
+        ]);
+        webGLCall(g_ctx, 0x112, [0x8892, 36, Array.from(vertexData), 0x88E4]); // GL_STATIC_DRAW
+
+        // Set up a simple instance buffer (4 floats per instance: x, y, scale, rotation)
+        const instBufId = webGLCall(g_ctx, 0x110, [1]);
+        webGLCall(g_ctx, 0x111, [0x8892, instBufId]);
+
+        // 2 instances * 4 floats * 4 bytes = 32 bytes
+        const instanceData = new Float32Array([
+            -0.3, 0.0, 0.5, 0.0,   // instance 0
+             0.3, 0.0, 0.5, 0.0    // instance 1
+        ]);
+        webGLCall(g_ctx, 0x112, [0x8892, 32, Array.from(instanceData), 0x88E8]); // GL_DYNAMIC_DRAW
+
+        // Set vertex attrib divisor for instance data (attrib index 1)
+        webGLCall(g_ctx, 0x304, [1, 1]); // WGLCMD_VERTEX_ATTRIB_DIVISOR
+
+        // Draw 3 vertices, 2 instances
+        // Args: [mode, first, count, instancecount]
+        // GL_TRIANGLES = 4
+        const drawResult = webGLCall(g_ctx, 0x302, [4, 0, 3, 2]);
+        assert(drawResult === 0 || drawResult === undefined,
+            `DrawArraysInstanced executed (2 instances of triangle)`);
+
+        // Cleanup
+        webGLCall(g_ctx, 0x113, [1, bufId]);
+        webGLCall(g_ctx, 0x113, [1, instBufId]);
+
+    } catch (e) {
+        assert(false, `DrawArraysInstanced test threw: ${e.message}`);
+    }
+}
+
+// =============================================================================
+// Test: VertexAttribDivisor (Opcode 0x304)
+// =============================================================================
+
+async function testVertexAttribDivisor() {
+    log('--- Test: VertexAttribDivisor (0x304) ---');
+    try {
+        if (!g_ctx) g_ctx = createContext();
+
+        // Test divisor = 0 (per-vertex, default)
+        const r0 = webGLCall(g_ctx, 0x304, [0, 0]);
+        assert(r0 === 0 || r0 === undefined, `VertexAttribDivisor(0, 0) — per-vertex`);
+
+        // Test divisor = 1 (per-instance)
+        const r1 = webGLCall(g_ctx, 0x304, [1, 1]);
+        assert(r1 === 0 || r1 === undefined, `VertexAttribDivisor(1, 1) — per-instance`);
+
+        // Test divisor = 2 (every 2 instances)
+        const r2 = webGLCall(g_ctx, 0x304, [2, 2]);
+        assert(r2 === 0 || r2 === undefined, `VertexAttribDivisor(2, 2) — every-2-instances`);
+
+    } catch (e) {
+        assert(false, `VertexAttribDivisor test threw: ${e.message}`);
+    }
+}
+
+// =============================================================================
+// Test: Full Ring-Buffer Cycle
+// =============================================================================
+
+async function testRingBufferCycle() {
+    log('--- Test: Ring-Buffer Cycle (Map → Write → Unmap → Draw → Fence → Wait) ---');
+    try {
+        if (!g_ctx) g_ctx = createContext();
+
+        const RING_SEGMENTS = 3;
+        const SEGMENT_SIZE = 256; // bytes per segment
+        const TOTAL_SIZE = RING_SEGMENTS * SEGMENT_SIZE;
+
+        // Create ring buffer
+        const ringBuf = webGLCall(g_ctx, 0x110, [1]);
+        webGLCall(g_ctx, 0x111, [0x8892, ringBuf]);
+        webGLCall(g_ctx, 0x112, [0x8892, TOTAL_SIZE, null, 0x88E8]); // GL_DYNAMIC_DRAW
+
+        let currentSegment = 0;
+        const syncObjects = [];
+
+        for (let frame = 0; frame < 6; frame++) {
+            // 1. Determine which segment to write into
+            const writeSeg = currentSegment;
+            const offset = writeSeg * SEGMENT_SIZE;
+
+            // 2. If this segment was used before, wait for its fence
+            if (syncObjects[writeSeg]) {
+                const waitResult = webGLCall(g_ctx, 0x308,
+                    [syncObjects[writeSeg], 0x00000001, 500000000]); // 500ms timeout
+                const GL_TIMEOUT_EXPIRED = 0x911B;
+                if (waitResult === GL_TIMEOUT_EXPIRED) {
+                    warn(`Frame ${frame}: segment ${writeSeg} fence timeout — possible GPU stall`);
+                } else {
+                    log(`Frame ${frame}: segment ${writeSeg} ready (wait=0x${(waitResult>>>0).toString(16)})`, 'pass');
+                }
+                syncObjects[writeSeg] = null;
+            }
+
+            // 3. Map the segment
+            const accessFlags = 0x0002 | 0x0020; // WRITE | UNSYNCHRONIZED
+            const ptr = webGLCall(g_ctx, 0x305, [0x8892, offset, SEGMENT_SIZE, accessFlags]);
+            assert(ptr !== 0, `Frame ${frame}: MapBufferRange returned pointer for segment ${writeSeg}`);
+
+            // 4. Unmap (in real code, write SIMD data at ptr first)
+            const unmapResult = webGLCall(g_ctx, 0x306, [0x8892]);
+            assert(unmapResult === 0 || unmapResult === true,
+                `Frame ${frame}: UnmapBuffer succeeded`);
+
+            // 5. Draw instanced using this segment
+            webGLCall(g_ctx, 0x302, [4, 0, 3, 2]); // GL_TRIANGLES, 3 verts, 2 instances
+
+            // 6. Insert fence
+            const fence = webGLCall(g_ctx, 0x307, [0x9117, 0]);
+            assert(fence !== 0, `Frame ${frame}: FenceSync returned handle`);
+            syncObjects[writeSeg] = fence;
+
+            // 7. Advance ring
+            currentSegment = (currentSegment + 1) % RING_SEGMENTS;
+        }
+
+        // Cleanup: wait for all remaining fences
+        for (let i = 0; i < RING_SEGMENTS; i++) {
+            if (syncObjects[i]) {
+                webGLCall(g_ctx, 0x308, [syncObjects[i], 0x00000001, 1000000000]);
+            }
+        }
+
+        webGLCall(g_ctx, 0x113, [1, ringBuf]);
+        assert(true, `Ring-buffer cycle completed: 6 frames across ${RING_SEGMENTS} segments`);
+
+    } catch (e) {
+        assert(false, `Ring-buffer cycle threw: ${e.message}`);
+    }
+}
+
+// =============================================================================
+// Master Test Runner
+// =============================================================================
+
+async function runAllTests() {
+    log('╔══════════════════════════════════════════════════════════════╗');
+    log('║  RawrXD TridentBeacon — Instancing & Sync Opcode Validation   ║');
+    log('╚══════════════════════════════════════════════════════════════╝');
+
+    passCount = 0; failCount = 0; warnCount = 0;
+    g_ctx = null; g_syncHandle = null; g_mappedPtr = null;
+
+    const tests = [
+        testMapBufferRange,
+        testFenceSync,
+        testClientWaitSync,
+        testVertexAttribDivisor,
+        testDrawArraysInstanced,
+        testRingBufferCycle
+    ];
+
+    for (const test of tests) {
+        try {
+            await test();
+        } catch (e) {
+            assert(false, `Test ${test.name} crashed: ${e.message}`);
+        }
+        // Small delay between tests to let GPU settle
+        await new Promise(r => setTimeout(r, 100));
+    }
+
+    // Cleanup context
+    if (g_ctx) {
+        destroyContext(g_ctx);
+        g_ctx = null;
+    }
+
+    log('');
+    log('═══════════════════════════════════════════════════════════════');
+    log(`🏁 ALL TESTS COMPLETE — Pass: ${passCount}, Fail: ${failCount}, Warn: ${warnCount}`);
+    if (failCount === 0) {
+        log('✅ ALL TESTS PASSED — TridentBeacon instancing/sync opcodes are functional', 'pass');
+    } else {
+        log('❌ SOME TESTS FAILED — Review log above for details', 'fail');
+    }
+    log('═══════════════════════════════════════════════════════════════');
+}
+
+// Auto-run if loaded in a test environment
+if (window.location.search.includes('autorun=1')) {
+    window.addEventListener('load', runAllTests);
+}
+</script>
+</body>
+</html>

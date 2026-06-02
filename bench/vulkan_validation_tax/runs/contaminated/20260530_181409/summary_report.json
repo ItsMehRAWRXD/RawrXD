@@ -1,0 +1,11 @@
+{
+  "TimestampUtc": "2026-05-30T23:07:53.0131056Z",
+  "Status": "Contaminated",
+  "Attempt": 1,
+  "Pid": 2856,
+  "ForbiddenModules": [
+    "graphics-hook64.dll",
+    "amdihk64.dll"
+  ],
+  "Message": "FATAL: Hook detected before debugger attach"
+}

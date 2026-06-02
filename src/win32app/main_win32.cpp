@@ -73,14 +73,14 @@
 extern "C" PVOID CALLBACK Sovereign_VEH_Handler(PEXCEPTION_POINTERS pExc);
 
 // Definition of the sovereign telemetry bus
-PulseRingBuffer g_pulseRing;
+PulseRing g_pulseRing;
 SovereignPulseBuffer g_SovereignPulse;
 
 extern "C" {
-    uint32_t g_Metrics_Faults = 0;
-    uint64_t g_Sovereign_RecoveryRIP = 0;
-    uint64_t g_CrashEpoch_RIP = 0;
-    uint32_t g_CrashEpoch_Code = 0;
+    __declspec(selectany) uint32_t g_Metrics_Faults = 0;
+    __declspec(selectany) uint64_t g_Sovereign_RecoveryRIP = 0;
+    __declspec(selectany) uint64_t g_CrashEpoch_RIP = 0;
+    __declspec(selectany) uint32_t g_CrashEpoch_Code = 0;
     void Lazarus_OnSignal();
 }
 

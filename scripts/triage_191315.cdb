@@ -1,0 +1,4 @@
+.ecxr
+r rax rbx rcx
+dc @rbx L8
+q

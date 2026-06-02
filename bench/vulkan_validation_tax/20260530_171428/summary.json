@@ -1,0 +1,35 @@
+﻿{
+    "timestamp":  "2026-05-30T17:14:30.4830568-05:00",
+    "iterations":  200,
+    "repeats":  1,
+    "exe_path":  "D:\\rawrxd\\build_win32ide\\tests\\RawrXD-VulkanValidationTax.exe",
+    "session_dir":  "D:\\rawrxd\\bench\\vulkan_validation_tax\\20260530_171428",
+    "guards_on_avg_us":  1411.205,
+    "guards_off_avg_us":  1454.681,
+    "guards_on_p95_us":  1411.205,
+    "guards_off_p95_us":  1454.681,
+    "validation_tax_us":  -43.476,
+    "validation_tax_pct":  -2.988696,
+    "runs":  [
+                 {
+                     "mode":  "guards-on",
+                     "run":  1,
+                     "label":  "guards-on",
+                     "total_ms":  282.241,
+                     "per_iter_us":  1411.205,
+                     "active_imports":  0,
+                     "stdout":  "D:\\rawrxd\\bench\\vulkan_validation_tax\\20260530_171428\\guards-on_run1_stdout.txt",
+                     "stderr":  "D:\\rawrxd\\bench\\vulkan_validation_tax\\20260530_171428\\guards-on_run1_stderr.txt"
+                 },
+                 {
+                     "mode":  "guards-off",
+                     "run":  1,
+                     "label":  "guards-off",
+                     "total_ms":  290.936,
+                     "per_iter_us":  1454.681,
+                     "active_imports":  0,
+                     "stdout":  "D:\\rawrxd\\bench\\vulkan_validation_tax\\20260530_171428\\guards-off_run1_stdout.txt",
+                     "stderr":  "D:\\rawrxd\\bench\\vulkan_validation_tax\\20260530_171428\\guards-off_run1_stderr.txt"
+                 }
+             ]
+}

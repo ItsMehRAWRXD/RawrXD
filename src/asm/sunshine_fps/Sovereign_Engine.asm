@@ -61,11 +61,12 @@ Sovereign_Fabric_Loop PROC
     call Verify_Arena_Integrity
     
     ; 3. Barrier Pulse
+    xor rcx, rcx                    ; Lane 0
     call Sovereign_Fabric_Barrier
     
     ; 4. Vectorized Compute (Lane 0)
     extern Sovereign_Compute_Kernel : PROC
-    mov rcx, 0 ; Lane ID 0
+    xor rcx, rcx                    ; Lane 0
     call Sovereign_Compute_Kernel
     
     ; 5. IDE Monitor Snapshot
@@ -99,6 +100,7 @@ Sovereign_Lane_Entry PROC
     lea r15, [g_FabricContext]
     mov r14, rcx ; Preserve Lane ID in R14
 @@LaneTick:
+    mov rcx, r14
     call Sovereign_Fabric_Barrier
     
     ; Lane-Specific Logic

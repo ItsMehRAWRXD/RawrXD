@@ -1,0 +1,10 @@
+{
+  "TimestampUtc": "2026-05-30T23:14:11.2035659Z",
+  "Bucket": "contaminated",
+  "Status": "Contaminated",
+  "Verdict": "Unknown",
+  "Attempt": 1,
+  "RunDir": "D:\\rawrxd\\bench\\vulkan_validation_tax\\runs\\contaminated\\20260530_181409",
+  "MetaPath": "D:\\rawrxd\\bench\\vulkan_validation_tax\\runs\\contaminated\\20260530_181409\\run_meta.json",
+  "SummaryPath": "D:\\rawrxd\\bench\\vulkan_validation_tax\\runs\\contaminated\\20260530_181409\\summary_report.json"
+}

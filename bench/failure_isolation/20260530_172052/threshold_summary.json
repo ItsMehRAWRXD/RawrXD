@@ -1,0 +1,47 @@
+﻿[
+    {
+        "Model":  "gptoss20b",
+        "CtxSize":  5121024,
+        "Ngl":  33,
+        "Repeat":  1,
+        "ExitCode":  null,
+        "Status":  "FAIL",
+        "AssertHit":  false,
+        "AvgPromptTs":  null,
+        "AvgGenTs":  null,
+        "Notes":  "error: invalid parameter for argument: -c",
+        "OutLog":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\gptoss20b_ctx5121024_ngl33_r1_out.log",
+        "ErrLog":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\gptoss20b_ctx5121024_ngl33_r1_err.log",
+        "JsonOut":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\gptoss20b_ctx5121024_ngl33_r1.json"
+    },
+    {
+        "Model":  "TinyLlama-1.1B-Q4_0",
+        "CtxSize":  5121024,
+        "Ngl":  33,
+        "Repeat":  1,
+        "ExitCode":  null,
+        "Status":  "FAIL",
+        "AssertHit":  false,
+        "AvgPromptTs":  null,
+        "AvgGenTs":  null,
+        "Notes":  "error: invalid parameter for argument: -c",
+        "OutLog":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\TinyLlama-1.1B-Q4_0_ctx5121024_ngl33_r1_out.log",
+        "ErrLog":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\TinyLlama-1.1B-Q4_0_ctx5121024_ngl33_r1_err.log",
+        "JsonOut":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\TinyLlama-1.1B-Q4_0_ctx5121024_ngl33_r1.json"
+    },
+    {
+        "Model":  "tinyllama_fresh",
+        "CtxSize":  5121024,
+        "Ngl":  33,
+        "Repeat":  1,
+        "ExitCode":  null,
+        "Status":  "FAIL",
+        "AssertHit":  false,
+        "AvgPromptTs":  null,
+        "AvgGenTs":  null,
+        "Notes":  "error: invalid parameter for argument: -c",
+        "OutLog":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\tinyllama_fresh_ctx5121024_ngl33_r1_out.log",
+        "ErrLog":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\tinyllama_fresh_ctx5121024_ngl33_r1_err.log",
+        "JsonOut":  "D:\\rawrxd\\bench\\failure_isolation\\20260530_172052\\tinyllama_fresh_ctx5121024_ngl33_r1.json"
+    }
+]

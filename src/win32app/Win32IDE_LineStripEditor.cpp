@@ -727,7 +727,7 @@ void Win32IDE::syncLineStripDocumentFromEditor()
 
         if (runCount == 0 && doc.lengthBytes > 0)
         {
-            runStorage[0] = {0u, doc.lengthBytes, RGB(212, 212, 212)};
+            runStorage[0] = {0, static_cast<int>(doc.lengthBytes), RGB(212, 212, 212)};
             runCount = 1u;
         }
 

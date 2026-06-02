@@ -1,0 +1,8 @@
+.ecxr
+r rax rbx rcx rip
+dc rax L20
+dc rax+70 L20
+dc rax+90 L20
+db rax+b0 L40
+k
+q

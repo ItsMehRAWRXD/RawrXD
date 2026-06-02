@@ -1,0 +1,11 @@
+[20:31:08.006] PID=82064 CRT_ENTRY_REACHED
+[20:31:08.006] PID=82064 STATIC_INIT_COMPLETE_OK
+[Prometheus] Listening on port 9090 for /metrics...
+[20:31:08.011] PID=82064 INIT_0_WINMAIN_ENTRY_REACHED
+[Win32IDE] ProbeGates=ON SovereignHarness=EXTERNAL GGUFFallback=link_fallbacks
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: d:\rawrxd\build_win32ide\bin\rawrxd.config.json — using defaults.
+[ProjectChatSession] Initialized for project: .
+[ProjectChatSession] Storage: C:\Users\HiH8e\AppData\Roaming\RawrXD\workspaces\0002b5d3\chat_history.txt
+[ProjectChatSession] Loaded 1 messages
+[BenchmarkMenu] Menu created

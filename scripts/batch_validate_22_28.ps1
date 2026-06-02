@@ -35,8 +35,8 @@ function New-Result {
 $results = @()
 
 $now = Get-Date
-$results += New-Result -Id 22 -Name "masm_stress_harness" -Command "not-automated" -ExitCode -3 -Passed:$false `
-    -Note "stress harness exists; add scripted runner to validate" -StartedAt $now -FinishedAt $now
+$results += New-Result -Id 22 -Name "masm_stress_harness" -Command "Run-LinkerDagStress.ps1" -ExitCode -3 -Passed:$false `
+    -Note "scripted DAG runner available: D:\rawrxd\scripts\Run-LinkerDagStress.ps1" -StartedAt $now -FinishedAt $now
 
 $now = Get-Date
 $results += New-Result -Id 23 -Name "convergence_stress_harness" -Command "not-automated" -ExitCode -3 -Passed:$false `

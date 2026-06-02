@@ -212,44 +212,57 @@ Sovereign_Compositor_Init PROC
     jz      fail_init_9
     mov     [wglSwapIntervalEXT_ptr], rax
 
-    ; Create core profile context
+    ; Create core profile context (fallback to legacy if unavailable)
+    cmp     qword ptr [wglCreateContextAttribsARB_ptr], 0
+    je      use_legacy_context
+
     mov     rcx, [hDC]
     xor     edx, edx                ; shareContext = NULL
-    mov     r8d, 1                  ; major = 3
-    mov     r9d, 3                  ; minor = 3
     sub     rsp, 30h
-    mov     dword ptr [rsp], 02091h ; WGL_CONTEXT_MAJOR_VERSION_ARB
-    mov     dword ptr [rsp+4], 3
-    mov     dword ptr [rsp+8], 02092h ; WGL_CONTEXT_MINOR_VERSION_ARB
+    mov     dword ptr [rsp],    02091h ; WGL_CONTEXT_MAJOR_VERSION_ARB
+    mov     dword ptr [rsp+4],  3
+    mov     dword ptr [rsp+8],  02092h ; WGL_CONTEXT_MINOR_VERSION_ARB
     mov     dword ptr [rsp+12], 3
     mov     dword ptr [rsp+16], 09126h ; WGL_CONTEXT_PROFILE_MASK_ARB
-    mov     dword ptr [rsp+20], 1    ; WGL_CONTEXT_CORE_PROFILE_BIT_ARB
-    mov     dword ptr [rsp+24], 0    ; terminator
+    mov     dword ptr [rsp+20], 1      ; WGL_CONTEXT_CORE_PROFILE_BIT_ARB
+    mov     dword ptr [rsp+24], 0      ; terminator
     mov     r8, rsp
     call    [wglCreateContextAttribsARB_ptr]
     add     rsp, 30h
     test    rax, rax
-    jz      fail_init_10
+    jnz     core_context_ok
 
-    ; Make core context current
+use_legacy_context:
+    ; Fallback: keep the legacy context already created
+    mov     r14, [hGLRC]
+    jmp     context_ready
+
+core_context_ok:
     mov     r14, rax                ; Save core context handle
     mov     rcx, [hDC]
     mov     rdx, r14
     call    wglMakeCurrent
     test    eax, eax
     jz      fail_init_11
-    
+
     ; Delete legacy context
     mov     rcx, [hGLRC]
     call    wglDeleteContext
+
+context_ready:
     mov     [hGLRC], r14
 
-    ; Enable VSync
+    ; Enable VSync if available
+    cmp     qword ptr [wglSwapIntervalEXT_ptr], 0
+    je      skip_vsync
     mov     ecx, 1
     call    [wglSwapIntervalEXT_ptr]
+skip_vsync:
 
     ; Resolve GL 3.3 functions
     call    Sovereign_ResolveGLPointers
+    test    rax, rax
+    jz      fail_init_12
 
     ; Create quad geometry
     call    Sovereign_CreateQuad
@@ -263,11 +276,6 @@ Sovereign_Compositor_Init PROC
     call    ShowWindow
     mov     rcx, [hWnd]
     call    UpdateWindow
-
-    ; Validate pointers
-    cmp     qword ptr [glUseProgram_ptr], 0
-    je      fail_init_12
-
 
     mov     rax, 1
     jmp     done_init
@@ -336,6 +344,7 @@ Sovereign_Compositor_Init ENDP
 ; -------------------------------------------------------------------
 ; Sovereign_ResolveGLPointers
 ; Resolves all GL 3.3 function pointers via wglGetProcAddress.
+; Returns RAX = 1 on success, 0 if any critical pointer is NULL.
 ; -------------------------------------------------------------------
 Sovereign_ResolveGLPointers PROC
     sub rsp, 28h
@@ -343,42 +352,62 @@ Sovereign_ResolveGLPointers PROC
     lea     rcx, [str_glGenVertexArrays]
     call    wglGetProcAddress
     mov     [glGenVertexArrays_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glBindVertexArray]
     call    wglGetProcAddress
     mov     [glBindVertexArray_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glGenBuffers]
     call    wglGetProcAddress
     mov     [glGenBuffers_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glBindBuffer]
     call    wglGetProcAddress
     mov     [glBindBuffer_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glBufferData]
     call    wglGetProcAddress
     mov     [glBufferData_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glVertexAttribPointer]
     call    wglGetProcAddress
     mov     [glVertexAttribPointer_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glEnableVertexAttribArray]
     call    wglGetProcAddress
     mov     [glEnableVertexAttribArray_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glCreateShader]
     call    wglGetProcAddress
     mov     [glCreateShader_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glShaderSource]
     call    wglGetProcAddress
     mov     [glShaderSource_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glCompileShader]
     call    wglGetProcAddress
     mov     [glCompileShader_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glGetShaderiv]
     call    wglGetProcAddress
@@ -387,31 +416,70 @@ Sovereign_ResolveGLPointers PROC
     lea     rcx, [str_glCreateProgram]
     call    wglGetProcAddress
     mov     [glCreateProgram_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glAttachShader]
     call    wglGetProcAddress
     mov     [glAttachShader_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glLinkProgram]
     call    wglGetProcAddress
     mov     [glLinkProgram_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glUseProgram]
     call    wglGetProcAddress
     mov     [glUseProgram_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glGetUniformLocation]
     call    wglGetProcAddress
     mov     [glGetUniformLocation_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glUniform1f]
     call    wglGetProcAddress
     mov     [glUniform1f_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
     lea     rcx, [str_glUniform2f]
     call    wglGetProcAddress
     mov     [glUniform2f_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
 
+    lea     rcx, [str_glDrawArrays]
+    call    wglGetProcAddress
+    mov     [glDrawArrays_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
+
+    lea     rcx, [str_glClear]
+    call    wglGetProcAddress
+    mov     [glClear_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
+
+    lea     rcx, [str_glViewport]
+    call    wglGetProcAddress
+    mov     [glViewport_ptr], rax
+    test    rax, rax
+    jz      resolve_fail
+
+    mov     rax, 1
+    jmp     resolve_done
+
+resolve_fail:
+    xor     rax, rax
+
+resolve_done:
     add rsp, 28h
     ret
 Sovereign_ResolveGLPointers ENDP
@@ -529,11 +597,11 @@ Sovereign_Compositor_Render PROC
     xor     edx, edx
     cvttss2si r8d, real4 ptr [rsp+24h]
     cvttss2si r9d, real4 ptr [rsp+28h]
-    call    glViewport
+    call    [glViewport_ptr]
 
     ; Clear
     mov     ecx, 04000h             ; GL_COLOR_BUFFER_BIT
-    call    glClear
+    call    [glClear_ptr]
 
     ; Use shader
     mov     ecx, [shader_program]
@@ -561,7 +629,7 @@ Sovereign_Compositor_Render PROC
     mov     ecx, 0                  ; GL_TRIANGLES
     xor     edx, edx                ; first
     mov     r8d, 6                  ; count
-    call    glDrawArrays
+    call    [glDrawArrays_ptr]
 
     ; Swap
     mov     rcx, [hDC]

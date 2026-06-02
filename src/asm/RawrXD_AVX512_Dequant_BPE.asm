@@ -11,9 +11,13 @@ PUBLIC RawrXD_MASM_BPETokenize
 PUBLIC RawrXD_ASMToolDispatchFastPath
 
 .data
-    align 64
-    ; AVX-512 constant: 0.5 for rounding
+    ; AVX-512 constant: 0.5 for rounding (aligned via db padding)
+    align 16
     g_AVX512_Half       real4 16 dup(0.5)
+    
+    ; Space vector for BPE tokenizer
+    align 16
+    g_SpaceVec          db 16 dup(20h)
 
 .code
 
@@ -112,8 +116,9 @@ RawrXD_MASM_BPETokenize PROC
     cmp     rcx, 16
     jl      @check_char
     
-    vmovdqu xmm0, [rsi]
-    vpcmpeqb xmm1, xmm0, [g_SpaceVec]
+    vmovdqu xmm0, xmmword ptr [rsi]
+    vmovdqu xmm2, xmmword ptr [g_SpaceVec]
+    vpcmpeqb xmm1, xmm0, xmm2
     vpmovmskb eax, xmm1
     cmp     eax, 0FFFFh             ; All spaces?
     jne     @check_char
@@ -144,10 +149,6 @@ RawrXD_MASM_BPETokenize PROC
     pop     rsi
     pop     rbx
     ret
-
-.data
-    align 16
-    g_SpaceVec  db 16 dup(20h)
 RawrXD_MASM_BPETokenize ENDP
 
 ; uint64_t RawrXD_ASMToolDispatchFastPath(...)
@@ -156,14 +157,8 @@ RawrXD_ASMToolDispatchFastPath PROC
     cmp     rcx, 10                 ; Opcodes 0-10 mapped to fast path
     ja      @fallback
     
-    lea     rax, @DispatchTable
-    jmp     qword ptr [rax + rcx*8]
+    jmp     qword ptr [@DispatchTable + rcx*8]
 
-.data
-    align 8
-    @DispatchTable dq @Op0, @Op1, @Op2, @Op3, @Op4, @Op5, @Op6, @Op7, @Op8, @Op9, @Op10
-
-.code
 @Op0: ; NOP / Heartbeat
     mov rax, 1
     ret
@@ -179,10 +174,21 @@ RawrXD_ASMToolDispatchFastPath PROC
     rep stosb
     mov rax, 1
     ret
-@Op3: @Op4: @Op5: @Op6: @Op7: @Op8: @Op9: @Op10:
+@Op3:
+@Op4:
+@Op5:
+@Op6:
+@Op7:
+@Op8:
+@Op9:
+@Op10:
 @fallback:
     xor rax, rax
     ret
+    
+    align 8
+@DispatchTable dq @Op0, @Op1, @Op2, @Op3, @Op4, @Op5, @Op6, @Op7, @Op8, @Op9, @Op10
+    
 RawrXD_ASMToolDispatchFastPath ENDP
 
 END

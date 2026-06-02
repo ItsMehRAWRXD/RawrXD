@@ -1,0 +1,75 @@
+{
+  "count": 6,
+  "fanIn": 2,
+  "deadSymbolEvery": 3,
+  "objects": [
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\obj_000.asm",
+      "exports": [
+        "obj_000_func"
+      ],
+      "dependencies": [],
+      "deadExport": "obj_000_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\obj_001.asm",
+      "exports": [
+        "obj_001_func"
+      ],
+      "dependencies": [
+        "obj_000_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\obj_002.asm",
+      "exports": [
+        "obj_002_func"
+      ],
+      "dependencies": [
+        "obj_001_func",
+        "obj_000_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\obj_003.asm",
+      "exports": [
+        "obj_003_func"
+      ],
+      "dependencies": [
+        "obj_002_func",
+        "obj_001_func"
+      ],
+      "deadExport": "obj_003_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\obj_004.asm",
+      "exports": [
+        "obj_004_func"
+      ],
+      "dependencies": [
+        "obj_003_func",
+        "obj_002_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\obj_005.asm",
+      "exports": [
+        "obj_005_func"
+      ],
+      "dependencies": [
+        "obj_004_func",
+        "obj_003_func"
+      ]
+    }
+  ],
+  "entry": {
+    "path": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\entry.asm",
+    "exports": [
+      "stress_entry"
+    ],
+    "dependencies": [
+      "obj_004_func",
+      "obj_005_func"
+    ]
+  }
+}

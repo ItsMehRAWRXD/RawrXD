@@ -1,0 +1,59 @@
+=================================================================
+Vulkan KMT Validation Tax Benchmark
+iterations=50000
+mode=guards-off
+=================================================================
+[guards-off] begin
+Found device 0: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 1: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Selected device: AMD Radeon RX 7800 XT
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon RX 7800 XT
+AMD Device: Yes
+Compute Queue Family: 0
+Allocated buffer 0 with 1024 bytes (Exportable)
+v1.3 P2P: Exported KMT handle 0000000040002482 for buffer 0
+[guards-off] iter=1 breadcrumb=0x00000201
+[guards-off] iter=2 breadcrumb=0x00000202
+[guards-off] iter=3 breadcrumb=0x00000203
+[guards-off] iter=4 breadcrumb=0x00000204
+[guards-off] iter=5 breadcrumb=0x00000205
+[guards-off] iter=6 breadcrumb=0x00000206
+[guards-off] iter=7 breadcrumb=0x00000207
+[guards-off] progress=1000 breadcrumb=0x00000301
+[guards-off] progress=2000 breadcrumb=0x00000302
+[guards-off] progress=3000 breadcrumb=0x00000303
+[guards-off] progress=4000 breadcrumb=0x00000304
+[guards-off] progress=5000 breadcrumb=0x00000305
+[guards-off] progress=6000 breadcrumb=0x00000306
+[guards-off] progress=7000 breadcrumb=0x00000307
+[guards-off] progress=8000 breadcrumb=0x00000308
+[guards-off] progress=9000 breadcrumb=0x00000309
+[guards-off] progress=10000 breadcrumb=0x0000030A
+[guards-off] progress=11000 breadcrumb=0x0000030B
+[guards-off] progress=12000 breadcrumb=0x0000030C
+[guards-off] progress=13000 breadcrumb=0x0000030D
+[guards-off] progress=14000 breadcrumb=0x0000030E
+[guards-off] progress=15000 breadcrumb=0x0000030F
+[guards-off] progress=16000 breadcrumb=0x00000310
+[guards-off] progress=17000 breadcrumb=0x00000311
+[guards-off] progress=18000 breadcrumb=0x00000312
+[guards-off] progress=19000 breadcrumb=0x00000313
+[guards-off] progress=20000 breadcrumb=0x00000314
+[guards-off] progress=21000 breadcrumb=0x00000315
+[guards-off] progress=22000 breadcrumb=0x00000316
+[guards-off] progress=23000 breadcrumb=0x00000317
+[guards-off] progress=24000 breadcrumb=0x00000318
+[guards-off] progress=25000 breadcrumb=0x00000319
+[guards-off] progress=26000 breadcrumb=0x0000031A
+[guards-off] progress=27000 breadcrumb=0x0000031B
+[guards-off] progress=28000 breadcrumb=0x0000031C
+[guards-off] progress=29000 breadcrumb=0x0000031D
+[guards-off] progress=30000 breadcrumb=0x0000031E
+[guards-off] progress=31000 breadcrumb=0x0000031F
+[guards-off] progress=32000 breadcrumb=0x00000320
+[guards-off] progress=33000 breadcrumb=0x00000321
+[guards-off] progress=34000 breadcrumb=0x00000322
+[guards-off] progress=35000 breadcrumb=0x00000323
+[guards-off] progress=36000 breadcrumb=0x00000324
+[guards-off] progress=37000 breadcrumb=0x00000325

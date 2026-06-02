@@ -147,6 +147,63 @@ if(WIN32)
     set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version for VS generator" FORCE)
 endif()
 
+# Ensure SDK manifest/resource tools are set before project() compiler tests.
+# Some environments initialize cl/link but leave rc/mt unresolved (CMAKE_MT-NOTFOUND).
+if(WIN32)
+    if(NOT DEFINED CMAKE_MT OR CMAKE_MT STREQUAL "" OR CMAKE_MT MATCHES "NOTFOUND"
+       OR NOT DEFINED CMAKE_RC_COMPILER OR CMAKE_RC_COMPILER STREQUAL "" OR CMAKE_RC_COMPILER MATCHES "NOTFOUND")
+        set(_RAWR_SDK_BIN "")
+        if(EXISTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/rc.exe" AND
+           EXISTS "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/mt.exe")
+            set(_RAWR_SDK_BIN "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64")
+        elseif(EXISTS "D:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/rc.exe" AND
+               EXISTS "D:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/mt.exe")
+            set(_RAWR_SDK_BIN "D:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64")
+        endif()
+
+        if(_RAWR_SDK_BIN)
+            set(CMAKE_RC_COMPILER "${_RAWR_SDK_BIN}/rc.exe" CACHE FILEPATH "Resource Compiler" FORCE)
+            set(CMAKE_MT "${_RAWR_SDK_BIN}/mt.exe" CACHE FILEPATH "Manifest Tool" FORCE)
+            set(ENV{PATH} "$ENV{PATH};${_RAWR_SDK_BIN}")
+            message(STATUS "[SDK Fix] Forced RC/MT tools from ${_RAWR_SDK_BIN}")
+        endif()
+    endif()
+endif()
+
+# Ensure linker library search roots exist in process environment before project()
+# so CMake's try-compile can resolve kernel32.lib reliably.
+if(WIN32)
+    set(_RAWR_PREPROJECT_LIBPATHS "")
+
+    if(DEFINED ENV{VCToolsInstallDir})
+        if(EXISTS "$ENV{VCToolsInstallDir}/lib/x64")
+            list(APPEND _RAWR_PREPROJECT_LIBPATHS "$ENV{VCToolsInstallDir}/lib/x64")
+        endif()
+        if(EXISTS "$ENV{VCToolsInstallDir}/lib/onecore/x64")
+            list(APPEND _RAWR_PREPROJECT_LIBPATHS "$ENV{VCToolsInstallDir}/lib/onecore/x64")
+        endif()
+    endif()
+
+    if(EXISTS "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64")
+        list(APPEND _RAWR_PREPROJECT_LIBPATHS "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64")
+    endif()
+    if(EXISTS "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64")
+        list(APPEND _RAWR_PREPROJECT_LIBPATHS "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64")
+    endif()
+    if(EXISTS "D:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64")
+        list(APPEND _RAWR_PREPROJECT_LIBPATHS "D:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64")
+    endif()
+    if(EXISTS "D:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64")
+        list(APPEND _RAWR_PREPROJECT_LIBPATHS "D:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64")
+    endif()
+
+    if(_RAWR_PREPROJECT_LIBPATHS)
+        list(REMOVE_DUPLICATES _RAWR_PREPROJECT_LIBPATHS)
+        set(ENV{LIB} "$ENV{LIB};${_RAWR_PREPROJECT_LIBPATHS}")
+        message(STATUS "[SDK Fix] Augmented LIB search roots for pre-project try-compile")
+    endif()
+endif()
+
 # RawrXD - Zero Bloat Horizon (Phase 14.7.3+)
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
@@ -1606,17 +1663,28 @@ set(RAWR_ENGINE_SOURCES
     src/cpu_inference_engine.cpp
     src/dispatch_orchestrator.cpp
     src/rawrxd_model_loader.cpp
+    src/streaming_gguf_loader.cpp
+    src/streaming_gguf_loader_enhanced.cpp
     src/logging/Logger.cpp
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
     src/core/headless_subsystem_stubs.cpp
     src/core/js_extension_host_headless_stubs.cpp
+    src/core/headless_sovereign_bridge.cpp
     tests/gguf_link_stubs.cpp
     src/win32app/agentic_bridge_headless.cpp
     src/win32app/agentic_headless_laneb_link_stubs.cpp
     src/win32app/bulk_fix_orchestrator_laneb_stub.cpp
     src/agentic/StreamingResultChannel.cpp
     src/agentic/observability/Logger.cpp
+    src/win32app/agentic_headless_laneb_impl.cpp
+    src/native_agent.cpp
+    # Speculative decoding and memory management
+    src/ai/fast_spec.cpp
+    src/ai/fast_spec_inference_bridge.cpp
+    src/gpu/speculative_decoder_v2.cpp
+    src/inference/MemoryPressureGuard.cpp
+    src/inference/rawr_inference_autopatch_loop.cpp
 )
 message(STATUS "[RawrEngine LaneB] Using curated headless core sources")
 
@@ -1633,6 +1701,16 @@ set(RAWR_ENGINE_ASM_SOURCES
     src/asm/RawrXD_SovereignTokenizerCore.asm
     src/kernels/dequant_q6k_avx512.asm
     src/kernels/kv_accum_avx512.asm
+    src/headless/Sovereign_Input_Hub.asm
+    src/headless/Sovereign_Time_Sync.asm
+    src/headless/Sovereign_Diagnostic_Trap.asm
+)
+
+set_source_files_properties(
+    src/headless/Sovereign_Input_Hub.asm
+    src/headless/Sovereign_Time_Sync.asm
+    src/headless/Sovereign_Diagnostic_Trap.asm
+    PROPERTIES LANGUAGE ASM_MASM
 )
 
 # =============================================================================
@@ -2263,26 +2341,10 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: AgenticOrchestrator — VTable Dispatch + SPSC Task Queue
-    set(ASM_AGENTIC_ORCH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm")
-    set(_ASM_AGENTIC_ORCH_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_AgenticOrchestrator.obj")
-    set(_ASM_AGENTIC_ORCH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_AgenticOrchestrator.obj")
-    if(EXISTS "${_ASM_AGENTIC_ORCH_PREBUILT1}")
-        set(ASM_AGENTIC_ORCH_OBJ "${_ASM_AGENTIC_ORCH_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_AgenticOrchestrator.obj")
-    elseif(EXISTS "${_ASM_AGENTIC_ORCH_PREBUILT2}")
-        set(ASM_AGENTIC_ORCH_OBJ "${_ASM_AGENTIC_ORCH_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_AgenticOrchestrator.obj (genesis)")
-    else()
-        set(ASM_AGENTIC_ORCH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_AgenticOrchestrator.obj")
-        add_custom_command(
-            OUTPUT ${ASM_AGENTIC_ORCH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_AGENTIC_ORCH_OBJ} ${ASM_AGENTIC_ORCH_SRC}
-            DEPENDS ${ASM_AGENTIC_ORCH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_AgenticOrchestrator.asm (23-Handler VTable, SPSC Queue, Metrics)"
-            VERBATIM
-        )
-    endif()
+    # Phase 50: AgenticOrchestrator — DISABLED (MASM build issues)
+    # Using C++ stub implementation instead of MASM
+    set(ASM_AGENTIC_ORCH_OBJ "")  # Empty - no MASM object
+    message(STATUS "[MASM] AgenticOrchestrator disabled - using C++ stubs")
 
     # Phase 50: GGUF Vulkan Loader — Memory-Mapped Parser + Staging Buffer
     set(ASM_GGUF_VKLOAD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm")
@@ -2921,6 +2983,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_sampler.cpp
     src/gguf_vocab_resolver.cpp
     src/streaming_gguf_loader.cpp
+    src/streaming_gguf_loader_enhanced.cpp
     src/compression_interface.cpp
     src/brutal_implementation.cpp
     src/memory_core.cpp
@@ -3009,6 +3072,7 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
 endif()
 
 set(INFERENCE_ENGINE_LIBRARY_SOURCES ${INFERENCE_ENGINE_SOURCES})
+list(FILTER INFERENCE_ENGINE_LIBRARY_SOURCES EXCLUDE REGEX ".*/llm_adapter/GGUFRunner\\.cpp$")
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
     src/inference/inference_standalone_main.cpp
 )
@@ -3019,6 +3083,15 @@ add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
     src/inference/inference_standalone_main.cpp
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
+
+add_executable(RawrXD-InferenceSmoke EXCLUDE_FROM_ALL
+    tests/smoke_test_inference.cpp
+)
+target_link_libraries(RawrXD-InferenceSmoke PRIVATE InferenceEngine)
+set_target_properties(RawrXD-InferenceSmoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-InferenceSmoke
+)
 
 # ---------------------------------------------------------------------------
 # Autocomplete engine – zero-dependency, single-file GGUF transformer daemon
@@ -5289,6 +5362,12 @@ if(WIN32)
         endif()
     endif()
 
+    # Stub implementations for linker gap closure (must be after all REMOVE_ITEM/FILTER operations)
+    list(APPEND WIN32IDE_SOURCES
+        src/stubs/stub_implementations.cpp
+        src/core/diff_engine.cpp
+    )
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM}
         src/ggml.c
         src/ggml-alloc.c
@@ -5397,7 +5476,7 @@ if(WIN32)
         set(_IDE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-Win32IDE.map")
         set(_IDE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-Win32IDE.map")
         target_link_options(RawrXD-Win32IDE PRIVATE
-            /LARGEADDRESSAWARE
+            /LARGEADDRESSAWARE:NO
             $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:/DEBUG:FULL>
             $<$<CONFIG:Release>:/DEBUG:NONE>
             $<$<CONFIG:Release>:/OPT:REF>
@@ -6495,6 +6574,84 @@ if(WIN32)
     message(STATUS "[Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)")
     include(${CMAKE_SOURCE_DIR}/cmake/SmokeE2EIPC.cmake)
 
+# ═══════════════════════════════════════════════════════════════════
+# Vulkan KMT Fault-Injection Harness
+# Negative-test boundary for ImportBufferKMT pre-flight guards.
+# Build: cmake --build build-ninja --target RawrXD-VulkanKMTFault
+# Run  : .\build-ninja\tests\RawrXD-VulkanKMTFault.exe
+# ═══════════════════════════════════════════════════════════════════
+add_executable(RawrXD-VulkanKMTFault EXCLUDE_FROM_ALL
+    tests/gpu/test_vulkan_kmt_fault_injection.cpp
+    src/vulkan_compute.cpp
+)
+target_include_directories(RawrXD-VulkanKMTFault PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(RawrXD-VulkanKMTFault PRIVATE /EHsc /W3)
+endif()
+if(TARGET Vulkan::Vulkan)
+    target_link_libraries(RawrXD-VulkanKMTFault PRIVATE Vulkan::Vulkan)
+else()
+    target_link_libraries(RawrXD-VulkanKMTFault PRIVATE vulkan-1)
+endif()
+set_target_properties(RawrXD-VulkanKMTFault PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    OUTPUT_NAME RawrXD-VulkanKMTFault
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Hardening] RawrXD-VulkanKMTFault target registered (fault-injection for ImportBufferKMT)")
+
+add_executable(RawrXD-VulkanKMTSoak EXCLUDE_FROM_ALL
+    tests/gpu/test_vulkan_soak.cpp
+    src/vulkan_compute.cpp
+)
+target_include_directories(RawrXD-VulkanKMTSoak PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(RawrXD-VulkanKMTSoak PRIVATE /EHsc /W3)
+endif()
+if(TARGET Vulkan::Vulkan)
+    target_link_libraries(RawrXD-VulkanKMTSoak PRIVATE Vulkan::Vulkan)
+else()
+    target_link_libraries(RawrXD-VulkanKMTSoak PRIVATE vulkan-1)
+endif()
+set_target_properties(RawrXD-VulkanKMTSoak PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    OUTPUT_NAME RawrXD-VulkanKMTSoak
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Hardening] RawrXD-VulkanKMTSoak target registered (lifecycle soak for ImportBufferKMT)")
+
+add_executable(RawrXD-VulkanValidationTax EXCLUDE_FROM_ALL
+    tests/gpu/test_vulkan_validation_tax.cpp
+    src/vulkan_compute.cpp
+)
+target_include_directories(RawrXD-VulkanValidationTax PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(RawrXD-VulkanValidationTax PRIVATE /EHsc /W3)
+endif()
+if(TARGET Vulkan::Vulkan)
+    target_link_libraries(RawrXD-VulkanValidationTax PRIVATE Vulkan::Vulkan)
+else()
+    target_link_libraries(RawrXD-VulkanValidationTax PRIVATE vulkan-1)
+endif()
+set_target_properties(RawrXD-VulkanValidationTax PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    OUTPUT_NAME RawrXD-VulkanValidationTax
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Hardening] RawrXD-VulkanValidationTax target registered (guards-on vs guards-off timing)")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # RawrXD-MemoryBench — synthetic stress benchmark for the 10-strategy memory
 # subsystem. EXCLUDE_FROM_ALL so it never breaks the main IDE build.
@@ -6917,32 +7074,35 @@ endif()
 #   - Bypasses Ollama and REST API entirely
 # Run: psexec -s -i RawrXD_Inference.exe --model "bg40-unleashed.bin"
 # ============================================================================
-add_executable(RawrXD_Inference
-    src/sovereign_inference/RawrXD_Inference.cpp
-    src/compression/sovereign_pager.cpp
-    src/asm/model_streamer_x64.asm
-)
+# Pruned legacy/stub inference lane: keep disabled to prevent ghost artifact confusion.
+if(FALSE)
+    add_executable(RawrXD_Inference
+        src/sovereign_inference/RawrXD_Inference.cpp
+        src/compression/sovereign_pager.cpp
+        src/asm/model_streamer_x64.asm
+    )
 
-target_include_directories(RawrXD_Inference PRIVATE
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src/compression
-)
+    target_include_directories(RawrXD_Inference PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/compression
+    )
 
-target_compile_features(RawrXD_Inference PRIVATE cxx_std_17)
+    target_compile_features(RawrXD_Inference PRIVATE cxx_std_17)
 
-if(MSVC)
-    target_compile_options(RawrXD_Inference PRIVATE /EHsc /W3 /O2 /arch:AVX2)
-    enable_language(ASM_MASM)
-    set_source_files_properties(src/asm/model_streamer_x64.asm PROPERTIES LANGUAGE ASM_MASM)
+    if(MSVC)
+        target_compile_options(RawrXD_Inference PRIVATE /EHsc /W3 /O2 /arch:AVX2)
+        enable_language(ASM_MASM)
+        set_source_files_properties(src/asm/model_streamer_x64.asm PROPERTIES LANGUAGE ASM_MASM)
+    endif()
+
+    target_link_libraries(RawrXD_Inference PRIVATE kernel32 advapi32 dstorage d3d12 dxgi)
+
+    set_target_properties(RawrXD_Inference PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
 endif()
-
-target_link_libraries(RawrXD_Inference PRIVATE kernel32 advapi32 dstorage d3d12 dxgi)
-
-set_target_properties(RawrXD_Inference PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
 
 # ============================================================================
 # FP8 Verifier Test Suite (Scalar vs FP8 Numerical Validation)

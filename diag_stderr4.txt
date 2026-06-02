@@ -1,0 +1,9 @@
+[20:32:59.070] PID=74624 CRT_ENTRY_REACHED
+[20:32:59.070] PID=74624 STATIC_INIT_COMPLETE_OK
+[Prometheus] Listening on port 9090 for /metrics...
+[20:32:59.074] PID=74624 INIT_0_WINMAIN_ENTRY_REACHED
+[Win32IDE] ProbeGates=ON SovereignHarness=EXTERNAL GGUFFallback=link_fallbacks
+[ProjectChatSession] Initialized for project: .
+[ProjectChatSession] Storage: C:\Users\HiH8e\AppData\Roaming\RawrXD\workspaces\0002b5d3\chat_history.txt
+[ProjectChatSession] Loaded 1 messages
+[BenchmarkMenu] Menu created

@@ -5,6 +5,8 @@
 #include <cmath>
 #include <iostream> // For debug output instead of Diagnostics
 
+namespace RawrXD {
+
 // ============================================================================
 // CONSTRUCTION & INITIALIZATION
 // ============================================================================
@@ -204,8 +206,20 @@ std::span<const std::byte> EnhancedStreamingGGUFLoader::GetTensorView(
     // Update metrics
     metrics_.total_tensor_loads++;
     
-    // Check if tensor is resident (cache hit)
-    if (IsTensorResident(tensor_name)) {
+    // Check if tensor zone is loaded (cache hit)
+    std::string zone_name = GetTensorZone(tensor_name);
+    bool resident = false;
+    {
+        std::lock_guard<std::mutex> lock(residency_mutex_);
+        for (const auto& zone : layer_residency_) {
+            if (zone.host_ptr != nullptr) {
+                resident = true;
+                break;
+            }
+        }
+    }
+    
+    if (resident) {
         metrics_.cache_hits++;
         
         // Trigger predictive prefetch for next likely zones
@@ -213,22 +227,17 @@ std::span<const std::byte> EnhancedStreamingGGUFLoader::GetTensorView(
         for (uint32_t pred_zone : predictions) {
             PrefetchZoneAsync(pred_zone);
         }
+    } else {
+        // Cache miss - need to load zone first
+        metrics_.cache_misses++;
         
-        // Delegate to base class zero-copy
-        return StreamingGGUFLoader::GetTensorView(tensor_name, offset, length);
+        if (!zone_name.empty()) {
+            LoadZone(zone_name);
+        }
     }
     
-    // Cache miss - need to load zone first
-    metrics_.cache_misses++;
-    
-    // Synchronously load the zone
-    std::string zone_name = GetTensorZone(tensor_name);
-    if (!zone_name.empty()) {
-        LoadZone(zone_name);
-    }
-    
-    // Now return the view
-    return StreamingGGUFLoader::GetTensorView(tensor_name, offset, length);
+    // Return empty span - actual data access goes through GetTensorData
+    return std::span<const std::byte>();
 }
 
 void EnhancedStreamingGGUFLoader::PrefetchTensorAsync(const std::string& tensor_name)
@@ -1727,3 +1736,5 @@ bool DecompressZSTD(const std::vector<uint8_t>& compressed,
 }
 
 }  // namespace EnhancedLoaderUtils
+
+} // namespace RawrXD

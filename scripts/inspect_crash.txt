@@ -1,0 +1,5 @@
+.ecxr
+r rax rbx rcx rip
+k
+dq linker_ir_harness_crash!g_TraceBreadcrumb L1
+q

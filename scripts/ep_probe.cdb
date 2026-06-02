@@ -1,0 +1,3 @@
+lm m linker_ir_harness_crash
+!dh linker_ir_harness_crash -f
+q

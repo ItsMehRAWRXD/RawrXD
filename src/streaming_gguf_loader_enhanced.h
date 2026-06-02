@@ -8,9 +8,12 @@
 #include <array>
 #include <chrono>
 #include <vector>
+#include <queue>
 #include <condition_variable>
 #include <span>
 #include <cstddef>
+
+namespace RawrXD {
 
 // ============================================================================
 // ENHANCED STREAMING GGUF LOADER - Predictive, NVMe-optimized, parallelized
@@ -205,6 +208,9 @@ public:
     size_t GetLayerOffsetCount() const { return iocp_context_.layer_offsets.size(); }
     bool BuildLayerOffsetTable();
     
+    // Issue async read for layer N+1 while computing layer N
+    bool PrefetchLayerAsync(uint32_t layer_id);
+    
     // Wait for a specific layer to be resident (blocking with timeout)
     bool WaitForLayerReady(uint32_t layer_id, uint32_t timeout_ms = 5000);
     
@@ -305,7 +311,6 @@ private:
     bool CompleteLayerRead(uint32_t slot_idx, DWORD bytes_transferred);
     uint32_t FindFreeSlot();
     uint32_t FindSlotForLayer(uint32_t layer_id);
-    bool BuildLayerOffsetTable();
     
     // ---- File path (duplicated from base for IOCP access) ----
     std::wstring model_filepath_;
@@ -357,6 +362,8 @@ namespace EnhancedLoaderUtils {
         return static_cast<double>(ticks) / 1000.0;
     }
 }
+
+} // namespace RawrXD
 
 // Header guard end
 // (Removed duplicate #endif to fix C1020 error)

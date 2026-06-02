@@ -1,0 +1,135 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4188 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: d:\rawrxd\src\asm\sunshine_fps\SunshineFPS.exe
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff7`f4fc0000 00007ff7`f5010000   image00007ff7`f4fc0000
+ModLoad: 00007fff`e6540000 00007fff`e67a6000   ntdll.dll
+ModLoad: 00007fff`e57b0000 00007fff`e5879000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007fff`e3930000 00007fff`e3d2a000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007fff`e5900000 00007fff`e5ac7000   C:\WINDOWS\System32\USER32.dll
+ModLoad: 00007fff`e3900000 00007fff`e3927000   C:\WINDOWS\System32\win32u.dll
+ModLoad: 00007fff`e5f70000 00007fff`e5f9b000   C:\WINDOWS\System32\GDI32.dll
+ModLoad: 00007fff`e37d0000 00007fff`e38fb000   C:\WINDOWS\System32\gdi32full.dll
+ModLoad: 00007fff`e4170000 00007fff`e4213000   C:\WINDOWS\System32\msvcp_win.dll
+ModLoad: 00007fff`e3d30000 00007fff`e3e7c000   C:\WINDOWS\System32\ucrtbase.dll
+ModLoad: 00007fff`65cc0000 00007fff`65dcc000   C:\WINDOWS\SYSTEM32\OPENGL32.dll
+ModLoad: 00007fff`e6240000 00007fff`e62e9000   C:\WINDOWS\System32\msvcrt.dll
+ModLoad: 00007fff`e4e40000 00007fff`e4ef6000   C:\WINDOWS\System32\ADVAPI32.dll
+ModLoad: 00007fff`e5fa0000 00007fff`e604a000   C:\WINDOWS\System32\sechost.dll
+ModLoad: 00007fff`e44f0000 00007fff`e4608000   C:\WINDOWS\System32\RPCRT4.dll
+ModLoad: 00007fff`e5af0000 00007fff`e5e73000   C:\WINDOWS\System32\combase.dll
+ModLoad: 00007fff`649e0000 00007fff`64a0d000   C:\WINDOWS\SYSTEM32\GLU32.dll
+ModLoad: 00007fff`e0b20000 00007fff`e0b64000   C:\WINDOWS\SYSTEM32\dxcore.dll
+(60dc.12520): Break instruction exception - code 80000003 (first chance)
+ntdll!LdrpDoDebuggerBreak+0x35:
+00007fff`e665d78d cc              int     3
+0:000> cdb: Reading initial command 'g; .exr -1; r; kv; q'
+ModLoad: 00007fff`e5770000 00007fff`e57a2000   C:\WINDOWS\System32\IMM32.DLL
+ModLoad: 00007fff`e0a20000 00007fff`e0aca000   C:\WINDOWS\system32\uxtheme.dll
+ModLoad: 00007fff`e62f0000 00007fff`e644d000   C:\WINDOWS\System32\MSCTF.dll
+ModLoad: 00007fff`cdb20000 00007fff`cdb3d000   C:\WINDOWS\SYSTEM32\windows.staterepositorycore.dll
+ModLoad: 00007fff`d8100000 00007fff`d812b000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200691.inf_amd64_84c885aed7de6324\B026021\atig6pxx.dll
+ModLoad: 00007fff`18cf0000 00007fff`1cc04000   C:\WINDOWS\System32\DriverStore\FileRepository\amdogl.inf_amd64_baa6e90550e66efb\atio6axx.dll
+ModLoad: 00007fff`e4fe0000 00007fff`e5178000   C:\WINDOWS\System32\ole32.dll
+ModLoad: 00007fff`d8df0000 00007fff`d8e26000   C:\WINDOWS\SYSTEM32\WINMM.dll
+ModLoad: 00007fff`e4610000 00007fff`e4d94000   C:\WINDOWS\System32\SHELL32.dll
+ModLoad: 00007fff`d8630000 00007fff`d863b000   C:\WINDOWS\SYSTEM32\VERSION.dll
+ModLoad: 00007fff`e52e0000 00007fff`e5767000   C:\WINDOWS\System32\SETUPAPI.dll
+ModLoad: 00007fff`e4db0000 00007fff`e4e30000   C:\WINDOWS\System32\WS2_32.dll
+ModLoad: 00007fff`e1380000 00007fff`e1c00000   C:\WINDOWS\SYSTEM32\windows.storage.dll
+ModLoad: 00007fff`e5190000 00007fff`e5286000   C:\WINDOWS\System32\SHCORE.dll
+ModLoad: 00007fff`e6050000 00007fff`e60b7000   C:\WINDOWS\System32\shlwapi.dll
+ModLoad: 00007fff`e0cd0000 00007fff`e0cff000   C:\WINDOWS\SYSTEM32\dwmapi.dll
+ModLoad: 00007fff`e3380000 00007fff`e33ad000   C:\WINDOWS\SYSTEM32\DEVOBJ.dll
+ModLoad: 00007fff`e33c0000 00007fff`e3411000   C:\WINDOWS\SYSTEM32\cfgmgr32.dll
+ModLoad: 000001c9`fcd60000 000001c9`fcdb1000   C:\WINDOWS\SYSTEM32\CFGMGR32.dll
+ModLoad: 00007fff`e4220000 00007fff`e42a3000   C:\WINDOWS\System32\WINTRUST.dll
+ModLoad: 00007fff`e3ff0000 00007fff`e4168000   C:\WINDOWS\System32\CRYPT32.dll
+ModLoad: 00007fff`e2ee0000 00007fff`e2ef3000   C:\WINDOWS\SYSTEM32\MSASN1.dll
+ModLoad: 00007fff`e0b70000 00007fff`e0caa000   C:\WINDOWS\system32\dxgi.dll
+ModLoad: 00007fff`e3480000 00007fff`e34de000   C:\WINDOWS\SYSTEM32\powrprof.dll
+ModLoad: 00007fff`e3460000 00007fff`e3474000   C:\WINDOWS\SYSTEM32\UMPDC.dll
+ModLoad: 00007fff`e0f60000 00007fff`e0f74000   C:\WINDOWS\SYSTEM32\resourcepolicyclient.dll
+ModLoad: 00007fff`de520000 00007fff`de57f000   C:\WINDOWS\SYSTEM32\directxdatabasehelper.dll
+ModLoad: 00007fff`e2530000 00007fff`e254b000   C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+ModLoad: 00007fff`e3e80000 00007fff`e3f28000   C:\WINDOWS\System32\bcryptPrimitives.dll
+ModLoad: 00007fff`e36c0000 00007fff`e36ea000   C:\WINDOWS\SYSTEM32\BCrypt.dll
+ModLoad: 00007fff`d7350000 00007fff`d738e000   C:\WINDOWS\System32\DriverStore\FileRepository\u0200691.inf_amd64_84c885aed7de6324\B026021\amdihk64.dll
+ModLoad: 00007fff`e2530000 00007fff`e254b000   C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+ModLoad: 00007fff`e4f00000 00007fff`e4fd9000   C:\WINDOWS\System32\OLEAUT32.dll
+ModLoad: 00007fff`d31b0000 00007fff`d32f8000   C:\WINDOWS\SYSTEM32\textinputframework.dll
+(60dc.12520): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+*** WARNING: Unable to verify checksum for d:\rawrxd\src\asm\sunshine_fps\SunshineFPS.exe
+ExceptionAddress: 00007ff7f4fc11a1 (SunshineFPS+0x00000000000011a1)
+   ExceptionCode: c0000005 (Access violation)
+  ExceptionFlags: 00000000
+NumberParameters: 2
+   Parameter[0]: 0000000000000000
+   Parameter[1]: ffffffffffffffff
+Attempt to read from address ffffffffffffffff
+rax=0000000000000000 rbx=0000f2771abe8c68 rcx=000001c9fc96fbb0
+rdx=0000727f25beec00 rsi=0000000000000000 rdi=0000000000000000
+rip=00007ff7f4fc11a1 rsp=000000c14e79fa68 rbp=0000000000000000
+ r8=7ffffffffffffffc  r9=000001c9fc96fc50 r10=000000000000000d
+r11=000001c9fc96fd20 r12=00007fffe57e3190 r13=0000000000000010
+r14=0000000000000000 r15=00007ff7f4ffa000
+iopl=0         nv up ei pl nz na pe nc
+cs=0033  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010202
+SunshineFPS+0x11a1:
+00007ff7`f4fc11a1 48c70303000000  mov     qword ptr [rbx],3 ds:0000f277`1abe8c68=????????????????
+Child-SP          RetAddr               : Args to Child                                                           : Call Site
+000000c1`4e79fa68 00007ff7`f4fc1152     : 00000000`00000000 00007fff`e57de957 00000000`00000000 00000000`00000000 : SunshineFPS+0x11a1
+000000c1`4e79fa70 00000000`00000000     : 00007fff`e57de957 00000000`00000000 00000000`00000000 00000000`00000000 : SunshineFPS+0x1152
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'

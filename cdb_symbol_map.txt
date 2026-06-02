@@ -1,0 +1,364 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4188 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: D:\rawrxd\build_win32ide\tests\RawrXD-VulkanValidationTax.exe
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff6`816b0000 00007ff6`81710000   RawrXD-VulkanValidationTax.exe
+ModLoad: 00007fff`e6540000 00007fff`e67a6000   ntdll.dll
+ModLoad: 00007fff`5d1f0000 00007fff`5d262000   C:\WINDOWS\System32\verifier.dll
+Page heap: pid 0xA56C: page heap enabled with flags 0x3.
+ModLoad: 00007fff`e57b0000 00007fff`e5879000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007fff`e3930000 00007fff`e3d2a000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007fff`e0900000 00007fff`e09a0000   C:\WINDOWS\SYSTEM32\apphelp.dll
+ModLoad: 00007fff`53ce0000 00007fff`53e8a000   C:\WINDOWS\SYSTEM32\vulkan-1.dll
+ModLoad: 00007fff`e4e40000 00007fff`e4ef6000   C:\WINDOWS\System32\ADVAPI32.dll
+ModLoad: 00007fff`e33c0000 00007fff`e3411000   C:\WINDOWS\SYSTEM32\CFGMGR32.dll
+ModLoad: 00007fff`e6240000 00007fff`e62e9000   C:\WINDOWS\System32\msvcrt.dll
+ModLoad: 00007fff`e3d30000 00007fff`e3e7c000   C:\WINDOWS\System32\ucrtbase.dll
+ModLoad: 00007fff`e5fa0000 00007fff`e604a000   C:\WINDOWS\System32\sechost.dll
+ModLoad: 00007fff`e44f0000 00007fff`e4608000   C:\WINDOWS\System32\RPCRT4.dll
+(a56c.7c24): Break instruction exception - code 80000003 (first chance)
+ntdll!LdrpDoDebuggerBreak+0x35:
+00007fff`e665d78d cc              int     3
+0:000> cdb: Reading initial command 'x RawrXD_VulkanValidationTax!*VulkanKernel_VerifySPIRVFile*; u RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile L120; q'
+*** WARNING: Unable to verify checksum for RawrXD-VulkanValidationTax.exe
+00007ff6`816c64e0 RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile (<no parameter info>)
+RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile:
+00007ff6`816c64e0 4053            push    rbx
+00007ff6`816c64e2 4883ec40        sub     rsp,40h
+00007ff6`816c64e6 488bda          mov     rbx,rdx
+00007ff6`816c64e9 4885c9          test    rcx,rcx
+00007ff6`816c64ec 0f8499000000    je      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0xab (00007ff6`816c658b)
+00007ff6`816c64f2 803900          cmp     byte ptr [rcx],0
+00007ff6`816c64f5 0f8490000000    je      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0xab (00007ff6`816c658b)
+00007ff6`816c64fb 0f57c0          xorps   xmm0,xmm0
+00007ff6`816c64fe 48c744243000000000 mov   qword ptr [rsp+30h],0
+00007ff6`816c6507 488d542420      lea     rdx,[rsp+20h]
+00007ff6`816c650c f30f7f442420    movdqu  xmmword ptr [rsp+20h],xmm0
+00007ff6`816c6512 e809b8ffff      call    RawrXD_VulkanValidationTax+0x11d20 (00007ff6`816c1d20)
+00007ff6`816c6517 488b4c2420      mov     rcx,qword ptr [rsp+20h]
+00007ff6`816c651c 84c0            test    al,al
+00007ff6`816c651e 7504            jne     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x44 (00007ff6`816c6524)
+00007ff6`816c6520 33db            xor     ebx,ebx
+00007ff6`816c6522 eb15            jmp     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x59 (00007ff6`816c6539)
+00007ff6`816c6524 4885db          test    rbx,rbx
+00007ff6`816c6527 740b            je      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x54 (00007ff6`816c6534)
+00007ff6`816c6529 488b442428      mov     rax,qword ptr [rsp+28h]
+00007ff6`816c652e 482bc1          sub     rax,rcx
+00007ff6`816c6531 488903          mov     qword ptr [rbx],rax
+00007ff6`816c6534 bb01000000      mov     ebx,1
+00007ff6`816c6539 4885c9          test    rcx,rcx
+00007ff6`816c653c 7445            je      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0xa3 (00007ff6`816c6583)
+00007ff6`816c653e 488b542430      mov     rdx,qword ptr [rsp+30h]
+00007ff6`816c6543 482bd1          sub     rdx,rcx
+00007ff6`816c6546 4881fa00100000  cmp     rdx,1000h
+00007ff6`816c654d 722c            jb      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x9b (00007ff6`816c657b)
+00007ff6`816c654f 488b41f8        mov     rax,qword ptr [rcx-8]
+00007ff6`816c6553 482bc8          sub     rcx,rax
+00007ff6`816c6556 4883e908        sub     rcx,8
+00007ff6`816c655a 4883f91f        cmp     rcx,1Fh
+00007ff6`816c655e 7714            ja      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x94 (00007ff6`816c6574)
+00007ff6`816c6560 4883c227        add     rdx,27h
+00007ff6`816c6564 488bc8          mov     rcx,rax
+00007ff6`816c6567 e8f81a0000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x1b84 (00007ff6`816c8064)
+00007ff6`816c656c 8bc3            mov     eax,ebx
+00007ff6`816c656e 4883c440        add     rsp,40h
+00007ff6`816c6572 5b              pop     rbx
+00007ff6`816c6573 c3              ret
+00007ff6`816c6574 b905000000      mov     ecx,5
+00007ff6`816c6579 cd29            int     29h
+00007ff6`816c657b 488bc1          mov     rax,rcx
+00007ff6`816c657e e8e11a0000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x1b84 (00007ff6`816c8064)
+00007ff6`816c6583 8bc3            mov     eax,ebx
+00007ff6`816c6585 4883c440        add     rsp,40h
+00007ff6`816c6589 5b              pop     rbx
+00007ff6`816c658a c3              ret
+00007ff6`816c658b 33c0            xor     eax,eax
+00007ff6`816c658d 4883c440        add     rsp,40h
+00007ff6`816c6591 5b              pop     rbx
+00007ff6`816c6592 c3              ret
+00007ff6`816c6593 cc              int     3
+00007ff6`816c6594 cc              int     3
+00007ff6`816c6595 cc              int     3
+00007ff6`816c6596 cc              int     3
+00007ff6`816c6597 cc              int     3
+00007ff6`816c6598 cc              int     3
+00007ff6`816c6599 cc              int     3
+00007ff6`816c659a cc              int     3
+00007ff6`816c659b cc              int     3
+00007ff6`816c659c cc              int     3
+00007ff6`816c659d cc              int     3
+00007ff6`816c659e cc              int     3
+00007ff6`816c659f cc              int     3
+00007ff6`816c65a0 4c89442418      mov     qword ptr [rsp+18h],r8
+00007ff6`816c65a5 4c894c2420      mov     qword ptr [rsp+20h],r9
+00007ff6`816c65aa 53              push    rbx
+00007ff6`816c65ab 55              push    rbp
+00007ff6`816c65ac 56              push    rsi
+00007ff6`816c65ad 57              push    rdi
+00007ff6`816c65ae 4883ec38        sub     rsp,38h
+00007ff6`816c65b2 498bf0          mov     rsi,r8
+00007ff6`816c65b5 488d6c2478      lea     rbp,[rsp+78h]
+00007ff6`816c65ba 488bda          mov     rbx,rdx
+00007ff6`816c65bd 488bf9          mov     rdi,rcx
+00007ff6`816c65c0 e86bb1feff      call    RawrXD_VulkanValidationTax+0x1730 (00007ff6`816b1730)
+00007ff6`816c65c5 48896c2428      mov     qword ptr [rsp+28h],rbp
+00007ff6`816c65ca 4c8bce          mov     r9,rsi
+00007ff6`816c65cd 4c8bc3          mov     r8,rbx
+00007ff6`816c65d0 48c744242000000000 mov   qword ptr [rsp+20h],0
+00007ff6`816c65d9 488bd7          mov     rdx,rdi
+00007ff6`816c65dc 488b08          mov     rcx,qword ptr [rax]
+00007ff6`816c65df e880af0000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0xb084 (00007ff6`816d1564)
+00007ff6`816c65e4 85c0            test    eax,eax
+00007ff6`816c65e6 b9ffffffff      mov     ecx,0FFFFFFFFh
+00007ff6`816c65eb 0f48c1          cmovs   eax,ecx
+00007ff6`816c65ee 4883c438        add     rsp,38h
+00007ff6`816c65f2 5f              pop     rdi
+00007ff6`816c65f3 5e              pop     rsi
+00007ff6`816c65f4 5d              pop     rbp
+00007ff6`816c65f5 5b              pop     rbx
+00007ff6`816c65f6 c3              ret
+00007ff6`816c65f7 ff25538e0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f70 (00007ff6`816ef450)]
+00007ff6`816c65fd ff25d58c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28df8 (00007ff6`816ef2d8)]
+00007ff6`816c6603 ff253f8e0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f68 (00007ff6`816ef448)]
+00007ff6`816c6609 ff25318e0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f60 (00007ff6`816ef440)]
+00007ff6`816c660f ff25238e0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f58 (00007ff6`816ef438)]
+00007ff6`816c6615 ff25158e0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f50 (00007ff6`816ef430)]
+00007ff6`816c661b ff25078e0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f48 (00007ff6`816ef428)]
+00007ff6`816c6621 ff25f98d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f40 (00007ff6`816ef420)]
+00007ff6`816c6627 ff25eb8d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f38 (00007ff6`816ef418)]
+00007ff6`816c662d ff25dd8d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f30 (00007ff6`816ef410)]
+00007ff6`816c6633 ff25cf8d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f28 (00007ff6`816ef408)]
+00007ff6`816c6639 ff25c18d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f20 (00007ff6`816ef400)]
+00007ff6`816c663f ff25b38d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f18 (00007ff6`816ef3f8)]
+00007ff6`816c6645 ff25a58d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f10 (00007ff6`816ef3f0)]
+00007ff6`816c664b ff25978d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f08 (00007ff6`816ef3e8)]
+00007ff6`816c6651 ff25898d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28f00 (00007ff6`816ef3e0)]
+00007ff6`816c6657 ff257b8d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ef8 (00007ff6`816ef3d8)]
+00007ff6`816c665d ff256d8d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ef0 (00007ff6`816ef3d0)]
+00007ff6`816c6663 ff255f8d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ee8 (00007ff6`816ef3c8)]
+00007ff6`816c6669 ff25518d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ee0 (00007ff6`816ef3c0)]
+00007ff6`816c666f ff25438d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ed8 (00007ff6`816ef3b8)]
+00007ff6`816c6675 ff25358d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ed0 (00007ff6`816ef3b0)]
+00007ff6`816c667b ff25278d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ec8 (00007ff6`816ef3a8)]
+00007ff6`816c6681 ff25198d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ec0 (00007ff6`816ef3a0)]
+00007ff6`816c6687 ff250b8d0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28eb8 (00007ff6`816ef398)]
+00007ff6`816c668d ff25fd8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28eb0 (00007ff6`816ef390)]
+00007ff6`816c6693 ff25ef8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ea8 (00007ff6`816ef388)]
+00007ff6`816c6699 ff25e18c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28ea0 (00007ff6`816ef380)]
+00007ff6`816c669f ff25d38c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e98 (00007ff6`816ef378)]
+00007ff6`816c66a5 ff25c58c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e90 (00007ff6`816ef370)]
+00007ff6`816c66ab ff25b78c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e88 (00007ff6`816ef368)]
+00007ff6`816c66b1 ff25a98c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e80 (00007ff6`816ef360)]
+00007ff6`816c66b7 ff259b8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e78 (00007ff6`816ef358)]
+00007ff6`816c66bd ff258d8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e70 (00007ff6`816ef350)]
+00007ff6`816c66c3 ff257f8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e68 (00007ff6`816ef348)]
+00007ff6`816c66c9 ff25718c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e60 (00007ff6`816ef340)]
+00007ff6`816c66cf ff25638c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e58 (00007ff6`816ef338)]
+00007ff6`816c66d5 ff25558c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e50 (00007ff6`816ef330)]
+00007ff6`816c66db ff25478c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e48 (00007ff6`816ef328)]
+00007ff6`816c66e1 ff25398c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e40 (00007ff6`816ef320)]
+00007ff6`816c66e7 ff252b8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e38 (00007ff6`816ef318)]
+00007ff6`816c66ed ff251d8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e30 (00007ff6`816ef310)]
+00007ff6`816c66f3 ff250f8c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e28 (00007ff6`816ef308)]
+00007ff6`816c66f9 ff25018c0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e20 (00007ff6`816ef300)]
+00007ff6`816c66ff ff25f38b0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e18 (00007ff6`816ef2f8)]
+00007ff6`816c6705 ff25e58b0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e10 (00007ff6`816ef2f0)]
+00007ff6`816c670b ff25d78b0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e08 (00007ff6`816ef2e8)]
+00007ff6`816c6711 ff25c98b0200    jmp     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28e00 (00007ff6`816ef2e0)]
+00007ff6`816c6717 cc              int     3
+00007ff6`816c6718 4883ec28        sub     rsp,28h
+00007ff6`816c671c 488d4c2430      lea     rcx,[rsp+30h]
+00007ff6`816c6721 ff15798a0200    call    qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28cc0 (00007ff6`816ef1a0)]
+00007ff6`816c6727 488b442430      mov     rax,qword ptr [rsp+30h]
+00007ff6`816c672c 4883c428        add     rsp,28h
+00007ff6`816c6730 c3              ret
+00007ff6`816c6731 cc              int     3
+00007ff6`816c6732 cc              int     3
+00007ff6`816c6733 cc              int     3
+00007ff6`816c6734 4883ec28        sub     rsp,28h
+00007ff6`816c6738 488b0571240400  mov     rax,qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x426d0 (00007ff6`81708bb0)]
+00007ff6`816c673f 4885c0          test    rax,rax
+00007ff6`816c6742 7517            jne     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x27b (00007ff6`816c675b)
+00007ff6`816c6744 488d4c2430      lea     rcx,[rsp+30h]
+00007ff6`816c6749 ff15598a0200    call    qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28cc8 (00007ff6`816ef1a8)]
+00007ff6`816c674f 488b442430      mov     rax,qword ptr [rsp+30h]
+00007ff6`816c6754 48890555240400  mov     qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x426d0 (00007ff6`81708bb0)],rax
+00007ff6`816c675b 4883c428        add     rsp,28h
+00007ff6`816c675f c3              ret
+00007ff6`816c6760 4053            push    rbx
+00007ff6`816c6762 4883ec20        sub     rsp,20h
+00007ff6`816c6766 488bd9          mov     rbx,rcx
+00007ff6`816c6769 e82e000000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x2bc (00007ff6`816c679c)
+00007ff6`816c676e 4c8bc0          mov     r8,rax
+00007ff6`816c6771 48b8bd427ae5d594bfd6 mov rax,0D6BF94D5E57A42BDh
+00007ff6`816c677b 49f7e0          mul     rax,r8
+00007ff6`816c677e 48c1ea17        shr     rdx,17h
+00007ff6`816c6782 488913          mov     qword ptr [rbx],rdx
+00007ff6`816c6785 69d280969800    imul    edx,edx,989680h
+00007ff6`816c678b 442bc2          sub     r8d,edx
+00007ff6`816c678e 416bc064        imul    eax,r8d,64h
+00007ff6`816c6792 894308          mov     dword ptr [rbx+8],eax
+00007ff6`816c6795 4883c420        add     rsp,20h
+00007ff6`816c6799 5b              pop     rbx
+00007ff6`816c679a c3              ret
+00007ff6`816c679b cc              int     3
+00007ff6`816c679c 4883ec28        sub     rsp,28h
+00007ff6`816c67a0 488d4c2430      lea     rcx,[rsp+30h]
+00007ff6`816c67a5 ff15058a0200    call    qword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x28cd0 (00007ff6`816ef1b0)]
+00007ff6`816c67ab 8b442434        mov     eax,dword ptr [rsp+34h]
+00007ff6`816c67af 48ba0080c12a214e62fe mov rdx,0FE624E212AC18000h
+00007ff6`816c67b9 8b4c2430        mov     ecx,dword ptr [rsp+30h]
+00007ff6`816c67bd 48c1e020        shl     rax,20h
+00007ff6`816c67c1 4803c2          add     rax,rdx
+00007ff6`816c67c4 4803c1          add     rax,rcx
+00007ff6`816c67c7 4883c428        add     rsp,28h
+00007ff6`816c67cb c3              ret
+00007ff6`816c67cc 48895c2408      mov     qword ptr [rsp+8],rbx
+00007ff6`816c67d1 57              push    rdi
+00007ff6`816c67d2 4883ec20        sub     rsp,20h
+00007ff6`816c67d6 488bf9          mov     rdi,rcx
+00007ff6`816c67d9 f0ff0580080400  lock inc dword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x40b80 (00007ff6`81707060)]
+00007ff6`816c67e0 751f            jne     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x321 (00007ff6`816c6801)
+00007ff6`816c67e2 488d1de7230400  lea     rbx,[RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x426f0 (00007ff6`81708bd0)]
+00007ff6`816c67e9 488bcb          mov     rcx,rbx
+00007ff6`816c67ec e8cf140000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x17e0 (00007ff6`816c7cc0)
+00007ff6`816c67f1 488d0518250400  lea     rax,[RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x42830 (00007ff6`81708d10)]
+00007ff6`816c67f8 4883c328        add     rbx,28h
+00007ff6`816c67fc 483bd8          cmp     rbx,rax
+00007ff6`816c67ff 75e8            jne     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x309 (00007ff6`816c67e9)
+00007ff6`816c6801 488b5c2430      mov     rbx,qword ptr [rsp+30h]
+00007ff6`816c6806 488bc7          mov     rax,rdi
+00007ff6`816c6809 4883c420        add     rsp,20h
+00007ff6`816c680d 5f              pop     rdi
+00007ff6`816c680e c3              ret
+00007ff6`816c680f cc              int     3
+00007ff6`816c6810 4053            push    rbx
+00007ff6`816c6812 4883ec20        sub     rsp,20h
+00007ff6`816c6816 8911            mov     dword ptr [rcx],edx
+00007ff6`816c6818 488bd9          mov     rbx,rcx
+00007ff6`816c681b 85d2            test    edx,edx
+00007ff6`816c681d 7507            jne     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x346 (00007ff6`816c6826)
+00007ff6`816c681f e8bceb0000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0xef00 (00007ff6`816d53e0)
+00007ff6`816c6824 eb1c            jmp     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x362 (00007ff6`816c6842)
+00007ff6`816c6826 83fa08          cmp     edx,8
+00007ff6`816c6829 7d17            jge     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x362 (00007ff6`816c6842)
+00007ff6`816c682b 4863c2          movsxd  rax,edx
+00007ff6`816c682e 488d0c80        lea     rcx,[rax+rax*4]
+00007ff6`816c6832 488d0597230400  lea     rax,[RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x426f0 (00007ff6`81708bd0)]
+00007ff6`816c6839 488d0cc8        lea     rcx,[rax+rcx*8]
+00007ff6`816c683d e88e140000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x17f0 (00007ff6`816c7cd0)
+00007ff6`816c6842 488bc3          mov     rax,rbx
+00007ff6`816c6845 4883c420        add     rsp,20h
+00007ff6`816c6849 5b              pop     rbx
+00007ff6`816c684a c3              ret
+00007ff6`816c684b cc              int     3
+00007ff6`816c684c 4053            push    rbx
+00007ff6`816c684e 4883ec20        sub     rsp,20h
+00007ff6`816c6852 83c8ff          or      eax,0FFFFFFFFh
+00007ff6`816c6855 f00fc10503080400 lock xadd dword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x40b80 (00007ff6`81707060)],eax
+00007ff6`816c685d 83f801          cmp     eax,1
+00007ff6`816c6860 791f            jns     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x3a1 (00007ff6`816c6881)
+00007ff6`816c6862 488d1d67230400  lea     rbx,[RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x426f0 (00007ff6`81708bd0)]
+00007ff6`816c6869 488bcb          mov     rcx,rbx
+00007ff6`816c686c e847140000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x17d8 (00007ff6`816c7cb8)
+00007ff6`816c6871 488d0598240400  lea     rax,[RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x42830 (00007ff6`81708d10)]
+00007ff6`816c6878 4883c328        add     rbx,28h
+00007ff6`816c687c 483bd8          cmp     rbx,rax
+00007ff6`816c687f 75e8            jne     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x389 (00007ff6`816c6869)
+00007ff6`816c6881 4883c420        add     rsp,20h
+00007ff6`816c6885 5b              pop     rbx
+00007ff6`816c6886 c3              ret
+00007ff6`816c6887 cc              int     3
+00007ff6`816c6888 4883ec28        sub     rsp,28h
+00007ff6`816c688c 486301          movsxd  rax,dword ptr [rcx]
+00007ff6`816c688f 85c0            test    eax,eax
+00007ff6`816c6891 7509            jne     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x3bc (00007ff6`816c689c)
+00007ff6`816c6893 4883c428        add     rsp,28h
+00007ff6`816c6897 e960eb0000      jmp     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0xef1c (00007ff6`816d53fc)
+00007ff6`816c689c 83f808          cmp     eax,8
+00007ff6`816c689f 7d14            jge     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x3d5 (00007ff6`816c68b5)
+00007ff6`816c68a1 488d0c80        lea     rcx,[rax+rax*4]
+00007ff6`816c68a5 488d0524230400  lea     rax,[RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x426f0 (00007ff6`81708bd0)]
+00007ff6`816c68ac 488d0cc8        lea     rcx,[rax+rcx*8]
+00007ff6`816c68b0 e823140000      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x17f8 (00007ff6`816c7cd8)
+00007ff6`816c68b5 4883c428        add     rsp,28h
+00007ff6`816c68b9 c3              ret
+00007ff6`816c68ba cc              int     3
+00007ff6`816c68bb cc              int     3
+00007ff6`816c68bc e92f330000      jmp     RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x3710 (00007ff6`816c9bf0)
+00007ff6`816c68c1 cc              int     3
+00007ff6`816c68c2 cc              int     3
+00007ff6`816c68c3 cc              int     3
+00007ff6`816c68c4 cc              int     3
+00007ff6`816c68c5 cc              int     3
+00007ff6`816c68c6 cc              int     3
+00007ff6`816c68c7 cc              int     3
+00007ff6`816c68c8 cc              int     3
+00007ff6`816c68c9 cc              int     3
+00007ff6`816c68ca cc              int     3
+00007ff6`816c68cb cc              int     3
+00007ff6`816c68cc cc              int     3
+00007ff6`816c68cd cc              int     3
+00007ff6`816c68ce cc              int     3
+00007ff6`816c68cf cc              int     3
+00007ff6`816c68d0 8b0576080400    mov     eax,dword ptr [RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x40c6c (00007ff6`8170714c)]
+00007ff6`816c68d6 4c8bca          mov     r9,rdx
+00007ff6`816c68d9 4c2bc9          sub     r9,rcx
+00007ff6`816c68dc 4d8bd1          mov     r10,r9
+00007ff6`816c68df 4983e2e0        and     r10,0FFFFFFFFFFFFFFE0h
+00007ff6`816c68e3 0f8495000000    je      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x49e (00007ff6`816c697e)
+00007ff6`816c68e9 a820            test    al,20h
+00007ff6`816c68eb 0f848d000000    je      RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x49e (00007ff6`816c697e)
+00007ff6`816c68f1 410fbec0        movsx   eax,r8b
+00007ff6`816c68f5 4c03d1          add     r10,rcx
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'

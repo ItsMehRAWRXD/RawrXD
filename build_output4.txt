@@ -1,0 +1,156 @@
+[1/1] RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked; Linking CXX executable bin\RawrXD-Win32IDE.exe; [Win32IDE] Staging RawrXD-ServeInference plugin; [Win32IDE] Staging ggml.dll for GPU inference support; [Win32IDE] Staging ggml-base.dll for GPU inference support; [Win32IDE] Staging ggml-cpu.dll for GPU inference support; [Win32IDE] Staging ggml-vulkan.dll for GPU inference support; [Win32IDE] Staging llama.dll for GPU inference support
+FAILED: bin/RawrXD-Win32IDE.exe 
+C:\WINDOWS\system32\cmd.exe /C "C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f D:/rawrxd/build_ninja/bin/RawrXD-Win32IDE.exe D:/rawrxd/build_ninja/bin/RawrXD-Win32IDE.pdb && cd D:\rawrxd\build_ninja" && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1950 --intdir=CMakeFiles\RawrXD-Win32IDE.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\mt.exe --manifests  -- C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp  /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LARGEADDRESSAWARE /DEBUG:NONE /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG:OFF /MAP:D:/rawrxd/build_ninja/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO && C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/rawrxd/build_ninja/bin/RawrXD-Win32IDE.map D:/rawrxd/build_ninja/RawrXD-Win32IDE.map && cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/rawrxd/build_ninja/bin/RawrXD_ServeInference.dll D:/rawrxd/build_ninja/bin && cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/llama.cpp/build/bin/ggml.dll D:/rawrxd/build_ninja/bin && cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/llama.cpp/build/bin/ggml-base.dll D:/rawrxd/build_ninja/bin && cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/llama.cpp/build/bin/ggml-cpu.dll D:/rawrxd/build_ninja/bin && cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/llama.cpp/build/bin/ggml-vulkan.dll D:/rawrxd/build_ninja/bin && cd /D D:\rawrxd\build_ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/llama.cpp/build/bin/llama.dll D:/rawrxd/build_ninja/bin""
+LINK: command "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LARGEADDRESSAWARE /DEBUG:NONE /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG:OFF /MAP:D:/rawrxd/build_ninja/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO" failed (exit code 1120) with the following output:
+   Creating library RawrXD-Win32IDE.lib and object RawrXD-Win32IDE.exp
+
+main_win32.cpp.obj : error LNK2019: unresolved external symbol asm_orchestrator_shutdown referenced in function WinMain
+
+main_win32.cpp.obj : error LNK2019: unresolved external symbol "int __cdecl runAgentWalCliSmokeTest(void)" (?runAgentWalCliSmokeTest@@YAHXZ) referenced in function WinMain
+
+main_win32.cpp.obj : error LNK2019: unresolved external symbol Sovereign_VEH_Handler referenced in function WinMain
+
+main_win32.cpp.obj : error LNK2019: unresolved external symbol "int __cdecl rawrxd::ghost_pipeline_probe::runGhostPipelineProbeCli(void)" (?runGhostPipelineProbeCli@ghost_pipeline_probe@rawrxd@@YAHXZ) referenced in function WinMain
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "public: __cdecl RawrXD::Core::Diff::DiffEngine::DiffEngine(struct RawrXD::Core::Diff::DiffConfig const &)" (??0DiffEngine@Diff@Core@RawrXD@@QEAA@AEBUDiffConfig@123@@Z) referenced in function "class std::optional<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > __cdecl rawrxd::ghost_completion::applyStructuredAiLineDiffsUtf8(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct RawrXD::Core::Diff::DiffResult const &)" (?applyStructuredAiLineDiffsUtf8@ghost_completion@rawrxd@@YA?AV?$optional@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@4@AEBUDiffResult@Diff@Core@RawrXD@@@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "public: __cdecl RawrXD::Core::Diff::DiffEngine::~DiffEngine(void)" (??1DiffEngine@Diff@Core@RawrXD@@QEAA@XZ) referenced in function "class std::optional<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > __cdecl rawrxd::ghost_completion::applyStructuredAiLineDiffsUtf8(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct RawrXD::Core::Diff::DiffResult const &)" (?applyStructuredAiLineDiffsUtf8@ghost_completion@rawrxd@@YA?AV?$optional@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@4@AEBUDiffResult@Diff@Core@RawrXD@@@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "public: class std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > > __cdecl RawrXD::Core::Diff::DiffEngine::applyDiff(class std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > > const &,struct RawrXD::Core::Diff::DiffResult const &)" (?applyDiff@DiffEngine@Diff@Core@RawrXD@@QEAA?AV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@AEBV56@AEBUDiffResult@234@@Z) referenced in function "class std::optional<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > __cdecl rawrxd::ghost_completion::applyStructuredAiLineDiffsUtf8(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct RawrXD::Core::Diff::DiffResult const &)" (?applyStructuredAiLineDiffsUtf8@ghost_completion@rawrxd@@YA?AV?$optional@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@4@AEBUDiffResult@Diff@Core@RawrXD@@@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::onFileTreeSelect(struct _TREEITEM *)" (?onFileTreeSelect@Win32IDE@@QEAAXPEAU_TREEITEM@@@Z) referenced in function "public: static __int64 __cdecl Win32IDE::FileExplorerContainerProc(struct HWND__ *,unsigned int,unsigned __int64,__int64)" (?FileExplorerContainerProc@Win32IDE@@SA_JPEAUHWND__@@I_K_J@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::createAgentChatCursorOverlay(void)" (?createAgentChatCursorOverlay@Win32IDE@@QEAAXXZ) referenced in function "public: void __cdecl Win32IDE::createChatPanel(void)" (?createChatPanel@Win32IDE@@QEAAXXZ)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::shutdownAgentChatCursorOverlay(void)" (?shutdownAgentChatCursorOverlay@Win32IDE@@QEAAXXZ) referenced in function "public: __cdecl Win32IDE::~Win32IDE(void)" (??1Win32IDE@@QEAA@XZ)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "private: void __cdecl Win32IDE::ensureAgentDiffPanelVisible(void)" (?ensureAgentDiffPanelVisible@Win32IDE@@AEAAXXZ) referenced in function "public: void __cdecl Win32IDE::executeDirectSlashFixFromEditor(struct HWND__ *,struct rawrxd::ghost_completion::GhostCompletionContext const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?executeDirectSlashFixFromEditor@Win32IDE@@QEAAXPEAUHWND__@@AEBUGhostCompletionContext@ghost_completion@rawrxd@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@2@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "private: bool __cdecl Win32IDE::stageDirectFixAgentProposal(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?stageDirectFixAgentProposal@Win32IDE@@AEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@000@Z) referenced in function "public: void __cdecl Win32IDE::executeDirectSlashFixFromEditor(struct HWND__ *,struct rawrxd::ghost_completion::GhostCompletionContext const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?executeDirectSlashFixFromEditor@Win32IDE@@QEAAXPEAUHWND__@@AEBUGhostCompletionContext@ghost_completion@rawrxd@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@2@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "private: bool __cdecl Win32IDE::validateCurrentAgentSessionMirrorGate(void)" (?validateCurrentAgentSessionMirrorGate@Win32IDE@@AEAA_NXZ) referenced in function "public: void __cdecl Win32IDE::executeDirectSlashFixFromEditor(struct HWND__ *,struct rawrxd::ghost_completion::GhostCompletionContext const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?executeDirectSlashFixFromEditor@Win32IDE@@QEAAXPEAUHWND__@@AEBUGhostCompletionContext@ghost_completion@rawrxd@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@2@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "private: bool __cdecl Win32IDE::rollbackLastAIEditTransaction(void)" (?rollbackLastAIEditTransaction@Win32IDE@@AEAA_NXZ) referenced in function "public: static __int64 __cdecl Win32IDE::EditorSubclassProc(struct HWND__ *,unsigned int,unsigned __int64,__int64)" (?EditorSubclassProc@Win32IDE@@SA_JPEAUHWND__@@I_K_J@Z)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol "private: void __cdecl Win32IDE::clearAgenticLspConditionWiring(void)" (?clearAgenticLspConditionWiring@Win32IDE@@AEAAXXZ) referenced in function "public: __cdecl Win32IDE::~Win32IDE(void)" (??1Win32IDE@@QEAA@XZ)
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol AgentBridge_SetShuttingDown referenced in function "public: __cdecl Win32IDE::~Win32IDE(void)" (??1Win32IDE@@QEAA@XZ)
+
+Win32IDE_Core.cpp.obj : error LNK2001: unresolved external symbol AgentBridge_SetShuttingDown
+
+Win32IDE.cpp.obj : error LNK2019: unresolved external symbol PromptWarm_SetAcceptRequests referenced in function "public: __cdecl Win32IDE::~Win32IDE(void)" (??1Win32IDE@@QEAA@XZ)
+
+Win32IDE_Core.cpp.obj : error LNK2001: unresolved external symbol PromptWarm_SetAcceptRequests
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::layoutAgentChatCursorOverlay(void)" (?layoutAgentChatCursorOverlay@Win32IDE@@QEAAXXZ) referenced in function "private: void __cdecl Win32IDE::onSize(int,int)" (?onSize@Win32IDE@@AEAAXHH@Z)
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::setAgentChatCursorTarget(int,int,bool)" (?setAgentChatCursorTarget@Win32IDE@@QEAAXHH_N@Z) referenced in function "private: __int64 __cdecl Win32IDE::handleMessage(struct HWND__ *,unsigned int,unsigned __int64,__int64)" (?handleMessage@Win32IDE@@AEAA_JPEAUHWND__@@I_K_J@Z)
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::tickAgentChatCursorAnimation(void)" (?tickAgentChatCursorAnimation@Win32IDE@@QEAAXXZ) referenced in function "private: __int64 __cdecl Win32IDE::handleMessage(struct HWND__ *,unsigned int,unsigned __int64,__int64)" (?handleMessage@Win32IDE@@AEAA_JPEAUHWND__@@I_K_J@Z)
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol "private: bool __cdecl Win32IDE::handleWiringManifestGaps(int,unsigned int)" (?handleWiringManifestGaps@Win32IDE@@AEAA_NHI@Z) referenced in function "private: void __cdecl Win32IDE::onCommand(struct HWND__ *,int,struct HWND__ *,unsigned int)" (?onCommand@Win32IDE@@AEAAXPEAUHWND__@@H0I@Z)
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol "public: bool __cdecl Win32IDE::handleEmojiCommand(int,__int64)" (?handleEmojiCommand@Win32IDE@@QEAA_NH_J@Z) referenced in function "private: __int64 __cdecl Win32IDE::handleMessage(struct HWND__ *,unsigned int,unsigned __int64,__int64)" (?handleMessage@Win32IDE@@AEAA_JPEAUHWND__@@I_K_J@Z)
+
+Win32IDE_Tier5Cosmetics.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Win32IDE::handleEmojiCommand(int,__int64)" (?handleEmojiCommand@Win32IDE@@QEAA_NH_J@Z)
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::updateEmojiTemporalLayer(void)" (?updateEmojiTemporalLayer@Win32IDE@@QEAAXXZ) referenced in function "private: __int64 __cdecl Win32IDE::handleMessage(struct HWND__ *,unsigned int,unsigned __int64,__int64)" (?handleMessage@Win32IDE@@AEAA_JPEAUHWND__@@I_K_J@Z)
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol AgentBridge_SetInitComplete referenced in function "public: unsigned long __cdecl `private: void __cdecl Win32IDE::deferredHeavyInit(void)'::`5'::<lambda_1>::operator()(void *)const " (??R<lambda_1>@?4??deferredHeavyInit@Win32IDE@@AEAAXXZ@QEBAKPEAX@Z)
+
+Win32IDE_Core.cpp.obj : error LNK2019: unresolved external symbol AgentBridge_BindMainWindow referenced in function "private: void __cdecl Win32IDE::onCreate(struct HWND__ *)" (?onCreate@Win32IDE@@AEAAXPEAUHWND__@@@Z)
+
+Win32IDE_Commands.cpp.obj : error LNK2019: unresolved external symbol "private: void __cdecl Win32IDE::handleHotpatchCtrlCommand(int)" (?handleHotpatchCtrlCommand@Win32IDE@@AEAAXH@Z) referenced in function "private: bool __cdecl Win32IDE::routeCommand(int)" (?routeCommand@Win32IDE@@AEAA_NH@Z)
+
+Win32IDE_GhostText.cpp.obj : error LNK2019: unresolved external symbol Bridge_ReadDraftBlockGhostA referenced in function "private: static unsigned int __cdecl std::thread::_Invoke<class std::tuple<class `private: void __cdecl Win32IDE::scheduleTitanDraftPrefetch(void)'::`2'::<lambda_1> >,0>(void *)" (??$_Invoke@V?$tuple@V<lambda_1>@?1??scheduleTitanDraftPrefetch@Win32IDE@@AEAAXXZ@@std@@$0A@@thread@std@@CAIPEAX@Z)
+
+GGUFRunner.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl GGUFRunner::tokenChunkGenerated(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?tokenChunkGenerated@GGUFRunner@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) referenced in function "public: bool __cdecl GGUFRunner::runInference(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,float *)" (?runInference@GGUFRunner@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAM@Z)
+
+GGUFRunner.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl GGUFRunner::inferenceComplete(bool)" (?inferenceComplete@GGUFRunner@@QEAAX_N@Z) referenced in function "public: bool __cdecl GGUFRunner::runInference(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,float *)" (?runInference@GGUFRunner@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAM@Z)
+
+GGUFRunner.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl GGUFRunner::modelLoaded(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,__int64)" (?modelLoaded@GGUFRunner@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@_J@Z) referenced in function "public: bool __cdecl GGUFRunner::loadModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?loadModel@GGUFRunner@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+GGUFRunner.cpp.obj : error LNK2019: unresolved external symbol matmul_kernel_avx2 referenced in function "private: void __cdecl GGUFRunner::matmul(float const *,float const *,float *,int,int,int)" (?matmul@GGUFRunner@@AEAAXPEBM0PEAMHHH@Z)
+
+GGUFRunner.cpp.obj : error LNK2019: unresolved external symbol ggml_rxd_gemm_q4_0 referenced in function "public: bool __cdecl GGUFRunner::runInference(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,float *)" (?runInference@GGUFRunner@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAM@Z)
+
+rawrxd_transformer.cpp.obj : error LNK2019: unresolved external symbol "public: bool __cdecl RawrXD::EnhancedStreamingGGUFLoader::PrefetchLayerAsync(unsigned int)" (?PrefetchLayerAsync@EnhancedStreamingGGUFLoader@RawrXD@@QEAA_NI@Z) referenced in function "public: class std::vector<float,class std::allocator<float> > __cdecl RawrXDTransformer::Forward(class std::vector<unsigned int,class std::allocator<unsigned int> > const &,int)" (?Forward@RawrXDTransformer@@QEAA?AV?$vector@MV?$allocator@M@std@@@std@@AEBV?$vector@IV?$allocator@I@std@@@3@H@Z)
+
+cpu_inference_engine.cpp.obj : error LNK2019: unresolved external symbol "public: __cdecl RawrXD::EnhancedStreamingGGUFLoader::EnhancedStreamingGGUFLoader(void)" (??0EnhancedStreamingGGUFLoader@RawrXD@@QEAA@XZ) referenced in function "class std::unique_ptr<class RawrXD::EnhancedStreamingGGUFLoader,struct std::default_delete<class RawrXD::EnhancedStreamingGGUFLoader> > __cdecl std::make_unique<class RawrXD::EnhancedStreamingGGUFLoader,0>(void)" (??$make_unique@VEnhancedStreamingGGUFLoader@RawrXD@@$$V$0A@@std@@YA?AV?$unique_ptr@VEnhancedStreamingGGUFLoader@RawrXD@@U?$default_delete@VEnhancedStreamingGGUFLoader@RawrXD@@@std@@@0@XZ)
+
+cpu_inference_engine.cpp.obj : error LNK2019: unresolved external symbol "public: bool __cdecl RawrXD::EnhancedStreamingGGUFLoader::InitializeIocpStreaming(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?InitializeIocpStreaming@EnhancedStreamingGGUFLoader@RawrXD@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) referenced in function "public: virtual bool __cdecl RawrXD::CPUInferenceEngine::LoadModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?LoadModel@CPUInferenceEngine@RawrXD@@UEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+cpu_inference_engine.cpp.obj : error LNK2019: unresolved external symbol "public: bool __cdecl RawrXD::EnhancedStreamingGGUFLoader::BuildLayerOffsetTable(void)" (?BuildLayerOffsetTable@EnhancedStreamingGGUFLoader@RawrXD@@QEAA_NXZ) referenced in function "public: virtual bool __cdecl RawrXD::CPUInferenceEngine::LoadModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?LoadModel@CPUInferenceEngine@RawrXD@@UEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+cpu_inference_engine.cpp.obj : error LNK2019: unresolved external symbol "public: bool __cdecl RawrXD::EnhancedStreamingGGUFLoader::PinLayerInRam(unsigned int)" (?PinLayerInRam@EnhancedStreamingGGUFLoader@RawrXD@@QEAA_NI@Z) referenced in function "public: virtual bool __cdecl RawrXD::CPUInferenceEngine::LoadModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?LoadModel@CPUInferenceEngine@RawrXD@@UEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_init referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::initialize(void)" (?initialize@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@XZ)
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_set_key referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::initializeWithKey(unsigned char const *)" (?initializeWithKey@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@PEBE@Z)
+
+shadow_page_detour.cpp.obj : error LNK2001: unresolved external symbol asm_camellia256_set_key
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_encrypt_block referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::initialize(void)" (?initialize@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@XZ)
+
+Win32IDE_AirgappedEnterprise.cpp.obj : error LNK2001: unresolved external symbol asm_camellia256_encrypt_block
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_decrypt_block referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::initialize(void)" (?initialize@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@XZ)
+
+Win32IDE_AirgappedEnterprise.cpp.obj : error LNK2001: unresolved external symbol asm_camellia256_decrypt_block
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_encrypt_ctr referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::encryptBuffer(unsigned char *,unsigned __int64)" (?encryptBuffer@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@PEAE_K@Z)
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_decrypt_ctr referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::decryptBuffer(unsigned char *,unsigned __int64)" (?decryptBuffer@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@PEAE_K@Z)
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_encrypt_file referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::encryptFile(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?encryptFile@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z)
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_decrypt_file referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::decryptFile(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?decryptFile@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z)
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_get_status referenced in function "public: struct RawrXD::Crypto::CamelliaEngineStatus __cdecl RawrXD::Crypto::Camellia256Bridge::getStatus(void)const " (?getStatus@Camellia256Bridge@Crypto@RawrXD@@QEBA?AUCamelliaEngineStatus@23@XZ)
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_shutdown referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::shutdown(void)" (?shutdown@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@XZ)
+
+Win32IDE_FlagshipFeatures.cpp.obj : error LNK2001: unresolved external symbol asm_camellia256_shutdown
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_self_test referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::selfTest(void)" (?selfTest@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@XZ)
+
+shadow_page_detour.cpp.obj : error LNK2001: unresolved external symbol asm_camellia256_self_test
+
+camellia256_bridge.cpp.obj : error LNK2019: unresolved external symbol asm_camellia256_get_hmac_key referenced in function "public: struct RawrXD::Crypto::CamelliaResult __cdecl RawrXD::Crypto::Camellia256Bridge::initialize(void)" (?initialize@Camellia256Bridge@Crypto@RawrXD@@QEAA?AUCamelliaResult@23@XZ)
+
+Win32IDE_AuditDashboard.cpp.obj : error LNK2001: unresolved external symbol asm_camellia256_get_hmac_key
+
+Win32IDE_Tier5Cosmetics.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl Win32IDE::initEmojiSupport(void)" (?initEmojiSupport@Win32IDE@@QEAAXXZ) referenced in function "private: void __cdecl Win32IDE::initTier5Cosmetics(void)" (?initTier5Cosmetics@Win32IDE@@AEAAXXZ)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_init referenced in function "public: struct PatchResult __cdecl SelfHostEngine::initialize(void)" (?initialize@SelfHostEngine@@QEAA?AUPatchResult@@XZ)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_read_text referenced in function "public: struct PatchResult __cdecl SelfHostEngine::readTextSection(class std::vector<unsigned char,class std::allocator<unsigned char> > &)" (?readTextSection@SelfHostEngine@@QEAA?AUPatchResult@@AEAV?$vector@EV?$allocator@E@std@@@std@@@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_profile_region referenced in function "public: struct PatchResult __cdecl SelfHostEngine::profileKernel(void *,unsigned __int64,struct ProfileResult *)" (?profileKernel@SelfHostEngine@@QEAA?AUPatchResult@@PEAX_KPEAUProfileResult@@@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_gen_trampoline referenced in function "public: void * __cdecl SelfHostEngine::assembleInstructions(class std::vector<struct UasmInstruction,class std::allocator<struct UasmInstruction> > const &,unsigned int *)" (?assembleInstructions@SelfHostEngine@@QEAAPEAXAEBV?$vector@UUasmInstruction@@V?$allocator@UUasmInstruction@@@std@@@std@@PEAI@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_micro_assemble referenced in function "public: void * __cdecl SelfHostEngine::assembleInstructions(class std::vector<struct UasmInstruction,class std::allocator<struct UasmInstruction> > const &,unsigned int *)" (?assembleInstructions@SelfHostEngine@@QEAAPEAXAEBV?$vector@UUasmInstruction@@V?$allocator@UUasmInstruction@@@std@@@std@@PEAI@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_atomic_swap referenced in function "public: struct PatchResult __cdecl SelfHostEngine::swapKernel(char const *)" (?swapKernel@SelfHostEngine@@QEAA?AUPatchResult@@PEBD@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_verify_equiv referenced in function "public: struct PatchResult __cdecl SelfHostEngine::verifyEquivalence(void *,void *,class std::vector<unsigned __int64,class std::allocator<unsigned __int64> > const &)" (?verifyEquivalence@SelfHostEngine@@QEAA?AUPatchResult@@PEAX0AEBV?$vector@_KV?$allocator@_K@std@@@std@@@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_measure_delta referenced in function "public: int __cdecl SelfHostEngine::measurePerformanceDelta(void *,void *,unsigned __int64)" (?measurePerformanceDelta@SelfHostEngine@@QEAAHPEAX0_K@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_read_source referenced in function "public: struct PatchResult __cdecl SelfHostEngine::readAsmSource(char const *,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > &)" (?readAsmSource@SelfHostEngine@@QEAA?AUPatchResult@@PEBDAEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_write_source referenced in function "public: struct PatchResult __cdecl SelfHostEngine::writeAsmSource(char const *,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?writeAsmSource@SelfHostEngine@@QEAA?AUPatchResult@@PEBDAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_get_generation referenced in function "public: struct PatchResult __cdecl SelfHostEngine::generateOptimizedKernel(char const *,void *,class std::vector<struct UasmInstruction,class std::allocator<struct UasmInstruction> > const &)" (?generateOptimizedKernel@SelfHostEngine@@QEAA?AUPatchResult@@PEBDPEAXAEBV?$vector@UUasmInstruction@@V?$allocator@UUasmInstruction@@@std@@@std@@@Z)
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_get_stats referenced in function "public: unsigned __int64 __cdecl SelfHostEngine::dumpDiagnostics(char *,unsigned __int64)const " (?dumpDiagnostics@SelfHostEngine@@QEBA_KPEAD_K@Z)
+
+
+self_host_engine.cpp.obj : error LNK2019: unresolved external symbol asm_selfhost_shutdown referenced in function "public: struct PatchResult __cdecl SelfHostEngine::shutdown(void)" (?shutdown@SelfHostEngine@@QEAA?AUPatchResult@@XZ)
+
+
+bin\RawrXD-Win32IDE.exe : fatal error LNK1120: 63 unresolved externals
+
+
+ninja: build stopped: subcommand failed.

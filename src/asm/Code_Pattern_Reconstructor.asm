@@ -87,8 +87,10 @@ Reconstructor_IdentifyFunctions PROC
     sub rax, [g_context.binary_base] ; Relative Offset
     
     lea rdx, g_functions
-    mov [rdx + r10*size FUNCTION_INFO].entry_offset, rax
-    inc r10
+    ; Calculate offset manually: FUNCTION_INFO is 36 bytes (8+8+4+4+4+4+4)
+    mov rcx, r10
+    imul rcx, rcx, 36
+    mov [rdx + rcx], rax            ; Store at base + offset (entry_offset is first field at offset 0)
     
     add rsi, 4
     sub r8, 4

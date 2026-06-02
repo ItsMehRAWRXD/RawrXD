@@ -1,0 +1,158 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.032 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4188 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: D:\rawrxd\build_win32ide\tests\RawrXD-VulkanValidationTax.exe --iterations 1000 --mode=guards-off
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff6`816b0000 00007ff6`81710000   RawrXD-VulkanValidationTax.exe
+ModLoad: 00007fff`e6540000 00007fff`e67a6000   ntdll.dll
+ModLoad: 00007fff`5b640000 00007fff`5b6b2000   C:\WINDOWS\System32\verifier.dll
+Page heap: pid 0x12A08: page heap enabled with flags 0x3.
+ModLoad: 00007fff`e57b0000 00007fff`e5879000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007fff`e3930000 00007fff`e3d2a000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007fff`53a80000 00007fff`53c2a000   C:\WINDOWS\SYSTEM32\vulkan-1.dll
+ModLoad: 00007fff`e4e40000 00007fff`e4ef6000   C:\WINDOWS\System32\ADVAPI32.dll
+ModLoad: 00007fff`e33c0000 00007fff`e3411000   C:\WINDOWS\SYSTEM32\CFGMGR32.dll
+ModLoad: 00007fff`e6240000 00007fff`e62e9000   C:\WINDOWS\System32\msvcrt.dll
+ModLoad: 00007fff`e3d30000 00007fff`e3e7c000   C:\WINDOWS\System32\ucrtbase.dll
+ModLoad: 00007fff`e5fa0000 00007fff`e604a000   C:\WINDOWS\System32\sechost.dll
+ModLoad: 00007fff`e44f0000 00007fff`e4608000   C:\WINDOWS\System32\RPCRT4.dll
+(12a08.84b8): Break instruction exception - code 80000003 (first chance)
+ntdll!LdrpDoDebuggerBreak+0x35:
+00007fff`e665d78d cc              int     3
+0:000> cdb: Reading initial command 'sxe av; g; .ecxr; .echo ===REGS===; r; .echo ===STACK===; kv; .echo ===DT_RSI===; dt RawrXD_VulkanValidationTax!* @rsi; .echo ===DT_ADDR===; dt @rsi; .echo ===LOCALS===; dv; .echo ===DISASM===; u @rip L16; q'
+=================================================================
+Vulkan KMT Validation Tax Benchmark
+iterations=1000
+mode=guards-off
+=================================================================
+[guards-off] begin
+(12a08.84b8): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+Unable to get exception context, HRESULT 0x8000FFFF
+===REGS===
+*** WARNING: Unable to verify checksum for RawrXD-VulkanValidationTax.exe
+rax=0000026c0e38cdd0 rbx=0000000000000000 rcx=0000026c0e38cee0
+rdx=0000000000000010 rsi=0000026c0e38ca70 rdi=0000000000000004
+rip=00007ff6816b51d8 rsp=00000089a032fa60 rbp=0000000000000000
+ r8=00000000000000f8  r9=0000000000000100 r10=00007ff6816b0000
+r11=00007ff6816ed007 r12=0000000000000004 r13=0000026c0e24ff70
+r14=00000089a032fb30 r15=00000000000003e8
+iopl=0         nv up ei pl nz na pe nc
+cs=0033  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010202
+RawrXD_VulkanValidationTax+0x51d8:
+00007ff6`816b51d8 4889ae90050000  mov     qword ptr [rsi+590h],rbp ds:0000026c`0e38d000=????????????????
+===STACK===
+Child-SP          RetAddr               : Args to Child                                                           : Call Site
+00000089`a032fa60 00007ff6`816b140f     : 0000026c`0e38ca70 00007ff6`817071e8 00000000`00000000 00000089`a032faa8 : RawrXD_VulkanValidationTax+0x51d8
+00000089`a032faa0 00007ff6`816b1968     : 0000026c`0e38ca70 0000026c`0e24ffe8 7fffffff`fffffffc 00000000`00000004 : RawrXD_VulkanValidationTax+0x140f
+00000089`a032fb10 00007ff6`816c84c8     : 00000000`00000000 00007ff6`816c8541 00000000`00000000 00000000`00000000 : RawrXD_VulkanValidationTax+0x1968
+00000089`a032fbb0 00007fff`e57de957     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x1fe8
+00000089`a032fbf0 00007fff`e65c7c1c     : 00000000`00000000 00000000`00000000 000004f0`fffffb30 000004d0`fffffb30 : KERNEL32!BaseThreadInitThunk+0x17
+00000089`a032fc20 00000000`00000000     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : ntdll!RtlUserThreadStart+0x2c
+===DT_RSI===
+*************************************************************************
+***                                                                   ***
+***                                                                   ***
+***    Either you specified an unqualified symbol, or your debugger   ***
+***    doesn't have full symbol information.  Unqualified symbol      ***
+***    resolution is turned off by default. Please either specify a   ***
+***    fully qualified symbol module!symbolname, or enable resolution ***
+***    of unqualified symbols by typing ".symopt- 100". Note that     ***
+***    enabling unqualified symbol resolution with network symbol     ***
+***    server shares in the symbol path may cause the debugger to     ***
+***    appear to hang for long periods of time when an incorrect      ***
+***    symbol name is typed or the network symbol server is down.     ***
+***                                                                   ***
+***    For some commands to work properly, your symbol path           ***
+***    must point to .pdb files that have full type information.      ***
+***                                                                   ***
+***    Certain .pdb files (such as the public OS symbols) do not      ***
+***    contain the required information.  Contact the group that      ***
+***    provided you with these symbols if you need this command to    ***
+***    work.                                                          ***
+***                                                                   ***
+***    Type referenced: RawrXD_VulkanValidationTax!*                  ***
+***                                                                   ***
+*************************************************************************
+Symbol RawrXD_VulkanValidationTax!* not found.
+===DT_ADDR===
+Symbol not found at address 0000026c0e38ca70.
+===LOCALS===
+Unable to enumerate locals, Win32 error 0n318
+Private symbols (symbols.pri) are required for locals.
+Type ".hh dbgerr005" for details.
+===DISASM===
+RawrXD_VulkanValidationTax+0x51d8:
+00007ff6`816b51d8 4889ae90050000  mov     qword ptr [rsi+590h],rbp
+00007ff6`816b51df c78698050000ffffffff mov dword ptr [rsi+598h],0FFFFFFFFh
+00007ff6`816b51e9 4088ae9c050000  mov     byte ptr [rsi+59Ch],bpl
+00007ff6`816b51f0 89aea0050000    mov     dword ptr [rsi+5A0h],ebp
+00007ff6`816b51f6 4889aea8050000  mov     qword ptr [rsi+5A8h],rbp
+00007ff6`816b51fd 4889aeb0050000  mov     qword ptr [rsi+5B0h],rbp
+00007ff6`816b5204 4889aeb8050000  mov     qword ptr [rsi+5B8h],rbp
+00007ff6`816b520b 4889aec0050000  mov     qword ptr [rsi+5C0h],rbp
+00007ff6`816b5212 4889aec8050000  mov     qword ptr [rsi+5C8h],rbp
+00007ff6`816b5219 4889aed0050000  mov     qword ptr [rsi+5D0h],rbp
+00007ff6`816b5220 4889aed8050000  mov     qword ptr [rsi+5D8h],rbp
+00007ff6`816b5227 4889aee0050000  mov     qword ptr [rsi+5E0h],rbp
+00007ff6`816b522e b990000000      mov     ecx,90h
+00007ff6`816b5233 e8f02d0100      call    RawrXD_VulkanValidationTax!VulkanKernel_VerifySPIRVFile+0x1b48 (00007ff6`816c8028)
+00007ff6`816b5238 488900          mov     qword ptr [rax],rax
+00007ff6`816b523b 48894008        mov     qword ptr [rax+8],rax
+00007ff6`816b523f 48894010        mov     qword ptr [rax+10h],rax
+00007ff6`816b5243 66c740180101    mov     word ptr [rax+18h],101h
+00007ff6`816b5249 488986d8050000  mov     qword ptr [rsi+5D8h],rax
+00007ff6`816b5250 0f57c0          xorps   xmm0,xmm0
+00007ff6`816b5253 0f118600060000  movups  xmmword ptr [rsi+600h],xmm0
+00007ff6`816b525a 0f118610060000  movups  xmmword ptr [rsi+610h],xmm0
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'

@@ -19,6 +19,10 @@ EXTERN QueryPerformanceFrequency : PROC
 EXTERN RtlCopyMemory : PROC
 EXTERN RtlZeroMemory : PROC
 
+; SRWLock imports for telemetry thread safety
+EXTERNDEF __imp_AcquireSRWLockExclusive : QWORD
+EXTERNDEF __imp_ReleaseSRWLockExclusive : QWORD
+
 ; ============================================================
 ; PUBLIC EXPORTS
 ; ============================================================
@@ -27,6 +31,15 @@ PUBLIC Titan_PerformCopy
 PUBLIC Titan_PerformDMA
 PUBLIC Titan_InitializeDMA
 PUBLIC Titan_GetDMAStats
+
+; New utilities from Module 2+ extraction
+PUBLIC GetCurrentTimestamp
+PUBLIC CalculateMicroseconds
+PUBLIC ValidateMemoryRange
+
+; GPU Telemetry exports
+PUBLIC Titan_GetGPUStats
+PUBLIC Titan_ResetGPUStats
 
 ; ============================================================
 ; CONSTANTS
@@ -75,9 +88,41 @@ FLAG_PREFETCH_L1            EQU 00000400h
 FLAG_PREFETCH_L2            EQU 00000800h
 
 ; ============================================================
+; STRUCTURES
+; ============================================================
+
+; PERFORMANCE_COUNTERS - Extended GPU/DMA statistics structure
+; Extracted from Module 2+ for telemetry support
+PERFORMANCE_COUNTERS STRUCT
+    KernelsSubmitted       QWORD ?
+    KernelsCompleted       QWORD ?
+    KernelsFailed          QWORD ?
+    TotalComputeTimeNs     QWORD ?
+    CopiesSubmitted        QWORD ?
+    CopiesCompleted        QWORD ?
+    CopiesFailed           QWORD ?
+    TotalBytesCopied       QWORD ?
+    TotalCopyTimeNs        QWORD ?
+    DmaSubmitted           QWORD ?
+    DmaCompleted           QWORD ?
+    DmaFailed              QWORD ?
+    TotalDmaBytes          QWORD ?
+    TotalDmaTimeNs         QWORD ?
+    NF4BlocksProcessed     QWORD ?
+    NF4BytesDecompressed   QWORD ?
+    StatsLock              QWORD 2 DUP(?)    ; SRWLock storage (renamed from Lock)
+PERFORMANCE_COUNTERS ENDS
+
+; ============================================================
 ; DATA SECTION
 ; ============================================================
 .data
+
+; Extended performance counters for GPU telemetry
+ALIGN 16
+g_PerformanceCounters   PERFORMANCE_COUNTERS <>
+g_QPFrequency           QWORD 0
+g_IsInitialized         DWORD 0
 
 ; NF4 Lookup Table (16 float values for 4-bit dequantization)
 ; Values from QLoRA paper: Normal Float 4-bit quantization
@@ -145,9 +190,9 @@ ReleaseSpinlock PROC PRIVATE
 ReleaseSpinlock ENDP
 
 ; ============================================================
-; HELPER: Get Timestamp (microseconds)
+; HELPER: Get Timestamp (microseconds) - LEGACY VERSION
 ; ============================================================
-GetTimestampUs PROC PRIVATE FRAME
+GetTimestampUs_OLD PROC PRIVATE FRAME
     push rbx
     .PUSHREG RBX
     push rsi
@@ -174,6 +219,125 @@ GetTimestampUs PROC PRIVATE FRAME
     add rsp, 48
     pop rdi
     pop rsi
+    pop rbx
+    ret
+GetTimestampUs_OLD ENDP
+
+; ============================================================
+; NEW UTILITIES (Extracted from Module 2+)
+; ============================================================
+
+;-----------------------------------------------------------------------------
+; GetCurrentTimestamp - Get high-resolution timestamp (raw QPC ticks)
+; Returns: RAX = QPC tick count
+;-----------------------------------------------------------------------------
+GetCurrentTimestamp PROC EXPORT FRAME
+    sub rsp, 16
+    .ALLOCSTACK 16
+    .ENDPROLOG
+    
+    lea rcx, [rsp+8]
+    call QueryPerformanceCounter
+    
+    mov rax, [rsp+8]
+    
+    add rsp, 16
+    ret
+GetCurrentTimestamp ENDP
+
+;-----------------------------------------------------------------------------
+; InitPerfFrequency - Initialize performance counter frequency (lazy init)
+; Returns: RAX = frequency
+;-----------------------------------------------------------------------------
+InitPerfFrequency PROC PRIVATE FRAME
+    sub rsp, 16
+    .ALLOCSTACK 16
+    .ENDPROLOG
+    
+    mov rax, g_QPCFrequency
+    test rax, rax
+    jnz @@already_initialized
+    
+    lea rcx, [rsp+8]
+    call QueryPerformanceFrequency
+    mov rax, [rsp+8]
+    mov g_QPCFrequency, rax
+    
+@@already_initialized:
+    add rsp, 16
+    ret
+InitPerfFrequency ENDP
+
+;-----------------------------------------------------------------------------
+; CalculateMicroseconds - Convert QPC ticks to microseconds
+; Parameters: RCX = tick count
+; Returns: RAX = microseconds
+;-----------------------------------------------------------------------------
+CalculateMicroseconds PROC EXPORT FRAME
+    push rbx
+    .PUSHREG RBX
+    .ENDPROLOG
+    
+    mov rbx, rcx                            ; Save input ticks
+    call InitPerfFrequency                  ; Ensure frequency is initialized
+    
+    mov rax, rbx
+    mov rcx, 1000000                        ; Microseconds per second
+    mul rcx                                 ; RDX:RAX = ticks * 1000000
+    mov rcx, g_QPCFrequency
+    xor rdx, rdx
+    div rcx                                 ; RAX = (ticks * 1000000) / frequency
+    
+    pop rbx
+    ret
+CalculateMicroseconds ENDP
+
+;-----------------------------------------------------------------------------
+; ValidateMemoryRange - Validate memory range is accessible
+; Parameters: RCX = address, RDX = size
+; Returns: EAX = 0 (valid), TITAN_ERROR_INVALID_PARAM (invalid)
+;-----------------------------------------------------------------------------
+ValidateMemoryRange PROC EXPORT FRAME
+    .ENDPROLOG
+    
+    test rcx, rcx
+    jz @@invalid
+    test rdx, rdx
+    jz @@invalid
+    
+    mov r8, rcx
+    add r8, rdx
+    jc @@invalid                            ; Overflow check
+    
+    xor eax, eax                            ; Return 0 (valid)
+    jmp @@done
+    
+@@invalid:
+    mov eax, TITAN_ERROR_INVALID_PARAM
+    
+@@done:
+    ret
+ValidateMemoryRange ENDP
+
+;-----------------------------------------------------------------------------
+; GetTimestampUs - Improved timestamp in microseconds (replaces old version)
+; Combines GetCurrentTimestamp + CalculateMicroseconds with init check
+; Returns: RAX = microseconds
+;-----------------------------------------------------------------------------
+GetTimestampUs PROC EXPORT FRAME
+    push rbx
+    .PUSHREG RBX
+    sub rsp, 16
+    .ALLOCSTACK 16
+    .ENDPROLOG
+    
+    call GetCurrentTimestamp                ; RAX = raw ticks
+    mov rbx, rax                            ; Save ticks
+    
+    mov rcx, rbx
+    call CalculateMicroseconds              ; RAX = microseconds
+    
+    add rsp, 16
     pop rbx
     ret
 GetTimestampUs ENDP
@@ -929,6 +1093,79 @@ Titan_GetDMAStats PROC FRAME
     pop rbx
     ret
 Titan_GetDMAStats ENDP
+
+; ============================================================
+; NEW: GPU Telemetry Functions (Extracted from Module 2+)
+; ============================================================
+
+;-----------------------------------------------------------------------------
+; Titan_GetGPUStats - Get extended GPU/DMA performance statistics
+; Parameters:
+;   RCX = pointer to store KernelsCompleted (QWORD)
+;   RDX = pointer to store TotalBytesCopied (QWORD)
+;   R8  = pointer to store DmaCompleted (QWORD)
+; Returns: EAX = 0 (SUCCESS)
+;-----------------------------------------------------------------------------
+Titan_GetGPUStats PROC EXPORT FRAME
+    push rbx
+    .PUSHREG RBX
+    push rsi
+    .PUSHREG RSI
+    push rdi
+    .PUSHREG RDI
+    sub rsp, 40
+    .ALLOCSTACK 40
+    .ENDPROLOG
+    
+    mov rbx, rcx                            ; KernelsCompleted pointer
+    mov rsi, rdx                            ; TotalBytesCopied pointer
+    mov rdi, r8                             ; DmaCompleted pointer
+    
+    ; Read statistics from global counters
+    mov rax, g_PerformanceCounters.KernelsCompleted
+    mov [rbx], rax
+    
+    mov rax, g_PerformanceCounters.TotalBytesCopied
+    mov [rsi], rax
+    
+    mov rax, g_PerformanceCounters.DmaCompleted
+    mov [rdi], rax
+    
+    add rsp, 40
+    pop rdi
+    pop rsi
+    pop rbx
+    xor eax, eax                            ; SUCCESS
+    ret
+Titan_GetGPUStats ENDP
+
+;-----------------------------------------------------------------------------
+; Titan_ResetGPUStats - Reset all GPU performance counters (thread-safe)
+; Parameters: None
+; Returns: EAX = 0 (SUCCESS)
+;-----------------------------------------------------------------------------
+Titan_ResetGPUStats PROC EXPORT FRAME
+    sub rsp, 40
+    .ALLOCSTACK 40
+    .ENDPROLOG
+    
+    ; Acquire exclusive lock
+    lea rcx, g_PerformanceCounters.StatsLock
+    call QWORD PTR [__imp_AcquireSRWLockExclusive]
+    
+    ; Zero all counters (size = 136 bytes = 17 QWORDs before StatsLock)
+    lea rcx, g_PerformanceCounters.KernelsSubmitted
+    mov rdx, 136                            ; Size of all counters
+    call RtlZeroMemory
+    
+    ; Release lock
+    lea rcx, g_PerformanceCounters.StatsLock
+    call QWORD PTR [__imp_ReleaseSRWLockExclusive]
+    
+    add rsp, 40
+    xor eax, eax                            ; SUCCESS
+    ret
+Titan_ResetGPUStats ENDP
 
 ; ============================================================
 ; DATA: Helper masks

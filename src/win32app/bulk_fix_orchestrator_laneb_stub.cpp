@@ -2,9 +2,18 @@
 // Stub file for RawrEngine Lane B headless build
 // Created: 2026-04-24
 
+// Forward declaration for BulkFixOrchestrator
+class BulkFixOrchestrator {
+public:
+    ~BulkFixOrchestrator();
+};
+
 extern "C" void BulkFixOrchestratorLaneBStub() {}
 
 // C++ symbol stubs
 void bulk_fix_orchestrator_laneb_init() {}
 void bulk_fix_orchestrator_laneb_shutdown() {}
 void bulk_fix_orchestrator_laneb_process() {}
+
+// BulkFixOrchestrator destructor stub
+BulkFixOrchestrator::~BulkFixOrchestrator() {}

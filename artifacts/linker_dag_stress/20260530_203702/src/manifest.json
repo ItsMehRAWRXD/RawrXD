@@ -1,0 +1,1319 @@
+{
+  "count": 128,
+  "fanIn": 2,
+  "deadSymbolEvery": 5,
+  "objects": [
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_000.asm",
+      "exports": [
+        "obj_000_func"
+      ],
+      "dependencies": [],
+      "deadExport": "obj_000_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_001.asm",
+      "exports": [
+        "obj_001_func"
+      ],
+      "dependencies": [
+        "obj_000_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_002.asm",
+      "exports": [
+        "obj_002_func"
+      ],
+      "dependencies": [
+        "obj_001_func",
+        "obj_000_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_003.asm",
+      "exports": [
+        "obj_003_func"
+      ],
+      "dependencies": [
+        "obj_002_func",
+        "obj_001_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_004.asm",
+      "exports": [
+        "obj_004_func"
+      ],
+      "dependencies": [
+        "obj_003_func",
+        "obj_002_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_005.asm",
+      "exports": [
+        "obj_005_func"
+      ],
+      "dependencies": [
+        "obj_004_func",
+        "obj_003_func"
+      ],
+      "deadExport": "obj_005_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_006.asm",
+      "exports": [
+        "obj_006_func"
+      ],
+      "dependencies": [
+        "obj_005_func",
+        "obj_004_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_007.asm",
+      "exports": [
+        "obj_007_func"
+      ],
+      "dependencies": [
+        "obj_006_func",
+        "obj_005_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_008.asm",
+      "exports": [
+        "obj_008_func"
+      ],
+      "dependencies": [
+        "obj_007_func",
+        "obj_006_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_009.asm",
+      "exports": [
+        "obj_009_func"
+      ],
+      "dependencies": [
+        "obj_008_func",
+        "obj_007_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_010.asm",
+      "exports": [
+        "obj_010_func"
+      ],
+      "dependencies": [
+        "obj_009_func",
+        "obj_008_func"
+      ],
+      "deadExport": "obj_010_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_011.asm",
+      "exports": [
+        "obj_011_func"
+      ],
+      "dependencies": [
+        "obj_010_func",
+        "obj_009_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_012.asm",
+      "exports": [
+        "obj_012_func"
+      ],
+      "dependencies": [
+        "obj_011_func",
+        "obj_010_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_013.asm",
+      "exports": [
+        "obj_013_func"
+      ],
+      "dependencies": [
+        "obj_012_func",
+        "obj_011_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_014.asm",
+      "exports": [
+        "obj_014_func"
+      ],
+      "dependencies": [
+        "obj_013_func",
+        "obj_012_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_015.asm",
+      "exports": [
+        "obj_015_func"
+      ],
+      "dependencies": [
+        "obj_014_func",
+        "obj_013_func"
+      ],
+      "deadExport": "obj_015_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_016.asm",
+      "exports": [
+        "obj_016_func"
+      ],
+      "dependencies": [
+        "obj_015_func",
+        "obj_014_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_017.asm",
+      "exports": [
+        "obj_017_func"
+      ],
+      "dependencies": [
+        "obj_016_func",
+        "obj_015_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_018.asm",
+      "exports": [
+        "obj_018_func"
+      ],
+      "dependencies": [
+        "obj_017_func",
+        "obj_016_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_019.asm",
+      "exports": [
+        "obj_019_func"
+      ],
+      "dependencies": [
+        "obj_018_func",
+        "obj_017_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_020.asm",
+      "exports": [
+        "obj_020_func"
+      ],
+      "dependencies": [
+        "obj_019_func",
+        "obj_018_func"
+      ],
+      "deadExport": "obj_020_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_021.asm",
+      "exports": [
+        "obj_021_func"
+      ],
+      "dependencies": [
+        "obj_020_func",
+        "obj_019_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_022.asm",
+      "exports": [
+        "obj_022_func"
+      ],
+      "dependencies": [
+        "obj_021_func",
+        "obj_020_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_023.asm",
+      "exports": [
+        "obj_023_func"
+      ],
+      "dependencies": [
+        "obj_022_func",
+        "obj_021_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_024.asm",
+      "exports": [
+        "obj_024_func"
+      ],
+      "dependencies": [
+        "obj_023_func",
+        "obj_022_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_025.asm",
+      "exports": [
+        "obj_025_func"
+      ],
+      "dependencies": [
+        "obj_024_func",
+        "obj_023_func"
+      ],
+      "deadExport": "obj_025_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_026.asm",
+      "exports": [
+        "obj_026_func"
+      ],
+      "dependencies": [
+        "obj_025_func",
+        "obj_024_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_027.asm",
+      "exports": [
+        "obj_027_func"
+      ],
+      "dependencies": [
+        "obj_026_func",
+        "obj_025_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_028.asm",
+      "exports": [
+        "obj_028_func"
+      ],
+      "dependencies": [
+        "obj_027_func",
+        "obj_026_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_029.asm",
+      "exports": [
+        "obj_029_func"
+      ],
+      "dependencies": [
+        "obj_028_func",
+        "obj_027_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_030.asm",
+      "exports": [
+        "obj_030_func"
+      ],
+      "dependencies": [
+        "obj_029_func",
+        "obj_028_func"
+      ],
+      "deadExport": "obj_030_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_031.asm",
+      "exports": [
+        "obj_031_func"
+      ],
+      "dependencies": [
+        "obj_030_func",
+        "obj_029_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_032.asm",
+      "exports": [
+        "obj_032_func"
+      ],
+      "dependencies": [
+        "obj_031_func",
+        "obj_030_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_033.asm",
+      "exports": [
+        "obj_033_func"
+      ],
+      "dependencies": [
+        "obj_032_func",
+        "obj_031_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_034.asm",
+      "exports": [
+        "obj_034_func"
+      ],
+      "dependencies": [
+        "obj_033_func",
+        "obj_032_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_035.asm",
+      "exports": [
+        "obj_035_func"
+      ],
+      "dependencies": [
+        "obj_034_func",
+        "obj_033_func"
+      ],
+      "deadExport": "obj_035_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_036.asm",
+      "exports": [
+        "obj_036_func"
+      ],
+      "dependencies": [
+        "obj_035_func",
+        "obj_034_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_037.asm",
+      "exports": [
+        "obj_037_func"
+      ],
+      "dependencies": [
+        "obj_036_func",
+        "obj_035_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_038.asm",
+      "exports": [
+        "obj_038_func"
+      ],
+      "dependencies": [
+        "obj_037_func",
+        "obj_036_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_039.asm",
+      "exports": [
+        "obj_039_func"
+      ],
+      "dependencies": [
+        "obj_038_func",
+        "obj_037_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_040.asm",
+      "exports": [
+        "obj_040_func"
+      ],
+      "dependencies": [
+        "obj_039_func",
+        "obj_038_func"
+      ],
+      "deadExport": "obj_040_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_041.asm",
+      "exports": [
+        "obj_041_func"
+      ],
+      "dependencies": [
+        "obj_040_func",
+        "obj_039_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_042.asm",
+      "exports": [
+        "obj_042_func"
+      ],
+      "dependencies": [
+        "obj_041_func",
+        "obj_040_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_043.asm",
+      "exports": [
+        "obj_043_func"
+      ],
+      "dependencies": [
+        "obj_042_func",
+        "obj_041_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_044.asm",
+      "exports": [
+        "obj_044_func"
+      ],
+      "dependencies": [
+        "obj_043_func",
+        "obj_042_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_045.asm",
+      "exports": [
+        "obj_045_func"
+      ],
+      "dependencies": [
+        "obj_044_func",
+        "obj_043_func"
+      ],
+      "deadExport": "obj_045_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_046.asm",
+      "exports": [
+        "obj_046_func"
+      ],
+      "dependencies": [
+        "obj_045_func",
+        "obj_044_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_047.asm",
+      "exports": [
+        "obj_047_func"
+      ],
+      "dependencies": [
+        "obj_046_func",
+        "obj_045_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_048.asm",
+      "exports": [
+        "obj_048_func"
+      ],
+      "dependencies": [
+        "obj_047_func",
+        "obj_046_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_049.asm",
+      "exports": [
+        "obj_049_func"
+      ],
+      "dependencies": [
+        "obj_048_func",
+        "obj_047_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_050.asm",
+      "exports": [
+        "obj_050_func"
+      ],
+      "dependencies": [
+        "obj_049_func",
+        "obj_048_func"
+      ],
+      "deadExport": "obj_050_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_051.asm",
+      "exports": [
+        "obj_051_func"
+      ],
+      "dependencies": [
+        "obj_050_func",
+        "obj_049_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_052.asm",
+      "exports": [
+        "obj_052_func"
+      ],
+      "dependencies": [
+        "obj_051_func",
+        "obj_050_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_053.asm",
+      "exports": [
+        "obj_053_func"
+      ],
+      "dependencies": [
+        "obj_052_func",
+        "obj_051_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_054.asm",
+      "exports": [
+        "obj_054_func"
+      ],
+      "dependencies": [
+        "obj_053_func",
+        "obj_052_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_055.asm",
+      "exports": [
+        "obj_055_func"
+      ],
+      "dependencies": [
+        "obj_054_func",
+        "obj_053_func"
+      ],
+      "deadExport": "obj_055_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_056.asm",
+      "exports": [
+        "obj_056_func"
+      ],
+      "dependencies": [
+        "obj_055_func",
+        "obj_054_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_057.asm",
+      "exports": [
+        "obj_057_func"
+      ],
+      "dependencies": [
+        "obj_056_func",
+        "obj_055_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_058.asm",
+      "exports": [
+        "obj_058_func"
+      ],
+      "dependencies": [
+        "obj_057_func",
+        "obj_056_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_059.asm",
+      "exports": [
+        "obj_059_func"
+      ],
+      "dependencies": [
+        "obj_058_func",
+        "obj_057_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_060.asm",
+      "exports": [
+        "obj_060_func"
+      ],
+      "dependencies": [
+        "obj_059_func",
+        "obj_058_func"
+      ],
+      "deadExport": "obj_060_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_061.asm",
+      "exports": [
+        "obj_061_func"
+      ],
+      "dependencies": [
+        "obj_060_func",
+        "obj_059_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_062.asm",
+      "exports": [
+        "obj_062_func"
+      ],
+      "dependencies": [
+        "obj_061_func",
+        "obj_060_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_063.asm",
+      "exports": [
+        "obj_063_func"
+      ],
+      "dependencies": [
+        "obj_062_func",
+        "obj_061_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_064.asm",
+      "exports": [
+        "obj_064_func"
+      ],
+      "dependencies": [
+        "obj_063_func",
+        "obj_062_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_065.asm",
+      "exports": [
+        "obj_065_func"
+      ],
+      "dependencies": [
+        "obj_064_func",
+        "obj_063_func"
+      ],
+      "deadExport": "obj_065_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_066.asm",
+      "exports": [
+        "obj_066_func"
+      ],
+      "dependencies": [
+        "obj_065_func",
+        "obj_064_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_067.asm",
+      "exports": [
+        "obj_067_func"
+      ],
+      "dependencies": [
+        "obj_066_func",
+        "obj_065_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_068.asm",
+      "exports": [
+        "obj_068_func"
+      ],
+      "dependencies": [
+        "obj_067_func",
+        "obj_066_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_069.asm",
+      "exports": [
+        "obj_069_func"
+      ],
+      "dependencies": [
+        "obj_068_func",
+        "obj_067_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_070.asm",
+      "exports": [
+        "obj_070_func"
+      ],
+      "dependencies": [
+        "obj_069_func",
+        "obj_068_func"
+      ],
+      "deadExport": "obj_070_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_071.asm",
+      "exports": [
+        "obj_071_func"
+      ],
+      "dependencies": [
+        "obj_070_func",
+        "obj_069_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_072.asm",
+      "exports": [
+        "obj_072_func"
+      ],
+      "dependencies": [
+        "obj_071_func",
+        "obj_070_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_073.asm",
+      "exports": [
+        "obj_073_func"
+      ],
+      "dependencies": [
+        "obj_072_func",
+        "obj_071_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_074.asm",
+      "exports": [
+        "obj_074_func"
+      ],
+      "dependencies": [
+        "obj_073_func",
+        "obj_072_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_075.asm",
+      "exports": [
+        "obj_075_func"
+      ],
+      "dependencies": [
+        "obj_074_func",
+        "obj_073_func"
+      ],
+      "deadExport": "obj_075_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_076.asm",
+      "exports": [
+        "obj_076_func"
+      ],
+      "dependencies": [
+        "obj_075_func",
+        "obj_074_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_077.asm",
+      "exports": [
+        "obj_077_func"
+      ],
+      "dependencies": [
+        "obj_076_func",
+        "obj_075_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_078.asm",
+      "exports": [
+        "obj_078_func"
+      ],
+      "dependencies": [
+        "obj_077_func",
+        "obj_076_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_079.asm",
+      "exports": [
+        "obj_079_func"
+      ],
+      "dependencies": [
+        "obj_078_func",
+        "obj_077_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_080.asm",
+      "exports": [
+        "obj_080_func"
+      ],
+      "dependencies": [
+        "obj_079_func",
+        "obj_078_func"
+      ],
+      "deadExport": "obj_080_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_081.asm",
+      "exports": [
+        "obj_081_func"
+      ],
+      "dependencies": [
+        "obj_080_func",
+        "obj_079_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_082.asm",
+      "exports": [
+        "obj_082_func"
+      ],
+      "dependencies": [
+        "obj_081_func",
+        "obj_080_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_083.asm",
+      "exports": [
+        "obj_083_func"
+      ],
+      "dependencies": [
+        "obj_082_func",
+        "obj_081_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_084.asm",
+      "exports": [
+        "obj_084_func"
+      ],
+      "dependencies": [
+        "obj_083_func",
+        "obj_082_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_085.asm",
+      "exports": [
+        "obj_085_func"
+      ],
+      "dependencies": [
+        "obj_084_func",
+        "obj_083_func"
+      ],
+      "deadExport": "obj_085_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_086.asm",
+      "exports": [
+        "obj_086_func"
+      ],
+      "dependencies": [
+        "obj_085_func",
+        "obj_084_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_087.asm",
+      "exports": [
+        "obj_087_func"
+      ],
+      "dependencies": [
+        "obj_086_func",
+        "obj_085_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_088.asm",
+      "exports": [
+        "obj_088_func"
+      ],
+      "dependencies": [
+        "obj_087_func",
+        "obj_086_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_089.asm",
+      "exports": [
+        "obj_089_func"
+      ],
+      "dependencies": [
+        "obj_088_func",
+        "obj_087_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_090.asm",
+      "exports": [
+        "obj_090_func"
+      ],
+      "dependencies": [
+        "obj_089_func",
+        "obj_088_func"
+      ],
+      "deadExport": "obj_090_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_091.asm",
+      "exports": [
+        "obj_091_func"
+      ],
+      "dependencies": [
+        "obj_090_func",
+        "obj_089_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_092.asm",
+      "exports": [
+        "obj_092_func"
+      ],
+      "dependencies": [
+        "obj_091_func",
+        "obj_090_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_093.asm",
+      "exports": [
+        "obj_093_func"
+      ],
+      "dependencies": [
+        "obj_092_func",
+        "obj_091_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_094.asm",
+      "exports": [
+        "obj_094_func"
+      ],
+      "dependencies": [
+        "obj_093_func",
+        "obj_092_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_095.asm",
+      "exports": [
+        "obj_095_func"
+      ],
+      "dependencies": [
+        "obj_094_func",
+        "obj_093_func"
+      ],
+      "deadExport": "obj_095_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_096.asm",
+      "exports": [
+        "obj_096_func"
+      ],
+      "dependencies": [
+        "obj_095_func",
+        "obj_094_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_097.asm",
+      "exports": [
+        "obj_097_func"
+      ],
+      "dependencies": [
+        "obj_096_func",
+        "obj_095_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_098.asm",
+      "exports": [
+        "obj_098_func"
+      ],
+      "dependencies": [
+        "obj_097_func",
+        "obj_096_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_099.asm",
+      "exports": [
+        "obj_099_func"
+      ],
+      "dependencies": [
+        "obj_098_func",
+        "obj_097_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_100.asm",
+      "exports": [
+        "obj_100_func"
+      ],
+      "dependencies": [
+        "obj_099_func",
+        "obj_098_func"
+      ],
+      "deadExport": "obj_100_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_101.asm",
+      "exports": [
+        "obj_101_func"
+      ],
+      "dependencies": [
+        "obj_100_func",
+        "obj_099_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_102.asm",
+      "exports": [
+        "obj_102_func"
+      ],
+      "dependencies": [
+        "obj_101_func",
+        "obj_100_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_103.asm",
+      "exports": [
+        "obj_103_func"
+      ],
+      "dependencies": [
+        "obj_102_func",
+        "obj_101_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_104.asm",
+      "exports": [
+        "obj_104_func"
+      ],
+      "dependencies": [
+        "obj_103_func",
+        "obj_102_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_105.asm",
+      "exports": [
+        "obj_105_func"
+      ],
+      "dependencies": [
+        "obj_104_func",
+        "obj_103_func"
+      ],
+      "deadExport": "obj_105_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_106.asm",
+      "exports": [
+        "obj_106_func"
+      ],
+      "dependencies": [
+        "obj_105_func",
+        "obj_104_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_107.asm",
+      "exports": [
+        "obj_107_func"
+      ],
+      "dependencies": [
+        "obj_106_func",
+        "obj_105_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_108.asm",
+      "exports": [
+        "obj_108_func"
+      ],
+      "dependencies": [
+        "obj_107_func",
+        "obj_106_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_109.asm",
+      "exports": [
+        "obj_109_func"
+      ],
+      "dependencies": [
+        "obj_108_func",
+        "obj_107_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_110.asm",
+      "exports": [
+        "obj_110_func"
+      ],
+      "dependencies": [
+        "obj_109_func",
+        "obj_108_func"
+      ],
+      "deadExport": "obj_110_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_111.asm",
+      "exports": [
+        "obj_111_func"
+      ],
+      "dependencies": [
+        "obj_110_func",
+        "obj_109_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_112.asm",
+      "exports": [
+        "obj_112_func"
+      ],
+      "dependencies": [
+        "obj_111_func",
+        "obj_110_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_113.asm",
+      "exports": [
+        "obj_113_func"
+      ],
+      "dependencies": [
+        "obj_112_func",
+        "obj_111_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_114.asm",
+      "exports": [
+        "obj_114_func"
+      ],
+      "dependencies": [
+        "obj_113_func",
+        "obj_112_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_115.asm",
+      "exports": [
+        "obj_115_func"
+      ],
+      "dependencies": [
+        "obj_114_func",
+        "obj_113_func"
+      ],
+      "deadExport": "obj_115_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_116.asm",
+      "exports": [
+        "obj_116_func"
+      ],
+      "dependencies": [
+        "obj_115_func",
+        "obj_114_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_117.asm",
+      "exports": [
+        "obj_117_func"
+      ],
+      "dependencies": [
+        "obj_116_func",
+        "obj_115_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_118.asm",
+      "exports": [
+        "obj_118_func"
+      ],
+      "dependencies": [
+        "obj_117_func",
+        "obj_116_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_119.asm",
+      "exports": [
+        "obj_119_func"
+      ],
+      "dependencies": [
+        "obj_118_func",
+        "obj_117_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_120.asm",
+      "exports": [
+        "obj_120_func"
+      ],
+      "dependencies": [
+        "obj_119_func",
+        "obj_118_func"
+      ],
+      "deadExport": "obj_120_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_121.asm",
+      "exports": [
+        "obj_121_func"
+      ],
+      "dependencies": [
+        "obj_120_func",
+        "obj_119_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_122.asm",
+      "exports": [
+        "obj_122_func"
+      ],
+      "dependencies": [
+        "obj_121_func",
+        "obj_120_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_123.asm",
+      "exports": [
+        "obj_123_func"
+      ],
+      "dependencies": [
+        "obj_122_func",
+        "obj_121_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_124.asm",
+      "exports": [
+        "obj_124_func"
+      ],
+      "dependencies": [
+        "obj_123_func",
+        "obj_122_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_125.asm",
+      "exports": [
+        "obj_125_func"
+      ],
+      "dependencies": [
+        "obj_124_func",
+        "obj_123_func"
+      ],
+      "deadExport": "obj_125_dead"
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_126.asm",
+      "exports": [
+        "obj_126_func"
+      ],
+      "dependencies": [
+        "obj_125_func",
+        "obj_124_func"
+      ]
+    },
+    {
+      "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\obj_127.asm",
+      "exports": [
+        "obj_127_func"
+      ],
+      "dependencies": [
+        "obj_126_func",
+        "obj_125_func"
+      ]
+    }
+  ],
+  "entry": {
+    "path": "D:\\rawrxd\\artifacts\\linker_dag_stress\\20260530_203702\\src\\entry.asm",
+    "exports": [
+      "stress_entry"
+    ],
+    "dependencies": [
+      "obj_126_func",
+      "obj_127_func"
+    ]
+  }
+}

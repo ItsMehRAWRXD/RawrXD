@@ -13,6 +13,9 @@ namespace rawrxd::ui {
 
     struct DocumentLine {
         std::string text;
+        const char* rawBufferStart = nullptr;
+        std::uint32_t lengthBytes = 0;
+        std::uint32_t lineVersion = 0;
     };
 
     struct TextLineSpan {
@@ -42,4 +45,9 @@ namespace rawrxd::ui {
         int line;
         int column;
     };
-}
+
+    struct LineRenderBatch {
+        int lineIndex;
+        int tokenCount;
+    };
+} // namespace rawrxd::ui

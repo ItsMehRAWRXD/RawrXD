@@ -1,4 +1,5 @@
 #include "rawrxd_transformer.h"
+#include "streaming_gguf_loader_enhanced.h"
 #include "core/moe_expert_accumulation.hpp"
 #include "core/swarm_scheduler.hpp"
 #include "logging/Logger.h"

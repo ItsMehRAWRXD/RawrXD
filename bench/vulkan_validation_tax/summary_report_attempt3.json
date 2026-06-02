@@ -1,0 +1,15 @@
+{
+  "Attempt": "capture_attempt_0003.log",
+  "LogPath": "D:\\rawrxd\\bench\\vulkan_validation_tax\\capture_attempt_0003.log",
+  "TimestampUtc": "2026-05-30T22:55:59.3337676Z",
+  "LastEvent": "Last event: 38cc.5500: Exit process 0:38cc, code ffffffff",
+  "IsFatalEvent": true,
+  "ExceptionCode": "0x80000003",
+  "ExceptionType": "Break instruction exception",
+  "FaultingIP": "0x00007ffd880a0bc4",
+  "FaultingSymbol": "ntdll!NtSetInformationObject",
+  "FaultingModule": "AMD_HOOK",
+  "FirstNonSystemFrame": "amdihk64!NotifyFidelityFXStatus",
+  "OBSInjected": true,
+  "Verdict": "ProcessAbort"
+}

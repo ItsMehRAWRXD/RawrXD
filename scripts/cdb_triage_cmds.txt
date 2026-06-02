@@ -1,0 +1,8 @@
+.ecxr
+r rax rbx rcx rip
+k
+dq linker_ir_harness_crash!g_CoffLinkerRunStage L1
+dq linker_ir_harness_crash!g_TraceBreadcrumb L1
+dq linker_ir_harness_crash!flush_arg_snapshot L1
+u @rip-20 L20
+q

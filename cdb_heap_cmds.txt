@@ -1,0 +1,14 @@
+sxe av
+g
+.echo ===REGS===
+r
+.echo ===STACK===
+kv
+.echo ===HEAP_RSI===
+!heap -p -a @rsi
+.echo ===HEAP_RSI_PLUS_590===
+? @rsi+590
+!heap -p -a @rsi+590
+.echo ===DISASM===
+u @rip L20
+q

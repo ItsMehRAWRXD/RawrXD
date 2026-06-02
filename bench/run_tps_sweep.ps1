@@ -5,6 +5,9 @@
 
 $ErrorActionPreference = 'Continue'
 $bench = 'D:\llama-vulkan\build\bin\llama-bench.exe'
+$llamaCli = 'D:\llama-vulkan\build\bin\llama-cli.exe'
+$verifyScript = 'D:\rawrxd\scripts\verify_models.ps1'
+$manifestPath = 'D:\rawrxd\scripts\model_compatibility_manifest.json'
 $out   = 'd:\rawrxd\bench\out'
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 
@@ -20,6 +23,37 @@ $models = @(
 
 $summary = @()
 
+function Invoke-ModelPreflight {
+    param(
+        [string]$ModelName,
+        [string]$ModelPath
+    )
+
+    if (-not (Test-Path $verifyScript)) {
+        return @{ Valid = $true; Reason = 'validator script missing (soft-pass)' }
+    }
+
+    try {
+        $verifyJson = & $verifyScript -ModelPath $ModelPath -ModelName $ModelName -LlamaCliPath $llamaCli -ManifestPath $manifestPath -AsJson
+        if ($LASTEXITCODE -ne 0) {
+            if ($verifyJson) {
+                $v = $verifyJson | ConvertFrom-Json
+                return @{ Valid = $false; Reason = [string]$v.Reason }
+            }
+            return @{ Valid = $false; Reason = 'preflight failed (no details)' }
+        }
+
+        $v = $verifyJson | ConvertFrom-Json
+        return @{ Valid = [bool]$v.Valid; Reason = [string]$v.Reason }
+    } catch {
+        return @{ Valid = $false; Reason = "preflight exception: $($_.Exception.Message)" }
+    }
+}
+
+$benchDir = Split-Path -Parent $bench
+Push-Location $benchDir
+try {
+
 foreach ($m in $models) {
     $name = $m.Name
     $path = $m.Path
@@ -32,6 +66,15 @@ foreach ($m in $models) {
         Write-Host "  SKIP: file missing"
         $summary += [pscustomobject]@{
             Model=$name; Status='MISSING'; pp512=$null; tg128=$null; LoadMs=$null; Backend=$null; Notes='file not found'
+        }
+        continue
+    }
+
+    $preflight = Invoke-ModelPreflight -ModelName $name -ModelPath $path
+    if (-not $preflight.Valid) {
+        Write-Host "  SKIP: preflight failed ($($preflight.Reason))"
+        $summary += [pscustomobject]@{
+            Model=$name; Status='PRECHECK_FAIL'; pp512=$null; tg128=$null; LoadMs=$null; Backend=$null; Notes=$preflight.Reason
         }
         continue
     }
@@ -51,7 +94,7 @@ foreach ($m in $models) {
     Write-Host "  exit=$ec  wall=$([math]::Round($sw.Elapsed.TotalSeconds,1))s"
 
     $pp = $null; $tg = $null; $backend=$null; $loadMs=$null; $notes=$null
-    if (Test-Path $jsonPath -and ((Get-Item $jsonPath).Length -gt 0)) {
+    if ((Test-Path $jsonPath) -and ((Get-Item $jsonPath).Length -gt 0)) {
         try {
             $j = Get-Content $jsonPath -Raw | ConvertFrom-Json
             foreach ($row in $j) {
@@ -84,6 +127,10 @@ foreach ($m in $models) {
         Backend = $backend
         Notes   = $notes
     }
+}
+}
+finally {
+    Pop-Location
 }
 
 # Write consolidated CSV + Markdown table

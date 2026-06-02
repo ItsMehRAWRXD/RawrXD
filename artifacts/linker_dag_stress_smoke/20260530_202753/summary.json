@@ -1,0 +1,14 @@
+{
+  "generatedObjects": 6,
+  "assembledObjects": 7,
+  "fanIn": 2,
+  "deadSymbolEvery": 3,
+  "sourceRoot": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src",
+  "objectRoot": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\obj",
+  "manifestPath": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\src\\manifest.json",
+  "objectListPath": "D:\\rawrxd\\artifacts\\linker_dag_stress_smoke\\20260530_202753\\objects.txt",
+  "rootDependencies": [
+    "obj_004_func",
+    "obj_005_func"
+  ]
+}

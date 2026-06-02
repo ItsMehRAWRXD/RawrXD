@@ -1,0 +1,10 @@
+{
+  "TimestampUtc": "2026-05-30T23:12:47.6600396Z",
+  "Bucket": "contaminated",
+  "LoopExitCode": null,
+  "Status": "Contaminated",
+  "Verdict": "Unknown",
+  "Attempt": 1,
+  "RunDir": "D:\\rawrxd\\bench\\vulkan_validation_tax\\runs\\contaminated\\20260530_181245",
+  "MoveArtifacts": false
+}
