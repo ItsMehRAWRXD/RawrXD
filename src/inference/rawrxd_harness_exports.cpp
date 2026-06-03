@@ -52,11 +52,15 @@ struct HarnessEngine {
     int version = 1;
     float threshold = 0.0f;
     bool initialized = false;
+    bool warmup_complete = false;
+    size_t profile_window = 1;
+    int lane_id = 0;
 
     HarnessEngine() = default;
 
     bool loadModelAutomatic(const char*) {
         initialized = true;
+        warmup_complete = (version > 0) && (threshold >= 0.0f);
         return true;
     }
 
@@ -65,9 +69,9 @@ struct HarnessEngine {
         std::function<void(const std::string&)> token_callback,
         size_t max_tokens) {
         rawrxd::inference::AutonomousInferenceEngine::Telemetry telemetry;
-        telemetry.prompt_tokens = prompt_text.empty() ? 0u : 1u;
-        telemetry.generated_tokens = max_tokens > 0 ? 1u : 0u;
-        telemetry.context_tokens = telemetry.prompt_tokens + telemetry.generated_tokens;
+        telemetry.prompt_tokens = prompt_text.empty() ? 0u : profile_window;
+        telemetry.generated_tokens = (max_tokens > 0 && warmup_complete && lane_id >= 0) ? 1u : 0u;
+        telemetry.context_tokens = telemetry.prompt_tokens + telemetry.generated_tokens + static_cast<size_t>(version > 0 ? 0 : 1);
         telemetry.total_ms = 0.0;
         telemetry.tps = telemetry.generated_tokens > 0 ? 1.0 : 0.0;
         if (token_callback && telemetry.generated_tokens > 0) {
@@ -117,9 +121,11 @@ enum HarnessStatus : int {
 };
 
 char g_last_error[256] = {0};
+int g_last_status = 0;
 
 void clear_last_error() {
     g_last_error[0] = '\0';
+    g_last_status = 0;
 }
 
 void set_last_error(const char* msg) {
@@ -403,8 +409,11 @@ __declspec(dllexport) int rawrxd_harness_run_cycle(void* engine, const char* pro
         max_tokens);
     if (piece_count == 0 || telem.generated_tokens == 0) {
         set_last_error("run_cycle: no tokens generated");
+        g_last_status = HARNESS_RUN_FAIL;
         return HARNESS_RUN_FAIL;
     }
+
+    g_last_status = HARNESS_OK;
 
     return HARNESS_OK;
 }
@@ -444,6 +453,10 @@ __declspec(dllexport) int rawrxd_harness_free_engine(void* mem) {
 
 __declspec(dllexport) const char* rawrxd_harness_last_error() {
     return g_last_error;
+}
+
+__declspec(dllexport) int rawrxd_harness_last_status() {
+    return g_last_status;
 }
 
 } // extern "C"

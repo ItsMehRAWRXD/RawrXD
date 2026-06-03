@@ -7,6 +7,7 @@ EXTERN rawrxd_harness_run_cycle:PROC
 EXTERN rawrxd_harness_dtor_engine:PROC
 EXTERN rawrxd_harness_free_engine:PROC
 EXTERN rawrxd_harness_last_error:PROC
+EXTERN rawrxd_harness_last_status:PROC
 EXTERN rawrxd_probe_empty_size:PROC
 EXTERN rawrxd_probe_virtual_size:PROC
 EXTERN rawrxd_probe_stl_size:PROC
@@ -56,6 +57,8 @@ stage_run_len   EQU ($ - stage_run)
 ok_msg          db "[MASM Harness] run_cycle succeeded", 13, 10
 ok_msg_len      EQU ($ - ok_msg)
 fail_msg        db "[MASM Harness] failure: ", 0
+code_msg        db "[MASM Harness] failure code: ", 0
+code_buf        db "-2147483648", 0
 newline_msg     db 13, 10
 init_prefix     db "[MASM Harness] init ptr: 0x", 0
 hex_digits      db "0123456789ABCDEF", 0
@@ -337,6 +340,14 @@ count_len:
 have_len:
     call harness_write
 
+    lea rcx, code_msg
+    mov rdx, 30
+    call harness_write
+
+    call rawrxd_harness_last_status
+    mov ecx, eax
+    call harness_write_i32
+
     lea rcx, newline_msg
     mov rdx, 2
     call harness_write
@@ -351,5 +362,52 @@ harness_fail_probe:
     xor r13, r13
     jmp harness_fail
 harness_entry endp
+
+harness_write_i32 proc frame
+    ; ECX = signed integer to print
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+    lea r9, [rsp+10h+12]
+    mov byte ptr [r9], 0
+
+    mov eax, ecx
+    xor r10d, r10d
+    test eax, eax
+    jge i32_positive
+    neg eax
+    mov r10d, 1
+
+i32_positive:
+    cmp eax, 0
+    jne i32_loop
+    dec r9
+    mov byte ptr [r9], '0'
+    jmp i32_sign
+
+i32_loop:
+    mov r8d, 10
+    xor edx, edx
+    div r8d
+    add dl, '0'
+    dec r9
+    mov byte ptr [r9], dl
+    test eax, eax
+    jnz i32_loop
+
+i32_sign:
+    test r10d, r10d
+    jz i32_emit
+    dec r9
+    mov byte ptr [r9], '-'
+
+i32_emit:
+    lea rcx, [r9]
+    lea rdx, [rsp+10h+12]
+    sub rdx, r9
+    call harness_write
+    add rsp, 28h
+    ret
+harness_write_i32 endp
 
 END
