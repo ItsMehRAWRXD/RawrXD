@@ -61,7 +61,7 @@ struct HarnessEngine {
             rawrxd::inference::AutonomousInferenceEngine::InferenceConfig cfg;
                         cfg.enable_gpu = false;
                         cfg.enable_hotpatching = true;
-            cfg.enable_async_inference = false;
+                        cfg.enable_async_inference = true;
                         cfg.enable_ollama_blob_support = false;
             return cfg;
           }()) {}

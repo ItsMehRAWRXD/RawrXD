@@ -590,13 +590,26 @@ AutonomousInferenceEngine::AutonomousInferenceEngine(const InferenceConfig& conf
         }
 
         HarnessCtorTrace("[CtorTrace] infer_ring");
-        m_inferRing = RawrXD::Inference::TokenQueueFast::create(kInferRingCapacity);
+        if (!config_.enable_ollama_blob_support) {
+            HarnessCtorTrace("[CtorTrace] skip_infer_ring_harness");
+            m_inferRing = nullptr;
+        } else {
+            m_inferRing = RawrXD::Inference::TokenQueueFast::create(kInferRingCapacity);
+        }
 
         HarnessCtorTrace("[CtorTrace] worker_start");
+        if (!config_.enable_ollama_blob_support) {
+            HarnessCtorTrace("[CtorTrace] skip_worker_harness");
+            HarnessCtorTrace("[CtorTrace] ready");
+            return;
+        }
+
     // Start the persistent worker thread that services queueInfer() requests
     m_inferWorker = std::thread(&AutonomousInferenceEngine::inferWorkerLoop, this);
+        HarnessCtorTrace("[CtorTrace] worker_created");
 #ifdef _WIN32
     PinThreadToCore(m_inferWorker, 2); // Pin to core 2 (skip 0/1 for OS/IDE)
+        HarnessCtorTrace("[CtorTrace] worker_pinned");
 #endif
         HarnessCtorTrace("[CtorTrace] ready");
 }
@@ -897,6 +910,12 @@ void AutonomousInferenceEngine::queueInfer(
     TokenCallback token_callback,
     size_t max_tokens)
 {
+    if (config_.enable_async_inference && !config_.enable_ollama_blob_support && !m_inferWorker.joinable()) {
+        HarnessCtorTrace("[AsyncTrace] inline_queue_fallback");
+        infer(prompt, std::move(token_callback), max_tokens);
+        return;
+    }
+
     InferRequest req;
     req.prompt    = prompt;
     req.callback  = std::move(token_callback);
@@ -912,6 +931,7 @@ void AutonomousInferenceEngine::queueInfer(
 // inferWorkerLoop — drained by the single worker thread
 // ---------------------------------------------------------------------------
 void AutonomousInferenceEngine::inferWorkerLoop() {
+    HarnessCtorTrace("[AsyncTrace] worker_loop_enter");
     while (!m_workerStop.load(std::memory_order_relaxed)) {
         InferRequest req;
         {
