@@ -59,8 +59,10 @@ struct HarnessEngine {
     HarnessEngine()
         : engine([] {
             rawrxd::inference::AutonomousInferenceEngine::InferenceConfig cfg;
+                        cfg.enable_gpu = false;
             cfg.enable_hotpatching = false;
             cfg.enable_async_inference = false;
+                        cfg.enable_ollama_blob_support = false;
             return cfg;
           }()) {}
 
@@ -403,6 +405,7 @@ __declspec(dllexport) int rawrxd_harness_init_model(void* engine, const char* mo
     apply_real_forward_env_gate();
 
     h->initialized = h->loadModelAutomatic(model_path);
+
     if (!h->initialized) {
         set_last_error("init_model: loadModelAutomatic failed");
         return HARNESS_INIT_FAIL;
@@ -430,6 +433,7 @@ __declspec(dllexport) int rawrxd_harness_run_cycle(void* engine, const char* pro
         prompt,
         [&](const std::string&) { piece_count++; },
         max_tokens);
+
     if (piece_count == 0 || telem.generated_tokens == 0) {
         set_last_error("run_cycle: no tokens generated");
         g_last_status = HARNESS_RUN_FAIL;

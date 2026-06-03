@@ -616,26 +616,52 @@ AutonomousInferenceEngine::~AutonomousInferenceEngine() {
 }
 
 bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path) {
+    HarnessCtorTrace("[InitTrace] enter");
     config_.model_path = model_path;
+    HarnessCtorTrace("[InitTrace] clear_state");
     loaded_model_.clear();
     inference_backend_.reset();
+
+    HarnessCtorTrace("[InitTrace] tokenizer_alloc");
     tokenizer_ = std::make_unique<RawrXDTokenizer>();
-    if (!tokenizer_->LoadFromGGUF(model_path)) {
+    HarnessCtorTrace("[InitTrace] tokenizer_load_gguf");
+    const bool skipTokenizerGguf = !config_.enable_ollama_blob_support;
+    const bool tokenizerLoaded = !skipTokenizerGguf && tokenizer_->LoadFromGGUF(model_path);
+    if (!tokenizerLoaded) {
+        HarnessCtorTrace("[InitTrace] tokenizer_fallback_json");
         std::string jsonPath = model_path;
         size_t dot = jsonPath.rfind('.');
         if (dot != std::string::npos) {
             jsonPath = jsonPath.substr(0, dot) + ".json";
         }
-        if (!tokenizer_->Load(jsonPath)) {
+        HarnessCtorTrace("[InitTrace] tokenizer_load_json");
+        const bool skipTokenizerJson = !config_.enable_ollama_blob_support;
+        if (!skipTokenizerJson && !tokenizer_->Load(jsonPath)) {
             printf("[Tokenizer] No vocab found — using byte-level fallback\n");
         }
     }
-    if (std::filesystem::exists(model_path)) {
+    HarnessCtorTrace("[InitTrace] file_exists_check");
+    bool modelExists = false;
+    if (!config_.enable_ollama_blob_support) {
+#ifdef _WIN32
+        DWORD attrs = GetFileAttributesA(model_path.c_str());
+        modelExists = (attrs != INVALID_FILE_ATTRIBUTES) && ((attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
+#else
+        modelExists = std::filesystem::exists(model_path);
+#endif
+    } else {
+        modelExists = std::filesystem::exists(model_path);
+    }
+
+    if (modelExists) {
+        HarnessCtorTrace("[InitTrace] model_vector_resize");
         loaded_model_.resize(1024, 0.1f);
-        const char* envReal = std::getenv("RAWRXD_ENABLE_REAL_FORWARD");
-        const bool enableRealForward = (envReal != nullptr) && (std::string(envReal) == "1");
+        HarnessCtorTrace("[InitTrace] env_real_forward");
+        const bool enableRealForward = config_.enable_gpu;
         if (enableRealForward) {
+            HarnessCtorTrace("[InitTrace] backend_alloc");
             inference_backend_ = std::make_unique<RawrXDInference>();
+            HarnessCtorTrace("[InitTrace] backend_initialize");
             if (!inference_backend_->Initialize(model_path)) {
                 const std::string reason = inference_backend_->GetLastLoadErrorMessage();
                 printf("[InferenceBackend] WARNING: Real backend init failed, using fallback path: %s\n",
@@ -643,8 +669,10 @@ bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path
                 inference_backend_.reset();
             }
         }
+        HarnessCtorTrace("[InitTrace] success");
         return true;
     }
+    HarnessCtorTrace("[InitTrace] missing_model");
     return false;
 }
 
@@ -655,7 +683,9 @@ bool AutonomousInferenceEngine::loadOllamaBlob(const std::string& blob_path) {
 void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
                                       std::function<void(const std::string&)> token_callback,
                                       size_t max_tokens) {
+    HarnessCtorTrace("[InferTrace] enter");
     if (loaded_model_.empty()) {
+        HarnessCtorTrace("[InferTrace] loaded_model_empty");
         if (token_callback) token_callback("");
         return;
     }
@@ -672,8 +702,10 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
         }
     }
 
+    HarnessCtorTrace("[InferTrace] ultrafast_ctor");
     UltraFastInferenceEngine engine(config_);
     if (!prefixHit) {
+        HarnessCtorTrace("[InferTrace] ultrafast_load_model");
         engine.loadModel(config_.model_path);
     }
 
@@ -681,6 +713,7 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
     // Push tokens into the ring, then drain via IC_TokenBatchDequeue so the
     // token-batch dequeue kernel is wired into every infer() call.
     if (m_inferRing) {
+        HarnessCtorTrace("[InferTrace] ring_path");
         // Push: ring is empty at this point (worker not consuming during sync call)
         for (int32_t t : prompt) {
             // If ring is unexpectedly full (re-entrant call?), fall through
@@ -713,6 +746,7 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
         }
 
         auto generated = engine.generate(prompt_text, static_cast<int>(max_tokens));
+        HarnessCtorTrace("[InferTrace] ring_generate_done");
         for (int32_t t : generated) {
             if (token_callback) {
                 if (tokenizer_ && tokenizer_->size() > 256) {
@@ -725,12 +759,14 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
         }
         stats_.total_tokens_generated += static_cast<int>(generated.size());
     } else {
+        HarnessCtorTrace("[InferTrace] direct_path");
         // Fallback: ring allocation failed — direct path
         std::string prompt_text;
         prompt_text.reserve(prompt.size());
         for (int32_t t : prompt)
             prompt_text.push_back(static_cast<char>(std::clamp<int32_t>(t, 0, 255)));
         auto generated = engine.generate(prompt_text, static_cast<int>(max_tokens));
+        HarnessCtorTrace("[InferTrace] direct_generate_done");
         for (int32_t t : generated) {
             if (token_callback) {
                 if (tokenizer_ && tokenizer_->size() > 256) {
@@ -763,12 +799,15 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
     std::function<void(const std::string&)> token_callback,
     size_t max_tokens)
 {
+    HarnessCtorTrace("[RunTrace] enter");
     Telemetry telem{};
     if (!tokenizer_ || prompt_text.empty()) {
+        HarnessCtorTrace("[RunTrace] early_return_empty");
         if (token_callback) token_callback("");
         return telem;
     }
 
+    HarnessCtorTrace("[RunTrace] encode_begin");
     auto t0 = std::chrono::high_resolution_clock::now();
 
     // Encode text → token IDs using real tokenizer
@@ -779,15 +818,18 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
         prompt.push_back(static_cast<int32_t>(t));
     }
     telem.prompt_tokens = prompt.size();
+    HarnessCtorTrace("[RunTrace] encode_done");
 
     auto t1 = std::chrono::high_resolution_clock::now();
     telem.encode_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
     if (!inference_backend_) {
+        HarnessCtorTrace("[RunTrace] fallback_begin");
         // Fallback path preserves behavior when real backend failed to init.
         const auto fallback_start = std::chrono::high_resolution_clock::now();
         bool saw_first = false;
         size_t generated = 0;
+        HarnessCtorTrace("[RunTrace] fallback_infer_call");
         infer(prompt, [&](const std::string& piece) {
             if (!saw_first) {
                 const auto now = std::chrono::high_resolution_clock::now();
@@ -806,9 +848,11 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
         telem.tps = (telem.decode_ms > 0.0) ? (telem.generated_tokens * 1000.0 / telem.decode_ms) : 0.0;
         telem.total_ms = std::chrono::duration<double, std::milli>(t4 - t0).count();
         telem.context_tokens = telem.prompt_tokens + telem.generated_tokens;
+        HarnessCtorTrace("[RunTrace] fallback_done");
         return telem;
     }
 
+    HarnessCtorTrace("[RunTrace] backend_begin");
     RawrXDInference::GenerationStats generation_stats{};
     const auto gen_start = std::chrono::high_resolution_clock::now();
     bool saw_first_token = false;
