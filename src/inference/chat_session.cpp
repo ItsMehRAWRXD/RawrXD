@@ -15,7 +15,10 @@ ChatSession::ChatSession(AutonomousInferenceEngine& engine, size_t max_context)
 }
 
 void ChatSession::addUserMessage(const std::string& text) {
-    // Simple word-hash tokenization (same as standalone_main.cpp)
+    // Store raw text — tokenization happens inside inferText()
+    history_.push_back("User: " + text);
+    // For now, we still need token IDs for context tracking
+    // TODO: migrate to full text-based context once inferText() returns token IDs
     std::istringstream iss(text);
     std::string word;
     while (iss >> word) {
@@ -23,7 +26,6 @@ void ChatSession::addUserMessage(const std::string& text) {
         for (char c : word) h = h * 31 + static_cast<uint32_t>(c);
         context_tokens_.push_back(static_cast<int32_t>(h % 32000));
     }
-    history_.push_back("User: " + text);
     trimContext();
 }
 

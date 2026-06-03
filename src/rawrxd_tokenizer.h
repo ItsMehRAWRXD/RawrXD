@@ -33,6 +33,9 @@ public:
     // Decode tokens to text
     std::string Decode(const std::vector<uint32_t>& tokens);
     
+    // Decode a single token to text
+    std::string DecodeToken(uint32_t token) const;
+    
     // Decode with UTF-8 validation and sanitization
     std::string DecodeSafe(const std::vector<uint32_t>& tokens);
     
@@ -41,6 +44,9 @@ public:
     uint32_t EOS_ID = std::numeric_limits<uint32_t>::max();
     uint32_t UNK_ID = std::numeric_limits<uint32_t>::max();
     uint32_t PAD_ID = std::numeric_limits<uint32_t>::max();
+    
+    // Vocabulary size
+    size_t size() const { return vocab.size(); }
 };
 
 

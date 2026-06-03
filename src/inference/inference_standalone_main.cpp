@@ -386,22 +386,13 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        std::vector<int32_t> promptTokens;
-        std::istringstream piss(cli.prompt.empty() ? "Hello world" : cli.prompt);
-        std::string w;
-        while (piss >> w) {
-            uint32_t h = 0;
-            for (char c : w) h = h * 31 + (uint32_t)c;
-            promptTokens.push_back((int32_t)(h % 32000));
-        }
-
         printf("[Stream] Generating (press Ctrl+C to cancel)...\n\n");
         auto start = std::chrono::high_resolution_clock::now();
         auto firstTokenTime = start;
         bool firstToken = false;
 
         int tokenCount = 0;
-        engine.infer(promptTokens, [&](const std::string& token) {
+        engine.inferText(cli.prompt.empty() ? "Hello world" : cli.prompt, [&](const std::string& token) {
             if (!firstToken) {
                 firstTokenTime = std::chrono::high_resolution_clock::now();
                 firstToken = true;

@@ -384,6 +384,23 @@ std::string RawrXDTokenizer::Decode(const std::vector<uint32_t>& tokens) {
     return res;
 }
 
+// Decode a single token to text (for streaming output)
+std::string RawrXDTokenizer::DecodeToken(uint32_t token) const
+{
+    if (token == BOS_ID || token == EOS_ID || token == PAD_ID)
+        return "";
+    
+    auto it = reverse_vocab.find(static_cast<int>(token));
+    if (it != reverse_vocab.end()) {
+        std::string out;
+        appendNormalizedPiece(it->second, out);
+        return out;
+    } else if (token < 256) {
+        return std::string(1, static_cast<char>(token));
+    }
+    return "";
+}
+
 // Decode with UTF-8 validation and corruption detection
 std::string RawrXDTokenizer::DecodeSafe(const std::vector<uint32_t>& tokens)
 {

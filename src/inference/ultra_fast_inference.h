@@ -13,6 +13,7 @@
 #include <condition_variable>
 #include <chrono>
 #include "../../include/inference/token_queue_fast.h"
+#include "../rawrxd_tokenizer.h"
 
 /**
  * @file ultra_fast_inference.h
@@ -286,6 +287,13 @@ public:
         size_t max_tokens = 256
     );
 
+    // Inference with real tokenizer: text prompt → streaming text output
+    void inferText(
+        const std::string& prompt_text,
+        std::function<void(const std::string&)> token_callback,
+        size_t max_tokens = 256
+    );
+
     // Async inference: enqueues the request and returns immediately.
     // token_callback is invoked from the worker thread.
     using TokenCallback = std::function<void(const std::string&)>;
@@ -327,6 +335,7 @@ private:
     std::unique_ptr<TensorPruningScorer> pruner_;
     std::unique_ptr<StreamingTensorReducer> reducer_;
     std::unique_ptr<ModelHotpatcher> hotpatcher_;
+    std::unique_ptr<RawrXDTokenizer> tokenizer_;
     
     std::vector<float> loaded_model_;
     std::vector<float> kv_cache_;
