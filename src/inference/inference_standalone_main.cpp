@@ -393,20 +393,26 @@ int main(int argc, char* argv[]) {
 
         printf("[Stream] Generating (press Ctrl+C to cancel)...\n\n");
         auto start = std::chrono::high_resolution_clock::now();
+        auto firstTokenTime = start;
+        bool firstToken = false;
 
-        rawrxd::inference::TokenGenerator gen(engine, promptTokens, cli.maxTokens);
         int tokenCount = 0;
-        while (gen.hasNext()) {
-            std::string tok = gen.next();
-            if (tok.empty()) break;
-            printf("%s", tok.c_str());
+        engine.infer(promptTokens, [&](const std::string& token) {
+            if (!firstToken) {
+                firstTokenTime = std::chrono::high_resolution_clock::now();
+                firstToken = true;
+            }
+            printf("%s", token.c_str());
             fflush(stdout);
             tokenCount++;
-        }
+        }, cli.maxTokens);
+
         auto end = std::chrono::high_resolution_clock::now();
         double totalMs = std::chrono::duration<double, std::milli>(end - start).count();
+        double ttftMs = std::chrono::duration<double, std::milli>(firstTokenTime - start).count();
         double tps = (totalMs > 0) ? (tokenCount * 1000.0 / totalMs) : 0;
-        printf("\n\n[Stream] %d tokens in %.2f ms = %.2f tok/s\n", tokenCount, totalMs, tps);
+        printf("\n\n[Stream] %d tokens in %.2f ms (TTFT: %.2f ms) = %.2f tok/s\n",
+               tokenCount, totalMs, ttftMs, tps);
         return 0;
     }
 
