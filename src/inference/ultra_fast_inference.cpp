@@ -29,6 +29,23 @@ static void PinThreadToCore(std::thread& t, DWORD coreIndex) {
 namespace rawrxd {
 namespace inference {
 
+#ifdef _WIN32
+static void HarnessCtorTrace(const char* msg) {
+    if (!msg) {
+        return;
+    }
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (!h || h == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    DWORD written = 0;
+    WriteFile(h, msg, static_cast<DWORD>(lstrlenA(msg)), &written, nullptr);
+    WriteFile(h, "\r\n", 2, &written, nullptr);
+}
+#else
+static void HarnessCtorTrace(const char*) {}
+#endif
+
 using InferenceConfig = AutonomousInferenceEngine::InferenceConfig;
 
 class SimpleTokenizer {
@@ -543,20 +560,44 @@ std::string ModelHotpatcher::correctResponseWithTier(
 AutonomousInferenceEngine::AutonomousInferenceEngine(const InferenceConfig& config)
     : config_(config),
       stats_{0.0f, 0.0f, 0.0f, 0, 0.0f, 0},
-      pruner_(std::make_unique<TensorPruningScorer>()),
-      reducer_(std::make_unique<StreamingTensorReducer>()),
-      hotpatcher_(std::make_unique<ModelHotpatcher>()),
+            pruner_(nullptr),
+            reducer_(nullptr),
+            hotpatcher_(nullptr),
       loaded_model_(),
       kv_cache_(),
       inference_thread_(),
       inference_mutex_(),
       running_(false),
-      m_inferRing(RawrXD::Inference::TokenQueueFast::create(kInferRingCapacity)) {
+            m_inferRing(nullptr) {
+        HarnessCtorTrace("[CtorTrace] enter");
+        HarnessCtorTrace("[CtorTrace] pruner");
+        pruner_ = std::make_unique<TensorPruningScorer>();
+
+        HarnessCtorTrace("[CtorTrace] reducer");
+        reducer_ = std::make_unique<StreamingTensorReducer>();
+
+        if (!config_.enable_hotpatching) {
+            HarnessCtorTrace("[CtorTrace] skip_hotpatcher");
+        } else {
+            HarnessCtorTrace("[CtorTrace] hotpatcher");
+            hotpatcher_ = std::make_unique<ModelHotpatcher>();
+        }
+
+        if (!config_.enable_async_inference) {
+            HarnessCtorTrace("[CtorTrace] skip_async_lane");
+            return;
+        }
+
+        HarnessCtorTrace("[CtorTrace] infer_ring");
+        m_inferRing = RawrXD::Inference::TokenQueueFast::create(kInferRingCapacity);
+
+        HarnessCtorTrace("[CtorTrace] worker_start");
     // Start the persistent worker thread that services queueInfer() requests
     m_inferWorker = std::thread(&AutonomousInferenceEngine::inferWorkerLoop, this);
 #ifdef _WIN32
     PinThreadToCore(m_inferWorker, 2); // Pin to core 2 (skip 0/1 for OS/IDE)
 #endif
+        HarnessCtorTrace("[CtorTrace] ready");
 }
 
 AutonomousInferenceEngine::~AutonomousInferenceEngine() {

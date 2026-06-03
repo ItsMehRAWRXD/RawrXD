@@ -8,6 +8,9 @@ EXTERN rawrxd_harness_dtor_engine:PROC
 EXTERN rawrxd_harness_free_engine:PROC
 EXTERN rawrxd_harness_last_error:PROC
 EXTERN rawrxd_harness_last_status:PROC
+EXTERN rawrxd_harness_install_veh:PROC
+EXTERN rawrxd_harness_last_fault_rip:PROC
+EXTERN rawrxd_harness_last_fault_code:PROC
 EXTERN rawrxd_probe_empty_size:PROC
 EXTERN rawrxd_probe_virtual_size:PROC
 EXTERN rawrxd_probe_stl_size:PROC
@@ -58,9 +61,10 @@ ok_msg          db "[MASM Harness] run_cycle succeeded", 13, 10
 ok_msg_len      EQU ($ - ok_msg)
 fail_msg        db "[MASM Harness] failure: ", 0
 code_msg        db "[MASM Harness] failure code: ", 0
+fault_code_msg  db "[MASM Harness] fault code: ", 0
+fault_rip_msg   db "[MASM Harness] fault RIP: 0x", 0
 code_buf        db "-2147483648", 0
 newline_msg     db 13, 10
-init_prefix     db "[MASM Harness] init ptr: 0x", 0
 hex_digits      db "0123456789ABCDEF", 0
 ptr_buffer      db "0000000000000000", 0
 
@@ -98,6 +102,10 @@ harness_entry proc frame
     lea rcx, boot_msg
     mov rdx, boot_msg_len
     call harness_write
+
+    call rawrxd_harness_install_veh
+    test eax, eax
+    jnz harness_fail
 
     ; probe 1: empty constructor
     lea rcx, stage_probe_empty
@@ -352,6 +360,30 @@ have_len:
     mov rdx, 2
     call harness_write
 
+    lea rcx, fault_code_msg
+    mov rdx, 28
+    call harness_write
+
+    call rawrxd_harness_last_fault_code
+    mov ecx, eax
+    call harness_write_i32
+
+    lea rcx, newline_msg
+    mov rdx, 2
+    call harness_write
+
+    lea rcx, fault_rip_msg
+    mov rdx, 30
+    call harness_write
+
+    call rawrxd_harness_last_fault_rip
+    mov rcx, rax
+    call harness_write_hex64
+
+    lea rcx, newline_msg
+    mov rdx, 2
+    call harness_write
+
     mov ecx, 1
     call ExitProcess
 harness_fail_probe:
@@ -409,5 +441,34 @@ i32_emit:
     add rsp, 28h
     ret
 harness_write_i32 endp
+
+harness_write_hex64 proc frame
+    ; RCX = unsigned 64-bit value to print as 16 hex digits
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rax, rcx
+    lea r9, ptr_buffer
+    mov r8d, 16
+
+hex_loop:
+    mov rdx, rax
+    and rdx, 0Fh
+    mov dl, byte ptr [hex_digits+rdx]
+    mov r10d, r8d
+    dec r10d
+    mov byte ptr [r9+r10], dl
+    shr rax, 4
+    dec r8d
+    jnz hex_loop
+
+    lea rcx, ptr_buffer
+    mov rdx, 16
+    call harness_write
+
+    add rsp, 28h
+    ret
+harness_write_hex64 endp
 
 END

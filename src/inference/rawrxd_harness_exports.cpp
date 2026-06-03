@@ -48,46 +48,41 @@ void operator delete[](void* ptr, std::size_t) noexcept {
 
 namespace {
 
+static_assert(
+    alignof(rawrxd::inference::AutonomousInferenceEngine) <= 16,
+    "Engine alignment violation");
+
 struct HarnessEngine {
-    int version = 1;
-    float threshold = 0.0f;
+    rawrxd::inference::AutonomousInferenceEngine engine;
     bool initialized = false;
-    bool warmup_complete = false;
-    size_t profile_window = 1;
-    int lane_id = 0;
-    std::unique_ptr<int> token_budget;
-    std::vector<int> request_ring;
 
-    HarnessEngine() = default;
+    HarnessEngine()
+        : engine([] {
+            rawrxd::inference::AutonomousInferenceEngine::InferenceConfig cfg;
+            cfg.enable_hotpatching = false;
+            cfg.enable_async_inference = false;
+            return cfg;
+          }()) {}
 
-    bool loadModelAutomatic(const char*) {
-        token_budget = std::make_unique<int>(32);
-        request_ring.push_back(1);
-        request_ring.push_back(2);
-        initialized = true;
-        warmup_complete = (version > 0) && (threshold >= 0.0f);
-        return true;
+    bool loadModelAutomatic(const std::string& model_path) {
+        return engine.loadModelAutomatic(model_path);
     }
 
     rawrxd::inference::AutonomousInferenceEngine::Telemetry inferText(
         const std::string& prompt_text,
-        std::function<void(const std::string&)> token_callback,
+        const std::function<void(const std::string&)>& token_callback,
         size_t max_tokens) {
-        rawrxd::inference::AutonomousInferenceEngine::Telemetry telemetry;
-        telemetry.prompt_tokens = prompt_text.empty() ? 0u : profile_window + request_ring.size();
-        telemetry.generated_tokens =
-            (max_tokens > 0 && warmup_complete && lane_id >= 0 && token_budget && *token_budget > 0)
-                ? 1u
-                : 0u;
-        telemetry.context_tokens = telemetry.prompt_tokens + telemetry.generated_tokens + static_cast<size_t>(version > 0 ? 0 : 1);
-        telemetry.total_ms = 0.0;
-        telemetry.tps = telemetry.generated_tokens > 0 ? 1.0 : 0.0;
-        if (token_callback && telemetry.generated_tokens > 0) {
-            token_callback("probe");
-        }
-        return telemetry;
+        return engine.inferText(prompt_text, token_callback, max_tokens);
     }
 };
+
+void apply_real_forward_env_gate() {
+    char value[16] = {};
+    DWORD n = GetEnvironmentVariableA("RAWRXD_ENABLE_REAL_FORWARD", value, static_cast<DWORD>(sizeof(value)));
+    if (n == 0 || n >= sizeof(value) || lstrcmpA(value, "1") != 0) {
+        SetEnvironmentVariableA("RAWRXD_ENABLE_REAL_FORWARD", "1");
+    }
+}
 
 struct ProbeEmpty {
     int x;
@@ -130,6 +125,24 @@ enum HarnessStatus : int {
 
 char g_last_error[256] = {0};
 int g_last_status = 0;
+void* g_veh_handle = nullptr;
+std::uint64_t g_last_fault_rip = 0;
+std::uint32_t g_last_fault_code = 0;
+
+LONG CALLBACK harness_vectored_exception_handler(EXCEPTION_POINTERS* info) {
+    if (!info || !info->ExceptionRecord || !info->ContextRecord) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    g_last_fault_code = info->ExceptionRecord->ExceptionCode;
+#if defined(_M_X64)
+    g_last_fault_rip = static_cast<std::uint64_t>(info->ContextRecord->Rip);
+#else
+    g_last_fault_rip = 0;
+#endif
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
 
 void clear_last_error() {
     g_last_error[0] = '\0';
@@ -387,6 +400,8 @@ __declspec(dllexport) int rawrxd_harness_init_model(void* engine, const char* mo
         return HARNESS_INVALID_ARG;
     }
 
+    apply_real_forward_env_gate();
+
     h->initialized = h->loadModelAutomatic(model_path);
     if (!h->initialized) {
         set_last_error("init_model: loadModelAutomatic failed");
@@ -465,6 +480,25 @@ __declspec(dllexport) const char* rawrxd_harness_last_error() {
 
 __declspec(dllexport) int rawrxd_harness_last_status() {
     return g_last_status;
+}
+
+__declspec(dllexport) int rawrxd_harness_install_veh() {
+    if (!g_veh_handle) {
+        g_veh_handle = AddVectoredExceptionHandler(1, harness_vectored_exception_handler);
+        if (!g_veh_handle) {
+            set_last_error("install_veh: AddVectoredExceptionHandler failed");
+            return HARNESS_RUN_FAIL;
+        }
+    }
+    return HARNESS_OK;
+}
+
+__declspec(dllexport) std::uint64_t rawrxd_harness_last_fault_rip() {
+    return g_last_fault_rip;
+}
+
+__declspec(dllexport) std::uint32_t rawrxd_harness_last_fault_code() {
+    return g_last_fault_code;
 }
 
 } // extern "C"
