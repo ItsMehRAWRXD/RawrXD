@@ -3090,6 +3090,35 @@ add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
 
+add_executable(RawrXD-MASMHarness EXCLUDE_FROM_ALL
+    src/inference/masm_harness.asm
+    src/inference/rawrxd_harness_exports.cpp
+)
+set_source_files_properties(src/inference/masm_harness.asm PROPERTIES LANGUAGE ASM_MASM)
+target_link_libraries(RawrXD-MASMHarness PRIVATE InferenceEngine kernel32)
+if(MSVC)
+    target_link_options(RawrXD-MASMHarness PRIVATE
+        /ENTRY:harness_entry
+        /SUBSYSTEM:CONSOLE
+        /NODEFAULTLIB
+        /LARGEADDRESSAWARE:NO
+    )
+    # Keep CRT startup disabled while still satisfying explicit C++ runtime symbols.
+    target_link_libraries(RawrXD-MASMHarness PRIVATE
+        dxgi
+        libcmt
+        libcpmt
+        libvcruntime
+        vcruntime
+        libucrt
+        oldnames
+    )
+endif()
+set_target_properties(RawrXD-MASMHarness PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-MASMHarness
+)
+
 add_executable(RawrXD-InferenceSmoke EXCLUDE_FROM_ALL
     tests/smoke_test_inference.cpp
 )
