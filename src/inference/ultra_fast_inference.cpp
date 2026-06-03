@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <string_view>
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -52,6 +53,52 @@ static void HarnessCtorTrace(const char*) {}
 #else
 #define SOV_TRACE(msg) ((void)0)
 #endif
+
+static void SOVTraceTokenIdPiece(uint32_t token_id, std::string_view piece) {
+    char buf[256] = {};
+    size_t pos = 0;
+
+    auto append_text = [&](const char* text) {
+        if (!text) return;
+        while (*text && pos + 1 < sizeof(buf)) {
+            buf[pos++] = *text++;
+        }
+    };
+
+    auto append_u32 = [&](uint32_t value) {
+        char tmp[16] = {};
+        size_t n = 0;
+        do {
+            tmp[n++] = static_cast<char>('0' + (value % 10u));
+            value /= 10u;
+        } while (value != 0 && n < sizeof(tmp));
+        while (n > 0 && pos + 1 < sizeof(buf)) {
+            buf[pos++] = tmp[--n];
+        }
+    };
+
+    append_text("[TokenTrace] id=");
+    append_u32(token_id);
+    append_text(" | piece='");
+
+    const size_t max_piece = 96;
+    const size_t take = std::min(piece.size(), max_piece);
+    for (size_t i = 0; i < take && pos + 1 < sizeof(buf); ++i) {
+        const unsigned char c = static_cast<unsigned char>(piece[i]);
+        buf[pos++] = (c >= 0x20 && c <= 0x7E) ? static_cast<char>(c) : '.';
+    }
+    if (piece.size() > take && pos + 4 < sizeof(buf)) {
+        buf[pos++] = '.';
+        buf[pos++] = '.';
+        buf[pos++] = '.';
+    }
+    if (pos + 2 < sizeof(buf)) {
+        buf[pos++] = '\'';
+        buf[pos] = '\0';
+    }
+
+    HarnessCtorTrace(buf);
+}
 
 using InferenceConfig = AutonomousInferenceEngine::InferenceConfig;
 
@@ -771,9 +818,16 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
             if (token_callback) {
                 if (tokenizer_ && tokenizer_->size() > 256) {
                     std::string piece = tokenizer_->DecodeToken(static_cast<uint32_t>(t));
+                    if (!config_.enable_ollama_blob_support) {
+                        SOVTraceTokenIdPiece(static_cast<uint32_t>(t), piece);
+                    }
                     token_callback(piece);
                 } else {
-                    token_callback(std::string(1, static_cast<char>(std::clamp<int32_t>(t, 0, 255))));
+                    std::string piece(1, static_cast<char>(std::clamp<int32_t>(t, 0, 255)));
+                    if (!config_.enable_ollama_blob_support) {
+                        SOVTraceTokenIdPiece(static_cast<uint32_t>(t), piece);
+                    }
+                    token_callback(piece);
                 }
             }
         }
@@ -791,9 +845,16 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
             if (token_callback) {
                 if (tokenizer_ && tokenizer_->size() > 256) {
                     std::string piece = tokenizer_->DecodeToken(static_cast<uint32_t>(t));
+                    if (!config_.enable_ollama_blob_support) {
+                        SOVTraceTokenIdPiece(static_cast<uint32_t>(t), piece);
+                    }
                     token_callback(piece);
                 } else {
-                    token_callback(std::string(1, static_cast<char>(std::clamp<int32_t>(t, 0, 255))));
+                    std::string piece(1, static_cast<char>(std::clamp<int32_t>(t, 0, 255)));
+                    if (!config_.enable_ollama_blob_support) {
+                        SOVTraceTokenIdPiece(static_cast<uint32_t>(t), piece);
+                    }
+                    token_callback(piece);
                 }
             }
         }
@@ -886,6 +947,9 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
                 const auto now = std::chrono::high_resolution_clock::now();
                 telem.first_token_ms = std::chrono::duration<double, std::milli>(now - gen_start).count();
                 saw_first_token = true;
+            }
+            if (!config_.enable_ollama_blob_support) {
+                SOVTraceTokenIdPiece(token_id, piece);
             }
             if (token_callback) {
                 token_callback(piece);
