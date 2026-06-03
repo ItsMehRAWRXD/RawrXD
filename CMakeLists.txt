@@ -3103,6 +3103,11 @@ if(MSVC)
         /NODEFAULTLIB
         /LARGEADDRESSAWARE:NO
     )
+    set(_RAWR_HARNESS_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-MASMHarness.map")
+    target_link_options(RawrXD-MASMHarness PRIVATE
+        "/MAP:${_RAWR_HARNESS_MAP_PATH}"
+        /MAPINFO:EXPORTS
+    )
     # Keep CRT startup disabled while still satisfying explicit C++ runtime symbols.
     target_link_libraries(RawrXD-MASMHarness PRIVATE
         dxgi

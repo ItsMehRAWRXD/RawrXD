@@ -19,8 +19,6 @@ EXTERN rawrxd_probe_empty_dtor:PROC
 EXTERN rawrxd_probe_virtual_ctor:PROC
 EXTERN rawrxd_probe_virtual_dtor:PROC
 EXTERN rawrxd_probe_stl_ctor:PROC
-EXTERN __xc_a:QWORD
-EXTERN __xc_z:QWORD
 EXTERN rawrxd_probe_stl_dtor:PROC
 EXTERN rawrxd_probe_unique_ptr_ctor:PROC
 EXTERN rawrxd_probe_unique_ptr_dtor:PROC
@@ -37,8 +35,6 @@ model_path      db "d:\phi3mini.gguf", 0
 prompt_text     db "Telemetry forward path test", 0
 boot_msg        db "[MASM Harness] boot", 13, 10
 boot_msg_len    EQU ($ - boot_msg)
-preinit_msg     db "[MASM Harness] preinit", 13, 10
-preinit_msg_len EQU ($ - preinit_msg)
 stage_probe_empty db "[MASM Harness] probe-empty", 13, 10
 stage_probe_empty_len EQU ($ - stage_probe_empty)
 stage_probe_virtual db "[MASM Harness] probe-virtual", 13, 10
@@ -61,6 +57,9 @@ ok_msg          db "[MASM Harness] run_cycle succeeded", 13, 10
 ok_msg_len      EQU ($ - ok_msg)
 fail_msg        db "[MASM Harness] failure: ", 0
 newline_msg     db 13, 10
+init_prefix     db "[MASM Harness] init ptr: 0x", 0
+hex_digits      db "0123456789ABCDEF", 0
+ptr_buffer      db "0000000000000000", 0
 
 .code
 
@@ -83,29 +82,6 @@ harness_write proc
     ret
 harness_write endp
 
-init_statics proc
-
-    lea rax, __xc_a
-    lea r8, __xc_z
-
-init_loop:
-    cmp rax, r8
-    jae init_done
-
-    mov rcx, [rax]
-    test rcx, rcx
-    jz init_next
-
-    call rcx
-
-init_next:
-    add rax, 8
-    jmp init_loop
-
-init_done:
-    ret
-init_statics endp
-
 ; Use FRAME so the x64 unwinder has metadata for the custom entry path.
 harness_entry proc frame
     ; 16-byte alignment + 32-byte shadow space
@@ -115,12 +91,6 @@ harness_entry proc frame
     xor ebx, ebx
     xor r12d, r12d
     xor r13, r13
-
-    lea rcx, preinit_msg
-    mov rdx, preinit_msg_len
-    call harness_write
-
-    call init_statics
 
     lea rcx, boot_msg
     mov rdx, boot_msg_len
