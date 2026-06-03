@@ -387,27 +387,22 @@ int main(int argc, char* argv[]) {
         }
 
         printf("[Stream] Generating (press Ctrl+C to cancel)...\n\n");
-        auto start = std::chrono::high_resolution_clock::now();
-        auto firstTokenTime = start;
-        bool firstToken = false;
 
         int tokenCount = 0;
-        engine.inferText(cli.prompt.empty() ? "Hello world" : cli.prompt, [&](const std::string& token) {
-            if (!firstToken) {
-                firstTokenTime = std::chrono::high_resolution_clock::now();
-                firstToken = true;
-            }
+        auto telem = engine.inferText(cli.prompt.empty() ? "Hello world" : cli.prompt, [&](const std::string& token) {
             printf("%s", token.c_str());
             fflush(stdout);
             tokenCount++;
         }, cli.maxTokens);
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double totalMs = std::chrono::duration<double, std::milli>(end - start).count();
-        double ttftMs = std::chrono::duration<double, std::milli>(firstTokenTime - start).count();
-        double tps = (totalMs > 0) ? (tokenCount * 1000.0 / totalMs) : 0;
-        printf("\n\n[Stream] %d tokens in %.2f ms (TTFT: %.2f ms) = %.2f tok/s\n",
-               tokenCount, totalMs, ttftMs, tps);
+        printf("\n\n[Telemetry]\n");
+        printf("  Encode:   %.3f ms (%zu tokens)\n", telem.encode_ms, telem.prompt_tokens);
+        printf("  Prefill:  %.3f ms\n", telem.prefill_ms);
+        printf("  TTFT:     %.3f ms\n", telem.first_token_ms);
+        printf("  Decode:   %.3f ms (%zu tokens)\n", telem.decode_ms, telem.generated_tokens);
+        printf("  Total:    %.3f ms\n", telem.total_ms);
+        printf("  TPS:      %.2f tok/s\n", telem.tps);
+        printf("  Context:  %zu tokens\n", telem.context_tokens);
         return 0;
     }
 

@@ -1,6 +1,7 @@
 #include "ultra_fast_inference.h"
 #include "vulkan_compute.h"
 #include "../../include/inference/token_queue_fast.h"
+#include "../rawrxd_inference.h"
 
 #include <algorithm>
 #include <cmath>
@@ -577,14 +578,12 @@ bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path
     loaded_model_.clear();
     tokenizer_ = std::make_unique<RawrXDTokenizer>();
     if (!tokenizer_->LoadFromGGUF(model_path)) {
-        // Tokenizer metadata missing from GGUF — try tokenizer.json sidecar
         std::string jsonPath = model_path;
         size_t dot = jsonPath.rfind('.');
         if (dot != std::string::npos) {
             jsonPath = jsonPath.substr(0, dot) + ".json";
         }
         if (!tokenizer_->Load(jsonPath)) {
-            // Fallback: byte-level tokenizer (256 tokens = raw bytes)
             printf("[Tokenizer] No vocab found — using byte-level fallback\n");
         }
     }
@@ -607,9 +606,7 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
         return;
     }
 
-    // --- Prefix KV fingerprint probe ---
-    // Hash the full prompt; if we have seen this exact prefix before we can
-    // skip the expensive model-load step and jump straight to generation.
+    // --- Fallback: stub generation path ---
     const size_t prefixLen = prompt.size();
     const uint64_t prefixHash = hashPrefix(prompt, prefixLen);
     bool prefixHit = false;
@@ -707,15 +704,18 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
 // ---------------------------------------------------------------------------
 // inferText — text prompt with real tokenizer → streaming text output
 // ---------------------------------------------------------------------------
-void AutonomousInferenceEngine::inferText(
+AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
     const std::string& prompt_text,
     std::function<void(const std::string&)> token_callback,
     size_t max_tokens)
 {
+    Telemetry telem{};
     if (!tokenizer_ || prompt_text.empty()) {
         if (token_callback) token_callback("");
-        return;
+        return telem;
     }
+
+    auto t0 = std::chrono::high_resolution_clock::now();
 
     // Encode text → token IDs using real tokenizer
     std::vector<uint32_t> u32_tokens = tokenizer_->Encode(prompt_text);
@@ -724,11 +724,19 @@ void AutonomousInferenceEngine::inferText(
     for (uint32_t t : u32_tokens) {
         prompt.push_back(static_cast<int32_t>(t));
     }
+    telem.prompt_tokens = prompt.size();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    telem.encode_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
     // Run inference with per-token decoding
+    // TODO: Replace stub with real transformer forward pass
     infer(prompt, [&](const std::string& /*raw_token*/) {
         // infer() passes raw bytes — we decode properly below
     }, max_tokens);
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    telem.prefill_ms = std::chrono::duration<double, std::milli>(t2 - t1).count();
 
     // For now, generate dummy tokens and decode them
     // TODO: wire real generation loop to return token IDs
@@ -740,13 +748,28 @@ void AutonomousInferenceEngine::inferText(
     }
 
     // Decode each token and stream
+    bool first = true;
     for (int32_t tok : generated) {
         std::string piece = tokenizer_->DecodeToken(static_cast<uint32_t>(tok));
         if (piece.empty() && tok >= 32 && tok <= 126) {
             piece = std::string(1, static_cast<char>(tok));
         }
         if (token_callback) token_callback(piece);
+        telem.generated_tokens++;
+        if (first) {
+            auto t3 = std::chrono::high_resolution_clock::now();
+            telem.first_token_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
+            first = false;
+        }
     }
+
+    auto t4 = std::chrono::high_resolution_clock::now();
+    telem.decode_ms = std::chrono::duration<double, std::milli>(t4 - t2).count();
+    telem.total_ms = std::chrono::duration<double, std::milli>(t4 - t0).count();
+    telem.tps = (telem.decode_ms > 0) ? (telem.generated_tokens * 1000.0 / telem.decode_ms) : 0;
+    telem.context_tokens = telem.prompt_tokens + telem.generated_tokens;
+
+    return telem;
 }
 
 // ---------------------------------------------------------------------------

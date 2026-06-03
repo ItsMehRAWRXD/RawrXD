@@ -14,6 +14,7 @@
 #include <chrono>
 #include "../../include/inference/token_queue_fast.h"
 #include "../rawrxd_tokenizer.h"
+#include "../rawrxd_inference.h"
 
 /**
  * @file ultra_fast_inference.h
@@ -271,6 +272,18 @@ public:
         int total_tokens_generated;
     };
     
+    struct Telemetry {
+        double encode_ms = 0.0;
+        double prefill_ms = 0.0;
+        double first_token_ms = 0.0;
+        double decode_ms = 0.0;
+        double total_ms = 0.0;
+        double tps = 0.0;
+        size_t prompt_tokens = 0;
+        size_t generated_tokens = 0;
+        size_t context_tokens = 0;
+    };
+    
     explicit AutonomousInferenceEngine(const InferenceConfig& config = InferenceConfig());
     ~AutonomousInferenceEngine();
     
@@ -288,7 +301,8 @@ public:
     );
 
     // Inference with real tokenizer: text prompt → streaming text output
-    void inferText(
+    // Returns telemetry for the generation session.
+    Telemetry inferText(
         const std::string& prompt_text,
         std::function<void(const std::string&)> token_callback,
         size_t max_tokens = 256
@@ -336,6 +350,7 @@ private:
     std::unique_ptr<StreamingTensorReducer> reducer_;
     std::unique_ptr<ModelHotpatcher> hotpatcher_;
     std::unique_ptr<RawrXDTokenizer> tokenizer_;
+    std::unique_ptr<RawrXDInference> inference_backend_;
     
     std::vector<float> loaded_model_;
     std::vector<float> kv_cache_;
