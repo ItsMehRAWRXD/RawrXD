@@ -1,5 +1,6 @@
 #include "polymorphic_loader.h"
 #include <algorithm>
+#include <chrono>
 #include <numeric>
 #include <cstring>
 #include <iostream>
@@ -7,6 +8,9 @@
 #include <map>
 #include <filesystem>
 #include <functional>
+#include <mutex>
+
+#include "backend_lane_type.h"
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -19,22 +23,136 @@
 // SECTION 1: Budget Enforcement
 // ============================================================================
 
-bool ActiveWindowBudget::canAllocate(SlotType type, size_t bytes) const {
-    switch (type) {
-        case SlotType::ATTENTION:
-            return (attn_used.load(std::memory_order_acquire) + bytes) <= ATTN_BYTES;
-        case SlotType::MLP:
-            return (mlp_used.load(std::memory_order_acquire) + bytes) <= MLP_BYTES;
-        case SlotType::KV_CACHE:
-            return (kv_used.load(std::memory_order_acquire) + bytes) <= KV_BYTES;
-        case SlotType::AUXILIARY:
-            return (misc_used.load(std::memory_order_acquire) + bytes) <= MISC_BYTES;
+namespace {
+void emitInferenceTelemetryPacket(
+    uint32_t stepId,
+    uint32_t zoneCount,
+    uint32_t zonesLoaded,
+    uint32_t zonesSkipped,
+    double skipRatio,
+    uint64_t bytesLoaded,
+    uint32_t evictions,
+    double evictionAgeAvg,
+    uint32_t evictMisc,
+    uint32_t evictMlp,
+    uint32_t evictAttn,
+    uint32_t selfEvictionBlocked,
+    uint32_t protectedHits,
+    uint32_t protectedScanCount,
+    uint32_t fastPathHits,
+    uint32_t unprotectedEvictions,
+    uint32_t adaptiveWindowValue,
+    uint64_t burstBytesActive,
+    double reclaimProgress,
+    double sigmoidReclaimValue,
+    uint64_t hysteresisHolds,
+    size_t activeUsage,
+    RawrXD::BackendLaneType lane,
+    PolymorphicLoader::SlotAcquireFailure failureReason,
+    const char* phase,
+    bool success)
+{
+    static std::mutex telemetryMutex;
+    std::lock_guard<std::mutex> lock(telemetryMutex);
+
+    std::cout << "[telemetry]"
+              << " phase=" << phase
+              << " step_id=" << stepId
+              << " zone_count=" << zoneCount
+              << " zones_loaded=" << zonesLoaded
+              << " zones_skipped=" << zonesSkipped
+              << " skip_ratio=" << skipRatio
+              << " bytes_loaded=" << bytesLoaded
+              << " evictions=" << evictions
+              << " eviction_age_avg=" << evictionAgeAvg
+              << " evict_misc=" << evictMisc
+              << " evict_mlp=" << evictMlp
+              << " evict_attn=" << evictAttn
+              << " self_eviction_blocked=" << selfEvictionBlocked
+              << " protected_hits=" << protectedHits
+              << " protected_scan_count=" << protectedScanCount
+              << " fast_path_hits=" << fastPathHits
+              << " unprotected_evictions=" << unprotectedEvictions
+              << " adaptive_window_value=" << adaptiveWindowValue
+              << " burst_bytes_active=" << burstBytesActive
+              << " reclaim_progress=" << reclaimProgress
+              << " sigmoid_reclaim_value=" << sigmoidReclaimValue
+              << " hysteresis_holds=" << hysteresisHolds
+              << " active_usage=" << activeUsage
+              << " backend_lane_code=" << RawrXD::BackendLaneTypeCode(lane)
+              << " slot_fail=" << static_cast<uint32_t>(failureReason)
+              << " slot_fail_name=" << PolymorphicLoader::slotAcquireFailureToString(failureReason)
+              << " success=" << (success ? 1 : 0)
+              << "\n";
+}
+
+void emitInferencePerfTelemetryPacket(
+    uint32_t stepId,
+    uint32_t zoneCount,
+    uint32_t zonesLoaded,
+    uint64_t stepElapsedNs,
+    uint64_t victimSearchNs,
+    uint64_t materializationNs,
+    uint32_t batchCount,
+    double avgZonesPerBatch,
+    bool success)
+{
+    static std::mutex perfTelemetryMutex;
+    std::lock_guard<std::mutex> lock(perfTelemetryMutex);
+
+    const double searchRatio = stepElapsedNs > 0
+        ? static_cast<double>(victimSearchNs) / static_cast<double>(stepElapsedNs)
+        : 0.0;
+    const double materializationRatio = stepElapsedNs > 0
+        ? static_cast<double>(materializationNs) / static_cast<double>(stepElapsedNs)
+        : 0.0;
+
+    std::cout << "[perf_telemetry]"
+              << " step_id=" << stepId
+              << " zone_count=" << zoneCount
+              << " zones_loaded=" << zonesLoaded
+              << " step_elapsed_ns=" << stepElapsedNs
+              << " victim_search_ns=" << victimSearchNs
+              << " materialization_ns=" << materializationNs
+              << " victim_search_ratio=" << searchRatio
+              << " materialization_ratio=" << materializationRatio
+              << " batch_count=" << batchCount
+              << " avg_zones_per_batch=" << avgZonesPerBatch
+              << " success=" << (success ? 1 : 0)
+              << "\n";
+}
+
+bool isMaterializableRole(TensorRole role, SlotType& outSlotType) {
+    switch (role) {
+        case TensorRole::ATTN_Q:
+        case TensorRole::ATTN_K:
+        case TensorRole::ATTN_V:
+        case TensorRole::ATTN_O:
+            outSlotType = SlotType::ATTENTION;
+            return true;
+        case TensorRole::MLP_UP:
+        case TensorRole::MLP_DOWN:
+            outSlotType = SlotType::MLP;
+            return true;
+        case TensorRole::KV_CACHE:
+            outSlotType = SlotType::KV_CACHE;
+            return true;
         default:
+            outSlotType = SlotType::AUXILIARY;
             return false;
     }
 }
 
-void ActiveWindowBudget::recordUsage(SlotType type, size_t bytes) {
+} // namespace
+
+bool ActiveWindowBudget::canAllocate(SlotType type, size_t bytes) const {
+    // Path B: slot capacity is the only limiter; budget is not enforced.
+    (void)type;
+    (void)bytes;
+    return true;
+}
+
+void ActiveWindowBudget::recordUsage(SlotType type, size_t bytes) const {
     switch (type) {
         case SlotType::ATTENTION:
             attn_used.fetch_add(bytes, std::memory_order_release);
@@ -51,106 +169,266 @@ void ActiveWindowBudget::recordUsage(SlotType type, size_t bytes) {
     }
 }
 
+void ActiveWindowBudget::releaseUsage(SlotType type, size_t bytes) const {
+    switch (type) {
+        case SlotType::ATTENTION:
+            attn_used.fetch_sub(bytes, std::memory_order_acq_rel);
+            break;
+        case SlotType::MLP:
+            mlp_used.fetch_sub(bytes, std::memory_order_acq_rel);
+            break;
+        case SlotType::KV_CACHE:
+            kv_used.fetch_sub(bytes, std::memory_order_acq_rel);
+            break;
+        case SlotType::AUXILIARY:
+            misc_used.fetch_sub(bytes, std::memory_order_acq_rel);
+            break;
+    }
+}
+
+void ActiveWindowBudget::updateBurstBudget(uint64_t step_id) const {
+    // Borrow first from MISC; if too small, borrow from MLP while conserving total budget.
+    const size_t desiredExtra = (BURST_ATTN_MULTIPLIER > 1)
+        ? (ATTN_BYTES * static_cast<size_t>(BURST_ATTN_MULTIPLIER - 1))
+        : 0;
+    const size_t maxBorrow = MISC_BYTES + (MLP_BYTES / 4);
+    const size_t burstCap = std::min(desiredExtra, maxBorrow);
+
+    size_t active = 0;
+    double progress = 0.0;
+    double sigmoid = 0.0;
+    bool heldByHysteresis = false;
+
+    if (step_id < BURST_STEPS) {
+        active = burstCap;
+        progress = 0.0;
+        sigmoid = 0.0;
+    } else {
+        const double phase = static_cast<double>(step_id - BURST_STEPS + 1) /
+            static_cast<double>(std::max<uint32_t>(BURST_STEPS, 1));
+        const double clamped = std::min(1.0, std::max(0.0, phase));
+
+        // Smooth reclaim curve: slow start, faster middle, slow tail.
+        const double x = (clamped - 0.5) * BURST_SIGMOID_GAIN;
+        sigmoid = 1.0 / (1.0 + std::exp(-x));
+        const double minSig = 1.0 / (1.0 + std::exp(0.5 * BURST_SIGMOID_GAIN));
+        const double maxSig = 1.0 / (1.0 + std::exp(-0.5 * BURST_SIGMOID_GAIN));
+        progress = (sigmoid - minSig) / std::max(1e-9, (maxSig - minSig));
+        progress = std::min(1.0, std::max(0.0, progress));
+
+        if (progress < MIN_RECLAIM_FLOOR) {
+            progress = 0.0;
+            heldByHysteresis = true;
+        } else {
+            progress = (progress - MIN_RECLAIM_FLOOR) / (1.0 - MIN_RECLAIM_FLOOR);
+            progress = std::min(1.0, std::max(0.0, progress));
+        }
+
+        active = static_cast<size_t>(static_cast<double>(burstCap) * (1.0 - progress));
+    }
+
+    burst_attn_bytes.store(active, std::memory_order_release);
+    if (burstCap == 0) {
+        progress = 1.0;
+        sigmoid = 1.0;
+    }
+    sigmoid_reclaim_value.store(sigmoid, std::memory_order_release);
+    if (heldByHysteresis) {
+        hysteresis_holds.fetch_add(1, std::memory_order_acq_rel);
+    }
+    burst_reclaim_progress.store(progress, std::memory_order_release);
+}
+
+size_t ActiveWindowBudget::getEffectiveLimit(SlotType type) const {
+    const size_t activeBurst = burst_attn_bytes.load(std::memory_order_acquire);
+    const size_t fromMisc = std::min(activeBurst, MISC_BYTES);
+    const size_t fromMlp = (activeBurst > fromMisc) ? (activeBurst - fromMisc) : 0;
+
+    switch (type) {
+        case SlotType::ATTENTION:
+            return ATTN_BYTES + activeBurst;
+        case SlotType::MLP:
+            return (MLP_BYTES > fromMlp) ? (MLP_BYTES - fromMlp) : 0;
+        case SlotType::KV_CACHE:
+            return KV_BYTES;
+        case SlotType::AUXILIARY:
+            return (MISC_BYTES > fromMisc) ? (MISC_BYTES - fromMisc) : 0;
+        default:
+            return 0;
+    }
+}
+
+size_t ActiveWindowBudget::getBurstBytesActive() const {
+    return burst_attn_bytes.load(std::memory_order_acquire);
+}
+
+double ActiveWindowBudget::getReclaimProgress() const {
+    return burst_reclaim_progress.load(std::memory_order_acquire);
+}
+
+double ActiveWindowBudget::getSigmoidReclaimValue() const {
+    return sigmoid_reclaim_value.load(std::memory_order_acquire);
+}
+
+uint64_t ActiveWindowBudget::getHysteresisHolds() const {
+    return hysteresis_holds.load(std::memory_order_acquire);
+}
+
+bool ActiveWindowBudget::isBurstActive() const {
+    return getBurstBytesActive() > 0;
+}
+
 // ============================================================================
 // SECTION 2: Slot Lattice Implementation
 // ============================================================================
 
 SlotLattice::SlotLattice(const ActiveWindowBudget& budget, size_t slot_count)
     : budget_(budget) {
-    
-    // Allocate fixed slots
-    slots_.reserve(slot_count);
-    free_slots_.reserve(slot_count);
+    const size_t baseSlots = 16 + 8 + 8 + 4;
+    const size_t desiredSlots = std::max(slot_count, baseSlots);
+    const size_t scale = std::max<size_t>(1, desiredSlots / baseSlots);
+
+    size_t attnSlots = 16 * scale;
+    size_t mlpSlots = 8 * scale;
+    size_t kvSlots = 8 * scale;
+    size_t miscSlots = 4 * scale;
+    size_t totalSlots = attnSlots + mlpSlots + kvSlots + miscSlots;
+
+    while (totalSlots < desiredSlots) {
+        ++attnSlots;
+        ++totalSlots;
+    }
+
+    // Reserve capacity but do NOT allocate memory yet (arena handles it)
+    slots_.reserve(totalSlots);
+    free_slots_.reserve(totalSlots);
     
     // Determine slot size based on budget and role
-    size_t attn_slot_size = budget.ATTN_BYTES / 8;
-    size_t mlp_slot_size = budget.MLP_BYTES / 8;
-    size_t kv_slot_size = budget.KV_BYTES / 8;
-    size_t misc_slot_size = budget.MISC_BYTES / 4;
+    // Path B: prioritize capacity over strict partitioning to avoid large-tensor fragmentation.
+    const size_t attn_slot_size = budget.ATTN_BYTES / 8;
+    const size_t mlp_slot_size = budget.MLP_BYTES / 8;
+    const size_t kv_slot_size = budget.KV_BYTES / 8;
+    const size_t misc_slot_size = std::max<size_t>(1, budget.MISC_BYTES);
     
-    // Create attention slots
-    for (size_t i = 0; i < 8; ++i) {
+    // Arena uses a uniform slot size = max of all role sizes, capped at 64MB
+    // Path B: 64MB primary keeps L3 free for V tensors; overflow handles 98MB zones.
+    const size_t max_slot_size = std::min(
+        std::max({attn_slot_size, mlp_slot_size, kv_slot_size, misc_slot_size}),
+        size_t(64 * 1024 * 1024)); // Cap at 64MB to prevent L3 eviction
+    
+    // Pre-commit entire arena upfront (pay the tax once, never again)
+    if (!arena_.Init(totalSlots, max_slot_size)) {
+        std::cerr << "[SlotLattice] Arena initialization failed (" << totalSlots 
+                  << " slots x " << max_slot_size << " bytes)\n";
+    }
+    
+    // Create attention slots (arena-backed, zero-syscall)
+    for (size_t i = 0; i < attnSlots; ++i) {
         Slot s{};
-        s.base = ::operator new(attn_slot_size);
-        s.capacity_bytes = static_cast<uint32_t>(attn_slot_size);
+        s.base = nullptr;  // Allocated on first acquireSlot via arena
+        s.capacity_bytes = static_cast<uint32_t>(max_slot_size);
         s.type = SlotType::ATTENTION;
+        s.home_type = SlotType::ATTENTION;
+        s.flags = (i < ATTN_PROTECTED_SLOTS) ? SLOT_FLAG_PROTECTED_ATTN : 0;
         slots_.push_back(s);
         free_slots_.push_back(&slots_.back());
     }
     
-    // Create MLP slots
-    for (size_t i = 0; i < 8; ++i) {
+    // Create MLP slots (arena-backed)
+    for (size_t i = 0; i < mlpSlots; ++i) {
         Slot s{};
-        s.base = ::operator new(mlp_slot_size);
-        s.capacity_bytes = static_cast<uint32_t>(mlp_slot_size);
+        s.base = nullptr;
+        s.capacity_bytes = static_cast<uint32_t>(max_slot_size);
         s.type = SlotType::MLP;
+        s.home_type = SlotType::MLP;
         slots_.push_back(s);
         free_slots_.push_back(&slots_.back());
     }
     
-    // Create KV slots
-    for (size_t i = 0; i < 8; ++i) {
+    // Create KV slots (arena-backed)
+    for (size_t i = 0; i < kvSlots; ++i) {
         Slot s{};
-        s.base = ::operator new(kv_slot_size);
-        s.capacity_bytes = static_cast<uint32_t>(kv_slot_size);
+        s.base = nullptr;
+        s.capacity_bytes = static_cast<uint32_t>(max_slot_size);
         s.type = SlotType::KV_CACHE;
+        s.home_type = SlotType::KV_CACHE;
         slots_.push_back(s);
         free_slots_.push_back(&slots_.back());
     }
     
-    // Create auxiliary slots
-    for (size_t i = 0; i < 4; ++i) {
+    // Create auxiliary slots (arena-backed)
+    for (size_t i = 0; i < miscSlots; ++i) {
         Slot s{};
-        s.base = ::operator new(misc_slot_size);
-        s.capacity_bytes = static_cast<uint32_t>(misc_slot_size);
+        s.base = nullptr;
+        s.capacity_bytes = static_cast<uint32_t>(max_slot_size);
         s.type = SlotType::AUXILIARY;
+        s.home_type = SlotType::AUXILIARY;
         slots_.push_back(s);
         free_slots_.push_back(&slots_.back());
     }
 }
 
 SlotLattice::~SlotLattice() {
-    for (auto& slot : slots_) {
-        if (slot.base) {
-            ::operator delete(slot.base);
-        }
-    }
+    // Arena handles all memory cleanup automatically via RAII
+    // No per-slot ::operator delete needed - zero syscall shutdown
 }
 
 Slot* SlotLattice::acquireSlot(SlotType type, uint32_t bytes_needed, uint64_t step_id) {
-    // Find a free slot of the right type
+    if (!budget_.canAllocate(type, bytes_needed)) {
+        return nullptr;
+    }
+    adaptive_window_last_.store(0, std::memory_order_release);
+
     auto it = std::find_if(free_slots_.begin(), free_slots_.end(),
         [type, bytes_needed](Slot* s) {
             return s->type == type && s->capacity_bytes >= bytes_needed;
         });
-    
     if (it == free_slots_.end()) {
-        return nullptr;  // No suitable slot available
+        // Path B fallback: use any free slot that can fit, then retag semantically.
+        it = std::find_if(free_slots_.begin(), free_slots_.end(),
+            [bytes_needed](Slot* s) {
+                return s->capacity_bytes >= bytes_needed;
+            });
     }
-    
+    if (it == free_slots_.end()) {
+        return nullptr;
+    }
+
     Slot* slot = *it;
+    free_slots_.erase(it);
+
+    // Zero-syscall allocation: get base from pre-committed arena
+    if (!slot->base) {
+        size_t slot_index = static_cast<size_t>(slot - &slots_[0]);
+        slot->base = arena_.Acquire(slot_index);
+    }
+
+    slot->type = type;
     slot->active_bytes = bytes_needed;
     slot->last_written_step = step_id;
-    
-    // Don't remove from free_slots_ yet—we'll overwrite it
-    // This is the key: slots are never truly "allocated", just reused
-    
+    slot->last_access_step = step_id;
+    budget_.recordUsage(type, bytes_needed);
+    total_usage_.fetch_add(bytes_needed, std::memory_order_release);
     return slot;
 }
 
 void SlotLattice::releaseSlot(Slot* slot) {
     // Semantic release only—memory remains
-    if (slot) {
+    if (slot && slot->active_bytes > 0) {
+        const uint32_t released = slot->active_bytes;
+        budget_.releaseUsage(slot->type, released);
+        total_usage_.fetch_sub(released, std::memory_order_acq_rel);
         slot->active_bytes = 0;
+        slot->type = slot->home_type;
+
+        if (std::find(free_slots_.begin(), free_slots_.end(), slot) == free_slots_.end()) {
+            free_slots_.push_back(slot);
+        }
     }
 }
 
 size_t SlotLattice::getTotalUsage() const {
-    size_t total = 0;
-    for (const auto& slot : slots_) {
-        total += slot.active_bytes;
-    }
-    return total;
+    return total_usage_.load(std::memory_order_acquire);
 }
 
 size_t SlotLattice::getUsageByType(SlotType type) const {
@@ -200,6 +478,46 @@ Slot* SlotLattice::findSlot(SlotType type) const {
         }
     }
     return nullptr;
+}
+
+uint64_t SlotLattice::getEvictionCount() const {
+    return eviction_count_total_.load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getEvictionAgeSum() const {
+    return eviction_age_sum_total_.load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getEvictionBytes() const {
+    return eviction_bytes_total_.load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getEvictionsByRole(SlotType type) const {
+    return eviction_by_role_[static_cast<size_t>(type)].load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getSelfEvictionBlockedCount() const {
+    return self_eviction_blocked_total_.load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getProtectedHitCount() const {
+    return protected_hit_total_.load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getProtectedScanCount() const {
+    return protected_scan_total_.load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getFastPathHitCount() const {
+    return fast_path_hit_total_.load(std::memory_order_acquire);
+}
+
+uint64_t SlotLattice::getUnprotectedEvictionCount() const {
+    return unprotected_eviction_total_.load(std::memory_order_acquire);
+}
+
+uint32_t SlotLattice::getAdaptiveWindowValue() const {
+    return adaptive_window_last_.load(std::memory_order_acquire);
 }
 
 // ============================================================================
@@ -830,7 +1148,7 @@ PolymorphicLoader::PolymorphicLoader(size_t active_window_bytes)
     : model_file_handle_(nullptr) {
     
     // Initialize slot lattice with budget
-    slots_ = std::make_unique<SlotLattice>(budget_, 32);
+    slots_ = std::make_unique<SlotLattice>(budget_, 256);
 }
 
 PolymorphicLoader::~PolymorphicLoader() {
@@ -840,6 +1158,8 @@ PolymorphicLoader::~PolymorphicLoader() {
 }
 
 bool PolymorphicLoader::indexModel(const std::string& model_path) {
+    current_model_path_ = model_path;
+
     // Detect format
     adapter_ = detectAndLoadAdapter(model_path);
     if (!adapter_) return false;
@@ -876,37 +1196,191 @@ bool PolymorphicLoader::beginExecution(const std::string& model_path) {
     
     // Initialize controller
     controller_ = std::make_unique<ExecutionController>(*plan_, *slots_);
+
+    metrics_.total_steps = plan_->getTotalSteps();
+    metrics_.current_step = 0;
+    metrics_.active_memory_bytes = 0;
+    metrics_.mb_per_second = 0.0f;
+    metrics_.tokens_per_second = 0.0f;
+    metrics_.avg_step_ms = 0.0;
+    metrics_.p95_step_ms = 0.0;
+    metrics_.step_stddev_ms = 0.0;
+    metrics_.timed_steps = 0;
+    metrics_.last_step_zone_count = 0;
+    metrics_.last_step_loaded_zones = 0;
+    metrics_.last_step_skipped_zones = 0;
+    metrics_.last_step_skip_ratio = 0.0;
+    metrics_.last_step_bytes_loaded = 0;
+    metrics_.last_step_bytes_evicted = 0;
+    metrics_.last_step_evictions = 0;
+    metrics_.last_step_eviction_age_avg = 0.0;
+    metrics_.last_step_victim_search_ns = 0;
+    metrics_.last_step_materialization_ns = 0;
+    metrics_.last_step_victim_search_ratio = 0.0;
+    metrics_.last_step_materialization_ratio = 0.0;
+    metrics_.last_step_batch_count = 0;
+    metrics_.last_step_avg_zones_per_batch = 0.0;
+    metrics_.last_step_evictions_misc = 0;
+    metrics_.last_step_evictions_mlp = 0;
+    metrics_.last_step_evictions_attn = 0;
+    metrics_.burst_bytes_active = 0;
+    metrics_.reclaim_progress = 0.0;
+    metrics_.sigmoid_reclaim_value = 0.0;
+    metrics_.adaptive_window_value = 0;
+    metrics_.last_step_self_eviction_blocked = 0;
+    metrics_.last_step_protected_hits = 0;
+    metrics_.last_step_protected_scan_count = 0;
+    metrics_.last_step_fast_path_hits = 0;
+    metrics_.last_step_unprotected_evictions = 0;
+    metrics_.cumulative_self_eviction_blocked = 0;
+    metrics_.cumulative_protected_hits = 0;
+    metrics_.cumulative_protected_scan_count = 0;
+    metrics_.cumulative_fast_path_hits = 0;
+    metrics_.cumulative_unprotected_evictions = 0;
+    metrics_.hysteresis_holds = 0;
+    metrics_.last_slot_failure_code = static_cast<uint32_t>(SlotAcquireFailure::NONE);
+    metrics_.cumulative_zone_count = 0;
+    metrics_.cumulative_loaded_zones = 0;
+    metrics_.cumulative_skipped_zones = 0;
+    metrics_.cumulative_skip_ratio = 0.0;
+    metrics_.cumulative_bytes_loaded = 0;
+    metrics_.cumulative_bytes_evicted = 0;
+    metrics_.cumulative_evictions = 0;
+    metrics_.cumulative_eviction_age_avg = 0.0;
+    metrics_.cumulative_victim_search_ns = 0;
+    metrics_.cumulative_materialization_ns = 0;
+    metrics_.cumulative_batch_count = 0;
+    metrics_.cumulative_zones_per_batch = 0;
+    metrics_.cumulative_evictions_misc = 0;
+    metrics_.cumulative_evictions_mlp = 0;
+    metrics_.cumulative_evictions_attn = 0;
+    step_latencies_ms_.clear();
+    step_latency_sum_ms_ = 0.0;
+    step_latency_sum_sq_ms_ = 0.0;
     
     return true;
 }
 
 bool PolymorphicLoader::executeStep() {
+    if (!controller_ || !slots_) {
+        return false;
+    }
+
+    const auto started = std::chrono::high_resolution_clock::now();
+
     // Load zones for current step
     const auto& step = controller_->currentStep();
+    budget_.updateBurstBudget(controller_->getCurrentStepId());
+    const auto laneType = RawrXD::BackendLaneType::StandaloneExe;
+    uint32_t skippedZones = 0;
+    uint32_t loadedZones = 0;
+    uint64_t bytesLoaded = 0;
+    uint64_t bytesEvicted = 0;
+    uint64_t stepEvictions = 0;
+    uint64_t stepVictimSearchNs = 0;
+    uint64_t stepMaterializationNs = 0;
+    uint32_t stepBatchCount = 0;
+    uint64_t stepZonesPerBatchSum = 0;
+    double stepEvictionAgeAvg = 0.0;
+    SlotAcquireFailure lastFailure = SlotAcquireFailure::NONE;
+
+    const uint64_t evictionsBefore = slots_->getEvictionCount();
+    const uint64_t evictionAgeSumBefore = slots_->getEvictionAgeSum();
+    const uint64_t evictionBytesBefore = slots_->getEvictionBytes();
+    const uint64_t evictMiscBefore = slots_->getEvictionsByRole(SlotType::AUXILIARY);
+    const uint64_t evictMlpBefore = slots_->getEvictionsByRole(SlotType::MLP);
+    const uint64_t evictAttnBefore = slots_->getEvictionsByRole(SlotType::ATTENTION);
+    const uint64_t selfBlockedBefore = slots_->getSelfEvictionBlockedCount();
+    const uint64_t protectedHitsBefore = slots_->getProtectedHitCount();
+    const uint64_t protectedScanBefore = slots_->getProtectedScanCount();
+    const uint64_t fastPathBefore = slots_->getFastPathHitCount();
+    const uint64_t unprotectedEvictionsBefore = slots_->getUnprotectedEvictionCount();
+    const uint64_t hysteresisBefore = budget_.getHysteresisHolds();
+
+    auto classifyAcquireFailure = [&](SlotType slotType, uint32_t bytesRequested) -> SlotAcquireFailure {
+        if (!budget_.canAllocate(slotType, bytesRequested)) {
+            return SlotAcquireFailure::BYTE_BUDGET_EXCEEDED;
+        }
+
+        const auto allSlots = slots_->getAllSlots();
+        uint32_t roleSlots = 0;
+        uint32_t freeSlots = 0;
+        uint32_t freeThatFit = 0;
+        uint32_t largestFree = 0;
+
+        for (const Slot* s : allSlots) {
+            if (!s || s->type != slotType) {
+                continue;
+            }
+            ++roleSlots;
+            if (s->active_bytes == 0) {
+                ++freeSlots;
+                largestFree = std::max(largestFree, s->capacity_bytes);
+                if (s->capacity_bytes >= bytesRequested) {
+                    ++freeThatFit;
+                }
+            }
+        }
+
+        if (roleSlots == 0) {
+            return SlotAcquireFailure::ROLE_LIMIT_EXCEEDED;
+        }
+        if (freeThatFit > 0) {
+            return SlotAcquireFailure::NONE;
+        }
+        if (freeSlots == 0) {
+            return SlotAcquireFailure::SLOT_COUNT_EXHAUSTED;
+        }
+        if (largestFree < bytesRequested) {
+            return SlotAcquireFailure::FRAGMENTATION;
+        }
+        return SlotAcquireFailure::ROLE_LIMIT_EXCEEDED;
+    };
+
+    emitInferenceTelemetryPacket(
+        controller_->getCurrentStepId(),
+        static_cast<uint32_t>(step.zones_to_load.size()),
+        loadedZones,
+        skippedZones,
+        0.0,
+        bytesLoaded,
+        0,
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        budget_.getBurstBytesActive(),
+        budget_.getReclaimProgress(),
+        budget_.getSigmoidReclaimValue(),
+        budget_.getHysteresisHolds(),
+        slots_->getTotalUsage(),
+        laneType,
+        SlotAcquireFailure::NONE,
+        "start",
+        true);
     
     for (const auto& zone : step.zones_to_load) {
-        // Determine slot type from role
+        // Determine slot type from role.
         SlotType slot_type = SlotType::AUXILIARY;
-        switch (zone.role) {
-            case TensorRole::ATTN_Q:
-            case TensorRole::ATTN_K:
-            case TensorRole::ATTN_V:
-            case TensorRole::ATTN_O:
-                slot_type = SlotType::ATTENTION;
-                break;
-            case TensorRole::MLP_UP:
-            case TensorRole::MLP_DOWN:
-                slot_type = SlotType::MLP;
-                break;
-            case TensorRole::KV_CACHE:
-                slot_type = SlotType::KV_CACHE;
-                break;
-            default:
-                break;
+        const bool shouldMaterializeInSlot = isMaterializableRole(zone.role, slot_type);
+
+        if (!shouldMaterializeInSlot) {
+            ++skippedZones;
+            lastFailure = SlotAcquireFailure::UNSUPPORTED_ROLE;
+            continue;
         }
         
-        // Acquire slot
+        // Acquire slot and account victim-search time.
+        auto acquireStarted = std::chrono::high_resolution_clock::now();
         auto slot = slots_->acquireSlot(slot_type, zone.byte_length, controller_->getCurrentStepId());
+        stepVictimSearchNs += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::high_resolution_clock::now() - acquireStarted).count());
         if (!slot) {
             // Budget exceeded — trigger tier morphing: downgrade quantization
             PolymorphicMathEngine mathEngine;
@@ -939,15 +1413,185 @@ bool PolymorphicLoader::executeStep() {
                     }
                 }
             }
-            if (!freed) return false;
+            if (!freed) {
+                ++skippedZones;
+                lastFailure = classifyAcquireFailure(slot_type, zone.byte_length);
+                std::cerr << "[executeStep] slot acquire failed: step=" << controller_->getCurrentStepId()
+                          << " role=" << static_cast<int>(zone.role)
+                          << " bytes=" << zone.byte_length
+                          << " reason=" << slotAcquireFailureToString(lastFailure) << "\n";
+                continue;
+            }
 
             // Retry slot acquisition after morphing
+            acquireStarted = std::chrono::high_resolution_clock::now();
             slot = slots_->acquireSlot(slot_type, zone.byte_length, controller_->getCurrentStepId());
-            if (!slot) return false;
+            stepVictimSearchNs += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::high_resolution_clock::now() - acquireStarted).count());
+            if (!slot) {
+                ++skippedZones;
+                lastFailure = classifyAcquireFailure(slot_type, zone.byte_length);
+                std::cerr << "[executeStep] slot acquire failed after morph: step=" << controller_->getCurrentStepId()
+                          << " role=" << static_cast<int>(zone.role)
+                          << " bytes=" << zone.byte_length
+                          << " reason=" << slotAcquireFailureToString(lastFailure) << "\n";
+                continue;
+            }
         }
         
-        // Start async load
-        startAsyncLoad(zone);
+        const auto materializationStarted = std::chrono::high_resolution_clock::now();
+        const bool loadOk = startAsyncLoad(zone, slot);
+        stepMaterializationNs += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::high_resolution_clock::now() - materializationStarted).count());
+        if (!loadOk) {
+            ++skippedZones;
+            lastFailure = SlotAcquireFailure::IO_ERROR;
+            std::cerr << "[executeStep] async load failed: step=" << controller_->getCurrentStepId()
+                      << " role=" << static_cast<int>(zone.role)
+                      << " offset=" << zone.file_offset
+                      << " bytes=" << zone.byte_length << "\n";
+            continue;
+        }
+
+        ++loadedZones;
+        bytesLoaded += zone.byte_length;
+        ++stepBatchCount;
+        ++stepZonesPerBatchSum;
+    }
+
+    const uint32_t zoneCount = static_cast<uint32_t>(step.zones_to_load.size());
+    const double skipRatio = zoneCount > 0
+        ? static_cast<double>(skippedZones) / static_cast<double>(zoneCount)
+        : 0.0;
+
+    const auto finished = std::chrono::high_resolution_clock::now();
+    const uint64_t elapsedNs = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(finished - started).count());
+    const double elapsed_ms = std::chrono::duration<double, std::milli>(finished - started).count();
+    updateStepTimingMetrics(elapsed_ms, static_cast<size_t>(step.total_bytes), zoneCount, skippedZones);
+
+    const uint64_t evictionsAfter = slots_->getEvictionCount();
+    const uint64_t evictionAgeSumAfter = slots_->getEvictionAgeSum();
+    const uint64_t evictionBytesAfter = slots_->getEvictionBytes();
+    const uint64_t evictMiscAfter = slots_->getEvictionsByRole(SlotType::AUXILIARY);
+    const uint64_t evictMlpAfter = slots_->getEvictionsByRole(SlotType::MLP);
+    const uint64_t evictAttnAfter = slots_->getEvictionsByRole(SlotType::ATTENTION);
+    const uint64_t selfBlockedAfter = slots_->getSelfEvictionBlockedCount();
+    const uint64_t protectedHitsAfter = slots_->getProtectedHitCount();
+    const uint64_t protectedScanAfter = slots_->getProtectedScanCount();
+    const uint64_t fastPathAfter = slots_->getFastPathHitCount();
+    const uint64_t unprotectedEvictionsAfter = slots_->getUnprotectedEvictionCount();
+    const uint32_t adaptiveWindow = slots_->getAdaptiveWindowValue();
+    const uint64_t hysteresisAfter = budget_.getHysteresisHolds();
+    stepEvictions = (evictionsAfter >= evictionsBefore) ? (evictionsAfter - evictionsBefore) : 0;
+    bytesEvicted = (evictionBytesAfter >= evictionBytesBefore) ? (evictionBytesAfter - evictionBytesBefore) : 0;
+    if (stepEvictions > 0) {
+        const uint64_t deltaAge = (evictionAgeSumAfter >= evictionAgeSumBefore)
+            ? (evictionAgeSumAfter - evictionAgeSumBefore)
+            : 0;
+        stepEvictionAgeAvg = static_cast<double>(deltaAge) / static_cast<double>(stepEvictions);
+    }
+
+    metrics_.last_step_zone_count = zoneCount;
+    metrics_.last_step_loaded_zones = loadedZones;
+    metrics_.last_step_skipped_zones = skippedZones;
+    metrics_.last_step_skip_ratio = skipRatio;
+    metrics_.last_step_bytes_loaded = bytesLoaded;
+    metrics_.last_step_bytes_evicted = bytesEvicted;
+    metrics_.last_step_evictions = static_cast<uint32_t>(stepEvictions);
+    metrics_.last_step_eviction_age_avg = stepEvictionAgeAvg;
+    metrics_.last_step_victim_search_ns = stepVictimSearchNs;
+    metrics_.last_step_materialization_ns = stepMaterializationNs;
+    metrics_.last_step_victim_search_ratio = elapsedNs > 0
+        ? static_cast<double>(stepVictimSearchNs) / static_cast<double>(elapsedNs)
+        : 0.0;
+    metrics_.last_step_materialization_ratio = elapsedNs > 0
+        ? static_cast<double>(stepMaterializationNs) / static_cast<double>(elapsedNs)
+        : 0.0;
+    metrics_.last_step_batch_count = stepBatchCount;
+    metrics_.last_step_avg_zones_per_batch = stepBatchCount > 0
+        ? static_cast<double>(stepZonesPerBatchSum) / static_cast<double>(stepBatchCount)
+        : 0.0;
+    metrics_.last_step_evictions_misc = static_cast<uint32_t>((evictMiscAfter >= evictMiscBefore) ? (evictMiscAfter - evictMiscBefore) : 0);
+    metrics_.last_step_evictions_mlp = static_cast<uint32_t>((evictMlpAfter >= evictMlpBefore) ? (evictMlpAfter - evictMlpBefore) : 0);
+    metrics_.last_step_evictions_attn = static_cast<uint32_t>((evictAttnAfter >= evictAttnBefore) ? (evictAttnAfter - evictAttnBefore) : 0);
+    metrics_.burst_bytes_active = budget_.getBurstBytesActive();
+    metrics_.reclaim_progress = budget_.getReclaimProgress();
+    metrics_.sigmoid_reclaim_value = budget_.getSigmoidReclaimValue();
+    metrics_.adaptive_window_value = adaptiveWindow;
+    metrics_.last_step_self_eviction_blocked = static_cast<uint32_t>((selfBlockedAfter >= selfBlockedBefore) ? (selfBlockedAfter - selfBlockedBefore) : 0);
+    metrics_.last_step_protected_hits = static_cast<uint32_t>((protectedHitsAfter >= protectedHitsBefore) ? (protectedHitsAfter - protectedHitsBefore) : 0);
+    metrics_.last_step_protected_scan_count = static_cast<uint32_t>((protectedScanAfter >= protectedScanBefore) ? (protectedScanAfter - protectedScanBefore) : 0);
+    metrics_.last_step_fast_path_hits = static_cast<uint32_t>((fastPathAfter >= fastPathBefore) ? (fastPathAfter - fastPathBefore) : 0);
+    metrics_.last_step_unprotected_evictions = static_cast<uint32_t>((unprotectedEvictionsAfter >= unprotectedEvictionsBefore) ? (unprotectedEvictionsAfter - unprotectedEvictionsBefore) : 0);
+    metrics_.cumulative_self_eviction_blocked = selfBlockedAfter;
+    metrics_.cumulative_protected_hits = protectedHitsAfter;
+    metrics_.cumulative_protected_scan_count = protectedScanAfter;
+    metrics_.cumulative_fast_path_hits = fastPathAfter;
+    metrics_.cumulative_unprotected_evictions = unprotectedEvictionsAfter;
+    metrics_.hysteresis_holds = hysteresisAfter;
+    metrics_.last_slot_failure_code = static_cast<uint32_t>(lastFailure);
+    metrics_.cumulative_zone_count += zoneCount;
+    metrics_.cumulative_loaded_zones += loadedZones;
+    metrics_.cumulative_skipped_zones += skippedZones;
+    metrics_.cumulative_skip_ratio = metrics_.cumulative_zone_count > 0
+        ? static_cast<double>(metrics_.cumulative_skipped_zones) / static_cast<double>(metrics_.cumulative_zone_count)
+        : 0.0;
+    metrics_.cumulative_bytes_loaded += bytesLoaded;
+    metrics_.cumulative_bytes_evicted += bytesEvicted;
+    metrics_.cumulative_evictions = evictionsAfter;
+    metrics_.cumulative_eviction_age_avg = metrics_.cumulative_evictions > 0
+        ? static_cast<double>(evictionAgeSumAfter) / static_cast<double>(metrics_.cumulative_evictions)
+        : 0.0;
+    metrics_.cumulative_victim_search_ns += stepVictimSearchNs;
+    metrics_.cumulative_materialization_ns += stepMaterializationNs;
+    metrics_.cumulative_batch_count += stepBatchCount;
+    metrics_.cumulative_zones_per_batch += stepZonesPerBatchSum;
+    metrics_.cumulative_evictions_misc = evictMiscAfter;
+    metrics_.cumulative_evictions_mlp = evictMlpAfter;
+    metrics_.cumulative_evictions_attn = evictAttnAfter;
+
+    emitInferenceTelemetryPacket(
+        controller_->getCurrentStepId(),
+        zoneCount,
+        loadedZones,
+        skippedZones,
+        skipRatio,
+        bytesLoaded,
+        static_cast<uint32_t>(stepEvictions),
+        stepEvictionAgeAvg,
+        metrics_.last_step_evictions_misc,
+        metrics_.last_step_evictions_mlp,
+        metrics_.last_step_evictions_attn,
+        metrics_.last_step_self_eviction_blocked,
+        metrics_.last_step_protected_hits,
+        metrics_.last_step_protected_scan_count,
+        metrics_.last_step_fast_path_hits,
+        metrics_.last_step_unprotected_evictions,
+        metrics_.adaptive_window_value,
+        metrics_.burst_bytes_active,
+        metrics_.reclaim_progress,
+        metrics_.sigmoid_reclaim_value,
+        metrics_.hysteresis_holds,
+        slots_->getTotalUsage(),
+        laneType,
+        lastFailure,
+        "end",
+        true);
+
+    emitInferencePerfTelemetryPacket(
+        controller_->getCurrentStepId(),
+        zoneCount,
+        loadedZones,
+        elapsedNs,
+        stepVictimSearchNs,
+        stepMaterializationNs,
+        stepBatchCount,
+        metrics_.last_step_avg_zones_per_batch,
+        true);
+
+    if (skippedZones > 0) {
+        std::cerr << "[executeStep] step=" << controller_->getCurrentStepId()
+                  << " completed_with_skips=" << skippedZones << "\n";
     }
     
     return true;
@@ -997,14 +1641,14 @@ std::unique_ptr<IFormatAdapter> PolymorphicLoader::detectAndLoadAdapter(const st
     return nullptr;
 }
 
-bool PolymorphicLoader::startAsyncLoad(const TensorDesc& zone) {
-    if (!model_file_handle_) {
-        model_file_handle_ = CreateFileA(current_model_path_.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-        if (model_file_handle_ == INVALID_HANDLE_VALUE) return false;
+bool PolymorphicLoader::startAsyncLoad(const TensorDesc& zone, Slot* target_slot) {
+    if (!ensureModelFileHandle()) {
+        return false;
     }
 
     // Determine target slot
     SlotType slot_type = SlotType::AUXILIARY;
+    bool shouldMaterializeInSlot = true;
     switch (zone.role) {
         case TensorRole::ATTN_Q:
         case TensorRole::ATTN_K:
@@ -1020,11 +1664,36 @@ bool PolymorphicLoader::startAsyncLoad(const TensorDesc& zone) {
             slot_type = SlotType::KV_CACHE;
             break;
         default:
+            shouldMaterializeInSlot = false;
             break;
     }
 
-    auto slot = slots_->acquireSlot(slot_type, zone.byte_length, controller_->getCurrentStepId());
-    if (!slot) return false;
+    if (!shouldMaterializeInSlot) {
+        return true;
+    }
+
+    Slot* slot = target_slot;
+    if (!slot) {
+        slot = slots_->acquireSlot(slot_type, zone.byte_length, controller_->getCurrentStepId());
+    }
+    if (!slot) {
+        std::cerr << "[startAsyncLoad] no slot available: step="
+                  << (controller_ ? controller_->getCurrentStepId() : 0)
+                  << " role=" << static_cast<int>(zone.role)
+                  << " bytes=" << zone.byte_length << "\n";
+        return false;
+    }
+
+    LARGE_INTEGER fileSize{};
+    if (GetFileSizeEx(model_file_handle_, &fileSize)) {
+        const uint64_t endOffset = zone.file_offset + zone.byte_length;
+        if (endOffset > static_cast<uint64_t>(fileSize.QuadPart)) {
+            std::cerr << "[startAsyncLoad] out_of_range_read: offset=" << zone.file_offset
+                      << " bytes=" << zone.byte_length
+                      << " file_size=" << static_cast<uint64_t>(fileSize.QuadPart) << "\n";
+            return false;
+        }
+    }
 
     // Set up overlapped read
     OVERLAPPED* ov = new OVERLAPPED();
@@ -1035,13 +1704,84 @@ bool PolymorphicLoader::startAsyncLoad(const TensorDesc& zone) {
     if (!ReadFile(model_file_handle_, slot->base, zone.byte_length, NULL, ov)) {
         DWORD err = GetLastError();
         if (err != ERROR_IO_PENDING) {
+            std::cerr << "[startAsyncLoad] ReadFile failed: error=" << err
+                      << " offset=" << zone.file_offset
+                      << " bytes=" << zone.byte_length << "\n";
             delete ov;
             return false;
         }
     }
 
-    // Update metrics
-    metrics_.mb_per_second = (float)zone.byte_length / (1024.0f * 1024.0f); // Simplification
+    return true;
+}
+
+bool PolymorphicLoader::ensureModelFileHandle() {
+    if (model_file_handle_) {
+        return true;
+    }
+
+    model_file_handle_ = CreateFileA(
+        current_model_path_.c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_OVERLAPPED,
+        NULL);
+    if (model_file_handle_ == INVALID_HANDLE_VALUE) {
+        std::cerr << "[ensureModelFileHandle] CreateFileA failed: path=" << current_model_path_
+                  << " error=" << GetLastError() << "\n";
+        model_file_handle_ = nullptr;
+        return false;
+    }
 
     return true;
+}
+
+void PolymorphicLoader::updateStepTimingMetrics(double elapsed_ms, size_t step_bytes, uint32_t zone_count, uint32_t skipped_zones) {
+    step_latencies_ms_.push_back(elapsed_ms);
+    step_latency_sum_ms_ += elapsed_ms;
+    step_latency_sum_sq_ms_ += elapsed_ms * elapsed_ms;
+
+    const uint32_t samples = static_cast<uint32_t>(step_latencies_ms_.size());
+    if (samples == 0) {
+        return;
+    }
+
+    const double avg = step_latency_sum_ms_ / static_cast<double>(samples);
+    const double variance = std::max(0.0, (step_latency_sum_sq_ms_ / static_cast<double>(samples)) - (avg * avg));
+
+    std::vector<double> sorted = step_latencies_ms_;
+    std::sort(sorted.begin(), sorted.end());
+    const size_t p95_index = static_cast<size_t>(std::ceil(0.95 * static_cast<double>(samples))) - 1;
+    const double p95 = sorted[std::min(p95_index, sorted.size() - 1)];
+
+    metrics_.avg_step_ms = avg;
+    metrics_.p95_step_ms = p95;
+    metrics_.step_stddev_ms = std::sqrt(variance);
+    metrics_.timed_steps = samples;
+    metrics_.active_memory_bytes = slots_ ? slots_->getTotalUsage() : 0;
+    metrics_.current_step = controller_ ? controller_->getCurrentStepId() : 0;
+
+    const double elapsed_seconds = std::max(step_latency_sum_ms_ / 1000.0, 1e-9);
+    metrics_.tokens_per_second = static_cast<float>(static_cast<double>(samples) / elapsed_seconds);
+    metrics_.mb_per_second = static_cast<float>((static_cast<double>(step_bytes) / (1024.0 * 1024.0)) / std::max(elapsed_ms / 1000.0, 1e-9));
+    metrics_.last_step_zone_count = zone_count;
+    metrics_.last_step_skipped_zones = skipped_zones;
+    metrics_.last_step_skip_ratio = zone_count > 0
+        ? static_cast<double>(skipped_zones) / static_cast<double>(zone_count)
+        : 0.0;
+}
+
+const char* PolymorphicLoader::slotAcquireFailureToString(SlotAcquireFailure reason) {
+    switch (reason) {
+        case SlotAcquireFailure::NONE: return "None";
+        case SlotAcquireFailure::SLOT_COUNT_EXHAUSTED: return "SlotCountExhausted";
+        case SlotAcquireFailure::BYTE_BUDGET_EXCEEDED: return "ByteBudgetExceeded";
+        case SlotAcquireFailure::FRAGMENTATION: return "Fragmentation";
+        case SlotAcquireFailure::ROLE_LIMIT_EXCEEDED: return "RoleBudgetExceeded";
+        case SlotAcquireFailure::UNSUPPORTED_ROLE: return "UnsupportedRole";
+        case SlotAcquireFailure::IO_ERROR: return "IoError";
+        default: return "Unknown";
+    }
 }

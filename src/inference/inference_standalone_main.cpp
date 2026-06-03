@@ -31,6 +31,7 @@
 
 #include "cpu_inference_engine.h"
 #include "ultra_fast_inference.h"
+#include "token_generator.h"
 
 // ============================================================================
 // Forward declarations — these live in the inference core sources
@@ -65,6 +66,7 @@ struct InferenceCLI {
     bool interactive    = false;
     bool traceSummary   = false;
     bool verbose        = false;
+    bool stream         = false;
 
     static InferenceCLI parse(int argc, char* argv[]) {
         InferenceCLI cli;
@@ -79,6 +81,8 @@ struct InferenceCLI {
                 cli.temperature = static_cast<float>(atof(argv[++i]));
             } else if (strcmp(argv[i], "--bench") == 0) {
                 cli.benchmark = true;
+            } else if (strcmp(argv[i], "--stream") == 0) {
+                cli.stream = true;
             } else if (strcmp(argv[i], "--interactive") == 0) {
                 cli.interactive = true;
             } else if (strcmp(argv[i], "--trace-token-summary") == 0) {
@@ -94,6 +98,7 @@ struct InferenceCLI {
                 printf("  --max-tokens <n>     Maximum tokens to generate (default: 256)\n");
                 printf("  --temperature <f>    Sampling temperature (default: 0.7)\n");
                 printf("  --bench              Run TPS benchmark\n");
+                printf("  --stream             Stream tokens to stdout as generated\n");
                 printf("  --interactive        Interactive REPL mode\n");
                 printf("  --trace-token-summary Emit Titan token trace summary after generation\n");
                 printf("  --trace-token-csv <path> Dump Titan token trace CSV after generation\n");
@@ -359,6 +364,49 @@ int main(int argc, char* argv[]) {
     if (cli.benchmark) {
         BenchmarkResult bench = runBenchmark(cli);
         (void)bench;
+        return 0;
+    }
+
+    if (cli.stream) {
+        printf("[Stream] Loading model: %s\n", cli.modelPath.c_str());
+        rawrxd::inference::AutonomousInferenceEngine::InferenceConfig config;
+        config.max_memory_mb = 0;
+        config.quality_target = 0.8f;
+        config.enable_streaming_pruning = true;
+        config.enable_hotpatching = true;
+        config.enable_gpu = true;
+
+        rawrxd::inference::AutonomousInferenceEngine engine(config);
+        if (!engine.loadModelAutomatic(cli.modelPath)) {
+            printf("[Stream] ERROR: Failed to load model: %s\n", cli.modelPath.c_str());
+            return 1;
+        }
+
+        std::vector<int32_t> promptTokens;
+        std::istringstream piss(cli.prompt.empty() ? "Hello world" : cli.prompt);
+        std::string w;
+        while (piss >> w) {
+            uint32_t h = 0;
+            for (char c : w) h = h * 31 + (uint32_t)c;
+            promptTokens.push_back((int32_t)(h % 32000));
+        }
+
+        printf("[Stream] Generating (press Ctrl+C to cancel)...\n\n");
+        auto start = std::chrono::high_resolution_clock::now();
+
+        rawrxd::inference::TokenGenerator gen(engine, promptTokens, cli.maxTokens);
+        int tokenCount = 0;
+        while (gen.hasNext()) {
+            std::string tok = gen.next();
+            if (tok.empty()) break;
+            printf("%s", tok.c_str());
+            fflush(stdout);
+            tokenCount++;
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        double totalMs = std::chrono::duration<double, std::milli>(end - start).count();
+        double tps = (totalMs > 0) ? (tokenCount * 1000.0 / totalMs) : 0;
+        printf("\n\n[Stream] %d tokens in %.2f ms = %.2f tok/s\n", tokenCount, totalMs, tps);
         return 0;
     }
 

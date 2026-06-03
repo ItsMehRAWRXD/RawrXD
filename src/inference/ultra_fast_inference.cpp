@@ -14,6 +14,16 @@
 #include <windows.h>
 #endif
 
+#ifdef _WIN32
+// Pin inference worker to a single core to keep the 64MB arena resident in one L3 slice.
+static void PinThreadToCore(std::thread& t, DWORD coreIndex) {
+    if (t.native_handle() != nullptr) {
+        DWORD_PTR mask = 1ULL << coreIndex;
+        SetThreadAffinityMask(t.native_handle(), mask);
+    }
+}
+#endif
+
 namespace rawrxd {
 namespace inference {
 
@@ -542,6 +552,9 @@ AutonomousInferenceEngine::AutonomousInferenceEngine(const InferenceConfig& conf
       m_inferRing(RawrXD::Inference::TokenQueueFast::create(kInferRingCapacity)) {
     // Start the persistent worker thread that services queueInfer() requests
     m_inferWorker = std::thread(&AutonomousInferenceEngine::inferWorkerLoop, this);
+#ifdef _WIN32
+    PinThreadToCore(m_inferWorker, 2); // Pin to core 2 (skip 0/1 for OS/IDE)
+#endif
 }
 
 AutonomousInferenceEngine::~AutonomousInferenceEngine() {

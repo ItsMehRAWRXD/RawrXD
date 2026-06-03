@@ -34,6 +34,8 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         file(GLOB _MSVC_VERS "D:/VS2022Enterprise/VC/Tools/MSVC/*")
     elseif(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC")
         file(GLOB _MSVC_VERS "C:/VS2022Enterprise/VC/Tools/MSVC/*")
+    elseif(EXISTS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC")
+        file(GLOB _MSVC_VERS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/*")
     elseif(EXISTS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC")
         file(GLOB _MSVC_VERS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/*")
     else()
@@ -2969,8 +2971,11 @@ endif()
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
 set(INFERENCE_ENGINE_SOURCES
+    src/inference/arena.asm
+    src/inference/accumulate_row_masm.asm
     src/inference/inference_standalone_main.cpp
     src/inference/ultra_fast_inference.cpp
+    src/inference/token_generator.cpp
     src/gpu/speculative_decoder_v2.cpp
     src/gpu/speculative_inference_bridge.cpp
     src/inference/polymorphic_loader.cpp

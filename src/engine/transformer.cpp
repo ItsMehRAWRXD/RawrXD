@@ -177,15 +177,13 @@ void TransformerLayer::forward(float* x, int pos, int seq_len) {
         static_cast<int>((total_tokens_seen - effective_len) % max_seq_len),
         max_seq_len);
     
-    if (use_quantized_kv && effective_len > 128) {
+    if (use_quantized_kv && effective_len > 64) {
         // Flash-Attention v2 path with quantized KV cache
-        // For Flash-Attention we dequant tiles on-the-fly, but for simplicity
-        // we use the FP32 cache that was also written (it holds the ring buffer)
-        // True int8 Flash-Attention would dequant per-tile — next optimization tier
+        // Threshold lowered from 128 -> 64 to use cache-blocked path earlier
         multi_head_attention_flash(
             q, attn_out, effective_len, logical_start_pos, n_heads, n_kv_heads, head_dim);
     } else {
-        // Standard path for short sequences (< 128 tokens)
+        // Standard path for short sequences (<= 64 tokens)
         multi_head_attention(q, k_cache, v_cache, attn_out,
                             effective_len, logical_start_pos, n_heads, n_kv_heads, head_dim);
     }

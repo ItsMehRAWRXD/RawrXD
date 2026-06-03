@@ -1,5 +1,7 @@
 #pragma once
 
+#include "arena.h"
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -156,7 +158,11 @@ struct Slot {
     void* base;                     // Fixed base address
     uint32_t capacity_bytes;        // Never changes
     SlotType type;                  // Role-based budget
+    SlotType home_type;             // Original role bucket for this slot
+    uint32_t flags;                 // Slot policy flags (e.g., protected ATTN ring)
     uint64_t last_written_step;     // For LRU / verification
+    uint64_t last_access_step;      // Last observed use for locality-sensitive eviction
+    uint64_t last_eviction_step;    // Last step this slot was evicted
     uint32_t active_bytes;          // Current usage (< capacity)
 };
 
@@ -185,16 +191,33 @@ struct ActiveWindowBudget {
     static constexpr size_t MLP_BYTES = static_cast<size_t>(TOTAL_BYTES * (WEIGHT_MLP / WEIGHT_SUM));
     static constexpr size_t KV_BYTES = static_cast<size_t>(TOTAL_BYTES * (WEIGHT_KV / WEIGHT_SUM));
     static constexpr size_t MISC_BYTES = TOTAL_BYTES - (ATTN_BYTES + MLP_BYTES + KV_BYTES);
+    static constexpr uint32_t BURST_STEPS = 16;
+    static constexpr uint32_t BURST_ATTN_MULTIPLIER = 2;
+    static constexpr double BURST_RECLAIM_RATE = 0.125;
+    static constexpr double BURST_SIGMOID_GAIN = 6.0;
+    static constexpr double MIN_RECLAIM_FLOOR = 0.15;
     
     // Runtime tracking
-    std::atomic<size_t> attn_used{0};
-    std::atomic<size_t> mlp_used{0};
-    std::atomic<size_t> kv_used{0};
-    std::atomic<size_t> misc_used{0};
+    mutable std::atomic<size_t> attn_used{0};
+    mutable std::atomic<size_t> mlp_used{0};
+    mutable std::atomic<size_t> kv_used{0};
+    mutable std::atomic<size_t> misc_used{0};
+    mutable std::atomic<size_t> burst_attn_bytes{0};
+    mutable std::atomic<double> burst_reclaim_progress{0.0};
+    mutable std::atomic<double> sigmoid_reclaim_value{0.0};
+    mutable std::atomic<uint64_t> hysteresis_holds{0};
     
     // Hard cap enforcement
     bool canAllocate(SlotType type, size_t bytes) const;
-    void recordUsage(SlotType type, size_t bytes);
+    void recordUsage(SlotType type, size_t bytes) const;
+    void releaseUsage(SlotType type, size_t bytes) const;
+    void updateBurstBudget(uint64_t step_id) const;
+    size_t getEffectiveLimit(SlotType type) const;
+    size_t getBurstBytesActive() const;
+    double getReclaimProgress() const;
+    double getSigmoidReclaimValue() const;
+    uint64_t getHysteresisHolds() const;
+    bool isBurstActive() const;
 };
 
 /**
@@ -203,7 +226,15 @@ struct ActiveWindowBudget {
  */
 class SlotLattice {
 public:
-    explicit SlotLattice(const ActiveWindowBudget& budget, size_t slot_count = 32);
+    static constexpr uint32_t SLOT_FLAG_PROTECTED_ATTN = 0x1;
+    static constexpr uint32_t ATTN_PROTECTED_SLOTS = 4;
+    static constexpr uint32_t SLOT_LRU_BUCKETS = 16;
+    static constexpr uint64_t EVICTION_AGE_THRESHOLD = 2;
+    static constexpr uint64_t ATTN_LOCALITY_WINDOW = 2;
+    static constexpr uint32_t MAX_SCAN_ATTEMPTS = 10;
+    static constexpr uint32_t MAX_RETRIES = 3;
+
+    explicit SlotLattice(const ActiveWindowBudget& budget, size_t slot_count = 256);
     ~SlotLattice();
     
     /**
@@ -247,11 +278,33 @@ public:
      */
     Slot* findSlot(SlotType type) const;
 
+    uint64_t getEvictionCount() const;
+    uint64_t getEvictionAgeSum() const;
+    uint64_t getEvictionBytes() const;
+    uint64_t getEvictionsByRole(SlotType type) const;
+    uint64_t getSelfEvictionBlockedCount() const;
+    uint64_t getProtectedHitCount() const;
+    uint64_t getProtectedScanCount() const;
+    uint64_t getFastPathHitCount() const;
+    uint64_t getUnprotectedEvictionCount() const;
+    uint32_t getAdaptiveWindowValue() const;
+
 private:
     std::vector<Slot> slots_;
     std::vector<Slot*> free_slots_;
     const ActiveWindowBudget& budget_;
+    FastArena arena_;               // Zero-syscall arena allocator
     std::atomic<size_t> total_usage_{0};
+    std::atomic<uint64_t> eviction_count_total_{0};
+    std::atomic<uint64_t> eviction_age_sum_total_{0};
+    std::atomic<uint64_t> eviction_bytes_total_{0};
+    std::array<std::atomic<uint64_t>, 4> eviction_by_role_{};
+    std::atomic<uint64_t> self_eviction_blocked_total_{0};
+    std::atomic<uint64_t> protected_hit_total_{0};
+    std::atomic<uint64_t> protected_scan_total_{0};
+    std::atomic<uint64_t> fast_path_hit_total_{0};
+    std::atomic<uint64_t> unprotected_eviction_total_{0};
+    std::atomic<uint32_t> adaptive_window_last_{0};
 };
 
 // ============================================================================
@@ -458,6 +511,16 @@ private:
  */
 class PolymorphicLoader {
 public:
+    enum class SlotAcquireFailure : uint32_t {
+        NONE = 0,
+        SLOT_COUNT_EXHAUSTED = 1,
+        BYTE_BUDGET_EXCEEDED = 2,
+        FRAGMENTATION = 3,
+        ROLE_LIMIT_EXCEEDED = 4,
+        UNSUPPORTED_ROLE = 5,
+        IO_ERROR = 6
+    };
+
     explicit PolymorphicLoader(size_t active_window_bytes = 2500 * 1024 * 1024);
     ~PolymorphicLoader();
     
@@ -501,6 +564,58 @@ public:
         size_t active_memory_bytes;
         uint32_t total_steps;
         uint32_t current_step;
+        double avg_step_ms;
+        double p95_step_ms;
+        double step_stddev_ms;
+        uint32_t timed_steps;
+        uint32_t last_step_zone_count;
+        uint32_t last_step_loaded_zones;
+        uint32_t last_step_skipped_zones;
+        double last_step_skip_ratio;
+        uint64_t last_step_bytes_loaded;
+        uint64_t last_step_bytes_evicted;
+        uint32_t last_step_evictions;
+        double last_step_eviction_age_avg;
+        uint64_t last_step_victim_search_ns;
+        uint64_t last_step_materialization_ns;
+        double last_step_victim_search_ratio;
+        double last_step_materialization_ratio;
+        uint32_t last_step_batch_count;
+        double last_step_avg_zones_per_batch;
+        uint32_t last_step_evictions_misc;
+        uint32_t last_step_evictions_mlp;
+        uint32_t last_step_evictions_attn;
+        uint64_t burst_bytes_active;
+        double reclaim_progress;
+        double sigmoid_reclaim_value;
+        uint32_t adaptive_window_value;
+        uint32_t last_step_self_eviction_blocked;
+        uint32_t last_step_protected_hits;
+        uint32_t last_step_protected_scan_count;
+        uint32_t last_step_fast_path_hits;
+        uint32_t last_step_unprotected_evictions;
+        uint64_t cumulative_self_eviction_blocked;
+        uint64_t cumulative_protected_hits;
+        uint64_t cumulative_protected_scan_count;
+        uint64_t cumulative_fast_path_hits;
+        uint64_t cumulative_unprotected_evictions;
+        uint64_t hysteresis_holds;
+        uint32_t last_slot_failure_code;
+        uint64_t cumulative_zone_count;
+        uint64_t cumulative_loaded_zones;
+        uint64_t cumulative_skipped_zones;
+        double cumulative_skip_ratio;
+        uint64_t cumulative_bytes_loaded;
+        uint64_t cumulative_bytes_evicted;
+        uint64_t cumulative_evictions;
+        double cumulative_eviction_age_avg;
+        uint64_t cumulative_victim_search_ns;
+        uint64_t cumulative_materialization_ns;
+        uint64_t cumulative_batch_count;
+        uint64_t cumulative_zones_per_batch;
+        uint64_t cumulative_evictions_misc;
+        uint64_t cumulative_evictions_mlp;
+        uint64_t cumulative_evictions_attn;
     };
     
     PerformanceMetrics getMetrics() const;
@@ -509,6 +624,8 @@ public:
      * Detect model format automatically and load with appropriate adapter.
      */
     static std::unique_ptr<IFormatAdapter> detectAndLoadAdapter(const std::string& path);
+
+    static const char* slotAcquireFailureToString(SlotAcquireFailure reason);
 
 private:
     ActiveWindowBudget budget_;
@@ -519,9 +636,15 @@ private:
     
     std::string current_model_path_;
     PerformanceMetrics metrics_;
+    std::vector<double> step_latencies_ms_;
+    double step_latency_sum_ms_ = 0.0;
+    double step_latency_sum_sq_ms_ = 0.0;
     
     // Streaming I/O
     void* model_file_handle_;
-    bool startAsyncLoad(const TensorDesc& zone);
+    bool ensureModelFileHandle();
+    bool startAsyncLoad(const TensorDesc& zone, Slot* target_slot = nullptr);
+
+    void updateStepTimingMetrics(double elapsed_ms, size_t step_bytes, uint32_t zone_count, uint32_t skipped_zones);
 };
 
