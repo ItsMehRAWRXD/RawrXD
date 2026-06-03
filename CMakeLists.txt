@@ -2976,6 +2976,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/inference/inference_standalone_main.cpp
     src/inference/ultra_fast_inference.cpp
     src/inference/token_generator.cpp
+    src/inference/chat_session.cpp
     src/gpu/speculative_decoder_v2.cpp
     src/gpu/speculative_inference_bridge.cpp
     src/inference/polymorphic_loader.cpp

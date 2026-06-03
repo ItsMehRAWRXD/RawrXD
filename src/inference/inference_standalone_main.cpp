@@ -32,6 +32,7 @@
 #include "cpu_inference_engine.h"
 #include "ultra_fast_inference.h"
 #include "token_generator.h"
+#include "chat_session.h"
 
 // ============================================================================
 // Forward declarations — these live in the inference core sources
@@ -67,6 +68,7 @@ struct InferenceCLI {
     bool traceSummary   = false;
     bool verbose        = false;
     bool stream         = false;
+    bool chat           = false;
 
     static InferenceCLI parse(int argc, char* argv[]) {
         InferenceCLI cli;
@@ -83,6 +85,8 @@ struct InferenceCLI {
                 cli.benchmark = true;
             } else if (strcmp(argv[i], "--stream") == 0) {
                 cli.stream = true;
+            } else if (strcmp(argv[i], "--chat") == 0) {
+                cli.chat = true;
             } else if (strcmp(argv[i], "--interactive") == 0) {
                 cli.interactive = true;
             } else if (strcmp(argv[i], "--trace-token-summary") == 0) {
@@ -418,6 +422,53 @@ int main(int argc, char* argv[]) {
 
     if (cli.traceSummary || !cli.traceCsvPath.empty()) {
         return runTitanTrace(cli);
+    }
+
+    if (cli.chat) {
+        printf("[Chat] Loading model: %s\n", cli.modelPath.c_str());
+        rawrxd::inference::AutonomousInferenceEngine::InferenceConfig config;
+        config.max_memory_mb = 0;
+        config.quality_target = 0.8f;
+        config.enable_streaming_pruning = true;
+        config.enable_hotpatching = true;
+        config.enable_gpu = true;
+
+        rawrxd::inference::AutonomousInferenceEngine engine(config);
+        if (!engine.loadModelAutomatic(cli.modelPath)) {
+            printf("[Chat] ERROR: Failed to load model: %s\n", cli.modelPath.c_str());
+            return 1;
+        }
+
+        rawrxd::inference::ChatSession session(engine, 4096);
+        printf("[Chat] Session started. Type 'exit' to quit, 'reset' to clear history.\n\n");
+
+        char line[1024];
+        while (true) {
+            printf("User: ");
+            fflush(stdout);
+            if (!fgets(line, sizeof(line), stdin)) break;
+            line[strcspn(line, "\n")] = '\0';
+            if (strcmp(line, "exit") == 0) break;
+            if (strcmp(line, "reset") == 0) {
+                session.reset();
+                printf("[Chat] History cleared.\n\n");
+                continue;
+            }
+            if (strlen(line) == 0) continue;
+
+            session.addUserMessage(line);
+            printf("Assistant: ");
+            fflush(stdout);
+            auto start = std::chrono::high_resolution_clock::now();
+            session.generate([](const std::string& token) {
+                printf("%s", token.c_str());
+                fflush(stdout);
+            }, cli.maxTokens);
+            auto end = std::chrono::high_resolution_clock::now();
+            double ms = std::chrono::duration<double, std::milli>(end - start).count();
+            printf("\n[%.2f ms]\n\n", ms);
+        }
+        return 0;
     }
 
     if (cli.interactive) {
