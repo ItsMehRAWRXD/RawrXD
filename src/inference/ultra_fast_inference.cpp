@@ -47,6 +47,12 @@ static void HarnessCtorTrace(const char* msg) {
 static void HarnessCtorTrace(const char*) {}
 #endif
 
+#if defined(SOVEREIGN_DEBUG)
+#define SOV_TRACE(msg) HarnessCtorTrace(msg)
+#else
+#define SOV_TRACE(msg) ((void)0)
+#endif
+
 using InferenceConfig = AutonomousInferenceEngine::InferenceConfig;
 
 class SimpleTokenizer {
@@ -570,48 +576,48 @@ AutonomousInferenceEngine::AutonomousInferenceEngine(const InferenceConfig& conf
       inference_mutex_(),
       running_(false),
             m_inferRing(nullptr) {
-        HarnessCtorTrace("[CtorTrace] enter");
-        HarnessCtorTrace("[CtorTrace] pruner");
+        SOV_TRACE("[CtorTrace] enter");
+        SOV_TRACE("[CtorTrace] pruner");
         pruner_ = std::make_unique<TensorPruningScorer>();
 
-        HarnessCtorTrace("[CtorTrace] reducer");
+        SOV_TRACE("[CtorTrace] reducer");
         reducer_ = std::make_unique<StreamingTensorReducer>();
 
         if (!config_.enable_hotpatching) {
-            HarnessCtorTrace("[CtorTrace] skip_hotpatcher");
+            SOV_TRACE("[CtorTrace] skip_hotpatcher");
         } else {
-            HarnessCtorTrace("[CtorTrace] hotpatcher");
+            SOV_TRACE("[CtorTrace] hotpatcher");
             hotpatcher_ = std::make_unique<ModelHotpatcher>();
         }
 
         if (!config_.enable_async_inference) {
-            HarnessCtorTrace("[CtorTrace] skip_async_lane");
+            SOV_TRACE("[CtorTrace] skip_async_lane");
             return;
         }
 
-        HarnessCtorTrace("[CtorTrace] infer_ring");
+        SOV_TRACE("[CtorTrace] infer_ring");
         if (!config_.enable_ollama_blob_support) {
-            HarnessCtorTrace("[CtorTrace] skip_infer_ring_harness");
+            SOV_TRACE("[CtorTrace] skip_infer_ring_harness");
             m_inferRing = nullptr;
         } else {
             m_inferRing = RawrXD::Inference::TokenQueueFast::create(kInferRingCapacity);
         }
 
-        HarnessCtorTrace("[CtorTrace] worker_start");
+        SOV_TRACE("[CtorTrace] worker_start");
         if (!config_.enable_ollama_blob_support) {
-            HarnessCtorTrace("[CtorTrace] skip_worker_harness");
-            HarnessCtorTrace("[CtorTrace] ready");
+            SOV_TRACE("[CtorTrace] skip_worker_harness");
+            SOV_TRACE("[CtorTrace] ready");
             return;
         }
 
     // Start the persistent worker thread that services queueInfer() requests
     m_inferWorker = std::thread(&AutonomousInferenceEngine::inferWorkerLoop, this);
-        HarnessCtorTrace("[CtorTrace] worker_created");
+    SOV_TRACE("[CtorTrace] worker_created");
 #ifdef _WIN32
     PinThreadToCore(m_inferWorker, 2); // Pin to core 2 (skip 0/1 for OS/IDE)
-        HarnessCtorTrace("[CtorTrace] worker_pinned");
+    SOV_TRACE("[CtorTrace] worker_pinned");
 #endif
-        HarnessCtorTrace("[CtorTrace] ready");
+    SOV_TRACE("[CtorTrace] ready");
 }
 
 AutonomousInferenceEngine::~AutonomousInferenceEngine() {
@@ -630,31 +636,31 @@ AutonomousInferenceEngine::~AutonomousInferenceEngine() {
 }
 
 bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path) {
-    HarnessCtorTrace("[InitTrace] enter");
+    SOV_TRACE("[InitTrace] enter");
     config_.model_path = model_path;
-    HarnessCtorTrace("[InitTrace] clear_state");
+    SOV_TRACE("[InitTrace] clear_state");
     loaded_model_.clear();
     inference_backend_.reset();
 
-    HarnessCtorTrace("[InitTrace] tokenizer_alloc");
+    SOV_TRACE("[InitTrace] tokenizer_alloc");
     tokenizer_ = std::make_unique<RawrXDTokenizer>();
-    HarnessCtorTrace("[InitTrace] tokenizer_load_gguf");
+    SOV_TRACE("[InitTrace] tokenizer_load_gguf");
     const bool skipTokenizerGguf = !config_.enable_ollama_blob_support;
     const bool tokenizerLoaded = !skipTokenizerGguf && tokenizer_->LoadFromGGUF(model_path);
     if (!tokenizerLoaded) {
-        HarnessCtorTrace("[InitTrace] tokenizer_fallback_json");
+        SOV_TRACE("[InitTrace] tokenizer_fallback_json");
         std::string jsonPath = model_path;
         size_t dot = jsonPath.rfind('.');
         if (dot != std::string::npos) {
             jsonPath = jsonPath.substr(0, dot) + ".json";
         }
-        HarnessCtorTrace("[InitTrace] tokenizer_load_json");
+        SOV_TRACE("[InitTrace] tokenizer_load_json");
         const bool skipTokenizerJson = !config_.enable_ollama_blob_support;
         if (!skipTokenizerJson && !tokenizer_->Load(jsonPath)) {
             printf("[Tokenizer] No vocab found — using byte-level fallback\n");
         }
     }
-    HarnessCtorTrace("[InitTrace] file_exists_check");
+    SOV_TRACE("[InitTrace] file_exists_check");
     bool modelExists = false;
     if (!config_.enable_ollama_blob_support) {
 #ifdef _WIN32
@@ -668,14 +674,14 @@ bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path
     }
 
     if (modelExists) {
-        HarnessCtorTrace("[InitTrace] model_vector_resize");
+        SOV_TRACE("[InitTrace] model_vector_resize");
         loaded_model_.resize(1024, 0.1f);
-        HarnessCtorTrace("[InitTrace] env_real_forward");
+        SOV_TRACE("[InitTrace] env_real_forward");
         const bool enableRealForward = config_.enable_gpu;
         if (enableRealForward) {
-            HarnessCtorTrace("[InitTrace] backend_alloc");
+            SOV_TRACE("[InitTrace] backend_alloc");
             inference_backend_ = std::make_unique<RawrXDInference>();
-            HarnessCtorTrace("[InitTrace] backend_initialize");
+            SOV_TRACE("[InitTrace] backend_initialize");
             if (!inference_backend_->Initialize(model_path)) {
                 const std::string reason = inference_backend_->GetLastLoadErrorMessage();
                 printf("[InferenceBackend] WARNING: Real backend init failed, using fallback path: %s\n",
@@ -683,10 +689,10 @@ bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path
                 inference_backend_.reset();
             }
         }
-        HarnessCtorTrace("[InitTrace] success");
+        SOV_TRACE("[InitTrace] success");
         return true;
     }
-    HarnessCtorTrace("[InitTrace] missing_model");
+    SOV_TRACE("[InitTrace] missing_model");
     return false;
 }
 
@@ -697,9 +703,9 @@ bool AutonomousInferenceEngine::loadOllamaBlob(const std::string& blob_path) {
 void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
                                       std::function<void(const std::string&)> token_callback,
                                       size_t max_tokens) {
-    HarnessCtorTrace("[InferTrace] enter");
+    SOV_TRACE("[InferTrace] enter");
     if (loaded_model_.empty()) {
-        HarnessCtorTrace("[InferTrace] loaded_model_empty");
+        SOV_TRACE("[InferTrace] loaded_model_empty");
         if (token_callback) token_callback("");
         return;
     }
@@ -716,10 +722,10 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
         }
     }
 
-    HarnessCtorTrace("[InferTrace] ultrafast_ctor");
+    SOV_TRACE("[InferTrace] ultrafast_ctor");
     UltraFastInferenceEngine engine(config_);
     if (!prefixHit) {
-        HarnessCtorTrace("[InferTrace] ultrafast_load_model");
+        SOV_TRACE("[InferTrace] ultrafast_load_model");
         engine.loadModel(config_.model_path);
     }
 
@@ -727,7 +733,7 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
     // Push tokens into the ring, then drain via IC_TokenBatchDequeue so the
     // token-batch dequeue kernel is wired into every infer() call.
     if (m_inferRing) {
-        HarnessCtorTrace("[InferTrace] ring_path");
+        SOV_TRACE("[InferTrace] ring_path");
         // Push: ring is empty at this point (worker not consuming during sync call)
         for (int32_t t : prompt) {
             // If ring is unexpectedly full (re-entrant call?), fall through
@@ -760,7 +766,7 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
         }
 
         auto generated = engine.generate(prompt_text, static_cast<int>(max_tokens));
-        HarnessCtorTrace("[InferTrace] ring_generate_done");
+        SOV_TRACE("[InferTrace] ring_generate_done");
         for (int32_t t : generated) {
             if (token_callback) {
                 if (tokenizer_ && tokenizer_->size() > 256) {
@@ -773,14 +779,14 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
         }
         stats_.total_tokens_generated += static_cast<int>(generated.size());
     } else {
-        HarnessCtorTrace("[InferTrace] direct_path");
+        SOV_TRACE("[InferTrace] direct_path");
         // Fallback: ring allocation failed — direct path
         std::string prompt_text;
         prompt_text.reserve(prompt.size());
         for (int32_t t : prompt)
             prompt_text.push_back(static_cast<char>(std::clamp<int32_t>(t, 0, 255)));
         auto generated = engine.generate(prompt_text, static_cast<int>(max_tokens));
-        HarnessCtorTrace("[InferTrace] direct_generate_done");
+        SOV_TRACE("[InferTrace] direct_generate_done");
         for (int32_t t : generated) {
             if (token_callback) {
                 if (tokenizer_ && tokenizer_->size() > 256) {
@@ -813,15 +819,15 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
     std::function<void(const std::string&)> token_callback,
     size_t max_tokens)
 {
-    HarnessCtorTrace("[RunTrace] enter");
+    SOV_TRACE("[RunTrace] enter");
     Telemetry telem{};
     if (!tokenizer_ || prompt_text.empty()) {
-        HarnessCtorTrace("[RunTrace] early_return_empty");
+        SOV_TRACE("[RunTrace] early_return_empty");
         if (token_callback) token_callback("");
         return telem;
     }
 
-    HarnessCtorTrace("[RunTrace] encode_begin");
+    SOV_TRACE("[RunTrace] encode_begin");
     auto t0 = std::chrono::high_resolution_clock::now();
 
     // Encode text → token IDs using real tokenizer
@@ -832,18 +838,18 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
         prompt.push_back(static_cast<int32_t>(t));
     }
     telem.prompt_tokens = prompt.size();
-    HarnessCtorTrace("[RunTrace] encode_done");
+    SOV_TRACE("[RunTrace] encode_done");
 
     auto t1 = std::chrono::high_resolution_clock::now();
     telem.encode_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
     if (!inference_backend_) {
-        HarnessCtorTrace("[RunTrace] fallback_begin");
+        SOV_TRACE("[RunTrace] fallback_begin");
         // Fallback path preserves behavior when real backend failed to init.
         const auto fallback_start = std::chrono::high_resolution_clock::now();
         bool saw_first = false;
         size_t generated = 0;
-        HarnessCtorTrace("[RunTrace] fallback_infer_call");
+        SOV_TRACE("[RunTrace] fallback_infer_call");
         infer(prompt, [&](const std::string& piece) {
             if (!saw_first) {
                 const auto now = std::chrono::high_resolution_clock::now();
@@ -862,11 +868,11 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
         telem.tps = (telem.decode_ms > 0.0) ? (telem.generated_tokens * 1000.0 / telem.decode_ms) : 0.0;
         telem.total_ms = std::chrono::duration<double, std::milli>(t4 - t0).count();
         telem.context_tokens = telem.prompt_tokens + telem.generated_tokens;
-        HarnessCtorTrace("[RunTrace] fallback_done");
+        SOV_TRACE("[RunTrace] fallback_done");
         return telem;
     }
 
-    HarnessCtorTrace("[RunTrace] backend_begin");
+    SOV_TRACE("[RunTrace] backend_begin");
     RawrXDInference::GenerationStats generation_stats{};
     const auto gen_start = std::chrono::high_resolution_clock::now();
     bool saw_first_token = false;
@@ -911,7 +917,7 @@ void AutonomousInferenceEngine::queueInfer(
     size_t max_tokens)
 {
     if (config_.enable_async_inference && !config_.enable_ollama_blob_support && !m_inferWorker.joinable()) {
-        HarnessCtorTrace("[AsyncTrace] inline_queue_fallback");
+        SOV_TRACE("[AsyncTrace] inline_queue_fallback");
         infer(prompt, std::move(token_callback), max_tokens);
         return;
     }
@@ -931,7 +937,7 @@ void AutonomousInferenceEngine::queueInfer(
 // inferWorkerLoop — drained by the single worker thread
 // ---------------------------------------------------------------------------
 void AutonomousInferenceEngine::inferWorkerLoop() {
-    HarnessCtorTrace("[AsyncTrace] worker_loop_enter");
+    SOV_TRACE("[AsyncTrace] worker_loop_enter");
     while (!m_workerStop.load(std::memory_order_relaxed)) {
         InferRequest req;
         {
