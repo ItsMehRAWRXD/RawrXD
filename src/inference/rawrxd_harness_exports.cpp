@@ -1,11 +1,50 @@
 #include "ultra_fast_inference.h"
 
 #include <windows.h>
+#include <cstddef>
 #include <cstdint>
 #include <array>
 #include <memory>
 #include <new>
 #include <vector>
+
+void* operator new(std::size_t size) {
+    if (size == 0) {
+        size = 1;
+    }
+    return HeapAlloc(GetProcessHeap(), 0, static_cast<SIZE_T>(size));
+}
+
+void operator delete(void* ptr) noexcept {
+    if (ptr) {
+        HeapFree(GetProcessHeap(), 0, ptr);
+    }
+}
+
+void operator delete(void* ptr, std::size_t) noexcept {
+    if (ptr) {
+        HeapFree(GetProcessHeap(), 0, ptr);
+    }
+}
+
+void* operator new[](std::size_t size) {
+    if (size == 0) {
+        size = 1;
+    }
+    return HeapAlloc(GetProcessHeap(), 0, static_cast<SIZE_T>(size));
+}
+
+void operator delete[](void* ptr) noexcept {
+    if (ptr) {
+        HeapFree(GetProcessHeap(), 0, ptr);
+    }
+}
+
+void operator delete[](void* ptr, std::size_t) noexcept {
+    if (ptr) {
+        HeapFree(GetProcessHeap(), 0, ptr);
+    }
+}
 
 namespace {
 
