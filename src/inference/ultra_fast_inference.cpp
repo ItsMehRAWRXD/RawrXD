@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 
@@ -576,6 +577,7 @@ AutonomousInferenceEngine::~AutonomousInferenceEngine() {
 bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path) {
     config_.model_path = model_path;
     loaded_model_.clear();
+    inference_backend_.reset();
     tokenizer_ = std::make_unique<RawrXDTokenizer>();
     if (!tokenizer_->LoadFromGGUF(model_path)) {
         std::string jsonPath = model_path;
@@ -589,6 +591,17 @@ bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path
     }
     if (std::filesystem::exists(model_path)) {
         loaded_model_.resize(1024, 0.1f);
+        const char* envReal = std::getenv("RAWRXD_ENABLE_REAL_FORWARD");
+        const bool enableRealForward = (envReal != nullptr) && (std::string(envReal) == "1");
+        if (enableRealForward) {
+            inference_backend_ = std::make_unique<RawrXDInference>();
+            if (!inference_backend_->Initialize(model_path)) {
+                const std::string reason = inference_backend_->GetLastLoadErrorMessage();
+                printf("[InferenceBackend] WARNING: Real backend init failed, using fallback path: %s\n",
+                       reason.empty() ? "unknown" : reason.c_str());
+                inference_backend_.reset();
+            }
+        }
         return true;
     }
     return false;
@@ -729,45 +742,63 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
     auto t1 = std::chrono::high_resolution_clock::now();
     telem.encode_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-    // Run inference with per-token decoding
-    // TODO: Replace stub with real transformer forward pass
-    infer(prompt, [&](const std::string& /*raw_token*/) {
-        // infer() passes raw bytes — we decode properly below
-    }, max_tokens);
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-    telem.prefill_ms = std::chrono::duration<double, std::milli>(t2 - t1).count();
-
-    // For now, generate dummy tokens and decode them
-    // TODO: wire real generation loop to return token IDs
-    std::vector<int32_t> generated;
-    generated.reserve(max_tokens);
-    for (size_t i = 0; i < max_tokens; ++i) {
-        // Generate printable ASCII (32-126) for visible output
-        generated.push_back(static_cast<int32_t>(32 + (i % 95)));
+    if (!inference_backend_) {
+        // Fallback path preserves behavior when real backend failed to init.
+        const auto fallback_start = std::chrono::high_resolution_clock::now();
+        bool saw_first = false;
+        size_t generated = 0;
+        infer(prompt, [&](const std::string& piece) {
+            if (!saw_first) {
+                const auto now = std::chrono::high_resolution_clock::now();
+                telem.first_token_ms = std::chrono::duration<double, std::milli>(now - fallback_start).count();
+                saw_first = true;
+            }
+            if (token_callback) token_callback(piece);
+            generated++;
+        }, max_tokens);
+        auto t4 = std::chrono::high_resolution_clock::now();
+        const double fallback_total = std::chrono::duration<double, std::milli>(t4 - fallback_start).count();
+        telem.prefill_ms = telem.first_token_ms;
+        telem.decode_ms = std::max(0.0, fallback_total - telem.first_token_ms);
+        telem.sampling_ms = 0.0;
+        telem.generated_tokens = generated;
+        telem.tps = (telem.decode_ms > 0.0) ? (telem.generated_tokens * 1000.0 / telem.decode_ms) : 0.0;
+        telem.total_ms = std::chrono::duration<double, std::milli>(t4 - t0).count();
+        telem.context_tokens = telem.prompt_tokens + telem.generated_tokens;
+        return telem;
     }
 
-    // Decode each token and stream
-    bool first = true;
-    for (int32_t tok : generated) {
-        std::string piece = tokenizer_->DecodeToken(static_cast<uint32_t>(tok));
-        if (piece.empty() && tok >= 32 && tok <= 126) {
-            piece = std::string(1, static_cast<char>(tok));
-        }
-        if (token_callback) token_callback(piece);
-        telem.generated_tokens++;
-        if (first) {
-            auto t3 = std::chrono::high_resolution_clock::now();
-            telem.first_token_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
-            first = false;
-        }
-    }
+    RawrXDInference::GenerationStats generation_stats{};
+    const auto gen_start = std::chrono::high_resolution_clock::now();
+    bool saw_first_token = false;
 
-    auto t4 = std::chrono::high_resolution_clock::now();
-    telem.decode_ms = std::chrono::duration<double, std::milli>(t4 - t2).count();
-    telem.total_ms = std::chrono::duration<double, std::milli>(t4 - t0).count();
-    telem.tps = (telem.decode_ms > 0) ? (telem.generated_tokens * 1000.0 / telem.decode_ms) : 0;
+    std::vector<uint32_t> generated = inference_backend_->GenerateFromTokens(
+        u32_tokens,
+        static_cast<uint32_t>(max_tokens),
+        [&](uint32_t token_id, const std::string& piece) {
+            (void)token_id;
+            if (!saw_first_token) {
+                const auto now = std::chrono::high_resolution_clock::now();
+                telem.first_token_ms = std::chrono::duration<double, std::milli>(now - gen_start).count();
+                saw_first_token = true;
+            }
+            if (token_callback) {
+                token_callback(piece);
+            }
+        },
+        &generation_stats);
+
+    const auto t4 = std::chrono::high_resolution_clock::now();
+    telem.prefill_ms = generation_stats.t_prefill_ms;
+    telem.decode_ms = generation_stats.t_decode_ms;
+    telem.sampling_ms = generation_stats.t_sampling_ms;
+    telem.generated_tokens = generated.size();
     telem.context_tokens = telem.prompt_tokens + telem.generated_tokens;
+    telem.total_ms = std::chrono::duration<double, std::milli>(t4 - t0).count();
+    telem.tps = generation_stats.tokens_per_second();
+    if (!saw_first_token && telem.generated_tokens > 0) {
+        telem.first_token_ms = telem.prefill_ms;
+    }
 
     return telem;
 }

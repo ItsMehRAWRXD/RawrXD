@@ -5,6 +5,7 @@
 #endif
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -114,6 +115,43 @@ inline void NormalizeMoEPackHudMetrics(MoEPackHudMetrics& m) noexcept
 
 class RawrXDInference
 {
+    public:
+        struct GenerationStats
+        {
+                double t_prefill_ms = 0.0;
+                double t_decode_ms = 0.0;
+                std::size_t token_count = 0;
+                double t_sampling_ms = 0.0;
+
+                double avg_decode_ms_per_token() const
+                {
+                        return token_count ? (t_decode_ms / static_cast<double>(token_count)) : 0.0;
+                }
+
+                double tokens_per_second() const
+                {
+                        return (t_decode_ms > 0.0) ? (static_cast<double>(token_count) * 1000.0 / t_decode_ms) : 0.0;
+                }
+        };
+
+        class ScopedTimer
+        {
+            public:
+                explicit ScopedTimer(double* accumulator) : m_accumulator(accumulator), m_start(std::chrono::high_resolution_clock::now()) {}
+                ~ScopedTimer()
+                {
+                        if (!m_accumulator)
+                                return;
+                        const auto end = std::chrono::high_resolution_clock::now();
+                        *m_accumulator += std::chrono::duration<double, std::milli>(end - m_start).count();
+                }
+
+            private:
+                double* m_accumulator;
+                std::chrono::high_resolution_clock::time_point m_start;
+        };
+
+    private:
     RawrXDModelLoader loader;
     RawrXDTransformer transformer;
     RawrXDTokenizer tokenizer;
@@ -807,9 +845,12 @@ class RawrXDInference
     const std::vector<float>& LastLogits() const { return m_lastLogits; }
 
     std::vector<uint32_t> GenerateFromTokens(const std::vector<uint32_t>& promptTokens, uint32_t maxTokens = 512,
-                                             std::function<void(uint32_t, const std::string&)> callback = nullptr)
+                                             std::function<void(uint32_t, const std::string&)> callback = nullptr,
+                                             GenerationStats* stats = nullptr)
     {
         std::vector<uint32_t> generated;
+        if (stats)
+            *stats = GenerationStats{};
         if (!m_initialized || maxTokens == 0 || promptTokens.empty())
         {
             return generated;
@@ -848,6 +889,7 @@ class RawrXDInference
         try
         {
             currentTrace.record_t1();  // Scheduler dispatch
+            ScopedTimer prefillTimer(stats ? &stats->t_prefill_ms : nullptr);
             logits = transformer.Forward(tokens, 0);
             currentTrace.record_t2();  // Weights ready
         }
@@ -895,6 +937,7 @@ class RawrXDInference
 
         for (uint32_t i = 0; i < maxTokens; i++)
         {
+            ScopedTimer decodeTimer(stats ? &stats->t_decode_ms : nullptr);
             if (logits.empty())
                 break;
             
@@ -923,6 +966,7 @@ class RawrXDInference
             try
             {
                 currentTrace.record_t3();  // Compute begin (pre-sample)
+                ScopedTimer samplingTimer(stats ? &stats->t_sampling_ms : nullptr);
                 if (fastSpecEnabled)
                 {
                     const uint32_t lastToken = tokens.empty() ? 0u : tokens.back();
@@ -969,6 +1013,8 @@ class RawrXDInference
                 tokens.erase(tokens.begin(), tokens.end() - m_contextLimit);
             }
             generated.push_back(nextToken);
+            if (stats)
+                stats->token_count = generated.size();
             
             // Record token emission and compute stall attribution
             currentTrace.record_t6();

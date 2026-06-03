@@ -400,6 +400,7 @@ int main(int argc, char* argv[]) {
         printf("  Prefill:  %.3f ms\n", telem.prefill_ms);
         printf("  TTFT:     %.3f ms\n", telem.first_token_ms);
         printf("  Decode:   %.3f ms (%zu tokens)\n", telem.decode_ms, telem.generated_tokens);
+        printf("  Sample:   %.3f ms\n", telem.sampling_ms);
         printf("  Total:    %.3f ms\n", telem.total_ms);
         printf("  TPS:      %.2f tok/s\n", telem.tps);
         printf("  Context:  %zu tokens\n", telem.context_tokens);
