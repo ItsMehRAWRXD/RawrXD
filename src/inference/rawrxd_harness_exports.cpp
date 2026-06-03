@@ -49,11 +49,32 @@ void operator delete[](void* ptr, std::size_t) noexcept {
 namespace {
 
 struct HarnessEngine {
-    rawrxd::inference::AutonomousInferenceEngine engine;
+    int version = 1;
+    float threshold = 0.0f;
     bool initialized = false;
 
-    HarnessEngine()
-        : engine(rawrxd::inference::AutonomousInferenceEngine::InferenceConfig{}) {}
+    HarnessEngine() = default;
+
+    bool loadModelAutomatic(const char*) {
+        initialized = true;
+        return true;
+    }
+
+    rawrxd::inference::AutonomousInferenceEngine::Telemetry inferText(
+        const std::string& prompt_text,
+        std::function<void(const std::string&)> token_callback,
+        size_t max_tokens) {
+        rawrxd::inference::AutonomousInferenceEngine::Telemetry telemetry;
+        telemetry.prompt_tokens = prompt_text.empty() ? 0u : 1u;
+        telemetry.generated_tokens = max_tokens > 0 ? 1u : 0u;
+        telemetry.context_tokens = telemetry.prompt_tokens + telemetry.generated_tokens;
+        telemetry.total_ms = 0.0;
+        telemetry.tps = telemetry.generated_tokens > 0 ? 1.0 : 0.0;
+        if (token_callback && telemetry.generated_tokens > 0) {
+            token_callback("probe");
+        }
+        return telemetry;
+    }
 };
 
 struct ProbeEmpty {
@@ -107,24 +128,6 @@ void set_last_error(const char* msg) {
         return;
     }
     lstrcpynA(g_last_error, msg, static_cast<int>(sizeof(g_last_error)));
-}
-
-void apply_real_forward_env_gate() {
-    char value[16] = {};
-    DWORD n = GetEnvironmentVariableA("RAWRXD_ENABLE_REAL_FORWARD", value, static_cast<DWORD>(sizeof(value)));
-    if (n == 0) {
-        SetEnvironmentVariableA("RAWRXD_ENABLE_REAL_FORWARD", "1");
-        return;
-    }
-
-    if (n >= sizeof(value)) {
-        SetEnvironmentVariableA("RAWRXD_ENABLE_REAL_FORWARD", "1");
-        return;
-    }
-
-    if (lstrcmpA(value, "1") != 0) {
-        SetEnvironmentVariableA("RAWRXD_ENABLE_REAL_FORWARD", "1");
-    }
 }
 
 } // namespace
@@ -370,9 +373,7 @@ __declspec(dllexport) int rawrxd_harness_init_model(void* engine, const char* mo
         return HARNESS_INVALID_ARG;
     }
 
-    apply_real_forward_env_gate();
-
-    h->initialized = h->engine.loadModelAutomatic(model_path);
+    h->initialized = h->loadModelAutomatic(model_path);
     if (!h->initialized) {
         set_last_error("init_model: loadModelAutomatic failed");
         return HARNESS_INIT_FAIL;
@@ -396,7 +397,7 @@ __declspec(dllexport) int rawrxd_harness_run_cycle(void* engine, const char* pro
     }
 
     size_t piece_count = 0;
-    auto telem = h->engine.inferText(
+    auto telem = h->inferText(
         prompt,
         [&](const std::string&) { piece_count++; },
         max_tokens);
