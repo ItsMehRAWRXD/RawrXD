@@ -2,6 +2,8 @@
 
 #include <windows.h>
 #include <cstdint>
+#include <array>
+#include <memory>
 #include <new>
 #include <vector>
 
@@ -30,6 +32,18 @@ struct ProbeStl {
     std::vector<int> data;
     ProbeStl() { data.push_back(1); }
     ~ProbeStl() = default;
+};
+
+struct ProbeUniquePtr {
+    std::unique_ptr<int> value;
+    ProbeUniquePtr() : value(std::make_unique<int>(3)) {}
+    ~ProbeUniquePtr() = default;
+};
+
+struct ProbeArray {
+    std::array<int, 8> values;
+    ProbeArray() : values{1, 2, 3, 4, 5, 6, 7, 8} {}
+    ~ProbeArray() = default;
 };
 
 enum HarnessStatus : int {
@@ -105,6 +119,14 @@ __declspec(dllexport) std::uint64_t rawrxd_probe_virtual_size() {
 
 __declspec(dllexport) std::uint64_t rawrxd_probe_stl_size() {
     return static_cast<std::uint64_t>(sizeof(ProbeStl));
+}
+
+__declspec(dllexport) std::uint64_t rawrxd_probe_unique_ptr_size() {
+    return static_cast<std::uint64_t>(sizeof(ProbeUniquePtr));
+}
+
+__declspec(dllexport) std::uint64_t rawrxd_probe_array_size() {
+    return static_cast<std::uint64_t>(sizeof(ProbeArray));
 }
 
 __declspec(dllexport) void* rawrxd_probe_alloc(std::uint64_t bytes) {
@@ -222,6 +244,58 @@ __declspec(dllexport) int rawrxd_probe_stl_dtor(void* mem) {
         return HARNESS_INVALID_ARG;
     }
     static_cast<ProbeStl*>(mem)->~ProbeStl();
+    return HARNESS_OK;
+}
+
+__declspec(dllexport) int rawrxd_probe_unique_ptr_ctor(void* mem) {
+    clear_last_error();
+    if (!mem) {
+        set_last_error("probe_unique_ptr_ctor: null memory pointer");
+        return HARNESS_INVALID_ARG;
+    }
+
+    try {
+        (void)::new (mem) ProbeUniquePtr();
+    } catch (...) {
+        set_last_error("probe_unique_ptr_ctor: constructor threw");
+        return HARNESS_CTOR_FAIL;
+    }
+    return HARNESS_OK;
+}
+
+__declspec(dllexport) int rawrxd_probe_unique_ptr_dtor(void* mem) {
+    clear_last_error();
+    if (!mem) {
+        set_last_error("probe_unique_ptr_dtor: null memory pointer");
+        return HARNESS_INVALID_ARG;
+    }
+    static_cast<ProbeUniquePtr*>(mem)->~ProbeUniquePtr();
+    return HARNESS_OK;
+}
+
+__declspec(dllexport) int rawrxd_probe_array_ctor(void* mem) {
+    clear_last_error();
+    if (!mem) {
+        set_last_error("probe_array_ctor: null memory pointer");
+        return HARNESS_INVALID_ARG;
+    }
+
+    try {
+        (void)::new (mem) ProbeArray();
+    } catch (...) {
+        set_last_error("probe_array_ctor: constructor threw");
+        return HARNESS_CTOR_FAIL;
+    }
+    return HARNESS_OK;
+}
+
+__declspec(dllexport) int rawrxd_probe_array_dtor(void* mem) {
+    clear_last_error();
+    if (!mem) {
+        set_last_error("probe_array_dtor: null memory pointer");
+        return HARNESS_INVALID_ARG;
+    }
+    static_cast<ProbeArray*>(mem)->~ProbeArray();
     return HARNESS_OK;
 }
 

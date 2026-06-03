@@ -10,6 +10,8 @@ EXTERN rawrxd_harness_last_error:PROC
 EXTERN rawrxd_probe_empty_size:PROC
 EXTERN rawrxd_probe_virtual_size:PROC
 EXTERN rawrxd_probe_stl_size:PROC
+EXTERN rawrxd_probe_unique_ptr_size:PROC
+EXTERN rawrxd_probe_array_size:PROC
 EXTERN rawrxd_probe_alloc:PROC
 EXTERN rawrxd_probe_free:PROC
 EXTERN rawrxd_probe_empty_ctor:PROC
@@ -18,6 +20,10 @@ EXTERN rawrxd_probe_virtual_ctor:PROC
 EXTERN rawrxd_probe_virtual_dtor:PROC
 EXTERN rawrxd_probe_stl_ctor:PROC
 EXTERN rawrxd_probe_stl_dtor:PROC
+EXTERN rawrxd_probe_unique_ptr_ctor:PROC
+EXTERN rawrxd_probe_unique_ptr_dtor:PROC
+EXTERN rawrxd_probe_array_ctor:PROC
+EXTERN rawrxd_probe_array_dtor:PROC
 EXTERN GetStdHandle:PROC
 EXTERN WriteFile:PROC
 EXTERN ExitProcess:PROC
@@ -33,6 +39,10 @@ stage_probe_empty db "[MASM Harness] probe-empty", 13, 10
 stage_probe_empty_len EQU ($ - stage_probe_empty)
 stage_probe_virtual db "[MASM Harness] probe-virtual", 13, 10
 stage_probe_virtual_len EQU ($ - stage_probe_virtual)
+stage_probe_unique_ptr db "[MASM Harness] probe-unique_ptr", 13, 10
+stage_probe_unique_ptr_len EQU ($ - stage_probe_unique_ptr)
+stage_probe_array db "[MASM Harness] probe-array", 13, 10
+stage_probe_array_len EQU ($ - stage_probe_array)
 stage_probe_stl db "[MASM Harness] probe-stl", 13, 10
 stage_probe_stl_len EQU ($ - stage_probe_stl)
 stage_alloc     db "[MASM Harness] alloc", 13, 10
@@ -136,7 +146,63 @@ harness_entry proc
     jnz harness_fail
     xor r13, r13
 
-    ; probe 3: STL constructor
+    ; probe 3: unique_ptr constructor
+    lea rcx, stage_probe_unique_ptr
+    mov rdx, stage_probe_unique_ptr_len
+    call harness_write
+
+    call rawrxd_probe_unique_ptr_size
+    mov rcx, rax
+    call rawrxd_probe_alloc
+    test rax, rax
+    jz harness_fail
+    mov r13, rax
+
+    mov rcx, r13
+    call rawrxd_probe_unique_ptr_ctor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_unique_ptr_dtor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_free
+    test eax, eax
+    jnz harness_fail
+    xor r13, r13
+
+    ; probe 4: array constructor
+    lea rcx, stage_probe_array
+    mov rdx, stage_probe_array_len
+    call harness_write
+
+    call rawrxd_probe_array_size
+    mov rcx, rax
+    call rawrxd_probe_alloc
+    test rax, rax
+    jz harness_fail
+    mov r13, rax
+
+    mov rcx, r13
+    call rawrxd_probe_array_ctor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_array_dtor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_free
+    test eax, eax
+    jnz harness_fail
+    xor r13, r13
+
+    ; probe 5: STL constructor
     lea rcx, stage_probe_stl
     mov rdx, stage_probe_stl_len
     call harness_write
