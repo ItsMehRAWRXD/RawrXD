@@ -55,10 +55,15 @@ struct HarnessEngine {
     bool warmup_complete = false;
     size_t profile_window = 1;
     int lane_id = 0;
+    std::unique_ptr<int> token_budget;
+    std::vector<int> request_ring;
 
     HarnessEngine() = default;
 
     bool loadModelAutomatic(const char*) {
+        token_budget = std::make_unique<int>(32);
+        request_ring.push_back(1);
+        request_ring.push_back(2);
         initialized = true;
         warmup_complete = (version > 0) && (threshold >= 0.0f);
         return true;
@@ -69,8 +74,11 @@ struct HarnessEngine {
         std::function<void(const std::string&)> token_callback,
         size_t max_tokens) {
         rawrxd::inference::AutonomousInferenceEngine::Telemetry telemetry;
-        telemetry.prompt_tokens = prompt_text.empty() ? 0u : profile_window;
-        telemetry.generated_tokens = (max_tokens > 0 && warmup_complete && lane_id >= 0) ? 1u : 0u;
+        telemetry.prompt_tokens = prompt_text.empty() ? 0u : profile_window + request_ring.size();
+        telemetry.generated_tokens =
+            (max_tokens > 0 && warmup_complete && lane_id >= 0 && token_budget && *token_budget > 0)
+                ? 1u
+                : 0u;
         telemetry.context_tokens = telemetry.prompt_tokens + telemetry.generated_tokens + static_cast<size_t>(version > 0 ? 0 : 1);
         telemetry.total_ms = 0.0;
         telemetry.tps = telemetry.generated_tokens > 0 ? 1.0 : 0.0;
