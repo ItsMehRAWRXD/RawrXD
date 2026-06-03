@@ -7,6 +7,17 @@ EXTERN rawrxd_harness_run_cycle:PROC
 EXTERN rawrxd_harness_dtor_engine:PROC
 EXTERN rawrxd_harness_free_engine:PROC
 EXTERN rawrxd_harness_last_error:PROC
+EXTERN rawrxd_probe_empty_size:PROC
+EXTERN rawrxd_probe_virtual_size:PROC
+EXTERN rawrxd_probe_stl_size:PROC
+EXTERN rawrxd_probe_alloc:PROC
+EXTERN rawrxd_probe_free:PROC
+EXTERN rawrxd_probe_empty_ctor:PROC
+EXTERN rawrxd_probe_empty_dtor:PROC
+EXTERN rawrxd_probe_virtual_ctor:PROC
+EXTERN rawrxd_probe_virtual_dtor:PROC
+EXTERN rawrxd_probe_stl_ctor:PROC
+EXTERN rawrxd_probe_stl_dtor:PROC
 EXTERN GetStdHandle:PROC
 EXTERN WriteFile:PROC
 EXTERN ExitProcess:PROC
@@ -18,6 +29,12 @@ model_path      db "d:\phi3mini.gguf", 0
 prompt_text     db "Telemetry forward path test", 0
 boot_msg        db "[MASM Harness] boot", 13, 10
 boot_msg_len    EQU ($ - boot_msg)
+stage_probe_empty db "[MASM Harness] probe-empty", 13, 10
+stage_probe_empty_len EQU ($ - stage_probe_empty)
+stage_probe_virtual db "[MASM Harness] probe-virtual", 13, 10
+stage_probe_virtual_len EQU ($ - stage_probe_virtual)
+stage_probe_stl db "[MASM Harness] probe-stl", 13, 10
+stage_probe_stl_len EQU ($ - stage_probe_stl)
 stage_alloc     db "[MASM Harness] alloc", 13, 10
 stage_alloc_len EQU ($ - stage_alloc)
 stage_ctor      db "[MASM Harness] ctor", 13, 10
@@ -57,10 +74,95 @@ harness_entry proc
     sub rsp, 28h
     xor ebx, ebx
     xor r12d, r12d
+    xor r13, r13
 
     lea rcx, boot_msg
     mov rdx, boot_msg_len
     call harness_write
+
+    ; probe 1: empty constructor
+    lea rcx, stage_probe_empty
+    mov rdx, stage_probe_empty_len
+    call harness_write
+
+    call rawrxd_probe_empty_size
+    mov rcx, rax
+    call rawrxd_probe_alloc
+    test rax, rax
+    jz harness_fail
+    mov r13, rax
+
+    mov rcx, r13
+    call rawrxd_probe_empty_ctor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_empty_dtor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_free
+    test eax, eax
+    jnz harness_fail
+    xor r13, r13
+
+    ; probe 2: virtual constructor
+    lea rcx, stage_probe_virtual
+    mov rdx, stage_probe_virtual_len
+    call harness_write
+
+    call rawrxd_probe_virtual_size
+    mov rcx, rax
+    call rawrxd_probe_alloc
+    test rax, rax
+    jz harness_fail
+    mov r13, rax
+
+    mov rcx, r13
+    call rawrxd_probe_virtual_ctor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_virtual_dtor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_free
+    test eax, eax
+    jnz harness_fail
+    xor r13, r13
+
+    ; probe 3: STL constructor
+    lea rcx, stage_probe_stl
+    mov rdx, stage_probe_stl_len
+    call harness_write
+
+    call rawrxd_probe_stl_size
+    mov rcx, rax
+    call rawrxd_probe_alloc
+    test rax, rax
+    jz harness_fail
+    mov r13, rax
+
+    mov rcx, r13
+    call rawrxd_probe_stl_ctor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_stl_dtor
+    test eax, eax
+    jnz harness_fail_probe
+
+    mov rcx, r13
+    call rawrxd_probe_free
+    test eax, eax
+    jnz harness_fail
+    xor r13, r13
 
     lea rcx, stage_alloc
     mov rdx, stage_alloc_len
@@ -127,6 +229,13 @@ skip_free_success:
     call ExitProcess
 
 harness_fail:
+    test r13, r13
+    jz skip_probe_free_fail
+    mov rcx, r13
+    call rawrxd_probe_free
+    xor r13, r13
+skip_probe_free_fail:
+
     ; cleanup depending on completed stages
     test r12d, 2
     jz skip_dtor_fail
@@ -162,6 +271,13 @@ have_len:
 
     mov ecx, 1
     call ExitProcess
+harness_fail_probe:
+    test r13, r13
+    jz harness_fail
+    mov rcx, r13
+    call rawrxd_probe_free
+    xor r13, r13
+    jmp harness_fail
 harness_entry endp
 
 END
