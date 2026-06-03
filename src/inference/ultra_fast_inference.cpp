@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 
@@ -1138,6 +1139,66 @@ UltraFastInferenceEngine::~UltraFastInferenceEngine() {
 void UltraFastInferenceEngine::loadModel(const std::string& model_path) {
     constexpr size_t kMaxSampleBytes = 64ull * 1024ull * 1024ull;
     constexpr size_t kMinSampleFloats = 1024ull;
+
+    if (!config_.enable_ollama_blob_support) {
+        HarnessCtorTrace("[LoadTrace] open_native_begin");
+#ifdef _WIN32
+        HANDLE hFile = CreateFileA(
+            model_path.c_str(),
+            GENERIC_READ,
+            FILE_SHARE_READ,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr);
+
+        if (hFile == INVALID_HANDLE_VALUE) {
+            HarnessCtorTrace("[LoadTrace] handle_result: INVALID_HANDLE_VALUE");
+            model_weights_.resize(1024 * 1024);
+            std::fill(model_weights_.begin(), model_weights_.end(), 0.1f);
+            tokenizer_ = std::make_unique<SimpleTokenizer>();
+            return;
+        }
+
+        HarnessCtorTrace("[LoadTrace] handle_result: OK");
+
+        LARGE_INTEGER sizeLi{};
+        if (!GetFileSizeEx(hFile, &sizeLi) || sizeLi.QuadPart <= 0) {
+            HarnessCtorTrace("[LoadTrace] filesize_failed");
+            CloseHandle(hFile);
+            model_weights_.resize(1024 * 1024);
+            std::fill(model_weights_.begin(), model_weights_.end(), 0.1f);
+            tokenizer_ = std::make_unique<SimpleTokenizer>();
+            return;
+        }
+
+        const size_t sizeBytes = static_cast<size_t>(sizeLi.QuadPart);
+        const size_t sample_bytes = std::max<size_t>(
+            kMinSampleFloats * sizeof(float),
+            std::min<size_t>(sizeBytes, kMaxSampleBytes));
+        const size_t sample_floats = std::max<size_t>(kMinSampleFloats, sample_bytes / sizeof(float));
+
+        model_weights_.resize(sample_floats, 0.1f);
+
+        DWORD bytesRead = 0;
+        const DWORD bytesToRead = static_cast<DWORD>(sample_floats * sizeof(float));
+        HarnessCtorTrace("[LoadTrace] read_native_begin");
+        if (!ReadFile(hFile, model_weights_.data(), bytesToRead, &bytesRead, nullptr) || bytesRead == 0) {
+            HarnessCtorTrace("[LoadTrace] read_native_failed");
+            model_weights_.resize(1024 * 1024);
+            std::fill(model_weights_.begin(), model_weights_.end(), 0.1f);
+        } else {
+            HarnessCtorTrace("[LoadTrace] read_native_ok");
+        }
+
+        CloseHandle(hFile);
+#else
+        model_weights_.resize(1024 * 1024);
+        std::fill(model_weights_.begin(), model_weights_.end(), 0.1f);
+#endif
+        tokenizer_ = std::make_unique<SimpleTokenizer>();
+        return;
+    }
 
     std::ifstream file(model_path, std::ios::binary | std::ios::ate);
     if (file.is_open()) {
