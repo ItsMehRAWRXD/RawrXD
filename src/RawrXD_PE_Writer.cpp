@@ -1201,10 +1201,6 @@ public:
         }
 
         DWORD currentOffset = 0;
-        auto closeOnFailure = [&]() {
-            CloseHandle(hFile);
-            return false;
-        };
         auto writeAll = [&](const void* data, size_t size) -> bool {
             const BYTE* cursor = static_cast<const BYTE*>(data);
             size_t remaining = size;
@@ -1649,16 +1645,6 @@ private:
             return (std::numeric_limits<DWORD>::max)();
         }
         return (value + alignment - 1) & ~(alignment - 1);
-    }
-
-    bool PadFile(FILE* f, DWORD targetOffset) {
-        long current = ftell(f);
-        if (current < 0) return false;
-        while (current < (long)targetOffset) {
-            if (fputc(0, f) == EOF) return false;
-            current++;
-        }
-        return true;
     }
 
     DWORD CalculateImportTableSize() {
