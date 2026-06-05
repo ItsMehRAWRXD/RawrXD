@@ -14,7 +14,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
-#include <string.h>
 #include <vector>
 #include <map>
 #include <set>
@@ -550,7 +549,7 @@ public:
             DWORD callRVA = currentRVA + fixup.offset;
             DWORD rel32 = fixup.targetRVA - (callRVA + 4);  // +4 because rel32 is from end of instruction
             // Avoid unaligned aliasing stores.
-            memcpy(code.data() + fixup.offset, &rel32, sizeof(rel32));
+            CopyMemory(code.data() + fixup.offset, &rel32, sizeof(rel32));
         }
     }
 
@@ -570,7 +569,7 @@ public:
             DWORD disp32Offset = currentRVA + call.offset;  // RVA of the disp32 field
             DWORD targetRVA = iatRVAs[call.importIndex];     // RVA of the IAT slot
             DWORD rel32 = targetRVA - (disp32Offset + 4);   // RIP-relative: from end of instruction
-            memcpy(code.data() + call.offset, &rel32, sizeof(rel32));
+            CopyMemory(code.data() + call.offset, &rel32, sizeof(rel32));
         }
     }
 
@@ -1207,7 +1206,7 @@ public:
         for (const auto& sec : sections) {
             IMAGE_SECTION_HEADER sh = {};
             size_t nameLen = sec.name.size() < sizeof(sh.Name) ? sec.name.size() : sizeof(sh.Name);
-            memcpy(sh.Name, sec.name.c_str(), nameLen);
+            CopyMemory(sh.Name, sec.name.c_str(), nameLen);
             sh.Misc.VirtualSize = (DWORD)sec.data.size();
             sh.VirtualAddress = sec.virtualAddress;
             sh.SizeOfRawData = AlignUp((DWORD)sec.data.size(), fileAlignment);
@@ -1470,7 +1469,7 @@ private:
             if (offset > fileData.size() || size > (fileData.size() - offset)) {
                 return false;
             }
-            memcpy(out, fileData.data() + offset, size);
+            CopyMemory(out, fileData.data() + offset, size);
             return true;
         };
 
@@ -2087,7 +2086,7 @@ int main() {
     int baseLen = lstrlenA(outPath);
     int suffixLen = lstrlenA(outputName);
     if (baseLen < 0 || suffixLen < 0 || baseLen + suffixLen >= MAX_PATH) return 1;
-    memcpy(outPath + baseLen, outputName, static_cast<size_t>(suffixLen) + 1);
+    CopyMemory(outPath + baseLen, outputName, static_cast<size_t>(suffixLen) + 1);
     return writer.EmitExecutable(outPath) ? 0 : 1;
 }
 #endif
