@@ -44,6 +44,7 @@ PE_FILE_ALIGNMENT               EQU PE_FILE_ALIGN_512
 
 MEM_WALL_BALANCED_PCT           EQU 50
 MEM_WALL_BOUND_PCT              EQU 80
+MEM_WALL_DEFAULT_PEAK_GBPS_X100 EQU 5000
 
 ;==============================================================================
 ; OS DISPATCH (BYTE TABLE, NO STRUCTS)
@@ -213,6 +214,18 @@ gOS        BYTE OS_BYTES DUP(0)
 ALIGN 16
 PUBLIC gState
 gState     BYTE ST_BYTES DUP(0)
+
+ALIGN 16
+AI_BW_MSG_COMPUTE db '[AI] bound=compute', 0Ah
+AI_BW_MSG_COMPUTE_END db 0
+AI_BW_MSG_BALANCED db '[AI] bound=balanced', 0Ah
+AI_BW_MSG_BALANCED_END db 0
+AI_BW_MSG_MEMORY db '[AI] bound=memory', 0Ah
+AI_BW_MSG_MEMORY_END db 0
+
+AI_BW_MSG_COMPUTE_LEN EQU AI_BW_MSG_COMPUTE_END - AI_BW_MSG_COMPUTE
+AI_BW_MSG_BALANCED_LEN EQU AI_BW_MSG_BALANCED_END - AI_BW_MSG_BALANCED
+AI_BW_MSG_MEMORY_LEN EQU AI_BW_MSG_MEMORY_END - AI_BW_MSG_MEMORY
 
 ;==============================================================================
 ; PE HEADER DEFINITIONS (EMITTED AS DATA)
@@ -4467,15 +4480,99 @@ ai_embed ENDP
 PUBLIC ai_generate
 ai_generate PROC
     ; RCX=promptPtr, RDX=promptLen, R8=maxTokens
+    push rbx
+    push rsi
+    sub rsp, 58h
+
+    mov QWORD PTR [rsp+40h], rcx
+    mov QWORD PTR [rsp+48h], rdx
+    mov QWORD PTR [rsp+50h], r8
+
+    ; Capture generation start timestamp when QPC hook is available.
+    mov QWORD PTR [rsp+20h], 0
+    lea r10, gOS
+    mov rax, QWORD PTR [r10+OS_QPC]
+    test rax, rax
+    jz  @@skip_start_qpc
+    lea rcx, [rsp+20h]
+    call rax
+@@skip_start_qpc:
+
+    mov rcx, QWORD PTR [rsp+40h]
+    mov rdx, QWORD PTR [rsp+48h]
     call ai_query
     test eax, eax
-    jnz @F
+    jnz @@done
+
     lea r9, gState
     inc DWORD PTR [r9+ST_AI_GENERATION_COUNT]
     mov DWORD PTR [r9+ST_LAST_ERROR], 0
-    mov eax, DWORD PTR [r9+ST_AI_GENERATION_COUNT]
-    ret
-@@:
+    mov ebx, DWORD PTR [r9+ST_AI_GENERATION_COUNT]
+
+    ; Capture end timestamp and classify memory pressure.
+    mov QWORD PTR [rsp+28h], 0
+    mov QWORD PTR [rsp+30h], 0
+    mov QWORD PTR [rsp+38h], 0
+
+    lea r10, gOS
+    mov rax, QWORD PTR [r10+OS_QPC]
+    test rax, rax
+    jz  @@skip_profile
+    lea rcx, [rsp+28h]
+    call rax
+
+    lea r10, gOS
+    mov rax, QWORD PTR [r10+OS_QPF]
+    test rax, rax
+    jz  @@skip_profile
+    lea rcx, [rsp+30h]
+    call rax
+
+    mov rdx, QWORD PTR [rsp+28h]
+    sub rdx, QWORD PTR [rsp+20h]
+    jbe @@skip_profile
+
+    mov rcx, QWORD PTR [rsp+50h]
+    shl rcx, 12                     ; approximate bytes per generated token (4 KiB)
+    add rcx, QWORD PTR [rsp+48h]    ; add prompt bytes
+    mov r8, QWORD PTR [rsp+30h]
+    lea r9, [rsp+38h]
+    call IDE_profile_bandwidth_x100
+    test eax, eax
+    jnz @@skip_profile
+
+    mov rcx, QWORD PTR [rsp+38h]
+    mov rdx, MEM_WALL_DEFAULT_PEAK_GBPS_X100
+    call IDE_classify_memory_wall
+
+    cmp eax, 2
+    je  @@log_mem
+    cmp eax, 1
+    je  @@log_bal
+
+    lea rcx, AI_BW_MSG_COMPUTE
+    mov edx, AI_BW_MSG_COMPUTE_LEN
+    call IDE_log
+    jmp @@skip_profile
+
+@@log_bal:
+    lea rcx, AI_BW_MSG_BALANCED
+    mov edx, AI_BW_MSG_BALANCED_LEN
+    call IDE_log
+    jmp @@skip_profile
+
+@@log_mem:
+    lea rcx, AI_BW_MSG_MEMORY
+    mov edx, AI_BW_MSG_MEMORY_LEN
+    call IDE_log
+
+@@skip_profile:
+    mov eax, ebx
+
+@@done:
+    add rsp, 58h
+    pop rsi
+    pop rbx
     ret
 ai_generate ENDP
 
