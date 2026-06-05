@@ -1736,6 +1736,12 @@ private:
     std::vector<BYTE> BuildExportTable(DWORD baseRVA) {
         std::vector<BYTE> data;
         if (exports.empty()) return data;
+        if (exports.size() > (std::numeric_limits<WORD>::max)()) {
+            return {};
+        }
+        if (baseRVA > (std::numeric_limits<DWORD>::max)() - sizeof(IMAGE_EXPORT_DIRECTORY)) {
+            return {};
+        }
 
         // IMAGE_EXPORT_DIRECTORY
         IMAGE_EXPORT_DIRECTORY exportDir = {};
@@ -1747,20 +1753,36 @@ private:
 
         // AddressOfFunctions
         exportDir.AddressOfFunctions = currentRVA;
-        currentRVA += (DWORD)exports.size() * sizeof(DWORD);
+        DWORD functionsBytes = static_cast<DWORD>(exports.size() * sizeof(DWORD));
+        if (currentRVA > (std::numeric_limits<DWORD>::max)() - functionsBytes) {
+            return {};
+        }
+        currentRVA += functionsBytes;
 
         // AddressOfNames
         exportDir.AddressOfNames = currentRVA;
-        currentRVA += (DWORD)exports.size() * sizeof(DWORD);
+        DWORD namesBytes = static_cast<DWORD>(exports.size() * sizeof(DWORD));
+        if (currentRVA > (std::numeric_limits<DWORD>::max)() - namesBytes) {
+            return {};
+        }
+        currentRVA += namesBytes;
 
         // AddressOfNameOrdinals
         exportDir.AddressOfNameOrdinals = currentRVA;
-        currentRVA += (DWORD)exports.size() * sizeof(WORD);
+        DWORD ordinalsBytes = static_cast<DWORD>(exports.size() * sizeof(WORD));
+        if (currentRVA > (std::numeric_limits<DWORD>::max)() - ordinalsBytes) {
+            return {};
+        }
+        currentRVA += ordinalsBytes;
 
         // Name RVA (point to a dummy name)
         exportDir.Name = currentRVA;
         const char* dllName = "RawrXD.dll";
-        currentRVA += static_cast<DWORD>(lstrlenA(dllName)) + 1;
+        DWORD dllNameBytes = static_cast<DWORD>(lstrlenA(dllName)) + 1;
+        if (currentRVA > (std::numeric_limits<DWORD>::max)() - dllNameBytes) {
+            return {};
+        }
+        currentRVA += dllNameBytes;
 
         // Export address table
         for (const auto& exp : exports) {
@@ -1771,8 +1793,15 @@ private:
         // Name pointers
         DWORD nameRVA = currentRVA;
         for (const auto& exp : exports) {
+            if (exp.name.size() > (std::numeric_limits<DWORD>::max)() - 1) {
+                return {};
+            }
             data.insert(data.end(), (BYTE*)&nameRVA, (BYTE*)&nameRVA + sizeof(DWORD));
-            nameRVA += (DWORD)exp.name.size() + 1;
+            DWORD nameBytes = static_cast<DWORD>(exp.name.size()) + 1;
+            if (nameRVA > (std::numeric_limits<DWORD>::max)() - nameBytes) {
+                return {};
+            }
+            nameRVA += nameBytes;
         }
 
         // Name ordinals
@@ -1801,10 +1830,20 @@ private:
     std::vector<BYTE> BuildTLSTable(DWORD baseRVA) {
         std::vector<BYTE> data;
         if (tlsCallbacks.empty()) return data;
+        if (tlsCallbacks.size() > ((std::numeric_limits<DWORD>::max)() / sizeof(ULONGLONG))) {
+            return {};
+        }
+        if (baseRVA > (std::numeric_limits<DWORD>::max)() - sizeof(IMAGE_TLS_DIRECTORY64)) {
+            return {};
+        }
 
         // IMAGE_TLS_DIRECTORY64
         IMAGE_TLS_DIRECTORY64 tlsDir = {};
-        tlsDir.AddressOfCallBacks = imageBase + baseRVA + sizeof(IMAGE_TLS_DIRECTORY64);
+        ULONGLONG callbackBase = imageBase + baseRVA + sizeof(IMAGE_TLS_DIRECTORY64);
+        if (callbackBase < imageBase || callbackBase < baseRVA) {
+            return {};
+        }
+        tlsDir.AddressOfCallBacks = callbackBase;
 
         // Callbacks array
         for (const auto& cb : tlsCallbacks) {
