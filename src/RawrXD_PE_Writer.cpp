@@ -960,6 +960,13 @@ public:
         auto layoutSections = [&]() {
             DWORD rva = AlignUp(alignedHeadersSize, sectionAlignment);
             DWORD raw = alignedHeadersSize;
+            auto advanceChecked = [](DWORD& dst, DWORD add) -> bool {
+                if (dst > (std::numeric_limits<DWORD>::max)() - add) {
+                    return false;
+                }
+                dst += add;
+                return true;
+            };
             for (auto& sec : sections) {
                 sec.virtualAddress = rva;
                 sec.rawAddress = raw;
@@ -970,8 +977,10 @@ public:
                     printf("Error: Section layout overflow for %s\n", sec.name.c_str());
                     return (std::numeric_limits<DWORD>::max)();
                 }
-                rva += virtualSize;
-                raw += rawSize;
+                if (!advanceChecked(rva, virtualSize) || !advanceChecked(raw, rawSize)) {
+                    printf("Error: Section layout overflow for %s\n", sec.name.c_str());
+                    return (std::numeric_limits<DWORD>::max)();
+                }
                 printf("Section %s: RVA %u, raw %u, size %zu\n", sec.name.c_str(), sec.virtualAddress, sec.rawAddress, sec.data.size());
             }
             return rva;
@@ -1006,6 +1015,10 @@ public:
                 if (sec.name == ".idata") {
                     importTableRVA = sec.virtualAddress;
                     DWORD estimatedImportSize = CalculateImportTableSize();
+                    if (estimatedImportSize == (std::numeric_limits<DWORD>::max)()) {
+                        printf("Error: Import table size overflow\n");
+                        return false;
+                    }
                     std::vector<BYTE> importTableData = BuildImportTable(importTableRVA, iatRVAs);
                     if (importTableData.empty() && estimatedImportSize != sizeof(IMAGE_IMPORT_DESCRIPTOR)) {
                         printf("Error: BuildImportTable returned empty unexpectedly\n");
@@ -1719,18 +1732,35 @@ private:
         for (const auto& imp : imports) {
             if (!imp.functions.empty()) ++activeImportCount;
         }
-        DWORD size = (DWORD)((activeImportCount + 1) * sizeof(IMAGE_IMPORT_DESCRIPTOR));
+        if (activeImportCount > ((std::numeric_limits<size_t>::max)() - 1)) {
+            return (std::numeric_limits<DWORD>::max)();
+        }
+        size_t size = (activeImportCount + 1) * sizeof(IMAGE_IMPORT_DESCRIPTOR);
         for (const auto& imp : imports) {
             if (imp.functions.empty()) continue;
-            size += AlignUp((DWORD)imp.dllName.size() + 1, 2);  // DLL name
-            size += (DWORD)(imp.functions.size() + 1) * sizeof(IMAGE_THUNK_DATA64);  // ILT + null
-            size += (DWORD)(imp.functions.size() + 1) * sizeof(IMAGE_THUNK_DATA64);  // IAT + null
+            size_t dllNameSize = static_cast<size_t>(AlignUp((DWORD)imp.dllName.size() + 1, 2));  // DLL name
+            size_t thunkSpan = (imp.functions.size() + 1) * sizeof(IMAGE_THUNK_DATA64);  // ILT/IAT + null
+            if (size > (std::numeric_limits<size_t>::max)() - dllNameSize ||
+                size > (std::numeric_limits<size_t>::max)() - thunkSpan ||
+                size > (std::numeric_limits<size_t>::max)() - thunkSpan) {
+                return (std::numeric_limits<DWORD>::max)();
+            }
+            size += dllNameSize;
+            size += thunkSpan;
+            size += thunkSpan;
             for (const auto& func : imp.functions) {
-                size += sizeof(WORD) + (DWORD)func.size() + 1;  // Hint + name
+                size_t hintNameSize = sizeof(WORD) + func.size() + 1;  // Hint + name
+                if (size > (std::numeric_limits<size_t>::max)() - hintNameSize) {
+                    return (std::numeric_limits<DWORD>::max)();
+                }
+                size += hintNameSize;
                 size = AlignUp(size, 2);
             }
         }
-        return size;
+        if (size > (std::numeric_limits<DWORD>::max)()) {
+            return (std::numeric_limits<DWORD>::max)();
+        }
+        return static_cast<DWORD>(size);
     }
 
     std::vector<BYTE> BuildExportTable(DWORD baseRVA) {
@@ -2036,6 +2066,7 @@ private:
         }
         if (activeImportCount == 0) {
             IMAGE_IMPORT_DESCRIPTOR nullDesc = {};
+            ZeroMemory(&nullDesc, sizeof(nullDesc));
             data.insert(data.end(), (BYTE*)&nullDesc, (BYTE*)&nullDesc + sizeof(nullDesc));
             return data;
         }
@@ -2048,7 +2079,11 @@ private:
             dst += add;
             return true;
         };
+        if (activeImportCount > ((std::numeric_limits<DWORD>::max)() / sizeof(IMAGE_IMPORT_DESCRIPTOR)) - 1) {
+            return {};
+        }
         DWORD currentRVA = baseRVA + (DWORD)((activeImportCount + 1) * sizeof(IMAGE_IMPORT_DESCRIPTOR));
+        if (currentRVA < baseRVA) return {};
 
         // Calculate RVAs for each part
         std::map<std::string, DWORD> dllNameRVAs;
@@ -2057,6 +2092,7 @@ private:
         for (const auto& imp : imports) {
             if (imp.functions.empty()) continue;
             dllNameRVAs[imp.dllName] = currentRVA;
+            if (imp.dllName.size() > (std::numeric_limits<DWORD>::max)() - 1) return {};
             DWORD dllSpan = AlignUp((DWORD)imp.dllName.size() + 1, 2);
             if (!addRvaChecked(currentRVA, dllSpan)) return {};
 
@@ -2079,8 +2115,11 @@ private:
 
             for (size_t i = 0; i < imp.functions.size(); ++i) {
                 hintNameRVAs[imp.dllName][i] = currentRVA;
-                DWORD hintNameSize = sizeof(WORD) + (DWORD)imp.functions[i].size() + 1;
-                if (!addRvaChecked(currentRVA, AlignUp(hintNameSize, 2))) return {};
+                size_t funcLen = imp.functions[i].size();
+                if (funcLen > (std::numeric_limits<DWORD>::max)() - sizeof(WORD) - 1) return {};
+                DWORD hintNameSize = static_cast<DWORD>(sizeof(WORD) + funcLen + 1);
+                DWORD hintNameSpan = AlignUp(hintNameSize, 2);
+                if (!addRvaChecked(currentRVA, hintNameSpan)) return {};
             }
         }
 
@@ -2097,6 +2136,7 @@ private:
         }
         // Null descriptor
         IMAGE_IMPORT_DESCRIPTOR nullDesc = {};
+        ZeroMemory(&nullDesc, sizeof(nullDesc));
         data.insert(data.end(), (BYTE*)&nullDesc, (BYTE*)&nullDesc + sizeof(nullDesc));
 
         // DLL names
