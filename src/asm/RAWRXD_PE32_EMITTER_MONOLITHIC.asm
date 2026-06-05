@@ -2466,6 +2466,14 @@ emit_ai_reset_counters PROC
     ret
 emit_ai_reset_counters ENDP
 
+PUBLIC emit_ai_apply_profile_calibration
+emit_ai_apply_profile_calibration PROC
+    mov ecx, 3029
+    call emit_feature_dispatch
+    xor eax, eax
+    ret
+emit_ai_apply_profile_calibration ENDP
+
 PUBLIC emit_voice_init
 emit_voice_init PROC
     mov ecx, 4000
@@ -4872,6 +4880,40 @@ ai_reset_counters PROC
 @@:
     ret
 ai_reset_counters ENDP
+
+PUBLIC ai_apply_profile_calibration
+ai_apply_profile_calibration PROC
+    ; RCX=peak_gbps_x100 (must be > 0)
+    call ai_require_init
+    test eax, eax
+    jnz @F
+    test rcx, rcx
+    jz  @@bad_args
+
+    lea r8, gState
+    mov QWORD PTR [r8+ST_AI_PEAK_GBPS_X100], rcx
+
+    mov QWORD PTR [r8+ST_AI_LOAD_BW_X100], 0
+    mov QWORD PTR [r8+ST_AI_DECODE_BW_X100], 0
+    mov DWORD PTR [r8+ST_AI_LOAD_BOUND_CLASS], 0
+    mov DWORD PTR [r8+ST_AI_DECODE_BOUND_CLASS], 0
+
+    mov DWORD PTR [r8+ST_AI_QUERY_COUNT], 0
+    mov DWORD PTR [r8+ST_AI_TOKEN_COUNT], 0
+    mov DWORD PTR [r8+ST_AI_GENERATION_COUNT], 0
+
+    mov DWORD PTR [r8+ST_LAST_ERROR], 0
+    xor eax, eax
+    ret
+
+@@bad_args:
+    lea r8, gState
+    mov DWORD PTR [r8+ST_LAST_ERROR], 22
+    mov eax, IDE_FAIL
+    ret
+@@:
+    ret
+ai_apply_profile_calibration ENDP
 
 PUBLIC ai_audio_transcribe
 ai_audio_transcribe PROC
