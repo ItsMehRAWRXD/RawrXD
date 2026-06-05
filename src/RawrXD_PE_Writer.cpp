@@ -1375,160 +1375,174 @@ public:
 private:
     bool ValidatePEFile(const char* filename) {
         printf("Validating PE file: %s\n", filename);
-        FILE* f = nullptr;
-        if (fopen_s(&f, filename, "rb") != 0) {
+        HANDLE hFile = CreateFileA(
+            filename,
+            GENERIC_READ,
+            FILE_SHARE_READ,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr);
+        if (hFile == INVALID_HANDLE_VALUE) {
             printf("Failed to open file for validation\n");
             return false;
         }
 
-        fseek(f, 0, SEEK_END);
-        long fileSize = ftell(f);
-        if (fileSize <= 0) {
+        LARGE_INTEGER fileSizeLi = {};
+        if (!GetFileSizeEx(hFile, &fileSizeLi) || fileSizeLi.QuadPart <= 0) {
             printf("Invalid file size\n");
-            fclose(f);
+            CloseHandle(hFile);
             return false;
         }
-        fseek(f, 0, SEEK_SET);
+        if ((unsigned long long)fileSizeLi.QuadPart > (unsigned long long)(std::numeric_limits<size_t>::max)()) {
+            printf("File size too large for validation\n");
+            CloseHandle(hFile);
+            return false;
+        }
+
+        size_t fileSize = static_cast<size_t>(fileSizeLi.QuadPart);
+        std::vector<BYTE> fileData(fileSize);
+
+        size_t remaining = fileSize;
+        BYTE* cursor = fileData.data();
+        while (remaining > 0) {
+            DWORD chunk = remaining > (size_t)(std::numeric_limits<DWORD>::max)()
+                ? (std::numeric_limits<DWORD>::max)()
+                : static_cast<DWORD>(remaining);
+            DWORD bytesRead = 0;
+            if (!ReadFile(hFile, cursor, chunk, &bytesRead, nullptr) || bytesRead != chunk) {
+                printf("Failed to read file contents\n");
+                CloseHandle(hFile);
+                return false;
+            }
+            cursor += bytesRead;
+            remaining -= bytesRead;
+        }
+        CloseHandle(hFile);
+
+        auto readStruct = [&](size_t offset, void* out, size_t size) -> bool {
+            if (offset > fileData.size() || size > (fileData.size() - offset)) {
+                return false;
+            }
+            memcpy(out, fileData.data() + offset, size);
+            return true;
+        };
 
         // Read DOS header
-        IMAGE_DOS_HEADER dosHeader;
-        if (fread(&dosHeader, sizeof(dosHeader), 1, f) != 1) {
+        IMAGE_DOS_HEADER dosHeader = {};
+        if (!readStruct(0, &dosHeader, sizeof(dosHeader))) {
             printf("Failed to read DOS header\n");
-            fclose(f);
             return false;
         }
 
         // Check DOS signature
         if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) {
             printf("Invalid DOS signature: %x\n", dosHeader.e_magic);
-            fclose(f);
             return false;
         }
-        if (dosHeader.e_lfanew <= 0 || dosHeader.e_lfanew > fileSize - (long)sizeof(DWORD)) {
+        if (dosHeader.e_lfanew <= 0 || (size_t)dosHeader.e_lfanew > fileData.size() - sizeof(DWORD)) {
             printf("Invalid e_lfanew: %ld\n", (long)dosHeader.e_lfanew);
-            fclose(f);
             return false;
         }
 
-        // Seek to NT headers
-        if (fseek(f, dosHeader.e_lfanew, SEEK_SET) != 0) {
-            printf("Failed to seek to NT headers\n");
-            fclose(f);
-            return false;
-        }
+        size_t ntOffset = static_cast<size_t>(dosHeader.e_lfanew);
 
         // Read NT signature
-        DWORD ntSignature;
-        if (fread(&ntSignature, sizeof(ntSignature), 1, f) != 1) {
+        DWORD ntSignature = 0;
+        if (!readStruct(ntOffset, &ntSignature, sizeof(ntSignature))) {
             printf("Failed to read NT signature\n");
-            fclose(f);
             return false;
         }
 
         if (ntSignature != IMAGE_NT_SIGNATURE) {
             printf("Invalid NT signature: %x\n", ntSignature);
-            fclose(f);
             return false;
         }
 
         // Read file header
-        IMAGE_FILE_HEADER fileHeader;
-        if (fread(&fileHeader, sizeof(fileHeader), 1, f) != 1) {
+        IMAGE_FILE_HEADER fileHeader = {};
+        if (!readStruct(ntOffset + sizeof(DWORD), &fileHeader, sizeof(fileHeader))) {
             printf("Failed to read file header\n");
-            fclose(f);
             return false;
         }
 
         // Check machine type
         if (fileHeader.Machine != IMAGE_FILE_MACHINE_AMD64) {
             printf("Invalid machine type: %x\n", fileHeader.Machine);
-            fclose(f);
             return false;
         }
         if (fileHeader.NumberOfSections == 0 || fileHeader.NumberOfSections > kMaxSections) {
             printf("Invalid section count: %u\n", fileHeader.NumberOfSections);
-            fclose(f);
             return false;
         }
 
-        IMAGE_OPTIONAL_HEADER64 optHeader;
-        if (fread(&optHeader, sizeof(optHeader), 1, f) != 1) {
+        IMAGE_OPTIONAL_HEADER64 optHeader = {};
+        size_t optOffset = ntOffset + sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER);
+        if (!readStruct(optOffset, &optHeader, sizeof(optHeader))) {
             printf("Failed to read optional header\n");
-            fclose(f);
             return false;
         }
 
         if (optHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
             printf("Invalid optional header magic: %x\n", optHeader.Magic);
-            fclose(f);
             return false;
         }
 
         if (optHeader.SectionAlignment < optHeader.FileAlignment) {
             printf("Invalid alignment: section=%u file=%u\n", optHeader.SectionAlignment, optHeader.FileAlignment);
-            fclose(f);
             return false;
         }
         if (optHeader.NumberOfRvaAndSizes < 16) {
             printf("Insufficient NumberOfRvaAndSizes: %u\n", optHeader.NumberOfRvaAndSizes);
-            fclose(f);
             return false;
         }
         if (optHeader.FileAlignment == 0 || (optHeader.FileAlignment & (optHeader.FileAlignment - 1)) != 0 ||
             optHeader.SectionAlignment == 0 || (optHeader.SectionAlignment & (optHeader.SectionAlignment - 1)) != 0) {
             printf("Invalid non-power-of-two alignment values\n");
-            fclose(f);
             return false;
         }
         if (optHeader.SizeOfHeaders < fileHeader.SizeOfOptionalHeader + sizeof(IMAGE_FILE_HEADER) + sizeof(DWORD)) {
             printf("Invalid SizeOfHeaders: %u\n", optHeader.SizeOfHeaders);
-            fclose(f);
             return false;
         }
         if (optHeader.SizeOfImage == 0 || (optHeader.SizeOfImage % optHeader.SectionAlignment) != 0) {
             printf("Invalid SizeOfImage alignment/value: %u\n", optHeader.SizeOfImage);
-            fclose(f);
             return false;
         }
 
         std::vector<IMAGE_SECTION_HEADER> sectionHeaders(fileHeader.NumberOfSections);
         if (!sectionHeaders.empty()) {
-            if (fread(sectionHeaders.data(), sizeof(IMAGE_SECTION_HEADER), sectionHeaders.size(), f) != sectionHeaders.size()) {
+            size_t sectionHeadersOffset = optOffset + sizeof(IMAGE_OPTIONAL_HEADER64);
+            size_t sectionHeadersBytes = sectionHeaders.size() * sizeof(IMAGE_SECTION_HEADER);
+            if (!readStruct(sectionHeadersOffset, sectionHeaders.data(), sectionHeadersBytes)) {
                 printf("Failed to read section headers\n");
-                fclose(f);
                 return false;
             }
         }
         for (const auto& sh : sectionHeaders) {
             if ((sh.VirtualAddress % optHeader.SectionAlignment) != 0) {
                 printf("Section virtual address alignment violation\n");
-                fclose(f);
                 return false;
             }
             if (sh.SizeOfRawData > 0 && (sh.PointerToRawData % optHeader.FileAlignment) != 0) {
                 printf("Section raw pointer alignment violation\n");
-                fclose(f);
                 return false;
             }
             if (sh.SizeOfRawData > 0 && (sh.SizeOfRawData % optHeader.FileAlignment) != 0) {
                 printf("Section raw size alignment violation\n");
-                fclose(f);
                 return false;
             }
             if (sh.Misc.VirtualSize > 0 && sh.VirtualAddress > optHeader.SizeOfImage) {
                 printf("Section virtual address exceeds SizeOfImage\n");
-                fclose(f);
                 return false;
             }
             DWORD vsize = sh.Misc.VirtualSize ? sh.Misc.VirtualSize : sh.SizeOfRawData;
             if (vsize > 0 && sh.VirtualAddress > (std::numeric_limits<DWORD>::max)() - vsize) {
                 printf("Section virtual range overflow\n");
-                fclose(f);
                 return false;
             }
             if (vsize > 0 && (sh.VirtualAddress + vsize) > optHeader.SizeOfImage) {
                 printf("Section virtual range exceeds SizeOfImage\n");
-                fclose(f);
                 return false;
             }
             bool nameAllZero = true;
@@ -1537,7 +1551,6 @@ private:
             }
             if (nameAllZero) {
                 printf("Section name is empty\n");
-                fclose(f);
                 return false;
             }
             DWORD rawSize = sh.SizeOfRawData;
@@ -1545,12 +1558,10 @@ private:
             if (rawSize > 0) {
                 if (rawPtr < optHeader.SizeOfHeaders) {
                     printf("Section raw pointer overlaps headers\n");
-                    fclose(f);
                     return false;
                 }
                 if ((ULONGLONG)rawPtr + (ULONGLONG)rawSize > (ULONGLONG)fileSize) {
                     printf("Section exceeds file bounds\n");
-                    fclose(f);
                     return false;
                 }
             }
@@ -1565,7 +1576,6 @@ private:
         for (size_t i = 1; i < rawRanges.size(); ++i) {
             if (rawRanges[i].first < rawRanges[i - 1].second) {
                 printf("Overlapping section raw ranges detected\n");
-                fclose(f);
                 return false;
             }
         }
@@ -1582,7 +1592,6 @@ private:
 
         if (!entryPointValid) {
             printf("Entry point does not map to an executable section\n");
-            fclose(f);
             return false;
         }
         bool baseOfCodeValid = false;
@@ -1595,7 +1604,6 @@ private:
         }
         if (!baseOfCodeValid) {
             printf("BaseOfCode does not map to a code section\n");
-            fclose(f);
             return false;
         }
 
@@ -1609,30 +1617,25 @@ private:
         if (optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress &&
             !rvaMapsToSection(optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)) {
             printf("Import directory RVA is outside all sections\n");
-            fclose(f);
             return false;
         }
         if (optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size > 0 &&
             optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress == 0) {
             printf("Import directory size set but RVA is zero\n");
-            fclose(f);
             return false;
         }
         if (optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress &&
             !rvaMapsToSection(optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress)) {
             printf("Reloc directory RVA is outside all sections\n");
-            fclose(f);
             return false;
         }
         if (optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size > 0 &&
             optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress == 0) {
             printf("Reloc directory size set but RVA is zero\n");
-            fclose(f);
             return false;
         }
 
         printf("PE validation passed\n");
-        fclose(f);
         return true;
     }
 
