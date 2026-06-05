@@ -4051,6 +4051,7 @@ if(WIN32)
         src/ui/advanced_docking_system.cpp
         src/kv_cache/kv_cache_fp8_quantizer.cpp
         src/inference/token_pipeline_double_buffer.cpp
+        src/inference/model_loader.cpp
         src/speculative/speculative_fused_verify.cpp
         src/kernels/fp8_avx2_interface.cpp
         src/win32app/Win32IDE_Settings.cpp
@@ -5184,6 +5185,7 @@ if(WIN32)
             src/asm/RawrXD_PE_Exporter.asm
             src/asm/ghost_text_ranker.asm
             src/asm/diff_engine.asm
+            src/asm/snmalloc_stub.asm
         )
 
         # GPU Sovereign Control Modules
