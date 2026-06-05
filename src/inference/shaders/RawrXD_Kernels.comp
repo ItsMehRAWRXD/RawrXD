@@ -1,0 +1,375 @@
+// ============================================================================
+// RawrXD_Kernels.comp — Sovereign Vulkan Compute Shaders
+// ============================================================================
+//
+// SPIR-V compute kernels for the RawrXD Data Plane.
+// Compile to .spv at build time with:
+//   glslangValidator -V -S comp RawrXD_Kernels.comp -o RawrXD_Kernels.spv
+//
+// Target GPU: AMD Radeon RX 7800 XT (16 GB VRAM, Vulkan 1.4)
+//
+// Kernels:
+//   - gemm_q4_k_m : Quantized GEMM (Q4_K_M weights × F16 activations)
+//   - rms_norm    : Root-mean-square layer normalization
+//   - rope        : Rotary positional embedding
+//   - kv_append   : Single-token KV cache append
+//   - softmax     : Attention softmax over sequence length
+//
+// Design rules:
+//   - Workgroup size tuned for RDNA3 wavefront (32 threads / subgroup)
+//   - All buffers are StorageBuffer (no Uniform for large tensors)
+//   - Q4_K_M blocks: 256 weights + 2×F16 scale + 2×F16 min (144 bytes/block)
+// ============================================================================
+
+#version 450
+
+// ============================================================================
+// Common constants and types
+// ============================================================================
+
+#define WORKGROUP_SIZE_X 256
+#define WORKGROUP_SIZE_Y 1
+#define WORKGROUP_SIZE_Z 1
+
+// Q4_K_M block layout (144 bytes per 256 weights)
+//   bytes 0-127   : 256 nibbles (128 bytes) of quantized weights
+//   bytes 128-131 : F16 scale for low 128 weights
+//   bytes 132-135 : F16 scale for high 128 weights
+//   bytes 136-139 : F16 min for low 128 weights
+//   bytes 140-143 : F16 min for high 128 weights
+struct Q4KMBlock {
+    uint  weights[32];   // 128 bytes = 32 uints
+    vec2  scale_min;     // scale.x = low scale, scale.y = high scale
+    vec2  min_val;       // min.x = low min, min.y = high min
+};
+
+// ============================================================================
+// Kernel 1: gemm_q4_k_m
+// ============================================================================
+// Computes Out = A × B where A is Q4_K_M quantized weights and B is F16.
+//
+// Layout:
+//   A : [M, K] quantized weights (Q4_K_M blocks)
+//   B : [K, N] activations (F16)
+//   Out : [M, N] output (F32)
+//
+// Dispatch: (M / 16, N / 16, 1) workgroups, each 256 threads
+// ============================================================================
+
+#ifdef KERNEL_GEMM_Q4_K_M
+
+layout(local_size_x = WORKGROUP_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer TensorA { uint8_t data[]; } A;
+layout(binding = 1) readonly buffer TensorB { float data[]; } B;
+layout(binding = 2) writeonly buffer TensorOut { float data[]; Out; };
+
+layout(push_constant) uniform PushConstants {
+    uint M;
+    uint K;
+    uint N;
+    uint K_blocks;   // K / 256 (number of Q4_K_M blocks along K)
+} pc;
+
+// Shared memory for B tile (cooperative loading)
+shared float shared_B[256];   // One row of B tile
+
+// Half-precision decode helper (manual, no GL_AMD_gpu_shader_half_float)
+float decode_f16(uint16_t h) {
+    uint bits = uint(h);
+    uint sign = (bits >> 15) & 0x1u;
+    uint exponent = (bits >> 10) & 0x1Fu;
+    uint mantissa = bits & 0x3FFu;
+
+    if (exponent == 0u) {
+        return 0.0; // Zero / subnormal → flush to zero for speed
+    }
+    if (exponent == 0x1Fu) {
+        return (sign != 0u) ? -1.0/0.0 : 1.0/0.0; // Inf
+    }
+
+    float f32_exp = float(int(exponent) - 15 + 127);
+    uint f32_bits = (sign << 31) | (uint(f32_exp) << 23) | (mantissa << 13);
+    return uintBitsToFloat(f32_bits);
+}
+
+// Dequantize one Q4_K_M block and accumulate dot product with B segment
+float q4km_dot(uint block_offset, uint b_offset, uint len) {
+    float acc = 0.0;
+    // Simplified: process 128 weights at a time (one half-block)
+    for (uint i = 0; i < 32; ++i) {
+        uint packed = A.data[block_offset + i];
+        // Extract low nibble
+        uint w_low = packed & 0x0Fu;
+        // Extract high nibble
+        uint w_high = (packed >> 4) & 0x0Fu;
+
+        // TODO: load scale/min from block header and dequantize
+        // For scaffolding, treat as direct 4-bit values scaled by 1/16
+        acc += float(w_low) * B.data[b_offset + i * 2 + 0] * (1.0 / 16.0);
+        acc += float(w_high) * B.data[b_offset + i * 2 + 1] * (1.0 / 16.0);
+    }
+    return acc;
+}
+
+void main() {
+    uint global_idx = gl_GlobalInvocationID.x;
+    uint local_idx  = gl_LocalInvocationID.x;
+
+    // Each thread computes one output element
+    uint row = global_idx / pc.N;
+    uint col = global_idx % pc.N;
+
+    if (row >= pc.M || col >= pc.N) return;
+
+    float acc = 0.0;
+    for (uint kb = 0; kb < pc.K_blocks; ++kb) {
+        uint a_block_offset = (row * pc.K_blocks + kb) * 144; // bytes per block
+        uint b_offset = (kb * 256 + local_idx) * pc.N + col;
+
+        // Cooperative load of B tile into shared memory
+        if (local_idx < 256) {
+            shared_B[local_idx] = B.data[b_offset];
+        }
+        barrier();
+
+        acc += q4km_dot(a_block_offset, b_offset, 256);
+        barrier();
+    }
+
+    Out.data[row * pc.N + col] = acc;
+}
+
+#endif // KERNEL_GEMM_Q4_K_M
+
+// ============================================================================
+// Kernel 2: rms_norm
+// ============================================================================
+// Computes: out = x / sqrt(mean(x²) + epsilon) × weight
+//
+// Layout:
+//   x      : [n_embd] input
+//   weight : [n_embd] scale
+//   out    : [n_embd] output
+//
+// Dispatch: (1, 1, 1) workgroup of 256 threads
+// ============================================================================
+
+#ifdef KERNEL_RMS_NORM
+
+layout(local_size_x = WORKGROUP_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer InputX { float data[]; } x;
+layout(binding = 1) readonly buffer InputWeight { float data[]; } weight;
+layout(binding = 2) writeonly buffer Output { float data[]; } out_buf;
+
+layout(push_constant) uniform PushConstants {
+    uint n_embd;
+    float epsilon;
+} pc;
+
+shared float shared_sum[256];
+
+void main() {
+    uint tid = gl_LocalInvocationID.x;
+    uint gid = gl_GlobalInvocationID.x;
+
+    // Step 1: Compute local sum of squares
+    float local_sum = 0.0;
+    for (uint i = gid; i < pc.n_embd; i += WORKGROUP_SIZE_X) {
+        float v = x.data[i];
+        local_sum += v * v;
+    }
+    shared_sum[tid] = local_sum;
+    barrier();
+
+    // Step 2: Parallel reduction for mean
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (tid < stride) {
+            shared_sum[tid] += shared_sum[tid + stride];
+        }
+        barrier();
+    }
+
+    float rms = sqrt(shared_sum[0] / float(pc.n_embd) + pc.epsilon);
+    float inv_rms = 1.0 / rms;
+
+    // Step 3: Normalize and scale
+    for (uint i = gid; i < pc.n_embd; i += WORKGROUP_SIZE_X) {
+        out_buf.data[i] = x.data[i] * inv_rms * weight.data[i];
+    }
+}
+
+#endif // KERNEL_RMS_NORM
+
+// ============================================================================
+// Kernel 3: rope (Rotary Positional Embedding)
+// ============================================================================
+// Applies rotary embedding to Q and K vectors in-place.
+//
+// Layout:
+//   q : [n_heads, head_dim] query
+//   k : [n_heads, head_dim] key
+//
+// Dispatch: (n_heads, 1, 1) workgroups, 256 threads each
+// ============================================================================
+
+#ifdef KERNEL_ROPE
+
+layout(local_size_x = WORKGROUP_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) buffer TensorQ { float data[]; } q;
+layout(binding = 1) buffer TensorK { float data[]; } k;
+
+layout(push_constant) uniform PushConstants {
+    uint n_heads;
+    uint head_dim;
+    uint seq_pos;      // Position in sequence
+    float theta;       // Base frequency (typically 10000.0)
+} pc;
+
+void main() {
+    uint head = gl_WorkGroupID.x;
+    uint tid  = gl_LocalInvocationID.x;
+
+    if (head >= pc.n_heads) return;
+
+    uint base = head * pc.head_dim;
+    for (uint i = tid; i < pc.head_dim; i += WORKGROUP_SIZE_X) {
+        uint pair = i / 2;
+        uint is_odd = i & 1u;
+
+        float freq = 1.0 / pow(pc.theta, float(2 * pair) / float(pc.head_dim));
+        float angle = float(pc.seq_pos) * freq;
+        float c = cos(angle);
+        float s = sin(angle);
+
+        uint idx = base + i;
+        uint pair_idx = base + (pair * 2) + (1 - is_odd);
+
+        float v = is_odd != 0u ? q.data[idx] : q.data[pair_idx];
+        float rot = is_odd != 0u ? -s : c;
+
+        q.data[idx] = q.data[idx] * c + v * rot;
+        k.data[idx] = k.data[idx] * c + v * rot;
+    }
+}
+
+#endif // KERNEL_ROPE
+
+// ============================================================================
+// Kernel 4: kv_append
+// ============================================================================
+// Appends a single token's K/V vectors into the layer-wise KV cache.
+//
+// Layout:
+//   k_cache : [n_ctx, n_embd_head] existing cache
+//   v_cache : [n_ctx, n_embd_head] existing cache
+//   k_new   : [n_embd_head] new key vector
+//   v_new   : [n_embd_head] new value vector
+//
+// Dispatch: (1, 1, 1) workgroup, 256 threads
+// ============================================================================
+
+#ifdef KERNEL_KV_APPEND
+
+layout(local_size_x = WORKGROUP_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) buffer KCache { float data[]; } k_cache;
+layout(binding = 1) buffer VCache { float data[]; } v_cache;
+layout(binding = 2) readonly buffer KNew { float data[]; } k_new;
+layout(binding = 3) readonly buffer VNew { float data[]; } v_new;
+
+layout(push_constant) uniform PushConstants {
+    uint seq_pos;      // Position to write (0-based)
+    uint n_embd_head;  // Dimension per head
+    uint n_ctx;        // Maximum context length
+} pc;
+
+void main() {
+    uint tid = gl_LocalInvocationID.x;
+    uint offset = pc.seq_pos * pc.n_embd_head;
+
+    for (uint i = tid; i < pc.n_embd_head; i += WORKGROUP_SIZE_X) {
+        k_cache.data[offset + i] = k_new.data[i];
+        v_cache.data[offset + i] = v_new.data[i];
+    }
+}
+
+#endif // KERNEL_KV_APPEND
+
+// ============================================================================
+// Kernel 5: softmax
+// ============================================================================
+// Computes softmax over the sequence dimension for attention scores.
+//
+// Layout:
+//   scores : [n_heads, seq_len] attention scores
+//   out    : [n_heads, seq_len] softmax probabilities
+//
+// Dispatch: (n_heads, 1, 1) workgroups, 256 threads
+// ============================================================================
+
+#ifdef KERNEL_SOFTMAX
+
+layout(local_size_x = WORKGROUP_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer Scores { float data[]; } scores;
+layout(binding = 1) writeonly buffer Output { float data[]; } out_buf;
+
+layout(push_constant) uniform PushConstants {
+    uint seq_len;
+    uint n_heads;
+} pc;
+
+shared float shared_max[256];
+shared float shared_sum[256];
+
+void main() {
+    uint head = gl_WorkGroupID.x;
+    uint tid  = gl_LocalInvocationID.x;
+
+    if (head >= pc.n_heads) return;
+
+    uint base = head * pc.seq_len;
+
+    // Step 1: Find max for numerical stability
+    float local_max = -1e38;
+    for (uint i = tid; i < pc.seq_len; i += WORKGROUP_SIZE_X) {
+        local_max = max(local_max, scores.data[base + i]);
+    }
+    shared_max[tid] = local_max;
+    barrier();
+
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (tid < stride) shared_max[tid] = max(shared_max[tid], shared_max[tid + stride]);
+        barrier();
+    }
+    float max_val = shared_max[0];
+
+    // Step 2: Compute exp(x - max) and sum
+    float local_sum = 0.0;
+    for (uint i = tid; i < pc.seq_len; i += WORKGROUP_SIZE_X) {
+        float e = exp(scores.data[base + i] - max_val);
+        // Store temporarily back to shared memory
+        shared_sum[i] = e;
+        local_sum += e;
+    }
+    barrier();
+
+    // Reduce sum
+    shared_max[tid] = local_sum; // reuse shared_max array
+    barrier();
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (tid < stride) shared_max[tid] += shared_max[tid + stride];
+        barrier();
+    }
+    float sum_val = shared_max[0];
+
+    // Step 3: Normalize
+    for (uint i = tid; i < pc.seq_len; i += WORKGROUP_SIZE_X) {
+        out_buf.data[base + i] = shared_sum[i] / sum_val;
+    }
+}
+
+#endif // KERNEL_SOFTMAX

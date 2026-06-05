@@ -46,6 +46,7 @@ set(INFERENCE_CORE_SOURCES
     ollama_blob_parser.cpp
     inference_standalone_main.cpp
     RawrXD_LlamaNative.cpp              # Native llama.dll bridge (zero HTTP)
+    RawrXD_VulkanAccelerator.cpp        # Sovereign Vulkan Data Plane
 )
 
 # =============================================================================
@@ -84,6 +85,10 @@ if(RAWR_HAS_MASM)
         ${CMAKE_CURRENT_SOURCE_DIR}/../asm/FlashAttention_AVX512.asm
         ${CMAKE_CURRENT_SOURCE_DIR}/../asm/model_bridge_x64.asm
         ${CMAKE_CURRENT_SOURCE_DIR}/../asm/RawrXD_Telemetry_Kernel.asm
+        RawrXD_VulkanShim.asm              # Sovereign Vulkan hot-path dispatch
+        RawrXD_AsyncDMARing.asm            # Host-side async DMA lane scheduler
+        RawrXD_IntegrityValidator.asm      # SSE4.2 CRC32 transfer integrity gate
+        RawrXD_TaskDispatcher.asm          # Dependency-aware async task gating
     )
     set_source_files_properties(${INFERENCE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 else()
@@ -186,3 +191,77 @@ endif()
 
 message(STATUS "[Inference] RawrXD-InferenceEngine standalone build configured")
 message(STATUS "[Inference] MASM kernels: ${RAWR_HAS_MASM}")
+
+# =============================================================================
+# VRAM Arena Stress Test (Phase 7a — allocator battle-hardening)
+# =============================================================================
+add_executable(RawrXD-BenchAllocator
+    bench_allocator.cpp
+    RawrXD_VulkanAccelerator.cpp
+)
+
+target_compile_definitions(RawrXD-BenchAllocator PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+    NOMINMAX
+    WIN32_LEAN_AND_MEAN
+    $<$<BOOL:${RAWR_HAS_MASM}>:RAWR_HAS_MASM=1>
+)
+
+target_include_directories(RawrXD-BenchAllocator PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/../core
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+)
+
+if(Vulkan_FOUND)
+    target_include_directories(RawrXD-BenchAllocator PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(RawrXD-BenchAllocator PRIVATE Vulkan::Vulkan)
+    target_compile_definitions(RawrXD-BenchAllocator PRIVATE RAWR_HAS_VULKAN=1)
+else()
+    target_compile_definitions(RawrXD-BenchAllocator PRIVATE RAWR_HAS_VULKAN=0)
+endif()
+
+target_link_libraries(RawrXD-BenchAllocator PRIVATE
+    Threads::Threads
+)
+if(WIN32)
+    target_link_libraries(RawrXD-BenchAllocator PRIVATE
+        kernel32 advapi32 shlwapi psapi dbghelp ws2_32 winhttp ntdll
+    )
+endif()
+
+if(MSVC)
+    target_compile_options(RawrXD-BenchAllocator PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/std:c++20>
+        $<$<COMPILE_LANGUAGE:CXX>:/W3>
+        $<$<COMPILE_LANGUAGE:CXX>:/permissive->
+        $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:/O2>
+        $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:/Oi>
+        $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:/Ot>
+    )
+endif()
+
+message(STATUS "[Inference] RawrXD-BenchAllocator target configured")
+
+# =============================================================================
+# GGUF truncation utility (Phase 2.1 surgeon tool)
+# =============================================================================
+add_executable(RawrXD-GGUF-Truncator
+    GGUF_Truncator.cpp
+)
+
+target_compile_definitions(RawrXD-GGUF-Truncator PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+)
+
+if(MSVC)
+    target_compile_options(RawrXD-GGUF-Truncator PRIVATE
+        /std:c++20
+        /W3
+        /permissive-
+    )
+else()
+    target_compile_options(RawrXD-GGUF-Truncator PRIVATE -O2)
+endif()

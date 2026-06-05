@@ -5,8 +5,11 @@
 
 #include "model_loader.h"
 #include "../core/native_ide_tools.h"
+#include "rawrxd_quant_container.h"
 #include <filesystem>
 #include <fstream>
+#include <cstdio>
+#include <vector>
 
 namespace RawrXD::Inference {
 
@@ -131,6 +134,12 @@ bool ModelLoader::loadGGUF(const std::string& path, Model& model) {
     if (!loader.open(path)) {
         return false;
     }
+
+    const uint64_t fileSize = static_cast<uint64_t>(loader.size());
+    if (fileSize < sizeof(uint32_t)) {
+        loader.close();
+        return false;
+    }
     
     // Log for large models
     if (loader.isLargeFile()) {
@@ -147,6 +156,137 @@ bool ModelLoader::loadGGUF(const std::string& path, Model& model) {
         loader.read(&header.metadataCount, sizeof(header.metadataCount)) != sizeof(header.metadataCount)) {
         loader.close();
         return false;
+    }
+
+    // RXQF quant container path: validate hard and fail closed on malformed files.
+    if (header.magic == RAWRXD_QUANT_MAGIC) {
+        RawrXDQuantFileHeader qh{};
+        if (!loader.seek(0) || loader.read(&qh, sizeof(qh)) != sizeof(qh) ||
+            !RawrXDQuantValidateHeader(&qh, fileSize)) {
+            loader.close();
+            return false;
+        }
+
+        model.format = ModelFormat::RXQF;
+        model.version = qh.version;
+        model.tensors.clear();
+        model.metadata.clear();
+        std::vector<std::string> rxqfNames;
+
+        auto quantTypeFromMode = [](uint32_t mode) {
+            switch (mode) {
+                case RAWRXD_QUANT_FILE_FP16: return QuantizationType::F16;
+                case RAWRXD_QUANT_FILE_INT8: return QuantizationType::Q8_0;
+                case RAWRXD_QUANT_FILE_INT4:
+                case RAWRXD_QUANT_FILE_INT4_NF:
+                    return QuantizationType::Q4_0;
+                default: return QuantizationType::None;
+            }
+        };
+        auto tensorTypeFromMode = [](uint32_t mode) {
+            switch (mode) {
+                case RAWRXD_QUANT_FILE_FP16: return TensorType::F16;
+                case RAWRXD_QUANT_FILE_INT8: return TensorType::Q8_0;
+                case RAWRXD_QUANT_FILE_INT4:
+                case RAWRXD_QUANT_FILE_INT4_NF:
+                    return TensorType::Q4_0;
+                default: return TensorType::F32;
+            }
+        };
+
+        bool quantTypeSet = false;
+
+        if (qh.reserved0 != 0) {
+            RawrXDQuantNameTableHeader nh{};
+            if (!loader.seek(static_cast<size_t>(qh.reserved0)) ||
+                loader.read(&nh, sizeof(nh)) != sizeof(nh) ||
+                !RawrXDQuantValidateNameTableHeader(&qh, &nh, fileSize)) {
+                loader.close();
+                return false;
+            }
+
+            rxqfNames.reserve(static_cast<size_t>(nh.tensor_count));
+            for (uint64_t i = 0; i < nh.tensor_count; ++i) {
+                uint16_t nameLen = 0;
+                if (loader.read(&nameLen, sizeof(nameLen)) != sizeof(nameLen) || nameLen == 0 || nameLen > 255) {
+                    loader.close();
+                    return false;
+                }
+                std::string name;
+                name.resize(nameLen);
+                if (loader.read(name.data(), nameLen) != nameLen) {
+                    loader.close();
+                    return false;
+                }
+                rxqfNames.push_back(std::move(name));
+            }
+        }
+
+        for (uint64_t i = 0; i < qh.tensor_count; ++i) {
+            RawrXDQuantTensorDescriptor desc{};
+            const uint64_t descOffset = qh.descriptor_table_offset + (i * qh.descriptor_bytes);
+            if (!loader.seek(static_cast<size_t>(descOffset)) ||
+                loader.read(&desc, sizeof(desc)) != sizeof(desc) ||
+                !RawrXDQuantValidateDescriptor(&qh, &desc, fileSize)) {
+                loader.close();
+                return false;
+            }
+
+            TensorInfo tensor;
+            char tensorName[64] = {0};
+            if (i < rxqfNames.size() && !rxqfNames[static_cast<size_t>(i)].empty()) {
+                tensor.name = rxqfNames[static_cast<size_t>(i)];
+            } else {
+                std::snprintf(tensorName, sizeof(tensorName), "rxqf_%llu_%016llx",
+                              static_cast<unsigned long long>(i),
+                              static_cast<unsigned long long>(desc.name_hash));
+                tensor.name = tensorName;
+            }
+            tensor.type = tensorTypeFromMode(desc.quant_mode);
+            tensor.offset = desc.payload_offset;
+
+            if (desc.shape_bytes >= sizeof(RawrXDQuantShapeRecord) &&
+                (desc.shape_offset + sizeof(RawrXDQuantShapeRecord)) <= qh.shape_bytes) {
+                RawrXDQuantShapeRecord shape{};
+                const uint64_t shapeOffset = qh.shape_table_offset + desc.shape_offset;
+                if (!loader.seek(static_cast<size_t>(shapeOffset)) ||
+                    loader.read(&shape, sizeof(shape)) != sizeof(shape)) {
+                    loader.close();
+                    return false;
+                }
+                if (shape.rank > 0 && shape.rank <= 8) {
+                    tensor.dimensions.assign(shape.dims, shape.dims + shape.rank);
+                }
+            }
+
+            if (desc.payload_bytes > static_cast<uint64_t>(SIZE_MAX)) {
+                loader.close();
+                return false;
+            }
+
+            tensor.data.resize(static_cast<size_t>(desc.payload_bytes));
+            if (!loader.seek(static_cast<size_t>(desc.payload_offset)) ||
+                loader.read(tensor.data.data(), tensor.data.size()) != tensor.data.size()) {
+                loader.close();
+                return false;
+            }
+
+            if (!quantTypeSet) {
+                model.quantizationType = quantTypeFromMode(desc.quant_mode);
+                quantTypeSet = true;
+            }
+
+            model.tensors[tensor.name] = std::move(tensor);
+            if (m_progressCallback) {
+                float progress = static_cast<float>(i + 1) / static_cast<float>(qh.tensor_count == 0 ? 1 : qh.tensor_count);
+                m_progressCallback(tensorName, progress);
+            }
+        }
+
+        model.quantizationVersion = qh.version;
+        model.name = std::filesystem::path(path).stem().string();
+        loader.close();
+        return true;
     }
     
     // Verify magic (GGUF in little-endian)

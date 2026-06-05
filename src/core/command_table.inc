@@ -45,6 +45,7 @@ COMMAND_TABLE(1032, FILE_MODEL_OLLAMA,  "file.modelFromOllama", "!model_ollama",
 COMMAND_TABLE(1033, FILE_MODEL_URL,     "file.modelFromURL",    "!model_url",           BOTH, FILE,           handleFileModelFromURL,     "",             "Download from URL")
 COMMAND_TABLE(1034, FILE_MODEL_UNIFIED, "file.modelUnified",    "!model_unified",       BOTH, FILE,           handleFileUnifiedLoad,      "",             "Universal loader")
 COMMAND_TABLE(1035, FILE_QUICK_LOAD,    "file.quickLoad",       "!quick_load",          BOTH, FILE,           handleFileQuickLoad,        "",             "One-click local cache load")
+COMMAND_TABLE(1036, FILE_CONVERT_RXQF,  "file.convertToRxqf",   "!model_to_rxqf",       BOTH, FILE,           handleFileConvertToRxqf,    "",             "Convert model to RXQF container")
 COMMAND_TABLE(1099, FILE_EXIT,          "file.exit",            "!exit",                BOTH, FILE,           handleFileExit,             "Alt+F4",       "Exit application")
 
 // ============================================================================

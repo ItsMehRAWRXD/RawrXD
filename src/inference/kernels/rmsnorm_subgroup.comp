@@ -1,0 +1,111 @@
+// ============================================================================
+// rmsnorm_subgroup.comp — Register-Persistent RMSNorm via Subgroup Intrinsics
+// ============================================================================
+//
+// Replaces shared-memory reduction with subgroupAdd/subgroupBroadcast.
+// Target: AMD RDNA3 (RX 7800 XT) — wavefront=32 in Vulkan subgroup model.
+//
+// Layout:
+//   binding 0 : Input  (float[])  — x vector
+//   binding 1 : Output (float[])  — y vector
+//   binding 2 : Weight (float[])  — gamma weights
+//   binding 3 : UBO Params
+//
+// Workgroup: 256 threads (8 subgroups of 32).
+// Each subgroup reduces independently via subgroupAdd.
+// Subgroup leaders write to a tiny shared buffer (8 floats).
+// Thread 0 computes final RMS and broadcasts via subgroupBroadcast.
+//
+// Compile: glslangValidator -V -S comp rmsnorm_subgroup.comp -o rmsnorm_subgroup.spv
+// ============================================================================
+
+#version 450
+#extension GL_KHR_shader_subgroup_arithmetic : require
+#extension GL_KHR_shader_subgroup_ballot : require
+#extension GL_KHR_shader_subgroup_shuffle : require
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly  buffer InputBuffer  { float data[]; } x;
+layout(binding = 1) writeonly buffer OutputBuffer { float data[]; } y;
+layout(binding = 2) readonly  buffer WeightBuffer { float data[]; } w;
+
+layout(binding = 3) uniform ParamsBlock {
+    uint hidden_size;
+    float eps;
+    uint layer_idx;
+    uint seq_pos;
+    uint reserved[4];
+} pc;
+
+// Tiny shared buffer: one float per subgroup leader
+// Max 32 subgroups for 1024-thread workgroups (conservative)
+shared float subgroup_sums[32];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id  = gl_LocalInvocationID.x;
+    uint group_id  = gl_WorkGroupID.x;
+    uint sg_id     = gl_SubgroupID;
+    uint sg_lid    = gl_SubgroupInvocationID;
+    uint sg_size   = gl_SubgroupSize;      // Actual subgroup size (32 or 64)
+    uint num_sg    = 256 / sg_size;        // Number of subgroups in workgroup
+
+    uint row_offset = group_id * pc.hidden_size;
+
+    // -------------------------------------------------------------------------
+    // Phase 1: Accumulate squares (register-local)
+    // -------------------------------------------------------------------------
+    float acc = 0.0;
+    for (uint s = 0; s < pc.hidden_size; s += 256) {
+        uint idx = row_offset + local_id + s;
+        if ((local_id + s) < pc.hidden_size) {
+            float v = x.data[idx];
+            acc += v * v;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 2: Explicit shuffle reduction (butterfly pattern)
+    // Reduce acc across all lanes in the subgroup dynamically.
+    // -------------------------------------------------------------------------
+    float sg_sum = acc;
+    for (uint stride = sg_size / 2; stride > 0; stride /= 2) {
+        sg_sum += subgroupShuffleXor(sg_sum, stride);
+    }
+
+    // Subgroup leader (lane 0) writes to shared buffer
+    if (sg_lid == 0) {
+        subgroup_sums[sg_id] = sg_sum;
+    }
+    barrier();
+
+    // -------------------------------------------------------------------------
+    // Phase 3: Thread 0 computes final RMS, writes to shared, all threads read
+    // -------------------------------------------------------------------------
+    if (local_id == 0) {
+        float total_sum = 0.0;
+        for (uint i = 0; i < num_sg; ++i) {
+            total_sum += subgroup_sums[i];
+        }
+        subgroup_sums[0] = total_sum;
+    }
+    barrier();
+
+    float total_sum = subgroup_sums[0];
+
+    float rms = sqrt(total_sum / float(pc.hidden_size) + pc.eps);
+    float inv_rms = 1.0 / rms;
+
+    // -------------------------------------------------------------------------
+    // Phase 4: Write normalized output
+    // -------------------------------------------------------------------------
+    for (uint s = 0; s < pc.hidden_size; s += 256) {
+        uint idx = row_offset + local_id + s;
+        if ((local_id + s) < pc.hidden_size) {
+            float v = x.data[idx];
+            float gamma = w.data[local_id + s];
+            y.data[idx] = v * inv_rms * gamma;
+        }
+    }
+}

@@ -1,0 +1,90 @@
+// ============================================================================
+// rmsnorm.comp — Root-Mean-Square Layer Normalization
+// ============================================================================
+//
+// Sovereign Vulkan compute kernel for RawrXD Data Plane.
+// Compile to SPIR-V at build time:
+//   glslangValidator -V -S comp rmsnorm.comp -o rmsnorm.spv
+//
+// Target GPU: AMD Radeon RX 7800 XT (RDNA3, wavefront=32)
+// Workgroup:  256 threads (8 wavefronts)
+//
+// Layout:
+//   binding 0 : Input  (float[])  — x vector
+//   binding 1 : Output (float[])  — y vector (can alias Input for in-place)
+//   binding 2 : Weight (float[])  — per-channel gamma weights
+//
+// Push constants:
+//   hidden_size : number of elements per row (must be multiple of 256)
+//   eps         : small constant to avoid div-by-zero (default 1e-6)
+//
+// Dispatch: (num_rows, 1, 1) workgroups, each 256 threads.
+// ============================================================================
+
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly  buffer InputBuffer  { float data[]; } x;
+layout(binding = 1) writeonly buffer OutputBuffer { float data[]; } y;
+layout(binding = 2) readonly  buffer WeightBuffer { float data[]; } w;
+
+layout(binding = 3) uniform ParamsBlock {
+    uint hidden_size;
+    float eps;
+    uint layer_idx;
+    uint seq_pos;
+    uint reserved[4];
+} pc;
+
+shared float sum[256];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id  = gl_LocalInvocationID.x;
+    uint group_id  = gl_WorkGroupID.x;
+
+    // Each workgroup processes one row of length hidden_size.
+    // Thread i within the workgroup handles elements:
+    //   group_id * hidden_size + local_id + s*256
+    uint row_offset = group_id * pc.hidden_size;
+
+    // -------------------------------------------------------------------------
+    // Step 1: Accumulate squares into shared memory
+    // -------------------------------------------------------------------------
+    float acc = 0.0;
+    for (uint s = 0; s < pc.hidden_size; s += 256) {
+        uint idx = row_offset + local_id + s;
+        if ((local_id + s) < pc.hidden_size) {
+            float v = x.data[idx];
+            acc += v * v;
+        }
+    }
+    sum[local_id] = acc;
+    barrier();
+
+    // -------------------------------------------------------------------------
+    // Step 2: Parallel reduction tree (256 → 1)
+    // -------------------------------------------------------------------------
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            sum[local_id] += sum[local_id + stride];
+        }
+        barrier();
+    }
+
+    float rms = sqrt(sum[0] / float(pc.hidden_size) + pc.eps);
+    float inv_rms = 1.0 / rms;
+
+    // -------------------------------------------------------------------------
+    // Step 3: Write normalized output (broadcast same inv_rms to all threads)
+    // -------------------------------------------------------------------------
+    for (uint s = 0; s < pc.hidden_size; s += 256) {
+        uint idx = row_offset + local_id + s;
+        if ((local_id + s) < pc.hidden_size) {
+            float v = x.data[idx];
+            float gamma = w.data[local_id + s];
+            y.data[idx] = v * inv_rms * gamma;
+        }
+    }
+}

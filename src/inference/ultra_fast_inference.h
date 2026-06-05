@@ -261,6 +261,7 @@ public:
         bool enable_async_inference = true;
         bool enable_ollama_blob_support = true;
         float temperature = 0.7f;
+        bool enable_kv_cache_preservation = true;
     };
     
     struct InferenceStats {
@@ -309,6 +310,9 @@ public:
         size_t max_tokens = 256
     );
 
+    // Reset persistent conversation state, including the lightweight KV cache.
+    void resetConversationState();
+
     // Async inference: enqueues the request and returns immediately.
     // token_callback is invoked from the worker thread.
     using TokenCallback = std::function<void(const std::string&)>;
@@ -354,7 +358,7 @@ private:
     std::unique_ptr<RawrXDInference> inference_backend_;
     
     std::vector<float> loaded_model_;
-    std::vector<float> kv_cache_;
+    std::vector<int32_t> kv_cache_;
     
     // ---- Async dispatch ring buffer ----
     // Producer (callers of queueInfer) push InferRequest objects into the

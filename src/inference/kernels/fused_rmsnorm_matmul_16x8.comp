@@ -1,0 +1,113 @@
+// ============================================================================
+// fused_rmsnorm_matmul_16x8.comp — Fused RMSNorm + MatMul Kernel (16x8 tile)
+// ============================================================================
+
+#version 450
+
+layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) readonly  buffer InputBuffer      { float data[]; } x;
+layout(binding = 1) writeonly buffer OutputBuffer   { float data[]; } y;
+layout(binding = 2) readonly  buffer RMSNormWeight { float data[]; } gamma;
+layout(binding = 3) readonly  buffer MatMulWeight  { float data[]; } w;
+
+layout(binding = 4) uniform ParamsBlock {
+    uint hidden_size;
+    uint output_size;
+    float eps;
+    uint layer_idx;
+    uint num_rows;
+    uint reserved[3];
+} pc;
+
+const uint TILE_M = 8u;
+const uint TILE_N = 16u;
+const uint TILE_K = 16u;
+
+shared float sum_tile[TILE_M][TILE_N];
+shared float inv_rms_tile[TILE_M];
+shared float norm_tile[TILE_M][TILE_K];
+shared float w_tile[TILE_K][TILE_N + 1u];
+
+void main() {
+    uint tx = gl_LocalInvocationID.x;
+    uint ty = gl_LocalInvocationID.y;
+    uint group_row = gl_WorkGroupID.x;
+    uint group_col = gl_WorkGroupID.y;
+
+    uint row = group_row * TILE_M + ty;
+    uint col = group_col * TILE_N + tx;
+    bool row_valid = row < pc.num_rows;
+    bool col_valid = col < pc.output_size;
+
+    uint in_row_offset = row * pc.hidden_size;
+    uint out_row_offset = row * pc.output_size;
+
+    float acc = 0.0;
+    for (uint i = tx; i < pc.hidden_size; i += TILE_N) {
+        if (row_valid) {
+            uint idx = in_row_offset + i;
+            float v = x.data[idx];
+            acc += v * v;
+        }
+    }
+    sum_tile[ty][tx] = acc;
+    barrier();
+
+    for (uint stride = TILE_N / 2u; stride > 0; stride >>= 1u) {
+        if (tx < stride) {
+            sum_tile[ty][tx] += sum_tile[ty][tx + stride];
+        }
+        barrier();
+    }
+
+    if (tx == 0) {
+        float rms = sqrt(sum_tile[ty][0] / float(pc.hidden_size) + pc.eps);
+        inv_rms_tile[ty] = 1.0 / rms;
+    }
+    barrier();
+
+    float dot = 0.0;
+    for (uint k0 = 0; k0 < pc.hidden_size; k0 += TILE_K) {
+        uint k_norm = k0 + tx;
+        if (tx < TILE_K) {
+            if (row_valid && k_norm < pc.hidden_size) {
+                float v = x.data[in_row_offset + k_norm];
+                float g = gamma.data[k_norm];
+                norm_tile[ty][tx] = v * inv_rms_tile[ty] * g;
+            } else {
+                norm_tile[ty][tx] = 0.0;
+            }
+        }
+
+        uint k_w0 = k0 + ty;
+        if (k_w0 < pc.hidden_size && col_valid) {
+            w_tile[ty][tx] = w.data[k_w0 * pc.output_size + col];
+        } else {
+            w_tile[ty][tx] = 0.0;
+        }
+
+        uint k_w1_row = ty + 8u;
+        uint k_w1 = k0 + k_w1_row;
+        if (k_w1_row < TILE_K) {
+            if (k_w1 < pc.hidden_size && col_valid) {
+                w_tile[k_w1_row][tx] = w.data[k_w1 * pc.output_size + col];
+            } else {
+                w_tile[k_w1_row][tx] = 0.0;
+            }
+        }
+        barrier();
+
+        uint tile_elems = min(TILE_K, pc.hidden_size - k0);
+        if (row_valid && col_valid) {
+            for (uint t = 0; t < tile_elems; ++t) {
+                dot += norm_tile[ty][t] * w_tile[t][tx];
+            }
+        }
+        barrier();
+    }
+
+    if (row_valid && col_valid) {
+        y.data[out_row_offset + col] = dot;
+    }
+}

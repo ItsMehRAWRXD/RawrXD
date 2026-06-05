@@ -11,26 +11,18 @@
 #include <filesystem>
 
 // ============================================================================
-// Static singleton instance
+// Static singleton instance (no heap allocation on first access)
 // ============================================================================
-static std::unique_ptr<LlamaNativeBridge> g_bridge;
-
 LlamaNativeBridge& GetLlamaBridge() {
-    if (!g_bridge) {
-        g_bridge = std::make_unique<LlamaNativeBridge>();
-    }
-    return *g_bridge;
+    static LlamaNativeBridge g_bridge;
+    return g_bridge;
 }
 
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
 LlamaNativeBridge::LlamaNativeBridge() {
-    tokenBuf_.resize(32768);  // Max tokens per request
-    pieceBuf_.resize(512);    // Max bytes per token piece
-    posBuf_.resize(32768);
-    seqBuf_.resize(1);
-    logitsBuf_.resize(32768);
+    // Defer heap-backed buffer growth to generation-time to avoid startup allocator spikes.
 }
 
 LlamaNativeBridge::~LlamaNativeBridge() {
@@ -54,15 +46,24 @@ bool LlamaNativeBridge::Initialize(const wchar_t* dllDir) {
         if (!prefix.empty() && prefix.back() != L'\\' && prefix.back() != L'/') {
             prefix += L'\\';
         }
+    } else {
+        // Default to the executable directory only; avoid implicit PATH-wide DLL side-loading.
+        wchar_t exePath[MAX_PATH] = {};
+        const DWORD len = GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+        if (len > 0 && len < MAX_PATH) {
+            std::wstring p(exePath, len);
+            const size_t slash = p.find_last_of(L"\\/");
+            if (slash != std::wstring::npos) {
+                prefix = p.substr(0, slash + 1);
+            }
+        }
     }
 
-    // Load ggml backends (dependencies loaded first)
-    // Vulkan preferred for RX 7800 XT, CPU fallback
+    // Load ggml backends from explicit prefix only.
     std::wstring ggmlVkPath = prefix + L"ggml-vulkan.dll";
     std::wstring ggmlCpuPath = prefix + L"ggml-cpu.dll";
     std::wstring ggmlBasePath = prefix + L"ggml.dll";
 
-    // Try Vulkan first (AMD GPU acceleration)
     hGgmlVk_ = LoadLibraryW(ggmlVkPath.c_str());
     hGgmlCpu_ = LoadLibraryW(ggmlCpuPath.c_str());
     hGgml_ = LoadLibraryW(ggmlBasePath.c_str());
@@ -76,6 +77,15 @@ bool LlamaNativeBridge::Initialize(const wchar_t* dllDir) {
            << "Ensure llama.dll is in: " << (dllDir ? "specified directory" : "exe directory");
         SetError(ss.str().c_str());
         return false;
+    }
+
+    if (hGgml_) {
+        fn_ggml_backend_load_all = reinterpret_cast<pfn_ggml_backend_load_all>(
+            GetProcAddress(hGgml_, "ggml_backend_load_all"));
+    }
+    if (!fn_ggml_backend_load_all && hLlama_) {
+        fn_ggml_backend_load_all = reinterpret_cast<pfn_ggml_backend_load_all>(
+            GetProcAddress(hLlama_, "ggml_backend_load_all"));
     }
 
     if (!BindExports()) {
@@ -96,41 +106,107 @@ bool LlamaNativeBridge::Initialize(const wchar_t* dllDir) {
 // BindExports - GetProcAddress for all required functions
 // ============================================================================
 bool LlamaNativeBridge::BindExports() {
-    #define BIND(name, type) \
-        fn_##name = (type)GetProcAddress(hLlama_, "llama_" #name); \
-        if (!fn_##name) { SetError("Missing export: llama_" #name); return false; }
+    auto bindRequired = [this](const char* name) -> FARPROC {
+        FARPROC proc = GetProcAddress(hLlama_, name);
+        if (!proc) {
+            std::string err = "Missing export: ";
+            err += name;
+            SetError(err.c_str());
+        }
+        return proc;
+    };
 
-    #define BIND_OPT(name, type) \
-        fn_##name = (type)GetProcAddress(hLlama_, "llama_" #name)
+    auto bindAny = [this](std::initializer_list<const char*> names) -> FARPROC {
+        for (const char* name : names) {
+            if (FARPROC proc = GetProcAddress(hLlama_, name)) {
+                return proc;
+            }
+        }
+        if (names.size() > 0) {
+            std::string err = "Missing export (aliases): ";
+            bool first = true;
+            for (const char* name : names) {
+                if (!first) {
+                    err += " | ";
+                }
+                first = false;
+                err += name;
+            }
+            SetError(err.c_str());
+        }
+        return nullptr;
+    };
 
-    // Required exports
-    BIND(backend_init, pfn_backend_init);
-    BIND(model_default_params, pfn_model_default_params);
-    BIND(load_model, pfn_load_model);  // Actually "llama_load_model_from_file"
-    
-    // Try alternate name for load_model
-    if (!fn_load_model) {
-        fn_load_model = (pfn_load_model)GetProcAddress(hLlama_, "llama_load_model_from_file");
-    }
-    if (!fn_load_model) {
-        SetError("Missing export: llama_load_model_from_file");
+    // Required exports (support old/new llama.cpp symbol naming)
+    fn_backend_init = reinterpret_cast<pfn_backend_init>(bindRequired("llama_backend_init"));
+    if (!fn_backend_init) {
         return false;
     }
 
-    fn_free_model = (pfn_free_model)GetProcAddress(hLlama_, "llama_free_model");
-    fn_model_n_vocab = (pfn_model_n_vocab)GetProcAddress(hLlama_, "llama_n_vocab");
-    fn_context_default_params = (pfn_context_default_params)GetProcAddress(hLlama_, "llama_context_default_params");
-    fn_new_context = (pfn_new_context)GetProcAddress(hLlama_, "llama_new_context_with_model");
-    fn_free_context = (pfn_free_context)GetProcAddress(hLlama_, "llama_free");
-    fn_kv_cache_clear = (pfn_kv_cache_clear)GetProcAddress(hLlama_, "llama_kv_cache_clear");
-    fn_tokenize = (pfn_tokenize)GetProcAddress(hLlama_, "llama_tokenize");
-    fn_token_to_piece = (pfn_token_to_piece)GetProcAddress(hLlama_, "llama_token_to_piece");
-    fn_token_bos = (pfn_token_bos)GetProcAddress(hLlama_, "llama_token_bos");
-    fn_token_eos = (pfn_token_eos)GetProcAddress(hLlama_, "llama_token_eos");
-    fn_batch_init = (pfn_batch_init)GetProcAddress(hLlama_, "llama_batch_init");
-    fn_batch_free = (pfn_batch_free)GetProcAddress(hLlama_, "llama_batch_free");
-    fn_decode = (pfn_decode)GetProcAddress(hLlama_, "llama_decode");
-    fn_get_logits_ith = (pfn_get_logits_ith)GetProcAddress(hLlama_, "llama_get_logits_ith");
+    fn_model_default_params = reinterpret_cast<pfn_model_default_params>(
+        bindRequired("llama_model_default_params"));
+    if (!fn_model_default_params) {
+        return false;
+    }
+
+    fn_load_model = reinterpret_cast<pfn_load_model>(bindAny({
+        "llama_load_model",
+        "llama_load_model_from_file",
+        "llama_model_load_from_file"
+    }));
+    if (!fn_load_model) {
+        return false;
+    }
+
+    fn_free_model = reinterpret_cast<pfn_free_model>(bindAny({
+        "llama_free_model",
+        "llama_model_free"
+    }));
+    if (!fn_free_model) {
+        return false;
+    }
+
+    fn_model_get_vocab = reinterpret_cast<pfn_model_get_vocab>(
+        bindRequired("llama_model_get_vocab"));
+    if (!fn_model_get_vocab) {
+        return false;
+    }
+    fn_model_n_vocab = reinterpret_cast<pfn_model_n_vocab>(bindAny({
+        "llama_vocab_n_tokens",
+        "llama_n_vocab"
+    }));
+    fn_context_default_params = reinterpret_cast<pfn_context_default_params>(
+        bindRequired("llama_context_default_params"));
+    if (!fn_context_default_params) {
+        return false;
+    }
+    fn_new_context = reinterpret_cast<pfn_new_context>(bindAny({
+        "llama_new_context_with_model",
+        "llama_init_from_model"
+    }));
+    fn_free_context = reinterpret_cast<pfn_free_context>(bindRequired("llama_free"));
+    fn_kv_cache_clear = reinterpret_cast<pfn_kv_cache_clear>(bindAny({
+        "llama_kv_cache_clear",
+        "llama_kv_self_clear"
+    }));
+    fn_tokenize = reinterpret_cast<pfn_tokenize>(bindRequired("llama_tokenize"));
+    fn_token_to_piece = reinterpret_cast<pfn_token_to_piece>(bindRequired("llama_token_to_piece"));
+    fn_token_bos = reinterpret_cast<pfn_token_bos>(bindRequired("llama_token_bos"));
+    fn_token_eos = reinterpret_cast<pfn_token_eos>(bindRequired("llama_token_eos"));
+    fn_batch_init = reinterpret_cast<pfn_batch_init>(bindRequired("llama_batch_init"));
+    fn_batch_free = reinterpret_cast<pfn_batch_free>(bindRequired("llama_batch_free"));
+    fn_decode = reinterpret_cast<pfn_decode>(bindRequired("llama_decode"));
+    fn_get_logits_ith = reinterpret_cast<pfn_get_logits_ith>(bindRequired("llama_get_logits_ith"));
+
+    if (!fn_new_context || !fn_free_context || !fn_tokenize ||
+        !fn_token_to_piece || !fn_token_bos || !fn_token_eos || !fn_batch_init ||
+        !fn_batch_free || !fn_decode || !fn_get_logits_ith) {
+        // bindRequired()/bindAny() already set a detailed message for the first miss.
+        if (lastError_.empty()) {
+            SetError("Critical exports missing from llama.dll");
+        }
+        return false;
+    }
 
     // Optional sampler exports (b3506+)
     fn_sampler_chain_init = (pfn_sampler_chain_init)GetProcAddress(hLlama_, "llama_sampler_chain_init");
@@ -144,15 +220,6 @@ bool LlamaNativeBridge::BindExports() {
 
     // Backend cleanup (optional)
     fn_backend_free = (pfn_backend_free)GetProcAddress(hLlama_, "llama_backend_free");
-
-    #undef BIND
-    #undef BIND_OPT
-
-    // Validate critical exports
-    if (!fn_new_context || !fn_tokenize || !fn_decode || !fn_get_logits_ith) {
-        SetError("Critical exports missing from llama.dll");
-        return false;
-    }
 
     return true;
 }
@@ -189,6 +256,10 @@ bool LlamaNativeBridge::LoadModel(const wchar_t* modelPath, int32_t gpuLayers, u
 
     UnloadModel();  // Unload any existing model
 
+    if (fn_ggml_backend_load_all) {
+        fn_ggml_backend_load_all();
+    }
+
     // Convert wide path to UTF-8
     char pathUtf8[1024];
     int pathLen = WideCharToMultiByte(CP_UTF8, 0, modelPath, -1, pathUtf8, sizeof(pathUtf8), nullptr, nullptr);
@@ -223,9 +294,9 @@ bool LlamaNativeBridge::LoadModel(const wchar_t* modelPath, int32_t gpuLayers, u
     cParams.n_ctx = ctxSize;
     cParams.n_batch = 512;
     cParams.n_ubatch = 512;
-    cParams.n_threads = 8;        // 7800X3D optimal
-    cParams.n_threads_batch = 8;
-    cParams.flash_attn = true;    // Enable FlashAttention if available
+    cParams.n_threads = nThreads_;
+    cParams.n_threads_batch = nThreads_;
+    ctxSize_ = ctxSize;
 
     // Apply KV cache quantization if configured
     if (kvTypeK_ > 0) cParams.type_k = kvTypeK_;
@@ -246,14 +317,23 @@ bool LlamaNativeBridge::LoadModel(const wchar_t* modelPath, int32_t gpuLayers, u
     // Store model info
     modelInfo_.loaded = true;
     modelInfo_.path = pathUtf8;
+    vocab_ = nullptr;
+    if (fn_model_get_vocab) {
+        vocab_ = const_cast<llama_vocab_t>(fn_model_get_vocab(model_));
+    }
+    if (!vocab_) {
+        SetError("Failed to resolve model vocabulary handle");
+        return false;
+    }
+
     if (fn_model_n_vocab) {
-        modelInfo_.n_vocab = fn_model_n_vocab(model_);
+        modelInfo_.n_vocab = fn_model_n_vocab(vocab_);
     }
     if (fn_token_bos) {
-        modelInfo_.bos = fn_token_bos(model_);
+        modelInfo_.bos = fn_token_bos(vocab_);
     }
     if (fn_token_eos) {
-        modelInfo_.eos = fn_token_eos(model_);
+        modelInfo_.eos = fn_token_eos(vocab_);
     }
 
     return true;
@@ -278,6 +358,8 @@ void LlamaNativeBridge::UnloadModel() {
         ctx_ = nullptr;
     }
 
+    vocab_ = nullptr;
+
     if (model_ && fn_free_model) {
         fn_free_model(model_);
         model_ = nullptr;
@@ -289,48 +371,180 @@ void LlamaNativeBridge::UnloadModel() {
 // ============================================================================
 // ClearKVCache - Reset for new conversation
 // ============================================================================
+void LlamaNativeBridge::SetThreads(int32_t nThreads) {
+    if (nThreads > 0) {
+        nThreads_ = nThreads;
+    }
+}
+
 void LlamaNativeBridge::ClearKVCache() {
     if (ctx_ && fn_kv_cache_clear) {
         fn_kv_cache_clear(ctx_);
+    } else if (ctx_ && model_ && fn_free_context && fn_new_context && fn_context_default_params) {
+        // Older llama.dll ABIs may not export kv-cache clear; recreate context to force a clean state.
+        llama_context_params cParams = fn_context_default_params();
+        cParams.n_ctx = ctxSize_;
+        cParams.n_batch = 512;
+        cParams.n_ubatch = 512;
+        cParams.n_threads = 8;
+        cParams.n_threads_batch = 8;
+        if (kvTypeK_ > 0) cParams.type_k = kvTypeK_;
+        if (kvTypeV_ > 0) cParams.type_v = kvTypeV_;
+
+        if (llama_context_t freshCtx = fn_new_context(model_, cParams)) {
+            fn_free_context(ctx_);
+            ctx_ = freshCtx;
+        }
     }
+    cachedPromptTokens_.clear();
+}
+
+int32_t LlamaNativeBridge::GetTopToken() {
+    if (!ctx_ || !fn_get_logits_ith) {
+        return -1;
+    }
+
+    float* logits = fn_get_logits_ith(ctx_, -1);
+    if (!logits) {
+        return -1;
+    }
+
+    const int32_t vocabSize = modelInfo_.n_vocab > 0 ? modelInfo_.n_vocab : 32000;
+    int32_t best = 0;
+    float maxLogit = logits[0];
+    for (int32_t v = 1; v < vocabSize; ++v) {
+        if (logits[v] > maxLogit) {
+            maxLogit = logits[v];
+            best = v;
+        }
+    }
+    return best;
+}
+
+std::string LlamaNativeBridge::TokenToPiece(int32_t token) {
+    if (!vocab_ || !fn_token_to_piece) {
+        return {};
+    }
+
+    if (pieceBuf_.size() < 512) {
+        pieceBuf_.resize(512);
+    }
+
+    const int32_t nChars = fn_token_to_piece(
+        vocab_,
+        static_cast<llama_token>(token),
+        pieceBuf_.data(),
+        static_cast<int32_t>(pieceBuf_.size()),
+        0,
+        false
+    );
+    if (nChars <= 0) {
+        return {};
+    }
+    return std::string(pieceBuf_.data(), nChars);
+}
+
+bool LlamaNativeBridge::DecodeTokenBatch(const std::vector<int32_t>& tokens, bool logitsOnLastToken) {
+    if (!ctx_ || !fn_decode) {
+        SetError("DecodeTokenBatch called before model/context ready");
+        return false;
+    }
+
+    if (tokens.empty()) {
+        return true;
+    }
+
+    int32_t nPast = static_cast<int32_t>(cachedPromptTokens_.size());
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        batch_.n_tokens = 1;
+        batch_.token[0] = static_cast<llama_token>(tokens[i]);
+        batch_.pos[0] = nPast;
+        batch_.n_seq_id[0] = 1;
+        batch_.seq_id[0][0] = 0;
+        batch_.logits[0] = (logitsOnLastToken && i + 1 == tokens.size()) ? 1 : 0;
+
+        const int32_t decodeResult = fn_decode(ctx_, batch_);
+        if (decodeResult != 0) {
+            std::stringstream ss;
+            ss << "DecodeTokenBatch failed at idx " << i << " (code " << decodeResult << ")";
+            SetError(ss.str().c_str());
+            return false;
+        }
+
+        cachedPromptTokens_.push_back(static_cast<llama_token>(tokens[i]));
+        ++nPast;
+    }
+
+    return true;
+}
+
+bool LlamaNativeBridge::RewindToTokenCount(int32_t tokenCount) {
+    if (!ctx_) {
+        SetError("RewindToTokenCount called before model/context ready");
+        return false;
+    }
+
+    if (tokenCount < 0) {
+        tokenCount = 0;
+    }
+    const int32_t current = static_cast<int32_t>(cachedPromptTokens_.size());
+    if (tokenCount > current) {
+        SetError("Rewind target exceeds current token count");
+        return false;
+    }
+    if (tokenCount == current) {
+        return true;
+    }
+
+    std::vector<llama_token> replayPrefix(
+        cachedPromptTokens_.begin(),
+        cachedPromptTokens_.begin() + tokenCount
+    );
+
+    ClearKVCache();
+    if (tokenCount == 0) {
+        return true;
+    }
+
+    int32_t nPast = 0;
+    for (int32_t i = 0; i < tokenCount; ++i) {
+        batch_.n_tokens = 1;
+        batch_.token[0] = replayPrefix[static_cast<size_t>(i)];
+        batch_.pos[0] = nPast;
+        batch_.n_seq_id[0] = 1;
+        batch_.seq_id[0][0] = 0;
+        batch_.logits[0] = (i + 1 == tokenCount) ? 1 : 0;
+
+        const int32_t decodeResult = fn_decode(ctx_, batch_);
+        if (decodeResult != 0) {
+            std::stringstream ss;
+            ss << "Rewind replay failed at idx " << i << " (code " << decodeResult << ")";
+            SetError(ss.str().c_str());
+            ClearKVCache();
+            return false;
+        }
+        ++nPast;
+    }
+
+    cachedPromptTokens_ = std::move(replayPrefix);
+    return true;
 }
 
 // ============================================================================
 // SetupSampler - Configure sampling chain
 // ============================================================================
 bool LlamaNativeBridge::SetupSampler(float temp, float topP, int32_t topK) {
+    (void)temp;
+    (void)topP;
+    (void)topK;
+
     // Free existing sampler
     if (sampler_ && fn_sampler_free) {
         fn_sampler_free(sampler_);
         sampler_ = nullptr;
     }
 
-    // Use greedy if sampler chain not available
-    if (!fn_sampler_chain_init || !fn_sampler_chain_add) {
-        return true;  // Fall back to argmax in Generate()
-    }
-
-    // Create sampler chain
-    llama_context_params sparams = {};
-    sampler_ = fn_sampler_chain_init(sparams);
-    if (!sampler_) return false;
-
-    // Add samplers in order: temp -> top_k -> top_p
-    if (fn_sampler_init_temp && temp > 0.0f) {
-        auto tempSampler = fn_sampler_init_temp(temp);
-        if (tempSampler) fn_sampler_chain_add(sampler_, tempSampler);
-    }
-
-    if (fn_sampler_init_top_k && topK > 0) {
-        auto topKSampler = fn_sampler_init_top_k(topK);
-        if (topKSampler) fn_sampler_chain_add(sampler_, topKSampler);
-    }
-
-    if (fn_sampler_init_top_p && topP < 1.0f) {
-        auto topPSampler = fn_sampler_init_top_p(topP, 1);
-        if (topPSampler) fn_sampler_chain_add(sampler_, topPSampler);
-    }
-
+    // Bridge safe mode: rely on deterministic greedy path in Generate()/GenerateStream().
     return true;
 }
 
@@ -353,8 +567,11 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
 
     auto timeStart = std::chrono::high_resolution_clock::now();
 
-    // Clear KV cache for fresh generation
-    ClearKVCache();
+    if (tokenBuf_.size() < 8192) tokenBuf_.resize(8192);
+    if (pieceBuf_.size() < 512) pieceBuf_.resize(512);
+    if (posBuf_.size() < 8192) posBuf_.resize(8192);
+    if (seqBuf_.size() < 1) seqBuf_.resize(1);
+    if (logitsBuf_.size() < 8192) logitsBuf_.resize(8192);
 
     // Setup sampler chain
     SetupSampler(temperature, topP, topK);
@@ -363,7 +580,7 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
     // 1. Tokenize prompt
     // ========================================================================
     int32_t nPromptTokens = fn_tokenize(
-        model_,
+        vocab_,
         prompt.c_str(),
         static_cast<int32_t>(prompt.length()),
         tokenBuf_.data(),
@@ -378,14 +595,41 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
     }
     result.prompt_tokens = nPromptTokens;
 
+    size_t reusePrefix = 0;
+    const bool canReuse = preserveKVCache_ && !cachedPromptTokens_.empty();
+    if (canReuse) {
+        const size_t limit = std::min<size_t>(cachedPromptTokens_.size(), static_cast<size_t>(nPromptTokens));
+        while (reusePrefix < limit && cachedPromptTokens_[reusePrefix] == tokenBuf_[reusePrefix]) {
+            ++reusePrefix;
+        }
+    }
+
+    result.prefix_tokens_matched_pre_reset = static_cast<int32_t>(reusePrefix);
+    result.cached_tokens_before_reset = static_cast<int32_t>(cachedPromptTokens_.size());
+
+    const bool resetDueToPolicy = !preserveKVCache_;
+    const bool resetDueToMismatch = preserveKVCache_ && (reusePrefix != cachedPromptTokens_.size());
+    if (resetDueToPolicy || resetDueToMismatch) {
+        ClearKVCache();
+        reusePrefix = 0;
+    }
+
+    result.prompt_tokens_reused = static_cast<int32_t>(reusePrefix);
+    result.prompt_tokens_computed = nPromptTokens - static_cast<int32_t>(reusePrefix);
+    result.cache_hit = (result.prompt_tokens_reused > 0);
+    result.cache_reset_due_to_mismatch = resetDueToMismatch;
+    result.cache_reset_due_to_policy = resetDueToPolicy;
+
     // ========================================================================
     // 2. Decode prompt tokens (fill KV cache)
     // ========================================================================
-    for (int32_t i = 0; i < nPromptTokens; ++i) {
+    int32_t nPast = static_cast<int32_t>(reusePrefix);
+    result.n_past_start = nPast;
+    for (int32_t i = static_cast<int32_t>(reusePrefix); i < nPromptTokens; ++i) {
         // Setup batch for single token
         batch_.n_tokens = 1;
         batch_.token[0] = tokenBuf_[i];
-        batch_.pos[0] = i;
+        batch_.pos[0] = nPast;
         batch_.n_seq_id[0] = 1;
         batch_.seq_id[0][0] = 0;
         batch_.logits[0] = (i == nPromptTokens - 1) ? 1 : 0;  // Only last token needs logits
@@ -397,15 +641,18 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
             result.error = ss.str();
             return result;
         }
+
+        ++nPast;
     }
 
     auto timePromptDone = std::chrono::high_resolution_clock::now();
     result.t_prompt_ms = std::chrono::duration<double, std::milli>(timePromptDone - timeStart).count();
+    bool firstTokenSeen = false;
 
     // ========================================================================
     // 3. Generation loop
     // ========================================================================
-    int32_t nPast = nPromptTokens;
+    cachedPromptTokens_.assign(tokenBuf_.begin(), tokenBuf_.begin() + nPromptTokens);
     result.text.reserve(maxTokens * 4);  // Rough estimate
 
     for (int32_t i = 0; i < maxTokens; ++i) {
@@ -443,12 +690,17 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
         // Detokenize
         if (fn_token_to_piece) {
             int32_t nChars = fn_token_to_piece(
-                model_, nextToken,
+                vocab_, nextToken,
                 pieceBuf_.data(), static_cast<int32_t>(pieceBuf_.size()),
                 0, false
             );
             if (nChars > 0) {
                 result.text.append(pieceBuf_.data(), nChars);
+                if (!firstTokenSeen) {
+                    const auto now = std::chrono::high_resolution_clock::now();
+                    result.t_first_token_ms = std::chrono::duration<double, std::milli>(now - timeStart).count();
+                    firstTokenSeen = true;
+                }
             }
         }
 
@@ -467,8 +719,12 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
         }
 
         ++nPast;
+        cachedPromptTokens_.push_back(nextToken);
+        result.generated_token_ids.push_back(static_cast<int32_t>(nextToken));
         ++result.tokens_generated;
     }
+
+    result.n_past_end = nPast;
 
     auto timeGenDone = std::chrono::high_resolution_clock::now();
     result.t_gen_ms = std::chrono::duration<double, std::milli>(timeGenDone - timePromptDone).count();
@@ -506,8 +762,11 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::GenerateStream(
 
     auto timeStart = std::chrono::high_resolution_clock::now();
 
-    // Clear KV cache for fresh generation
-    ClearKVCache();
+    if (tokenBuf_.size() < 8192) tokenBuf_.resize(8192);
+    if (pieceBuf_.size() < 512) pieceBuf_.resize(512);
+    if (posBuf_.size() < 8192) posBuf_.resize(8192);
+    if (seqBuf_.size() < 1) seqBuf_.resize(1);
+    if (logitsBuf_.size() < 8192) logitsBuf_.resize(8192);
 
     // Setup sampler chain
     SetupSampler(temperature, topP, topK);
@@ -516,7 +775,7 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::GenerateStream(
     // 1. Tokenize prompt
     // ========================================================================
     int32_t nPromptTokens = fn_tokenize(
-        model_,
+        vocab_,
         prompt.c_str(),
         static_cast<int32_t>(prompt.length()),
         tokenBuf_.data(),
@@ -531,13 +790,40 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::GenerateStream(
     }
     result.prompt_tokens = nPromptTokens;
 
+    size_t reusePrefix = 0;
+    const bool canReuse = preserveKVCache_ && !cachedPromptTokens_.empty();
+    if (canReuse) {
+        const size_t limit = std::min<size_t>(cachedPromptTokens_.size(), static_cast<size_t>(nPromptTokens));
+        while (reusePrefix < limit && cachedPromptTokens_[reusePrefix] == tokenBuf_[reusePrefix]) {
+            ++reusePrefix;
+        }
+    }
+
+    result.prefix_tokens_matched_pre_reset = static_cast<int32_t>(reusePrefix);
+    result.cached_tokens_before_reset = static_cast<int32_t>(cachedPromptTokens_.size());
+
+    const bool resetDueToPolicy = !preserveKVCache_;
+    const bool resetDueToMismatch = preserveKVCache_ && (reusePrefix != cachedPromptTokens_.size());
+    if (resetDueToPolicy || resetDueToMismatch) {
+        ClearKVCache();
+        reusePrefix = 0;
+    }
+
+    result.prompt_tokens_reused = static_cast<int32_t>(reusePrefix);
+    result.prompt_tokens_computed = nPromptTokens - static_cast<int32_t>(reusePrefix);
+    result.cache_hit = (result.prompt_tokens_reused > 0);
+    result.cache_reset_due_to_mismatch = resetDueToMismatch;
+    result.cache_reset_due_to_policy = resetDueToPolicy;
+
     // ========================================================================
     // 2. Decode prompt tokens (fill KV cache)
     // ========================================================================
-    for (int32_t i = 0; i < nPromptTokens; ++i) {
+    int32_t nPast = static_cast<int32_t>(reusePrefix);
+    result.n_past_start = nPast;
+    for (int32_t i = static_cast<int32_t>(reusePrefix); i < nPromptTokens; ++i) {
         batch_.n_tokens = 1;
         batch_.token[0] = tokenBuf_[i];
-        batch_.pos[0] = i;
+        batch_.pos[0] = nPast;
         batch_.n_seq_id[0] = 1;
         batch_.seq_id[0][0] = 0;
         batch_.logits[0] = (i == nPromptTokens - 1) ? 1 : 0;
@@ -549,15 +835,18 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::GenerateStream(
             result.error = ss.str();
             return result;
         }
+
+        ++nPast;
     }
 
     auto timePromptDone = std::chrono::high_resolution_clock::now();
     result.t_prompt_ms = std::chrono::duration<double, std::milli>(timePromptDone - timeStart).count();
+    bool firstTokenSeen = false;
 
     // ========================================================================
     // 3. Streaming generation loop
     // ========================================================================
-    int32_t nPast = nPromptTokens;
+    cachedPromptTokens_.assign(tokenBuf_.begin(), tokenBuf_.begin() + nPromptTokens);
     result.text.reserve(maxTokens * 4);
 
     for (int32_t i = 0; i < maxTokens; ++i) {
@@ -589,13 +878,18 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::GenerateStream(
         // Detokenize and stream
         if (fn_token_to_piece) {
             int32_t nChars = fn_token_to_piece(
-                model_, nextToken,
+                vocab_, nextToken,
                 pieceBuf_.data(), static_cast<int32_t>(pieceBuf_.size()),
                 0, false
             );
             if (nChars > 0) {
                 std::string piece(pieceBuf_.data(), nChars);
                 result.text += piece;
+                if (!firstTokenSeen) {
+                    const auto now = std::chrono::high_resolution_clock::now();
+                    result.t_first_token_ms = std::chrono::duration<double, std::milli>(now - timeStart).count();
+                    firstTokenSeen = true;
+                }
                 if (on_token) {
                     on_token(piece);
                 }
@@ -616,14 +910,184 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::GenerateStream(
         }
 
         ++nPast;
+        cachedPromptTokens_.push_back(nextToken);
+        result.generated_token_ids.push_back(static_cast<int32_t>(nextToken));
         ++result.tokens_generated;
     }
+
+    result.n_past_end = nPast;
 
     auto timeGenDone = std::chrono::high_resolution_clock::now();
     result.t_gen_ms = std::chrono::duration<double, std::milli>(timeGenDone - timePromptDone).count();
     result.success = true;
     
     // Record telemetry for the governor/dashboard
+    if (result.tokens_generated > 0 && result.t_gen_ms > 0) {
+        auto* telemetry = RawrXD::Inference::PipelineTelemetryCollector::Instance();
+        telemetry->RecordTokenBatch(
+            static_cast<size_t>(result.tokens_generated),
+            result.t_gen_ms
+        );
+    }
+
+    return result;
+}
+
+// ============================================================================
+// ContinueStream — append-only generation against existing KV context
+// ============================================================================
+LlamaNativeBridge::GenerationResult LlamaNativeBridge::ContinueStream(
+    const std::string& promptSuffix,
+    TokenCallback on_token,
+    int32_t maxTokens,
+    float temperature,
+    float topP,
+    int32_t topK
+) {
+    GenerationResult result;
+
+    if (!ctx_) {
+        result.error = "Model not loaded";
+        return result;
+    }
+
+    auto timeStart = std::chrono::high_resolution_clock::now();
+
+    if (tokenBuf_.size() < 8192) tokenBuf_.resize(8192);
+    if (pieceBuf_.size() < 512) pieceBuf_.resize(512);
+    if (posBuf_.size() < 8192) posBuf_.resize(8192);
+    if (seqBuf_.size() < 1) seqBuf_.resize(1);
+    if (logitsBuf_.size() < 8192) logitsBuf_.resize(8192);
+
+    SetupSampler(temperature, topP, topK);
+
+    // Tokenize only the new suffix and do not add BOS for continuation turns.
+    int32_t nSuffixTokens = fn_tokenize(
+        vocab_,
+        promptSuffix.c_str(),
+        static_cast<int32_t>(promptSuffix.length()),
+        tokenBuf_.data(),
+        static_cast<int32_t>(tokenBuf_.size()),
+        false,
+        false
+    );
+
+    if (nSuffixTokens < 0) {
+        result.error = "Tokenization failed (suffix too long?)";
+        return result;
+    }
+
+    result.prompt_tokens = nSuffixTokens;
+    result.prefix_tokens_matched_pre_reset = static_cast<int32_t>(cachedPromptTokens_.size());
+    result.cached_tokens_before_reset = static_cast<int32_t>(cachedPromptTokens_.size());
+    result.prompt_tokens_reused = static_cast<int32_t>(cachedPromptTokens_.size());
+    result.prompt_tokens_computed = nSuffixTokens;
+    result.cache_hit = !cachedPromptTokens_.empty();
+    result.cache_reset_due_to_mismatch = false;
+    result.cache_reset_due_to_policy = false;
+
+    int32_t nPast = static_cast<int32_t>(cachedPromptTokens_.size());
+    result.n_past_start = nPast;
+
+    // Decode only new suffix tokens into the existing KV cache.
+    for (int32_t i = 0; i < nSuffixTokens; ++i) {
+        batch_.n_tokens = 1;
+        batch_.token[0] = tokenBuf_[i];
+        batch_.pos[0] = nPast;
+        batch_.n_seq_id[0] = 1;
+        batch_.seq_id[0][0] = 0;
+        batch_.logits[0] = (i == nSuffixTokens - 1) ? 1 : 0;
+
+        int32_t decodeResult = fn_decode(ctx_, batch_);
+        if (decodeResult != 0) {
+            std::stringstream ss;
+            ss << "Decode failed at suffix token " << i << " (code " << decodeResult << ")";
+            result.error = ss.str();
+            return result;
+        }
+
+        ++nPast;
+    }
+
+    cachedPromptTokens_.insert(cachedPromptTokens_.end(), tokenBuf_.begin(), tokenBuf_.begin() + nSuffixTokens);
+
+    auto timePromptDone = std::chrono::high_resolution_clock::now();
+    result.t_prompt_ms = std::chrono::duration<double, std::milli>(timePromptDone - timeStart).count();
+    bool firstTokenSeen = false;
+
+    result.text.reserve(maxTokens * 4);
+
+    for (int32_t i = 0; i < maxTokens; ++i) {
+        float* logits = fn_get_logits_ith(ctx_, -1);
+        if (!logits) {
+            result.error = "Failed to get logits";
+            break;
+        }
+
+        llama_token nextToken;
+        if (sampler_ && fn_sampler_sample) {
+            nextToken = fn_sampler_sample(sampler_, ctx_, -1);
+        } else {
+            int32_t vocabSize = modelInfo_.n_vocab > 0 ? modelInfo_.n_vocab : 32000;
+            nextToken = 0;
+            float maxLogit = logits[0];
+            for (int32_t v = 1; v < vocabSize; ++v) {
+                if (logits[v] > maxLogit) {
+                    maxLogit = logits[v];
+                    nextToken = v;
+                }
+            }
+        }
+
+        if (nextToken == modelInfo_.eos || nextToken == 2) {
+            break;
+        }
+
+        if (fn_token_to_piece) {
+            int32_t nChars = fn_token_to_piece(
+                vocab_, nextToken,
+                pieceBuf_.data(), static_cast<int32_t>(pieceBuf_.size()),
+                0, false
+            );
+            if (nChars > 0) {
+                std::string piece(pieceBuf_.data(), nChars);
+                result.text += piece;
+                if (!firstTokenSeen) {
+                    const auto now = std::chrono::high_resolution_clock::now();
+                    result.t_first_token_ms = std::chrono::duration<double, std::milli>(now - timeStart).count();
+                    firstTokenSeen = true;
+                }
+                if (on_token) {
+                    on_token(piece);
+                }
+            }
+        }
+
+        batch_.n_tokens = 1;
+        batch_.token[0] = nextToken;
+        batch_.pos[0] = nPast;
+        batch_.n_seq_id[0] = 1;
+        batch_.seq_id[0][0] = 0;
+        batch_.logits[0] = 1;
+
+        int32_t decodeResult = fn_decode(ctx_, batch_);
+        if (decodeResult != 0) {
+            result.error = "Generation decode failed";
+            break;
+        }
+
+        ++nPast;
+        cachedPromptTokens_.push_back(nextToken);
+        result.generated_token_ids.push_back(static_cast<int32_t>(nextToken));
+        ++result.tokens_generated;
+    }
+
+    result.n_past_end = nPast;
+
+    auto timeGenDone = std::chrono::high_resolution_clock::now();
+    result.t_gen_ms = std::chrono::duration<double, std::milli>(timeGenDone - timePromptDone).count();
+    result.success = true;
+
     if (result.tokens_generated > 0 && result.t_gen_ms > 0) {
         auto* telemetry = RawrXD::Inference::PipelineTelemetryCollector::Instance();
         telemetry->RecordTokenBatch(

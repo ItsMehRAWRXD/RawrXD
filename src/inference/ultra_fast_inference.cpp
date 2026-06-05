@@ -4,11 +4,13 @@
 #include "../rawrxd_inference.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <string_view>
 
 #ifdef _WIN32
@@ -100,6 +102,50 @@ static void SOVTraceTokenIdPiece(uint32_t token_id, std::string_view piece) {
     HarnessCtorTrace(buf);
 }
 
+static int32_t SampleFromLogits(const std::array<float, 256>& logits, float temperature) {
+    int best_idx = 0;
+    float best_logit = logits[0];
+    for (int i = 1; i < 256; ++i) {
+        if (logits[static_cast<size_t>(i)] > best_logit) {
+            best_logit = logits[static_cast<size_t>(i)];
+            best_idx = i;
+        }
+    }
+
+    if (!(temperature > 0.0f) || !std::isfinite(temperature)) {
+        return static_cast<int32_t>(best_idx);
+    }
+
+    std::array<float, 256> probs = {};
+    const float max_logit = best_logit;
+    float sum = 0.0f;
+
+    for (int i = 0; i < 256; ++i) {
+        const float scaled = (logits[static_cast<size_t>(i)] - max_logit) / temperature;
+        const float weight = std::exp(scaled);
+        probs[static_cast<size_t>(i)] = weight;
+        sum += weight;
+    }
+
+    if (!(sum > 0.0f) || !std::isfinite(sum)) {
+        return static_cast<int32_t>(best_idx);
+    }
+
+    static thread_local std::mt19937 rng{0x4D595DF4u};
+    std::uniform_real_distribution<float> dist(0.0f, sum);
+    const float target = dist(rng);
+
+    float accum = 0.0f;
+    for (int i = 0; i < 256; ++i) {
+        accum += probs[static_cast<size_t>(i)];
+        if (target <= accum) {
+            return static_cast<int32_t>(i);
+        }
+    }
+
+    return static_cast<int32_t>(best_idx);
+}
+
 using InferenceConfig = AutonomousInferenceEngine::InferenceConfig;
 
 class SimpleTokenizer {
@@ -117,11 +163,12 @@ public:
 private:
     InferenceConfig config_;
     std::unique_ptr<SimpleTokenizer> tokenizer_;
-    std::vector<float> kv_cache_;
+    std::vector<int32_t> kv_cache_;
     std::vector<float> model_weights_;
     CPUInference::VulkanCompute* vulkan_engine_;
     std::vector<int32_t> generateWithKVCache(const std::vector<int32_t>& prompt_tokens, int max_tokens);
-    int32_t runForwardPass(const std::vector<int32_t>& tokens);
+    int32_t runForwardPass(const std::vector<int32_t>& tokens, const std::vector<int32_t>& history);
+    void applyRepetitionPenalty(std::array<float, 256>& logits, const std::vector<int32_t>& history, float penalty_factor);
 };
 
 //=============================================================================
@@ -687,6 +734,7 @@ bool AutonomousInferenceEngine::loadModelAutomatic(const std::string& model_path
     config_.model_path = model_path;
     SOV_TRACE("[InitTrace] clear_state");
     loaded_model_.clear();
+    kv_cache_.clear();
     inference_backend_.reset();
 
     SOV_TRACE("[InitTrace] tokenizer_alloc");
@@ -970,6 +1018,10 @@ AutonomousInferenceEngine::Telemetry AutonomousInferenceEngine::inferText(
     }
 
     return telem;
+}
+
+void AutonomousInferenceEngine::resetConversationState() {
+    kv_cache_.clear();
 }
 
 // ---------------------------------------------------------------------------
@@ -1340,28 +1392,83 @@ std::vector<int32_t> UltraFastInferenceEngine::generateWithKVCache(
     int max_tokens
 ) {
     std::vector<int32_t> generated_tokens = prompt_tokens;
-    
-    // Reset or initialize KV cache for this generation sequence
-    kv_cache_.clear();
+    std::vector<int32_t> context_tokens = prompt_tokens;
+
+    if (!config_.enable_kv_cache_preservation) {
+        kv_cache_.clear();
+    } else if (!kv_cache_.empty()) {
+        context_tokens.insert(context_tokens.begin(), kv_cache_.begin(), kv_cache_.end());
+    }
+
+    constexpr size_t kMaxPersistedContextTokens = 4096;
+
+#ifdef _WIN32
+    LARGE_INTEGER qpf{};
+    LARGE_INTEGER qpc_start{};
+    LARGE_INTEGER qpc_end{};
+    const bool qpc_ready =
+        (QueryPerformanceFrequency(&qpf) != 0) &&
+        (QueryPerformanceCounter(&qpc_start) != 0);
+    uint32_t generated_count = 0;
+#endif
 
     for (int i = 0; i < max_tokens; ++i) {
         // Only process the most recent token
         std::vector<int32_t> current_input = { generated_tokens.back() };
         
         // The forward pass uses the KV cache for context
-        int32_t next_token = runForwardPass(current_input);
+        int32_t next_token = runForwardPass(current_input, context_tokens);
         
         generated_tokens.push_back(next_token);
+        context_tokens.push_back(next_token);
+    #ifdef _WIN32
+        if (context_tokens.size() > kMaxPersistedContextTokens) {
+            context_tokens.erase(
+            context_tokens.begin(),
+            context_tokens.begin() + static_cast<std::ptrdiff_t>(context_tokens.size() - kMaxPersistedContextTokens));
+        }
+    #endif
+#ifdef _WIN32
+        ++generated_count;
+#endif
         
         if (next_token == tokenizer_->getEOSToken()) {
             break;
         }
     }
+
+#ifdef _WIN32
+    if (qpc_ready && generated_count > 0 && QueryPerformanceCounter(&qpc_end) != 0) {
+        const double elapsed_ticks = static_cast<double>(qpc_end.QuadPart - qpc_start.QuadPart);
+        const double elapsed_seconds = (qpf.QuadPart > 0)
+            ? (elapsed_ticks / static_cast<double>(qpf.QuadPart))
+            : 0.0;
+        const double sovereign_tps = (elapsed_seconds > 0.0)
+            ? (static_cast<double>(generated_count) / elapsed_seconds)
+            : 0.0;
+
+        char probe_line[192] = {};
+        std::snprintf(
+            probe_line,
+            sizeof(probe_line),
+            "[SovereignProbe] tokens=%u elapsed_s=%.6f tps=%.3f",
+            generated_count,
+            elapsed_seconds,
+            sovereign_tps);
+        HarnessCtorTrace(probe_line);
+    }
+#endif
+    if (config_.enable_kv_cache_preservation) {
+        kv_cache_ = context_tokens;
+    }
     
     return generated_tokens;
 }
 
-int32_t UltraFastInferenceEngine::runForwardPass(const std::vector<int32_t>& tokens) {
+int32_t UltraFastInferenceEngine::runForwardPass(
+    const std::vector<int32_t>& tokens,
+    const std::vector<int32_t>& history
+) {
     // Production-ready forward pass implementation
     // 1. Embed the input tokens.
     // 2. Run them through the transformer layers, using and updating the KV cache.
@@ -1370,15 +1477,40 @@ int32_t UltraFastInferenceEngine::runForwardPass(const std::vector<int32_t>& tok
 
     if (model_weights_.empty()) return 0;
 
-    // Simplified forward pass
-    float logit_sum = 0.0f;
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        size_t idx = (tokens[i] + i) % model_weights_.size();
-        logit_sum += model_weights_[idx];
+    std::array<float, 256> logits = {};
+    const int32_t last_token = tokens.empty() ? 0 : tokens.back();
+
+    // Build deterministic fallback logits from model sample so we can apply
+    // repetition penalty before greedy pick.
+    for (int i = 0; i < 256; ++i) {
+        const size_t widx = (static_cast<size_t>(last_token + i) * 1315423911u + i) % model_weights_.size();
+        logits[static_cast<size_t>(i)] = model_weights_[widx] + static_cast<float>((i * 17) & 31) * 0.001f;
     }
 
-    // Sample next token (simplified)
-    return static_cast<int32_t>(logit_sum) % 256;
+    applyRepetitionPenalty(logits, history, 1.2f);
+
+    return SampleFromLogits(logits, config_.temperature);
+}
+
+void UltraFastInferenceEngine::applyRepetitionPenalty(
+    std::array<float, 256>& logits,
+    const std::vector<int32_t>& history,
+    float penalty_factor
+) {
+    if (penalty_factor <= 1.0f || history.empty()) {
+        return;
+    }
+
+    const size_t window = std::min<size_t>(history.size(), 32);
+    const size_t start = history.size() - window;
+
+    for (size_t i = start; i < history.size(); ++i) {
+        const int32_t tok = history[i];
+        if (tok < 0 || tok >= 256) {
+            continue;
+        }
+        logits[static_cast<size_t>(tok)] /= penalty_factor;
+    }
 }
 
 //=============================================================================

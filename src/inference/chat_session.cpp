@@ -5,6 +5,8 @@
 #include "chat_session.h"
 #include "ultra_fast_inference.h"
 
+#include <sstream>
+
 namespace rawrxd {
 namespace inference {
 
@@ -36,27 +38,39 @@ void ChatSession::addAssistantTokens(const std::vector<int32_t>& tokens) {
 
 size_t ChatSession::generate(std::function<void(const std::string&)> token_callback,
                              size_t max_tokens) {
-    if (context_tokens_.empty()) {
+    if (history_.empty()) {
         return 0;
     }
 
+    std::string transcript;
+    for (const std::string& entry : history_) {
+        transcript.append(entry);
+        transcript.push_back('\n');
+    }
+    transcript.append("Assistant:");
+
+    std::string response;
     size_t generated = 0;
-    engine_.infer(context_tokens_, [&](const std::string& token) {
+    engine_.inferText(transcript, [&](const std::string& token) {
+        response.append(token);
+        ++generated;
         if (token_callback) token_callback(token);
     }, max_tokens);
 
-    // For now, infer() doesn't return token count — estimate from callback
-    // In production, infer() would return generated tokens for us to append
-    // TODO: wire infer() to return generated token IDs for KV cache persistence
-    generated = max_tokens; // placeholder
+    history_.push_back("Assistant: " + response);
 
-    history_.push_back("Assistant: (generated " + std::to_string(generated) + " tokens)");
+    for (unsigned char c : response) {
+        context_tokens_.push_back(static_cast<int32_t>(c));
+    }
+    trimContext();
+
     return generated;
 }
 
 void ChatSession::reset() {
     context_tokens_.clear();
     history_.clear();
+    engine_.resetConversationState();
 }
 
 size_t ChatSession::contextLength() const {

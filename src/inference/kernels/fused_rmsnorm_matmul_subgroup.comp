@@ -1,0 +1,112 @@
+// ============================================================================
+// fused_rmsnorm_matmul_subgroup.comp — Fused RMSNorm+MatMul (Subgroup Optimized)
+// ============================================================================
+//
+// Sovereign Vulkan compute kernel for RawrXD Data Plane.
+// Uses subgroup intrinsics (subgroupAdd, subgroupBroadcast) to perform
+// RMSNorm reduction entirely in registers — zero shared memory, zero barriers.
+//
+// Target GPU: AMD Radeon RX 7800 XT (RDNA3, wavefront=32)
+// Workgroup:  32 threads (1 wavefront) — no cross-wavefront sync needed
+//
+// Layout:
+//   binding 0 : Input          (float[])  — x vector
+//   binding 1 : Output         (float[])  — final MatMul output
+//   binding 2 : RMSNorm Weight (float[])  — per-channel gamma weights
+//   binding 3 : MatMul Weight  (float[])  — weight matrix (row-major)
+//   binding 4 : UBO Params
+//
+// Dispatch: (num_rows, ceil(output_size/32), 1) workgroups, each 32 threads.
+// ============================================================================
+
+#version 450
+
+#extension GL_KHR_shader_subgroup_arithmetic : require
+#extension GL_KHR_shader_subgroup_ballot : require
+
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly  buffer InputBuffer      { float data[]; } x;
+layout(binding = 1) writeonly buffer OutputBuffer   { float data[]; } y;
+layout(binding = 2) readonly  buffer RMSNormWeight { float data[]; } gamma;
+layout(binding = 3) readonly  buffer MatMulWeight  { float data[]; } w;
+
+layout(binding = 4) uniform ParamsBlock {
+    uint hidden_size;    // Input dimension (must be multiple of 32)
+    uint output_size;    // Output dimension (must be multiple of 32)
+    float eps;
+    uint layer_idx;
+    uint reserved[4];
+} pc;
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id  = gl_LocalInvocationID.x;
+    uint group_id  = gl_WorkGroupID.x;
+    uint out_tile  = gl_WorkGroupID.y;  // Which output tile (0..output_size/32-1)
+
+    // Each workgroup processes one input row.
+    uint in_row_offset  = group_id * pc.hidden_size;
+    uint out_row_offset = group_id * pc.output_size;
+
+    // -------------------------------------------------------------------------
+    // Phase 1: RMSNorm — accumulate squares in registers, reduce via subgroupAdd
+    // -------------------------------------------------------------------------
+    float acc = 0.0;
+    // Each thread handles hidden_size/32 elements
+    for (uint s = local_id; s < pc.hidden_size; s += 32) {
+        float v = x.data[in_row_offset + s];
+        acc += v * v;
+    }
+
+    // Wavefront-wide reduction: sum all 32 partial sums in registers
+    float row_sum = subgroupAdd(acc);
+
+    // Thread 0 computes RMS, then broadcast to all 32 threads
+    float rms = 0.0;
+    float inv_rms = 0.0;
+    if (subgroupElect()) {  // Only thread 0
+        rms = sqrt(row_sum / float(pc.hidden_size) + pc.eps);
+        inv_rms = 1.0 / rms;
+    }
+    inv_rms = subgroupBroadcastFirst(inv_rms);  // Broadcast from thread 0
+
+    // -------------------------------------------------------------------------
+    // Phase 2: Normalize + cache in registers (no shared memory)
+    // Each thread keeps its normalized values in private registers
+    // -------------------------------------------------------------------------
+    float normalized[8];  // hidden_size/32 max = 8 for hidden_size=256
+    uint norm_count = 0;
+    for (uint s = local_id; s < pc.hidden_size; s += 32) {
+        float v = x.data[in_row_offset + s];
+        float g = gamma.data[s];
+        normalized[norm_count++] = v * inv_rms * g;
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase 3: MatMul — each thread computes output elements at stride 32
+    // output[j] = sum_i(normalized[i] * weight[i * output_size + j])
+    // -------------------------------------------------------------------------
+    // This workgroup handles output tile 'out_tile' (32 consecutive outputs)
+    uint out_base = out_tile * 32;
+
+    for (uint out_idx = local_id; out_idx < 32; out_idx += 32) {
+        uint out_col = out_base + out_idx;
+        if (out_col >= pc.output_size) break;
+
+        float dot = 0.0;
+        uint norm_idx = 0;
+        for (uint s = local_id; s < pc.hidden_size; s += 32) {
+            float mat_val = w.data[s * pc.output_size + out_col];
+            dot += normalized[norm_idx++] * mat_val;
+        }
+
+        // Sum dot products across the wavefront (each thread contributed partial)
+        float final_dot = subgroupAdd(dot);
+
+        // Only thread 0 writes the final result for this output column
+        if (subgroupElect()) {
+            y.data[out_row_offset + out_col] = final_dot;
+        }
+    }
+}

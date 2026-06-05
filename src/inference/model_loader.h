@@ -25,6 +25,7 @@ namespace RawrXD::Inference {
 enum class ModelFormat {
     Unknown,
     GGUF,
+    RXQF,
     PyTorch,
     SafeTensors,
     ONNX

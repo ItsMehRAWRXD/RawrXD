@@ -1,0 +1,133 @@
+// ============================================================================
+// fused_rmsnorm_matmul.comp — Fused RMSNorm + MatMul Kernel
+// ============================================================================
+//
+// Sovereign Vulkan compute kernel for RawrXD Data Plane.
+// Fuses RMSNorm normalization with matrix multiplication to eliminate
+// intermediate VRAM roundtrips.
+//
+// Target GPU: AMD Radeon RX 7800 XT (RDNA3, wavefront=32)
+// Workgroup:  16x16 threads (256 total)
+//
+// Layout:
+//   binding 0 : Input          (float[])  — x vector
+//   binding 1 : Output         (float[])  — final MatMul output
+//   binding 2 : RMSNorm Weight (float[])  — per-channel gamma weights
+//   binding 3 : MatMul Weight  (float[])  — weight matrix (row-major)
+//   binding 4 : UBO Params
+//
+// Dispatch: (ceil(num_rows/16), ceil(output_size/16), 1) workgroups.
+// ============================================================================
+
+#version 450
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(binding = 0) readonly  buffer InputBuffer      { float data[]; } x;
+layout(binding = 1) writeonly buffer OutputBuffer   { float data[]; } y;
+layout(binding = 2) readonly  buffer RMSNormWeight { float data[]; } gamma;
+layout(binding = 3) readonly  buffer MatMulWeight  { float data[]; } w;
+
+layout(binding = 4) uniform ParamsBlock {
+    uint hidden_size;    // Input dimension (must be multiple of 256)
+    uint output_size;    // Output dimension (must be multiple of 256)
+    float eps;
+    uint layer_idx;
+    uint num_rows;       // Number of rows in current dispatch
+    uint reserved[3];
+} pc;
+
+const uint TILE_M = 16u;
+const uint TILE_N = 16u;
+const uint TILE_K = 16u;
+
+shared float sum_tile[TILE_M][TILE_N];
+shared float inv_rms_tile[TILE_M];
+shared float norm_tile[TILE_M][TILE_K];
+shared float w_tile[TILE_K][TILE_N];
+
+void main() {
+    uint tx = gl_LocalInvocationID.x;
+    uint ty = gl_LocalInvocationID.y;
+    uint group_row = gl_WorkGroupID.x;
+    uint group_col = gl_WorkGroupID.y;
+
+    // Each workgroup processes a TILE_M x TILE_N output block.
+    uint row = group_row * TILE_M + ty;
+    uint col = group_col * TILE_N + tx;
+    bool row_valid = row < pc.num_rows;
+    bool col_valid = col < pc.output_size;
+
+    uint in_row_offset = row * pc.hidden_size;
+    uint out_row_offset = row * pc.output_size;
+
+    // -------------------------------------------------------------------------
+    // Phase 1: RMSNorm — accumulate squares into shared memory
+    // -------------------------------------------------------------------------
+    float acc = 0.0;
+    for (uint i = tx; i < pc.hidden_size; i += TILE_N) {
+        if (row_valid) {
+            uint idx = in_row_offset + i;
+            float v = x.data[idx];
+            acc += v * v;
+        }
+    }
+    sum_tile[ty][tx] = acc;
+    barrier();
+
+    // Parallel reduction per row in the tile (16 -> 1)
+    for (uint stride = TILE_N / 2u; stride > 0; stride >>= 1u) {
+        if (tx < stride) {
+            sum_tile[ty][tx] += sum_tile[ty][tx + stride];
+        }
+        barrier();
+    }
+
+    if (tx == 0) {
+        float rms = sqrt(sum_tile[ty][0] / float(pc.hidden_size) + pc.eps);
+        inv_rms_tile[ty] = 1.0 / rms;
+    }
+    barrier();
+
+    // -------------------------------------------------------------------------
+    // Phase 2: Tiled MatMul with LDS-cached normalized input.
+    // For each K tile, the workgroup cooperatively loads normalized input once
+    // into shared memory, then all threads reuse that tile for their output col.
+    // output[j] = sum_i((x_i * inv_rms * gamma_i) * weight[i * output_size + j])
+    // -------------------------------------------------------------------------
+    float dot = 0.0;
+    for (uint k0 = 0; k0 < pc.hidden_size; k0 += TILE_K) {
+        // Cooperative load normalized input tile for each row in this block.
+        uint k_norm = k0 + tx;
+        if (tx < TILE_K) {
+            if (row_valid && k_norm < pc.hidden_size) {
+                float v = x.data[in_row_offset + k_norm];
+                float g = gamma.data[k_norm];
+                norm_tile[ty][tx] = v * inv_rms_tile[ty] * g;
+            } else {
+                norm_tile[ty][tx] = 0.0;
+            }
+        }
+
+        // Cooperative load weight tile shared across TILE_M rows.
+        uint k_w = k0 + ty;
+        if (k_w < pc.hidden_size && col_valid) {
+            w_tile[ty][tx] = w.data[k_w * pc.output_size + col];
+        } else {
+            w_tile[ty][tx] = 0.0;
+        }
+        barrier();
+
+        uint tile_elems = min(TILE_K, pc.hidden_size - k0);
+        if (row_valid && col_valid) {
+            for (uint t = 0; t < tile_elems; ++t) {
+                dot += norm_tile[ty][t] * w_tile[t][tx];
+            }
+        }
+        barrier();
+    }
+
+    if (row_valid && col_valid) {
+        y.data[out_row_offset + col] = dot;
+    }
+}

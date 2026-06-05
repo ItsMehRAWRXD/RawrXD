@@ -29,6 +29,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <queue>
+#include <thread>
 
 namespace rawrxd {
 namespace inference {
@@ -62,6 +63,11 @@ public:
     // Returns time-to-first-token in milliseconds
     double timeToFirstTokenMs() const;
 
+    // Hint that the caller wants to preserve context across generations.
+    void keepContext();
+
+    bool keepContextEnabled() const;
+
 private:
     AutonomousInferenceEngine& engine_;
     std::queue<std::string> tokenQueue_;
@@ -72,6 +78,8 @@ private:
     std::atomic<bool> firstToken_{false};
     std::atomic<size_t> tokenCount_{0};
     double timeToFirstTokenMs_ = 0.0;
+    std::thread worker_;
+    std::atomic<bool> keep_context_{false};
 };
 
 } // namespace inference

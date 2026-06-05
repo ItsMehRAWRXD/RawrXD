@@ -24,6 +24,7 @@ CommandResult handleFileSaveAs(const CommandContext& ctx);
 CommandResult handleFileSaveAll(const CommandContext& ctx);
 CommandResult handleFileClose(const CommandContext& ctx);
 CommandResult handleFileLoadModel(const CommandContext& ctx);
+CommandResult handleFileConvertToRxqf(const CommandContext& ctx);
 CommandResult handleFileModelFromHF(const CommandContext& ctx);
 CommandResult handleFileModelFromOllama(const CommandContext& ctx);
 CommandResult handleFileModelFromURL(const CommandContext& ctx);

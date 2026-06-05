@@ -705,6 +705,44 @@ if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
     add_custom_target(rawrxd-fa8-tiled-spv DEPENDS ${RAWRXD_FA8_TILED_SPV})
 endif()
 
+# RMSNorm sovereign kernel (Data Plane normalization gate)
+set(RAWRXD_RMSNORM_COMP "${CMAKE_SOURCE_DIR}/src/inference/kernels/rmsnorm.comp")
+set(RAWRXD_RMSNORM_SPV  "${CMAKE_SOURCE_DIR}/src/inference/kernels/rmsnorm.spv")
+
+if(RAWRXD_GLSLANG_VALIDATOR)
+    add_custom_command(
+        OUTPUT ${RAWRXD_RMSNORM_SPV}
+        COMMAND ${RAWRXD_GLSLANG_VALIDATOR}
+                -V
+                -S comp
+                --target-env vulkan1.3
+                -o ${RAWRXD_RMSNORM_SPV}
+                ${RAWRXD_RMSNORM_COMP}
+        DEPENDS ${RAWRXD_RMSNORM_COMP}
+        COMMENT "Compiling rmsnorm.comp -> SPIR-V (sovereign normalization gate)"
+        VERBATIM
+    )
+elseif(RAWRXD_GLSLC)
+    add_custom_command(
+        OUTPUT ${RAWRXD_RMSNORM_SPV}
+        COMMAND ${RAWRXD_GLSLC}
+                -fshader-stage=compute
+                --target-env=vulkan1.3
+                -O
+                ${RAWRXD_RMSNORM_COMP}
+                -o ${RAWRXD_RMSNORM_SPV}
+        DEPENDS ${RAWRXD_RMSNORM_COMP}
+        COMMENT "Compiling rmsnorm.comp with glslc -> SPIR-V"
+        VERBATIM
+    )
+else()
+    message(STATUS "[RMSNorm] glslangValidator/glslc not found; rmsnorm.spv will not be auto-regenerated")
+endif()
+
+if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
+    add_custom_target(rawrxd-rmsnorm-spv DEPENDS ${RAWRXD_RMSNORM_SPV})
+endif()
+
 set(_RAWR_ASM_FEATURE_DEFINITIONS
     RAWR_HAS_MASM=$<IF:$<BOOL:${RAWR_HAS_MASM}>,1,0>
     RAWRXD_LINK_QUADBUFFER_ASM=$<IF:$<BOOL:${RAWR_HAS_MASM}>,1,0>
@@ -2015,6 +2053,8 @@ target_sources(RawrXD_Gold PRIVATE
     src/modules/unity_engine_integration.cpp
     src/modules/unreal_engine_integration.cpp
     src/core/feature_handlers_model_load.cpp
+    src/inference/rxqf_converter.cpp
+    src/core/rawrxd_quant_container_writer.cpp
     src/core/rawr_engine_link_closure.cpp
     src/core/vram_probe.cpp
     src/core/gold_sentinel_hash_stub.cpp
@@ -2971,10 +3011,15 @@ endif()
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
 set(INFERENCE_ENGINE_SOURCES
-    src/inference/arena.asm
-    src/inference/accumulate_row_masm.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference/arena.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference/accumulate_row_masm.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference/RawrXD_VulkanShim.asm
     src/inference/inference_standalone_main.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    src/inference/RawrXD_VulkanAccelerator.cpp
     src/inference/ultra_fast_inference.cpp
+    src/inference/pipeline_telemetry.cpp
+    src/flow_control/credit_governor.cpp
     src/inference/token_generator.cpp
     src/inference/chat_session.cpp
     src/gpu/speculative_decoder_v2.cpp
@@ -3090,6 +3135,14 @@ add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
 
+add_executable(RawrXD-GGUF-Truncator EXCLUDE_FROM_ALL
+    src/inference/GGUF_Truncator.cpp
+)
+set_target_properties(RawrXD-GGUF-Truncator PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-GGUF-Truncator
+)
+
 add_executable(RawrXD-MASMHarness EXCLUDE_FROM_ALL
     src/inference/masm_harness.asm
     src/inference/rawrxd_harness_exports.cpp
@@ -3131,6 +3184,182 @@ target_link_libraries(RawrXD-InferenceSmoke PRIVATE InferenceEngine)
 set_target_properties(RawrXD-InferenceSmoke PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     OUTPUT_NAME RawrXD-InferenceSmoke
+)
+
+# ---------------------------------------------------------------------------
+# Sovereign Vulkan RMSNorm Smoke Test — minimal, no snmalloc, no llama.dll
+# ---------------------------------------------------------------------------
+add_executable(RawrXD-VulkanSmoke EXCLUDE_FROM_ALL
+    src/inference/vulkan_smoke_main.cpp
+    src/inference/RawrXD_VulkanAccelerator.cpp
+    src/inference/RawrXD_VulkanShim.asm
+)
+target_include_directories(RawrXD-VulkanSmoke PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+if(RAWR_HAS_VULKAN)
+    target_include_directories(RawrXD-VulkanSmoke PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(RawrXD-VulkanSmoke PRIVATE ${Vulkan_LIBRARIES})
+endif()
+target_include_directories(RawrXD-VulkanSmoke PRIVATE "C:/VulkanSDK/1.4.328.1/include")
+target_compile_definitions(RawrXD-VulkanSmoke PRIVATE RAWR_HAS_VULKAN=1)
+if(MSVC)
+    target_compile_options(RawrXD-VulkanSmoke PRIVATE /W3 /std:c++20)
+    target_link_libraries(RawrXD-VulkanSmoke PRIVATE vulkan-1)
+    target_link_directories(RawrXD-VulkanSmoke PRIVATE "C:/VulkanSDK/1.4.328.1/Lib")
+endif()
+set_target_properties(RawrXD-VulkanSmoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-VulkanSmoke
+)
+
+# ---------------------------------------------------------------------------
+# Sovereign Vulkan Fused RMSNorm+MatMul Smoke Test
+# ---------------------------------------------------------------------------
+add_executable(RawrXD-VulkanFusedSmoke EXCLUDE_FROM_ALL
+    src/inference/vulkan_fused_smoke_main.cpp
+    src/inference/RawrXD_VulkanAccelerator.cpp
+    src/inference/RawrXD_VulkanShim.asm
+)
+target_include_directories(RawrXD-VulkanFusedSmoke PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+if(RAWR_HAS_VULKAN)
+    target_include_directories(RawrXD-VulkanFusedSmoke PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(RawrXD-VulkanFusedSmoke PRIVATE ${Vulkan_LIBRARIES})
+endif()
+target_include_directories(RawrXD-VulkanFusedSmoke PRIVATE "C:/VulkanSDK/1.4.328.1/include")
+target_compile_definitions(RawrXD-VulkanFusedSmoke PRIVATE RAWR_HAS_VULKAN=1)
+if(MSVC)
+    target_compile_options(RawrXD-VulkanFusedSmoke PRIVATE /W3 /std:c++20)
+    target_link_libraries(RawrXD-VulkanFusedSmoke PRIVATE vulkan-1)
+    target_link_directories(RawrXD-VulkanFusedSmoke PRIVATE "C:/VulkanSDK/1.4.328.1/Lib")
+endif()
+set_target_properties(RawrXD-VulkanFusedSmoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-VulkanFusedSmoke
+)
+
+# ---------------------------------------------------------------------------
+# Sovereign Vulkan Kernel Benchmark — Baseline RMSNorm profiling
+# ---------------------------------------------------------------------------
+add_executable(RawrXD-VulkanBench EXCLUDE_FROM_ALL
+    src/inference/vulkan_benchmark_main.cpp
+    src/inference/RawrXD_VulkanAccelerator.cpp
+    src/inference/RawrXD_VulkanShim.asm
+    src/inference/RawrXD_AsyncDMARing.asm
+    src/inference/RawrXD_IntegrityValidator.asm
+    src/inference/RawrXD_TaskDispatcher.asm
+)
+target_include_directories(RawrXD-VulkanBench PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+if(RAWR_HAS_VULKAN)
+    target_include_directories(RawrXD-VulkanBench PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(RawrXD-VulkanBench PRIVATE ${Vulkan_LIBRARIES})
+endif()
+target_include_directories(RawrXD-VulkanBench PRIVATE "C:/VulkanSDK/1.4.328.1/include")
+target_compile_definitions(RawrXD-VulkanBench PRIVATE RAWR_HAS_VULKAN=1)
+if(MSVC)
+    target_compile_options(RawrXD-VulkanBench PRIVATE /W3 /std:c++20)
+    target_link_libraries(RawrXD-VulkanBench PRIVATE vulkan-1)
+    target_link_directories(RawrXD-VulkanBench PRIVATE "C:/VulkanSDK/1.4.328.1/Lib")
+endif()
+set_target_properties(RawrXD-VulkanBench PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-VulkanBench
+)
+
+# ---------------------------------------------------------------------------
+# Sovereign GPU RMSNorm Integration Test — real GGUF weights → GPU → verify
+# ---------------------------------------------------------------------------
+add_executable(RawrXD-GPU-RMSNorm-Integration EXCLUDE_FROM_ALL
+    src/tests/test_gpu_rmsnorm_integration.cpp
+    src/inference/RawrXD_VulkanAccelerator.cpp
+    src/inference/RawrXD_VulkanShim.asm
+    src/inference/RawrXD_AsyncDMARing.asm
+    src/inference/RawrXD_IntegrityValidator.asm
+    src/inference/RawrXD_TaskDispatcher.asm
+    src/engine/gguf_core.cpp
+)
+target_include_directories(RawrXD-GPU-RMSNorm-Integration PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+if(RAWR_HAS_VULKAN)
+    target_include_directories(RawrXD-GPU-RMSNorm-Integration PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(RawrXD-GPU-RMSNorm-Integration PRIVATE ${Vulkan_LIBRARIES})
+endif()
+target_include_directories(RawrXD-GPU-RMSNorm-Integration PRIVATE "C:/VulkanSDK/1.4.328.1/include")
+target_compile_definitions(RawrXD-GPU-RMSNorm-Integration PRIVATE RAWR_HAS_VULKAN=1)
+if(MSVC)
+    target_compile_options(RawrXD-GPU-RMSNorm-Integration PRIVATE /W3 /std:c++20)
+    target_link_libraries(RawrXD-GPU-RMSNorm-Integration PRIVATE vulkan-1)
+    target_link_directories(RawrXD-GPU-RMSNorm-Integration PRIVATE "C:/VulkanSDK/1.4.328.1/Lib")
+endif()
+set_target_properties(RawrXD-GPU-RMSNorm-Integration PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-GPU-RMSNorm-Integration
+)
+
+# ---------------------------------------------------------------------------
+# Sovereign Hot Lap — CRT-free entry point, MASM-driven, proven accelerator
+# ---------------------------------------------------------------------------
+# Entry point is RawrXD_Entry in RawrXD_SovereignEntry.asm.
+# The C++ bridge (RawrXD_SovereignMain.cpp) calls the proven VulkanAccelerator.
+# We use /NODEFAULTLIB + explicit static CRT linkage to keep the binary
+# dependency-clean while still supporting the C++ PIMPL accelerator.
+# ---------------------------------------------------------------------------
+add_executable(RawrXD-SovereignHotLap EXCLUDE_FROM_ALL
+    src/inference/RawrXD_SovereignEntry.asm
+    src/inference/RawrXD_SovereignMain.cpp
+    src/inference/RawrXD_VulkanAccelerator.cpp
+    src/inference/RawrXD_VulkanShim.asm
+)
+set_source_files_properties(src/inference/RawrXD_SovereignEntry.asm PROPERTIES LANGUAGE ASM_MASM)
+set_source_files_properties(src/inference/RawrXD_VulkanShim.asm PROPERTIES LANGUAGE ASM_MASM)
+target_include_directories(RawrXD-SovereignHotLap PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+if(RAWR_HAS_VULKAN)
+    target_include_directories(RawrXD-SovereignHotLap PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(RawrXD-SovereignHotLap PRIVATE ${Vulkan_LIBRARIES})
+endif()
+target_include_directories(RawrXD-SovereignHotLap PRIVATE "C:/VulkanSDK/1.4.328.1/include")
+target_compile_definitions(RawrXD-SovereignHotLap PRIVATE RAWR_HAS_VULKAN=1)
+if(MSVC)
+    target_compile_options(RawrXD-SovereignHotLap PRIVATE /W3 /std:c++20 /GS-)
+    target_link_options(RawrXD-SovereignHotLap PRIVATE
+        /ENTRY:RawrXD_Entry
+        /SUBSYSTEM:CONSOLE
+        /NODEFAULTLIB
+        /LARGEADDRESSAWARE:NO
+    )
+    target_link_libraries(RawrXD-SovereignHotLap PRIVATE
+        vulkan-1
+        kernel32
+        libcmt
+        libcpmt
+        libvcruntime
+        vcruntime
+        libucrt
+        oldnames
+    )
+    target_link_directories(RawrXD-SovereignHotLap PRIVATE "C:/VulkanSDK/1.4.328.1/Lib")
+endif()
+set_target_properties(RawrXD-SovereignHotLap PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-SovereignHotLap
 )
 
 # ---------------------------------------------------------------------------
@@ -3211,6 +3440,34 @@ target_include_directories(RawrXD-MaximusDemo PRIVATE
 set_target_properties(RawrXD-MaximusDemo PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+# ════════════════════════════════════════════════════════════════════
+# VRAM Allocator Benchmark — Validate sovereign Vulkan Data Plane memory allocator
+# ════════════════════════════════════════════════════════════════════
+add_executable(RawrXD-VRAMAllocatorBench EXCLUDE_FROM_ALL
+    src/inference/bench_allocator.cpp
+)
+target_include_directories(RawrXD-VRAMAllocatorBench PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_compile_definitions(RawrXD-VRAMAllocatorBench PRIVATE
+    RAWR_BENCHMARK=1
+)
+if(MSVC)
+    target_compile_options(RawrXD-VRAMAllocatorBench PRIVATE /EHsc /W0 /O2)
+endif()
+target_link_libraries(RawrXD-VRAMAllocatorBench PRIVATE
+    InferenceEngine
+    Vulkan::Vulkan
+    kernel32
+    user32
+)
+set_target_properties(RawrXD-VRAMAllocatorBench PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-VRAMAllocatorBench
+)
+message(STATUS "[VRAM Allocator] Benchmark target: RawrXD-VRAMAllocatorBench")
 
 # =============================================================================
 # Agentic Streamer Bridge
@@ -4558,6 +4815,8 @@ if(WIN32)
         src/win32app/Win32IDE_VideoStudio.cpp
         src/win32app/Win32IDE_EnableAllFeatures.cpp
         src/core/feature_handlers_model_load.cpp
+        src/inference/rxqf_converter.cpp
+        src/core/rawrxd_quant_container_writer.cpp
         src/autonomous_validation_layer.cpp
         src/video/tubi_backend.cpp
 
@@ -6909,6 +7168,28 @@ set_target_properties(MCP-ModelSmoke PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 message(STATUS "[MCPSmoke] Target: MCP-ModelSmoke")
+
+# RXQF roundtrip smoke test (manual): write tiny RXQF, reload, verify tensor parity.
+add_executable(RawrXD-RXQFRoundtripSmoke EXCLUDE_FROM_ALL
+    src/tests/rxqf_roundtrip_smoke_test.cpp
+    src/inference/model_loader.cpp
+    src/core/rawrxd_quant_container_writer.cpp
+)
+target_include_directories(RawrXD-RXQFRoundtripSmoke PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(RawrXD-RXQFRoundtripSmoke PRIVATE /EHsc /W2)
+endif()
+set_target_properties(RawrXD-RXQFRoundtripSmoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-RXQFRoundtripSmoke
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[RXQFSmoke] Target: RawrXD-RXQFRoundtripSmoke")
 
 # Extension Installer smoke test — offline + live marketplace parity
 # Usage: ExtensionInstallerSmoke.exe            (offline/unit)
