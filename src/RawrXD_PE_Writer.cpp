@@ -1187,30 +1187,73 @@ public:
         }
 
         // ── Write file ──
-        FILE* f = nullptr;
-        if (fopen_s(&f, filename, "wb") != 0) {
+        HANDLE hFile = CreateFileA(
+            filename,
+            GENERIC_WRITE,
+            0,
+            nullptr,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr);
+        if (hFile == INVALID_HANDLE_VALUE) {
             printf("Failed to open output file for write: %s\n", filename);
             return false;
         }
 
+        DWORD currentOffset = 0;
+        auto closeOnFailure = [&]() {
+            CloseHandle(hFile);
+            return false;
+        };
+        auto writeAll = [&](const void* data, size_t size) -> bool {
+            const BYTE* cursor = static_cast<const BYTE*>(data);
+            size_t remaining = size;
+            while (remaining > 0) {
+                DWORD chunk = remaining > (size_t)(std::numeric_limits<DWORD>::max)()
+                    ? (std::numeric_limits<DWORD>::max)()
+                    : static_cast<DWORD>(remaining);
+                DWORD bytesWritten = 0;
+                if (!WriteFile(hFile, cursor, chunk, &bytesWritten, nullptr) || bytesWritten != chunk) {
+                    return false;
+                }
+                cursor += bytesWritten;
+                remaining -= bytesWritten;
+                currentOffset += bytesWritten;
+            }
+            return true;
+        };
+        auto padTo = [&](DWORD targetOffset) -> bool {
+            static const BYTE zeroBlock[4096] = {};
+            while (currentOffset < targetOffset) {
+                DWORD chunk = targetOffset - currentOffset;
+                if (chunk > sizeof(zeroBlock)) {
+                    chunk = sizeof(zeroBlock);
+                }
+                if (!writeAll(zeroBlock, chunk)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
         // DOS header + stub
-        if (fwrite(&dosHeader, sizeof(dosHeader), 1, f) != 1) { fclose(f); return false; }
-        if (!dosStub.empty() && fwrite(dosStub.data(), dosStub.size(), 1, f) != 1) { fclose(f); return false; }
+        if (!writeAll(&dosHeader, sizeof(dosHeader))) { CloseHandle(hFile); return false; }
+        if (!dosStub.empty() && !writeAll(dosStub.data(), dosStub.size())) { CloseHandle(hFile); return false; }
 
         // NT headers
         DWORD ntSignature = IMAGE_NT_SIGNATURE;
-        if (fwrite(&ntSignature, sizeof(ntSignature), 1, f) != 1) { fclose(f); return false; }
-        if (fwrite(&fileHeader, sizeof(fileHeader), 1, f) != 1) { fclose(f); return false; }
-        if (fwrite(&optHeader, sizeof(optHeader), 1, f) != 1) { fclose(f); return false; }
+        if (!writeAll(&ntSignature, sizeof(ntSignature))) { CloseHandle(hFile); return false; }
+        if (!writeAll(&fileHeader, sizeof(fileHeader))) { CloseHandle(hFile); return false; }
+        if (!writeAll(&optHeader, sizeof(optHeader))) { CloseHandle(hFile); return false; }
 
         // Section headers
         for (const auto& sh : sectionHeaders) {
-            if (fwrite(&sh, sizeof(sh), 1, f) != 1) { fclose(f); return false; }
+            if (!writeAll(&sh, sizeof(sh))) { CloseHandle(hFile); return false; }
         }
 
         // Pad to file alignment
-        if (!PadFile(f, alignedHeadersSize)) {
-            fclose(f);
+        if (!padTo(alignedHeadersSize)) {
+            CloseHandle(hFile);
             return false;
         }
 
@@ -1218,24 +1261,19 @@ public:
         printf("Writing %zu sections\n", sections.size());
         for (const auto& sec : sections) {
             printf("Writing section %s, size %zu\n", sec.name.c_str(), sec.data.size());
-            if (!sec.data.empty() && fwrite(sec.data.data(), sec.data.size(), 1, f) != 1) {
-                fclose(f);
+            if (!sec.data.empty() && !writeAll(sec.data.data(), sec.data.size())) {
+                CloseHandle(hFile);
                 return false;
             }
             DWORD nextPos = sec.rawAddress + AlignUp((DWORD)sec.data.size(), fileAlignment);
             printf("Padding to %u\n", nextPos);
-            if (!PadFile(f, nextPos)) {
-                fclose(f);
+            if (!padTo(nextPos)) {
+                CloseHandle(hFile);
                 return false;
             }
         }
 
-        long finalPos = ftell(f);
-        if (finalPos < 0) {
-            fclose(f);
-            return false;
-        }
-        fclose(f);
+        CloseHandle(hFile);
 
         // ── Compute and patch PE CheckSum ──
         ComputeAndPatchChecksum(filename);
@@ -1247,30 +1285,53 @@ public:
     // Compute PE checksum using the standard fold-add-WORD algorithm
     // (same as MapFileAndCheckSum / MSVC /RELEASE linker flag)
     void ComputeAndPatchChecksum(const char* filename) {
-        FILE* f = nullptr;
-        if (fopen_s(&f, filename, "r+b") != 0) return;
+        HANDLE hFile = CreateFileA(
+            filename,
+            GENERIC_READ | GENERIC_WRITE,
+            FILE_SHARE_READ,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr);
+        if (hFile == INVALID_HANDLE_VALUE) return;
 
-        // Get file size
-        fseek(f, 0, SEEK_END);
-        long fileSize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
-        // Read entire file
-        std::vector<BYTE> fileData((size_t)fileSize);
-        if (fread(fileData.data(), 1, fileSize, f) != (size_t)fileSize) {
-            fclose(f);
+        LARGE_INTEGER fileSizeLi = {};
+        if (!GetFileSizeEx(hFile, &fileSizeLi) || fileSizeLi.QuadPart <= 0) {
+            CloseHandle(hFile);
             return;
+        }
+        if ((unsigned long long)fileSizeLi.QuadPart > (unsigned long long)(std::numeric_limits<size_t>::max)()) {
+            CloseHandle(hFile);
+            return;
+        }
+
+        size_t fileSize = static_cast<size_t>(fileSizeLi.QuadPart);
+        std::vector<BYTE> fileData(fileSize);
+
+        size_t remaining = fileSize;
+        BYTE* cursor = fileData.data();
+        while (remaining > 0) {
+            DWORD chunk = remaining > (size_t)(std::numeric_limits<DWORD>::max)()
+                ? (std::numeric_limits<DWORD>::max)()
+                : static_cast<DWORD>(remaining);
+            DWORD bytesRead = 0;
+            if (!ReadFile(hFile, cursor, chunk, &bytesRead, nullptr) || bytesRead != chunk) {
+                CloseHandle(hFile);
+                return;
+            }
+            cursor += bytesRead;
+            remaining -= bytesRead;
         }
 
         // Find checksum field offset: e_lfanew + 4 (sig) + sizeof(FILE_HEADER) + 64 (offset of CheckSum in OPT64)
         IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)fileData.data();
         if (dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0 || (size_t)dos->e_lfanew >= fileData.size()) {
-            fclose(f);
+            CloseHandle(hFile);
             return;
         }
         DWORD checksumOffset = dos->e_lfanew + 4 + sizeof(IMAGE_FILE_HEADER) + 64;
         if ((size_t)checksumOffset + sizeof(DWORD) > fileData.size()) {
-            fclose(f);
+            CloseHandle(hFile);
             return;
         }
 
@@ -1292,15 +1353,21 @@ public:
         }
         // Final fold
         sum = (sum & 0xFFFF) + (sum >> 16);
-        DWORD checksum = (DWORD)(sum + fileSize);
+        DWORD checksum = (DWORD)(sum + static_cast<DWORD>(fileSize));
 
         // Patch it back
-        fseek(f, (long)checksumOffset, SEEK_SET);
-        if (fwrite(&checksum, sizeof(checksum), 1, f) != 1) {
-            fclose(f);
+        LARGE_INTEGER patchPos = {};
+        patchPos.QuadPart = checksumOffset;
+        if (!SetFilePointerEx(hFile, patchPos, nullptr, FILE_BEGIN)) {
+            CloseHandle(hFile);
             return;
         }
-        fclose(f);
+        DWORD bytesWritten = 0;
+        if (!WriteFile(hFile, &checksum, sizeof(checksum), &bytesWritten, nullptr) || bytesWritten != sizeof(checksum)) {
+            CloseHandle(hFile);
+            return;
+        }
+        CloseHandle(hFile);
 
         printf("PE CheckSum computed and patched: 0x%08X\n", checksum);
     }
