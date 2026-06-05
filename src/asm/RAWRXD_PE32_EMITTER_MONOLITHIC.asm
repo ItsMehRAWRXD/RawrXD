@@ -149,6 +149,8 @@ ST_AI_DECODE_BW_X100     EQU 150h ; QWORD ; last decode bandwidth in GiB/s * 100
 ST_AI_LOAD_BOUND_CLASS   EQU 158h ; DWORD ; 0 compute, 1 balanced, 2 memory
 ST_AI_DECODE_BOUND_CLASS EQU 15Ch ; DWORD ; 0 compute, 1 balanced, 2 memory
 ST_AI_PEAK_GBPS_X100     EQU 160h ; QWORD ; configured peak reference
+ST_AI_BALANCED_PCT       EQU 168h ; DWORD ; balanced threshold percent
+ST_AI_BOUND_PCT          EQU 16Ch ; DWORD ; memory-bound threshold percent
 
 ST_BYTES                 EQU 200h
 
@@ -544,20 +546,50 @@ PUBLIC IDE_classify_memory_wall
 IDE_classify_memory_wall PROC
     ; RCX=observedGbpsX100, RDX=peakGbpsX100
     ; Returns: EAX = 0 compute-bound, 1 balanced, 2 memory-bound.
+    mov r8d, MEM_WALL_BALANCED_PCT
+    mov r9d, MEM_WALL_BOUND_PCT
+    jmp IDE_classify_memory_wall_ex
+IDE_classify_memory_wall ENDP
+
+PUBLIC IDE_classify_memory_wall_ex
+IDE_classify_memory_wall_ex PROC
+    ; RCX=observedGbpsX100, RDX=peakGbpsX100, R8D=balancedPct, R9D=boundPct
+    ; Returns: EAX = 0 compute-bound, 1 balanced, 2 memory-bound.
     test rdx, rdx
     jz  @@compute
+
+    ; Clamp invalid thresholds to safe defaults.
+    test r8d, r8d
+    jz  @@default_bal
+    cmp r8d, 100
+    jbe @@bal_ok
+@@default_bal:
+    mov r8d, MEM_WALL_BALANCED_PCT
+@@bal_ok:
+
+    test r9d, r9d
+    jz  @@default_bound
+    cmp r9d, 100
+    jbe @@bound_limit_ok
+@@default_bound:
+    mov r9d, MEM_WALL_BOUND_PCT
+@@bound_limit_ok:
+    cmp r9d, r8d
+    jae @@bound_ok
+    mov r9d, r8d
+@@bound_ok:
 
     mov rax, rcx
     imul rax, 100
     xor r10d, r10d
 
     mov r11, rdx
-    imul r11, MEM_WALL_BOUND_PCT
+    imul r11, r9
     cmp rax, r11
     jae @@memory
 
     mov r11, rdx
-    imul r11, MEM_WALL_BALANCED_PCT
+    imul r11, r8
     cmp rax, r11
     jae @@balanced
 
@@ -572,7 +604,7 @@ IDE_classify_memory_wall PROC
 @@memory:
     mov eax, 2
     ret
-IDE_classify_memory_wall ENDP
+IDE_classify_memory_wall_ex ENDP
 
 PUBLIC IDE_spin_acquire
 IDE_spin_acquire PROC
@@ -2474,6 +2506,22 @@ emit_ai_apply_profile_calibration PROC
     ret
 emit_ai_apply_profile_calibration ENDP
 
+PUBLIC emit_ai_set_profile_thresholds
+emit_ai_set_profile_thresholds PROC
+    mov ecx, 3030
+    call emit_feature_dispatch
+    xor eax, eax
+    ret
+emit_ai_set_profile_thresholds ENDP
+
+PUBLIC emit_ai_get_profile_calibration
+emit_ai_get_profile_calibration PROC
+    mov ecx, 3031
+    call emit_feature_dispatch
+    xor eax, eax
+    ret
+emit_ai_get_profile_calibration ENDP
+
 PUBLIC emit_voice_init
 emit_voice_init PROC
     mov ecx, 4000
@@ -4297,6 +4345,8 @@ ai_init PROC
     mov DWORD PTR [r8+ST_AI_LOAD_BOUND_CLASS], 0
     mov DWORD PTR [r8+ST_AI_DECODE_BOUND_CLASS], 0
     mov QWORD PTR [r8+ST_AI_PEAK_GBPS_X100], MEM_WALL_DEFAULT_PEAK_GBPS_X100
+    mov DWORD PTR [r8+ST_AI_BALANCED_PCT], MEM_WALL_BALANCED_PCT
+    mov DWORD PTR [r8+ST_AI_BOUND_PCT], MEM_WALL_BOUND_PCT
     mov DWORD PTR [r8+ST_LAST_ERROR], 0
     xor eax, eax
     ret
@@ -4451,7 +4501,9 @@ ai_load_model PROC
     mov rcx, QWORD PTR [rsp+10h]
     lea r8, gState
     mov rdx, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
-    call IDE_classify_memory_wall
+    mov r8d, DWORD PTR [r8+ST_AI_BALANCED_PCT]
+    mov r9d, DWORD PTR [r8+ST_AI_BOUND_PCT]
+    call IDE_classify_memory_wall_ex
 
     lea r8, gState
     mov DWORD PTR [r8+ST_AI_LOAD_BOUND_CLASS], eax
@@ -4683,7 +4735,9 @@ ai_generate PROC
     mov rcx, QWORD PTR [rsp+38h]
     lea r8, gState
     mov rdx, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
-    call IDE_classify_memory_wall
+    mov r8d, DWORD PTR [r8+ST_AI_BALANCED_PCT]
+    mov r9d, DWORD PTR [r8+ST_AI_BOUND_PCT]
+    call IDE_classify_memory_wall_ex
 
     lea r8, gState
     mov DWORD PTR [r8+ST_AI_DECODE_BOUND_CLASS], eax
@@ -4914,6 +4968,67 @@ ai_apply_profile_calibration PROC
 @@:
     ret
 ai_apply_profile_calibration ENDP
+
+PUBLIC ai_set_profile_thresholds
+ai_set_profile_thresholds PROC
+    ; RCX=balanced_pct, RDX=bound_pct
+    call ai_require_init
+    test eax, eax
+    jnz @F
+
+    test rcx, rcx
+    jz  @@bad_args
+    test rdx, rdx
+    jz  @@bad_args
+    cmp rcx, 100
+    ja  @@bad_args
+    cmp rdx, 100
+    ja  @@bad_args
+    cmp rdx, rcx
+    jb  @@bad_args
+
+    lea r8, gState
+    mov DWORD PTR [r8+ST_AI_BALANCED_PCT], ecx
+    mov DWORD PTR [r8+ST_AI_BOUND_PCT], edx
+    mov DWORD PTR [r8+ST_LAST_ERROR], 0
+    xor eax, eax
+    ret
+
+@@bad_args:
+    lea r8, gState
+    mov DWORD PTR [r8+ST_LAST_ERROR], 22
+    mov eax, IDE_FAIL
+    ret
+@@:
+    ret
+ai_set_profile_thresholds ENDP
+
+PUBLIC ai_get_profile_calibration
+ai_get_profile_calibration PROC
+    ; RCX=outPtr (minimum 0x10 bytes)
+    ; [0x00] QWORD peak_gbps_x100
+    ; [0x08] DWORD balanced_pct
+    ; [0x0C] DWORD bound_pct
+    test rcx, rcx
+    jz  @@bad_args
+
+    lea r8, gState
+    mov rax, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
+    mov QWORD PTR [rcx+00h], rax
+    mov eax, DWORD PTR [r8+ST_AI_BALANCED_PCT]
+    mov DWORD PTR [rcx+08h], eax
+    mov eax, DWORD PTR [r8+ST_AI_BOUND_PCT]
+    mov DWORD PTR [rcx+0Ch], eax
+    mov DWORD PTR [r8+ST_LAST_ERROR], 0
+    xor eax, eax
+    ret
+
+@@bad_args:
+    lea r8, gState
+    mov DWORD PTR [r8+ST_LAST_ERROR], 22
+    mov eax, IDE_FAIL
+    ret
+ai_get_profile_calibration ENDP
 
 PUBLIC ai_audio_transcribe
 ai_audio_transcribe PROC
