@@ -19,7 +19,6 @@
 #include <set>
 #include <string>
 #include <algorithm>
-#include <cctype>
 #include <limits>
 // NOTE:
 // This file is a self-contained monolithic implementation that defines
@@ -132,6 +131,13 @@ static int AsciiICmp(const char* lhs, const char* rhs) {
         return 1;
     }
     return 0;
+}
+
+static void LowerAsciiInPlace(std::string& text) {
+    if (text.empty()) {
+        return;
+    }
+    CharLowerBuffA(text.data(), static_cast<DWORD>(text.size()));
 }
 
 static DWORD ComputeTimestampForFileHeader() {
@@ -693,8 +699,7 @@ public:
         if (!dllName || !functionName || dllName[0] == '\0' || functionName[0] == '\0') return;
         if (imports.size() >= kMaxImports) return;
         std::string canonDll(dllName);
-        std::transform(canonDll.begin(), canonDll.end(), canonDll.begin(),
-                       [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+        LowerAsciiInPlace(canonDll);
 
         // Find or create import for this DLL
         for (auto& imp : imports) {
@@ -811,8 +816,7 @@ public:
                 return false;
             }
             std::string lowered = sec.name;
-            std::transform(lowered.begin(), lowered.end(), lowered.begin(),
-                           [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+            LowerAsciiInPlace(lowered);
             if (sectionNames.count(lowered)) {
                 printf("Error: Duplicate section name: %s\n", sec.name.c_str());
                 return false;
