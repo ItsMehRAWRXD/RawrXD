@@ -758,7 +758,7 @@ public:
             return;
         }
         for (const auto& rel : relocations) {
-            if (rel.rva == rva && rel.type == type) return;
+            if (rel.rva == rva) return;
         }
         Relocation rel;
         rel.rva = rva;
@@ -1783,8 +1783,21 @@ private:
                         printf("Reloc entry type is invalid\n");
                         return false;
                     }
+                    DWORD targetRVA = block.VirtualAddress + offset;
+                    if (targetRVA < block.VirtualAddress || targetRVA >= optHeader.SizeOfImage) {
+                        printf("Reloc entry target RVA is outside image bounds\n");
+                        return false;
+                    }
+                    if (!rvaMapsToSection(targetRVA)) {
+                        printf("Reloc entry target RVA is outside mapped sections\n");
+                        return false;
+                    }
                     if (havePreviousOffset && offset < previousOffset) {
                         printf("Reloc entries are not sorted within block\n");
+                        return false;
+                    }
+                    if (havePreviousOffset && offset == previousOffset) {
+                        printf("Reloc block contains duplicate offsets\n");
                         return false;
                     }
                     previousOffset = offset;
