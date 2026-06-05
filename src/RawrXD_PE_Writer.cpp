@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <cctype>
 #include <limits>
-#include <cstdlib>
 // NOTE:
 // This file is a self-contained monolithic implementation that defines
 // MachineCodeEmitter and PEWriter directly. Including the public header here
@@ -114,6 +113,26 @@ static bool ParseDecimalU64(const char* text, unsigned long long* outValue) {
     }
     *outValue = value;
     return true;
+}
+
+static int AsciiICmp(const char* lhs, const char* rhs) {
+    if (lhs == rhs) {
+        return 0;
+    }
+    if (!lhs) {
+        return -1;
+    }
+    if (!rhs) {
+        return 1;
+    }
+    int cmp = CompareStringOrdinal(lhs, -1, rhs, -1, TRUE);
+    if (cmp == CSTR_LESS_THAN) {
+        return -1;
+    }
+    if (cmp == CSTR_GREATER_THAN) {
+        return 1;
+    }
+    return 0;
 }
 
 static DWORD ComputeTimestampForFileHeader() {
@@ -645,12 +664,12 @@ public:
 public:
     void AddSection(const char* name, const BYTE* data, size_t size, DWORD characteristics, MachineCodeEmitter* emitter = nullptr) {
         if (!name || name[0] == '\0') return;
-        if (strlen(name) > 8) return;
+        if (lstrlenA(name) > 8) return;
         if (!data && size > 0) return;
         if (sections.size() >= kMaxSections) return;
 
         for (auto& sec : sections) {
-            if (_stricmp(sec.name.c_str(), name) == 0) {
+            if (AsciiICmp(sec.name.c_str(), name) == 0) {
                 if (size > 0) sec.data.assign(data, data + size);
                 else sec.data.clear();
                 sec.characteristics = characteristics;
@@ -680,9 +699,9 @@ public:
 
         // Find or create import for this DLL
         for (auto& imp : imports) {
-            if (_stricmp(imp.dllName.c_str(), canonDll.c_str()) == 0) {
+            if (AsciiICmp(imp.dllName.c_str(), canonDll.c_str()) == 0) {
                 for (const auto& fn : imp.functions) {
-                    if (_stricmp(fn.c_str(), functionName) == 0) return;
+                    if (AsciiICmp(fn.c_str(), functionName) == 0) return;
                 }
                 imp.functions.push_back(functionName);
                 return;
@@ -700,7 +719,7 @@ public:
 
         WORD resolvedOrdinal = ordinal ? ordinal : (WORD)(exports.size() + 1);
         for (const auto& exp : exports) {
-            if (_stricmp(exp.name.c_str(), name) == 0) return;
+            if (AsciiICmp(exp.name.c_str(), name) == 0) return;
             if (exp.ordinal == resolvedOrdinal) return;
         }
 
@@ -859,7 +878,7 @@ public:
 
         auto ensureSection = [&](const char* name, DWORD characteristics) -> Section* {
             for (auto& sec : sections) {
-                if (_stricmp(sec.name.c_str(), name) == 0) {
+                if (AsciiICmp(sec.name.c_str(), name) == 0) {
                     sec.characteristics = characteristics;
                     return &sec;
                 }
@@ -891,16 +910,16 @@ public:
 
         // Deterministic ordering of import/export metadata for reproducible builds.
         std::sort(imports.begin(), imports.end(), [](const Import& a, const Import& b) {
-            return _stricmp(a.dllName.c_str(), b.dllName.c_str()) < 0;
+            return AsciiICmp(a.dllName.c_str(), b.dllName.c_str()) < 0;
         });
         for (auto& imp : imports) {
             std::sort(imp.functions.begin(), imp.functions.end(), [](const std::string& a, const std::string& b) {
-                return _stricmp(a.c_str(), b.c_str()) < 0;
+                return AsciiICmp(a.c_str(), b.c_str()) < 0;
             });
         }
         std::sort(exports.begin(), exports.end(), [](const Export& a, const Export& b) {
             if (a.ordinal != b.ordinal) return a.ordinal < b.ordinal;
-            return _stricmp(a.name.c_str(), b.name.c_str()) < 0;
+            return AsciiICmp(a.name.c_str(), b.name.c_str()) < 0;
         });
 
         // Generate DOS stub
@@ -1724,7 +1743,7 @@ private:
         // Name RVA (point to a dummy name)
         exportDir.Name = currentRVA;
         const char* dllName = "RawrXD.dll";
-        currentRVA += (DWORD)strlen(dllName) + 1;
+        currentRVA += static_cast<DWORD>(lstrlenA(dllName)) + 1;
 
         // Export address table
         for (const auto& exp : exports) {
@@ -1746,7 +1765,7 @@ private:
         }
 
         // DLL name
-        data.insert(data.end(), dllName, dllName + strlen(dllName) + 1);
+        data.insert(data.end(), dllName, dllName + lstrlenA(dllName) + 1);
 
         // Export names
         for (const auto& exp : exports) {
@@ -2056,11 +2075,19 @@ int main() {
 
     char outPath[MAX_PATH] = {};
     if (GetModuleFileNameA(nullptr, outPath, MAX_PATH) == 0) return 1;
-    char* slash = strrchr(outPath, '\\');
-    if (!slash) slash = strrchr(outPath, '/');
+    char* slash = nullptr;
+    for (char* p = outPath; *p != '\0'; ++p) {
+        if (*p == '\\' || *p == '/') {
+            slash = p;
+        }
+    }
     if (!slash) return 1;
     slash[1] = '\0';
-    strcat_s(outPath, "test.exe");
+    const char* outputName = "test.exe";
+    int baseLen = lstrlenA(outPath);
+    int suffixLen = lstrlenA(outputName);
+    if (baseLen < 0 || suffixLen < 0 || baseLen + suffixLen >= MAX_PATH) return 1;
+    memcpy(outPath + baseLen, outputName, static_cast<size_t>(suffixLen) + 1);
     return writer.EmitExecutable(outPath) ? 0 : 1;
 }
 #endif
