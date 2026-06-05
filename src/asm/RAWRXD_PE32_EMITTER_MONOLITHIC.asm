@@ -2538,6 +2538,14 @@ emit_ai_get_phase_telemetry_ex PROC
     ret
 emit_ai_get_phase_telemetry_ex ENDP
 
+PUBLIC emit_ai_classify_bandwidth_sample
+emit_ai_classify_bandwidth_sample PROC
+    mov ecx, 3034
+    call emit_feature_dispatch
+    xor eax, eax
+    ret
+emit_ai_classify_bandwidth_sample ENDP
+
 PUBLIC emit_voice_init
 emit_voice_init PROC
     mov ecx, 4000
@@ -5137,6 +5145,42 @@ ai_get_phase_telemetry_ex PROC
     mov eax, IDE_FAIL
     ret
 ai_get_phase_telemetry_ex ENDP
+
+PUBLIC ai_classify_bandwidth_sample
+ai_classify_bandwidth_sample PROC
+    ; RCX=observed_gbps_x100, RDX=peak_gbps_x100 (0 => use configured peak)
+    ; Returns EAX class: 0 compute, 1 balanced, 2 memory, IDE_FAIL on error.
+    call ai_require_init
+    test eax, eax
+    jnz @F
+
+    test rcx, rcx
+    jz  @@bad_args
+
+    lea r8, gState
+    test rdx, rdx
+    jnz @@have_peak
+    mov rdx, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
+@@have_peak:
+    test rdx, rdx
+    jz  @@bad_args
+
+    mov r8d, DWORD PTR [r8+ST_AI_BALANCED_PCT]
+    mov r9d, DWORD PTR [r8+ST_AI_BOUND_PCT]
+    call IDE_classify_memory_wall_ex
+
+    lea r8, gState
+    mov DWORD PTR [r8+ST_LAST_ERROR], 0
+    ret
+
+@@bad_args:
+    lea r8, gState
+    mov DWORD PTR [r8+ST_LAST_ERROR], 22
+    mov eax, IDE_FAIL
+    ret
+@@:
+    ret
+ai_classify_bandwidth_sample ENDP
 
 PUBLIC ai_audio_transcribe
 ai_audio_transcribe PROC
