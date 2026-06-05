@@ -143,6 +143,13 @@ ST_VOICE_LISTEN_COUNT    EQU 138h ; DWORD
 ST_VOICE_SPEAK_COUNT     EQU 13Ch ; DWORD
 ST_VOICE_LAST_INPUT_PTR  EQU 140h ; QWORD
 
+; AI phase telemetry (machine-readable, no log parsing required)
+ST_AI_LOAD_BW_X100       EQU 148h ; QWORD ; last load bandwidth in GiB/s * 100
+ST_AI_DECODE_BW_X100     EQU 150h ; QWORD ; last decode bandwidth in GiB/s * 100
+ST_AI_LOAD_BOUND_CLASS   EQU 158h ; DWORD ; 0 compute, 1 balanced, 2 memory
+ST_AI_DECODE_BOUND_CLASS EQU 15Ch ; DWORD ; 0 compute, 1 balanced, 2 memory
+ST_AI_PEAK_GBPS_X100     EQU 160h ; QWORD ; configured peak reference
+
 ST_BYTES                 EQU 200h
 
 ;==============================================================================
@@ -4253,6 +4260,11 @@ ai_init PROC
     mov QWORD PTR [r8+ST_AI_LAST_INPUT_PTR], 0
     mov QWORD PTR [r8+ST_AI_LAST_OUTPUT_PTR], 0
     mov DWORD PTR [r8+ST_AI_FLAGS], 0
+    mov QWORD PTR [r8+ST_AI_LOAD_BW_X100], 0
+    mov QWORD PTR [r8+ST_AI_DECODE_BW_X100], 0
+    mov DWORD PTR [r8+ST_AI_LOAD_BOUND_CLASS], 0
+    mov DWORD PTR [r8+ST_AI_DECODE_BOUND_CLASS], 0
+    mov QWORD PTR [r8+ST_AI_PEAK_GBPS_X100], MEM_WALL_DEFAULT_PEAK_GBPS_X100
     mov DWORD PTR [r8+ST_LAST_ERROR], 0
     xor eax, eax
     ret
@@ -4400,9 +4412,17 @@ ai_load_model PROC
     test eax, eax
     jnz @@success
 
+    lea r8, gState
+    mov rax, QWORD PTR [rsp+10h]
+    mov QWORD PTR [r8+ST_AI_LOAD_BW_X100], rax
+
     mov rcx, QWORD PTR [rsp+10h]
-    mov rdx, MEM_WALL_DEFAULT_PEAK_GBPS_X100
+    lea r8, gState
+    mov rdx, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
     call IDE_classify_memory_wall
+
+    lea r8, gState
+    mov DWORD PTR [r8+ST_AI_LOAD_BOUND_CLASS], eax
 
     cmp eax, 2
     je  @@log_load_mem
@@ -4624,9 +4644,17 @@ ai_generate PROC
     test eax, eax
     jnz @@skip_profile
 
+    lea r8, gState
+    mov rax, QWORD PTR [rsp+38h]
+    mov QWORD PTR [r8+ST_AI_DECODE_BW_X100], rax
+
     mov rcx, QWORD PTR [rsp+38h]
-    mov rdx, MEM_WALL_DEFAULT_PEAK_GBPS_X100
+    lea r8, gState
+    mov rdx, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
     call IDE_classify_memory_wall
+
+    lea r8, gState
+    mov DWORD PTR [r8+ST_AI_DECODE_BOUND_CLASS], eax
 
     cmp eax, 2
     je  @@log_mem
@@ -4721,6 +4749,46 @@ ai_image_generate PROC
     call ai_generate
     ret
 ai_image_generate ENDP
+
+PUBLIC ai_get_phase_telemetry
+ai_get_phase_telemetry PROC
+    ; RCX=outPtr (minimum 0x28 bytes)
+    ; [0x00] QWORD load_bw_x100
+    ; [0x08] QWORD decode_bw_x100
+    ; [0x10] DWORD load_class
+    ; [0x14] DWORD decode_class
+    ; [0x18] QWORD peak_gbps_x100
+    ; [0x20] DWORD query_count
+    ; [0x24] DWORD generation_count
+    test rcx, rcx
+    jz  @@bad_args
+
+    lea r8, gState
+    mov rax, QWORD PTR [r8+ST_AI_LOAD_BW_X100]
+    mov QWORD PTR [rcx+00h], rax
+    mov rax, QWORD PTR [r8+ST_AI_DECODE_BW_X100]
+    mov QWORD PTR [rcx+08h], rax
+    mov eax, DWORD PTR [r8+ST_AI_LOAD_BOUND_CLASS]
+    mov DWORD PTR [rcx+10h], eax
+    mov eax, DWORD PTR [r8+ST_AI_DECODE_BOUND_CLASS]
+    mov DWORD PTR [rcx+14h], eax
+    mov rax, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
+    mov QWORD PTR [rcx+18h], rax
+    mov eax, DWORD PTR [r8+ST_AI_QUERY_COUNT]
+    mov DWORD PTR [rcx+20h], eax
+    mov eax, DWORD PTR [r8+ST_AI_GENERATION_COUNT]
+    mov DWORD PTR [rcx+24h], eax
+
+    mov DWORD PTR [r8+ST_LAST_ERROR], 0
+    xor eax, eax
+    ret
+
+@@bad_args:
+    lea r8, gState
+    mov DWORD PTR [r8+ST_LAST_ERROR], 22
+    mov eax, IDE_FAIL
+    ret
+ai_get_phase_telemetry ENDP
 
 PUBLIC ai_audio_transcribe
 ai_audio_transcribe PROC
