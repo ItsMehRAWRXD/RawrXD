@@ -50,6 +50,7 @@
 
 static_assert(sizeof(IMAGE_DOS_HEADER) == 64, "Unexpected IMAGE_DOS_HEADER size");
 static_assert(sizeof(IMAGE_FILE_HEADER) == 20, "Unexpected IMAGE_FILE_HEADER size");
+static_assert(sizeof(IMAGE_OPTIONAL_HEADER64) == 240, "Unexpected IMAGE_OPTIONAL_HEADER64 size");
 static_assert(sizeof(IMAGE_SECTION_HEADER) == 40, "Unexpected IMAGE_SECTION_HEADER size");
 static_assert(sizeof(IMAGE_IMPORT_DESCRIPTOR) == 20, "Unexpected IMAGE_IMPORT_DESCRIPTOR size");
 static_assert(sizeof(IMAGE_THUNK_DATA64) == 8, "Unexpected IMAGE_THUNK_DATA64 size");
@@ -775,6 +776,11 @@ public:
     }
 
     void AddExceptionHandler(DWORD startRVA, DWORD endRVA, DWORD unwindRVA) {
+        if (startRVA == 0 || endRVA == 0 || unwindRVA == 0) return;
+        if (startRVA >= endRVA) return;
+        for (const auto& exc : exceptions) {
+            if (exc.startRVA == startRVA && exc.endRVA == endRVA && exc.unwindRVA == unwindRVA) return;
+        }
         ExceptionEntry exc;
         exc.startRVA = startRVA;
         exc.endRVA = endRVA;
@@ -1861,6 +1867,9 @@ private:
     std::vector<BYTE> BuildExceptionTable() {
         std::vector<BYTE> data;
         if (exceptions.empty()) return data;
+        if (exceptions.size() > ((std::numeric_limits<size_t>::max)() / sizeof(RUNTIME_FUNCTION))) {
+            return {};
+        }
 
         // RUNTIME_FUNCTION entries
         for (const auto& exc : exceptions) {
@@ -1877,13 +1886,21 @@ private:
     std::vector<BYTE> BuildDebugTable(DWORD baseRVA) {
         std::vector<BYTE> data;
         if (debugEntries.empty()) return data;
+        if (debugEntries.size() > ((std::numeric_limits<DWORD>::max)() / sizeof(IMAGE_DEBUG_DIRECTORY))) {
+            return {};
+        }
+        DWORD dirBytes = static_cast<DWORD>(debugEntries.size() * sizeof(IMAGE_DEBUG_DIRECTORY));
+        if (baseRVA > (std::numeric_limits<DWORD>::max)() - dirBytes) {
+            return {};
+        }
+        DWORD debugDataRVA = baseRVA + dirBytes;
 
         // IMAGE_DEBUG_DIRECTORY entries
         for (const auto& dbg : debugEntries) {
             IMAGE_DEBUG_DIRECTORY debugDir = {};
             debugDir.Type = dbg.type;
             debugDir.SizeOfData = (DWORD)dbg.data.size();
-            debugDir.AddressOfRawData = baseRVA + sizeof(IMAGE_DEBUG_DIRECTORY) * (DWORD)debugEntries.size();
+            debugDir.AddressOfRawData = debugDataRVA;
             debugDir.PointerToRawData = debugDir.AddressOfRawData;
 
             data.insert(data.end(), (BYTE*)&debugDir, (BYTE*)&debugDir + sizeof(debugDir));
