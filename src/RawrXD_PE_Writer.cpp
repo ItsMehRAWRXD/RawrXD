@@ -1826,6 +1826,12 @@ private:
     std::vector<BYTE> BuildResourceTable(DWORD baseRVA) {
         std::vector<BYTE> data;
         if (resources.empty()) return data;
+        if (resources.size() > (std::numeric_limits<WORD>::max)()) {
+            return {};
+        }
+        if (baseRVA > (std::numeric_limits<DWORD>::max)() - sizeof(IMAGE_RESOURCE_DIRECTORY)) {
+            return {};
+        }
 
         // IMAGE_RESOURCE_DIRECTORY root
         IMAGE_RESOURCE_DIRECTORY rootDir = {};
@@ -1833,9 +1839,20 @@ private:
 
         DWORD currentRVA = baseRVA + sizeof(IMAGE_RESOURCE_DIRECTORY);
 
+        auto addRvaChecked = [](DWORD& dst, DWORD add) -> bool {
+            if (dst > (std::numeric_limits<DWORD>::max)() - add) {
+                return false;
+            }
+            dst += add;
+            return true;
+        };
+
         // Resource directory entries
         std::vector<IMAGE_RESOURCE_DIRECTORY_ENTRY> entries;
         for (size_t i = 0; i < resources.size(); ++i) {
+            if (resources[i].data.size() > (std::numeric_limits<DWORD>::max)()) {
+                return {};
+            }
             IMAGE_RESOURCE_DIRECTORY_ENTRY entry = {};
             entry.Id = resources[i].type;
             entry.OffsetToData = currentRVA - baseRVA;
@@ -1843,6 +1860,9 @@ private:
 
             // Resource data entry
             IMAGE_RESOURCE_DATA_ENTRY dataEntry = {};
+            if (currentRVA > (std::numeric_limits<DWORD>::max)() - sizeof(IMAGE_RESOURCE_DATA_ENTRY)) {
+                return {};
+            }
             dataEntry.OffsetToData = currentRVA + sizeof(IMAGE_RESOURCE_DATA_ENTRY);
             dataEntry.Size = (DWORD)resources[i].data.size();
             data.insert(data.end(), (BYTE*)&dataEntry, (BYTE*)&dataEntry + sizeof(dataEntry));
@@ -1850,7 +1870,10 @@ private:
             // Resource data
             data.insert(data.end(), resources[i].data.begin(), resources[i].data.end());
 
-            currentRVA += sizeof(IMAGE_RESOURCE_DATA_ENTRY) + (DWORD)resources[i].data.size();
+            DWORD payloadSpan = sizeof(IMAGE_RESOURCE_DATA_ENTRY) + static_cast<DWORD>(resources[i].data.size());
+            if (!addRvaChecked(currentRVA, payloadSpan)) {
+                return {};
+            }
         }
 
         // Prepend root directory and entries
