@@ -1,6 +1,7 @@
 // BackendOrchestrator.cpp — Implementation
 #include "BackendOrchestrator.h"
 #include "InferenceProfiler.h"
+#include "backend_lane_type.h"
 #include "gguf_loader.h"
 #include "kernels/kv_accum_avx512.h"
 #include "win32app/TitanIPC.h"
