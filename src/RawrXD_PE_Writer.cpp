@@ -1727,6 +1727,16 @@ private:
         return (value + alignment - 1) & ~(alignment - 1);
     }
 
+    size_t AlignUpSize(size_t value, size_t alignment) {
+        if (alignment == 0) return value;
+        size_t rem = value % alignment;
+        if (rem == 0) return value;
+        if (value > (std::numeric_limits<size_t>::max)() - (alignment - rem)) {
+            return (std::numeric_limits<size_t>::max)();
+        }
+        return value + (alignment - rem);
+    }
+
     DWORD CalculateImportTableSize() {
         size_t activeImportCount = 0;
         for (const auto& imp : imports) {
@@ -1754,7 +1764,7 @@ private:
                     return (std::numeric_limits<DWORD>::max)();
                 }
                 size += hintNameSize;
-                size = AlignUp(size, 2);
+                size = AlignUpSize(size, 2);
             }
         }
         if (size > (std::numeric_limits<DWORD>::max)()) {
@@ -2021,6 +2031,9 @@ private:
             DWORD pageRVA = pr.first;
             const auto& rels = pr.second;
             std::vector<WORD> entries;
+            if (rels.size() > ((std::numeric_limits<size_t>::max)() / sizeof(WORD)) - 1) {
+                return {};
+            }
             for (const auto& rel : rels) {
                 WORD entry = (rel.rva & 0xFFF) | (rel.type << 12);
                 entries.push_back(entry);
@@ -2029,7 +2042,11 @@ private:
             if (entries.size() & 1) {
                 entries.push_back(0);  // IMAGE_REL_BASED_ABSOLUTE padding
             }
-            DWORD blockSize = static_cast<DWORD>(sizeof(DWORD) + sizeof(DWORD) + entries.size() * sizeof(WORD));
+            size_t blockSizeSizeT = sizeof(DWORD) + sizeof(DWORD) + entries.size() * sizeof(WORD);
+            if (blockSizeSizeT > (std::numeric_limits<DWORD>::max)()) {
+                return {};
+            }
+            DWORD blockSize = static_cast<DWORD>(blockSizeSizeT);
             data.insert(data.end(), (BYTE*)&pageRVA, (BYTE*)&pageRVA + sizeof(DWORD));
             data.insert(data.end(), (BYTE*)&blockSize, (BYTE*)&blockSize + sizeof(DWORD));
             for (WORD entry : entries) {
