@@ -216,16 +216,26 @@ PUBLIC gState
 gState     BYTE ST_BYTES DUP(0)
 
 ALIGN 16
-AI_BW_MSG_COMPUTE db '[AI] bound=compute', 0Ah
-AI_BW_MSG_COMPUTE_END db 0
-AI_BW_MSG_BALANCED db '[AI] bound=balanced', 0Ah
-AI_BW_MSG_BALANCED_END db 0
-AI_BW_MSG_MEMORY db '[AI] bound=memory', 0Ah
-AI_BW_MSG_MEMORY_END db 0
+AI_BW_LOAD_MSG_COMPUTE db '[AI][load] bound=compute', 0Ah
+AI_BW_LOAD_MSG_COMPUTE_END db 0
+AI_BW_LOAD_MSG_BALANCED db '[AI][load] bound=balanced', 0Ah
+AI_BW_LOAD_MSG_BALANCED_END db 0
+AI_BW_LOAD_MSG_MEMORY db '[AI][load] bound=memory', 0Ah
+AI_BW_LOAD_MSG_MEMORY_END db 0
 
-AI_BW_MSG_COMPUTE_LEN EQU AI_BW_MSG_COMPUTE_END - AI_BW_MSG_COMPUTE
-AI_BW_MSG_BALANCED_LEN EQU AI_BW_MSG_BALANCED_END - AI_BW_MSG_BALANCED
-AI_BW_MSG_MEMORY_LEN EQU AI_BW_MSG_MEMORY_END - AI_BW_MSG_MEMORY
+AI_BW_DECODE_MSG_COMPUTE db '[AI][decode] bound=compute', 0Ah
+AI_BW_DECODE_MSG_COMPUTE_END db 0
+AI_BW_DECODE_MSG_BALANCED db '[AI][decode] bound=balanced', 0Ah
+AI_BW_DECODE_MSG_BALANCED_END db 0
+AI_BW_DECODE_MSG_MEMORY db '[AI][decode] bound=memory', 0Ah
+AI_BW_DECODE_MSG_MEMORY_END db 0
+
+AI_BW_LOAD_MSG_COMPUTE_LEN EQU AI_BW_LOAD_MSG_COMPUTE_END - AI_BW_LOAD_MSG_COMPUTE
+AI_BW_LOAD_MSG_BALANCED_LEN EQU AI_BW_LOAD_MSG_BALANCED_END - AI_BW_LOAD_MSG_BALANCED
+AI_BW_LOAD_MSG_MEMORY_LEN EQU AI_BW_LOAD_MSG_MEMORY_END - AI_BW_LOAD_MSG_MEMORY
+AI_BW_DECODE_MSG_COMPUTE_LEN EQU AI_BW_DECODE_MSG_COMPUTE_END - AI_BW_DECODE_MSG_COMPUTE
+AI_BW_DECODE_MSG_BALANCED_LEN EQU AI_BW_DECODE_MSG_BALANCED_END - AI_BW_DECODE_MSG_BALANCED
+AI_BW_DECODE_MSG_MEMORY_LEN EQU AI_BW_DECODE_MSG_MEMORY_END - AI_BW_DECODE_MSG_MEMORY
 
 ;==============================================================================
 ; PE HEADER DEFINITIONS (EMITTED AS DATA)
@@ -4335,23 +4345,96 @@ ai_predict ENDP
 PUBLIC ai_load_model
 ai_load_model PROC
     ; RCX=modelPathPtr
+    push rbx
+    sub rsp, 40h
+
+    mov QWORD PTR [rsp+20h], rcx
+    mov QWORD PTR [rsp+28h], 0     ; qpc_start
+    mov QWORD PTR [rsp+30h], 0     ; qpc_end
+    mov QWORD PTR [rsp+38h], 0     ; qpf
+
+    lea r10, gOS
+    mov rax, QWORD PTR [r10+OS_QPC]
+    test rax, rax
+    jz  @@skip_start_qpc
+    lea rcx, [rsp+28h]
+    call rax
+@@skip_start_qpc:
+
     call ai_require_init
     test eax, eax
-    jnz @F
+    jnz @@exit
+    mov rcx, QWORD PTR [rsp+20h]
     test rcx, rcx
     jz  @@bad_args
     lea r8, gState
     mov DWORD PTR [r8+ST_AI_MODEL_LOADED], 1
     mov QWORD PTR [r8+ST_AI_LAST_INPUT_PTR], rcx
     mov DWORD PTR [r8+ST_LAST_ERROR], 0
+
+    lea r10, gOS
+    mov rax, QWORD PTR [r10+OS_QPC]
+    test rax, rax
+    jz  @@success
+    lea rcx, [rsp+30h]
+    call rax
+
+    lea r10, gOS
+    mov rax, QWORD PTR [r10+OS_QPF]
+    test rax, rax
+    jz  @@success
+    lea rcx, [rsp+38h]
+    call rax
+
+    mov rdx, QWORD PTR [rsp+30h]
+    sub rdx, QWORD PTR [rsp+28h]
+    jbe @@success
+
+    mov rcx, QWORD PTR [rsp+20h]
+    call IDE_strlen
+    mov rcx, rax
+    shl rcx, 20                     ; approximate load bytes from path-driven scale
+    mov r8, QWORD PTR [rsp+38h]
+    lea r9, [rsp+10h]
+    call IDE_profile_bandwidth_x100
+    test eax, eax
+    jnz @@success
+
+    mov rcx, QWORD PTR [rsp+10h]
+    mov rdx, MEM_WALL_DEFAULT_PEAK_GBPS_X100
+    call IDE_classify_memory_wall
+
+    cmp eax, 2
+    je  @@log_load_mem
+    cmp eax, 1
+    je  @@log_load_bal
+
+    lea rcx, AI_BW_LOAD_MSG_COMPUTE
+    mov edx, AI_BW_LOAD_MSG_COMPUTE_LEN
+    call IDE_log
+    jmp @@success
+
+@@log_load_bal:
+    lea rcx, AI_BW_LOAD_MSG_BALANCED
+    mov edx, AI_BW_LOAD_MSG_BALANCED_LEN
+    call IDE_log
+    jmp @@success
+
+@@log_load_mem:
+    lea rcx, AI_BW_LOAD_MSG_MEMORY
+    mov edx, AI_BW_LOAD_MSG_MEMORY_LEN
+    call IDE_log
+
+@@success:
     xor eax, eax
-    ret
+    jmp @@exit
 @@bad_args:
     lea r8, gState
     mov DWORD PTR [r8+ST_LAST_ERROR], 22
     mov eax, IDE_FAIL
-    ret
-@@:
+@@exit:
+    add rsp, 40h
+    pop rbx
     ret
 ai_load_model ENDP
 
@@ -4550,20 +4633,20 @@ ai_generate PROC
     cmp eax, 1
     je  @@log_bal
 
-    lea rcx, AI_BW_MSG_COMPUTE
-    mov edx, AI_BW_MSG_COMPUTE_LEN
+    lea rcx, AI_BW_DECODE_MSG_COMPUTE
+    mov edx, AI_BW_DECODE_MSG_COMPUTE_LEN
     call IDE_log
     jmp @@skip_profile
 
 @@log_bal:
-    lea rcx, AI_BW_MSG_BALANCED
-    mov edx, AI_BW_MSG_BALANCED_LEN
+    lea rcx, AI_BW_DECODE_MSG_BALANCED
+    mov edx, AI_BW_DECODE_MSG_BALANCED_LEN
     call IDE_log
     jmp @@skip_profile
 
 @@log_mem:
-    lea rcx, AI_BW_MSG_MEMORY
-    mov edx, AI_BW_MSG_MEMORY_LEN
+    lea rcx, AI_BW_DECODE_MSG_MEMORY
+    mov edx, AI_BW_DECODE_MSG_MEMORY_LEN
     call IDE_log
 
 @@skip_profile:
