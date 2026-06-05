@@ -1690,6 +1690,24 @@ private:
             }
             return false;
         };
+        auto rvaToFileOffset = [&](DWORD rva, size_t* fileOffset) -> bool {
+            if (!fileOffset) {
+                return false;
+            }
+            for (const auto& sh : sectionHeaders) {
+                DWORD vsize = sh.Misc.VirtualSize ? sh.Misc.VirtualSize : sh.SizeOfRawData;
+                if (rva < sh.VirtualAddress || rva >= sh.VirtualAddress + vsize) {
+                    continue;
+                }
+                DWORD delta = rva - sh.VirtualAddress;
+                if (delta >= sh.SizeOfRawData) {
+                    return false;
+                }
+                *fileOffset = static_cast<size_t>(sh.PointerToRawData) + delta;
+                return *fileOffset <= fileData.size();
+            }
+            return false;
+        };
         if (optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress &&
             !rvaMapsToSection(optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)) {
             printf("Import directory RVA is outside all sections\n");
@@ -1709,6 +1727,75 @@ private:
             optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress == 0) {
             printf("Reloc directory size set but RVA is zero\n");
             return false;
+        }
+        if (optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress &&
+            optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size > 0) {
+            size_t relocFileOffset = 0;
+            if (!rvaToFileOffset(optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress, &relocFileOffset)) {
+                printf("Reloc directory cannot be mapped to file data\n");
+                return false;
+            }
+            size_t relocSize = optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
+            if (relocSize > fileData.size() - relocFileOffset) {
+                printf("Reloc directory exceeds file bounds\n");
+                return false;
+            }
+            size_t cursor = relocFileOffset;
+            size_t relocEnd = relocFileOffset + relocSize;
+            while (cursor < relocEnd) {
+                if (relocEnd - cursor < sizeof(IMAGE_BASE_RELOCATION)) {
+                    printf("Reloc block truncated\n");
+                    return false;
+                }
+                IMAGE_BASE_RELOCATION block = {};
+                if (!readStruct(cursor, &block, sizeof(block))) {
+                    printf("Failed to read reloc block\n");
+                    return false;
+                }
+                if ((block.VirtualAddress & 0xFFF) != 0) {
+                    printf("Reloc block page RVA is not 4KB aligned\n");
+                    return false;
+                }
+                if (block.SizeOfBlock < sizeof(IMAGE_BASE_RELOCATION) || (block.SizeOfBlock % 4) != 0) {
+                    printf("Reloc block size is invalid\n");
+                    return false;
+                }
+                if (block.SizeOfBlock > relocEnd - cursor) {
+                    printf("Reloc block exceeds directory bounds\n");
+                    return false;
+                }
+                size_t entryBytes = block.SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION);
+                WORD previousOffset = 0;
+                bool havePreviousOffset = false;
+                for (size_t entryOffset = 0; entryOffset < entryBytes; entryOffset += sizeof(WORD)) {
+                    WORD entry = 0;
+                    if (!readStruct(cursor + sizeof(IMAGE_BASE_RELOCATION) + entryOffset, &entry, sizeof(entry))) {
+                        printf("Failed to read reloc entry\n");
+                        return false;
+                    }
+                    WORD type = static_cast<WORD>(entry >> 12);
+                    WORD offset = static_cast<WORD>(entry & 0x0FFF);
+                    if (type == 0) {
+                        continue;
+                    }
+                    if (!(type == IMAGE_REL_BASED_DIR64 || type == IMAGE_REL_BASED_HIGHLOW ||
+                          type == IMAGE_REL_BASED_HIGH || type == IMAGE_REL_BASED_LOW)) {
+                        printf("Reloc entry type is invalid\n");
+                        return false;
+                    }
+                    if (havePreviousOffset && offset < previousOffset) {
+                        printf("Reloc entries are not sorted within block\n");
+                        return false;
+                    }
+                    previousOffset = offset;
+                    havePreviousOffset = true;
+                }
+                cursor += block.SizeOfBlock;
+            }
+            if (cursor != relocEnd) {
+                printf("Reloc directory size does not match parsed blocks\n");
+                return false;
+            }
         }
 
         printf("PE validation passed\n");
@@ -2029,7 +2116,11 @@ private:
         // Build IMAGE_BASE_RELOCATION blocks
         for (const auto& pr : pageRelocs) {
             DWORD pageRVA = pr.first;
-            const auto& rels = pr.second;
+            std::vector<Relocation> rels = pr.second;
+            std::sort(rels.begin(), rels.end(), [](const Relocation& a, const Relocation& b) {
+                if ((a.rva & 0xFFF) != (b.rva & 0xFFF)) return (a.rva & 0xFFF) < (b.rva & 0xFFF);
+                return a.type < b.type;
+            });
             std::vector<WORD> entries;
             if (rels.size() > ((std::numeric_limits<size_t>::max)() / sizeof(WORD)) - 1) {
                 return {};
