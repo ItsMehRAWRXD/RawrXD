@@ -31,6 +31,20 @@ IMAGE_SCN_CNT_CODE              EQU 00000020h
 IMAGE_SCN_CNT_INITIALIZED_DATA  EQU 00000040h
 IMAGE_REL_BASED_DIR64           EQU 0Ah
 
+; PE layout tuning knobs (default to strict loader-compatible values).
+; For huge-page experiments keep file alignment loader-safe and adjust runtime
+; model buffer allocation separately via large-page VirtualAlloc paths.
+PE_SECTION_ALIGN_4K             EQU 1000h
+PE_SECTION_ALIGN_2M             EQU 200000h
+PE_FILE_ALIGN_512               EQU 200h
+PE_FILE_ALIGN_4K                EQU 1000h
+
+PE_SECTION_ALIGNMENT            EQU PE_SECTION_ALIGN_4K
+PE_FILE_ALIGNMENT               EQU PE_FILE_ALIGN_512
+
+MEM_WALL_BALANCED_PCT           EQU 50
+MEM_WALL_BOUND_PCT              EQU 80
+
 ;==============================================================================
 ; OS DISPATCH (BYTE TABLE, NO STRUCTS)
 ;==============================================================================
@@ -261,8 +275,8 @@ OPTIONAL_HEADER:
     dd TEXT_RVA                     ; AddressOfEntryPoint
     dd TEXT_RVA                     ; BaseOfCode
     dq 00400000h                    ; ImageBase
-    dd 1000h                        ; SectionAlignment
-    dd 200h                         ; FileAlignment
+    dd PE_SECTION_ALIGNMENT         ; SectionAlignment
+    dd PE_FILE_ALIGNMENT            ; FileAlignment
     dw 6                            ; MajorOperatingSystemVersion
     dw 0                            ; MinorOperatingSystemVersion
     dw 0                            ; MajorImageVersion
@@ -363,8 +377,8 @@ end_idata:
 ; RVAs and Offsets (Calculated)
 ;==============================================================================
 
-TEXT_RVA        EQU 1000h
-IDATA_RVA       EQU 2000h
+TEXT_RVA        EQU PE_SECTION_ALIGNMENT
+IDATA_RVA       EQU TEXT_RVA + PE_SECTION_ALIGNMENT
 TEXT_OFFSET     EQU 400h
 IDATA_OFFSET    EQU 400h + TEXT_SIZE
 
@@ -372,7 +386,7 @@ KERNEL32_RVA                EQU IDATA_RVA + (KERNEL32_NAME - IMPORT_DESCRIPTOR)
 KERNEL32_HINT_NAME_RVA      EQU IDATA_RVA + (KERNEL32_HINT_NAME - IMPORT_DESCRIPTOR)
 KERNEL32_IAT_RVA            EQU IDATA_RVA + (KERNEL32_HINT_NAME - IMPORT_DESCRIPTOR)
 
-RELOC_RVA       EQU 3000h
+RELOC_RVA       EQU IDATA_RVA + PE_SECTION_ALIGNMENT
 RELOC_OFFSET    EQU 400h + TEXT_SIZE + IDATA_SIZE
 RELOC_SIZE      EQU 1000h
 
@@ -464,6 +478,71 @@ IDE_fnv1a64 PROC
 @@:
     ret
 IDE_fnv1a64 ENDP
+
+PUBLIC IDE_profile_bandwidth_x100
+IDE_profile_bandwidth_x100 PROC
+    ; RCX=bytesProcessed, RDX=ticksElapsed, R8=qpfHz, R9=outGbpsX100Ptr
+    ; Returns: EAX=IDE_OK on success, IDE_FAIL on invalid input.
+    ; Output: *outGbpsX100 = observed bandwidth in 0.01 GB/s units.
+    test rdx, rdx
+    jz  @@fail
+    test r8, r8
+    jz  @@fail
+    test r9, r9
+    jz  @@fail
+
+    mov r11, rdx                    ; ticksElapsed
+    mov rax, rcx                    ; bytesProcessed
+    mul r8                          ; bytes * qpfHz -> RDX:RAX
+    div r11                         ; bytes per second in RAX
+
+    mov rcx, 100
+    mul rcx                         ; (bytes/sec) * 100
+    mov rcx, 40000000h              ; 1 GiB
+    div rcx                         ; -> GB/s * 100
+
+    mov QWORD PTR [r9], rax
+    xor eax, eax
+    ret
+
+@@fail:
+    mov eax, IDE_FAIL
+    ret
+IDE_profile_bandwidth_x100 ENDP
+
+PUBLIC IDE_classify_memory_wall
+IDE_classify_memory_wall PROC
+    ; RCX=observedGbpsX100, RDX=peakGbpsX100
+    ; Returns: EAX = 0 compute-bound, 1 balanced, 2 memory-bound.
+    test rdx, rdx
+    jz  @@compute
+
+    mov rax, rcx
+    imul rax, 100
+    xor r10d, r10d
+
+    mov r11, rdx
+    imul r11, MEM_WALL_BOUND_PCT
+    cmp rax, r11
+    jae @@memory
+
+    mov r11, rdx
+    imul r11, MEM_WALL_BALANCED_PCT
+    cmp rax, r11
+    jae @@balanced
+
+@@compute:
+    xor eax, eax
+    ret
+
+@@balanced:
+    mov eax, 1
+    ret
+
+@@memory:
+    mov eax, 2
+    ret
+IDE_classify_memory_wall ENDP
 
 PUBLIC IDE_spin_acquire
 IDE_spin_acquire PROC
