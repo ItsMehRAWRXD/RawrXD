@@ -14,9 +14,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <vector>
 #include <map>
 #include <set>
@@ -96,6 +94,50 @@ std::vector<BYTE> GenerateDOSStub() {
     }
 
     return stub;
+}
+
+static bool ParseDecimalU64(const char* text, unsigned long long* outValue) {
+    if (!text || !outValue || text[0] == '\0') {
+        return false;
+    }
+    unsigned long long value = 0;
+    for (size_t i = 0; text[i] != '\0'; ++i) {
+        char c = text[i];
+        if (c < '0' || c > '9') {
+            return false;
+        }
+        unsigned int digit = static_cast<unsigned int>(c - '0');
+        if (value > (((std::numeric_limits<unsigned long long>::max)() - digit) / 10ull)) {
+            return false;
+        }
+        value = (value * 10ull) + digit;
+    }
+    *outValue = value;
+    return true;
+}
+
+static DWORD ComputeTimestampForFileHeader() {
+    char epochText[64] = {};
+    DWORD envLen = GetEnvironmentVariableA("SOURCE_DATE_EPOCH", epochText, sizeof(epochText));
+    if (envLen > 0 && envLen < sizeof(epochText)) {
+        unsigned long long epoch = 0;
+        if (ParseDecimalU64(epochText, &epoch)) {
+            return static_cast<DWORD>(epoch & 0xFFFFFFFFull);
+        }
+    }
+
+    // Convert Windows FILETIME (100ns ticks since 1601) to Unix epoch seconds.
+    FILETIME fileTime = {};
+    GetSystemTimeAsFileTime(&fileTime);
+    ULARGE_INTEGER ticks = {};
+    ticks.LowPart = fileTime.dwLowDateTime;
+    ticks.HighPart = fileTime.dwHighDateTime;
+    const unsigned long long kTicksToUnixEpoch = 116444736000000000ull;
+    if (ticks.QuadPart <= kTicksToUnixEpoch) {
+        return 0;
+    }
+    unsigned long long unixSeconds = (ticks.QuadPart - kTicksToUnixEpoch) / 10000000ull;
+    return static_cast<DWORD>(unixSeconds & 0xFFFFFFFFull);
 }
 
 // ── Machine Code Emitter (reverse-engineered from x64 MASM) ──
@@ -1054,18 +1096,7 @@ public:
         IMAGE_FILE_HEADER fileHeader = {};
         fileHeader.Machine = IMAGE_FILE_MACHINE_AMD64;
         fileHeader.NumberOfSections = (WORD)sections.size();
-        {
-            char* sde = nullptr;
-            size_t sdeLen = 0;
-            errno_t envErr = _dupenv_s(&sde, &sdeLen, "SOURCE_DATE_EPOCH");
-            if (envErr == 0 && sde && sde[0] != '\0') {
-                unsigned long long epoch = _strtoui64(sde, nullptr, 10);
-                fileHeader.TimeDateStamp = static_cast<DWORD>(epoch & 0xFFFFFFFFull);
-            } else {
-                fileHeader.TimeDateStamp = (DWORD)time(nullptr);
-            }
-            if (sde) free(sde);
-        }
+        fileHeader.TimeDateStamp = ComputeTimestampForFileHeader();
         fileHeader.SizeOfOptionalHeader = sizeof(IMAGE_OPTIONAL_HEADER64);
         fileHeader.Characteristics = IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_LARGE_ADDRESS_AWARE;
 
