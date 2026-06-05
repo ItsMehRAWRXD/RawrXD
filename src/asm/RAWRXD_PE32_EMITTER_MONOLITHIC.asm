@@ -2522,6 +2522,22 @@ emit_ai_get_profile_calibration PROC
     ret
 emit_ai_get_profile_calibration ENDP
 
+PUBLIC emit_ai_apply_profile_calibration_ex
+emit_ai_apply_profile_calibration_ex PROC
+    mov ecx, 3032
+    call emit_feature_dispatch
+    xor eax, eax
+    ret
+emit_ai_apply_profile_calibration_ex ENDP
+
+PUBLIC emit_ai_get_phase_telemetry_ex
+emit_ai_get_phase_telemetry_ex PROC
+    mov ecx, 3033
+    call emit_feature_dispatch
+    xor eax, eax
+    ret
+emit_ai_get_phase_telemetry_ex ENDP
+
 PUBLIC emit_voice_init
 emit_voice_init PROC
     mov ecx, 4000
@@ -4969,6 +4985,53 @@ ai_apply_profile_calibration PROC
     ret
 ai_apply_profile_calibration ENDP
 
+PUBLIC ai_apply_profile_calibration_ex
+ai_apply_profile_calibration_ex PROC
+    ; RCX=peak_gbps_x100, RDX=balanced_pct, R8=bound_pct
+    call ai_require_init
+    test eax, eax
+    jnz @F
+
+    test rcx, rcx
+    jz  @@bad_args
+    test rdx, rdx
+    jz  @@bad_args
+    test r8, r8
+    jz  @@bad_args
+    cmp rdx, 100
+    ja  @@bad_args
+    cmp r8, 100
+    ja  @@bad_args
+    cmp r8, rdx
+    jb  @@bad_args
+
+    lea r9, gState
+    mov QWORD PTR [r9+ST_AI_PEAK_GBPS_X100], rcx
+    mov DWORD PTR [r9+ST_AI_BALANCED_PCT], edx
+    mov DWORD PTR [r9+ST_AI_BOUND_PCT], r8d
+
+    mov QWORD PTR [r9+ST_AI_LOAD_BW_X100], 0
+    mov QWORD PTR [r9+ST_AI_DECODE_BW_X100], 0
+    mov DWORD PTR [r9+ST_AI_LOAD_BOUND_CLASS], 0
+    mov DWORD PTR [r9+ST_AI_DECODE_BOUND_CLASS], 0
+
+    mov DWORD PTR [r9+ST_AI_QUERY_COUNT], 0
+    mov DWORD PTR [r9+ST_AI_TOKEN_COUNT], 0
+    mov DWORD PTR [r9+ST_AI_GENERATION_COUNT], 0
+
+    mov DWORD PTR [r9+ST_LAST_ERROR], 0
+    xor eax, eax
+    ret
+
+@@bad_args:
+    lea r9, gState
+    mov DWORD PTR [r9+ST_LAST_ERROR], 22
+    mov eax, IDE_FAIL
+    ret
+@@:
+    ret
+ai_apply_profile_calibration_ex ENDP
+
 PUBLIC ai_set_profile_thresholds
 ai_set_profile_thresholds PROC
     ; RCX=balanced_pct, RDX=bound_pct
@@ -5029,6 +5092,51 @@ ai_get_profile_calibration PROC
     mov eax, IDE_FAIL
     ret
 ai_get_profile_calibration ENDP
+
+PUBLIC ai_get_phase_telemetry_ex
+ai_get_phase_telemetry_ex PROC
+    ; RCX=outPtr (minimum 0x30 bytes)
+    ; [0x00] QWORD load_bw_x100
+    ; [0x08] QWORD decode_bw_x100
+    ; [0x10] DWORD load_class
+    ; [0x14] DWORD decode_class
+    ; [0x18] QWORD peak_gbps_x100
+    ; [0x20] DWORD query_count
+    ; [0x24] DWORD generation_count
+    ; [0x28] DWORD balanced_pct
+    ; [0x2C] DWORD bound_pct
+    test rcx, rcx
+    jz  @@bad_args
+
+    lea r8, gState
+    mov rax, QWORD PTR [r8+ST_AI_LOAD_BW_X100]
+    mov QWORD PTR [rcx+00h], rax
+    mov rax, QWORD PTR [r8+ST_AI_DECODE_BW_X100]
+    mov QWORD PTR [rcx+08h], rax
+    mov eax, DWORD PTR [r8+ST_AI_LOAD_BOUND_CLASS]
+    mov DWORD PTR [rcx+10h], eax
+    mov eax, DWORD PTR [r8+ST_AI_DECODE_BOUND_CLASS]
+    mov DWORD PTR [rcx+14h], eax
+    mov rax, QWORD PTR [r8+ST_AI_PEAK_GBPS_X100]
+    mov QWORD PTR [rcx+18h], rax
+    mov eax, DWORD PTR [r8+ST_AI_QUERY_COUNT]
+    mov DWORD PTR [rcx+20h], eax
+    mov eax, DWORD PTR [r8+ST_AI_GENERATION_COUNT]
+    mov DWORD PTR [rcx+24h], eax
+    mov eax, DWORD PTR [r8+ST_AI_BALANCED_PCT]
+    mov DWORD PTR [rcx+28h], eax
+    mov eax, DWORD PTR [r8+ST_AI_BOUND_PCT]
+    mov DWORD PTR [rcx+2Ch], eax
+    mov DWORD PTR [r8+ST_LAST_ERROR], 0
+    xor eax, eax
+    ret
+
+@@bad_args:
+    lea r8, gState
+    mov DWORD PTR [r8+ST_LAST_ERROR], 22
+    mov eax, IDE_FAIL
+    ret
+ai_get_phase_telemetry_ex ENDP
 
 PUBLIC ai_audio_transcribe
 ai_audio_transcribe PROC
