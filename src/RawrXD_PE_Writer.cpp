@@ -48,6 +48,12 @@
 #define IMAGE_REL_BASED_HIGH                1
 #define IMAGE_REL_BASED_LOW                 2
 
+static_assert(sizeof(IMAGE_DOS_HEADER) == 64, "Unexpected IMAGE_DOS_HEADER size");
+static_assert(sizeof(IMAGE_FILE_HEADER) == 20, "Unexpected IMAGE_FILE_HEADER size");
+static_assert(sizeof(IMAGE_SECTION_HEADER) == 40, "Unexpected IMAGE_SECTION_HEADER size");
+static_assert(sizeof(IMAGE_IMPORT_DESCRIPTOR) == 20, "Unexpected IMAGE_IMPORT_DESCRIPTOR size");
+static_assert(sizeof(IMAGE_THUNK_DATA64) == 8, "Unexpected IMAGE_THUNK_DATA64 size");
+
 // ── DOS Header and Stub Generation ──
 
 // Generate a proper DOS stub that displays an error message and exits
@@ -760,10 +766,11 @@ public:
     }
 
     void AddResource(WORD type, WORD id, const BYTE* data, size_t size) {
+        if (!data && size > 0) return;
         ResourceEntry res;
         res.type = type;
         res.id = id;
-        res.data.assign(data, data + size);
+        if (size > 0) res.data.assign(data, data + size);
         resources.push_back(res);
     }
 
@@ -776,9 +783,10 @@ public:
     }
 
     void AddDebugInfo(DWORD type, const BYTE* data, size_t size) {
+        if (!data && size > 0) return;
         DebugEntry dbg;
         dbg.type = type;
-        dbg.data.assign(data, data + size);
+        if (size > 0) dbg.data.assign(data, data + size);
         debugEntries.push_back(dbg);
     }
 
