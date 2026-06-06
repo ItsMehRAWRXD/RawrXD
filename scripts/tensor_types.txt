@@ -1,0 +1,3 @@
+v.patch_conv.weight=f16
+v.patch_conv.bias=f16
+v.patch_embed.weight=f16

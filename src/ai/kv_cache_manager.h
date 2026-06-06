@@ -20,6 +20,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <string>
@@ -162,6 +163,9 @@ private:
     
     // Evict entries to free memory
     bool EvictIfNeeded(size_t required_bytes);
+
+    // Evict one or more oldest entries while cache_mutex_ is already held.
+    size_t EvictLRUUnlocked(size_t min_bytes_to_free);
     
     // Members
     size_t max_entries_;
@@ -181,7 +185,7 @@ private:
     
     // Statistics
     mutable std::mutex stats_mutex_;
-    KVCacheStats stats_;
+    mutable KVCacheStats stats_;
 };
 
 // Inline implementations
@@ -192,15 +196,26 @@ inline bool KVCacheManager::HasCache(ContextHash hash) const {
 }
 
 inline const KVCacheEntry* KVCacheManager::GetCache(ContextHash hash) const {
-    std::shared_lock<std::shared_mutex> lock(cache_mutex_);
+    std::unique_lock<std::shared_mutex> lock(cache_mutex_);
     auto it = cache_entries_.find(hash);
     if (it == cache_entries_.end()) {
+        std::lock_guard<std::mutex> stats_lock(stats_mutex_);
+        stats_.cache_misses++;
+        const int total = stats_.cache_hits + stats_.cache_misses;
+        stats_.hit_rate = (total > 0) ? (static_cast<float>(stats_.cache_hits) / static_cast<float>(total)) : 0.0f;
         return nullptr;
     }
     
     // Update access count and last used
     it->second->access_count++;
     it->second->last_used = std::chrono::steady_clock::now();
+
+    {
+        std::lock_guard<std::mutex> stats_lock(stats_mutex_);
+        stats_.cache_hits++;
+        const int total = stats_.cache_hits + stats_.cache_misses;
+        stats_.hit_rate = (total > 0) ? (static_cast<float>(stats_.cache_hits) / static_cast<float>(total)) : 0.0f;
+    }
     
     return it->second.get();
 }

@@ -569,6 +569,9 @@ if(RAWR_HAS_MASM)
         src/asm/mxcsr_determinism.asm
         src/asm/zerocopy_ring_bridge.asm
         src/asm/ums_micro_scheduler.asm
+        # Sovereign memory + inference stack (Phase 2)
+        src/asm/rawr_linear_allocator.asm
+        src/asm/Sovereign_GEMM_Q4_F32.asm
         # Previously broken MASM64 syntax now portable C++20 with extern "C" ABI compatibility.
 
         
@@ -3251,6 +3254,428 @@ target_link_libraries(RawrXD-InferenceSmoke PRIVATE InferenceEngine)
 set_target_properties(RawrXD-InferenceSmoke PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     OUTPUT_NAME RawrXD-InferenceSmoke
+)
+
+# ---------------------------------------------------------------------------
+# Sovereign Layer0 Smoke Test — Phase 2: arena + kernel + GGUF parser, no llama.cpp
+# ---------------------------------------------------------------------------
+add_executable(test_sovereign_layer0 EXCLUDE_FROM_ALL
+    src/ai/test_layer0.cpp
+    src/streaming_gguf_loader.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/gguf_parser.cpp
+)
+if(RAWR_HAS_MASM)
+    target_sources(test_sovereign_layer0 PRIVATE
+        src/asm/rawr_linear_allocator.asm
+        src/asm/Sovereign_GEMM_Q4_F32.asm
+    )
+    set_source_files_properties(
+        src/asm/rawr_linear_allocator.asm
+        src/asm/Sovereign_GEMM_Q4_F32.asm
+        PROPERTIES LANGUAGE ASM_MASM
+    )
+endif()
+target_include_directories(test_sovereign_layer0 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ggml-cpu
+)
+target_compile_definitions(test_sovereign_layer0 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_sovereign_layer0 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_sovereign_layer0 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_sovereign_layer0 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_sovereign_layer0
+)
+
+# ---------------------------------------------------------------------------
+# Sovereign Kernel Minimal Test — isolates MASM kernel from GGUF loading
+# ---------------------------------------------------------------------------
+add_executable(test_kernel_minimal EXCLUDE_FROM_ALL
+    src/ai/test_kernel_minimal.cpp
+)
+if(RAWR_HAS_MASM)
+    target_sources(test_kernel_minimal PRIVATE
+        src/asm/rawr_linear_allocator.asm
+        src/asm/Sovereign_GEMM_Q4_F32.asm
+    )
+    set_source_files_properties(
+        src/asm/rawr_linear_allocator.asm
+        src/asm/Sovereign_GEMM_Q4_F32.asm
+        PROPERTIES LANGUAGE ASM_MASM
+    )
+endif()
+target_include_directories(test_kernel_minimal PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_kernel_minimal PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_kernel_minimal PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_kernel_minimal PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_kernel_minimal PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_kernel_minimal
+)
+
+# ---------------------------------------------------------------------------
+# KV Cache Manager Smoke Test — Phase 3 cache reuse + eviction validation
+# ---------------------------------------------------------------------------
+add_executable(test_kv_cache_manager_phase3 EXCLUDE_FROM_ALL
+    src/ai/test_kv_cache_manager_phase3.cpp
+    src/ai/kv_cache_manager.cpp
+)
+target_include_directories(test_kv_cache_manager_phase3 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_kv_cache_manager_phase3 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_kv_cache_manager_phase3 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_kv_cache_manager_phase3 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_kv_cache_manager_phase3 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_kv_cache_manager_phase3
+)
+
+# ---------------------------------------------------------------------------
+# Transformer Stack Orchestrator Smoke Test — Phase 3 multi-token KV cache integration
+# ---------------------------------------------------------------------------
+add_executable(test_transformer_stack_orchestrator_phase3 EXCLUDE_FROM_ALL
+    src/ai/test_transformer_stack_orchestrator_simple_phase3.cpp
+)
+target_include_directories(test_transformer_stack_orchestrator_phase3 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_transformer_stack_orchestrator_phase3 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+    RAWRXD_PHASE3_ORCHESTRATOR=1
+)
+if(MSVC)
+    target_compile_options(test_transformer_stack_orchestrator_phase3 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_transformer_stack_orchestrator_phase3 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_transformer_stack_orchestrator_phase3 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_transformer_stack_orchestrator_phase3
+)
+
+# ---------------------------------------------------------------------------
+# Phase 3.1 — 2-Token Deterministic Replay Harness
+# Validates identical outputs across two SovereignInferenceEngine instances.
+# ---------------------------------------------------------------------------
+add_executable(test_deterministic_replay_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_deterministic_replay_phase31.cpp
+    src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignInferenceClient_stub.cpp
+    src/ai/kv_cache_manager.cpp
+    src/ai/transformer_stack_orchestrator.cpp
+    src/ai/token_generator.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/asm/rawr_linear_allocator.asm
+    src/asm/Sovereign_GEMM_Q4_F32.asm
+)
+target_include_directories(test_deterministic_replay_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_deterministic_replay_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_deterministic_replay_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_deterministic_replay_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_deterministic_replay_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_deterministic_replay_phase31
+)
+
+# ---------------------------------------------------------------------------
+# Attention Core Micro-Harness — isolates Q·K·V datapath with hash checkpoints
+# ---------------------------------------------------------------------------
+add_executable(test_attention_core_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_attention_core_phase31.cpp
+    src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignInferenceClient_stub.cpp
+    src/ai/kv_cache_manager.cpp
+    src/ai/transformer_stack_orchestrator.cpp
+    src/ai/token_generator.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/asm/rawr_linear_allocator.asm
+    src/asm/Sovereign_GEMM_Q4_F32.asm
+)
+target_include_directories(test_attention_core_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_attention_core_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_attention_core_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_attention_core_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_attention_core_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_attention_core_phase31
+)
+
+# ---------------------------------------------------------------------------
+# FFN Core Micro-Harness — isolates SwiGLU datapath with hash checkpoints
+# ---------------------------------------------------------------------------
+add_executable(test_ffn_core_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_ffn_core_phase31.cpp
+    src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignInferenceClient_stub.cpp
+    src/ai/kv_cache_manager.cpp
+    src/ai/transformer_stack_orchestrator.cpp
+    src/ai/token_generator.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/asm/rawr_linear_allocator.asm
+    src/asm/Sovereign_GEMM_Q4_F32.asm
+)
+target_include_directories(test_ffn_core_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_ffn_core_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_ffn_core_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_ffn_core_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_ffn_core_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_ffn_core_phase31
+)
+
+# ---------------------------------------------------------------------------
+# Full Transformer Layer Micro-Harness — attention + RMSNorm + residual + FFN
+# ---------------------------------------------------------------------------
+add_executable(test_transformer_layer_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_transformer_layer_phase31.cpp
+    src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignKVCache.cpp
+    src/ai/SovereignInferenceClient_stub.cpp
+    src/ai/kv_cache_manager.cpp
+    src/ai/transformer_stack_orchestrator.cpp
+    src/ai/token_generator.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/asm/rawr_linear_allocator.asm
+    src/asm/Sovereign_GEMM_Q4_F32.asm
+)
+target_include_directories(test_transformer_layer_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_transformer_layer_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_transformer_layer_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_transformer_layer_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_transformer_layer_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_transformer_layer_phase31
+)
+
+# ---------------------------------------------------------------------------
+# Multi-Layer Single Forward Pass Smoke Test — Phase 3.1
+# ---------------------------------------------------------------------------
+add_executable(test_multilayer_single_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_multilayer_single_phase31.cpp
+    src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignKVCache.cpp
+    src/ai/SovereignInferenceClient_stub.cpp
+    src/ai/kv_cache_manager.cpp
+    src/ai/transformer_stack_orchestrator.cpp
+    src/ai/token_generator.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/asm/rawr_linear_allocator.asm
+    src/asm/Sovereign_GEMM_Q4_F32.asm
+)
+target_include_directories(test_multilayer_single_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_multilayer_single_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_multilayer_single_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_multilayer_single_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_multilayer_single_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_multilayer_single_phase31
+)
+
+# ---------------------------------------------------------------------------
+# GGUF Metadata Dump — diagnostic tool
+# ---------------------------------------------------------------------------
+add_executable(test_gguf_metadata_dump EXCLUDE_FROM_ALL
+    src/ai/test_gguf_metadata_dump.cpp
+    src/streaming_gguf_loader.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/gguf_loader.cpp
+)
+target_include_directories(test_gguf_metadata_dump PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_gguf_metadata_dump PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_gguf_metadata_dump PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_gguf_metadata_dump PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_gguf_metadata_dump PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_gguf_metadata_dump
+)
+
+# ---------------------------------------------------------------------------
+# KV Cache Micro-Harness — Phase 3.1
+# ---------------------------------------------------------------------------
+add_executable(test_kv_cache_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_kv_cache_phase31.cpp
+    src/ai/SovereignKVCache.cpp
+)
+target_include_directories(test_kv_cache_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_kv_cache_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_kv_cache_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_kv_cache_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_kv_cache_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_kv_cache_phase31
 )
 
 # ---------------------------------------------------------------------------

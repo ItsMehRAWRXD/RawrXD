@@ -423,31 +423,21 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
 		return false;
 	}
 
-	const std::string zoneName = tensorIt->second.zone_name;
-	if (zoneName.empty()) {
+	const TensorRef& ref = tensorIt->second;
+	if (ref.size == 0) {
+		data.clear();
+		return true;
+	}
+
+	// Fast path: read directly from file, bypass zone cache entirely
+	if (!file_.is_open()) {
 		return false;
 	}
-
-	if (!zones_[zoneName].is_loaded && !LoadZone(zoneName, max_zone_memory_mb_)) {
-		return false;
-	}
-
-	const TensorZoneInfo& zone = zones_[zoneName];
-	uint64_t offsetInZone = 0;
-	for (const auto& other : zone.tensors) {
-		const auto& ref = tensor_index_.at(other);
-		if (other == tensor_name) {
-			if (offsetInZone + ref.size > zone.data.size()) {
-				return false;
-			}
-			data.assign(zone.data.begin() + static_cast<std::ptrdiff_t>(offsetInZone),
-						zone.data.begin() + static_cast<std::ptrdiff_t>(offsetInZone + ref.size));
-			return true;
-		}
-		offsetInZone += ref.size;
-	}
-
-	return false;
+	data.resize(static_cast<size_t>(ref.size));
+	file_.clear();
+	file_.seekg(static_cast<std::streamoff>(data_section_offset_ + ref.offset), std::ios::beg);
+	file_.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(ref.size));
+	return file_.good();
 }
 
 bool StreamingGGUFLoader::ProbeTensorData(const std::string& tensor_name, size_t sample_bytes) {

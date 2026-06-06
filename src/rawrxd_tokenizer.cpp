@@ -1,4 +1,5 @@
 #include "rawrxd_tokenizer.h"
+#include "streaming_gguf_loader.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -242,27 +243,29 @@ bool RawrXDTokenizer::Load(const std::string& vocabPath) {
 
 bool RawrXDTokenizer::LoadFromGGUF(const std::string& ggufPath)
 {
-    GGUFLoader loader;
+    // Use StreamingGGUFLoader — it parses tokenizer.ggml.tokens into GetVocabulary()
+    RawrXD::StreamingGGUFLoader loader;
     if (!loader.Open(ggufPath))
     {
         std::cerr << "[Tokenizer] Failed to open GGUF: " << ggufPath << std::endl;
         return false;
     }
 
-    // Open() already calls ParseHeader() + ParseMetadata() internally.
-    // Do NOT call them again — ParseMetadata appends to metadata_.tokens
-    // without clearing, which would double the vocab (32064 → 64128).
+    // Open() already calls ParseHeader() + ParseMetadata() + BuildTensorIndex()
+    // Do NOT call them again.
 
-    const RawrXD::GGUFMetadata metadata = loader.GetMetadata();
+    const std::vector<std::string>& vocab = loader.GetVocabulary();
+    // COPY vocab before Close() — Close() clears m_vocab
+    std::vector<std::string> vocab_copy = vocab;
     loader.Close();
 
-    if (metadata.tokens.empty())
+    if (vocab_copy.empty())
     {
         std::cerr << "[Tokenizer] GGUF missing tokenizer.ggml.tokens: " << ggufPath << std::endl;
         return false;
     }
 
-    return LoadFromVocab(metadata.tokens);
+    return LoadFromVocab(vocab_copy);
 }
 
 std::vector<uint32_t> RawrXDTokenizer::Encode(const std::string& text) {

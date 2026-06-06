@@ -217,7 +217,7 @@ void KVCacheManager::InvalidateFileCaches(const std::string& file_path) {
     // Update stats
     {
         std::lock_guard<std::mutex> stats_lock(stats_mutex_);
-        stats_.total_entries = cache_entries_.size();
+        stats_.total_entries = static_cast<int>(cache_entries_.size());
         stats_.total_memory_bytes = current_memory_bytes_;
     }
 }
@@ -250,7 +250,7 @@ void KVCacheManager::SetMaxEntries(size_t max_entries) {
     
     // Evict if needed
     while (cache_entries_.size() > max_entries_) {
-        EvictLRU(0);  // Evict one entry
+        EvictLRUUnlocked(0);  // Evict one entry
     }
 }
 
@@ -260,7 +260,7 @@ void KVCacheManager::SetMaxMemory(size_t max_memory_mb) {
     
     // Evict if needed
     if (current_memory_bytes_ > max_memory_bytes_) {
-        EvictLRU(current_memory_bytes_ - max_memory_bytes_);
+        EvictLRUUnlocked(current_memory_bytes_ - max_memory_bytes_);
     }
 }
 
@@ -290,33 +290,7 @@ void KVCacheManager::PrefetchToVRAM(ContextHash hash) {
 
 void KVCacheManager::EvictLRU(size_t bytes_to_free) {
     std::unique_lock<std::shared_mutex> lock(cache_mutex_);
-    
-    // Find least recently used entry
-    auto oldest = cache_entries_.end();
-    auto oldest_time = std::chrono::steady_clock::now();
-    
-    for (auto it = cache_entries_.begin(); it != cache_entries_.end(); ++it) {
-        if (it->second->last_used < oldest_time) {
-            oldest_time = it->second->last_used;
-            oldest = it;
-        }
-    }
-    
-    if (oldest == cache_entries_.end()) {
-        return;
-    }
-    
-    size_t freed = oldest->second->memory_size;
-    current_memory_bytes_ -= freed;
-    cache_entries_.erase(oldest);
-    
-    // Update stats
-    {
-        std::lock_guard<std::mutex> stats_lock(stats_mutex_);
-        stats_.total_entries--;
-        stats_.total_memory_bytes = current_memory_bytes_;
-        stats_.cache_evictions++;
-    }
+    EvictLRUUnlocked(bytes_to_free);
 }
 
 void KVCacheManager::Clear() {
@@ -346,7 +320,7 @@ const KVCacheEntry* KVCacheManager::FindEntry(ContextHash hash) const {
 bool KVCacheManager::EvictIfNeeded(size_t required_bytes) {
     // Check entry limit
     if (cache_entries_.size() >= max_entries_) {
-        EvictLRU(0);
+        EvictLRUUnlocked(0);
     }
     
     // Check memory limit
@@ -354,10 +328,45 @@ bool KVCacheManager::EvictIfNeeded(size_t required_bytes) {
         if (cache_entries_.empty()) {
             return false;  // Can't free enough memory
         }
-        EvictLRU(0);
+        EvictLRUUnlocked(0);
     }
     
     return true;
+}
+
+size_t KVCacheManager::EvictLRUUnlocked(size_t min_bytes_to_free) {
+    size_t total_freed = 0;
+
+    do {
+        // Find least recently used entry.
+        auto oldest = cache_entries_.end();
+        auto oldest_time = std::chrono::steady_clock::now();
+
+        for (auto it = cache_entries_.begin(); it != cache_entries_.end(); ++it) {
+            if (it->second->last_used < oldest_time) {
+                oldest_time = it->second->last_used;
+                oldest = it;
+            }
+        }
+
+        if (oldest == cache_entries_.end()) {
+            break;
+        }
+
+        const size_t freed = oldest->second->memory_size;
+        current_memory_bytes_ -= freed;
+        total_freed += freed;
+        cache_entries_.erase(oldest);
+
+        {
+            std::lock_guard<std::mutex> stats_lock(stats_mutex_);
+            stats_.total_entries = static_cast<int>(cache_entries_.size());
+            stats_.total_memory_bytes = current_memory_bytes_;
+            stats_.cache_evictions++;
+        }
+    } while (total_freed < min_bytes_to_free && !cache_entries_.empty());
+
+    return total_freed;
 }
 
 } // namespace RawrXD

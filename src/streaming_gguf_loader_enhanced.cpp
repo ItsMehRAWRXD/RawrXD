@@ -1316,7 +1316,10 @@ bool EnhancedStreamingGGUFLoader::GetTensorData(const std::string& tensor_name,
     auto index = GetTensorIndex();
     for (const auto& ref : index) {
         if (ref.name == tensor_name) {
-            UpdateAccessPattern(ref.zone_name.empty() ? 0 : std::hash<std::string>{}(ref.zone_name));
+            const uint32_t zone_id = ref.zone_name.empty()
+                ? 0u
+                : static_cast<uint32_t>(std::hash<std::string>{}(ref.zone_name));
+            UpdateAccessPattern(zone_id);
             break;
         }
     }
