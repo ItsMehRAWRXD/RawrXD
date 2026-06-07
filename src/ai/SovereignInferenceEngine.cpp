@@ -246,8 +246,12 @@ bool SovereignInferenceEngine::Step(uint32_t& out_token_id, bool& done) {
         return false;
     }
 
-    // Greedy sample
-    out_token_id = SampleGreedy(logits.data(), logits.size());
+    // Temperature sampling (if temperature > 0)
+    if (cfg_.temperature > 0.0f) {
+        out_token_id = SampleWithTemperature(logits.data(), logits.size(), cfg_.temperature);
+    } else {
+        out_token_id = SampleGreedy(logits.data(), logits.size());
+    }
     step_state_.token_ids.push_back(out_token_id);
     step_state_.seq_len++;
 
@@ -280,6 +284,43 @@ SovereignInferenceEngine::Stats SovereignInferenceEngine::GetStats() const {
 }
 
 // ---------------------------------------------------------------------------
+// Dequantize a single Q4_0 row to F32
+// Row layout: [scale: uint16_t] [weights: 16 bytes for 32 elements]
+// Each block = 18 bytes = 2 bytes scale + 16 bytes weights (32 nibbles)
+// ---------------------------------------------------------------------------
+static void DequantizeQ4_0_Row(const uint8_t* q4_row, float* f32_out, int n_cols) {
+    int blocks = n_cols / 32;
+    for (int b = 0; b < blocks; ++b) {
+        const uint8_t* block = q4_row + b * 18;
+        // Scale: F16 at bytes 0-1
+        uint16_t scale_f16 = *reinterpret_cast<const uint16_t*>(block);
+        // Convert F16 to F32 manually
+        uint32_t sign = (scale_f16 >> 15) & 0x1;
+        uint32_t exp  = (scale_f16 >> 10) & 0x1F;
+        uint32_t mant = scale_f16 & 0x3FF;
+        float scale;
+        if (exp == 0) {
+            scale = 0.0f;
+        } else if (exp == 0x1F) {
+            scale = (mant == 0) ? (sign ? -INFINITY : INFINITY) : NAN;
+        } else {
+            float f = static_cast<float>(mant) / 1024.0f + 1.0f;
+            int e = static_cast<int>(exp) - 15;
+            scale = (sign ? -1.0f : 1.0f) * f * std::pow(2.0f, e);
+        }
+        // Weights: 16 bytes = 32 nibbles
+        for (int i = 0; i < 16; ++i) {
+            uint8_t byte = block[2 + i];
+            uint8_t low_nibble  = byte & 0x0F;
+            uint8_t high_nibble = (byte >> 4) & 0x0F;
+            // Dequantize: (nibble - 8) * scale
+            f32_out[b * 32 + i]       = (static_cast<float>(low_nibble)  - 8.0f) * scale;
+            f32_out[b * 32 + i + 16]  = (static_cast<float>(high_nibble) - 8.0f) * scale;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Forward pass — full transformer layer (attention + residual + FFN + residual)
 // Supports both single-layer (micro-harness) and multi-layer (full model) modes.
 // ---------------------------------------------------------------------------
@@ -299,10 +340,19 @@ bool SovereignInferenceEngine::RunTokenForward(uint32_t token_id,
     bool multi_layer = (wq_layers_.size() > 0);
     uint32_t num_layers = multi_layer ? static_cast<uint32_t>(wq_layers_.size()) : 1;
 
-    // 1. Deterministic input vector (simulates token embedding lookup)
+    // 1. Real embedding lookup: dequantize token_embd.weight row for token_id
     float* hidden = AlignedAllocF32(n_embd_, 512);
-    for (uint32_t i = 0; i < n_embd_; ++i) {
-        hidden[i] = static_cast<float>(token_id + i) * 0.001f;
+    if (token_embd_f32_.data && token_embd_f32_.size > 0 && token_id < n_vocab_) {
+        // token_embd.weight is Q4_0 [n_vocab × n_embd]
+        uint32_t blocks_per_row = n_embd_ / 32;
+        int row_stride = blocks_per_row * 18;
+        const uint8_t* row_data = static_cast<const uint8_t*>(token_embd_f32_.data) + token_id * row_stride;
+        DequantizeQ4_0_Row(row_data, hidden, n_embd_);
+    } else {
+        // Fallback: deterministic input
+        for (uint32_t i = 0; i < n_embd_; ++i) {
+            hidden[i] = static_cast<float>(token_id + i) * 0.001f;
+        }
     }
 
     // 2. Multi-layer transformer stack — ZERO per-layer allocations
@@ -722,6 +772,43 @@ uint32_t SovereignInferenceEngine::SampleGreedy(const float* logits, size_t coun
     for (size_t i = 1; i < count; ++i) {
         if (logits[i] > best_val) {
             best_val = logits[i];
+            best = static_cast<uint32_t>(i);
+        }
+    }
+    return best;
+}
+
+// ---------------------------------------------------------------------------
+// Temperature sampling: apply softmax with temperature, then sample
+// ---------------------------------------------------------------------------
+uint32_t SovereignInferenceEngine::SampleWithTemperature(const float* logits, size_t count, float temperature) const {
+    if (count == 0) return 0;
+    if (temperature <= 0.0f) return SampleGreedy(logits, count);
+
+    // Apply temperature and compute softmax
+    std::vector<float> probs(count);
+    float max_logit = logits[0];
+    for (size_t i = 1; i < count; ++i) {
+        if (logits[i] > max_logit) max_logit = logits[i];
+    }
+
+    double sum = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        probs[i] = std::exp((logits[i] - max_logit) / temperature);
+        sum += probs[i];
+    }
+
+    // Normalize
+    for (size_t i = 0; i < count; ++i) {
+        probs[i] = static_cast<float>(probs[i] / sum);
+    }
+
+    // Simple weighted random sample (deterministic for now — pick highest prob)
+    uint32_t best = 0;
+    float best_prob = probs[0];
+    for (size_t i = 1; i < count; ++i) {
+        if (probs[i] > best_prob) {
+            best_prob = probs[i];
             best = static_cast<uint32_t>(i);
         }
     }

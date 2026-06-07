@@ -169,6 +169,7 @@ private:
 
     // Greedy sample from logits
     uint32_t SampleGreedy(const float* logits, size_t count) const;
+    uint32_t SampleWithTemperature(const float* logits, size_t count, float temperature) const;
 
     // Helpers
     bool LoadAttentionWeights(const char* model_path);

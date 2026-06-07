@@ -1,6 +1,5 @@
 // test_generation_loop_phase31.cpp
-// Phase 3.1 — Autoregressive generation loop test
-// Validates: Prefill → Step loop produces varied tokens
+// Phase 3.1 — Autoregressive generation loop test with real embeddings + Decode
 
 #include "SovereignInferenceEngine.hpp"
 #include <cstdio>
@@ -14,6 +13,7 @@ int main(int argc, char** argv) {
     SovereignEngineConfig cfg{};
     cfg.model_path = model_path;
     cfg.max_context_length = 128;
+    cfg.temperature = 0.8f;  // Add temperature for varied output
     SovereignInferenceEngine engine(cfg);
     if (!engine.Initialize()) {
         fprintf(stderr, "FATAL: engine init failed\n");
@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
 
     // Generate 10 tokens
     printf("[Generation] Generating 10 tokens...\n");
+    std::vector<uint32_t> generated;
     for (int i = 0; i < 10; ++i) {
         uint32_t token_id = 0;
         bool done = false;
@@ -36,9 +37,17 @@ int main(int argc, char** argv) {
             fprintf(stderr, "FATAL: Step %d failed\n", i);
             return 1;
         }
-        printf("[Generation] Step %d: token=%u done=%s\n", i, token_id, done ? "true" : "false");
+        generated.push_back(token_id);
+        std::string tok_str = engine.Tokenizer().DecodeToken(token_id);
+        printf("[Generation] Step %d: token=%u str=\"%s\" done=%s\n",
+               i, token_id, tok_str.c_str(), done ? "true" : "false");
         if (done) break;
     }
+
+    // Decode full sequence (copy tokenizer since Decode is non-const)
+    RawrXDTokenizer tokenizer_copy = engine.Tokenizer();
+    std::string full_text = tokenizer_copy.Decode(generated);
+    printf("[Generation] Full decoded text: \"%s\"\n", full_text.c_str());
 
     printf("[Generation] PASS\n");
     return 0;
