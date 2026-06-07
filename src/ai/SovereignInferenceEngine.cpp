@@ -25,13 +25,19 @@ SovereignInferenceEngine::~SovereignInferenceEngine() {
         for (auto& s : slots) freeSlot(s);
         slots.clear();
     };
-    freeSlot(wq_); freeSlot(wk_); freeSlot(wv_); freeSlot(wo_);
-    freeSlot(ffn_gate_); freeSlot(ffn_up_); freeSlot(ffn_down_);
-    freeSlot(attn_norm_); freeSlot(ffn_norm_);
+
+    // Free multi-layer tables (own their memory)
     freeSlots(wq_layers_); freeSlots(wk_layers_); freeSlots(wv_layers_); freeSlots(wo_layers_);
     freeSlots(ffn_gate_layers_); freeSlots(ffn_up_layers_); freeSlots(ffn_down_layers_);
     freeSlots(attn_norm_layers_); freeSlots(ffn_norm_layers_);
-    freeSlot(output_norm_); freeSlot(output_weight_);
+
+    // Single-layer slots are just pointers — memory freed by vectors above
+    wq_ = WeightSlot{}; wk_ = WeightSlot{}; wv_ = WeightSlot{}; wo_ = WeightSlot{};
+    ffn_gate_ = WeightSlot{}; ffn_up_ = WeightSlot{}; ffn_down_ = WeightSlot{};
+    attn_norm_ = WeightSlot{}; ffn_norm_ = WeightSlot{};
+
+    // Free standalone slots
+    freeSlot(output_norm_); freeSlot(output_weight_); freeSlot(token_embd_f32_);
 
     // Free scratch buffers
     AlignedFree(scratch_.x_norm);
@@ -126,16 +132,10 @@ bool SovereignInferenceEngine::Initialize() {
             fprintf(stderr, "WARN: Could not load norm weights; forward pass will use stub\n");
         }
     } else {
-        // Multi-layer loaded — also populate single-layer slots for backward compat
-        if (!wq_layers_.empty()) wq_ = wq_layers_[0];
-        if (!wk_layers_.empty()) wk_ = wk_layers_[0];
-        if (!wv_layers_.empty()) wv_ = wv_layers_[0];
-        if (!wo_layers_.empty()) wo_ = wo_layers_[0];
-        if (!ffn_gate_layers_.empty()) ffn_gate_ = ffn_gate_layers_[0];
-        if (!ffn_up_layers_.empty())   ffn_up_   = ffn_up_layers_[0];
-        if (!ffn_down_layers_.empty()) ffn_down_ = ffn_down_layers_[0];
-        if (!attn_norm_layers_.empty()) attn_norm_ = attn_norm_layers_[0];
-        if (!ffn_norm_layers_.empty())  ffn_norm_  = ffn_norm_layers_[0];
+        // Multi-layer loaded — single-layer slots are unused (RunTokenForward uses wq_layers_ directly)
+        // DO NOT create shallow copies — they cause double-free crashes
+        printf("[Engine] Multi-layer weights loaded (%zu layers), single-layer slots left null\n",
+               wq_layers_.size());
     }
 
     // 5. Init orchestrator (with null inference client for now — we are the engine)
@@ -307,8 +307,6 @@ bool SovereignInferenceEngine::RunTokenForward(uint32_t token_id,
 
     // 2. Multi-layer transformer stack — ZERO per-layer allocations
     for (uint32_t layer = 0; layer < num_layers; ++layer) {
-        printf("[Forward] Layer %u/%u start\n", layer, num_layers);
-        fflush(stdout);
         const WeightSlot& wq = multi_layer ? wq_layers_[layer] : wq_;
         const WeightSlot& wk = multi_layer ? wk_layers_[layer] : wk_;
         const WeightSlot& wv = multi_layer ? wv_layers_[layer] : wv_;
@@ -320,110 +318,87 @@ bool SovereignInferenceEngine::RunTokenForward(uint32_t token_id,
         const WeightSlot& ffn_norm  = multi_layer ? ffn_norm_layers_[layer]  : ffn_norm_;
 
         // 2a. Pre-attention RMSNorm: hidden → scratch_.x_norm
-        printf("[Forward] Layer %u RMSNorm1\n", layer); fflush(stdout);
         memcpy(scratch_.x_norm, hidden, n_embd_ * sizeof(float));
         if (attn_norm.data && attn_norm.size >= n_embd_ * sizeof(float)) {
             RMSNorm(scratch_.x_norm, n_embd_, static_cast<float*>(attn_norm.data), 1e-5f);
         }
 
         // 2b. Attention sub-layer (Q/K/V projections + O projection)
-        //     scratch_.x_norm → scratch_.attn_out
         {
-            printf("[Forward] Layer %u Attention start\n", layer); fflush(stdout);
-            // Q/K/V projections reuse scratch buffers (Q=hidden, K=scratch_.attn_out, V=scratch_.x_norm)
-            // Note: for single-token generation without KV cache, we do minimal dot-product attention
-            float* Q = hidden;           // borrow hidden buffer for Q (will be reconstructed)
-            float* K = scratch_.attn_out;  // borrow attn_out for K
-            float* V = scratch_.x_norm;  // borrow x_norm for V
+            float* Q = hidden;
+            float* K = scratch_.attn_out;
+            float* V = scratch_.x_norm;
 
-            printf("[Forward] Layer %u QProj\n", layer); fflush(stdout);
             SovereignLayerExecutor::ExecuteAttentionQProj(wq.desc, static_cast<uint8_t*>(wq.data), scratch_.x_norm, Q);
-            printf("[Forward] Layer %u KProj\n", layer); fflush(stdout);
             SovereignLayerExecutor::ExecuteAttentionKProj(wk.desc, static_cast<uint8_t*>(wk.data), scratch_.x_norm, K);
-            printf("[Forward] Layer %u VProj\n", layer); fflush(stdout);
             SovereignLayerExecutor::ExecuteAttentionVProj(wv.desc, static_cast<uint8_t*>(wv.data), scratch_.x_norm, V);
-
-            // Minimal attention: dot(Q,K) for single token, then V→attn_out via O projection
-            // For now: just pass V through O projection (no KV cache yet)
-            printf("[Forward] Layer %u OProj\n", layer); fflush(stdout);
             SovereignLayerExecutor::ExecuteGEMV(wo.desc, static_cast<uint8_t*>(wo.data), V, scratch_.attn_out);
-
-            // Reconstruct hidden from Q (since we borrowed it)
-            // Actually Q was written into hidden, which is fine — we restore hidden from x_norm after
             memcpy(hidden, scratch_.x_norm, n_embd_ * sizeof(float));
-            printf("[Forward] Layer %u Attention done\n", layer); fflush(stdout);
         }
 
-        // 2c. Residual add: hidden = hidden + scratch_.attn_out
-        printf("[Forward] Layer %u Residual1\n", layer); fflush(stdout);
+        // 2c. Residual add
         for (uint32_t i = 0; i < n_embd_; ++i) {
             hidden[i] += scratch_.attn_out[i];
         }
 
-        // 2d. Pre-FFN RMSNorm: hidden → scratch_.x_norm
-        printf("[Forward] Layer %u RMSNorm2\n", layer); fflush(stdout);
+        // 2d. Pre-FFN RMSNorm
         memcpy(scratch_.x_norm, hidden, n_embd_ * sizeof(float));
         if (ffn_norm.data && ffn_norm.size >= n_embd_ * sizeof(float)) {
             RMSNorm(scratch_.x_norm, n_embd_, static_cast<float*>(ffn_norm.data), 1e-5f);
         }
 
-        // 2e. FFN sub-layer (SwiGLU) — all into scratch buffers
+        // 2e. FFN sub-layer (SwiGLU)
         {
             uint32_t ffn_dim = static_cast<uint32_t>(ffn_gate.desc.dims[1]);
             if (ffn_dim == 0) ffn_dim = scratch_ffn_dim_;
-            printf("[Forward] Layer %u FFN start (dim=%u)\n", layer, ffn_dim); fflush(stdout);
 
-            printf("[Forward] Layer %u FFN gate proj\n", layer); fflush(stdout);
             SovereignLayerExecutor::ExecuteGEMV(ffn_gate.desc, static_cast<uint8_t*>(ffn_gate.data), scratch_.x_norm, scratch_.ffn_gate);
-            printf("[Forward] Layer %u FFN up proj\n", layer); fflush(stdout);
             SovereignLayerExecutor::ExecuteGEMV(ffn_up.desc,   static_cast<uint8_t*>(ffn_up.data),   scratch_.x_norm, scratch_.ffn_up);
 
-            printf("[Forward] Layer %u FFN SiLU\n", layer); fflush(stdout);
             SiLU(scratch_.ffn_gate, ffn_dim);
-            printf("[Forward] Layer %u FFN multiply\n", layer); fflush(stdout);
             for (uint32_t i = 0; i < ffn_dim; ++i) {
                 scratch_.ffn_silu[i] = scratch_.ffn_gate[i] * scratch_.ffn_up[i];
             }
 
-            printf("[Forward] Layer %u FFN down proj\n", layer); fflush(stdout);
             SovereignLayerExecutor::ExecuteGEMV(ffn_down.desc, static_cast<uint8_t*>(ffn_down.data), scratch_.ffn_silu, scratch_.ffn_out);
-            printf("[Forward] Layer %u FFN done\n", layer); fflush(stdout);
         }
 
-        // 2f. Residual add: hidden = hidden + scratch_.ffn_out
-        printf("[Forward] Layer %u Residual2\n", layer); fflush(stdout);
+        // 2f. Residual add
         for (uint32_t i = 0; i < n_embd_; ++i) {
             hidden[i] += scratch_.ffn_out[i];
         }
-        printf("[Forward] Layer %u done\n", layer); fflush(stdout);
     }
 
-    // 3. Final head: RMSNorm + output.weight projection → real logits
-    printf("[Forward] Final norm...\n"); fflush(stdout);
+    // 3. Final head: RMSNorm + output projection → real logits
     if (output_norm_.data && output_norm_.size >= n_embd_ * sizeof(float)) {
         RMSNorm(hidden, n_embd_, static_cast<float*>(output_norm_.data), 1e-5f);
     }
 
-    printf("[Forward] Output projection...\n"); fflush(stdout);
     if (output_weight_.data && output_weight_.size > 0) {
-        // output.weight: n_vocab × n_embd — GEMV with hidden as input
-        // MUST use aligned scratch buffer (MASM kernel requires 512-byte align)
+        // Real output.weight loaded — use MASM GEMV kernel
         SovereignLayerExecutor::ExecuteGEMV(output_weight_.desc,
                                             static_cast<uint8_t*>(output_weight_.data),
                                             hidden,
                                             logits_scratch_);
-        // Copy aligned scratch → std::vector output
         memcpy(out_logits.data(), logits_scratch_, n_vocab_ * sizeof(float));
+    } else if (token_embd_f32_.data && token_embd_f32_.size > 0) {
+        // Tied embeddings: token_embd.weight is Q4_0 [n_vocab × n_embd]
+        // Use MASM scalar dot-product kernel directly (one output per call)
+        uint32_t blocks_per_row = n_embd_ / 32;
+        int row_stride = blocks_per_row * 18;
+        const uint8_t* W = static_cast<const uint8_t*>(token_embd_f32_.data);
+        for (uint32_t row = 0; row < n_vocab_; ++row) {
+            const void* row_data = W + row * row_stride;
+            // Direct dispatch to MASM kernel (bypass ExecuteGEMV wrapper which adds file_offset)
+            Sovereign_GEMM_Q4_F32(row_data, hidden, logits_scratch_, n_embd_);
+            out_logits[row] = logits_scratch_[0];
+        }
     } else {
-        // Fallback: deterministic hash-based spike (head not loaded)
+        // Fallback: deterministic hash-based spike
         uint64_t h = HashFloatVector(hidden, n_embd_);
         uint32_t spike = static_cast<uint32_t>(h % n_vocab_);
         out_logits[spike] = 10.0f;
-        printf("[Forward] token=%u layers=%u hash(hidden)=%016llX spike=%u (no head)\n",
-               token_id, num_layers, (unsigned long long)h, spike);
     }
-
-    printf("[Forward] token=%u layers=%u done\n", token_id, num_layers);
 
     AlignedFree(hidden);
     return true;
@@ -565,9 +540,22 @@ bool SovereignInferenceEngine::LoadAllLayerWeights(const char* model_path) {
         ok &= LoadWeightSlot(loader, name, slot); ffn_norm_layers_.push_back(slot); slot = WeightSlot{};
     }
 
-    // Final head weights (post-layer stack)
-    ok &= LoadWeightSlot(loader, "output_norm.weight", output_norm_);
-    ok &= LoadWeightSlot(loader, "output.weight",      output_weight_);
+    // Final head weights (post-layer stack) — non-fatal if unsupported type
+    LoadWeightSlot(loader, "output_norm.weight", output_norm_);
+    if (!LoadWeightSlot(loader, "output.weight", output_weight_)) {
+        fprintf(stderr, "WARN: output.weight not loaded (unsupported type or missing)\n");
+        // Not fatal — can use tied embeddings instead
+    }
+
+    // Tied embeddings: load token_embd.weight (Q4_0) — keep original type for MASM kernel
+    WeightSlot token_embd_raw{};
+    if (LoadWeightSlot(loader, "token_embd.weight", token_embd_raw)) {
+        token_embd_f32_ = token_embd_raw;
+        printf("[Engine] Loaded token_embd.weight for tied output projection (type=%u)\n",
+               token_embd_f32_.desc.ggml_type);
+    } else {
+        fprintf(stderr, "WARN: Could not load token_embd.weight\n");
+    }
 
     if (ok) {
         printf("[Engine] Loaded all %u layer weights + head\n", n_layer_);
@@ -616,6 +604,11 @@ bool SovereignInferenceEngine::LoadWeightSlot(StreamingGGUFLoader& loader,
         int total_elements = n_rows > 0 ? n_cols * n_rows : n_cols;
         expected_size = total_elements * sizeof(float);
         type_str = "F32";
+    } else if (t->type == RawrXD::GGMLType::F16) {
+        // F16: half-precision, stored as 2 bytes per element
+        int total_elements = n_rows > 0 ? n_cols * n_rows : n_cols;
+        expected_size = total_elements * sizeof(uint16_t);
+        type_str = "F16";
     } else {
         fprintf(stderr, "WARN: %s has unsupported type %d\n", name, static_cast<int>(t->type));
         return false;
@@ -634,6 +627,24 @@ bool SovereignInferenceEngine::LoadWeightSlot(StreamingGGUFLoader& loader,
     }
     memset(aligned_buf, 0, alloc_size);
     memcpy(aligned_buf, raw.data(), std::min(static_cast<size_t>(expected_size), raw.size()));
+
+    // If F16, convert to F32 in-place (expand buffer)
+    if (t->type == RawrXD::GGMLType::F16) {
+        int total_elements = n_rows > 0 ? n_cols * n_rows : n_cols;
+        size_t f32_size = static_cast<size_t>(total_elements) * sizeof(float);
+        void* f32_buf = _aligned_malloc(f32_size, 512);
+        if (!f32_buf) {
+            fprintf(stderr, "WARN: _aligned_malloc for F32 conversion failed\n");
+            _aligned_free(aligned_buf);
+            return false;
+        }
+        ConvertF16ToF32(static_cast<const uint16_t*>(aligned_buf), static_cast<float*>(f32_buf), total_elements);
+        _aligned_free(aligned_buf);
+        aligned_buf = f32_buf;
+        alloc_size = f32_size;
+        // Update desc to reflect F32
+        slot.desc.ggml_type = static_cast<uint32_t>(RawrXD::GGMLType::F32);
+    }
 
     if (slot.data) {
         _aligned_free(slot.data);
@@ -664,6 +675,44 @@ float* SovereignInferenceEngine::AlignedAllocF32(size_t count, size_t align) {
 
 void SovereignInferenceEngine::AlignedFree(void* ptr) {
     _aligned_free(ptr);
+}
+
+// ---------------------------------------------------------------------------
+// Convert F16 (half-precision) buffer to F32 — scalar fallback
+// ---------------------------------------------------------------------------
+void SovereignInferenceEngine::ConvertF16ToF32(const uint16_t* src, float* dst, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        uint16_t h = src[i];
+        // F16 format: 1 sign | 5 exp | 10 mantissa
+        uint32_t sign = (h >> 15) & 0x1;
+        uint32_t exp  = (h >> 10) & 0x1F;
+        uint32_t mant = h & 0x3FF;
+
+        uint32_t f32_bits;
+        if (exp == 0) {
+            // Zero or subnormal
+            if (mant == 0) {
+                f32_bits = sign << 31;  // +/- zero
+            } else {
+                // Subnormal: normalize and adjust exponent
+                uint32_t e = 0;
+                while ((mant & 0x400) == 0) {
+                    mant <<= 1;
+                    e++;
+                }
+                mant &= 0x3FF;
+                f32_bits = (sign << 31) | ((127 - 15 - e) << 23) | (mant << 13);
+            }
+        } else if (exp == 0x1F) {
+            // Inf or NaN
+            f32_bits = (sign << 31) | (0xFF << 23) | (mant << 13);
+        } else {
+            // Normal
+            int32_t e = static_cast<int32_t>(exp) - 15 + 127;
+            f32_bits = (sign << 31) | (static_cast<uint32_t>(e) << 23) | (mant << 13);
+        }
+        std::memcpy(&dst[i], &f32_bits, sizeof(float));
+    }
 }
 
 uint32_t SovereignInferenceEngine::SampleGreedy(const float* logits, size_t count) const {

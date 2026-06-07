@@ -3454,6 +3454,7 @@ set_target_properties(test_deterministic_replay_phase31 PROPERTIES
 add_executable(test_attention_core_phase31 EXCLUDE_FROM_ALL
     src/ai/test_attention_core_phase31.cpp
     src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignKVCache.cpp
     src/ai/SovereignInferenceClient_stub.cpp
     src/ai/kv_cache_manager.cpp
     src/ai/transformer_stack_orchestrator.cpp
@@ -3612,6 +3613,90 @@ target_link_libraries(test_multilayer_single_phase31 PRIVATE
 set_target_properties(test_multilayer_single_phase31 PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     OUTPUT_NAME test_multilayer_single_phase31
+)
+
+# ---------------------------------------------------------------------------
+# Logits Diagnostic — Phase 3.1
+# ---------------------------------------------------------------------------
+add_executable(test_logits_diagnostic_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_logits_diagnostic_phase31.cpp
+    src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignKVCache.cpp
+    src/ai/SovereignInferenceClient_stub.cpp
+    src/ai/kv_cache_manager.cpp
+    src/ai/transformer_stack_orchestrator.cpp
+    src/ai/token_generator.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/asm/rawr_linear_allocator.asm
+    src/asm/Sovereign_GEMM_Q4_F32.asm
+)
+target_include_directories(test_logits_diagnostic_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_logits_diagnostic_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_logits_diagnostic_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_logits_diagnostic_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_logits_diagnostic_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_logits_diagnostic_phase31
+)
+
+# ---------------------------------------------------------------------------
+# Generation Loop Test — Phase 3.1
+# ---------------------------------------------------------------------------
+add_executable(test_generation_loop_phase31 EXCLUDE_FROM_ALL
+    src/ai/test_generation_loop_phase31.cpp
+    src/ai/SovereignInferenceEngine.cpp
+    src/ai/SovereignKVCache.cpp
+    src/ai/SovereignInferenceClient_stub.cpp
+    src/ai/kv_cache_manager.cpp
+    src/ai/transformer_stack_orchestrator.cpp
+    src/ai/token_generator.cpp
+    src/streaming_gguf_loader_enhanced.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/asm/rawr_linear_allocator.asm
+    src/asm/Sovereign_GEMM_Q4_F32.asm
+)
+target_include_directories(test_generation_loop_phase31 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+)
+target_compile_definitions(test_generation_loop_phase31 PRIVATE
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+)
+if(MSVC)
+    target_compile_options(test_generation_loop_phase31 PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/W3 /arch:AVX2 /EHsc>
+    )
+endif()
+target_link_libraries(test_generation_loop_phase31 PRIVATE
+    kernel32
+    user32
+)
+set_target_properties(test_generation_loop_phase31 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_generation_loop_phase31
 )
 
 # ---------------------------------------------------------------------------

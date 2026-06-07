@@ -140,6 +140,8 @@ private:
     // Final head weights (norm + output projection)
     WeightSlot output_norm_;      // final RMSNorm scale (n_embd F32)
     WeightSlot output_weight_;    // LM head (n_vocab × n_embd)
+    // Tied embeddings: token_embd.weight converted to F32 for output projection
+    WeightSlot token_embd_f32_;   // n_vocab × n_embd F32 (converted from F16)
     bool       weights_loaded_ = false;
 
     // Generation state
@@ -176,6 +178,7 @@ private:
     bool LoadWeightSlot(StreamingGGUFLoader& loader, const char* name, WeightSlot& slot);
     static float* AlignedAllocF32(size_t count, size_t align);
     static void   AlignedFree(void* ptr);
+    static void   ConvertF16ToF32(const uint16_t* src, float* dst, size_t n);
     static uint64_t HashFloatVector(const float* vec, size_t n);
     static void Softmax(float* vec, size_t n);
     static void SiLU(float* vec, size_t n);
