@@ -1,6 +1,7 @@
 #include <nlohmann/json.hpp>
 
 #include "ai_model_caller.h"
+#include "agent/model_invoker.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -88,6 +89,29 @@ std::string ModelCaller::generateCode(
     const std::string& instruction,
     const std::string& fileType,
     const std::string& context) {
+    // If model is ready, attempt to generate via LLM
+    if (g_modelReady.load() && !g_modelName.empty()) {
+        try {
+            // Use ModelInvoker for actual LLM generation
+            ModelInvoker invoker;
+            invoker.setLLMBackend("ollama", "http://localhost:11434");
+            
+            InvocationParams params;
+            params.wish = "Generate " + fileType + " code for: " + instruction;
+            params.context = context;
+            params.maxTokens = 2048;
+            params.temperature = 0.2;
+            
+            auto response = invoker.invoke(params);
+            if (response.success && !response.rawOutput.empty()) {
+                return response.rawOutput;
+            }
+        } catch (const std::exception& e) {
+            // Fall through to fallback
+        }
+    }
+    
+    // Fallback: structured placeholder with instruction
     std::ostringstream out;
     out << "// Generated (" << fileType << ")\n";
     out << "// Model: " << (g_modelName.empty() ? "minimal" : g_modelName) << "\n";
@@ -98,7 +122,8 @@ std::string ModelCaller::generateCode(
             out << '\n';
         }
     }
-    out << "// TODO: Replace minimal generator with full model backend.\n";
+    out << "// Fallback: Model backend not available or invocation failed.\n";
+    out << "// Please ensure Ollama is running at localhost:11434 with a loaded model.\n";
     return out.str();
 }
 

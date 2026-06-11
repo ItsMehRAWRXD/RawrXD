@@ -4,7 +4,7 @@
 CXX = cl.exe
 LINK = link.exe
 CXXFLAGS = /std:c++latest /EHsc /MD /O2 /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" /I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include"
-LINKFLAGS = /SUBSYSTEM:CONSOLE /LIBPATH:"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\lib\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
+LINKFLAGS = /SUBSYSTEM:CONSOLE /LIBPATH:"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\lib\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64" kernel32.lib user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib uuid.lib ws2_32.lib
 
 DEFINES = -DNOMINMAX -D_WIN32_WINNT=0x0A00 -DHAVE_QT_CORE -DQT_NO_OPENGL -DRAWRXD_NO_VULKAN -DWIN32_LEAN_AND_MEAN -DRAWRXD_ALLOW_VULKAN_TYPE_STUBS=1
 
@@ -222,47 +222,49 @@ build obj/rawrxd_compiler_qt/rawrxd_compiler_qt.obj: compile src/compiler/rawrxd
 build lib/rawrxd_compiler_qt.lib: link obj/rawrxd_compiler_qt/rawrxd_compiler_qt.obj
 
 build obj/RawrXD-Win32IDE/main_win32.obj: compile src/win32app/main_win32.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE.obj: compile src/win32app/Win32IDE.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_Sidebar.obj: compile src/win32app/Win32IDE_Sidebar.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_VSCodeUI.obj: compile src/win32app/Win32IDE_VSCodeUI.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_PowerShellPanel.obj: compile src/win32app/Win32IDE_PowerShellPanel.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_PowerShell.obj: compile src/win32app/Win32IDE_PowerShell.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_Logger.obj: compile src/win32app/Win32IDE_Logger.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/TransparentRenderer.obj: compile src/win32app/TransparentRenderer.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32TerminalManager.obj: compile src/win32app/Win32TerminalManager.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_FileOps.obj: compile src/win32app/Win32IDE_FileOps.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_Commands.obj: compile src/win32app/Win32IDE_Commands.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_Debugger.obj: compile src/win32app/Win32IDE_Debugger.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_AgenticBridge.obj: compile src/win32app/Win32IDE_AgenticBridge.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_AgentCommands.obj: compile src/win32app/Win32IDE_AgentCommands.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Win32IDE_Autonomy.obj: compile src/win32app/Win32IDE_Autonomy.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/gguf_loader.obj: compile src/gguf_loader.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/gguf_vocab_resolver.obj: compile src/gguf_vocab_resolver.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/streaming_gguf_loader.obj: compile src/streaming_gguf_loader.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/ErrorReporter.obj: compile src/utils/ErrorReporter.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
 build obj/RawrXD-Win32IDE/Diagnostics.obj: compile src/utils/Diagnostics.cpp
-  includes = /Iinclude /Isrc
+  includes = /Iinclude /Isrc /IShip
+build obj/RawrXD-Win32IDE/win32app_stubs.obj: compile src/win32app/win32app_stubs.cpp
+  includes = /Iinclude /Isrc /IShip
 
-build bin/RawrXD-Win32IDE.exe: link obj/RawrXD-Win32IDE/main_win32.obj obj/RawrXD-Win32IDE/Win32IDE.obj obj/RawrXD-Win32IDE/Win32IDE_Sidebar.obj obj/RawrXD-Win32IDE/Win32IDE_VSCodeUI.obj obj/RawrXD-Win32IDE/Win32IDE_PowerShellPanel.obj obj/RawrXD-Win32IDE/Win32IDE_PowerShell.obj obj/RawrXD-Win32IDE/Win32IDE_Logger.obj obj/RawrXD-Win32IDE/TransparentRenderer.obj obj/RawrXD-Win32IDE/Win32TerminalManager.obj obj/RawrXD-Win32IDE/Win32IDE_FileOps.obj obj/RawrXD-Win32IDE/Win32IDE_Commands.obj obj/RawrXD-Win32IDE/Win32IDE_Debugger.obj obj/RawrXD-Win32IDE/Win32IDE_AgenticBridge.obj obj/RawrXD-Win32IDE/Win32IDE_AgentCommands.obj obj/RawrXD-Win32IDE/Win32IDE_Autonomy.obj obj/RawrXD-Win32IDE/gguf_loader.obj obj/RawrXD-Win32IDE/gguf_vocab_resolver.obj obj/RawrXD-Win32IDE/streaming_gguf_loader.obj obj/RawrXD-Win32IDE/ErrorReporter.obj obj/RawrXD-Win32IDE/Diagnostics.obj
+build bin/RawrXD-Win32IDE.exe: link obj/RawrXD-Win32IDE/main_win32.obj obj/RawrXD-Win32IDE/Win32IDE.obj obj/RawrXD-Win32IDE/Win32IDE_Sidebar.obj obj/RawrXD-Win32IDE/Win32IDE_VSCodeUI.obj obj/RawrXD-Win32IDE/Win32IDE_PowerShellPanel.obj obj/RawrXD-Win32IDE/Win32IDE_PowerShell.obj obj/RawrXD-Win32IDE/Win32IDE_Logger.obj obj/RawrXD-Win32IDE/TransparentRenderer.obj obj/RawrXD-Win32IDE/Win32TerminalManager.obj obj/RawrXD-Win32IDE/Win32IDE_FileOps.obj obj/RawrXD-Win32IDE/Win32IDE_Commands.obj obj/RawrXD-Win32IDE/Win32IDE_Debugger.obj obj/RawrXD-Win32IDE/Win32IDE_AgenticBridge.obj obj/RawrXD-Win32IDE/Win32IDE_AgentCommands.obj obj/RawrXD-Win32IDE/Win32IDE_Autonomy.obj obj/RawrXD-Win32IDE/gguf_loader.obj obj/RawrXD-Win32IDE/gguf_vocab_resolver.obj obj/RawrXD-Win32IDE/streaming_gguf_loader.obj obj/RawrXD-Win32IDE/ErrorReporter.obj obj/RawrXD-Win32IDE/Diagnostics.obj obj/RawrXD-Win32IDE/win32app_stubs.obj
 
 build obj/test_terminal/test_terminal.obj: compile src/win32app/test_terminal.cpp
   includes = /Iinclude /Isrc

@@ -3,6 +3,7 @@
 
 #include "agentic_orchestrator_integration.hpp"
 #include "observability/Logger.hpp"
+#include "../agent/model_invoker.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -62,18 +63,59 @@ void OrchestratorIntegration::initialize()
         return;
     }
 
-    // Wire planner: for now, use a stub that generates basic plans
+    // Wire planner: use ModelInvoker to generate plans via LLM
     m_orchestrator->setPlanGenerationFn(
         [this](const std::string& task) -> ExecutionPlan
         {
             ExecutionPlan plan;
             plan.description = task;
             plan.source_task = task;
-            plan.planner_model = "default_stub";
-            plan.confidence_score = 0.75f;
+            plan.planner_model = "llm_planner";
 
-            // Create a default multi-step plan
-            // In production, this would call an actual LLM planner
+            // Attempt LLM-based plan generation
+            try {
+                ModelInvoker invoker;
+                invoker.setLLMBackend("ollama", "http://localhost:11434");
+
+                InvocationParams params;
+                params.wish = "Generate a step-by-step execution plan for the following task. "
+                               "Return ONLY a JSON array of steps, each with 'id', 'title', 'description', 'is_mutating' (true/false), and 'risk_level' (VeryLow/Low/Medium/High/Critical).\n\nTask: " + task;
+                params.maxTokens = 2000;
+                params.temperature = 0.3;
+
+                auto response = invoker.invoke(params);
+                if (response.success && response.parsedPlan.is_array()) {
+                    for (const auto& stepJson : response.parsedPlan) {
+                        PlanStep step;
+                        step.id = stepJson.value("id", "step_" + std::to_string(plan.steps.size() + 1));
+                        step.title = stepJson.value("title", "Untitled step");
+                        step.description = stepJson.value("description", "");
+                        step.is_mutating = stepJson.value("is_mutating", false);
+                        std::string riskStr = stepJson.value("risk_level", "Low");
+                        if (riskStr == "VeryLow") step.risk_level = StepRisk::VeryLow;
+                        else if (riskStr == "Low") step.risk_level = StepRisk::Low;
+                        else if (riskStr == "Medium") step.risk_level = StepRisk::Medium;
+                        else if (riskStr == "High") step.risk_level = StepRisk::High;
+                        else step.risk_level = StepRisk::Critical;
+
+                        // Wire dependencies: each step depends on the previous
+                        if (!plan.steps.empty()) {
+                            step.dependencies.push_back(plan.steps.back().id);
+                        }
+                        plan.steps.push_back(step);
+                    }
+                    plan.confidence_score = 0.85f;
+                    LOG_INFO("AgenticOrch", "Generated LLM plan with " + std::to_string(plan.steps.size()) + " steps");
+                    return plan;
+                }
+            } catch (const std::exception& e) {
+                LOG_INFO("AgenticOrch", std::string("LLM planner failed: ") + e.what() + ", falling back to heuristic");
+            }
+
+            // Fallback heuristic planner when LLM is unavailable
+            plan.confidence_score = 0.65f;
+            plan.planner_model = "heuristic_fallback";
+
             PlanStep step1;
             step1.id = "step_1_analyze";
             step1.title = "Analyze task requirements";
@@ -96,9 +138,8 @@ void OrchestratorIntegration::initialize()
             step3.title = "Implement changes";
             step3.description = "Execute code modifications as planned";
             step3.is_mutating = true;
-            step3.risk_level = StepRisk::Medium;  // Will be re-analyzed
+            step3.risk_level = StepRisk::Medium;
             step3.dependencies.push_back(step2.id);
-            step3.affected_files.push_back("src/implementation.cpp");
             plan.steps.push_back(step3);
 
             PlanStep step4;

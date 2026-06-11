@@ -3,8 +3,15 @@
 #include <iomanip>
 #include <chrono>
 #include <utility>
+#include <algorithm>
+#include <string>
 
 namespace RawrXD::Agentic::Observability {
+
+// Default histogram buckets (Prometheus-style)
+static const std::vector<double> DEFAULT_BUCKETS = {
+    0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0
+};
 
 Metrics& Metrics::instance() {
     static Metrics inst;
@@ -32,6 +39,15 @@ bool Metrics::registerMetric(const std::string& name, MetricType type,
     metric.lastUpdated = std::chrono::system_clock::now();
     m_help[name] = help;
     m_labelNames[name] = labelNames;
+    
+    // Initialize histogram buckets if needed
+    if (type == MetricType::HISTOGRAM) {
+        metric.buckets = DEFAULT_BUCKETS;
+        metric.counts.resize(DEFAULT_BUCKETS.size() + 1); // +1 for +Inf bucket
+        for (auto& c : metric.counts) {
+            c.store(0);
+        }
+    }
     
     return true;
 }
@@ -73,8 +89,24 @@ void Metrics::observeHistogram(const std::string& name, double value,
         registerMetric(key, MetricType::HISTOGRAM);
     }
     
-    // TODO: Implement histogram buckets
-    m_metrics[key].value.store(value);
+    auto& metric = m_metrics[key];
+    
+    // Update histogram buckets
+    bool bucketFound = false;
+    for (size_t i = 0; i < metric.buckets.size(); ++i) {
+        if (value <= metric.buckets[i]) {
+            metric.counts[i].fetch_add(1);
+            bucketFound = true;
+            break;
+        }
+    }
+    if (!bucketFound) {
+        // +Inf bucket (last element)
+        metric.counts[metric.buckets.size()].fetch_add(1);
+    }
+    
+    // Also update sum and count for Prometheus compatibility
+    metric.value.store(metric.value.load() + value); // sum
     m_metrics[key].lastUpdated = std::chrono::system_clock::now();
 }
 
@@ -107,8 +139,24 @@ std::string Metrics::exportPrometheus() const {
             case MetricType::SUMMARY:   prom << "summary\n"; break;
         }
         
-        // Value
-        prom << name << " " << std::fixed << std::setprecision(2) << metric.value.load() << "\n";
+        if (metric.type == MetricType::HISTOGRAM) {
+            // Export histogram buckets
+            uint64_t cumulativeCount = 0;
+            for (size_t i = 0; i < metric.buckets.size(); ++i) {
+                cumulativeCount += metric.counts[i].load();
+                prom << name << "_bucket{le=\"" << std::fixed << std::setprecision(3) << metric.buckets[i] << "\"} " << cumulativeCount << "\n";
+            }
+            // +Inf bucket
+            cumulativeCount += metric.counts[metric.buckets.size()].load();
+            prom << name << "_bucket{le=\"+Inf\"} " << cumulativeCount << "\n";
+            
+            // Sum and count
+            prom << name << "_sum " << std::fixed << std::setprecision(2) << metric.value.load() << "\n";
+            prom << name << "_count " << cumulativeCount << "\n";
+        } else {
+            // Simple value for counter/gauge/summary
+            prom << name << " " << std::fixed << std::setprecision(2) << metric.value.load() << "\n";
+        }
     }
     
     return prom.str();
@@ -136,14 +184,117 @@ std::string Metrics::exportJson() const {
 }
 
 bool Metrics::startMetricsServer(uint16_t port) {
-    // TODO: Implement HTTP server for Prometheus scraping
+    if (m_serverRunning.load()) {
+        return true; // Already running
+    }
+    
     m_serverPort = port;
     m_serverRunning.store(true);
-    return false;
+    
+    try {
+        m_serverThread = std::thread(&Metrics::runServerLoop, this);
+    } catch (const std::exception& e) {
+        m_serverRunning.store(false);
+        return false;
+    }
+    
+    return true;
 }
 
 void Metrics::stopMetricsServer() {
     m_serverRunning.store(false);
+    if (m_serverThread.joinable()) {
+        m_serverThread.join();
+    }
+}
+
+void Metrics::runServerLoop() {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        return;
+    }
+    
+    SOCKET listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listenSocket == INVALID_SOCKET) {
+        WSACleanup();
+        return;
+    }
+    
+    // Allow port reuse
+    int opt = 1;
+    setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
+    
+    sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(m_serverPort);
+    
+    if (bind(listenSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        closesocket(listenSocket);
+        WSACleanup();
+        return;
+    }
+    
+    if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
+        closesocket(listenSocket);
+        WSACleanup();
+        return;
+    }
+    
+    // Set non-blocking mode for graceful shutdown
+    u_long nonBlocking = 1;
+    ioctlsocket(listenSocket, FIONBIO, &nonBlocking);
+    
+    while (m_serverRunning.load()) {
+        fd_set readSet;
+        FD_ZERO(&readSet);
+        FD_SET(listenSocket, &readSet);
+        
+        timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100000; // 100ms
+        
+        int selectResult = select(0, &readSet, nullptr, nullptr, &timeout);
+        if (selectResult <= 0 || !FD_ISSET(listenSocket, &readSet)) {
+            continue;
+        }
+        
+        SOCKET clientSocket = accept(listenSocket, nullptr, nullptr);
+        if (clientSocket == INVALID_SOCKET) {
+            continue;
+        }
+        
+        // Read HTTP request
+        char recvBuf[1024] = {0};
+        int recvResult = recv(clientSocket, recvBuf, sizeof(recvBuf) - 1, 0);
+        if (recvResult > 0) {
+            std::string request(recvBuf, recvResult);
+            std::string response;
+            
+            if (request.find("GET /metrics") != std::string::npos ||
+                request.find("GET /") != std::string::npos) {
+                // Serve Prometheus metrics
+                std::string metricsBody = exportPrometheus();
+                std::ostringstream httpResponse;
+                httpResponse << "HTTP/1.1 200 OK\r\n"
+                              << "Content-Type: text/plain; version=0.0.4; charset=utf-8\r\n"
+                              << "Content-Length: " << metricsBody.length() << "\r\n"
+                              << "Connection: close\r\n"
+                              << "\r\n"
+                              << metricsBody;
+                response = httpResponse.str();
+            } else {
+                response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+            }
+            
+            send(clientSocket, response.c_str(), static_cast<int>(response.length()), 0);
+        }
+        
+        closesocket(clientSocket);
+    }
+    
+    closesocket(listenSocket);
+    WSACleanup();
 }
 
 void Metrics::clear() {

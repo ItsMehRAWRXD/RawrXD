@@ -1,4 +1,5 @@
 #include "autonomous_intelligence_orchestrator.h"
+#include "ai_model_caller.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -275,8 +276,14 @@ void AutonomousIntelligenceOrchestrator::generateImplementation(const std::strin
         onNotification("Status", "Generating implementation for: " + requirement);
     }
     
-    // Would call AI model to generate code based on requirement
-    std::string generatedCode = "// Auto-generated implementation\n// TODO: Review and test";
+    // Attempt to generate code via ModelCaller if available
+    std::string generatedCode;
+    if (ModelCaller::IsReady()) {
+        generatedCode = ModelCaller::generateCode(requirement, "cpp", "");
+    } else {
+        generatedCode = "// Auto-generated implementation\n"
+                        "// Model backend not available - ensure model is loaded via ModelCaller::Initialize()\n";
+    }
     
     if (onNotification) {
         onNotification("Status", "Implementation generated");

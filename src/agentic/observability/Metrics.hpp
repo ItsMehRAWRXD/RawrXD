@@ -6,6 +6,10 @@
 #include <atomic>
 #include <mutex>
 #include <vector>
+#include <thread>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
 
 namespace RawrXD::Agentic::Observability {
 
@@ -94,6 +98,9 @@ private:
     // HTTP server state
     std::atomic<bool> m_serverRunning{false};
     uint16_t m_serverPort = 9090;
+    std::thread m_serverThread;
+    
+    void runServerLoop();
     
     std::string generateKey(const std::string& name,
                            const std::unordered_map<std::string, std::string>& labels) const;

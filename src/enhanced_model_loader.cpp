@@ -464,8 +464,14 @@ bool EnhancedModelLoader::loadOllamaModel(const std::string& modelName) {
               << " flags=0x" << std::hex << metaBuf.flags << std::dec
               << " agent=" << (int)metaBuf.agent_flag << "\n";
 
-    // TODO: store as m_lastMetadata member once enhanced_model_loader.h is updated
-    (void)metaBuf;
+    // Store metadata snapshot for later retrieval
+    m_lastMetadata.source = "ollama";
+    m_lastMetadata.family = meta.found ? meta.family : "";
+    m_lastMetadata.quantization = meta.found ? meta.quantization_level : "";
+    m_lastMetadata.parameter_count = 0; // Populate if available from Ollama API
+    m_lastMetadata.supports_tools = true;
+    m_lastMetadata.agent_capable = (metaBuf.agent_flag != 0);
+    m_lastMetadata.flags = metaBuf.flags;
 
     if (m_onLoadingProgress) m_onLoadingProgress(100);
     if (m_onModelLoaded) m_onModelLoaded(m_modelPath);
