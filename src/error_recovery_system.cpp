@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <thread>
 #include <cstdlib>
+#include <atomic>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -268,6 +269,9 @@ std::string ErrorRecoverySystem::recordError(const std::string& component, Error
     
     activeErrors[error.errorId] = error;
     errorHistory.push_back(error);
+    
+    // Recompute health score immediately so getSystemHealth() reflects the new error
+    updateSystemHealth();
     
     // Log based on severity
     std::string severityStr = errorSeverityToString(severity);
@@ -1005,11 +1009,11 @@ void ErrorRecoverySystem::clearRecoveredErrors() {
 }
 
 std::string ErrorRecoverySystem::generateErrorId() {
-    static std::mt19937 rng(static_cast<unsigned>(
-        std::chrono::steady_clock::now().time_since_epoch().count()));
+    static std::atomic<uint64_t> s_counter{0};
     auto msEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
-    return "error_" + std::to_string(msEpoch) + "_" + std::to_string(rng() % 10000);
+    uint64_t seq = s_counter.fetch_add(1, std::memory_order_relaxed);
+    return "error_" + std::to_string(msEpoch) + "_" + std::to_string(seq);
 }
 
 std::string ErrorRecoverySystem::errorSeverityToString(ErrorSeverity severity) const {
