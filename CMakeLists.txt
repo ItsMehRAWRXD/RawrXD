@@ -6147,6 +6147,51 @@ if(WIN32)
     )
     add_test(NAME RawrXD-GhostSoak COMMAND RawrXD-GhostSoak --iterations 200 --max-inflight 16 --timeout-ms 1500)
 
+    # API Server Stress Test — Bearer auth + rate limiting + JSON parsing
+    add_executable(test_api_stress EXCLUDE_FROM_ALL
+        tests/test_api_stress.cpp
+        src/api_server.cpp
+    )
+    target_include_directories(test_api_stress PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(test_api_stress PRIVATE
+        kernel32
+        user32
+        winhttp
+        ws2_32
+        bcrypt
+        psapi
+    )
+    set_target_properties(test_api_stress PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_api_stress
+    )
+    add_test(NAME test_api_stress COMMAND test_api_stress)
+
+    # Model Hot-Swap Stress Test — Memory leak detection + pager cycles
+    add_executable(test_model_stress EXCLUDE_FROM_ALL
+        tests/test_model_stress.cpp
+        src/dynamic_model_loader.cpp
+        src/compression/sovereign_pager.cpp
+        src/compression/virtualalloc_reservation_manager.cpp
+    )
+    target_include_directories(test_model_stress PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(test_model_stress PRIVATE
+        kernel32
+        user32
+        psapi
+    )
+    set_target_properties(test_model_stress PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_model_stress
+    )
+    add_test(NAME test_model_stress COMMAND test_model_stress)
+
     add_executable(benchmark_cli EXCLUDE_FROM_ALL
         src/cli_benchmark_main.cpp
         src/streaming/AdaptiveTensorCodec.cpp

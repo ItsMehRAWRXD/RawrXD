@@ -42,6 +42,18 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winhttp.lib")
 
+#include <nlohmann/json.hpp>
+
+// Security: load API token from environment variable RAWRXD_API_KEY
+static std::string LoadApiToken() {
+    const char* envKey = std::getenv("RAWRXD_API_KEY");
+    if (envKey && envKey[0]) {
+        return std::string(envKey);
+    }
+    // Fallback: temporary dev key (rotate before production)
+    return "rawrxd-dev-key-2026";
+}
+
 // Structured logging helper with timestamp and severity
 static void LogApiOperation(const std::string& severity, const std::string& operation, const std::string& details) {
     auto now = std::chrono::system_clock::now();
@@ -80,7 +92,7 @@ static void HandleDumpBinRequest(const std::string& body, std::string& response)
 static std::string GetFullMemoryStatsJson();
 
 APIServer::APIServer(AppState& app_state)
-    : app_state_(app_state), is_running_(false), port_(11434) {
+    : app_state_(app_state), is_running_(false), port_(11434), m_apiToken_(LoadApiToken()) {
 }
 
 APIServer::~APIServer() {
@@ -910,28 +922,38 @@ void APIServer::HandleClientConnections() {
     }
 }
 
-// JSON parsing utilities
+// JSON parsing utilities — hardened with nlohmann::json
 JsonValue APIServer::ParseJsonRequest(const std::string& request) {
-    // Simple JSON parsing implementation
     JsonValue result;
     result.is_object = true;
     
-    // Basic JSON parsing - would be replaced with proper JSON library in production
-    size_t prompt_pos = request.find("\"prompt\"");
-    if (prompt_pos != std::string::npos) {
-        size_t colon_pos = request.find(":", prompt_pos);
-        if (colon_pos != std::string::npos) {
-            size_t quote_start = request.find("\"", colon_pos);
-            if (quote_start != std::string::npos) {
-                size_t quote_end = request.find("\"", quote_start + 1);
-                if (quote_end != std::string::npos) {
-                    JsonValue prompt_val;
-                    prompt_val.is_string = true;
-                    prompt_val.string_value = request.substr(quote_start + 1, quote_end - quote_start - 1);
-                    result.object_value["prompt"] = prompt_val;
+    try {
+        auto j = nlohmann::json::parse(request);
+        if (j.is_object()) {
+            for (auto& [key, val] : j.items()) {
+                JsonValue jv;
+                if (val.is_string()) {
+                    jv.is_string = true;
+                    jv.string_value = val.get<std::string>();
+                } else if (val.is_number_integer()) {
+                    jv.is_string = true;
+                    jv.string_value = std::to_string(val.get<int64_t>());
+                } else if (val.is_number_float()) {
+                    jv.is_string = true;
+                    jv.string_value = std::to_string(val.get<double>());
+                } else if (val.is_boolean()) {
+                    jv.is_string = true;
+                    jv.string_value = val.get<bool>() ? "true" : "false";
                 }
+                result.object_value[key] = jv;
             }
         }
+    } catch (const std::exception& e) {
+        LogApiOperation("WARN", "JSON_PARSE", std::string("Parse error: ") + e.what());
+        result.is_object = false;
+    } catch (...) {
+        LogApiOperation("WARN", "JSON_PARSE", "Unknown JSON parse error");
+        result.is_object = false;
     }
     
     return result;
@@ -1063,11 +1085,31 @@ void APIServer::UpdateConnectionMetrics(int active_connections) {
 
 // Security utilities
 bool APIServer::ValidateRequest(const HttpRequest& request) {
-    // Implement request validation (size limits, content type, etc.)
-    if (request.body.length() > 10 * 1024 * 1024) { // 10MB limit
+    // Size limit
+    if (request.body.length() > 10 * 1024 * 1024) {
         return false;
     }
-    return true;
+    
+    // Bearer token auth
+    auto it = request.headers.find("Authorization");
+    if (it == request.headers.end()) {
+        return false;
+    }
+    const std::string& auth = it->second;
+    const std::string prefix = "Bearer ";
+    if (auth.size() <= prefix.size() || auth.compare(0, prefix.size(), prefix) != 0) {
+        return false;
+    }
+    std::string token = auth.substr(prefix.size());
+    // Constant-time comparison to prevent timing attacks
+    if (token.size() != m_apiToken_.size()) {
+        return false;
+    }
+    volatile int diff = 0;
+    for (size_t i = 0; i < token.size(); ++i) {
+        diff |= (token[i] ^ m_apiToken_[i]);
+    }
+    return diff == 0;
 }
 
 bool APIServer::CheckRateLimit(const std::string& client_id) {

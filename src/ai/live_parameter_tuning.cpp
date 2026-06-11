@@ -2,6 +2,7 @@
 // Part of the Copilot-like inference pipeline.
 
 #include "live_parameter_tuning.h"
+#include <nlohmann/json.hpp>
 #include <sstream>
 
 namespace RawrXD {
@@ -215,9 +216,57 @@ std::string LiveParameterTuner::ExportParametersJSON() const {
     return json.str();
 }
 
-bool LiveParameterTuner::ImportParametersJSON(const std::string& json) {
-    // TODO: Parse JSON and set parameters
-    return true;
+bool LiveParameterTuner::ImportParametersJSON(const std::string& json_str) {
+    try {
+        auto j = nlohmann::json::parse(json_str);
+        if (!j.is_object()) {
+            return false;
+        }
+        
+        std::lock_guard<std::mutex> lock(params_mutex_);
+        
+        for (auto& [key, val] : j.items()) {
+            auto it = definitions_.find(key);
+            if (it == definitions_.end()) {
+                continue; // Skip unknown parameters
+            }
+            
+            ParameterValue pv;
+            pv.name = key;
+            pv.type = it->second.type;
+            
+            switch (it->second.type) {
+                case ParameterType::FLOAT:
+                    if (val.is_number()) {
+                        pv.float_value = val.get<float>();
+                        values_[key] = pv;
+                    }
+                    break;
+                case ParameterType::INT:
+                    if (val.is_number_integer()) {
+                        pv.int_value = val.get<int>();
+                        values_[key] = pv;
+                    }
+                    break;
+                case ParameterType::BOOL:
+                    if (val.is_boolean()) {
+                        pv.bool_value = val.get<bool>();
+                        values_[key] = pv;
+                    }
+                    break;
+                case ParameterType::STRING:
+                case ParameterType::ENUM:
+                    if (val.is_string()) {
+                        pv.string_value = val.get<std::string>();
+                        values_[key] = pv;
+                    }
+                    break;
+            }
+        }
+        return true;
+    } catch (const nlohmann::json::exception&) {
+        return false;
+    }
 }
 
 bool LiveParameterTuner::ResetParameter(const std::string& name) {

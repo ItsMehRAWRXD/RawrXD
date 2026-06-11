@@ -28,6 +28,17 @@ EXTERNDEF RawrXD_AgenticDeepThinking_Init:PROC
 EXTERNDEF RawrXD_AgenticDeepThinking_Think:PROC
 EXTERNDEF RawrXD_Telemetry_Kernel_Log:PROC
 
+; Win32 API functions
+EXTERN TlsAlloc:PROC
+EXTERN GetSystemInfo:PROC
+EXTERN QueryPerformanceCounter:PROC
+EXTERN TlsFree:PROC
+EXTERN memcpy:PROC
+
+; Additional RawrXD functions
+EXTERNDEF RawrXD_AgenticOrchestrator_Cleanup:PROC
+EXTERNDEF RawrXD_AgenticMemorySystem_Free:PROC
+
 ; ─────────────────────────────────────────────────────────────────────────────
 ; CONSTANTS
 ; ─────────────────────────────────────────────────────────────────────────────
@@ -50,6 +61,9 @@ AGENT_TYPE_GENERATION   EQU 1
 AGENT_TYPE_EXECUTION    EQU 2
 AGENT_TYPE_LEARNING     EQU 3
 AGENT_TYPE_ORCHESTRATION EQU 4
+
+; Win32 error codes
+ERROR_INVALID_PARAMETER     EQU 87h
 
 ; ─────────────────────────────────────────────────────────────────────────────
 ; STRUCTURES
@@ -287,14 +301,14 @@ check_queue_wrap:
     ; Assign task ID
     mov     rax, g_taskIdCounter
     lock inc g_taskIdCounter
-    mov     AGENTIC_TASK PTR [rcx].taskId, rax
+    mov     [rcx + AGENTIC_TASK.taskId], rax
 
     ; Set initial state
-    mov     AGENTIC_TASK PTR [rcx].state, TASK_STATE_IDLE
+    mov     DWORD PTR [rcx + AGENTIC_TASK.state], TASK_STATE_IDLE
 
     ; Set start time
     call    QueryPerformanceCounter
-    mov     AGENTIC_TASK PTR [rcx].startTime, rax
+    mov     [rcx + AGENTIC_TASK.startTime], rax
 
     ; Add to queue
     mov     rdx, g_agenticContext.taskQueue
@@ -322,7 +336,7 @@ no_tail_wrap:
     ; (Implementation would signal condition variable here)
 
     ; Return task ID
-    mov     rax, AGENTIC_TASK PTR [rcx].taskId
+    mov     rax, [rcx + AGENTIC_TASK.taskId]
     jmp     submit_done
 
 submit_invalid_param:
@@ -389,7 +403,7 @@ no_head_wrap:
     mov     g_agenticContext.queueHead, eax
 
     ; Execute task based on agent type
-    mov     eax, AGENTIC_TASK PTR [rsp+32].agentType
+    mov     eax, [rsp + 32 + AGENTIC_TASK.agentType]
     cmp     eax, AGENT_TYPE_ANALYSIS
     je      execute_analysis
     cmp     eax, AGENT_TYPE_GENERATION
@@ -404,29 +418,29 @@ no_head_wrap:
 
 execute_analysis:
     ; Call inference engine for analysis
-    mov     rcx, AGENTIC_TASK PTR [rsp+32].inputBuffer
-    mov     rdx, AGENTIC_TASK PTR [rsp+32].inputSize
+    mov     rcx, [rsp + 32 + AGENTIC_TASK.inputBuffer]
+    mov     rdx, [rsp + 32 + AGENTIC_TASK.inputSize]
     call    RawrXD_InferenceEngine_Run
     jmp     task_completed
 
 execute_generation:
     ; Call inference engine for generation
-    mov     rcx, AGENTIC_TASK PTR [rsp+32].inputBuffer
-    mov     rdx, AGENTIC_TASK PTR [rsp+32].inputSize
+    mov     rcx, [rsp + 32 + AGENTIC_TASK.inputBuffer]
+    mov     rdx, [rsp + 32 + AGENTIC_TASK.inputSize]
     call    RawrXD_InferenceEngine_Run
     jmp     task_completed
 
 execute_tool:
     ; Call tool executor
-    mov     rcx, AGENTIC_TASK PTR [rsp+32].inputBuffer
-    mov     rdx, AGENTIC_TASK PTR [rsp+32].inputSize
+    mov     rcx, [rsp + 32 + AGENTIC_TASK.inputBuffer]
+    mov     rdx, [rsp + 32 + AGENTIC_TASK.inputSize]
     call    RawrXD_AgenticToolExecutor_Execute
     jmp     task_completed
 
 execute_learning:
     ; Learning tasks - store feedback
-    mov     rcx, AGENTIC_TASK PTR [rsp+32].inputBuffer
-    mov     rdx, AGENTIC_TASK PTR [rsp+32].inputSize
+    mov     rcx, [rsp + 32 + AGENTIC_TASK.inputBuffer]
+    mov     rdx, [rsp + 32 + AGENTIC_TASK.inputSize]
     call    RawrXD_AgenticMemorySystem_Write
     jmp     task_completed
 
@@ -436,14 +450,14 @@ execute_orchestration:
     jmp     task_completed
 
 execute_unknown:
-    mov     AGENTIC_TASK PTR [rsp+32].errorCode, ERROR_INVALID_PARAMETER
-    mov     AGENTIC_TASK PTR [rsp+32].state, TASK_STATE_FAILED
+    mov     DWORD PTR [rsp + 32 + AGENTIC_TASK.errorCode], ERROR_INVALID_PARAMETER
+    mov     DWORD PTR [rsp + 32 + AGENTIC_TASK.state], TASK_STATE_FAILED
     jmp     task_update_state
 
 task_completed:
-    mov     AGENTIC_TASK PTR [rsp+32].state, TASK_STATE_COMPLETED
+    mov     DWORD PTR [rsp + 32 + AGENTIC_TASK.state], TASK_STATE_COMPLETED
     call    QueryPerformanceCounter
-    mov     AGENTIC_TASK PTR [rsp+32].endTime, rax
+    mov     [rsp + 32 + AGENTIC_TASK.endTime], rax
 
 task_update_state:
     ; Update task in memory (simplified - would need proper indexing)
@@ -544,7 +558,7 @@ RawrXD_AgenticOrchestrator_Cleanup ENDP
 ; RCX = pointer to stats structure
 ; Returns: RAX = 0 on success, NTSTATUS on error
 ; ─────────────────────────────────────────────────────────────────────────────
-RawrXD_AgenticOrchestrator_GetStats PROC FRAME
+RawrXD_AgenticOrchestrator_GetStats PROC
     test    rcx, rcx
     jz      stats_invalid_param
 

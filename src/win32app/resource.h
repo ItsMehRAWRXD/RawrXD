@@ -74,6 +74,10 @@
 #define ID_TOOLS_PLUGINS        8002
 #define ID_TOOLS_EXTENSIONS     8003
 #define ID_TOOLS_SETTINGS       8004
+#define IDM_TOOLS_KILL_BUILD_LOCKS 8005
+#define IDM_QW_SHORTCUT_EDITOR  8006
+#define IDM_SHORTCUT_SHOW       8007
+#define IDM_QW_SLO_DASHBOARD    8008
 
 // --- Help menu (9001–9099) ---------------------------------------------------
 #define ID_HELP_CONTENTS        9001

@@ -99,6 +99,12 @@ class SovereignPager
     uint64_t bytes_resident(Tier t) const;
     uint64_t io_issued() const { return io_issued_.load(std::memory_order_relaxed); }
     uint64_t io_completed() const { return io_completed_.load(std::memory_order_relaxed); }
+};
+
+// Telemetry formatting helper
+inline std::string formatPagerLastLoadTelemetryReport() {
+    return "{}";
+}
 
   private:
     bool try_enable_large_pages();

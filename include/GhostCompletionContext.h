@@ -15,6 +15,7 @@ struct GhostCompletionContext {
     std::vector<std::string> symbolNames;
     std::string surroundingLines;
     std::string language;
+    std::string languageId;
     bool lspRunning = false;
     std::string lspSymbolDigest;
 
@@ -29,6 +30,7 @@ struct GhostCompletionContext {
         ctx.symbolNames = syms;
         ctx.surroundingLines = surrounding;
         ctx.language = lang;
+        ctx.languageId = lang;
         ctx.lspRunning = lspOk;
         return ctx;
     }

@@ -2000,27 +2000,13 @@ static void runExtensionBootstrapWorkerBody()
 static void runExtensionBootstrapWorkerSafe()
 {
 #if defined(_MSC_VER)
-    try
+    __try
     {
-        __try
-        {
-            runExtensionBootstrapWorkerBody();
-        }
-        __except (GetExceptionCode() == 0xE06D7363 ? EXCEPTION_CONTINUE_SEARCH : EXCEPTION_EXECUTE_HANDLER)
-        {
-            logBackgroundThreadCrash("extension_bootstrap", GetExceptionCode());
-        }
+        runExtensionBootstrapWorkerBody();
     }
-    catch (const std::exception& e)
+    __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
     {
-        char msg[512];
-        snprintf(msg, sizeof(msg), "[RawrXD] C++ exception in extension_bootstrap: %s\n", e.what());
-        OutputDebugStringA(msg);
-        logBackgroundThreadCrash("extension_bootstrap", 0xE06D7363);
-    }
-    catch (...)
-    {
-        logBackgroundThreadCrash("extension_bootstrap", 0xE06D7363);
+        logBackgroundThreadCrash("extension_bootstrap", GetExceptionCode());
     }
 #else
     try
@@ -2106,27 +2092,13 @@ static void runBackgroundBootWorkerBody()
 static void runBackgroundBootWorkerSafe()
 {
 #if defined(_MSC_VER)
-    try
+    __try
     {
-        __try
-        {
-            runBackgroundBootWorkerBody();
-        }
-        __except (GetExceptionCode() == 0xE06D7363 ? EXCEPTION_CONTINUE_SEARCH : EXCEPTION_EXECUTE_HANDLER)
-        {
-            logBackgroundThreadCrash("background_boot", GetExceptionCode());
-        }
+        runBackgroundBootWorkerBody();
     }
-    catch (const std::exception& e)
+    __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
     {
-        char msg[512];
-        snprintf(msg, sizeof(msg), "[RawrXD] C++ exception in background_boot: %s\n", e.what());
-        OutputDebugStringA(msg);
-        logBackgroundThreadCrash("background_boot", 0xE06D7363);
-    }
-    catch (...)
-    {
-        logBackgroundThreadCrash("background_boot", 0xE06D7363);
+        logBackgroundThreadCrash("background_boot", GetExceptionCode());
     }
 #else
     try

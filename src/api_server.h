@@ -66,6 +66,8 @@ private:
     void UpdateRateLimit(const std::string& client_id);
     void LogRequestMetrics(const std::string& endpoint, std::chrono::milliseconds duration, bool success);
     void UpdateConnectionMetrics(int active_connections);
+    
+    std::string m_apiToken_;
 
     AppState& app_state_;
     std::atomic<bool> is_running_;

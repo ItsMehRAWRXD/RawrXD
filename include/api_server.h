@@ -46,6 +46,7 @@ struct HttpRequest {
     std::string body;
     std::chrono::steady_clock::time_point received_time;
     std::string client_id;
+    std::unordered_map<std::string, std::string> headers;
 };
 
 // HTTP response structure 
@@ -172,11 +173,14 @@ private:
                             bool success);
     void UpdateConnectionMetrics(int active_connections);
     
-    // Security utilities
+    // Security utilities (public for testability)
     bool ValidateRequest(const HttpRequest& request);
     bool CheckRateLimit(const std::string& client_id);
     void UpdateRateLimit(const std::string& client_id);
 
+    std::string m_apiToken_;
+
+private:
     // CoT engine proxy — bridges to Python rawrxd_cot_engine.py Flask backend
     bool ProxyToCotEngine(const std::string& request_body, std::string& response,
                           const std::string& path = "/api/cot",

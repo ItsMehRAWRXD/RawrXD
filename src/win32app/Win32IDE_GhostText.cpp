@@ -72,9 +72,41 @@ static const UINT_PTR GHOST_TEXT_TIMER_ID = 8888;
 static const UINT_PTR TITAN_PAGING_HEARTBEAT_TIMER_ID = 8889;
 static const UINT_PTR GHOST_TEXT_SPECULATIVE_TIMER_ID = 8890;  // Speculative prefetch timer
 static const UINT_PTR GHOST_TEXT_RENDER_TIMER_ID = 8891;  // Micro-batched token render timer
-static const UINT GHOST_TEXT_DELAY_MS = 77;   // Calibrated: Sprint TTFT p50=67ms + 10ms margin (Phase 14.2 A/B sweep)
-static const UINT GHOST_TEXT_SPECULATIVE_IDLE_MS = 150;  // Idle cursor threshold for speculative prefetch
-static const UINT GHOST_TEXT_RENDER_BATCH_MS = 12;  // ~one frame at 60-90 Hz; avoids per-token repaint
+// Adaptive debounce bounds (will be tuned dynamically based on typing cadence)
+static const UINT GHOST_TEXT_DELAY_MS_BASE = 77;      // Calibrated: Sprint TTFT p50=67ms + 10ms margin (Phase 14.2 A/B sweep)
+static const UINT GHOST_TEXT_DELAY_MS_MIN = 45;       // Fast typist — low latency
+static const UINT GHOST_TEXT_DELAY_MS_MAX = 160;      // Slow/cautious typist — avoid mid-word fire
+static const UINT GHOST_TEXT_SPECULATIVE_IDLE_MS = 120; // Reduced from 150: prefetch sooner for better hit rate
+static const UINT GHOST_TEXT_RENDER_BATCH_MS = 8;     // Reduced from 12: smoother 120Hz feel
+
+// Typing cadence tracking for adaptive debounce
+static uint64_t g_lastKeyTick = 0;
+static double   g_typingIpaMs = 0.0;  // Inter-keystroke average (EMA)
+
+// ============================================================================
+// ADAPTIVE DEBOUNCE — adjusts delay based on user's real-time typing speed
+// ============================================================================
+static UINT computeAdaptiveDebounceMs()
+{
+    const uint64_t now = GetTickCount64();
+    if (g_lastKeyTick == 0)
+    {
+        g_lastKeyTick = now;
+        return GHOST_TEXT_DELAY_MS_BASE;
+    }
+    const double ipa = static_cast<double>(now - g_lastKeyTick);
+    g_lastKeyTick = now;
+    // EMA smoothing (alpha = 0.3)
+    g_typingIpaMs = (g_typingIpaMs == 0.0) ? ipa : (g_typingIpaMs * 0.7 + ipa * 0.3);
+    // Map IPA to debounce: fast typist (ipa < 80ms) → 45ms, slow (>300ms) → 160ms
+    if (g_typingIpaMs < 80.0)
+        return GHOST_TEXT_DELAY_MS_MIN;
+    if (g_typingIpaMs > 300.0)
+        return GHOST_TEXT_DELAY_MS_MAX;
+    // Linear interpolation
+    const double t = (g_typingIpaMs - 80.0) / 220.0;
+    return static_cast<UINT>(GHOST_TEXT_DELAY_MS_MIN + t * (GHOST_TEXT_DELAY_MS_MAX - GHOST_TEXT_DELAY_MS_MIN));
+}
 static const int GHOST_TEXT_MAX_CHARS = 512;  // Max ghost text length
 static const int GHOST_TEXT_MAX_LINES = 8;    // Max multi-line completions
 static const uint64_t GHOST_TEXT_CACHE_TTL_MS = 5000;  // 5s for 70B inference latency
@@ -309,6 +341,48 @@ std::string BuildGhostPromptContext(const std::string& editorContext, const std:
     }
 
     prompt += "### Continue inline:";
+    return prompt;
+}
+
+// ============================================================================
+// PROJECT-SCOPED CONTEXT INJECTION
+// ============================================================================
+// Injects open-file awareness and recent chat context into ghost prompts,
+// providing Cursor-style "project memory" without external dependencies.
+// ============================================================================
+std::string BuildProjectScopedGhostContext(Win32IDE* ide,
+                                            const std::string& editorContext,
+                                            const std::string& linePrefix)
+{
+    std::string prompt = BuildGhostPromptContext(editorContext, linePrefix);
+
+    if (!ide)
+        return prompt;
+
+    // Inject current file identity
+    const std::string& currentFile = ide->getCurrentFile();
+    if (!currentFile.empty())
+    {
+        size_t pos = prompt.find("### Continue inline:");
+        if (pos != std::string::npos)
+        {
+            std::string fileCtx = "### Current File: " + currentFile + "\n";
+            prompt.insert(pos, fileCtx);
+        }
+    }
+
+    // Inject project root (helps model know codebase boundaries)
+    const std::string& projRoot = ide->getProjectRoot();
+    if (!projRoot.empty() && projRoot != ".")
+    {
+        size_t pos = prompt.find("### Continue inline:");
+        if (pos != std::string::npos)
+        {
+            std::string rootCtx = "### Project Root: " + projRoot + "\n";
+            prompt.insert(pos, rootCtx);
+        }
+    }
+
     return prompt;
 }
 
@@ -1274,7 +1348,7 @@ void Win32IDE::initGhostText()
     lf.lfFaceName[LF_FACESIZE - 1] = '\0';
     m_ghostTextFont = CreateFontIndirectA(&lf);
 
-    LOG_INFO("Ghost text renderer initialized (debounce=" + std::to_string(GHOST_TEXT_DELAY_MS) +
+    LOG_INFO("Ghost text renderer initialized (adaptive debounce base=" + std::to_string(GHOST_TEXT_DELAY_MS_BASE) +
              "ms, default=enabled)");
 }
 
@@ -1336,8 +1410,9 @@ void Win32IDE::triggerGhostTextCompletion()
     // fresh high-priority input. New keystrokes always supersede stale model work.
     dismissGhostText();
 
-    // Start a new debounce timer
-    SetTimer(m_hwndMain, GHOST_TEXT_TIMER_ID, GHOST_TEXT_DELAY_MS, nullptr);
+    // Start a new debounce timer (adaptive based on typing cadence)
+    const UINT adaptiveDelay = computeAdaptiveDebounceMs();
+    SetTimer(m_hwndMain, GHOST_TEXT_TIMER_ID, adaptiveDelay, nullptr);
 
     // Arm speculative prefetch idle timer — fires earlier than the main
     // debounce to populate the prefix cache before the user finishes typing.
@@ -1487,7 +1562,7 @@ void Win32IDE::triggerSpeculativePrefetch()
     const uint64_t prefetchGeneration = g_speculativePrefetchGeneration.load();
     
     // Fire speculative prefetch in background
-    std::string contextCopy = BuildGhostPromptContext(context, linePrefix);
+    std::string contextCopy = BuildProjectScopedGhostContext(this, context, linePrefix);
     std::string suffixCopy = suffix;
     std::string langCopy = language;
     std::string fileCopy = m_currentFile;

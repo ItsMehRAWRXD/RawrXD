@@ -178,6 +178,8 @@ STATUS_SIGNATURE_INVALID    EQU 0C0000007h
 STATUS_CRYPTO_ERROR         EQU 0C0000008h
 STATUS_INVALID_SIZE         EQU 0C0000009h
 STATUS_INVALID_LICENSE      EQU 0C000000Ah
+STATUS_NO_MEMORY            EQU 0C0000017h
+STATUS_ALREADY_INITIALIZED  EQU 0C000004Dh
 
 ; =============================================================================
 ;                         PatchResult Pattern

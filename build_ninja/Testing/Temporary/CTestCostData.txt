@@ -1,4 +1,4 @@
 win32ide_agentic_smoke 5 0.163672
 win32ide_high_pressure_ui 2 0
+sovereign_baseline_regression 1 0.0085681
 ---
-win32ide_high_pressure_ui

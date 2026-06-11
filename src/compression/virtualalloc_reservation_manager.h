@@ -59,6 +59,10 @@ public:
     // Get current physical committed size across all reservations
     uint64_t GetTotalCommittedBytes() const;
 
+    // NUMA awareness
+    static int GetPreferredNumaNode() { return -1; }
+    static constexpr int kPreferredNumaNodeAuto = -1;
+
     // Get total reserved (logical) size
     uint64_t GetTotalReservedBytes() const;
 
