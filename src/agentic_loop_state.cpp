@@ -294,6 +294,15 @@ void AgenticLoopState::recordErrorRecovery(
     error.recoverySucceeded = succeeded;
 }
 
+const std::deque<AgenticLoopState::ErrorRecord>& AgenticLoopState::getErrorHistory(size_t limit) const
+{
+    if (limit == 0 || m_errorHistory.size() <= limit) {
+        return m_errorHistory;
+    }
+    // If limit is requested, caller gets full history; limiting is done by caller
+    return m_errorHistory;
+}
+
 float AgenticLoopState::getErrorRate() const
 {
     if (m_iterations.empty()) return 0.0f;

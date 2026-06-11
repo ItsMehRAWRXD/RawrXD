@@ -32,11 +32,8 @@ ErrorRecoverySystem::ErrorRecoverySystem()
 }
 
 ErrorRecoverySystem::~ErrorRecoverySystem() {
-    // Stop all recovery timers
-    for (auto& [id, timer] : m_recoveryTimers) {
-        timer.active = false;
-    }
-    m_recoveryTimers.clear();
+    // Clear any pending deferred recoveries
+    m_deferredRecoveries.clear();
 }
 
 void ErrorRecoverySystem::tick() {
