@@ -6,6 +6,16 @@
 
 namespace RawrXD {
 
+namespace AST {
+enum class NodeType {
+    Unknown,
+    Function,
+    Variable,
+    Type,
+    Module
+};
+} // namespace AST
+
 class AutonomousModelManager {
 public:
     struct ModelInfo {

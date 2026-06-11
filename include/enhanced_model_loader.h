@@ -11,17 +11,6 @@
 #include "hf_downloader.h"
 #include "ollama_proxy.h"
 
-// Metadata snapshot from last successful model load
-struct ModelMetadataSnapshot {
-    std::string source;
-    std::string family;
-    std::string quantization;
-    uint64_t parameter_count = 0;
-    bool supports_tools = false;
-    bool agent_capable = false;
-    uint32_t flags = 0;
-};
-
 class GGUFServer;
 class InferenceEngine;
 
@@ -79,10 +68,6 @@ public:
     std::string getServerUrl() const;
     std::string getLastError() const { return m_lastError; }
     ModelFormat getLoadedFormat() const { return m_loadedFormat; }
-    
-    // Metadata access
-    ModelMetadataSnapshot getLastMetadata() const { return m_lastMetadata; }
-    bool hasMetadata() const { return !m_lastMetadata.source.empty(); }
 
 private:
     bool validateModelFormatAndPermissions(const std::string& modelPath, std::string& reason) const;
@@ -122,8 +107,6 @@ private:
         "q2_k", "q3_k", "q4_0", "q4_1", "q4_k", "q4_k_s", "q4_k_m",
         "q5_0", "q5_1", "q5_k", "q5_k_s", "q5_k_m", "q6_k", "q8_0"
     };
-    
-    ModelMetadataSnapshot m_lastMetadata;
 
     ModelLoadedFn    m_onModelLoaded;
     LoadingProgressFn m_onLoadingProgress;

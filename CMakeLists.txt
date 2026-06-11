@@ -32,6 +32,8 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     # Auto-detect MSVC toolchain: try D: first, fall back to C:
     if(EXISTS "D:/VS2022Enterprise/VC/Tools/MSVC")
         file(GLOB _MSVC_VERS "D:/VS2022Enterprise/VC/Tools/MSVC/*")
+    elseif(EXISTS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC")
+        file(GLOB _MSVC_VERS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/*")
     elseif(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC")
         file(GLOB _MSVC_VERS "C:/VS2022Enterprise/VC/Tools/MSVC/*")
     elseif(EXISTS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC")
@@ -43,7 +45,7 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         list(SORT _MSVC_VERS)
         list(GET _MSVC_VERS -1 _MSVC_ROOT)
     else()
-        set(_MSVC_ROOT "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207")
+        set(_MSVC_ROOT "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231")
     endif()
     
     # SDK bin tools (rc.exe, mt.exe)
@@ -204,7 +206,7 @@ if(RAWRXD_BUILD_CLI)
         src/ui/RawrXD_MainLoop.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
-        src/cli/rawrxd_cli_link_shims.cpp
+# MISSING: src/cli/rawrxd_cli_link_shims.cpp
         src/res/Resource.rc
         # Agentic components for CLI Ollama testing
         src/agentic/OrchestratorBridge.cpp
@@ -790,7 +792,6 @@ set(SOURCES
 
     # HTTP Client — WinHTTP/curl async with future retention
     src/agent/llm_http_client.cpp
-    src/agent/hexmag_client.cpp
     src/agent/model_invoker.cpp
     src/agent/planner.cpp
     src/agent/eval_framework.cpp
@@ -1766,7 +1767,7 @@ endif()
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
-        src/core/missing_handler_stubs.cpp
+# MISSING: src/core/missing_handler_stubs.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
         src/core/ssot_handlers_ext_isolated.cpp
     )
@@ -1782,7 +1783,7 @@ else()
     )
     list(APPEND GOLD_UNDERSCORE_SOURCES
         src/core/auto_feature_impl.cpp
-        src/core/missing_handler_stubs.cpp
+# MISSING: src/core/missing_handler_stubs.cpp
     )
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
 endif()
@@ -2729,7 +2730,7 @@ if(MSVC)
         ${ASM_SOCKETRESP_OBJ}
         ${ASM_TRIDENTBEACON_OBJ}
         ${ASM_TRIDENTGPU_OBJ}
-        ${ASM_AGENTIC_ORCH_OBJ}
+        # ${ASM_AGENTIC_ORCH_OBJ}  # Disabled: MASM compilation errors (undefined symbols, prolog too big)
         ${ASM_GGUF_VKLOAD_OBJ}
         ${ASM_LSP_BRIDGE_OBJ}
         ${ASM_STREAM_QBUF_OBJ}
@@ -3642,10 +3643,10 @@ if(WIN32)
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
-        src/win32app/Win32IDE_SlashCommands.cpp
-        src/win32app/Win32IDE_MirrorGate.cpp
-        src/win32app/Win32IDE_ProjectRagLite.cpp
-        src/win32app/ghost_completion_parse.cpp
+        src/win32app/Win32IDE_SlashRouter.cpp
+        src/win32app/Win32IDE_MeshBrain.cpp
+# MISSING: src/win32app/Win32IDE_ProjectRagLite.cpp
+# MISSING: src/win32app/ghost_completion_parse.cpp
         src/win32app/Win32IDE_Titan_Heartbeat.cpp
         src/win32app/Win32IDE_OutlinePanel.cpp
         src/win32app/Win32IDE_GoToLine.cpp
@@ -3662,7 +3663,7 @@ if(WIN32)
         src/agentic/agentic_planning_orchestrator.cpp
         src/agentic/failure_intelligence_orchestrator.cpp
         src/agentic/agentic_orchestrator_integration.cpp
-        src/agentic/agentic_tool_executor_bridge.cpp
+        src/agentic/agentic_tool_executor.cpp
         src/agentic/agentic_audit_sink.cpp
         src/agentic/change_impact_analyzer.cpp
         src/agentic/agent_controller_minimal.cpp
@@ -3939,8 +3940,6 @@ if(WIN32)
 
         # HTTP Client — WinHTTP async with future retention (CLI+GUI)
         src/agent/llm_http_client.cpp
-        src/agent/hexmag_client.cpp
-        # src/agent/model_invoker.cpp  # Test file - excluded from build
         src/agent/planner.cpp
         src/agent/meta_planner.cpp
         src/agent/eval_framework.cpp
@@ -4094,7 +4093,7 @@ if(WIN32)
         src/codec/gzip_brutal_inflate.cpp
         src/core/ssot_handlers.cpp
         src/core/ssot_handlers_ext_isolated.cpp
-        src/core/beacon_link_stub.cpp
+# MISSING: src/core/beacon_link_stub.cpp
         src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
@@ -4646,13 +4645,13 @@ if(WIN32)
     # AgenticExecutor real implementation now provides these members.
     # Keep the link stub out of Win32IDE to avoid duplicate definitions.
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        src/core/agentic_executor_link_stub.cpp
-        src/core/beacon_link_stub.cpp
+# MISSING: src/core/agentic_executor_link_stub.cpp
+# MISSING: src/core/beacon_link_stub.cpp
     )
 
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/core/subsystem_mode_fallbacks.cpp
+# MISSING: src/core/subsystem_mode_fallbacks.cpp
             src/core/model_loader_fallbacks.cpp
             src/core/rawrxd_native_log_fallback.cpp
             src/llm_adapter/ggufrunner_link_fallbacks.cpp
@@ -4840,13 +4839,13 @@ if(WIN32)
 
         list(REMOVE_ITEM WIN32IDE_SOURCES
             src/win32app/agentic_bridge_headless.cpp
-            src/win32app/Win32IDE_headless_stubs.cpp
+# MISSING: src/win32app/Win32IDE_headless_stubs.cpp
             src/core/ignite_800b.cpp
-            src/stubs.cpp
-            src/core/stubs.cpp
-            src/core/universal_stub.cpp
-            src/core/link_stubs_final.cpp
-            src/core/link_stubs_remaining_classes.cpp
+# MISSING: src/stubs.cpp
+# MISSING: src/core/stubs.cpp
+# MISSING: src/core/universal_stub.cpp
+# MISSING: src/core/link_stubs_final.cpp
+# MISSING: src/core/link_stubs_remaining_classes.cpp
         )
         message(STATUS "[Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)")
     endif()
@@ -5218,70 +5217,70 @@ if(WIN32)
 
     # Win32IDE link-closure: probe harnesses, runtime/agentic providers, extension/VCS (fixes LNK2019)
     list(APPEND WIN32IDE_SOURCES
-        src/win32app/Win32IDE_Phase19_2_Soak.cpp
-        src/win32app/Win32IDE_TBA_LinkGraph.cpp
-        src/win32app/Win32IDE_GGUFManifold.cpp
-        src/win32app/Win32IDE_ContextGovernor.cpp
-        src/runtime/SovereignContextGovernor.cpp
-        src/win32app/Win32IDE_ActionGraph.cpp
-        src/runtime/SovereignActionGraph_link.cpp
-        src/win32app/Win32IDE_ExecutionTruth.cpp
-        src/agentic/observability/ExecutionTruth_link.cpp
-        src/win32app/Win32IDE_ParityEngine.cpp
-        src/runtime/SovereignParityEngine.cpp
+# MISSING: src/win32app/Win32IDE_Phase19_2_Soak.cpp
+# MISSING: src/win32app/Win32IDE_TBA_LinkGraph.cpp
+# MISSING: src/win32app/Win32IDE_GGUFManifold.cpp
+# MISSING: src/win32app/Win32IDE_ContextGovernor.cpp
+# MISSING: src/runtime/SovereignContextGovernor.cpp
+# MISSING: src/win32app/Win32IDE_ActionGraph.cpp
+# MISSING: src/runtime/SovereignActionGraph_link.cpp
+# MISSING: src/win32app/Win32IDE_ExecutionTruth.cpp
+# MISSING: src/agentic/observability/ExecutionTruth_link.cpp
+# MISSING: src/win32app/Win32IDE_ParityEngine.cpp
+# MISSING: src/runtime/SovereignParityEngine.cpp
         src/ui/rawrxd_software_raster.cpp
-        src/ui/rawrxd_text_engine.cpp
-        src/ui/rawrxd_linestream_raster.cpp
-        src/ui/rawrxd_linestrip_cache.cpp
-        src/ui/rawrxd_rle_raster.cpp
-        src/ui/rawrxd_syntax_bridge.cpp
-        src/ui/rawrxd_workspace_matrix.cpp
-        src/win32app/Win32IDE_BuildProvenance.cpp
-        src/win32app/Win32NeuralBridge.cpp
+# MISSING: src/ui/rawrxd_text_engine.cpp
+# MISSING: src/ui/rawrxd_linestream_raster.cpp
+# MISSING: src/ui/rawrxd_linestrip_cache.cpp
+# MISSING: src/ui/rawrxd_rle_raster.cpp
+# MISSING: src/ui/rawrxd_syntax_bridge.cpp
+# MISSING: src/ui/rawrxd_workspace_matrix.cpp
+# MISSING: src/win32app/Win32IDE_BuildProvenance.cpp
+# MISSING: src/win32app/Win32NeuralBridge.cpp
         src/win32app/Win32IDE_LineStripEditor.cpp
-        src/win32app/Win32IDE_SyntaxLayoutBridge.cpp
-        src/win32app/Win32IDE_WiringHandlers.cpp
-        src/win32app/Win32IDE_AgentCursorOverlay.cpp
-        src/ui/SidebarStagingPanel.cpp
-        src/win32app/ExtensionEngine_bridge.cpp
+# MISSING: src/win32app/Win32IDE_SyntaxLayoutBridge.cpp
+# MISSING: src/win32app/Win32IDE_WiringHandlers.cpp
+# MISSING: src/win32app/Win32IDE_AgentCursorOverlay.cpp
+# MISSING: src/ui/SidebarStagingPanel.cpp
+# MISSING: src/win32app/ExtensionEngine_bridge.cpp
         src/win32app/ExtensionHostIpcBridge.cpp
-        src/ui/agent_cursor_renderer.cpp
+# MISSING: src/ui/agent_cursor_renderer.cpp
         src/win32app/Win32IDE_TitanPressureLink.cpp
         src/agentic/AgenticRouterBridge.cpp
-        src/agentic/agentic_router_bridge_lsp_adapter.cpp
-        src/vcs/Win32GitPipe.cpp
-        src/vcs/GitProviderTypes.cpp
-        src/agentic/agentic_condition_evaluator.cpp
-        src/agentic/agentic_planning_persistence.cpp
-        src/agentic/lazarus_dispatcher.cpp
+# MISSING: src/agentic/agentic_router_bridge_lsp_adapter.cpp
+# MISSING: src/vcs/Win32GitPipe.cpp
+# MISSING: src/vcs/GitProviderTypes.cpp
+# MISSING: src/agentic/agentic_condition_evaluator.cpp
+# MISSING: src/agentic/agentic_planning_persistence.cpp
+# MISSING: src/agentic/lazarus_dispatcher.cpp
         src/agentic/observability/Metrics.cpp
-        src/win32app/Win32IDE_Swarm.cpp
-        src/win32app/RawrXD_AgentKernel.cpp
+# MISSING: src/win32app/Win32IDE_Swarm.cpp
+# MISSING: src/win32app/RawrXD_AgentKernel.cpp
     )
     if(RAWR_HAS_MASM)
         list(APPEND WIN32IDE_EXTRA_ASM
-            src/asm/sovereign_guard.asm
-            src/asm/trinity_beacon_arbiter.asm
-            src/asm/sovereign_media.asm
-            src/x64/GGUF_UNIFIED_FINALIZER_CORE.asm
-            src/win32app/ExtensionEngine.asm
-            src/asm/RawrXD_Agent_Dispatch.asm
+# MISSING: src/asm/sovereign_guard.asm
+# MISSING: src/asm/trinity_beacon_arbiter.asm
+# MISSING: src/asm/sovereign_media.asm
+# MISSING: src/x64/GGUF_UNIFIED_FINALIZER_CORE.asm
+# MISSING: src/win32app/ExtensionEngine.asm
+# MISSING: src/asm/RawrXD_Agent_Dispatch.asm
         )
         set_source_files_properties(
-            src/win32app/ExtensionEngine.asm
-            src/asm/RawrXD_Agent_Dispatch.asm
+# MISSING: src/win32app/ExtensionEngine.asm
+# MISSING: src/asm/RawrXD_Agent_Dispatch.asm
             PROPERTIES LANGUAGE ASM_MASM
         )
         if(RAWRXD_LINK_GGUF_SOVEREIGN_ASM)
             list(APPEND WIN32IDE_EXTRA_ASM
-                src/x64/GGUF_COMPRESSION_ENGINE.asm
-                src/x64/GGUF_MANUAL_GEARBOX.asm
-                src/x64/GGUF_REVERSE_STREAM.asm
+# MISSING: src/x64/GGUF_COMPRESSION_ENGINE.asm
+# MISSING: src/x64/GGUF_MANUAL_GEARBOX.asm
+# MISSING: src/x64/GGUF_REVERSE_STREAM.asm
             )
             set_source_files_properties(
-                src/x64/GGUF_COMPRESSION_ENGINE.asm
-                src/x64/GGUF_MANUAL_GEARBOX.asm
-                src/x64/GGUF_REVERSE_STREAM.asm
+# MISSING: src/x64/GGUF_COMPRESSION_ENGINE.asm
+# MISSING: src/x64/GGUF_MANUAL_GEARBOX.asm
+# MISSING: src/x64/GGUF_REVERSE_STREAM.asm
                 PROPERTIES LANGUAGE ASM_MASM
             )
             message(STATUS "[Win32IDE] GGUF sovereign ASM suite linked (RAWRXD_LINK_GGUF_SOVEREIGN_ASM=ON)")
@@ -5864,7 +5863,7 @@ endif()
 if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypass_impl_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_library(RawrXD-Crypto SHARED
         src/crypto_masm.asm
-        src/security/uac_bypass_impl_stub.cpp
+# MISSING: src/security/uac_bypass_impl_stub.cpp
     )
     set_source_files_properties(
         src/crypto_masm.asm
@@ -6193,7 +6192,7 @@ if(WIN32)
             src/agent/quantum_agent_orchestrator.cpp
             src/agentic/AgentOllamaClient.cpp
             src/inference/gpu_dispatch_gate.cpp
-            src/cpu_inference_engine_autofix_stub.cpp
+# MISSING: src/cpu_inference_engine_autofix_stub.cpp
             src/gguf_d3d12_bridge.cpp
         )
         target_include_directories(RawrXD-AutoFixCLI PRIVATE
@@ -6796,7 +6795,7 @@ message(STATUS "[ContextDecision] Harness target: RawrXD-ContextDecisionHarness"
 add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
     src/agentic/agentic_planning_orchestrator.cpp
     src/agentic/agentic_orchestrator_integration.cpp
-    src/agentic/agentic_tool_executor_bridge.cpp
+    src/agentic/agentic_tool_executor.cpp
     src/agentic/agentic_audit_sink.cpp
     src/agentic/observability/Logger.cpp
     src/core/execution_governor.cpp
@@ -6916,7 +6915,7 @@ endif()
 #   - Bypasses Ollama and REST API entirely
 # Run: psexec -s -i RawrXD_Inference.exe --model "bg40-unleashed.bin"
 # ============================================================================
-add_executable(RawrXD_Inference
+add_executable(RawrXD_Inference EXCLUDE_FROM_ALL
     src/sovereign_inference/RawrXD_Inference.cpp
     src/compression/sovereign_pager.cpp
     src/asm/model_streamer_x64.asm
@@ -8094,3 +8093,4 @@ set_target_properties(RawrXD-ParityUIDriver PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 message(STATUS "[Parity] RawrXD-ParityUIDriver target added (headless UI-side parity driver)")
+

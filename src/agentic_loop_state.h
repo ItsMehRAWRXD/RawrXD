@@ -214,7 +214,7 @@ private:
     // ----- Strategy / Constraints -----
     std::vector<std::string> m_appliedStrategies;
     std::vector<std::string> m_suggestedStrategies;
-    std::map<std::string, std::string> m_constraints;
+    nlohmann::json m_constraints;
 
     // ----- Snapshots -----
     nlohmann::json m_lastSnapshot;
