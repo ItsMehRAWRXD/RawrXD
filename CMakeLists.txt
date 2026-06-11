@@ -2725,6 +2725,8 @@ if(WIN32)
         src/agentic/SubAgentManager.cpp
         src/agentic/RobustOllamaParser.cpp
         src/agentic/ErrorRecoveryManager.cpp
+        # Linker stub provider for unresolved externals not covered by MASM objects
+        src/win32app/win32app_stubs.cpp
     )
 
     # MASM64 UI Dispatcher (MSVC/MASM-only).

@@ -234,20 +234,12 @@ extern "C" void CoT_SelectCopyEngine() {
     LogMessage("CoT_SelectCopyEngine stub called");
 }
 
-extern "C" void CoT_EnableMultiProducer() {
-    LogMessage("CoT_EnableMultiProducer stub called");
-}
-
 extern "C" void CoT_Has_Large_Pages() {
     LogMessage("CoT_Has_Large_Pages stub called");
 }
 
 extern "C" void CoT_TLS_SetError() {
     LogMessage("CoT_TLS_SetError stub called");
-}
-
-extern "C" void CoT_UpdateTelemetry() {
-    LogMessage("CoT_UpdateTelemetry stub called");
 }
 
 extern "C" void Acquire_CoT_Lock() {
@@ -669,22 +661,6 @@ extern "C" void Sample_Logits_TopP() {
 }
 
 // Shield stubs
-extern "C" void Shield_AES_DecryptShim() {
-    LogMessage("Shield_AES_DecryptShim stub called");
-}
-
-extern "C" void Shield_GenerateHWID() {
-    LogMessage("Shield_GenerateHWID stub called");
-}
-
-extern "C" void Shield_TimingCheck() {
-    LogMessage("Shield_TimingCheck stub called");
-}
-
-extern "C" void Shield_VerifyIntegrity() {
-    LogMessage("Shield_VerifyIntegrity stub called");
-}
-
 // Sidecar stub
 extern "C" void SidecarMain() {
     LogMessage("SidecarMain stub called");
@@ -713,11 +689,6 @@ extern "C" void SwarmTransportControl() {
 // Telemetry stub
 extern "C" void Telemetry_SanitizeData() {
     LogMessage("Telemetry_SanitizeData stub called");
-}
-
-// Unlock stub
-extern "C" void Unlock_800B_Kernel() {
-    LogMessage("Unlock_800B_Kernel stub called");
 }
 
 // Validate model stub
@@ -803,6 +774,107 @@ extern "C" void DispatchComputeStage() {
 
 extern "C" void GenerateTokens() {
     LogMessage("GenerateTokens stub called");
+}
+
+// Camellia-256 ASM stubs (required by camellia256_bridge.cpp, shadow_page_detour.cpp, Win32IDE_AirgappedEnterprise.cpp)
+extern "C" void asm_camellia256_init() {
+    LogMessage("asm_camellia256_init stub called");
+}
+
+extern "C" void asm_camellia256_set_key() {
+    LogMessage("asm_camellia256_set_key stub called");
+}
+
+extern "C" void asm_camellia256_encrypt_block() {
+    LogMessage("asm_camellia256_encrypt_block stub called");
+}
+
+extern "C" void asm_camellia256_decrypt_block() {
+    LogMessage("asm_camellia256_decrypt_block stub called");
+}
+
+extern "C" void asm_camellia256_encrypt_file() {
+    LogMessage("asm_camellia256_encrypt_file stub called");
+}
+
+extern "C" void asm_camellia256_decrypt_file() {
+    LogMessage("asm_camellia256_decrypt_file stub called");
+}
+
+extern "C" void asm_camellia256_get_status() {
+    LogMessage("asm_camellia256_get_status stub called");
+}
+
+extern "C" void asm_camellia256_shutdown() {
+    LogMessage("asm_camellia256_shutdown stub called");
+}
+
+extern "C" void asm_camellia256_self_test() {
+    LogMessage("asm_camellia256_self_test stub called");
+}
+
+// Self-Host Engine ASM stubs (required by self_host_engine.cpp)
+extern "C" void asm_selfhost_init() {
+    LogMessage("asm_selfhost_init stub called");
+}
+
+extern "C" void asm_selfhost_read_text() {
+    LogMessage("asm_selfhost_read_text stub called");
+}
+
+extern "C" void asm_selfhost_profile_region() {
+    LogMessage("asm_selfhost_profile_region stub called");
+}
+
+extern "C" void asm_selfhost_gen_trampoline() {
+    LogMessage("asm_selfhost_gen_trampoline stub called");
+}
+
+extern "C" void asm_selfhost_micro_assemble() {
+    LogMessage("asm_selfhost_micro_assemble stub called");
+}
+
+extern "C" void asm_selfhost_atomic_swap() {
+    LogMessage("asm_selfhost_atomic_swap stub called");
+}
+
+extern "C" void asm_selfhost_verify_equiv() {
+    LogMessage("asm_selfhost_verify_equiv stub called");
+}
+
+extern "C" void asm_selfhost_measure_delta() {
+    LogMessage("asm_selfhost_measure_delta stub called");
+}
+
+extern "C" void asm_selfhost_read_source() {
+    LogMessage("asm_selfhost_read_source stub called");
+}
+
+extern "C" void asm_selfhost_write_source() {
+    LogMessage("asm_selfhost_write_source stub called");
+}
+
+extern "C" void asm_selfhost_get_generation() {
+    LogMessage("asm_selfhost_get_generation stub called");
+}
+
+extern "C" void asm_selfhost_get_stats() {
+    LogMessage("asm_selfhost_get_stats stub called");
+}
+
+extern "C" void asm_selfhost_shutdown() {
+    LogMessage("asm_selfhost_shutdown stub called");
+}
+
+// Orchestrator shutdown stub (required by main_win32.cpp)
+extern "C" void asm_orchestrator_shutdown() {
+    LogMessage("asm_orchestrator_shutdown stub called");
+}
+
+// snmalloc library init stub (required by main_win32.cpp)
+extern "C" bool snmalloc_library_init() {
+    LogMessage("snmalloc_library_init stub called");
+    return true;
 }
 
 extern "C" void CleanupInference() {

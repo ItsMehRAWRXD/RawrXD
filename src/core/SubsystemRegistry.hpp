@@ -10,6 +10,7 @@
 #include <functional>
 #include <unordered_map>
 #include <chrono>
+#include <mutex>
 
 namespace RawrXD {
 
