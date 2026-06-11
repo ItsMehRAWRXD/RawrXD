@@ -103,16 +103,17 @@ std::atomic<bool>      g_active{false};
 Status                 g_status{};
 
 [[noreturn]] void fatal_no_gpu() {
-    const char* msg =
-        "[RawrXD][FATAL] No GPU backend available (Vulkan/CUDA/HIP). "
-        "GPU inference is REQUIRED and cannot be disabled. "
-        "Install Vulkan runtime or a supported GPU driver and retry.\n";
-    std::fputs(msg, stderr);
-#if defined(_WIN32)
-    OutputDebugStringA(msg);
-#endif
-    std::fflush(stderr);
-    std::abort();
+    // CPU FALLBACK: Instead of aborting, activate CPU-only mode so the IDE
+    // can continue without GPU. This is critical for systems where snmalloc
+    // init fails or Vulkan drivers are missing.
+    g_status.active       = Backend::None;
+    g_status.device_count = 0;
+    std::snprintf(g_status.device_name, sizeof(g_status.device_name), "CPU-Fallback-NoGPU");
+    g_active.store(true, std::memory_order_release);
+    std::fprintf(stderr,
+        "[RawrXD][GPU] CPU fallback activated — no GPU backend available. "
+        "Install Vulkan runtime or GPU drivers for acceleration.\n");
+    return;  // NOT aborting — IDE continues in CPU mode
 }
 
 void detect_locked() {
@@ -144,11 +145,21 @@ void detect_locked() {
     // Resolve probe symbols from ggml-vulkan.dll at runtime so we don't
     // silently fall back to the MSVC alternatename stubs when the import
     // library is not linked into the final executable.
-    const VulkanProbe vk = load_vulkan_probe();
+    // 
+    // SEH guard: If ggml-vulkan.dll triggers snmalloc init failure (0xe06d7363),
+    // catch it gracefully and fall back to CPU instead of crashing.
+    VulkanProbe vk{};
     int vk_count = 0;
     try {
-        vk_count = vk.get_device_count ? vk.get_device_count() : 0;
+        vk = load_vulkan_probe();
+        if (vk.get_device_count) {
+            vk_count = vk.get_device_count();
+        }
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[RawrXD][GPU] Vulkan probe C++ exception (snmalloc?): %s\n", e.what());
+        vk_count = 0;
     } catch (...) {
+        std::fprintf(stderr, "[RawrXD][GPU] Vulkan probe unknown exception (snmalloc init failure?) — falling back to CPU\n");
         vk_count = 0;
     }
     if (vk_count > 0) {
