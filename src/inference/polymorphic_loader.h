@@ -171,14 +171,13 @@ struct Slot {
  */
 struct ActiveWindowBudget {
     // Total active working set (configurable, default 2.5 GB)
-    static constexpr size_t TOTAL_BYTES = 2500 * 1024 * 1024;
+    static constexpr size_t TOTAL_BYTES = 2500ULL * 1024 * 1024;
     
-    // π-based partition ratios (compile-time)
-    static constexpr double PI = 3.14159265358979323846;
-    static constexpr size_t ATTN_BYTES = static_cast<size_t>(TOTAL_BYTES * PI / 8);     // ~0.98GB
-    static constexpr size_t MLP_BYTES = static_cast<size_t>(TOTAL_BYTES * PI / 5);      // ~1.58GB
-    static constexpr size_t KV_BYTES = static_cast<size_t>(TOTAL_BYTES * PI / 16);      // ~0.49GB
-    static constexpr size_t MISC_BYTES = TOTAL_BYTES - (ATTN_BYTES + MLP_BYTES + KV_BYTES);
+    // π-based partition ratios (compile-time, using integer math to avoid MSVC C2131)
+    static constexpr size_t ATTN_BYTES  = (TOTAL_BYTES * 3141592653ULL) / (8ULL * 1000000000ULL);  // ~0.98GB
+    static constexpr size_t MLP_BYTES   = (TOTAL_BYTES * 3141592653ULL) / (5ULL * 1000000000ULL);  // ~1.58GB
+    static constexpr size_t KV_BYTES      = (TOTAL_BYTES * 3141592653ULL) / (16ULL * 1000000000ULL); // ~0.49GB
+    static constexpr size_t MISC_BYTES    = TOTAL_BYTES - (ATTN_BYTES + MLP_BYTES + KV_BYTES);
     
     // Runtime tracking
     std::atomic<size_t> attn_used{0};

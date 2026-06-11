@@ -374,6 +374,7 @@ endif()
 # ASM kernel sources (shared between RawrEngine and Win32IDE)
 if(RAWR_HAS_MASM)
     set(ASM_KERNEL_SOURCES
+        src/asm/snmalloc_stub.asm
         src/asm/rawr_globals.asm
         src/asm/rawr_cpu_features.asm
         src/asm/inference_core.asm
