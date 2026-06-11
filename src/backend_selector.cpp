@@ -1,9 +1,8 @@
 #include "backend_selector.h"
 #include "cpu_inference_engine.h"
-// #include "vulkan_inference_engine.h" // TODO: Implement when available
-// #include "hip_inference_engine.h"     // TODO: Implement when available
-// #include "cuda_inference_engine.h"    // TODO: Implement when available
-// #include "titan_inference_engine.h"   // TODO: Implement when available
+#include "dml_inference_engine.h"
+// Note: Vulkan, HIP, CUDA, and Titan inference engines are not yet implemented.
+// When available, add the corresponding #include and case in createInferenceEngine().
 
 #include <algorithm>
 #include <chrono>
@@ -256,29 +255,37 @@ std::unique_ptr<InferenceEngine> BackendSelector::createDMLEngine() {
 }
 
 std::unique_ptr<InferenceEngine> BackendSelector::createVulkanEngine() {
-    // TODO: Implement VulkanInferenceEngine
-    // For now, fall back to CPU
-    std::cerr << "Vulkan backend not implemented yet, using CPU" << std::endl;
+    // Vulkan inference engine is not yet implemented.
+    // When implemented, it will use ggml-vulkan backend for GPU inference on AMD/Intel/NVIDIA.
+    std::cerr << "[BackendSelector] Vulkan backend not implemented yet, falling back to CPU"
+              << std::endl;
     return createCPUEngine();
 }
 
 std::unique_ptr<InferenceEngine> BackendSelector::createHIPEngine() {
-    // TODO: Implement HIPInferenceEngine
-    std::cerr << "HIP backend not implemented yet, using CPU" << std::endl;
+    // HIP inference engine is not yet implemented.
+    // When implemented, it will use AMD ROCm/HIP for GPU inference on AMD GPUs.
+    std::cerr << "[BackendSelector] HIP backend not implemented yet, falling back to CPU"
+              << std::endl;
     return createCPUEngine();
 }
 
 std::unique_ptr<InferenceEngine> BackendSelector::createCUDAEngine() {
-    // TODO: Implement CUDAInferenceEngine
-    std::cerr << "CUDA backend not implemented yet, using CPU" << std::endl;
+    // CUDA inference engine is not yet implemented.
+    // When implemented, it will use NVIDIA CUDA for GPU inference on NVIDIA GPUs.
+    std::cerr << "[BackendSelector] CUDA backend not implemented yet, falling back to CPU"
+              << std::endl;
     return createCPUEngine();
 }
 
 std::unique_ptr<InferenceEngine> BackendSelector::createTitanEngine() {
-    // TODO: Implement TitanInferenceEngine
-    // For now, use CPU with Titan flag enabled
+    // Titan inference engine is not yet implemented.
+    // When implemented, it will use MASM-optimized kernels for CPU inference.
+    // For now, use CPU with Titan flag enabled via CPUInferenceEngine.
+    std::cerr << "[BackendSelector] Titan backend not implemented yet, falling back to CPU"
+              << std::endl;
     auto engine = std::make_unique<CPUInferenceEngine>();
-    // engine->SetUseTitanAssembly(true); // Would need to add this method
+    engine->SetUseTitanAssembly(true);
     return engine;
 }
 

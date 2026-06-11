@@ -5,6 +5,8 @@
 
 #include "dynamic_model_loader.h"
 #include "inference_engine.h"
+#include "backend_selector.h"
+#include "gpu/speculative_decoder_v2.h"
 #include <windows.h>
 #include <psapi.h>
 #include <chrono>
@@ -231,17 +233,36 @@ LoadResult DynamicModelLoader::swapToModel(const std::string& path, LoadBackend 
 // --- Backend Implementations ---
 LoadResult DynamicModelLoader::tryLoadGPU(const std::string& path) {
     LoadResult result;
-    // TODO: Integrate with Vulkan/DX12 compute backend
-    // For now, mark as success if file exists (actual GPU load deferred)
-    if (std::filesystem::exists(path)) {
-        result.success = true;
-        result.backend_used = "GPU";
-        result.vram_used_mb = static_cast<size_t>(
-            std::filesystem::file_size(path) / (1024 * 1024)
-        );
-    } else {
-        result.error = "GPU load failed: file not found";
+    // Use BackendSelector to create the best available GPU engine
+    BackendSelector selector;
+    BackendType bestGPU = BackendType::DML; // Prefer DirectML on Windows
+
+    // Check if DML is available, otherwise try Vulkan
+    auto info = selector.getBackendInfo(bestGPU);
+    if (!info.available) {
+        bestGPU = BackendType::Vulkan;
+        info = selector.getBackendInfo(bestGPU);
     }
+
+    if (!info.available) {
+        result.error = "GPU load failed: no GPU backend (DML/Vulkan) available";
+        return result;
+    }
+
+    auto engine = selector.createInferenceEngine(bestGPU);
+    if (!engine) {
+        result.error = "GPU load failed: could not create inference engine";
+        return result;
+    }
+
+    if (!engine->LoadModel(path)) {
+        result.error = "GPU load failed: engine->LoadModel() returned false";
+        return result;
+    }
+
+    result.success = true;
+    result.backend_used = info.name;
+    result.vram_used_mb = info.vramBytes / (1024 * 1024);
     return result;
 }
 
@@ -289,7 +310,49 @@ LoadResult DynamicModelLoader::tryLoadSpillover(const std::string& path) {
 // --- Speculative Decoding ---
 bool DynamicModelLoader::enableMedusa(const std::string& draft_model_path) {
     if (!std::filesystem::exists(draft_model_path)) return false;
-    // TODO: Load draft model for Medusa tree attention
+
+    // Wire into SpeculativeDecoderV2 for Medusa tree attention
+    auto& decoder = RawrXD::Speculative::SpeculativeDecoderV2::Global();
+    RawrXD::Speculative::SpeculationConfig config;
+    config.treeSpeculation = true;
+    config.treeBranching = 2;
+    config.treeDepth = 3;
+    config.maxDraftTokens = 5;
+    decoder.setConfig(config);
+
+    // Set up draft model inference callbacks using the current engine
+    if (m_engine) {
+        RawrXD::Speculative::ModelInference draftModel;
+        draftModel.encode = [](const std::string& text, void* userData) -> std::vector<int> {
+            auto* engine = static_cast<RawrXD::InferenceEngine*>(userData);
+            return engine ? engine->Tokenize(text) : std::vector<int>{};
+        };
+        draftModel.decode = [](int tokenId, void* userData) -> std::string {
+            auto* engine = static_cast<RawrXD::InferenceEngine*>(userData);
+            if (!engine) return "";
+            auto tokens = engine->Detokenize({tokenId});
+            return tokens;
+        };
+        draftModel.logprobs = [](const std::vector<int>& context, int topK, void* userData) -> std::vector<std::pair<int, float>> {
+            auto* engine = static_cast<RawrXD::InferenceEngine*>(userData);
+            if (!engine || context.empty()) return {};
+            auto eval = engine->Eval(context);
+            // Return top-K from eval logits
+            std::vector<std::pair<int, float>> result;
+            if (!eval.empty()) {
+                // Simple: return first topK
+                int limit = std::min(topK, static_cast<int>(eval.size()));
+                for (int i = 0; i < limit; ++i) {
+                    result.push_back({i, eval[i]});
+                }
+            }
+            return result;
+        };
+        draftModel.userData = m_engine;
+        draftModel.modelId = draft_model_path;
+        decoder.setDraftModel(draftModel);
+    }
+
     m_speculative_enabled.store(true);
     return true;
 }

@@ -169,8 +169,8 @@ CommandResult handleInferenceRunSel(const CommandContext& ctx) {
         return CommandResult::failure("No model loaded");
     }
     
-    // TODO: Retrieve selected text from IDE via ctx.args or Win32 message
-    std::string selectedText = "TODO: Get selected text from editor";
+    // Retrieve selected text from ctx.args if provided by IDE bridge
+    std::string selectedText = (ctx.args && *ctx.args) ? ctx.args : "[No selection provided]";
     
     ctx.output("[INFERENCE] Executing with selected text: \"");
     ctx.output(selectedText.c_str());
@@ -195,7 +195,7 @@ CommandResult handleInferenceLoadRun(const CommandContext& ctx) {
     
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = NULL;  // TODO: Set to IDE main window handle
+    ofn.hwndOwner = ctx.hwnd ? static_cast<HWND>(ctx.hwnd) : NULL;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile);
     ofn.lpstrFilter = "GGUF Models (*.gguf)\0*.gguf\0All Files (*.*)\0*.*\0";
@@ -316,8 +316,33 @@ CommandResult handleInferenceConfig(const CommandContext& ctx) {
     auto& state = InferenceState::instance();
     std::lock_guard<std::mutex> lock(state.mtx);
     
-    // TODO: Show configuration dialog or parse from ctx.args
-    // For now, just display current config
+    // Parse configuration from ctx.args if provided (e.g., "ctx=8192 temp=0.8")
+    if (ctx.args && *ctx.args) {
+        std::string argStr(ctx.args);
+        // Simple key=value parser
+        size_t pos = 0;
+        while (pos < argStr.size()) {
+            size_t eq = argStr.find('=', pos);
+            if (eq == std::string::npos) break;
+            std::string key = argStr.substr(pos, eq - pos);
+            size_t sp = argStr.find(' ', eq + 1);
+            if (sp == std::string::npos) sp = argStr.size();
+            std::string val = argStr.substr(eq + 1, sp - eq - 1);
+            
+            if (key == "ctx" || key == "context") {
+                state.contextSize = std::stoi(val);
+            } else if (key == "temp" || key == "temperature") {
+                state.temperature = std::stof(val);
+            } else if (key == "max_tokens") {
+                state.maxTokens = std::stoi(val);
+            } else if (key == "top_p") {
+                state.topP = std::stof(val);
+            } else if (key == "top_k") {
+                state.topK = std::stoi(val);
+            }
+            pos = sp + 1;
+        }
+    }
     
     ctx.output("[INFERENCE] Current Configuration:\n");
     ctx.output("[INFERENCE]   Context Size: ");

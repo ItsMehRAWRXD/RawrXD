@@ -612,7 +612,12 @@ std::string AgenticLoopState::serializeState() const
     state["goal"] = m_currentGoal;
     state["metrics"] = getMetrics();
     state["memory"] = getAllMemory();
-    state["constraints"] = m_constraints;
+    // Convert std::map to nlohmann::json object
+    nlohmann::json constraintsJson = nlohmann::json::object();
+    for (const auto& [key, value] : m_constraints) {
+        constraintsJson[key] = value;
+    }
+    state["constraints"] = constraintsJson;
 
     return state.dump();
 }
@@ -629,6 +634,16 @@ bool AgenticLoopState::deserializeState(const std::string& jsonStr)
             m_currentStatus = stringToStatus(state["status"].get<std::string>());
         if (state.contains("goal") && state["goal"].is_string())
             m_currentGoal = state["goal"].get<std::string>();
+
+        // Restore constraints from JSON
+        if (state.contains("constraints") && state["constraints"].is_object()) {
+            m_constraints.clear();
+            for (auto it = state["constraints"].begin(); it != state["constraints"].end(); ++it) {
+                if (it.value().is_string()) {
+                    m_constraints[it.key()] = it.value().get<std::string>();
+                }
+            }
+        }
 
         return true;
     } catch (...) {
