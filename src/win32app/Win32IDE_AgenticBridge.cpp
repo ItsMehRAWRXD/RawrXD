@@ -16,7 +16,7 @@
 #include "../modules/native_memory.hpp"
 #include "../security/InputSanitizer.h"
 #include "../vsix_native_converter.hpp"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include "Win32IDE_SubAgent.h"

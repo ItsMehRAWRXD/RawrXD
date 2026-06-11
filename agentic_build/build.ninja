@@ -3,13 +3,13 @@
 
 CXX = cl.exe
 LINK = link.exe
-CXXFLAGS = /std:c++20 /EHsc /MD /O2
-LINKFLAGS = /SUBSYSTEM:CONSOLE
+CXXFLAGS = /std:c++latest /EHsc /MD /O2 /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" /I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include"
+LINKFLAGS = /SUBSYSTEM:CONSOLE /LIBPATH:"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\lib\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
 
-DEFINES = -DNOMINMAX -D_WIN32_WINNT=0x0A00 -DHAVE_QT_CORE -DQT_NO_OPENGL
+DEFINES = -DNOMINMAX -D_WIN32_WINNT=0x0A00 -DHAVE_QT_CORE -DQT_NO_OPENGL -DRAWRXD_NO_VULKAN -DWIN32_LEAN_AND_MEAN -DRAWRXD_ALLOW_VULKAN_TYPE_STUBS=1
 
 rule compile
-  command = $CXX $CXXFLAGS $DEFINES /I$includes /c $in /Fo$out
+  command = $CXX $CXXFLAGS $DEFINES $includes /c $in /Fo$out
   description = Compiling $in
 
 rule link
@@ -124,8 +124,6 @@ build obj/gpu_inference_benchmark/gpu_inference_benchmark.obj: compile src/qtapp
   includes = /Iinclude /Isrc
 build obj/gpu_inference_benchmark/inference_engine.obj: compile src/qtapp/inference_engine.cpp
   includes = /Iinclude /Isrc
-build obj/gpu_inference_benchmark/gguf_loader.obj: compile src/qtapp/gguf_loader.cpp
-  includes = /Iinclude /Isrc
 build obj/gpu_inference_benchmark/gguf_loader.obj: compile src/gguf_loader.cpp
   includes = /Iinclude /Isrc
 build obj/gpu_inference_benchmark/transformer_inference.obj: compile src/qtapp/transformer_inference.cpp
@@ -143,7 +141,7 @@ build obj/gpu_inference_benchmark/metrics_collector.obj: compile src/qtapp/metri
 build obj/gpu_inference_benchmark/quant_utils.obj: compile src/qtapp/quant_utils.cpp
   includes = /Iinclude /Isrc
 
-build bin/gpu_inference_benchmark.exe: link obj/gpu_inference_benchmark/gpu_inference_benchmark.obj obj/gpu_inference_benchmark/inference_engine.obj obj/gpu_inference_benchmark/gguf_loader.obj obj/gpu_inference_benchmark/gguf_loader.obj obj/gpu_inference_benchmark/transformer_inference.obj obj/gpu_inference_benchmark/bpe_tokenizer.obj obj/gpu_inference_benchmark/sentencepiece_tokenizer.obj obj/gpu_inference_benchmark/vocabulary_loader.obj obj/gpu_inference_benchmark/gpu_backend.obj obj/gpu_inference_benchmark/metrics_collector.obj obj/gpu_inference_benchmark/quant_utils.obj
+build bin/gpu_inference_benchmark.exe: link obj/gpu_inference_benchmark/gpu_inference_benchmark.obj obj/gpu_inference_benchmark/inference_engine.obj obj/gpu_inference_benchmark/gguf_loader.obj obj/gpu_inference_benchmark/transformer_inference.obj obj/gpu_inference_benchmark/bpe_tokenizer.obj obj/gpu_inference_benchmark/sentencepiece_tokenizer.obj obj/gpu_inference_benchmark/vocabulary_loader.obj obj/gpu_inference_benchmark/gpu_backend.obj obj/gpu_inference_benchmark/metrics_collector.obj obj/gpu_inference_benchmark/quant_utils.obj
 
 build obj/minimal_qt_test/minimal_qt_test.obj: compile src/minimal_qt_test.cpp
   includes = /Iinclude /Isrc
@@ -153,8 +151,6 @@ build bin/minimal_qt_test.exe: link obj/minimal_qt_test/minimal_qt_test.obj
 build obj/gguf_hotpatch_tester/gguf_hotpatch_tester.obj: compile src/qtapp/gguf_hotpatch_tester.cpp
   includes = /Iinclude /Isrc
 build obj/gguf_hotpatch_tester/inference_engine.obj: compile src/qtapp/inference_engine.cpp
-  includes = /Iinclude /Isrc
-build obj/gguf_hotpatch_tester/gguf_loader.obj: compile src/qtapp/gguf_loader.cpp
   includes = /Iinclude /Isrc
 build obj/gguf_hotpatch_tester/gguf_loader.obj: compile src/gguf_loader.cpp
   includes = /Iinclude /Isrc
@@ -178,8 +174,6 @@ build bin/gguf_hotpatch_tester.exe: link obj/gguf_hotpatch_tester/gguf_hotpatch_
 build obj/test_chat_streaming/test_chat_streaming.obj: compile src/qtapp/test_chat_streaming.cpp
   includes = /Iinclude /Isrc
 build obj/test_chat_streaming/inference_engine.obj: compile src/qtapp/inference_engine.cpp
-  includes = /Iinclude /Isrc
-build obj/test_chat_streaming/gguf_loader.obj: compile src/qtapp/gguf_loader.cpp
   includes = /Iinclude /Isrc
 build obj/test_chat_streaming/gguf_loader.obj: compile src/gguf_loader.cpp
   includes = /Iinclude /Isrc
@@ -587,20 +581,6 @@ build obj/benchmark_completions/real_time_completion_engine.obj: compile src/rea
   includes = /Iinclude /Isrc
 build obj/benchmark_completions/inference_engine.obj: compile src/qtapp/inference_engine.cpp
   includes = /Iinclude /Isrc
-build obj/benchmark_completions/gguf_loader.obj: compile src/qtapp/gguf_loader.cpp
-  includes = /Iinclude /Isrc
-build obj/benchmark_completions/quant_utils.obj: compile src/qtapp/quant_utils.cpp
-  includes = /Iinclude /Isrc
-build obj/benchmark_completions/transformer_inference.obj: compile src/qtapp/transformer_inference.cpp
-  includes = /Iinclude /Isrc
-build obj/benchmark_completions/bpe_tokenizer.obj: compile src/qtapp/bpe_tokenizer.cpp
-  includes = /Iinclude /Isrc
-build obj/benchmark_completions/sentencepiece_tokenizer.obj: compile src/qtapp/sentencepiece_tokenizer.cpp
-  includes = /Iinclude /Isrc
-build obj/benchmark_completions/vocabulary_loader.obj: compile src/qtapp/vocabulary_loader.cpp
-  includes = /Iinclude /Isrc
-build obj/benchmark_completions/inflate_deflate_cpp.obj: compile src/qtapp/inflate_deflate_cpp.cpp
-  includes = /Iinclude /Isrc
 build obj/benchmark_completions/gguf_loader.obj: compile src/gguf_loader.cpp
   includes = /Iinclude /Isrc
 build obj/benchmark_completions/memory_mapped_file.obj: compile src/ai/memory_mapped_file.cpp
@@ -608,5 +588,5 @@ build obj/benchmark_completions/memory_mapped_file.obj: compile src/ai/memory_ma
 build obj/benchmark_completions/streaming_gguf_loader_qt.obj: compile src/ai/streaming_gguf_loader_qt.cpp
   includes = /Iinclude /Isrc
 
-build bin/benchmark_completions.exe: link obj/benchmark_completions/benchmark_completions_full.obj obj/benchmark_completions/real_time_completion_engine.obj obj/benchmark_completions/inference_engine.obj obj/benchmark_completions/gguf_loader.obj obj/benchmark_completions/quant_utils.obj obj/benchmark_completions/transformer_inference.obj obj/benchmark_completions/bpe_tokenizer.obj obj/benchmark_completions/sentencepiece_tokenizer.obj obj/benchmark_completions/vocabulary_loader.obj obj/benchmark_completions/inflate_deflate_cpp.obj obj/benchmark_completions/gguf_loader.obj obj/benchmark_completions/memory_mapped_file.obj obj/benchmark_completions/streaming_gguf_loader_qt.obj
+build bin/benchmark_completions.exe: link obj/benchmark_completions/benchmark_completions_full.obj obj/benchmark_completions/real_time_completion_engine.obj obj/benchmark_completions/inference_engine.obj obj/benchmark_completions/gguf_loader.obj obj/benchmark_completions/quant_utils.obj obj/benchmark_completions/transformer_inference.obj obj/benchmark_completions/bpe_tokenizer.obj obj/benchmark_completions/sentencepiece_tokenizer.obj obj/benchmark_completions/vocabulary_loader.obj obj/benchmark_completions/inflate_deflate_cpp.obj obj/benchmark_completions/memory_mapped_file.obj obj/benchmark_completions/streaming_gguf_loader_qt.obj
 

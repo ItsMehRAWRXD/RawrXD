@@ -22,7 +22,7 @@
 
 #include "Win32IDE.h"
 #include "IDELogger.h"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 
 #include "../agentic/ToolCallResult.h"
 #include "../agentic/DiffEngine.h"

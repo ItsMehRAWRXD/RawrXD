@@ -21,3 +21,8 @@
 4289	17182	7919699043701503	CMakeFiles/RawrEngine.dir/src/universal_generator_service.cpp.obj	ef810ce3736e5794
 5475	22975	7919699055413296	CMakeFiles/RawrEngine.dir/src/interactive_shell.cpp.obj	fed3b28b3205df9e
 6022	23747	7919699060895782	CMakeFiles/RawrEngine.dir/src/agentic_engine.cpp.obj	d44ef06a1695c13b
+4	9354	8028992832984792	obj/RawrXD-Win32IDE/main_win32.obj	4dd1427f046cff85
+8	32327	8028993699238396	obj/RawrXD-Win32IDE/Win32IDE.obj	e369f7c26e88ae3d
+32328	40819	8028994022444608	obj/RawrXD-Win32IDE/Win32IDE_Sidebar.obj	15baafc572b86990
+40821	49683	8028994107455058	obj/RawrXD-Win32IDE/Win32IDE_VSCodeUI.obj	bdc1b56538a4471a
+49850	78974	8028994218754609	obj/RawrXD-Win32IDE/Win32IDE_PowerShellPanel.obj	5eef160c1f0ea617

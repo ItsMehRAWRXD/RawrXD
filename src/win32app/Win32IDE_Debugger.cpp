@@ -12,7 +12,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 #include "../core/native_debugger_engine.h"
 #include "../core/native_debugger_types.h"
 #include <richedit.h>

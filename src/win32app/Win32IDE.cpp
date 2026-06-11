@@ -12,7 +12,7 @@
 #include "../rawrxd_model_loader.h"
 #include "../streaming_gguf_loader.h"
 #include "../utils/ErrorReporter.hpp"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
 #include "VSIXInstaller.hpp"

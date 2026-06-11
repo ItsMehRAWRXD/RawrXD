@@ -17,7 +17,7 @@
 
 #include "Win32IDE_SubAgent.h"
 #include "Win32IDE.h"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 #include "../../include/feature_flags_runtime.h"
 #include <sstream>
 #include <chrono>

@@ -42,7 +42,6 @@ AgenticLoopState::AgenticLoopState()
     , m_currentStatus(IterationStatus::NotStarted)
     , m_stateStartTime(std::chrono::system_clock::now())
     , m_lastUpdateTime(std::chrono::system_clock::now())
-    , m_constraints(nlohmann::json::object())
     , m_lastSnapshot(nlohmann::json::object())
 {
     fprintf(stderr, "[AgenticLoopState] Initialized - Ready for iterative reasoning\n");
@@ -513,17 +512,14 @@ void AgenticLoopState::addConstraint(const std::string& key, const std::string& 
 
 void AgenticLoopState::removeConstraint(const std::string& key)
 {
-    // The current minimal json.hpp stub lacks erase().
-    // TODO: Implement erase in json.hpp or replace with std::map for constraints.
-    // m_constraints.erase(key);
+    m_constraints.erase(key);
 }
 
 bool AgenticLoopState::validateAgainstConstraints(const nlohmann::json& action) const
 {
     // Simple constraint validation — can be extended
-    for (auto it = m_constraints.begin(); it != m_constraints.end(); ++it) {
-        const std::string& constraintValue = it.value().get<std::string>();
-        if (!action.contains(it.key()) && !constraintValue.empty()) {
+    for (const auto& [constraintKey, constraintValue] : m_constraints) {
+        if (!action.contains(constraintKey) && !constraintValue.empty()) {
             return false;
         }
     }

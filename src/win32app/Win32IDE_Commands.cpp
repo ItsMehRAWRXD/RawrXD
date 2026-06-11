@@ -13,7 +13,7 @@
 #include "../core/command_registry.hpp"
 #include "../core/knowledge_graph_core.hpp"
 #include "../core/omega_orchestrator.hpp"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
 #include "win32_feature_adapter.h"

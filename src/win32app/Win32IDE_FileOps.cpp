@@ -3,7 +3,7 @@
 
 #include "Win32IDE.h"
 #include "IDELogger.h"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 #include <fstream>
 #include <sstream>
 #include <commdlg.h>

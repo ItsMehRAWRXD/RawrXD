@@ -21,7 +21,7 @@
 #include "../modules/ExtensionLoader.hpp"
 #include "../modules/native_memory.hpp"
 #include "../native_agent.hpp"
-#include "IDEConfig.h"
+#include "../config/IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
 #include "RawrXD_AgentCoordinator.h"
