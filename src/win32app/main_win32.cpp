@@ -21,7 +21,9 @@
 #include "../core/js_extension_host.hpp"
 #include "../core/model_memory_hotpatch.hpp"
 #include "../core/rawrxd_state_mmf.hpp"
+#include "../core/SubsystemRegistry.hpp"
 #include "../core/unified_command_dispatch.hpp"
+#include "../cpu_inference_engine.h"
 #include "../modules/codex_ultimate.h"
 #include "../modules/engine_manager.h"
 #include "../modules/memory_manager.h"
@@ -59,6 +61,11 @@
 #ifdef _WIN32
 #pragma comment(lib, "winhttp.lib")
 #endif
+
+// ============================================================================
+// External declarations
+// ============================================================================
+extern "C" bool snmalloc_library_init(void);
 
 // ============================================================================
 // Startup trace — write to ide_startup.log in exe dir for launch audit
@@ -319,6 +326,89 @@ static bool hasSelfTestFlag(LPSTR lpCmdLine)
     if (!lpCmdLine)
         return false;
     return strstr(lpCmdLine, "--selftest") != nullptr;
+}
+
+// ============================================================================
+// L0 Smoke Test mode — initialize registry, verify critical subsystems,
+// print SUCCESS_READY, and exit (0 = pass, non-zero = fail)
+// ============================================================================
+static bool hasTestModeFlag(LPSTR lpCmdLine)
+{
+    if (!lpCmdLine)
+        return false;
+    return strstr(lpCmdLine, "--test-mode") != nullptr;
+}
+
+static int runL0SmokeTest()
+{
+    using namespace RawrXD;
+    int failures = 0;
+    auto fail = [&](const char* step, const std::string& detail = std::string())
+    {
+        fprintf(stderr, "[l0-smoke] FAIL: %s%s%s\n", step, detail.empty() ? "" : " - ", detail.c_str());
+        ++failures;
+    };
+    auto pass = [&](const char* step, const std::string& detail = std::string())
+    { fprintf(stdout, "[l0-smoke] PASS: %s%s%s\n", step, detail.empty() ? "" : " - ", detail.c_str()); };
+
+    // 1) snmalloc init (critical — prevents "Failed to initialise snmalloc")
+    {
+        if (!snmalloc_library_init()) {
+            fail("snmalloc-init", "snmalloc_library_init() returned failure");
+        } else {
+            pass("snmalloc-init", "CRT heap shim active");
+        }
+    }
+
+    // 2) SubsystemRegistry instantiation
+    {
+        auto& reg = SubsystemRegistry::Instance();
+        if (reg.Count() == 0) {
+            pass("subsystem-registry", "empty (no subsystems registered yet)");
+        } else {
+            pass("subsystem-registry", std::to_string(reg.Count()) + " subsystems registered");
+        }
+    }
+
+    // 3) Inference engine shared instance
+    {
+        auto engine = CPUInferenceEngine::GetSharedInstance();
+        if (!engine) {
+            fail("inference-engine", "GetSharedInstance() returned null");
+        } else {
+            pass("inference-engine", "shared instance acquired");
+        }
+    }
+
+    // 4) File I/O sanity (same as selftest)
+    {
+        char tempDir[MAX_PATH] = {};
+        DWORD n = GetTempPathA(MAX_PATH, tempDir);
+        std::string tmp = (n > 0) ? std::string(tempDir) : std::string(".");
+        std::string path = tmp + "rawrxd_l0_smoke.tmp";
+        const std::string payload = "rawrxd-l0-ok\n";
+        {
+            std::ofstream out(path, std::ios::binary | std::ios::trunc);
+            if (!out) {
+                fail("file-write", path);
+            } else {
+                out << payload;
+            }
+        }
+        if (failures == 0) {
+            std::ifstream in(path, std::ios::binary);
+            std::string read((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            if (read != payload)
+                fail("file-read-verify", path);
+            else
+                pass("file-io", path);
+        }
+        DeleteFileA(path.c_str());
+    }
+
+    // Summary
+    fprintf(stdout, "[l0-smoke] result=%s failures=%d\n", failures == 0 ? "PASS" : "FAIL", failures);
+    return failures == 0 ? 0 : 3;  // 3 = L0 smoke failure (distinct from selftest's 2)
 }
 
 static void selfTestOutputSink(const char* text, void* userData)
@@ -1896,6 +1986,38 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         freopen("CONIN$", "r", stdin);
         int rc = runStartupSelfTest();
         exportCommandArtifacts("--selftest");
+        FreeConsole();
+        return rc;
+    }
+
+    // ========================================================================
+    // L0 SMOKE TEST MODE — initialize critical subsystems, print SUCCESS_READY,
+    // and exit (0 = pass, non-zero = fail). No GUI, no window creation.
+    // ========================================================================
+    if (hasTestModeFlag(lpCmdLine))
+    {
+        if (s_startupLog)
+        {
+            startupTrace("l0_smoke_mode");
+            s_startupLog->close();
+            delete s_startupLog;
+            s_startupLog = nullptr;
+        }
+        AllocConsole();
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
+        freopen("CONIN$", "r", stdin);
+        int rc = runL0SmokeTest();
+        if (rc == 0)
+        {
+            fprintf(stdout, "\nSUCCESS_READY\n");
+        }
+        else
+        {
+            fprintf(stderr, "\nFAILURE_DETECTED (exit code %d)\n", rc);
+        }
+        fflush(stdout);
+        fflush(stderr);
         FreeConsole();
         return rc;
     }
