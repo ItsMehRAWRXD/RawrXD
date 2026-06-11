@@ -307,6 +307,25 @@ if(NOT TARGET test_instructions_provider AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
     message(STATUS "  ✓ Added test_instructions_provider")
 endif()
 
+# ============================================================================
+# Regression Test: Agentic Bridge "No Loaded Model" Guard
+# ============================================================================
+# This test ensures SetModel() -> LoadModel() wiring is intact.
+# If the wiring breaks, the test fails with exit code 1.
+if(NOT TARGET regression_agentic_bridge AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/regression_agentic_bridge.cpp")
+    add_executable(regression_agentic_bridge regression_agentic_bridge.cpp)
+    target_include_directories(regression_agentic_bridge PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    set_target_properties(regression_agentic_bridge PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME regression_agentic_bridge COMMAND regression_agentic_bridge)
+    message(STATUS "  ✓ Added regression_agentic_bridge (Tier-1: 'no loaded model' guard)")
+endif()
+
 message(STATUS "========================================")
 message(STATUS "Test Suite Registration Complete")
 message(STATUS "Run tests: ctest --output-on-failure -C Release")
