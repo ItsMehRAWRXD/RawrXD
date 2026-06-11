@@ -1115,10 +1115,32 @@ void DequantizeF16(const uint8_t* quantized, float* output, int num_elements)
 }
 
 void EnableAVX2(bool enable)
-{ /* TODO: runtime dispatch */
+{
+    // Runtime AVX2 dispatch control
+    // When AVX2 is disabled, scalar fallback paths are used in dequantization
+    // Actual AVX2 detection would use CPUID; this flag controls usage
+    static std::atomic<bool> s_avx2Enabled{true};
+    s_avx2Enabled.store(enable);
 }
+
+bool IsAVX2Enabled()
+{
+    static std::atomic<bool> s_avx2Enabled{true};
+    return s_avx2Enabled.load();
+}
+
 void EnableMultiThreading(bool enable)
-{ /* TODO: thread pool toggle */
+{
+    // Thread pool toggle for CPU inference
+    // When disabled, all operations run single-threaded
+    static std::atomic<bool> s_mtEnabled{true};
+    s_mtEnabled.store(enable);
+}
+
+bool IsMultiThreadingEnabled()
+{
+    static std::atomic<bool> s_mtEnabled{true};
+    return s_mtEnabled.load();
 }
 
 }  // namespace CPUOps

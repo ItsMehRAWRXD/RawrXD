@@ -271,14 +271,32 @@ uint32_t AutonomousResourceManager::getCpuUsage() const
 
 void AutonomousResourceManager::getGpuInfo(uint32_t& usage, bool& available, QString& name) const
 {
-    // Simplified GPU detection - in production, use NVML, ADL, or WMI
-    // For now, check for common GPU vendors via WMI
+    // GPU detection via DXGI (Qt-free, Windows-native)
     available = false;
     usage = 0;
     name = "Unknown";
-    
-    // TODO: Implement proper GPU detection using WMI or vendor APIs
-    // This is a placeholder
+
+#ifdef _WIN32
+    IDXGIFactory* factory = nullptr;
+    if (SUCCEEDED(CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory))) {
+        IDXGIAdapter* adapter = nullptr;
+        if (SUCCEEDED(factory->EnumAdapters(0, &adapter))) {
+            DXGI_ADAPTER_DESC desc;
+            if (SUCCEEDED(adapter->GetDesc(&desc))) {
+                name = QString::fromWCharArray(desc.Description);
+                available = true;
+                // VRAM usage percentage (simplified heuristic)
+                uint64_t totalVRAM = desc.DedicatedVideoMemory;
+                if (totalVRAM > 0) {
+                    // Estimate usage from working set (simplified)
+                    usage = 0; // Would need NVML/ADL for real usage
+                }
+            }
+            adapter->Release();
+        }
+        factory->Release();
+    }
+#endif
 }
 #else
 uint64_t AutonomousResourceManager::getAvailableMemory() const
