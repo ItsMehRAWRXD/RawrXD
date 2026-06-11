@@ -29,22 +29,33 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         set(_SDK_UCRT_VER "${_SDK_UM_VER}")
     endif()
 
-    # Auto-detect MSVC toolchain: try D: first, fall back to C:
-    if(EXISTS "D:/VS2022Enterprise/VC/Tools/MSVC")
-        file(GLOB _MSVC_VERS "D:/VS2022Enterprise/VC/Tools/MSVC/*")
-    elseif(EXISTS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC")
-        file(GLOB _MSVC_VERS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/*")
-    elseif(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC")
-        file(GLOB _MSVC_VERS "C:/VS2022Enterprise/VC/Tools/MSVC/*")
-    elseif(EXISTS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC")
-        file(GLOB _MSVC_VERS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/*")
-    else()
-        set(_MSVC_VERS "")
-    endif()
-    if(_MSVC_VERS)
-        list(SORT _MSVC_VERS)
-        list(GET _MSVC_VERS -1 _MSVC_ROOT)
-    else()
+    # Auto-detect MSVC toolchain: try candidates in order, validate cl.exe exists
+    set(_MSVC_CANDIDATES
+        "D:/VS2022Enterprise/VC/Tools/MSVC"
+        "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC"
+        "C:/VS2022Enterprise/VC/Tools/MSVC"
+        "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC"
+    )
+    set(_MSVC_ROOT "")
+    foreach(_MSVC_BASE ${_MSVC_CANDIDATES})
+        if(EXISTS "${_MSVC_BASE}")
+            file(GLOB _VERS "${_MSVC_BASE}/*")
+            if(_VERS)
+                list(SORT _VERS)
+                list(REVERSE _VERS)  # Newest first
+                foreach(_V ${_VERS})
+                    if(EXISTS "${_V}/bin/Hostx64/x64/cl.exe")
+                        set(_MSVC_ROOT "${_V}")
+                        break()
+                    endif()
+                endforeach()
+            endif()
+        endif()
+        if(_MSVC_ROOT)
+            break()
+        endif()
+    endforeach()
+    if(NOT _MSVC_ROOT)
         set(_MSVC_ROOT "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231")
     endif()
     
