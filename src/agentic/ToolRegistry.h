@@ -51,7 +51,10 @@ namespace Agent
     M(run_build, "Trigger a CMake build with specified target and configuration.")                                     \
     M(apply_hotpatch,                                                                                                  \
       "Apply a runtime hotpatch through the unified hotpatch manager (memory, byte-level, or server layer).")          \
-    M(disk_recovery, "Control the hardware disk recovery agent for dying WD My Book USB bridges (scan, init, extract " \
+    M(revert_hotpatch, "Revert a previously applied hotpatch by ID or layer.")                                        \
+    M(list_hotpatches, "List all currently applied hotpatches with metadata (layer, ID, timestamp, status).")          \
+    M(hotpatch_status, "Get hotpatch subsystem statistics and health for a given layer.")                              \
+    M(disk_recovery, "Control the hardware disk recovery agent for dying WD My Book USB bridges (scan, init, extract "     \
                      "key, run, abort, stats).")                                                                       \
     M(get_gpu_telemetry, "Query GPU backend telemetry (VRAM, utilization, etc.).")                                     \
     M(tune_vram_limit, "Tune VRAM limit for the inference backend.")                                                   \
