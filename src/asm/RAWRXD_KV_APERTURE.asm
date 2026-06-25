@@ -64,6 +64,29 @@ KV_PageFlush PROC
 KV_PageFlush ENDP
 
 ;------------------------------------------------------------------------------
+; KV_StreamStore_AVX2(pDst:rcx, pSrc:rdx, nFloats:r8d)
+; Non-temporal (streaming) store of KV tensors using AVX2 YMM registers.
+; Process 8 floats (32 bytes) per iteration — fallback for non-AVX512 CPUs.
+;------------------------------------------------------------------------------
+KV_StreamStore_AVX2 PROC
+    mov eax, r8d
+    shr eax, 3           ; n / 8
+    jz @@done
+
+@@store_loop:
+    vmovups ymm0, ymmword ptr [rdx]  ; Load 32 bytes from compute buffer
+    vmovntps ymmword ptr [rcx], ymm0 ; Streaming store (bypasses cache)
+    add rcx, 32
+    add rdx, 32
+    dec eax
+    jnz @@store_loop
+
+    sfence               ; Canonical sync for NT stores
+@@done:
+    ret
+KV_StreamStore_AVX2 ENDP
+
+;------------------------------------------------------------------------------
 ; KV_StreamStore_AVX512(pDst:rcx, pSrc:rdx, nFloats:r8d)
 ; Non-temporal (streaming) store of KV tensors to avoid L3 cache pollution.
 ; Process 16 floats (64 bytes) per iteration using ZMM registers.

@@ -1,10 +1,42 @@
 // ghost_completion_parse.cpp - Real implementation for Win32IDE build
 // Parses inline completion suggestions from model responses for ghost text.
+// Now with AVX2/AVX-512 MASM fast-path via GhostParser_ScanVectorized.asm
 
 #include <windows.h>
 #include <string>
 #include <vector>
 #include <algorithm>
+
+// ============================================================================
+// MASM Fast-Path Forward Declarations
+// ============================================================================
+extern "C" {
+    // AVX2 broadside scanner — processes 16 wchar_t units per iteration
+    size_t GhostParser_ScanVectorized(
+        const wchar_t* buffer,
+        size_t bufferLen,
+        void* outPayloads,
+        size_t maxPayloads);
+
+    // AVX-512 version — processes 32 wchar_t units per iteration
+    size_t GhostParser_ScanVectorized_AVX512(
+        const wchar_t* buffer,
+        size_t bufferLen,
+        void* outPayloads,
+        size_t maxPayloads);
+}
+
+// ============================================================================
+// Payload structure (must match MASM layout exactly)
+// ============================================================================
+#pragma pack(push, 1)
+struct GhostCompletionPayload {
+    const wchar_t* text;    // Pointer into source buffer (no copy)
+    int startPos;           // Start position in wchar_t units
+    int endPos;             // End position in wchar_t units
+    float confidence;       // 0.85f for [[COMPLETION:]], 0.90f for ``` blocks
+};
+#pragma pack(pop)
 
 struct GhostCompletion {
     std::wstring text;
@@ -21,6 +53,47 @@ public:
         std::vector<GhostCompletion> results;
         if (!m_initialized || input.empty()) return results;
         
+        const size_t len = input.length();
+        if (len >= 32) {
+            // Try MASM fast-path first for buffers >= 32 wchar_t units
+            alignas(32) GhostCompletionPayload payloads[64];
+            size_t found = 0;
+            
+            // Attempt AVX-512 if buffer is large enough (64+ wchar_t units)
+            if (len >= 64) {
+                found = GhostParser_ScanVectorized_AVX512(
+                    input.c_str(), len, payloads, 64);
+            }
+            
+            // Fall back to AVX2 if AVX-512 returned nothing or wasn't suitable
+            if (found == 0) {
+                found = GhostParser_ScanVectorized(
+                    input.c_str(), len, payloads, 64);
+            }
+            
+            // Convert MASM payloads to C++ results
+            for (size_t i = 0; i < found; ++i) {
+                const auto& p = payloads[i];
+                if (p.text && p.startPos >= 0 && p.endPos > p.startPos) {
+                    GhostCompletion gc;
+                    gc.text = std::wstring(p.text, (p.endPos - p.startPos - 15) / 2);
+                    gc.startPos = p.startPos;
+                    gc.endPos = p.endPos;
+                    gc.confidence = p.confidence;
+                    results.push_back(std::move(gc));
+                }
+            }
+            
+            if (!results.empty()) {
+                std::sort(results.begin(), results.end(),
+                    [](const GhostCompletion& a, const GhostCompletion& b) {
+                        return a.confidence > b.confidence;
+                    });
+                return results;
+            }
+        }
+        
+        // Scalar fallback for small buffers or if MASM fast-path found nothing
         // Parse completion markers: [[COMPLETION:text]] or ```code``` blocks
         const wchar_t* p = input.c_str();
         const wchar_t* end = p + input.length();

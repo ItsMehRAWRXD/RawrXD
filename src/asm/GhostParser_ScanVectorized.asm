@@ -246,12 +246,19 @@ BitLoop:
     mov     r10d, r8d
     add     r10d, edx               ; r10 = candidate position
     
+    ; Save match mask (ecx) before call (rcx is volatile)
+    mov     dword ptr [rsp + 8], ecx
+    
     ; Verify full marker at this position
     mov     rcx, r12
     mov     rdx, r10
     mov     r8, r13
     sub     r8, r10                 ; remaining length from candidate
     call    VerifyMarker
+    
+    ; Restore match mask
+    mov     ecx, dword ptr [rsp + 8]
+    
     test    rax, rax
     jz      BitLoop                 ; Not a real marker
     
@@ -263,17 +270,26 @@ BitLoop:
     mov     rax, rsi
     imul    rax, PAYLOAD_SIZE
     lea     r9, [r14 + rax]
+    mov     qword ptr [rsp + 0], r9 ; Save payload address (r9 is volatile)
+    
+    ; Save match mask before call
+    mov     dword ptr [rsp + 8], ecx
     
     mov     rcx, r12
     mov     rdx, r10
     mov     r8, r13
     call    ExtractContent
+    
+    ; Restore match mask
+    mov     ecx, dword ptr [rsp + 8]
+    
     test    rax, rax
     jz      BitLoop                 ; Extraction failed
     
     inc     rsi                     ; Found count++
     
     ; Advance past this completion to avoid overlapping matches
+    mov     r9, qword ptr [rsp + 0] ; Restore payload address
     mov     ebx, dword ptr [r9 + PAYLOAD_END]
     jmp     ScanLoop16
     
@@ -310,6 +326,7 @@ TailLoop:
     mov     rax, rsi
     imul    rax, PAYLOAD_SIZE
     lea     r9, [r14 + rax]
+    mov     qword ptr [rsp + 0], r9 ; Save payload address (r9 is volatile)
     
     mov     rcx, r12
     mov     rdx, rbx
@@ -319,6 +336,7 @@ TailLoop:
     jz      TailNext
     
     inc     rsi
+    mov     r9, qword ptr [rsp + 0] ; Restore payload address
     mov     ebx, dword ptr [r9 + PAYLOAD_END]
     jmp     TailLoop
     
@@ -364,6 +382,12 @@ GhostParser_ScanVectorized_AVX512 PROC FRAME
     .allocstack 64
     .endprolog
     
+    ; Save parameters BEFORE cpuid/xgetbv clobber them
+    mov     r12, rcx                ; r12 = buffer
+    mov     r13, rdx                ; r13 = bufferLen
+    mov     r14, r8                 ; r14 = outPayloads
+    mov     r15, r9                 ; r15 = maxPayloads
+    
     ; Check CPU feature gate inline (AVX-512F + OS XSAVE + ZMM state)
     ; Step 1: Check CPUID leaf 1 ECX[27] = OSXSAVE
     mov     eax, 1
@@ -386,10 +410,6 @@ GhostParser_ScanVectorized_AVX512 PROC FRAME
     test    ebx, 010000h            ; bit 16 = AVX-512F
     jz      Fallback_AVX2
     
-    mov     r12, rcx                ; r12 = buffer
-    mov     r13, rdx                ; r13 = bufferLen
-    mov     r14, r8                 ; r14 = outPayloads
-    mov     r15, r9                 ; r15 = maxPayloads
     xor     rsi, rsi                ; rsi = found count
     
     cmp     r13, MIN_MATCH_LEN
@@ -432,11 +452,18 @@ BitLoop32:
     mov     r10d, r8d
     add     r10d, edx
     
+    ; Save match mask before call (rcx is volatile)
+    mov     dword ptr [rsp + 8], ecx
+    
     mov     rcx, r12
     mov     rdx, r10
     mov     r8, r13
     sub     r8, r10
     call    VerifyMarker
+    
+    ; Restore match mask
+    mov     ecx, dword ptr [rsp + 8]
+    
     test    rax, rax
     jz      BitLoop32
     
@@ -446,15 +473,24 @@ BitLoop32:
     mov     rax, rsi
     imul    rax, PAYLOAD_SIZE
     lea     r9, [r14 + rax]
+    mov     qword ptr [rsp + 0], r9 ; Save payload address (r9 is volatile)
+    
+    ; Save match mask before call
+    mov     dword ptr [rsp + 8], ecx
     
     mov     rcx, r12
     mov     rdx, r10
     mov     r8, r13
     call    ExtractContent
+    
+    ; Restore match mask
+    mov     ecx, dword ptr [rsp + 8]
+    
     test    rax, rax
     jz      BitLoop32
     
     inc     rsi
+    mov     r9, qword ptr [rsp + 0] ; Restore payload address
     mov     ebx, dword ptr [r9 + PAYLOAD_END]
     jmp     ScanLoop32
     
@@ -489,6 +525,7 @@ TailLoop_AVX512:
     mov     rax, rsi
     imul    rax, PAYLOAD_SIZE
     lea     r9, [r14 + rax]
+    mov     qword ptr [rsp + 0], r9 ; Save payload address (r9 is volatile)
     
     mov     rcx, r12
     mov     rdx, rbx
@@ -498,6 +535,7 @@ TailLoop_AVX512:
     jz      TailNext_AVX512
     
     inc     rsi
+    mov     r9, qword ptr [rsp + 0] ; Restore payload address
     mov     ebx, dword ptr [r9 + PAYLOAD_END]
     jmp     TailLoop_AVX512
     
@@ -507,6 +545,11 @@ TailNext_AVX512:
     
 Fallback_AVX2:
     ; CPU doesn't support AVX-512, delegate to AVX2 version
+    ; Parameters already in r12-r15, need to restore to rcx-rdx-r8-r9
+    mov     rcx, r12
+    mov     rdx, r13
+    mov     r8, r14
+    mov     r9, r15
     call    GhostParser_ScanVectorized
     jmp     Exit_AVX512
     

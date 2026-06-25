@@ -157,9 +157,18 @@ public:
             }
             int8_t zp = params.zero_point[ch];
 
-            for (uint32_t i = 0; i < params.num_elements_per_channel; ++i) {
-                int32_t q = static_cast<int32_t>(src_ptr[i]) - zp;
-                dst_ptr[i] = static_cast<float>(q) * scale;
+            // MASM fast-path: dispatch to vectorized dequantization for large channels
+            if (params.num_elements_per_channel >= 64) {
+                DequantParams dp{ scale, static_cast<int32_t>(zp) };
+                Quant_Dequant_INT8_AVX512(src_ptr, dst_ptr, params.num_elements_per_channel, &dp);
+            } else if (params.num_elements_per_channel >= 32) {
+                DequantParams dp{ scale, static_cast<int32_t>(zp) };
+                Quant_Dequant_INT8_AVX2(src_ptr, dst_ptr, params.num_elements_per_channel, &dp);
+            } else {
+                for (uint32_t i = 0; i < params.num_elements_per_channel; ++i) {
+                    int32_t q = static_cast<int32_t>(src_ptr[i]) - zp;
+                    dst_ptr[i] = static_cast<float>(q) * scale;
+                }
             }
 
             src_ptr += params.num_elements_per_channel;
@@ -168,7 +177,30 @@ public:
 
         return out;
     }
+
+private:
+    struct DequantParams {
+        float scale;
+        int32_t zero_point;
+    };
+
+    // MASM64 vectorized dequantization exports
+    static void Quant_Dequant_INT8_AVX512(const int8_t* pSrc, float* pDst, uint32_t n, const DequantParams* pParams);
+    static void Quant_Dequant_INT8_AVX2(const int8_t* pSrc, float* pDst, uint32_t n, const DequantParams* pParams);
 };
+
+// MASM64 extern declarations (zero-CRT, compact)
+extern "C" {
+    void Quant_Dequant_INT8_AVX512(const int8_t* pSrc, float* pDst, uint32_t n, const void* pParams);
+    void Quant_Dequant_INT8_AVX2(const int8_t* pSrc, float* pDst, uint32_t n, const void* pParams);
+}
+
+inline void inference::QuantizationCodec::Quant_Dequant_INT8_AVX512(const int8_t* pSrc, float* pDst, uint32_t n, const DequantParams* pParams) {
+    Quant_Dequant_INT8_AVX512(pSrc, pDst, n, static_cast<const void*>(pParams));
+}
+inline void inference::QuantizationCodec::Quant_Dequant_INT8_AVX2(const int8_t* pSrc, float* pDst, uint32_t n, const DequantParams* pParams) {
+    Quant_Dequant_INT8_AVX2(pSrc, pDst, n, static_cast<const void*>(pParams));
+}
 
 // ============================================================================
 // Sparsity Detection & Pruning

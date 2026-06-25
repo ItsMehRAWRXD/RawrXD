@@ -13,6 +13,20 @@
 #include <mutex>
 #include <thread>
 
+// ============================================================================
+// MASM64 KV-Cache Aperture Extern Declarations
+// ============================================================================
+extern "C" {
+    void KV_ApertureMap(void* pBase, size_t nSize);
+    void KV_PageFlush(void* pData, size_t nBytes);
+    void KV_StreamStore_AVX2(void* pDst, void* pSrc, uint32_t nFloats);
+    void KV_StreamStore_AVX512(void* pDst, void* pSrc, uint32_t nFloats);
+}
+
+// CPU feature detection (from rawr_cpu_features.asm)
+extern "C" uint32_t rawr_cpu_has_avx512();
+extern "C" uint32_t rawr_cpu_has_avx2();
+
 namespace
 {
 
@@ -61,8 +75,38 @@ void Titan_InternalFlushKVCache()
     
     if (g_titanState.kv_cache_ptr && g_titanState.kv_cache_size > 0)
     {
-        // Zero out the KV-cache memory (soft reset)
-        std::memset(g_titanState.kv_cache_ptr, 0, g_titanState.kv_cache_size);
+        void* ptr = g_titanState.kv_cache_ptr;
+        size_t sz = g_titanState.kv_cache_size;
+        
+        // MASM fast-path: use non-temporal streaming stores for large KV caches
+        // to avoid L3 cache pollution during zeroing.
+        constexpr size_t NT_THRESHOLD = 256;  // bytes
+        if (sz >= NT_THRESHOLD)
+        {
+            uint32_t nFloats = static_cast<uint32_t>(sz / sizeof(float));
+            uint32_t has_avx512 = rawr_cpu_has_avx512();
+            uint32_t has_avx2 = rawr_cpu_has_avx2();
+            
+            if (has_avx512 && nFloats >= 16)
+            {
+                // AVX-512: 64 bytes per iteration (16 floats)
+                KV_StreamStore_AVX512(ptr, ptr, nFloats);
+            }
+            else if (has_avx2 && nFloats >= 8)
+            {
+                // AVX2: 32 bytes per iteration (8 floats)
+                KV_StreamStore_AVX2(ptr, ptr, nFloats);
+            }
+            else
+            {
+                // Scalar fallback
+                std::memset(ptr, 0, sz);
+            }
+        }
+        else
+        {
+            std::memset(ptr, 0, sz);
+        }
     }
     
     g_titanState.current_seq_len.store(0);
@@ -120,6 +164,12 @@ void Titan_BeginInference()
     {
         g_titanState.session_start = std::chrono::steady_clock::now();
         g_titanState.current_seq_len.store(0);
+    }
+    
+    // MASM fast-path: TLB warmup via ApertureMap for KV cache region
+    if (g_titanState.kv_cache_ptr && g_titanState.kv_cache_size > 0)
+    {
+        KV_ApertureMap(g_titanState.kv_cache_ptr, g_titanState.kv_cache_size);
     }
     
     g_titanState.inference_in_progress.store(true);

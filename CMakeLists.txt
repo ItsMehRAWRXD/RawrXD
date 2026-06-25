@@ -436,6 +436,9 @@ if(RAWR_HAS_MASM)
         src/asm/GhostParser_ScanVectorized.asm
         # KV-Cache Aperture Memory Bypass (non-temporal streaming + rolling buffer)
         src/asm/RAWRXD_KV_APERTURE.asm
+        src/asm/RAWRXD_QUANT_DEQUANT.asm
+        src/asm/RAWRXD_SCHEDULER.asm
+        src/asm/RAWRXD_CYLINDER.asm
         src/asm/RawrXD_KVCache_Rolling.asm
         src/asm/Titan_MoE_SparseGather.asm
         # P0 Gaps: Vector Indexing & Search
@@ -6561,6 +6564,30 @@ if(WIN32)
         OUTPUT_NAME RawrXD-KVBenchmark
     )
     message(STATUS "[Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # GhostParser SIMD Benchmark — AVX2/AVX-512 vs Scalar wcsstr
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(RawrXD-GhostParserBench EXCLUDE_FROM_ALL
+        src/tools/ghostparser_benchmark.cpp
+        src/asm/GhostParser_ScanVectorized.asm
+    )
+    set_source_files_properties(src/asm/GhostParser_ScanVectorized.asm PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(RawrXD-GhostParserBench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_compile_options(RawrXD-GhostParserBench PRIVATE /EHsc /W0 /O2 /arch:AVX2)
+    endif()
+    target_link_libraries(RawrXD-GhostParserBench PRIVATE
+        kernel32 user32
+    )
+    set_target_properties(RawrXD-GhostParserBench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-GhostParserBench
+    )
+    message(STATUS "[Phase E] GhostParser SIMD Benchmark target: RawrXD-GhostParserBench")
 
     # ═══════════════════════════════════════════════════════════════════
     # Query Fusion Benchmark — Phase 9 deterministic gated fusion microbench
