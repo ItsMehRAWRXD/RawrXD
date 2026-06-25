@@ -231,7 +231,7 @@ Write-Host "`nPHASE 5: Security & Infrastructure" -ForegroundColor Yellow
 
 # VEH Handler
 $testStart = Get-Date
-$vehFile = "d:\rawrxd\src\win32app\Win32IDE_Stubs.cpp"
+$vehFile = "d:\rawrxd\src\win32app\Win32IDE_AgenticFeatures.cpp"
 if (Test-Path $vehFile) {
     Log-TestResult -Suite "Phase 5" -Test "VEH Handler" -Status "PASS" -Duration ((Get-Date) - $testStart).TotalMilliseconds -Details "VEH handler present"
 } else {

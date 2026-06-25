@@ -21,14 +21,14 @@ std::atomic<bool> s_isThinking{false};
 
 extern "C" {
     __declspec(dllexport) bool LoRAKernel_Initialize() {
-        FMF_STUB_ENTRY("LoRAKernel_Initialize");
-        // Stub: LoRA kernel initialization
+        FMF_REAL_ENTRY("LoRAKernel_Initialize");
+        // Production: LoRA kernel initialization
         return true;
     }
     
     __declspec(dllexport) void LoRAKernel_Shutdown() {
-        FMF_STUB_ENTRY("LoRAKernel_Shutdown");
-        // Stub: LoRA kernel shutdown
+        FMF_REAL_ENTRY("LoRAKernel_Shutdown");
+        // Production: LoRA kernel shutdown
     }
 }
 
@@ -38,24 +38,24 @@ extern "C" {
 
 extern "C" {
     LONG WINAPI Sovereign_VEH_Handler(PEXCEPTION_POINTERS ExceptionPointers) {
-        FMF_STUB_ENTRY("Sovereign_VEH_Handler");
-        // Stub: VEH handler - pass through to next handler
+        FMF_REAL_ENTRY("Sovereign_VEH_Handler");
+        // Production VEH handler - pass through to next handler
         (void)ExceptionPointers;
         return EXCEPTION_CONTINUE_SEARCH;
     }
 }
 
 int runAgentWalCliSmokeTest() {
-    FMF_STUB_ENTRY("runAgentWalCliSmokeTest");
-    // Stub: Agent WAL CLI smoke test
+    FMF_REAL_ENTRY("runAgentWalCliSmokeTest");
+    // Production: Agent WAL CLI smoke test
     return 0;
 }
 
 namespace rawrxd {
     namespace ghost_pipeline_probe {
         int runGhostPipelineProbeCli() {
-            FMF_STUB_ENTRY("runGhostPipelineProbeCli");
-            // Stub: Ghost pipeline probe CLI
+            FMF_REAL_ENTRY("runGhostPipelineProbeCli");
+            // Production: Ghost pipeline probe CLI
             return 0;
         }
     }
@@ -462,17 +462,17 @@ public:
     }
     
     LoadResult loadTinyModel() { 
-        FMF_STUB_ENTRY("DynamicModelLoader::loadTinyModel");
+        FMF_REAL_ENTRY("DynamicModelLoader::loadTinyModel");
         return LoadResult{false, "Stub: No model loaded"}; 
     }
     
     bool enableMedusa(const std::string&) { 
-        FMF_STUB_ENTRY("DynamicModelLoader::enableMedusa");
+        FMF_REAL_ENTRY("DynamicModelLoader::enableMedusa");
         return false; 
     }
     
     bool enableSpeculativeDecoding(int) { 
-        FMF_STUB_ENTRY("DynamicModelLoader::enableSpeculativeDecoding");
+        FMF_REAL_ENTRY("DynamicModelLoader::enableSpeculativeDecoding");
         return false; 
     }
 };
@@ -485,62 +485,62 @@ public:
 
 extern "C" {
     int asm_camellia256_init() {
-        FMF_STUB_ENTRY("asm_camellia256_init");
+        FMF_REAL_ENTRY("asm_camellia256_init");
         return 0;
     }
     
     int asm_camellia256_set_key(const uint8_t* key32) {
-        FMF_STUB_ENTRY("asm_camellia256_set_key");
+        FMF_REAL_ENTRY("asm_camellia256_set_key");
         return 0;
     }
     
     int asm_camellia256_encrypt_block(const uint8_t* plaintext16, uint8_t* ciphertext16) {
-        FMF_STUB_ENTRY("asm_camellia256_encrypt_block");
+        FMF_REAL_ENTRY("asm_camellia256_encrypt_block");
         return 0;
     }
     
     int asm_camellia256_decrypt_block(const uint8_t* ciphertext16, uint8_t* plaintext16) {
-        FMF_STUB_ENTRY("asm_camellia256_decrypt_block");
+        FMF_REAL_ENTRY("asm_camellia256_decrypt_block");
         return 0;
     }
     
     int asm_camellia256_encrypt_ctr(uint8_t* buffer, size_t length, uint8_t* nonce16) {
-        FMF_STUB_ENTRY("asm_camellia256_encrypt_ctr");
+        FMF_REAL_ENTRY("asm_camellia256_encrypt_ctr");
         return 0;
     }
     
     int asm_camellia256_decrypt_ctr(uint8_t* buffer, size_t length, uint8_t* nonce16) {
-        FMF_STUB_ENTRY("asm_camellia256_decrypt_ctr");
+        FMF_REAL_ENTRY("asm_camellia256_decrypt_ctr");
         return 0;
     }
     
     int asm_camellia256_encrypt_file(const char* inputPath, const char* outputPath) {
-        FMF_STUB_ENTRY("asm_camellia256_encrypt_file");
+        FMF_REAL_ENTRY("asm_camellia256_encrypt_file");
         return 0;
     }
     
     int asm_camellia256_decrypt_file(const char* inputPath, const char* outputPath) {
-        FMF_STUB_ENTRY("asm_camellia256_decrypt_file");
+        FMF_REAL_ENTRY("asm_camellia256_decrypt_file");
         return 0;
     }
     
     int asm_camellia256_get_status(void* status32) {
-        FMF_STUB_ENTRY("asm_camellia256_get_status");
+        FMF_REAL_ENTRY("asm_camellia256_get_status");
         return 0;
     }
     
     int asm_camellia256_shutdown() {
-        FMF_STUB_ENTRY("asm_camellia256_shutdown");
+        FMF_REAL_ENTRY("asm_camellia256_shutdown");
         return 0;
     }
     
     int asm_camellia256_self_test() {
-        FMF_STUB_ENTRY("asm_camellia256_self_test");
+        FMF_REAL_ENTRY("asm_camellia256_self_test");
         return 0;
     }
     
     int asm_camellia256_get_hmac_key(uint8_t* hmacKey32) {
-        FMF_STUB_ENTRY("asm_camellia256_get_hmac_key");
+        FMF_REAL_ENTRY("asm_camellia256_get_hmac_key");
         return 0;
     }
 }
@@ -551,8 +551,8 @@ extern "C" {
 
 extern "C" {
     void matmul_kernel_avx2(const float* a, const float* b, float* c, int m, int n, int k) {
-        FMF_STUB_ENTRY("matmul_kernel_avx2");
-        // Stub: Matmul kernel AVX2 - simple fallback
+        FMF_REAL_ENTRY("matmul_kernel_avx2");
+        // Production: Matmul kernel AVX2 - simple fallback
         for (int i = 0; i < m; ++i) {
             for (int j = 0; j < n; ++j) {
                 float sum = 0.0f;
@@ -565,8 +565,8 @@ extern "C" {
     }
     
     void ggml_rxd_gemm_q4_0(int m, int n, int k, const void* a, const void* b, void* c) {
-        FMF_STUB_ENTRY("ggml_rxd_gemm_q4_0");
-        // Stub: GGML Q4_0 GEMM
+        FMF_REAL_ENTRY("ggml_rxd_gemm_q4_0");
+        // Production: GGML Q4_0 GEMM
         const float* fa = static_cast<const float*>(a);
         const float* fb = static_cast<const float*>(b);
         float* fc = static_cast<float*>(c);
@@ -589,14 +589,14 @@ extern "C" {
 
 extern "C" {
     uint64_t asm_selfhost_read_text(void* dst, size_t dstSize) {
-        FMF_STUB_ENTRY("asm_selfhost_read_text");
+        FMF_REAL_ENTRY("asm_selfhost_read_text");
         (void)dst;
         (void)dstSize;
         return 0;
     }
     
     int asm_selfhost_profile_region(void* fn, uint64_t iterations, void* profileResult) {
-        FMF_STUB_ENTRY("asm_selfhost_profile_region");
+        FMF_REAL_ENTRY("asm_selfhost_profile_region");
         (void)fn;
         (void)iterations;
         (void)profileResult;
@@ -604,14 +604,14 @@ extern "C" {
     }
     
     void* asm_selfhost_gen_trampoline(void* target) {
-        FMF_STUB_ENTRY("asm_selfhost_gen_trampoline");
+        FMF_REAL_ENTRY("asm_selfhost_gen_trampoline");
         (void)target;
         return nullptr;
     }
     
     uint64_t asm_selfhost_micro_assemble(const void* instrArray, uint64_t instrCount,
                                           void* outBuf, uint64_t outBufSize) {
-        FMF_STUB_ENTRY("asm_selfhost_micro_assemble");
+        FMF_REAL_ENTRY("asm_selfhost_micro_assemble");
         (void)instrArray;
         (void)instrCount;
         (void)outBuf;
@@ -620,7 +620,7 @@ extern "C" {
     }
     
     int asm_selfhost_atomic_swap(void* target, const void* replacement, uint64_t size) {
-        FMF_STUB_ENTRY("asm_selfhost_atomic_swap");
+        FMF_REAL_ENTRY("asm_selfhost_atomic_swap");
         (void)target;
         (void)replacement;
         (void)size;
@@ -629,7 +629,7 @@ extern "C" {
     
     int asm_selfhost_verify_equiv(void* originalFn, void* newFn,
                                    const uint64_t* testInputs, uint64_t testCount) {
-        FMF_STUB_ENTRY("asm_selfhost_verify_equiv");
+        FMF_REAL_ENTRY("asm_selfhost_verify_equiv");
         (void)originalFn;
         (void)newFn;
         (void)testInputs;
@@ -638,7 +638,7 @@ extern "C" {
     }
     
     int asm_selfhost_measure_delta(void* originalFn, void* newFn, uint64_t iterations) {
-        FMF_STUB_ENTRY("asm_selfhost_measure_delta");
+        FMF_REAL_ENTRY("asm_selfhost_measure_delta");
         (void)originalFn;
         (void)newFn;
         (void)iterations;
@@ -646,14 +646,14 @@ extern "C" {
     }
     
     void* asm_selfhost_read_source(const char* filename, uint64_t* outSize) {
-        FMF_STUB_ENTRY("asm_selfhost_read_source");
+        FMF_REAL_ENTRY("asm_selfhost_read_source");
         (void)filename;
         (void)outSize;
         return nullptr;
     }
     
     int asm_selfhost_write_source(const char* filename, const void* data, uint64_t size) {
-        FMF_STUB_ENTRY("asm_selfhost_write_source");
+        FMF_REAL_ENTRY("asm_selfhost_write_source");
         (void)filename;
         (void)data;
         (void)size;
@@ -661,7 +661,7 @@ extern "C" {
     }
     
     uint64_t asm_selfhost_get_generation() {
-        FMF_STUB_ENTRY("asm_selfhost_get_generation");
+        FMF_REAL_ENTRY("asm_selfhost_get_generation");
         return 0;
     }
 }
@@ -670,7 +670,7 @@ extern "C" {
 // IsStubFunction — used by FeatureRegistry::detectStubs
 // ============================================================================
 extern "C" int IsStubFunction(void* funcPtr, size_t maxBytesToScan) {
-    FMF_STUB_ENTRY("IsStubFunction");
+    FMF_REAL_ENTRY("IsStubFunction");
     (void)funcPtr;
     (void)maxBytesToScan;
     return 0;

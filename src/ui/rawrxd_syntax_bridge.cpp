@@ -9,22 +9,22 @@
 #define MAX_TOKENS      4096
 #define MAX_TOKEN_LEN   128
 
-enum TokenType {
-    TOKEN_UNKNOWN = 0,
-    TOKEN_KEYWORD,
-    TOKEN_STRING,
-    TOKEN_COMMENT,
-    TOKEN_NUMBER,
-    TOKEN_IDENTIFIER,
-    TOKEN_OPERATOR,
-    TOKEN_TYPE
+enum RawrTokenType {
+    RAWR_TOKEN_UNKNOWN = 0,
+    RAWR_TOKEN_KEYWORD,
+    RAWR_TOKEN_STRING,
+    RAWR_TOKEN_COMMENT,
+    RAWR_TOKEN_NUMBER,
+    RAWR_TOKEN_IDENTIFIER,
+    RAWR_TOKEN_OPERATOR,
+    RAWR_TOKEN_TYPE
 };
 
 struct SyntaxToken {
     volatile LONG active;
     uint32_t tokenId;
     char text[MAX_TOKEN_LEN];
-    TokenType type;
+    RawrTokenType type;
     uint32_t line;
     uint32_t column;
     uint32_t color;
@@ -63,7 +63,7 @@ extern "C" __declspec(dllexport) int rawrxd_syntax_bridge_AddToken(const char* t
     if (len >= MAX_TOKEN_LEN) len = MAX_TOKEN_LEN - 1;
     memcpy(tok->text, text, len);
     tok->text[len] = 0;
-    tok->type = static_cast<TokenType>(type);
+    tok->type = static_cast<RawrTokenType>(type);
     tok->line = line;
     tok->column = column;
     tok->color = color;
