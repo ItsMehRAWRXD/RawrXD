@@ -153,15 +153,12 @@ namespace RawrXD::Extensions::VSCodeAPI {
             return it->second;
         }
 
-        // SANDBOX CHECK: Verify read access
-        // Note: In a real multi-tenant host, we would retrieve the context for the current extension.
-        // For Day 9, we use a placeholder check that will be wired to the active IPC context in Phase 3.
-        // TODO: Implement ExtensionSecurityContext and FilesystemAccessControl
-        // ExtensionSecurityContext dummyContext; 
-        // if (!FilesystemAccessControl::CheckReadAccess(dummyContext, fileName)) {
-        //     LOG_WARNING("Sandbox Blocked: OpenTextDocument unauthorized for " + fileName);
-        //     return nullptr;
-        // }
+        // SANDBOX CHECK: Verify read access using ExtensionSandboxManager
+        auto& sandbox = RawrXD::Extensions::ExtensionSandboxManager::GetInstance();
+        if (!sandbox.IsPathAllowed("vscode-api", fileName, RawrXD::Extensions::PermissionType::FileRead)) {
+            LOG_WARNING("Sandbox Blocked: OpenTextDocument unauthorized for " + fileName);
+            return nullptr;
+        }
 
         // Read file content (fail-soft; empty doc if unreadable)
         auto doc = std::make_shared<TextDocument>();
@@ -549,13 +546,12 @@ namespace RawrXD::Extensions::VSCodeAPI {
 
     void EnvironmentAPI::OpenExternal(const std::string& url)
     {
-        // SANDBOX CHECK: Verify network/URL access
-        // TODO: Implement ExtensionSecurityContext and NetworkAccessControl
-        // ExtensionSecurityContext dummyContext;
-        // if (!NetworkAccessControl::CheckURLAccess(dummyContext, url)) {
-        //     LOG_WARNING("Sandbox Blocked: OpenExternal unauthorized for " + url);
-        //     return;
-        // }
+        // SANDBOX CHECK: Verify network/URL access using ExtensionSandboxManager
+        auto& sandbox = RawrXD::Extensions::ExtensionSandboxManager::GetInstance();
+        if (!sandbox.ValidateRequest("vscode-api", RawrXD::Extensions::PermissionType::NetworkAccess, url)) {
+            LOG_WARNING("Sandbox Blocked: OpenExternal unauthorized for " + url);
+            return;
+        }
 
         LOG_INFO("Opening external URL: " + url);
         

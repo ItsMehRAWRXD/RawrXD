@@ -2,6 +2,7 @@
 // Phase 2 Day 7: Extension Discovery, Marketplace Client, and Manifest Validation
 
 #include "ExtensionHost.h"
+#include "../../include/rawrxd_version.h"
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -64,7 +65,19 @@ static ManifestValidationResult ValidateManifest(const nlohmann::json& manifest)
     if (manifest.contains("engines") && manifest["engines"].is_object()) {
         if (manifest["engines"].contains("rawrxd")) {
             std::string reqVer = manifest["engines"]["rawrxd"].get<std::string>();
-            // TODO: Compare against current RawrXD version
+            // Compare against current RawrXD version
+            std::string currentVer = RAWRXD_VERSION_STR;
+            if (reqVer != currentVer) {
+                // Simple semver check: require major version match, minor can differ
+                size_t dotPos = reqVer.find('.');
+                std::string reqMajor = (dotPos != std::string::npos) ? reqVer.substr(0, dotPos) : reqVer;
+                dotPos = currentVer.find('.');
+                std::string curMajor = (dotPos != std::string::npos) ? currentVer.substr(0, dotPos) : currentVer;
+                if (reqMajor != curMajor) {
+                    result.warnings.push_back("Extension requires RawrXD v" + reqVer +
+                                               " but current version is " + currentVer);
+                }
+            }
         }
     }
 
