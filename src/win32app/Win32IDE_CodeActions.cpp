@@ -23,26 +23,12 @@
 using json = nlohmann::json;
 
 // ============================================================================
-// CODE ACTION STRUCTURES
+// LSP CODE ACTION REQUEST/RESPONSE
 // ============================================================================
 
-struct CodeAction {
-    std::string title;
-    std::string kind;  // "quickfix", "refactor", "source.organizeImports", etc.
-    bool isPreferred;
-    std::string editUri;
-    std::vector<Win32IDE::LSPWorkspaceEdit::TextEdit> edits;
-    std::string command;
-    json commandArgs;
-};
-
-// ============================================================================
-// CODE ACTION REQUEST/RESPONSE
-// ============================================================================
-
-std::vector<CodeAction> Win32IDE::lspCodeActions(const std::string& uri, int line, int character,
-                                                  const std::vector<LSPDiagnostic>& diagnostics) {
-    std::vector<CodeAction> actions;
+std::vector<Win32IDE::LSPCodeAction> Win32IDE::lspCodeActions(const std::string& uri, int line, int startChar,
+                                                                 int endChar, const std::vector<std::string>& diagnosticCodes) {
+    std::vector<LSPCodeAction> actions;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
         return actions;
@@ -52,27 +38,16 @@ std::vector<CodeAction> Win32IDE::lspCodeActions(const std::string& uri, int lin
     json params;
     params["textDocument"]["uri"] = uri;
     params["range"]["start"]["line"] = line;
-    params["range"]["start"]["character"] = character;
+    params["range"]["start"]["character"] = startChar;
     params["range"]["end"]["line"] = line;
-    params["range"]["end"]["character"] = character;
+    params["range"]["end"]["character"] = endChar;
 
     // Include diagnostics context
     json diagArray = json::array();
-    for (const auto& diag : diagnostics) {
-        if (diag.range.start.line == line) {
-            json d;
-            d["range"]["start"]["line"] = diag.range.start.line;
-            d["range"]["start"]["character"] = diag.range.start.character;
-            d["range"]["end"]["line"] = diag.range.end.line;
-            d["range"]["end"]["character"] = diag.range.end.character;
-            d["message"] = diag.message;
-            d["severity"] = diag.severity;
-            d["source"] = diag.source;
-            if (!diag.code.empty()) {
-                d["code"] = diag.code;
-            }
-            diagArray.push_back(d);
-        }
+    for (const auto& code : diagnosticCodes) {
+        json d;
+        d["code"] = code;
+        diagArray.push_back(d);
     }
     params["context"]["diagnostics"] = diagArray;
 
@@ -93,44 +68,16 @@ std::vector<CodeAction> Win32IDE::lspCodeActions(const std::string& uri, int lin
 
     // Parse code actions
     for (const auto& actionJson : resp["result"]) {
-        CodeAction action;
+        LSPCodeAction action;
         action.title = actionJson.value("title", "");
         action.kind = actionJson.value("kind", "");
-        action.isPreferred = actionJson.value("isPreferred", false);
-
-        // Parse edit
-        if (actionJson.contains("edit")) {
-            const auto& edit = actionJson["edit"];
-            if (edit.contains("changes")) {
-                for (auto it = edit["changes"].begin(); it != edit["changes"].end(); ++it) {
-                    action.editUri = it.key();
-                    if (it.value().is_array()) {
-                        for (const auto& textEdit : it.value()) {
-                            Win32IDE::LSPWorkspaceEdit::TextEdit te;
-                            te.newText = textEdit.value("newText", "");
-                            if (textEdit.contains("range")) {
-                                const auto& r = textEdit["range"];
-                                te.range.start.line = r["start"].value("line", 0);
-                                te.range.start.character = r["start"].value("character", 0);
-                                te.range.end.line = r["end"].value("line", 0);
-                                te.range.end.character = r["end"].value("character", 0);
-                            }
-                            action.edits.push_back(te);
-                        }
-                    }
-                }
-            }
+        action.hasEdit = actionJson.contains("edit");
+        if (action.hasEdit) {
+            action.edit = actionJson["edit"];
         }
-
-        // Parse command (for actions that execute commands)
         if (actionJson.contains("command")) {
-            const auto& cmd = actionJson["command"];
-            action.command = cmd.value("command", "");
-            if (cmd.contains("arguments")) {
-                action.commandArgs = cmd["arguments"];
-            }
+            action.command = actionJson["command"].value("command", "");
         }
-
         actions.push_back(action);
     }
 
@@ -141,34 +88,30 @@ std::vector<CodeAction> Win32IDE::lspCodeActions(const std::string& uri, int lin
 // APPLY CODE ACTION
 // ============================================================================
 
-bool Win32IDE::applyCodeAction(const CodeAction& action) {
-    if (action.edits.empty() && action.command.empty()) {
-        return false;
-    }
+void Win32IDE::applyCodeAction(const CodeAction& action) {
+    if (action.lspEditJson.empty()) return;
 
-    // Apply text edits
-    if (!action.edits.empty()) {
-        // Sort edits by position (reverse order for safe application)
-        std::vector<Win32IDE::LSPWorkspaceEdit::TextEdit> sortedEdits = action.edits;
-        std::sort(sortedEdits.begin(), sortedEdits.end(), 
-            [](const auto& a, const auto& b) {
-                if (a.range.start.line != b.range.start.line)
-                    return a.range.start.line > b.range.start.line;
-                return a.range.start.character > b.range.start.character;
-            });
+    json editJson = json::parse(action.lspEditJson, nullptr, false);
+    if (editJson.is_discarded()) return;
 
-        // Apply each edit
-        for (const auto& edit : sortedEdits) {
-            applyTextEdit(edit);
+    if (editJson.contains("changes")) {
+        for (auto it = editJson["changes"].begin(); it != editJson["changes"].end(); ++it) {
+            if (it.value().is_array()) {
+                for (const auto& textEdit : it.value()) {
+                    LSPWorkspaceEdit::TextEdit te;
+                    te.newText = textEdit.value("newText", "");
+                    if (textEdit.contains("range")) {
+                        const auto& r = textEdit["range"];
+                        te.range.start.line = r["start"].value("line", 0);
+                        te.range.start.character = r["start"].value("character", 0);
+                        te.range.end.line = r["end"].value("line", 0);
+                        te.range.end.character = r["end"].value("character", 0);
+                    }
+                    applyTextEdit(te);
+                }
+            }
         }
     }
-
-    // Execute command if present
-    if (!action.command.empty()) {
-        executeLSPCommand(action.command, action.commandArgs);
-    }
-
-    return true;
 }
 
 void Win32IDE::applyTextEdit(const LSPWorkspaceEdit::TextEdit& edit) {
@@ -204,7 +147,7 @@ void Win32IDE::applyTextEdit(const LSPWorkspaceEdit::TextEdit& edit) {
     SendMessage(m_hwndEditor, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
     SendMessage(m_hwndEditor, EM_REPLACESEL, TRUE, reinterpret_cast<LPARAM>(edit.newText.c_str()));
 
-    m_modified = true;
+    m_fileModified = true;
 }
 
 // ============================================================================
@@ -220,26 +163,27 @@ void Win32IDE::cmdFixAllDiagnostics() {
     std::string uri = filePathToUri(m_currentFile);
     
     // Get all diagnostics for current file
-    std::vector<LSPDiagnostic> fileDiags;
+    std::vector<std::string> codes;
     {
         std::lock_guard<std::mutex> lock(m_lspDiagnosticsMutex);
-        for (const auto& diag : m_lspDiagnostics) {
-            if (diag.uri == uri) {
-                fileDiags.push_back(diag);
+        auto it = m_lspDiagnostics.find(uri);
+        if (it != m_lspDiagnostics.end()) {
+            for (const auto& diag : it->second) {
+                codes.push_back(diag.code);
             }
         }
     }
 
-    if (fileDiags.empty()) {
+    if (codes.empty()) {
         appendToOutput("[CodeAction] No diagnostics to fix.", "General", OutputSeverity::Info);
         return;
     }
 
     // Request code actions for all diagnostics
-    auto actions = lspCodeActions(uri, 0, 0, fileDiags);
+    auto actions = lspCodeActions(uri, 0, 0, 0, codes);
 
     // Filter for "fix all" actions
-    std::vector<CodeAction> fixAllActions;
+    std::vector<LSPCodeAction> fixAllActions;
     for (const auto& action : actions) {
         if (action.kind.find("source.fixAll") != std::string::npos ||
             action.kind.find("quickfix.fixAll") != std::string::npos) {
@@ -248,15 +192,31 @@ void Win32IDE::cmdFixAllDiagnostics() {
     }
 
     if (fixAllActions.empty()) {
-        // Fall back to applying individual quick fixes
-        for (const auto& action : actions) {
-            if (action.kind.find("quickfix") != std::string::npos && action.isPreferred) {
-                applyCodeAction(action);
+        appendToOutput("[CodeAction] No fix-all actions available.", "General", OutputSeverity::Info);
+        return;
+    }
+
+    // Apply first fix-all action
+    if (fixAllActions[0].hasEdit && !fixAllActions[0].edit.is_null()) {
+        json editJson = fixAllActions[0].edit;
+        if (editJson.contains("changes")) {
+            for (auto it = editJson["changes"].begin(); it != editJson["changes"].end(); ++it) {
+                if (it.value().is_array()) {
+                    for (const auto& textEdit : it.value()) {
+                        LSPWorkspaceEdit::TextEdit te;
+                        te.newText = textEdit.value("newText", "");
+                        if (textEdit.contains("range")) {
+                            const auto& r = textEdit["range"];
+                            te.range.start.line = r["start"].value("line", 0);
+                            te.range.start.character = r["start"].value("character", 0);
+                            te.range.end.line = r["end"].value("line", 0);
+                            te.range.end.character = r["end"].value("character", 0);
+                        }
+                        applyTextEdit(te);
+                    }
+                }
             }
         }
-    } else {
-        // Apply fix all
-        applyCodeAction(fixAllActions[0]);
     }
 
     appendToOutput("[CodeAction] Applied fix all.", "General", OutputSeverity::Info);
@@ -297,35 +257,29 @@ void Win32IDE::cmdOrganizeImports() {
     json resp = readLSPResponse(lang, id, 5000);
 
     if (resp.contains("result") && resp["result"].is_array() && !resp["result"].empty()) {
-        const auto& action = resp["result"][0];
-        CodeAction ca;
-        ca.title = action.value("title", "Organize Imports");
-        ca.kind = action.value("kind", "");
-
+        const auto& action = resp["result"].at(0);
         if (action.contains("edit")) {
-            const auto& edit = action["edit"];
-            if (edit.contains("changes")) {
-                for (auto it = edit["changes"].begin(); it != edit["changes"].end(); ++it) {
-                    ca.editUri = it.key();
-                    for (const auto& textEdit : it.value()) {
-                        LSPWorkspaceEdit::TextEdit te;
-                        te.newText = textEdit.value("newText", "");
-                        if (textEdit.contains("range")) {
-                            const auto& r = textEdit["range"];
-                            te.range.start.line = r["start"].value("line", 0);
-                            te.range.start.character = r["start"].value("character", 0);
-                            te.range.end.line = r["end"].value("line", 0);
-                            te.range.end.character = r["end"].value("character", 0);
+            json editJson = action["edit"];
+            if (editJson.contains("changes")) {
+                for (auto it = editJson["changes"].begin(); it != editJson["changes"].end(); ++it) {
+                    if (it.value().is_array()) {
+                        for (const auto& textEdit : it.value()) {
+                            LSPWorkspaceEdit::TextEdit te;
+                            te.newText = textEdit.value("newText", "");
+                            if (textEdit.contains("range")) {
+                                const auto& r = textEdit["range"];
+                                te.range.start.line = r["start"].value("line", 0);
+                                te.range.start.character = r["start"].value("character", 0);
+                                te.range.end.line = r["end"].value("line", 0);
+                                te.range.end.character = r["end"].value("character", 0);
+                            }
+                            applyTextEdit(te);
                         }
-                        ca.edits.push_back(te);
                     }
                 }
             }
         }
-
-        if (applyCodeAction(ca)) {
-            appendToOutput("[CodeAction] Organized imports.", "General", OutputSeverity::Info);
-        }
+        appendToOutput("[CodeAction] Organized imports.", "General", OutputSeverity::Info);
     } else {
         appendToOutput("[CodeAction] No organize imports action available.", "General", OutputSeverity::Warning);
     }
@@ -341,18 +295,21 @@ void Win32IDE::showCodeActions(int line, int character) {
     std::string uri = filePathToUri(m_currentFile);
 
     // Get diagnostics for this line
-    std::vector<LSPDiagnostic> lineDiags;
+    std::vector<std::string> lineCodes;
     {
         std::lock_guard<std::mutex> lock(m_lspDiagnosticsMutex);
-        for (const auto& diag : m_lspDiagnostics) {
-            if (diag.uri == uri && diag.range.start.line == line) {
-                lineDiags.push_back(diag);
+        auto it = m_lspDiagnostics.find(uri);
+        if (it != m_lspDiagnostics.end()) {
+            for (const auto& diag : it->second) {
+                if (diag.range.start.line == line) {
+                    lineCodes.push_back(diag.code);
+                }
             }
         }
     }
 
     // Request code actions
-    auto actions = lspCodeActions(uri, line, character, lineDiags);
+    auto actions = lspCodeActions(uri, line, character, character, lineCodes);
 
     if (actions.empty()) {
         appendToOutput("[CodeAction] No actions available at this location.", "General", OutputSeverity::Info);
@@ -365,19 +322,7 @@ void Win32IDE::showCodeActions(int line, int character) {
 
     for (const auto& action : actions) {
         std::string label = action.title;
-        if (action.isPreferred) {
-            label = "★ " + label;
-        }
-
         AppendMenuA(hMenu, MF_STRING, menuId++, label.c_str());
-
-        // Add separator between different kinds
-        if (menuId > 1001 && !actions.empty()) {
-            const auto& prev = actions[(menuId - 2) - 1000];
-            if (prev.kind != action.kind) {
-                AppendMenuA(hMenu, MF_SEPARATOR, 0, nullptr);
-            }
-        }
     }
 
     // Show menu at cursor position
@@ -390,7 +335,15 @@ void Win32IDE::showCodeActions(int line, int character) {
     if (result >= 1000) {
         int actionIndex = result - 1000;
         if (actionIndex >= 0 && actionIndex < (int)actions.size()) {
-            applyCodeAction(actions[actionIndex]);
+            // Convert LSPCodeAction to CodeAction and apply
+            CodeAction ca;
+            ca.title = actions[actionIndex].title;
+            ca.kind = actions[actionIndex].kind;
+            ca.isFromLSP = true;
+            if (actions[actionIndex].hasEdit) {
+                ca.lspEditJson = actions[actionIndex].edit.dump();
+            }
+            applyCodeAction(ca);
         }
     }
 

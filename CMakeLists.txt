@@ -433,6 +433,7 @@ if(RAWR_HAS_MASM)
         src/asm/RawrXD_ContextBuffer.asm
         src/asm/RawrXD_JsonPlanParser.asm
         src/asm/node_heartbeat.asm
+        src/asm/GhostParser_ScanVectorized.asm
         # KV-Cache Aperture Memory Bypass (non-temporal streaming + rolling buffer)
         src/asm/RAWRXD_KV_APERTURE.asm
         src/asm/RawrXD_KVCache_Rolling.asm
@@ -3668,6 +3669,8 @@ if(WIN32)
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/ASM_Bridge_Implementation.cpp
         src/win32app/Win32IDE_Commands.cpp
+        src/win32app/Win32IDE_CodeActions.cpp
+        src/win32app/Win32IDE_Hierarchy.cpp
         src/win32app/Win32IDE_ModelLab.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
         src/win32app/Win32IDE_CopilotNativeGlue.cpp

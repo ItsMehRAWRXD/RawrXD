@@ -23,65 +23,6 @@
 using json = nlohmann::json;
 
 // ============================================================================
-// CALL HIERARCHY ITEM
-// ============================================================================
-
-struct CallHierarchyItem {
-    std::string name;
-    std::string kind;  // "function", "method", "constructor", etc.
-    std::string detail;
-    std::string uri;
-    struct {
-        int startLine;
-        int startCharacter;
-        int endLine;
-        int endCharacter;
-    } range;
-    struct {
-        int startLine;
-        int startCharacter;
-        int endLine;
-        int endCharacter;
-    } selectionRange;
-};
-
-struct CallHierarchyCall {
-    CallHierarchyItem from;
-    CallHierarchyItem to;
-    struct {
-        int startLine;
-        int startCharacter;
-        int endLine;
-        int endCharacter;
-    } fromRanges;
-};
-
-// ============================================================================
-// TYPE HIERARCHY ITEM
-// ============================================================================
-
-struct TypeHierarchyItem {
-    std::string name;
-    std::string kind;  // "class", "interface", "struct", "enum", etc.
-    std::string detail;
-    std::string uri;
-    struct {
-        int startLine;
-        int startCharacter;
-        int endLine;
-        int endCharacter;
-    } range;
-    struct {
-        int startLine;
-        int startCharacter;
-        int endLine;
-        int endCharacter;
-    } selectionRange;
-    std::vector<TypeHierarchyItem> parents;   // supertypes
-    std::vector<TypeHierarchyItem> children;  // subtypes
-};
-
-// ============================================================================
 // CALL HIERARCHY IMPLEMENTATION
 // ============================================================================
 
@@ -118,18 +59,18 @@ CallHierarchyItem Win32IDE::lspPrepareCallHierarchy(const std::string& uri, int 
 
         if (item.contains("range")) {
             const auto& r = item["range"];
-            result.range.startLine = r["start"].value("line", 0);
-            result.range.startCharacter = r["start"].value("character", 0);
-            result.range.endLine = r["end"].value("line", 0);
-            result.range.endCharacter = r["end"].value("character", 0);
+            result.range.start.line = r["start"].value("line", 0);
+            result.range.start.character = r["start"].value("character", 0);
+            result.range.end.line = r["end"].value("line", 0);
+            result.range.end.character = r["end"].value("character", 0);
         }
 
         if (item.contains("selectionRange")) {
             const auto& sr = item["selectionRange"];
-            result.selectionRange.startLine = sr["start"].value("line", 0);
-            result.selectionRange.startCharacter = sr["start"].value("character", 0);
-            result.selectionRange.endLine = sr["end"].value("line", 0);
-            result.selectionRange.endCharacter = sr["end"].value("character", 0);
+            result.selectionRange.start.line = sr["start"].value("line", 0);
+            result.selectionRange.start.character = sr["start"].value("character", 0);
+            result.selectionRange.end.line = sr["end"].value("line", 0);
+            result.selectionRange.end.character = sr["end"].value("character", 0);
         }
     }
 
@@ -148,14 +89,14 @@ std::vector<CallHierarchyCall> Win32IDE::lspIncomingCalls(const CallHierarchyIte
     itemJson["name"] = item.name;
     itemJson["kind"] = item.kind;
     itemJson["uri"] = item.uri;
-    itemJson["range"]["start"]["line"] = item.range.startLine;
-    itemJson["range"]["start"]["character"] = item.range.startCharacter;
-    itemJson["range"]["end"]["line"] = item.range.endLine;
-    itemJson["range"]["end"]["character"] = item.range.endCharacter;
-    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.startLine;
-    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.startCharacter;
-    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.endLine;
-    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.endCharacter;
+    itemJson["range"]["start"]["line"] = item.range.start.line;
+    itemJson["range"]["start"]["character"] = item.range.start.character;
+    itemJson["range"]["end"]["line"] = item.range.end.line;
+    itemJson["range"]["end"]["character"] = item.range.end.character;
+    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.start.line;
+    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.start.character;
+    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.end.line;
+    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.end.character;
     params["item"] = itemJson;
 
     int id = sendLSPRequest(lang, "callHierarchy/incomingCalls", params);
@@ -181,20 +122,20 @@ std::vector<CallHierarchyCall> Win32IDE::lspIncomingCalls(const CallHierarchyIte
 
             if (from.contains("range")) {
                 const auto& r = from["range"];
-                chc.from.range.startLine = r["start"].value("line", 0);
-                chc.from.range.startCharacter = r["start"].value("character", 0);
-                chc.from.range.endLine = r["end"].value("line", 0);
-                chc.from.range.endCharacter = r["end"].value("character", 0);
+                chc.from.range.start.line = r["start"].value("line", 0);
+                chc.from.range.start.character = r["start"].value("character", 0);
+                chc.from.range.end.line = r["end"].value("line", 0);
+                chc.from.range.end.character = r["end"].value("character", 0);
             }
         }
 
         // Parse "fromRanges"
         if (call.contains("fromRanges") && call["fromRanges"].is_array()) {
             for (const auto& fr : call["fromRanges"]) {
-                chc.fromRanges.startLine = fr["start"].value("line", 0);
-                chc.fromRanges.startCharacter = fr["start"].value("character", 0);
-                chc.fromRanges.endLine = fr["end"].value("line", 0);
-                chc.fromRanges.endCharacter = fr["end"].value("character", 0);
+                chc.fromRanges.start.line = fr["start"].value("line", 0);
+                chc.fromRanges.start.character = fr["start"].value("character", 0);
+                chc.fromRanges.end.line = fr["end"].value("line", 0);
+                chc.fromRanges.end.character = fr["end"].value("character", 0);
                 break;  // Just use first range
             }
         }
@@ -217,14 +158,14 @@ std::vector<CallHierarchyCall> Win32IDE::lspOutgoingCalls(const CallHierarchyIte
     itemJson["name"] = item.name;
     itemJson["kind"] = item.kind;
     itemJson["uri"] = item.uri;
-    itemJson["range"]["start"]["line"] = item.range.startLine;
-    itemJson["range"]["start"]["character"] = item.range.startCharacter;
-    itemJson["range"]["end"]["line"] = item.range.endLine;
-    itemJson["range"]["end"]["character"] = item.range.endCharacter;
-    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.startLine;
-    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.startCharacter;
-    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.endLine;
-    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.endCharacter;
+    itemJson["range"]["start"]["line"] = item.range.start.line;
+    itemJson["range"]["start"]["character"] = item.range.start.character;
+    itemJson["range"]["end"]["line"] = item.range.end.line;
+    itemJson["range"]["end"]["character"] = item.range.end.character;
+    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.start.line;
+    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.start.character;
+    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.end.line;
+    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.end.character;
     params["item"] = itemJson;
 
     int id = sendLSPRequest(lang, "callHierarchy/outgoingCalls", params);
@@ -250,20 +191,20 @@ std::vector<CallHierarchyCall> Win32IDE::lspOutgoingCalls(const CallHierarchyIte
 
             if (to.contains("range")) {
                 const auto& r = to["range"];
-                chc.to.range.startLine = r["start"].value("line", 0);
-                chc.to.range.startCharacter = r["start"].value("character", 0);
-                chc.to.range.endLine = r["end"].value("line", 0);
-                chc.to.range.endCharacter = r["end"].value("character", 0);
+                chc.to.range.start.line = r["start"].value("line", 0);
+                chc.to.range.start.character = r["start"].value("character", 0);
+                chc.to.range.end.line = r["end"].value("line", 0);
+                chc.to.range.end.character = r["end"].value("character", 0);
             }
         }
 
         // Parse "fromRanges"
         if (call.contains("fromRanges") && call["fromRanges"].is_array()) {
             for (const auto& fr : call["fromRanges"]) {
-                chc.fromRanges.startLine = fr["start"].value("line", 0);
-                chc.fromRanges.startCharacter = fr["start"].value("character", 0);
-                chc.fromRanges.endLine = fr["end"].value("line", 0);
-                chc.fromRanges.endCharacter = fr["end"].value("character", 0);
+                chc.fromRanges.start.line = fr["start"].value("line", 0);
+                chc.fromRanges.start.character = fr["start"].value("character", 0);
+                chc.fromRanges.end.line = fr["end"].value("line", 0);
+                chc.fromRanges.end.character = fr["end"].value("character", 0);
                 break;
             }
         }
@@ -311,18 +252,18 @@ TypeHierarchyItem Win32IDE::lspPrepareTypeHierarchy(const std::string& uri, int 
 
         if (item.contains("range")) {
             const auto& r = item["range"];
-            result.range.startLine = r["start"].value("line", 0);
-            result.range.startCharacter = r["start"].value("character", 0);
-            result.range.endLine = r["end"].value("line", 0);
-            result.range.endCharacter = r["end"].value("character", 0);
+            result.range.start.line = r["start"].value("line", 0);
+            result.range.start.character = r["start"].value("character", 0);
+            result.range.end.line = r["end"].value("line", 0);
+            result.range.end.character = r["end"].value("character", 0);
         }
 
         if (item.contains("selectionRange")) {
             const auto& sr = item["selectionRange"];
-            result.selectionRange.startLine = sr["start"].value("line", 0);
-            result.selectionRange.startCharacter = sr["start"].value("character", 0);
-            result.selectionRange.endLine = sr["end"].value("line", 0);
-            result.selectionRange.endCharacter = sr["end"].value("character", 0);
+            result.selectionRange.start.line = sr["start"].value("line", 0);
+            result.selectionRange.start.character = sr["start"].value("character", 0);
+            result.selectionRange.end.line = sr["end"].value("line", 0);
+            result.selectionRange.end.character = sr["end"].value("character", 0);
         }
     }
 
@@ -341,14 +282,14 @@ std::vector<TypeHierarchyItem> Win32IDE::lspSupertypes(const TypeHierarchyItem& 
     itemJson["name"] = item.name;
     itemJson["kind"] = item.kind;
     itemJson["uri"] = item.uri;
-    itemJson["range"]["start"]["line"] = item.range.startLine;
-    itemJson["range"]["start"]["character"] = item.range.startCharacter;
-    itemJson["range"]["end"]["line"] = item.range.endLine;
-    itemJson["range"]["end"]["character"] = item.range.endCharacter;
-    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.startLine;
-    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.startCharacter;
-    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.endLine;
-    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.endCharacter;
+    itemJson["range"]["start"]["line"] = item.range.start.line;
+    itemJson["range"]["start"]["character"] = item.range.start.character;
+    itemJson["range"]["end"]["line"] = item.range.end.line;
+    itemJson["range"]["end"]["character"] = item.range.end.character;
+    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.start.line;
+    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.start.character;
+    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.end.line;
+    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.end.character;
     params["item"] = itemJson;
 
     int id = sendLSPRequest(lang, "typeHierarchy/supertypes", params);
@@ -371,10 +312,10 @@ std::vector<TypeHierarchyItem> Win32IDE::lspSupertypes(const TypeHierarchyItem& 
 
         if (sup.contains("range")) {
             const auto& r = sup["range"];
-            thi.range.startLine = r["start"].value("line", 0);
-            thi.range.startCharacter = r["start"].value("character", 0);
-            thi.range.endLine = r["end"].value("line", 0);
-            thi.range.endCharacter = r["end"].value("character", 0);
+            thi.range.start.line = r["start"].value("line", 0);
+            thi.range.start.character = r["start"].value("character", 0);
+            thi.range.end.line = r["end"].value("line", 0);
+            thi.range.end.character = r["end"].value("character", 0);
         }
 
         supertypes.push_back(thi);
@@ -395,14 +336,14 @@ std::vector<TypeHierarchyItem> Win32IDE::lspSubtypes(const TypeHierarchyItem& it
     itemJson["name"] = item.name;
     itemJson["kind"] = item.kind;
     itemJson["uri"] = item.uri;
-    itemJson["range"]["start"]["line"] = item.range.startLine;
-    itemJson["range"]["start"]["character"] = item.range.startCharacter;
-    itemJson["range"]["end"]["line"] = item.range.endLine;
-    itemJson["range"]["end"]["character"] = item.range.endCharacter;
-    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.startLine;
-    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.startCharacter;
-    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.endLine;
-    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.endCharacter;
+    itemJson["range"]["start"]["line"] = item.range.start.line;
+    itemJson["range"]["start"]["character"] = item.range.start.character;
+    itemJson["range"]["end"]["line"] = item.range.end.line;
+    itemJson["range"]["end"]["character"] = item.range.end.character;
+    itemJson["selectionRange"]["start"]["line"] = item.selectionRange.start.line;
+    itemJson["selectionRange"]["start"]["character"] = item.selectionRange.start.character;
+    itemJson["selectionRange"]["end"]["line"] = item.selectionRange.end.line;
+    itemJson["selectionRange"]["end"]["character"] = item.selectionRange.end.character;
     params["item"] = itemJson;
 
     int id = sendLSPRequest(lang, "typeHierarchy/subtypes", params);
@@ -425,10 +366,10 @@ std::vector<TypeHierarchyItem> Win32IDE::lspSubtypes(const TypeHierarchyItem& it
 
         if (sub.contains("range")) {
             const auto& r = sub["range"];
-            thi.range.startLine = r["start"].value("line", 0);
-            thi.range.startCharacter = r["start"].value("character", 0);
-            thi.range.endLine = r["end"].value("line", 0);
-            thi.range.endCharacter = r["end"].value("character", 0);
+            thi.range.start.line = r["start"].value("line", 0);
+            thi.range.start.character = r["start"].value("character", 0);
+            thi.range.end.line = r["end"].value("line", 0);
+            thi.range.end.character = r["end"].value("character", 0);
         }
 
         subtypes.push_back(thi);
@@ -473,11 +414,11 @@ void Win32IDE::cmdShowCallHierarchy() {
         std::string result = "Call Hierarchy for: " + item.name + "\n\n";
         result += "=== Incoming Calls (" + std::to_string(incoming.size()) + ") ===\n";
         for (const auto& call : incoming) {
-            result += "  " + call.from.name + " (" + call.from.kind + ") - " + call.from.uri + ":" + std::to_string(call.fromRanges.startLine + 1) + "\n";
+            result += "  " + call.from.name + " (" + call.from.kind + ") - " + call.from.uri + ":" + std::to_string(call.fromRanges.start.line + 1) + "\n";
         }
         result += "\n=== Outgoing Calls (" + std::to_string(outgoing.size()) + ") ===\n";
         for (const auto& call : outgoing) {
-            result += "  " + call.to.name + " (" + call.to.kind + ") - " + call.to.uri + ":" + std::to_string(call.fromRanges.startLine + 1) + "\n";
+            result += "  " + call.to.name + " (" + call.to.kind + ") - " + call.to.uri + ":" + std::to_string(call.fromRanges.start.line + 1) + "\n";
         }
 
         // Store result and notify UI

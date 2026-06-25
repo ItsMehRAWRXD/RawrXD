@@ -4588,6 +4588,8 @@ class Win32IDE
         uint64_t totalServerRestarts = 0;
         uint64_t totalInlayHintRequests = 0;
         uint64_t totalCodeActionRequests = 0;
+        uint64_t totalCallHierarchyRequests = 0;
+        uint64_t totalTypeHierarchyRequests = 0;
         /// Agentic `agenticConditionQueryDefinitionAt` recovery (SYMBOL_RESOLVES path).
         uint64_t agenticDefinitionRecoveryDidChangeCount = 0;
         uint64_t agenticDefinitionRecoveryNuclearCount = 0;
@@ -4703,6 +4705,45 @@ class Win32IDE
                                               const std::vector<std::string>& diagnosticCodes);
 
     // ========================================================================
+    // CALL HIERARCHY & TYPE HIERARCHY — LSP 3.16+ navigation
+    // ========================================================================
+    struct CallHierarchyItem {
+        std::string name;
+        std::string kind;
+        std::string detail;
+        std::string uri;
+        LSPRange range;
+        LSPRange selectionRange;
+    };
+    struct CallHierarchyCall {
+        CallHierarchyItem from;
+        CallHierarchyItem to;
+        LSPRange fromRanges;
+    };
+    struct TypeHierarchyItem {
+        std::string name;
+        std::string kind;
+        std::string detail;
+        std::string uri;
+        LSPRange range;
+        LSPRange selectionRange;
+        std::vector<TypeHierarchyItem> parents;
+        std::vector<TypeHierarchyItem> children;
+    };
+
+    CallHierarchyItem lspPrepareCallHierarchy(const std::string& uri, int line, int character);
+    std::vector<CallHierarchyCall> lspIncomingCalls(const CallHierarchyItem& item);
+    std::vector<CallHierarchyCall> lspOutgoingCalls(const CallHierarchyItem& item);
+    TypeHierarchyItem lspPrepareTypeHierarchy(const std::string& uri, int line, int character);
+    std::vector<TypeHierarchyItem> lspSupertypes(const TypeHierarchyItem& item);
+    std::vector<TypeHierarchyItem> lspSubtypes(const TypeHierarchyItem& item);
+
+    void showCallHierarchyPanel();
+    void showTypeHierarchyPanel();
+    void cmdShowCallHierarchy();
+    void cmdShowTypeHierarchy();
+
+    // ========================================================================
     // REFACTORING ENGINE — Code transformation operations
     // ========================================================================
     bool operationExtractVariable();
@@ -4736,6 +4777,12 @@ class Win32IDE
     std::mutex m_lspResponseMutex;
     std::condition_variable m_lspResponseCV;
     std::vector<std::thread> m_lspReaderThreads;
+
+    // Call/Type Hierarchy results
+    std::string m_lastCallHierarchyResult;
+    std::string m_lastTypeHierarchyResult;
+    std::mutex m_callHierarchyMutex;
+    std::mutex m_typeHierarchyMutex;
 
     // ========================================================================
     // Settings Dialog (Win32IDE_Settings.cpp)
@@ -7425,6 +7472,11 @@ class Win32IDE
     };
     std::vector<CodeAction> requestCodeActions(int line);
     void applyCodeAction(const CodeAction& action);
+    void applyTextEdit(const LSPWorkspaceEdit::TextEdit& edit);
+    void cmdFixAllDiagnostics();
+    void cmdOrganizeImports();
+    void showCodeActions(int line, int character);
+    void executeLSPCommand(const std::string& command, const nlohmann::json& arguments);
 
     // 30. Code Folding Controls
     void initCodeFolding();
