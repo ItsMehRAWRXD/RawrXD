@@ -21,12 +21,13 @@
 #include <commctrl.h>
 
 using json = nlohmann::json;
+using namespace RawrXD;
 
 // ============================================================================
 // CALL HIERARCHY IMPLEMENTATION
 // ============================================================================
 
-CallHierarchyItem Win32IDE::lspPrepareCallHierarchy(const std::string& uri, int line, int character) {
+Win32IDE::CallHierarchyItem Win32IDE::lspPrepareCallHierarchy(const std::string& uri, int line, int character) {
     CallHierarchyItem result;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
@@ -51,7 +52,7 @@ CallHierarchyItem Win32IDE::lspPrepareCallHierarchy(const std::string& uri, int 
     }
 
     if (!resp["result"].empty()) {
-        const auto& item = resp["result"][0];
+        const auto& item = resp["result"].at(0);
         result.name = item.value("name", "");
         result.kind = item.value("kind", "");
         result.detail = item.value("detail", "");
@@ -77,8 +78,8 @@ CallHierarchyItem Win32IDE::lspPrepareCallHierarchy(const std::string& uri, int 
     return result;
 }
 
-std::vector<CallHierarchyCall> Win32IDE::lspIncomingCalls(const CallHierarchyItem& item) {
-    std::vector<CallHierarchyCall> calls;
+std::vector<Win32IDE::CallHierarchyCall> Win32IDE::lspIncomingCalls(const CallHierarchyItem& item) {
+    std::vector<Win32IDE::CallHierarchyCall> calls;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(item.uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
         return calls;
@@ -111,7 +112,7 @@ std::vector<CallHierarchyCall> Win32IDE::lspIncomingCalls(const CallHierarchyIte
     }
 
     for (const auto& call : resp["result"]) {
-        CallHierarchyCall chc;
+        Win32IDE::CallHierarchyCall chc;
 
         // Parse "from" item
         if (call.contains("from")) {
@@ -146,8 +147,8 @@ std::vector<CallHierarchyCall> Win32IDE::lspIncomingCalls(const CallHierarchyIte
     return calls;
 }
 
-std::vector<CallHierarchyCall> Win32IDE::lspOutgoingCalls(const CallHierarchyItem& item) {
-    std::vector<CallHierarchyCall> calls;
+std::vector<Win32IDE::CallHierarchyCall> Win32IDE::lspOutgoingCalls(const CallHierarchyItem& item) {
+    std::vector<Win32IDE::CallHierarchyCall> calls;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(item.uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
         return calls;
@@ -180,7 +181,7 @@ std::vector<CallHierarchyCall> Win32IDE::lspOutgoingCalls(const CallHierarchyIte
     }
 
     for (const auto& call : resp["result"]) {
-        CallHierarchyCall chc;
+        Win32IDE::CallHierarchyCall chc;
 
         // Parse "to" item
         if (call.contains("to")) {
@@ -219,8 +220,8 @@ std::vector<CallHierarchyCall> Win32IDE::lspOutgoingCalls(const CallHierarchyIte
 // TYPE HIERARCHY IMPLEMENTATION
 // ============================================================================
 
-TypeHierarchyItem Win32IDE::lspPrepareTypeHierarchy(const std::string& uri, int line, int character) {
-    TypeHierarchyItem result;
+Win32IDE::TypeHierarchyItem Win32IDE::lspPrepareTypeHierarchy(const std::string& uri, int line, int character) {
+    Win32IDE::TypeHierarchyItem result;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
         return result;
@@ -244,7 +245,7 @@ TypeHierarchyItem Win32IDE::lspPrepareTypeHierarchy(const std::string& uri, int 
     }
 
     if (!resp["result"].empty()) {
-        const auto& item = resp["result"][0];
+        const auto& item = resp["result"].at(0);
         result.name = item.value("name", "");
         result.kind = item.value("kind", "");
         result.detail = item.value("detail", "");
@@ -270,8 +271,8 @@ TypeHierarchyItem Win32IDE::lspPrepareTypeHierarchy(const std::string& uri, int 
     return result;
 }
 
-std::vector<TypeHierarchyItem> Win32IDE::lspSupertypes(const TypeHierarchyItem& item) {
-    std::vector<TypeHierarchyItem> supertypes;
+std::vector<Win32IDE::TypeHierarchyItem> Win32IDE::lspSupertypes(const TypeHierarchyItem& item) {
+    std::vector<Win32IDE::TypeHierarchyItem> supertypes;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(item.uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
         return supertypes;
@@ -304,7 +305,7 @@ std::vector<TypeHierarchyItem> Win32IDE::lspSupertypes(const TypeHierarchyItem& 
     }
 
     for (const auto& sup : resp["result"]) {
-        TypeHierarchyItem thi;
+        Win32IDE::TypeHierarchyItem thi;
         thi.name = sup.value("name", "");
         thi.kind = sup.value("kind", "");
         thi.detail = sup.value("detail", "");
@@ -324,8 +325,8 @@ std::vector<TypeHierarchyItem> Win32IDE::lspSupertypes(const TypeHierarchyItem& 
     return supertypes;
 }
 
-std::vector<TypeHierarchyItem> Win32IDE::lspSubtypes(const TypeHierarchyItem& item) {
-    std::vector<TypeHierarchyItem> subtypes;
+std::vector<Win32IDE::TypeHierarchyItem> Win32IDE::lspSubtypes(const TypeHierarchyItem& item) {
+    std::vector<Win32IDE::TypeHierarchyItem> subtypes;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(item.uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
         return subtypes;
@@ -358,7 +359,7 @@ std::vector<TypeHierarchyItem> Win32IDE::lspSubtypes(const TypeHierarchyItem& it
     }
 
     for (const auto& sub : resp["result"]) {
-        TypeHierarchyItem thi;
+        Win32IDE::TypeHierarchyItem thi;
         thi.name = sub.value("name", "");
         thi.kind = sub.value("kind", "");
         thi.detail = sub.value("detail", "");
@@ -448,7 +449,7 @@ void Win32IDE::cmdShowTypeHierarchy() {
     std::string uri = filePathToUri(m_currentFile);
 
     // Prepare type hierarchy
-    TypeHierarchyItem item = lspPrepareTypeHierarchy(uri, line, character);
+    Win32IDE::TypeHierarchyItem item = lspPrepareTypeHierarchy(uri, line, character);
 
     if (item.name.empty()) {
         appendToOutput("[TypeHierarchy] No type hierarchy available at this location.", "General", OutputSeverity::Info);
