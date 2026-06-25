@@ -1,0 +1,139 @@
+﻿{
+    "startTime":  "2026-06-25 02:22:20",
+    "failedTests":  0,
+    "passedTests":  16,
+    "testSuites":  [
+                       {
+                           "details":  "Size: 47258624 bytes (45.1 MB)",
+                           "timestamp":  "2026-06-25 02:22:20",
+                           "suite":  "Phase 1",
+                           "duration":  22.217200000000002,
+                           "test":  "Binary Exists",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "PID: 18912",
+                           "timestamp":  "2026-06-25 02:22:23",
+                           "suite":  "Phase 2",
+                           "duration":  3037.5034,
+                           "test":  "Process Launch",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "80.7 MB (under 500MB)",
+                           "timestamp":  "2026-06-25 02:22:23",
+                           "suite":  "Phase 2",
+                           "duration":  6.1094,
+                           "test":  "Memory Usage",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "14 threads active",
+                           "timestamp":  "2026-06-25 02:22:23",
+                           "suite":  "Phase 2",
+                           "duration":  1.5125000000000002,
+                           "test":  "Thread Creation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "332 handles open",
+                           "timestamp":  "2026-06-25 02:22:23",
+                           "suite":  "Phase 2",
+                           "duration":  1.5228000000000002,
+                           "test":  "Handle Creation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Stable for 5+ seconds",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 2",
+                           "duration":  2005.9047,
+                           "test":  "Runtime Stability",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "5/5 functions",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 3",
+                           "duration":  4.5629,
+                           "test":  "AI Features Implementation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "5/5 providers",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 3",
+                           "duration":  0,
+                           "test":  "Multi-Provider Router",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Threading implementation verified",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 3",
+                           "duration":  1.5147000000000002,
+                           "test":  "Async Worker Thread",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Production file exists",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 3",
+                           "duration":  0,
+                           "test":  "Code Actions Implementation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Production file exists",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 3",
+                           "duration":  0,
+                           "test":  "Hierarchy Implementation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Semantic tokens implemented",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 3",
+                           "duration":  0,
+                           "test":  "LSP Semantic Tokens",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Production files in build",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 4",
+                           "duration":  12.1333,
+                           "test":  "CMakeLists Production Files",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "No critical stubs in active build",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 4",
+                           "duration":  113.6165,
+                           "test":  "No Active Stubs",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "VEH handler present",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 5",
+                           "duration":  0,
+                           "test":  "VEH Handler",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "2/2 files",
+                           "timestamp":  "2026-06-25 02:22:25",
+                           "suite":  "Phase 5",
+                           "duration":  1.512,
+                           "test":  "Security Framework",
+                           "status":  "PASS"
+                       }
+                   ],
+    "endTime":  "2026-06-25 02:22:25",
+    "passRate":  100,
+    "totalTests":  16,
+    "binaryPath":  "d:\\rawrxd\\build-ninja\\bin\\RawrXD-Win32IDE.exe"
+}

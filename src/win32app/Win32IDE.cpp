@@ -16311,6 +16311,23 @@ void Win32IDE::clearInferenceLayerProgressCallback()
         SendMessageW(m_hwndStatusBar, SB_SETTEXT, 3, (LPARAM)L"MoE pack: —");
 }
 
+void Win32IDE::updateExecutionModeStatusBar()
+{
+    if (!m_hwndStatusBar)
+        return;
+
+    // Update status bar to reflect current execution mode
+    const wchar_t* modeText = L"Safe";
+    if (m_executionMode == ExecutionMode::Normal)
+        modeText = L"Normal";
+    else if (m_executionMode == ExecutionMode::Unsafe)
+        modeText = L"Unsafe";
+    else if (m_executionMode == ExecutionMode::Kernel)
+        modeText = L"Kernel";
+
+    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)modeText);
+}
+
 // --- Quick GGUF Model Loader (delegates to unified model dialog) ---
 void Win32IDE::quickLoadGGUFModel()
 {

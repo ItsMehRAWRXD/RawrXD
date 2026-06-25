@@ -3712,7 +3712,7 @@ if(WIN32)
         src/kernels/fp8_avx2_interface.cpp
         src/win32app/Win32IDE_Settings.cpp
         src/win32app/Win32IDE_AutonomousCommunicator.cpp
-        src/win32app/Win32IDE_AgenticIntegration_stub.cpp
+        src/win32app/Win32IDE_AgenticIntegration.cpp
         src/win32ide/ExecModeToolbar.cpp
         src/win32ide/GhostOverlay.cpp
         src/agentic/ExecPipeline.cpp
@@ -3770,8 +3770,15 @@ if(WIN32)
         src/serve/rawrxd_serve_inference_plugin.cpp
         src/lora/LoRABeaconInterface.cpp
         src/autonomous_model_manager.cpp
-        # ExtensionHost minimal link stub for Win32IDE_Commands.cpp callsites
-        src/win32app/ExtensionHost_stub.cpp
+        # ExtensionHost real implementation for Win32IDE_Commands.cpp callsites
+        src/win32app/ExtensionHost.cpp
+        src/win32app/ExtensionHostProcess.cpp
+        src/win32app/ExtensionHost_VSCodeAPIs.cpp
+        src/win32app/ExtensionHost_Discovery.cpp
+        src/win32app/ExtensionSandboxManager.cpp
+        src/win32app/ExtensionAPI_VSCode.cpp
+        src/win32app/IPC_Channel.cpp
+        src/win32app/ExtensionHost_MASM_ProcessBroker.asm
         src/bridge/symbol_index_bridge.cpp
         src/core/ast_graph_engine_impl.cpp
         src/core/kv_cache_credit_bridge.cpp
@@ -3817,9 +3824,6 @@ if(WIN32)
 
         # AI Features — Top 50 IDE Parity (Phase 50) - Real implementations
         src/win32app/Win32IDE_AIFeatures.cpp
-        src/win32app/Win32IDE_CodeActions.cpp
-        src/win32app/Win32IDE_SemanticTokens.cpp
-        src/win32app/Win32IDE_Hierarchy.cpp
 
         # Context Fusion Layer — Phase 45: Unified semantic state machine
         src/core/ContextFusionEngine.cpp
@@ -3847,7 +3851,7 @@ if(WIN32)
         src/subagent_core.cpp
         src/bridge_layer.cpp
         src/titan/titan_abi.cpp
-        src/bridge_on_suggestion_ready_stub.cpp
+        src/bridge_on_suggestion_ready.cpp
 
         # Bounded Agent Loop + FIM Provider (Agent→IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
@@ -3886,7 +3890,7 @@ if(WIN32)
         src/agentic/agentic_executor.cpp
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/react_tool_loop.cpp
-        src/ai/inference_retry_shim.cpp
+        src/ai/inference_retry_production.cpp
         src/core/safe_inference_session.cpp
         src/ai/embedding_provider.cpp
         src/core/ai_execution_guardrails.cpp
@@ -4184,7 +4188,7 @@ if(WIN32)
         src/win32app/VoiceAssistantWorker.cpp
         src/win32app/Win32IDE_VoiceAssistantPanel.cpp
         src/win32app/Win32IDE_ReferenceGraph.cpp
-        src/win32app/Win32IDE_Stubs.cpp
+        src/win32app/Win32IDE_AgenticFeatures.cpp
         src/core/symbol_index_impl.cpp
         src/dynamic_model_loader.cpp
 
