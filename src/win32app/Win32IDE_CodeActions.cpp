@@ -23,96 +23,16 @@
 using json = nlohmann::json;
 
 // ============================================================================
-// LSP CODE ACTION REQUEST/RESPONSE
+// LSP CODE ACTION REQUEST/RESPONSE — definition lives in Win32IDE_Commands.cpp
 // ============================================================================
 
-std::vector<Win32IDE::LSPCodeAction> Win32IDE::lspCodeActions(const std::string& uri, int line, int startChar,
-                                                                 int endChar, const std::vector<std::string>& diagnosticCodes) {
-    std::vector<LSPCodeAction> actions;
-    LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
-    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running) {
-        return actions;
-    }
-
-    // Build code action request
-    json params;
-    params["textDocument"]["uri"] = uri;
-    params["range"]["start"]["line"] = line;
-    params["range"]["start"]["character"] = startChar;
-    params["range"]["end"]["line"] = line;
-    params["range"]["end"]["character"] = endChar;
-
-    // Include diagnostics context
-    json diagArray = json::array();
-    for (const auto& code : diagnosticCodes) {
-        json d;
-        d["code"] = code;
-        diagArray.push_back(d);
-    }
-    params["context"]["diagnostics"] = diagArray;
-
-    // Request only quick fixes and refactors
-    params["context"]["only"] = json::array({"quickfix", "refactor", "source"});
-
-    int id = sendLSPRequest(lang, "textDocument/codeAction", params);
-    if (id < 0) {
-        return actions;
-    }
-
-    json resp = readLSPResponse(lang, id, 5000);
-    m_lspStats.totalCodeActionRequests++;
-
-    if (!resp.contains("result") || resp["result"].is_null() || !resp["result"].is_array()) {
-        return actions;
-    }
-
-    // Parse code actions
-    for (const auto& actionJson : resp["result"]) {
-        LSPCodeAction action;
-        action.title = actionJson.value("title", "");
-        action.kind = actionJson.value("kind", "");
-        action.hasEdit = actionJson.contains("edit");
-        if (action.hasEdit) {
-            action.edit = actionJson["edit"];
-        }
-        if (actionJson.contains("command")) {
-            action.command = actionJson["command"].value("command", "");
-        }
-        actions.push_back(action);
-    }
-
-    return actions;
-}
-
 // ============================================================================
-// APPLY CODE ACTION
+// APPLY CODE ACTION — definition lives in Win32IDE_Tier3Cosmetics.cpp
 // ============================================================================
 
-void Win32IDE::applyCodeAction(const CodeAction& action) {
-    if (action.lspEditJson.empty()) return;
-
-    json editJson = json::parse(action.lspEditJson, nullptr, false);
-    if (editJson.is_discarded()) return;
-
-    if (editJson.contains("changes")) {
-        for (auto it = editJson["changes"].begin(); it != editJson["changes"].end(); ++it) {
-            if (it.value().is_array()) {
-                for (const auto& textEdit : it.value()) {
-                    LSPWorkspaceEdit::TextEdit te;
-                    te.newText = textEdit.value("newText", "");
-                    if (textEdit.contains("range")) {
-                        const auto& r = textEdit["range"];
-                        te.range.start.line = r["start"].value("line", 0);
-                        te.range.start.character = r["start"].value("character", 0);
-                        te.range.end.line = r["end"].value("line", 0);
-                        te.range.end.character = r["end"].value("character", 0);
-                    }
-                    applyTextEdit(te);
-                }
-            }
-        }
-    }
-}
+// ============================================================================
+// APPLY TEXT EDIT
+// ============================================================================
 
 void Win32IDE::applyTextEdit(const LSPWorkspaceEdit::TextEdit& edit) {
     if (!m_hwndEditor) return;
