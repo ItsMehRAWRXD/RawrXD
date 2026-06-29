@@ -4,6 +4,7 @@
 
 #include "RawrXD_LlamaNative.h"
 #include "inference/pipeline_telemetry.hpp"
+#include "inference_profiler_simple.h"
 #include <chrono>
 #include <cstring>
 #include <algorithm>
@@ -106,12 +107,9 @@ bool LlamaNativeBridge::BindExports() {
     // Required exports
     BIND(backend_init, pfn_backend_init);
     BIND(model_default_params, pfn_model_default_params);
-    BIND(load_model, pfn_load_model);  // Actually "llama_load_model_from_file"
     
-    // Try alternate name for load_model
-    if (!fn_load_model) {
-        fn_load_model = (pfn_load_model)GetProcAddress(hLlama_, "llama_load_model_from_file");
-    }
+    // Try load_model with alternate name (llama_load_model_from_file)
+    fn_load_model = (pfn_load_model)GetProcAddress(hLlama_, "llama_load_model_from_file");
     if (!fn_load_model) {
         SetError("Missing export: llama_load_model_from_file");
         return false;
@@ -182,6 +180,8 @@ void LlamaNativeBridge::Shutdown() {
 // LoadModel - Load GGUF model file
 // ============================================================================
 bool LlamaNativeBridge::LoadModel(const wchar_t* modelPath, int32_t gpuLayers, uint32_t ctxSize) {
+    PROFILE_FUNC();
+    
     if (!hLlama_) {
         SetError("DLL not initialized");
         return false;
@@ -209,7 +209,10 @@ bool LlamaNativeBridge::LoadModel(const wchar_t* modelPath, int32_t gpuLayers, u
     mParams.use_mlock = false;
 
     // Load model
-    model_ = fn_load_model(pathUtf8, mParams);
+    {
+        PROFILE_BLOCK("llama_load_model");
+        model_ = fn_load_model(pathUtf8, mParams);
+    }
     if (!model_) {
         SetError("Failed to load model file (invalid GGUF or missing tensors)");
         return false;
@@ -232,7 +235,10 @@ bool LlamaNativeBridge::LoadModel(const wchar_t* modelPath, int32_t gpuLayers, u
     if (kvTypeV_ > 0) cParams.type_v = kvTypeV_;
 
     // Create context
-    ctx_ = fn_new_context(model_, cParams);
+    {
+        PROFILE_BLOCK("llama_new_context");
+        ctx_ = fn_new_context(model_, cParams);
+    }
     if (!ctx_) {
         fn_free_model(model_);
         model_ = nullptr;
@@ -241,7 +247,10 @@ bool LlamaNativeBridge::LoadModel(const wchar_t* modelPath, int32_t gpuLayers, u
     }
 
     // Initialize batch
-    batch_ = fn_batch_init(512, 0, 1);
+    {
+        PROFILE_BLOCK("llama_batch_init");
+        batch_ = fn_batch_init(512, 0, 1);
+    }
 
     // Store model info
     modelInfo_.loaded = true;
@@ -344,6 +353,7 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
     float topP,
     int32_t topK
 ) {
+    PROFILE_FUNC();
     GenerationResult result;
 
     if (!ctx_) {
@@ -362,15 +372,19 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
     // ========================================================================
     // 1. Tokenize prompt
     // ========================================================================
-    int32_t nPromptTokens = fn_tokenize(
-        model_,
-        prompt.c_str(),
-        static_cast<int32_t>(prompt.length()),
-        tokenBuf_.data(),
-        static_cast<int32_t>(tokenBuf_.size()),
-        true,   // add_special (BOS)
-        false   // parse_special
-    );
+    int32_t nPromptTokens = 0;
+    {
+        PROFILE_BLOCK("tokenize_prompt");
+        nPromptTokens = fn_tokenize(
+            model_,
+            prompt.c_str(),
+            static_cast<int32_t>(prompt.length()),
+            tokenBuf_.data(),
+            static_cast<int32_t>(tokenBuf_.size()),
+            true,   // add_special (BOS)
+            false   // parse_special
+        );
+    }
 
     if (nPromptTokens < 0) {
         result.error = "Tokenization failed (prompt too long?)";
@@ -381,21 +395,24 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
     // ========================================================================
     // 2. Decode prompt tokens (fill KV cache)
     // ========================================================================
-    for (int32_t i = 0; i < nPromptTokens; ++i) {
-        // Setup batch for single token
-        batch_.n_tokens = 1;
-        batch_.token[0] = tokenBuf_[i];
-        batch_.pos[0] = i;
-        batch_.n_seq_id[0] = 1;
-        batch_.seq_id[0][0] = 0;
-        batch_.logits[0] = (i == nPromptTokens - 1) ? 1 : 0;  // Only last token needs logits
+    {
+        PROFILE_BLOCK("prompt_decode");
+        for (int32_t i = 0; i < nPromptTokens; ++i) {
+            // Setup batch for single token
+            batch_.n_tokens = 1;
+            batch_.token[0] = tokenBuf_[i];
+            batch_.pos[0] = i;
+            batch_.n_seq_id[0] = 1;
+            batch_.seq_id[0][0] = 0;
+            batch_.logits[0] = (i == nPromptTokens - 1) ? 1 : 0;  // Only last token needs logits
 
-        int32_t decodeResult = fn_decode(ctx_, batch_);
-        if (decodeResult != 0) {
-            std::stringstream ss;
-            ss << "Decode failed at prompt token " << i << " (code " << decodeResult << ")";
-            result.error = ss.str();
-            return result;
+            int32_t decodeResult = fn_decode(ctx_, batch_);
+            if (decodeResult != 0) {
+                std::stringstream ss;
+                ss << "Decode failed at prompt token " << i << " (code " << decodeResult << ")";
+                result.error = ss.str();
+                return result;
+            }
         }
     }
 
@@ -409,6 +426,8 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
     result.text.reserve(maxTokens * 4);  // Rough estimate
 
     for (int32_t i = 0; i < maxTokens; ++i) {
+        PROFILE_BLOCK("token_generation");
+        
         // Get logits for last decoded token
         float* logits = fn_get_logits_ith(ctx_, -1);
         if (!logits) {
@@ -418,19 +437,21 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
 
         // Sample next token
         llama_token nextToken;
-        
-        if (sampler_ && fn_sampler_sample) {
-            // Use sampler chain
-            nextToken = fn_sampler_sample(sampler_, ctx_, -1);
-        } else {
-            // Greedy argmax fallback
-            int32_t vocabSize = modelInfo_.n_vocab > 0 ? modelInfo_.n_vocab : 32000;
-            nextToken = 0;
-            float maxLogit = logits[0];
-            for (int32_t v = 1; v < vocabSize; ++v) {
-                if (logits[v] > maxLogit) {
-                    maxLogit = logits[v];
-                    nextToken = v;
+        {
+            PROFILE_BLOCK("sample_token");
+            if (sampler_ && fn_sampler_sample) {
+                // Use sampler chain
+                nextToken = fn_sampler_sample(sampler_, ctx_, -1);
+            } else {
+                // Greedy argmax fallback
+                int32_t vocabSize = modelInfo_.n_vocab > 0 ? modelInfo_.n_vocab : 32000;
+                nextToken = 0;
+                float maxLogit = logits[0];
+                for (int32_t v = 1; v < vocabSize; ++v) {
+                    if (logits[v] > maxLogit) {
+                        maxLogit = logits[v];
+                        nextToken = v;
+                    }
                 }
             }
         }
@@ -482,6 +503,9 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
             result.t_gen_ms
         );
     }
+    
+    // Dump profiler report
+    rxdn::prof_dump();
 
     return result;
 }

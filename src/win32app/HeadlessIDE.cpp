@@ -6525,12 +6525,53 @@ void HeadlessIDE::handleClient(SOCKET clientFd)
                 statsJson = m_multiResponse->statsToJson();
             }
 
+            // Read TPS telemetry from shared memory
+            std::string telemetryJson = "{}";
+            HANDLE hTelemetry = OpenFileMappingW(FILE_MAP_READ, FALSE, L"RawrXD_TPS_Telemetry_v1");
+            if (hTelemetry)
+            {
+                struct TpsTelemetry {
+                    uint32_t version;
+                    uint32_t sequence;
+                    double tps;
+                    double gflops;
+                    double acceptanceRate;
+                    uint32_t tokensGenerated;
+                    uint32_t tokensAccepted;
+                    uint32_t speculativeDepth;
+                    uint64_t timestampUs;
+                    char reserved[64];
+                };
+                TpsTelemetry* telem = (TpsTelemetry*)MapViewOfFile(hTelemetry, FILE_MAP_READ, 0, 0, sizeof(TpsTelemetry));
+                if (telem && telem->version == 1)
+                {
+                    std::ostringstream tss;
+                    tss << "{\"version\":" << telem->version;
+                    tss << ",\"sequence\":" << telem->sequence;
+                    tss << ",\"tps\":" << telem->tps;
+                    tss << ",\"gflops\":" << telem->gflops;
+                    tss << ",\"acceptanceRate\":" << telem->acceptanceRate;
+                    tss << ",\"tokensGenerated\":" << telem->tokensGenerated;
+                    tss << ",\"tokensAccepted\":" << telem->tokensAccepted;
+                    tss << ",\"speculativeDepth\":" << telem->speculativeDepth;
+                    tss << ",\"timestampUs\":" << telem->timestampUs << "}";
+                    telemetryJson = tss.str();
+                }
+                if (telem) UnmapViewOfFile(telem);
+                CloseHandle(hTelemetry);
+            }
+
             std::ostringstream oss;
             oss << "{\"success\":true,";
             oss << "\"active\":" << (active ? "true" : "false") << ",";
             oss << "\"templates\":" << templateCount << ",";
             oss << "\"max_chain\":" << (m_multiResponse ? m_multiResponse->getMaxChainResponses() : 0) << ",";
-            oss << "\"stats\":" << statsJson << "}";
+            oss << "\"stats\":" << statsJson;
+            if (telemetryJson != "{}")
+            {
+                oss << ",\"telemetry\":" << telemetryJson;
+            }
+            oss << "}";
             responseBody = oss.str();
         }
     }
@@ -6591,9 +6632,9 @@ void HeadlessIDE::handleClient(SOCKET clientFd)
                                     oss << ",";
                                 }
                                 oss << "{\"index\":" << i << ",";
-                                oss << "\"template_id\":" << r.templateId << ",";
+                                oss << "\"template_id\":" << static_cast<int>(r.templateId) << ",";
                                 oss << "\"latency_ms\":" << r.latencyMs << ",";
-                                oss << "\"success\":" << (r.success ? "true" : "false") << ",";
+                                oss << "\"success\":" << (r.error ? "false" : "true") << ",";
                                 oss << "\"content\":\"" << jsonEscape(r.content) << "\"}";
                             }
                         }
@@ -6626,10 +6667,10 @@ void HeadlessIDE::handleClient(SOCKET clientFd)
                         oss << ",";
                     }
                     ++count;
-                    oss << "{\"id\":" << t.id << ",";
+                    oss << "{\"id\":" << static_cast<int>(t.id) << ",";
                     oss << "\"name\":\"" << jsonEscape(t.name ? t.name : "") << "\",";
                     oss << "\"enabled\":" << (t.enabled ? "true" : "false") << ",";
-                    oss << "\"system_prompt\":\"" << jsonEscape(t.systemPrompt ? t.systemPrompt : "") << "\"}";
+                    oss << "\"system_prompt\":\"" << jsonEscape(t.systemPromptSuffix ? t.systemPromptSuffix : "") << "\"}";
                 }
             }
             oss << "],\"count\":" << count << "}";

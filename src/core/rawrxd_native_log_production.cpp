@@ -150,6 +150,22 @@ bool RawrXD_Log_IsInitialized() {
     return NativeLogger::Instance().IsInitialized();
 }
 
+void RawrXD_Native_Log(const char* fmt, ...) {
+    if (!fmt) return;
+    
+    va_list args;
+    va_start(args, fmt);
+    
+    // Format the message
+    char buffer[2048];
+    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+    
+    if (len > 0) {
+        NativeLogger::Instance().Log(LogLevel::INFO, buffer);
+    }
+}
+
 void RawrXDNativeLogFallbackStub() {
     // Kept for binary compatibility
 }

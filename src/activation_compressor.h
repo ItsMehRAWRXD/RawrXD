@@ -191,15 +191,15 @@ private:
 
 // MASM64 extern declarations (zero-CRT, compact)
 extern "C" {
-    void Quant_Dequant_INT8_AVX512(const int8_t* pSrc, float* pDst, uint32_t n, const void* pParams);
-    void Quant_Dequant_INT8_AVX2(const int8_t* pSrc, float* pDst, uint32_t n, const void* pParams);
+    void Quant_Dequant_INT8_AVX512_masm(const int8_t* pSrc, float* pDst, uint32_t n, const void* pParams);
+    void Quant_Dequant_INT8_AVX2_masm(const int8_t* pSrc, float* pDst, uint32_t n, const void* pParams);
 }
 
 inline void inference::QuantizationCodec::Quant_Dequant_INT8_AVX512(const int8_t* pSrc, float* pDst, uint32_t n, const DequantParams* pParams) {
-    Quant_Dequant_INT8_AVX512(pSrc, pDst, n, static_cast<const void*>(pParams));
+    Quant_Dequant_INT8_AVX512_masm(pSrc, pDst, n, static_cast<const void*>(pParams));
 }
 inline void inference::QuantizationCodec::Quant_Dequant_INT8_AVX2(const int8_t* pSrc, float* pDst, uint32_t n, const DequantParams* pParams) {
-    Quant_Dequant_INT8_AVX2(pSrc, pDst, n, static_cast<const void*>(pParams));
+    Quant_Dequant_INT8_AVX2_masm(pSrc, pDst, n, static_cast<const void*>(pParams));
 }
 
 // ============================================================================

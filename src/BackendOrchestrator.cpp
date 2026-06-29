@@ -5,6 +5,16 @@
 #include "kernels/kv_accum_avx512.h"
 #include "win32app/TitanIPC.h"
 #include "core/thread_lifecycle_registry.h"
+#include "core/Pyre_Bootstrap.h"
+
+// Forward declaration for Pyre MASM kernel entry points
+extern "C" void Pyre_GEMM_F32_AVX512();
+extern "C" void Pyre_SmokeTest();
+
+// Define the Pyre BootstrapPage in the dedicated .pyre PE section.
+// This is the single definition required by both C++ and MASM.
+#pragma section(".pyre", read, write)
+extern "C" __declspec(allocate(".pyre")) pyre::BootstrapPage g_pyreBootstrap{};
 
 
 #include <algorithm>
@@ -2062,21 +2072,26 @@ bool BackendOrchestrator::Initialize()
 
     ConfigureSovereignScalingFromEnv();
 
+    bool has_avx512 = RawrXD::KernelOps::HasAVX512Runtime();
+    if (has_avx512)
     {
-        bool has_avx512 = RawrXD::KernelOps::HasAVX512Runtime();
-        if (has_avx512)
+        alignas(64) float src[16] = {0.0f};
+        alignas(64) float dst[16] = {0.0f};
+        for (int i = 0; i < 16; ++i)
         {
-            alignas(64) float src[16] = {0.0f};
-            alignas(64) float dst[16] = {0.0f};
-            for (int i = 0; i < 16; ++i)
-            {
-                src[i] = 1.0f;
-                dst[i] = static_cast<float>(i);
-            }
-            const bool ok = RawrXD::KernelOps::AccumulateKV_AVX512(src, dst, 16);
-            has_avx512 = ok && dst[0] == 1.0f && dst[15] == 16.0f;
+            src[i] = 1.0f;
+            dst[i] = static_cast<float>(i);
         }
-        m_supports_avx512_kernels.store(has_avx512, std::memory_order_relaxed);
+        const bool ok = RawrXD::KernelOps::AccumulateKV_AVX512(src, dst, 16);
+        has_avx512 = ok && dst[0] == 1.0f && dst[15] == 16.0f;
+    }
+    m_supports_avx512_kernels.store(has_avx512, std::memory_order_relaxed);
+
+    // Initialize Pyre compute-engine bridge before any backend probes
+    // so the BootstrapPage is ready if a backend wants to register
+    // a Pyre-backed kernel plugin during its own init.
+    if (has_avx512) {
+        InitPyreBridge();
     }
 
     // Probe available backends
@@ -3306,3 +3321,198 @@ void BackendOrchestrator::RegisterTitanToolDispatch(::AgenticExecutor* executor)
 }
 
 }  // namespace RawrXD
+
+// ============================================================================
+// CHAMBER 3: SOVEREIGN SCHEDULER INTEGRATION
+// ============================================================================
+// Appended after namespace RawrXD to keep the file structure intact.
+// These functions reference RawrXD::BackendOrchestrator members directly.
+// ============================================================================
+
+namespace {
+    // Structural translation glue for Chamber 3.
+    // Receives EngineTaskPayload* via RDX (Win64 arg2), extracts scheduler
+    // parameters, and invokes the ABI-corrected MASM scheduler.
+    void RawrSched_EnterLease_CylinderGlue(void* p) noexcept {
+        auto* payload = static_cast<RawrXD::EngineTaskPayload*>(p);
+        if (!payload) return;
+
+        RawrSched_EnterLease(
+            &payload->schedulerCtx,
+            payload->targetPriorityLevel,
+            payload->ccxCoreAffinityMask
+        );
+    }
+
+    void RawrSched_ExitLease_CylinderGlue(void* p) noexcept {
+        auto* payload = static_cast<RawrXD::EngineTaskPayload*>(p);
+        if (!payload) return;
+        RawrSched_ExitLease(&payload->schedulerCtx);
+    }
+}
+
+namespace RawrXD {
+
+void BackendOrchestrator::LoadChamberConfigurations() noexcept {
+    // Chamber 0: Vectorized GhostParser Scan
+    m_hardwareCylinder.chamber_0 = GhostParser_ScanVectorized_AVX512;
+    // Chamber 1: KV Cache Bypass Stream
+    m_hardwareCylinder.chamber_1 = KV_StreamStore_AVX512;
+    // Chamber 2: Quantization Packer
+    m_hardwareCylinder.chamber_2 = Quant_Dequant_INT8_AVX512;
+    // Chamber 3: Sovereign Scheduler Lease (Shot 4 / Bit 3)
+    m_hardwareCylinder.chamber_3 = RawrSched_EnterLease_CylinderGlue;
+    // Chamber 4: Speculative Validator (placeholder)
+    m_hardwareCylinder.chamber_4 = nullptr;
+    // Chamber 5: Hardware Yield Gate (placeholder)
+    m_hardwareCylinder.chamber_5 = nullptr;
+}
+
+bool BackendOrchestrator::EnterSchedulingLease(int32_t priority, uint64_t affinityMask) {
+    if (m_schedulerLeaseActive.load(std::memory_order_acquire)) {
+        return false; // Already active
+    }
+    m_cylinderPayload.targetPriorityLevel = priority;
+    m_cylinderPayload.ccxCoreAffinityMask   = affinityMask;
+    RawrSched_EnterLease_CylinderGlue(&m_cylinderPayload);
+    m_schedulerLeaseActive.store(true, std::memory_order_release);
+    return true;
+}
+
+void BackendOrchestrator::LeaveSchedulingLease() {
+    if (!m_schedulerLeaseActive.load(std::memory_order_acquire)) {
+        return;
+    }
+    RawrSched_ExitLease_CylinderGlue(&m_cylinderPayload);
+    m_schedulerLeaseActive.store(false, std::memory_order_release);
+}
+
+void BackendOrchestrator::FireCylinderMasked(uint32_t chamberMask, EngineTaskPayload* payload) {
+    if (!payload) {
+        payload = &m_cylinderPayload;
+    }
+
+    // Automatic pre-escalation: if MASK_REALTIME_LEP is requested,
+    // ensure the scheduler lease fires first to eliminate OS jitter
+    // before any heavy compute chambers run.
+    constexpr uint32_t kRealtimeBit = static_cast<uint32_t>(ChamberBit::MASK_REALTIME_LEP);
+    if ((chamberMask & kRealtimeBit) != 0) {
+        if (!m_schedulerLeaseActive.load(std::memory_order_acquire)) {
+            EnterSchedulingLease(payload->targetPriorityLevel, payload->ccxCoreAffinityMask);
+        }
+    }
+
+    Cylinder_RotateAndFireMasked(
+        &m_hardwareCylinder, payload, chamberMask);
+
+    // If the lease was auto-entered and no other chambers remain that need it,
+    // optionally relinquish. For now, we leave it to the caller to
+    // explicitly call LeaveSchedulingLease() for deterministic pairing.
+}
+
+bool BackendOrchestrator::InitPyreBridge() {
+    using namespace pyre;
+
+    // 1. Initialize BootstrapPage header
+    g_pyreBootstrap.magic = 0x45525950; // 'PYRE' in little-endian
+    g_pyreBootstrap.version = 1;
+    g_pyreBootstrap.hostImageBase = reinterpret_cast<uint64_t>(GetModuleHandle(NULL));
+
+    // 2. Provision Engine Section (64MB executable scratch)
+    void* engineMem = VirtualAlloc(NULL, 64ULL * 1024ULL * 1024ULL,
+                                   MEM_COMMIT | MEM_RESERVE,
+                                   PAGE_EXECUTE_READWRITE);
+    if (!engineMem) {
+        OutputDebugStringA("[Pyre] VirtualAlloc(engineMem) failed\n");
+        return false;
+    }
+    g_pyreBootstrap.engineSectionRVA = reinterpret_cast<uint64_t>(engineMem) - g_pyreBootstrap.hostImageBase;
+    g_pyreBootstrap.engineSectionSize = 64ULL * 1024ULL * 1024ULL;
+
+    // 3. Provision KV-cache MMF aperture (1GB shared memory)
+    HANDLE hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                    0, 1024 * 1024 * 1024,
+                                    L"RawrXD_KV_Aperture");
+    if (!hMap) {
+        OutputDebugStringA("[Pyre] CreateFileMapping(KV) failed\n");
+        VirtualFree(engineMem, 0, MEM_RELEASE);
+        return false;
+    }
+    void* pView = MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+    if (!pView) {
+        OutputDebugStringA("[Pyre] MapViewOfFile(KV) failed\n");
+        CloseHandle(hMap);
+        VirtualFree(engineMem, 0, MEM_RELEASE);
+        return false;
+    }
+    g_pyreBootstrap.kvCacheMMFHandle = reinterpret_cast<uint64_t>(hMap);
+    g_pyreBootstrap.kvCacheView = reinterpret_cast<uint64_t>(pView);
+
+    // 4. Register Pyre as a KernelPlugin
+    KernelPlugin pyreKernel;
+    pyreKernel.name = "RawrXD_Pyre_AVX512";
+    pyreKernel.matmul_f32 = [](const float* A, const float* B, float* C,
+                               int M, int K, int N) {
+        // Populate BootstrapPage argument slots
+        g_pyreBootstrap.arg1 = reinterpret_cast<uint64_t>(A);
+        g_pyreBootstrap.arg2 = reinterpret_cast<uint64_t>(B);
+        g_pyreBootstrap.arg0 = reinterpret_cast<uint64_t>(C);
+        g_pyreBootstrap.arg3 = static_cast<uint64_t>(M);
+        g_pyreBootstrap.arg4 = static_cast<uint64_t>(N);
+        g_pyreBootstrap.arg5 = static_cast<uint64_t>(K);
+        g_pyreBootstrap.alpha = 0x3F80000000000000ULL; // 1.0f as IEEE-754 bits
+        g_pyreBootstrap.command = PYRE_CMD_GEMM;
+
+        // Trigger the MASM kernel
+        Pyre_GEMM_F32_AVX512();
+
+        // Verify completion
+        if (g_pyreBootstrap.status != PYRE_STATUS_DONE) {
+            OutputDebugStringA("[Pyre] GEMM kernel did not complete successfully\n");
+        }
+    };
+
+    const bool registered = RegisterKernelPlugin(pyreKernel);
+    if (registered) {
+        OutputDebugStringA("[Pyre] Bridge initialized and kernel registered\n");
+    } else {
+        OutputDebugStringA("[Pyre] RegisterKernelPlugin failed\n");
+    }
+    return registered;
+}
+
+bool BackendOrchestrator::PyreSmokeTest() {
+    using namespace pyre;
+
+    // Ensure bridge is initialized
+    if (g_pyreBootstrap.magic != 0x45525950) {
+        OutputDebugStringA("[PyreSmoke] Bootstrap not initialized\n");
+        return false;
+    }
+
+    // Write a test pattern into arg1
+    const uint64_t testPattern = 0xDEADBEEFCAFEBABEULL;
+    g_pyreBootstrap.arg1 = testPattern;
+    g_pyreBootstrap.arg0 = 0;
+    g_pyreBootstrap.command = PYRE_CMD_SMOKE;
+    g_pyreBootstrap.status  = PYRE_STATUS_BUSY;
+
+    // Trigger MASM smoke-test routine
+    Pyre_SmokeTest();
+
+    // Verify
+    const bool ok = (g_pyreBootstrap.status == PYRE_STATUS_DONE) &&
+                    (g_pyreBootstrap.arg0 == testPattern);
+    if (!ok) {
+        char buf[128];
+        snprintf(buf, sizeof(buf),
+                 "[PyreSmoke] FAILED — status=%llu arg0=%016llX expected=%016llX\n",
+                 g_pyreBootstrap.status, g_pyreBootstrap.arg0, testPattern);
+        OutputDebugStringA(buf);
+    } else {
+        OutputDebugStringA("[PyreSmoke] PASSED — bridge ping OK\n");
+    }
+    return ok;
+}
+
+} // namespace RawrXD

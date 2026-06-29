@@ -39,7 +39,7 @@
 #include "execution_governor.h"
 
 // Phase 9C: Multi-Response Engine
-#include "../win32app/multi_response_engine.h"
+#include "multi_response_engine.h"
 
 // Phase 5: Agent History
 #include "agent_history.h"
@@ -1066,8 +1066,8 @@ void cmd_multi_response(const std::string& args)
         auto stats = g_multiResponse->getStats();
         std::cout << "\n📊 Multi-Response Stats:\n";
         std::cout << "  Total sessions:     " << stats.totalSessions << "\n";
-        std::cout << "  Total responses:    " << stats.totalResponses << "\n";
-        std::cout << "  Preferences:        " << stats.preferenceSelections << "\n\n";
+        std::cout << "  Total responses:    " << stats.totalResponsesGenerated << "\n";
+        std::cout << "  Preferences:        " << stats.totalPreferencesRecorded << "\n\n";
     }
     else if (sub == "toggle")
     {
@@ -1083,8 +1083,8 @@ void cmd_multi_response(const std::string& args)
             std::cout << "❌ Invalid template ID (0-3)\n";
             return;
         }
-        auto tmpl = g_multiResponse->getTemplate(static_cast<uint32_t>(id));
-        g_multiResponse->setTemplateEnabled(static_cast<uint32_t>(id), !tmpl.enabled);
+        auto tmpl = g_multiResponse->getTemplate(static_cast<ResponseTemplateId>(id));
+        g_multiResponse->setTemplateEnabled(static_cast<ResponseTemplateId>(id), !tmpl.enabled);
         std::cout << "✅ " << tmpl.name << " → " << (!tmpl.enabled ? "enabled" : "disabled") << "\n";
     }
     else if (sub == "prefer")
@@ -1133,7 +1133,7 @@ void cmd_multi_response(const std::string& args)
             const auto& tmpl = g_multiResponse->getTemplate(resp.templateId);
             std::cout << "\n── [" << i << "] " << tmpl.name << " ("
                       << formatDuration(static_cast<uint64_t>(resp.latencyMs)) << ") ";
-            if (!resp.success)
+            if (resp.error)
                 std::cout << "❌ ERROR";
             std::cout << " ──\n";
             if (!resp.content.empty())

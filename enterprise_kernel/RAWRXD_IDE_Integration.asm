@@ -4,6 +4,8 @@
 ; 69 Compiler Backend Integration - Pure MASM x64 - No CRT Dependencies
 ; ============================================================================
 
+; x64 MASM (ml64.exe) - Pure x64, no 32-bit directives
+; Microsoft x64 calling convention: RCX, RDX, R8, R9 + stack
 OPTION CASEMAP:NONE
 
 ; External imports from Win32IDE
@@ -337,15 +339,15 @@ IDE_RegisterCompiler PROC FRAME
     
     ; Calculate table offset
     mov     rbx, rcx
-    imul    rbx, SIZEOF COMPILER_REGISTRY
+    imul    rbx, rbx, SIZEOF COMPILER_REGISTRY
     lea     rdi, compiler_table
     add     rdi, rbx
     
-    ; Fill registry entry
-    mov     [rdi].COMPILER_REGISTRY.id, rcx
-    mov     [rdi].COMPILER_REGISTRY.name, rdx
-    mov     [rdi].COMPILER_REGISTRY.entry_point, r8
-    mov     byte ptr [rdi].COMPILER_REGISTRY.is_available, 1
+    ; Fill registry entry - use explicit offsets
+    mov     [rdi], rcx                                    ; id
+    mov     [rdi + 8], rdx                                ; name
+    mov     [rdi + 16], r8                                ; entry_point
+    mov     byte ptr [rdi + 32], 1                        ; is_available
     
     pop     rdi
     pop     rbx
@@ -552,11 +554,11 @@ IDE_CI_DispatchCompiler PROC FRAME
     add     rdi, rbx
     
     ; Check if compiler is available
-    cmp     byte ptr [rdi].COMPILER_REGISTRY.is_available, 0
+    cmp     byte ptr [rdi + 32], 0
     je      compiler_unavailable
     
     ; Get entry point
-    mov     rax, [rdi].COMPILER_REGISTRY.entry_point
+    mov     rax, [rdi + 16]
     test    rax, rax
     jz      compiler_no_entry
     
@@ -861,11 +863,11 @@ IDE_CI_InitCompilerRegistry PROC FRAME
     
     ; Calculate entry offset
     mov rax, rbx
-    imul rax, SIZEOF COMPILER_ENTRY
+    imul rax, rax, SIZEOF COMPILER_ENTRY
     lea rdi, [rsi + rax]
     
     ; Set LangID
-    mov [rdi].COMPILER_ENTRY.LangID, ebx
+    mov [rdi], ebx
     
     ; Set up language-specific data
     call SetupCompilerEntry
@@ -902,8 +904,8 @@ SetupCompilerEntry PROC FRAME
     
 .tier1:
     ; Tier 1: Native binaries (0-7)
-    mov [rdi].COMPILER_ENTRY.Tier, COMPILER_TIER1
-    mov [rdi].COMPILER_ENTRY.Status, 0
+    mov [rdi + 4], COMPILER_TIER1
+    mov [rdi + 28], 0
     
     ; Set language name based on index
     lea rax, szLang_MASM
@@ -932,8 +934,8 @@ SetupCompilerEntry PROC FRAME
     
 .tier2:
     ; Tier 2: Manifest-based (8-47)
-    mov [rdi].COMPILER_ENTRY.Tier, COMPILER_TIER2
-    mov [rdi].COMPILER_ENTRY.Status, 0
+    mov [rdi + 4], COMPILER_TIER2
+    mov [rdi + 28], 0
     
     ; Calculate offset within Tier 2
     mov r8d, ebx
@@ -1071,8 +1073,8 @@ SetupCompilerEntry PROC FRAME
     
 .tier3:
     ; Tier 3: Implied/Subsystem (48-68)
-    mov [rdi].COMPILER_ENTRY.Tier, COMPILER_TIER3
-    mov [rdi].COMPILER_ENTRY.Status, 0
+    mov [rdi + 4], COMPILER_TIER3
+    mov [rdi + 28], 0
     
     ; Calculate offset within Tier 3
     mov r8d, ebx
@@ -1145,20 +1147,20 @@ SetupCompilerEntry PROC FRAME
     jmp .set_name
     
 .set_name:
-    mov [rdi].COMPILER_ENTRY.pLangName, rax
+    mov [rdi + 8], rax
     
     ; Set compiler path (simplified)
     lea rax, szPath_MASM
-    mov [rdi].COMPILER_ENTRY.pCompilerPath, rax
+    mov [rdi + 16], rax
     
     ; Set lexer name
     lea rax, szLexer_Custom
-    mov [rdi].COMPILER_ENTRY.pLexerName, rax
+    mov [rdi + 24], rax
     
     ; Initialize counters
-    mov [rdi].COMPILER_ENTRY.LastCompileTime, 0
-    mov [rdi].COMPILER_ENTRY.CompileCount, 0
-    mov [rdi].COMPILER_ENTRY.ErrorCount, 0
+    mov qword ptr [rdi + 32], 0
+    mov qword ptr [rdi + 40], 0
+    mov qword ptr [rdi + 48], 0
     
     leave
     ret
@@ -1181,7 +1183,7 @@ AuditSingleCompiler PROC FRAME
     lea rdi, [rsi + rax]
     
     ; Determine verification method based on tier
-    mov eax, [rdi].COMPILER_ENTRY.Tier
+    mov eax, [rdi + 4]
     cmp eax, COMPILER_TIER1
     je .verify_tier1
     cmp eax, COMPILER_TIER2
@@ -1190,7 +1192,7 @@ AuditSingleCompiler PROC FRAME
     
 .verify_tier1:
     ; Tier 1: Verify file exists (would call CreateFileA in full implementation)
-    mov [rdi].COMPILER_ENTRY.Status, 1
+    mov dword ptr [rdi + 28], 1
     lock inc VerifiedCount
     lea rcx, szCompilerPass
     call PrintString
@@ -1198,7 +1200,7 @@ AuditSingleCompiler PROC FRAME
     
 .verify_tier2:
     ; Tier 2: Check manifest
-    mov [rdi].COMPILER_ENTRY.Status, 1
+    mov dword ptr [rdi + 28], 1
     lock inc VerifiedCount
     lea rcx, szCompilerPass
     call PrintString
@@ -1206,14 +1208,14 @@ AuditSingleCompiler PROC FRAME
     
 .verify_tier3:
     ; Tier 3: Check subsystem
-    mov [rdi].COMPILER_ENTRY.Status, 1
+    mov dword ptr [rdi + 28], 1
     lock inc VerifiedCount
     lea rcx, szCompilerPass
     call PrintString
     
 .print_name:
     ; Print language name
-    mov rcx, [rdi].COMPILER_ENTRY.pLangName
+    mov rcx, [rdi + 8]
     call PrintString
     
     ; Print separator
@@ -1221,7 +1223,7 @@ AuditSingleCompiler PROC FRAME
     call PrintString
     
     ; Print lexer name
-    mov rcx, [rdi].COMPILER_ENTRY.pLexerName
+    mov rcx, [rdi + 24]
     call PrintString
     
     ; Print newline
@@ -1243,9 +1245,9 @@ IDE_CI_GetCompilerStatus PROC FRAME
     jae .invalid
     
     mov eax, ecx
-    imul rax, SIZEOF COMPILER_ENTRY
+    imul rax, rax, SIZEOF COMPILER_ENTRY
     lea rsi, CompilerRegistry
-    mov eax, [rsi + rax].COMPILER_ENTRY.Status
+    mov eax, [rsi + rax + 28]
     ret
     
 .invalid:
@@ -1271,16 +1273,16 @@ IDE_CI_DispatchCompiler PROC FRAME
     
     ; Get compiler entry
     mov eax, ecx
-    imul rax, SIZEOF COMPILER_ENTRY
+    imul rax, rax, SIZEOF COMPILER_ENTRY
     lea rsi, CompilerRegistry
     lea rdi, [rsi + rax]
     
     ; Check if compiler is verified
-    cmp [rdi].COMPILER_ENTRY.Status, 1
+    cmp dword ptr [rdi + 28], 1
     jne .not_verified
     
     ; Update compile count
-    inc [rdi].COMPILER_ENTRY.CompileCount
+    inc qword ptr [rdi + 40]
     
     ; Record start time
     lea rcx, [rsp + 60h]

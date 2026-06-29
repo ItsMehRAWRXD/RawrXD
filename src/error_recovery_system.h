@@ -210,6 +210,14 @@ private:
     };
     std::vector<DeferredRecovery> m_deferredRecoveries;
 
+    // Recovery timers (for active recovery attempts)
+    struct RecoveryTimer {
+        std::string errorId;
+        std::chrono::steady_clock::time_point startTime;
+        bool active = false;
+    };
+    std::unordered_map<std::string, RecoveryTimer> m_recoveryTimers;
+
     // Callbacks (function pointers, per project rules)
     ErrorRecordedERS_Cb    m_errorRecordedCb = nullptr;        void* m_errorRecordedUd = nullptr;
     ErrorRecoveredERS_Cb   m_errorRecoveredCb = nullptr;       void* m_errorRecoveredUd = nullptr;

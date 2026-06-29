@@ -38,8 +38,8 @@ extern "C" {
 
 extern "C" {
     LONG WINAPI Sovereign_VEH_Handler(PEXCEPTION_POINTERS ExceptionPointers) {
-        FMF_REAL_ENTRY("Sovereign_VEH_Handler");
-        // Production VEH handler - pass through to next handler
+        // Minimal VEH handler - just pass through to let the OS handle it
+        // This prevents the infinite loop caused by FMF logging inside the handler
         (void)ExceptionPointers;
         return EXCEPTION_CONTINUE_SEARCH;
     }
@@ -667,11 +667,5 @@ extern "C" {
 }
 
 // ============================================================================
-// IsStubFunction — used by FeatureRegistry::detectStubs
+// IsStubFunction — removed; definition lives in src/core/feature_registry.cpp
 // ============================================================================
-extern "C" int IsStubFunction(void* funcPtr, size_t maxBytesToScan) {
-    FMF_REAL_ENTRY("IsStubFunction");
-    (void)funcPtr;
-    (void)maxBytesToScan;
-    return 0;
-}

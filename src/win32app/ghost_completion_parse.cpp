@@ -6,6 +6,12 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <memory>
+
+// ============================================================================
+// Sovereign Scheduler — Lazy Real-Time Lease
+// ============================================================================
+#include "core/RawrXD_Scheduler.h"
 
 // ============================================================================
 // MASM Fast-Path Forward Declarations
@@ -55,6 +61,14 @@ public:
         
         const size_t len = input.length();
         if (len >= 32) {
+            // Lazy real-time lease for large buffers (>= 2048 wchar_t units)
+            // Prevents OS preemption during vectorized broadside scan
+            std::unique_ptr<RawrXD::PerformanceLease> lease;
+            if (len >= 2048) {
+                lease = std::make_unique<RawrXD::PerformanceLease>(
+                    RawrXD::PriorityTier::TimeCritical);
+            }
+
             // Try MASM fast-path first for buffers >= 32 wchar_t units
             alignas(32) GhostCompletionPayload payloads[64];
             size_t found = 0;

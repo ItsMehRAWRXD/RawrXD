@@ -11,7 +11,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
-#include "multi_response_engine.h"
+#include "../core/multi_response_engine.h"
 
 #include <sstream>
 #include <algorithm>
@@ -21,9 +21,91 @@
 #include <limits>
 
 // ============================================================================
+// TPS Telemetry Shared Memory Integration
+// ============================================================================
+#include <windows.h>
+
+// TPS Telemetry structure (matches GhostText_TPS_Overlay expectations)
+#pragma pack(push, 1)
+struct TpsTelemetry {
+    uint32_t version;           // 1
+    uint32_t sequence;            // Incrementing sequence number
+    double tps;                   // Current tokens per second
+    double gflops;              // Current GFLOPS
+    double acceptanceRate;        // Medusa acceptance rate (0.0-1.0)
+    uint32_t tokensGenerated;     // Total tokens generated
+    uint32_t tokensAccepted;      // Tokens accepted by Medusa
+    uint32_t speculativeDepth;      // Current speculative depth
+    uint64_t timestampUs;         // Microsecond timestamp
+    char reserved[64];            // Reserved for future expansion
+};
+#pragma pack(pop)
+
+static HANDLE g_telemetryMmf = nullptr;
+static TpsTelemetry* g_telemetryData = nullptr;
+
+static bool InitializeTelemetryReader() {
+    if (g_telemetryData) return true; // Already initialized and mapped
+    
+    // Try to open shared memory (producer may have started since last attempt)
+    g_telemetryMmf = OpenFileMappingW(FILE_MAP_READ, FALSE, L"RawrXD_TPS_Telemetry_v1");
+    if (!g_telemetryMmf) {
+        // Telemetry not available (producer not running)
+        return false;
+    }
+    
+    g_telemetryData = (TpsTelemetry*)MapViewOfFile(g_telemetryMmf, FILE_MAP_READ, 0, 0, sizeof(TpsTelemetry));
+    return g_telemetryData != nullptr;
+}
+
+static void ShutdownTelemetryReader() {
+    if (g_telemetryData) {
+        UnmapViewOfFile(g_telemetryData);
+        g_telemetryData = nullptr;
+    }
+    if (g_telemetryMmf) {
+        CloseHandle(g_telemetryMmf);
+        g_telemetryMmf = nullptr;
+    }
+}
+
+static std::string GetTelemetryJson() {
+    if (!g_telemetryData && !InitializeTelemetryReader()) {
+        return "{}"; // Telemetry not available
+    }
+    
+    std::ostringstream oss;
+    oss << "{";
+    oss << "\"version\":" << g_telemetryData->version << ",";
+    oss << "\"sequence\":" << g_telemetryData->sequence << ",";
+    oss << "\"tps\":" << g_telemetryData->tps << ",";
+    oss << "\"gflops\":" << g_telemetryData->gflops << ",";
+    oss << "\"acceptanceRate\":" << g_telemetryData->acceptanceRate << ",";
+    oss << "\"tokensGenerated\":" << g_telemetryData->tokensGenerated << ",";
+    oss << "\"tokensAccepted\":" << g_telemetryData->tokensAccepted << ",";
+    oss << "\"speculativeDepth\":" << g_telemetryData->speculativeDepth << ",";
+    oss << "\"timestampUs\":" << g_telemetryData->timestampUs;
+    oss << "}";
+    return oss.str();
+}
+
+// ============================================================================
 // Local HTTP utility (mirrors LocalServerUtil from Win32IDE_LocalServer.cpp)
 // ============================================================================
 namespace LocalServerUtil {
+// Helper to find JSON value position
+static bool findJsonValueStart(const std::string& body, const std::string& key, size_t& pos) {
+    std::string searchKey = "\"" + key + "\"";
+    pos = body.find(searchKey);
+    if (pos == std::string::npos) return false;
+    pos += searchKey.size();
+    // Skip whitespace and colon
+    while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t' || body[pos] == '\n' || body[pos] == '\r')) ++pos;
+    if (pos < body.size() && body[pos] == ':') ++pos;
+    while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t' || body[pos] == '\n' || body[pos] == '\r')) ++pos;
+    return pos < body.size();
+}
+
 static std::string buildHttpResponse(int status, const std::string& body,
                                       const std::string& contentType = "application/json") {
     std::ostringstream oss;
@@ -46,22 +128,6 @@ static std::string buildHttpResponse(int status, const std::string& body,
     return oss.str();
 }
 
-static std::string escapeJson(const std::string& value) {
-    std::string out;
-    out.reserve(value.size());
-    for (char c : value) {
-        switch (c) {
-            case '"':  out += "\\\""; break;
-            case '\\': out += "\\\\"; break;
-            case '\n': out += "\\n"; break;
-            case '\r': out += "\\r"; break;
-            case '\t': out += "\\t"; break;
-            default:   out.push_back(c); break;
-        }
-    }
-    return out;
-}
-
 static std::string trim(const std::string& value) {
     size_t first = 0;
     while (first < value.size() && std::isspace(static_cast<unsigned char>(value[first]))) {
@@ -78,32 +144,26 @@ static std::string trim(const std::string& value) {
     return value.substr(first, last - first);
 }
 
-static std::string buildErrorJson(const std::string& error, const std::string& message) {
-    return std::string("{\"error\":\"") + escapeJson(error) +
-           "\",\"message\":\"" + escapeJson(message) + "\"}";
+static std::string escapeJson(const std::string& value) {
+    std::string out;
+    out.reserve(value.size());
+    for (char c : value) {
+        switch (c) {
+            case '"':  out += "\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:   out.push_back(c); break;
+        }
+    }
+    return out;
 }
 
-static size_t skipWhitespace(const std::string& body, size_t pos) {
-    while (pos < body.size() && std::isspace(static_cast<unsigned char>(body[pos]))) {
-        ++pos;
-    }
-    return pos;
-}
-
-static bool findJsonValueStart(const std::string& body, const std::string& key, size_t& valueStart) {
-    const std::string quotedKey = "\"" + key + "\"";
-    size_t pos = body.find(quotedKey);
-    if (pos == std::string::npos) {
-        return false;
-    }
-
-    size_t colon = body.find(':', pos + quotedKey.size());
-    if (colon == std::string::npos) {
-        return false;
-    }
-
-    valueStart = skipWhitespace(body, colon + 1);
-    return valueStart < body.size();
+static std::string buildErrorJson(const std::string& code, const std::string& message) {
+    std::ostringstream oss;
+    oss << "{\"error\":\"" << escapeJson(code) << "\",\"message\":\"" << escapeJson(message) << "\"}";
+    return oss.str();
 }
 
 static bool tryExtractJsonString(const std::string& body, const std::string& key, std::string& value) {
@@ -260,7 +320,7 @@ void Win32IDE::cmdMultiResponseGenerate() {
                 const auto& tmpl = m_multiResponseEngine->getTemplate(resp.templateId);
                 oss << "  [" << i << "] " << tmpl.name
                     << " — " << (int)resp.latencyMs << "ms"
-                    << (resp.success ? " OK" : " (ERROR)") << "\n";
+                    << (resp.complete && !resp.error ? " OK" : " (ERROR)") << "\n";
             }
             oss << "Use 'MultiResp: Select Preferred' to pick your favorite.";
             appendToOutput(oss.str(), "General", OutputSeverity::Info);
@@ -346,7 +406,7 @@ void Win32IDE::cmdMultiResponseCompare() {
         if (session->preferredIndex == static_cast<int>(i)) oss << " ★ PREFERRED";
         oss << " ────\n";
         oss << "Latency: " << (int)resp.latencyMs << "ms";
-        if (!resp.success) oss << " | ERROR";
+        if (resp.error) oss << " | ERROR: " << resp.errorDetail;
         oss << "\n";
         // Show first 200 chars of content preview
         std::string preview = resp.content.substr(0, 200);
@@ -366,8 +426,8 @@ void Win32IDE::cmdMultiResponseShowStats() {
     std::ostringstream oss;
     oss << "══════════ Multi-Response Statistics ══════════\n";
     oss << "Total sessions:   " << stats.totalSessions << "\n";
-    oss << "Total responses:  " << stats.totalResponses << "\n";
-    oss << "Total prefs:      " << stats.preferenceSelections << "\n\n";
+    oss << "Total responses:  " << stats.totalResponsesGenerated << "\n";
+    oss << "Total prefs:      " << stats.totalPreferencesRecorded << "\n\n";
     oss << "\nRecommended template: " << recommended << "\n";
 
     appendToOutput(oss.str(), "General", OutputSeverity::Info);
@@ -380,9 +440,9 @@ void Win32IDE::cmdMultiResponseShowTemplates() {
     std::ostringstream oss;
     oss << "══════════ Response Templates ══════════\n";
     for (const auto& t : templates) {
-        oss << "[" << t.id << "] " << t.name
+        oss << "[" << static_cast<int>(t.id) << "] " << t.name
             << (t.enabled ? " ✓" : " ✗") << "\n"
-            << "    " << t.systemPrompt << "\n\n";
+            << "    " << t.systemPromptSuffix << "\n\n";
     }
     oss << "Enabled: " << m_multiResponseEngine->getEnabledTemplateCount()
         << "/" << templates.size() << "\n";
@@ -411,7 +471,7 @@ void Win32IDE::cmdMultiResponseToggleTemplate() {
     }
 
     const auto& current = templates[static_cast<size_t>(toggleIdx)];
-    const uint32_t tmplId = current.id;
+    const ResponseTemplateId tmplId = current.id;
     const std::string tmplName = current.name;
     const bool desiredState = !current.enabled;
     m_multiResponseEngine->setTemplateEnabled(tmplId, desiredState);
@@ -443,17 +503,11 @@ void Win32IDE::cmdMultiResponseShowPreferences() {
     std::ostringstream oss;
     oss << "══════════ Preference History (last " << history.size() << ") ══════════\n";
     for (const auto& rec : history) {
-        uint64_t sid = rec.first;
-        int preferred = rec.second;
-        std::string tmplName = "?";
-        if (const auto* session = m_multiResponseEngine->getSession(sid)) {
-            if (preferred >= 0 && preferred < static_cast<int>(session->responses.size())) {
-                const auto& resp = session->responses[preferred];
-                tmplName = m_multiResponseEngine->getTemplate(resp.templateId).name;
-            }
-        }
-        oss << "Session #" << sid << " → #" << preferred
-            << " (" << tmplName << ")\n";
+        uint64_t sid = rec.sessionId;
+        ResponseTemplateId preferredTemplate = rec.preferredTemplate;
+        std::string tmplName = m_multiResponseEngine->getTemplate(preferredTemplate).name;
+        oss << "Session #" << sid << " → " << tmplName
+            << "\n";
     }
     appendToOutput(oss.str(), "General", OutputSeverity::Info);
 }
@@ -538,7 +592,7 @@ void Win32IDE::cmdMultiResponseApplyPreferred() {
 // HTTP ENDPOINT HANDLERS (called from LocalServer routing)
 // ============================================================================
 
-// GET /api/multi-response/status — engine overview
+// GET /api/multi-response/status — engine overview with telemetry
 void Win32IDE::handleMultiResponseStatusEndpoint(SOCKET client) {
     if (!m_multiResponseInitialized) initMultiResponse();
     if (!m_multiResponseInitialized || !m_multiResponseEngine) {
@@ -548,8 +602,28 @@ void Win32IDE::handleMultiResponseStatusEndpoint(SOCKET client) {
         return;
     }
 
-    const std::string json = m_multiResponseEngine->toJson();
-    const std::string response = LocalServerUtil::buildHttpResponse(200, json);
+    // Build combined response with engine status + telemetry
+    std::string engineJson = m_multiResponseEngine->toJson();
+    std::string telemetryJson = GetTelemetryJson();
+    
+    // Combine JSON objects
+    std::ostringstream combined;
+    combined << "{";
+    // Remove closing brace from engineJson and add telemetry
+    if (!engineJson.empty() && engineJson.front() == '{' && engineJson.back() == '}') {
+        combined << engineJson.substr(1, engineJson.length() - 2);
+        if (telemetryJson != "{}") {
+            combined << ",\"telemetry\":" << telemetryJson;
+        }
+    } else {
+        combined << "\"engine\":" << engineJson;
+        if (telemetryJson != "{}") {
+            combined << ",\"telemetry\":" << telemetryJson;
+        }
+    }
+    combined << "}";
+    
+    const std::string response = LocalServerUtil::buildHttpResponse(200, combined.str());
     send(client, response.c_str(), (int)response.size(), 0);
 }
 
@@ -569,9 +643,9 @@ void Win32IDE::handleMultiResponseTemplatesEndpoint(SOCKET client) {
     for (size_t i = 0; i < templates.size(); ++i) {
         if (i > 0) o << ",";
         const auto& t = templates[i];
-        o << "{\"id\":" << (int)t.id
+        o << "{\"id\":" << static_cast<int>(t.id)
           << ",\"name\":\"" << t.name << "\""
-          << ",\"systemPrompt\":\"" << LocalServerUtil::escapeJson(t.systemPrompt) << "\""
+          << ",\"systemPromptSuffix\":\"" << LocalServerUtil::escapeJson(t.systemPromptSuffix) << "\""
           << ",\"enabled\":" << (t.enabled ? "true" : "false")
           << "}";
     }

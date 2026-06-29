@@ -1,13 +1,4 @@
-// ============================================================================
-// Win32IDE_CodeActions_Stub.cpp — LSP Code Actions Stub Implementation
-// ============================================================================
-// Stub implementations for LSP Code Actions. These will be integrated with
-// the actual LSP client in a future phase.
-// ============================================================================
-
-#include "Win32IDE.h"
-#include "IDELogger.h"
-#include <nlohmann/json.hpp>
+// File deleted - stub no longer needed
 
 using json = nlohmann::json;
 

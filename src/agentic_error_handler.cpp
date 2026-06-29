@@ -127,7 +127,8 @@ nlohmann::json AgenticErrorHandler::handleError(
         result["handled"] = executeRetryStrategy(m_errorHistory.back(), [this, component]() {
             // Attempt recovery by re-invoking the last known operation
             if (m_state) {
-                m_state->recordRecoveryAttempt(component, "retry");
+                // Record recovery attempt via error recovery tracking
+                m_state->recordErrorRecovery(static_cast<int>(m_errorHistory.size()) - 1, "retry", false);
             }
             return true; // Retry signaled; caller should re-execute the guarded operation
         });
@@ -527,7 +528,7 @@ bool AgenticErrorHandler::executeFallbackStrategy(const ErrorContext& context)
 void AgenticErrorHandler::executeEscalateStrategy(const ErrorContext& context)
 {
     // Notify higher-level handlers or administrators
-    fprintf(stderr, "[AgenticErrorHandler] ESCALATE: %s - %s\n", context.errorCode.c_str(), context.message.c_str());
+    fprintf(stderr, "[AgenticErrorHandler] ESCALATE: %s - %s\n", context.errorId.c_str(), context.message.c_str());
     m_totalRecoveries++;
 }
 

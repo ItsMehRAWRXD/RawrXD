@@ -107,7 +107,7 @@ MODEL_PROFILE ENDS
 ; =============================================================================
 
 BRIDGE_STATE STRUCT
-    initialized     DD ?                ; 1 if ModelBridge_Init called
+    initialized     DD ?                ; 1 if MASM_ModelBridge_Init called
     has_avx2        DD ?                ; CPUID: AVX2 support
     has_fma3        DD ?                ; CPUID: FMA3 support
     has_avx512f     DD ?                ; CPUID: AVX-512F support
@@ -186,19 +186,19 @@ _DATA64 ENDS
 ;                           EXPORTS
 ; =============================================================================
 
-PUBLIC ModelBridge_Init
-PUBLIC ModelBridge_GetProfileCount
-PUBLIC ModelBridge_GetProfile
-PUBLIC ModelBridge_GetProfileByName
-PUBLIC ModelBridge_ValidateLoad
-PUBLIC ModelBridge_LoadModel
-PUBLIC ModelBridge_UnloadModel
-PUBLIC ModelBridge_GetActiveProfile
-PUBLIC ModelBridge_GetState
-PUBLIC ModelBridge_EstimateRAM
-PUBLIC ModelBridge_GetTierForSize
-PUBLIC ModelBridge_GetQuantName
-PUBLIC ModelBridge_GetCapabilities
+PUBLIC MASM_ModelBridge_Init
+PUBLIC MASM_ModelBridge_GetProfileCount
+PUBLIC MASM_ModelBridge_GetProfile
+PUBLIC MASM_ModelBridge_GetProfileByName
+PUBLIC MASM_ModelBridge_ValidateLoad
+PUBLIC MASM_ModelBridge_LoadModel
+PUBLIC MASM_ModelBridge_UnloadModel
+PUBLIC MASM_ModelBridge_GetActiveProfile
+PUBLIC MASM_ModelBridge_GetState
+PUBLIC MASM_ModelBridge_EstimateRAM
+PUBLIC MASM_ModelBridge_GetTierForSize
+PUBLIC MASM_ModelBridge_GetQuantName
+PUBLIC MASM_ModelBridge_GetCapabilities
 PUBLIC AcquireBridgeLock
 PUBLIC ReleaseBridgeLock
 PUBLIC ValidateModelAlignment
@@ -210,7 +210,7 @@ PUBLIC EstimateRAM_Safe
 _TEXT SEGMENT ALIGN(16) 'CODE'
 
 ; =============================================================================
-; ModelBridge_Init ? Initialize the model bridge subsystem
+; MASM_ModelBridge_Init ? Initialize the model bridge subsystem
 ; =============================================================================
 ; Detects CPU capabilities, queries system RAM, and populates the model
 ; profile table with all supported 8B-800B configurations.
@@ -219,7 +219,7 @@ _TEXT SEGMENT ALIGN(16) 'CODE'
 ; Returns:    RAX = BRIDGE_OK on success, error code on failure
 ;             RDX = pointer to g_BridgeState
 ; =============================================================================
-ModelBridge_Init PROC FRAME
+MASM_ModelBridge_Init PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -346,13 +346,13 @@ ModelBridge_Init PROC FRAME
     pop     rsi
     pop     rbx
     ret
-ModelBridge_Init ENDP
+MASM_ModelBridge_Init ENDP
 
 ; =============================================================================
 ; PopulateProfiles ? Internal: fill g_ModelProfiles table
 ; =============================================================================
 ; Populates all 24 model profiles with metadata.
-; Called once from ModelBridge_Init.
+; Called once from MASM_ModelBridge_Init.
 ; =============================================================================
 PopulateProfiles PROC FRAME
     push    rbx
@@ -1052,24 +1052,24 @@ PopulateProfiles PROC FRAME
 PopulateProfiles ENDP
 
 ; =============================================================================
-; ModelBridge_GetProfileCount ? Return number of registered profiles
+; MASM_ModelBridge_GetProfileCount ? Return number of registered profiles
 ; =============================================================================
 ; Parameters: none
 ; Returns:    EAX = profile count
 ; =============================================================================
-ModelBridge_GetProfileCount PROC
+MASM_ModelBridge_GetProfileCount PROC
     lea     rax, g_BridgeState
     mov     eax, DWORD PTR [rax].BRIDGE_STATE.profile_count
     ret
-ModelBridge_GetProfileCount ENDP
+MASM_ModelBridge_GetProfileCount ENDP
 
 ; =============================================================================
-; ModelBridge_GetProfile ? Get pointer to profile by index
+; MASM_ModelBridge_GetProfile ? Get pointer to profile by index
 ; =============================================================================
 ; Parameters: ECX = profile index (0-based)
 ; Returns:    RAX = pointer to MODEL_PROFILE, or NULL if invalid
 ; =============================================================================
-ModelBridge_GetProfile PROC
+MASM_ModelBridge_GetProfile PROC
     lea     rax, g_BridgeState
     cmp     ecx, DWORD PTR [rax].BRIDGE_STATE.profile_count
     jae     @invalid_idx
@@ -1089,16 +1089,16 @@ ModelBridge_GetProfile PROC
 @invalid_idx:
     xor     eax, eax                    ; Return NULL
     ret
-ModelBridge_GetProfile ENDP
+MASM_ModelBridge_GetProfile ENDP
 
 ; =============================================================================
-; ModelBridge_GetProfileByName ? Find profile by name substring match
+; MASM_ModelBridge_GetProfileByName ? Find profile by name substring match
 ; =============================================================================
 ; Parameters: RCX = pointer to name string (null-terminated)
 ; Returns:    RAX = pointer to MODEL_PROFILE, or NULL if not found
 ;             EDX = profile index, or -1
 ; =============================================================================
-ModelBridge_GetProfileByName PROC FRAME
+MASM_ModelBridge_GetProfileByName PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -1185,10 +1185,10 @@ ModelBridge_GetProfileByName PROC FRAME
     pop     rsi
     pop     rbx
     ret
-ModelBridge_GetProfileByName ENDP
+MASM_ModelBridge_GetProfileByName ENDP
 
 ; =============================================================================
-; ModelBridge_ValidateLoad ? Check if a model profile can be loaded
+; MASM_ModelBridge_ValidateLoad ? Check if a model profile can be loaded
 ; =============================================================================
 ; Checks CPU capabilities, RAM availability, and engine compatibility.
 ;
@@ -1196,7 +1196,7 @@ ModelBridge_GetProfileByName ENDP
 ; Returns:    EAX = BRIDGE_OK if loadable, error code otherwise
 ;             RDX = error message string pointer
 ; =============================================================================
-ModelBridge_ValidateLoad PROC FRAME
+MASM_ModelBridge_ValidateLoad PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -1265,10 +1265,10 @@ ModelBridge_ValidateLoad PROC FRAME
     pop     rsi
     pop     rbx
     ret
-ModelBridge_ValidateLoad ENDP
+MASM_ModelBridge_ValidateLoad ENDP
 
 ; =============================================================================
-; ModelBridge_LoadModel ? Load a model by profile index
+; MASM_ModelBridge_LoadModel ? Load a model by profile index
 ; =============================================================================
 ; Validates and sets the active model profile. Actual model weight loading
 ; is dispatched to the C++ InferenceEngine via callback.
@@ -1277,7 +1277,7 @@ ModelBridge_ValidateLoad ENDP
 ; Returns:    EAX = BRIDGE_OK on success, error code on failure
 ;             RDX = status message
 ; =============================================================================
-ModelBridge_LoadModel PROC FRAME
+MASM_ModelBridge_LoadModel PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -1356,15 +1356,15 @@ ModelBridge_LoadModel PROC FRAME
     pop     rsi
     pop     rbx
     ret
-ModelBridge_LoadModel ENDP
+MASM_ModelBridge_LoadModel ENDP
 
 ; =============================================================================
-; ModelBridge_UnloadModel ? Unload the current model
+; MASM_ModelBridge_UnloadModel ? Unload the current model
 ; =============================================================================
 ; Parameters: none
 ; Returns:    EAX = BRIDGE_OK on success, BRIDGE_ERR_NOT_LOADED if no model
 ; =============================================================================
-ModelBridge_UnloadModel PROC
+MASM_ModelBridge_UnloadModel PROC
     lea     rax, g_BridgeState
 
     ; Check if anything is loaded
@@ -1385,16 +1385,16 @@ ModelBridge_UnloadModel PROC
 @unload_none:
     mov     eax, BRIDGE_ERR_NOT_LOADED
     ret
-ModelBridge_UnloadModel ENDP
+MASM_ModelBridge_UnloadModel ENDP
 
 ; =============================================================================
-; ModelBridge_GetActiveProfile ? Get the currently loaded profile
+; MASM_ModelBridge_GetActiveProfile ? Get the currently loaded profile
 ; =============================================================================
 ; Parameters: none
 ; Returns:    RAX = pointer to active MODEL_PROFILE, or NULL if none
 ;             EDX = active profile index, or -1
 ; =============================================================================
-ModelBridge_GetActiveProfile PROC
+MASM_ModelBridge_GetActiveProfile PROC
     lea     rax, g_BridgeState
     mov     edx, DWORD PTR [rax].BRIDGE_STATE.active_profile
     cmp     edx, -1
@@ -1412,21 +1412,21 @@ ModelBridge_GetActiveProfile PROC
     xor     eax, eax
     mov     edx, -1
     ret
-ModelBridge_GetActiveProfile ENDP
+MASM_ModelBridge_GetActiveProfile ENDP
 
 ; =============================================================================
-; ModelBridge_GetState ? Get pointer to bridge state structure
+; MASM_ModelBridge_GetState ? Get pointer to bridge state structure
 ; =============================================================================
 ; Parameters: none
 ; Returns:    RAX = pointer to BRIDGE_STATE
 ; =============================================================================
-ModelBridge_GetState PROC
+MASM_ModelBridge_GetState PROC
     lea     rax, g_BridgeState
     ret
-ModelBridge_GetState ENDP
+MASM_ModelBridge_GetState ENDP
 
 ; =============================================================================
-; ModelBridge_EstimateRAM ? Estimate RAM needed for model at given quant
+; MASM_ModelBridge_EstimateRAM ? Estimate RAM needed for model at given quant
 ; =============================================================================
 ; Approximate formula: RAM_MB ? (params_B * bits_per_weight) / 8 * 1.15
 ; The 1.15 multiplier accounts for KV cache, activations, and overhead.
@@ -1435,7 +1435,7 @@ ModelBridge_GetState ENDP
 ;             EDX = quant_bits (2, 3, 4, 5, 6, 8, 16, 32)
 ; Returns:    EAX = estimated RAM in MB
 ; =============================================================================
-ModelBridge_EstimateRAM PROC
+MASM_ModelBridge_EstimateRAM PROC
     ; RAM_MB = param_count_b * 1000 * quant_bits / 8 * 1.15
     ; Simplified: RAM_MB = param_count_b * quant_bits * 143.75
     ; Integer approx: RAM_MB = (param_count_b * quant_bits * 144) / 1
@@ -1447,15 +1447,15 @@ ModelBridge_EstimateRAM PROC
     imul    eax, edx                   ; EAX = param_b * 144 * bits
     ; Result is in MB
     ret
-ModelBridge_EstimateRAM ENDP
+MASM_ModelBridge_EstimateRAM ENDP
 
 ; =============================================================================
-; ModelBridge_GetTierForSize ? Classify a model by parameter count
+; MASM_ModelBridge_GetTierForSize ? Classify a model by parameter count
 ; =============================================================================
 ; Parameters: ECX = parameter count in billions
 ; Returns:    EAX = MODEL_TIER_* classification
 ; =============================================================================
-ModelBridge_GetTierForSize PROC
+MASM_ModelBridge_GetTierForSize PROC
     cmp     ecx, 100
     ja      @tier_800b
     cmp     ecx, 70
@@ -1490,15 +1490,15 @@ ModelBridge_GetTierForSize PROC
 @tier_unknown:
     mov     eax, MODEL_TIER_UNKNOWN
     ret
-ModelBridge_GetTierForSize ENDP
+MASM_ModelBridge_GetTierForSize ENDP
 
 ; =============================================================================
-; ModelBridge_GetQuantName ? Get quantization m_type name string
+; MASM_ModelBridge_GetQuantName ? Get quantization m_type name string
 ; =============================================================================
 ; Parameters: ECX = QUANT_* m_type ID
 ; Returns:    RAX = pointer to null-terminated name string
 ; =============================================================================
-ModelBridge_GetQuantName PROC
+MASM_ModelBridge_GetQuantName PROC
     lea     rax, @quant_unknown
     cmp     ecx, QUANT_COUNT
     jae     @gqn_done
@@ -1531,10 +1531,10 @@ ALIGN 8
 @quant_q2_k     DB 'Q2_K', 0
 @quant_unknown  DB 'UNKNOWN', 0
 
-ModelBridge_GetQuantName ENDP
+MASM_ModelBridge_GetQuantName ENDP
 
 ; =============================================================================
-; ModelBridge_GetCapabilities ? Return packed capability bitmask
+; MASM_ModelBridge_GetCapabilities ? Return packed capability bitmask
 ; =============================================================================
 ; Returns a 64-bit bitmask describing current bridge + hardware capabilities.
 ;
@@ -1556,7 +1556,7 @@ ModelBridge_GetQuantName ENDP
 ;             Bits 32-47: Total RAM in GB
 ;             Bits 48-63: Free RAM in GB
 ; =============================================================================
-ModelBridge_GetCapabilities PROC
+MASM_ModelBridge_GetCapabilities PROC
     lea     rcx, g_BridgeState
     xor     rax, rax
 
@@ -1644,7 +1644,7 @@ ModelBridge_GetCapabilities PROC
     or      rax, rdx
 
     ret
-ModelBridge_GetCapabilities ENDP
+MASM_ModelBridge_GetCapabilities ENDP
 
 ; =============================================================================
 ; AcquireBridgeLock ? Reusable PAUSE-based spinlock acquire
@@ -1712,7 +1712,7 @@ ValidateModelAlignment ENDP
 ; =============================================================================
 ; EstimateRAM_Safe ? RAM estimation with load fence (serialized read)
 ; =============================================================================
-; Same formula as ModelBridge_EstimateRAM but with lfence to serialize
+; Same formula as MASM_ModelBridge_EstimateRAM but with lfence to serialize
 ; volatile reads before multiplication. Prevents stale QuantBits/ParamCount
 ; reads on 800B dual-engine loads where engine handoff may update these
 ; values concurrently.

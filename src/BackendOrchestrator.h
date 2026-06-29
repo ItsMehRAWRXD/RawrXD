@@ -33,6 +33,9 @@
 #include <chrono>
 #include <array>
 
+#include "core/EngineTaskPayload.h"
+#include "core/RawrXD_Cylinder.h"
+
 class AgenticExecutor; // global-namespace forward declaration
 
 namespace RawrXD {
@@ -265,6 +268,30 @@ public:
     // Pass nullptr to clear the callback (e.g. on AgenticExecutor teardown).
     static void RegisterTitanToolDispatch(::AgenticExecutor* executor);
 
+    // ---- Chamber 3: Sovereign Scheduler Lease API ----
+    // Load chamber function pointers into the 6-shot execution cylinder.
+    void LoadChamberConfigurations() noexcept;
+
+    // Manual lease controls for ad-hoc real-time priority escalation.
+    // Returns true if lease was successfully entered.
+    bool EnterSchedulingLease(int32_t priority = 15, uint64_t affinityMask = 0x00000000FFFFFFFF);
+    void LeaveSchedulingLease();
+
+    // Fire selected chambers via bitmask (e.g., MASK_ALL_SHOTS).
+    // Automatically triggers Chamber 3 (scheduler lease) first when
+    // MASK_REALTIME_LEP is set, ensuring jitter-free execution.
+    void FireCylinderMasked(uint32_t chamberMask, EngineTaskPayload* payload);
+
+    // ---- Pyre Compute Engine Bridge ----
+    // Initializes the shared BootstrapPage in the .pyre section,
+    // allocates executable scratch space, and registers the Pyre
+    // kernel plugin for GEMM offload.
+    bool InitPyreBridge();
+
+    // Bridge validation: writes a test pattern, triggers Pyre_SmokeTest,
+    // and verifies the MASM side can read/write the BootstrapPage.
+    bool PyreSmokeTest();
+
 private:
     BackendOrchestrator();
     ~BackendOrchestrator();
@@ -274,6 +301,11 @@ private:
     BackendKind               m_active_backend = BackendKind::Vulkan;
     BackendKind               m_forced_backend  = BackendKind::Count; // Count = auto
     std::vector<BackendKind>  m_failover_order;
+
+    // 6-Shot Execution Cylinder (Chamber 3 = Sovereign Scheduler)
+    ExecutionCylinder m_hardwareCylinder{};
+    EngineTaskPayload m_cylinderPayload{};
+    std::atomic<bool> m_schedulerLeaseActive{false};
 
     // Health
     mutable std::mutex m_health_mtx;

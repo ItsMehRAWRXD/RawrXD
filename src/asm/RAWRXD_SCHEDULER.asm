@@ -1,58 +1,85 @@
 ;==============================================================================
 ; RAWRXD_SCHEDULER.asm
-; LANE D: SOVEREIGN GOLDILOCKS SCHEDULER
-; Real-time thread priority lease, core affinity pinning, RDTSC telemetry.
-; Zero-CRT, compact, no scaffolding.
+; LANE D: SOVEREIGN GOLDILOCKS SCHEDULER (Fixed Win64 ABI Edition)
+; Zero-CRT, compact, fully aligned real-time scheduling core.
+; Win64 ABI Compliant: Non-volatile preservation, shadow space, stack alignment.
 ;==============================================================================
 OPTION CASEMAP:NONE
+
+; External Win32 Kernel Entry Points
+EXTERN GetCurrentThread      : PROC
+EXTERN SetThreadPriority     : PROC
+EXTERN GetThreadPriority     : PROC
+EXTERN SetThreadAffinityMask : PROC
 
 .CODE
 
 ;------------------------------------------------------------------------------
 ; RawrSched_EnterLease(pCtx:rcx, targetPriority:edx, targetAffinity:r8)
-; Captures current thread state, escalates priority, optionally pins affinity.
-; pCtx points to: { DWORD origPri; DWORD pad; QWORD origAffinity; QWORD startTSC;
-;                   QWORD accumCycles; DWORD leaseActive; DWORD pad2; }
+; Context Struct Layout:
+;   +0  : DWORD origPri
+;   +4  : DWORD pad
+;   +8  : QWORD origAffinity
+;   +16 : QWORD startTSC
+;   +24 : DWORD leaseActive
+;   +28 : DWORD pad2
+;   +32 : QWORD accumCycles
 ;------------------------------------------------------------------------------
 RawrSched_EnterLease PROC
     test rcx, rcx
     jz @@done
 
+    ; --- Win64 Stack Frame Setup & Non-Volatile Preservation ---
     push rbx
     push rdi
-    mov rbx, rcx
-    mov edi, edx          ; targetPriority
+    push rsi
+    push r12
+    ; Stack Accounting: 4 pushes = 32 bytes. Entry was (16n + 8). 
+    ; Current RSP = (16n + 8 - 32) = (16n - 24).
+    ; We allocate 40 bytes: 32 bytes shadow space + 8 bytes alignment padding.
+    ; New RSP = (16n - 64), perfectly 16-byte aligned.
+    sub rsp, 40
 
-    ; Get current thread pseudo-handle
+    ; --- Isolate Input Parameters from Volatile Clobbering ---
+    mov rbx, rcx            ; rbx = pCtx
+    mov edi, edx            ; edi = targetPriority
+    mov r12, r8             ; r12 = targetAffinity (Safe from API wipes)
+
+    ; 1. Acquire secure Thread Handle
     call GetCurrentThread
-    mov r9, rax           ; r9 = thread handle
+    mov rsi, rax            ; rsi = Thread Handle (Preserved across calls)
 
-    ; Save original priority
-    mov rcx, r9
+    ; 2. Extract and log original thread state
+    mov rcx, rsi
     call GetThreadPriority
-    mov [rbx], eax        ; origPri
+    mov [rbx], eax          ; Store origPri
 
-    ; Apply new priority
-    mov rcx, r9
+    ; 3. Escalate priority state
+    mov rcx, rsi
     mov edx, edi
     call SetThreadPriority
 
-    ; Handle affinity pinning if targetAffinity != 0
-    test r8, r8
+    ; 4. Conditionally enforce CCX Hardware Core Affinity Lock
+    test r12, r12
     jz @@skip_affinity
-    mov rcx, r9
-    mov rdx, r8
+    
+    mov rcx, rsi
+    mov rdx, r12
     call SetThreadAffinityMask
-    mov [rbx+8], rax      ; origAffinity
+    mov [rbx+8], rax        ; Store returned origAffinity
 @@skip_affinity:
 
-    ; Mark lease active and capture start TSC
-    mov dword ptr [rbx+24], 1   ; leaseActive
-    rdtsc
+    ; 5. Raise Active Lease Flag and sample performance timestamp
+    mov dword ptr [rbx+24], 1   ; leaseActive = 1
+    rdtsc                       ; EDX:EAX = TSC
     shl rdx, 32
     or rax, rdx
-    mov [rbx+16], rax     ; startTSC
+    mov [rbx+16], rax           ; Store startTSC
 
+    ; --- Stack Clean Up & Frame Destruction ---
+    add rsp, 40
+    pop r12
+    pop rsi
     pop rdi
     pop rbx
 @@done:
@@ -67,42 +94,51 @@ RawrSched_ExitLease PROC
     test rcx, rcx
     jz @@done
 
+    ; --- Stack Frame Setup & Alignment ---
     push rbx
-    mov rbx, rcx
+    push rsi
+    ; 2 pushes = 16 bytes. RSP = (16n - 8). 
+    ; Allocate 40 bytes (32 shadow + 8 pad). New RSP = (16n - 48), aligned.
+    sub rsp, 40
+    
+    mov rbx, rcx            ; rbx = pCtx
 
-    ; Guard: only exit if lease is active
+    ; Guard: Verify structural context state before modification
     cmp dword ptr [rbx+24], 1
     jne @@exit_early
 
-    ; Capture end TSC and compute delta
+    ; 1. Calculate and update high-precision execution cycle tracking
     rdtsc
     shl rdx, 32
     or rax, rdx
-    mov r10, [rbx+16]     ; startTSC
-    sub rax, r10
-    add [rbx+32], rax     ; accumCycles += delta
+    mov r10, [rbx+16]       ; r10 = startTSC
+    sub rax, r10            ; rax = delta execution cycles
+    add [rbx+32], rax       ; accumCycles += delta
 
-    ; Get current thread
+    ; 2. Query Thread Context
     call GetCurrentThread
-    mov r9, rax
+    mov rsi, rax            ; rsi = Thread Handle
 
-    ; Restore original affinity if non-zero
-    mov rdx, [rbx+8]
+    ; 3. Revert Core Affinity Mask
+    mov rdx, [rbx+8]        ; rdx = origAffinity
     test rdx, rdx
     jz @@skip_affinity_restore
-    mov rcx, r9
+    
+    mov rcx, rsi
     call SetThreadAffinityMask
 @@skip_affinity_restore:
 
-    ; Restore original priority
-    mov rcx, r9
-    movsx rdx, dword ptr [rbx]
+    ; 4. Revert Priority Level 
+    mov rcx, rsi
+    movsxd rdx, dword ptr [rbx] ; rdx = origPri (Sign-extended)
     call SetThreadPriority
 
-    ; Clear lease active
+    ; 5. Relinquish lease ownership cleanly
     mov dword ptr [rbx+24], 0
 
 @@exit_early:
+    add rsp, 40
+    pop rsi
     pop rbx
 @@done:
     ret
@@ -110,7 +146,7 @@ RawrSched_ExitLease ENDP
 
 ;------------------------------------------------------------------------------
 ; RawrSched_ReadCycles() -> RAX
-; Returns 64-bit TSC. No arguments, no side effects.
+; Pure, non-destructive low-overhead hardware telemetry tap.
 ;------------------------------------------------------------------------------
 RawrSched_ReadCycles PROC
     rdtsc

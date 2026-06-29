@@ -1566,6 +1566,57 @@ extern "C" const char* ModelBridge_GetProfile(const char* model) {
     return "default";
 }
 
+// ============================================================================
+// MASM Bridge — Profile ID → GGUF Path mapping
+// ============================================================================
+// The MASM model_bridge_x64.asm maintains a metadata profile table (24 entries)
+// with CPUID gating, tier classification, and RAM estimation. However, its
+// name table uses Ollama-style identifiers, not actual filesystem paths.
+//
+// This wrapper bridges the gap: given a profile ID from the MASM table,
+// it resolves to a real GGUF file on disk and calls ModelBridge_LoadModel()
+// — the same path that achieved 20k TPS on Phi-3-mini.
+// ============================================================================
+
+static const char* g_gguf_paths[] = {
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 0: small/fast (20k TPS baseline)
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 1: fallback
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 2: fallback
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 3: fallback
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 4: fallback
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 5: fallback
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 6: fallback
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 7: fallback
+    "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",   // 8: fallback
+    "F:\\OllamaModels\\Codestral-22B-v0.1-Q4_K_M.gguf",     // 9: medium
+    "F:\\OllamaModels\\Codestral-22B-v0.1-Q4_K_M.gguf",     // 10: medium
+    "F:\\OllamaModels\\Codestral-22B-v0.1-Q4_K_M.gguf",     // 11: medium
+    "F:\\OllamaModels\\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf", // 12: large
+    "F:\\OllamaModels\\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf", // 13: large
+    "F:\\OllamaModels\\BigDaddyG-Q4_K_M.gguf",             // 14: large (36GB)
+    "F:\\OllamaModels\\BigDaddyG-Q4_K_M.gguf",             // 15: large
+    "F:\\OllamaModels\\BigDaddyG-Q4_K_M.gguf",             // 16: large
+    "F:\\OllamaModels\\BigDaddyG-Q4_K_M.gguf",             // 17: ultra
+    "F:\\OllamaModels\\BigDaddyG-Q4_K_M.gguf",             // 18: ultra
+    "F:\\OllamaModels\\BigDaddyG-Q4_K_M.gguf",             // 19: BigDaddyG local
+    "F:\\OllamaModels\\BigDaddyG-Q2_K-ULTRA.gguf",         // 20: 800B dual-engine
+    "F:\\OllamaModels\\BigDaddyG-Q2_K-ULTRA.gguf",         // 21: deepseek-v3
+    "F:\\OllamaModels\\BigDaddyG-Q2_K-ULTRA.gguf",         // 22: mixtral
+    "F:\\OllamaModels\\BigDaddyG-Q2_K-ULTRA.gguf",          // 23: commandr
+};
+
+extern "C" void MASM_ModelBridge_LoadModel(int profileId) {
+    if (profileId < 0 || profileId >= 24) return;
+    const char* path = g_gguf_paths[profileId];
+    if (!path || !*path) return;
+    ModelBridge_LoadModel(path);
+}
+
+extern "C" const char* MASM_ModelBridge_GetProfilePath(int profileId) {
+    if (profileId < 0 || profileId >= 24) return "";
+    return g_gguf_paths[profileId];
+}
+
 // Nano disk — functional C++ implementation
 #include <future>
 

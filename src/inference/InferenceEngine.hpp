@@ -128,6 +128,7 @@ private:
         }
     }
 
+public:
     void unloadModel() {
         m_modelPath.clear();
     }

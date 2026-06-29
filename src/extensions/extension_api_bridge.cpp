@@ -96,54 +96,60 @@ namespace RawrXD::Extensions {
         return file.good();
     }
 
-    const char* ExtensionAPIBridge::getConfiguration(const char* section, const char* key) {
-        if (!section || !key) return "";
-        std::lock_guard<std::mutex> lock(m_configMutex);
-        auto secIt = m_config.find(section);
-        if (secIt == m_config.end()) return "";
-        auto keyIt = secIt->second.find(key);
-        if (keyIt == secIt->second.end()) return "";
-        return keyIt->second.c_str();
+    const char* ExtensionAPIBridge::getConfiguration(const char* section) {
+        if (!section) return nullptr;
+        std::lock_guard<std::shared_mutex> lock(m_configMutex);
+        auto it = m_configs.find(section);
+        if (it != m_configs.end() && it->second) {
+            return it->second->getName();
+        }
+        return nullptr;
     }
 
-    void ExtensionAPIBridge::setConfiguration(const char* section, const char* key, const char* value) {
-        if (!section || !key || !value) return;
-        std::lock_guard<std::mutex> lock(m_configMutex);
-        m_config[section][key] = value;
-        // Persist to file if path is set
-        if (!m_configPath.empty()) {
-            std::ofstream file(m_configPath, std::ios::trunc);
-            if (file) {
-                for (const auto& sec : m_config) {
-                    file << "[" << sec.first << "]\n";
-                    for (const auto& kv : sec.second) {
-                        file << kv.first << "=" << kv.second << "\n";
-                    }
-                    file << "\n";
-                }
-            }
+    void ExtensionAPIBridge::reloadConfiguration() {
+        // Force reload from disk - implementation stub
+    }
+
+    uint64_t ExtensionAPIBridge::subscribeToEvent(const char* eventType, ExtEventCallback callback, void* userData) {
+        if (!eventType || !callback) return 0;
+        std::lock_guard<std::shared_mutex> lock(m_eventMutex);
+        uint64_t handle = m_nextEventHandle.fetch_add(1);
+        m_eventListeners[eventType].push_back({handle, {callback, userData}});
+        return handle;
+    }
+
+    void ExtensionAPIBridge::unsubscribeFromEvent(uint64_t handle) {
+        std::lock_guard<std::shared_mutex> lock(m_eventMutex);
+        for (auto& [type, listeners] : m_eventListeners) {
+            listeners.erase(
+                std::remove_if(listeners.begin(), listeners.end(),
+                    [handle](const auto& p) { return p.first == handle; }),
+                listeners.end());
         }
     }
 
-    void ExtensionAPIBridge::subscribeToEvent(const char* eventType, CommandCallback callback, void* userData) {
-        if (!eventType || !callback) return;
-        std::lock_guard<std::mutex> lock(m_eventMutex);
-        EventSub sub;
-        sub.callback = callback;
-        sub.userData = userData;
-        m_eventSubs[eventType].push_back(sub);
-    }
-
-    void ExtensionAPIBridge::publishEvent(const char* eventType, void* eventData) {
+    void ExtensionAPIBridge::emitEvent(const char* eventType, const char* jsonPayload) {
         if (!eventType) return;
-        std::lock_guard<std::mutex> lock(m_eventMutex);
-        auto it = m_eventSubs.find(eventType);
-        if (it != m_eventSubs.end()) {
-            for (const auto& sub : it->second) {
-                if (sub.callback) {
-                    sub.callback(eventData);
+        std::lock_guard<std::shared_mutex> lock(m_eventMutex);
+        auto it = m_eventListeners.find(eventType);
+        if (it != m_eventListeners.end()) {
+            for (const auto& [handle, cbData] : it->second) {
+                if (cbData.first) {
+                    cbData.first(eventType, jsonPayload ? jsonPayload : "{}", cbData.second);
                 }
             }
         }
     }
+
+    // Singleton instance accessor
+    ExtensionAPIBridge& ExtensionAPIBridge::instance() {
+        static ExtensionAPIBridge s_instance;
+        return s_instance;
+    }
+
+    // Constructor
+    ExtensionAPIBridge::ExtensionAPIBridge() = default;
+
+    // Destructor
+    ExtensionAPIBridge::~ExtensionAPIBridge() = default;
 }

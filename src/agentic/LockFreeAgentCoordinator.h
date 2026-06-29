@@ -291,10 +291,11 @@ public:
     void updateAgentHealth(const std::string& agentId, bool healthy);
     bool isAgentHealthy(const std::string& agentId) const;
 
-private:
+    // Constructor/Destructor - public for C API
     LockFreeAgentCoordinator() = default;
     ~LockFreeAgentCoordinator();
-    
+
+private:
     // Worker thread function
     void workerLoop(int threadId);
     
@@ -309,11 +310,11 @@ private:
     
     // Task registry (for dependency resolution)
     std::unordered_map<std::string, std::unique_ptr<TaskNode>> m_tasks;
-    std::shared_mutex m_taskMutex; // Only for task registration, not execution
+    mutable std::shared_mutex m_taskMutex; // Only for task registration, not execution
     
     // Agent registry (RCU-style)
     std::unordered_map<std::string, std::unique_ptr<AgentState>> m_agents;
-    std::shared_mutex m_agentMutex; // Only for agent registration
+    mutable std::shared_mutex m_agentMutex; // Only for agent registration
     
     // Worker threads
     std::vector<std::thread> m_workers;

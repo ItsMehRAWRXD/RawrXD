@@ -72,9 +72,8 @@ namespace StubPatterns {
 }
 
 // ============================================================================
-// C++ FALLBACK — IsStubFunction (for MinGW / non-MASM builds)
+// IsStubFunction — Detects if a function is a stub/unimplemented
 // ============================================================================
-#ifndef RAWR_HAS_MASM
 
 extern "C" int IsStubFunction(void* funcPtr, size_t maxBytesToScan) {
     if (!funcPtr || maxBytesToScan == 0) return 0;
@@ -148,8 +147,6 @@ extern "C" int IsStubFunction(void* funcPtr, size_t maxBytesToScan) {
 
     return 0;  // Not a stub
 }
-
-#endif  // !RAWR_HAS_MASM
 
 // ============================================================================
 // FEATURE REGISTRY SINGLETON

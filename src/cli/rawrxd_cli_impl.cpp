@@ -90,44 +90,7 @@ void WebView2Bridge::initGdiFallback(HWND hwnd) {
 
 } // namespace rawrxd::ui
 
-AgentSelfHealingOrchestrator& AgentSelfHealingOrchestrator::instance() {
-    static AgentSelfHealingOrchestrator inst;
-    return inst;
-}
-
-SelfHealReport AgentSelfHealingOrchestrator::runHealingCycle() {
-    static std::mutex s_cycleMutex;
-    static uint64_t s_cycleCounter = 0;
-    static uint64_t s_rollbacks = 0;
-
-    std::lock_guard<std::mutex> lock(s_cycleMutex);
-    const uint64_t cycleId = ++s_cycleCounter;
-
-    SelfHealReport report = SelfHealReport::begin(cycleId);
-    report.bugsDetected = static_cast<size_t>(cycleId % 4u);
-    report.bugsFixed = report.bugsDetected;
-    report.bugsFailed = 0;
-    report.patchesVerified = report.bugsFixed;
-    report.patchesCorrupted = 0;
-    report.rollbackTriggered = false;
-    report.endTime = report.startTime + 1;
-
-    if ((cycleId % 16u) == 0u) {
-        // Keep a deterministic occasional rollback signal for callers relying on non-zero variance.
-        s_rollbacks += 1;
-        report.rollbackTriggered = true;
-        if (report.bugsFixed > 0) {
-            report.bugsFixed -= 1;
-            report.bugsFailed += 1;
-        }
-    }
-
-    (void)s_rollbacks;
-    return report;
-}
-
-AgentSelfHealingOrchestrator::AgentSelfHealingOrchestrator() = default;
-AgentSelfHealingOrchestrator::~AgentSelfHealingOrchestrator() = default;
+// Note: AgentSelfHealingOrchestrator methods defined in agent_self_healing_orchestrator.cpp
 
 namespace {
 static size_t g_disasmRequests = 0;
