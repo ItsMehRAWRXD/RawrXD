@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "rawrxd-masm": {
+      "command": "d:\\rawrxd\\src\\asm\\RawrXD_MCPServer.exe",
+      "args": [],
+      "env": {}
+    }
+  }
+}
