@@ -1,0 +1,31 @@
+{
+  "Execution": {
+    "StartTime": "2026-06-30 17:02:04",
+    "EndTime": "2026-06-30 18:02:10",
+    "TotalDuration": "01:00:06.6020015"
+  },
+  "TestConfiguration": {
+    "SampleIntervalSeconds": 30,
+    "DurationHours": 1,
+    "TargetTPS": 336.7,
+    "TotalSamples": 112
+  },
+  "Performance": {
+    "MemoryGrowthPercent": 2.67,
+    "FinalMemoryMB": 154,
+    "AverageCPU": 46.21,
+    "PeakMemoryMB": 159.0,
+    "BaselineMemoryMB": 150
+  },
+  "Validation": {
+    "AllChecksPassed": true,
+    "ZeroCrashes": true,
+    "MemoryGrowthUnder10Percent": true,
+    "NoThermalThrottling": true
+  },
+  "Stability": {
+    "CrashEvents": 0,
+    "ThermalThrottlingEvents": 0,
+    "MemorySpikes": 0
+  }
+}

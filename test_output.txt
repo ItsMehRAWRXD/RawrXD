@@ -1,0 +1,50 @@
+================================================
+RawrXD Telemetry Integration Test (FIXED)
+================================================
+Max Target TPS: 50
+Load Ramping: 50 → 100 → 200 → 50
+================================================
+
+[Test Suite 1] Infrastructure Validation
+  ℹ Starting Infrastructure Validation
+  ✓ Fixed Telemetry ASM: PASS
+  ✓ Integration ASM: PASS
+  ✓ C Header: PASS
+  ✓ Dashboard script: PASS
+  ✓ Grafana config: PASS
+
+[Test Suite 2] Memory-Mapped Buffer (Synchronized)
+  ℹ Starting Memory-Mapped Buffer Tests with Synchronization
+  ✗ Memory-mapped buffer test error: Exception calling "CreateNew" with "2" argument(s): "Access to the path is denied."
+
+[Test Suite 3] Load Ramping Test
+  📈 Starting Load Ramping Test (50 → 100 → 200 → 50 TPS)
+  📈 Ramping to 50 TPS...
+  ⚠   50 TPS: 31.7 actual, 864 errors
+  📈 Ramping to 100 TPS...
+  ⚠   100 TPS: 63.2 actual, 1730 errors
+  📈 Ramping to 200 TPS...
+  ⚠   200 TPS: 63.5 actual, 1812 errors
+  📈 Ramping to 50 TPS...
+  ⚠   50 TPS: 31.8 actual, 868 errors
+
+[Test Suite 4] Prometheus Endpoint
+  ℹ Checking Prometheus endpoint availability...
+  ✓ Port 9090 available: PASS
+  ✓ Dashboard script structure: PASS
+
+================================================
+Telemetry Integration Test Summary (Fixed)
+================================================
+  Infrastructure: 5/5 ✅ PASS
+  Memory-Mapped Buffer: 0/4 ⚠️  PARTIAL
+  Load Ramping: 0/4 ⚠️  PARTIAL
+  Prometheus: 2/2 ✅ PASS
+
+------------------------------------------------
+Total: 7/15 tests passed (46.7%)
+
+Overall Result: ⚠️  NEEDS ATTENTION
+
+Log file: d:\RawrXD\telemetry-integration-test-fixed.log
+  ⚠ Test run completed. Overall: PARTIAL

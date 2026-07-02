@@ -50,29 +50,47 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     
     # SDK bin tools (rc.exe, mt.exe)
     set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UCRT_VER}/x64")
+    set(_SDK_RC "${_SDK_BIN}/rc.exe")
+    set(_SDK_MT "${_SDK_BIN}/mt.exe")
     
     # Build INCLUDE and LIB environment strings
     set(ENV{INCLUDE} "${_MSVC_ROOT}/include;${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt;${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared;${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um")
     # MSVC 14.50+ ships CRT in lib/onecore/x64 instead of lib/x64, include both
     set(ENV{LIB} "${_MSVC_ROOT}/lib/x64;${_MSVC_ROOT}/lib/onecore/x64;${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64;${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64")
     set(ENV{PATH} "$ENV{PATH};${_SDK_BIN};${_MSVC_ROOT}/bin/Hostx64/x64")
+    set(ENV{RC} "${_SDK_RC}")
+    set(ENV{MT} "${_SDK_MT}")
+    set(CMAKE_RC_COMPILER_INIT "${_SDK_RC}")
+    set(CMAKE_MT "${_SDK_MT}")
     
-    # Tell CMake where the SDK tools are
-    set(CMAKE_MT "${_SDK_BIN}/mt.exe" CACHE FILEPATH "Manifest Tool" FORCE)
-    set(CMAKE_RC_COMPILER "${_SDK_BIN}/rc.exe" CACHE FILEPATH "Resource Compiler" FORCE)
-    set(CMAKE_C_COMPILER "${_MSVC_ROOT}/bin/Hostx64/x64/cl.exe" CACHE FILEPATH "C Compiler" FORCE)
-    set(CMAKE_CXX_COMPILER "${_MSVC_ROOT}/bin/Hostx64/x64/cl.exe" CACHE FILEPATH "C++ Compiler" FORCE)
-    set(CMAKE_LINKER "${_MSVC_ROOT}/bin/Hostx64/x64/link.exe" CACHE FILEPATH "Linker" FORCE)
-    set(CMAKE_ASM_MASM_COMPILER "${_MSVC_ROOT}/bin/Hostx64/x64/ml64.exe" CACHE FILEPATH "MASM64" FORCE)
-
+    # Tell CMake where the SDK tools are. Repair stale cache entries like plain `rc`
+    # that survive across shell sessions and break final link with LNK1158.
+    if(NOT DEFINED CMAKE_MT OR NOT EXISTS "${CMAKE_MT}" OR CMAKE_MT STREQUAL "mt")
+        set(CMAKE_MT "${_SDK_MT}" CACHE FILEPATH "Manifest Tool" FORCE)
+    endif()
+    if(NOT DEFINED CMAKE_RC_COMPILER OR NOT EXISTS "${CMAKE_RC_COMPILER}" OR CMAKE_RC_COMPILER STREQUAL "rc")
+        set(CMAKE_RC_COMPILER "${_SDK_RC}" CACHE FILEPATH "Resource Compiler" FORCE)
+    endif()
+    if(NOT DEFINED CMAKE_C_COMPILER)
+        set(CMAKE_C_COMPILER "${_MSVC_ROOT}/bin/Hostx64/x64/cl.exe" CACHE FILEPATH "C Compiler")
+    endif()
+    if(NOT DEFINED CMAKE_CXX_COMPILER)
+        set(CMAKE_CXX_COMPILER "${_MSVC_ROOT}/bin/Hostx64/x64/cl.exe" CACHE FILEPATH "C++ Compiler")
+    endif()
+    if(NOT DEFINED CMAKE_LINKER)
+        set(CMAKE_LINKER "${_MSVC_ROOT}/bin/Hostx64/x64/link.exe" CACHE FILEPATH "Linker")
+    endif()
     # Makefile generators need an explicit build tool path when not in a Dev Prompt.
     if(CMAKE_GENERATOR STREQUAL "NMake Makefiles" AND EXISTS "${_MSVC_ROOT}/bin/Hostx64/x64/nmake.exe")
-        set(CMAKE_MAKE_PROGRAM "${_MSVC_ROOT}/bin/Hostx64/x64/nmake.exe" CACHE FILEPATH "NMake" FORCE)
+        if(NOT DEFINED CMAKE_MAKE_PROGRAM)
+            set(CMAKE_MAKE_PROGRAM "${_MSVC_ROOT}/bin/Hostx64/x64/nmake.exe" CACHE FILEPATH "NMake")
+        endif()
     endif()
      
     message(STATUS "[SDK Fix] INCLUDE = $ENV{INCLUDE}")
     message(STATUS "[SDK Fix] LIB     = $ENV{LIB}")
-    message(STATUS "[SDK Fix] MT      = ${_SDK_BIN}/mt.exe")
+    message(STATUS "[SDK Fix] RC      = ${_SDK_RC}")
+    message(STATUS "[SDK Fix] MT      = ${_SDK_MT}")
 endif()
 
 # Provide explicit library search paths for all targets when not in a Dev Prompt.
@@ -340,7 +358,6 @@ endif()
 # Enable ASM_MASM only on MSVC (ml64.exe required).
 # MinGW builds skip ASM kernels and use C++ fallbacks.
 if(MSVC)
-    enable_language(ASM_MASM)
     set(CMAKE_ASM_MASM_FLAGS "/c /Zi /Zd /I${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
     set(RAWR_HAS_MASM TRUE)
     # These two ASM modules currently rely on `rawrxd_win64.inc` sovereign resolver blocks
@@ -481,6 +498,11 @@ if(RAWR_HAS_MASM)
         # High-performance Q4_0 dequantization and inference kernels
         src/core/aperture_q4_0_avx512.asm
         src/core/kv_cache_arena.asm
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # Phase 17: AMX Optimization Kernels (Intel Sapphire Rapids+)
+        # ═══════════════════════════════════════════════════════════════════
+        src/asm/Sovereign_AMX_Kernels.asm
     )
     list(REMOVE_DUPLICATES ASM_KERNEL_SOURCES)
     # Mark ASM files with MASM language property
@@ -1281,6 +1303,12 @@ set(SOURCES
 
     # Phase 17: Enterprise Telemetry & Compliance — OTLP tracing, audit, GDPR
     src/core/enterprise_telemetry_compliance.cpp
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # Phase 17: AMX Optimization — Hybrid Scheduler + Telemetry
+    # ═══════════════════════════════════════════════════════════════════
+    src/quantization/sovereign_hybrid_scheduler.cpp
+    src/quantization/sovereign_telemetry_amx.cpp
 
     # Phase 50: Enterprise Hardening — Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     src/core/update_signature.cpp
@@ -1745,7 +1773,7 @@ else()
 endif()
 
 # Phase 18C: LoRA Adapter System
-option(RAWR_ENABLE_LORA "Enable Low-Rank Adaptation for personalized embeddings" ON)
+option(RAWR_ENABLE_LORA "Enable Low-Rank Adaptation for personalized embeddings" OFF)
 
 if(RAWR_ENABLE_LORA)
     message(STATUS "[Phase 18C] LoRA Adapter System (Personalized Embeddings) enabled")
@@ -2898,17 +2926,6 @@ if(MSVC)
         ${ASM_DEFLATE_BRUTAL_OBJ}
         ${ASM_FLASHATTN_OBJ}
         ${ASM_QUANT_AVX2_OBJ}
-        "d:/src/build_masm_integration/streaming_gguf_loader_pure.obj"
-        "d:/src/build_masm_integration/gguf_loader_masm_bridge.obj"
-        "d:/src/ai/Aperture_Q4_0_Dequant_AVX512.obj"
-        "d:/src/ai/Aperture_Q4_1_Dequant_AVX512.obj"
-        "d:/src/ai/Aperture_Q8_0_Dequant_AVX512.obj"
-        "d:/src/ai/Aperture_Q8_1_Dequant_AVX512.obj"
-        "d:/src/ai/Aperture_F16_Convert_AVX512.obj"
-        "d:/src/ai/Aperture_F32_Copy_AVX512.obj"
-        "d:/src/ai/Aperture_GEMM_F32_AVX512.obj"
-        "d:/src/Aperture_Kernel_Validation.obj"
-        "d:/src/ai/Aperture_GEMM_F32.obj"
     )
 
     # Link MASM objects into RawrEngine (disabled in Lane B headless minimal).
@@ -3346,6 +3363,34 @@ target_include_directories(RawrXD-ComparativeBenchmark PRIVATE
 target_compile_definitions(RawrXD-ComparativeBenchmark PRIVATE
     NOMINMAX
     _CRT_SECURE_NO_WARNINGS
+)
+
+# =============================================================================
+# Phase 18B: AMX Benchmark Suite — AVX-512 vs AMX performance validation
+# =============================================================================
+add_executable(RawrXD-AMXBench EXCLUDE_FROM_ALL
+    src/benchmark/sovereign_bench_suite.cpp
+    src/quantization/sovereign_hybrid_scheduler.cpp
+    src/quantization/sovereign_telemetry_amx.cpp
+    ${ASM_KERNEL_SOURCES}
+)
+target_include_directories(RawrXD-AMXBench PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/quantization
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_compile_definitions(RawrXD-AMXBench PRIVATE
+    SOVEREIGN_AMX_INSTRUMENTATION=1
+    NOMINMAX
+    _CRT_SECURE_NO_WARNINGS
+)
+if(MSVC)
+    target_compile_options(RawrXD-AMXBench PRIVATE /arch:AVX512)
+endif()
+set_target_properties(RawrXD-AMXBench PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
 # =============================================================================
@@ -4163,6 +4208,7 @@ if(WIN32)
         src/hot_patcher.cpp
         src/streaming_gguf_loader.cpp
         src/streaming_gguf_loader_enhanced.cpp
+        src/modules/gguf_loader.cpp
         src/utils/Diagnostics.cpp
         src/diagnostics/self_diagnose.cpp
         # src/gguf_loader.cpp  # Replaced by MASM bridge: gguf_loader_masm.cpp
@@ -5751,8 +5797,6 @@ if(WIN32)
             $<$<CONFIG:Release>:/OPT:REF>
             $<$<CONFIG:Release>:/OPT:ICF>
             $<$<CONFIG:Release>:/INCREMENTAL:NO>
-            $<$<CONFIG:Release>:/LTCG:ON>
-            $<$<CONFIG:Release>:/GL>
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
@@ -6687,8 +6731,6 @@ if(WIN32)
     # Static library containing Aperture kernels and CPU feature detection
     
     # MASM assembly sources
-    enable_language(ASM_MASM)
-    set(CMAKE_ASM_MASM_COMPILER "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe")
     
     # Mark ASM file for MASM compilation
     set_source_files_properties(src/core/aperture_q4_0_avx512_final.asm PROPERTIES LANGUAGE ASM_MASM)
@@ -7457,7 +7499,6 @@ target_compile_features(RawrXD_Inference PRIVATE cxx_std_17)
 
 if(MSVC)
     target_compile_options(RawrXD_Inference PRIVATE /EHsc /W3 /O2 /arch:AVX2)
-    enable_language(ASM_MASM)
     set_source_files_properties(src/asm/model_streamer_x64.asm PROPERTIES LANGUAGE ASM_MASM)
 endif()
 
@@ -8724,3 +8765,207 @@ set_target_properties(RawrXD-ParityUIDriver PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 message(STATUS "[Parity] RawrXD-ParityUIDriver target added (headless UI-side parity driver)")
+
+# =============================================================================
+# Sovereign Super-Node Target
+# =============================================================================
+add_executable(sovereign_super_node EXCLUDE_FROM_ALL
+    src/core/sovereign_super_node.cpp
+    src/core/sovereign_thread_pool.cpp
+    src/core/sovereign_transformer_forward.cpp
+    src/core/sovereign_config.cpp
+    src/core/sovereign_context.cpp
+    src/core/llama_decode_internal.cpp
+    src/core/sovereign_gguf_mapper.cpp
+    src/core/sovereign_q3_k_s_dequant.cpp
+    src/core/sovereign_q6_k_dequant.cpp
+    src/core/sovereign_tokenizer.cpp
+    src/core/sovereign_quantized_matmul.cpp
+    src/core/sovereign_detokenizer.cpp
+    src/streaming_gguf_loader.cpp
+    src/kernels/RawrXD_ProductionLoader.asm
+    src/kernels/RawrXD_120B_Loader.asm
+    asm/RawrXD_Inference.asm
+)
+
+target_compile_features(sovereign_super_node PRIVATE cxx_std_17)
+
+if(MSVC)
+    set_source_files_properties(src/kernels/RawrXD_ProductionLoader.asm PROPERTIES LANGUAGE ASM_MASM)
+    set_source_files_properties(src/kernels/RawrXD_120B_Loader.asm PROPERTIES LANGUAGE ASM_MASM)
+    set_source_files_properties(asm/RawrXD_Inference.asm PROPERTIES LANGUAGE ASM_MASM)
+endif()
+
+if(MSVC)
+    target_compile_options(sovereign_super_node PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(sovereign_super_node PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(sovereign_super_node PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/asm
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(sovereign_super_node PRIVATE kernel32 ws2_32)
+    else()
+        target_link_libraries(sovereign_super_node PRIVATE kernel32 ws2_32 pthread)
+    endif()
+endif()
+
+set_target_properties(sovereign_super_node PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME sovereign_super_node
+)
+
+message(STATUS "[SuperNode] sovereign_super_node target added")
+
+# =============================================================================
+# Sovereign Super-Node Parallel Stress Test
+# =============================================================================
+add_executable(sovereign_super_node_stress EXCLUDE_FROM_ALL
+    src/core/super_node_parallel_stress_test.cpp
+    src/core/sovereign_thread_pool.cpp
+)
+
+target_compile_features(sovereign_super_node_stress PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(sovereign_super_node_stress PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(sovereign_super_node_stress PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(sovereign_super_node_stress PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/asm
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(sovereign_super_node_stress PRIVATE kernel32 ws2_32)
+    else()
+        target_link_libraries(sovereign_super_node_stress PRIVATE kernel32 ws2_32 pthread)
+    endif()
+endif()
+
+set_target_properties(sovereign_super_node_stress PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME sovereign_super_node_stress
+)
+
+message(STATUS "[SuperNode] sovereign_super_node_stress target added")
+
+# =============================================================================
+# Sovereign Batch Splitter Test
+# =============================================================================
+add_executable(sovereign_batch_splitter_test EXCLUDE_FROM_ALL
+    src/core/batch_splitter_test.cpp
+)
+
+target_compile_features(sovereign_batch_splitter_test PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(sovereign_batch_splitter_test PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(sovereign_batch_splitter_test PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(sovereign_batch_splitter_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/asm
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(sovereign_batch_splitter_test PRIVATE kernel32 ws2_32)
+    else()
+        target_link_libraries(sovereign_batch_splitter_test PRIVATE kernel32 ws2_32 pthread)
+    endif()
+endif()
+
+set_target_properties(sovereign_batch_splitter_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME sovereign_batch_splitter_test
+)
+
+message(STATUS "[SuperNode] sovereign_batch_splitter_test target added")
+
+# =============================================================================
+# llama_decode_internal Test
+# =============================================================================
+add_executable(test_llama_decode EXCLUDE_FROM_ALL
+    src/core/test_llama_decode.cpp
+    src/core/llama_decode_internal.cpp
+    src/core/sovereign_transformer_forward.cpp
+)
+
+target_compile_features(test_llama_decode PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_llama_decode PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(test_llama_decode PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(test_llama_decode PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/asm
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(test_llama_decode PRIVATE kernel32 ws2_32)
+    else()
+        target_link_libraries(test_llama_decode PRIVATE kernel32 ws2_32 pthread)
+    endif()
+endif()
+
+set_target_properties(test_llama_decode PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_llama_decode
+)
+
+message(STATUS "[SuperNode] test_llama_decode target added")
+
+# =============================================================================
+# RawrXD HTTP Server - OpenAI-compatible API server
+# =============================================================================
+add_executable(rawrxd_http_server EXCLUDE_FROM_ALL
+    src/server/rawrxd_http_server_main.cpp
+)
+
+target_compile_features(rawrxd_http_server PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(rawrxd_http_server PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(rawrxd_http_server PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(rawrxd_http_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/server
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(rawrxd_http_server PRIVATE kernel32 ws2_32)
+    else()
+        target_link_libraries(rawrxd_http_server PRIVATE kernel32 ws2_32 pthread)
+    endif()
+endif()
+
+set_target_properties(rawrxd_http_server PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME rawrxd_http_server
+)
+
+message(STATUS "[HTTPServer] rawrxd_http_server target added")

@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstring>
 #include <cmath>
+#include <cstdio>
 
 // Aperture kernel API
 extern "C" {

@@ -12,6 +12,7 @@
       "description": "Bounded preset for normal toolchains (aligns with rawrxd::sovereign::TargetManifest — not a syscall lab).",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/cmake-preset-ninja-release",
+      "toolchainFile": "${sourceDir}/cmake/Toolchain-Windows-MASM.cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }

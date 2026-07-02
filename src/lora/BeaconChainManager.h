@@ -9,8 +9,8 @@
 
 // Forward declarations for C interface
 extern "C" {
-typ struct LoRABeaconState LoRABeaconState;
-typ struct LoRABeaconChain LoRABeaconChain;
+typedef struct LoRABeaconState LoRABeaconState;
+typedef struct LoRABeaconChain LoRABeaconChain;
 }
 
 namespace RawrXD {

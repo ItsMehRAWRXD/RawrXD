@@ -450,6 +450,21 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
 	return false;
 }
 
+bool StreamingGGUFLoader::GetTensorDataDirect(const std::string& tensor_name, std::vector<uint8_t>& data) {
+	const auto it = tensor_index_.find(tensor_name);
+	if (it == tensor_index_.end() || !file_.is_open()) {
+		return false;
+	}
+
+	const TensorRef& ref = it->second;
+	data.resize(ref.size);
+	
+	file_.clear();
+	file_.seekg(static_cast<std::streamoff>(data_section_offset_ + ref.offset), std::ios::beg);
+	file_.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(ref.size));
+	return file_.good();
+}
+
 bool StreamingGGUFLoader::ProbeTensorData(const std::string& tensor_name, size_t sample_bytes) {
 	const auto it = tensor_index_.find(tensor_name);
 	if (it == tensor_index_.end() || !file_.is_open()) {

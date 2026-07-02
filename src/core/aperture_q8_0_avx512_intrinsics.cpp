@@ -18,6 +18,8 @@
 // ============================================================================
 
 #include <immintrin.h>
+#include <cmath>
+#include <limits>
 #include <cstdint>
 #include <cstddef>
 

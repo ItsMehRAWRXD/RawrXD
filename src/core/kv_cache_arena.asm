@@ -52,9 +52,6 @@ KV_FLAG_DIRTY        EQU     4       ; Cache needs flush
     ; Global arena registry (supports up to 8 concurrent contexts)
     KV_Arena_Registry   QWORD   8 DUP (0)
     KV_Arena_Count      DWORD   0
-    
-    ; Alignment padding for cache line separation
-    ALIGN CACHE_LINE_SIZE
 
 ; ----------------------------------------------------------------------------
 ; CODE SECTION
@@ -125,15 +122,15 @@ KVCache_Arena_Create PROC FRAME
     mov     ecx, SIZEOF KV_Cache_Arena
     call    malloc              ; C runtime malloc
     test    rax, rax
-    jz      .create_failed
+    jz      create_failed
     mov     r14, rax            ; Save arena pointer
     
     ; Allocate fixed buffer with page alignment
     mov     rcx, r13            ; Size
     mov     edx, PAGE_SIZE      ; Alignment
-    call    aligned_malloc      ; Custom aligned allocator
+    call    _aligned_malloc      ; Windows C runtime aligned allocator
     test    rax, rax
-    jz      .alloc_failed
+    jz      alloc_failed
     mov     r15, rax            ; Save buffer pointer
     
     ; Initialize arena structure
@@ -154,17 +151,17 @@ KVCache_Arena_Create PROC FRAME
     
     ; Return arena pointer
     mov     rax, r14
-    jmp     .create_done
+    jmp     create_done
     
-.alloc_failed:
+alloc_failed:
     ; Free arena descriptor
     mov     rcx, r14
     call    free
     
-.create_failed:
+create_failed:
     xor     rax, rax            ; Return NULL
     
-.create_done:
+create_done:
     ; Restore stack and registers
     add     rsp, 64
     pop     rsi
@@ -213,17 +210,17 @@ KVCache_Arena_Pin PROC FRAME
     add     rsp, 32
     
     test    rax, rax
-    jz      .pin_failed
+    jz      pin_failed
     
     ; Set pinned flag
     or      [rbx].KV_Cache_Arena.flags, KV_FLAG_PINNED
     mov     rax, 1              ; Success
-    jmp     .pin_done
+    jmp     pin_done
     
-. pin_failed:
+pin_failed:
     xor     rax, rax            ; Failure
     
-.pin_done:
+pin_done:
     add     rsp, 40
     pop     rdi
     pop     rsi
@@ -264,11 +261,12 @@ KVCache_Arena_Write PROC FRAME
     
     ; Bounds check
     cmp     r12d, [rbx].KV_Cache_Arena.max_tokens
-    jae     .write_failed
+    jae     write_failed
     
     ; Calculate slot offset: token_index * stride
     mov     eax, r12d
-    imul    rax, [rbx].KV_Cache_Arena.stride
+    mov     r10d, [rbx].KV_Cache_Arena.stride
+    imul    rax, r10
     
     ; Get buffer base
     mov     rdi, [rbx].KV_Cache_Arena.buffer_ptr
@@ -283,66 +281,67 @@ KVCache_Arena_Write PROC FRAME
     ; Copy Key data using AVX-512
     mov     rcx, r8             ; Size
     shr     rcx, 6              ; / 64 (AVX-512 registers)
-    jz      .key_copy_remainder
+    jz      key_copy_remainder
     
-.key_copy_loop:
+key_copy_loop:
     vmovdqu64 zmm0, [r13]       ; Load from source
     vmovdqu64 [rdi], zmm0       ; Store to destination
     add     r13, 64
     add     rdi, 64
     dec     rcx
-    jnz     .key_copy_loop
+    jnz     key_copy_loop
     
-.key_copy_remainder:
+key_copy_remainder:
     ; Handle remaining bytes (< 64)
     mov     rcx, r8
     and     rcx, 63             ; Remainder
-    jz      .key_done
+    jz      key_done
     rep     movsb
     
-.key_done:
+key_done:
     ; Copy Value data (same pattern)
     mov     rdi, [rbx].KV_Cache_Arena.buffer_ptr
     mov     eax, r12d
-    imul    rax, [rbx].KV_Cache_Arena.stride
+    mov     r10d, [rbx].KV_Cache_Arena.stride
+    imul    rax, r10
     add     rdi, rax
     add     rdi, r8             ; Offset to value section
     
     ; Copy Value using AVX-512
     mov     rcx, r8
     shr     rcx, 6
-    jz      .value_copy_remainder
+    jz      value_copy_remainder
     
-.value_copy_loop:
+value_copy_loop:
     vmovdqu64 zmm0, [rsi]
     vmovdqu64 [rdi], zmm0
     add     rsi, 64
     add     rdi, 64
     dec     rcx
-    jnz     .value_copy_loop
+    jnz     value_copy_loop
     
-.value_copy_remainder:
+value_copy_remainder:
     mov     rcx, r8
     and     rcx, 63
-    jz      .value_done
+    jz      value_done
     rep     movsb
     
-.value_done:
+value_done:
     ; Update current size if this is a new token
     mov     eax, [rbx].KV_Cache_Arena.current_size
     cmp     r12d, eax
-    jbe     .write_success
+    jbe     write_success
     mov     [rbx].KV_Cache_Arena.current_size, r12d
     inc     [rbx].KV_Cache_Arena.current_size
     
-.write_success:
+write_success:
     mov     rax, 1
-    jmp     .write_done
+    jmp     write_done
     
-.write_failed:
+write_failed:
     xor     rax, rax
     
-.write_done:
+write_done:
     vzeroupper                  ; Required after AVX-512
     add     rsp, 40
     pop     r13
@@ -386,11 +385,12 @@ KVCache_Arena_Read PROC FRAME
     
     ; Bounds check
     cmp     r12d, [rbx].KV_Cache_Arena.current_size
-    jae     .read_failed
+    jae     read_failed
     
     ; Calculate slot offset
     mov     eax, r12d
-    imul    rax, [rbx].KV_Cache_Arena.stride
+    mov     r10d, [rbx].KV_Cache_Arena.stride
+    imul    rax, r10
     
     ; Get source pointer
     mov     r13, [rbx].KV_Cache_Arena.buffer_ptr
@@ -408,56 +408,57 @@ KVCache_Arena_Read PROC FRAME
     ; Copy Key data using AVX-512
     mov     rcx, r8
     shr     rcx, 6
-    jz      .key_read_remainder
+    jz      key_read_remainder
     
-.key_read_loop:
+key_read_loop:
     vmovdqu64 zmm0, [r13]
     vmovdqu64 [rdi], zmm0
     add     r13, 64
     add     rdi, 64
     dec     rcx
-    jnz     .key_read_loop
+    jnz     key_read_loop
     
-.key_read_remainder:
+key_read_remainder:
     mov     rcx, r8
     and     rcx, 63
-    jz      .key_read_done
+    jz      key_read_done
     rep     movsb
     
-.key_read_done:
+key_read_done:
     ; Copy Value data
     mov     r13, [rbx].KV_Cache_Arena.buffer_ptr
     mov     eax, r12d
-    imul    rax, [rbx].KV_Cache_Arena.stride
+    mov     r10d, [rbx].KV_Cache_Arena.stride
+    imul    rax, r10
     add     r13, rax
     add     r13, r8             ; Offset to value
     
     mov     rcx, r8
     shr     rcx, 6
-    jz      .value_read_remainder
+    jz      value_read_remainder
     
-.value_read_loop:
+value_read_loop:
     vmovdqu64 zmm0, [r13]
     vmovdqu64 [rsi], zmm0
     add     r13, 64
     add     rsi, 64
     dec     rcx
-    jnz     .value_read_loop
+    jnz     value_read_loop
     
-.value_read_remainder:
+value_read_remainder:
     mov     rcx, r8
     and     rcx, 63
-    jz      .value_read_done
+    jz      value_read_done
     rep     movsb
     
-.value_read_done:
+value_read_done:
     mov     rax, 1
-    jmp     .read_done
+    jmp     read_done
     
-.read_failed:
+read_failed:
     xor     rax, rax
     
-.read_done:
+read_done:
     vzeroupper
     add     rsp, 40
     pop     r13
@@ -521,7 +522,7 @@ KVCache_Arena_Destroy PROC FRAME
     
     ; Check if pinned
     test    [rbx].KV_Cache_Arena.flags, KV_FLAG_PINNED
-    jz      .not_pinned
+    jz      not_pinned
     
     ; Unlock pages
     mov     rcx, [rbx].KV_Cache_Arena.buffer_ptr
@@ -533,10 +534,10 @@ KVCache_Arena_Destroy PROC FRAME
     call    VirtualUnlock
     add     rsp, 32
     
-.not_pinned:
+not_pinned:
     ; Free buffer
     mov     rcx, [rbx].KV_Cache_Arena.buffer_ptr
-    call    aligned_free
+    call    _aligned_free
     
     ; Free arena
     mov     rcx, rbx
@@ -566,7 +567,8 @@ EXTRN malloc:PROC
 EXTRN free:PROC
 EXTRN VirtualLock:PROC
 EXTRN VirtualUnlock:PROC
-EXTRN aligned_malloc:PROC
-EXTRN aligned_free:PROC
+EXTRN _aligned_malloc:PROC
+EXTRN _aligned_free:PROC
 
 END
+

@@ -46,13 +46,13 @@ std::string ChainConfig::to_json() const {
     root["created_timestamp"] = static_cast<Json::UInt64>(created_timestamp);
     root["modified_timestamp"] = static_cast<Json::UInt64>(modified_timestamp);
     
-    Json::Value tags_json(Json::arrayValue);
+    Json::Value tags_json(Json::Value::arrayValue);
     for (const auto& tag : tags) {
         tags_json.append(tag);
     }
     root["tags"] = tags_json;
     
-    Json::Value entries_json(Json::arrayValue);
+    Json::Value entries_json(Json::Value::arrayValue);
     for (const auto& entry : entries) {
         Json::Value entry_json;
         entry_json["adapter_name"] = entry.adapter_name;
@@ -522,10 +522,9 @@ bool BeaconChainManager::build_beacon_chain(const ChainConfig& config) {
         
         // Initialize beacon state
         beacon->version = 1;
-        beacon->status = BEACON_ACTIVE;
+        beacon->status = LORA_BEACON_ACTIVE;
         beacon->rank = adapter_data->rank;
-        beacon->in_features = adapter_data->in_features;
-        beacon->out_features = adapter_data->out_features;
+        beacon->hidden_dim = adapter_data->in_features;  // Map in_features to hidden_dim
         beacon->ptr_A = A_buffer;
         beacon->ptr_B = B_buffer;
         beacon->scale_factor = entry.weight;

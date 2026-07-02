@@ -925,19 +925,8 @@ double SovereignInferenceClient::GetAvgTokensPerSec() const {
 // AgenticBridge::ExecuteAgentCommand (for RawrXD_AgentLoop.cpp)
 // ============================================================================
 
-// Include the real header to get the correct class definition
-#include "win32app/Win32IDE_AgenticBridge.h"
-
-AgenticBridge::AgenticBridge(Win32IDE* ide) { (void)ide; }
-AgenticBridge::~AgenticBridge() = default;
-
-AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
-    (void)prompt;
-    AgentResponse r;
-    r.type = AgentResponseType::AGENT_ERROR;
-    r.content = "AgenticBridge not implemented in Gold build";
-    return r;
-}
+// NOTE: AgenticBridge is implemented in agentic_bridge_headless.cpp
+// Do NOT provide stubs here to avoid duplicate symbol errors
 
 // ============================================================================
 // Snapshot stubs

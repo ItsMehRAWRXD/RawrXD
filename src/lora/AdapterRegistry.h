@@ -96,7 +96,7 @@ public:
     LoRAEmbeddingHook* get_embedding_hook();
 
 private:
-    AdapterRegistry() = default;
+    AdapterRegistry();
     ~AdapterRegistry() = default;
     
     AdapterRegistry(const AdapterRegistry&) = delete;

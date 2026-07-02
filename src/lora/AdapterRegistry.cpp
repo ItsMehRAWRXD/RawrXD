@@ -47,7 +47,7 @@ std::string AdapterManifest::to_json() const {
     root["description"] = description;
     root["rank"] = rank;
     
-    Json::Value tags_json(Json::arrayValue);
+    Json::Value tags_json(Json::Value::arrayValue);
     for (const auto& tag : tags) {
         tags_json.append(tag);
     }
@@ -88,7 +88,7 @@ std::optional<AdapterManifest> AdapterManifest::from_json(const std::string& jso
     }
     
     manifest.trained_samples = root.get("trained_samples", 0).asUInt64();
-    manifest.training_loss = root.get("training_loss", 0.0f).asFloat();
+    manifest.training_loss = root.get("training_loss", 0.0).asDouble();
     manifest.created_timestamp = root.get("created_timestamp", 0).asUInt64();
     manifest.modified_timestamp = root.get("modified_timestamp", 0).asUInt64();
     

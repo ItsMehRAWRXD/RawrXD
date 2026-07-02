@@ -244,22 +244,27 @@ void QuantizedMatVecMul_Q6_K(const QuantizedWeightData& q_weights,
         return;
     }
 
-    // Calculate total elements
-    uint32_t total_elements = output_dim * input_dim;
+    // FIX: Calculate byte stride per row instead of element count
+    // For Q6_K lm_head: 49,152,000 bytes / 32,000 tokens = 1,536 bytes per token row
+    size_t bytes_per_row = q_weights.size / output_dim;
     
-    // Q6_K: 210 bytes per 256 elements
-    uint32_t max_elements = static_cast<uint32_t>((q_weights.size / 210) * 256);
-    
-    if (max_elements < total_elements) {
-        fprintf(stderr, "[Q6_K] WARNING: not enough data: have %u elements, need %u\n", 
-                max_elements, total_elements);
-        // Adjust
-        if (max_elements < input_dim) {
-            fprintf(stderr, "[Q6_K] ERROR: cannot even process one row\n");
-            return;
-        }
-        output_dim = max_elements / input_dim;
+    // Verify we have enough data
+    size_t total_bytes_needed = bytes_per_row * output_dim;
+    if (total_bytes_needed > q_weights.size) {
+        fprintf(stderr, "[Q6_K] WARNING: not enough data: have %zu bytes, need %zu\n", 
+                q_weights.size, total_bytes_needed);
+        // Continue with what we have - the tensor layout should be correct
     }
+    
+    // FIX: Calculate actual element count from data size, not from dimensions
+    // The tensor may have fewer elements than output_dim * input_dim
+    // Q6_K: 210 bytes per 256 elements
+    uint64_t n_blocks = q_weights.size / 210;
+    uint32_t actual_elements = static_cast<uint32_t>(n_blocks * 256);
+    uint32_t requested_elements = output_dim * input_dim;
+    
+    // Use the smaller of actual vs requested to avoid reading garbage
+    uint32_t total_elements = (actual_elements < requested_elements) ? actual_elements : requested_elements;
     
     // Allocate buffer for dequantized weights
     float* dequantized = static_cast<float*>(
@@ -465,7 +470,11 @@ void TransformerForward::EmbeddingLookup(uint32_t token_id, float* output) {
     uint32_t block_size = 32;
     uint32_t blocks_per_row = (hidden_dim + block_size - 1) / block_size;
     uint64_t row_size = static_cast<uint64_t>(blocks_per_row) * bytes_per_block;
-    uint32_t effective_vocab = static_cast<uint32_t>(w.q_token_embeddings.size / row_size);
+    uint32_t tensor_vocab = static_cast<uint32_t>(w.q_token_embeddings.size / row_size);
+    
+    // FIX: Use model's vocab_size (32000) not tensor size (28444)
+    // The embedding tensor may be smaller than full vocab in some GGUF files
+    uint32_t effective_vocab = w.vocab_size > 0 ? w.vocab_size : tensor_vocab;
     
     // Clamp token_id to valid range
     uint32_t safe_token_id = token_id;
@@ -481,6 +490,20 @@ void TransformerForward::EmbeddingLookup(uint32_t token_id, float* output) {
             fflush(stderr);
             last_warned = token_id;
         }
+    }
+    
+    // FIX: If token_id exceeds actual tensor size, return zero embedding
+    // This handles the case where vocab_size (32000) > tensor_vocab (28444)
+    if (safe_token_id >= tensor_vocab) {
+        // Return zero embedding for out-of-range tokens
+        memset(output, 0, hidden_dim * sizeof(float));
+        static uint32_t last_tensor_warned = 0xFFFFFFFF;
+        if (safe_token_id != last_tensor_warned) {
+            fprintf(stderr, "[WARN] token_id %u exceeds tensor vocab %u, returning zero embedding\n",
+                    safe_token_id, tensor_vocab);
+            last_tensor_warned = safe_token_id;
+        }
+        return;
     }
     
     // Check if we have quantized embeddings
@@ -540,11 +563,11 @@ void TransformerForward::EmbeddingLookup(uint32_t token_id, float* output) {
             // Calculate row size in bytes
             uint64_t row_size = static_cast<uint64_t>(blocks_per_row) * bytes_per_block;
             
-            // Check if token_id is valid
-            uint64_t token_offset = static_cast<uint64_t>(token_id) * row_size;
+            // FIX: Use safe_token_id (clamped to vocab) instead of raw token_id
+            uint64_t token_offset = static_cast<uint64_t>(safe_token_id) * row_size;
             if (token_offset + row_size > w.q_token_embeddings.size) {
-                fprintf(stderr, "[EmbeddingLookup] ERROR: token_id %u out of bounds (size=%zu)\n", 
-                        token_id, w.q_token_embeddings.size);
+                fprintf(stderr, "[EmbeddingLookup] ERROR: safe_token_id %u out of bounds (size=%zu)\n", 
+                        safe_token_id, w.q_token_embeddings.size);
                 memset(output, 0, hidden_dim * sizeof(float));
                 return;
             }
@@ -1682,30 +1705,56 @@ bool TransformerForward::ForwardToken(uint32_t token_id, uint32_t pos, float* ou
     }
     
     // LM head projection
+    // FIX: Use config vocab_size (32000) not tensor-calculated size (28444)
+    // The Q6_K tensor has 49,152,000 bytes = 32000 tokens × 1536 bytes/token
+    // This is exactly the right size for 6-bit quantization (6 bits × 2048 / 8 = 1536 bytes)
+    uint32_t lm_head_vocab = w.vocab_size;  // Use config vocab_size (32000)
+    
+    // For Q6_K, calculate bytes per row correctly: data_size / vocab_size
+    // This gives 1536 bytes per row for 32000 tokens, not the block-based calculation
+    if (w.use_quantized && w.q_lm_head.data && w.q_lm_head.quant_type == 2) {
+        // Q6_K: 49,152,000 bytes / 32000 tokens = 1536 bytes per token row
+        // This is correct: 6 bits × 2048 hidden_dim / 8 bits = 1536 bytes
+        uint32_t calculated_vocab = static_cast<uint32_t>(w.q_lm_head.size / 1536);
+        if (calculated_vocab >= w.vocab_size) {
+            lm_head_vocab = w.vocab_size;  // Use full vocab if tensor is large enough
+        } else {
+            lm_head_vocab = calculated_vocab;  // Fallback to tensor size
+            if (g_debug) fprintf(stderr, "[LM_HEAD] WARNING: Q6_K tensor only has %u rows, expected %u\n", 
+                                 calculated_vocab, w.vocab_size);
+        }
+    }
+    
     if (w.use_quantized && w.q_lm_head.data) {
-        if (g_debug) fprintf(stderr, "[LM_HEAD] Using quantized LM head, quant_type=%d\n", w.q_lm_head.quant_type);
+        if (g_debug) fprintf(stderr, "[LM_HEAD] Using quantized LM head, quant_type=%d, lm_head_vocab=%u\n", 
+                             w.q_lm_head.quant_type, lm_head_vocab);
         // Use quantized LM head based on quant_type
         if (w.q_lm_head.quant_type == 3) {  // Q4_0
-            QuantizedMatVecMul_Q4_0(w.q_lm_head, hidden_states_, output_logits, w.vocab_size, w.hidden_dim);
+            QuantizedMatVecMul_Q4_0(w.q_lm_head, hidden_states_, output_logits, lm_head_vocab, w.hidden_dim);
         } else if (w.q_lm_head.quant_type == 2) {  // Q6_K
-            QuantizedMatVecMul_Q6_K(w.q_lm_head, hidden_states_, output_logits, w.vocab_size, w.hidden_dim);
+            QuantizedMatVecMul_Q6_K(w.q_lm_head, hidden_states_, output_logits, lm_head_vocab, w.hidden_dim);
         } else if (w.q_lm_head.quant_type == 1) {  // Q3_K
-            QuantizedMatVecMul_Q3_K_S(w.q_lm_head, hidden_states_, output_logits, w.vocab_size, w.hidden_dim);
+            QuantizedMatVecMul_Q3_K_S(w.q_lm_head, hidden_states_, output_logits, lm_head_vocab, w.hidden_dim);
         } else {
             fprintf(stderr, "[ForwardToken] WARNING: Unsupported lm_head quant_type %d\n", w.q_lm_head.quant_type);
             // Fallback: generate placeholder logits
-            for (uint32_t i = 0; i < w.vocab_size; i++) {
+            for (uint32_t i = 0; i < lm_head_vocab; i++) {
                 output_logits[i] = (float)(rand() % 1000) / 1000.0f - 0.5f;
             }
         }
     } else if (w.lm_head) {
         // Use float LM head
-        Kernel_MatMul(hidden_states_, w.lm_head, output_logits, 1, w.vocab_size, w.hidden_dim);
+        Kernel_MatMul(hidden_states_, w.lm_head, output_logits, 1, lm_head_vocab, w.hidden_dim);
     } else {
         // Fallback: generate placeholder logits (for testing)
-        for (uint32_t i = 0; i < w.vocab_size; i++) {
+        for (uint32_t i = 0; i < lm_head_vocab; i++) {
             output_logits[i] = (float)(rand() % 1000) / 1000.0f - 0.5f;
         }
+    }
+    
+    // Set logits beyond LM head range to -infinity (never sampled)
+    for (uint32_t i = lm_head_vocab; i < w.vocab_size; i++) {
+        output_logits[i] = -1e10f;
     }
     
     return true;

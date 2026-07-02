@@ -75,6 +75,8 @@ class StreamingGGUFLoader : public IGGUFLoader
 
     // Access raw tensor data
     bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data);
+    // Direct file read without zone loading (for simple cases)
+    bool GetTensorDataDirect(const std::string& tensor_name, std::vector<uint8_t>& data);
     // Probe that tensor bytes are readable without materializing the full tensor in RAM.
     bool ProbeTensorData(const std::string& tensor_name, size_t sample_bytes = 4096);
     // Get total file size

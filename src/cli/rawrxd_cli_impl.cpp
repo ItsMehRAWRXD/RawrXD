@@ -98,12 +98,7 @@ static size_t g_symbolRequests = 0;
 static size_t g_moduleRequests = 0;
 }
 
-extern "C" void RawrXD_Disasm_HandleReq() {
-    g_disasmRequests += 1;
-}
-extern "C" void RawrXD_Symbol_HandleReq() {
-    g_symbolRequests += 1;
-}
-extern "C" void RawrXD_Module_HandleReq() {
-    g_moduleRequests += 1;
-}
+// NOTE: These functions are defined in agentic_bridge_headless.cpp
+// extern "C" void RawrXD_Disasm_HandleReq() { g_disasmRequests += 1; }
+// extern "C" void RawrXD_Symbol_HandleReq() { g_symbolRequests += 1; }
+// extern "C" void RawrXD_Module_HandleReq() { g_moduleRequests += 1; }

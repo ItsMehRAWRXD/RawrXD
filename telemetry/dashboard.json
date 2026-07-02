@@ -1,0 +1,55 @@
+{
+  \"dashboard\": {
+    \"title\": \"Sovereign Engine - Real-Time Dashboard\",
+    \"panels\": [
+      {
+        \"title\": \"Cluster Throughput (TPS)\",
+        \"targets\": [
+          {
+            \"expr\": \"sum(sovereign_tokens_per_second)\",
+            \"legendFormat\": \"Total TPS\"
+          }
+        ],
+        \"yAxes\": [{ \"label\": \"Tokens/sec\" }],
+        \"alert\": {
+          \"conditions\": [
+            {
+              \"evaluator\": { \"type\": \"lt\", \"params\": [50000] },
+              \"operator\": { \"type\": \"and\" }
+            }
+          ]
+        }
+      },
+      {
+        \"title\": \"Ring Rotation Latency\",
+        \"targets\": [
+          {
+            \"expr\": \"sovereign_ring_rotation_ms\",
+            \"legendFormat\": \"{{instance}}\"
+          }
+        ],
+        \"yAxes\": [{ \"label\": \"Milliseconds\" }]
+      },
+      {
+        \"title\": \"Weight Drift (σ)\",
+        \"targets\": [
+          {
+            \"expr\": \"sovereign_weight_drift\",
+            \"legendFormat\": \"{{instance}}\"
+          }
+        ],
+        \"yAxes\": [{ \"label\": \"Standard Deviation\" }]
+      },
+      {
+        \"title\": \"Node Status\",
+        \"targets\": [
+          {
+            \"expr\": \"up{job=~\\\"sovereign-.*\\\"}\",
+            \"legendFormat\": \"{{instance}}\"
+          }
+        ],
+        \"type\": \"stat\"
+      }
+    ]
+  }
+}

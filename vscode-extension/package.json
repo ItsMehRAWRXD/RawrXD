@@ -1,0 +1,178 @@
+{
+  "name": "rawrxd-lsp-client",
+  "displayName": "RawrXD LSP Client",
+  "description": "AI-powered code completion via RawrXD SuperNode cluster",
+  "version": "0.1.0",
+  "publisher": "rawrxd",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ItsMehRAWRXD/RawrXD"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Programming Languages",
+    "Snippets"
+  ],
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:cpp",
+    "onLanguage:c",
+    "onLanguage:asm"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "RawrXD LSP",
+      "properties": {
+        "rawrxd.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable RawrXD AI completion"
+        },
+        "rawrxd.clusterEndpoint": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "SuperNode cluster HAProxy endpoint"
+        },
+        "rawrxd.maxTokens": {
+          "type": "number",
+          "default": 128,
+          "description": "Maximum completion tokens"
+        },
+        "rawrxd.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "description": "Sampling temperature"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "rawrxd.enable",
+        "title": "Enable RawrXD Completion",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.disable",
+        "title": "Disable RawrXD Completion",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.status",
+        "title": "Show Cluster Status",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.openChat",
+        "title": "Open Chat",
+        "category": "RawrXD",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "rawrxd.inlineChat",
+        "title": "Inline Chat",
+        "category": "RawrXD",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "rawrxd.smartGenerate",
+        "title": "Generate Code",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.smartExplain",
+        "title": "Explain Code",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.smartFix",
+        "title": "Fix Issue",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.smartTest",
+        "title": "Generate Tests",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.smartDocument",
+        "title": "Add Documentation",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.agentMode",
+        "title": "Start Agent Mode",
+        "category": "RawrXD",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "rawrxd.agentStop",
+        "title": "Stop Agent",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.terminalBuild",
+        "title": "Build Project",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.terminalTest",
+        "title": "Run Tests",
+        "category": "RawrXD"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "rawrxd.openChat",
+          "when": "rawrxd.enabled"
+        },
+        {
+          "command": "rawrxd.inlineChat",
+          "when": "editorTextFocus"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "rawrxd.openChat",
+          "group": "9_cutcopypaste@5",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "rawrxd.inlineChat",
+          "group": "9_cutcopypaste@6",
+          "when": "editorTextFocus"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "rawrxd.openChat",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "rawrxd.inlineChat",
+        "key": "ctrl+i",
+        "mac": "cmd+i",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "20.x",
+    "typescript": "^5.3.0"
+  }
+}

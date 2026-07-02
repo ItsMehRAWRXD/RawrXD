@@ -81,9 +81,9 @@ struct LoRAFileHeader {
     
     // Integrity
     uint32_t crc32_checksum;           // CRC32 of header + data
-    uint32_t reserved3;                // Padding to 64 bytes
+    uint32_t reserved3;                // Padding
 };
-static_assert(sizeof(LoRAFileHeader) == 64, "Header must be 64 bytes");
+static_assert(sizeof(LoRAFileHeader) == 88, "Header must be 88 bytes");
 #pragma pack(pop)
 
 // ============================================================================

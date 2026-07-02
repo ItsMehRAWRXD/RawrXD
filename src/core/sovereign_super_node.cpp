@@ -76,6 +76,9 @@ public:
     // Get vocabulary for detokenization
     const std::vector<std::string>& GetVocabulary() const { return vocabulary_; }
     
+    // Get model's actual vocab size (may be smaller than tokenizer vocab)
+    uint32_t GetModelVocabSize() const { return model_weights_.vocab_size; }
+    
     // Pin thread to specific CPU cores (NUMA-aware)
     static bool PinThreadToCores(int core1, int core2);
     
@@ -1508,14 +1511,26 @@ void RunChatMode(Sovereign::SuperNodeEngine* engine, int max_tokens_per_response
     // Initialize BPE tokenizer with vocabulary
     Sovereign::SovereignTokenizer tokenizer;
     if (!vocab.empty()) {
-        std::vector<float> scores(vocab.size(), 0.0f);
+        // FIX: Clamp vocabulary to model's actual vocab_size
+        // The tokenizer vocab may be larger than what the model tensors support
+        size_t effective_vocab_size = vocab.size();
+        if (engine && effective_vocab_size > engine->GetModelVocabSize()) {
+            effective_vocab_size = engine->GetModelVocabSize();
+            printf("[Chat] Tokenizer vocab clamped from %zu to %zu (model limit)\n", 
+                   vocab.size(), effective_vocab_size);
+        }
+        
+        std::vector<float> scores(effective_vocab_size, 0.0f);
         Sovereign::TokenizerConfig config;
-        config.vocab_size = static_cast<uint32_t>(vocab.size());
+        config.vocab_size = static_cast<uint32_t>(effective_vocab_size);
         config.bos_token_id = 1;
         config.eos_token_id = 2;
         config.unk_token_id = 0;
-        tokenizer.LoadVocabulary(vocab, scores, config);
-        printf("[Chat] BPE Tokenizer initialized with %zu tokens\n\n", vocab.size());
+        
+        // Only load the first effective_vocab_size tokens
+        std::vector<std::string> clamped_vocab(vocab.begin(), vocab.begin() + effective_vocab_size);
+        tokenizer.LoadVocabulary(clamped_vocab, scores, config);
+        printf("[Chat] BPE Tokenizer initialized with %zu tokens\n\n", effective_vocab_size);
     } else {
         printf("[Chat] Warning: No vocabulary loaded - tokenization will not work\n\n");
     }
@@ -1560,9 +1575,9 @@ void RunChatMode(Sovereign::SuperNodeEngine* engine, int max_tokens_per_response
         }
         
         // === CHAT TEMPLATE ===
-        // Format the prompt with a chat template for better responses
-        // TinyLlama uses a simple format: "User: {input}\nAssistant:"
-        std::string formatted_prompt = "User: " + user_input + "\nAssistant:";
+        // Format the prompt with Llama-2 chat template for better responses
+        // Llama-2 format: "[INST] {input} [/INST]\n"
+        std::string formatted_prompt = "[INST] " + user_input + " [/INST]\n";
         
         // Use proper BPE tokenization on the formatted prompt
         std::vector<uint32_t> input_tokens = tokenizer.Encode(formatted_prompt);

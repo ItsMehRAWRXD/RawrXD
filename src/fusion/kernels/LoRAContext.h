@@ -43,7 +43,8 @@ struct LORA_ALIGN LoRAContext {
     
     // Control
     volatile uint64_t active; // Non-zero when adapter is valid
-    uint64_t reserved;          // Padding to 48 bytes
+    uint64_t reserved;          // Padding
+    uint64_t reserved2;         // Padding to reach 64 bytes
     
     // Flag definitions
     static constexpr uint32_t FLAG_READY = 0x00000001;      // Adapter loaded
@@ -53,7 +54,7 @@ struct LORA_ALIGN LoRAContext {
 };
 
 // Verify size and alignment
-static_assert(sizeof(LoRAContext) == 48, "LoRAContext must be 48 bytes");
+static_assert(sizeof(LoRAContext) == 64, "LoRAContext must be 64 bytes");
 static_assert(alignof(LoRAContext) >= 32, "LoRAContext must be 32-byte aligned");
 
 /**

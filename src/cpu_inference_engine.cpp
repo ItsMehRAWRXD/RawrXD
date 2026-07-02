@@ -1064,44 +1064,11 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
 
             printf("[CPUInferenceEngine] Model loaded successfully\n");
 
-            // Initialize enhanced streaming loader with IOCP
-            m_enhancedLoader = std::make_unique<EnhancedStreamingGGUFLoader>();
-            if (m_enhancedLoader)
-            {
-                printf("[CPUInferenceEngine] Initializing enhanced streaming loader...\n");
-                if (m_enhancedLoader->Open(effectiveModelPath))
-                {
-                    // Enable IORING for async batch I/O
-                    if (m_enhancedLoader->EnableIOring())
-                    {
-                        printf("[CPUInferenceEngine] IORING async I/O enabled\n");
-                    }
-                    else
-                    {
-                        printf("[CPUInferenceEngine] IORING not available (falling back to synchronous)\n");
-                    }
-
-                    // Enable NVMe direct I/O if available
-                    if (m_enhancedLoader->EnableNVMeDirectIO())
-                    {
-                        printf("[CPUInferenceEngine] NVMe direct I/O enabled\n");
-                    }
-                    else
-                    {
-                        printf("[CPUInferenceEngine] NVMe direct I/O not available\n");
-                    }
-
-                    // Allocate huge pages for tensor staging
-                    if (m_enhancedLoader->AllocateHugePages(1024))
-                    {
-                        printf("[CPUInferenceEngine] Huge pages allocated (1024MB)\n");
-                    }
-                }
-                else
-                {
-                    printf("[CPUInferenceEngine] Enhanced loader init failed (non-critical)\n");
-                }
-            }
+            // DISABLED: Enhanced streaming loader causes deadlock during initialization
+            // The loader is non-critical for inference, so we skip it to avoid the deadlock
+            // TODO: Debug and fix the deadlock in EnhancedStreamingGGUFLoader constructor
+            printf("[CPUInferenceEngine] Enhanced streaming loader disabled (deadlock workaround)\n");
+            m_enhancedLoader = nullptr;
 
             return true;
         }

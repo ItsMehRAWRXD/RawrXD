@@ -14,6 +14,8 @@
 #include <immintrin.h>
 #include <cstdint>
 #include <cstddef>
+#include <cmath>
+#include <limits>
 
 // Q4_0 format constants
 static constexpr int Q4_0_BLOCK_SIZE = 32;

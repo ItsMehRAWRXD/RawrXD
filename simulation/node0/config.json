@@ -1,0 +1,19 @@
+﻿{
+    "nodeId": 0,
+    "role": "HEAD",
+    "headNodeIp": "127.0.0.1",
+    "bindAddress": "0.0.0.0:5555",
+    "dataPlane": {
+        "routerEndpoint": "tcp://127.0.0.1:5555",
+        "pubEndpoint": "tcp://127.0.0.1:5556"
+    },
+    "hardware": {
+        "enableGPU": true,
+        "enableAMX": true,
+        "threadPoolSize": 8
+    },
+    "telemetry": {
+        "prometheusPort": 8080,
+        "logLevel": "INFO"
+    }
+}
