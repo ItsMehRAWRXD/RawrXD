@@ -82,7 +82,8 @@ $Components = @(
     @{Name="Hook Simulator Test"; Asm="Hook_Simulator_Test.asm"; Obj="Hook_Simulator_Test.obj"},
     @{Name="Telemetry Stress Harness"; Asm="Telemetry_Stress_Harness.asm"; Obj="Telemetry_Stress_Harness.obj"},
     @{Name="Unified Entry"; Asm="Sovereign_Unified_Entry.asm"; Obj="Sovereign_Unified_Entry.obj"},
-    @{Name="Hyper Detector"; Asm="Sovereign_Hyper_Detector.asm"; Obj="Sovereign_Hyper_Detector.obj"}
+    @{Name="Hyper Detector"; Asm="Sovereign_Hyper_Detector.asm"; Obj="Sovereign_Hyper_Detector.obj"},
+    @{Name="Model Streamer"; Asm="Sovereign_Model_Streamer.asm"; Obj="Sovereign_Model_Streamer.obj"}
 )
 
 $SuccessCount = 0

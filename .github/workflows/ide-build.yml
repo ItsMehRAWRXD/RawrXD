@@ -1,0 +1,73 @@
+name: Sovereign IDE Build
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+jobs:
+  validate-perf-and-build:
+    runs-on: ubuntu-latest
+    env:
+      PERF_REDACT_MAX_PCT: "5.0"
+      PERF_PASSTHROUGH_MAX_PCT: "3.0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Tier 1 - Static analysis (type-check)
+        working-directory: frontend
+        run: npm run type-check
+
+      - name: Tier 1 - Static analysis (lint if available)
+        shell: bash
+        run: |
+          if node -e "const p=require('./frontend/package.json'); process.exit(p.scripts&&p.scripts.lint?0:1)"; then
+            echo "Running lint"
+            npm --prefix frontend run lint
+          else
+            echo "No lint script found in frontend/package.json; skipping lint step"
+          fi
+
+      - name: Tier 2 - Run headless benchmark
+        run: |
+          python tools/run_benchmark.py --headless --loops 8 --output benchmark-results.json
+
+      - name: Tier 2 - Enforce performance budget
+        run: |
+          python tools/perf_budget_gate.py --input benchmark-results.json --max-redact-overhead-pct "$PERF_REDACT_MAX_PCT" --max-passthrough-overhead-pct "$PERF_PASSTHROUGH_MAX_PCT"
+
+      - name: Tier 3 - Functional hazard regression gate
+        run: |
+          python tools/run_regression.py --corpus tests/hazard_corpus.json --backend mock_backend.py --host 127.0.0.1 --port 11439
+
+      - name: Tier 4 - Build artifact bundle
+        run: |
+          python build.py --benchmark-json benchmark-results.json --max-redact-overhead-pct "$PERF_REDACT_MAX_PCT" --max-passthrough-overhead-pct "$PERF_PASSTHROUGH_MAX_PCT"
+
+      - name: Tier 5 - Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sovereign-ide-dist
+          path: |
+            benchmark-results.json
+            dist/sovereign_ide/
+          if-no-files-found: error

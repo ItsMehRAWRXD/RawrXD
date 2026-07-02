@@ -1,0 +1,3 @@
+# Python dependencies for the Day 8 bundle pipeline.
+# Runtime note: mock_backend.py currently uses Python stdlib only (no external packages).
+# Keep this file explicit to lock dependency surface area for artifact reproducibility.

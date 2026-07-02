@@ -114,6 +114,8 @@ using ChatCallback = std::function<void(const ChatMessage&)>;
 using EditCallback = std::function<void(const EditOperation&)>;
 using AgentCallback = std::function<void(const AgentTask&)>;
 using ErrorCallback = std::function<void(const std::string&)>;
+using StreamingTokenCallback = std::function<void(const std::string&)>;
+using StreamingCompleteCallback = std::function<void()>;
 
 /**
  * AI Assistant Engine
@@ -145,6 +147,11 @@ public:
     std::string StartChatSession();
     void SendChatMessage(const std::string& session_id, const std::string& message,
                         const CodeContext& context, ChatCallback callback);
+    void SendChatMessageStreaming(const std::string& session_id, const std::string& message,
+                                  const CodeContext& context,
+                                  StreamingTokenCallback token_cb,
+                                  StreamingCompleteCallback complete_cb = nullptr,
+                                  ErrorCallback error_cb = nullptr);
     std::vector<ChatMessage> GetChatHistory(const std::string& session_id) const;
     void ClearChatSession(const std::string& session_id);
 
@@ -252,11 +259,17 @@ private:
  * Model Backend Interface
  * Abstracts different model providers (GGUF, Ollama, APIs)
  */
+using StreamingTokenCallback = std::function<void(const std::string&)>;
+using StreamingCompleteCallback = std::function<void()>;
+
 class IModelBackend {
 public:
     virtual ~IModelBackend() = default;
     virtual bool Initialize(const ModelConfig& config) = 0;
     virtual std::string Generate(const std::string& prompt, int max_tokens) = 0;
+    virtual void GenerateStreaming(const std::string& prompt, int max_tokens,
+                                   StreamingTokenCallback token_cb,
+                                   StreamingCompleteCallback complete_cb = nullptr) = 0;
     virtual bool IsReady() const = 0;
     virtual void Shutdown() = 0;
 };
@@ -269,6 +282,9 @@ class GGUFBackend : public IModelBackend {
 public:
     bool Initialize(const ModelConfig& config) override;
     std::string Generate(const std::string& prompt, int max_tokens) override;
+    void GenerateStreaming(const std::string& prompt, int max_tokens,
+                           StreamingTokenCallback token_cb,
+                           StreamingCompleteCallback complete_cb = nullptr) override;
     bool IsReady() const override { return m_ready; }
     void Shutdown() override;
 
@@ -285,6 +301,9 @@ class OllamaBackend : public IModelBackend {
 public:
     bool Initialize(const ModelConfig& config) override;
     std::string Generate(const std::string& prompt, int max_tokens) override;
+    void GenerateStreaming(const std::string& prompt, int max_tokens,
+                           StreamingTokenCallback token_cb,
+                           StreamingCompleteCallback complete_cb = nullptr) override;
     bool IsReady() const override { return m_ready; }
     void Shutdown() override;
 
@@ -303,6 +322,9 @@ class OpenAIBackend : public IModelBackend {
 public:
     bool Initialize(const ModelConfig& config) override;
     std::string Generate(const std::string& prompt, int max_tokens) override;
+    void GenerateStreaming(const std::string& prompt, int max_tokens,
+                           StreamingTokenCallback token_cb,
+                           StreamingCompleteCallback complete_cb = nullptr) override;
     bool IsReady() const override { return m_ready; }
     void Shutdown() override;
 

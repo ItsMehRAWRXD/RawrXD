@@ -1,0 +1,10 @@
+sxe ud:Sovereign_SDK.dll
+g
+.echo === UNLOAD INITIATED ===
+k
+.echo === ACTIVE THREADS ===
+~*
+.echo === THREAD CONTEXTS ===
+~* r
+g
+qd

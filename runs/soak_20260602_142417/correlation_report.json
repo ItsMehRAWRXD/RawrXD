@@ -1,0 +1,84 @@
+﻿{
+    "GeneratedUtc":  "2026-06-02T18:25:00.8839172Z",
+    "MetricsCsvPath":  "d:\\rawrxd-ci-bootstrap\\runs\\soak_20260602_142417\\sidecar_metrics.csv",
+    "GateLogPath":  "d:\\rawrxd-ci-bootstrap\\runs\\soak_20260602_142417\\gate.log",
+    "BurnInSamples":  5,
+    "Overall":  {
+                    "SamplesTotal":  1635,
+                    "SamplesRawTotal":  1640,
+                    "BurnInSamplesExcluded":  5,
+                    "CompletionEventsTotal":  256,
+                    "MaxFillOverall":  0,
+                    "TotalBackpressureEvents":  0,
+                    "TotalBackpressureDelta":  0,
+                    "TotalDroppedDelta":  0,
+                    "SaturationThreshold":  48,
+                    "SaturationSampleCount":  0,
+                    "SaturationBackpressureEvents":  0
+                },
+    "PerBin":  [
+                   {
+                       "FillBin":  "0-15",
+                       "SampleCount":  1635,
+                       "AvgFill":  0,
+                       "MaxFill":  0,
+                       "BackpressureEvents":  0,
+                       "BackpressureDeltaSum":  0,
+                       "DroppedDeltaSum":  0,
+                       "AvgBackpressureDeltaPerSample":  0,
+                       "CompletionEvents":  256,
+                       "AvgLatencyMs":  157.1641,
+                       "P95LatencyMs":  265,
+                       "StdDevLatencyMs":  76.8772
+                   },
+                   {
+                       "FillBin":  "16-31",
+                       "SampleCount":  0,
+                       "AvgFill":  0,
+                       "MaxFill":  0,
+                       "BackpressureEvents":  0,
+                       "BackpressureDeltaSum":  0,
+                       "DroppedDeltaSum":  0,
+                       "AvgBackpressureDeltaPerSample":  0,
+                       "CompletionEvents":  0,
+                       "AvgLatencyMs":  0,
+                       "P95LatencyMs":  0,
+                       "StdDevLatencyMs":  0
+                   },
+                   {
+                       "FillBin":  "32-47",
+                       "SampleCount":  0,
+                       "AvgFill":  0,
+                       "MaxFill":  0,
+                       "BackpressureEvents":  0,
+                       "BackpressureDeltaSum":  0,
+                       "DroppedDeltaSum":  0,
+                       "AvgBackpressureDeltaPerSample":  0,
+                       "CompletionEvents":  0,
+                       "AvgLatencyMs":  0,
+                       "P95LatencyMs":  0,
+                       "StdDevLatencyMs":  0
+                   },
+                   {
+                       "FillBin":  "48-64",
+                       "SampleCount":  0,
+                       "AvgFill":  0,
+                       "MaxFill":  0,
+                       "BackpressureEvents":  0,
+                       "BackpressureDeltaSum":  0,
+                       "DroppedDeltaSum":  0,
+                       "AvgBackpressureDeltaPerSample":  0,
+                       "CompletionEvents":  0,
+                       "AvgLatencyMs":  0,
+                       "P95LatencyMs":  0,
+                       "StdDevLatencyMs":  0
+                   }
+               ],
+    "GateSummary":  {
+                        "PassLine":  "1769/2000",
+                        "CancelRecovered":  "231",
+                        "AvgInferenceMs":  "2.94",
+                        "P95InferenceMs":  "0",
+                        "GatePassed":  true
+                    }
+}

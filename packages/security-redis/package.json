@@ -1,0 +1,23 @@
+{
+  "name": "@rawrxd/security-redis",
+  "version": "0.1.0",
+  "description": "Redis-backed distributed StateProvider for @rawrxd/security-engine",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "type-check": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "@rawrxd/security-engine": "^0.1.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.2.0",
+    "typescript": "^5.9.3"
+  }
+}

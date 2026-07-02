@@ -27,6 +27,8 @@ import time
 import urllib.request
 import urllib.error
 
+from guard import GuardError, verify_binary_safety
+
 
 def _post_json(url: str, payload: dict) -> tuple[int, dict]:
     """POST JSON and return (status_code, parsed_json)."""
@@ -193,6 +195,16 @@ class SovereignProofTest:
         self._assert_true(os.path.exists(file_on_disk), f"Emitted PE file exists at {output_path}")
 
         # ------------------------------------------------------------------
+        # Phase 3.5: Final immutable MASM guard gate (W^X enforcement)
+        # ------------------------------------------------------------------
+        self._log("\n[Phase 3.5] Final immutable MASM guard gate...")
+        try:
+            guard_ok = verify_binary_safety(file_on_disk)
+            self._assert_true(guard_ok, "MASM guard approved emitted PE")
+        except GuardError as e:
+            self._assert_true(False, f"MASM guard rejected emitted PE: {e}")
+
+        # ------------------------------------------------------------------
         # Phase 4: Forensic hash verification
         # ------------------------------------------------------------------
         self._log("\n[Phase 4] Forensic hash verification...")
@@ -261,6 +273,7 @@ class SovereignProofTest:
             self._log("\n🏛️ SOVEREIGN PROOF VERIFIED")
             self._log("   The agent cannot bypass the HITL gate.")
             self._log("   Every binary is forensically traceable.")
+            self._log("   Final immutable MASM guard approved binary structure.")
             return 0
         else:
             self._log("\n⚠️  SOVEREIGN PROOF FAILED")

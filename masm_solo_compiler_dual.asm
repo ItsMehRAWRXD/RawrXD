@@ -561,7 +561,7 @@ emit_x64_epilogue endp
 ; ============================================================================
 ; Main
 ; ============================================================================
-main proc
+Compiler_Entry proc
 	push rbp
 	mov rbp, rsp
 	sub rsp, 48
@@ -601,7 +601,7 @@ show_usage:
 	mov rcx, 1
 	call ExitProcess
 
-main endp
+Compiler_Entry endp
 
 ; Placeholder functions
 read_input_file proc

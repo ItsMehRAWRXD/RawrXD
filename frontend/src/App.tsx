@@ -10,6 +10,8 @@ import { ModelSelector } from './components/ModelSelector';
 import { SafetyAuditPanel } from './components/SafetyAuditPanel';
 import { AgentPanel } from './components/AgentPanel';
 import { HitlAuditPanel } from './components/HitlAuditPanel';
+import { ReplayPanel } from './components/ReplayPanel';
+import { SecurityPostureDashboard } from './components/SecurityPostureDashboard';
 import { ResilienceProvider } from './components/ResilienceProvider';
 import './App.css';
 
@@ -34,6 +36,10 @@ function App() {
               <AgentPanel />
               <h3>Audit</h3>
               <HitlAuditPanel />
+              <h3>Replay</h3>
+              <ReplayPanel />
+              <h3>Posture</h3>
+              <SecurityPostureDashboard />
             </nav>
           </aside>
 

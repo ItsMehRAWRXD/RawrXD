@@ -41,15 +41,9 @@ jobs:
           choco install nasm -y
           $env:PATH += ";C:\Program Files\NASM"
 
-      - name: Install Qt via aqtinstall
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # All UI is rendered via Direct2D (Win32) or React (frontend).
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
       - name: Download Google Test
         shell: pwsh
@@ -144,14 +138,9 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # All UI is rendered via Direct2D (Win32) or React (frontend).
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
       - name: Build VoiceProcessor Tests
         shell: pwsh
@@ -183,14 +172,8 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
       - name: Build AIMergeResolver Tests
         shell: pwsh
@@ -222,14 +205,8 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
       - name: Build SemanticDiffAnalyzer Tests
         shell: pwsh
@@ -261,14 +238,8 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
       - name: Build ZeroRetentionManager Tests
         shell: pwsh
@@ -300,14 +271,8 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
       - name: Build SandboxedTerminal Tests
         shell: pwsh
@@ -339,14 +304,8 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
       - name: Build ModelRegistry Tests
         shell: pwsh

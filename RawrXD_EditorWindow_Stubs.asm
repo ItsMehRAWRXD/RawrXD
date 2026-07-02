@@ -41,6 +41,10 @@ EXTERN GetSaveFileNameA:PROC
 EXTERN MessageBoxA:PROC
 EXTERN FillRect:PROC
 
+; Ghost Engine Bridge
+EXTERN IDE_GHOST_RENDER:PROC
+EXTERN IDE_GHOST_INIT:PROC
+
 ; ============================================================================
 ; DATA STRUCTURES
 ; ============================================================================
@@ -139,7 +143,7 @@ szEmptyPath         DB "", 0
 .code
 
 ; TextBuffer_Initialize - Allocate 32KB buffer
-TextBuffer_Initialize PROC FRAME
+TextBuffer_Initialize PROC
     push rbx
     sub rsp, 28h
     
@@ -147,7 +151,8 @@ TextBuffer_Initialize PROC FRAME
     mov rcx, 32768
     call malloc_simple    ; rcx = size, returns rax = ptr
     mov g_buffer_ptr, rax
-    xor g_buffer_size, g_buffer_size
+    xor eax, eax
+    mov g_buffer_size, eax
     
     add rsp, 28h
     pop rbx
@@ -158,10 +163,14 @@ TextBuffer_Initialize ENDP
 ; rcx = character (0-255)
 ; rdx = position (byte offset)
 ; Returns: rax = new buffer size (or 0 on error)
-TextBuffer_InsertChar PROC FRAME uses rbx rsi rdi
+TextBuffer_InsertChar PROC
+    push rbx
+    push rsi
+    push rdi
     ; Check capacity
-    cmp g_buffer_size, g_buffer_capacity
-    jge .InsertError
+    mov rax, g_buffer_size
+    cmp rax, g_buffer_capacity
+    jge InsertError
     
     ; Get buffer pointer
     mov rsi, g_buffer_ptr
@@ -172,66 +181,77 @@ TextBuffer_InsertChar PROC FRAME uses rbx rsi rdi
     mov rcx, rbx                ; rcx = copy count
     add rcx, rsi                ; rcx = end of buffer
     cmp edi, ebx                ; Check if position > size
-    jg .InsertError
+    jg InsertError
     
     ; Shift bytes right to make room
     mov rax, rsi
     add rax, rdi                ; rax = insert position
     
-.ShiftLoop:
+ShiftLoop:
     cmp rbx, rdi
-    jle .ShiftDone
+    jle ShiftDone
     mov al, [rsi + rbx - 1]     ; Read byte before position
     mov [rsi + rbx], al         ; Write byte after position
     dec rbx
-    jmp .ShiftLoop
+    jmp ShiftLoop
     
-.ShiftDone:
+ShiftDone:
     ; Insert character
     mov rax, rsi
     add rax, rdi
-    mov byte [rax], cl (lower 8 bits of rcx)
+    mov byte ptr [rax], cl
     
     ; Update size
     inc g_buffer_size
     mov rax, g_buffer_size
-    ret
+    jmp InsertExit
     
-.InsertError:
+InsertError:
     xor eax, eax
+InsertExit:
+    pop rdi
+    pop rsi
+    pop rbx
     ret
 TextBuffer_InsertChar ENDP
 
 ; TextBuffer_DeleteChar - Delete character at position
 ; rcx = position (byte offset)
 ; Returns: rax = new buffer size (or 0 on error)
-TextBuffer_DeleteChar PROC FRAME uses rbx rsi rdi
+TextBuffer_DeleteChar PROC
+    push rbx
+    push rsi
+    push rdi
     mov rsi, g_buffer_ptr
     mov rdi, rcx                ; rdi = position
     mov rbx, g_buffer_size
     
     ; Validate position
     cmp edi, ebx
-    jge .DeleteError
+    jge DeleteError
     cmp edi, 0
-    jl .DeleteError
+    jl DeleteError
     
     ; Shift bytes left (from position to end)
-.DeleteLoop:
+DeleteLoop:
     cmp edi, ebx
-    jge .DeleteDone
+    jge DeleteDone
     mov al, [rsi + rdi + 1]     ; Read next byte
     mov [rsi + rdi], al         ; Write current position
     inc rdi
-    jmp .DeleteLoop
+    jmp DeleteLoop
     
-.DeleteDone:
+DeleteDone:
     dec g_buffer_size
     mov rax, g_buffer_size
-    ret
+    jmp DeleteExit
     
-.DeleteError:
+DeleteError:
     xor eax, eax
+DeleteExit:
+    pop rdi
+    pop rsi
+    pop rbx
     ret
 TextBuffer_DeleteChar ENDP
 
@@ -241,11 +261,11 @@ TextBuffer_DeleteChar ENDP
 TextBuffer_GetChar PROC
     mov rsi, g_buffer_ptr
     cmp rcx, g_buffer_size
-    jge .GetError
+    jge GetError
     mov al, [rsi + rcx]
     movzx eax, al
     ret
-.GetError:
+GetError:
     mov eax, 0xFFFFFFFF
     ret
 TextBuffer_GetChar ENDP
@@ -255,17 +275,17 @@ TextBuffer_GetChar ENDP
 ; ============================================================================
 
 ; EditorWindow_RegisterClass - Register window class
-EditorWindow_RegisterClass PROC FRAME
+EditorWindow_RegisterClass PROC
     sub rsp, 28h
     
     lea rax, [rel EditorWindow_WndProc]
     
     ; WNDCLASSA structure on stack
-    mov dword [rsp], 3          ; style = CS_VREDRAW | CS_HREDRAW
-    mov qword [rsp+8], rax      ; lpfnWndProc = WndProc
+    mov dword ptr [rsp], 3          ; style = CS_VREDRAW | CS_HREDRAW
+    mov qword ptr [rsp+8], rax      ; lpfnWndProc = WndProc
     xor r8d, r8d
-    mov dword [rsp+16], r8d     ; cbClsExtra = 0
-    mov dword [rsp+20], r8d     ; cbWndExtra = 0
+    mov dword ptr [rsp+16], r8d     ; cbClsExtra = 0
+    mov dword ptr [rsp+20], r8d     ; cbWndExtra = 0
     
     ; rcx = class struct ptr
     mov rcx, rsp
@@ -277,7 +297,7 @@ EditorWindow_RegisterClass ENDP
 
 ; EditorWindow_Create - Create main editor window
 ; Returns: rax = hwnd (or 0 on error)
-EditorWindow_Create PROC FRAME
+EditorWindow_Create PROC
     push rbx
     sub rsp, 40h
     
@@ -291,17 +311,20 @@ EditorWindow_Create PROC FRAME
     mov r9d, 0x00CF0000                ; style = WS_OVERLAPPEDWINDOW (0xCF0000)
     
     ; Parameters on stack
-    mov dword [rsp], 0                  ; x = 0
-    mov dword [rsp+4], 0                ; y = 0
-    mov dword [rsp+8], 800              ; width = 800
-    mov dword [rsp+12], 600             ; height = 600
-    mov dword [rsp+16], 0               ; parent = 0
-    mov dword [rsp+20], 0               ; menu = 0
-    mov dword [rsp+24], 0               ; hInstance = 0
-    mov qword [rsp+32], 0               ; param = 0
+    mov dword ptr [rsp], 0                  ; x = 0
+    mov dword ptr [rsp+4], 0                ; y = 0
+    mov dword ptr [rsp+8], 800              ; width = 800
+    mov dword ptr [rsp+12], 600             ; height = 600
+    mov dword ptr [rsp+16], 0               ; parent = 0
+    mov dword ptr [rsp+20], 0               ; menu = 0
+    mov dword ptr [rsp+24], 0               ; hInstance = 0
+    mov qword ptr [rsp+32], 0               ; param = 0
     
     call CreateWindowExA
     mov g_hwndEditor, rax
+    
+    ; Initialize Ghost Engine for AI predictions
+    call IDE_GHOST_INIT
     
     add rsp, 40h
     pop rbx
@@ -309,7 +332,7 @@ EditorWindow_Create PROC FRAME
 EditorWindow_Create ENDP
 
 ; EditorWindow_Show - Display window and enter message loop
-EditorWindow_Show PROC FRAME
+EditorWindow_Show PROC
     push rbx
     sub rsp, 40h
     
@@ -329,7 +352,7 @@ EditorWindow_Show PROC FRAME
     call TextBuffer_Initialize
     
     ; Message loop
-.MessageLoop:
+MessageLoop:
     ; GetMessageA(&msg, hwnd, 0, 0)
     lea rcx, [rsp]              ; msg struct on stack
     mov rdx, g_hwndEditor
@@ -350,7 +373,7 @@ EditorWindow_Show PROC FRAME
     
     jmp .MessageLoop
     
-.MessageLoopEnd:
+MessageLoopEnd:
     add rsp, 40h
     pop rbx
     ret
@@ -362,102 +385,110 @@ EditorWindow_Show ENDP
 
 ; EditorWindow_WndProc - Main message dispatcher
 ; rcx = hwnd, edx = msg, r8 = wparam, r9 = lparam
-EditorWindow_WndProc PROC FRAME
+EditorWindow_WndProc PROC
     ; Route message
     cmp edx, 15                 ; WM_PAINT
-    je .OnPaint
+    je OnPaint
     cmp edx, 0x0100             ; WM_KEYDOWN
-    je .OnKeyDown
+    je OnKeyDown
     cmp edx, 0x0102             ; WM_KEYUP
-    je .OnKeyUp
+    je OnKeyUp
     cmp edx, 0x0109             ; WM_CHAR
-    je .OnChar
+    je OnChar
     cmp edx, 0x0201             ; WM_LBUTTONDOWN
-    je .OnLButtonDown
+    je OnLButtonDown
     cmp edx, 0x0202             ; WM_LBUTTONUP
-    je .OnLButtonUp
+    je OnLButtonUp
     cmp edx, 0x0113             ; WM_TIMER
-    je .OnTimer
+    je OnTimer
     cmp edx, 2                  ; WM_DESTROY
-    je .OnDestroy
+    je OnDestroy
     cmp edx, 5                  ; WM_SIZE
-    je .OnSize
+    je OnSize
     
     ; Default handling
-    jmp .DefaultProc
+    jmp DefaultProc
     
-.OnPaint:
+OnPaint:
     call EditorWindow_HandlePaint
     xor eax, eax
     ret
     
-.OnKeyDown:
+OnKeyDown:
     mov eax, r8d                ; eax = vkCode
     call EditorWindow_HandleKeyDown
     xor eax, eax
     ret
     
-.OnKeyUp:
+OnKeyUp:
     ; Track shift/ctrl/alt key state
     mov eax, r8d
     cmp eax, 0x10               ; VK_SHIFT
-    je .SetShift
+    je SetShift
     cmp eax, 0x11               ; VK_CONTROL
-    je .SetCtrl
+    je SetCtrl
     cmp eax, 0x12               ; VK_MENU (Alt)
-    je .SetAlt
+    je SetAlt
     xor eax, eax
     ret
     
-.SetShift:
-    xor g_shift_pressed, g_shift_pressed
+SetShift:
+    mov eax, g_shift_pressed
+xor eax, eax
+mov g_shift_pressed, eax
     xor eax, eax
     ret
-.SetCtrl:
-    xor g_ctrl_pressed, g_ctrl_pressed
+SetCtrl:
+    mov eax, g_ctrl_pressed
+xor eax, eax
+mov g_ctrl_pressed, eax
     xor eax, eax
     ret
-.SetAlt:
-    xor g_alt_pressed, g_alt_pressed
+SetAlt:
+    mov eax, g_alt_pressed
+xor eax, eax
+mov g_alt_pressed, eax
     xor eax, eax
     ret
     
-.OnChar:
+OnChar:
     mov eax, r8d                ; eax = char code
     call EditorWindow_HandleChar
     xor eax, eax
     ret
     
-.OnLButtonDown:
+OnLButtonDown:
     ; Mouse click - position cursor
-    mov edx, r8d (lower 16 bits = x)
-    mov r8d, r9d (lower 16 bits of lparam = y)
-    shr edx, 16
-    shr r8d, 16
+    ; edx = r8d lower 16 bits = x
+    ; r8d = r9d lower 16 bits of lparam = y
+    movzx edx, r8w
+    movzx r8d, r9w
     call EditorWindow_OnMouseClick
     xor eax, eax
     ret
     
-.OnLButtonUp:
+OnLButtonUp:
     xor eax, eax
     ret
     
-.OnTimer:
+OnTimer:
     ; Toggle cursor blink state
-    xor g_blink_state, 1
+    mov eax, g_blink_state
+    xor eax, 1
+    mov g_blink_state, eax
     mov rcx, g_hwndEditor
     mov edx, 0
     call InvalidateRect
     xor eax, eax
     ret
     
-.OnDestroy:
+OnDestroy:
     xor ecx, ecx
     call PostQuitMessage
     xor eax, eax
     ret
     
-.OnSize:
+OnSize:
     ; Update client dimensions
     mov eax, r8d
     and eax, 0xFFFF
@@ -468,7 +499,7 @@ EditorWindow_WndProc PROC FRAME
     xor eax, eax
     ret
     
-.DefaultProc:
+DefaultProc:
     call DefWindowProcA
     ret
 EditorWindow_WndProc ENDP
@@ -478,7 +509,7 @@ EditorWindow_WndProc ENDP
 ; ============================================================================
 
 ; EditorWindow_HandlePaint - Complete GDI rendering pipeline
-EditorWindow_HandlePaint PROC FRAME
+EditorWindow_HandlePaint PROC
     sub rsp, 40h
     
     mov rcx, g_hwndEditor
@@ -497,11 +528,15 @@ EditorWindow_HandlePaint PROC FRAME
     ; Draw text content
     call EditorWindow_DrawText
     
+    ; Draw ghost text (AI predictions)
+    mov rcx, g_hwndEditor
+    call IDE_GHOST_RENDER
+    
     ; Draw cursor (if blink state = 1)
     cmp g_blink_state, 1
-    jne .SkipCursor
+    jne SkipCursor
     call EditorWindow_DrawCursor
-.SkipCursor:
+SkipCursor:
     
     ; Cleanup
     mov rcx, g_hwndEditor
@@ -513,16 +548,16 @@ EditorWindow_HandlePaint PROC FRAME
 EditorWindow_HandlePaint ENDP
 
 ; EditorWindow_DrawLineNumbers - Render line number margin
-EditorWindow_DrawLineNumbers PROC FRAME
+EditorWindow_DrawLineNumbers PROC
     ; Draw vertical line at margin edge
     ; For each line: TextOutA(hdc, x, y, line_num_str, len)
     
     mov rcx, 1                  ; Line counter starting at 1
     mov rdx, 5                  ; Y position
     
-.LineLoop:
+LineLoop:
     cmp rdx, g_client_height
-    jge .LineLoopEnd
+    jge LineLoopEnd
     
     ; Format line number as string (simplified - just "1", "2", ...)
     ; Add digit to line number display
@@ -530,14 +565,14 @@ EditorWindow_DrawLineNumbers PROC FRAME
     
     add rdx, g_char_height      ; Next line
     inc rcx
-    jmp .LineLoop
+    jmp LineLoop
     
-.LineLoopEnd:
+LineLoopEnd:
     ret
 EditorWindow_DrawLineNumbers ENDP
 
 ; EditorWindow_DrawText - Render file content
-EditorWindow_DrawText PROC FRAME
+EditorWindow_DrawText PROC
     ; For each line in buffer:
     ; TextOutA(hdc, line_num_width, y, buffer_ptr + offset, length)
     
@@ -545,27 +580,27 @@ EditorWindow_DrawText PROC FRAME
     mov rdi, 0                  ; Byte offset
     mov rdx, 0                  ; Y position
     
-.TextLoop:
+TextLoop:
     cmp rdx, g_client_height
-    jge .TextLoopEnd
+    jge TextLoopEnd
     cmp rdi, g_buffer_size
-    jge .TextLoopEnd
+    jge TextLoopEnd
     
     ; Find end of line (newline or buffer end)
     mov rcx, rdi
     mov r8, 0                   ; Line length
     
-.FindLineEnd:
+FindLineEnd:
     cmp rcx, g_buffer_size
-    jge .FoundEnd
+    jge FoundEnd
     mov al, [rsi + rcx]
     cmp al, 10                  ; Newline (LF)
-    je .FoundEnd
+    je FoundEnd
     inc r8
     inc rcx
-    jmp .FindLineEnd
+    jmp FindLineEnd
     
-.FoundEnd:
+FoundEnd:
     ; TextOutA(hdc, x=line_num_width, y=rdx, ptr, len)
     mov rcx, g_hdc
     mov edx, g_line_num_width
@@ -575,14 +610,14 @@ EditorWindow_DrawText PROC FRAME
     add rdi, r8
     add rdi, 1                  ; Skip newline
     add rdx, g_char_height
-    jmp .TextLoop
+    jmp TextLoop
     
-.TextLoopEnd:
+TextLoopEnd:
     ret
 EditorWindow_DrawText ENDP
 
 ; EditorWindow_DrawCursor - Render blinking cursor
-EditorWindow_DrawCursor PROC FRAME
+EditorWindow_DrawCursor PROC
     ; Draw vertical line at (cursor_x, cursor_y)
     ; Simple version: TextOutA with cursor character (e.g., "|")
     
@@ -590,7 +625,7 @@ EditorWindow_DrawCursor PROC FRAME
     mov edx, g_cursor_x
     mov r8d, g_cursor_y
     lea r9, [rel szCursorChar]  ; "|" character
-    mov dword [rsp], 1          ; Length = 1
+    mov dword ptr [rsp], 1          ; Length = 1
     call TextOutA
     
     ret
@@ -602,83 +637,87 @@ EditorWindow_DrawCursor ENDP
 
 ; EditorWindow_HandleKeyDown - Route keyboard input
 ; eax = virtual key code
-EdgeitorWindow_HandleKeyDown PROC FRAME
+EdgeitorWindow_HandleKeyDown PROC
     ; Route to specific handlers based on key code
     cmp eax, 0x25                ; VK_LEFT
-    je .HandleLeft
+    je HandleLeft
     cmp eax, 0x27                ; VK_RIGHT
-    je .HandleRight
+    je HandleRight
     cmp eax, 0x26                ; VK_UP
-    je .HandleUp
+    je HandleUp
     cmp eax, 0x28                ; VK_DOWN
-    je .HandleDown
+    je HandleDown
     cmp eax, 0x24                ; VK_HOME
-    je .HandleHome
+    je HandleHome
     cmp eax, 0x23                ; VK_END
-    je .HandleEnd
+    je HandleEnd
     cmp eax, 0x21                ; VK_PRIOR (PgUp)
-    je .HandlePageUp
+    je HandlePageUp
     cmp eax, 0x22                ; VK_NEXT (PgDn)
-    je .HandlePageDown
+    je HandlePageDown
     cmp eax, 0x2E                ; VK_DELETE
-    je .HandleDelete
+    je HandleDelete
     cmp eax, 0x08                ; VK_BACK
-    je .HandleBackspace
+    je HandleBackspace
     cmp eax, 0x09                ; VK_TAB
-    je .HandleTab
+    je HandleTab
     cmp eax, 0x20                ; VK_SPACE + Ctrl
     cmp g_ctrl_pressed, 1
-    je .HandleCtrlSpace
+    je HandleCtrlSpace
     
     ret
     
-.HandleLeft:
+HandleLeft:
     dec g_cursor_x
     cmp g_cursor_x, g_line_num_width
-    jge .InvalidateAfterKey
+    jge InvalidateAfterKey
     mov g_cursor_x, g_line_num_width
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleRight:
+HandleRight:
     add g_cursor_x, g_char_width
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleUp:
+HandleUp:
     sub g_cursor_y, g_char_height
     cmp g_cursor_y, 0
-    jge .InvalidateAfterKey
-    xor g_cursor_y, g_cursor_y
-    jmp .InvalidateAfterKey
+    jge InvalidateAfterKey
+    mov eax, g_cursor_y
+xor eax, eax
+mov g_cursor_y, eax
+    jmp InvalidateAfterKey
     
-.HandleDown:
+HandleDown:
     add g_cursor_y, g_char_height
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleHome:
+HandleHome:
     mov g_cursor_x, g_line_num_width
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleEnd:
+HandleEnd:
     mov eax, g_client_width
     mov g_cursor_x, eax
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandlePageUp:
+HandlePageUp:
     mov edx, g_char_height
     imul edx, 10
     sub g_cursor_y, edx
     cmp g_cursor_y, 0
-    jge .InvalidateAfterKey
-    xor g_cursor_y, g_cursor_y
-    jmp .InvalidateAfterKey
+    jge InvalidateAfterKey
+    mov eax, g_cursor_y
+xor eax, eax
+mov g_cursor_y, eax
+    jmp InvalidateAfterKey
     
-.HandlePageDown:
+HandlePageDown:
     mov edx, g_char_height
     imul edx, 10
     add g_cursor_y, edx
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleDelete:
+HandleDelete:
     ; Find cursor position in buffer and delete
     mov rcx, g_cursor_x
     sub rcx, g_line_num_width
@@ -689,21 +728,21 @@ EdgeitorWindow_HandleKeyDown PROC FRAME
     add rcx, rax                ; rcx = buffer position
     call TextBuffer_DeleteChar
     mov g_modified, 1
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleBackspace:
+HandleBackspace:
     ; Delete before cursor
     mov rcx, g_cursor_x
     sub rcx, g_line_num_width
     cmp rcx, 0
-    jle .InvalidateAfterKey
+    jle InvalidateAfterKey
     dec rcx
     call TextBuffer_DeleteChar
     sub g_cursor_x, g_char_width
     mov g_modified, 1
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleTab:
+HandleTab:
     ; Insert 4 spaces
     mov rcx, ' '                ; Space character
     mov rdx, 0                  ; Position
@@ -716,14 +755,14 @@ EdgeitorWindow_HandleKeyDown PROC FRAME
     call TextBuffer_InsertChar
     add g_cursor_x, 32          ; 4 * char_width (assuming 8)
     mov g_modified, 1
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.HandleCtrlSpace:
+HandleCtrlSpace:
     ; Trigger ML completion
     call EditorWindow_OnCtrlSpace
-    jmp .InvalidateAfterKey
+    jmp InvalidateAfterKey
     
-.InvalidateAfterKey:
+InvalidateAfterKey:
     mov rcx, g_hwndEditor
     xor edx, edx                ; rect = 0 (entire window)
     call InvalidateRect
@@ -731,12 +770,12 @@ EdgeitorWindow_HandleKeyDown PROC FRAME
 EditorWindow_HandleKeyDown ENDP
 
 ; EditorWindow_HandleChar - Character input handler
-EditorWindow_HandleChar PROC FRAME
+EditorWindow_HandleChar PROC
     ; eax = character code
     
     ; Check for special characters
     cmp eax, 0x0D               ; Enter
-    je .HandleEnter
+    je HandleEnter
     cmp eax, 0x09               ; Tab (already handled in KeyDown)
     je .SkipChar
     
@@ -754,7 +793,7 @@ EditorWindow_HandleChar PROC FRAME
     
     ret
     
-.HandleEnter:
+HandleEnter:
     mov rcx, 0x0A               ; LF
     call TextBuffer_InsertChar
     mov g_cursor_x, g_line_num_width
@@ -766,7 +805,7 @@ EditorWindow_HandleChar PROC FRAME
     call InvalidateRect
     ret
     
-.SkipChar:
+SkipChar:
     ret
 EditorWindow_HandleChar ENDP
 
@@ -776,7 +815,7 @@ EditorWindow_HandleChar ENDP
 
 ; EditorWindow_OnMouseClick - Position cursor from mouse
 ; edx = x, r8d = y
-EditorWindow_OnMouseClick PROC FRAME
+EditorWindow_OnMouseClick PROC
     mov g_cursor_x, edx
     mov g_cursor_y, r8d
     
@@ -792,15 +831,18 @@ EditorWindow_OnMouseClick ENDP
 
 ; FileDialog_Open - Open file dialog
 ; Returns: rax = filename (or 0 if cancelled)
-FileDialog_Open PROC FRAME uses rbx rsi rdi
+FileDialog_Open PROC
+    push rbx
+    push rsi
+    push rdi
     sub rsp, 256 + 32           ; Buffer for filename + OPENFILENAMEA struct
     
     ; Setup OPENFILENAMEA
-    mov qword [rsp], sizeof(OPENFILENAMEA)      ; lStructSize
-    mov qword [rsp+8], g_hwndEditor             ; hwndOwner
+    mov qword ptr [rsp], sizeof(OPENFILENAMEA)      ; lStructSize
+    mov qword ptr [rsp+8], g_hwndEditor             ; hwndOwner
     lea rax, [rsp + 256]                        ; lpstrFile buffer
-    mov qword [rsp+32], rax
-    mov dword [rsp+40], 256                     ; nMaxFile
+    mov qword ptr [rsp+32], rax
+    mov dword ptr [rsp+40], 256                     ; nMaxFile
     
     ; Call GetOpenFileNameA
     lea rcx, [rsp + 288]                        ; OPENFILENAMEA ptr
@@ -810,19 +852,25 @@ FileDialog_Open PROC FRAME uses rbx rsi rdi
     mov rsi, rsp                                ; filename buffer
     add rsp, 256 + 32
     mov rax, rsi
+    pop rdi
+    pop rsi
+    pop rbx
     ret
 FileDialog_Open ENDP
 
 ; FileDialog_Save - Save file dialog
 ; Returns: rax = filename (or 0 if cancelled)
-FileDialog_Save PROC FRAME uses rbx rsi rdi
+FileDialog_Save PROC
+    push rbx
+    push rsi
+    push rdi
     sub rsp, 256 + 32
     
-    mov qword [rsp], sizeof(OPENFILENAMEA)
-    mov qword [rsp+8], g_hwndEditor
+    mov qword ptr [rsp], sizeof(OPENFILENAMEA)
+    mov qword ptr [rsp+8], g_hwndEditor
     lea rax, [rsp + 256]
-    mov qword [rsp+32], rax
-    mov dword [rsp+40], 256
+    mov qword ptr [rsp+32], rax
+    mov dword ptr [rsp+40], 256
     
     lea rcx, [rsp + 288]
     call GetSaveFileNameA
@@ -830,13 +878,16 @@ FileDialog_Save PROC FRAME uses rbx rsi rdi
     mov rsi, rsp
     add rsp, 256 + 32
     mov rax, rsi
+    pop rdi
+    pop rsi
+    pop rbx
     ret
 FileDialog_Save ENDP
 
 ; FileIO_OpenRead - Open file for reading
 ; rcx = filename
 ; Returns: rax = file handle (or INVALID_HANDLE_VALUE)
-FileIO_OpenRead PROC FRAME
+FileIO_OpenRead PROC
     sub rsp, 28h
     
     ; CreateFileA(filename, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)
@@ -844,9 +895,9 @@ FileIO_OpenRead PROC FRAME
     xor r8, r8
     xor r9, r9
     
-    mov dword [rsp], 0x00000003 ; dwCreationDisposition = OPEN_EXISTING
-    mov dword [rsp+4], 0x00000080 ; dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
-    mov qword [rsp+16], 0       ; hTemplateFile = 0
+    mov dword ptr [rsp], 0x00000003 ; dwCreationDisposition = OPEN_EXISTING
+    mov dword ptr [rsp+4], 0x00000080 ; dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+    mov qword ptr [rsp+16], 0       ; hTemplateFile = 0
     
     call CreateFileA
     
@@ -857,16 +908,16 @@ FileIO_OpenRead ENDP
 ; FileIO_OpenWrite - Open file for writing
 ; rcx = filename
 ; Returns: rax = file handle
-FileIO_OpenWrite PROC FRAME
+FileIO_OpenWrite PROC
     sub rsp, 28h
     
     mov rdx, 0x40000000         ; GENERIC_WRITE
     xor r8, r8
     xor r9, r9
     
-    mov dword [rsp], 0x00000002 ; CREATE_ALWAYS
-    mov dword [rsp+4], 0x00000080 ; FILE_ATTRIBUTE_NORMAL
-    mov qword [rsp+16], 0
+    mov dword ptr [rsp], 0x00000002 ; CREATE_ALWAYS
+    mov dword ptr [rsp+4], 0x00000080 ; FILE_ATTRIBUTE_NORMAL
+    mov qword ptr [rsp+16], 0
     
     call CreateFileA
     
@@ -877,10 +928,11 @@ FileIO_OpenWrite ENDP
 ; FileIO_Read - Read from file handle
 ; rcx = file handle
 ; Returns: rax = bytes read
-FileIO_Read PROC FRAME uses rbx rsi
+FileIO_Read PROC
+    push rbx
+    push rsi
     sub rsp, 28h
     
-    mov g_buffer_ptr, g_buffer_ptr  ; Use global buffer
     mov rdx, g_buffer_ptr           ; lpBuffer
     mov r8d, g_buffer_capacity      ; nNumberOfBytesToRead
     lea r9, [rsp]                   ; lpNumberOfBytesRead
@@ -891,13 +943,17 @@ FileIO_Read PROC FRAME uses rbx rsi
     mov g_buffer_size, eax
     
     add rsp, 28h
+    pop rsi
+    pop rbx
     ret
 FileIO_Read ENDP
 
 ; FileIO_Write - Write to file handle
 ; rcx = file handle
 ; Returns: rax = bytes written
-FileIO_Write PROC FRAME uses rbx rsi
+FileIO_Write PROC
+    push rbx
+    push rsi
     sub rsp, 28h
     
     mov rdx, g_buffer_ptr
@@ -909,6 +965,8 @@ FileIO_Write PROC FRAME uses rbx rsi
     mov eax, [rsp]
     
     add rsp, 28h
+    pop rsi
+    pop rbx
     ret
 FileIO_Write ENDP
 
@@ -917,19 +975,19 @@ FileIO_Write ENDP
 ; ============================================================================
 
 ; EditorWindow_CreateToolbar - Create toolbar
-EditorWindow_CreateToolbar PROC FRAME
+EditorWindow_CreateToolbar PROC
     ; TODO: CreateWindowExA(WS_EX_TOOLWINDOW, "ToolbarWindow32", ...)
     ret
 EditorWindow_CreateToolbar ENDP
 
 ; EditorWindow_CreateStatusBar - Create status bar
-EditorWindow_CreateStatusBar PROC FRAME
+EditorWindow_CreateStatusBar PROC
     ; TODO: CreateWindowExA(WS_CHILD, "msctls_statusbar32", ...)
     ret
 EditorWindow_CreateStatusBar ENDP
 
 ; EditorWindow_OnCtrlSpace - Ctrl+Space for ML completion
-EditorWindow_OnCtrlSpace PROC FRAME
+EditorWindow_OnCtrlSpace PROC
     ; TODO: Call MLInference module
     ret
 EditorWindow_OnCtrlSpace ENDP

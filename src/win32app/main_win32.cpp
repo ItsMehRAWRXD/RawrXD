@@ -1801,31 +1801,42 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // ========================================================================
     // CRASH CONTAINMENT — Cathedral Boundary Guard
     // MiniDump + SelfPatch rollback + register capture + patch quarantine
+    // STUBBED: Set RAWRXD_NO_CRASH_DUMP=1 to bypass and reveal real crashes
     // ========================================================================
     {
-        CreateDirectoryA("crash_dumps", nullptr);
-
-        // Initialize the patch rollback ledger (WAL-journaled)
-        auto& ledger = RawrXD::Patch::PatchRollbackLedger::Global();
-        ledger.initialize("crash_dumps\\patch_journal.wal");
-
-        RawrXD::Crash::CrashConfig crashCfg;
-        memset(&crashCfg, 0, sizeof(crashCfg));
-        crashCfg.dumpType = RawrXD::Crash::DumpType::Normal;
-        crashCfg.dumpDirectory = "crash_dumps";
-        crashCfg.enableMiniDump = true;
-        crashCfg.enablePatchRollback = true;
-        crashCfg.enablePatchQuarantine = true;
-        crashCfg.showMessageBox = true;
-        crashCfg.terminateAfterDump = true;
-        crashCfg.onCrashCallback = [](const RawrXD::Crash::CrashReport* r, void*)
+        char noDumpBuf[8] = {};
+        bool noCrashDump = (GetEnvironmentVariableA("RAWRXD_NO_CRASH_DUMP", noDumpBuf, (DWORD)sizeof(noDumpBuf)) != 0 &&
+                            (noDumpBuf[0] == '1' || noDumpBuf[0] == 'y' || noDumpBuf[0] == 'Y'));
+        if (noCrashDump)
         {
-            if (r && r->logPath[0])
-                spawnRecoveryLauncher(r->logPath, r->dumpPath);
-        };
-        crashCfg.callbackUserData = nullptr;
-        RawrXD::Crash::Install(crashCfg);
-        OutputDebugStringA("[main_win32] Cathedral crash containment boundary installed\n");
+            OutputDebugStringA("[main_win32] Crash dump handler DISABLED (RAWRXD_NO_CRASH_DUMP=1)\n");
+        }
+        else
+        {
+            CreateDirectoryA("crash_dumps", nullptr);
+
+            // Initialize the patch rollback ledger (WAL-journaled)
+            auto& ledger = RawrXD::Patch::PatchRollbackLedger::Global();
+            ledger.initialize("crash_dumps\\patch_journal.wal");
+
+            RawrXD::Crash::CrashConfig crashCfg;
+            memset(&crashCfg, 0, sizeof(crashCfg));
+            crashCfg.dumpType = RawrXD::Crash::DumpType::Normal;
+            crashCfg.dumpDirectory = "crash_dumps";
+            crashCfg.enableMiniDump = true;
+            crashCfg.enablePatchRollback = true;
+            crashCfg.enablePatchQuarantine = true;
+            crashCfg.showMessageBox = true;
+            crashCfg.terminateAfterDump = true;
+            crashCfg.onCrashCallback = [](const RawrXD::Crash::CrashReport* r, void*)
+            {
+                if (r && r->logPath[0])
+                    spawnRecoveryLauncher(r->logPath, r->dumpPath);
+            };
+            crashCfg.callbackUserData = nullptr;
+            RawrXD::Crash::Install(crashCfg);
+            OutputDebugStringA("[main_win32] Cathedral crash containment boundary installed\n");
+        }
     }
     startupTrace("crash_containment_installed");
     emitStartupHeapSnapshot("crash_containment_installed");

@@ -1,0 +1,18 @@
+{
+  "tool": "clang-compiler",
+  "identity": "org.llvm.clang",
+  "executable": "clang.exe",
+  "runtime_limits": {
+    "network_access": false,
+    "max_memory_mb": 512,
+    "max_cpu_percent": 80,
+    "max_execution_seconds": 300,
+    "allow_child_processes": false
+  },
+  "capability_allowlist": {
+    "fs": ["read:./src/**", "write:./build/**", "read:./include/**"],
+    "ipc": ["propose_patch", "request_symbol_map"],
+    "env": ["INCLUDE", "LIB", "LIBPATH"]
+  },
+  "manifest_version": "1.0.0"
+}

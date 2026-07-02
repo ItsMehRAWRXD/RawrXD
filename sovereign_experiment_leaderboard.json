@@ -1,0 +1,55 @@
+{
+  "GeneratedUtc": "2026-06-02T07:50:19.4372893Z",
+  "MatrixPath": "d:\\rawrxd-ci-bootstrap\\sovereign_experiment_matrix.sample.json",
+  "DryRun": true,
+  "Results": [
+    {
+      "Experiment": "baseline_seed42",
+      "RequestCount": 200,
+      "CancelPercent": 15,
+      "Seed": 42,
+      "GatePassed": false,
+      "GateAvgMs": 0,
+      "GateP95Ms": 0,
+      "DominantBin": "",
+      "DominantBinStdDevMs": 0,
+      "DominantBinAvgLatencyMs": 0,
+      "BackpressureEvents": 0,
+      "MaxFillOverall": 0,
+      "RunDir": "",
+      "Status": "DRY_RUN"
+    },
+    {
+      "Experiment": "same_load_seed99",
+      "RequestCount": 200,
+      "CancelPercent": 15,
+      "Seed": 99,
+      "GatePassed": false,
+      "GateAvgMs": 0,
+      "GateP95Ms": 0,
+      "DominantBin": "",
+      "DominantBinStdDevMs": 0,
+      "DominantBinAvgLatencyMs": 0,
+      "BackpressureEvents": 0,
+      "MaxFillOverall": 0,
+      "RunDir": "",
+      "Status": "DRY_RUN"
+    },
+    {
+      "Experiment": "higher_cancel_mix",
+      "RequestCount": 200,
+      "CancelPercent": 30,
+      "Seed": 42,
+      "GatePassed": false,
+      "GateAvgMs": 0,
+      "GateP95Ms": 0,
+      "DominantBin": "",
+      "DominantBinStdDevMs": 0,
+      "DominantBinAvgLatencyMs": 0,
+      "BackpressureEvents": 0,
+      "MaxFillOverall": 0,
+      "RunDir": "",
+      "Status": "DRY_RUN"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+============================================================
+SOVEREIGN PROOF: PEWriter Adversarial Regression Suite
+============================================================
+
+[Phase 1] Engine readiness check...
+  ✅ PASS: GET /status returns 200
+  ✅ PASS: Engine state is READY (2), got 2
+  ✅ PASS: Engine state is READY (2), got 2
+
+[Phase 2] Adversarial emission attempt (no HITL approval)...
+  ✅ PASS: PEWriter blocked with 423 when engine paused (got 423)
+  ✅ PASS: Error payload is ENGINE_PAUSED_FOR_HITL (got ENGINE_PAUSED_FOR_HITL)
+
+[Phase 3] Legitimate emission with approval...
+  ✅ PASS: PEWriter returns 200 when engine ready (got 200)
+  ✅ PASS: bytesWritten > 0
+  ✅ PASS: peHash is present in response
+  ✅ PASS: codeHash is present in response
+  ✅ PASS: Emitted PE file exists at test_adversarial_pe.exe
+
+[Phase 4] Forensic hash verification...
+  ✅ PASS: Disk hash matches peHash from audit trail
+  ✅ PASS: verify_pe_hash returns 200 (got 200)
+  ✅ PASS: verify_pe_hash reports verified=True
+
+[Phase 5] Denial simulation — file must NOT be recreated...
+  ✅ PASS: PE file deleted before denial test
+  ✅ PASS: Denied emission returns 423 (got 423)
+  ✅ PASS: PE file was NOT created after denied proposal
+
+[Phase 6] Cleanup...
+  Engine resumed. Test artifacts removed.
+
+============================================================
+RESULTS: 16 passed, 0 failed
+============================================================
+
+🏛️ SOVEREIGN PROOF VERIFIED
+   The agent cannot bypass the HITL gate.
+   Every binary is forensically traceable.

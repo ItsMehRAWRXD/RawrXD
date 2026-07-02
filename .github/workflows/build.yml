@@ -22,9 +22,8 @@ on:
           - linux
           - all
 
-env:
-  QT_VERSION: 6.7.3
-  QT_ARCH: msvc2022_64
+# NOTE: Qt removed — Sovereign IDE is Qt-free (Direct2D + React frontend)
+# See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
 
 jobs:
   # ============================================================
@@ -52,31 +51,9 @@ jobs:
         run: |
           choco install nasm -y
           $env:PATH += ";C:\Program Files\NASM"
-      
-      - name: Cache Qt
-        id: cache-qt
-        uses: actions/cache@v4
-        with:
-          path: C:\Qt
-          key: ${{ runner.os }}-qt-${{ env.QT_VERSION }}-${{ env.QT_ARCH }}
-      
-      - name: Install Qt
-        if: steps.cache-qt.outputs.cache-hit != 'true'
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: ${{ env.QT_VERSION }}
-          arch: win64_${{ env.QT_ARCH }}
-          cache: true
-          modules: 'qtcharts'
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # All UI is rendered via Direct2D (Win32) or React (frontend).
 
       - name: Configure CMake
         shell: pwsh
@@ -84,13 +61,12 @@ jobs:
           $BuildDir = "build_${{ matrix.config }}_${{ matrix.arch }}"
           mkdir $BuildDir -Force
           cd $BuildDir
-          
+
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.config }} `
                 -G "Visual Studio 17 2022" `
                 -A ${{ matrix.arch }} `
-                -DQt6_DIR="C:/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }}/lib/cmake/Qt6" `
                 ..
-          
+
           if ($LASTEXITCODE -ne 0) {
             Write-Error "CMake configuration failed"
             exit 1
@@ -132,17 +108,8 @@ jobs:
             Write-Error "Executable not found at $ExePath"
             exit 1
           }
-      
-      - name: Deploy Qt Dependencies
-        if: matrix.config == 'Release'
-        shell: pwsh
-        run: |
-          $BuildDir = "build_${{ matrix.config }}_${{ matrix.arch }}"
-          cd $BuildDir/bin/${{ matrix.config }}
-          & "C:/Qt/${{ env.QT_VERSION }}/${{ env.QT_ARCH }}/bin/windeployqt.exe" `
-            --release `
-            --no-translations `
-            RawrXD-AgenticIDE.exe
+
+      # NOTE: windeployqt removed — Qt-free build has no Qt DLLs to deploy.
 
       - name: Upload Build Artifact
         if: matrix.config == 'Release'
@@ -174,14 +141,7 @@ jobs:
           choco install nasm -y
           $env:PATH += ";C:\Program Files\NASM"
 
-      - name: Install Qt
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
 
       - name: Configure with Clang
         shell: pwsh
@@ -217,13 +177,13 @@ jobs:
             build-essential \
             cmake \
             nasm \
-            qt6-base-dev \
-            qt6-tools-dev \
             libvulkan-dev \
             vulkan-tools \
             libxcb-render0-dev \
             libxcb-shape0-dev \
             libxcb-xfixes0-dev
+
+      # NOTE: qt6-base-dev and qt6-tools-dev removed — Qt-free build.
 
       - name: Configure CMake
         shell: bash
@@ -274,11 +234,9 @@ jobs:
       - name: Install Qt for ARM64
         shell: pwsh
         run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_arm64
-          $QtBase = Join-Path $PWD "Qt\6.7.3\msvc2019_arm64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+          # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+          # If ARM64 Qt is needed for other targets, re-enable selectively.
+          Write-Host "Qt-free build: skipping ARM64 Qt install."
 
       - name: Configure for ARM64
         shell: pwsh

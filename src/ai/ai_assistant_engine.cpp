@@ -223,6 +223,99 @@ std::string WinHttpRequest(const std::string& url,
     WinHttpCloseHandle(session);
     return body;
 }
+
+// Streaming HTTP request — reads chunked responses and calls callback for each chunk
+void WinHttpRequestStreaming(const std::string& url,
+                             const std::wstring& method,
+                             const std::string& payload,
+                             const std::vector<std::wstring>& headers,
+                             std::function<void(const std::string&)> chunk_callback) {
+    URL_COMPONENTSW parts;
+    ZeroMemory(&parts, sizeof(parts));
+    parts.dwStructSize = sizeof(parts);
+    parts.dwSchemeLength = static_cast<DWORD>(-1);
+    parts.dwHostNameLength = static_cast<DWORD>(-1);
+    parts.dwUrlPathLength = static_cast<DWORD>(-1);
+    parts.dwExtraInfoLength = static_cast<DWORD>(-1);
+
+    std::wstring url_w = ToWide(url);
+    if (url_w.empty()) return;
+    if (!WinHttpCrackUrl(url_w.c_str(), 0, 0, &parts)) {
+        return;
+    }
+
+    std::wstring host(parts.lpszHostName, parts.dwHostNameLength);
+    std::wstring path(parts.lpszUrlPath, parts.dwUrlPathLength);
+    if (parts.dwExtraInfoLength > 0) {
+        path.append(parts.lpszExtraInfo, parts.dwExtraInfoLength);
+    }
+
+    HINTERNET session = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                    WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!session) return;
+
+    HINTERNET connect = WinHttpConnect(session, host.c_str(), parts.nPort, 0);
+    if (!connect) {
+        WinHttpCloseHandle(session);
+        return;
+    }
+
+    DWORD flags = (parts.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
+    HINTERNET request = WinHttpOpenRequest(connect, method.c_str(), path.c_str(), nullptr,
+                                           WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+    if (!request) {
+        WinHttpCloseHandle(connect);
+        WinHttpCloseHandle(session);
+        return;
+    }
+
+    for (const auto& header : headers) {
+        WinHttpAddRequestHeaders(request, header.c_str(), -1L, WINHTTP_ADDREQ_FLAG_ADD);
+    }
+
+    BOOL ok = WinHttpSendRequest(request,
+                                 WINHTTP_NO_ADDITIONAL_HEADERS,
+                                 0,
+                                 payload.empty() ? WINHTTP_NO_REQUEST_DATA : (LPVOID)payload.data(),
+                                 static_cast<DWORD>(payload.size()),
+                                 static_cast<DWORD>(payload.size()),
+                                 0);
+    if (!ok || !WinHttpReceiveResponse(request, nullptr)) {
+        WinHttpCloseHandle(request);
+        WinHttpCloseHandle(connect);
+        WinHttpCloseHandle(session);
+        return;
+    }
+
+    // Read response in chunks and emit to callback
+    std::string buffer;
+    DWORD size = 0;
+    while (WinHttpQueryDataAvailable(request, &size) && size > 0) {
+        std::vector<char> buf(size + 1, 0);
+        DWORD read = 0;
+        if (!WinHttpReadData(request, buf.data(), size, &read) || read == 0) break;
+        buffer.append(buf.data(), read);
+
+        // Emit complete lines to callback
+        size_t pos = 0;
+        while ((pos = buffer.find('\n')) != std::string::npos) {
+            std::string line = buffer.substr(0, pos + 1);
+            buffer.erase(0, pos + 1);
+            if (chunk_callback) {
+                chunk_callback(line);
+            }
+        }
+    }
+
+    // Emit any remaining data
+    if (!buffer.empty() && chunk_callback) {
+        chunk_callback(buffer);
+    }
+
+    WinHttpCloseHandle(request);
+    WinHttpCloseHandle(connect);
+    WinHttpCloseHandle(session);
+}
 } // namespace
 
 // ============================================================================
@@ -584,6 +677,95 @@ void AIAssistantEngine::SendChatMessage(const std::string& session_id,
 
     EnqueueTask([this, session_id, message, context, callback]() {
         ProcessChatRequest(session_id, message, context, callback);
+    });
+}
+
+void AIAssistantEngine::SendChatMessageStreaming(const std::string& session_id,
+                                                  const std::string& message,
+                                                  const CodeContext& context,
+                                                  StreamingTokenCallback token_cb,
+                                                  StreamingCompleteCallback complete_cb,
+                                                  ErrorCallback error_cb) {
+    if (!m_initialized) {
+        if (error_cb) {
+            error_cb("AI engine not initialized");
+        } else if (m_error_callback) {
+            m_error_callback("AI engine not initialized");
+        }
+        return;
+    }
+
+    if (!m_backend || !m_backend->IsReady()) {
+        if (error_cb) {
+            error_cb("Model backend not ready");
+        } else if (m_error_callback) {
+            m_error_callback("Model backend not ready");
+        }
+        return;
+    }
+
+    // Build prompt synchronously (needs chat history lock)
+    std::string prompt;
+    {
+        std::lock_guard<std::mutex> lock(m_chat_mutex);
+
+        // Add user message to history
+        ChatMessage user_msg;
+        user_msg.role = ChatMessage::Role::User;
+        user_msg.content = message;
+        user_msg.timestamp = GetCurrentTimestamp();
+        m_chat_sessions[session_id].push_back(user_msg);
+
+        // Build prompt with conversation history
+        std::stringstream prompt_ss;
+        for (const auto& msg : m_chat_sessions[session_id]) {
+            if (msg.role == ChatMessage::Role::System) {
+                prompt_ss << "System: " << msg.content << "\n\n";
+            } else if (msg.role == ChatMessage::Role::User) {
+                prompt_ss << "User: " << msg.content << "\n\n";
+            } else {
+                prompt_ss << "Assistant: " << msg.content << "\n\n";
+            }
+        }
+
+        if (!context.selected_text.empty()) {
+            prompt_ss << "\nSelected Code:\n```" << context.language << "\n"
+                      << context.selected_text << "\n```\n\n";
+        }
+
+        prompt_ss << "Assistant: ";
+        prompt = prompt_ss.str();
+    }
+
+    // Accumulate response for history
+    auto accumulated = std::make_shared<std::string>();
+
+    // Launch streaming generation on worker thread
+    EnqueueTask([this, session_id, prompt, token_cb, complete_cb, accumulated]() {
+        m_backend->GenerateStreaming(
+            prompt,
+            m_current_config.max_tokens > 0 ? m_current_config.max_tokens : 1024,
+            [this, session_id, token_cb, accumulated](const std::string& token) {
+                *accumulated += token;
+                if (token_cb) {
+                    token_cb(token);
+                }
+            },
+            [this, session_id, complete_cb, accumulated]() {
+                // Save completed response to chat history
+                {
+                    std::lock_guard<std::mutex> lock(m_chat_mutex);
+                    ChatMessage assistant_msg;
+                    assistant_msg.role = ChatMessage::Role::Assistant;
+                    assistant_msg.content = *accumulated;
+                    assistant_msg.timestamp = GetCurrentTimestamp();
+                    m_chat_sessions[session_id].push_back(assistant_msg);
+                }
+                if (complete_cb) {
+                    complete_cb();
+                }
+            }
+        );
     });
 }
 
@@ -1280,6 +1462,23 @@ std::string GGUFBackend::Generate(const std::string& prompt, int max_tokens) {
     return response;
 }
 
+void GGUFBackend::GenerateStreaming(const std::string& prompt, int max_tokens,
+                                    StreamingTokenCallback token_cb,
+                                    StreamingCompleteCallback complete_cb) {
+    if (!m_ready || !m_engine || !token_cb) {
+        return;
+    }
+
+    std::vector<int32_t> tokens = m_engine->Tokenize(prompt);
+    m_engine->GenerateStreaming(
+        tokens,
+        max_tokens,
+        token_cb,
+        complete_cb ? complete_cb : []() {},
+        nullptr
+    );
+}
+
 void GGUFBackend::Shutdown() {
     m_engine.reset();
     m_ready = false;
@@ -1356,6 +1555,65 @@ std::string OllamaBackend::Generate(const std::string& prompt, int max_tokens) {
     return "";
 }
 
+void OllamaBackend::GenerateStreaming(const std::string& prompt, int max_tokens,
+                                        StreamingTokenCallback token_cb,
+                                        StreamingCompleteCallback complete_cb) {
+    if (!m_ready || !token_cb) {
+        return;
+    }
+
+    // Build JSON payload with stream=true
+    std::stringstream json;
+    json << "{"
+         << "\"model\":\"" << m_model_name << "\","
+         << "\"prompt\":\"" << EscapeJSON(prompt) << "\","
+         << "\"stream\":true,"
+         << "\"options\":{\"num_predict\":" << max_tokens << "}"
+         << "}";
+
+    // Use streaming HTTP request
+    WinHttpRequestStreaming(
+        m_endpoint,
+        L"POST",
+        json.str(),
+        {L"Content-Type: application/json"},
+        [token_cb](const std::string& line) {
+            // Parse NDJSON line: {"response":"token","done":false}
+            size_t response_pos = line.find("\"response\":\"");
+            if (response_pos != std::string::npos) {
+                size_t start = response_pos + 12;
+                size_t end = line.find("\"", start);
+                if (end != std::string::npos) {
+                    std::string token = line.substr(start, end - start);
+                    // Unescape JSON string
+                    std::string unescaped;
+                    for (size_t i = 0; i < token.size(); ++i) {
+                        if (token[i] == '\\' && i + 1 < token.size()) {
+                            switch (token[i + 1]) {
+                                case 'n': unescaped += '\n'; ++i; break;
+                                case 'r': unescaped += '\r'; ++i; break;
+                                case 't': unescaped += '\t'; ++i; break;
+                                case '\\': unescaped += '\\'; ++i; break;
+                                case '"': unescaped += '"'; ++i; break;
+                                default: unescaped += token[i]; break;
+                            }
+                        } else {
+                            unescaped += token[i];
+                        }
+                    }
+                    if (!unescaped.empty()) {
+                        token_cb(unescaped);
+                    }
+                }
+            }
+        }
+    );
+
+    if (complete_cb) {
+        complete_cb();
+    }
+}
+
 std::string OllamaBackend::SendHTTPRequest(const std::string& json_payload) {
     return WinHttpRequest(m_endpoint, L"POST", json_payload, {L"Content-Type: application/json"});
 }
@@ -1401,6 +1659,78 @@ std::string OpenAIBackend::Generate(const std::string& prompt, int max_tokens) {
     }
 
     return "";
+}
+
+void OpenAIBackend::GenerateStreaming(const std::string& prompt, int max_tokens,
+                                      StreamingTokenCallback token_cb,
+                                      StreamingCompleteCallback complete_cb) {
+    if (!m_ready || !token_cb) {
+        return;
+    }
+
+    // Build JSON payload with stream=true
+    std::stringstream json;
+    json << "{"
+         << "\"model\":\"" << m_model_name << "\","
+         << "\"messages\":[{\"role\":\"user\",\"content\":\"" << EscapeJSON(prompt) << "\"}],"
+         << "\"max_tokens\":" << max_tokens << ","
+         << "\"stream\":true"
+         << "}";
+
+    std::wstring auth = L"Authorization: Bearer " + ToWide(m_api_key);
+
+    // Use streaming HTTP request
+    WinHttpRequestStreaming(
+        m_endpoint,
+        L"POST",
+        json.str(),
+        {L"Content-Type: application/json", auth},
+        [token_cb](const std::string& line) {
+            // Parse SSE line: data: {"choices":[{"delta":{"content":"token"}}]}
+            if (line.substr(0, 6) != "data: ") return;
+
+            std::string data = line.substr(6);
+            // Remove trailing \r\n
+            while (!data.empty() && (data.back() == '\n' || data.back() == '\r')) {
+                data.pop_back();
+            }
+
+            if (data == "[DONE]") return;
+
+            // Extract content from JSON
+            size_t content_pos = data.find("\"content\":\"");
+            if (content_pos != std::string::npos) {
+                size_t start = content_pos + 11;
+                size_t end = data.find("\"", start);
+                if (end != std::string::npos) {
+                    std::string token = data.substr(start, end - start);
+                    // Unescape JSON string
+                    std::string unescaped;
+                    for (size_t i = 0; i < token.size(); ++i) {
+                        if (token[i] == '\\' && i + 1 < token.size()) {
+                            switch (token[i + 1]) {
+                                case 'n': unescaped += '\n'; ++i; break;
+                                case 'r': unescaped += '\r'; ++i; break;
+                                case 't': unescaped += '\t'; ++i; break;
+                                case '\\': unescaped += '\\'; ++i; break;
+                                case '"': unescaped += '"'; ++i; break;
+                                default: unescaped += token[i]; break;
+                            }
+                        } else {
+                            unescaped += token[i];
+                        }
+                    }
+                    if (!unescaped.empty()) {
+                        token_cb(unescaped);
+                    }
+                }
+            }
+        }
+    );
+
+    if (complete_cb) {
+        complete_cb();
+    }
 }
 
 std::string OpenAIBackend::SendHTTPRequest(const std::string& json_payload) {

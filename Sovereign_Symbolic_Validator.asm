@@ -204,7 +204,8 @@ BUILD_SYMBOL_HASH_TABLE PROC FRAME
     mov rbx, rcx
 
     ; Clear table
-    lea rdi, g_HashTable
+    lea rax, g_HashTable
+    mov rdi, rax
     mov ecx, HASH_TABLE_SIZE*HASH_SLOT_SIZE/8
     xor eax, eax
     rep stosq
@@ -275,8 +276,9 @@ insert_probe:
     cmp esi, HASH_TABLE_SIZE
     jae build_next
 
-    imul rcx, rdx, HASH_SLOT_SIZE
-    lea rcx, [g_HashTable+rcx]
+    imul rax, rdx, HASH_SLOT_SIZE
+    lea rcx, g_HashTable
+    add rcx, rax
     mov rax, QWORD PTR [rcx+HASH_SLOT_HASH]
     test rax, rax
     jz insert_here
@@ -342,8 +344,9 @@ lookup_probe:
     cmp ebx, HASH_TABLE_SIZE
     jae lookup_not_found
 
-    imul rcx, r9, HASH_SLOT_SIZE
-    lea rcx, [g_HashTable+rcx]
+    imul rax, r9, HASH_SLOT_SIZE
+    lea rcx, g_HashTable
+    add rcx, rax
 
     mov rax, QWORD PTR [rcx+HASH_SLOT_HASH]
     test rax, rax

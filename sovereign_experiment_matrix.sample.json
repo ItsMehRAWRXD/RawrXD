@@ -1,0 +1,31 @@
+{
+  "global_overrides": {
+    "request_count": 200,
+    "cancel_percent": 15,
+    "seed": 42,
+    "cooldown_sec": 5,
+    "saturation_threshold": 48,
+    "include_slot_metadata": true,
+    "sidecar_interval_ms": 25
+  },
+  "matrix": [
+    {
+      "name": "baseline_seed42",
+      "request_count": 200,
+      "cancel_percent": 15,
+      "seed": 42
+    },
+    {
+      "name": "same_load_seed99",
+      "request_count": 200,
+      "cancel_percent": 15,
+      "seed": 99
+    },
+    {
+      "name": "higher_cancel_mix",
+      "request_count": 200,
+      "cancel_percent": 30,
+      "seed": 42
+    }
+  ]
+}

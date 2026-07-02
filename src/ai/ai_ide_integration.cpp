@@ -280,11 +280,30 @@ void AIIDEIntegration::SendChatMessage(const std::wstring& message) {
     // Get code context
     CodeContext context = GetCurrentCodeContext();
 
-    // Send to AI engine
-    m_ai_engine->SendChatMessage(m_current_chat_session, utf8_message, context,
-        [this](const ChatMessage& response) {
-            OnChatResponse(response);
-        });
+    // Create streaming assistant message placeholder
+    ChatMessage assistant_msg;
+    assistant_msg.role = ChatMessage::Role::Assistant;
+    assistant_msg.content = "";  // Will be filled as tokens arrive
+    AppendToChatHistory(assistant_msg);
+    
+    // Store reference to last message for streaming updates
+    m_streaming_message_index = static_cast<int>(m_ai_engine->GetChatHistory(m_current_chat_session).size()) - 1;
+
+    // Send to AI engine with streaming (Final Mile)
+    m_ai_engine->SendChatMessageStreaming(m_current_chat_session, utf8_message, context,
+        // Token callback - called for each token
+        [this](const std::string& token) {
+            OnStreamingToken(token);
+        },
+        // Complete callback
+        [this]() {
+            OnStreamingComplete();
+        },
+        // Error callback
+        [this](const std::string& error) {
+            OnStreamingError(error);
+        }
+    );
 
     // Clear input
     SetWindowTextW(m_chat_input, L"");
@@ -292,6 +311,80 @@ void AIIDEIntegration::SendChatMessage(const std::wstring& message) {
 
 void AIIDEIntegration::OnChatResponse(const ChatMessage& message) {
     AppendToChatHistory(message);
+}
+
+// ============================================================================
+// Streaming Chat Callbacks (Final Mile) — Thread-Safe
+// ============================================================================
+
+// Custom window message for streaming token marshaling
+static constexpr UINT WM_STREAMING_TOKEN = WM_USER + 1001;
+static constexpr UINT WM_STREAMING_COMPLETE = WM_USER + 1002;
+
+void AIIDEIntegration::OnStreamingToken(const std::string& token) {
+    // This runs on the inference worker thread — MUST marshal to UI thread
+    MarshalStreamingToken(token);
+}
+
+void AIIDEIntegration::MarshalStreamingToken(const std::string& token) {
+    // Convert to wide string and buffer it
+    int len = MultiByteToWideChar(CP_UTF8, 0, token.c_str(), -1, nullptr, 0);
+    if (len <= 0) return;
+
+    std::wstring wtoken(len - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, token.c_str(), -1, &wtoken[0], len);
+
+    {
+        std::lock_guard<std::mutex> lock(m_stream_mutex);
+        m_pending_stream_token += wtoken;
+        m_streaming_active = true;
+    }
+
+    // Post message to UI thread to flush the buffer
+    if (m_chat_panel) {
+        PostMessage(m_chat_panel, WM_STREAMING_TOKEN, 0, 0);
+    }
+}
+
+void AIIDEIntegration::FlushStreamingToken() {
+    // This runs on the UI thread (called from ChatPanelProc)
+    std::wstring token;
+    {
+        std::lock_guard<std::mutex> lock(m_stream_mutex);
+        token = std::move(m_pending_stream_token);
+        m_pending_stream_token.clear();
+    }
+
+    if (token.empty() || !m_chat_history) return;
+
+    // Append to RichEdit
+    int text_len = GetWindowTextLengthW(m_chat_history);
+    std::wstring current_text(text_len + 1, L'\0');
+    GetWindowTextW(m_chat_history, &current_text[0], text_len + 1);
+
+    current_text = current_text.substr(0, text_len);
+    current_text += token;
+
+    SetWindowTextW(m_chat_history, current_text.c_str());
+    SendMessage(m_chat_history, EM_SCROLL, SB_BOTTOM, 0);
+}
+
+void AIIDEIntegration::OnStreamingComplete() {
+    // Flush any remaining tokens
+    FlushStreamingToken();
+
+    // Post completion to UI thread
+    if (m_chat_panel) {
+        PostMessage(m_chat_panel, WM_STREAMING_COMPLETE, 0, 0);
+    }
+}
+
+void AIIDEIntegration::OnStreamingError(const std::string& error) {
+    // Errors are rare and short — safe to marshal directly
+    ChatMessage error_msg;
+    error_msg.role = ChatMessage::Role::Assistant;
+    error_msg.content = "[Error: " + error + "]";
+    AppendToChatHistory(error_msg);
 }
 
 void AIIDEIntegration::InsertCodeFromChat(const std::string& code) {
@@ -814,6 +907,18 @@ LRESULT CALLBACK AIIDEIntegration::ChatPanelProc(HWND hwnd, UINT msg, WPARAM wPa
 
     auto* self = reinterpret_cast<AIIDEIntegration*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     switch (msg) {
+        case WM_STREAMING_TOKEN: {
+            if (self) {
+                self->FlushStreamingToken();
+            }
+            return 0;
+        }
+        case WM_STREAMING_COMPLETE: {
+            if (self && self->m_chat_history) {
+                SendMessage(self->m_chat_history, EM_SCROLL, SB_BOTTOM, 0);
+            }
+            return 0;
+        }
         case WM_COMMAND: {
             if (LOWORD(wParam) == ID_CHAT_SEND && self) {
                 wchar_t buffer[2048] = {0};

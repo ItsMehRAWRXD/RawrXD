@@ -89,6 +89,7 @@ TelemetryConfidence     dd 03F800000h
 ; RDX = HookFunc (HOOK_HANDLER)
 ; Returns: RAX = 1 (success), 0 (failure)
 ; ==============================================================================
+PUBLIC INSTALL_HOOK
 INSTALL_HOOK PROC FRAME
     push rbx
     push rsi
@@ -202,6 +203,7 @@ INSTALL_HOOK ENDP
 ; UNINSTALL_HOOK: Restore original bytes and cleanup
 ; Returns: RAX = 1 (success), 0 (failure)
 ; ==============================================================================
+PUBLIC UNINSTALL_HOOK
 UNINSTALL_HOOK PROC FRAME
     push rbx
     .endprolog
@@ -362,6 +364,7 @@ HOOK_HANDLER ENDP
 ;   [RCX+24] = Min latency
 ; Returns: RAX = 1 always
 ; ==============================================================================
+PUBLIC GET_LATENCY_STATS
 GET_LATENCY_STATS PROC
     mov rax, [LatencyTotal]
     mov [rcx + 0], rax

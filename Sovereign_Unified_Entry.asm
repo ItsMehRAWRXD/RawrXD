@@ -44,6 +44,12 @@ EXTERN FNV1A_64 : PROC
 EXTERN BUILD_SYMBOL_HASH_TABLE : PROC
 EXTERN RESOLVE_SYMBOL_FROM_PE : PROC
 
+; Model Streamer APIs
+EXTERN STREAMER_INIT : PROC
+EXTERN STREAMER_PUSH_TOKEN : PROC
+EXTERN STREAMER_FLUSH : PROC
+EXTERN STREAMER_SET_CONFIDENCE : PROC
+
 ; ==============================================================================
 ; Constants
 ; ==============================================================================
@@ -105,6 +111,7 @@ QPCFreq                 dq 0
 ; PIN_THREAD: Bind current thread to specified core
 ; RCX = AffinityMask
 ; ==============================================================================
+PUBLIC PIN_THREAD
 PIN_THREAD PROC
     push rcx
     call GetCurrentThread
@@ -118,6 +125,7 @@ PIN_THREAD ENDP
 ; READ_LATENCY: Get latest latency from ring buffer
 ; Returns: RAX = latest latency in cycles, 0 if empty
 ; ==============================================================================
+PUBLIC READ_LATENCY
 READ_LATENCY PROC
     push rbx
     mov rbx, LatencyTail
@@ -145,6 +153,7 @@ READ_LATENCY ENDP
 ; WRITE_LATENCY: Push latency to ring buffer
 ; RCX = Latency in cycles
 ; ==============================================================================
+PUBLIC WRITE_LATENCY
 WRITE_LATENCY PROC
     push rbx
     push rsi
@@ -177,6 +186,8 @@ WRITE_LATENCY ENDP
 AI_WORKER_THREAD PROC
     push rbx
     push r12
+    push r13
+    push r14
     
     ; Pin to Core 1
     mov ecx, CORE_1
@@ -207,11 +218,30 @@ ai_loop:
     test rax, rax
     jnz ai_throttled
     
-    ; Push prediction to Ghost Engine
+    ; Push tokens through Model Streamer
     lea rcx, TestPrediction
     mov rdx, TestPredictionLen
-    mov r8d, 03F800000h     ; 1.0f confidence
-    call PUSH_GHOST_PREDICTION
+    
+    ; Push each character as a token
+    mov r13, rcx            ; r13 = text pointer
+    mov r14, rdx            ; r14 = length
+    
+push_token_loop:
+    test r14, r14
+    jz push_token_done
+    
+    ; Push single token
+    movzx ecx, byte ptr [r13]
+    xor edx, edx
+    call STREAMER_PUSH_TOKEN
+    
+    inc r13
+    dec r14
+    jmp push_token_loop
+    
+push_token_done:
+    ; Flush to Ghost Engine
+    call STREAMER_FLUSH
     
     test eax, eax
     jz ai_skip_count
@@ -232,6 +262,8 @@ ai_throttled:
     jmp ai_loop
     
 ai_exit:
+    pop r14
+    pop r13
     pop r12
     pop rbx
     xor eax, eax
@@ -354,6 +386,11 @@ MAIN_WORKER PROC
     
     ; Initialize Ghost Engine
     call INIT_GHOST_BUFFER
+    test eax, eax
+    jz main_fail
+    
+    ; Initialize Model Streamer
+    call STREAMER_INIT
     test eax, eax
     jz main_fail
     

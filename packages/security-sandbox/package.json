@@ -1,0 +1,26 @@
+{
+  "name": "@rawrxd/security-sandbox",
+  "version": "0.1.0",
+  "description": "Out-of-process extension sandbox with brokered capability model",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "regression:malicious": "tsx tests/malicious-extension-regression.ts"
+  },
+  "dependencies": {
+    "@rawrxd/security-ipc": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsup": "^8.2.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

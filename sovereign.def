@@ -1,0 +1,68 @@
+; ==============================================================================
+; sovereign.def — DLL Export Definitions for Sovereign Framework
+; ==============================================================================
+; Link with: link /DLL /DEF:sovereign.def /OUT:sovereign.dll
+;
+; Exposes all 18-component APIs for LoadLibrary/GetProcAddress consumption.
+; Aliases map C-friendly camelCase names to MASM uppercase names.
+; ==============================================================================
+
+LIBRARY sovereign
+EXPORTS
+    ; Ghost Engine
+    InitGhostBuffer=INIT_GHOST_BUFFER
+    PushGhostPrediction=PUSH_GHOST_PREDICTION
+    RenderGhostPredictive=RENDER_GHOST_PREDICTIVE
+    FlushGhostBuffer=FLUSH_GHOST_BUFFER
+    GhostHeartbeat=GHOST_HEARTBEAT
+    GetGhostLatency=GET_GHOST_LATENCY
+    GetGhostStats=GET_GHOST_STATS
+    SetConfidenceThreshold=SET_CONFIDENCE_THRESHOLD
+    GetConfidenceThreshold=GET_CONFIDENCE_THRESHOLD
+
+    ; Model Streamer
+    StreamerInit=STREAMER_INIT
+    StreamerPushToken=STREAMER_PUSH_TOKEN
+    StreamerFlush=STREAMER_FLUSH
+    StreamerSetConfidence=STREAMER_SET_CONFIDENCE
+
+    ; Hook Simulator
+    InstallHook=INSTALL_HOOK
+    UninstallHook=UNINSTALL_HOOK
+    GetHookLatencyStats=GET_LATENCY_STATS
+
+    ; Symbolic Validator
+    ValidateTokenSIMD=VALIDATE_TOKEN_SIMD
+    FNV1A_64=FNV1A_64
+    BuildSymbolHashTable=BUILD_SYMBOL_HASH_TABLE
+    ResolveSymbolFromPE=RESOLVE_SYMBOL_FROM_PE
+
+    ; Telemetry (MASM standalone library)
+    TelemetryPush=WRITE_LATENCY
+    TelemetryRead=READ_LATENCY
+
+    ; Framework Lifecycle (C wrapper implementations)
+    SovereignVersion
+    SovereignInitAll
+    SovereignShutdown
+    RunTelemetryStress
+    PinThreadToCore
+
+    ; GGUF Model Loader
+    SovereignLoadModel=SOVEREIGN_LOAD_MODEL
+    SovereignUnloadModel=SOVEREIGN_UNLOAD_MODEL
+    SovereignIsModelReady=SOVEREIGN_IS_MODEL_READY
+    SovereignGetModelInfo=SOVEREIGN_GET_MODEL_INFO
+    SovereignGetTensorCount=SOVEREIGN_GET_TENSOR_COUNT
+    SovereignGetTensorByIndex=SOVEREIGN_GET_TENSOR_BY_INDEX
+    SovereignGetTensorOffset=SOVEREIGN_GET_TENSOR_OFFSET
+
+    ; Sovereign Switch (Hook Bypass Dispatcher)
+    SovereignHash=Sovereign_Hash
+    SovereignFindNtdll=Sovereign_FindNtdll
+    SovereignGetExport=Sovereign_GetExport
+    SovereignGetSyscallID=Sovereign_GetSyscallID
+    SovereignCall=Sovereign_Call
+    SovereignSetMode=Sovereign_SetMode
+    SovereignGetMode=Sovereign_GetMode
+    SovereignInitHashes=Sovereign_InitHashes

@@ -57,18 +57,18 @@ PAGE_EXECUTE_READWRITE      EQU 00000040h
 KERNEL_HEADER_SIZE          EQU 12
 TRACE_HEADER_SIZE           EQU 16
 
-main PROC
+Titan_Entry PROC
     sub rsp, 40
     call Titan_Initialize
     test eax, eax
-    jnz main_error
+    jnz titan_error
     call Titan_MainLoop
     xor ecx, ecx
     call ExitProcess
-main_error:
+titan_error:
     mov ecx, eax
     call ExitProcess
-main ENDP
+Titan_Entry ENDP
 
 Titan_Initialize PROC
     push rbx

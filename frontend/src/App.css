@@ -972,3 +972,578 @@ body,
 ::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
+
+/* ---------------------------------------------------------------------------
+ * Replay Panel (Day 19)
+ * --------------------------------------------------------------------------- */
+
+.replay-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0 6px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.replay-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.replay-panel-header h3 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.replay-panel-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.replay-run-all-btn,
+.replay-clear-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+}
+
+.replay-run-all-btn {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.replay-run-all-btn:hover {
+  background: #dbeafe;
+}
+
+.replay-run-all-btn:disabled {
+  cursor: not-allowed;
+  color: #9ca3af;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.replay-clear-btn {
+  background: #f9fafb;
+  color: #4b5563;
+}
+
+.replay-clear-btn:hover {
+  background: #f3f4f6;
+}
+
+.replay-report-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.replay-score-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: conic-gradient(#22c55e calc(var(--score) * 1%), #e5e7eb 0);
+  --score: 0;
+}
+
+.replay-score-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.replay-score-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.replay-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.replay-scenario-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.replay-scenario-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.replay-scenario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.replay-scenario-header strong {
+  font-size: 12px;
+  color: #111827;
+}
+
+.replay-scenario-id {
+  font-size: 9px;
+  color: #9ca3af;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.replay-scenario-desc {
+  font-size: 11px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.replay-scenario-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.replay-result-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: #f9fafb;
+  border-left: 3px solid #22c55e;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.replay-result-row {
+  display: flex;
+  justify-content: space-between;
+  color: #374151;
+}
+
+.replay-enforcement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+  color: #4b5563;
+}
+
+.replay-enforcement-list ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.replay-enforcement-list li {
+  color: #991b1b;
+}
+
+.replay-run-btn {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.replay-run-btn:hover {
+  background: #dbeafe;
+}
+
+.replay-run-btn:disabled {
+  cursor: not-allowed;
+  color: #9ca3af;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+/* ---------------------------------------------------------------------------
+ * Forensic Hash Verification (HitlAuditPanel)
+ * --------------------------------------------------------------------------- */
+
+.hitl-verify-hash-btn {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.hitl-verify-hash-btn:hover {
+  background: #dbeafe;
+}
+
+.hitl-verify-hash-btn:disabled {
+  cursor: not-allowed;
+  color: #9ca3af;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.hitl-verify-hash-actual {
+  margin-left: 6px;
+  font-size: 9px;
+  color: #6b7280;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+/* ---------------------------------------------------------------------------
+ * Security Posture Dashboard (Day 20)
+ * --------------------------------------------------------------------------- */
+
+.security-posture-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 0 6px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.posture-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.posture-header h3 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.posture-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.posture-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.posture-btn:hover {
+  background: #dbeafe;
+}
+
+.posture-btn-export {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.posture-btn-export:hover {
+  background: #dcfce7;
+}
+
+.posture-score-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.posture-score-ring {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+}
+
+.posture-score-value {
+  position: absolute;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.posture-score-label {
+  position: absolute;
+  bottom: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.posture-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.posture-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.posture-stat-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.posture-stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.posture-overrides-section,
+.posture-replay-section,
+.posture-events-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.posture-overrides-section h4,
+.posture-replay-section h4,
+.posture-events-section h4 {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+}
+
+.posture-overrides-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.posture-override-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.posture-override-tool {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.posture-override-risk {
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+.posture-override-risk.risk-low {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.posture-override-risk.risk-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.posture-override-risk.risk-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.posture-override-reason {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.posture-replay-summary {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: #4b5563;
+  padding: 4px 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.posture-replay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.posture-replay-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.posture-replay-item.passed {
+  background: #f0fdf4;
+  border-left: 3px solid #22c55e;
+}
+
+.posture-replay-item.failed {
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+}
+
+.posture-replay-item.deadlocked {
+  background: #fff7ed;
+  border-left: 3px solid #f97316;
+}
+
+.posture-replay-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.posture-replay-score {
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.posture-replay-status {
+  font-size: 9px;
+}
+
+.posture-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.posture-event-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: #f9fafb;
+  font-size: 10px;
+  align-items: center;
+}
+
+.posture-event-kind {
+  font-weight: 700;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+.posture-event-tool {
+  color: #4b5563;
+}
+
+.posture-event-risk {
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+.posture-event-status {
+  color: #6b7280;
+  font-size: 9px;
+}
+
+.posture-footer {
+  font-size: 9px;
+  color: #9ca3af;
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------------------
+ * Binary Risk Gauge (Day 21)
+ * --------------------------------------------------------------------------- */
+
+.posture-binary-risk-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.posture-binary-risk-section h4 {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+}
+
+.posture-binary-risk-bar {
+  width: 100%;
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.posture-binary-risk-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.posture-binary-risk-label {
+  font-size: 10px;
+  color: #6b7280;
+  text-align: right;
+}

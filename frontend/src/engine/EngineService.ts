@@ -84,7 +84,7 @@ type PollFailureCallback = (errorMessage: string) => void;
 type HeartbeatLossCallback = (errorMessage: string) => void;
 
 export class EngineService {
-  private endpoint: string = 'http://localhost:11435';
+  private endpoint: string;
   private pollInterval: number = 1000; // 1Hz
   private pollTimeoutMs: number = 2500;
   private pollingHandle: ReturnType<typeof setInterval> | null = null;
@@ -97,6 +97,12 @@ export class EngineService {
   private streamClosedByClient: boolean = false;
   private inferenceReconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatLossRaised: boolean = false;
+
+  constructor() {
+    const host = import.meta.env.VITE_ENGINE_HOST ?? 'localhost';
+    const port = import.meta.env.VITE_ENGINE_PORT ?? '11435';
+    this.endpoint = `http://${host}:${port}`;
+  }
 
   /**
    * Start polling the engine /status endpoint at 1Hz.

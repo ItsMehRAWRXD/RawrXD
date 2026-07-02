@@ -1,0 +1,89 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4188 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: d:\rawrxd-ci-bootstrap\IDE_Integration.exe --headless-soak=20 --model=D:\gptoss20b.gguf
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff6`b6010000 00007ff6`b6043000   image00007ff6`b6010000
+ModLoad: 00007ffb`3b2a0000 00007ffb`3b506000   ntdll.dll
+ModLoad: 00007ffb`394a0000 00007ffb`39569000   C:\WINDOWS\System32\KERNEL32.DLL
+ModLoad: 00007ffb`385c0000 00007ffb`389ba000   C:\WINDOWS\System32\KERNELBASE.dll
+ModLoad: 00007ffb`3a6f0000 00007ffb`3a8b7000   C:\WINDOWS\System32\USER32.dll
+ModLoad: 00007ffb`38b10000 00007ffb`38b37000   C:\WINDOWS\System32\win32u.dll
+ModLoad: 00007ffb`39440000 00007ffb`3946b000   C:\WINDOWS\System32\GDI32.dll
+ModLoad: 00007ffb`38ee0000 00007ffb`3900b000   C:\WINDOWS\System32\gdi32full.dll
+ModLoad: 00007ffb`38e30000 00007ffb`38ed3000   C:\WINDOWS\System32\msvcp_win.dll
+ModLoad: 00007ffb`389c0000 00007ffb`38b0c000   C:\WINDOWS\System32\ucrtbase.dll
+(6a4c.5f34): Break instruction exception - code 80000003 (first chance)
+ntdll!LdrpDoDebuggerBreak+0x35:
+00007ffb`3b3bd78d cc              int     3
+0:000> cdb: Reading initial command '.symfix; .reload; g; .ecxr; r; u Sovereign_SDK!SOVEREIGN_LOAD_MODEL L220; u @rip-30 L80; kb; .exr -1; q'
+Reloading current modules
+..........
+ModLoad: 00007ffb`3b190000 00007ffb`3b1c2000   C:\WINDOWS\System32\IMM32.DLL
+ModLoad: 00007ffa`80080000 00007ffa`809f9000   d:\rawrxd-ci-bootstrap\Sovereign_SDK.dll
+ModLoad: 00007ffb`3b1d0000 00007ffb`3b250000   C:\WINDOWS\System32\WS2_32.dll
+ModLoad: 00007ffb`3b070000 00007ffb`3b188000   C:\WINDOWS\System32\RPCRT4.dll
+[IDE] Sovereign SDK Integration Stub
+[IDE] Loading SDK...
+[IDE] Loopback ports: local=7777 remote=7778
+[IDE] Stress controls: F6 toggle, F8/F7 drop +/-, F10/F9 jitter +/-, F12/F11 corrupt +/-
+[Stress] OFF drop=0.00 jitter=0.00 corrupt=0.00 jitterHoldMax=2 (drops=0 jitter=0 corrupt=0)
+[Telemetry] Logging to d:\rawrxd-ci-bootstrap\soak_log_7777_27212.csv
+[Gateway] Missing export: Sovereign_IsModelReady
+[IDE] SDK loaded. extended lockstep/recovery exports resolved.
+[Headless] Starting soak for 20 seconds
+[Headless] Model load faulted before startup
+[Telemetry] closed d:\rawrxd-ci-bootstrap\soak_log_7777_27212.csv
+[IDE] Headless shutdown complete.
+ModLoad: 00007ffb`372a0000 00007ffb`372bb000   C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+ModLoad: 00007ffb`3afc0000 00007ffb`3b069000   C:\WINDOWS\System32\msvcrt.dll
+Unable to get exception context, HRESULT 0x8000FFFF
+rax=000000000000002c rbx=0000000000000001 rcx=ffffffffffffffff
+rdx=0000000000000001 rsi=0000000000000000 rdi=0000000000000000
+rip=00007ffb3b4005f4 rsp=000000c4dbeffd78 rbp=000000c4dbeffe30
+ r8=000000c4dbeffca0  r9=000000c4dbeff7b8 r10=ffffffffffffffff
+r11=ffffffffffffffff r12=0000000000000000 r13=0000000000000000
+r14=0000000000000000 r15=0000000000000000
+iopl=0         nv up ei pl zr na po nc
+cs=0033  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!NtTerminateProcess+0x14:
+00007ffb`3b4005f4 c3              ret
+Couldn't resolve error at 'Sovereign_SDK!SOVEREIGN_LOAD_MODEL '

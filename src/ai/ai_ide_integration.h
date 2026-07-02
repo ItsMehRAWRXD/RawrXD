@@ -94,6 +94,15 @@ private:
     void OnAgentUpdate(const AgentTask& task);
     void OnError(const std::string& error);
 
+    // Streaming callbacks (Final Mile)
+    void OnStreamingToken(const std::string& token);
+    void OnStreamingComplete();
+    void OnStreamingError(const std::string& error);
+
+    // Thread-safe UI marshaling
+    void MarshalStreamingToken(const std::string& token);
+    void FlushStreamingToken();
+
     // Window Procedures
     static LRESULT CALLBACK ChatPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK EditPromptProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -116,6 +125,12 @@ private:
     bool m_inline_completion_enabled;
     bool m_suggestion_visible;
     bool m_edit_pending = false;
+    int m_streaming_message_index = -1;  // Index of message being streamed
+
+    // Thread-safe streaming buffer
+    std::wstring m_pending_stream_token;
+    std::mutex m_stream_mutex;
+    bool m_streaming_active = false;
 
     // Timers
     UINT_PTR m_inline_completion_timer;

@@ -1,0 +1,14 @@
+RunDir=d:\rawrxd-ci-bootstrap\runs\soak_20260602_034254
+TimestampUtc=2026-06-02T07:42:59.3086516Z
+RequestCount=40
+CancelPercent=15
+GateExitCode=0
+SidecarExitCode=0
+AnalyzerExitCode=0
+Artifacts:
+  GateLog=d:\rawrxd-ci-bootstrap\runs\soak_20260602_034254\gate.log
+  SidecarCsv=d:\rawrxd-ci-bootstrap\runs\soak_20260602_034254\sidecar_metrics.csv
+  SidecarStdOut=d:\rawrxd-ci-bootstrap\runs\soak_20260602_034254\sidecar.stdout.log
+  SidecarStdErr=d:\rawrxd-ci-bootstrap\runs\soak_20260602_034254\sidecar.stderr.log
+  AnalyzerCsv=d:\rawrxd-ci-bootstrap\runs\soak_20260602_034254\correlation_report.csv
+  AnalyzerJson=d:\rawrxd-ci-bootstrap\runs\soak_20260602_034254\correlation_report.json

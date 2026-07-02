@@ -1,0 +1,10 @@
+================================================================
+Sovereign Regression Gate v5
+================================================================
+Requests=1 Cancel%=0
+[LOAD] Loading model...
+[LOAD] OK
+      state -1->3
+
+? REGRESSION GATE v5 FAILED
+Reason: Request 1: completion timeout state=3 ms=30000

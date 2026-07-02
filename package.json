@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "RawrXD IDE Chatbot with 120B Model Support",
   "main": "server.js",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "start": "node server.js",
     "build": "build_phase3.bat",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build:packages": "npm run build --workspaces"
   },
   "dependencies": {
-    "ffi-napi": "^4.0.3",
-    "jsdom": "^28.0.0",
-    "ref-napi": "^3.0.3"
+    "jsdom": "^28.0.0"
   },
   "devDependencies": {
     "acorn": "^8.15.0",

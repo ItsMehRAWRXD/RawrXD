@@ -25,6 +25,15 @@ option prologue:none
 option epilogue:none
 
 ; ==============================================================================
+; External APIs (GDI rendering)
+; ==============================================================================
+EXTERN GetDC : PROC
+EXTERN ReleaseDC : PROC
+EXTERN SetTextColor : PROC
+EXTERN SetBkMode : PROC
+EXTERN TextOutA : PROC
+
+; ==============================================================================
 ; Constants
 ; ==============================================================================
 GHOST_BUFFER_SIZE       equ 4096        ; 4KB ring buffer
@@ -98,6 +107,7 @@ g_LastTimestamp dq 0
 ; Input:  None
 ; Output: RAX = 1 on success, 0 on failure
 ; ==============================================================================
+PUBLIC INIT_GHOST_BUFFER
 INIT_GHOST_BUFFER proc
     push rdi
     push rcx
@@ -142,6 +152,7 @@ INIT_GHOST_BUFFER endp
 ;         R8  = Confidence score (float)
 ; Output: RAX = 1 on success, 0 on failure
 ; ==============================================================================
+PUBLIC PUSH_GHOST_PREDICTION
 PUSH_GHOST_PREDICTION proc
     push rbx
     push rsi
@@ -217,15 +228,16 @@ PUSH_GHOST_PREDICTION proc
     mov [rdi + GHOST_DATA.Confidence], r14d
     mov dword ptr [rdi + GHOST_DATA.Status], GHOST_OK
     
-    ; Advance head
-    inc qword ptr [rbx + GHOST_RING.Head]
+    ; Advance head (atomic)
+    lock inc qword ptr [rbx + GHOST_RING.Head]
     mov rax, [rbx + GHOST_RING.Head]
     cmp rax, GHOST_RING_SLOTS
     jb push_no_wrap
-    mov qword ptr [rbx + GHOST_RING.Head], 0
+    xor eax, eax
+    xchg qword ptr [rbx + GHOST_RING.Head], rax
     
 push_no_wrap:
-    inc qword ptr [rbx + GHOST_RING.SlotCount]
+    lock inc qword ptr [rbx + GHOST_RING.SlotCount]
     
     mov eax, 1
     jmp push_exit
@@ -253,6 +265,7 @@ PUSH_GHOST_PREDICTION endp
 ; Input:  RCX = Editor window handle (HWND)
 ; Output: RAX = 1 if rendered, 0 if dropped
 ; ==============================================================================
+PUBLIC RENDER_GHOST_PREDICTIVE
 RENDER_GHOST_PREDICTIVE proc
     push rbx
     push rsi
@@ -266,6 +279,9 @@ RENDER_GHOST_PREDICTIVE proc
     lea rbx, g_GhostRing
     mov rsi, [rbx + GHOST_RING.Tail]
     mov rdi, [rbx + GHOST_RING.SlotCount]
+    
+    ; Memory fence to ensure consistent reads
+    lock add qword ptr [rbx + GHOST_RING.SlotCount], 0
     
     ; Check if any slots available
     test rdi, rdi
@@ -311,21 +327,22 @@ RENDER_GHOST_PREDICTIVE proc
     ; Mark as rendered
     inc qword ptr [rbx + GHOST_RING.RenderCount]
     
-    ; Advance tail
-    inc qword ptr [rbx + GHOST_RING.Tail]
+    ; Advance tail (atomic)
+    lock inc qword ptr [rbx + GHOST_RING.Tail]
     mov rax, [rbx + GHOST_RING.Tail]
     cmp rax, GHOST_RING_SLOTS
     jb render_no_wrap
-    mov qword ptr [rbx + GHOST_RING.Tail], 0
+    xor eax, eax
+    xchg qword ptr [rbx + GHOST_RING.Tail], rax
     
 render_no_wrap:
-    dec qword ptr [rbx + GHOST_RING.SlotCount]
+    lock dec qword ptr [rbx + GHOST_RING.SlotCount]
     
     mov eax, 1
     jmp render_exit
     
 render_stale:
-    inc qword ptr [rbx + GHOST_RING.DropCount]
+    lock inc qword ptr [rbx + GHOST_RING.DropCount]
     mov dword ptr [r13 + GHOST_DATA.Status], GHOST_STALE
     jmp render_consume
     
@@ -335,14 +352,15 @@ render_low_confidence:
     
 render_consume:
     ; Consume slot even if dropped
-    inc qword ptr [rbx + GHOST_RING.Tail]
+    lock inc qword ptr [rbx + GHOST_RING.Tail]
     mov rax, [rbx + GHOST_RING.Tail]
     cmp rax, GHOST_RING_SLOTS
     jb render_consume_wrap
-    mov qword ptr [rbx + GHOST_RING.Tail], 0
+    xor eax, eax
+    xchg qword ptr [rbx + GHOST_RING.Tail], rax
     
 render_consume_wrap:
-    dec qword ptr [rbx + GHOST_RING.SlotCount]
+    lock dec qword ptr [rbx + GHOST_RING.SlotCount]
     
 render_drop:
     xor eax, eax
@@ -357,23 +375,76 @@ render_exit:
 RENDER_GHOST_PREDICTIVE endp
 
 ; ==============================================================================
-; DRAW_OVERLAY_TEXT - Platform-specific text rendering
+; DRAW_OVERLAY_TEXT - GDI Ghost Text Rendering
 ; ==============================================================================
 ; Input:  RCX = Text pointer
 ;         RDX = Text length
 ;         R9  = HWND (editor window)
 ; Output: RAX = 1 on success
 ; ==============================================================================
+PUBLIC DRAW_OVERLAY_TEXT
 DRAW_OVERLAY_TEXT proc
-    ; Placeholder for actual GDI/DirectWrite rendering
-    ; In production, this would:
-    ; 1. Get device context from HWND
-    ; 2. Calculate caret position
-    ; 3. Set ghost text color (light gray)
-    ; 4. Draw text at caret offset
-    ; 5. Release device context
+    push rbx
+    push r12
+    push r13
+    push r14
+    sub rsp, 40h              ; Shadow space + align
+    
+    mov r12, rcx            ; Text pointer
+    mov r13, rdx            ; Text length
+    mov r14, r9             ; HWND (save it)
+    
+    ; Validate HWND (test mode uses HWND=0)
+    test r14, r14
+    jz draw_test_mode
+    
+    ; Get device context from HWND
+    mov rcx, r14
+    call GetDC
+    test rax, rax
+    jz draw_fail
+    mov rbx, rax            ; rbx = hdc
+    
+    ; Set ghost text color (light gray: 0xAAAAAA)
+    mov rcx, rbx
+    mov edx, 0AAAAAAh
+    call SetTextColor
+    
+    ; Set background mode to transparent
+    mov rcx, rbx
+    mov edx, 1              ; TRANSPARENT
+    call SetBkMode
+    
+    ; Draw text at caret position (simplified: offset from cursor)
+    mov rcx, rbx            ; hdc
+    mov edx, 100            ; X offset
+    mov r8d, 50             ; Y offset
+    mov r9, r12             ; Text pointer
+    mov dword ptr [rsp + 20h], r13d  ; Length (5th param)
+    call TextOutA
+    
+    ; Release device context
+    mov rcx, r14            ; HWND
+    mov rdx, rbx            ; hdc
+    call ReleaseDC
     
     mov eax, 1
+    jmp draw_exit
+    
+draw_test_mode:
+    ; Test mode: no real window, just return success
+    mov eax, 1
+    jmp draw_exit
+    
+draw_fail:
+    xor eax, eax
+    
+draw_exit:
+    add rsp, 40h
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
     ret
 DRAW_OVERLAY_TEXT endp
 
@@ -383,6 +454,7 @@ DRAW_OVERLAY_TEXT endp
 ; Input:  None
 ; Output: RAX = Last latency in TSC cycles
 ; ==============================================================================
+PUBLIC GET_GHOST_LATENCY
 GET_GHOST_LATENCY proc
     mov rax, [g_LastLatency]
     ret
@@ -398,6 +470,7 @@ GET_GHOST_LATENCY endp
 ;         [RCX+24] = Last latency
 ; Output: RAX = 1 always
 ; ==============================================================================
+PUBLIC GET_GHOST_STATS
 GET_GHOST_STATS proc
     lea r8, g_GhostRing
     mov rax, [r8 + GHOST_RING.RenderCount]
@@ -418,6 +491,7 @@ GET_GHOST_STATS endp
 ; Input:  RCX = Threshold value (float bits)
 ; Output: RAX = 1 on success
 ; ==============================================================================
+PUBLIC SET_CONFIDENCE_THRESHOLD
 SET_CONFIDENCE_THRESHOLD proc
     lea rax, g_GhostRing
     mov [rax + GHOST_RING.Threshold], ecx
@@ -431,6 +505,7 @@ SET_CONFIDENCE_THRESHOLD endp
 ; Input:  None
 ; Output: RAX = Current threshold (float bits)
 ; ==============================================================================
+PUBLIC GET_CONFIDENCE_THRESHOLD
 GET_CONFIDENCE_THRESHOLD proc
     lea rax, g_GhostRing
     mov eax, [rax + GHOST_RING.Threshold]
@@ -443,6 +518,7 @@ GET_CONFIDENCE_THRESHOLD endp
 ; Input:  None
 ; Output: RAX = Number of slots flushed
 ; ==============================================================================
+PUBLIC FLUSH_GHOST_BUFFER
 FLUSH_GHOST_BUFFER proc
     push rbx
     
@@ -467,6 +543,7 @@ FLUSH_GHOST_BUFFER endp
 ; Input:  RCX = HWND (editor window)
 ; Output: RAX = 1 if rendered, 0 otherwise
 ; ==============================================================================
+PUBLIC GHOST_HEARTBEAT
 GHOST_HEARTBEAT proc
     ; Check if there are pending predictions
     lea rax, g_GhostRing

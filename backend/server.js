@@ -7,7 +7,11 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 
-const PORT = 8080;
+// Load centralized configuration
+const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config.json'), 'utf8'));
+const PORT = process.env.PORT || config.api.port || 11435;
+const HOST = config.api.host || 'localhost';
+
 const MODEL_DIR = 'D:/OllamaModels';
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
 const LLAMA_CPP_HOST = process.env.LLAMA_CPP_HOST || 'http://localhost:8081';
