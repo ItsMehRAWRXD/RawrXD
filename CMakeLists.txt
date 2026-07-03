@@ -210,7 +210,7 @@ if(EXISTS "${RAWRXD_LOCAL_WIN32_SDK_DIR}")
 endif()
 
 option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" ON)
-option(RAWRXD_BUILD_CLI "Build the rawrxd CLI console target" OFF)
+option(RAWRXD_BUILD_CLI "Build the rawrxd CLI console target" ON)
 option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units from production targets" OFF)
 option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
 option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
@@ -222,35 +222,32 @@ if(RAWRXD_BUILD_CLI)
     file(GLOB ASM_SOURCES "src/asm/RawrXD_IPC_Dispatcher.asm" "src/asm/RawrXD_Disasm_Kernel.asm")
 
     add_executable(rawrxd 
-        src/ui/entry_point.cpp
-        src/ui/RawrXD_MainLoop.cpp
-        src/asm/RawrXD_IPC_Dispatcher.asm
-        src/asm/RawrXD_Disasm_Kernel.asm
-        src/cli/rawrxd_cli_link_shims.cpp
+        src/cli/cli_main.cpp
+        src/cli/cli_stream.cpp
+        src/cli/pipe_server_callback.cpp
+        src/cli/hotpatch_model_manager.cpp
+        src/cli/hotpatch_inference_integration.cpp
+        src/gguf_loader.cpp
+        src/masm/cli_history.asm
+        src/masm/RawrXD_PipeServer_v2.asm
+        src/masm/rawrxd_hotpatch_router_simple.asm
         src/res/Resource.rc
-        # Agentic components for CLI Ollama testing
-        src/agentic/OrchestratorBridge.cpp
-        src/agentic/AgenticSubmitInference_Fix.cpp
-        src/agentic/AgentOllamaClient.cpp
-        src/agentic/FIMPromptBuilder.cpp
-        src/agentic/RobustOllamaParser.cpp
     )
-    set_target_properties(rawrxd PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(rawrxd PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE 
+        OUTPUT_NAME rawrxd-cli
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"  # Force static release runtime, no DLL dependencies
+    )
+    
+    # Library paths are provided via LIB environment variable (set by build.ps1 wrapper)
+    # This avoids vs_link_exe argument mangling issues with /LIBPATH: paths containing spaces
     if(MSVC)
-        target_link_directories(rawrxd PRIVATE ${_RAWR_MSVC_LIBPATHS})
-        set(_RAWR_CLI_LIBPATHS "")
-        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
-            if(EXISTS "${_rawr_lib}")
-                target_link_options(rawrxd PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
-                list(APPEND _RAWR_CLI_LIBPATHS "/LIBPATH:\"${_rawr_lib}\"")
-            endif()
-        endforeach()
-        if(_RAWR_CLI_LIBPATHS)
-            string(REPLACE ";" " " _RAWR_CLI_LIBPATHS_STR "${_RAWR_CLI_LIBPATHS}")
-            set_property(TARGET rawrxd APPEND_STRING PROPERTY LINK_FLAGS " ${_RAWR_CLI_LIBPATHS_STR}")
-        endif()
+        # /MANIFEST:NO is kept but doesn't bypass vs_link_exe when .res files are linked
+        target_link_options(rawrxd PRIVATE "/MANIFEST:NO")
     endif()
-
+    
+    # Use short library names - link_directories above provides the paths
     target_link_libraries(rawrxd PRIVATE
         kernel32
         user32
@@ -265,23 +262,40 @@ if(RAWRXD_BUILD_CLI)
         version
         ws2_32
     )
-    # Explicit absolute library paths ensure linking succeeds even if LIBPATH is dropped
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        target_link_libraries(rawrxd PRIVATE
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/winspool.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/shell32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ole32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/oleaut32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/uuid.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/comdlg32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/advapi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/version.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
+
+    # Kill rawrxd-cli.exe before linking to release the file lock.
+    # DISABLED: cmd /c hangs in this context
+    # add_custom_command(TARGET rawrxd PRE_LINK
+    #     COMMAND cmd /c "taskkill /F /IM rawrxd-cli.exe 2>nul & exit 0"
+    #     COMMENT "Releasing rawrxd-cli.exe file lock before link"
+    # )
+
+    # Post-build staleness guard - verifies EXE was actually created
+    # The POST_BUILD command runs even if link fails, so we check for EXE existence
+    # DISABLED: cmake -E echo hangs in this context
+    # add_custom_command(TARGET rawrxd POST_BUILD
+    #     COMMAND ${CMAKE_COMMAND} -E echo "Verifying EXE was created..."
+    #     COMMAND cmd /c "if not exist \"${CMAKE_BINARY_DIR}/bin/rawrxd-cli.exe\" (echo [FATAL] EXE was not created - link failed silently && exit 1) else (echo [OK] EXE exists and is fresh)"
+    #     COMMENT "Verifying EXE was created..."
+    # )
+
+    # Hotpatch client tool - sends payloads to running rawrxd-cli
+    add_executable(rawrxd-hotpatch
+        src/cli/hotpatch_client.cpp
+    )
+    set_target_properties(rawrxd-hotpatch PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    if(MSVC)
+        set_target_properties(rawrxd-hotpatch PROPERTIES
+            LINK_FLAGS "/LIBPATH:\"${_MSVC_ROOT}/lib/x64\" /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\" /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\""
         )
     endif()
+    target_link_libraries(rawrxd-hotpatch PRIVATE
+        kernel32 user32 advapi32
+    )
 endif()
 
 # Resource compiler for icon/version
@@ -4209,6 +4223,7 @@ if(WIN32)
         src/streaming_gguf_loader.cpp
         src/streaming_gguf_loader_enhanced.cpp
         src/modules/gguf_loader.cpp
+        src/gguf_loader.cpp
         src/utils/Diagnostics.cpp
         src/diagnostics/self_diagnose.cpp
         # src/gguf_loader.cpp  # Replaced by MASM bridge: gguf_loader_masm.cpp
