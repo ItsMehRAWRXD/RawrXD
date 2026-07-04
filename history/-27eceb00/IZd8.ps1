@@ -33,8 +33,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$script:Errors = @()
-$script:StartTime = Get-Date
+${script:Errors} = @()
+${script:StartTime} = Get-Date
 
 # ─── Banner ──────────────────────────────────────────────────────────────
 function Show-Banner {
@@ -215,7 +215,7 @@ function Invoke-MASM {
         }
 
         Write-Host "    [asm]  $($f.Name)" -ForegroundColor White
-        $debugFlag = if ($Config -eq 'Debug') { '/Zi' } else { '' }
+        $debugFlag = $(if ($Config -eq 'Debug') { '/Zi' } else { '' }
 
         $args = @('/c', '/nologo', '/Fo', $objFile)
         if ($debugFlag) { $args += $debugFlag }
@@ -226,7 +226,7 @@ function Invoke-MASM {
 
         if ($proc.ExitCode -ne 0) {
             $errLog = Get-Content "$ObjDir\$($f.BaseName)_asm.log" -Raw -ErrorAction SilentlyContinue
-            $script:Errors += "MASM error in $($f.Name): $errLog"
+            ${script:Errors} += "MASM error in $($f.Name): $errLog"
             Write-Host "    [FAIL] $($f.Name)" -ForegroundColor Red
             if ($errLog) { Write-Host $errLog -ForegroundColor Red }
         }
@@ -282,7 +282,7 @@ function Invoke-CPP {
 
         if ($proc.ExitCode -ne 0) {
             $errLog = Get-Content "$ObjDir\$($f.BaseName)_cpp.log" -Raw -ErrorAction SilentlyContinue
-            $script:Errors += "C++ error in $($f.Name): $errLog"
+            ${script:Errors} += "C++ error in $($f.Name): $errLog"
             Write-Host "    [FAIL] $($f.Name)" -ForegroundColor Red
             if ($errLog) { Write-Host $errLog -ForegroundColor Red }
         }
@@ -332,7 +332,7 @@ function Invoke-Link {
 
     if ($proc.ExitCode -ne 0) {
         $errLog = Get-Content "$ObjDir\link.log" -Raw -ErrorAction SilentlyContinue
-        $script:Errors += "Link error: $errLog"
+        ${script:Errors} += "Link error: $errLog"
         Write-Host "    [FAIL] Linking failed" -ForegroundColor Red
         if ($errLog) { Write-Host $errLog -ForegroundColor Red }
     } else {
@@ -397,13 +397,13 @@ function Main {
     Write-Host ""
 
     # Summary
-    $elapsed = (Get-Date) - $script:StartTime
+    $elapsed = (Get-Date) - ${script:StartTime}
 
-    if ($script:Errors.Count -gt 0) {
+    if (${script:Errors}.Count -gt 0) {
         Write-Host "╔══════════════════════════════════════════════════════╗" -ForegroundColor Red
-        Write-Host "║  BUILD FAILED — $($script:Errors.Count) error(s)                        ║" -ForegroundColor Red
+        Write-Host "║  BUILD FAILED — $(${script:Errors}.Count) error(s)                        ║" -ForegroundColor Red
         Write-Host "╚══════════════════════════════════════════════════════╝" -ForegroundColor Red
-        foreach ($e in $script:Errors) {
+        foreach ($e in ${script:Errors}) {
             Write-Host "  ! $e" -ForegroundColor Red
         }
         exit 1

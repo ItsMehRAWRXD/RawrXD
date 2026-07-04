@@ -2756,3 +2756,50 @@ void Win32IDE::loadMemoryPlugin(const std::string& path)
         FreeLibrary(hPlugin);
     }
 }
+
+// ============================================================================
+// CODEX CLI/GUI INTEGRATION
+// ============================================================================
+void Win32IDE::initializeCodexIntegration()
+{
+    LOG_INFO("Initializing Codex CLI/GUI Integration");
+
+    if (m_codexCLI)
+    {
+        LOG_INFO("CodexCLI already initialized");
+        return;
+    }
+
+    // Create CodexCLI instance
+    m_codexCLI = std::make_shared<RawrXD::Codex::CodexCLI>();
+
+    // Create command router
+    m_codexRouter = std::make_unique<RawrXD::Codex::CodexCommandRouter>();
+    if (m_codexRouter->Initialize(m_codexCLI))
+    {
+        LOG_INFO("CodexCommandRouter initialized successfully");
+        appendToOutput("✅ Codex integration initialized\n", "Output", OutputSeverity::Info);
+    }
+    else
+    {
+        LOG_ERROR("Failed to initialize CodexCommandRouter");
+        appendToOutput("⚠️ Codex integration initialization failed\n", "Output", OutputSeverity::Warning);
+    }
+}
+
+void Win32IDE::shutdownCodexIntegration()
+{
+    LOG_INFO("Shutting down Codex CLI/GUI Integration");
+
+    if (m_codexRouter)
+    {
+        m_codexRouter.reset();
+    }
+
+    if (m_codexCLI)
+    {
+        m_codexCLI.reset();
+    }
+
+    LOG_INFO("Codex integration shut down");
+}

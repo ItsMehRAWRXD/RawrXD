@@ -41,8 +41,8 @@ $testCases = @(
 $correct = 0
 foreach ($test in $testCases) {
     $result = Invoke-RawrXDClassification -Code $test.Input -Context $test.Category
-    $status = if ($result.Type -eq $test.Expected) { "✓"; $correct++ } else { "✗" }
-    $displayText = if ($test.Input.Length -gt 35) { $test.Input.Substring(0,32) + "..." } else { $test.Input }
+    $status = $(if ($result.Type -eq $test.Expected) { "✓"; $correct++ } else { "✗" }
+    $displayText = $(if ($test.Input.Length -gt 35) { $test.Input.Substring(0,32) + "..." } else { $test.Input }
     Write-Host "  $status [$($test.Category)] $displayText → $($result.TypeName) ($([math]::Round($result.Confidence,2)))" -ForegroundColor $(if($status -eq "✓"){"Green"}else{"Red"})
 }
 Write-Host "  Accuracy: $correct/$($testCases.Count) ($([math]::Round($correct/$testCases.Count*100,1))%)" -ForegroundColor $(if($correct -eq $testCases.Count){"Green"}else{"Yellow"})

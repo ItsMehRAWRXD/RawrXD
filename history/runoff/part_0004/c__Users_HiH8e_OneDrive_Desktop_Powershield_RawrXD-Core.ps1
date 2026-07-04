@@ -13,7 +13,7 @@
 # ENHANCED STARTUP LOGGER SYSTEM
 # ============================================
 # Initialize startup log file path
-$script:StartupLogFile = Join-Path $env:TEMP "RawrXD-Startup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+${script:StartupLogFile} = Join-Path ${env:TEMP} "RawrXD-Startup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 # Startup logger function - enhanced with emergency fallback
 function Write-StartupLog {
     param(
@@ -30,19 +30,19 @@ function Write-StartupLog {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
         $logEntry = "[$timestamp] [$Level] $Message"
         # Ensure log file path is set
-        if (-not $script:StartupLogFile) {
-            $script:StartupLogFile = Join-Path $env:TEMP "RawrXD-Startup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+        if (-not ${script:StartupLogFile}) {
+            ${script:StartupLogFile} = Join-Path ${env:TEMP} "RawrXD-Startup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
         }
         # Ensure log directory exists
-        if ($script:StartupLogFile -and -not (Test-Path $script:StartupLogFile)) {
-            $logDir = Split-Path $script:StartupLogFile
+        if (${script:StartupLogFile} -and -not (Test-Path ${script:StartupLogFile})) {
+            $logDir = Split-Path ${script:StartupLogFile}
             if ($logDir -and -not (Test-Path $logDir)) {
                 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
             }
         }
         # Write to log file
-        if ($script:StartupLogFile) {
-            Add-Content -Path $script:StartupLogFile -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+        if (${script:StartupLogFile}) {
+            Add-Content -Path ${script:StartupLogFile} -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
         }
         # Also output to console for immediate feedback
         $color = switch ($Level) {
@@ -63,7 +63,7 @@ function Write-StartupLog {
 # ADVANCED ERROR HANDLING & NOTIFICATION SYSTEM
 # ============================================
 # Error categories and severity levels
-$script:ErrorCategories = @{
+${script:ErrorCategories} = @{
     Critical       = "CRITICAL"
     Security       = "SECURITY"
     Network        = "NETWORK"
@@ -74,7 +74,7 @@ $script:ErrorCategories = @{
     Performance    = "PERFORMANCE"
 }
 # Error notification settings
-$script:ErrorNotificationConfig = @{
+${script:ErrorNotificationConfig} = @{
     EnableEmailNotifications = $false
     EmailRecipient           = "admin@company.com"
     SMTPServer               = "smtp.company.com"
@@ -85,7 +85,7 @@ $script:ErrorNotificationConfig = @{
     EnableErrorReporting     = $true
 }
 # Error tracking and rate limiting
-$script:ErrorTracker = @{
+${script:ErrorTracker} = @{
     ErrorCount       = 0
     LastErrorTime    = Get-Date
     ErrorHistory     = @()
@@ -109,18 +109,18 @@ function Register-ErrorHandler {
         [bool]$ShowToUser = $true
     )
     $currentTime = Get-Date
-    $timeSinceLastError = ($currentTime - $script:ErrorTracker.LastErrorTime).TotalMinutes
+    $timeSinceLastError = ($currentTime - ${script:ErrorTracker}.LastErrorTime).TotalMinutes
     # Rate limiting: prevent error spam
     if ($timeSinceLastError -lt 1) {
-        $script:ErrorTracker.ErrorCount++
-        if ($script:ErrorTracker.ErrorCount -gt $script:ErrorNotificationConfig.MaxErrorsPerMinute) {
+        ${script:ErrorTracker}.ErrorCount++
+        if (${script:ErrorTracker}.ErrorCount -gt ${script:ErrorNotificationConfig}.MaxErrorsPerMinute) {
             Write-StartupLog "Error rate limit exceeded, suppressing notifications" "WARNING"
             return
         }
     }
     else {
-        $script:ErrorTracker.ErrorCount = 1
-        $script:ErrorTracker.LastErrorTime = $currentTime
+        ${script:ErrorTracker}.ErrorCount = 1
+        ${script:ErrorTracker}.LastErrorTime = $currentTime
     }
     # Create detailed error record
     $errorRecord = @{
@@ -129,7 +129,7 @@ function Register-ErrorHandler {
         Category       = $ErrorCategory
         Severity       = $Severity
         SourceFunction = $SourceFunction
-        SessionId      = $script:CurrentSession.SessionId
+        SessionId      = ${script:CurrentSession}.SessionId
         ProcessId      = $PID
         UserContext    = [Environment]::UserName
         MachineName    = [Environment]::MachineName
@@ -137,10 +137,10 @@ function Register-ErrorHandler {
         StackTrace     = (Get-PSCallStack | Select-Object -Skip 1 | ForEach-Object { "$($_.Command):$($_.ScriptLineNumber)" }) -join " -> "
     }
     # Add to error history
-    $script:ErrorTracker.ErrorHistory += $errorRecord
+    ${script:ErrorTracker}.ErrorHistory += $errorRecord
     # Keep only last 100 errors to prevent memory issues
-    if (@($script:ErrorTracker.ErrorHistory).Count -gt 100) {
-        $script:ErrorTracker.ErrorHistory = $script:ErrorTracker.ErrorHistory | Select-Object -Last 100
+    if (@(${script:ErrorTracker}.ErrorHistory).Count -gt 100) {
+        ${script:ErrorTracker}.ErrorHistory = ${script:ErrorTracker}.ErrorHistory | Select-Object -Last 100
     }
     # Log to startup log
     Write-StartupLog "[$ErrorCategory - $Severity] $ErrorMessage" "ERROR"
@@ -152,7 +152,7 @@ function Register-ErrorHandler {
         Write-SecurityLog "Application error" "ERROR" "$ErrorCategory - $ErrorMessage"
     }
     # Log to Windows Event Log
-    if ($script:ErrorNotificationConfig.LogToEventLog) {
+    if (${script:ErrorNotificationConfig}.LogToEventLog) {
         try {
             if (-not ([System.Diagnostics.EventLog]::SourceExists("RawrXD"))) {
                 [System.Diagnostics.EventLog]::CreateEventSource("RawrXD", "Application")
@@ -171,18 +171,18 @@ function Register-ErrorHandler {
         }
     }
     # Visual notification to user
-    if ($ShowToUser -and $script:ErrorNotificationConfig.EnablePopupNotifications) {
+    if ($ShowToUser -and ${script:ErrorNotificationConfig}.EnablePopupNotifications) {
         Show-ErrorNotification -ErrorRecord $errorRecord
     }
     # Sound notification
-    if ($script:ErrorNotificationConfig.EnableSoundNotifications -and $Severity -in @("HIGH", "CRITICAL")) {
+    if (${script:ErrorNotificationConfig}.EnableSoundNotifications -and $Severity -in @("HIGH", "CRITICAL")) {
         try {
             [System.Media.SystemSounds]::Exclamation.Play()
         }
         catch { }
     }
     # Email notification for critical errors
-    if ($script:ErrorNotificationConfig.EnableEmailNotifications -and $Severity -eq "CRITICAL") {
+    if (${script:ErrorNotificationConfig}.EnableEmailNotifications -and $Severity -eq "CRITICAL") {
         Send-ErrorNotificationEmail -ErrorRecord $errorRecord
     }
     # Auto-recovery for specific error types
@@ -195,9 +195,9 @@ Write-EmergencyLog "════════════════════
 Write-EmergencyLog "RUNTIME COMPATIBILITY DETECTION" "INFO"
 Write-EmergencyLog "═══════════════════════════════════════════════════════" "INFO"
 # Global runtime detection results - used throughout the application
-$script:RuntimeInfo = @{
+${script:RuntimeInfo} = @{
     PowerShellVersion         = $PSVersionTable.PSVersion
-    PowerShellEdition         = if ($PSVersionTable.PSEdition) { $PSVersionTable.PSEdition } else { "Desktop" }
+    PowerShellEdition         = $(if ($PSVersionTable.PSEdition) { $PSVersionTable.PSEdition } else { "Desktop" }
     DotNetVersion             = $null
     DotNetMajorVersion        = 0
     IsWindowsPowerShell       = $false
@@ -234,115 +234,115 @@ function Initialize-RuntimeDetection {
             $buildOrPatch = $psVersion.Patch
         }
         Write-EmergencyLog "PowerShell Version: $($psVersion.Major).$($psVersion.Minor).$buildOrPatch" "INFO"
-        $script:RuntimeInfo.PowerShellVersion = $psVersion
-        $script:RuntimeInfo.IsWindowsPowerShell = ($psVersion.Major -eq 5)
-        $script:RuntimeInfo.IsPowerShellCore = ($psVersion.Major -ge 6)
-        $script:RuntimeInfo.IsPowerShell7Plus = ($psVersion.Major -ge 7)
-        if ($script:RuntimeInfo.IsWindowsPowerShell) {
+        ${script:RuntimeInfo}.PowerShellVersion = $psVersion
+        ${script:RuntimeInfo}.IsWindowsPowerShell = ($psVersion.Major -eq 5)
+        ${script:RuntimeInfo}.IsPowerShellCore = ($psVersion.Major -ge 6)
+        ${script:RuntimeInfo}.IsPowerShell7Plus = ($psVersion.Major -ge 7)
+        if (${script:RuntimeInfo}.IsWindowsPowerShell) {
             Write-EmergencyLog "✅ Windows PowerShell 5.1 detected - Full compatibility mode" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.IsPowerShell7Plus) {
+        elseif (${script:RuntimeInfo}.IsPowerShell7Plus) {
             Write-EmergencyLog "⚠️ PowerShell $($psVersion.Major).$($psVersion.Minor) detected - Checking .NET compatibility" "WARNING"
         }
         # 2. .NET Runtime Version Detection
         try {
             $dotnetDescription = [System.Runtime.InteropServices.RuntimeInformation]::FrameworkDescription
-            $script:RuntimeInfo.DotNetVersion = $dotnetDescription
+            ${script:RuntimeInfo}.DotNetVersion = $dotnetDescription
             Write-EmergencyLog ".NET Runtime: $dotnetDescription" "INFO"
             # Parse major version from description (e.g., ".NET 9.0.0" or ".NET Framework 4.8.9261.0")
             if ($dotnetDescription -match "\.NET\s+(\d+)") {
-                $script:RuntimeInfo.DotNetMajorVersion = [int]$matches[1]
-                Write-EmergencyLog ".NET Major Version: $($script:RuntimeInfo.DotNetMajorVersion)" "INFO"
+                ${script:RuntimeInfo}.DotNetMajorVersion = [int]$matches[1]
+                Write-EmergencyLog ".NET Major Version: $(${script:RuntimeInfo}.DotNetMajorVersion)" "INFO"
                 # .NET 9+ has breaking changes with System.Windows.Forms.ContextMenu
-                if ($script:RuntimeInfo.DotNetMajorVersion -ge 9) {
-                    $script:RuntimeInfo.IsNet9OrLater = $true
-                    $script:RuntimeInfo.IsNet8OrEarlier = $false
-                    $script:RuntimeInfo.ContextMenuAvailable = $false
+                if (${script:RuntimeInfo}.DotNetMajorVersion -ge 9) {
+                    ${script:RuntimeInfo}.IsNet9OrLater = $true
+                    ${script:RuntimeInfo}.IsNet8OrEarlier = $false
+                    ${script:RuntimeInfo}.ContextMenuAvailable = $false
                     Write-EmergencyLog "⚠️ .NET 9+ detected - System.Windows.Forms.ContextMenu NOT available" "WARNING"
                     Write-EmergencyLog "   Will use ContextMenuStrip for all context menus" "INFO"
                 }
             }
             elseif ($dotnetDescription -match "\.NET Framework\s+(\d+)\.(\d+)") {
                 # .NET Framework always supports ContextMenu
-                $script:RuntimeInfo.DotNetMajorVersion = [int]$matches[1]
-                $script:RuntimeInfo.IsNet8OrEarlier = $true
-                $script:RuntimeInfo.ContextMenuAvailable = $true
+                ${script:RuntimeInfo}.DotNetMajorVersion = [int]$matches[1]
+                ${script:RuntimeInfo}.IsNet8OrEarlier = $true
+                ${script:RuntimeInfo}.ContextMenuAvailable = $true
                 Write-EmergencyLog "✅ .NET Framework $($matches[1]).$($matches[2]) - Full ContextMenu support" "SUCCESS"
             }
         }
         catch {
             Write-EmergencyLog "Could not detect .NET version: $($_.Exception.Message)" "WARNING"
             # Assume conservative defaults
-            if ($script:RuntimeInfo.IsPowerShell7Plus) {
-                $script:RuntimeInfo.IsNet9OrLater = $true
-                $script:RuntimeInfo.ContextMenuAvailable = $false
+            if (${script:RuntimeInfo}.IsPowerShell7Plus) {
+                ${script:RuntimeInfo}.IsNet9OrLater = $true
+                ${script:RuntimeInfo}.ContextMenuAvailable = $false
             }
         }
         # 3. WebView2 Runtime Detection
-        $script:RuntimeInfo.WebView2Available = Test-WebView2Runtime
+        ${script:RuntimeInfo}.WebView2Available = Test-WebView2Runtime
         # 4. PS5.1 Browser Bridge Detection (for hybrid mode on PS7+)
         $ps51BrowserHostPath = Join-Path $PSScriptRoot "PS51-Browser-Host.ps1"
         $browserBridgePath = Join-Path $PSScriptRoot "BrowserBridge.psm1"
-        $script:RuntimeInfo.PS51BrowserAvailable = (Test-Path $ps51BrowserHostPath) -and (Test-Path $browserBridgePath)
-        if ($script:RuntimeInfo.PS51BrowserAvailable) {
+        ${script:RuntimeInfo}.PS51BrowserAvailable = (Test-Path $ps51BrowserHostPath) -and (Test-Path $browserBridgePath)
+        if (${script:RuntimeInfo}.PS51BrowserAvailable) {
             Write-EmergencyLog "✅ PS5.1 Browser Bridge available for hybrid mode" "SUCCESS"
         }
         # 5. Determine Browser Strategy based on runtime
-        if ($script:RuntimeInfo.IsWindowsPowerShell) {
+        if (${script:RuntimeInfo}.IsWindowsPowerShell) {
             # Windows PowerShell 5.1 - Native WebBrowser has full video support
-            $script:RuntimeInfo.BrowserImplementation = "native"
-            $script:RuntimeInfo.UseLegacyBrowser = $false
+            ${script:RuntimeInfo}.BrowserImplementation = "native"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $false
             Write-EmergencyLog "✅ PS5.1 Native Mode - Full WebBrowser video support" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.IsPowerShell7Plus -and $script:RuntimeInfo.PS51BrowserAvailable) {
+        elseif (${script:RuntimeInfo}.IsPowerShell7Plus -and ${script:RuntimeInfo}.PS51BrowserAvailable) {
             # PowerShell 7+ with PS5.1 bridge available - BEST OPTION for video
-            $script:RuntimeInfo.BrowserImplementation = "ps51-bridge"
-            $script:RuntimeInfo.UsePS51BrowserBridge = $true
-            $script:RuntimeInfo.UseLegacyBrowser = $false
+            ${script:RuntimeInfo}.BrowserImplementation = "ps51-bridge"
+            ${script:RuntimeInfo}.UsePS51BrowserBridge = $true
+            ${script:RuntimeInfo}.UseLegacyBrowser = $false
             Write-EmergencyLog "🎬 PS7+ Hybrid Mode - Using PS5.1 subprocess for full video support" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.WebView2Available -and -not $script:RuntimeInfo.IsNet9OrLater) {
+        elseif (${script:RuntimeInfo}.WebView2Available -and -not ${script:RuntimeInfo}.IsNet9OrLater) {
             # WebView2 available and no .NET 9 issues
-            $script:RuntimeInfo.BrowserImplementation = "webview2"
-            $script:RuntimeInfo.UseLegacyBrowser = $false
+            ${script:RuntimeInfo}.BrowserImplementation = "webview2"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $false
             Write-EmergencyLog "✅ WebView2 Mode - Modern browser engine available" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.IsNet9OrLater) {
+        elseif (${script:RuntimeInfo}.IsNet9OrLater) {
             # .NET 9+ without PS5.1 bridge - need WebView2Shim
             Write-EmergencyLog "⚠️ .NET 9+ detected - WebView2 WinForms may have ContextMenu issues" "WARNING"
-            $script:RuntimeInfo.BrowserImplementation = "shim"
-            $script:RuntimeInfo.UseLegacyBrowser = $true
+            ${script:RuntimeInfo}.BrowserImplementation = "shim"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $true
         }
         else {
             # Fallback to legacy browser
-            $script:RuntimeInfo.BrowserImplementation = "legacy"
-            $script:RuntimeInfo.UseLegacyBrowser = $true
+            ${script:RuntimeInfo}.BrowserImplementation = "legacy"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $true
             Write-EmergencyLog "WebView2 Runtime not installed - Using legacy browser" "WARNING"
         }
         # 6. Load WebView2Shim as fallback if needed (but not if using PS5.1 bridge)
-        if ($script:RuntimeInfo.UseLegacyBrowser -and -not $script:RuntimeInfo.UsePS51BrowserBridge) {
+        if (${script:RuntimeInfo}.UseLegacyBrowser -and -not ${script:RuntimeInfo}.UsePS51BrowserBridge) {
             $shimLoaded = Initialize-WebView2ShimFallback
-            $script:RuntimeInfo.WebView2ShimLoaded = $shimLoaded
+            ${script:RuntimeInfo}.WebView2ShimLoaded = $shimLoaded
         }
-        $script:RuntimeInfo.DetectionComplete = $true
+        ${script:RuntimeInfo}.DetectionComplete = $true
         # Output summary
         Write-EmergencyLog "═══════════════════════════════════════════════════════" "INFO"
         Write-EmergencyLog "RUNTIME DETECTION SUMMARY:" "INFO"
-        Write-EmergencyLog "  PowerShell: $($script:RuntimeInfo.PowerShellVersion) ($($script:RuntimeInfo.PowerShellEdition))" "INFO"
-        Write-EmergencyLog "  .NET Runtime: $($script:RuntimeInfo.DotNetVersion)" "INFO"
-        Write-EmergencyLog "  ContextMenu Available: $($script:RuntimeInfo.ContextMenuAvailable)" "INFO"
-        Write-EmergencyLog "  WebView2 Available: $($script:RuntimeInfo.WebView2Available)" "INFO"
-        Write-EmergencyLog "  PS5.1 Browser Bridge: $($script:RuntimeInfo.PS51BrowserAvailable)" "INFO"
-        Write-EmergencyLog "  Browser Implementation: $($script:RuntimeInfo.BrowserImplementation)" "INFO"
-        Write-EmergencyLog "  Use Legacy Browser: $($script:RuntimeInfo.UseLegacyBrowser)" "INFO"
+        Write-EmergencyLog "  PowerShell: $(${script:RuntimeInfo}.PowerShellVersion) ($(${script:RuntimeInfo}.PowerShellEdition))" "INFO"
+        Write-EmergencyLog "  .NET Runtime: $(${script:RuntimeInfo}.DotNetVersion)" "INFO"
+        Write-EmergencyLog "  ContextMenu Available: $(${script:RuntimeInfo}.ContextMenuAvailable)" "INFO"
+        Write-EmergencyLog "  WebView2 Available: $(${script:RuntimeInfo}.WebView2Available)" "INFO"
+        Write-EmergencyLog "  PS5.1 Browser Bridge: $(${script:RuntimeInfo}.PS51BrowserAvailable)" "INFO"
+        Write-EmergencyLog "  Browser Implementation: $(${script:RuntimeInfo}.BrowserImplementation)" "INFO"
+        Write-EmergencyLog "  Use Legacy Browser: $(${script:RuntimeInfo}.UseLegacyBrowser)" "INFO"
         Write-EmergencyLog "═══════════════════════════════════════════════════════" "INFO"
         return $true
     }
     catch {
         Write-EmergencyLog "❌ Runtime detection failed: $($_.Exception.Message)" "CRITICAL"
         # Set safe defaults
-        $script:RuntimeInfo.UseLegacyBrowser = $true
-        $script:RuntimeInfo.ContextMenuAvailable = $false
+        ${script:RuntimeInfo}.UseLegacyBrowser = $true
+        ${script:RuntimeInfo}.ContextMenuAvailable = $false
         return $false
     }
 }
@@ -358,9 +358,9 @@ function Test-WebView2Runtime {
         }
         # Check for Edge WebView2 in common locations
         $webView2Paths = @(
-            "$env:ProgramFiles\Microsoft\EdgeWebView\Application",
-            "$env:ProgramFiles(x86)\Microsoft\EdgeWebView\Application",
-            "$env:LocalAppData\Microsoft\EdgeWebView\Application"
+            "${env:ProgramFiles}\Microsoft\EdgeWebView\Application",
+            "${env:ProgramFiles}(x86)\Microsoft\EdgeWebView\Application",
+            "${env:LocalAppData}\Microsoft\EdgeWebView\Application"
         )
         foreach ($path in $webView2Paths) {
             if (Test-Path $path) {
@@ -389,7 +389,7 @@ function Initialize-WebView2ShimFallback {
             # Verify shim functions are available
             if (Get-Command Initialize-WebView2Shim -ErrorAction SilentlyContinue) {
                 Write-EmergencyLog "✅ WebView2Shim loaded successfully" "SUCCESS"
-                $script:UseWebView2FallbackAsBrowser = $true
+                ${script:UseWebView2FallbackAsBrowser} = $true
                 return $true
             }
         }
@@ -404,7 +404,7 @@ function Initialize-WebView2ShimFallback {
     }
 }
 # Initialize DotNetSwitchEnabled to false by default (will be set by switcher module if loaded)
-$script:DotNetSwitchEnabled = $false
+${script:DotNetSwitchEnabled} = $false
 function Initialize-EditorDiagnosticsModule {
     <#
     .SYNOPSIS
@@ -452,25 +452,25 @@ function Initialize-DotNetRuntimeSwitcherModule {
             if (Get-Command "Initialize-DotNetRuntimeSwitcher" -ErrorAction SilentlyContinue) {
                 Initialize-DotNetRuntimeSwitcher -ErrorAction Stop
                 # Mark as enabled if initialization succeeded
-                $script:DotNetSwitchEnabled = $true
+                ${script:DotNetSwitchEnabled} = $true
                 Write-StartupLog "✅ .NET Runtime Switcher loaded successfully" "SUCCESS"
                 return $true
             }
             else {
                 Write-StartupLog "Initialize-DotNetRuntimeSwitcher function not found in module" "ERROR"
-                $script:DotNetSwitchEnabled = $false
+                ${script:DotNetSwitchEnabled} = $false
                 return $false
             }
         }
         else {
             Write-StartupLog ".NET Runtime Switcher not found at: $switcherPath" "WARNING"
-            $script:DotNetSwitchEnabled = $false
+            ${script:DotNetSwitchEnabled} = $false
             return $false
         }
     }
     catch {
         Write-StartupLog "Failed to load .NET Runtime Switcher: $($_.Exception.Message)" "ERROR"
-        $script:DotNetSwitchEnabled = $false
+        ${script:DotNetSwitchEnabled} = $false
         return $false
     }
 }
@@ -535,39 +535,39 @@ function Show-RuntimeInfo {
        RAWRXD RUNTIME COMPATIBILITY INFORMATION
 ═══════════════════════════════════════════════════════
 POWERSHELL:
-  Version: $($script:RuntimeInfo.PowerShellVersion)
-  Edition: $($script:RuntimeInfo.PowerShellEdition)
-  Is Windows PowerShell 5.1: $($script:RuntimeInfo.IsWindowsPowerShell)
-  Is PowerShell Core 6+: $($script:RuntimeInfo.IsPowerShellCore)
-  Is PowerShell 7+: $($script:RuntimeInfo.IsPowerShell7Plus)
+  Version: $(${script:RuntimeInfo}.PowerShellVersion)
+  Edition: $(${script:RuntimeInfo}.PowerShellEdition)
+  Is Windows PowerShell 5.1: $(${script:RuntimeInfo}.IsWindowsPowerShell)
+  Is PowerShell Core 6+: $(${script:RuntimeInfo}.IsPowerShellCore)
+  Is PowerShell 7+: $(${script:RuntimeInfo}.IsPowerShell7Plus)
 .NET RUNTIME:
-  Full Description: $($script:RuntimeInfo.DotNetVersion)
-  Major Version: $($script:RuntimeInfo.DotNetMajorVersion)
-  Is .NET 9 or later: $($script:RuntimeInfo.IsNet9OrLater)
-  Is .NET 8 or earlier: $($script:RuntimeInfo.IsNet8OrEarlier)
+  Full Description: $(${script:RuntimeInfo}.DotNetVersion)
+  Major Version: $(${script:RuntimeInfo}.DotNetMajorVersion)
+  Is .NET 9 or later: $(${script:RuntimeInfo}.IsNet9OrLater)
+  Is .NET 8 or earlier: $(${script:RuntimeInfo}.IsNet8OrEarlier)
 WINFORMS COMPATIBILITY:
-  Windows Forms Available: $($script:RuntimeInfo.WinFormsAvailable)
-  ContextMenu Available: $($script:RuntimeInfo.ContextMenuAvailable)
-  ContextMenuStrip Available: $($script:RuntimeInfo.ContextMenuStripAvailable)
+  Windows Forms Available: $(${script:RuntimeInfo}.WinFormsAvailable)
+  ContextMenu Available: $(${script:RuntimeInfo}.ContextMenuAvailable)
+  ContextMenuStrip Available: $(${script:RuntimeInfo}.ContextMenuStripAvailable)
 BROWSER:
-  WebView2 Runtime Installed: $($script:RuntimeInfo.WebView2Available)
-  WebView2Shim Loaded: $($script:RuntimeInfo.WebView2ShimLoaded)
-  Using Legacy Browser: $($script:RuntimeInfo.UseLegacyBrowser)
-  Current Browser Type: $($script:browserType)
-  WebView2 Active: $($script:useWebView2)
+  WebView2 Runtime Installed: $(${script:RuntimeInfo}.WebView2Available)
+  WebView2Shim Loaded: $(${script:RuntimeInfo}.WebView2ShimLoaded)
+  Using Legacy Browser: $(${script:RuntimeInfo}.UseLegacyBrowser)
+  Current Browser Type: $(${script:browserType})
+  WebView2 Active: $(${script:useWebView2})
 DETECTION STATUS:
-  Detection Complete: $($script:RuntimeInfo.DetectionComplete)
-  .NET Compatible for WebView2: $($script:NetVersionCompatible)
+  Detection Complete: $(${script:RuntimeInfo}.DetectionComplete)
+  .NET Compatible for WebView2: $(${script:NetVersionCompatible})
 ═══════════════════════════════════════════════════════
 RECOMMENDATIONS:
 "@
-    if ($script:RuntimeInfo.IsNet9OrLater) {
+    if (${script:RuntimeInfo}.IsNet9OrLater) {
         $info += "`n• You're on .NET 9+. WebView2 WinForms may have issues.`n• Using WebView2Shim/legacy browser for compatibility.`n• For full WebView2 support, use Windows PowerShell 5.1."
     }
-    elseif ($script:RuntimeInfo.IsPowerShell7Plus -and -not $script:useWebView2) {
+    elseif (${script:RuntimeInfo}.IsPowerShell7Plus -and -not ${script:useWebView2}) {
         $info += "`n• PowerShell 7+ detected but WebView2 unavailable.`n• Install WebView2 Runtime for better browser experience.`n• Or use Windows PowerShell 5.1 for full compatibility."
     }
-    elseif ($script:RuntimeInfo.IsWindowsPowerShell) {
+    elseif (${script:RuntimeInfo}.IsWindowsPowerShell) {
         $info += "`n• Windows PowerShell 5.1 - Full compatibility mode.`n• All features should work correctly."
     }
     else {
@@ -581,7 +581,7 @@ function Get-RuntimeInfoObject {
     .SYNOPSIS
         Returns the runtime info hashtable for programmatic access
     #>
-    return $script:RuntimeInfo
+    return ${script:RuntimeInfo}
 }
 # Run runtime detection immediately
 $runtimeDetectionSuccess = Initialize-RuntimeDetection
@@ -597,9 +597,9 @@ function Initialize-WindowsForms {
     param()
     try {
         # Check PowerShell version (use cached runtime info)
-        $psVersion = $script:RuntimeInfo.PowerShellVersion
+        $psVersion = ${script:RuntimeInfo}.PowerShellVersion
         Write-EmergencyLog "PowerShell Version: $psVersion" "INFO"
-        if ($script:RuntimeInfo.IsPowerShellCore) {
+        if (${script:RuntimeInfo}.IsPowerShellCore) {
             Write-EmergencyLog "PowerShell Core/7+ detected - using Microsoft.WindowsDesktop.App" "INFO"
             # For PowerShell Core 6+, we need Microsoft.WindowsDesktop.App
             try {
@@ -670,24 +670,24 @@ function Initialize-WindowsForms {
             $testForm = New-Object System.Windows.Forms.Form -ErrorAction Stop
             $testForm.Dispose()
             Write-EmergencyLog "✅ Windows Forms is functional" "SUCCESS"
-            $script:RuntimeInfo.WinFormsAvailable = $true
+            ${script:RuntimeInfo}.WinFormsAvailable = $true
             return $true
         }
         catch {
             Write-EmergencyLog "❌ Windows Forms not functional: $($_.Exception.Message)" "CRITICAL"
-            $script:RuntimeInfo.WinFormsAvailable = $false
+            ${script:RuntimeInfo}.WinFormsAvailable = $false
             return $false
         }
     }
     catch {
         Write-EmergencyLog "❌ Critical error initializing Windows Forms: $($_.Exception.Message)" "CRITICAL"
-        $script:RuntimeInfo.WinFormsAvailable = $false
+        ${script:RuntimeInfo}.WinFormsAvailable = $false
         return $false
     }
 }
 # Initialize Windows Forms and store result
-$script:WindowsFormsAvailable = Initialize-WindowsForms
-if (-not $script:WindowsFormsAvailable) {
+${script:WindowsFormsAvailable} = Initialize-WindowsForms
+if (-not ${script:WindowsFormsAvailable}) {
     Write-EmergencyLog "═══════════════════════════════════════════════════════" "CRITICAL"
     Write-EmergencyLog "CRITICAL ERROR: Windows Forms is not available!" "CRITICAL"
     Write-EmergencyLog "This can happen in PowerShell Core 6+ environments." "CRITICAL"
@@ -731,11 +731,11 @@ function Start-ConsoleMode {
         # Initialize AI/Ollama connection
         if (Test-NetConnection -ComputerName localhost -Port 11434 -InformationLevel Quiet -ErrorAction SilentlyContinue) {
             Write-Host "✅ Ollama service detected on localhost:11434" -ForegroundColor Green
-            $script:ConsoleOllamaAvailable = $true
+            ${script:ConsoleOllamaAvailable} = $true
         }
         else {
             Write-Host "⚠️ Ollama service not detected" -ForegroundColor Yellow
-            $script:ConsoleOllamaAvailable = $false
+            ${script:ConsoleOllamaAvailable} = $false
         }
         # Show available commands
         Show-ConsoleHelp
@@ -778,19 +778,19 @@ Type a command to get started, or /help for more information.
 }
 function Start-ConsoleInteractiveMode {
     param()
-    $script:ConsoleRunning = $true
-    $script:ConsoleHistory = @()
+    ${script:ConsoleRunning} = $true
+    ${script:ConsoleHistory} = @()
     Write-Host ""
     Write-Host "🚀 Console mode ready! Type /help for commands or /exit to quit." -ForegroundColor Green
     Write-Host ""
-    while ($script:ConsoleRunning) {
+    while (${script:ConsoleRunning}) {
         try {
             # Show prompt
             Write-Host "RawrXD> " -NoNewline -ForegroundColor Cyan
             # Get user input
             $userInput = Read-Host
             if (-not [string]::IsNullOrWhiteSpace($userInput)) {
-                $script:ConsoleHistory += $userInput
+                ${script:ConsoleHistory} += $userInput
                 Process-ConsoleCommand $userInput.Trim()
             }
         }
@@ -805,25 +805,25 @@ function Process-ConsoleCommand {
     # Parse command and arguments
     $parts = $Command -split '\s+', 2
     $cmd = $parts[0].ToLower()
-    $arguments = if ($parts.Length -gt 1) { $parts[1] } else { "" }
+    $arguments = $(if ($parts.Length -gt 1) { $parts[1] } else { "" }
     switch ($cmd) {
         "/help" {
             Show-ConsoleHelp
         }
         "/exit" {
             Write-Host "👋 Goodbye!" -ForegroundColor Green
-            $script:ConsoleRunning = $false
+            ${script:ConsoleRunning} = $false
         }
         "/status" {
             Write-Host "📊 RAWRXD STATUS:" -ForegroundColor Cyan
             Write-Host "   PowerShell: $($PSVersionTable.PSVersion)" -ForegroundColor Gray
             Write-Host "   Platform: $($PSVersionTable.Platform)" -ForegroundColor Gray
-            Write-Host "   Windows Forms: $(if ($script:WindowsFormsAvailable) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
-            Write-Host "   Ollama: $(if ($script:ConsoleOllamaAvailable) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
-            Write-Host "   Session ID: $($script:CurrentSession.SessionId)" -ForegroundColor Gray
+            Write-Host "   Windows Forms: $(if (${script:WindowsFormsAvailable}) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
+            Write-Host "   Ollama: $(if (${script:ConsoleOllamaAvailable}) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
+            Write-Host "   Session ID: $(${script:CurrentSession}.SessionId)" -ForegroundColor Gray
         }
         "/ask" {
-            if (-not $script:ConsoleOllamaAvailable) {
+            if (-not ${script:ConsoleOllamaAvailable}) {
                 Write-Host "❌ Ollama service not available. Please start Ollama first." -ForegroundColor Red
                 return
             }
@@ -842,7 +842,7 @@ function Process-ConsoleCommand {
             }
         }
         "/models" {
-            if (-not $script:ConsoleOllamaAvailable) {
+            if (-not ${script:ConsoleOllamaAvailable}) {
                 Write-Host "❌ Ollama service not available" -ForegroundColor Red
                 return
             }
@@ -851,7 +851,7 @@ function Process-ConsoleCommand {
                 $models = Get-AvailableModels
                 if ($models.Count -gt 0) {
                     foreach ($model in $models) {
-                        $marker = if ($model -eq $OllamaModel) { "👉" } else { "  " }
+                        $marker = $(if ($model -eq $OllamaModel) { "👉" } else { "  " }
                         Write-Host "$marker $model" -ForegroundColor Gray
                     }
                 }
@@ -867,12 +867,12 @@ function Process-ConsoleCommand {
             Write-Host "📂 Current Directory: $(Get-Location)" -ForegroundColor Gray
         }
         "/list" {
-            $path = if ([string]::IsNullOrWhiteSpace($arguments)) { Get-Location } else { $arguments }
+            $path = $(if ([string]::IsNullOrWhiteSpace($arguments)) { Get-Location } else { $arguments }
             try {
                 Write-Host "📁 Contents of: $path" -ForegroundColor Cyan
                 Get-ChildItem $path | ForEach-Object {
-                    $icon = if ($_.PSIsContainer) { "📁" } else { "📄" }
-                    $size = if (-not $_.PSIsContainer) { " ($($_.Length) bytes)" } else { "" }
+                    $icon = $(if ($_.PSIsContainer) { "📁" } else { "📄" }
+                    $size = $(if (-not $_.PSIsContainer) { " ($($_.Length) bytes)" } else { "" }
                     Write-Host "   $icon $($_.Name)$size" -ForegroundColor Gray
                 }
             }
@@ -891,14 +891,14 @@ function Process-ConsoleCommand {
         }
         "/logs" {
             try {
-                if (Test-Path $script:StartupLogFile) {
+                if (Test-Path ${script:StartupLogFile}) {
                     Write-Host "📋 Recent log entries:" -ForegroundColor Cyan
-                    Get-Content $script:StartupLogFile -Tail 20 | ForEach-Object {
+                    Get-Content ${script:StartupLogFile} -Tail 20 | ForEach-Object {
                         Write-Host "   $_" -ForegroundColor Gray
                     }
                 }
                 else {
-                    Write-Host "❌ Log file not found: $script:StartupLogFile" -ForegroundColor Red
+                    Write-Host "❌ Log file not found: ${script:StartupLogFile}" -ForegroundColor Red
                 }
             }
             catch {
@@ -908,9 +908,9 @@ function Process-ConsoleCommand {
         "/settings" {
             Write-Host "⚙️ Current Settings:" -ForegroundColor Cyan
             Write-Host "   Ollama Model: $OllamaModel" -ForegroundColor Gray
-            Write-Host "   Emergency Log: $script:EmergencyLogPath" -ForegroundColor Gray
-            Write-Host "   Session Timeout: $($script:SecurityConfig.SessionTimeout) seconds" -ForegroundColor Gray
-            Write-Host "   Debug Mode: $($global:settings.DebugMode)" -ForegroundColor Gray
+            Write-Host "   Emergency Log: ${script:EmergencyLogPath}" -ForegroundColor Gray
+            Write-Host "   Session Timeout: $(${script:SecurityConfig}.SessionTimeout) seconds" -ForegroundColor Gray
+            Write-Host "   Debug Mode: $(${global:settings}.DebugMode)" -ForegroundColor Gray
         }
         default {
             if ($Command.StartsWith("/")) {
@@ -919,7 +919,7 @@ function Process-ConsoleCommand {
             }
             else {
                 # Treat as AI chat if Ollama is available
-                if ($script:ConsoleOllamaAvailable) {
+                if (${script:ConsoleOllamaAvailable}) {
                     Write-Host "🤖 Chatting with AI..." -ForegroundColor Yellow
                     try {
                         $response = Send-OllamaRequest $Command $OllamaModel
@@ -1012,7 +1012,7 @@ public static class StealthCrypto {
 }
 "@
 # Global security configuration
-$script:SecurityConfig = @{
+${script:SecurityConfig} = @{
     EncryptSensitiveData   = $true
     ValidateAllInputs      = $true
     SecureConnections      = $true
@@ -1025,7 +1025,7 @@ $script:SecurityConfig = @{
     ProcessHiding          = $false
 }
 # Session management
-$script:CurrentSession = @{
+${script:CurrentSession} = @{
     UserId          = $null
     SessionId       = [System.Guid]::NewGuid().ToString()
     StartTime       = Get-Date
@@ -1036,28 +1036,28 @@ $script:CurrentSession = @{
     EncryptionKey   = [StealthCrypto]::GenerateKey()
 }
 # Agentic command state management
-$script:PendingDelete = $null
+${script:PendingDelete} = $null
 # Security event logging
-$script:SecurityLog = @()
+${script:SecurityLog} = @()
 function Write-SecurityLog {
     param(
         [string]$EventName,
         [string]$Level = "INFO",
         [string]$Details = ""
     )
-    if (-not $script:SecurityConfig.LogSecurityEvents) { return }
+    if (-not ${script:SecurityConfig}.LogSecurityEvents) { return }
     $logEntry = @{
         Timestamp   = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        SessionId   = $script:CurrentSession.SessionId
+        SessionId   = ${script:CurrentSession}.SessionId
         Event       = $EventName
         Level       = $Level
         Details     = $Details
         ProcessId   = $PID
         UserContext = [Environment]::UserName
     }
-    $script:SecurityLog += $logEntry
+    ${script:SecurityLog} += $logEntry
     # Write to console if debug mode
-    if ($script:DebugMode) {
+    if (${script:DebugMode}) {
         Write-Host "[$Level] Security: $EventName" -ForegroundColor $(
             switch ($Level) {
                 "ERROR" { "Red" }
@@ -1070,11 +1070,11 @@ function Write-SecurityLog {
 }
 function Protect-SensitiveString {
     param([string]$Data)
-    if (-not $script:SecurityConfig.EncryptSensitiveData -or [string]::IsNullOrEmpty($Data)) {
+    if (-not ${script:SecurityConfig}.EncryptSensitiveData -or [string]::IsNullOrEmpty($Data)) {
         return $Data
     }
     try {
-        $encrypted = [StealthCrypto]::Encrypt($Data, $script:CurrentSession.EncryptionKey)
+        $encrypted = [StealthCrypto]::Encrypt($Data, ${script:CurrentSession}.EncryptionKey)
         Write-SecurityLog "Data encrypted" "DEBUG" "Length: $($Data.Length)"
         return $encrypted
     }
@@ -1085,11 +1085,11 @@ function Protect-SensitiveString {
 }
 function Unprotect-SensitiveString {
     param([string]$EncryptedData)
-    if (-not $script:SecurityConfig.EncryptSensitiveData -or [string]::IsNullOrEmpty($EncryptedData)) {
+    if (-not ${script:SecurityConfig}.EncryptSensitiveData -or [string]::IsNullOrEmpty($EncryptedData)) {
         return $EncryptedData
     }
     try {
-        $decrypted = [StealthCrypto]::Decrypt($EncryptedData, $script:CurrentSession.EncryptionKey)
+        $decrypted = [StealthCrypto]::Decrypt($EncryptedData, ${script:CurrentSession}.EncryptionKey)
         Write-SecurityLog "Data decrypted" "DEBUG" "Success"
         return $decrypted
     }
@@ -1100,7 +1100,7 @@ function Unprotect-SensitiveString {
 }
 function Test-InputSafety {
     param([string]$InputText, [string]$Type = "General")
-    if (-not $script:SecurityConfig.ValidateAllInputs) { return $true }
+    if (-not ${script:SecurityConfig}.ValidateAllInputs) { return $true }
     # Basic validation patterns
     $dangerousPatterns = @(
         '(?i)(script|javascript|vbscript):', # Script injection
@@ -1121,14 +1121,14 @@ function Test-InputSafety {
 }
 function Enable-StealthMode {
     param([bool]$Enable = $true)
-    $script:SecurityConfig.StealthMode = $Enable
+    ${script:SecurityConfig}.StealthMode = $Enable
     if ($Enable) {
         Write-SecurityLog "Stealth mode enabled" "INFO"
         # Minimize resource footprint
         [System.GC]::Collect()
         [System.GC]::WaitForPendingFinalizers()
         # Hide from process list (basic obfuscation)
-        if ($script:SecurityConfig.ProcessHiding) {
+        if (${script:SecurityConfig}.ProcessHiding) {
             try {
                 $process = Get-Process -Id $PID
                 $process.ProcessName = "svchost"  # This doesn't actually work but shows intent
@@ -1136,10 +1136,10 @@ function Enable-StealthMode {
             catch { }
         }
         # Enable anti-forensics measures
-        if ($script:SecurityConfig.AntiForensics) {
+        if (${script:SecurityConfig}.AntiForensics) {
             # Clear PowerShell history
-            if (Test-Path "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt") {
-                Clear-Content "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt" -Force -ErrorAction SilentlyContinue
+            if (Test-Path "${env:APPDATA}\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt") {
+                Clear-Content "${env:APPDATA}\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt" -Force -ErrorAction SilentlyContinue
             }
         }
     }
@@ -1149,9 +1149,9 @@ function Enable-StealthMode {
 }
 function Test-SessionSecurity {
     $currentTime = Get-Date
-    $sessionDuration = ($currentTime - $script:CurrentSession.StartTime).TotalSeconds
+    $sessionDuration = ($currentTime - ${script:CurrentSession}.StartTime).TotalSeconds
     # Check session timeout
-    if ($script:SecurityConfig.AuthenticationRequired -and $sessionDuration -gt $script:SecurityConfig.SessionTimeout) {
+    if (${script:SecurityConfig}.AuthenticationRequired -and $sessionDuration -gt ${script:SecurityConfig}.SessionTimeout) {
         Write-SecurityLog "Session timeout exceeded" "WARNING" "Duration: $sessionDuration seconds"
         return $false
     }
@@ -1201,7 +1201,7 @@ function Write-ErrorLog {
             }
         }
         # Use existing Write-StartupLog for immediate logging
-        $logMessage = if ($IsAIRelated) {
+        $logMessage = $(if ($IsAIRelated) {
             "[AI-$ErrorCategory - $Severity] $ErrorMessage"
         }
         else {
@@ -1223,7 +1223,7 @@ function Write-ErrorLog {
         }
         Write-SecurityLog "Error logged: $ErrorMessage" "ERROR" $securityContext
         # Real-time AI error notification to chat if available and AI-related
-        if ($IsAIRelated -and $script:chatBox -and $ShowToUser) {
+        if ($IsAIRelated -and ${script:chatBox} -and $ShowToUser) {
             $aiErrorNotification = "🤖 AI Agent Error [$Severity]: $ErrorMessage"
             if ($AgentContext) {
                 $aiErrorNotification += "`nContext: $AgentContext"
@@ -1231,7 +1231,7 @@ function Write-ErrorLog {
             if ($AIModel) {
                 $aiErrorNotification += "`nModel: $AIModel"
             }
-            $script:chatBox.AppendText("Agent > $aiErrorNotification`r`n`r`n")
+            ${script:chatBox}.AppendText("Agent > $aiErrorNotification`r`n`r`n")
         }
     }
     catch {
@@ -1244,7 +1244,7 @@ function Write-ErrorLog {
 # ADVANCED TELEMETRY & INSIGHTS SYSTEM
 # ============================================
 # Telemetry configuration
-$script:TelemetryConfig = @{
+${script:TelemetryConfig} = @{
     EnableTelemetry        = $true
     EnableInsights         = $true
     RealTimeAnalysis       = $true
@@ -1257,10 +1257,10 @@ $script:TelemetryConfig = @{
         CPUUsage     = 80  # 80%
     }
     InsightsRetentionDays  = 30
-    ExportPath             = Join-Path $env:TEMP "RawrXD_Insights"
+    ExportPath             = Join-Path ${env:TEMP} "RawrXD_Insights"
 }
 # Global telemetry storage
-$script:TelemetryData = @{
+${script:TelemetryData} = @{
     SessionMetrics     = @{
         StartTime        = Get-Date
         EventCount       = 0
@@ -1295,7 +1295,7 @@ function Update-Insights {
         [string]$EventCategory = "General",
         [hashtable]$Metadata = @{}
     )
-    if (-not $script:TelemetryConfig.EnableInsights) { return }
+    if (-not ${script:TelemetryConfig}.EnableInsights) { return }
     try {
         $timestamp = Get-Date
         $insight = @{
@@ -1304,21 +1304,21 @@ function Update-Insights {
             EventData = $EventData
             Category  = $EventCategory
             Metadata  = $Metadata
-            SessionId = $script:CurrentSession.SessionId
+            SessionId = ${script:CurrentSession}.SessionId
         }
         # Store insight
-        $script:TelemetryData.InsightsHistory += $insight
-        $script:TelemetryData.SessionMetrics.EventCount++
+        ${script:TelemetryData}.InsightsHistory += $insight
+        ${script:TelemetryData}.SessionMetrics.EventCount++
         # Real-time analysis if enabled
-        if ($script:TelemetryConfig.RealTimeAnalysis) {
+        if (${script:TelemetryConfig}.RealTimeAnalysis) {
             Analyze-RealTimeInsights -Insight $insight
         }
         # Log to console if debug mode
-        if ($script:DebugMode) {
+        if (${script:DebugMode}) {
             Write-StartupLog "🔍 INSIGHT: [$EventCategory] $EventName - $EventData" "INFO"
         }
         # Performance tracking
-        if ($script:TelemetryConfig.PerformanceTracking) {
+        if (${script:TelemetryConfig}.PerformanceTracking) {
             Update-PerformanceMetrics
         }
         # Check notification thresholds
@@ -1326,7 +1326,7 @@ function Update-Insights {
         # Clean up old insights
         Cleanup-OldInsights
         # Send email notification if configured
-        if ($script:ErrorNotificationConfig.EnableEmailNotifications -and $EventCategory -eq "ERROR") {
+        if (${script:ErrorNotificationConfig}.EnableEmailNotifications -and $EventCategory -eq "ERROR") {
             Send-InsightEmailNotification -EventName $EventName -EventData $EventData -Category $EventCategory
         }
     }
@@ -1342,7 +1342,7 @@ function Send-InsightEmailNotification {
         [string]$Category
     )
     try {
-        $emailConfig = $script:ErrorNotificationConfig.EmailSettings
+        $emailConfig = ${script:ErrorNotificationConfig}.EmailSettings
         if (-not $emailConfig) { return }
         $subject = "RawrXD Application Insight: $Category - $EventName"
         $body = @"
@@ -1351,13 +1351,13 @@ Event: $EventName
 Category: $Category
 Data: $EventData
 Timestamp: $(Get-Date)
-Session ID: $($script:CurrentSession.SessionId)
-Machine: $env:COMPUTERNAME
-User: $env:USERNAME
+Session ID: $(${script:CurrentSession}.SessionId)
+Machine: ${env:COMPUTERNAME}
+User: ${env:USERNAME}
 Performance Metrics:
-- Memory Usage: $(if ($script:TelemetryData.PerformanceMetrics.MemoryUsage -and $script:TelemetryData.PerformanceMetrics.MemoryUsage.Count -gt 0) { $script:TelemetryData.PerformanceMetrics.MemoryUsage[-1].Value } else { "N/A" })MB
-- Event Count: $($script:TelemetryData.SessionMetrics.EventCount)
-- Error Count: $($script:TelemetryData.SessionMetrics.ErrorCount)
+- Memory Usage: $(if (${script:TelemetryData}.PerformanceMetrics.MemoryUsage -and ${script:TelemetryData}.PerformanceMetrics.MemoryUsage.Count -gt 0) { ${script:TelemetryData}.PerformanceMetrics.MemoryUsage[-1].Value } else { "N/A" })MB
+- Event Count: $(${script:TelemetryData}.SessionMetrics.EventCount)
+- Error Count: $(${script:TelemetryData}.SessionMetrics.ErrorCount)
 This notification was sent automatically by RawrXD's telemetry system.
 "@
         $message = New-Object System.Net.Mail.MailMessage
@@ -1382,18 +1382,18 @@ function Analyze-RealTimeInsights {
     param($Insight)
     try {
         # Pattern detection
-        $recentInsights = $script:TelemetryData.InsightsHistory | Where-Object {
+        $recentInsights = ${script:TelemetryData}.InsightsHistory | Where-Object {
             $_.Timestamp -gt (Get-Date).AddMinutes(-5)
         }
         # Error pattern detection
         if ($Insight.Category -eq "ERROR") {
-            $script:TelemetryData.SessionMetrics.ErrorCount++
+            ${script:TelemetryData}.SessionMetrics.ErrorCount++
             $recentErrors = @($recentInsights | Where-Object { $_.Category -eq "ERROR" })
-            $recentErrorCount = if ($recentErrors) { $recentErrors.Count } else { 0 }
+            $recentErrorCount = $(if ($recentErrors) { $recentErrors.Count } else { 0 }
             if ($recentErrorCount -gt 3) {
                 Send-AlertNotification -Type "ErrorSpike" -Message "High error rate detected: $recentErrorCount errors in 5 minutes"
                 # Track error patterns
-                $script:TelemetryData.UserBehavior.ErrorPatterns += @{
+                ${script:TelemetryData}.UserBehavior.ErrorPatterns += @{
                     Timestamp  = Get-Date
                     ErrorCount = $recentErrorCount
                     Pattern    = "ErrorSpike"
@@ -1409,20 +1409,20 @@ function Analyze-RealTimeInsights {
         }
         # User behavior analysis
         if ($Insight.Category -eq "UserInteraction") {
-            $script:TelemetryData.SessionMetrics.UserInteractions++
+            ${script:TelemetryData}.SessionMetrics.UserInteractions++
             Analyze-UserBehavior -Insight $Insight
         }
         # AI request tracking
         if ($Insight.Category -eq "AI") {
-            $script:TelemetryData.SessionMetrics.AIRequests++
+            ${script:TelemetryData}.SessionMetrics.AIRequests++
         }
         # File operation tracking
         if ($Insight.Category -eq "FileSystem") {
-            $script:TelemetryData.SessionMetrics.FileOperations++
+            ${script:TelemetryData}.SessionMetrics.FileOperations++
         }
         # Network request tracking
         if ($Insight.Category -eq "Network") {
-            $script:TelemetryData.SessionMetrics.NetworkRequests++
+            ${script:TelemetryData}.SessionMetrics.NetworkRequests++
         }
     }
     catch {
@@ -1436,13 +1436,13 @@ function Update-PerformanceMetrics {
         if ($process) {
             # Memory usage
             $memoryMB = [math]::Round($process.WorkingSet64 / 1MB, 2)
-            $script:TelemetryData.PerformanceMetrics.MemoryUsage += @{
+            ${script:TelemetryData}.PerformanceMetrics.MemoryUsage += @{
                 Timestamp = Get-Date
                 Value     = $memoryMB
             }
             # CPU usage (approximation)
             $cpuTime = $process.TotalProcessorTime.TotalMilliseconds
-            $script:TelemetryData.PerformanceMetrics.CPUUsage += @{
+            ${script:TelemetryData}.PerformanceMetrics.CPUUsage += @{
                 Timestamp = Get-Date
                 Value     = $cpuTime
             }
@@ -1451,7 +1451,7 @@ function Update-PerformanceMetrics {
                 $diskCounters = Get-Counter "\Process($($process.ProcessName)*)\IO Data Bytes/sec" -ErrorAction SilentlyContinue
                 if ($diskCounters) {
                     $diskIO = $diskCounters.CounterSamples[0].CookedValue
-                    $script:TelemetryData.PerformanceMetrics.DiskIO += @{
+                    ${script:TelemetryData}.PerformanceMetrics.DiskIO += @{
                         Timestamp = Get-Date
                         Value     = $diskIO
                     }
@@ -1461,13 +1461,13 @@ function Update-PerformanceMetrics {
                 # Silent fail for disk I/O metrics
             }
             # Trim old metrics (keep last 100 entries)
-            if ($script:TelemetryData.PerformanceMetrics.MemoryUsage -and $script:TelemetryData.PerformanceMetrics.MemoryUsage.Count -gt 100) {
-                $script:TelemetryData.PerformanceMetrics.MemoryUsage = $script:TelemetryData.PerformanceMetrics.MemoryUsage[-100..-1]
-                if ($script:TelemetryData.PerformanceMetrics.CPUUsage) {
-                    $script:TelemetryData.PerformanceMetrics.CPUUsage = $script:TelemetryData.PerformanceMetrics.CPUUsage[-100..-1]
+            if (${script:TelemetryData}.PerformanceMetrics.MemoryUsage -and ${script:TelemetryData}.PerformanceMetrics.MemoryUsage.Count -gt 100) {
+                ${script:TelemetryData}.PerformanceMetrics.MemoryUsage = ${script:TelemetryData}.PerformanceMetrics.MemoryUsage[-100..-1]
+                if (${script:TelemetryData}.PerformanceMetrics.CPUUsage) {
+                    ${script:TelemetryData}.PerformanceMetrics.CPUUsage = ${script:TelemetryData}.PerformanceMetrics.CPUUsage[-100..-1]
                 }
-                if ($script:TelemetryData.PerformanceMetrics.DiskIO -and $script:TelemetryData.PerformanceMetrics.DiskIO.Count -gt 100) {
-                    $script:TelemetryData.PerformanceMetrics.DiskIO = $script:TelemetryData.PerformanceMetrics.DiskIO[-100..-1]
+                if (${script:TelemetryData}.PerformanceMetrics.DiskIO -and ${script:TelemetryData}.PerformanceMetrics.DiskIO.Count -gt 100) {
+                    ${script:TelemetryData}.PerformanceMetrics.DiskIO = ${script:TelemetryData}.PerformanceMetrics.DiskIO[-100..-1]
                 }
             }
         }
@@ -1480,30 +1480,30 @@ function Update-PerformanceMetrics {
 function Check-InsightThresholds {
     try {
         # Check if telemetry data and config are properly initialized
-        if (-not $script:TelemetryConfig -or -not $script:TelemetryConfig.NotificationThresholds) {
+        if (-not ${script:TelemetryConfig} -or -not ${script:TelemetryConfig}.NotificationThresholds) {
             Write-StartupLog "Telemetry configuration not initialized, skipping threshold checks" "DEBUG"
             return
         }
-        if (-not $script:TelemetryData -or -not $script:TelemetryData.PerformanceMetrics) {
+        if (-not ${script:TelemetryData} -or -not ${script:TelemetryData}.PerformanceMetrics) {
             Write-StartupLog "Telemetry data not initialized, skipping threshold checks" "DEBUG"
             return
         }
-        $thresholds = $script:TelemetryConfig.NotificationThresholds
+        $thresholds = ${script:TelemetryConfig}.NotificationThresholds
         # Check memory usage with proper null checking
-        if ($script:TelemetryData.PerformanceMetrics.MemoryUsage -and @($script:TelemetryData.PerformanceMetrics.MemoryUsage).Count -gt 0) {
-            $latestMemory = $script:TelemetryData.PerformanceMetrics.MemoryUsage | Select-Object -Last 1
+        if (${script:TelemetryData}.PerformanceMetrics.MemoryUsage -and @(${script:TelemetryData}.PerformanceMetrics.MemoryUsage).Count -gt 0) {
+            $latestMemory = ${script:TelemetryData}.PerformanceMetrics.MemoryUsage | Select-Object -Last 1
             if ($latestMemory -and $latestMemory.Value -gt $thresholds.MemoryUsage) {
                 Send-AlertNotification -Type "MemoryUsage" -Message "High memory usage: $($latestMemory.Value)MB" -Severity "HIGH"
             }
         }
         # Check error rate with proper null checking
-        if ($script:TelemetryData.InsightsHistory -and @($script:TelemetryData.InsightsHistory).Count -gt 0) {
-            $recentInsights = @($script:TelemetryData.InsightsHistory | Where-Object {
+        if (${script:TelemetryData}.InsightsHistory -and @(${script:TelemetryData}.InsightsHistory).Count -gt 0) {
+            $recentInsights = @(${script:TelemetryData}.InsightsHistory | Where-Object {
                     $_.Timestamp -gt (Get-Date).AddMinutes(-10)
                 })
             if ($recentInsights -and $recentInsights.Count -gt 0) {
                 $errorInsights = @($recentInsights | Where-Object { $_.Category -eq "ERROR" })
-                $errorCount = if ($errorInsights) { $errorInsights.Count } else { 0 }
+                $errorCount = $(if ($errorInsights) { $errorInsights.Count } else { 0 }
                 $errorRate = $errorCount / $recentInsights.Count
                 if ($errorRate -gt $thresholds.ErrorRate) {
                     Send-AlertNotification -Type "ErrorRate" -Message "High error rate: $([math]::Round($errorRate * 100, 1))%" -Severity "HIGH"
@@ -1511,8 +1511,8 @@ function Check-InsightThresholds {
             }
         }
         # Check response times with proper null checking
-        if ($script:TelemetryData.PerformanceMetrics.ResponseTimes -and @($script:TelemetryData.PerformanceMetrics.ResponseTimes).Count -gt 0) {
-            $recentResponseTimes = @($script:TelemetryData.PerformanceMetrics.ResponseTimes | Where-Object {
+        if (${script:TelemetryData}.PerformanceMetrics.ResponseTimes -and @(${script:TelemetryData}.PerformanceMetrics.ResponseTimes).Count -gt 0) {
+            $recentResponseTimes = @(${script:TelemetryData}.PerformanceMetrics.ResponseTimes | Where-Object {
                     $_.Timestamp -gt (Get-Date).AddMinutes(-5)
                 })
             if ($recentResponseTimes -and $recentResponseTimes.Count -gt 0) {
@@ -1534,22 +1534,22 @@ function Analyze-UserBehavior {
         # Track feature usage
         if ($Insight.Metadata.ContainsKey("Feature")) {
             $feature = $Insight.Metadata.Feature
-            if (-not $script:TelemetryData.UserBehavior.FeatureUsage.ContainsKey($feature)) {
-                $script:TelemetryData.UserBehavior.FeatureUsage[$feature] = 0
+            if (-not ${script:TelemetryData}.UserBehavior.FeatureUsage.ContainsKey($feature)) {
+                ${script:TelemetryData}.UserBehavior.FeatureUsage[$feature] = 0
             }
-            $script:TelemetryData.UserBehavior.FeatureUsage[$feature]++
+            ${script:TelemetryData}.UserBehavior.FeatureUsage[$feature]++
         }
         # Track navigation patterns
         if ($Insight.EventName -eq "Navigation") {
-            $script:TelemetryData.UserBehavior.NavigationPatterns += @{
+            ${script:TelemetryData}.UserBehavior.NavigationPatterns += @{
                 Timestamp = $Insight.Timestamp
                 Target    = $Insight.EventData
                 Source    = $Insight.Metadata.Source
             }
         }
         # Generate insights based on usage patterns
-        if ($script:TelemetryData.UserBehavior.FeatureUsage -and @($script:TelemetryData.UserBehavior.FeatureUsage).Count -gt 0) {
-            $mostUsed = ($script:TelemetryData.UserBehavior.FeatureUsage.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
+        if (${script:TelemetryData}.UserBehavior.FeatureUsage -and @(${script:TelemetryData}.UserBehavior.FeatureUsage).Count -gt 0) {
+            $mostUsed = (${script:TelemetryData}.UserBehavior.FeatureUsage.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
             Update-Insights -EventName "PopularFeature" -EventData $mostUsed -EventCategory "Analytics" -Metadata @{Type = "FeatureAnalysis" }
         }
     }
@@ -1568,7 +1568,7 @@ function Send-AlertNotification {
         # Log alert through error handler system
         Register-ErrorHandler -ErrorMessage $Message -ErrorCategory "ALERT" -Severity $Severity -SourceFunction "TelemetrySystem"
         # Show desktop notification if possible
-        if ($script:TelemetryConfig.EnableTelemetry) {
+        if (${script:TelemetryConfig}.EnableTelemetry) {
             Show-DesktopNotification -Title "RawrXD Alert" -Message $Message -Type $Type
         }
         # Log to security log for critical alerts
@@ -1633,8 +1633,8 @@ function Show-DesktopNotification {
 # Insights cleanup
 function Cleanup-OldInsights {
     try {
-        $cutoffDate = (Get-Date).AddDays(-$script:TelemetryConfig.InsightsRetentionDays)
-        $script:TelemetryData.InsightsHistory = $script:TelemetryData.InsightsHistory | Where-Object {
+        $cutoffDate = (Get-Date).AddDays(-${script:TelemetryConfig}.InsightsRetentionDays)
+        ${script:TelemetryData}.InsightsHistory = ${script:TelemetryData}.InsightsHistory | Where-Object {
             $_.Timestamp -gt $cutoffDate
         }
     }
@@ -1645,7 +1645,7 @@ function Cleanup-OldInsights {
 # Export insights report
 function Export-InsightsReport {
     param(
-        [string]$OutputPath = $script:TelemetryConfig.ExportPath
+        [string]$OutputPath = ${script:TelemetryConfig}.ExportPath
     )
     $cursorToken = Enter-CursorWaitState -Reason "Telemetry:Export" -Style "Wait"
     try {
@@ -1655,17 +1655,17 @@ function Export-InsightsReport {
         $reportPath = Join-Path $OutputPath "RawrXD_Insights_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
         $report = @{
             GeneratedAt        = Get-Date
-            SessionMetrics     = $script:TelemetryData.SessionMetrics
-            PerformanceMetrics = $script:TelemetryData.PerformanceMetrics
-            UserBehavior       = $script:TelemetryData.UserBehavior
-            InsightsHistory    = $script:TelemetryData.InsightsHistory[-50..-1]  # Last 50 insights
-            Configuration      = $script:TelemetryConfig
+            SessionMetrics     = ${script:TelemetryData}.SessionMetrics
+            PerformanceMetrics = ${script:TelemetryData}.PerformanceMetrics
+            UserBehavior       = ${script:TelemetryData}.UserBehavior
+            InsightsHistory    = ${script:TelemetryData}.InsightsHistory[-50..-1]  # Last 50 insights
+            Configuration      = ${script:TelemetryConfig}
             SystemInfo         = @{
                 PSVersion      = $PSVersionTable.PSVersion
                 Platform       = [System.Environment]::OSVersion.Platform
                 ProcessorCount = [System.Environment]::ProcessorCount
-                MachineName    = $env:COMPUTERNAME
-                UserName       = $env:USERNAME
+                MachineName    = ${env:COMPUTERNAME}
+                UserName       = ${env:USERNAME}
             }
         }
         $report | ConvertTo-Json -Depth 10 | Out-File -FilePath $reportPath -Encoding UTF8
@@ -1793,7 +1793,7 @@ function Show-AuthenticationDialog {
     $cancelBtn.FlatStyle = "Flat"
     $buttonPanel.Controls.Add($cancelBtn)
     # Event handlers
-    $script:authResult = $false
+    ${script:authResult} = $false
     $loginBtn.Add_Click({
             $username = $usernameBox.Text.Trim()
             $password = $passwordBox.Text
@@ -1804,22 +1804,22 @@ function Show-AuthenticationDialog {
                 "guest" = "guest"
             }
             if ($username -and $validCredentials.ContainsKey($username) -and $validCredentials[$username] -eq $password) {
-                $script:CurrentSession.UserId = $username
-                $script:SecurityConfig.StealthMode = $stealthCheck.Checked
-                $script:UseHTTPS = $httpsCheck.Checked
-                $script:SecurityConfig.EncryptSensitiveData = $encryptCheck.Checked
-                if ($script:UseHTTPS) {
-                    $script:OllamaAPIEndpoint = $OllamaSecureEndpoint
+                ${script:CurrentSession}.UserId = $username
+                ${script:SecurityConfig}.StealthMode = $stealthCheck.Checked
+                ${script:UseHTTPS} = $httpsCheck.Checked
+                ${script:SecurityConfig}.EncryptSensitiveData = $encryptCheck.Checked
+                if (${script:UseHTTPS}) {
+                    ${script:OllamaAPIEndpoint} = $OllamaSecureEndpoint
                 }
                 Write-SecurityLog "User '$username' authenticated successfully" "SUCCESS" "Options: Stealth=$($stealthCheck.Checked), HTTPS=$($httpsCheck.Checked), Encrypt=$($encryptCheck.Checked)"
-                $script:authResult = $true
+                ${script:authResult} = $true
                 $authForm.DialogResult = "OK"
                 $authForm.Close()
             }
             else {
-                $script:CurrentSession.LoginAttempts++
-                Write-SecurityLog "Authentication failed for user '$username'" "ERROR" "Attempts: $($script:CurrentSession.LoginAttempts)"
-                if ($script:CurrentSession.LoginAttempts -ge $script:SecurityConfig.MaxLoginAttempts) {
+                ${script:CurrentSession}.LoginAttempts++
+                Write-SecurityLog "Authentication failed for user '$username'" "ERROR" "Attempts: $(${script:CurrentSession}.LoginAttempts)"
+                if (${script:CurrentSession}.LoginAttempts -ge ${script:SecurityConfig}.MaxLoginAttempts) {
                     Write-StartupLog "Maximum login attempts exceeded. Application will exit." "CRITICAL"; Write-DevConsole "SECURITY: Maximum login attempts exceeded" "ERROR"
                     $authForm.DialogResult = "Cancel"
                     $authForm.Close()
@@ -1849,7 +1849,7 @@ function Show-AuthenticationDialog {
     # Show dialog
     $passwordBox.Focus()
     $result = $authForm.ShowDialog()
-    return ($result -eq "OK" -and $script:authResult)
+    return ($result -eq "OK" -and ${script:authResult})
 }
 function Show-SecuritySettings {
     $settingsForm = New-Object System.Windows.Forms.Form
@@ -1863,21 +1863,21 @@ function Show-SecuritySettings {
     $settingsForm.MinimizeBox = $false
     # Settings controls
     $y = 20
-    foreach ($setting in $script:SecurityConfig.Keys) {
+    foreach ($setting in ${script:SecurityConfig}.Keys) {
         $label = New-Object System.Windows.Forms.Label
         $label.Text = $setting + ":"
         $label.Size = New-Object System.Drawing.Size(200, 20)
         $label.Location = New-Object System.Drawing.Point(20, $y)
         $settingsForm.Controls.Add($label)
-        if ($script:SecurityConfig[$setting] -is [bool]) {
+        if (${script:SecurityConfig}[$setting] -is [bool]) {
             $checkbox = New-Object System.Windows.Forms.CheckBox
-            $checkbox.Checked = $script:SecurityConfig[$setting]
+            $checkbox.Checked = ${script:SecurityConfig}[$setting]
             $checkbox.Size = New-Object System.Drawing.Size(20, 20)
             $checkbox.Location = New-Object System.Drawing.Point(230, $y)
             $checkbox.Tag = $setting
             $settingsForm.Controls.Add($checkbox)
         }
-        elseif ($script:SecurityConfig[$setting] -is [int]) {
+        elseif (${script:SecurityConfig}[$setting] -is [int]) {
             $numericUpDown = New-Object System.Windows.Forms.NumericUpDown
             $numericUpDown.Size = New-Object System.Drawing.Size(100, 20)
             $numericUpDown.Location = New-Object System.Drawing.Point(230, $y)
@@ -1906,7 +1906,7 @@ function Show-SecuritySettings {
                 }
             }
             # Clamp value into valid range before assigning to avoid ArgumentOutOfRangeException
-            $intValue = [int]$script:SecurityConfig[$setting]
+            $intValue = [int]${script:SecurityConfig}[$setting]
             if ($intValue -lt [int]$numericUpDown.Minimum) { $intValue = [int]$numericUpDown.Minimum }
             if ($intValue -gt [int]$numericUpDown.Maximum) { $intValue = [int]$numericUpDown.Maximum }
             $numericUpDown.Value = $intValue
@@ -1936,22 +1936,22 @@ function Show-SecuritySettings {
     $settingsForm.Controls.Add($cancelBtn)
     $saveBtn.Add_Click({
             foreach ($control in $settingsForm.Controls) {
-                if ($control.Tag -and $script:SecurityConfig.ContainsKey($control.Tag)) {
+                if ($control.Tag -and ${script:SecurityConfig}.ContainsKey($control.Tag)) {
                     if ($control -is [System.Windows.Forms.CheckBox]) {
-                        $script:SecurityConfig[$control.Tag] = $control.Checked
+                        ${script:SecurityConfig}[$control.Tag] = $control.Checked
                     }
                     elseif ($control -is [System.Windows.Forms.NumericUpDown]) {
-                        $script:SecurityConfig[$control.Tag] = $control.Value
+                        ${script:SecurityConfig}[$control.Tag] = $control.Value
                     }
                 }
             }
             # Save to file
-            $configDir = Join-Path $env:APPDATA "RawrXD"
+            $configDir = Join-Path ${env:APPDATA} "RawrXD"
             if (-not (Test-Path $configDir)) {
                 New-Item -ItemType Directory -Path $configDir -Force | Out-Null
             }
             $configPath = Join-Path $configDir "security.json"
-            $script:SecurityConfig | ConvertTo-Json | Set-Content $configPath
+            ${script:SecurityConfig} | ConvertTo-Json | Set-Content $configPath
             Write-SecurityLog "Security settings updated" "SUCCESS"
             $settingsForm.Close()
         })
@@ -1962,8 +1962,8 @@ function Show-SecuritySettings {
 # ============================================
 function Get-EnvironmentInfo {
     $env = @{
-        OS                = if ($PSVersionTable.PSObject.Properties["OS"]) { $PSVersionTable.OS } else { [System.Environment]::OSVersion.VersionString }
-        Platform          = if ($PSVersionTable.PSObject.Properties["Platform"]) { $PSVersionTable.Platform } else { "Win32NT" }
+        OS                = $(if ($PSVersionTable.PSObject.Properties["OS"]) { $PSVersionTable.OS } else { [System.Environment]::OSVersion.VersionString }
+        Platform          = $(if ($PSVersionTable.PSObject.Properties["Platform"]) { $PSVersionTable.Platform } else { "Win32NT" }
         PowerShellVersion = $PSVersionTable.PSVersion
         Shell             = "PowerShell"
         Python            = $null
@@ -1995,7 +1995,7 @@ function Get-EnvironmentInfo {
         $env.DotNet = $dotnetVersion
     }
     catch {}
-    $global:agentContext.Environment = $env
+    ${global:agentContext}.Environment = $env
     return $env
 }
 # ============================================
@@ -2067,8 +2067,8 @@ function Apply-Theme {
         }
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.BackColor = $bgColor
                         $session.ChatBox.ForeColor = $textColor
@@ -2085,16 +2085,16 @@ function Apply-Theme {
         }
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.BackColor = $bgColor
-                $script:editor.ForeColor = $textColor
+            if (${script:editor}) {
+                ${script:editor}.BackColor = $bgColor
+                ${script:editor}.ForeColor = $textColor
             }
         }
         catch {
             Write-DevConsole "Editor theming partial: $_" "WARNING"
         }
         # Save theme preference
-        $script:CurrentTheme = $ThemeName
+        ${script:CurrentTheme} = $ThemeName
         Save-CustomizationSettings
         Write-DevConsole "✅ $ThemeName theme applied successfully" "SUCCESS"
     }
@@ -2113,8 +2113,8 @@ function Apply-FontSize {
         $form.Font = $newFont
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.Font = New-Object System.Drawing.Font("Consolas", $Size)
                     }
@@ -2129,15 +2129,15 @@ function Apply-FontSize {
         }
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.Font = New-Object System.Drawing.Font("Consolas", $Size)
+            if (${script:editor}) {
+                ${script:editor}.Font = New-Object System.Drawing.Font("Consolas", $Size)
             }
         }
         catch {
             Write-DevConsole "Editor font update partial: $_" "WARNING"
         }
         # Save font preference
-        $script:CurrentFontSize = $Size
+        ${script:CurrentFontSize} = $Size
         Save-CustomizationSettings
         Write-DevConsole "✅ Font size set to ${Size}pt successfully" "SUCCESS"
     }
@@ -2167,7 +2167,7 @@ function Apply-UIScaling {
             Write-DevConsole "Panel scaling partial: $_" "WARNING"
         }
         # Save scaling preference
-        $script:CurrentUIScale = $Scale
+        ${script:CurrentUIScale} = $Scale
         Save-CustomizationSettings
         Write-DevConsole "✅ UI scaling set to $($Scale * 100)% successfully" "SUCCESS"
     }
@@ -2235,7 +2235,7 @@ function Show-CustomThemeBuilder {
             $colorDialog = New-Object System.Windows.Forms.ColorDialog
             if ($colorDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
                 $textButton.BackColor = $colorDialog.Color
-                $textButton.ForeColor = if ($colorDialog.Color.GetBrightness() -gt 0.5) { [System.Drawing.Color]::Black } else { [System.Drawing.Color]::White }
+                $textButton.ForeColor = $(if ($colorDialog.Color.GetBrightness() -gt 0.5) { [System.Drawing.Color]::Black } else { [System.Drawing.Color]::White }
             }
         })
     # Panel Color
@@ -2308,8 +2308,8 @@ function Apply-CustomTheme {
         }
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.BackColor = $BackColor
                         $session.ChatBox.ForeColor = $TextColor
@@ -2326,21 +2326,21 @@ function Apply-CustomTheme {
         }
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.BackColor = $BackColor
-                $script:editor.ForeColor = $TextColor
+            if (${script:editor}) {
+                ${script:editor}.BackColor = $BackColor
+                ${script:editor}.ForeColor = $TextColor
             }
         }
         catch {
             Write-DevConsole "Editor custom theming partial: $_" "WARNING"
         }
         # Save custom theme
-        $script:CustomTheme = @{
+        ${script:CustomTheme} = @{
             BackColor  = $BackColor
             TextColor  = $TextColor
             PanelColor = $PanelColor
         }
-        $script:CurrentTheme = "Custom"
+        ${script:CurrentTheme} = "Custom"
         Save-CustomizationSettings
         Write-DevConsole "✅ Custom theme applied successfully" "SUCCESS"
     }
@@ -2387,14 +2387,14 @@ function Save-UILayout {
                 X = $form.Location.X
                 Y = $form.Location.Y
             }
-            LeftPanelWidth    = if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
+            LeftPanelWidth    = $(if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
             StatusPanelHeight = 30  # Default value as status panel doesn't exist
-            SplitterDistance  = if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
-            Theme             = $script:CurrentTheme
-            FontSize          = $script:CurrentFontSize
-            UIScale           = $script:CurrentUIScale
+            SplitterDistance  = $(if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
+            Theme             = ${script:CurrentTheme}
+            FontSize          = ${script:CurrentFontSize}
+            UIScale           = ${script:CurrentUIScale}
         }
-        $layoutPath = Join-Path $env:USERPROFILE "RawrXD_Layout.json"
+        $layoutPath = Join-Path ${env:USERPROFILE} "RawrXD_Layout.json"
         $layoutData | ConvertTo-Json -Depth 3 | Set-Content -Path $layoutPath
         Write-DevConsole "✅ UI layout saved to: $layoutPath" "SUCCESS"
     }
@@ -2404,7 +2404,7 @@ function Save-UILayout {
 }
 function Load-UILayout {
     try {
-        $layoutPath = Join-Path $env:USERPROFILE "RawrXD_Layout.json"
+        $layoutPath = Join-Path ${env:USERPROFILE} "RawrXD_Layout.json"
         if (Test-Path $layoutPath) {
             $layoutData = Get-Content -Path $layoutPath | ConvertFrom-Json
             # Apply saved layout
@@ -2436,12 +2436,12 @@ function Load-UILayout {
 function Save-CustomizationSettings {
     try {
         $settings = @{
-            Theme       = $script:CurrentTheme
-            FontSize    = $script:CurrentFontSize
-            UIScale     = $script:CurrentUIScale
-            CustomTheme = $script:CustomTheme
+            Theme       = ${script:CurrentTheme}
+            FontSize    = ${script:CurrentFontSize}
+            UIScale     = ${script:CurrentUIScale}
+            CustomTheme = ${script:CustomTheme}
         }
-        $settingsPath = Join-Path $env:USERPROFILE "RawrXD_Customization.json"
+        $settingsPath = Join-Path ${env:USERPROFILE} "RawrXD_Customization.json"
         $settings | ConvertTo-Json -Depth 3 | Set-Content -Path $settingsPath
     }
     catch {
@@ -2450,26 +2450,26 @@ function Save-CustomizationSettings {
 }
 function Load-CustomizationSettings {
     try {
-        $settingsPath = Join-Path $env:USERPROFILE "RawrXD_Customization.json"
+        $settingsPath = Join-Path ${env:USERPROFILE} "RawrXD_Customization.json"
         if (Test-Path $settingsPath) {
             $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
-            $script:CurrentTheme = if ($settings.Theme) { $settings.Theme } else { "Stealth-Cheetah" }
-            $script:CurrentFontSize = if ($settings.FontSize) { $settings.FontSize } else { 14 }
-            $script:CurrentUIScale = if ($settings.UIScale) { $settings.UIScale } else { 1.0 }
-            $script:CustomTheme = $settings.CustomTheme
+            ${script:CurrentTheme} = $(if ($settings.Theme) { $settings.Theme } else { "Stealth-Cheetah" }
+            ${script:CurrentFontSize} = $(if ($settings.FontSize) { $settings.FontSize } else { 14 }
+            ${script:CurrentUIScale} = $(if ($settings.UIScale) { $settings.UIScale } else { 1.0 }
+            ${script:CustomTheme} = $settings.CustomTheme
             # Apply loaded settings
-            if ($script:CurrentTheme -ne "Stealth-Cheetah") {
-                Apply-Theme $script:CurrentTheme
+            if (${script:CurrentTheme} -ne "Stealth-Cheetah") {
+                Apply-Theme ${script:CurrentTheme}
             }
             else {
                 # Apply default Stealth-Cheetah theme
                 Apply-Theme "Stealth-Cheetah"
             }
-            if ($script:CurrentFontSize -ne 14) {
-                Apply-FontSize $script:CurrentFontSize
+            if (${script:CurrentFontSize} -ne 14) {
+                Apply-FontSize ${script:CurrentFontSize}
             }
-            if ($script:CurrentUIScale -ne 1.0) {
-                Apply-UIScaling $script:CurrentUIScale
+            if (${script:CurrentUIScale} -ne 1.0) {
+                Apply-UIScaling ${script:CurrentUIScale}
             }
         }
         else {
@@ -2494,8 +2494,8 @@ function Get-AIErrorDashboard {
     )
     try {
         # Load AI error statistics
-        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
-        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+        $statsFile = Join-Path ${script:EmergencyLogPath} "ai_error_stats.json"
+        $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
         $dashboard = @"
 ═══════════════════════════════════════════════════════════
 🤖 AI AGENT ERROR DASHBOARD - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
@@ -2579,10 +2579,10 @@ function Get-AIErrorDashboard {
         # System health indicators
         $dashboard += @"
 🏥 SYSTEM HEALTH:
-   Current Session: $($script:CurrentSession.SessionId)
-   Session Start: $($script:CurrentSession.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
-   Last Activity: $($script:CurrentSession.LastActivity.ToString("yyyy-MM-dd HH:mm:ss"))
-   Agent Mode: $(if ($global:AgentMode) { "🟢 ACTIVE" } else { "🔴 INACTIVE" })
+   Current Session: $(${script:CurrentSession}.SessionId)
+   Session Start: $(${script:CurrentSession}.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
+   Last Activity: $(${script:CurrentSession}.LastActivity.ToString("yyyy-MM-dd HH:mm:ss"))
+   Agent Mode: $(if (${global:AgentMode}) { "🟢 ACTIVE" } else { "🔴 INACTIVE" })
    Ollama Connection: $(if (Test-NetConnection -ComputerName localhost -Port 11434 -InformationLevel Quiet) { "🟢 ONLINE" } else { "🔴 OFFLINE" })
 💡 QUICK ACTIONS:
    /ai-errors          - Show this dashboard
@@ -2597,16 +2597,16 @@ function Get-AIErrorDashboard {
         return @"
 ❌ Error generating AI Error Dashboard: $($_.Exception.Message)
 Basic Info:
-- Emergency Log Path: $script:EmergencyLogPath
-- Current Session: $($script:CurrentSession.SessionId)
+- Emergency Log Path: ${script:EmergencyLogPath}
+- Current Session: $(${script:CurrentSession}.SessionId)
 - Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 "@
     }
 }
 function Clear-AIErrorStatistics {
     try {
-        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
-        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+        $statsFile = Join-Path ${script:EmergencyLogPath} "ai_error_stats.json"
+        $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
         # Reset statistics file
         if (Test-Path $statsFile) {
             Remove-Item $statsFile -Force
@@ -2629,12 +2629,12 @@ function Clear-AIErrorStatistics {
 }
 # ============================================
 # Initialize customization variables
-$script:CurrentTheme = "Stealth-Cheetah"  # Default to stealth-cheetah theme
-$script:CurrentFontSize = 14
-$script:CurrentUIScale = 1.0
-$script:CustomTheme = $null
+${script:CurrentTheme} = "Stealth-Cheetah"  # Default to stealth-cheetah theme
+${script:CurrentFontSize} = 14
+${script:CurrentUIScale} = 1.0
+${script:CustomTheme} = $null
 # Initialize error statistics
-$script:ErrorStats = @{
+${script:ErrorStats} = @{
     TotalErrors       = 0
     CriticalErrors    = 0
     SecurityErrors    = 0

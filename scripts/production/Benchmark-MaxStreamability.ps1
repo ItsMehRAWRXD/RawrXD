@@ -98,10 +98,10 @@ function Invoke-StreamProbe {
 
         $tokenEstimate = Get-TokenEstimate -Text $stdout
         $streamMs = [Math]::Max(1.0, [double]$sw.ElapsedMilliseconds - [double]$firstByteMs)
-        $tps = if ($tokenEstimate -gt 0) { [double]$tokenEstimate / ($streamMs / 1000.0) } else { 0.0 }
-        $exitCode = if ($timedOut) { 124 } else { [int]$proc.ExitCode }
+        $tps = $(if ($tokenEstimate -gt 0) { [double]$tokenEstimate / ($streamMs / 1000.0) } else { 0.0 }
+        $exitCode = $(if ($timedOut) { 124 } else { [int]$proc.ExitCode }
         $exitCodeHex = ('0x{0:X8}' -f ([BitConverter]::ToUInt32([BitConverter]::GetBytes([int]$exitCode), 0)))
-        $stderrTailText = if ($stderr.Length -gt 2048) { $stderr.Substring($stderr.Length - 2048) } else { $stderr }
+        $stderrTailText = $(if ($stderr.Length -gt 2048) { $stderr.Substring($stderr.Length - 2048) } else { $stderr }
 
         return [ordered]@{
             maxTokens = $MaxTokens
@@ -231,7 +231,7 @@ $oneAdditionTimeout = $BaselineTimeoutSeconds + $OneAdditionTimeoutBoostSeconds
 $oneAddition = Invoke-SweepLane -LaneName "one_addition_timeout_budget" -TimeoutSeconds $oneAdditionTimeout
 
 $upliftTokens = [int]$oneAddition.maxStableTokens - [int]$baseline.maxStableTokens
-$upliftPct = if ($baseline.maxStableTokens -gt 0) {
+$upliftPct = $(if ($baseline.maxStableTokens -gt 0) {
     [Math]::Round((100.0 * $upliftTokens) / [double]$baseline.maxStableTokens, 2)
 } else {
     0.0

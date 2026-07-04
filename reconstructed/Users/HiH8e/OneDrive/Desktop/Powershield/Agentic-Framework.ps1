@@ -136,16 +136,16 @@ function Invoke-Tool {
                 }
             }
             "list_dir" {
-                $path = if ($args.path) { $args.path } else { "." }
+                $path = $(if ($args.path) { $args.path } else { "." }
                 return Invoke-ListDirTool -path $path
             }
             "git_status" {
-                $path = if ($args.path) { $args.path } else { "." }
+                $path = $(if ($args.path) { $args.path } else { "." }
                 return Invoke-GitStatusTool -path $path
             }
             "task_orchestrator" {
                 if ($args.goal) {
-                    $maxSteps = if ($args.max_steps) { $args.max_steps } else { 10 }
+                    $maxSteps = $(if ($args.max_steps) { $args.max_steps } else { 10 }
                     return Invoke-TaskOrchestratorTool -goal $args.goal -max_steps $maxSteps
                 }
             }
@@ -201,13 +201,13 @@ function Start-AgenticLoop {
                 $observation = Invoke-Tool -toolCall $reply
 
                 # FIX: Truncate large observations to prevent context overflow
-                $obsToSend = if ($observation.Length -gt 4000) {
+                $obsToSend = $(if ($observation.Length -gt 4000) {
                     $observation.Substring(0, 4000) + "… (truncated, original length: $($observation.Length) chars)"
                 } else {
                     $observation
                 }
 
-                $obsPreview = if ($observation.Length -gt 200) {
+                $obsPreview = $(if ($observation.Length -gt 200) {
                     $observation.Substring(0, 200) + "…"
                 } else {
                     $observation

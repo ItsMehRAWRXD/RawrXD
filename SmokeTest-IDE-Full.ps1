@@ -13,9 +13,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Root = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+$Root = $(if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 
-$Exe = if ($ExePath) { $ExePath } else {
+$Exe = $(if ($ExePath) { $ExePath } else {
     $candidates = @(
         (Join-Path $Root "$BuildDir\bin\RawrXD-Win32IDE.exe"),
         (Join-Path $Root "bin\RawrXD-Win32IDE.exe"),
@@ -39,10 +39,10 @@ function Test-Step {
     param([string]$Name, [scriptblock]$Run)
     try {
         $ok = & $Run
-        if ($ok) { $script:Pass++; Write-Host "  [PASS] $Name" -ForegroundColor Green } else { $script:Fail++; Write-Host "  [FAIL] $Name" -ForegroundColor Red }
+        if ($ok) { ${script:Pass}++; Write-Host "  [PASS] $Name" -ForegroundColor Green } else { ${script:Fail}++; Write-Host "  [FAIL] $Name" -ForegroundColor Red }
         return $ok
     } catch {
-        $script:Fail++
+        ${script:Fail}++
         Write-Host "  [FAIL] $Name - $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
@@ -57,24 +57,24 @@ Push-Location $ExeDir
 
 # CLI: --help
 Test-Step "CLI --help" {
-    $p = Start-Process -FilePath $Exe -ArgumentList "--help" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$env:TEMP\rawrxd_help.txt" -RedirectStandardError "$env:TEMP\rawrxd_help_err.txt"
+    $p = Start-Process -FilePath $Exe -ArgumentList "--help" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "${env:TEMP}\rawrxd_help.txt" -RedirectStandardError "${env:TEMP}\rawrxd_help_err.txt"
     if ($p.ExitCode -ne 0) { return $false }
-    $out = Get-Content "$env:TEMP\rawrxd_help.txt" -Raw -ErrorAction SilentlyContinue
+    $out = Get-Content "${env:TEMP}\rawrxd_help.txt" -Raw -ErrorAction SilentlyContinue
     $out -match "Usage|Options|RawrXD"
 }
 
 # CLI: --version
 Test-Step "CLI --version" {
-    $p = Start-Process -FilePath $Exe -ArgumentList "--version" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$env:TEMP\rawrxd_ver.txt" -RedirectStandardError "$env:TEMP\rawrxd_ver_err.txt"
+    $p = Start-Process -FilePath $Exe -ArgumentList "--version" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "${env:TEMP}\rawrxd_ver.txt" -RedirectStandardError "${env:TEMP}\rawrxd_ver_err.txt"
     if ($p.ExitCode -ne 0) { return $false }
-    $out = Get-Content "$env:TEMP\rawrxd_ver.txt" -Raw -ErrorAction SilentlyContinue
+    $out = Get-Content "${env:TEMP}\rawrxd_ver.txt" -Raw -ErrorAction SilentlyContinue
     $out -match "RawrXD|v\d"
 }
 
 # Selftest (quick exit, no message loop)
 Test-Step "Selftest (--selftest)" {
-    $p = Start-Process -FilePath $Exe -ArgumentList "--selftest" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$env:TEMP\rawrxd_selftest.txt" -RedirectStandardError "$env:TEMP\rawrxd_selftest_err.txt"
-    $out = Get-Content "$env:TEMP\rawrxd_selftest.txt" -Raw -ErrorAction SilentlyContinue
+    $p = Start-Process -FilePath $Exe -ArgumentList "--selftest" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "${env:TEMP}\rawrxd_selftest.txt" -RedirectStandardError "${env:TEMP}\rawrxd_selftest_err.txt"
+    $out = Get-Content "${env:TEMP}\rawrxd_selftest.txt" -Raw -ErrorAction SilentlyContinue
     $out -match "result=PASS|PASS"
 }
 

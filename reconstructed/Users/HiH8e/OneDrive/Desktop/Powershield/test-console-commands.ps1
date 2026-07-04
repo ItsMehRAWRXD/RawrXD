@@ -13,13 +13,13 @@ Write-Host ""
 
 # Simulate console input by calling the function directly
 # First we need to dot-source and setup the environment
-$env:RAWRXD_TEST_MODE = "true"
+${env:RAWRXD_TEST_MODE} = "true"
 
 # Create a test script that will run console commands
 $testScript = @'
 # Load RawrXD in memory
-$script:ConsoleMode = $true
-$script:SkipGUI = $true
+${script:ConsoleMode} = $true
+${script:SkipGUI} = $true
 
 # Dot-source the main script (this will load all functions)
 . ".\RawrXD.ps1"

@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 
 # Possible extension locations (user install vs. system)
 $extBasePaths = @(
-    "$env:USERPROFILE\.vscode\extensions",
+    "${env:USERPROFILE}\.vscode\extensions",
     "${env:ProgramFiles}\Microsoft VS Code\resources\app\extensions",
     "${env:LOCALAPPDATA}\Programs\Microsoft VS Code\resources\app\extensions"
 )

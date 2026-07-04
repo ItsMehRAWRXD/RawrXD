@@ -255,9 +255,7 @@ function Invoke-SymbolValidation {
 
 # ============================================================================
 # Entry Point
-# ============================================================================
-
-if (-not $BinaryPath -or -not $RegistryPath) {
+# ============================================================================ $(if (-not $BinaryPath -or -not $RegistryPath) {
     Write-Log "Usage: .\validate_symbols.ps1 -BinaryPath <path> -RegistryPath <path> [-OutputPath <path>]" "ERROR"
     Write-Log "Example: .\validate_symbols.ps1 -BinaryPath `".\build\RawrXD.exe`" -RegistryPath `".\AUDIT_TRACKER.json`"" "ERROR"
     exit 1

@@ -223,11 +223,11 @@ class DesktopCopilot {
         $this.MainWindow.Controls.Add($inputLabel)
         
         # Input textbox
-        $script:inputBox = New-Object System.Windows.Forms.TextBox
-        $script:inputBox.Location = New-Object System.Drawing.Point(20, 265)
-        $script:inputBox.Size = New-Object System.Drawing.Size(650, 30)
-        $script:inputBox.Font = New-Object System.Drawing.Font("Segoe UI", 11)
-        $this.MainWindow.Controls.Add($script:inputBox)
+        ${script:inputBox} = New-Object System.Windows.Forms.TextBox
+        ${script:inputBox}.Location = New-Object System.Drawing.Point(20, 265)
+        ${script:inputBox}.Size = New-Object System.Drawing.Size(650, 30)
+        ${script:inputBox}.Font = New-Object System.Drawing.Font("Segoe UI", 11)
+        $this.MainWindow.Controls.Add(${script:inputBox})
         
         # Ask button
         $askBtn = New-Object System.Windows.Forms.Button
@@ -238,7 +238,7 @@ class DesktopCopilot {
         $askBtn.ForeColor = [System.Drawing.Color]::White
         $askBtn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
         $askBtn.add_Click({ 
-            $query = $script:inputBox.Text
+            $query = ${script:inputBox}.Text
             if ($query.Trim()) {
                 $this.ProcessQuery($query)
             }
@@ -246,16 +246,16 @@ class DesktopCopilot {
         $this.MainWindow.Controls.Add($askBtn)
         
         # Output area
-        $script:outputBox = New-Object System.Windows.Forms.TextBox
-        $script:outputBox.Location = New-Object System.Drawing.Point(20, 305)
-        $script:outputBox.Size = New-Object System.Drawing.Size(760, 230)
-        $script:outputBox.Multiline = $true
-        $script:outputBox.ScrollBars = "Vertical"
-        $script:outputBox.Font = New-Object System.Drawing.Font("Consolas", 10)
-        $script:outputBox.ReadOnly = $true
-        $script:outputBox.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-        $script:outputBox.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)
-        $this.MainWindow.Controls.Add($script:outputBox)
+        ${script:outputBox} = New-Object System.Windows.Forms.TextBox
+        ${script:outputBox}.Location = New-Object System.Drawing.Point(20, 305)
+        ${script:outputBox}.Size = New-Object System.Drawing.Size(760, 230)
+        ${script:outputBox}.Multiline = $true
+        ${script:outputBox}.ScrollBars = "Vertical"
+        ${script:outputBox}.Font = New-Object System.Drawing.Font("Consolas", 10)
+        ${script:outputBox}.ReadOnly = $true
+        ${script:outputBox}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        ${script:outputBox}.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)
+        $this.MainWindow.Controls.Add(${script:outputBox})
         
         # Status bar
         $statusLabel = New-Object System.Windows.Forms.Label
@@ -299,13 +299,13 @@ class DesktopCopilot {
         $this.MainWindow.Show()
         $this.MainWindow.Activate()
         $this.MainWindow.BringToFront()
-        $script:inputBox.Focus()
+        ${script:inputBox}.Focus()
     }
     
     [void] ProcessQuery([string]$query) {
-        $script:outputBox.AppendText("You: $query`r`n`r`n")
-        $script:outputBox.AppendText("Copilot: Processing...`r`n")
-        $script:outputBox.Refresh()
+        ${script:outputBox}.AppendText("You: $query`r`n`r`n")
+        ${script:outputBox}.AppendText("Copilot: Processing...`r`n")
+        ${script:outputBox}.Refresh()
         
         # Log to history
         $this.TaskHistory.Add(@{
@@ -317,13 +317,13 @@ class DesktopCopilot {
         # Analyze query and respond
         $response = $this.AnalyzeAndRespond($query)
         
-        $script:outputBox.AppendText($response)
-        $script:outputBox.AppendText("`r`n`r`n" + "="*80 + "`r`n`r`n")
-        $script:outputBox.SelectionStart = $script:outputBox.TextLength
-        $script:outputBox.ScrollToCaret()
+        ${script:outputBox}.AppendText($response)
+        ${script:outputBox}.AppendText("`r`n`r`n" + "="*80 + "`r`n`r`n")
+        ${script:outputBox}.SelectionStart = ${script:outputBox}.TextLength
+        ${script:outputBox}.ScrollToCaret()
         
         # Clear input
-        $script:inputBox.Clear()
+        ${script:inputBox}.Clear()
     }
     
     [string] AnalyzeAndRespond([string]$query) {
@@ -534,82 +534,82 @@ Or run: Get-WindowsUpdate (requires WindowsUpdate module)
     
     [void] DiagnoseSystem() {
         $this.ShowMainWindow()
-        $script:outputBox.Clear()
-        $script:outputBox.AppendText("🔍 FULL SYSTEM DIAGNOSIS`r`n")
-        $script:outputBox.AppendText("="*80 + "`r`n`r`n")
-        $script:outputBox.Refresh()
+        ${script:outputBox}.Clear()
+        ${script:outputBox}.AppendText("🔍 FULL SYSTEM DIAGNOSIS`r`n")
+        ${script:outputBox}.AppendText("="*80 + "`r`n`r`n")
+        ${script:outputBox}.Refresh()
         
         # Performance
-        $script:outputBox.AppendText($this.DiagnosePerformance())
-        $script:outputBox.AppendText("`r`n`r`n")
-        $script:outputBox.Refresh()
+        ${script:outputBox}.AppendText($this.DiagnosePerformance())
+        ${script:outputBox}.AppendText("`r`n`r`n")
+        ${script:outputBox}.Refresh()
         
         # Disk
-        $script:outputBox.AppendText($this.CheckDiskSpace())
-        $script:outputBox.AppendText("`r`n`r`n")
-        $script:outputBox.Refresh()
+        ${script:outputBox}.AppendText($this.CheckDiskSpace())
+        ${script:outputBox}.AppendText("`r`n`r`n")
+        ${script:outputBox}.Refresh()
         
         # Network
-        $script:outputBox.AppendText($this.DiagnoseNetwork())
-        $script:outputBox.AppendText("`r`n`r`n")
-        $script:outputBox.Refresh()
+        ${script:outputBox}.AppendText($this.DiagnoseNetwork())
+        ${script:outputBox}.AppendText("`r`n`r`n")
+        ${script:outputBox}.Refresh()
         
         $this.TrayIcon.ShowBalloonTip(3000, "Diagnosis Complete", "Check the window for full report!", [System.Windows.Forms.ToolTipIcon]::Info)
     }
     
     [void] FixCommonIssues() {
         $this.ShowMainWindow()
-        $script:outputBox.Clear()
-        $script:outputBox.AppendText("🔧 FIXING COMMON ISSUES...`r`n`r`n")
-        $script:outputBox.Refresh()
+        ${script:outputBox}.Clear()
+        ${script:outputBox}.AppendText("🔧 FIXING COMMON ISSUES...`r`n`r`n")
+        ${script:outputBox}.Refresh()
         
         # Clear temp files
-        $script:outputBox.AppendText("Cleaning temp files...`r`n")
+        ${script:outputBox}.AppendText("Cleaning temp files...`r`n")
         try {
             $tempPath = [System.IO.Path]::GetTempPath()
             $files = Get-ChildItem $tempPath -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-7) }
             $count = $files.Count
             $files | Remove-Item -Force -ErrorAction SilentlyContinue
-            $script:outputBox.AppendText("✅ Cleaned $count temp files`r`n`r`n")
+            ${script:outputBox}.AppendText("✅ Cleaned $count temp files`r`n`r`n")
         }
         catch {
-            $script:outputBox.AppendText("⚠️  Could not clean all temp files`r`n`r`n")
+            ${script:outputBox}.AppendText("⚠️  Could not clean all temp files`r`n`r`n")
         }
         
         # Clear recycle bin
-        $script:outputBox.AppendText("Emptying recycle bin...`r`n")
+        ${script:outputBox}.AppendText("Emptying recycle bin...`r`n")
         try {
             Clear-RecycleBin -Force -ErrorAction Stop
-            $script:outputBox.AppendText("✅ Recycle bin emptied`r`n`r`n")
+            ${script:outputBox}.AppendText("✅ Recycle bin emptied`r`n`r`n")
         }
         catch {
-            $script:outputBox.AppendText("⚠️  Could not empty recycle bin`r`n`r`n")
+            ${script:outputBox}.AppendText("⚠️  Could not empty recycle bin`r`n`r`n")
         }
         
         # Flush DNS
-        $script:outputBox.AppendText("Flushing DNS cache...`r`n")
+        ${script:outputBox}.AppendText("Flushing DNS cache...`r`n")
         try {
             Clear-DnsClientCache
-            $script:outputBox.AppendText("✅ DNS cache flushed`r`n`r`n")
+            ${script:outputBox}.AppendText("✅ DNS cache flushed`r`n`r`n")
         }
         catch {
-            $script:outputBox.AppendText("⚠️  Could not flush DNS`r`n`r`n")
+            ${script:outputBox}.AppendText("⚠️  Could not flush DNS`r`n`r`n")
         }
         
-        $script:outputBox.AppendText("✅ COMMON FIXES APPLIED!`r`n")
+        ${script:outputBox}.AppendText("✅ COMMON FIXES APPLIED!`r`n")
         $this.TrayIcon.ShowBalloonTip(3000, "Fixes Applied", "Common issues fixed!", [System.Windows.Forms.ToolTipIcon]::Info)
     }
     
     [void] CleanSystem() {
         $this.ShowMainWindow()
-        $script:outputBox.Clear()
-        $script:outputBox.AppendText("🧹 CLEANING SYSTEM...`r`n`r`n")
+        ${script:outputBox}.Clear()
+        ${script:outputBox}.AppendText("🧹 CLEANING SYSTEM...`r`n`r`n")
         
         # Find large files
-        $script:outputBox.AppendText("Finding large files (>100MB)...`r`n")
-        $script:outputBox.Refresh()
+        ${script:outputBox}.AppendText("Finding large files (>100MB)...`r`n")
+        ${script:outputBox}.Refresh()
         
-        $largeDirs = @("C:\Users\$env:USERNAME\Downloads", "C:\Users\$env:USERNAME\Documents", "C:\Users\$env:USERNAME\Desktop")
+        $largeDirs = @("C:\Users\${env:USERNAME}\Downloads", "C:\Users\${env:USERNAME}\Documents", "C:\Users\${env:USERNAME}\Desktop")
         
         foreach ($dir in $largeDirs) {
             if (Test-Path $dir) {
@@ -620,33 +620,33 @@ Or run: Get-WindowsUpdate (requires WindowsUpdate module)
                 
                 foreach ($file in $files) {
                     $sizeMB = [Math]::Round($file.Length / 1MB, 2)
-                    $script:outputBox.AppendText("   • $($file.FullName) - $sizeMB MB`r`n")
+                    ${script:outputBox}.AppendText("   • $($file.FullName) - $sizeMB MB`r`n")
                 }
             }
         }
         
-        $script:outputBox.AppendText("`r`n💡 Review these files and delete if not needed!`r`n")
+        ${script:outputBox}.AppendText("`r`n💡 Review these files and delete if not needed!`r`n")
     }
     
     [void] ShowSystemMonitor() {
         $this.ShowMainWindow()
-        $script:outputBox.Clear()
-        $script:outputBox.AppendText($this.DiagnosePerformance())
-        $script:outputBox.AppendText("`r`n`r`n")
-        $script:outputBox.AppendText($this.DiagnoseProcesses())
+        ${script:outputBox}.Clear()
+        ${script:outputBox}.AppendText($this.DiagnosePerformance())
+        ${script:outputBox}.AppendText("`r`n`r`n")
+        ${script:outputBox}.AppendText($this.DiagnoseProcesses())
     }
     
     [void] ShowTaskHistory() {
         $this.ShowMainWindow()
-        $script:outputBox.Clear()
-        $script:outputBox.AppendText("📜 TASK HISTORY`r`n`r`n")
+        ${script:outputBox}.Clear()
+        ${script:outputBox}.AppendText("📜 TASK HISTORY`r`n`r`n")
         
         if ($this.TaskHistory.Count -eq 0) {
-            $script:outputBox.AppendText("No tasks yet. Start asking questions!`r`n")
+            ${script:outputBox}.AppendText("No tasks yet. Start asking questions!`r`n")
         }
         else {
             foreach ($task in ($this.TaskHistory | Select-Object -Last 20)) {
-                $script:outputBox.AppendText("[$($task.Timestamp.ToString('HH:mm:ss'))] $($task.Query)`r`n")
+                ${script:outputBox}.AppendText("[$($task.Timestamp.ToString('HH:mm:ss'))] $($task.Query)`r`n")
             }
         }
     }
@@ -680,7 +680,7 @@ Or run: Get-WindowsUpdate (requires WindowsUpdate module)
     }
     
     [void] Run() {
-        if (-not $script:Silent) {
+        if (-not ${script:Silent}) {
             Write-Host "`n✅ Desktop Copilot running in system tray!" -ForegroundColor Green
             Write-Host "   • Right-click tray icon for menu" -ForegroundColor Cyan
             Write-Host "   • Press Ctrl+Shift+A to open (coming soon)" -ForegroundColor Cyan

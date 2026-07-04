@@ -75,9 +75,7 @@ Write-Host "[OK] All source files present" -ForegroundColor Green
 
 # ============================================================================
 # Clean Build
-# ============================================================================
-
-if ($Clean) {
+# ============================================================================ $(if ($Clean) {
     Write-Host "[2/6] Cleaning build directory..." -ForegroundColor Yellow
     if (Test-Path $BuildDir) {
         Remove-Item -Path $BuildDir -Recurse -Force
@@ -87,9 +85,7 @@ if ($Clean) {
 
 # ============================================================================
 # CMake Configuration
-# ============================================================================
-
-if (-not $TestOnly) {
+# ============================================================================ $(if (-not $TestOnly) {
     Write-Host "[3/6] Configuring with CMake..." -ForegroundColor Yellow
 
     if (-not (Test-Path $BuildDir)) {

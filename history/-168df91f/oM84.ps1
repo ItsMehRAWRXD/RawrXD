@@ -12,15 +12,15 @@
 
 Write-Host "🚀 Loading RawrXD Modular Architecture..." -ForegroundColor Cyan
 
-$script:RawrXDRootPath = if ($env:LAZY_INIT_IDE_ROOT -and (Test-Path $env:LAZY_INIT_IDE_ROOT)) {
-    $env:LAZY_INIT_IDE_ROOT
+${script:RawrXDRootPath} = $(if (${env:LAZY_INIT_IDE_ROOT} -and (Test-Path ${env:LAZY_INIT_IDE_ROOT})) {
+    ${env:LAZY_INIT_IDE_ROOT}
 } else {
     $PSScriptRoot
 }
 
 # Import Core Module
-if (Test-Path (Join-Path $script:RawrXDRootPath "RawrXD.Core.psm1")) {
-    Import-Module (Join-Path $script:RawrXDRootPath "RawrXD.Core.psm1") -Force
+if (Test-Path (Join-Path ${script:RawrXDRootPath} "RawrXD.Core.psm1")) {
+    Import-Module (Join-Path ${script:RawrXDRootPath} "RawrXD.Core.psm1") -Force
     Write-Host "✅ Core module loaded" -ForegroundColor Green
 } else {
     Write-Host "❌ Core module not found" -ForegroundColor Red
@@ -28,8 +28,8 @@ if (Test-Path (Join-Path $script:RawrXDRootPath "RawrXD.Core.psm1")) {
 }
 
 # Import UI Module
-if (Test-Path (Join-Path $script:RawrXDRootPath "RawrXD.UI.psm1")) {
-    Import-Module (Join-Path $script:RawrXDRootPath "RawrXD.UI.psm1") -Force
+if (Test-Path (Join-Path ${script:RawrXDRootPath} "RawrXD.UI.psm1")) {
+    Import-Module (Join-Path ${script:RawrXDRootPath} "RawrXD.UI.psm1") -Force
     Write-Host "✅ UI module loaded" -ForegroundColor Green
 } else {
     Write-Host "❌ UI module not found" -ForegroundColor Red
@@ -37,21 +37,21 @@ if (Test-Path (Join-Path $script:RawrXDRootPath "RawrXD.UI.psm1")) {
 }
 
 # Import Wiring Modules
-$script:WiringModules = @('DependencyManager', 'PerformanceFramework', 'SecurityFramework')
-$script:WiringModuleStatus = @{}
-foreach ($moduleName in $script:WiringModules) {
-    $modulePath = Join-Path $script:RawrXDRootPath ("scripts\{0}.psm1" -f $moduleName)
+${script:WiringModules} = @('DependencyManager', 'PerformanceFramework', 'SecurityFramework')
+${script:WiringModuleStatus} = @{}
+foreach ($moduleName in ${script:WiringModules}) {
+    $modulePath = Join-Path ${script:RawrXDRootPath} ("scripts\{0}.psm1" -f $moduleName)
     if (Test-Path $modulePath) {
         try {
             Import-Module $modulePath -Force -ErrorAction Stop
-            $script:WiringModuleStatus[$moduleName] = $true
+            ${script:WiringModuleStatus}[$moduleName] = $true
             Write-Host "✅ $moduleName module loaded" -ForegroundColor Green
         } catch {
-            $script:WiringModuleStatus[$moduleName] = $false
+            ${script:WiringModuleStatus}[$moduleName] = $false
             Write-Host "⚠️ $moduleName module load failed: $($_.Exception.Message)" -ForegroundColor Yellow
         }
     } else {
-        $script:WiringModuleStatus[$moduleName] = $false
+        ${script:WiringModuleStatus}[$moduleName] = $false
         Write-Host "⚠️ $moduleName module not found" -ForegroundColor Yellow
     }
 }
@@ -62,7 +62,7 @@ Write-EmergencyLog "Modular architecture initialized" "SUCCESS"
 # CONFIGURATION
 # ============================================
 
-$script:ModularConfig = @{
+${script:ModularConfig} = @{
     OllamaHost = "http://localhost:11434"
     OllamaModel = "llama3"
     EnableThreading = $true
@@ -97,7 +97,7 @@ function Import-RawrXDModule {
     }
 
     try {
-        $modulePath = Join-Path $script:RawrXDRootPath ("scripts\{0}.psm1" -f $ModuleName)
+        $modulePath = Join-Path ${script:RawrXDRootPath} ("scripts\{0}.psm1" -f $ModuleName)
         $module = Import-Module $modulePath -PassThru -Force
         return $module
     } catch {
@@ -162,7 +162,7 @@ function Initialize-RawrXDModularSystem {
     [CmdletBinding()]
     param()
 
-    foreach ($moduleName in $script:WiringModules) {
+    foreach ($moduleName in ${script:WiringModules}) {
         if (-not (Get-Module -Name $moduleName)) {
             Write-Verbose "[RawrXD.Modular] $moduleName not loaded"
         } else {
@@ -170,15 +170,15 @@ function Initialize-RawrXDModularSystem {
         }
     }
 
-    $script:RawrXDModularContext = @{
+    ${script:RawrXDModularContext} = @{
         DependencyResolver = { param($m) Resolve-RawrXDModuleDeps -TargetModule $m }
         SecurityValidator = { param($m) Test-ModuleSecurity -ModuleName $m }
         PerformanceMonitor = { param($n, $b) Invoke-ScannedOperation -OperationName $n -ScriptBlock $b }
         WiredAt = [DateTime]::UtcNow
     }
 
-    $Global:RawrXDModularContext = $script:RawrXDModularContext
-    return $script:RawrXDModularContext
+    ${Global:RawrXDModularContext} = ${script:RawrXDModularContext}
+    return ${script:RawrXDModularContext}
 }
 
 # ============================================
@@ -240,7 +240,7 @@ function Start-RawrXDModular {
                 $chatBox.AppendText("You: $message`r`n")
             }
             
-            Start-OllamaChatAsync -Prompt $message -Form $form -ChatBox $chatBox -StreamUI $script:ModularConfig.EnableStreaming
+            Start-OllamaChatAsync -Prompt $message -Form $form -ChatBox $chatBox -StreamUI ${script:ModularConfig}.EnableStreaming
             $chatInput.Text = ""
         }
     })
@@ -294,7 +294,7 @@ function Start-RawrXDModular {
                 }
                 
                 # Execute the tool
-                $tool = $script:agentTools[$parsedCommand.tool]
+                $tool = ${script:agentTools}[$parsedCommand.tool]
                 if ($tool.Enabled) {
                     &$tool.Handler $parsedCommand.args
                 }

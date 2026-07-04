@@ -28,11 +28,11 @@ function Get-ML64Path {
     if ($cmd) { return $cmd.Source }
 
     $candidates = @()
-    if ($env:VCToolsInstallDir) {
-        $candidates += Join-Path $env:VCToolsInstallDir "bin\Hostx64\x64\ml64.exe"
+    if (${env:VCToolsInstallDir}) {
+        $candidates += Join-Path ${env:VCToolsInstallDir} "bin\Hostx64\x64\ml64.exe"
     }
     $candidates += Get-ChildItem -Path "C:\VS2022Enterprise" -Filter ml64.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-    foreach ($root in @("$env:ProgramFiles(x86)", "$env:ProgramFiles")) {
+    foreach ($root in @("${env:ProgramFiles}(x86)", "${env:ProgramFiles}")) {
         $candidates += Get-ChildItem -Path (Join-Path $root "Microsoft Visual Studio\2022") -Filter ml64.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
     }
     $candidates = $candidates | Where-Object { $_ } | Sort-Object -Descending -Unique
@@ -48,7 +48,7 @@ function Get-LinkPath {
 
     $candidates = @()
     $candidates += Get-ChildItem -Path "C:\VS2022Enterprise" -Filter link.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-    foreach ($root in @("$env:ProgramFiles(x86)", "$env:ProgramFiles")) {
+    foreach ($root in @("${env:ProgramFiles}(x86)", "${env:ProgramFiles}")) {
         $candidates += Get-ChildItem -Path (Join-Path $root "Microsoft Visual Studio\2022") -Filter link.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
     }
     $candidates = $candidates | Where-Object { $_ } | Sort-Object -Descending -Unique
@@ -76,8 +76,8 @@ function Ensure-HotpatchBinary {
     if (-not (Test-Path $HotpatchDll)) { throw "Hotpatch DLL not built at $HotpatchDll" }
 
     $dllDir = Split-Path $HotpatchDll -Parent
-    if ($env:PATH.Split(';') -notcontains $dllDir) {
-        $env:PATH = "$dllDir;" + $env:PATH
+    if (${env:PATH}.Split(';') -notcontains $dllDir) {
+        ${env:PATH} = "$dllDir;" + ${env:PATH}
     }
 }
 
@@ -226,7 +226,7 @@ foreach ($model in $modelFiles) {
         if ($patch.View -ne [IntPtr]::Zero) { [RawrXDHotpatch]::UnmapViewOfFile($patch.View) | Out-Null }
         if ($patch.Map -ne [IntPtr]::Zero) { [RawrXDHotpatch]::CloseHandle($patch.Map) | Out-Null }
         
-        $color = if ($loadTimeMs -lt $BASELINE_LOAD_MS) { "Green" } else { "Yellow" }
+        $color = $(if ($loadTimeMs -lt $BASELINE_LOAD_MS) { "Green" } else { "Yellow" }
         Write-Host " $loadTimeMs ms" -ForegroundColor $color
         
         Start-Sleep -Milliseconds 500  # Brief pause between iterations

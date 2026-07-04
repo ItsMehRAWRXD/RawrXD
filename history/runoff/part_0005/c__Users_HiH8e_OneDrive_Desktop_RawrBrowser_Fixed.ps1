@@ -2,9 +2,9 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # WebView2 Setup - Only load managed assemblies, not native DLLs
-$wvDir = "$env:TEMP\WVLibs"
+$wvDir = "${env:TEMP}\WVLibs"
 $useWebView2 = $false
-$userDataDir = Join-Path $env:TEMP "RawrBrowserData"
+$userDataDir = Join-Path ${env:TEMP} "RawrBrowserData"
 
 if (-not (Test-Path $userDataDir)) {
   New-Item -ItemType Directory -Path $userDataDir -Force | Out-Null
@@ -243,7 +243,7 @@ document.getElementById("in").onchange = async e => {
       })
     $browser.add_NavigationCompleted({
         param($senderObj, $navCompletedArgs)
-        $lvl = if ($navCompletedArgs.IsSuccess) { 'SUCCESS' } else { 'WARN' }
+        $lvl = $(if ($navCompletedArgs.IsSuccess) { 'SUCCESS' } else { 'WARN' }
         Write-BrowserLog "NavigationCompleted: Success=$($navCompletedArgs.IsSuccess)" $lvl
       })
     $browser.add_WebMessageReceived({

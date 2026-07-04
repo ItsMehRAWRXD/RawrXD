@@ -189,7 +189,7 @@ function Clean-BuildArtifacts {
     }
     
     # Clean electron cache
-    $electronCache = "$env:LOCALAPPDATA\electron\Cache"
+    $electronCache = "${env:LOCALAPPDATA}\electron\Cache"
     if (Test-Path $electronCache) {
         if ($Force) {
             Write-RecoveryStep "Cleaning Electron cache..."

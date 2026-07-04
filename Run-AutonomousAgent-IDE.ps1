@@ -66,7 +66,7 @@ $WarningPreference = "Continue"
 $InformationPreference = "Continue"
 
 # Global execution state
-$script:ExecutionState = @{
+${script:ExecutionState} = @{
     Version = "3.0.0"
     StartTime = Get-Date
     EndTime = $null
@@ -119,9 +119,9 @@ function Write-ExecutionLog {
     
     # Update state
     if ($Level -eq 'Error' -or $Level -eq 'Critical') {
-        $script:ExecutionState.Errors.Add($Message)
+        ${script:ExecutionState}.Errors.Add($Message)
     } elseif ($Level -eq 'Warning') {
-        $script:ExecutionState.Warnings.Add($Message)
+        ${script:ExecutionState}.Warnings.Add($Message)
     }
     
     # Log to file
@@ -154,7 +154,7 @@ function Show-Configuration {
     Write-Host "  Verbose: $Verbose" -ForegroundColor White
     Write-Host "  Skip Tests: $SkipTests" -ForegroundColor White
     Write-Host "  Skip Execution: $SkipExecution" -ForegroundColor White
-    Write-Host "  Start Time: $($script:ExecutionState.StartTime)" -ForegroundColor White
+    Write-Host "  Start Time: $(${script:ExecutionState}.StartTime)" -ForegroundColor White
     Write-Host ""
 }
 
@@ -205,7 +205,7 @@ function Execute-SystemValidation {
             throw "System validation failed. Please address the issues above."
         }
         
-        $script:ExecutionState.Results.SystemValidation = $prereqs
+        ${script:ExecutionState}.Results.SystemValidation = $prereqs
         return $prereqs
         
     } catch {
@@ -232,7 +232,7 @@ function Import-AutonomousAgent {
         
         Write-ExecutionLog -Message "✓ Autonomous agent imported successfully" -Level Success
         
-        $script:ExecutionState.Results.ModuleImport = @{
+        ${script:ExecutionState}.Results.ModuleImport = @{
             Success = $true
             ModulePath = $modulePath
             Timestamp = Get-Date
@@ -254,7 +254,7 @@ function Execute-TestSuite {
     
     if ($SkipTests) {
         Write-ExecutionLog -Message "Skipping test suite execution (SkipTests flag set)" -Level Warning
-        $script:ExecutionState.Results.TestSuite = @{
+        ${script:ExecutionState}.Results.TestSuite = @{
             Success = $true
             Skipped = $true
             TestsPassed = 0
@@ -278,16 +278,16 @@ function Execute-TestSuite {
         
         Write-ExecutionLog -Message "✓ Test suite execution completed successfully" -Level Success
         
-        $script:ExecutionState.Results.TestSuite = @{
+        ${script:ExecutionState}.Results.TestSuite = @{
             Success = $true
             Skipped = $false
-            TestsPassed = $script:TestState.Tests.Passed
-            TestsFailed = $script:TestState.Tests.Failed
+            TestsPassed = ${script:TestState}.Tests.Passed
+            TestsFailed = ${script:TestState}.Tests.Failed
             Timestamp = Get-Date
         }
         
-        $script:ExecutionState.TestsPassed = $script:TestState.Tests.Passed
-        $script:ExecutionState.TestsFailed = $script:TestState.Tests.Failed
+        ${script:ExecutionState}.TestsPassed = ${script:TestState}.Tests.Passed
+        ${script:ExecutionState}.TestsFailed = ${script:TestState}.Tests.Failed
         
         return $true
         
@@ -305,7 +305,7 @@ function Execute-AutonomousAgent {
     
     if ($SkipExecution) {
         Write-ExecutionLog -Message "Skipping autonomous agent execution (SkipExecution flag set)" -Level Warning
-        $script:ExecutionState.Results.AutonomousAgent = @{
+        ${script:ExecutionState}.Results.AutonomousAgent = @{
             Success = $true
             Skipped = $true
             Iterations = 0
@@ -332,11 +332,11 @@ function Execute-AutonomousAgent {
         
         Write-ExecutionLog -Message "✓ Autonomous agent execution completed successfully" -Level Success
         
-        $script:ExecutionState.Results.AutonomousAgent = @{
+        ${script:ExecutionState}.Results.AutonomousAgent = @{
             Success = $true
             Skipped = $false
-            Iterations = $script:ExecutionState.Iterations
-            FeaturesGenerated = $script:ExecutionState.FeaturesGenerated
+            Iterations = ${script:ExecutionState}.Iterations
+            FeaturesGenerated = ${script:ExecutionState}.FeaturesGenerated
             Timestamp = Get-Date
         }
         
@@ -355,7 +355,7 @@ function Show-FinalResults {
     Write-ExecutionLog -Message "═══════════════════════════════════════════════════════════════════" -Level IDE
     
     $endTime = Get-Date
-    $duration = [Math]::Round(($endTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
+    $duration = [Math]::Round(($endTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
     
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
@@ -367,32 +367,32 @@ function Show-FinalResults {
     
     Write-Host "Execution Summary:" -ForegroundColor Yellow
     Write-Host "  Duration: $duration minutes" -ForegroundColor White
-    Write-Host "  Mode: $($script:ExecutionState.Mode)" -ForegroundColor White
-    Write-Host "  WhatIf: $($script:ExecutionState.WhatIf)" -ForegroundColor White
-    Write-Host "  Status: $(if($script:ExecutionState.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if($script:ExecutionState.Success){'Green'}else{'Red'})
+    Write-Host "  Mode: $(${script:ExecutionState}.Mode)" -ForegroundColor White
+    Write-Host "  WhatIf: $(${script:ExecutionState}.WhatIf)" -ForegroundColor White
+    Write-Host "  Status: $(if(${script:ExecutionState}.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if(${script:ExecutionState}.Success){'Green'}else{'Red'})
     Write-Host ""
     
     Write-Host "Statistics:" -ForegroundColor Yellow
-    Write-Host "  Tests Passed: $($script:ExecutionState.TestsPassed)" -ForegroundColor Green
-    Write-Host "  Tests Failed: $($script:ExecutionState.TestsFailed)" -ForegroundColor Red
-    Write-Host "  Iterations: $($script:ExecutionState.Iterations)" -ForegroundColor White
-    Write-Host "  Features Generated: $($script:ExecutionState.FeaturesGenerated)" -ForegroundColor White
-    Write-Host "  Optimizations Applied: $($script:ExecutionState.OptimizationsApplied)" -ForegroundColor White
-    Write-Host "  Errors: $($script:ExecutionState.Errors.Count)" -ForegroundColor $(if($script:ExecutionState.Errors.Count -eq 0){'Green'}else{'Red'})
-    Write-Host "  Warnings: $($script:ExecutionState.Warnings.Count)" -ForegroundColor $(if($script:ExecutionState.Warnings.Count -eq 0){'Green'}else{'Yellow'})
+    Write-Host "  Tests Passed: $(${script:ExecutionState}.TestsPassed)" -ForegroundColor Green
+    Write-Host "  Tests Failed: $(${script:ExecutionState}.TestsFailed)" -ForegroundColor Red
+    Write-Host "  Iterations: $(${script:ExecutionState}.Iterations)" -ForegroundColor White
+    Write-Host "  Features Generated: $(${script:ExecutionState}.FeaturesGenerated)" -ForegroundColor White
+    Write-Host "  Optimizations Applied: $(${script:ExecutionState}.OptimizationsApplied)" -ForegroundColor White
+    Write-Host "  Errors: $(${script:ExecutionState}.Errors.Count)" -ForegroundColor $(if(${script:ExecutionState}.Errors.Count -eq 0){'Green'}else{'Red'})
+    Write-Host "  Warnings: $(${script:ExecutionState}.Warnings.Count)" -ForegroundColor $(if(${script:ExecutionState}.Warnings.Count -eq 0){'Green'}else{'Yellow'})
     Write-Host ""
     
-    if ($script:ExecutionState.Errors.Count -gt 0) {
+    if (${script:ExecutionState}.Errors.Count -gt 0) {
         Write-Host "Errors:" -ForegroundColor Red
-        foreach ($error in $script:ExecutionState.Errors) {
+        foreach ($error in ${script:ExecutionState}.Errors) {
             Write-Host "  • $error" -ForegroundColor Gray
         }
         Write-Host ""
     }
     
-    if ($script:ExecutionState.Warnings.Count -gt 0) {
+    if (${script:ExecutionState}.Warnings.Count -gt 0) {
         Write-Host "Warnings:" -ForegroundColor Yellow
-        foreach ($warning in $script:ExecutionState.Warnings) {
+        foreach ($warning in ${script:ExecutionState}.Warnings) {
             Write-Host "  • $warning" -ForegroundColor Gray
         }
         Write-Host ""
@@ -430,23 +430,23 @@ function Start-MainExecution {
         $execResult = Execute-AutonomousAgent
         
         # Update final status
-        $script:ExecutionState.EndTime = Get-Date
-        $script:ExecutionState.Duration = [Math]::Round(($script:ExecutionState.EndTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
-        $script:ExecutionState.Status = "Complete"
-        $script:ExecutionState.Success = ($script:ExecutionState.Errors.Count -eq 0)
+        ${script:ExecutionState}.EndTime = Get-Date
+        ${script:ExecutionState}.Duration = [Math]::Round((${script:ExecutionState}.EndTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
+        ${script:ExecutionState}.Status = "Complete"
+        ${script:ExecutionState}.Success = (${script:ExecutionState}.Errors.Count -eq 0)
         
         Write-ExecutionLog -Message "IDE execution completed successfully" -Level Success
         
         # Show final results
         Show-FinalResults
         
-        return $script:ExecutionState
+        return ${script:ExecutionState}
         
     } catch {
-        $script:ExecutionState.EndTime = Get-Date
-        $script:ExecutionState.Duration = [Math]::Round(($script:ExecutionState.EndTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
-        $script:ExecutionState.Status = "Failed"
-        $script:ExecutionState.Success = $false
+        ${script:ExecutionState}.EndTime = Get-Date
+        ${script:ExecutionState}.Duration = [Math]::Round((${script:ExecutionState}.EndTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
+        ${script:ExecutionState}.Status = "Failed"
+        ${script:ExecutionState}.Success = $false
         
         Write-ExecutionLog -Message "IDE execution failed: $_" -Level Critical
         

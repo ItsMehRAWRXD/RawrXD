@@ -9,13 +9,13 @@
 # ============================================
 # EMERGENCY LOGGING SETUP - SCALAR MODE
 
-$script:EmergencyLogPath = Join-Path $env:APPDATA "RawrXD"
-if (-not (Test-Path $script:EmergencyLogPath)) {
+${script:EmergencyLogPath} = Join-Path ${env:APPDATA} "RawrXD"
+if (-not (Test-Path ${script:EmergencyLogPath})) {
     try { 
-        $null = New-Item -ItemType Directory -Path $script:EmergencyLogPath -Force
+        $null = New-Item -ItemType Directory -Path ${script:EmergencyLogPath} -Force
     } catch { }
 }
-$script:StartupLogFile = Join-Path $script:EmergencyLogPath "startup.log"
+${script:StartupLogFile} = Join-Path ${script:EmergencyLogPath} "startup.log"
 
 function Write-EmergencyLog {
     param(
@@ -27,8 +27,8 @@ function Write-EmergencyLog {
     try {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
         $logEntry = "[$timestamp] [$Level] $Message"
-        if ($script:StartupLogFile) {
-            Add-Content -Path $script:StartupLogFile -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+        if (${script:StartupLogFile}) {
+            Add-Content -Path ${script:StartupLogFile} -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
         }
 
         # SCALAR: explicit comparison, no -in operator
@@ -73,9 +73,9 @@ function Write-StartupLog {
 
     Write-Host $logEntry -ForegroundColor $color
 
-    if ($script:StartupLogFile) {
+    if (${script:StartupLogFile}) {
         try {
-            Add-Content -Path $script:StartupLogFile -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+            Add-Content -Path ${script:StartupLogFile} -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
         }
         catch { }
     }
@@ -121,7 +121,7 @@ function Get-OllamaModels {
         "$PSScriptRoot\OllamaModels",
         "D:\OllamaModels",
         "C:\OllamaModels",
-        "$env:USERPROFILE\OllamaModels",
+        "${env:USERPROFILE}\OllamaModels",
         "$PSScriptRoot\models",
         "$PSScriptRoot"
     )
@@ -176,8 +176,8 @@ function Get-OllamaModels {
 
     # 3) Include configured fallback if present
     try {
-        if ($script:settings -and $script:settings.OllamaModel) { 
-            $models += $script:settings.OllamaModel 
+        if (${script:settings} -and ${script:settings}.OllamaModel) { 
+            $models += ${script:settings}.OllamaModel 
             $modelCount++
         }
     } catch { }

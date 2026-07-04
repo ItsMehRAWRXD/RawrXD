@@ -87,7 +87,7 @@ $msvcRoot = (Resolve-Path (Join-Path $masmDir "..\\..\\..")).Path
 $msvcLibX64 = Join-Path $msvcRoot "lib\x64"
 $msvcLibOneCore = Join-Path $msvcRoot "lib\onecore\x64"
 
-$sdkRoot = if (Test-Path "C:\Program Files (x86)\Windows Kits\10\Lib") {
+$sdkRoot = $(if (Test-Path "C:\Program Files (x86)\Windows Kits\10\Lib") {
     "C:\Program Files (x86)\Windows Kits\10\Lib"
 } elseif (Test-Path "D:\Program Files (x86)\Windows Kits\10\Lib") {
     "D:\Program Files (x86)\Windows Kits\10\Lib"

@@ -17,7 +17,7 @@ if (-not $WorkspaceRoot) {
 }
 
 $smokeFile = Join-Path $WorkspaceRoot "rawrxd_agent_smoke.txt"
-$stdoutTmp = Join-Path $env:TEMP ("rawrxd_rtp_smoke_stdout_{0}.txt" -f [guid]::NewGuid().ToString("N"))
+$stdoutTmp = Join-Path ${env:TEMP} ("rawrxd_rtp_smoke_stdout_{0}.txt" -f [guid]::NewGuid().ToString("N"))
 
 try {
     if (Test-Path -LiteralPath $smokeFile) {

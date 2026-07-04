@@ -10,7 +10,7 @@
       Tools:   D:\Stash House\RawrXD-Main\tools\
 
     Still stamps the registry and applies the thermal profile.
-    No files are moved or duplicated to $env:LOCALAPPDATA.
+    No files are moved or duplicated to ${env:LOCALAPPDATA}.
 .PARAMETER ThermalProfile
     Iguana (default) | Cheetah | Tortoise
 .PARAMETER Target

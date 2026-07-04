@@ -23,7 +23,7 @@ if (Test-Path $edgePathX86) {
 if ($targetEdge) {
     Write-Host "🚀 Launching Beast IDE in Modern App Mode..." -ForegroundColor Cyan
     # Use a separate user data dir to ensure a clean session and no interference with main browser
-    $userDataDir = "$env:LOCALAPPDATA\BeastIDE_Profile"
+    $userDataDir = "${env:LOCALAPPDATA}\BeastIDE_Profile"
     
     $process = Start-Process -FilePath $targetEdge -ArgumentList "--app=""file:///$idePath""", "--user-data-dir=""$userDataDir""", "--force-renderer-accessibility" -PassThru
     

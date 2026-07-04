@@ -21,8 +21,7 @@
 
 # ============================================================================
 # STRUCTURED LOGGING (Standalone fallback)
-# ============================================================================
-if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
+# ============================================================================ $(if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
     function Write-StructuredLog {
         param(
             [Parameter(Mandatory=$true)][string]$Message,
@@ -52,7 +51,7 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 # ============================================================================
 # CI REGISTRY (Global State Management)
 # ============================================================================
-$script:CIRegistry = @{
+${script:CIRegistry} = @{
     ActiveWatchers = @{}                 # WatcherId -> Watcher info
     BuildQueue = [System.Collections.ArrayList]@()  # Pending builds
     BuildHistory = [System.Collections.ArrayList]@() # Completed builds
@@ -151,15 +150,15 @@ function Add-BuildToQueue {
     $priorityOrder = @{ 'Critical' = 0; 'High' = 1; 'Normal' = 2; 'Low' = 3 }
     $insertIndex = 0
     
-    for ($i = 0; $i -lt $script:CIRegistry.BuildQueue.Count; $i++) {
-        if ($priorityOrder[$Priority] -lt $priorityOrder[$script:CIRegistry.BuildQueue[$i].Priority]) {
+    for ($i = 0; $i -lt ${script:CIRegistry}.BuildQueue.Count; $i++) {
+        if ($priorityOrder[$Priority] -lt $priorityOrder[${script:CIRegistry}.BuildQueue[$i].Priority]) {
             $insertIndex = $i
             break
         }
         $insertIndex = $i + 1
     }
     
-    $script:CIRegistry.BuildQueue.Insert($insertIndex, $buildRequest)
+    ${script:CIRegistry}.BuildQueue.Insert($insertIndex, $buildRequest)
     
     Write-StructuredLog -Message "Build queued" -Level Info -Context @{
         BuildId = $buildId
@@ -180,12 +179,12 @@ function Get-NextBuild {
     [CmdletBinding()]
     param()
     
-    if ($script:CIRegistry.BuildQueue.Count -eq 0) {
+    if (${script:CIRegistry}.BuildQueue.Count -eq 0) {
         return $null
     }
     
-    $build = $script:CIRegistry.BuildQueue[0]
-    $script:CIRegistry.BuildQueue.RemoveAt(0)
+    $build = ${script:CIRegistry}.BuildQueue[0]
+    ${script:CIRegistry}.BuildQueue.RemoveAt(0)
     return $build
 }
 
@@ -277,7 +276,7 @@ function Invoke-GitHubActionsWorkflow {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)][hashtable]$BuildRequest,
-        [hashtable]$Config = $script:CIRegistry.Configuration.Providers.GitHub
+        [hashtable]$Config = ${script:CIRegistry}.Configuration.Providers.GitHub
     )
     
     if (-not $Config.Enabled) {
@@ -335,7 +334,7 @@ function Invoke-AzureDevOpsPipeline {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)][hashtable]$BuildRequest,
-        [hashtable]$Config = $script:CIRegistry.Configuration.Providers.AzureDevOps
+        [hashtable]$Config = ${script:CIRegistry}.Configuration.Providers.AzureDevOps
     )
     
     if (-not $Config.Enabled) {
@@ -399,7 +398,7 @@ function Invoke-JenkinsBuild {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)][hashtable]$BuildRequest,
-        [hashtable]$Config = $script:CIRegistry.Configuration.Providers.Jenkins
+        [hashtable]$Config = ${script:CIRegistry}.Configuration.Providers.Jenkins
     )
     
     if (-not $Config.Enabled) {
@@ -447,7 +446,7 @@ function Invoke-LocalBuild {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)][hashtable]$BuildRequest,
-        [hashtable]$Config = $script:CIRegistry.Configuration.Providers.Local
+        [hashtable]$Config = ${script:CIRegistry}.Configuration.Providers.Local
     )
     
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -544,7 +543,7 @@ function Start-Build {
     }
     
     $results = @()
-    $providers = $script:CIRegistry.Configuration.Providers
+    $providers = ${script:CIRegistry}.Configuration.Providers
     
     # Determine which providers to use
     $enabledProviders = @()
@@ -575,7 +574,7 @@ function Start-Build {
     
     # Determine overall result
     $allSucceeded = ($results | Where-Object { $_.Success }).Count -eq $results.Count
-    $BuildRequest.Status = if ($allSucceeded) { 'Succeeded' } else { 'Failed' }
+    $BuildRequest.Status = $(if ($allSucceeded) { 'Succeeded' } else { 'Failed' }
     $BuildRequest.Result = @{
         Success = $allSucceeded
         ProviderResults = $results
@@ -583,25 +582,25 @@ function Start-Build {
     }
     
     # Update statistics
-    $script:CIRegistry.Statistics.TotalBuilds++
+    ${script:CIRegistry}.Statistics.TotalBuilds++
     if ($allSucceeded) {
-        $script:CIRegistry.Statistics.SuccessfulBuilds++
+        ${script:CIRegistry}.Statistics.SuccessfulBuilds++
     } else {
-        $script:CIRegistry.Statistics.FailedBuilds++
+        ${script:CIRegistry}.Statistics.FailedBuilds++
     }
-    $script:CIRegistry.Statistics.LastBuildTime = Get-Date
+    ${script:CIRegistry}.Statistics.LastBuildTime = Get-Date
     
     # Calculate running average
-    $totalBuilds = $script:CIRegistry.Statistics.TotalBuilds
-    $currentAvg = $script:CIRegistry.Statistics.AverageBuiltTimeMs
-    $script:CIRegistry.Statistics.AverageBuiltTimeMs = (($currentAvg * ($totalBuilds - 1)) + $stopwatch.Elapsed.TotalMilliseconds) / $totalBuilds
+    $totalBuilds = ${script:CIRegistry}.Statistics.TotalBuilds
+    $currentAvg = ${script:CIRegistry}.Statistics.AverageBuiltTimeMs
+    ${script:CIRegistry}.Statistics.AverageBuiltTimeMs = (($currentAvg * ($totalBuilds - 1)) + $stopwatch.Elapsed.TotalMilliseconds) / $totalBuilds
     
     # Add to history
-    [void]$script:CIRegistry.BuildHistory.Add($BuildRequest)
+    [void]${script:CIRegistry}.BuildHistory.Add($BuildRequest)
     
     # Keep history limited to last 100 builds
-    while ($script:CIRegistry.BuildHistory.Count -gt 100) {
-        $script:CIRegistry.BuildHistory.RemoveAt(0)
+    while (${script:CIRegistry}.BuildHistory.Count -gt 100) {
+        ${script:CIRegistry}.BuildHistory.RemoveAt(0)
     }
     
     # Send notifications
@@ -630,7 +629,7 @@ function Send-BuildNotification {
         [Parameter(Mandatory=$true)][hashtable]$BuildRequest
     )
     
-    $notifications = $script:CIRegistry.Configuration.Notifications
+    $notifications = ${script:CIRegistry}.Configuration.Notifications
     
     # Slack notification
     if ($notifications.Slack.Enabled -and $notifications.Slack.WebhookUrl) {
@@ -650,8 +649,8 @@ function Send-SlackNotification {
         [Parameter(Mandatory=$true)][string]$WebhookUrl
     )
     
-    $color = if ($BuildRequest.Result.Success) { 'good' } else { 'danger' }
-    $status = if ($BuildRequest.Result.Success) { '✅ Succeeded' } else { '❌ Failed' }
+    $color = $(if ($BuildRequest.Result.Success) { 'good' } else { 'danger' }
+    $status = $(if ($BuildRequest.Result.Success) { '✅ Succeeded' } else { '❌ Failed' }
     
     $payload = @{
         attachments = @(
@@ -685,8 +684,8 @@ function Send-TeamsNotification {
         [Parameter(Mandatory=$true)][string]$WebhookUrl
     )
     
-    $themeColor = if ($BuildRequest.Result.Success) { '00FF00' } else { 'FF0000' }
-    $status = if ($BuildRequest.Result.Success) { '✅ Succeeded' } else { '❌ Failed' }
+    $themeColor = $(if ($BuildRequest.Result.Success) { '00FF00' } else { 'FF0000' }
+    $status = $(if ($BuildRequest.Result.Success) { '✅ Succeeded' } else { '❌ Failed' }
     
     $payload = @{
         '@type' = 'MessageCard'
@@ -725,10 +724,10 @@ function Start-WebhookServer {
     #>
     [CmdletBinding()]
     param(
-        [int]$Port = $script:CIRegistry.Configuration.WebhookPort
+        [int]$Port = ${script:CIRegistry}.Configuration.WebhookPort
     )
     
-    if ($script:CIRegistry.WebhookServer) {
+    if (${script:CIRegistry}.WebhookServer) {
         Write-StructuredLog -Message "Webhook server already running" -Level Warning
         return
     }
@@ -738,7 +737,7 @@ function Start-WebhookServer {
         $listener.Prefixes.Add("http://localhost:$Port/")
         $listener.Start()
         
-        $script:CIRegistry.WebhookServer = $listener
+        ${script:CIRegistry}.WebhookServer = $listener
         
         Write-StructuredLog -Message "Webhook server started" -Level Info -Context @{Port = $Port}
         
@@ -795,10 +794,10 @@ function Stop-WebhookServer {
     [CmdletBinding()]
     param()
     
-    if ($script:CIRegistry.WebhookServer) {
-        $script:CIRegistry.WebhookServer.Stop()
-        $script:CIRegistry.WebhookServer.Close()
-        $script:CIRegistry.WebhookServer = $null
+    if (${script:CIRegistry}.WebhookServer) {
+        ${script:CIRegistry}.WebhookServer.Stop()
+        ${script:CIRegistry}.WebhookServer.Close()
+        ${script:CIRegistry}.WebhookServer = $null
         
         # Stop the job
         Get-Job -Name "CIWebhookServer" -ErrorAction SilentlyContinue | Stop-Job -PassThru | Remove-Job
@@ -818,7 +817,7 @@ function Start-BuildQueueProcessor {
     [CmdletBinding()]
     param()
     
-    $script:CIRegistry.IsRunning = $true
+    ${script:CIRegistry}.IsRunning = $true
     
     $job = Start-Job -Name "CIBuildProcessor" -ScriptBlock {
         param($MaxConcurrent, $Timeout)
@@ -828,7 +827,7 @@ function Start-BuildQueueProcessor {
             # Build processing would happen here in a real implementation
             # This is a placeholder for the background processor
         }
-    } -ArgumentList $script:CIRegistry.Configuration.MaxConcurrentBuilds, $script:CIRegistry.Configuration.BuildTimeout
+    } -ArgumentList ${script:CIRegistry}.Configuration.MaxConcurrentBuilds, ${script:CIRegistry}.Configuration.BuildTimeout
     
     Write-StructuredLog -Message "Build queue processor started" -Level Info
     return $job
@@ -858,13 +857,13 @@ function Invoke-ContinuousIntegrationTrigger {
         [string[]]$TriggerFiles = @()
     )
     
-    $script:CIRegistry.CancellationToken = New-Object System.Threading.ManualResetEvent $false
+    ${script:CIRegistry}.CancellationToken = New-Object System.Threading.ManualResetEvent $false
     
     # Handle Ctrl+C gracefully
     $onCancel = {
         Write-StructuredLog -Message "Received cancellation signal" -Level Info
-        $script:CIRegistry.CancellationToken.Set() | Out-Null
-        $script:CIRegistry.IsRunning = $false
+        ${script:CIRegistry}.CancellationToken.Set() | Out-Null
+        ${script:CIRegistry}.IsRunning = $false
     }
     
     try {
@@ -880,14 +879,14 @@ function Invoke-ContinuousIntegrationTrigger {
     }
     
     # Update configuration
-    $script:CIRegistry.Configuration.WatchDirectories = @($WatchDir)
-    $script:CIRegistry.Configuration.DebounceMs = $DebounceMilliseconds
-    $script:CIRegistry.Configuration.EnableWebhooks = $EnableWebhooks
-    $script:CIRegistry.Configuration.WebhookPort = $WebhookPort
+    ${script:CIRegistry}.Configuration.WatchDirectories = @($WatchDir)
+    ${script:CIRegistry}.Configuration.DebounceMs = $DebounceMilliseconds
+    ${script:CIRegistry}.Configuration.EnableWebhooks = $EnableWebhooks
+    ${script:CIRegistry}.Configuration.WebhookPort = $WebhookPort
     
     # Handle RunOnce mode (manual trigger)
     if ($RunOnce -or $TriggerFiles.Count -gt 0) {
-        $files = if ($TriggerFiles.Count -gt 0) { $TriggerFiles } else { @("manual-trigger") }
+        $files = $(if ($TriggerFiles.Count -gt 0) { $TriggerFiles } else { @("manual-trigger") }
         
         $buildId = Add-BuildToQueue -Trigger 'Manual' -ChangedFiles $files -Priority 'High'
         $buildRequest = Get-NextBuild
@@ -916,8 +915,8 @@ function Invoke-ContinuousIntegrationTrigger {
     $watcher.EnableRaisingEvents = $true
     
     # Debounce tracking
-    $script:pendingChanges = @{}
-    $script:lastProcessed = @{}
+    ${script:pendingChanges} = @{}
+    ${script:lastProcessed} = @{}
     
     # Event handler for file changes
     $changeHandler = {
@@ -947,7 +946,7 @@ function Invoke-ContinuousIntegrationTrigger {
         if (-not $matched) { return }
         
         # Add to pending changes
-        $script:pendingChanges[$path] = @{
+        ${script:pendingChanges}[$path] = @{
             Path = $path
             ChangeType = $changeType
             Timestamp = Get-Date
@@ -964,7 +963,7 @@ function Invoke-ContinuousIntegrationTrigger {
     Register-ObjectEvent -InputObject $watcher -EventName Deleted -Action $changeHandler -SourceIdentifier 'CIFileDeleted' | Out-Null
     Register-ObjectEvent -InputObject $watcher -EventName Renamed -Action $changeHandler -SourceIdentifier 'CIFileRenamed' | Out-Null
     
-    $script:CIRegistry.ActiveWatchers['main'] = @{
+    ${script:CIRegistry}.ActiveWatchers['main'] = @{
         Watcher = $watcher
         Path = $WatchDir
         StartedAt = Get-Date
@@ -973,20 +972,20 @@ function Invoke-ContinuousIntegrationTrigger {
     Write-StructuredLog -Message "CI Trigger is running. Press Ctrl+C to stop." -Level Info
     
     # Main loop
-    while (-not $script:CIRegistry.CancellationToken.WaitOne(1000)) {
+    while (-not ${script:CIRegistry}.CancellationToken.WaitOne(1000)) {
         # Process pending changes with debouncing
         $now = Get-Date
         $toProcess = @()
         $keysToRemove = @()
         
-        foreach ($key in $script:pendingChanges.Keys) {
-            $change = $script:pendingChanges[$key]
+        foreach ($key in ${script:pendingChanges}.Keys) {
+            $change = ${script:pendingChanges}[$key]
             $elapsed = ($now - $change.Timestamp).TotalMilliseconds
             
             if ($elapsed -ge $DebounceMilliseconds) {
                 # Check if we recently processed this file
-                if ($script:lastProcessed.ContainsKey($key)) {
-                    $lastTime = $script:lastProcessed[$key]
+                if (${script:lastProcessed}.ContainsKey($key)) {
+                    $lastTime = ${script:lastProcessed}[$key]
                     if (($now - $lastTime).TotalMilliseconds -lt $DebounceMilliseconds) {
                         $keysToRemove += $key
                         continue
@@ -995,13 +994,13 @@ function Invoke-ContinuousIntegrationTrigger {
                 
                 $toProcess += $change.Path
                 $keysToRemove += $key
-                $script:lastProcessed[$key] = $now
+                ${script:lastProcessed}[$key] = $now
             }
         }
         
         # Remove processed changes
         foreach ($key in $keysToRemove) {
-            $script:pendingChanges.Remove($key)
+            ${script:pendingChanges}.Remove($key)
         }
         
         # Trigger build if we have changes
@@ -1015,7 +1014,7 @@ function Invoke-ContinuousIntegrationTrigger {
         }
         
         # Process any queued builds
-        while ($script:CIRegistry.BuildQueue.Count -gt 0) {
+        while (${script:CIRegistry}.BuildQueue.Count -gt 0) {
             $buildRequest = Get-NextBuild
             if ($buildRequest) {
                 Start-Build -BuildRequest $buildRequest
@@ -1039,8 +1038,8 @@ function Invoke-ContinuousIntegrationTrigger {
             Stop-WebhookServer
         }
         
-        $script:CIRegistry.ActiveWatchers.Clear()
-        $script:CIRegistry.IsRunning = $false
+        ${script:CIRegistry}.ActiveWatchers.Clear()
+        ${script:CIRegistry}.IsRunning = $false
         
         Write-StructuredLog -Message "CI Trigger shutdown complete" -Level Info
     } catch {
@@ -1048,8 +1047,8 @@ function Invoke-ContinuousIntegrationTrigger {
     }
     
     return @{
-        Statistics = $script:CIRegistry.Statistics
-        BuildHistory = $script:CIRegistry.BuildHistory
+        Statistics = ${script:CIRegistry}.Statistics
+        BuildHistory = ${script:CIRegistry}.BuildHistory
     }
 }
 
@@ -1064,7 +1063,7 @@ function Get-CIStatistics {
     [CmdletBinding()]
     param()
     
-    return $script:CIRegistry.Statistics
+    return ${script:CIRegistry}.Statistics
 }
 
 function Get-BuildHistory {
@@ -1079,7 +1078,7 @@ function Get-BuildHistory {
         [string]$Status = 'All'
     )
     
-    $history = $script:CIRegistry.BuildHistory
+    $history = ${script:CIRegistry}.BuildHistory
     
     if ($Status -ne 'All') {
         $history = $history | Where-Object { $_.Status -eq $Status }
@@ -1096,7 +1095,7 @@ function Get-BuildQueue {
     [CmdletBinding()]
     param()
     
-    return $script:CIRegistry.BuildQueue
+    return ${script:CIRegistry}.BuildQueue
 }
 
 function Set-CIConfiguration {
@@ -1121,55 +1120,55 @@ function Set-CIConfiguration {
     )
     
     if ($PSBoundParameters.ContainsKey('WatchDirectories')) {
-        $script:CIRegistry.Configuration.WatchDirectories = $WatchDirectories
+        ${script:CIRegistry}.Configuration.WatchDirectories = $WatchDirectories
     }
     if ($PSBoundParameters.ContainsKey('WatchPatterns')) {
-        $script:CIRegistry.Configuration.WatchPatterns = $WatchPatterns
+        ${script:CIRegistry}.Configuration.WatchPatterns = $WatchPatterns
     }
     if ($PSBoundParameters.ContainsKey('ExcludePatterns')) {
-        $script:CIRegistry.Configuration.ExcludePatterns = $ExcludePatterns
+        ${script:CIRegistry}.Configuration.ExcludePatterns = $ExcludePatterns
     }
     if ($PSBoundParameters.ContainsKey('DebounceMs')) {
-        $script:CIRegistry.Configuration.DebounceMs = $DebounceMs
+        ${script:CIRegistry}.Configuration.DebounceMs = $DebounceMs
     }
     if ($PSBoundParameters.ContainsKey('MaxConcurrentBuilds')) {
-        $script:CIRegistry.Configuration.MaxConcurrentBuilds = $MaxConcurrentBuilds
+        ${script:CIRegistry}.Configuration.MaxConcurrentBuilds = $MaxConcurrentBuilds
     }
     if ($PSBoundParameters.ContainsKey('BuildTimeout')) {
-        $script:CIRegistry.Configuration.BuildTimeout = $BuildTimeout
+        ${script:CIRegistry}.Configuration.BuildTimeout = $BuildTimeout
     }
     if ($GitHubConfig) {
         foreach ($key in $GitHubConfig.Keys) {
-            $script:CIRegistry.Configuration.Providers.GitHub[$key] = $GitHubConfig[$key]
+            ${script:CIRegistry}.Configuration.Providers.GitHub[$key] = $GitHubConfig[$key]
         }
     }
     if ($AzureDevOpsConfig) {
         foreach ($key in $AzureDevOpsConfig.Keys) {
-            $script:CIRegistry.Configuration.Providers.AzureDevOps[$key] = $AzureDevOpsConfig[$key]
+            ${script:CIRegistry}.Configuration.Providers.AzureDevOps[$key] = $AzureDevOpsConfig[$key]
         }
     }
     if ($JenkinsConfig) {
         foreach ($key in $JenkinsConfig.Keys) {
-            $script:CIRegistry.Configuration.Providers.Jenkins[$key] = $JenkinsConfig[$key]
+            ${script:CIRegistry}.Configuration.Providers.Jenkins[$key] = $JenkinsConfig[$key]
         }
     }
     if ($LocalConfig) {
         foreach ($key in $LocalConfig.Keys) {
-            $script:CIRegistry.Configuration.Providers.Local[$key] = $LocalConfig[$key]
+            ${script:CIRegistry}.Configuration.Providers.Local[$key] = $LocalConfig[$key]
         }
     }
     if ($SlackConfig) {
         foreach ($key in $SlackConfig.Keys) {
-            $script:CIRegistry.Configuration.Notifications.Slack[$key] = $SlackConfig[$key]
+            ${script:CIRegistry}.Configuration.Notifications.Slack[$key] = $SlackConfig[$key]
         }
     }
     if ($TeamsConfig) {
         foreach ($key in $TeamsConfig.Keys) {
-            $script:CIRegistry.Configuration.Notifications.Teams[$key] = $TeamsConfig[$key]
+            ${script:CIRegistry}.Configuration.Notifications.Teams[$key] = $TeamsConfig[$key]
         }
     }
     
-    return $script:CIRegistry.Configuration
+    return ${script:CIRegistry}.Configuration
 }
 
 # Export functions

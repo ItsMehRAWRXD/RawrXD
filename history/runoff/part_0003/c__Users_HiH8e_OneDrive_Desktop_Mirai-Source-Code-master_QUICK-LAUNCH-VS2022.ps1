@@ -10,8 +10,8 @@ Write-Host "🚀 Visual Studio 2022 - BotBuilder Launcher`n" -ForegroundColor Gr
 # Paths
 $VS_PATH = "D:\Microsoft Visual Studio 2022\Common7\IDE\devenv.exe"
 $SOLUTION_PATH = "$PSScriptRoot\Projects\BotBuilder\BotBuilder.sln"
-$VS_CACHE = "$env:LOCALAPPDATA\Microsoft\VisualStudio"
-$MEF_CACHE = "$env:TEMP\VisualStudioComponentCache"
+$VS_CACHE = "${env:LOCALAPPDATA}\Microsoft\VisualStudio"
+$MEF_CACHE = "${env:TEMP}\VisualStudioComponentCache"
 
 # Verify paths exist
 if (-not (Test-Path $VS_PATH)) {

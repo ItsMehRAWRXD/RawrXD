@@ -1,15 +1,15 @@
-$ErrorActionPreference = "Stop"
+$Script:ErrorActionPreference = "Stop"
 
-$ml = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
-$ln = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
-$db = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\dumpbin.exe"
+$Script:ml = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
+$Script:ln = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
+$Script:db = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\dumpbin.exe"
 
-$writerAsm = "D:\RawrXD\RawrXD_PE_Writer.asm"
-$writerObj = "D:\RawrXD\RawrXD_PE_Writer.obj"
-$harnessAsm = "D:\RawrXD\pe_writer_import_e2e.asm"
-$harnessObj = "D:\RawrXD\pe_writer_import_e2e.obj"
-$harnessExe = "D:\RawrXD\pe_writer_import_e2e.exe"
-$outExe = "D:\RawrXD\test_output_imports.exe"
+$Script:writerAsm = "D:\RawrXD\RawrXD_PE_Writer.asm"
+$Script:writerObj = "D:\RawrXD\RawrXD_PE_Writer.obj"
+$Script:harnessAsm = "D:\RawrXD\pe_writer_import_e2e.asm"
+$Script:harnessObj = "D:\RawrXD\pe_writer_import_e2e.obj"
+$Script:harnessExe = "D:\RawrXD\pe_writer_import_e2e.exe"
+$Script:outExe = "D:\RawrXD\test_output_imports.exe"
 
 & $ml /c /Fo$writerObj $writerAsm
 if ($LASTEXITCODE -ne 0) { throw "Writer assembly failed." }
@@ -26,10 +26,10 @@ if ($LASTEXITCODE -ne 0) { throw "Harness link failed." }
 if ($LASTEXITCODE -ne 0) { throw "Runtime generation failed with exit code $LASTEXITCODE." }
 if (-not (Test-Path $outExe)) { throw "Output executable not created." }
 
-$size = (Get-Item $outExe).Length
+$Script:size = (Get-Item $outExe).Length
 if ($size -lt 0xA00) { throw "Output too small ($size bytes), expected at least 0xA00." }
 
-$imports = (& $db /imports $outExe) -join "`n"
+$Script:imports = (& $db /imports $outExe) -join "`n"
 foreach ($needle in @(
     "kernel32.dll", "ExitProcess", "GetStdHandle", "WriteFile",
     "user32.dll", "MessageBoxA",
@@ -40,7 +40,7 @@ foreach ($needle in @(
     }
 }
 
-$headers = (& $db /headers $outExe) -join "`n"
+$Script:headers = (& $db /headers $outExe) -join "`n"
 foreach ($needle in @(".text name", ".rdata name", ".idata name")) {
     if ($headers -notmatch [Regex]::Escape($needle)) {
         throw "Missing section header marker: $needle"

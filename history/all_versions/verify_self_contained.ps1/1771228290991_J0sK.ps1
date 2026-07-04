@@ -25,10 +25,10 @@ function Test-Check {
     } else {
         if ($Warning) {
             Write-Host "⚠️  WARN" -ForegroundColor Yellow
-            $script:warnings++
+            ${script:warnings}++
         } else {
             Write-Host "❌ FAIL" -ForegroundColor Red
-            $script:failed++
+            ${script:failed}++
         }
         return $false
     }

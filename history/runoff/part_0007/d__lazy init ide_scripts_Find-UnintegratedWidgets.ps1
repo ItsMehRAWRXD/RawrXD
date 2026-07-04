@@ -62,7 +62,7 @@ if (-not (Test-Path $mainWindowCpp)) {
 }
 
 $mainWindowContent = Get-Content $mainWindowCpp -Raw -ErrorAction SilentlyContinue
-$mainWindowHeader = if (Test-Path $mainWindowH) { Get-Content $mainWindowH -Raw } else { "" }
+$mainWindowHeader = $(if (Test-Path $mainWindowH) { Get-Content $mainWindowH -Raw } else { "" }
 
 # Integration patterns to check
 $integrationPatterns = @(

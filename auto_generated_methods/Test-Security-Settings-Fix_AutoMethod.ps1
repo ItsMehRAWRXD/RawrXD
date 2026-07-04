@@ -21,8 +21,7 @@
 
 # ============================================================================
 # STRUCTURED LOGGING (Standalone fallback)
-# ============================================================================
-if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
+# ============================================================================ $(if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
     function Write-StructuredLog {
         param(
             [Parameter(Mandatory=$true)][string]$Message,
@@ -45,7 +44,7 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 # ============================================================================
 # SECURITY BASELINE DEFINITIONS
 # ============================================================================
-$script:SecurityBaseline = @{
+${script:SecurityBaseline} = @{
     TLS = @{
         MinVersion = '1.2'
         RequireTLS = $true
@@ -97,7 +96,7 @@ $script:SecurityBaseline = @{
 # ============================================================================
 # SECURITY CHECK RESULTS REGISTRY
 # ============================================================================
-$script:SecurityCheckResults = @{
+${script:SecurityCheckResults} = @{
     Checks = @()
     Passed = 0
     Failed = 0
@@ -129,7 +128,7 @@ function Test-TLSConfiguration {
         Fixes = @()
     }
     
-    $baseline = $script:SecurityBaseline.TLS
+    $baseline = ${script:SecurityBaseline}.TLS
     $issues = @()
     
     # Check .NET TLS settings
@@ -188,7 +187,7 @@ function Test-TLSConfiguration {
     }
     
     $results.Issues = $issues
-    $results.Status = if ($issues | Where-Object { $_.Severity -eq 'Critical' }) { 'Failed' }
+    $results.Status = $(if ($issues | Where-Object { $_.Severity -eq 'Critical' }) { 'Failed' }
                       elseif ($issues | Where-Object { $_.Severity -eq 'High' }) { 'Warning' }
                       elseif ($issues.Count -gt 0) { 'Minor' }
                       else { 'Passed' }
@@ -226,7 +225,7 @@ function Test-FilePermissions {
         return $results
     }
     
-    $baseline = $script:SecurityBaseline.FilePermissions
+    $baseline = ${script:SecurityBaseline}.FilePermissions
     
     # Get all files matching sensitive patterns
     $sensitiveFiles = @()
@@ -282,7 +281,7 @@ function Test-FilePermissions {
     }
     
     $results.SensitiveFilesFound = $sensitiveFiles.Count
-    $results.Status = if ($results.Issues | Where-Object { $_.Severity -eq 'High' }) { 'Failed' }
+    $results.Status = $(if ($results.Issues | Where-Object { $_.Severity -eq 'High' }) { 'Failed' }
                       elseif ($results.Issues.Count -gt 0) { 'Warning' }
                       else { 'Passed' }
     
@@ -311,7 +310,7 @@ function Test-EncryptionSettings {
         Fixes = @()
     }
     
-    $baseline = $script:SecurityBaseline.Encryption
+    $baseline = ${script:SecurityBaseline}.Encryption
     
     if (-not $Config) {
         $Config = @{}
@@ -364,7 +363,7 @@ function Test-EncryptionSettings {
         HashAlgorithm = $Config.hashAlgorithm
     }
     
-    $results.Status = if ($results.Issues | Where-Object { $_.Severity -eq 'Critical' }) { 'Failed' }
+    $results.Status = $(if ($results.Issues | Where-Object { $_.Severity -eq 'Critical' }) { 'Failed' }
                       elseif ($results.Issues | Where-Object { $_.Severity -eq 'High' }) { 'Warning' }
                       else { 'Passed' }
     
@@ -393,7 +392,7 @@ function Test-AuthenticationSettings {
         Fixes = @()
     }
     
-    $baseline = $script:SecurityBaseline.Authentication
+    $baseline = ${script:SecurityBaseline}.Authentication
     
     if (-not $Config) {
         $Config = @{}
@@ -437,7 +436,7 @@ function Test-AuthenticationSettings {
         MaxLoginAttempts = $Config.maxLoginAttempts
     }
     
-    $results.Status = if ($results.Issues | Where-Object { $_.Severity -eq 'High' }) { 'Warning' }
+    $results.Status = $(if ($results.Issues | Where-Object { $_.Severity -eq 'High' }) { 'Warning' }
                       elseif ($results.Issues.Count -gt 0) { 'Minor' }
                       else { 'Passed' }
     
@@ -466,7 +465,7 @@ function Test-NetworkSecuritySettings {
         Fixes = @()
     }
     
-    $baseline = $script:SecurityBaseline.Network
+    $baseline = ${script:SecurityBaseline}.Network
     
     if (-not $Config) {
         $Config = @{}
@@ -506,7 +505,7 @@ function Test-NetworkSecuritySettings {
         HSTSMaxAge = $Config.hstsMaxAge
     }
     
-    $results.Status = if ($results.Issues | Where-Object { $_.Severity -eq 'Critical' }) { 'Failed' }
+    $results.Status = $(if ($results.Issues | Where-Object { $_.Severity -eq 'Critical' }) { 'Failed' }
                       elseif ($results.Issues | Where-Object { $_.Severity -eq 'High' }) { 'Warning' }
                       else { 'Passed' }
     
@@ -653,7 +652,7 @@ function New-ComplianceReport {
                 $required = @('TLS Configuration', 'Encryption Settings', 'Authentication Settings')
                 $passed = $CheckResults | Where-Object { $_.CheckName -in $required -and $_.Status -eq 'Passed' }
                 $frameworkResult.Score = [math]::Round(($passed.Count / $required.Count) * 100, 1)
-                $frameworkResult.Status = if ($frameworkResult.Score -ge 80) { 'Compliant' } 
+                $frameworkResult.Status = $(if ($frameworkResult.Score -ge 80) { 'Compliant' } 
                                           elseif ($frameworkResult.Score -ge 50) { 'Partial' } 
                                           else { 'Non-Compliant' }
             }
@@ -662,7 +661,7 @@ function New-ComplianceReport {
                 $required = @('Encryption Settings', 'Credential Storage', 'Network Security')
                 $passed = $CheckResults | Where-Object { $_.CheckName -in $required -and $_.Status -eq 'Passed' }
                 $frameworkResult.Score = [math]::Round(($passed.Count / $required.Count) * 100, 1)
-                $frameworkResult.Status = if ($frameworkResult.Score -eq 100) { 'Compliant' } 
+                $frameworkResult.Status = $(if ($frameworkResult.Score -eq 100) { 'Compliant' } 
                                           else { 'Non-Compliant' }
             }
             'HIPAA' {
@@ -670,7 +669,7 @@ function New-ComplianceReport {
                 $required = @('Encryption Settings', 'File Permissions', 'Authentication Settings')
                 $passed = $CheckResults | Where-Object { $_.CheckName -in $required -and $_.Status -eq 'Passed' }
                 $frameworkResult.Score = [math]::Round(($passed.Count / $required.Count) * 100, 1)
-                $frameworkResult.Status = if ($frameworkResult.Score -ge 90) { 'Compliant' } 
+                $frameworkResult.Status = $(if ($frameworkResult.Score -ge 90) { 'Compliant' } 
                                           elseif ($frameworkResult.Score -ge 70) { 'Partial' } 
                                           else { 'Non-Compliant' }
             }
@@ -680,7 +679,7 @@ function New-ComplianceReport {
     }
     
     # Overall status
-    $report.OverallStatus = if ($report.Summary.Failed -eq 0) { 'Secure' }
+    $report.OverallStatus = $(if ($report.Summary.Failed -eq 0) { 'Secure' }
                             elseif ($report.Summary.Failed -le 2) { 'Needs Attention' }
                             else { 'At Risk' }
     
@@ -719,12 +718,12 @@ function Invoke-Test-Security-Settings-FixAuto {
     )
     
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    $script:SecurityCheckResults.StartTime = Get-Date
-    $script:SecurityCheckResults.Checks = @()
-    $script:SecurityCheckResults.Passed = 0
-    $script:SecurityCheckResults.Failed = 0
-    $script:SecurityCheckResults.Warnings = 0
-    $script:SecurityCheckResults.Remediated = 0
+    ${script:SecurityCheckResults}.StartTime = Get-Date
+    ${script:SecurityCheckResults}.Checks = @()
+    ${script:SecurityCheckResults}.Passed = 0
+    ${script:SecurityCheckResults}.Failed = 0
+    ${script:SecurityCheckResults}.Warnings = 0
+    ${script:SecurityCheckResults}.Remediated = 0
     
     Write-StructuredLog -Message "Starting Security Settings Validation" -Level Info -Context @{
         ConfigFile = $ConfigFile
@@ -780,14 +779,14 @@ function Invoke-Test-Security-Settings-FixAuto {
     
     # Aggregate results
     foreach ($result in $allResults) {
-        $script:SecurityCheckResults.Checks += $result
+        ${script:SecurityCheckResults}.Checks += $result
         switch ($result.Status) {
-            'Passed' { $script:SecurityCheckResults.Passed++ }
-            'Failed' { $script:SecurityCheckResults.Failed++ }
-            default { $script:SecurityCheckResults.Warnings++ }
+            'Passed' { ${script:SecurityCheckResults}.Passed++ }
+            'Failed' { ${script:SecurityCheckResults}.Failed++ }
+            default { ${script:SecurityCheckResults}.Warnings++ }
         }
         if ($result.Fixes.Count -gt 0) {
-            $script:SecurityCheckResults.Remediated += $result.Fixes.Count
+            ${script:SecurityCheckResults}.Remediated += $result.Fixes.Count
         }
     }
     
@@ -796,11 +795,11 @@ function Invoke-Test-Security-Settings-FixAuto {
     
     # Calculate overall score
     $totalChecks = $allResults.Count
-    $script:SecurityCheckResults.OverallScore = [math]::Round(($script:SecurityCheckResults.Passed / $totalChecks) * 100, 1)
-    $script:SecurityCheckResults.ComplianceStatus = $complianceReport.FrameworkResults
+    ${script:SecurityCheckResults}.OverallScore = [math]::Round((${script:SecurityCheckResults}.Passed / $totalChecks) * 100, 1)
+    ${script:SecurityCheckResults}.ComplianceStatus = $complianceReport.FrameworkResults
     
     $stopwatch.Stop()
-    $script:SecurityCheckResults.EndTime = Get-Date
+    ${script:SecurityCheckResults}.EndTime = Get-Date
     
     # Auto-fix the config file if issues were found and AutoFix is enabled
     if ($AutoFix -and $securityConfig.Count -gt 0) {
@@ -831,14 +830,14 @@ function Invoke-Test-Security-Settings-FixAuto {
     
     # Generate report
     $report = @{
-        Success = $script:SecurityCheckResults.Failed -eq 0
+        Success = ${script:SecurityCheckResults}.Failed -eq 0
         Summary = @{
             TotalChecks = $totalChecks
-            Passed = $script:SecurityCheckResults.Passed
-            Failed = $script:SecurityCheckResults.Failed
-            Warnings = $script:SecurityCheckResults.Warnings
-            Remediated = $script:SecurityCheckResults.Remediated
-            OverallScore = $script:SecurityCheckResults.OverallScore
+            Passed = ${script:SecurityCheckResults}.Passed
+            Failed = ${script:SecurityCheckResults}.Failed
+            Warnings = ${script:SecurityCheckResults}.Warnings
+            Remediated = ${script:SecurityCheckResults}.Remediated
+            OverallScore = ${script:SecurityCheckResults}.OverallScore
         }
         Compliance = $complianceReport
         Duration = $stopwatch.Elapsed.TotalMilliseconds
@@ -858,9 +857,9 @@ function Invoke-Test-Security-Settings-FixAuto {
     }
     
     Write-StructuredLog -Message "Security validation complete" -Level $(if ($report.Success) { 'Info' } else { 'Warning' }) -Context @{
-        Score = "$($script:SecurityCheckResults.OverallScore)%"
-        Passed = $script:SecurityCheckResults.Passed
-        Failed = $script:SecurityCheckResults.Failed
+        Score = "$(${script:SecurityCheckResults}.OverallScore)%"
+        Passed = ${script:SecurityCheckResults}.Passed
+        Failed = ${script:SecurityCheckResults}.Failed
         Duration = [math]::Round($stopwatch.Elapsed.TotalMilliseconds, 2)
     }
     
@@ -871,7 +870,7 @@ function Invoke-Test-Security-Settings-FixAuto {
 # UTILITY FUNCTIONS
 # ============================================================================
 function Get-SecurityBaseline {
-    return $script:SecurityBaseline
+    return ${script:SecurityBaseline}
 }
 
 function Set-SecurityBaseline {
@@ -882,16 +881,16 @@ function Set-SecurityBaseline {
     )
     
     foreach ($key in $Baseline.Keys) {
-        if ($script:SecurityBaseline.ContainsKey($key)) {
-            $script:SecurityBaseline[$key] = $Baseline[$key]
+        if (${script:SecurityBaseline}.ContainsKey($key)) {
+            ${script:SecurityBaseline}[$key] = $Baseline[$key]
         }
     }
     
-    return $script:SecurityBaseline
+    return ${script:SecurityBaseline}
 }
 
 function Get-LastSecurityCheckResults {
-    return $script:SecurityCheckResults
+    return ${script:SecurityCheckResults}
 }
 
 # Export

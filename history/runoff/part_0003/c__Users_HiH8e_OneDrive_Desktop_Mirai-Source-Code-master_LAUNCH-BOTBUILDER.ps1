@@ -28,7 +28,7 @@ Write-Host ""
 
 # Clear cache quickly (optional)
 Write-Host "🧹 Clearing cache..." -ForegroundColor Yellow
-$cacheDir = "$env:LOCALAPPDATA\Microsoft\VisualStudio"
+$cacheDir = "${env:LOCALAPPDATA}\Microsoft\VisualStudio"
 Get-ChildItem "$cacheDir" -Filter "*17.0*" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
     $componentCache = Join-Path $_.FullName "ComponentModelCache"
     if (Test-Path $componentCache) {

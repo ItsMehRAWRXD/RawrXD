@@ -28,26 +28,26 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Web
 
-$script:ProjectRoot = $PSScriptRoot
-$script:EditorTabs = @{}
-$script:EditorTabCount = 0
-$script:MaxEditorTabs = 1000
+${script:ProjectRoot} = $PSScriptRoot
+${script:EditorTabs} = @{}
+${script:EditorTabCount} = 0
+${script:MaxEditorTabs} = 1000
 
-$script:ChatTabs = @{}
-$script:ChatTabCount = 0
-$script:MaxChatTabs = 1000
+${script:ChatTabs} = @{}
+${script:ChatTabCount} = 0
+${script:MaxChatTabs} = 1000
 
-$script:TerminalTabs = @{}
-$script:TerminalTabCount = 0
-$script:MaxTerminalTabs = 1000
+${script:TerminalTabs} = @{}
+${script:TerminalTabCount} = 0
+${script:MaxTerminalTabs} = 1000
 
 # REAL: Agent and backend configuration
-$script:OllamaModels = @()
-$script:CurrentAgent = $null
-$script:AgentSession = @{}
-$script:HealthMetrics = @{}
-$script:BackendURL = "http://localhost:8000"  # Real backend endpoint
-$script:ApiKey = ""
+${script:OllamaModels} = @()
+${script:CurrentAgent} = $null
+${script:AgentSession} = @{}
+${script:HealthMetrics} = @{}
+${script:BackendURL} = "http://localhost:8000"  # Real backend endpoint
+${script:ApiKey} = ""
 
 # ============================================
 # REAL HEALTH MONITORING SYSTEM
@@ -88,7 +88,7 @@ function Get-RealHealthMetrics {
     try {
         # REAL GPU Detection (NVIDIA)
         $gpu = Get-WmiObject -Query "select * from Win32_VideoController" -ErrorAction SilentlyContinue
-        $metrics['GPU'] = if ($gpu) { "Available: $($gpu[0].Name)" } else { "Not Detected" }
+        $metrics['GPU'] = $(if ($gpu) { "Available: $($gpu[0].Name)" } else { "Not Detected" }
     }
     catch {
         $metrics['GPU'] = "Not Available"
@@ -138,10 +138,10 @@ function Invoke-BackendAPI {
     )
     
     try {
-        $uri = "$($script:BackendURL)$Endpoint"
+        $uri = "$(${script:BackendURL})$Endpoint"
         $headers = @{
             "Content-Type" = "application/json"
-            "Authorization" = "Bearer $($script:ApiKey)"
+            "Authorization" = "Bearer $(${script:ApiKey})"
         }
         
         if ($Method -eq "POST" -and $Body) {
@@ -327,13 +327,13 @@ function Invoke-OllamaInference {
 function New-ChatTab {
     param([string]$ChatName = "")
     
-    if ($script:ChatTabCount -ge $script:MaxChatTabs) {
+    if (${script:ChatTabCount} -ge ${script:MaxChatTabs}) {
         [System.Windows.Forms.MessageBox]::Show("Maximum chat tabs reached!", "Tab Limit")
         return
     }
     
-    $tabIndex = $script:ChatTabCount++
-    $tabName = if ($ChatName) { $ChatName } else { "Chat-$tabIndex" }
+    $tabIndex = ${script:ChatTabCount}++
+    $tabName = $(if ($ChatName) { $ChatName } else { "Chat-$tabIndex" }
     
     $chatTab = New-Object System.Windows.Forms.TabPage($tabName)
     $chatTab.Tag = @{ Index = $tabIndex; MessageCount = 0; AgentEnabled = $true }
@@ -389,7 +389,7 @@ function New-ChatTab {
     $chatSend.ForeColor = [System.Drawing.Color]::White
     
     $chatSend.Add_Click({
-        if ($script:ChatTabs.ContainsKey($tabIndex)) {
+        if (${script:ChatTabs}.ContainsKey($tabIndex)) {
             Send-AgenticMessage -TabIndex $tabIndex -UseReasoning $agentToggle.Checked
         }
     })
@@ -400,11 +400,11 @@ function New-ChatTab {
     $chatTab.Controls.Add($chatSplit)
     
     # Insert before the "+" tab
-    $insertIndex = [Math]::Max(0, $script:EditorTabControl.TabPages.Count - 1)
-    $script:EditorTabControl.TabPages.Insert($insertIndex, $chatTab)
-    $script:EditorTabControl.SelectedTab = $chatTab
+    $insertIndex = [Math]::Max(0, ${script:EditorTabControl}.TabPages.Count - 1)
+    ${script:EditorTabControl}.TabPages.Insert($insertIndex, $chatTab)
+    ${script:EditorTabControl}.SelectedTab = $chatTab
     
-    $script:ChatTabs[$tabIndex] = @{
+    ${script:ChatTabs}[$tabIndex] = @{
         TabPage = $chatTab
         Display = $chatDisplay
         Input = $chatInput
@@ -426,13 +426,13 @@ function Load-RealOllamaModels {
     
     try {
         $output = ollama list 2>&1
-        $script:OllamaModels = @()
+        ${script:OllamaModels} = @()
         
         $lines = $output -split "`n" | Select-Object -Skip 1
         foreach ($line in $lines) {
             if ($line.Trim() -and $line -match '(\S+)\s') {
                 $modelName = $matches[1]
-                $script:OllamaModels += $modelName
+                ${script:OllamaModels} += $modelName
                 $ComboBox.Items.Add($modelName) | Out-Null
             }
         }
@@ -457,7 +457,7 @@ function Send-AgenticMessage {
         [bool]$UseReasoning = $true
     )
     
-    $chatTab = $script:ChatTabs[$TabIndex]
+    $chatTab = ${script:ChatTabs}[$TabIndex]
     $message = $chatTab.Input.Text.Trim()
     $model = $chatTab.ModelCombo.SelectedItem
     
@@ -494,7 +494,7 @@ function Send-AgenticMessage {
         
         $chatTab.Messages += @{
             User = $message
-            Reasoning = if ($UseReasoning) { $reasoning } else { "" }
+            Reasoning = $(if ($UseReasoning) { $reasoning } else { "" }
             Assistant = $response
             Timestamp = Get-Date
             Model = $model
@@ -616,13 +616,13 @@ function New-EditorTab {
         [string]$Content = ""
     )
     
-    if ($script:EditorTabCount -ge $script:MaxEditorTabs) {
+    if (${script:EditorTabCount} -ge ${script:MaxEditorTabs}) {
         [System.Windows.Forms.MessageBox]::Show("Maximum editor tabs reached!", "Tab Limit")
         return
     }
     
-    $tabIndex = $script:EditorTabCount++
-    $tabName = if ($FileName) { Split-Path $FileName -Leaf } else { "Untitled-$tabIndex" }
+    $tabIndex = ${script:EditorTabCount}++
+    $tabName = $(if ($FileName) { Split-Path $FileName -Leaf } else { "Untitled-$tabIndex" }
     
     $editorTab = New-Object System.Windows.Forms.TabPage($tabName)
     $editorTab.Tag = @{
@@ -636,7 +636,7 @@ function New-EditorTab {
     $editor.Font = New-Object System.Drawing.Font("Consolas", 10)
     $editor.Text = $Content
     $editor.Add_TextChanged({
-        $tab = $script:EditorTabControl.SelectedTab
+        $tab = ${script:EditorTabControl}.SelectedTab
         if ($tab -and $tab.Tag) {
             $tab.Tag.Modified = $true
             if (-not $tab.Text.EndsWith("*")) {
@@ -646,11 +646,11 @@ function New-EditorTab {
     })
     
     $editorTab.Controls.Add($editor)
-    $insertIndex = [Math]::Max(0, $script:EditorTabControl.TabPages.Count - 1)
-    $script:EditorTabControl.TabPages.Insert($insertIndex, $editorTab)
-    $script:EditorTabControl.SelectedTab = $editorTab
+    $insertIndex = [Math]::Max(0, ${script:EditorTabControl}.TabPages.Count - 1)
+    ${script:EditorTabControl}.TabPages.Insert($insertIndex, $editorTab)
+    ${script:EditorTabControl}.SelectedTab = $editorTab
     
-    $script:EditorTabs[$tabIndex] = @{
+    ${script:EditorTabs}[$tabIndex] = @{
         TabPage = $editorTab
         Editor = $editor
         FilePath = $FileName
@@ -671,7 +671,7 @@ function Save-EditorTab {
     }
     
     try {
-        $editor = $script:EditorTabs[$TabPage.Tag.Index].Editor
+        $editor = ${script:EditorTabs}[$TabPage.Tag.Index].Editor
         Set-Content -Path $TabPage.Tag.FilePath -Value $editor.Text
         $TabPage.Tag.Modified = $false
         $TabPage.Text = $TabPage.Text.TrimEnd("*")
@@ -703,13 +703,13 @@ function Open-RealFile {
 function New-TerminalTab {
     param([string]$TerminalName = "")
     
-    if ($script:TerminalTabCount -ge $script:MaxTerminalTabs) {
+    if (${script:TerminalTabCount} -ge ${script:MaxTerminalTabs}) {
         [System.Windows.Forms.MessageBox]::Show("Maximum terminal tabs reached!", "Tab Limit")
         return
     }
     
-    $tabIndex = $script:TerminalTabCount++
-    $tabName = if ($TerminalName) { $TerminalName } else { "Terminal-$tabIndex" }
+    $tabIndex = ${script:TerminalTabCount}++
+    $tabName = $(if ($TerminalName) { $TerminalName } else { "Terminal-$tabIndex" }
     
     $terminalTab = New-Object System.Windows.Forms.TabPage($tabName)
     $terminalTab.Tag = @{ Index = $tabIndex; CommandCount = 0 }
@@ -747,16 +747,16 @@ function New-TerminalTab {
     $terminalExecute.ForeColor = [System.Drawing.Color]::White
     
     $terminalExecute.Add_Click({
-        $currentTab = $script:TerminalTabControl.SelectedTab
-        if ($currentTab.Tag -and $script:TerminalTabs.ContainsKey($currentTab.Tag.Index)) {
+        $currentTab = ${script:TerminalTabControl}.SelectedTab
+        if ($currentTab.Tag -and ${script:TerminalTabs}.ContainsKey($currentTab.Tag.Index)) {
             Execute-RealTerminalCommand $currentTab.Tag.Index
         }
     })
     
     $terminalInput.Add_KeyDown({
         if ($_.KeyCode -eq "Return" -and $_.Control) {
-            $currentTab = $script:TerminalTabControl.SelectedTab
-            if ($currentTab.Tag -and $script:TerminalTabs.ContainsKey($currentTab.Tag.Index)) {
+            $currentTab = ${script:TerminalTabControl}.SelectedTab
+            if ($currentTab.Tag -and ${script:TerminalTabs}.ContainsKey($currentTab.Tag.Index)) {
                 Execute-RealTerminalCommand $currentTab.Tag.Index
             }
         }
@@ -768,11 +768,11 @@ function New-TerminalTab {
     $terminalSplit.Panel2.Controls.Add($terminalControls)
     $terminalTab.Controls.Add($terminalSplit)
     
-    $insertIndex = [Math]::Max(0, $script:TerminalTabControl.TabPages.Count - 1)
-    $script:TerminalTabControl.TabPages.Insert($insertIndex, $terminalTab)
-    $script:TerminalTabControl.SelectedTab = $terminalTab
+    $insertIndex = [Math]::Max(0, ${script:TerminalTabControl}.TabPages.Count - 1)
+    ${script:TerminalTabControl}.TabPages.Insert($insertIndex, $terminalTab)
+    ${script:TerminalTabControl}.SelectedTab = $terminalTab
     
-    $script:TerminalTabs[$tabIndex] = @{
+    ${script:TerminalTabs}[$tabIndex] = @{
         TabPage = $terminalTab
         Output = $terminalOutput
         Input = $terminalInput
@@ -790,7 +790,7 @@ function New-TerminalTab {
 function Execute-RealTerminalCommand {
     param([int]$TabIndex)
     
-    $terminalTab = $script:TerminalTabs[$TabIndex]
+    $terminalTab = ${script:TerminalTabs}[$TabIndex]
     $command = $terminalTab.Input.Text.Trim()
     
     if (-not $command) { return }
@@ -918,8 +918,8 @@ function Initialize-AgenticBrowser {
 function Update-StatusBar {
     param([string]$Message)
     
-    if ($script:StatusLabel) {
-        $script:StatusLabel.Text = "$Message | E:$script:EditorTabCount | C:$script:ChatTabCount | T:$script:TerminalTabCount"
+    if (${script:StatusLabel}) {
+        ${script:StatusLabel}.Text = "$Message | E:${script:EditorTabCount} | C:${script:ChatTabCount} | T:${script:TerminalTabCount}"
     }
 }
 
@@ -928,11 +928,11 @@ function Update-StatusBar {
 # ============================================
 
 function Initialize-AgenticIDE {
-    $script:MainForm = New-Object System.Windows.Forms.Form
-    $script:MainForm.Text = "RawrXD IDE - Fully Agentic (1,000 Tab Support)"
-    $script:MainForm.Size = New-Object System.Drawing.Size(1800, 1100)
-    $script:MainForm.StartPosition = "CenterScreen"
-    $script:MainForm.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
+    ${script:MainForm} = New-Object System.Windows.Forms.Form
+    ${script:MainForm}.Text = "RawrXD IDE - Fully Agentic (1,000 Tab Support)"
+    ${script:MainForm}.Size = New-Object System.Drawing.Size(1800, 1100)
+    ${script:MainForm}.StartPosition = "CenterScreen"
+    ${script:MainForm}.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
     
     # Main vertical split
     $mainVerticalSplit = New-Object System.Windows.Forms.SplitContainer
@@ -949,13 +949,13 @@ function Initialize-AgenticIDE {
     
     # Explorer tab
     $explorerTab = New-Object System.Windows.Forms.TabPage("Explorer")
-    $script:FileExplorer = New-Object System.Windows.Forms.TreeView
-    $script:FileExplorer.Dock = "Fill"
-    $script:FileExplorer.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
-    $script:FileExplorer.ForeColor = [System.Drawing.Color]::White
-    $script:FileExplorer.Add_BeforeExpand({ Populate-RealDirectory $_.Node })
-    $script:FileExplorer.Add_NodeMouseDoubleClick({ Open-RealFile $_.Node })
-    $explorerTab.Controls.Add($script:FileExplorer)
+    ${script:FileExplorer} = New-Object System.Windows.Forms.TreeView
+    ${script:FileExplorer}.Dock = "Fill"
+    ${script:FileExplorer}.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
+    ${script:FileExplorer}.ForeColor = [System.Drawing.Color]::White
+    ${script:FileExplorer}.Add_BeforeExpand({ Populate-RealDirectory $_.Node })
+    ${script:FileExplorer}.Add_NodeMouseDoubleClick({ Open-RealFile $_.Node })
+    $explorerTab.Controls.Add(${script:FileExplorer})
     
     # Health tab
     $healthTab = New-Object System.Windows.Forms.TabPage("Health")
@@ -1012,44 +1012,44 @@ function Initialize-AgenticIDE {
     $saveBtn.Location = New-Object System.Drawing.Point(175, 5)
     $saveBtn.Size = New-Object System.Drawing.Size(60, 25)
     $saveBtn.Add_Click({
-        if ($script:EditorTabControl.SelectedTab -and $script:EditorTabControl.SelectedTab.Tag) {
-            Save-EditorTab $script:EditorTabControl.SelectedTab
+        if (${script:EditorTabControl}.SelectedTab -and ${script:EditorTabControl}.SelectedTab.Tag) {
+            Save-EditorTab ${script:EditorTabControl}.SelectedTab
         }
     })
     
     $topToolbar.Controls.AddRange(@($newFileBtn, $newChatBtn, $saveBtn))
     
-    $script:EditorTabControl = New-Object System.Windows.Forms.TabControl
-    $script:EditorTabControl.Dock = "Fill"
+    ${script:EditorTabControl} = New-Object System.Windows.Forms.TabControl
+    ${script:EditorTabControl}.Dock = "Fill"
     
     # Add Agentic Browser Tab
     $browserTab = New-Object System.Windows.Forms.TabPage("Agentic Browser")
     Initialize-AgenticBrowser $browserTab
-    $script:EditorTabControl.TabPages.Add($browserTab)
+    ${script:EditorTabControl}.TabPages.Add($browserTab)
     
     # Create initial tabs
     New-EditorTab
     New-ChatTab
     
-    $script:EditorTabControl.Add_MouseDown({
+    ${script:EditorTabControl}.Add_MouseDown({
         if ($_.Button -eq "Middle") {
-            $tab = $script:EditorTabControl.SelectedTab
+            $tab = ${script:EditorTabControl}.SelectedTab
             if ($tab -and $tab.Tag) {
-                if ($script:EditorTabs.ContainsKey($tab.Tag.Index)) {
-                    $script:EditorTabs.Remove($tab.Tag.Index)
-                    $script:EditorTabControl.TabPages.Remove($tab)
-                    $script:EditorTabCount--
+                if (${script:EditorTabs}.ContainsKey($tab.Tag.Index)) {
+                    ${script:EditorTabs}.Remove($tab.Tag.Index)
+                    ${script:EditorTabControl}.TabPages.Remove($tab)
+                    ${script:EditorTabCount}--
                 }
-                elseif ($script:ChatTabs.ContainsKey($tab.Tag.Index)) {
-                    $script:ChatTabs.Remove($tab.Tag.Index)
-                    $script:EditorTabControl.TabPages.Remove($tab)
-                    $script:ChatTabCount--
+                elseif (${script:ChatTabs}.ContainsKey($tab.Tag.Index)) {
+                    ${script:ChatTabs}.Remove($tab.Tag.Index)
+                    ${script:EditorTabControl}.TabPages.Remove($tab)
+                    ${script:ChatTabCount}--
                 }
             }
         }
     })
     
-    $topPanel.Controls.AddRange(@($topToolbar, $script:EditorTabControl))
+    $topPanel.Controls.AddRange(@($topToolbar, ${script:EditorTabControl}))
     $mainHorizontalSplit.Panel1.Controls.Add($topPanel)
     
     # BOTTOM: Terminal
@@ -1076,48 +1076,46 @@ function Initialize-AgenticIDE {
     
     $terminalToolbar.Controls.AddRange(@($terminalLabel, $newTerminalBtn))
     
-    $script:TerminalTabControl = New-Object System.Windows.Forms.TabControl
-    $script:TerminalTabControl.Dock = "Fill"
+    ${script:TerminalTabControl} = New-Object System.Windows.Forms.TabControl
+    ${script:TerminalTabControl}.Dock = "Fill"
     
     New-TerminalTab
     
-    $script:TerminalTabControl.Add_MouseDown({
+    ${script:TerminalTabControl}.Add_MouseDown({
         if ($_.Button -eq "Middle") {
-            $tab = $script:TerminalTabControl.SelectedTab
-            if ($tab -and $tab.Tag -and $script:TerminalTabs.ContainsKey($tab.Tag.Index)) {
-                $script:TerminalTabs.Remove($tab.Tag.Index)
-                $script:TerminalTabControl.TabPages.Remove($tab)
-                $script:TerminalTabCount--
+            $tab = ${script:TerminalTabControl}.SelectedTab
+            if ($tab -and $tab.Tag -and ${script:TerminalTabs}.ContainsKey($tab.Tag.Index)) {
+                ${script:TerminalTabs}.Remove($tab.Tag.Index)
+                ${script:TerminalTabControl}.TabPages.Remove($tab)
+                ${script:TerminalTabCount}--
             }
         }
     })
     
-    $terminalPanel.Controls.AddRange(@($terminalToolbar, $script:TerminalTabControl))
+    $terminalPanel.Controls.AddRange(@($terminalToolbar, ${script:TerminalTabControl}))
     $mainHorizontalSplit.Panel2.Controls.Add($terminalPanel)
     
     $mainVerticalSplit.Panel2.Controls.Add($mainHorizontalSplit)
-    $script:MainForm.Controls.Add($mainVerticalSplit)
+    ${script:MainForm}.Controls.Add($mainVerticalSplit)
     
     # Status bar
     $statusStrip = New-Object System.Windows.Forms.StatusStrip
     $statusStrip.BackColor = [System.Drawing.Color]::FromArgb(0, 122, 204)
-    $script:StatusLabel = New-Object System.Windows.Forms.ToolStripStatusLabel
-    $script:StatusLabel.Text = "Ready - Fully Agentic with Real Backend"
-    $script:StatusLabel.ForeColor = [System.Drawing.Color]::White
-    $statusStrip.Items.Add($script:StatusLabel) | Out-Null
-    $script:MainForm.Controls.Add($statusStrip)
+    ${script:StatusLabel} = New-Object System.Windows.Forms.ToolStripStatusLabel
+    ${script:StatusLabel}.Text = "Ready - Fully Agentic with Real Backend"
+    ${script:StatusLabel}.ForeColor = [System.Drawing.Color]::White
+    $statusStrip.Items.Add(${script:StatusLabel}) | Out-Null
+    ${script:MainForm}.Controls.Add($statusStrip)
     
-    Initialize-RealFileExplorer $script:FileExplorer
+    Initialize-RealFileExplorer ${script:FileExplorer}
     
-    $script:MainForm.Add_Shown({$script:MainForm.Activate()})
-    $script:MainForm.ShowDialog() | Out-Null
+    ${script:MainForm}.Add_Shown({${script:MainForm}.Activate()})
+    ${script:MainForm}.ShowDialog() | Out-Null
 }
 
 # ============================================
 # EXECUTION
-# ============================================
-
-if ($CliMode) {
+# ============================================ $(if ($CliMode) {
     switch ($Command) {
         "health" {
             Write-Host "REAL SYSTEM HEALTH METRICS" -ForegroundColor Cyan

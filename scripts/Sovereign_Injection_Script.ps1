@@ -49,7 +49,7 @@ param (
 # Configuration
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$Script:CONFIG = @{
+${Script:CONFIG} = @{
     PipeNameTemplate = "\\.\pipe\RawrXD_PluginLoader_{0}"
     IpcTimeout       = 5000  # ms
     RetryCount       = 3
@@ -109,7 +109,7 @@ function Invoke-PluginInjection {
     
     Write-Host "📡 Attempting Qt Plugin Loader injection via IPC..." -ForegroundColor Cyan
     
-    $pipeName = $Script:CONFIG.PipeNameTemplate -f $ProcessId
+    $pipeName = ${Script:CONFIG}.PipeNameTemplate -f $ProcessId
     
     try {
         # Check if pipe exists
@@ -120,7 +120,7 @@ function Invoke-PluginInjection {
         
         # Connect to named pipe
         $pipeClient = New-Object System.IO.Pipes.NamedPipeClientStream(".", "RawrXD_PluginLoader_$ProcessId", [System.IO.Pipes.PipeDirection]::InOut)
-        $pipeClient.Connect($Script:CONFIG.IpcTimeout)
+        $pipeClient.Connect(${Script:CONFIG}.IpcTimeout)
         
         $writer = New-Object System.IO.StreamWriter($pipeClient)
         $reader = New-Object System.IO.StreamReader($pipeClient)

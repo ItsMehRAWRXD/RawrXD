@@ -20,8 +20,7 @@
 
 # ============================================================================
 # STRUCTURED LOGGING (Standalone fallback)
-# ============================================================================
-if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
+# ============================================================================ $(if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
     function Write-StructuredLog {
         param(
             [Parameter(Mandatory=$true)][string]$Message,
@@ -51,7 +50,7 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 # ============================================================================
 # PLUGIN REGISTRY (Global State Management)
 # ============================================================================
-$script:PluginRegistry = @{
+${script:PluginRegistry} = @{
     Plugins = @{}                    # PluginId -> PluginInfo
     LoadOrder = [System.Collections.ArrayList]@()  # Ordered list of loaded plugins
     Dependencies = @{}               # PluginId -> @(DependencyIds)
@@ -282,7 +281,7 @@ function Find-Plugins {
     #>
     [CmdletBinding()]
     param(
-        [string[]]$SearchPaths = $script:PluginRegistry.Configuration.PluginDirectories,
+        [string[]]$SearchPaths = ${script:PluginRegistry}.Configuration.PluginDirectories,
         [switch]$IncludeDisabled
     )
     
@@ -364,14 +363,14 @@ function Import-Plugin {
         [switch]$NoCache
     )
     
-    $pluginId = if ($PluginInfo.Manifest) { $PluginInfo.Manifest.PluginId } else { $PluginInfo.Name }
+    $pluginId = $(if ($PluginInfo.Manifest) { $PluginInfo.Manifest.PluginId } else { $PluginInfo.Name }
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     
     Write-StructuredLog -Message "Loading plugin: $pluginId" -Level Info -Context @{Path = $PluginInfo.Path}
     
     try {
         # Check if already loaded
-        if ($script:PluginRegistry.Plugins.ContainsKey($pluginId) -and -not $Force) {
+        if (${script:PluginRegistry}.Plugins.ContainsKey($pluginId) -and -not $Force) {
             Write-StructuredLog -Message "Plugin already loaded: $pluginId" -Level Debug
             return @{
                 Success = $true
@@ -381,7 +380,7 @@ function Import-Plugin {
         }
         
         # Validate manifest if required
-        if ($script:PluginRegistry.Configuration.RequireManifest -and -not $PluginInfo.HasManifest) {
+        if (${script:PluginRegistry}.Configuration.RequireManifest -and -not $PluginInfo.HasManifest) {
             return @{
                 Success = $false
                 PluginId = $pluginId
@@ -406,7 +405,7 @@ function Import-Plugin {
         # Load module files
         $loadedModules = @()
         foreach ($moduleFile in $PluginInfo.ModuleFiles) {
-            $modulePath = if ($moduleFile -is [string]) { $moduleFile } else { $moduleFile.FullName }
+            $modulePath = $(if ($moduleFile -is [string]) { $moduleFile } else { $moduleFile.FullName }
             
             # Pre-load validation - syntax check
             try {
@@ -431,22 +430,22 @@ function Import-Plugin {
         }
         
         # Register in plugin registry
-        $script:PluginRegistry.Plugins[$pluginId] = @{
+        ${script:PluginRegistry}.Plugins[$pluginId] = @{
             Info = $PluginInfo
             LoadedAt = Get-Date
             Checksum = $checksum
             LoadedModules = $loadedModules
             State = 'Active'
-            Version = if ($PluginInfo.Manifest) { $PluginInfo.Manifest.Version } else { "1.0.0" }
+            Version = $(if ($PluginInfo.Manifest) { $PluginInfo.Manifest.Version } else { "1.0.0" }
         }
         
         # Add to load order
-        if ($pluginId -notin $script:PluginRegistry.LoadOrder) {
-            [void]$script:PluginRegistry.LoadOrder.Add($pluginId)
+        if ($pluginId -notin ${script:PluginRegistry}.LoadOrder) {
+            [void]${script:PluginRegistry}.LoadOrder.Add($pluginId)
         }
         
         # Initialize health status
-        $script:PluginRegistry.HealthStatus[$pluginId] = @{
+        ${script:PluginRegistry}.HealthStatus[$pluginId] = @{
             Status = 'Healthy'
             LastCheck = Get-Date
             FailureCount = 0
@@ -454,7 +453,7 @@ function Import-Plugin {
         }
         
         # Set up hot-reload watcher if enabled
-        if ($script:PluginRegistry.Configuration.AutoReloadEnabled) {
+        if (${script:PluginRegistry}.Configuration.AutoReloadEnabled) {
             Register-PluginWatcher -PluginId $pluginId -Path $PluginInfo.Path
         }
         
@@ -502,12 +501,12 @@ function Unload-Plugin {
         [switch]$PreserveState
     )
     
-    if (-not $script:PluginRegistry.Plugins.ContainsKey($PluginId)) {
+    if (-not ${script:PluginRegistry}.Plugins.ContainsKey($PluginId)) {
         Write-StructuredLog -Message "Plugin not loaded: $PluginId" -Level Warning
         return $false
     }
     
-    $plugin = $script:PluginRegistry.Plugins[$PluginId]
+    $plugin = ${script:PluginRegistry}.Plugins[$PluginId]
     
     try {
         # Fire unloading event
@@ -520,15 +519,15 @@ function Unload-Plugin {
         }
         
         # Stop watcher
-        if ($script:PluginRegistry.Watchers.ContainsKey($PluginId)) {
-            $script:PluginRegistry.Watchers[$PluginId].Dispose()
-            $script:PluginRegistry.Watchers.Remove($PluginId)
+        if (${script:PluginRegistry}.Watchers.ContainsKey($PluginId)) {
+            ${script:PluginRegistry}.Watchers[$PluginId].Dispose()
+            ${script:PluginRegistry}.Watchers.Remove($PluginId)
         }
         
         # Remove from registry
-        $script:PluginRegistry.Plugins.Remove($PluginId)
-        $script:PluginRegistry.LoadOrder.Remove($PluginId)
-        $script:PluginRegistry.HealthStatus.Remove($PluginId)
+        ${script:PluginRegistry}.Plugins.Remove($PluginId)
+        ${script:PluginRegistry}.LoadOrder.Remove($PluginId)
+        ${script:PluginRegistry}.HealthStatus.Remove($PluginId)
         
         # Fire unloaded event
         Invoke-PluginEvent -EventName 'PluginUnloaded' -PluginId $PluginId
@@ -560,11 +559,11 @@ function Register-PluginWatcher {
     )
     
     # Clean up existing watcher
-    if ($script:PluginRegistry.Watchers.ContainsKey($PluginId)) {
-        $script:PluginRegistry.Watchers[$PluginId].Dispose()
+    if (${script:PluginRegistry}.Watchers.ContainsKey($PluginId)) {
+        ${script:PluginRegistry}.Watchers[$PluginId].Dispose()
     }
     
-    $watchPath = if (Test-Path $Path -PathType Container) { $Path } else { Split-Path $Path -Parent }
+    $watchPath = $(if (Test-Path $Path -PathType Container) { $Path } else { Split-Path $Path -Parent }
     
     $watcher = New-Object System.IO.FileSystemWatcher
     $watcher.Path = $watchPath
@@ -572,7 +571,7 @@ function Register-PluginWatcher {
     $watcher.IncludeSubdirectories = $true
     $watcher.NotifyFilter = [System.IO.NotifyFilters]::LastWrite -bor [System.IO.NotifyFilters]::FileName
     
-    $script:lastReload = @{}
+    ${script:lastReload} = @{}
     $debounceMs = 2000
     
     $action = {
@@ -580,11 +579,11 @@ function Register-PluginWatcher {
         $now = Get-Date
         
         # Debounce
-        if ($script:lastReload.ContainsKey($pluginId)) {
-            $elapsed = ($now - $script:lastReload[$pluginId]).TotalMilliseconds
+        if (${script:lastReload}.ContainsKey($pluginId)) {
+            $elapsed = ($now - ${script:lastReload}[$pluginId]).TotalMilliseconds
             if ($elapsed -lt $Event.MessageData.DebounceMs) { return }
         }
-        $script:lastReload[$pluginId] = $now
+        ${script:lastReload}[$pluginId] = $now
         
         Write-StructuredLog -Message "Hot-reload triggered" -Level Info -Context @{
             PluginId = $pluginId
@@ -592,7 +591,7 @@ function Register-PluginWatcher {
         }
         
         # Reload plugin
-        $pluginInfo = $script:PluginRegistry.Plugins[$pluginId].Info
+        $pluginInfo = ${script:PluginRegistry}.Plugins[$pluginId].Info
         Import-Plugin -PluginInfo $pluginInfo -Force
     }
     
@@ -604,7 +603,7 @@ function Register-PluginWatcher {
     Register-ObjectEvent -InputObject $watcher -EventName Changed -Action $action -MessageData $messageData -SourceIdentifier "PluginWatch_$PluginId" | Out-Null
     
     $watcher.EnableRaisingEvents = $true
-    $script:PluginRegistry.Watchers[$PluginId] = $watcher
+    ${script:PluginRegistry}.Watchers[$PluginId] = $watcher
     
     Write-StructuredLog -Message "Hot-reload watcher registered" -Level Debug -Context @{
         PluginId = $PluginId
@@ -628,11 +627,11 @@ function Register-PluginEventHandler {
         [Parameter(Mandatory=$true)][scriptblock]$Handler
     )
     
-    if (-not $script:PluginRegistry.EventHandlers.ContainsKey($EventName)) {
-        $script:PluginRegistry.EventHandlers[$EventName] = @()
+    if (-not ${script:PluginRegistry}.EventHandlers.ContainsKey($EventName)) {
+        ${script:PluginRegistry}.EventHandlers[$EventName] = @()
     }
     
-    $script:PluginRegistry.EventHandlers[$EventName] += $Handler
+    ${script:PluginRegistry}.EventHandlers[$EventName] += $Handler
 }
 
 function Invoke-PluginEvent {
@@ -643,8 +642,8 @@ function Invoke-PluginEvent {
         [hashtable]$Data = @{}
     )
     
-    if ($script:PluginRegistry.EventHandlers.ContainsKey($EventName)) {
-        foreach ($handler in $script:PluginRegistry.EventHandlers[$EventName]) {
+    if (${script:PluginRegistry}.EventHandlers.ContainsKey($EventName)) {
+        foreach ($handler in ${script:PluginRegistry}.EventHandlers[$EventName]) {
             try {
                 & $handler -EventName $EventName -PluginId $PluginId -Data $Data
             } catch {
@@ -670,7 +669,7 @@ function Test-PluginHealth {
         [Parameter(Mandatory=$true)][string]$PluginId
     )
     
-    if (-not $script:PluginRegistry.Plugins.ContainsKey($PluginId)) {
+    if (-not ${script:PluginRegistry}.Plugins.ContainsKey($PluginId)) {
         return @{
             PluginId = $PluginId
             Status = 'NotLoaded'
@@ -678,7 +677,7 @@ function Test-PluginHealth {
         }
     }
     
-    $plugin = $script:PluginRegistry.Plugins[$PluginId]
+    $plugin = ${script:PluginRegistry}.Plugins[$PluginId]
     $health = @{
         PluginId = $PluginId
         Status = 'Unknown'
@@ -722,8 +721,8 @@ function Test-PluginHealth {
     }
     
     # Update registry
-    $script:PluginRegistry.HealthStatus[$PluginId].Status = $health.Status
-    $script:PluginRegistry.HealthStatus[$PluginId].LastCheck = Get-Date
+    ${script:PluginRegistry}.HealthStatus[$PluginId].Status = $health.Status
+    ${script:PluginRegistry}.HealthStatus[$PluginId].LastCheck = Get-Date
     
     return $health
 }
@@ -735,7 +734,7 @@ function Start-PluginHealthMonitor {
     #>
     [CmdletBinding()]
     param(
-        [int]$IntervalMs = $script:PluginRegistry.Configuration.HealthCheckIntervalMs
+        [int]$IntervalMs = ${script:PluginRegistry}.Configuration.HealthCheckIntervalMs
     )
     
     $job = Start-Job -Name "PluginHealthMonitor" -ScriptBlock {
@@ -783,8 +782,8 @@ function Invoke-PluginAutoLoader {
     }
     
     # Update configuration
-    $script:PluginRegistry.Configuration.PluginDirectories = $PluginDirs
-    $script:PluginRegistry.Configuration.AutoReloadEnabled = -not $NoAutoReload
+    ${script:PluginRegistry}.Configuration.PluginDirectories = $PluginDirs
+    ${script:PluginRegistry}.Configuration.AutoReloadEnabled = -not $NoAutoReload
     
     # Ensure plugin directories exist
     foreach ($dir in $PluginDirs) {
@@ -901,13 +900,13 @@ function Get-LoadedPlugins {
     [CmdletBinding()]
     param()
     
-    return $script:PluginRegistry.Plugins.GetEnumerator() | ForEach-Object {
+    return ${script:PluginRegistry}.Plugins.GetEnumerator() | ForEach-Object {
         @{
             PluginId = $_.Key
             Version = $_.Value.Version
             State = $_.Value.State
             LoadedAt = $_.Value.LoadedAt
-            Health = $script:PluginRegistry.HealthStatus[$_.Key]
+            Health = ${script:PluginRegistry}.HealthStatus[$_.Key]
         }
     }
 }
@@ -931,31 +930,31 @@ function Set-PluginConfiguration {
     )
     
     if ($PSBoundParameters.ContainsKey('PluginDirectories')) {
-        $script:PluginRegistry.Configuration.PluginDirectories = $PluginDirectories
+        ${script:PluginRegistry}.Configuration.PluginDirectories = $PluginDirectories
     }
     if ($PSBoundParameters.ContainsKey('AutoReloadEnabled')) {
-        $script:PluginRegistry.Configuration.AutoReloadEnabled = $AutoReloadEnabled
+        ${script:PluginRegistry}.Configuration.AutoReloadEnabled = $AutoReloadEnabled
     }
     if ($PSBoundParameters.ContainsKey('IsolationLevel')) {
-        $script:PluginRegistry.Configuration.IsolationLevel = $IsolationLevel
+        ${script:PluginRegistry}.Configuration.IsolationLevel = $IsolationLevel
     }
     if ($PSBoundParameters.ContainsKey('MaxLoadRetries')) {
-        $script:PluginRegistry.Configuration.MaxLoadRetries = $MaxLoadRetries
+        ${script:PluginRegistry}.Configuration.MaxLoadRetries = $MaxLoadRetries
     }
     if ($PSBoundParameters.ContainsKey('HealthCheckIntervalMs')) {
-        $script:PluginRegistry.Configuration.HealthCheckIntervalMs = $HealthCheckIntervalMs
+        ${script:PluginRegistry}.Configuration.HealthCheckIntervalMs = $HealthCheckIntervalMs
     }
     if ($PSBoundParameters.ContainsKey('RequireManifest')) {
-        $script:PluginRegistry.Configuration.RequireManifest = $RequireManifest
+        ${script:PluginRegistry}.Configuration.RequireManifest = $RequireManifest
     }
     if ($PSBoundParameters.ContainsKey('AllowUnsigned')) {
-        $script:PluginRegistry.Configuration.AllowUnsigned = $AllowUnsigned
+        ${script:PluginRegistry}.Configuration.AllowUnsigned = $AllowUnsigned
     }
     if ($PSBoundParameters.ContainsKey('MarketplaceUrl')) {
-        $script:PluginRegistry.Configuration.MarketplaceUrl = $MarketplaceUrl
+        ${script:PluginRegistry}.Configuration.MarketplaceUrl = $MarketplaceUrl
     }
     
-    return $script:PluginRegistry.Configuration
+    return ${script:PluginRegistry}.Configuration
 }
 
 # Export functions

@@ -10,7 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$VerbosePreference = if ($Verbose) { "Continue" } else { "SilentlyContinue" }
+$VerbosePreference = $(if ($Verbose) { "Continue" } else { "SilentlyContinue" }
 
 # Colors
 function Write-Success { Write-Host $args -ForegroundColor Green }

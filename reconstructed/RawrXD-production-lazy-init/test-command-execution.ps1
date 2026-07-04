@@ -55,13 +55,13 @@ function Test-Endpoint {
         
         Write-Host "✓ $Name" -ForegroundColor Green
         Write-Host "  Response: $(($response | ConvertTo-Json -Compress).Substring(0, 100))..."
-        $script:testsPassed++
+        ${script:testsPassed}++
         return $response
     }
     catch {
         Write-Host "✗ $Name" -ForegroundColor Red
         Write-Host "  Error: $($_.Exception.Message)"
-        $script:testsFailed++
+        ${script:testsFailed}++
         return $null
     }
 }
@@ -187,12 +187,12 @@ if ($response) {
         Write-Host "  - Status field: present"
         Write-Host "  - Result field: present"
         Write-Host "  - Timestamp field: $(if ($hasTimestamp) { 'present' } else { 'absent' })"
-        $script:testsPassed++
+        ${script:testsPassed}++
     }
     else {
         Write-Host "✗ Response format is invalid" -ForegroundColor Red
         Write-Host "  Missing required fields"
-        $script:testsFailed++
+        ${script:testsFailed}++
     }
 }
 
@@ -254,17 +254,17 @@ if ($times.Count -gt 0) {
 # ============================================================================
 Write-TestHeader "Test Summary"
 
-$totalTests = $script:testsPassed + $script:testsFailed
-$passPercentage = if ($totalTests -gt 0) { [Math]::Round(($script:testsPassed / $totalTests) * 100, 1) } else { 0 }
+$totalTests = ${script:testsPassed} + ${script:testsFailed}
+$passPercentage = $(if ($totalTests -gt 0) { [Math]::Round((${script:testsPassed} / $totalTests) * 100, 1) } else { 0 }
 
 Write-Host "Total Tests: $totalTests"
-Write-Host "Passed: $($script:testsPassed)" -ForegroundColor Green
-Write-Host "Failed: $($script:testsFailed)" -ForegroundColor $(if ($script:testsFailed -gt 0) { "Red" } else { "Green" })
+Write-Host "Passed: $(${script:testsPassed})" -ForegroundColor Green
+Write-Host "Failed: $(${script:testsFailed})" -ForegroundColor $(if (${script:testsFailed} -gt 0) { "Red" } else { "Green" })
 Write-Host "Pass Rate: $passPercentage%"
 
 Write-Host ""
 Write-Host "INTEGRATION STATUS:"
-if ($script:testsFailed -eq 0) {
+if (${script:testsFailed} -eq 0) {
     Write-Host "✓ All tests passed! RawrXD CLI is fully accessible to external tools." -ForegroundColor Green
     Write-Host ""
     Write-Host "You can now:"

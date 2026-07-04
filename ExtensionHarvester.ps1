@@ -13,8 +13,8 @@ New-Item -ItemType Directory -Force -Path $harvestDir | Out-Null
 
 # Check both Cursor and VS Code extension dirs
 $searchBases = @(
-    "$env:USERPROFILE\.cursor\extensions",
-    "$env:USERPROFILE\.vscode\extensions"
+    "${env:USERPROFILE}\.cursor\extensions",
+    "${env:USERPROFILE}\.vscode\extensions"
 )
 
 foreach ($ext in $extensions) {

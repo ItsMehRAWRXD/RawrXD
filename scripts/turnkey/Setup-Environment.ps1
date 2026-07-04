@@ -6,28 +6,28 @@
 param(
     [switch]$InstallIfMissing,
     [switch]$ForceReinstall,
-    [string]$LogPath = "$env:TEMP\rawrxd-env-setup.log"
+    [string]$LogPath = "${env:TEMP}\rawrxd-env-setup.log"
 )
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "Continue"
 
 # Configuration
-$script:RequiredComponents = @(
+${script:RequiredComponents} = @(
     @{ Name = "MSVC v143 - VS 2022 C++ x64/x86 build tools"; ID = "Microsoft.VisualStudio.Component.VC.Tools.x86.x64"; Required = $true },
     @{ Name = "Windows 10/11 SDK"; ID = "Microsoft.VisualStudio.Component.Windows10SDK"; Required = $true },
     @{ Name = "C++ CMake tools for Windows"; ID = "Microsoft.VisualStudio.Component.VC.CMake.Project"; Required = $false },
     @{ Name = "C++ AddressSanitizer"; ID = "Microsoft.VisualStudio.Component.VC.ASAN"; Required = $false }
 )
 
-$script:MinWindowsSDK = "10.0.19041.0"
-$script:LogFile = $LogPath
+${script:MinWindowsSDK} = "10.0.19041.0"
+${script:LogFile} = $LogPath
 
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logEntry = "[$timestamp] [$Level] $Message"
-    Add-Content -Path $script:LogFile -Value $logEntry -ErrorAction SilentlyContinue
+    Add-Content -Path ${script:LogFile} -Value $logEntry -ErrorAction SilentlyContinue
     switch ($Level) {
         "ERROR" { Write-Host $logEntry -ForegroundColor Red }
         "WARN"  { Write-Host $logEntry -ForegroundColor Yellow }
@@ -184,7 +184,7 @@ function Install-BuildTools {
     }
     
     $installerUrl = "https://aka.ms/vs/17/release/vs_buildtools.exe"
-    $installerPath = "$env:TEMP\vs_buildtools.exe"
+    $installerPath = "${env:TEMP}\vs_buildtools.exe"
     
     try {
         Write-Log "Downloading VS Build Tools installer..."
@@ -240,7 +240,7 @@ function Set-EnvironmentVariables {
     }
     
     # Set RAWRXD_ROOT if not set
-    if (-not $env:RAWRXD_ROOT) {
+    if (-not ${env:RAWRXD_ROOT}) {
         $scriptPath = $PSScriptRoot
         $rawrxdRoot = Resolve-Path "$scriptPath\..\.." -ErrorAction SilentlyContinue
         if ($rawrxdRoot) {

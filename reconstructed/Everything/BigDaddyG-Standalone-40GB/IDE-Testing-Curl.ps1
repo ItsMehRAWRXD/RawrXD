@@ -290,9 +290,7 @@ function Show-Menu {
 
 # ============================================================================
 # MAIN EXECUTION
-# ============================================================================
-
-if ($Help -or (-not $Quick -and -not $Full -and -not $ModelsOnly -and -not $ChatOnly -and -not $WebSocketOnly -and -not $StressTest)) {
+# ============================================================================ $(if ($Help -or (-not $Quick -and -not $Full -and -not $ModelsOnly -and -not $ChatOnly -and -not $WebSocketOnly -and -not $StressTest)) {
     Show-Menu
     exit
 }

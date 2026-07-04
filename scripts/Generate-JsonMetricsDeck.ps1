@@ -23,8 +23,8 @@ $venv = Join-Path $toolDir '.venv'
 $py = Join-Path $venv 'Scripts\python.exe'
 if (-not $PythonExe) {
     foreach ($c in @(
-            (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\python.exe'),
-            (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python313\python.exe'))) {
+            (Join-Path ${env:LOCALAPPDATA} 'Programs\Python\Python312\python.exe'),
+            (Join-Path ${env:LOCALAPPDATA} 'Programs\Python\Python313\python.exe'))) {
         if (Test-Path $c) { $PythonExe = $c; break }
     }
 }
@@ -35,10 +35,10 @@ if (-not (Test-Path $py)) {
     & $py -m pip install -q -r (Join-Path $toolDir 'requirements.txt')
 }
 
-$outAbs = if ([System.IO.Path]::IsPathRooted($OutPdf)) { $OutPdf } else { Join-Path $root $OutPdf }
+$outAbs = $(if ([System.IO.Path]::IsPathRooted($OutPdf)) { $OutPdf } else { Join-Path $root $OutPdf }
 $existing = [System.Collections.Generic.List[string]]::new()
 foreach ($i in $Inputs) {
-    $p = if ([System.IO.Path]::IsPathRooted($i)) { $i } else { Join-Path $root $i }
+    $p = $(if ([System.IO.Path]::IsPathRooted($i)) { $i } else { Join-Path $root $i }
     if (Test-Path $p) { $existing.Add($p) }
     else { Write-Warning "Skip missing: $p" }
 }
@@ -48,7 +48,7 @@ if ($existing.Count -eq 0) {
 
 $argList = @((Join-Path $toolDir 'generate_pdf_deck.py'), '--out', $outAbs, '--inputs') + $existing
 if ($OutHtml) {
-    $htmlAbs = if ([System.IO.Path]::IsPathRooted($OutHtml)) { $OutHtml } else { Join-Path $root $OutHtml }
+    $htmlAbs = $(if ([System.IO.Path]::IsPathRooted($OutHtml)) { $OutHtml } else { Join-Path $root $OutHtml }
     $argList += @('--html', $htmlAbs)
 }
 

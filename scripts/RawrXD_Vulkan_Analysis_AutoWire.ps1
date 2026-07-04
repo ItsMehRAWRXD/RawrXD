@@ -45,7 +45,7 @@ foreach ($reg in $RegPaths) {
     }
 }
 
-if (-not $VulkanSdk) { $VulkanSdk = $env:VULKAN_SDK }
+if (-not $VulkanSdk) { $VulkanSdk = ${env:VULKAN_SDK} }
 
 if (-not $VulkanSdk -or -not (Test-Path "$VulkanSdk\Include\vulkan\vulkan.h")) {
     $HuntPaths = @(
@@ -115,9 +115,9 @@ if ($GenerateIcal) {
         schema   = "RawrXD-Analysis-1.0"
         generated = (Get-Date -Format "o")
         vulkan   = @{
-            sdk_path = if ($VulkanSdk) { $VulkanSdk } else { $null }
-            version  = if ($VulkanSdk -and (Test-Path "$VulkanSdk\version.txt")) { (Get-Content "$VulkanSdk\version.txt" -Raw -ErrorAction SilentlyContinue) -replace "`r`n", "" } else { $null }
-            loader   = if ($VulkanSdk) { "$VulkanSdk\Bin\vulkan-1.dll" } else { $null }
+            sdk_path = $(if ($VulkanSdk) { $VulkanSdk } else { $null }
+            version  = $(if ($VulkanSdk -and (Test-Path "$VulkanSdk\version.txt")) { (Get-Content "$VulkanSdk\version.txt" -Raw -ErrorAction SilentlyContinue) -replace "`r`n", "" } else { $null }
+            loader   = $(if ($VulkanSdk) { "$VulkanSdk\Bin\vulkan-1.dll" } else { $null }
         }
         analysis_tools = $AnalysisTools
         targets = @(
@@ -133,10 +133,10 @@ if ($GenerateIcal) {
 
 # 4. SET ENV FOR CURRENT SESSION (so next build sees Vulkan)
 if ($VulkanSdk) {
-    $env:VULKAN_SDK = $VulkanSdk
-    $env:PATH = "$VulkanSdk\Bin;$env:PATH"
-    $env:INCLUDE = "$VulkanSdk\Include;$env:INCLUDE"
-    $env:LIB = "$VulkanSdk\Lib;$env:LIB"
+    ${env:VULKAN_SDK} = $VulkanSdk
+    ${env:PATH} = "$VulkanSdk\Bin;${env:PATH}"
+    ${env:INCLUDE} = "$VulkanSdk\Include;${env:INCLUDE}"
+    ${env:LIB} = "$VulkanSdk\Lib;${env:LIB}"
 }
 
 # 5. VALIDATION
@@ -148,5 +148,5 @@ if ($VulkanSdk) {
     }
 }
 
-$sdkDisplay = if ($VulkanSdk) { $VulkanSdk } else { 'none' }
+$sdkDisplay = $(if ($VulkanSdk) { $VulkanSdk } else { 'none' }
 Write-Host "`n[+] AutoWire complete. SDK: $sdkDisplay; Tools: $($AnalysisTools.Count)" -ForegroundColor Green

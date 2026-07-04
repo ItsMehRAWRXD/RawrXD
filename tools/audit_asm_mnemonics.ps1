@@ -1,25 +1,25 @@
-$ErrorActionPreference = 'Stop'
-$roots = @('D:\rawrxd\src', 'D:\rawrxd\Ship')
-$files = Get-ChildItem -Path $roots -Recurse -Filter *.asm -File
-$mnem = @{}
-$ext = @{
+$Script:ErrorActionPreference = 'Stop'
+$Script:roots = @('D:\rawrxd\src', 'D:\rawrxd\Ship')
+$Script:files = Get-ChildItem -Path $roots -Recurse -Filter *.asm -File
+$Script:mnem = @{}
+$Script:ext = @{
     call = 0; extern = 0; invoke = 0; includelib = 0; include = 0
     proto = 0; extrn = 0; public = 0; import = 0
 }
 foreach ($f in $files) {
     Get-Content -LiteralPath $f.FullName -ErrorAction SilentlyContinue | ForEach-Object {
-        $line = $_
-        $sc = $line.IndexOf(';')
+$Script:line = $_
+$Script:sc = $line.IndexOf(';')
         if ($sc -ge 0) { $line = $line.Substring(0, $sc) }
-        $line = $line.Trim()
+$Script:line = $line.Trim()
         if ($line.Length -eq 0) { return }
         if ($line.StartsWith('.')) { return }
-        $parts = $line -split '\s+', 20, [System.StringSplitOptions]::RemoveEmptyEntries
-        $i = 0
+$Script:parts = $line -split '\s+', 20, [System.StringSplitOptions]::RemoveEmptyEntries
+$Script:i = 0
         while ($i -lt $parts.Count) {
-            $t = $parts[$i]
+$Script:t = $parts[$i]
             if ($t -match ':$') { $i++; continue }
-            $tok = $t.ToLowerInvariant()
+$Script:tok = $t.ToLowerInvariant()
             foreach ($k in @('call','extern','invoke','includelib','include','proto','extrn','public','import')) {
                 if ($tok -eq $k) { $ext[$k] = $ext[$k] + 1 }
             }

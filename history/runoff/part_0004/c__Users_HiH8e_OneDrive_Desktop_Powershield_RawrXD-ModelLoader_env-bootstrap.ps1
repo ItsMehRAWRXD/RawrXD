@@ -53,7 +53,7 @@ if (-not $cmakeCmd) {
     )
     $cmakeFound = $cmakeFallbacks | Where-Object { Test-Path $_ } | Select-Object -First 1
     if ($cmakeFound) {
-        $env:PATH = (Split-Path $cmakeFound) + ';' + $env:PATH
+        ${env:PATH} = (Split-Path $cmakeFound) + ';' + ${env:PATH}
         $cmakeCmd = Get-Command cmake -ErrorAction SilentlyContinue
         Ok "Added CMake path: $(Split-Path $cmakeFound)"
     }
@@ -65,12 +65,12 @@ $ninjaCmd = Get-Command ninja -ErrorAction SilentlyContinue
 if ($ninjaCmd) { Ok "Ninja available" } else { Warn "Ninja not found (optional)" }
 
 # 4. Windows SDK sanity
-$windowsSdkDir = $env:WindowsSdkDir
-$windowsSdkVer = $env:WindowsSdkVersion
+$windowsSdkDir = ${env:WindowsSdkDir}
+$windowsSdkVer = ${env:WindowsSdkVersion}
 if ($windowsSdkDir -and (Test-Path $windowsSdkDir)) { Ok "Windows SDK dir: $windowsSdkDir ($windowsSdkVer)" } else { Warn "WindowsSdkDir not set" }
 
 # 5. MSVC tools dir
-if ($env:VCToolsInstallDir -and (Test-Path $env:VCToolsInstallDir)) { Ok "VCTools: $env:VCToolsInstallDir" } else { Warn "VCToolsInstallDir missing" }
+if (${env:VCToolsInstallDir} -and (Test-Path ${env:VCToolsInstallDir})) { Ok "VCTools: ${env:VCToolsInstallDir}" } else { Warn "VCToolsInstallDir missing" }
 
 # 6. LLVM/Clang fallback
 $clang = Get-Command clang-cl.exe -ErrorAction SilentlyContinue
@@ -89,7 +89,7 @@ Log "cl.exe:       " + (Get-Command cl.exe -ErrorAction SilentlyContinue ? 'OK' 
 Log "CMake:        " + ($cmakeCmd ? 'OK' : 'MISSING')
 Log "Ninja:        " + ($ninjaCmd ? 'OK' : 'MISSING')
 Log "Windows SDK:  " + (($windowsSdkDir -and (Test-Path $windowsSdkDir)) ? 'OK' : 'MISSING')
-Log "VCTools:      " + (($env:VCToolsInstallDir -and (Test-Path $env:VCToolsInstallDir)) ? 'OK' : 'MISSING')
+Log "VCTools:      " + ((${env:VCToolsInstallDir} -and (Test-Path ${env:VCToolsInstallDir})) ? 'OK' : 'MISSING')
 Log "Qt:           " + (Test-Path $qtHint ? 'FOUND ROOT' : 'NOT FOUND')
 
 Ok "Environment bootstrap complete"

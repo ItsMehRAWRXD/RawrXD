@@ -6,11 +6,11 @@ Write-Host "  RawrXD Deep Validation & Edge Case Testing Suite" -ForegroundColor
 Write-Host "  Testing REMAINING features and complex integration scenarios" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$script:testResults = @{}
-$script:totalTests = 0  
-$script:passedTests = 0
-$script:failedTests = 0
-$script:warnings = @()
+${script:testResults} = @{}
+${script:totalTests} = 0  
+${script:passedTests} = 0
+${script:failedTests} = 0
+${script:warnings} = @()
 
 function Test-DeepFeature {
   param(
@@ -21,7 +21,7 @@ function Test-DeepFeature {
     [string]$RiskLevel = "Medium"
   )
     
-  $script:totalTests++
+  ${script:totalTests}++
   $riskEmoji = switch ($RiskLevel) {
     "High" { "🔥" }
     "Medium" { "⚡" } 
@@ -39,29 +39,29 @@ function Test-DeepFeature {
         
     if ($result -eq $true) {
       Write-Host "   ✅ PASS ($([math]::Round($duration.TotalMilliseconds))ms)" -ForegroundColor Green
-      $script:passedTests++
-      $script:testResults[$TestName] = "PASS"
+      ${script:passedTests}++
+      ${script:testResults}[$TestName] = "PASS"
     }
     elseif ($result -eq "PARTIAL") {
       Write-Host "   ⚠️ PARTIAL ($([math]::Round($duration.TotalMilliseconds))ms)" -ForegroundColor Yellow
-      $script:testResults[$TestName] = "PARTIAL" 
-      $script:warnings += "PARTIAL: $TestName"
+      ${script:testResults}[$TestName] = "PARTIAL" 
+      ${script:warnings} += "PARTIAL: $TestName"
     }
     elseif ($result -eq "SKIP") {
       Write-Host "   ⏭️ SKIPPED (Requirements not met)" -ForegroundColor DarkYellow
-      $script:testResults[$TestName] = "SKIP"
+      ${script:testResults}[$TestName] = "SKIP"
     }
     else {
       Write-Host "   ❌ FAIL ($([math]::Round($duration.TotalMilliseconds))ms)" -ForegroundColor Red
-      $script:failedTests++
-      $script:testResults[$TestName] = "FAIL"
+      ${script:failedTests}++
+      ${script:testResults}[$TestName] = "FAIL"
     }
   }
   catch {
     Write-Host "   💥 ERROR: $_" -ForegroundColor Red
-    $script:failedTests++
-    $script:testResults[$TestName] = "ERROR: $_"
-    $script:warnings += "ERROR in $TestName`: $_"
+    ${script:failedTests}++
+    ${script:testResults}[$TestName] = "ERROR: $_"
+    ${script:warnings} += "ERROR in $TestName`: $_"
   }
 }
 
@@ -404,17 +404,17 @@ Test-DeepFeature -TestName "Resource Cleanup" -Category "Resilience" -RiskLevel 
 Write-Host "`n📊 DEEP VALIDATION RESULTS" -ForegroundColor Cyan
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$successRate = if ($script:totalTests -gt 0) { [math]::Round(($script:passedTests / $script:totalTests) * 100, 1) } else { 0 }
+$successRate = $(if (${script:totalTests} -gt 0) { [math]::Round((${script:passedTests} / ${script:totalTests}) * 100, 1) } else { 0 }
 
 Write-Host "`n🎯 Deep Test Summary:" -ForegroundColor White
-Write-Host "   Total Tests: $($script:totalTests)" -ForegroundColor Gray
-Write-Host "   Passed: $($script:passedTests)" -ForegroundColor Green
-Write-Host "   Failed: $($script:failedTests)" -ForegroundColor Red  
+Write-Host "   Total Tests: $(${script:totalTests})" -ForegroundColor Gray
+Write-Host "   Passed: $(${script:passedTests})" -ForegroundColor Green
+Write-Host "   Failed: $(${script:failedTests})" -ForegroundColor Red  
 Write-Host "   Success Rate: $successRate%" -ForegroundColor Cyan
 
 Write-Host "`n📋 Detailed Results:" -ForegroundColor White
-foreach ($test in $script:testResults.Keys | Sort-Object) {
-  $result = $script:testResults[$test]
+foreach ($test in ${script:testResults}.Keys | Sort-Object) {
+  $result = ${script:testResults}[$test]
   $color = switch -Regex ($result) {
     "^PASS" { "Green" }
     "^PARTIAL" { "Yellow" }
@@ -426,9 +426,9 @@ foreach ($test in $script:testResults.Keys | Sort-Object) {
   Write-Host "$status" -ForegroundColor $color
 }
 
-if ($script:warnings.Count -gt 0) {
+if (${script:warnings}.Count -gt 0) {
   Write-Host "`n⚠️ Warnings & Issues:" -ForegroundColor Yellow
-  foreach ($warning in $script:warnings) {
+  foreach ($warning in ${script:warnings}) {
     Write-Host "   • $warning" -ForegroundColor DarkYellow
   }
 }
@@ -444,7 +444,7 @@ Write-Host "   🔀 Concurrency: Multi-threading capabilities verified" -Foregro
 Write-Host "   🧹 Cleanup: Resource management tested" -ForegroundColor Gray
 
 # Generate final assessment
-$overallScore = [math]::Round(($successRate * 0.6) + (($script:passedTests / ($script:passedTests + $script:failedTests)) * 40), 1)
+$overallScore = [math]::Round(($successRate * 0.6) + ((${script:passedTests} / (${script:passedTests} + ${script:failedTests})) * 40), 1)
 
 if ($successRate -ge 95) {
   Write-Host "`n🏆 EXCEPTIONAL: RawrXD passes comprehensive deep testing!" -ForegroundColor Green
@@ -471,7 +471,7 @@ Write-Host "`n🎯 COMPREHENSIVE TESTING SUMMARY:" -ForegroundColor Cyan
 Write-Host "   📊 Features Discovered: 1,443 total features" -ForegroundColor White
 Write-Host "   🔥 High Priority Tests: 6/6 core systems validated" -ForegroundColor White
 Write-Host "   ⚡ Medium Priority Tests: 3/3 UI systems confirmed" -ForegroundColor White
-Write-Host "   🔍 Deep Validation Tests: $($script:passedTests)/$($script:totalTests) edge cases passed" -ForegroundColor White
+Write-Host "   🔍 Deep Validation Tests: $(${script:passedTests})/$(${script:totalTests}) edge cases passed" -ForegroundColor White
 Write-Host "   🎖️ Overall Quality Score: $overallScore/100" -ForegroundColor Cyan
 
 Write-Host "`n🚀 FINAL RECOMMENDATIONS:" -ForegroundColor Cyan  

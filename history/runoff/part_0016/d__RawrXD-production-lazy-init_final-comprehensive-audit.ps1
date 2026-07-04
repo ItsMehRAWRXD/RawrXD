@@ -26,7 +26,7 @@ load 3
 
 $output = $commands | & $cliPath 2>&1 | Select-Object -First 50
 $portMatch = $output | Where-Object { $_ -match '\[Port: (\d+)\]' } | Select-Object -First 1
-$port = if ($portMatch -match '\[Port: (\d+)\]') { $matches[1] } else { $null }
+$port = $(if ($portMatch -match '\[Port: (\d+)\]') { $matches[1] } else { $null }
 
 if (-not $port) {
     Write-Host "[ERROR] Could not start CLI or find port" -ForegroundColor Red

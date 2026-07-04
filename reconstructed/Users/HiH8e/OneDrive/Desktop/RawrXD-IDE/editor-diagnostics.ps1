@@ -12,10 +12,10 @@
 # MODULE VARIABLES
 # ============================================
 
-$script:DiagnosticLog = @()
-$script:EditorErrors = @()
-$script:PerformanceMetrics = @{}
-$script:MaxDiagnosticEntries = 500
+${script:DiagnosticLog} = @()
+${script:EditorErrors} = @()
+${script:PerformanceMetrics} = @{}
+${script:MaxDiagnosticEntries} = 500
 
 # ============================================
 # DIAGNOSTIC LOGGING
@@ -38,10 +38,10 @@ function Write-EditorDiagnostic {
         Message = $Message
     }
     
-    $script:DiagnosticLog += $entry
+    ${script:DiagnosticLog} += $entry
     
-    if ($script:DiagnosticLog.Count -gt $script:MaxDiagnosticEntries) {
-        $script:DiagnosticLog = $script:DiagnosticLog[-$script:MaxDiagnosticEntries..-1]
+    if (${script:DiagnosticLog}.Count -gt ${script:MaxDiagnosticEntries}) {
+        ${script:DiagnosticLog} = ${script:DiagnosticLog}[-${script:MaxDiagnosticEntries}..-1]
     }
     
     return @{
@@ -60,7 +60,7 @@ function Get-EditorDiagnostics {
         [string]$Level = ""
     )
     
-    $diagnostics = $script:DiagnosticLog
+    $diagnostics = ${script:DiagnosticLog}
     
     if ($Level) {
         $diagnostics = $diagnostics | Where-Object { $_.Level -eq $Level }
@@ -75,9 +75,9 @@ function Get-EditorErrorReport {
         Get comprehensive error report
     #>
     return @{
-        ErrorCount = $script:EditorErrors.Count
-        Errors = $script:EditorErrors
-        DiagnosticEntriesCount = $script:DiagnosticLog.Count
+        ErrorCount = ${script:EditorErrors}.Count
+        Errors = ${script:EditorErrors}
+        DiagnosticEntriesCount = ${script:DiagnosticLog}.Count
         Timestamp = Get-Date
     }
 }

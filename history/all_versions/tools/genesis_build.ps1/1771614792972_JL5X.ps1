@@ -34,7 +34,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 
-$rootDir = if ($PSScriptRoot) {
+$rootDir = $(if ($PSScriptRoot) {
     $scriptDir = $PSScriptRoot
     if ((Split-Path -Leaf $scriptDir) -eq "tools") { Split-Path -Parent $scriptDir } else { $scriptDir }
 } else { "D:\rawrxd" }
@@ -90,7 +90,7 @@ function Invoke-LinkOnly {
         exit 1
     }
 
-    $OutputExe = if ($OutputExe) { $OutputExe } else { (Join-Path $outDir "RawrXD.exe") }
+    $OutputExe = $(if ($OutputExe) { $OutputExe } else { (Join-Path $outDir "RawrXD.exe") }
     $outDirLocal = Split-Path -Parent $OutputExe
     if ($outDirLocal) {
         New-Item -ItemType Directory -Force -Path $outDirLocal -ErrorAction SilentlyContinue | Out-Null
@@ -147,8 +147,8 @@ if ($LinkOnly) {
     } else {
         if (-not $ObjDir) {
             $ObjDir = Resolve-FirstExistingPath -Candidates @(
-                (Join-Path $env:LOCALAPPDATA "RawrXD\build\lib\bin"),
-                (Join-Path $env:LOCALAPPDATA "RawrXD\build\lib"),
+                (Join-Path ${env:LOCALAPPDATA} "RawrXD\build\lib\bin"),
+                (Join-Path ${env:LOCALAPPDATA} "RawrXD\build\lib"),
                 (Join-Path $rootDir "build_prod")
             )
         }

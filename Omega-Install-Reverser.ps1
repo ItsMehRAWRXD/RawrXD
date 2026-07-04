@@ -431,7 +431,7 @@ function Invoke-TypeReconstruction {
                     Name = $func.name
                     RVA = $func.relativeVirtualAddress
                     Length = $func.length
-                    ReturnType = if ($func.type) { $func.type.name } else { "void" }
+                    ReturnType = $(if ($func.type) { $func.type.name } else { "void" }
                 }
             }
         } catch {
@@ -841,7 +841,7 @@ if ($GenerateBuildSystem) {
 if ($MapDependencies) {
     $manifest = @{
         Project = $ProjectName
-        Architecture = if ($is64Bit) { "x64" } else { "x86" }
+        Architecture = $(if ($is64Bit) { "x64" } else { "x86" }
         Dependencies = $allImports | Select-Object -Unique | Sort-Object
         Exports = $allExports.Count
         Sources = $projectSources

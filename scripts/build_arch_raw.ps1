@@ -66,7 +66,7 @@ if (-not $tools -or -not (Test-Path $tools.ml64)) {
 }
 if (-not (Test-Path $tools.dumpbin)) { $tools.dumpbin = $null }
 
-$root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
+$root = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
 $srcDir = Join-Path $root "src"
 $asmDir = Join-Path $srcDir "asm"
 $outDir = Join-Path $root "build" $Config

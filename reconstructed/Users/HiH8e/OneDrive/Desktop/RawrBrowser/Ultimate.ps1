@@ -4,7 +4,7 @@ Add-Type -AssemblyName System.Drawing
 Write-Host "=== RAWR BROWSER - GUARANTEED WORKING VERSION ===" -ForegroundColor Green
 
 # Enhanced WebView2 setup with multiple fallback strategies
-$wvDir = "$env:TEMP\WVLibs"
+$wvDir = "${env:TEMP}\WVLibs"
 $useWebView2 = $false
 
 # Ensure WebView2 SDK is available
@@ -75,15 +75,15 @@ if ($useWebView2) {
     $statusLabel.Text = "WebView2 control created, starting initialization..."
         
     # Set up user data folder
-    $userDataDir = "$env:TEMP\RawrBrowserData_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+    $userDataDir = "${env:TEMP}\RawrBrowserData_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
     New-Item -ItemType Directory -Path $userDataDir -Force | Out-Null
         
     Write-Host "User data directory: $userDataDir" -ForegroundColor Gray
         
     # Use a different approach - manual initialization check with timer
-    $script:initializationAttempted = $false
-    $script:initializationCompleted = $false
-    $script:initAttempts = 0
+    ${script:initializationAttempted} = $false
+    ${script:initializationCompleted} = $false
+    ${script:initAttempts} = 0
         
     # Start initialization without events first
     $statusLabel.Text = "Starting WebView2 core..."
@@ -92,7 +92,7 @@ if ($useWebView2) {
     $initTimer = New-Object System.Windows.Forms.Timer
     $initTimer.Interval = 500  # Check every 500ms
     $initTimer.add_Tick({
-        $script:initAttempts++
+        ${script:initAttempts}++
             
         try {
           if ($webView.CoreWebView2 -ne $null) {
@@ -517,10 +517,10 @@ if ($useWebView2) {
                     
             $webView.CoreWebView2.NavigateToString($html)
             $initTimer.Stop()
-            $script:initializationCompleted = $true
+            ${script:initializationCompleted} = $true
                     
           }
-          elseif ($script:initAttempts -ge 20) {
+          elseif (${script:initAttempts} -ge 20) {
             # Timeout after 10 seconds
             Write-Host "✗ WebView2 initialization timeout after 10 seconds" -ForegroundColor Red
             $statusLabel.Text = "WebView2 timeout - using fallback"
@@ -529,13 +529,13 @@ if ($useWebView2) {
           }
           else {
             # Still waiting
-            $statusLabel.Text = "Initializing WebView2... (attempt $($script:initAttempts)/20)"
+            $statusLabel.Text = "Initializing WebView2... (attempt $(${script:initAttempts})/20)"
                     
             # Try to start initialization again if not attempted
-            if (-not $script:initializationAttempted) {
+            if (-not ${script:initializationAttempted}) {
               try {
                 $webView.EnsureCoreWebView2Async() | Out-Null
-                $script:initializationAttempted = $true
+                ${script:initializationAttempted} = $true
                 Write-Host "WebView2 initialization started" -ForegroundColor Gray
               }
               catch {
@@ -564,7 +564,7 @@ if ($useWebView2) {
 }
 
 # Fallback browser - always create as backup
-if (-not $useWebView2 -or $script:initAttempts -ge 20) {
+if (-not $useWebView2 -or ${script:initAttempts} -ge 20) {
   Write-Host "Creating fallback browser..." -ForegroundColor Yellow
     
   # Clear form if WebView2 failed

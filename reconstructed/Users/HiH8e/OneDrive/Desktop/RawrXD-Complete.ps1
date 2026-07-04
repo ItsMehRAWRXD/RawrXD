@@ -83,35 +83,35 @@ param(
 # ============================================
 
 # Script-level variables
-$script:ProjectRoot = $PSScriptRoot
-$script:EmergencyLogPath = Join-Path $PSScriptRoot "logs"
-$script:ExtensionsPath = Join-Path $PSScriptRoot "extensions"
-$script:SettingsPath = Join-Path $PSScriptRoot "settings.json"
-$script:InstalledExtensions = @()
-$script:OllamaAvailable = $false
-$script:WebView2Available = $false
-$script:GitAvailable = $false
+${script:ProjectRoot} = $PSScriptRoot
+${script:EmergencyLogPath} = Join-Path $PSScriptRoot "logs"
+${script:ExtensionsPath} = Join-Path $PSScriptRoot "extensions"
+${script:SettingsPath} = Join-Path $PSScriptRoot "settings.json"
+${script:InstalledExtensions} = @()
+${script:OllamaAvailable} = $false
+${script:WebView2Available} = $false
+${script:GitAvailable} = $false
 
 # Create directories if they don't exist
-if (-not (Test-Path $script:EmergencyLogPath)) {
-    New-Item -ItemType Directory -Path $script:EmergencyLogPath -Force | Out-Null
+if (-not (Test-Path ${script:EmergencyLogPath})) {
+    New-Item -ItemType Directory -Path ${script:EmergencyLogPath} -Force | Out-Null
 }
-if (-not (Test-Path $script:ExtensionsPath)) {
-    New-Item -ItemType Directory -Path $script:ExtensionsPath -Force | Out-Null
+if (-not (Test-Path ${script:ExtensionsPath})) {
+    New-Item -ItemType Directory -Path ${script:ExtensionsPath} -Force | Out-Null
 }
 
 # Load settings
 function Load-Settings {
-    if (Test-Path $script:SettingsPath) {
+    if (Test-Path ${script:SettingsPath}) {
         try {
-            $script:Settings = Get-Content $script:SettingsPath | ConvertFrom-Json
+            ${script:Settings} = Get-Content ${script:SettingsPath} | ConvertFrom-Json
         }
         catch {
-            $script:Settings = @{}
+            ${script:Settings} = @{}
         }
     }
     else {
-        $script:Settings = @{
+        ${script:Settings} = @{
             Theme = "Dark"
             FontSize = 12
             AutoSave = $true
@@ -123,7 +123,7 @@ function Load-Settings {
 }
 
 function Save-Settings {
-    $script:Settings | ConvertTo-Json -Depth 10 | Out-File $script:SettingsPath -Encoding UTF8
+    ${script:Settings} | ConvertTo-Json -Depth 10 | Out-File ${script:SettingsPath} -Encoding UTF8
 }
 
 # ============================================
@@ -178,11 +178,11 @@ function Get-VSCodeMarketplaceExtensions {
                     Name = $ext.displayName
                     Description = $ext.shortDescription
                     Author = $ext.publisher.publisherName
-                    Version = if ($ext.versions -and $ext.versions[0]) { $ext.versions[0].version } else { "1.0.0" }
+                    Version = $(if ($ext.versions -and $ext.versions[0]) { $ext.versions[0].version } else { "1.0.0" }
                     Downloads = 0
                     Rating = 0
-                    Category = if ($ext.categories -and $ext.categories[0]) { $ext.categories[0] } else { "Other" }
-                    Tags = if ($ext.tags) { $ext.tags } else { @() }
+                    Category = $(if ($ext.categories -and $ext.categories[0]) { $ext.categories[0] } else { "Other" }
+                    Tags = $(if ($ext.tags) { $ext.tags } else { @() }
                     Source = "VSCode Marketplace"
                 }
             }
@@ -216,7 +216,7 @@ function Install-VSCodeExtension {
         
         if ($extension) {
             # Create extension directory
-            $extDir = Join-Path $script:ExtensionsPath $ExtensionId
+            $extDir = Join-Path ${script:ExtensionsPath} $ExtensionId
             if (-not (Test-Path $extDir)) {
                 New-Item -ItemType Directory -Path $extDir -Force | Out-Null
             }
@@ -225,10 +225,10 @@ function Install-VSCodeExtension {
             $extension | ConvertTo-Json -Depth 10 | Out-File (Join-Path $extDir "extension.json") -Encoding UTF8
             
             # Add to installed extensions
-            $script:InstalledExtensions += $extension
+            ${script:InstalledExtensions} += $extension
             
             # Save installed extensions list
-            $script:InstalledExtensions | ConvertTo-Json -Depth 10 | Out-File (Join-Path $script:ExtensionsPath "installed.json") -Encoding UTF8
+            ${script:InstalledExtensions} | ConvertTo-Json -Depth 10 | Out-File (Join-Path ${script:ExtensionsPath} "installed.json") -Encoding UTF8
             
             Write-Host "✅ Extension '$($extension.Name)' installed successfully!" -ForegroundColor Green
             
@@ -294,11 +294,11 @@ function Initialize-GUI {
     Add-Type -AssemblyName System.Drawing
     
     # Create main form
-    $script:MainForm = New-Object System.Windows.Forms.Form
-    $script:MainForm.Text = "RawrXD - Complete IDE"
-    $script:MainForm.Size = New-Object System.Drawing.Size(1200, 800)
-    $script:MainForm.StartPosition = "CenterScreen"
-    $script:MainForm.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
+    ${script:MainForm} = New-Object System.Windows.Forms.Form
+    ${script:MainForm}.Text = "RawrXD - Complete IDE"
+    ${script:MainForm}.Size = New-Object System.Drawing.Size(1200, 800)
+    ${script:MainForm}.StartPosition = "CenterScreen"
+    ${script:MainForm}.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
     
     # Create menu strip
     $menuStrip = New-Object System.Windows.Forms.MenuStrip
@@ -338,7 +338,7 @@ function Initialize-GUI {
     $extMenu.DropDownItems.AddRange(@($marketplaceItem, $installedItem))
     
     $menuStrip.Items.AddRange(@($fileMenu, $editMenu, $viewMenu, $extMenu))
-    $script:MainForm.Controls.Add($menuStrip)
+    ${script:MainForm}.Controls.Add($menuStrip)
     
     # Create split container for 3-pane layout
     $mainSplit = New-Object System.Windows.Forms.SplitContainer
@@ -371,15 +371,15 @@ function Initialize-GUI {
     $editorPanel.Dock = "Fill"
     $editorPanel.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
     
-    $script:Editor = New-Object System.Windows.Forms.RichTextBox
-    $script:Editor.Dock = "Fill"
-    $script:Editor.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-    $script:Editor.ForeColor = [System.Drawing.Color]::White
-    $script:Editor.Font = New-Object System.Drawing.Font("Consolas", 12)
-    $script:Editor.Multiline = $true
-    $script:Editor.ScrollBars = "Both"
+    ${script:Editor} = New-Object System.Windows.Forms.RichTextBox
+    ${script:Editor}.Dock = "Fill"
+    ${script:Editor}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+    ${script:Editor}.ForeColor = [System.Drawing.Color]::White
+    ${script:Editor}.Font = New-Object System.Drawing.Font("Consolas", 12)
+    ${script:Editor}.Multiline = $true
+    ${script:Editor}.ScrollBars = "Both"
     
-    $editorPanel.Controls.Add($script:Editor)
+    $editorPanel.Controls.Add(${script:Editor})
     $rightSplit.Panel1.Controls.Add($editorPanel)
     
     # Bottom panel (Terminal/Browser)
@@ -393,12 +393,12 @@ function Initialize-GUI {
     
     # Terminal tab
     $terminalTab = New-Object System.Windows.Forms.TabPage("Terminal")
-    $script:Terminal = New-Object System.Windows.Forms.RichTextBox
-    $script:Terminal.Dock = "Fill"
-    $script:Terminal.BackColor = [System.Drawing.Color]::Black
-    $script:Terminal.ForeColor = [System.Drawing.Color]::White
-    $script:Terminal.Font = New-Object System.Drawing.Font("Consolas", 10)
-    $terminalTab.Controls.Add($script:Terminal)
+    ${script:Terminal} = New-Object System.Windows.Forms.RichTextBox
+    ${script:Terminal}.Dock = "Fill"
+    ${script:Terminal}.BackColor = [System.Drawing.Color]::Black
+    ${script:Terminal}.ForeColor = [System.Drawing.Color]::White
+    ${script:Terminal}.Font = New-Object System.Drawing.Font("Consolas", 10)
+    $terminalTab.Controls.Add(${script:Terminal})
     
     # Browser tab
     $browserTab = New-Object System.Windows.Forms.TabPage("Browser")
@@ -415,21 +415,21 @@ function Initialize-GUI {
     $rightSplit.Panel2.Controls.Add($bottomPanel)
     
     $mainSplit.Panel2.Controls.Add($rightSplit)
-    $script:MainForm.Controls.Add($mainSplit)
+    ${script:MainForm}.Controls.Add($mainSplit)
     
     # Status bar
     $statusBar = New-Object System.Windows.Forms.StatusBar
     $statusBar.Text = "Ready"
     $statusBar.BackColor = [System.Drawing.Color]::FromArgb(60, 60, 60)
     $statusBar.ForeColor = [System.Drawing.Color]::White
-    $script:MainForm.Controls.Add($statusBar)
+    ${script:MainForm}.Controls.Add($statusBar)
     
     # Load installed extensions
     Load-InstalledExtensions
     
     # Show the form
-    $script:MainForm.Add_Shown({$script:MainForm.Activate()})
-    $script:MainForm.ShowDialog() | Out-Null
+    ${script:MainForm}.Add_Shown({${script:MainForm}.Activate()})
+    ${script:MainForm}.ShowDialog() | Out-Null
 }
 
 function Show-ExtensionMarketplace {
@@ -500,8 +500,8 @@ function Populate-ExtensionList {
 # ============================================
 
 function New-File {
-    $script:Editor.Text = ""
-    $script:Editor.Tag = $null
+    ${script:Editor}.Text = ""
+    ${script:Editor}.Tag = $null
     Update-Status "New file created"
 }
 
@@ -510,23 +510,23 @@ function Open-File {
     $openDialog.Filter = "All Files (*.*)|*.*"
     if ($openDialog.ShowDialog() -eq "OK") {
         $content = [System.IO.File]::ReadAllText($openDialog.FileName)
-        $script:Editor.Text = $content
-        $script:Editor.Tag = $openDialog.FileName
+        ${script:Editor}.Text = $content
+        ${script:Editor}.Tag = $openDialog.FileName
         Update-Status "Opened: $($openDialog.FileName)"
     }
 }
 
 function Save-File {
-    if ($script:Editor.Tag) {
-        [System.IO.File]::WriteAllText($script:Editor.Tag, $script:Editor.Text)
-        Update-Status "Saved: $($script:Editor.Tag)"
+    if (${script:Editor}.Tag) {
+        [System.IO.File]::WriteAllText(${script:Editor}.Tag, ${script:Editor}.Text)
+        Update-Status "Saved: $(${script:Editor}.Tag)"
     }
     else {
         $saveDialog = New-Object System.Windows.Forms.SaveFileDialog
         $saveDialog.Filter = "All Files (*.*)|*.*"
         if ($saveDialog.ShowDialog() -eq "OK") {
-            [System.IO.File]::WriteAllText($saveDialog.FileName, $script:Editor.Text)
-            $script:Editor.Tag = $saveDialog.FileName
+            [System.IO.File]::WriteAllText($saveDialog.FileName, ${script:Editor}.Text)
+            ${script:Editor}.Tag = $saveDialog.FileName
             Update-Status "Saved: $($saveDialog.FileName)"
         }
     }

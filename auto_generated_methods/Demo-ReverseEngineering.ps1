@@ -39,7 +39,7 @@ param(
     [switch]$ShowEnhancement = $false,
     
     [Parameter(Mandatory=$false)]
-    [switch]$FullDemo = $true
+    [switch]$FullDemo
 )
 
 # Import modules

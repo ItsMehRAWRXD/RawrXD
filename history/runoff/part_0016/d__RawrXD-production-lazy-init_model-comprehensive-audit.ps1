@@ -129,7 +129,7 @@ quit
             }
         }
         
-        $modelResponse = if ($responseStart -gt 0 -and $responseEnd -gt $responseStart) {
+        $modelResponse = $(if ($responseStart -gt 0 -and $responseEnd -gt $responseStart) {
             ($lines[$responseStart..($responseEnd-1)] -join "`n").Trim()
         } else {
             "No clear model response detected in output."
@@ -258,8 +258,8 @@ $summary = @"
 "@
 
 foreach ($result in $results) {
-    $status = if ($result.Success) { "✅ Success" } else { "❌ Failed" }
-    $link = if ($result.Success) { "[View Report]($($result.ReportPath))" } else { "N/A" }
+    $status = $(if ($result.Success) { "✅ Success" } else { "❌ Failed" }
+    $link = $(if ($result.Success) { "[View Report]($($result.ReportPath))" } else { "N/A" }
     $summary += "`n| $($result.Model) | - | $status | $link |"
 }
 
@@ -304,7 +304,7 @@ Write-Host "`n✅ Multi-model audit complete!`n" -ForegroundColor Green
 
 # Display results
 $results | ForEach-Object {
-    $color = if ($_.Success) { "Green" } else { "Red" }
-    $status = if ($_.Success) { "SUCCESS" } else { "FAILED - $($_.Error)" }
+    $color = $(if ($_.Success) { "Green" } else { "Red" }
+    $status = $(if ($_.Success) { "SUCCESS" } else { "FAILED - $($_.Error)" }
     Write-Host "$($_.Model): $status" -ForegroundColor $color
 }

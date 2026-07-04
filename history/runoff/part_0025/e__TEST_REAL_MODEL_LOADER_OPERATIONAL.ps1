@@ -145,7 +145,7 @@ $sequence = @(
 )
 
 foreach ($item in $sequence) {
-    $icon = if ($item.Status -eq "Ready") { "✓" } else { "✗" }
+    $icon = $(if ($item.Status -eq "Ready") { "✓" } else { "✗" }
     Write-Host "  [$($item.Step.PadLeft(2))] $($item.Action.PadRight(50)) [$($item.Status)]" -ForegroundColor $(if ($item.Status -eq "Ready") { "Green" } else { "Red" })
 }
 

@@ -16,8 +16,8 @@ if ($ExePath -and (Test-Path -LiteralPath $ExePath)) {
     $exe = $ExePath
 }
 if (-not $exe) {
-    if ($env:RAWRXD_EXE -and (Test-Path -LiteralPath $env:RAWRXD_EXE)) {
-        $exe = $env:RAWRXD_EXE
+    if (${env:RAWRXD_EXE} -and (Test-Path -LiteralPath ${env:RAWRXD_EXE})) {
+        $exe = ${env:RAWRXD_EXE}
     }
 }
 if (-not $exe) {
@@ -51,7 +51,7 @@ $payload = [ordered]@{
     exitCode   = $p.ExitCode
     exe        = $exe
     timestamp  = (Get-Date).ToString("o")
-    liveOllama = ($env:RAWRXD_AGENTIC_SMOKE_LIVE -eq "1")
+    liveOllama = (${env:RAWRXD_AGENTIC_SMOKE_LIVE} -eq "1")
 }
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 ($payload | ConvertTo-Json -Compress) | Set-Content -LiteralPath $artifactPath -Encoding utf8

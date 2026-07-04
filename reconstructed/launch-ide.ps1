@@ -35,7 +35,7 @@ function Start-Ide {
 }
 
 switch ($Target) {
-  "amazonq"   { $root = $env:AMAZONQ_HOME  ; if (-not $root) { $root = "D:\\amazonq-ide" }
+  "amazonq"   { $root = ${env:AMAZONQ_HOME}  ; if (-not $root) { $root = "D:\\amazonq-ide" }
                 try {
                   Start-Ide -root $root -pattern "*AmazonQ*.exe"
                 } catch {
@@ -46,6 +46,6 @@ switch ($Target) {
                     throw
                   }
                 } }
-  "mycopilot" { $root = $env:MYCOPILOT_HOME; if (-not $root) { $root = "D:\MyCoPilot-Complete-Portable" }
+  "mycopilot" { $root = ${env:MYCOPILOT_HOME}; if (-not $root) { $root = "D:\MyCoPilot-Complete-Portable" }
                 Start-Ide -root $root -pattern "*Copilot*.exe" }
 }

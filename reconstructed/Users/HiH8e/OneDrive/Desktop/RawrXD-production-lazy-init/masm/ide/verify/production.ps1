@@ -20,8 +20,8 @@ $allPresent = $true
 foreach ($artifact in $artifacts) {
     $path = Join-Path $buildDir $artifact.Name
     $exists = Test-Path $path
-    $status = if ($exists) { '✓' } else { '✗' }
-    $color = if ($exists) { 'Green' } else { 'Red' }
+    $status = $(if ($exists) { '✓' } else { '✗' }
+    $color = $(if ($exists) { 'Green' } else { 'Red' }
     Write-Host "  $status $($artifact.Type): $($artifact.Name)" -ForegroundColor $color
     if (-not $exists) { $allPresent = $false }
 }

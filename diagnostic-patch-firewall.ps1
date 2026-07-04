@@ -99,11 +99,11 @@ Write-Host ""
 Write-Host "CHECK 4: Patch-related errors in VS Code logs" -ForegroundColor Yellow
 Write-Host "──────────────────────────────────────────────" -ForegroundColor Gray
 
-$logPath = "$env:APPDATA\Code\logs\*\window*\renderer*.log"
+$logPath = "${env:APPDATA}\Code\logs\*\window*\renderer*.log"
 $patchErrors = @()
 
 try {
-    $logs = Get-Item -LiteralPath ("$env:APPDATA\Code\logs") -ErrorAction SilentlyContinue | `
+    $logs = Get-Item -LiteralPath ("${env:APPDATA}\Code\logs") -ErrorAction SilentlyContinue | `
             Get-ChildItem -Recurse -Filter "*.log" -ErrorAction SilentlyContinue | `
             Where-Object { $_.Name -like "*renderer*" } | `
             Select-Object -First 10

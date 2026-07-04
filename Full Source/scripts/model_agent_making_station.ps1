@@ -29,7 +29,7 @@ param(
     [switch]$QuickCreate = $false,
     [string]$ModelName = "",
     [string]$BaseModel = "Quantum",
-    [switch]$Dashboard = $true
+    [switch]$Dashboard
 )
 
 Set-StrictMode -Version Latest
@@ -48,15 +48,15 @@ if (Test-Path $advancedModulePath) {
 # CONFIGURATION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:StationRoot = Get-RawrXDRoot
-$script:ConfigDir = Join-Path $StationRoot "logs/swarm_config"
-$script:MakingStationDir = Join-Path $ConfigDir "making_station"
-$script:ModelsConfigFile = Join-Path $ConfigDir "models.json"
-$script:AgentPresetsFile = Join-Path $ConfigDir "agent_presets.json"
-$script:ModelSourcesFile = Join-Path $ConfigDir "model_sources.json"
-$script:ModelTemplatesFile = Join-Path $MakingStationDir "model_templates.json"
-$script:AgentBlueprintsFile = Join-Path $MakingStationDir "agent_blueprints.json"
-$script:TrainingPipelinesFile = Join-Path $MakingStationDir "training_pipelines.json"
+${script:StationRoot} = Get-RawrXDRoot
+${script:ConfigDir} = Join-Path $StationRoot "logs/swarm_config"
+${script:MakingStationDir} = Join-Path $ConfigDir "making_station"
+${script:ModelsConfigFile} = Join-Path $ConfigDir "models.json"
+${script:AgentPresetsFile} = Join-Path $ConfigDir "agent_presets.json"
+${script:ModelSourcesFile} = Join-Path $ConfigDir "model_sources.json"
+${script:ModelTemplatesFile} = Join-Path $MakingStationDir "model_templates.json"
+${script:AgentBlueprintsFile} = Join-Path $MakingStationDir "agent_blueprints.json"
+${script:TrainingPipelinesFile} = Join-Path $MakingStationDir "training_pipelines.json"
 
 # Ensure directories exist
 @($ConfigDir, $MakingStationDir) | ForEach-Object {
@@ -780,7 +780,7 @@ function Invoke-IntelligentPruning {
     param(
         [Parameter(Mandatory=$true)][string]$ModelName,
         [Parameter(Mandatory=$true)][double]$TargetReduction,
-        [switch]$PreserveFirstLast = $true,
+        [switch]$PreserveFirstLast,
         [switch]$DryRun = $false
     )
     
@@ -1114,7 +1114,7 @@ function New-ModelFromTemplate {
     Write-Host "Select quantization [1-$($template.QuantOptions.Count)]: " -NoNewline -ForegroundColor Cyan
     $qChoice = Read-Host
     $qIdx = [int]$qChoice - 1
-    $quantType = if ($qIdx -ge 0 -and $qIdx -lt $template.QuantOptions.Count) { $template.QuantOptions[$qIdx] } else { $template.QuantOptions[0] }
+    $quantType = $(if ($qIdx -ge 0 -and $qIdx -lt $template.QuantOptions.Count) { $template.QuantOptions[$qIdx] } else { $template.QuantOptions[0] }
     
     # Create model entry
     $newModel = @{
@@ -1280,7 +1280,7 @@ function New-CustomModel {
     
     Write-Host "Best For (comma-separated): " -NoNewline -ForegroundColor Cyan
     $bestFor = Read-Host
-    $bestForList = if ($bestFor) { $bestFor -split ',' | ForEach-Object { $_.Trim() } } else { @("General purpose") }
+    $bestForList = $(if ($bestFor) { $bestFor -split ',' | ForEach-Object { $_.Trim() } } else { @("General purpose") }
     
     $newModel = @{
         Description = $description
@@ -1332,7 +1332,7 @@ function New-CustomAgent {
     Write-Host "Select model [1-$($modelList.Count)]: " -NoNewline -ForegroundColor Cyan
     $mChoice = Read-Host
     $mIdx = [int]$mChoice - 1
-    $selectedModel = if ($mIdx -ge 0 -and $mIdx -lt $modelList.Count) { $modelList[$mIdx] } else { $modelList[0] }
+    $selectedModel = $(if ($mIdx -ge 0 -and $mIdx -lt $modelList.Count) { $modelList[$mIdx] } else { $modelList[0] }
     
     Write-Host ""
     Write-Host "Role/Purpose: " -NoNewline -ForegroundColor Cyan
@@ -1455,7 +1455,7 @@ function Show-ActiveModels {
     } else {
         foreach ($name in $models.Keys | Sort-Object) {
             $m = $models[$name]
-            $status = if ($m.GGUFPath -and (Test-Path $m.GGUFPath)) { "✓" } else { "○" }
+            $status = $(if ($m.GGUFPath -and (Test-Path $m.GGUFPath)) { "✓" } else { "○" }
             Write-Host "$status [$name]" -ForegroundColor $(if ($status -eq "✓") { "Green" } else { "Yellow" })
             Write-Host "    $($m.Description)" -ForegroundColor Gray
             Write-Host "    Size: $($m.Size) | Quant: $($m.QuantType) | Context: $($m.ContextSize)" -ForegroundColor DarkGray
@@ -1589,7 +1589,7 @@ function Invoke-VirtualQuantizationMenu {
     foreach ($name in $models.Keys | Sort-Object) {
         $m = $models[$name]
         $modelList += $name
-        $currentState = if ($m.VirtualQuantState) { $m.VirtualQuantState.Current } else { "None" }
+        $currentState = $(if ($m.VirtualQuantState) { $m.VirtualQuantState.Current } else { "None" }
         Write-Host "  [$i] $name - Current: $currentState" -ForegroundColor Gray
         $i++
     }
@@ -1722,7 +1722,7 @@ function Invoke-IntelligentPruningMenu {
         $m = $models[$name]
         if ($m.SupportsPruning) {
             $modelList += $name
-            $pruned = if ($m.PruningState -and $m.PruningState.IsPruned) { "[PRUNED]" } else { "" }
+            $pruned = $(if ($m.PruningState -and $m.PruningState.IsPruned) { "[PRUNED]" } else { "" }
             Write-Host "  [$i] $name $pruned" -ForegroundColor Gray
             $i++
         }
@@ -1845,7 +1845,7 @@ function Invoke-StateFreezeMenu {
         $m = $models[$name]
         if ($m.VirtualQuantState) {
             $modelList += $name
-            $frozen = if ($m.VirtualQuantState.Frozen) { "[FROZEN]" } else { "[UNFROZEN]" }
+            $frozen = $(if ($m.VirtualQuantState.Frozen) { "[FROZEN]" } else { "[UNFROZEN]" }
             Write-Host "  [$i] $name - $($m.VirtualQuantState.Current) $frozen" -ForegroundColor Gray
             $i++
         }

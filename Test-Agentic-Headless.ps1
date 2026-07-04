@@ -1,5 +1,5 @@
 param(
-    [switch]$SmokeOnly = $true
+    [switch]$SmokeOnly
 )
 
 # 🤖 RawrXD Headless Agentic Test Suite
@@ -30,10 +30,10 @@ if ($SmokeOnly) {
 # ============================================
 
 $ErrorActionPreference = "Continue"
-$global:AgentMode = $true  # Enable agent mode
+${global:AgentMode} = $true  # Enable agent mode
 
 # Agent Tools Registry
-$script:agentTools = @{}
+${script:agentTools} = @{}
 
 # Ollama Configuration
 $OllamaAPIEndpoint = "http://localhost:11434/api/generate"
@@ -50,7 +50,7 @@ function Register-AgentTool {
         [hashtable]$Parameters,
         [scriptblock]$Handler
     )
-    $script:agentTools[$Name] = @{
+    ${script:agentTools}[$Name] = @{
         Name        = $Name
         Description = $Description
         Parameters  = $Parameters
@@ -65,8 +65,8 @@ function Invoke-AgentTool {
         [hashtable]$Arguments
     )
     
-    if ($script:agentTools -and $script:agentTools[$ToolName]) {
-        $tool = $script:agentTools[$ToolName]
+    if (${script:agentTools} -and ${script:agentTools}[$ToolName]) {
+        $tool = ${script:agentTools}[$ToolName]
         try {
             $result = & $tool.Handler @Arguments
             return @{
@@ -92,7 +92,7 @@ function Invoke-AgentTool {
 
 function Get-AgentToolsSchema {
     $tools = @()
-    foreach ($tool in $script:agentTools.Values) {
+    foreach ($tool in ${script:agentTools}.Values) {
         $tools += @{
             name        = $tool.Name
             description = $tool.Description
@@ -161,14 +161,14 @@ Register-AgentTool -Name "get_environment" -Description "Get development environ
             success     = $true
             os          = [System.Environment]::OSVersion.VersionString
             ps_version  = $PSVersionTable.PSVersion.ToString()
-            user        = $env:USERNAME
-            machine     = $env:COMPUTERNAME
+            user        = ${env:USERNAME}
+            machine     = ${env:COMPUTERNAME}
             pwd         = (Get-Location).Path
             drives      = (Get-PSDrive -PSProvider FileSystem | Select-Object Name, Root)
         }
     }
 
-Write-Host "  ✅ $($script:agentTools.Count) tools registered" -ForegroundColor Green
+Write-Host "  ✅ $(${script:agentTools}.Count) tools registered" -ForegroundColor Green
 
 # ============================================
 # TEST 1: Ollama API Connectivity
@@ -228,7 +228,7 @@ else {
         Write-Host "  ✅ read_file: SUCCESS (read $($result.Result.size) bytes from ASM-CORE-README.md)" -ForegroundColor Green
     }
     else {
-        $msg = if ($result.Error) { $result.Error } else { $result.Result.error }
+        $msg = $(if ($result.Error) { $result.Error } else { $result.Result.error }
         Write-Host ("  ⚠️ read_file: {0}" -f $msg) -ForegroundColor Yellow
     }
 }
@@ -243,7 +243,7 @@ if ($result.Success -and $result.Result.success) {
     Write-Host "     📁 Directories: $dirs | 📄 Files: $files" -ForegroundColor Gray
 }
 else {
-    $msg = if ($result.Error) { $result.Error } else { $result.Result.error }
+    $msg = $(if ($result.Error) { $result.Error } else { $result.Result.error }
     Write-Host ("  ❌ list_directory: {0}" -f $msg) -ForegroundColor Red
 }
 
@@ -255,7 +255,7 @@ if ($result.Success -and $result.Result.success) {
     Write-Host "  ✅ execute_command: SUCCESS (found $asmCount .asm files in src/)" -ForegroundColor Green
 }
 else {
-    $msg = if ($result.Error) { $result.Error } else { $result.Result.error }
+    $msg = $(if ($result.Error) { $result.Error } else { $result.Result.error }
     Write-Host ("  ❌ execute_command: {0}" -f $msg) -ForegroundColor Red
 }
 
@@ -285,9 +285,9 @@ if ($ollamaAvailable) {
     Write-Host "`n📊 Gathering real project context..." -ForegroundColor Yellow
     
     $dirResult = Invoke-AgentTool -ToolName "list_directory" -Arguments @{ path = "D:\professional-nasm-ide" }
-    $projectFiles = if ($dirResult.Success) { $dirResult.Result.items | Select-Object -First 10 } else { @() }
+    $projectFiles = $(if ($dirResult.Success) { $dirResult.Result.items | Select-Object -First 10 } else { @() }
     
-    $fileCount = if ($dirResult.Success) { $dirResult.Result.count } else { "unknown" }
+    $fileCount = $(if ($dirResult.Success) { $dirResult.Result.count } else { "unknown" }
     $asmFiles = (Invoke-AgentTool -ToolName "execute_command" -Arguments @{ 
         command = "(Get-ChildItem 'D:\professional-nasm-ide' -Filter '*.asm' -Recurse).Count" 
     }).Result.output.Trim()
@@ -481,8 +481,8 @@ foreach ($test in $testMessages) {
         $color = "Red"
     }
     
-    $expectedStr = if ($test.Expected) { "AGENT" } else { "CHAT" }
-    $actualStr = if ($result) { "AGENT" } else { "CHAT" }
+    $expectedStr = $(if ($test.Expected) { "AGENT" } else { "CHAT" }
+    $actualStr = $(if ($result) { "AGENT" } else { "CHAT" }
     
     Write-Host "  $icon '$($test.Msg.Substring(0, [Math]::Min(40, $test.Msg.Length)))...' → Expected: $expectedStr, Got: $actualStr" -ForegroundColor $color
 }
@@ -498,11 +498,11 @@ Write-Host "  TEST SUMMARY" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
 $testResults = @{
-    "Ollama Service"     = if ($ollamaAvailable) { "✅ PASS" } else { "❌ FAIL" }
-    "Agent Tools"        = "✅ PASS ($($script:agentTools.Count) tools)"
-    "File Operations"    = if ($readResult.Success) { "✅ PASS" } else { "⚠️ PARTIAL" }
-    "Command Execution"  = if ($countResult.Success) { "✅ PASS" } else { "❌ FAIL" }
-    "Auto-Enable Detection" = if ($failCount -eq 0) { "✅ PASS ($passCount patterns)" } else { "⚠️ $passCount/$($testMessages.Count)" }
+    "Ollama Service"     = $(if ($ollamaAvailable) { "✅ PASS" } else { "❌ FAIL" }
+    "Agent Tools"        = "✅ PASS ($(${script:agentTools}.Count) tools)"
+    "File Operations"    = $(if ($readResult.Success) { "✅ PASS" } else { "⚠️ PARTIAL" }
+    "Command Execution"  = $(if ($countResult.Success) { "✅ PASS" } else { "❌ FAIL" }
+    "Auto-Enable Detection" = $(if ($failCount -eq 0) { "✅ PASS ($passCount patterns)" } else { "⚠️ $passCount/$($testMessages.Count)" }
 }
 
 foreach ($test in $testResults.GetEnumerator()) {

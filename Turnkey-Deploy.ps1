@@ -13,18 +13,18 @@ param(
     [string]$Configuration = "Release",
     [string]$ModelUrl = "https://huggingface.co/TheBloke/Llama-2-7B-GGUF/resolve/main/llama-2-7b.Q4_K_M.gguf",
     [string]$OutputPath = "",
-    [string]$LogPath = "$env:TEMP\rawrxd-turnkey-deploy.log"
+    [string]$LogPath = "${env:TEMP}\rawrxd-turnkey-deploy.log"
 )
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "Continue"
 
 # Configuration
-$script:ProjectRoot = Resolve-Path $PSScriptRoot
-$script:TurnkeyDir = Join-Path $script:ProjectRoot "scripts\turnkey"
-$script:LogFile = $LogPath
-$script:StartTime = Get-Date
-$script:PhaseResults = @()
+${script:ProjectRoot} = Resolve-Path $PSScriptRoot
+${script:TurnkeyDir} = Join-Path ${script:ProjectRoot} "scripts\turnkey"
+${script:LogFile} = $LogPath
+${script:StartTime} = Get-Date
+${script:PhaseResults} = @()
 
 function Write-Phase {
     param(
@@ -34,7 +34,7 @@ function Write-Phase {
         [string]$Message = ""
     )
     
-    $script:PhaseResults += [PSCustomObject]@{
+    ${script:PhaseResults} += [PSCustomObject]@{
         Phase = $PhaseNumber
         Name = $PhaseName
         Status = $Status
@@ -69,7 +69,7 @@ function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logEntry = "[$timestamp] [$Level] $Message"
-    Add-Content -Path $script:LogFile -Value $logEntry -ErrorAction SilentlyContinue
+    Add-Content -Path ${script:LogFile} -Value $logEntry -ErrorAction SilentlyContinue
 }
 
 function Merge-Hashtable {
@@ -160,9 +160,9 @@ function Show-Banner {
 
 function Get-LaunchTargets {
     $candidates = @(
-        @{ Label = "bin-turnkey\\RawrXD-Win32IDE.exe"; Path = Join-Path $script:ProjectRoot "bin-turnkey\RawrXD-Win32IDE.exe" },
-        @{ Label = "build-turnkey\\bin\\RawrXD-Win32IDE.exe"; Path = Join-Path $script:ProjectRoot "build-turnkey\bin\RawrXD-Win32IDE.exe" },
-        @{ Label = "build-ninja\\bin\\RawrXD-Win32IDE.exe"; Path = Join-Path $script:ProjectRoot "build-ninja\bin\RawrXD-Win32IDE.exe" }
+        @{ Label = "bin-turnkey\\RawrXD-Win32IDE.exe"; Path = Join-Path ${script:ProjectRoot} "bin-turnkey\RawrXD-Win32IDE.exe" },
+        @{ Label = "build-turnkey\\bin\\RawrXD-Win32IDE.exe"; Path = Join-Path ${script:ProjectRoot} "build-turnkey\bin\RawrXD-Win32IDE.exe" },
+        @{ Label = "build-ninja\\bin\\RawrXD-Win32IDE.exe"; Path = Join-Path ${script:ProjectRoot} "build-ninja\bin\RawrXD-Win32IDE.exe" }
     )
 
     $targets = @()
@@ -188,7 +188,7 @@ function Show-Prerequisites {
             } catch { $false } 
         } },
         @{ Name = "Disk space (10GB+)"; Check = { 
-            $drive = Get-PSDrive -Name $env:SystemDrive[0]
+            $drive = Get-PSDrive -Name ${env:SystemDrive}[0]
             $drive.Free -gt 10GB
         } }
     )
@@ -196,8 +196,8 @@ function Show-Prerequisites {
     $allPassed = $true
     foreach ($check in $checks) {
         $result = & $check.Check
-        $icon = if ($result) { "✓" } else { "✗" }
-        $color = if ($result) { "Green" } else { "Red" }
+        $icon = $(if ($result) { "✓" } else { "✗" }
+        $color = $(if ($result) { "Green" } else { "Red" }
         Write-Host "  $icon $($check.Name)" -ForegroundColor $color
         if (-not $result) { $allPassed = $false }
     }
@@ -208,12 +208,12 @@ function Show-Prerequisites {
 
 # Phase 1: Environment Setup
 $phase1 = {
-    $scriptPath = Join-Path $script:TurnkeyDir "Setup-Environment.ps1"
+    $scriptPath = Join-Path ${script:TurnkeyDir} "Setup-Environment.ps1"
     if (-not (Test-Path $scriptPath)) {
         throw "Setup-Environment.ps1 not found at $scriptPath"
     }
     
-    & $scriptPath -LogPath "$env:TEMP\rawrxd-phase1.log"
+    & $scriptPath -LogPath "${env:TEMP}\rawrxd-phase1.log"
     if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) {
         return $false
     }
@@ -222,14 +222,14 @@ $phase1 = {
 
 # Phase 2: Build
 $phase2 = {
-    $scriptPath = Join-Path $script:TurnkeyDir "Build-RawrXD.ps1"
+    $scriptPath = Join-Path ${script:TurnkeyDir} "Build-RawrXD.ps1"
     if (-not (Test-Path $scriptPath)) {
         throw "Build-RawrXD.ps1 not found at $scriptPath"
     }
     
     $args = @{
         Configuration = $Configuration
-        LogPath = "$env:TEMP\rawrxd-phase2.log"
+        LogPath = "${env:TEMP}\rawrxd-phase2.log"
     }
     if ($Clean) { $args.Clean = $true }
     if ($OutputPath) { $args.OutputPath = $OutputPath }
@@ -243,7 +243,7 @@ $phase2 = {
 
 # Phase 3: Model Download (optional)
 $phase3 = {
-    $modelsDir = Join-Path $script:ProjectRoot "models"
+    $modelsDir = Join-Path ${script:ProjectRoot} "models"
     
     # Check if any models exist
     $existingModels = Get-ChildItem $modelsDir -Filter "*.gguf" -ErrorAction SilentlyContinue
@@ -284,9 +284,9 @@ $phase3 = {
 
 # Phase 4: Configuration
 $phase4 = {
-    $configPath = Join-Path $script:ProjectRoot "rawrxd.config.json"
+    $configPath = Join-Path ${script:ProjectRoot} "rawrxd.config.json"
     
-    $modelsDir = Join-Path $script:ProjectRoot "models"
+    $modelsDir = Join-Path ${script:ProjectRoot} "models"
     if (-not (Test-Path $modelsDir)) {
         New-Item -ItemType Directory -Path $modelsDir -Force | Out-Null
     }
@@ -371,12 +371,12 @@ $phase4 = {
 
 # Phase 5: Validation
 $phase5 = {
-    $scriptPath = Join-Path $script:TurnkeyDir "Validate-Deployment.ps1"
+    $scriptPath = Join-Path ${script:TurnkeyDir} "Validate-Deployment.ps1"
     if (-not (Test-Path $scriptPath)) {
         throw "Validate-Deployment.ps1 not found at $scriptPath"
     }
     
-    & $scriptPath -GenerateReport -ReportPath "$env:TEMP\rawrxd-validation-report.json"
+    & $scriptPath -GenerateReport -ReportPath "${env:TEMP}\rawrxd-validation-report.json"
     if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) {
         return $false
     }
@@ -419,7 +419,7 @@ if ($success -and -not (Invoke-Phase -Number 5 -Name "Validation" -Action $phase
 }
 
 # Summary
-$duration = (Get-Date) - $script:StartTime
+$duration = (Get-Date) - ${script:StartTime}
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
@@ -427,7 +427,7 @@ Write-Host "                    DEPLOYMENT SUMMARY                          " -F
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 
-$finalPhases = $script:PhaseResults |
+$finalPhases = ${script:PhaseResults} |
     Group-Object Phase |
     ForEach-Object { $_.Group[-1] } |
     Sort-Object Phase
@@ -454,8 +454,8 @@ Write-Host "Log file: $LogFile" -ForegroundColor Gray
 
 if ($success) {
     $launchTargets = Get-LaunchTargets
-    $launchLine1 = if ($launchTargets.Count -gt 0) { $launchTargets[0] } else { "build-ninja\\bin\\RawrXD-Win32IDE.exe" }
-    $launchLine2 = if ($launchTargets.Count -gt 1) { $launchTargets[1] } else { $null }
+    $launchLine1 = $(if ($launchTargets.Count -gt 0) { $launchTargets[0] } else { "build-ninja\\bin\\RawrXD-Win32IDE.exe" }
+    $launchLine2 = $(if ($launchTargets.Count -gt 1) { $launchTargets[1] } else { $null }
 
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green

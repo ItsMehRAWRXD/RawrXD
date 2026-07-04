@@ -23,7 +23,7 @@ Write-Host "✓ Model: $(Split-Path $ModelPath -Leaf) ($([math]::Round($modelSiz
 
 Write-Host "`n[2/4] Starting RawrXD server with model..." -ForegroundColor Green
 $releaseDir = "d:\temp\RawrXD-q8-wire\RawrXD-ModelLoader\build\bin\Release"
-$env:PATH = "C:\Qt\6.7.3\msvc2022_64\bin;$env:PATH"
+${env:PATH} = "C:\Qt\6.7.3\msvc2022_64\bin;${env:PATH}"
 
 # Start the main application
 $serverProcess = Start-Process -FilePath "$releaseDir\RawrXD-QtShell.exe" -NoNewWindow -PassThru -ErrorAction SilentlyContinue
@@ -95,7 +95,7 @@ for ($i = 1; $i -le $NumRequests; $i++) {
         
         # Try to count generated tokens from response
         $generatedText = $responseData.response
-        $tokensGenerated = if ($generatedText) { 
+        $tokensGenerated = $(if ($generatedText) { 
             # Rough estimate: ~4 chars per token on average
             [math]::Max(1, [math]::Round($generatedText.Length / 4))
         } else {
@@ -144,15 +144,15 @@ Write-Host "`n[4/4] Calculating metrics..." -ForegroundColor Green
 # Aggregate metrics
 $successfulRequests = @($results | Where-Object { $_.Success }).Count
 $totalRequests = $results.Count
-$successRate = if ($totalRequests -gt 0) { $successfulRequests / $totalRequests * 100 } else { 0 }
+$successRate = $(if ($totalRequests -gt 0) { $successfulRequests / $totalRequests * 100 } else { 0 }
 
-$avgTokensPerSec = if ($successfulRequests -gt 0) {
+$avgTokensPerSec = $(if ($successfulRequests -gt 0) {
     ($results | Where-Object { $_.Success } | Measure-Object -Property TokensPerSec -Average).Average
 } else {
     0
 }
 
-$avgLatencyMs = if ($successfulRequests -gt 0) {
+$avgLatencyMs = $(if ($successfulRequests -gt 0) {
     ($results | Where-Object { $_.Success } | Measure-Object -Property ElapsedMs -Average).Average
 } else {
     0
@@ -163,9 +163,9 @@ $minLatencyMs = ($results | Where-Object { $_.Success } | Measure-Object -Proper
 
 # Percentiles
 $sortedLatencies = @($results | Where-Object { $_.Success } | Sort-Object -Property ElapsedMs | ForEach-Object { $_.ElapsedMs })
-$p50 = if ($sortedLatencies.Count -gt 0) { $sortedLatencies[[math]::Floor($sortedLatencies.Count * 0.5)] } else { 0 }
-$p95 = if ($sortedLatencies.Count -gt 0) { $sortedLatencies[[math]::Floor($sortedLatencies.Count * 0.95)] } else { 0 }
-$p99 = if ($sortedLatencies.Count -gt 0) { $sortedLatencies[[math]::Floor($sortedLatencies.Count * 0.99)] } else { 0 }
+$p50 = $(if ($sortedLatencies.Count -gt 0) { $sortedLatencies[[math]::Floor($sortedLatencies.Count * 0.5)] } else { 0 }
+$p95 = $(if ($sortedLatencies.Count -gt 0) { $sortedLatencies[[math]::Floor($sortedLatencies.Count * 0.95)] } else { 0 }
+$p99 = $(if ($sortedLatencies.Count -gt 0) { $sortedLatencies[[math]::Floor($sortedLatencies.Count * 0.99)] } else { 0 }
 
 Write-Host "`n╔════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║         REAL SYSTEM THROUGHPUT RESULTS                ║" -ForegroundColor Cyan

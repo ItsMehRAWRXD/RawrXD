@@ -86,33 +86,33 @@ function Process-TelemetryEvent {
     
     # Update counters
     switch ($metricType) {
-        1 { $script:Metrics.InferenceCount++ }  # INFERENCE_START
-        3 { $script:Metrics.TokenCount += $tokenCount }  # TOKEN_GENERATED
-        7 { $script:Metrics.SecurityEvents++ }  # SECURITY_EVENT
+        1 { ${script:Metrics}.InferenceCount++ }  # INFERENCE_START
+        3 { ${script:Metrics}.TokenCount += $tokenCount }  # TOKEN_GENERATED
+        7 { ${script:Metrics}.SecurityEvents++ }  # SECURITY_EVENT
     }
     
     # Update latency
     if ($latencyUs -gt 0) {
-        $script:Metrics.LatencyTotal += $latencyUs
+        ${script:Metrics}.LatencyTotal += $latencyUs
         
         # Update histogram
         $latencyMs = $latencyUs / 1000.0
-        if ($latencyMs -lt 10) { $script:Metrics.LatencyBuckets[0]++ }
-        elseif ($latencyMs -lt 20) { $script:Metrics.LatencyBuckets[1]++ }
-        elseif ($latencyMs -lt 50) { $script:Metrics.LatencyBuckets[2]++ }
-        elseif ($latencyMs -lt 100) { $script:Metrics.LatencyBuckets[3]++ }
-        else { $script:Metrics.LatencyBuckets[4]++ }
+        if ($latencyMs -lt 10) { ${script:Metrics}.LatencyBuckets[0]++ }
+        elseif ($latencyMs -lt 20) { ${script:Metrics}.LatencyBuckets[1]++ }
+        elseif ($latencyMs -lt 50) { ${script:Metrics}.LatencyBuckets[2]++ }
+        elseif ($latencyMs -lt 100) { ${script:Metrics}.LatencyBuckets[3]++ }
+        else { ${script:Metrics}.LatencyBuckets[4]++ }
     }
     
     # Update cache stats
-    if ($cacheHit) { $script:Metrics.CacheHits++ }
-    else { $script:Metrics.CacheMisses++ }
+    if ($cacheHit) { ${script:Metrics}.CacheHits++ }
+    else { ${script:Metrics}.CacheMisses++ }
     
     # Update quantization stats
     switch ($quantType) {
-        0 { $script:Metrics.INT8Count++ }
-        1 { $script:Metrics.BF16Count++ }
-        2 { $script:Metrics.FP32Count++ }
+        0 { ${script:Metrics}.INT8Count++ }
+        1 { ${script:Metrics}.BF16Count++ }
+        2 { ${script:Metrics}.FP32Count++ }
     }
 }
 
@@ -171,7 +171,7 @@ function Get-PrometheusMetrics {
     $output += "rawrxd_tokens_generated_total $($Metrics.TokenCount)"
     
     # Latency metrics
-    $avgLatency = if ($Metrics.InferenceCount -gt 0) { 
+    $avgLatency = $(if ($Metrics.InferenceCount -gt 0) { 
         [math]::Round($Metrics.LatencyTotal / $Metrics.InferenceCount / 1000.0, 2) 
     } else { 0 }
     
@@ -189,7 +189,7 @@ function Get-PrometheusMetrics {
     
     # Cache metrics
     $cacheTotal = $Metrics.CacheHits + $Metrics.CacheMisses
-    $cacheHitRate = if ($cacheTotal -gt 0) { 
+    $cacheHitRate = $(if ($cacheTotal -gt 0) { 
         [math]::Round($Metrics.CacheHits / $cacheTotal * 100, 2) 
     } else { 0 }
     
@@ -237,7 +237,7 @@ function Show-Dashboard {
         Write-Host "  Total Inferences: $($Metrics.InferenceCount)" -ForegroundColor White
         Write-Host "  Total Tokens: $($Metrics.TokenCount)" -ForegroundColor White
         
-        $avgLatency = if ($Metrics.InferenceCount -gt 0) { 
+        $avgLatency = $(if ($Metrics.InferenceCount -gt 0) { 
             [math]::Round($Metrics.LatencyTotal / $Metrics.InferenceCount / 1000.0, 2) 
         } else { 0 }
         Write-Host "  Avg Latency: $avgLatency ms" -ForegroundColor $(if($avgLatency -lt 25){"Green"}else{"Yellow"})
@@ -247,7 +247,7 @@ function Show-Dashboard {
         # Cache stats
         Write-Host "Cache Metrics:" -ForegroundColor Yellow
         $cacheTotal = $Metrics.CacheHits + $Metrics.CacheMisses
-        $cacheHitRate = if ($cacheTotal -gt 0) { 
+        $cacheHitRate = $(if ($cacheTotal -gt 0) { 
             [math]::Round($Metrics.CacheHits / $cacheTotal * 100, 1) 
         } else { 0 }
         Write-Host "  Hit Rate: $cacheHitRate%" -ForegroundColor $(if($cacheHitRate -gt 90){"Green"}else{"Yellow"})
@@ -291,19 +291,19 @@ function Start-Simulation {
     
     while ($true) {
         # Simulate inference events
-        $script:Metrics.InferenceCount += (Get-Random -Minimum 1 -Maximum 5)
-        $script:Metrics.TokenCount += (Get-Random -Minimum 10 -Maximum 100)
-        $script:Metrics.LatencyTotal += (Get-Random -Minimum 15000 -Maximum 25000)  # 15-25ms
+        ${script:Metrics}.InferenceCount += (Get-Random -Minimum 1 -Maximum 5)
+        ${script:Metrics}.TokenCount += (Get-Random -Minimum 10 -Maximum 100)
+        ${script:Metrics}.LatencyTotal += (Get-Random -Minimum 15000 -Maximum 25000)  # 15-25ms
         
         # Simulate cache behavior
-        if ((Get-Random) -gt 0.1) { $script:Metrics.CacheHits++ }
-        else { $script:Metrics.CacheMisses++ }
+        if ((Get-Random) -gt 0.1) { ${script:Metrics}.CacheHits++ }
+        else { ${script:Metrics}.CacheMisses++ }
         
         # Simulate quantization distribution (mostly INT8)
         $r = Get-Random
-        if ($r -lt 0.85) { $script:Metrics.INT8Count++ }
-        elseif ($r -lt 0.95) { $script:Metrics.BF16Count++ }
-        else { $script:Metrics.FP32Count++ }
+        if ($r -lt 0.85) { ${script:Metrics}.INT8Count++ }
+        elseif ($r -lt 0.95) { ${script:Metrics}.BF16Count++ }
+        else { ${script:Metrics}.FP32Count++ }
         
         Start-Sleep -Milliseconds 500
     }

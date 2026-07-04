@@ -27,7 +27,7 @@ function Get-OllamaModels {
         }
         [pscustomobject]@{
             Name   = $name
-            ID     = if ($parts.Count -ge 2) { $parts[1] } else { $null }
+            ID     = $(if ($parts.Count -ge 2) { $parts[1] } else { $null }
             SizeGB = $sizeGb
             Source = 'ollama-installed'
         }
@@ -118,11 +118,11 @@ function Invoke-Benchmark {
         $sw.Stop()
 
         $result.duration_ms = [math]::Round($sw.Elapsed.TotalMilliseconds, 2)
-        $result.tps = if ($result.duration_ms -gt 0) { [math]::Round($PredictTokens / ($result.duration_ms/1000), 2) } else { $null }
+        $result.tps = $(if ($result.duration_ms -gt 0) { [math]::Round($PredictTokens / ($result.duration_ms/1000), 2) } else { $null }
 
         if ($response -and $response.eval_count -and $response.eval_duration) {
             $result.eval_duration_ms = [double]$response.eval_duration
-            $result.eval_tps = if ($result.eval_duration_ms -gt 0) { [math]::Round(($response.eval_count / ($result.eval_duration_ms/1000)), 2) } else { $null }
+            $result.eval_tps = $(if ($result.eval_duration_ms -gt 0) { [math]::Round(($response.eval_count / ($result.eval_duration_ms/1000)), 2) } else { $null }
         }
     }
     catch {

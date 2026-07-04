@@ -13,7 +13,7 @@ function Add-CompilerError {
         Column = $Column
     }
 
-    $global:CompilerContext.Errors += $error
+    ${global:CompilerContext}.Errors += $error
 }
 
 function Add-CompilerWarning {
@@ -29,13 +29,13 @@ function Add-CompilerWarning {
         Column = $Column
     }
 
-    $global:CompilerContext.Warnings += $warning
+    ${global:CompilerContext}.Warnings += $warning
 }
 
 function Get-CompilerErrors {
-    return $global:CompilerContext.Errors
+    return ${global:CompilerContext}.Errors
 }
 
 function Get-CompilerWarnings {
-    return $global:CompilerContext.Warnings
+    return ${global:CompilerContext}.Warnings
 }

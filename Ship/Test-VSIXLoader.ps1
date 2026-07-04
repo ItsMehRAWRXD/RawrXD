@@ -8,12 +8,12 @@
 #
 # With Amazon Q / Copilot .vsix (tests metadata extraction — JS execution unavailable):
 #   .\Ship\Test-VSIXLoader.ps1 -AmazonQVsix "C:\path\to\amazonq.vsix" -GitHubCopilotVsix "C:\path\to\copilot.vsix"
-#   $env:AMAZONQ_VSIX="C:\..."; $env:GITHUB_COPILOT_VSIX="C:\..."; .\Ship\Test-VSIXLoader.ps1
+#   ${env:AMAZONQ_VSIX}="C:\..."; ${env:GITHUB_COPILOT_VSIX}="C:\..."; .\Ship\Test-VSIXLoader.ps1
 
 param(
     [string]$IdePath = "",
-    [string]$AmazonQVsix = $env:AMAZONQ_VSIX,
-    [string]$GitHubCopilotVsix = $env:GITHUB_COPILOT_VSIX,
+    [string]$AmazonQVsix = ${env:AMAZONQ_VSIX},
+    [string]$GitHubCopilotVsix = ${env:GITHUB_COPILOT_VSIX},
     [switch]$Gui,      # Launch IDE for manual verification
     [switch]$VsixTest  # Run --vsix-test agentically (loads .vsix from plugins/, writes result JSON)
 )
@@ -91,7 +91,7 @@ if ($runVsixTest) {
         Copy-Item -Path $GitHubCopilotVsix -Destination (Join-Path $pluginsDir "github-copilot.vsix") -Force
         Write-Host "[Agentic] Copied GitHub Copilot .vsix to plugins/" -ForegroundColor Cyan
     }
-    $env:RAWRXD_ALLOW_UNSIGNED_EXTENSIONS = "1"
+    ${env:RAWRXD_ALLOW_UNSIGNED_EXTENSIONS} = "1"
     Write-Host "[Agentic] Running: $IdePath --vsix-test" -ForegroundColor Cyan
     Push-Location $exeDir
     try { & $IdePath --vsix-test 2>&1 | Out-Null } finally { Pop-Location }

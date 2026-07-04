@@ -39,7 +39,7 @@ function Write-TestResult {
         [object]$Data = $null
     )
     
-    $color = if ($Status -eq "PASS") { "Green" } else { "Red" }
+    $color = $(if ($Status -eq "PASS") { "Green" } else { "Red" }
     Write-Host "$Endpoint : " -NoNewline
     Write-Host $Status -ForegroundColor $color
     

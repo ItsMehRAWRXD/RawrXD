@@ -44,9 +44,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:StartTime = Get-Date
-$script:PhaseResults = [ordered]@{}
-$script:OverallStatus = "PASS"
+${script:StartTime} = Get-Date
+${script:PhaseResults} = [ordered]@{}
+${script:OverallStatus} = "PASS"
 
 # ============================================================================
 # HEADER
@@ -94,7 +94,7 @@ function Invoke-ValidationPhase {
     
     try {
         $result = & $Script
-        $success = if ($null -eq $result) { $true } else { [bool]$result }
+        $success = $(if ($null -eq $result) { $true } else { [bool]$result }
         if (-not $success) {
             $errorMsg = "Phase returned failure status"
             Write-Host "  [ERROR] Phase reported failure status" -ForegroundColor Red
@@ -113,7 +113,7 @@ function Invoke-ValidationPhase {
     $phaseEnd = Get-Date
     $duration = $phaseEnd - $phaseStart
     
-    $script:PhaseResults[$Name] = [ordered]@{
+    ${script:PhaseResults}[$Name] = [ordered]@{
         Phase = $Number
         Name = $Name
         Success = $success
@@ -123,11 +123,11 @@ function Invoke-ValidationPhase {
     }
     
     if (-not $success -and $Required) {
-        $script:OverallStatus = "FAIL"
+        ${script:OverallStatus} = "FAIL"
     }
     
-    $color = if ($success) { "Green" } else { if ($Required) { "Red" } else { "Yellow" } }
-    $status = if ($success) { "PASS" } else { if ($Required) { "FAIL" } else { "WARN" } }
+    $color = $(if ($success) { "Green" } else { if ($Required) { "Red" } else { "Yellow" } }
+    $status = $(if ($success) { "PASS" } else { if ($Required) { "FAIL" } else { "WARN" } }
     
     Write-Host "  Phase $Number Result: [$status] (${duration}s)" -ForegroundColor $color
     
@@ -249,7 +249,7 @@ $phase3 = {
     }
     
     # Run gap closure validation
-    $mode = if ($QuickValidation) { "PreFlight" } else { "Full" }
+    $mode = $(if ($QuickValidation) { "PreFlight" } else { "Full" }
     $params = @("-Mode", $mode)
     if ($GenerateArtifacts) {
         $params += "-GenerateReport"
@@ -341,8 +341,8 @@ $phase5 = {
     
     # Display results
     foreach ($check in $checks) {
-        $color = if ($check.Pass) { "Green" } else { if ($check.Required) { "Red" } else { "Yellow" } }
-        $status = if ($check.Pass) { "✓" } else { if ($check.Required) { "✗" } else { "!" } }
+        $color = $(if ($check.Pass) { "Green" } else { if ($check.Required) { "Red" } else { "Yellow" } }
+        $status = $(if ($check.Pass) { "✓" } else { if ($check.Required) { "✗" } else { "!" } }
         Write-Host "  $status $($check.Name)" -ForegroundColor $color
     }
     
@@ -382,23 +382,23 @@ Invoke-ValidationPhase -Name "Final Integration Checks" -Number 5 -Script $phase
 # ============================================================================
 
 $endTime = Get-Date
-$totalDuration = $endTime - $script:StartTime
+$totalDuration = $endTime - ${script:StartTime}
 
-Write-Host "`n╔══════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor $(if ($script:OverallStatus -eq "PASS") { "Green" } else { "Red" })
-Write-Host "║                         FINAL VALIDATION SUMMARY                             ║" -ForegroundColor $(if ($script:OverallStatus -eq "PASS") { "Green" } else { "Red" })
-Write-Host "╠══════════════════════════════════════════════════════════════════════════════╣" -ForegroundColor $(if ($script:OverallStatus -eq "PASS") { "Green" } else { "Red" })
+Write-Host "`n╔══════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor $(if (${script:OverallStatus} -eq "PASS") { "Green" } else { "Red" })
+Write-Host "║                         FINAL VALIDATION SUMMARY                             ║" -ForegroundColor $(if (${script:OverallStatus} -eq "PASS") { "Green" } else { "Red" })
+Write-Host "╠══════════════════════════════════════════════════════════════════════════════╣" -ForegroundColor $(if (${script:OverallStatus} -eq "PASS") { "Green" } else { "Red" })
 
-foreach ($phase in $script:PhaseResults.Keys) {
-    $result = $script:PhaseResults[$phase]
-    $color = if ($result.Success) { "Green" } else { if ($result.Required) { "Red" } else { "Yellow" } }
-    $status = if ($result.Success) { "PASS" } else { if ($result.Required) { "FAIL" } else { "WARN" } }
+foreach ($phase in ${script:PhaseResults}.Keys) {
+    $result = ${script:PhaseResults}[$phase]
+    $color = $(if ($result.Success) { "Green" } else { if ($result.Required) { "Red" } else { "Yellow" } }
+    $status = $(if ($result.Success) { "PASS" } else { if ($result.Required) { "FAIL" } else { "WARN" } }
     Write-Host "║  Phase $($result.Phase): $($result.Name.PadRight(30)) [$status] ($($result.Duration)s)" -ForegroundColor $color
 }
 
-Write-Host "╠══════════════════════════════════════════════════════════════════════════════╣" -ForegroundColor $(if ($script:OverallStatus -eq "PASS") { "Green" } else { "Red" })
+Write-Host "╠══════════════════════════════════════════════════════════════════════════════╣" -ForegroundColor $(if (${script:OverallStatus} -eq "PASS") { "Green" } else { "Red" })
 Write-Host "║  Total Duration: $([math]::Round($totalDuration.TotalSeconds, 2))s" -ForegroundColor White
-Write-Host "║  Overall Status: $(if ($script:OverallStatus -eq "PASS") { "✓ PRODUCTION READY" } else { "✗ VALIDATION FAILED" })" -ForegroundColor $(if ($script:OverallStatus -eq "PASS") { "Green" } else { "Red" })
-Write-Host "╚══════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor $(if ($script:OverallStatus -eq "PASS") { "Green" } else { "Red" })
+Write-Host "║  Overall Status: $(if (${script:OverallStatus} -eq "PASS") { "✓ PRODUCTION READY" } else { "✗ VALIDATION FAILED" })" -ForegroundColor $(if (${script:OverallStatus} -eq "PASS") { "Green" } else { "Red" })
+Write-Host "╚══════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor $(if (${script:OverallStatus} -eq "PASS") { "Green" } else { "Red" })
 
 # Generate artifacts if requested
 if ($GenerateArtifacts) {
@@ -408,13 +408,13 @@ if ($GenerateArtifacts) {
     
     $artifact = [ordered]@{
         timestamp = (Get-Date).ToString("o")
-        mode = if ($FullValidation) { "Full" } elseif ($QuickValidation) { "Quick" } else { "Standard" }
+        mode = $(if ($FullValidation) { "Full" } elseif ($QuickValidation) { "Quick" } else { "Standard" }
         duration_seconds = [math]::Round($totalDuration.TotalSeconds, 2)
-        overall_status = $script:OverallStatus
-        phases = $script:PhaseResults
+        overall_status = ${script:OverallStatus}
+        phases = ${script:PhaseResults}
         system = @{
-            computer = $env:COMPUTERNAME
-            user = $env:USERNAME
+            computer = ${env:COMPUTERNAME}
+            user = ${env:USERNAME}
             powershell = $PSVersionTable.PSVersion.ToString()
         }
     }
@@ -427,4 +427,4 @@ if ($GenerateArtifacts) {
 
 Write-Host ""
 
-exit [int]($script:OverallStatus -eq "FAIL")
+exit [int](${script:OverallStatus} -eq "FAIL")

@@ -111,7 +111,7 @@ foreach ($Model in $AvailableModels) {
         Model = $Model.Name
         SizeGB = $Model.SizeGB
         LoadTimeMs = $LoadTime
-        LoadSpeedMBps = if ($LoadTime -gt 0) { [math]::Round(($Model.SizeGB * 1024) / ($LoadTime / 1000), 2) } else { 0 }
+        LoadSpeedMBps = $(if ($LoadTime -gt 0) { [math]::Round(($Model.SizeGB * 1024) / ($LoadTime / 1000), 2) } else { 0 }
     }
     
     Write-Host ""
@@ -227,14 +227,14 @@ if (Test-Path "d:\rawrxd\src\code_review\code_review_engine.cpp") {
     Write-Host "  ✓ Code Review module exists" -ForegroundColor Green
     
     # Compile and run test
-    $CompileCmd = "g++ -std=c++20 -O2 d:\rawrxd\src\code_review\code_review_engine.cpp d:\rawrxd\src\code_review\security_analyzer.cpp -o $env:TEMP\code_review_test.exe 2>&1"
+    $CompileCmd = "g++ -std=c++20 -O2 d:\rawrxd\src\code_review\code_review_engine.cpp d:\rawrxd\src\code_review\security_analyzer.cpp -o ${env:TEMP}\code_review_test.exe 2>&1"
     $CompileResult = Invoke-Expression $CompileCmd
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  ✓ Code Review compiles successfully" -ForegroundColor Green
         
         # Run test
-        $TestResult = & "$env:TEMP\code_review_test.exe" 2>&1
+        $TestResult = & "${env:TEMP}\code_review_test.exe" 2>&1
         Write-Host "  ✓ Code Review test executed" -ForegroundColor Green
     } else {
         Write-Host "  ✗ Code Review compilation failed" -ForegroundColor Red

@@ -31,13 +31,13 @@ $ErrorActionPreference = "Stop"
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:SwarmRoot = Get-RawrXDRoot
-$script:ConfigDir = Join-Path $SwarmRoot "logs/swarm_config"
-$script:BeaconDir = Join-Path $SwarmRoot "logs/swarm_beacon"
-$script:MemoryDir = Join-Path $SwarmRoot "logs/swarm_memory"
-$script:ModelsConfigFile = Join-Path $ConfigDir "models.json"
-$script:AgentPresetsFile = Join-Path $ConfigDir "agent_presets.json"
-$script:SwarmStateFile = Join-Path $ConfigDir "swarm_state.json"
+${script:SwarmRoot} = Get-RawrXDRoot
+${script:ConfigDir} = Join-Path $SwarmRoot "logs/swarm_config"
+${script:BeaconDir} = Join-Path $SwarmRoot "logs/swarm_beacon"
+${script:MemoryDir} = Join-Path $SwarmRoot "logs/swarm_memory"
+${script:ModelsConfigFile} = Join-Path $ConfigDir "models.json"
+${script:AgentPresetsFile} = Join-Path $ConfigDir "agent_presets.json"
+${script:SwarmStateFile} = Join-Path $ConfigDir "swarm_state.json"
 
 # Ensure directories exist
 @($ConfigDir, $BeaconDir, $MemoryDir) | ForEach-Object {
@@ -341,7 +341,7 @@ function Show-SwarmDashboard {
             "Titan"     { "🗿" }
             default     { "🤖" }
         }
-        $rec = if ($modelName -eq $caps.RecommendedModel) { "★" } else { " " }
+        $rec = $(if ($modelName -eq $caps.RecommendedModel) { "★" } else { " " }
         $modelLine = "    $rec $icon $($modelName.PadRight(12)) $($m.Speed.PadRight(12)) $($m.BestFor[0])"
         Write-Host "║$($modelLine.PadRight(79))║" -ForegroundColor Gray
     }
@@ -376,8 +376,8 @@ function Show-SwarmDashboard {
         
         foreach ($job in ($jobs | Where-Object { $_.State -eq 'Running' })) {
             $beacon = $beaconData[$job.Name]
-            $file = if ($beacon) { $beacon.CurrentFile } else { "(unknown)" }
-            $time = if ($beacon) { "$($beacon.ActiveSeconds)s" } else { "" }
+            $file = $(if ($beacon) { $beacon.CurrentFile } else { "(unknown)" }
+            $time = $(if ($beacon) { "$($beacon.ActiveSeconds)s" } else { "" }
             $agentLine = "    🟢 $($job.Name.PadRight(8)) | $($file.PadRight(30)) | $time"
             Write-Host "║$($agentLine.PadRight(79))║" -ForegroundColor Green
         }
@@ -467,7 +467,7 @@ function Show-CreatePreset {
     Write-Host "Select model [1-$($modelList.Count)]: " -NoNewline -ForegroundColor Cyan
     $modelChoice = Read-Host
     $modelIdx = [int]$modelChoice - 1
-    $selectedModel = if ($modelIdx -ge 0 -and $modelIdx -lt $modelList.Count) { $modelList[$modelIdx] } else { "Quantum" }
+    $selectedModel = $(if ($modelIdx -ge 0 -and $modelIdx -lt $modelList.Count) { $modelList[$modelIdx] } else { "Quantum" }
     
     Write-Host ""
     Write-Host "Role description (e.g., 'Code Review'): " -NoNewline -ForegroundColor Cyan

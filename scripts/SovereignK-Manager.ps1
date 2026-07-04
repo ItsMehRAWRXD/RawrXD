@@ -230,7 +230,7 @@ function Run-Tests {
     # Set BAR0 address if provided
     if ($Bar0Address) {
         Write-Info "Setting BAR0 address: $Bar0Address"
-        $env:SOVEREIGN_BAR0_PHYS = $Bar0Address
+        ${env:SOVEREIGN_BAR0_PHYS} = $Bar0Address
     } else {
         Write-Warning "BAR0 address not provided. Probe may fail."
         Write-Info "Use -Bar0Address parameter or set SOVEREIGN_BAR0_PHYS environment variable"
@@ -253,9 +253,7 @@ function Run-Tests {
 
 # =============================================================================
 # Main Execution
-# =============================================================================
-
-if ($Install) {
+# ============================================================================= $(if ($Install) {
     if (-not (Check-TestSigning)) {
         exit 1
     }

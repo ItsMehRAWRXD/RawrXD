@@ -24,8 +24,8 @@
     .\build_link.ps1 -Target "RawrXD-AgenticIDE" -Subsystem WINDOWS
 #>
 param(
-    [string]$ObjDir = "$env:LOCALAPPDATA\RawrXD\obj",
-    [string]$BinDir = "$env:LOCALAPPDATA\RawrXD\bin",
+    [string]$ObjDir = "${env:LOCALAPPDATA}\RawrXD\obj",
+    [string]$BinDir = "${env:LOCALAPPDATA}\RawrXD\bin",
     [ValidateSet("RawrXD-AgenticIDE","RawrXD-Win32IDE","RawrXD-Agent","RawrXD-CLI")]
     [string]$Target = "RawrXD-AgenticIDE",
     [ValidateSet("WINDOWS","CONSOLE")]
@@ -56,7 +56,7 @@ $repoBinDir = Join-Path $repoRoot "build\bin"
 if ($UseRawrLink) {
     $rawrLinkCandidates = @(
         (Join-Path $repoBinDir "rawrxd_link.exe"),
-        "$env:LOCALAPPDATA\RawrXD\bin\rawrxd_link.exe",
+        "${env:LOCALAPPDATA}\RawrXD\bin\rawrxd_link.exe",
         "D:\RawrXD\bin\rawrxd_link.exe"
     )
     foreach ($rlp in $rawrLinkCandidates) {
@@ -133,7 +133,7 @@ $libs = @(
 # ═══════════════════════════════════════════════════════════════
 # Linker Flags
 # ═══════════════════════════════════════════════════════════════
-$entryPoint = if ($Subsystem -eq "WINDOWS") { "WinMainCRTStartup" } else { "mainCRTStartup" }
+$entryPoint = $(if ($Subsystem -eq "WINDOWS") { "WinMainCRTStartup" } else { "mainCRTStartup" }
 
 $linkFlags = @(
     "/SUBSYSTEM:$Subsystem",

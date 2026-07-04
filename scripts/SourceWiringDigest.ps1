@@ -199,7 +199,7 @@ function Get-SourceFiles {
     $projectExcludes = @()
     $projectExcludePatterns = @()
     $projectExcludeRegex = @()
-    $profileIgnorePath = if ($RulesProfile -and $RulesProfile -ne 'default') { "$ExcludeConfigPath.$RulesProfile" } else { $null }
+    $profileIgnorePath = $(if ($RulesProfile -and $RulesProfile -ne 'default') { "$ExcludeConfigPath.$RulesProfile" } else { $null }
     $ignoreSources = @($ExcludeConfigPath)
     if ($profileIgnorePath) { $ignoreSources += $profileIgnorePath }
 
@@ -217,7 +217,7 @@ function Get-SourceFiles {
 
     $allExcludes = @($ExcludeDirectories + $projectExcludes)
     $excludePattern = ($allExcludes | ForEach-Object { [regex]::Escape($_) }) -join '|'
-    $excludeRegex = if ($excludePattern) { "[\\/]($excludePattern)[\\/]" } else { $null }
+    $excludeRegex = $(if ($excludePattern) { "[\\/]($excludePattern)[\\/]" } else { $null }
 
     function Test-ExcludePattern {
         param(
@@ -325,7 +325,7 @@ function Get-LanguageBreakdown {
     $groups = $Files | Group-Object Extension
     $breakdown = @{}
     foreach ($group in $groups) {
-        $ext = if ($group.Name) { $group.Name.TrimStart('.').ToLowerInvariant() } else { 'unknown' }
+        $ext = $(if ($group.Name) { $group.Name.TrimStart('.').ToLowerInvariant() } else { 'unknown' }
         $breakdown[$ext] = $group.Count
     }
 
@@ -710,7 +710,7 @@ function Get-PackagingRiskScore {
     )
 
     $score = ($BinaryCount * 2) + ($LargeFileCount * 2) + ($SecuritySignalCount * 3)
-    $level = if ($score -ge 20) { 'High' } elseif ($score -ge 8) { 'Medium' } else { 'Low' }
+    $level = $(if ($score -ge 20) { 'High' } elseif ($score -ge 8) { 'Medium' } else { 'Low' }
 
     return [PSCustomObject]@{
         Score = $score
@@ -727,7 +727,7 @@ foreach ($module in $modules) {
     $moduleExcludePatterns = @()
     $moduleExcludeRegex = @()
     $moduleIgnorePath = Join-Path $RootPath ".wiringdigestignore.$($module.Name)"
-    $moduleIgnoreProfilePath = if ($RulesProfile -and $RulesProfile -ne 'default') { Join-Path $RootPath ".wiringdigestignore.$($module.Name).$RulesProfile" } else { $null }
+    $moduleIgnoreProfilePath = $(if ($RulesProfile -and $RulesProfile -ne 'default') { Join-Path $RootPath ".wiringdigestignore.$($module.Name).$RulesProfile" } else { $null }
     if (Test-Path $moduleIgnorePath) {
         $lines = Get-Content $moduleIgnorePath -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') }
         if ($lines.Count -gt 0) {
@@ -756,7 +756,7 @@ foreach ($module in $modules) {
     $strongHits = @($hits | Where-Object { $_.Strength -eq 'Strong' })
     $weakHits = @($hits | Where-Object { $_.Strength -eq 'Weak' })
     $score = ($strongHits.Count * 2) + ($weakHits.Count * 1)
-    $signalLevel = if ($score -ge 6) { 'Strongly Wired' } elseif ($score -ge 2) { 'Weakly Wired' } else { 'Unwired' }
+    $signalLevel = $(if ($score -ge 6) { 'Strongly Wired' } elseif ($score -ge 2) { 'Weakly Wired' } else { 'Unwired' }
 
     $exports = @(Get-ExportedFunctions -ModulePath $module.Path)
     $exportRefs = @()

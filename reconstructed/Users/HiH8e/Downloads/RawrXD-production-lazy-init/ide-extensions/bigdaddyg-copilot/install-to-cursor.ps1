@@ -1,7 +1,7 @@
 # Install BigDaddyG Extension to Cursor
 param(
     [string]$ExtensionSource = "C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\ide-extensions\bigdaddyg-copilot",
-    [string]$CursorExtPath = "$env:APPDATA\Cursor\extensions"
+    [string]$CursorExtPath = "${env:APPDATA}\Cursor\extensions"
 )
 
 Write-Host "Installing BigDaddyG Extension..." -ForegroundColor Cyan

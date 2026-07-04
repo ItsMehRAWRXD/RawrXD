@@ -4,8 +4,8 @@
 #        .\Run-VSIXAgenticTest.ps1 -AmazonQVsix "C:\path\to\amazonq.vsix" -GitHubCopilotVsix "C:\path\to\copilot.vsix"
 
 param(
-    [string]$AmazonQVsix = $env:AMAZONQ_VSIX,
-    [string]$GitHubCopilotVsix = $env:GITHUB_COPILOT_VSIX,
+    [string]$AmazonQVsix = ${env:AMAZONQ_VSIX},
+    [string]$GitHubCopilotVsix = ${env:GITHUB_COPILOT_VSIX},
     [switch]$NoBuild
 )
 

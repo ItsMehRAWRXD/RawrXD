@@ -67,7 +67,7 @@ $WarningPreference = "Continue"
 $InformationPreference = "Continue"
 
 # Global execution state
-$script:ExecutionState = @{
+${script:ExecutionState} = @{
     Version = "3.0.0"
     StartTime = Get-Date
     EndTime = $null
@@ -119,9 +119,9 @@ function Write-ExecutionLog {
     
     # Update state
     if ($Level -eq 'Error' -or $Level -eq 'Critical') {
-        $script:ExecutionState.Errors.Add($Message)
+        ${script:ExecutionState}.Errors.Add($Message)
     } elseif ($Level -eq 'Warning') {
-        $script:ExecutionState.Warnings.Add($Message)
+        ${script:ExecutionState}.Warnings.Add($Message)
     }
     
     # Log to file
@@ -151,7 +151,7 @@ function Show-Configuration {
     Write-Host "  Mode: $Mode" -ForegroundColor White
     Write-Host "  WhatIf: $WhatIf" -ForegroundColor White
     Write-Host "  Verbose: $Verbose" -ForegroundColor White
-    Write-Host "  Start Time: $($script:ExecutionState.StartTime)" -ForegroundColor White
+    Write-Host "  Start Time: $(${script:ExecutionState}.StartTime)" -ForegroundColor White
     Write-Host ""
 }
 
@@ -217,7 +217,7 @@ function Execute-SystemValidation {
             throw "System validation failed. Please address the issues above."
         }
         
-        $script:ExecutionState.Results.SystemValidation = $prereqs
+        ${script:ExecutionState}.Results.SystemValidation = $prereqs
         return $prereqs
         
     } catch {
@@ -244,7 +244,7 @@ function Import-DeploymentOrchestrator {
         
         Write-ExecutionLog -Message "✓ Deployment orchestrator imported successfully" -Level Success
         
-        $script:ExecutionState.Results.ModuleImport = @{
+        ${script:ExecutionState}.Results.ModuleImport = @{
             Success = $true
             ModulePath = $modulePath
             Timestamp = Get-Date
@@ -280,7 +280,7 @@ function Execute-DeploymentPipeline {
             -BackupPath $backupPath `
             -DeploymentMode $Mode
         
-        $script:ExecutionState.Results.FinalReport = $finalReport
+        ${script:ExecutionState}.Results.FinalReport = $finalReport
         
         Write-ExecutionLog -Message "✓ Complete deployment pipeline executed successfully" -Level Success
         
@@ -301,7 +301,7 @@ function Show-FinalResults {
     Write-ExecutionLog -Message "═══════════════════════════════════════════════════════════════════" -Level Phase
     
     $endTime = Get-Date
-    $duration = [Math]::Round(($endTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
+    $duration = [Math]::Round(($endTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
     
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -315,7 +315,7 @@ function Show-FinalResults {
     Write-Host "  Duration: $duration minutes" -ForegroundColor White
     Write-Host "  Mode: $Mode" -ForegroundColor White
     Write-Host "  WhatIf: $WhatIf" -ForegroundColor White
-    Write-Host "  Status: $(if($script:ExecutionState.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if($script:ExecutionState.Success){'Green'}else{'Red'})
+    Write-Host "  Status: $(if(${script:ExecutionState}.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if(${script:ExecutionState}.Success){'Green'}else{'Red'})
     Write-Host ""
     
     if ($FinalReport) {
@@ -343,17 +343,17 @@ function Show-FinalResults {
         Write-Host ""
     }
     
-    if ($script:ExecutionState.Errors.Count -gt 0) {
+    if (${script:ExecutionState}.Errors.Count -gt 0) {
         Write-Host "Errors:" -ForegroundColor Red
-        foreach ($error in $script:ExecutionState.Errors) {
+        foreach ($error in ${script:ExecutionState}.Errors) {
             Write-Host "  • $error" -ForegroundColor Gray
         }
         Write-Host ""
     }
     
-    if ($script:ExecutionState.Warnings.Count -gt 0) {
+    if (${script:ExecutionState}.Warnings.Count -gt 0) {
         Write-Host "Warnings:" -ForegroundColor Yellow
-        foreach ($warning in $script:ExecutionState.Warnings) {
+        foreach ($warning in ${script:ExecutionState}.Warnings) {
             Write-Host "  • $warning" -ForegroundColor Gray
         }
         Write-Host ""
@@ -392,20 +392,20 @@ function Start-MainExecution {
         Show-FinalResults -FinalReport $finalReport
         
         # Update execution state
-        $script:ExecutionState.EndTime = Get-Date
-        $script:ExecutionState.Duration = [Math]::Round(($script:ExecutionState.EndTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
-        $script:ExecutionState.Status = "Complete"
-        $script:ExecutionState.Success = $true
+        ${script:ExecutionState}.EndTime = Get-Date
+        ${script:ExecutionState}.Duration = [Math]::Round((${script:ExecutionState}.EndTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
+        ${script:ExecutionState}.Status = "Complete"
+        ${script:ExecutionState}.Success = $true
         
         Write-ExecutionLog -Message "Ultimate deployment execution completed successfully" -Level Success
         
-        return $script:ExecutionState
+        return ${script:ExecutionState}
         
     } catch {
-        $script:ExecutionState.EndTime = Get-Date
-        $script:ExecutionState.Duration = [Math]::Round(($script:ExecutionState.EndTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
-        $script:ExecutionState.Status = "Failed"
-        $script:ExecutionState.Success = $false
+        ${script:ExecutionState}.EndTime = Get-Date
+        ${script:ExecutionState}.Duration = [Math]::Round((${script:ExecutionState}.EndTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
+        ${script:ExecutionState}.Status = "Failed"
+        ${script:ExecutionState}.Success = $false
         
         Write-ExecutionLog -Message "Ultimate deployment execution failed: $_" -Level Critical
         

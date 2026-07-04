@@ -111,7 +111,7 @@ foreach ($node in $targetNodes) {
     
     $validationResults += $result
     
-    $status = if ($result.Reachable -and $result.WinRM) { "✅" } else { "❌" }
+    $status = $(if ($result.Reachable -and $result.WinRM) { "✅" } else { "❌" }
     Write-Host " $status" -ForegroundColor $(if ($result.Reachable -and $result.WinRM) { "Green" } else { "Red" })
 }
 
@@ -283,7 +283,7 @@ foreach ($node in $targetNodes) {
             Healthy = $processCheck
         }
         
-        $status = if ($processCheck) { "✅" } else { "❌" }
+        $status = $(if ($processCheck) { "✅" } else { "❌" }
         Write-Host "    Node $($node.Id): $status" -ForegroundColor $(if ($processCheck) { "Green" } else { "Red" })
     } catch {
         $healthResults += [PSCustomObject]@{

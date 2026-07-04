@@ -202,7 +202,7 @@ Write-Host "║  VALIDATION COMPLETE                                            
 Write-Host "╚═══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 
 $totalChecks = 5
-$passedChecks = if ($scriptsOK -eq 4 -and $toolsOK -eq 3 -and $syntaxOK -eq 4) { $totalChecks } else { 4 }
+$passedChecks = $(if ($scriptsOK -eq 4 -and $toolsOK -eq 3 -and $syntaxOK -eq 4) { $totalChecks } else { 4 }
 
 Write-Host "`nVALIDATION SUMMARY:" -ForegroundColor Cyan
 Write-Host "  Scripts:     $scriptsOK/4" -ForegroundColor $(if ($scriptsOK -eq 4) { 'Green' } else { 'Yellow' })

@@ -18,8 +18,8 @@ $exts = @(
 
 $configDir = "D:\rawrxd\config"
 $legacyImport = "D:\rawrxd\config\legacy_import.json"
-$cursorSettings = "$env:USERPROFILE\.cursor\User\settings.json"
-$vscodeSettings = "$env:USERPROFILE\.vscode\User\settings.json"
+$cursorSettings = "${env:USERPROFILE}\.cursor\User\settings.json"
+$vscodeSettings = "${env:USERPROFILE}\.vscode\User\settings.json"
 
 Write-Host "`nEXTENSION GRAVEYARD PURGE — 9 extensions -> 1 executable" -ForegroundColor Magenta
 Write-Host "=========================================================`n" -ForegroundColor DarkGray

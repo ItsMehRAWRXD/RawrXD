@@ -352,7 +352,7 @@ foreach ($path in $scanFiles) {
 
 $inventory = [PSCustomObject]@{
     timestamp = (Get-Date).ToString('o')
-    mode = if ($Apply) { 'APPLY' } else { 'REPORT' }
+    mode = $(if ($Apply) { 'APPLY' } else { 'REPORT' }
     repoRoot = $repoRootResolved
     includeDocs = [bool]$IncludeDocs
     candidateFiles = $scanFiles.Count

@@ -3,10 +3,10 @@ param(
     [string]$RepoRoot = (Get-Location).Path,
     [string]$AgentScript = "Run-AutonomousAgent-IDE-Direct.ps1",
     [string]$BeaconDir = "logs/swarm_beacon",
-    [switch]$Watch = $true,
+    [switch]$Watch,
     [ValidateSet('Scaffold','Balanced','Thorough')][string]$WorkDepth = 'Balanced',
     [switch]$ChainWrite = $false,
-    [switch]$AutoResume = $true,
+    [switch]$AutoResume,
     [switch]$SkipPrompt = $false,
     [string]$CustomContext = "",
     [string]$RulesFile = ""
@@ -177,7 +177,7 @@ function New-BeaconState {
         PsJobTypeName = "Powershell.Job"
         State = "Starting"
         HasMoreData = $false
-        Location = $env:COMPUTERNAME
+        Location = ${env:COMPUTERNAME}
         CurrentFile = "(booting)"
         InCode = $false
         ActiveSeconds = 0
@@ -240,7 +240,7 @@ for ($i = 1; $i -le $Agents; $i++) {
                 PsJobTypeName = "Powershell.Job"
                 State = "Starting"
                 HasMoreData = $false
-                Location = $env:COMPUTERNAME
+                Location = ${env:COMPUTERNAME}
                 CurrentFile = "(booting)"
                 InCode = $false
                 ActiveSeconds = 0
@@ -271,16 +271,16 @@ for ($i = 1; $i -le $Agents; $i++) {
 
         function Enter-Code([string]$file) {
             if (-not $file) { $file = "(unknown)" }
-            if (-not $script:codeStart) { $script:codeStart = Get-Date }
+            if (-not ${script:codeStart}) { ${script:codeStart} = Get-Date }
             $state.CurrentFile = $file
             $state.InCode = $true
             Save-BeaconLocal
         }
 
         function Exit-Code {
-            if ($script:codeStart) {
-                $state.ActiveSeconds += [math]::Round(((Get-Date) - $script:codeStart).TotalSeconds,2)
-                $script:codeStart = $null
+            if (${script:codeStart}) {
+                $state.ActiveSeconds += [math]::Round(((Get-Date) - ${script:codeStart}).TotalSeconds,2)
+                ${script:codeStart} = $null
             }
             $state.InCode = $false
             Save-BeaconLocal

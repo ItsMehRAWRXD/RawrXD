@@ -236,7 +236,7 @@ foreach ($test in $benchmarkPrompts) {
         
         $results += $result
         
-        $speedRating = if ($elapsed -lt 5) { "⚡ ULTRA-FAST" } elseif ($elapsed -lt 10) { "⚡ FAST" } else { "⏱️ Good" }
+        $speedRating = $(if ($elapsed -lt 5) { "⚡ ULTRA-FAST" } elseif ($elapsed -lt 10) { "⚡ FAST" } else { "⏱️ Good" }
         Write-Host "      ${speedRating}: $([math]::Round($elapsed, 2))s | Output: $($response.response.Length) chars" -ForegroundColor Green
         
     } catch {

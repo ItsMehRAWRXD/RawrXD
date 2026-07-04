@@ -218,7 +218,7 @@ Write-Host ""
 
 # Show final summary
 $endTime = Get-Date
-$duration = [Math]::Round(($endTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
+$duration = [Math]::Round(($endTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
 
 Write-Host "╔═══════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
 Write-Host "║                                                                   ║" -ForegroundColor Magenta

@@ -1,10 +1,10 @@
-$QtSrcDir = "C:\Users\HiH8e\Downloads\qtbase-everywhere-src-6.7.2\qtbase-everywhere-src-6.7.2"
-$QtBuildDir = "C:\Users\HiH8e\Downloads\qtbase-everywhere-src-6.7.2\build-msvc2022_64"
-$QtInstallDir = "C:\Qt\6.7.2\msvc2022_64"
-$VcvarsPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+$Script:QtSrcDir = "C:\Users\HiH8e\Downloads\qtbase-everywhere-src-6.7.2\qtbase-everywhere-src-6.7.2"
+$Script:QtBuildDir = "C:\Users\HiH8e\Downloads\qtbase-everywhere-src-6.7.2\build-msvc2022_64"
+$Script:QtInstallDir = "C:\Qt\6.7.2\msvc2022_64"
+$Script:VcvarsPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
 # Ensure tools are in PATH
-$env:PATH = "C:\Strawberry\perl\bin;C:\Program Files\CMake\bin;$env:LOCALAPPDATA\Microsoft\WinGet\Links;$env:PATH"
+${env:PATH} = "C:\Strawberry\perl\bin;C:\Program Files\CMake\bin;${env:LOCALAPPDATA}\Microsoft\WinGet\Links;${env:PATH}"
 
 Write-Host "Checking tools..."
 cmake --version
@@ -19,7 +19,7 @@ if (!(Test-Path $QtBuildDir)) {
 Set-Location $QtBuildDir
 
 # Create a batch file to run the build in the MSVC environment
-$batchContent = @"
+$Script:batchContent = @"
 @echo off
 call "$VcvarsPath"
 if %errorlevel% neq 0 exit /b %errorlevel%

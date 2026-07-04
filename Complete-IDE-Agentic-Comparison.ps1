@@ -64,8 +64,8 @@ function Test-IDEFeature {
   $testCategories[$Category].Scores.VSCode += $VSCodeScore
     
   # Display test result
-  $rawrIcon = if ($RawrXDScore -gt $VSCodeScore) { "🏆" } elseif ($RawrXDScore -eq $VSCodeScore) { "⚖️" } else { "🥈" }
-  $vscodeIcon = if ($VSCodeScore -gt $RawrXDScore) { "🏆" } elseif ($VSCodeScore -eq $RawrXDScore) { "⚖️" } else { "🥈" }
+  $rawrIcon = $(if ($RawrXDScore -gt $VSCodeScore) { "🏆" } elseif ($RawrXDScore -eq $VSCodeScore) { "⚖️" } else { "🥈" }
+  $vscodeIcon = $(if ($VSCodeScore -gt $RawrXDScore) { "🏆" } elseif ($VSCodeScore -eq $RawrXDScore) { "⚖️" } else { "🥈" }
     
   Write-Host "`n🔸 $FeatureName" -ForegroundColor White
   Write-Host "   📋 $Description" -ForegroundColor Gray

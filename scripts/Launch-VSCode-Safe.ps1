@@ -68,7 +68,7 @@ if (-not (Test-Path -LiteralPath $exe)) {
 $launchArgs = [System.Collections.Generic.List[string]]::new()
 
 if ($FreshUserData) {
-    $profileDir = Join-Path $env:TEMP ("vscode-clean-profile-" + [Guid]::NewGuid().ToString('n').Substring(0, 8))
+    $profileDir = Join-Path ${env:TEMP} ("vscode-clean-profile-" + [Guid]::NewGuid().ToString('n').Substring(0, 8))
     New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
     $launchArgs.Add('--user-data-dir')
     $launchArgs.Add($profileDir)
@@ -108,10 +108,10 @@ if ($launchArgs.Count -gt 0) {
 $p = Start-Process -FilePath $exe -ArgumentList $launchArgs -PassThru
 Write-Host "PID: $($p.Id)" -ForegroundColor Green
 
-$logHint = if ($userDataDirForLogs) {
+$logHint = $(if ($userDataDirForLogs) {
     Join-Path $userDataDirForLogs 'logs'
 } else {
-    Join-Path $env:APPDATA 'Code\logs'
+    Join-Path ${env:APPDATA} 'Code\logs'
 }
 Write-Host "If still blank: check renderer logs under: $logHint" -ForegroundColor DarkGray
 Write-Host "Chromium flags may print 'not in the list of known options' — that is OK; they are still passed to Electron." -ForegroundColor DarkGray

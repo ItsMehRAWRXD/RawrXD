@@ -63,8 +63,8 @@ $metrics = @(
     @{ Name="patch_correctness";      L=$L.patch_correctness;      R=$R.patch_correctness }
     @{ Name="test_pass_rate";         L=$L.test_pass_rate;         R=$R.test_pass_rate }
     @{ Name="overall_score";          L=$L.overall_score;          R=$R.overall_score }
-    @{ Name="pass@1 (patch_correct)"; L=if ($L.total -gt 0) { $L.patch_correct / $L.total } else { 0 }
-                                       R=if ($R.total -gt 0) { $R.patch_correct / $R.total } else { 0 } }
+    @{ Name="pass@1 (patch_correct)"; L= $(if ($L.total -gt 0) { $L.patch_correct / $L.total } else { 0 }
+                                       R= $(if ($R.total -gt 0) { $R.patch_correct / $R.total } else { 0 } }
 )
 
 foreach ($m in $metrics) {
@@ -87,8 +87,8 @@ if ($L.results -and $R.results) {
     $allIds = ($L.results + $R.results | Select-Object -ExpandProperty task_id | Sort-Object -Unique)
     foreach ($id in $allIds) {
         $lt = $lMap[$id]; $rt = $rMap[$id]
-        $ls = if ($lt) { $lt.status } else { "(absent)" }
-        $rs = if ($rt) { $rt.status } else { "(absent)" }
+        $ls = $(if ($lt) { $lt.status } else { "(absent)" }
+        $rs = $(if ($rt) { $rt.status } else { "(absent)" }
         if ($ls -ne $rs) {
             Write-Host ("  {0,-40}  {1,-12}  ->  {2}" -f $id, $ls, $rs)
         }

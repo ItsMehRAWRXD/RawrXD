@@ -7,7 +7,7 @@ param(
 
 # Function to get Recycle Bin items
 function Get-RecycleBinItems {
-    $recycleBinPath = "$env:SystemDrive\`$Recycle.Bin"
+    $recycleBinPath = "${env:SystemDrive}\`$Recycle.Bin"
     $userSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     $userRecycleBin = Join-Path $recycleBinPath $userSid
     

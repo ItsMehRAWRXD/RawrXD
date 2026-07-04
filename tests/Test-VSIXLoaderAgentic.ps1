@@ -3,11 +3,11 @@
 # Usage:
 #   .\Test-VSIXLoaderAgentic.ps1
 #   .\Test-VSIXLoaderAgentic.ps1 -AmazonQVsix "C:\path\to\amazonq.vsix" -GitHubCopilotVsix "C:\path\to\github-copilot.vsix"
-#   $env:AMAZONQ_VSIX = "C:\..."; $env:GITHUB_COPILOT_VSIX = "C:\..."; .\Test-VSIXLoaderAgentic.ps1
+#   ${env:AMAZONQ_VSIX} = "C:\..."; ${env:GITHUB_COPILOT_VSIX} = "C:\..."; .\Test-VSIXLoaderAgentic.ps1
 
 param(
-    [string]$AmazonQVsix = $env:AMAZONQ_VSIX,
-    [string]$GitHubCopilotVsix = $env:GITHUB_COPILOT_VSIX,
+    [string]$AmazonQVsix = ${env:AMAZONQ_VSIX},
+    [string]$GitHubCopilotVsix = ${env:GITHUB_COPILOT_VSIX},
     [string]$IdeExe = $null,
     [switch]$BuildFirst,
     [switch]$SkipCopy
@@ -49,7 +49,7 @@ if (-not (Test-Path $pluginsDir)) { New-Item -ItemType Directory -Path $pluginsD
 
 # Copy .vsix or auto-discover from VS Code extensions folder
 $toLoad = @()
-$vscodeExt = Join-Path $env:USERPROFILE ".vscode\extensions"
+$vscodeExt = Join-Path ${env:USERPROFILE} ".vscode\extensions"
 
 if ($AmazonQVsix -and (Test-Path $AmazonQVsix)) {
     $dest = Join-Path $pluginsDir "amazonq.vsix"
@@ -87,7 +87,7 @@ if ($GitHubCopilotVsix -and (Test-Path $GitHubCopilotVsix)) {
     $copilotDir = $copilotDirs | Where-Object { $_ } | Select-Object -First 1
     if ($copilotDir) {
         $extPkg = Join-Path $copilotDir.FullName "extension\package.json"
-        $loadRoot = if (Test-Path $extPkg) { Join-Path $copilotDir.FullName "extension" } else { $copilotDir.FullName }
+        $loadRoot = $(if (Test-Path $extPkg) { Join-Path $copilotDir.FullName "extension" } else { $copilotDir.FullName }
         if (Test-Path (Join-Path $loadRoot "package.json")) {
             $dest = Join-Path $pluginsDir "github-copilot"
             if (-not $SkipCopy) {
@@ -105,7 +105,7 @@ if ($GitHubCopilotVsix -and (Test-Path $GitHubCopilotVsix)) {
 }
 
 # Allow unsigned extensions (marketplace VSIX are often unsigned)
-$env:RAWRXD_ALLOW_UNSIGNED_EXTENSIONS = "1"
+${env:RAWRXD_ALLOW_UNSIGNED_EXTENSIONS} = "1"
 
 Write-Host "Running VSIX loader agentic test: $IdeExe --vsix-test" -ForegroundColor Cyan
 Push-Location $exeDir

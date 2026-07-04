@@ -170,8 +170,8 @@ class UnifiedAgentProcessor : IRequestProcessor {
     # Initialize available models with default configurations
     hidden [void] InitializeModels() {
         $this.models = @(
-            [ModelConfig]::new("GitHub-Copilot", "https://api.github.com/copilot", $env:GITHUB_COPILOT_TOKEN, 1),
-            [ModelConfig]::new("Amazon-Q", "https://api.aws.amazon.com/q", $env:AMAZON_Q_TOKEN, 2),
+            [ModelConfig]::new("GitHub-Copilot", "https://api.github.com/copilot", ${env:GITHUB_COPILOT_TOKEN}, 1),
+            [ModelConfig]::new("Amazon-Q", "https://api.aws.amazon.com/q", ${env:AMAZON_Q_TOKEN}, 2),
             [ModelConfig]::new("Custom-Local", "http://localhost:8080/completion", "", 3)
         )
     }

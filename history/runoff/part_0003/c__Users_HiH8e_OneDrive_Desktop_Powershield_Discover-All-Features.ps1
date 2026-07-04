@@ -58,8 +58,8 @@ function Analyze-PowerShellCode {
     # Discover UI Controls
     if ($line -match 'New-Object\s+System\.Windows\.Forms\.(\w+)' -or 
       $line -match '\$(\w+)\s*=\s*New-Object.*Windows\.Forms\.(\w+)') {
-      $controlType = if ($matches[2]) { $matches[2] } else { $matches[1] }
-      $controlVar = if ($matches[1] -and $matches[2]) { $matches[1] } else { "Unknown" }
+      $controlType = $(if ($matches[2]) { $matches[2] } else { $matches[1] }
+      $controlVar = $(if ($matches[1] -and $matches[2]) { $matches[1] } else { "Unknown" }
             
       $featureCatalog.UIControls += @{
         Name   = "$controlVar ($controlType)"
@@ -72,7 +72,7 @@ function Analyze-PowerShellCode {
         
     # Discover Menu Items
     if ($line -match '\$(\w*[Mm]enu\w*)\s*=|Add_Click.*\{|ToolStripMenuItem|MenuStrip') {
-      $menuName = if ($matches[1]) { $matches[1] } else { "Menu Action" }
+      $menuName = $(if ($matches[1]) { $matches[1] } else { "Menu Action" }
       $featureCatalog.MenuItems += @{
         Name   = $menuName
         File   = $FilePath
@@ -84,7 +84,7 @@ function Analyze-PowerShellCode {
         
     # Discover Event Handlers
     if ($line -match '\.Add_(\w+)\s*\(' -or $line -match 'Register-ObjectEvent') {
-      $eventType = if ($matches[1]) { $matches[1] } else { "ObjectEvent" }
+      $eventType = $(if ($matches[1]) { $matches[1] } else { "ObjectEvent" }
       $featureCatalog.EventHandlers += @{
         Name   = $eventType
         File   = $FilePath
@@ -328,14 +328,14 @@ function Test-Feature {
         [string]$Description
     )
     
-    $script:totalTests++
+    ${script:totalTests}++
     Write-Host "`n🔸 Testing: $FeatureName" -ForegroundColor Yellow -NoNewline
     
     try {
         $result = & $TestCode
         if ($result) {
             Write-Host " ✅ PASS" -ForegroundColor Green
-            $script:passedTests++
+            ${script:passedTests}++
             $testResults[$FeatureName] = "PASS"
         } else {
             Write-Host " ⚠️ PARTIAL" -ForegroundColor Yellow
@@ -344,7 +344,7 @@ function Test-Feature {
     }
     catch {
         Write-Host " ❌ FAIL: $_" -ForegroundColor Red
-        $script:failedTests++
+        ${script:failedTests}++
         $testResults[$FeatureName] = "FAIL: $_"
     }
 }
@@ -426,7 +426,7 @@ Test-Feature -FeatureName "Chat Interface" -Category "Chat" -Description "Verify
 Write-Host "`n📊 AUTOMATED TEST RESULTS" -ForegroundColor Cyan
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$successRate = if ($totalTests -gt 0) { [math]::Round(($passedTests / $totalTests) * 100, 1) } else { 0 }
+$successRate = $(if ($totalTests -gt 0) { [math]::Round(($passedTests / $totalTests) * 100, 1) } else { 0 }
 
 Write-Host "`n🎯 Test Summary:" -ForegroundColor White
 Write-Host "   Total Tests: $totalTests" -ForegroundColor Gray

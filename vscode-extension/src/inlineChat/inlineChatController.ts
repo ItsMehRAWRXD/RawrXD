@@ -39,7 +39,7 @@ export class InlineChatController implements vscode.Disposable {
             const line = editor.document.lineAt(selection.active.line);
             this._currentRange = line.range;
         } else {
-            this._currentRange = selection;
+            this._currentRange = new vscode.Range(selection.start, selection.end);
         }
 
         // Highlight the target range

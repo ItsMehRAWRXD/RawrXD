@@ -35,9 +35,9 @@ if (-not (Test-Path $ModelPath)) {
 
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 
-$env:RAWRXD_STREAMING_MATMUL_TRACE = '1'
-$env:RAWRXD_TRANSFORMER_CALLSITE_TRACE = '1'
-$env:RAWRXD_STREAMING_MATMUL_SUMMARY = '1'
+${env:RAWRXD_STREAMING_MATMUL_TRACE} = '1'
+${env:RAWRXD_TRANSFORMER_CALLSITE_TRACE} = '1'
+${env:RAWRXD_STREAMING_MATMUL_SUMMARY} = '1'
 
 Write-Host "[forensics] running headless trace -> $logPath"
 Push-Location (Split-Path $exePath)

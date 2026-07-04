@@ -136,7 +136,7 @@ $infoBuffer = [System.Runtime.InteropServices.Marshal]::AllocHGlobal(64)
 [AVX512Engine]::GetEngineInfo($infoBuffer) | Out-Null
 $mode = [System.Runtime.InteropServices.Marshal]::ReadInt32($infoBuffer, 4)
 [System.Runtime.InteropServices.Marshal]::FreeHGlobal($infoBuffer)
-$modeStr = if ($mode -eq 2) { "AVX-512 SIMD ACTIVE" } else { "Scalar Fallback" }
+$modeStr = $(if ($mode -eq 2) { "AVX-512 SIMD ACTIVE" } else { "Scalar Fallback" }
 Write-Host "[AVX512] Engine mode: $modeStr" -ForegroundColor $(if ($mode -eq 2) { "Magenta" } else { "Yellow" })
 
 # Warmup

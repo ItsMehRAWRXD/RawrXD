@@ -12,10 +12,10 @@
 # MODULE VARIABLES
 # ============================================
 
-$script:ToolRegistry = @{}
-$script:InvocationHistory = @()
-$script:MaxHistoryEntries = 1000
-$script:ToolTimeout = 30
+${script:ToolRegistry} = @{}
+${script:InvocationHistory} = @()
+${script:MaxHistoryEntries} = 1000
+${script:ToolTimeout} = 30
 
 # ============================================
 # TOOL REGISTRATION
@@ -33,7 +33,7 @@ function Register-ToolInvocation {
         [hashtable]$Parameters = @{}
     )
     
-    $script:ToolRegistry[$ToolName] = @{
+    ${script:ToolRegistry}[$ToolName] = @{
         Name = $ToolName
         Handler = $Handler
         Description = $Description
@@ -53,8 +53,8 @@ function Unregister-ToolInvocation {
         [Parameter(Mandatory = $true)][string]$ToolName
     )
     
-    if ($script:ToolRegistry.ContainsKey($ToolName)) {
-        $script:ToolRegistry.Remove($ToolName)
+    if (${script:ToolRegistry}.ContainsKey($ToolName)) {
+        ${script:ToolRegistry}.Remove($ToolName)
         return $true
     }
     return $false
@@ -69,8 +69,8 @@ function Enable-ToolInvocation {
         [Parameter(Mandatory = $true)][string]$ToolName
     )
     
-    if ($script:ToolRegistry.ContainsKey($ToolName)) {
-        $script:ToolRegistry[$ToolName].Enabled = $true
+    if (${script:ToolRegistry}.ContainsKey($ToolName)) {
+        ${script:ToolRegistry}[$ToolName].Enabled = $true
     }
 }
 
@@ -83,8 +83,8 @@ function Disable-ToolInvocation {
         [Parameter(Mandatory = $true)][string]$ToolName
     )
     
-    if ($script:ToolRegistry.ContainsKey($ToolName)) {
-        $script:ToolRegistry[$ToolName].Enabled = $false
+    if (${script:ToolRegistry}.ContainsKey($ToolName)) {
+        ${script:ToolRegistry}[$ToolName].Enabled = $false
     }
 }
 
@@ -104,7 +104,7 @@ function Invoke-RegisteredTool {
     )
     
     try {
-        if (-not $script:ToolRegistry.ContainsKey($ToolName)) {
+        if (-not ${script:ToolRegistry}.ContainsKey($ToolName)) {
             return @{
                 Success = $false
                 Error = "Tool not registered: $ToolName"
@@ -112,7 +112,7 @@ function Invoke-RegisteredTool {
             }
         }
         
-        $tool = $script:ToolRegistry[$ToolName]
+        $tool = ${script:ToolRegistry}[$ToolName]
         
         if (-not $tool.Enabled) {
             return @{
@@ -143,11 +143,11 @@ function Invoke-RegisteredTool {
             Success = $true
         }
         
-        $script:InvocationHistory += $invocation
+        ${script:InvocationHistory} += $invocation
         
         # Trim history if too large
-        if ($script:InvocationHistory.Count -gt $script:MaxHistoryEntries) {
-            $script:InvocationHistory = $script:InvocationHistory[-$script:MaxHistoryEntries..-1]
+        if (${script:InvocationHistory}.Count -gt ${script:MaxHistoryEntries}) {
+            ${script:InvocationHistory} = ${script:InvocationHistory}[-${script:MaxHistoryEntries}..-1]
         }
         
         Write-Host "[AutoToolInvocation] Tool invocation completed in $($duration.TotalMilliseconds)ms" -ForegroundColor Green
@@ -169,7 +169,7 @@ function Invoke-RegisteredTool {
             Success = $false
         }
         
-        $script:InvocationHistory += $invocation
+        ${script:InvocationHistory} += $invocation
         
         Write-Host "[AutoToolInvocation] Tool invocation failed: $_" -ForegroundColor Red
         
@@ -205,8 +205,8 @@ function Invoke-ToolBatch {
                 $toolName = $_.ToolName
                 $parameters = $_.Parameters
                 
-                if ($script:ToolRegistry.ContainsKey($toolName)) {
-                    & $script:ToolRegistry[$toolName].Handler @parameters
+                if (${script:ToolRegistry}.ContainsKey($toolName)) {
+                    & ${script:ToolRegistry}[$toolName].Handler @parameters
                 }
             } -ThrottleLimit $ThrottleLimit
         }
@@ -246,7 +246,7 @@ function Get-RegisteredToolInvocations {
         [switch]$IncludeDisabled
     )
     
-    $tools = $script:ToolRegistry.Values
+    $tools = ${script:ToolRegistry}.Values
     
     if (-not $IncludeDisabled) {
         $tools = $tools | Where-Object { $_.Enabled }
@@ -265,7 +265,7 @@ function Get-ToolInvocationHistory {
         [string]$ToolName = ""
     )
     
-    $history = $script:InvocationHistory
+    $history = ${script:InvocationHistory}
     
     if ($ToolName) {
         $history = $history | Where-Object { $_.ToolName -eq $ToolName }
@@ -279,7 +279,7 @@ function Clear-ToolInvocationHistory {
     .SYNOPSIS
         Clear invocation history
     #>
-    $script:InvocationHistory = @()
+    ${script:InvocationHistory} = @()
     
     return @{
         Success = $true
@@ -293,14 +293,14 @@ function Get-ToolInvocationStats {
         Get statistics on tool invocations
     #>
     return @{
-        RegisteredTools = $script:ToolRegistry.Count
-        EnabledTools = ($script:ToolRegistry.Values | Where-Object { $_.Enabled }).Count
-        TotalInvocations = $script:InvocationHistory.Count
-        AverageInvocationTime = if ($script:InvocationHistory.Count -gt 0) { 
-            ([math]::Round(($script:InvocationHistory | Measure-Object -Property Duration -Average).Average, 3))
+        RegisteredTools = ${script:ToolRegistry}.Count
+        EnabledTools = (${script:ToolRegistry}.Values | Where-Object { $_.Enabled }).Count
+        TotalInvocations = ${script:InvocationHistory}.Count
+        AverageInvocationTime = $(if (${script:InvocationHistory}.Count -gt 0) { 
+            ([math]::Round((${script:InvocationHistory} | Measure-Object -Property Duration -Average).Average, 3))
         } else { 0 }
-        SuccessfulInvocations = ($script:InvocationHistory | Where-Object { $_.Success }).Count
-        FailedInvocations = ($script:InvocationHistory | Where-Object { -not $_.Success }).Count
+        SuccessfulInvocations = (${script:InvocationHistory} | Where-Object { $_.Success }).Count
+        FailedInvocations = (${script:InvocationHistory} | Where-Object { -not $_.Success }).Count
     }
 }
 
@@ -318,14 +318,14 @@ function Test-ToolParameters {
         [hashtable]$Parameters = @{}
     )
     
-    if (-not $script:ToolRegistry.ContainsKey($ToolName)) {
+    if (-not ${script:ToolRegistry}.ContainsKey($ToolName)) {
         return @{
             Valid = $false
             Message = "Tool not registered: $ToolName"
         }
     }
     
-    $tool = $script:ToolRegistry[$ToolName]
+    $tool = ${script:ToolRegistry}[$ToolName]
     $missingParams = @()
     
     # Check for required parameters

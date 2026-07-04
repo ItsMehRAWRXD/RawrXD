@@ -15,7 +15,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$ModelPath = $env:RAWRXD_TEST_GGUF,
+    [string]$ModelPath = ${env:RAWRXD_TEST_GGUF},
     [string]$BuildDir = "",
     [switch]$SkipHeadless,
     [switch]$IdeLogOnly,
@@ -26,8 +26,8 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if (-not $BuildDir) {
-    if ($env:RAWRXD_BUILD_DIR -and (Test-Path (Join-Path $env:RAWRXD_BUILD_DIR "CMakeCache.txt"))) {
-        $BuildDir = $env:RAWRXD_BUILD_DIR
+    if (${env:RAWRXD_BUILD_DIR} -and (Test-Path (Join-Path ${env:RAWRXD_BUILD_DIR} "CMakeCache.txt"))) {
+        $BuildDir = ${env:RAWRXD_BUILD_DIR}
     }
     else {
         foreach ($c in @(
@@ -96,7 +96,7 @@ if (-not $engine) {
 }
 
 if ($IdeLogOnly) {
-    $ideLog = Join-Path $env:APPDATA "RawrXD\ide.log"
+    $ideLog = Join-Path ${env:APPDATA} "RawrXD\ide.log"
     $ok = Test-IdeLogForIssues -LogPath $ideLog -FailHard:$FailOnIdeLogIssues
     if (-not $ok) { exit 2 }
     Write-Host "[IDE log] Done."
@@ -129,7 +129,7 @@ if (-not $SkipHeadless) {
 
 Write-Host ""
 Write-Host "=== IDE log audit (%APPDATA%\RawrXD\ide.log) ==="
-$ideLog = Join-Path $env:APPDATA "RawrXD\ide.log"
+$ideLog = Join-Path ${env:APPDATA} "RawrXD\ide.log"
 $logOk = Test-IdeLogForIssues -LogPath $ideLog -FailHard:$FailOnIdeLogIssues
 if (-not $logOk) { exit 2 }
 

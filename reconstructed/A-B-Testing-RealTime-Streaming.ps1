@@ -14,7 +14,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Results storage
-$global:streamingResults = @()
+${global:streamingResults} = @()
 
 Write-Host "╔════════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║      Real-Time A/B Testing Dashboard (Streaming Parallel Execution)            ║" -ForegroundColor Cyan
@@ -127,8 +127,8 @@ for ($i = 1; $i -le $NumIterations; $i++) {
     $resultA = Run-SingleTest -Model $ModelA -Prompt $TestPrompt -IterationNum $i -Timeout $Timeout
     $resultB = Run-SingleTest -Model $ModelB -Prompt $TestPrompt -IterationNum $i -Timeout $Timeout
     
-    $global:streamingResults += $resultA
-    $global:streamingResults += $resultB
+    ${global:streamingResults} += $resultA
+    ${global:streamingResults} += $resultB
     
     # Display real-time results
     Write-Host "  Model A: " -ForegroundColor Cyan -NoNewline
@@ -147,7 +147,7 @@ for ($i = 1; $i -le $NumIterations; $i++) {
     
     if ($resultA.Success -and $resultB.Success) {
         $diff = [math]::Round($resultA.LatencyMs - $resultB.LatencyMs, 2)
-        $faster = if ($diff -gt 0) { "Model B" } else { "Model A" }
+        $faster = $(if ($diff -gt 0) { "Model B" } else { "Model A" }
         Write-Host "  Difference: $([math]::Abs($diff))ms ($faster faster)" -ForegroundColor Cyan
     }
     
@@ -165,8 +165,8 @@ Write-Host "║                         SUMMARY STATISTICS                      
 Write-Host "╚════════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-$resultsA = $global:streamingResults | Where-Object { $_.Model -eq $ModelA -and $_.Success }
-$resultsB = $global:streamingResults | Where-Object { $_.Model -eq $ModelB -and $_.Success }
+$resultsA = ${global:streamingResults} | Where-Object { $_.Model -eq $ModelA -and $_.Success }
+$resultsB = ${global:streamingResults} | Where-Object { $_.Model -eq $ModelB -and $_.Success }
 
 if ($resultsA.Count -gt 0) {
     $avgLatencyA = [math]::Round(($resultsA | Measure-Object -Property LatencyMs -Average).Average, 2)
@@ -209,7 +209,7 @@ if ($resultsA.Count -gt 0 -and $resultsB.Count -gt 0) {
 # Save to CSV
 Write-Host "💾 Saving results to: $OutputFile" -ForegroundColor Yellow
 
-$csvData = $global:streamingResults | Select-Object Model, Iteration, Success, LatencyMs, TokensPerSec, Timestamp | 
+$csvData = ${global:streamingResults} | Select-Object Model, Iteration, Success, LatencyMs, TokensPerSec, Timestamp | 
     ConvertTo-Csv -NoTypeInformation
 
 $csvData | Set-Content -Path $OutputFile

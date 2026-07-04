@@ -23,7 +23,7 @@ Write-Host "╚═════════════════════�
 # Configuration
 $cursorDir = "E:\Everything\cursor"
 $cursorJs = "$cursorDir\resources\app\out\vs\workbench\workbench.desktop.main.js"
-$hostsFile = "$env:SystemRoot\System32\drivers\etc\hosts"
+$hostsFile = "${env:SystemRoot}\System32\drivers\etc\hosts"
 
 # Check prerequisites
 Write-Host "[1/6] Checking prerequisites..." -ForegroundColor Yellow
@@ -140,8 +140,8 @@ foreach ($patch in $patches) {
         $patchedCount++
         if ($patch.Critical) { $criticalPatched++ }
     } else {
-        $status = if ($patch.Critical) { "⚠" } else { "·" }
-        $color = if ($patch.Critical) { "Yellow" } else { "Gray" }
+        $status = $(if ($patch.Critical) { "⚠" } else { "·" }
+        $color = $(if ($patch.Critical) { "Yellow" } else { "Gray" }
         Write-Host "   $status $($patch.Name) - No matches found" -ForegroundColor $color
     }
 }
@@ -214,8 +214,8 @@ foreach ($check in $verifyPatterns) {
         Write-Host "   ✓ $($check.Name): PRESENT" -ForegroundColor Green
         $verifyPassed++
     } else {
-        $symbol = if($check.Critical) { "❌" } else { "⚠" }
-        $color = if($check.Critical) { "Red" } else { "Yellow" }
+        $symbol = $(if ($check.Critical) { "❌" } else { "⚠" }
+        $color = $(if ($check.Critical) { "Red" } else { "Yellow" }
         Write-Host "   $symbol $($check.Name): MISSING" -ForegroundColor $color
     }
 }

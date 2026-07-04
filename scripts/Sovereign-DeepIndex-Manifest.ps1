@@ -42,7 +42,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Continue"
 
 if (-not $OutCsv -or $OutCsv.Trim().Length -eq 0) {
-    $repo = $env:RAWRXD_REPO_ROOT
+    $repo = ${env:RAWRXD_REPO_ROOT}
     if (-not $repo) { $repo = "D:\RawrXD" }
     $logDir = Join-Path $repo "logs"
     if (-not (Test-Path -LiteralPath $logDir)) {
@@ -52,7 +52,7 @@ if (-not $OutCsv -or $OutCsv.Trim().Length -eq 0) {
 }
 
 if ($RootPaths.Count -eq 0) {
-    $r = $env:RAWRXD_REPO_ROOT
+    $r = ${env:RAWRXD_REPO_ROOT}
     if (-not $r) { $r = "D:\RawrXD" }
     $RootPaths = @($r)
 }

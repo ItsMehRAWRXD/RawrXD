@@ -25,26 +25,26 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Web
 
-$script:ProjectRoot = $PSScriptRoot
-$script:ModelsPath = Join-Path $PSScriptRoot "models"
+${script:ProjectRoot} = $PSScriptRoot
+${script:ModelsPath} = Join-Path $PSScriptRoot "models"
 
 # Tab management - support up to 1,000 tabs each
-$script:EditorTabs = @{}
-$script:EditorTabCount = 0
-$script:MaxEditorTabs = 1000
+${script:EditorTabs} = @{}
+${script:EditorTabCount} = 0
+${script:MaxEditorTabs} = 1000
 
-$script:ChatTabs = @{}
-$script:ChatTabCount = 0
-$script:MaxChatTabs = 1000
+${script:ChatTabs} = @{}
+${script:ChatTabCount} = 0
+${script:MaxChatTabs} = 1000
 
-$script:TerminalTabs = @{}
-$script:TerminalTabCount = 0
-$script:MaxTerminalTabs = 1000
+${script:TerminalTabs} = @{}
+${script:TerminalTabCount} = 0
+${script:MaxTerminalTabs} = 1000
 
-$script:OllamaModels = @()
+${script:OllamaModels} = @()
 
 # AI Copilot suggestions database
-$script:CodeSuggestions = @{
+${script:CodeSuggestions} = @{
     "function" = "function MyFunction { param(`$param1) `n    # Your code here`n}"
     "class" = "class MyClass { `n    [string]`$property`n    `n    [void] Method() { }`n}"
     "foreach" = "foreach (`$item in `$collection) { `n    # Process item`n}"
@@ -163,7 +163,7 @@ function New-FileInExplorer {
     
     if ($newFileName) {
         try {
-            $parentPath = if ($SelectedNode.Tag) { $SelectedNode.Tag } else { (Get-Location).Path }
+            $parentPath = $(if ($SelectedNode.Tag) { $SelectedNode.Tag } else { (Get-Location).Path }
             $newFilePath = Join-Path $parentPath $newFileName
             
             New-Item -Path $newFilePath -ItemType File -Force | Out-Null
@@ -188,7 +188,7 @@ function New-DirectoryInExplorer {
     
     if ($newDirName) {
         try {
-            $parentPath = if ($SelectedNode.Tag) { $SelectedNode.Tag } else { (Get-Location).Path }
+            $parentPath = $(if ($SelectedNode.Tag) { $SelectedNode.Tag } else { (Get-Location).Path }
             $newDirPath = Join-Path $parentPath $newDirName
             
             New-Item -Path $newDirPath -ItemType Directory -Force | Out-Null
@@ -490,13 +490,13 @@ function New-EditorTab {
         [string]$Content = ""
     )
     
-    if ($script:EditorTabCount -ge $script:MaxEditorTabs) {
-        [System.Windows.Forms.MessageBox]::Show("Maximum editor tabs ($($script:MaxEditorTabs)) reached!", "Tab Limit")
+    if (${script:EditorTabCount} -ge ${script:MaxEditorTabs}) {
+        [System.Windows.Forms.MessageBox]::Show("Maximum editor tabs ($(${script:MaxEditorTabs})) reached!", "Tab Limit")
         return
     }
     
-    $tabIndex = $script:EditorTabCount++
-    $tabName = if ($FileName) { Split-Path $FileName -Leaf } else { "Untitled-$tabIndex" }
+    $tabIndex = ${script:EditorTabCount}++
+    $tabName = $(if ($FileName) { Split-Path $FileName -Leaf } else { "Untitled-$tabIndex" }
     
     $editorTab = New-Object System.Windows.Forms.TabPage($tabName)
     $editorTab.Tag = @{
@@ -510,7 +510,7 @@ function New-EditorTab {
     $editor.Font = New-Object System.Drawing.Font("Consolas", 10)
     $editor.Text = $Content
     $editor.Add_TextChanged({
-        $tab = $script:EditorTabControl.SelectedTab
+        $tab = ${script:EditorTabControl}.SelectedTab
         if ($tab -and $tab.Tag) {
             $tab.Tag.Modified = $true
             if (-not $tab.Text.EndsWith("*")) {
@@ -594,8 +594,8 @@ function New-EditorTab {
     $modelSelectItem = New-Object System.Windows.Forms.ToolStripMenuItem("Select AI Model")
     
     # Use actual loaded models
-    $availableModels = if ($script:OllamaModels.Count -gt 0) { 
-        $script:OllamaModels 
+    $availableModels = $(if (${script:OllamaModels}.Count -gt 0) { 
+        ${script:OllamaModels} 
     } else { 
         @("No models loaded", "gpt-4 (API)", "gpt-3.5-turbo (API)")
     }
@@ -604,10 +604,10 @@ function New-EditorTab {
         $modelItem = New-Object System.Windows.Forms.ToolStripMenuItem($model)
         $currentModel = $model  # Capture variable for closure
         $modelItem.Add_Click({
-            if ($script:StatusBarModelCombo) {
-                $idx = $script:StatusBarModelCombo.Items.IndexOf($currentModel)
+            if (${script:StatusBarModelCombo}) {
+                $idx = ${script:StatusBarModelCombo}.Items.IndexOf($currentModel)
                 if ($idx -ge 0) {
-                    $script:StatusBarModelCombo.SelectedIndex = $idx
+                    ${script:StatusBarModelCombo}.SelectedIndex = $idx
                 }
             }
             Update-StatusBar "Selected AI Model: $currentModel"
@@ -637,17 +637,17 @@ function New-EditorTab {
     $editorTab.Controls.Add($editor)
     
     # Insert before the "+" tab
-    $insertIndex = [Math]::Max(0, $script:EditorTabControl.TabPages.Count - 1)
-    $script:EditorTabControl.TabPages.Insert($insertIndex, $editorTab)
-    $script:EditorTabControl.SelectedTab = $editorTab
+    $insertIndex = [Math]::Max(0, ${script:EditorTabControl}.TabPages.Count - 1)
+    ${script:EditorTabControl}.TabPages.Insert($insertIndex, $editorTab)
+    ${script:EditorTabControl}.SelectedTab = $editorTab
     
-    $script:EditorTabs[$tabIndex] = @{
+    ${script:EditorTabs}[$tabIndex] = @{
         TabPage = $editorTab
         Editor = $editor
         FilePath = $FileName
     }
     
-    Update-StatusBar "Editor tab created: $tabName (Total: $script:EditorTabCount)"
+    Update-StatusBar "Editor tab created: $tabName (Total: ${script:EditorTabCount})"
 }
 
 function Close-EditorTab {
@@ -667,10 +667,10 @@ function Close-EditorTab {
             }
         }
         
-        $script:EditorTabs.Remove($tabIndex)
-        $script:EditorTabControl.TabPages.Remove($TabPage)
-        $script:EditorTabCount--
-        Update-StatusBar "Editor tab closed (Total: $script:EditorTabCount)"
+        ${script:EditorTabs}.Remove($tabIndex)
+        ${script:EditorTabControl}.TabPages.Remove($TabPage)
+        ${script:EditorTabCount}--
+        Update-StatusBar "Editor tab closed (Total: ${script:EditorTabCount})"
     }
 }
 
@@ -686,7 +686,7 @@ function Save-EditorTab {
     }
     
     try {
-        $editor = $script:EditorTabs[$TabPage.Tag.Index].Editor
+        $editor = ${script:EditorTabs}[$TabPage.Tag.Index].Editor
         Set-Content -Path $TabPage.Tag.FilePath -Value $editor.Text
         $TabPage.Tag.Modified = $false
         $TabPage.Text = $TabPage.Text.TrimEnd("*")
@@ -719,13 +719,13 @@ function Open-RealFile {
 function New-ChatTab {
     param([string]$ChatName = "")
     
-    if ($script:ChatTabCount -ge $script:MaxChatTabs) {
-        [System.Windows.Forms.MessageBox]::Show("Maximum chat tabs ($($script:MaxChatTabs)) reached!", "Tab Limit")
+    if (${script:ChatTabCount} -ge ${script:MaxChatTabs}) {
+        [System.Windows.Forms.MessageBox]::Show("Maximum chat tabs ($(${script:MaxChatTabs})) reached!", "Tab Limit")
         return
     }
     
-    $tabIndex = $script:ChatTabCount++
-    $tabName = if ($ChatName) { $ChatName } else { "Chat-$tabIndex" }
+    $tabIndex = ${script:ChatTabCount}++
+    $tabName = $(if ($ChatName) { $ChatName } else { "Chat-$tabIndex" }
     
     $chatTab = New-Object System.Windows.Forms.TabPage($tabName)
     $chatTab.Tag = @{ Index = $tabIndex; MessageCount = 0 }
@@ -784,8 +784,8 @@ function New-ChatTab {
     $chatSend.ForeColor = [System.Drawing.Color]::White
     
     $chatSend.Add_Click({
-        $currentTab = $script:EditorTabControl.SelectedTab
-        if ($currentTab.Tag -and $script:ChatTabs.ContainsKey($currentTab.Tag.Index)) {
+        $currentTab = ${script:EditorTabControl}.SelectedTab
+        if ($currentTab.Tag -and ${script:ChatTabs}.ContainsKey($currentTab.Tag.Index)) {
             Send-ChatMessage $currentTab.Tag.Index
         }
     })
@@ -797,11 +797,11 @@ function New-ChatTab {
     $chatTab.Controls.Add($chatSplit)
     
     # Insert before the "+" tab
-    $insertIndex = [Math]::Max(0, $script:EditorTabControl.TabPages.Count - 1)
-    $script:EditorTabControl.TabPages.Insert($insertIndex, $chatTab)
-    $script:EditorTabControl.SelectedTab = $chatTab
+    $insertIndex = [Math]::Max(0, ${script:EditorTabControl}.TabPages.Count - 1)
+    ${script:EditorTabControl}.TabPages.Insert($insertIndex, $chatTab)
+    ${script:EditorTabControl}.SelectedTab = $chatTab
     
-    $script:ChatTabs[$tabIndex] = @{
+    ${script:ChatTabs}[$tabIndex] = @{
         TabPage = $chatTab
         Display = $chatDisplay
         Input = $chatInput
@@ -811,18 +811,18 @@ function New-ChatTab {
     }
     
     # Load Ollama models if available
-    if ($script:OllamaModels.Count -eq 0) {
+    if (${script:OllamaModels}.Count -eq 0) {
         Load-OllamaModels
     }
     
-    foreach ($model in $script:OllamaModels) {
+    foreach ($model in ${script:OllamaModels}) {
         $modelComboBox.Items.Add($model) | Out-Null
     }
     if ($modelComboBox.Items.Count -gt 0) {
         $modelComboBox.SelectedIndex = 0
     }
     
-    Update-StatusBar "Chat tab created: $tabName (Total: $script:ChatTabCount)"
+    Update-StatusBar "Chat tab created: $tabName (Total: ${script:ChatTabCount})"
 }
 
 function Close-ChatTab {
@@ -830,10 +830,10 @@ function Close-ChatTab {
     
     if ($TabPage.Tag) {
         $tabIndex = $TabPage.Tag.Index
-        $script:ChatTabs.Remove($tabIndex)
-        $script:EditorTabControl.TabPages.Remove($TabPage)
-        $script:ChatTabCount--
-        Update-StatusBar "Chat tab closed (Total: $script:ChatTabCount)"
+        ${script:ChatTabs}.Remove($tabIndex)
+        ${script:EditorTabControl}.TabPages.Remove($TabPage)
+        ${script:ChatTabCount}--
+        Update-StatusBar "Chat tab closed (Total: ${script:ChatTabCount})"
     }
 }
 
@@ -841,27 +841,27 @@ function Load-OllamaModels {
     try {
         $output = ollama list 2>&1
         if ($output) {
-            $script:OllamaModels = @()
+            ${script:OllamaModels} = @()
             $lines = $output -split "`n" | Select-Object -Skip 1
             foreach ($line in $lines) {
                 if ($line.Trim()) {
                     $modelName = ($line -split '\s+')[0]
                     if ($modelName) {
-                        $script:OllamaModels += $modelName
+                        ${script:OllamaModels} += $modelName
                     }
                 }
             }
         }
     }
     catch {
-        $script:OllamaModels = @("ollama-not-available")
+        ${script:OllamaModels} = @("ollama-not-available")
     }
 }
 
 function Send-ChatMessage {
     param([int]$TabIndex)
     
-    $chatTab = $script:ChatTabs[$TabIndex]
+    $chatTab = ${script:ChatTabs}[$TabIndex]
     $message = $chatTab.Input.Text.Trim()
     $model = $chatTab.ModelCombo.SelectedItem
     
@@ -900,13 +900,13 @@ function Send-ChatMessage {
 function New-TerminalTab {
     param([string]$TerminalName = "")
     
-    if ($script:TerminalTabCount -ge $script:MaxTerminalTabs) {
-        [System.Windows.Forms.MessageBox]::Show("Maximum terminal tabs ($($script:MaxTerminalTabs)) reached!", "Tab Limit")
+    if (${script:TerminalTabCount} -ge ${script:MaxTerminalTabs}) {
+        [System.Windows.Forms.MessageBox]::Show("Maximum terminal tabs ($(${script:MaxTerminalTabs})) reached!", "Tab Limit")
         return
     }
     
-    $tabIndex = $script:TerminalTabCount++
-    $tabName = if ($TerminalName) { $TerminalName } else { "Terminal-$tabIndex" }
+    $tabIndex = ${script:TerminalTabCount}++
+    $tabName = $(if ($TerminalName) { $TerminalName } else { "Terminal-$tabIndex" }
     
     $terminalTab = New-Object System.Windows.Forms.TabPage($tabName)
     $terminalTab.Tag = @{ Index = $tabIndex; CommandCount = 0 }
@@ -963,16 +963,16 @@ function New-TerminalTab {
     $terminalExecute.ForeColor = [System.Drawing.Color]::White
     
     $terminalExecute.Add_Click({
-        $currentTab = $script:TerminalTabControl.SelectedTab
-        if ($currentTab.Tag -and $script:TerminalTabs.ContainsKey($currentTab.Tag.Index)) {
+        $currentTab = ${script:TerminalTabControl}.SelectedTab
+        if ($currentTab.Tag -and ${script:TerminalTabs}.ContainsKey($currentTab.Tag.Index)) {
             Execute-TerminalCommand $currentTab.Tag.Index
         }
     })
     
     $terminalInput.Add_KeyDown({
         if ($_.KeyCode -eq "Return" -and $_.Control) {
-            $currentTab = $script:TerminalTabControl.SelectedTab
-            if ($currentTab.Tag -and $script:TerminalTabs.ContainsKey($currentTab.Tag.Index)) {
+            $currentTab = ${script:TerminalTabControl}.SelectedTab
+            if ($currentTab.Tag -and ${script:TerminalTabs}.ContainsKey($currentTab.Tag.Index)) {
                 Execute-TerminalCommand $currentTab.Tag.Index
             }
         }
@@ -985,11 +985,11 @@ function New-TerminalTab {
     $terminalTab.Controls.Add($terminalSplit)
     
     # Insert before the "+" tab
-    $insertIndex = [Math]::Max(0, $script:TerminalTabControl.TabPages.Count - 1)
-    $script:TerminalTabControl.TabPages.Insert($insertIndex, $terminalTab)
-    $script:TerminalTabControl.SelectedTab = $terminalTab
+    $insertIndex = [Math]::Max(0, ${script:TerminalTabControl}.TabPages.Count - 1)
+    ${script:TerminalTabControl}.TabPages.Insert($insertIndex, $terminalTab)
+    ${script:TerminalTabControl}.SelectedTab = $terminalTab
     
-    $script:TerminalTabs[$tabIndex] = @{
+    ${script:TerminalTabs}[$tabIndex] = @{
         TabPage = $terminalTab
         Output = $terminalOutput
         Input = $terminalInput
@@ -1003,7 +1003,7 @@ function New-TerminalTab {
     $terminalOutput.AppendText("Working Directory: $PWD`n")
     $terminalOutput.AppendText("Press Ctrl+Enter to execute`n`n")
     
-    Update-StatusBar "Terminal tab created: $tabName (Total: $script:TerminalTabCount)"
+    Update-StatusBar "Terminal tab created: $tabName (Total: ${script:TerminalTabCount})"
 }
 
 function Close-TerminalTab {
@@ -1011,17 +1011,17 @@ function Close-TerminalTab {
     
     if ($TabPage.Tag) {
         $tabIndex = $TabPage.Tag.Index
-        $script:TerminalTabs.Remove($tabIndex)
-        $script:TerminalTabControl.TabPages.Remove($TabPage)
-        $script:TerminalTabCount--
-        Update-StatusBar "Terminal tab closed (Total: $script:TerminalTabCount)"
+        ${script:TerminalTabs}.Remove($tabIndex)
+        ${script:TerminalTabControl}.TabPages.Remove($TabPage)
+        ${script:TerminalTabCount}--
+        Update-StatusBar "Terminal tab closed (Total: ${script:TerminalTabCount})"
     }
 }
 
 function Execute-TerminalCommand {
     param([int]$TabIndex)
     
-    $terminalTab = $script:TerminalTabs[$TabIndex]
+    $terminalTab = ${script:TerminalTabs}[$TabIndex]
     $command = $terminalTab.Input.Text.Trim()
     
     if (-not $command) { return }
@@ -1207,8 +1207,8 @@ function Load-ModelsFromPath {
 function Update-StatusBar {
     param([string]$Message)
     
-    if ($script:StatusLabel) {
-        $script:StatusLabel.Text = "$Message | Editors: $script:EditorTabCount | Chats: $script:ChatTabCount | Terminals: $script:TerminalTabCount"
+    if (${script:StatusLabel}) {
+        ${script:StatusLabel}.Text = "$Message | Editors: ${script:EditorTabCount} | Chats: ${script:ChatTabCount} | Terminals: ${script:TerminalTabCount}"
     }
 }
 
@@ -1218,11 +1218,11 @@ function Update-StatusBar {
 
 function Initialize-VSCodeStyleGUI {
     # REAL: Main form
-    $script:MainForm = New-Object System.Windows.Forms.Form
-    $script:MainForm.Text = "RawrXD IDE - VS Code Style (1,000 Tab Support)"
-    $script:MainForm.Size = New-Object System.Drawing.Size(1600, 1000)
-    $script:MainForm.StartPosition = "CenterScreen"
-    $script:MainForm.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
+    ${script:MainForm} = New-Object System.Windows.Forms.Form
+    ${script:MainForm}.Text = "RawrXD IDE - VS Code Style (1,000 Tab Support)"
+    ${script:MainForm}.Size = New-Object System.Drawing.Size(1600, 1000)
+    ${script:MainForm}.StartPosition = "CenterScreen"
+    ${script:MainForm}.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
     
     # ============================================
     # VERTICAL SPLIT: File Explorer | Main Content
@@ -1249,46 +1249,46 @@ function Initialize-VSCodeStyleGUI {
     $explorerLabel.TextAlign = "MiddleLeft"
     $explorerLabel.Padding = New-Object System.Windows.Forms.Padding(5, 0, 0, 0)
     
-    $script:FileExplorer = New-Object System.Windows.Forms.TreeView
-    $script:FileExplorer.Dock = "Fill"
-    $script:FileExplorer.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
-    $script:FileExplorer.ForeColor = [System.Drawing.Color]::White
-    $script:FileExplorer.Add_BeforeExpand({ Populate-RealDirectory $_.Node })
-    $script:FileExplorer.Add_NodeMouseDoubleClick({ Open-RealFile $_.Node })
+    ${script:FileExplorer} = New-Object System.Windows.Forms.TreeView
+    ${script:FileExplorer}.Dock = "Fill"
+    ${script:FileExplorer}.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
+    ${script:FileExplorer}.ForeColor = [System.Drawing.Color]::White
+    ${script:FileExplorer}.Add_BeforeExpand({ Populate-RealDirectory $_.Node })
+    ${script:FileExplorer}.Add_NodeMouseDoubleClick({ Open-RealFile $_.Node })
     
     # RIGHT-CLICK CONTEXT MENU FOR FILE EXPLORER
     $explorerContextMenu = New-Object System.Windows.Forms.ContextMenuStrip
     
     $newFileItem = New-Object System.Windows.Forms.ToolStripMenuItem("New File")
     $newFileItem.Add_Click({
-        New-FileInExplorer $script:FileExplorer.SelectedNode $script:FileExplorer
+        New-FileInExplorer ${script:FileExplorer}.SelectedNode ${script:FileExplorer}
     })
     
     $newFolderItem = New-Object System.Windows.Forms.ToolStripMenuItem("New Folder")
     $newFolderItem.Add_Click({
-        New-DirectoryInExplorer $script:FileExplorer.SelectedNode $script:FileExplorer
+        New-DirectoryInExplorer ${script:FileExplorer}.SelectedNode ${script:FileExplorer}
     })
     
     $renameItem = New-Object System.Windows.Forms.ToolStripMenuItem("Rename")
     $renameItem.Add_Click({
-        Rename-FileOrFolder $script:FileExplorer.SelectedNode
+        Rename-FileOrFolder ${script:FileExplorer}.SelectedNode
     })
     
     $deleteItem = New-Object System.Windows.Forms.ToolStripMenuItem("Delete")
     $deleteItem.Add_Click({
-        Delete-FileOrFolder $script:FileExplorer.SelectedNode
+        Delete-FileOrFolder ${script:FileExplorer}.SelectedNode
     })
     
     $openTerminalItem = New-Object System.Windows.Forms.ToolStripMenuItem("Open Terminal Here")
     $openTerminalItem.Add_Click({
-        if ($script:FileExplorer.SelectedNode -and $script:FileExplorer.SelectedNode.Tag) {
-            $dirPath = if ((Test-Path $script:FileExplorer.SelectedNode.Tag -PathType Container)) { 
-                $script:FileExplorer.SelectedNode.Tag 
+        if (${script:FileExplorer}.SelectedNode -and ${script:FileExplorer}.SelectedNode.Tag) {
+            $dirPath = $(if ((Test-Path ${script:FileExplorer}.SelectedNode.Tag -PathType Container)) { 
+                ${script:FileExplorer}.SelectedNode.Tag 
             } else { 
-                [System.IO.Path]::GetDirectoryName($script:FileExplorer.SelectedNode.Tag)
+                [System.IO.Path]::GetDirectoryName(${script:FileExplorer}.SelectedNode.Tag)
             }
             New-TerminalTab
-            $term = $script:TerminalTabs[$script:TerminalTabCount - 1]
+            $term = ${script:TerminalTabs}[${script:TerminalTabCount} - 1]
             $term.Output.AppendText("PowerShell Terminal opened in: $dirPath`n")
             Push-Location $dirPath
         }
@@ -1296,7 +1296,7 @@ function Initialize-VSCodeStyleGUI {
     
     $openInEditorItem = New-Object System.Windows.Forms.ToolStripMenuItem("Open in Editor")
     $openInEditorItem.Add_Click({
-        Open-RealFile $script:FileExplorer.SelectedNode
+        Open-RealFile ${script:FileExplorer}.SelectedNode
     })
     
     $explorerContextMenu.Items.AddRange(@(
@@ -1309,9 +1309,9 @@ function Initialize-VSCodeStyleGUI {
         $openInEditorItem
     ))
     
-    $script:FileExplorer.ContextMenuStrip = $explorerContextMenu
+    ${script:FileExplorer}.ContextMenuStrip = $explorerContextMenu
     
-    $leftPanel.Controls.AddRange(@($explorerLabel, $script:FileExplorer))
+    $leftPanel.Controls.AddRange(@($explorerLabel, ${script:FileExplorer}))
     $mainVerticalSplit.Panel1.Controls.Add($leftPanel)
     
     # ============================================
@@ -1351,8 +1351,8 @@ function Initialize-VSCodeStyleGUI {
     $saveButton.Location = New-Object System.Drawing.Point(175, 5)
     $saveButton.Size = New-Object System.Drawing.Size(60, 25)
     $saveButton.Add_Click({
-        if ($script:EditorTabControl.SelectedTab -and $script:EditorTabControl.SelectedTab.Tag) {
-            Save-EditorTab $script:EditorTabControl.SelectedTab
+        if (${script:EditorTabControl}.SelectedTab -and ${script:EditorTabControl}.SelectedTab.Tag) {
+            Save-EditorTab ${script:EditorTabControl}.SelectedTab
         }
     })
     
@@ -1360,50 +1360,50 @@ function Initialize-VSCodeStyleGUI {
     $masmButton.Text = "MASM"
     $masmButton.Location = New-Object System.Drawing.Point(240, 5)
     $masmButton.Size = New-Object System.Drawing.Size(60, 25)
-    $masmButton.Add_Click({ $script:EditorTabControl.SelectedTab = $script:MASMTab })
+    $masmButton.Add_Click({ ${script:EditorTabControl}.SelectedTab = ${script:MASMTab} })
     
     $modelsButton = New-Object System.Windows.Forms.Button
     $modelsButton.Text = "Models"
     $modelsButton.Location = New-Object System.Drawing.Point(305, 5)
     $modelsButton.Size = New-Object System.Drawing.Size(60, 25)
-    $modelsButton.Add_Click({ $script:EditorTabControl.SelectedTab = $script:ModelsTab })
+    $modelsButton.Add_Click({ ${script:EditorTabControl}.SelectedTab = ${script:ModelsTab} })
     
     $editorToolbar.Controls.AddRange(@($newFileButton, $newChatButton, $saveButton, $masmButton, $modelsButton))
     
     # Editor TabControl (for Editor, Chat, MASM, Models)
-    $script:EditorTabControl = New-Object System.Windows.Forms.TabControl
-    $script:EditorTabControl.Dock = "Fill"
-    $script:EditorTabControl.Multiline = $false
+    ${script:EditorTabControl} = New-Object System.Windows.Forms.TabControl
+    ${script:EditorTabControl}.Dock = "Fill"
+    ${script:EditorTabControl}.Multiline = $false
     
     # Add MASM Browser Tab (permanent)
-    $script:MASMTab = New-Object System.Windows.Forms.TabPage("MASM Browser")
-    Initialize-RealMASMBrowser $script:MASMTab
-    $script:EditorTabControl.TabPages.Add($script:MASMTab)
+    ${script:MASMTab} = New-Object System.Windows.Forms.TabPage("MASM Browser")
+    Initialize-RealMASMBrowser ${script:MASMTab}
+    ${script:EditorTabControl}.TabPages.Add(${script:MASMTab})
     
     # Add Model Loader Tab (permanent)
-    $script:ModelsTab = New-Object System.Windows.Forms.TabPage("Model Loader")
-    Initialize-RealModelLoader $script:ModelsTab
-    $script:EditorTabControl.TabPages.Add($script:ModelsTab)
+    ${script:ModelsTab} = New-Object System.Windows.Forms.TabPage("Model Loader")
+    Initialize-RealModelLoader ${script:ModelsTab}
+    ${script:EditorTabControl}.TabPages.Add(${script:ModelsTab})
     
     # Create initial tabs
     New-EditorTab
     New-ChatTab
     
     # Handle middle-click or context menu to close tabs
-    $script:EditorTabControl.Add_MouseDown({
+    ${script:EditorTabControl}.Add_MouseDown({
         if ($_.Button -eq "Middle") {
-            $tab = $script:EditorTabControl.SelectedTab
-            if ($tab -and $tab.Tag -and $tab -ne $script:MASMTab -and $tab -ne $script:ModelsTab) {
-                if ($script:EditorTabs.ContainsKey($tab.Tag.Index)) {
+            $tab = ${script:EditorTabControl}.SelectedTab
+            if ($tab -and $tab.Tag -and $tab -ne ${script:MASMTab} -and $tab -ne ${script:ModelsTab}) {
+                if (${script:EditorTabs}.ContainsKey($tab.Tag.Index)) {
                     Close-EditorTab $tab
-                } elseif ($script:ChatTabs.ContainsKey($tab.Tag.Index)) {
+                } elseif (${script:ChatTabs}.ContainsKey($tab.Tag.Index)) {
                     Close-ChatTab $tab
                 }
             }
         }
     })
     
-    $editorPanel.Controls.AddRange(@($editorToolbar, $script:EditorTabControl))
+    $editorPanel.Controls.AddRange(@($editorToolbar, ${script:EditorTabControl}))
     $mainHorizontalSplit.Panel1.Controls.Add($editorPanel)
     
     # ============================================
@@ -1436,28 +1436,28 @@ function Initialize-VSCodeStyleGUI {
     $terminalToolbar.Controls.AddRange(@($terminalLabel, $newTerminalButton))
     
     # Terminal TabControl
-    $script:TerminalTabControl = New-Object System.Windows.Forms.TabControl
-    $script:TerminalTabControl.Dock = "Fill"
+    ${script:TerminalTabControl} = New-Object System.Windows.Forms.TabControl
+    ${script:TerminalTabControl}.Dock = "Fill"
     
     # Create initial terminal
     New-TerminalTab
     
     # Handle middle-click to close terminal tabs
-    $script:TerminalTabControl.Add_MouseDown({
+    ${script:TerminalTabControl}.Add_MouseDown({
         if ($_.Button -eq "Middle") {
-            $tab = $script:TerminalTabControl.SelectedTab
-            if ($tab -and $tab.Tag -and $script:TerminalTabs.ContainsKey($tab.Tag.Index)) {
+            $tab = ${script:TerminalTabControl}.SelectedTab
+            if ($tab -and $tab.Tag -and ${script:TerminalTabs}.ContainsKey($tab.Tag.Index)) {
                 Close-TerminalTab $tab
             }
         }
     })
     
-    $terminalPanel.Controls.AddRange(@($terminalToolbar, $script:TerminalTabControl))
+    $terminalPanel.Controls.AddRange(@($terminalToolbar, ${script:TerminalTabControl}))
     $mainHorizontalSplit.Panel2.Controls.Add($terminalPanel)
     
     # Add split container to main form
     $mainVerticalSplit.Panel2.Controls.Add($mainHorizontalSplit)
-    $script:MainForm.Controls.Add($mainVerticalSplit)
+    ${script:MainForm}.Controls.Add($mainVerticalSplit)
     
     # ============================================
     # STATUS BAR
@@ -1465,10 +1465,10 @@ function Initialize-VSCodeStyleGUI {
     
     $statusStrip = New-Object System.Windows.Forms.StatusStrip
     $statusStrip.BackColor = [System.Drawing.Color]::FromArgb(0, 122, 204)
-    $script:StatusLabel = New-Object System.Windows.Forms.ToolStripStatusLabel
-    $script:StatusLabel.Text = "Ready - VS Code Style Layout"
-    $script:StatusLabel.ForeColor = [System.Drawing.Color]::White
-    $statusStrip.Items.Add($script:StatusLabel) | Out-Null
+    ${script:StatusLabel} = New-Object System.Windows.Forms.ToolStripStatusLabel
+    ${script:StatusLabel}.Text = "Ready - VS Code Style Layout"
+    ${script:StatusLabel}.ForeColor = [System.Drawing.Color]::White
+    $statusStrip.Items.Add(${script:StatusLabel}) | Out-Null
     
     # Model selector in status bar - DYNAMIC LOADING
     $modelLabel = New-Object System.Windows.Forms.ToolStripLabel
@@ -1477,50 +1477,48 @@ function Initialize-VSCodeStyleGUI {
     $statusStrip.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator)) | Out-Null
     $statusStrip.Items.Add($modelLabel) | Out-Null
     
-    $script:StatusBarModelCombo = New-Object System.Windows.Forms.ToolStripComboBox
-    $script:StatusBarModelCombo.AutoSize = $false
-    $script:StatusBarModelCombo.Width = 200
+    ${script:StatusBarModelCombo} = New-Object System.Windows.Forms.ToolStripComboBox
+    ${script:StatusBarModelCombo}.AutoSize = $false
+    ${script:StatusBarModelCombo}.Width = 200
     
     # Load actual models from Ollama
-    if ($script:OllamaModels.Count -eq 0) {
+    if (${script:OllamaModels}.Count -eq 0) {
         Load-OllamaModels
     }
     
-    if ($script:OllamaModels.Count -gt 0) {
-        foreach ($model in $script:OllamaModels) {
-            $script:StatusBarModelCombo.Items.Add($model) | Out-Null
+    if (${script:OllamaModels}.Count -gt 0) {
+        foreach ($model in ${script:OllamaModels}) {
+            ${script:StatusBarModelCombo}.Items.Add($model) | Out-Null
         }
-        $script:StatusBarModelCombo.SelectedIndex = 0
+        ${script:StatusBarModelCombo}.SelectedIndex = 0
     } else {
         # Fallback if no Ollama models found
-        $script:StatusBarModelCombo.Items.AddRange(@("No models loaded - Install Ollama", "gpt-4 (API)", "gpt-3.5-turbo (API)"))
-        $script:StatusBarModelCombo.SelectedIndex = 0
+        ${script:StatusBarModelCombo}.Items.AddRange(@("No models loaded - Install Ollama", "gpt-4 (API)", "gpt-3.5-turbo (API)"))
+        ${script:StatusBarModelCombo}.SelectedIndex = 0
     }
     
-    $script:StatusBarModelCombo.Add_SelectedIndexChanged({
-        Update-StatusBar "Active AI Model: $($script:StatusBarModelCombo.SelectedItem)"
+    ${script:StatusBarModelCombo}.Add_SelectedIndexChanged({
+        Update-StatusBar "Active AI Model: $(${script:StatusBarModelCombo}.SelectedItem)"
     })
-    $statusStrip.Items.Add($script:StatusBarModelCombo) | Out-Null
+    $statusStrip.Items.Add(${script:StatusBarModelCombo}) | Out-Null
     
-    $script:MainForm.Controls.Add($statusStrip)
+    ${script:MainForm}.Controls.Add($statusStrip)
     
     # ============================================
     # INITIALIZE COMPONENTS
     # ============================================
     
-    Initialize-RealFileExplorer $script:FileExplorer
+    Initialize-RealFileExplorer ${script:FileExplorer}
     Update-StatusBar "Ready - All systems operational"
     
     # Show form
-    $script:MainForm.Add_Shown({$script:MainForm.Activate()})
-    $script:MainForm.ShowDialog() | Out-Null
+    ${script:MainForm}.Add_Shown({${script:MainForm}.Activate()})
+    ${script:MainForm}.ShowDialog() | Out-Null
 }
 
 # ============================================
 # MAIN EXECUTION
-# ============================================
-
-if ($CliMode) {
+# ============================================ $(if ($CliMode) {
     switch ($Command) {
         "test-drives" {
             Write-Host "Real drive detection:" -ForegroundColor Cyan

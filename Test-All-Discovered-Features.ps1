@@ -6,10 +6,10 @@ Write-Host "  RawrXD Systematic Feature Testing Suite" -ForegroundColor Cyan
 Write-Host "  Testing TOP PRIORITY features that haven't been validated" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$script:testResults = @{}
-$script:totalTests = 0
-$script:passedTests = 0
-$script:failedTests = 0
+${script:testResults} = @{}
+${script:totalTests} = 0
+${script:passedTests} = 0
+${script:failedTests} = 0
 
 function Test-FeatureSystem {
   param(
@@ -19,7 +19,7 @@ function Test-FeatureSystem {
     [string]$Description
   )
     
-  $script:totalTests++
+  ${script:totalTests}++
   Write-Host "`n🔸 Testing: $TestName" -ForegroundColor Yellow
   Write-Host "   Description: $Description" -ForegroundColor Gray
     
@@ -30,23 +30,23 @@ function Test-FeatureSystem {
         
     if ($result -eq $true) {
       Write-Host "   ✅ PASS ($([math]::Round($duration.TotalMilliseconds))ms)" -ForegroundColor Green
-      $script:passedTests++
-      $script:testResults[$TestName] = "PASS"
+      ${script:passedTests}++
+      ${script:testResults}[$TestName] = "PASS"
     }
     elseif ($result -eq "PARTIAL") {
       Write-Host "   ⚠️ PARTIAL ($([math]::Round($duration.TotalMilliseconds))ms)" -ForegroundColor Yellow
-      $script:testResults[$TestName] = "PARTIAL"
+      ${script:testResults}[$TestName] = "PARTIAL"
     }
     else {
       Write-Host "   ❌ FAIL ($([math]::Round($duration.TotalMilliseconds))ms)" -ForegroundColor Red
-      $script:failedTests++
-      $script:testResults[$TestName] = "FAIL"
+      ${script:failedTests}++
+      ${script:testResults}[$TestName] = "FAIL"
     }
   }
   catch {
     Write-Host "   💥 ERROR: $_" -ForegroundColor Red
-    $script:failedTests++
-    $script:testResults[$TestName] = "ERROR: $_"
+    ${script:failedTests}++
+    ${script:testResults}[$TestName] = "ERROR: $_"
   }
 }
 
@@ -299,17 +299,17 @@ Test-FeatureSystem -TestName "Dialog Window System" -Category "Dialogs" -Descrip
 Write-Host "`n📊 COMPREHENSIVE FEATURE TESTING RESULTS" -ForegroundColor Cyan
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$successRate = if ($script:totalTests -gt 0) { [math]::Round(($script:passedTests / $script:totalTests) * 100, 1) } else { 0 }
+$successRate = $(if (${script:totalTests} -gt 0) { [math]::Round((${script:passedTests} / ${script:totalTests}) * 100, 1) } else { 0 }
 
 Write-Host "`n🎯 Test Summary:" -ForegroundColor White
-Write-Host "   Total Tests: $($script:totalTests)" -ForegroundColor Gray  
-Write-Host "   Passed: $($script:passedTests)" -ForegroundColor Green
-Write-Host "   Failed: $($script:failedTests)" -ForegroundColor Red
+Write-Host "   Total Tests: $(${script:totalTests})" -ForegroundColor Gray  
+Write-Host "   Passed: $(${script:passedTests})" -ForegroundColor Green
+Write-Host "   Failed: $(${script:failedTests})" -ForegroundColor Red
 Write-Host "   Success Rate: $successRate%" -ForegroundColor Cyan
 
 Write-Host "`n📋 Detailed Results:" -ForegroundColor White
-foreach ($test in $script:testResults.Keys | Sort-Object) {
-  $result = $script:testResults[$test]
+foreach ($test in ${script:testResults}.Keys | Sort-Object) {
+  $result = ${script:testResults}[$test]
   $color = switch -Regex ($result) {
     "^PASS" { "Green" }
     "^PARTIAL" { "Yellow" } 

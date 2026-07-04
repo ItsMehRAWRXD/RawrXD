@@ -1,9 +1,9 @@
 # save as: tools/rebuild_sections.ps1
-$env:LINK = "link.exe"
+${env:LINK} = "link.exe"
 
 # Prefer "ours" ml64 if provided; fall back to the MSVC ml64.exe.
 # Set `RAWRXD_ML64_PRIMARY` to point at your custom assembler.
-$PrimaryMasm = $env:RAWRXD_ML64_PRIMARY
+$PrimaryMasm = ${env:RAWRXD_ML64_PRIMARY}
 if (-not $PrimaryMasm) {
     $cmd = Get-Command ml64.exe -ErrorAction SilentlyContinue
     if ($cmd) { $PrimaryMasm = $cmd.Source }

@@ -17,8 +17,8 @@ $VerbosePreference = 'SilentlyContinue'
 $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 
 if ([string]::IsNullOrWhiteSpace($RawrXDRoot)) {
-    if ($env:LAZY_INIT_IDE_ROOT -and (Test-Path $env:LAZY_INIT_IDE_ROOT)) {
-        $RawrXDRoot = $env:LAZY_INIT_IDE_ROOT
+    if (${env:LAZY_INIT_IDE_ROOT} -and (Test-Path ${env:LAZY_INIT_IDE_ROOT})) {
+        $RawrXDRoot = ${env:LAZY_INIT_IDE_ROOT}
     } else {
         $RawrXDRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
     }
@@ -64,11 +64,11 @@ function Invoke-PreDeployment {
         if (-not (Test-Path $runLogDir)) {
             New-Item -ItemType Directory -Path $runLogDir -Force | Out-Null
         }
-        $env:RAWRXD_LOG_PATH = Join-Path $runLogDir "RawrXD_run_${timestamp}.log"
-        if (-not (Test-Path $env:RAWRXD_LOG_PATH)) {
-            New-Item -ItemType File -Path $env:RAWRXD_LOG_PATH -Force | Out-Null
+        ${env:RAWRXD_LOG_PATH} = Join-Path $runLogDir "RawrXD_run_${timestamp}.log"
+        if (-not (Test-Path ${env:RAWRXD_LOG_PATH})) {
+            New-Item -ItemType File -Path ${env:RAWRXD_LOG_PATH} -Force | Out-Null
         }
-        Write-DeployLog "Using run log: $env:RAWRXD_LOG_PATH" INFO
+        Write-DeployLog "Using run log: ${env:RAWRXD_LOG_PATH}" INFO
     } catch {
         Write-DeployLog "Failed to set RAWRXD_LOG_PATH: $_" WARNING Yellow
     }
@@ -95,7 +95,7 @@ function Invoke-PreDeployment {
         $exists = Test-Path $fullPath
         $checks += @{
             Component = $path
-            Status = if ($exists) { 'OK' } else { 'MISSING' }
+            Status = $(if ($exists) { 'OK' } else { 'MISSING' }
             Details = $fullPath
         }
         Write-DeployLog "Path check: $path - $(if ($exists) { 'OK' } else { 'MISSING' })" $(if ($exists) { 'SUCCESS' } else { 'ERROR' })
@@ -159,13 +159,13 @@ function Invoke-Deployment {
         if (-not (Test-Path $runLogDir)) {
             New-Item -ItemType Directory -Path $runLogDir -Force | Out-Null
         }
-        if (-not $env:RAWRXD_LOG_PATH) {
-            $env:RAWRXD_LOG_PATH = Join-Path $runLogDir "RawrXD_run_${timestamp}.log"
+        if (-not ${env:RAWRXD_LOG_PATH}) {
+            ${env:RAWRXD_LOG_PATH} = Join-Path $runLogDir "RawrXD_run_${timestamp}.log"
         }
-        if (-not (Test-Path $env:RAWRXD_LOG_PATH)) {
-            New-Item -ItemType File -Path $env:RAWRXD_LOG_PATH -Force | Out-Null
+        if (-not (Test-Path ${env:RAWRXD_LOG_PATH})) {
+            New-Item -ItemType File -Path ${env:RAWRXD_LOG_PATH} -Force | Out-Null
         }
-        Write-DeployLog "Using run log: $env:RAWRXD_LOG_PATH" INFO
+        Write-DeployLog "Using run log: ${env:RAWRXD_LOG_PATH}" INFO
     } catch {
         Write-DeployLog "Failed to set RAWRXD_LOG_PATH: $_" WARNING Yellow
     }
@@ -249,7 +249,7 @@ function Invoke-Verification {
         $logsDir = Join-Path $RootPath 'logs'
         if (-not (Test-Path $logsDir)) { return (Join-Path $RootPath 'logs/RawrXD.log') }
 
-        $override = $env:RAWRXD_LOG_PATH
+        $override = ${env:RAWRXD_LOG_PATH}
         if ($override -and (Test-Path $override)) { return $override }
 
         $candidateList = @()

@@ -87,7 +87,7 @@ if (Test-Path $cmakePath) {
     $win32IdeLines = ([regex]::Matches($content, "WIN32IDE_SOURCES|src/win32app/|src/asm/RawrXD_DualEngine|src/asm/quantum_beaconism")).Count
     $stats["cmake_src_refs"] = $sourcesLines
     $stats["cmake_win32ide_refs"] = $win32IdeLines
-    $soourcesBlock = if ($content -match "set\s*\(\s*SOURCES\s+([\s\S]*?)\)\s*(?=\s*set\s*\()") { $Matches[1] } else { "" }
+    $soourcesBlock = $(if ($content -match "set\s*\(\s*SOURCES\s+([\s\S]*?)\)\s*(?=\s*set\s*\()") { $Matches[1] } else { "" }
     $stats["sources_block_src_count"] = ([regex]::Matches($soourcesBlock, "src/")).Count
 }
 

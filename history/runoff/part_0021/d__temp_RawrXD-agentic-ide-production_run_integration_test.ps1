@@ -46,7 +46,7 @@ if (Test-Path $idePath) {
     Write-Host ""
     
     # Set Qt in PATH for runtime DLL resolution
-    $env:PATH = "C:\Qt\6.7.3\msvc2022_64\bin;" + $env:PATH
+    ${env:PATH} = "C:\Qt\6.7.3\msvc2022_64\bin;" + ${env:PATH}
     
     Start-Process $idePath -ArgumentList "--model", $modelPath -WorkingDirectory (Split-Path $idePath)
     

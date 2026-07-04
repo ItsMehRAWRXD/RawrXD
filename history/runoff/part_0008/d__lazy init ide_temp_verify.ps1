@@ -1,8 +1,8 @@
-$dllPath = "D:\lazy init ide\bin\temp_build\RawrXD_PatternBridge.dll"
-$typeName = "RawrXD_Verifier_$(Get-Date -Format 'yyyyMMddHHmmss')"
-$escaped = $dllPath -replace '\\','\\'
+$Script:dllPath = "D:\lazy init ide\bin\temp_build\RawrXD_PatternBridge.dll"
+$Script:typeName = "RawrXD_Verifier_$(Get-Date -Format 'yyyyMMddHHmmss')"
+$Script:escaped = $dllPath -replace '\\','\\'
 
-$csharp = @"
+$Script:csharp = @"
 using System;
 using System.Runtime.InteropServices;
 public static class $typeName
@@ -15,8 +15,8 @@ public static class $typeName
 try {
     Add-Type $csharp
     Write-Host "Verifying $dllPath with type $typeName..."
-    $expr = "[$typeName]::InitializePatternEngine()"
-    $res = Invoke-Expression $expr
+$Script:expr = "[$typeName]::InitializePatternEngine()"
+$Script:res = Invoke-Expression $expr
     if ($res -eq 1) { 
         Write-Host "InitializePatternEngine returned: $res (SUCCESS)" -ForegroundColor Green 
     } else { 

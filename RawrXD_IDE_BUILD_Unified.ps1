@@ -69,7 +69,7 @@ if ($sdkLib) {
 
 $libPaths = @($libPath)
 if ($sdkLib) { $libPaths += $sdkLib.FullName }
-$env:LIB = $libPaths -join ";"
+${env:LIB} = $libPaths -join ";"
 
 Set-Location $PSScriptRoot
 

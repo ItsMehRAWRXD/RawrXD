@@ -47,7 +47,7 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
-$Script:Version = "1.0.0"
+${Script:Version} = "1.0.0"
 
 # Color output helpers
 function Write-Success { param($Message) Write-Host "✅ $Message" -ForegroundColor Green }
@@ -67,7 +67,7 @@ function Write-Section { param($Message)
 
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║  🔥 RawrXD IDE - Thermal NVMe Array Initialization v$Script:Version          ║" -ForegroundColor Magenta
+Write-Host "║  🔥 RawrXD IDE - Thermal NVMe Array Initialization v${Script:Version}          ║" -ForegroundColor Magenta
 Write-Host "║  STRIPED_THERMAL_AWARE Mode Configuration                             ║" -ForegroundColor Magenta
 Write-Host "╚═══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
@@ -96,9 +96,9 @@ foreach ($deviceId in $targetDeviceIds) {
             BusType = $disk.BusType
             SizeGB = [math]::Round($disk.Size / 1GB, 2)
             HealthStatus = $disk.HealthStatus
-            Temperature = if ($health) { $health.Temperature } else { $null }
-            Wear = if ($health) { $health.Wear } else { $null }
-            PowerOnHours = if ($health) { $health.PowerOnHours } else { $null }
+            Temperature = $(if ($health) { $health.Temperature } else { $null }
+            Wear = $(if ($health) { $health.Wear } else { $null }
+            PowerOnHours = $(if ($health) { $health.PowerOnHours } else { $null }
             ThermalBaseline = $null
             ThermalHeadroom = $null
         }
@@ -113,7 +113,7 @@ foreach ($deviceId in $targetDeviceIds) {
             default { "❓" }
         }
         
-        $tempStr = if ($driveInfo.Temperature) { "$($driveInfo.Temperature)°C" } else { "N/A" }
+        $tempStr = $(if ($driveInfo.Temperature) { "$($driveInfo.Temperature)°C" } else { "N/A" }
         Write-Host "  $healthIcon DeviceId $($driveInfo.DeviceId): $($driveInfo.FriendlyName) - $($driveInfo.SizeGB) GB | Temp: $tempStr" -ForegroundColor White
     }
     else {

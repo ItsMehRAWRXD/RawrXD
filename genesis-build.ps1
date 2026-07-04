@@ -72,9 +72,9 @@ if ($hasCl) {
 # Stage 2: Setup
 Write-Host "`n[Stage 2/5] Environment Setup..." -ForegroundColor Yellow
 
-$env:GENESIS_ML64 = Join-Path $ToolPath "ml64.exe"
-$env:GENESIS_CL = Join-Path $ToolPath "cl.exe"
-$env:GENESIS_LINK = Join-Path $ToolPath "link.exe"
+${env:GENESIS_ML64} = Join-Path $ToolPath "ml64.exe"
+${env:GENESIS_CL} = Join-Path $ToolPath "cl.exe"
+${env:GENESIS_LINK} = Join-Path $ToolPath "link.exe"
 
 $BuildRoot = "build-genesis"
 @($BuildRoot, "$BuildRoot\obj", "$BuildRoot\bin") | ForEach-Object {
@@ -99,7 +99,7 @@ $MasmFiles = @(
 foreach ($file in $MasmFiles) {
     if (Test-Path $file) {
         $objFile = "$BuildRoot\obj\$($file -replace '\.asm$', '.obj')"
-        $cmd = "`"$env:GENESIS_ML64`" /c /W3 /nologo /Fo`"$objFile`" `"$file`""
+        $cmd = "`"${env:GENESIS_ML64}`" /c /W3 /nologo /Fo`"$objFile`" `"$file`""
         
         if ($Verbose) { Write-Host "  $cmd" -ForegroundColor DarkGray }
         

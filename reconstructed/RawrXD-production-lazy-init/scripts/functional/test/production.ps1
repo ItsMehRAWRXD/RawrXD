@@ -23,18 +23,18 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$script:TestResults = @{ Passed = 0; Failed = 0; Details = @() }
+${script:TestResults} = @{ Passed = 0; Failed = 0; Details = @() }
 
 function Write-TestResult {
     param([string]$TestName, [bool]$Passed, [string]$Message = "")
     
     if ($Passed) {
         Write-Host "  ✅ PASS: $TestName" -ForegroundColor Green
-        $script:TestResults.Passed++
+        ${script:TestResults}.Passed++
     } else {
         Write-Host "  ❌ FAIL: $TestName" -ForegroundColor Red
         if ($Message) { Write-Host "     └─ $Message" -ForegroundColor Yellow }
-        $script:TestResults.Failed++
+        ${script:TestResults}.Failed++
     }
 }
 
@@ -128,9 +128,9 @@ Write-Host "═══ Test 3: GitHub Copilot Detection ═══" -ForegroundCol
 
 # Check VS Code extensions directory
 $vscodePaths = @(
-    "$env:USERPROFILE\.vscode\extensions",
-    "$env:USERPROFILE\.vscode-insiders\extensions",
-    "$env:USERPROFILE\.cursor\extensions"
+    "${env:USERPROFILE}\.vscode\extensions",
+    "${env:USERPROFILE}\.vscode-insiders\extensions",
+    "${env:USERPROFILE}\.cursor\extensions"
 )
 
 $foundCopilot = $false
@@ -154,8 +154,8 @@ if (-not $foundCopilot) {
 
 # Check for Copilot config files
 $configPaths = @(
-    "$env:USERPROFILE\.config\github-copilot\hosts.json",
-    "$env:APPDATA\GitHub Copilot\settings.json"
+    "${env:USERPROFILE}\.config\github-copilot\hosts.json",
+    "${env:APPDATA}\GitHub Copilot\settings.json"
 )
 
 $foundConfig = $false
@@ -286,12 +286,12 @@ Write-Host "                    FUNCTIONAL TEST SUMMARY                    " -Fo
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 
-$total = $script:TestResults.Passed + $script:TestResults.Failed
-$passRate = if ($total -gt 0) { [math]::Round(($script:TestResults.Passed / $total) * 100, 1) } else { 0 }
+$total = ${script:TestResults}.Passed + ${script:TestResults}.Failed
+$passRate = $(if ($total -gt 0) { [math]::Round((${script:TestResults}.Passed / $total) * 100, 1) } else { 0 }
 
 Write-Host "  Total Tests:  $total" -ForegroundColor White
-Write-Host "  ✅ Passed:    $($script:TestResults.Passed)" -ForegroundColor Green
-Write-Host "  ❌ Failed:    $($script:TestResults.Failed)" -ForegroundColor Red
+Write-Host "  ✅ Passed:    $(${script:TestResults}.Passed)" -ForegroundColor Green
+Write-Host "  ❌ Failed:    $(${script:TestResults}.Failed)" -ForegroundColor Red
 Write-Host ""
 Write-Host "  Pass Rate:    $passRate%" -ForegroundColor $(if ($passRate -ge 80) { "Green" } elseif ($passRate -ge 60) { "Yellow" } else { "Red" })
 Write-Host ""
@@ -300,14 +300,14 @@ Write-Host ""
 $reportPath = "$LogsDir\functional_test_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
 @{
     Timestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ss"
-    Passed = $script:TestResults.Passed
-    Failed = $script:TestResults.Failed
+    Passed = ${script:TestResults}.Passed
+    Failed = ${script:TestResults}.Failed
     PassRate = $passRate
 } | ConvertTo-Json | Out-File $reportPath -Encoding UTF8
 Write-Host "  📄 Report: $reportPath" -ForegroundColor Gray
 Write-Host ""
 
-if ($script:TestResults.Failed -eq 0) {
+if (${script:TestResults}.Failed -eq 0) {
     Write-Host "✅ All functional tests passed!" -ForegroundColor Green
     exit 0
 } else {

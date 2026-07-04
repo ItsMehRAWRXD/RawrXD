@@ -19,7 +19,7 @@ if (-not (Test-Path $quantizeExe)) {
     Write-Host "   (This is a one-time download, ~50MB)" -ForegroundColor Yellow
     
     $downloadUrl = "https://github.com/ggerganov/llama.cpp/releases/download/b3055/llama-b3055-bin-win-avx2.zip"
-    $zipPath = "$env:TEMP\llama-quantize.zip"
+    $zipPath = "${env:TEMP}\llama-quantize.zip"
     $extractPath = "C:\llama"
     
     try {

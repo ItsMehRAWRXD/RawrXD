@@ -451,7 +451,13 @@ bool Win32IDE::routeCommand(int commandId)
         handleAgentCommand(commandId);
         return true;
     }
-    else if (commandId >= 5000 && commandId < 6000)
+    else if (commandId >= 5000 && commandId <= 5009)
+    {
+        // Codex menu commands (5000-5009) - Phase 7 integration
+        handleCodexCommand(commandId);
+        return true;
+    }
+    else if (commandId >= 5010 && commandId < 6000)
     {
         handleToolsCommand(commandId);
         return true;
@@ -2375,6 +2381,277 @@ void Win32IDE::handleViewCommand(int commandId)
 
         default:
             appendToOutput("[View] Unhandled command ID: " + std::to_string(commandId) + "\n", "Output",
+                           OutputSeverity::Info);
+            break;
+    }
+}
+
+// ============================================================================
+// CODEX COMMAND HANDLERS (Phase 7)
+// ============================================================================
+
+void Win32IDE::handleCodexCommand(int commandId)
+{
+    switch (commandId)
+    {
+        case IDM_CODEX_COMPLETE:  // 5000
+        {
+            // Trigger inline code completion at cursor position
+            if (!m_hwndEditor)
+            {
+                appendToOutput("[Codex] No active editor for completion\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            // Get context around cursor
+            CHARRANGE sel = {};
+            SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+            int line = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+            int col = sel.cpMin - (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, line, 0);
+            
+            // Trigger ghost text completion
+            if (m_ghostTextEnabled)
+            {
+                triggerGhostTextCompletion();
+                appendToOutput("[Codex] Completion triggered at L" + std::to_string(line + 1) + ":C" + std::to_string(col + 1) + "\n", 
+                               "Output", OutputSeverity::Info);
+            }
+            else
+            {
+                appendToOutput("[Codex] Ghost text completions disabled. Enable via AI menu.\n", 
+                               "Output", OutputSeverity::Warning);
+            }
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Completion triggered");
+        }
+        break;
+
+        case IDM_CODEX_EXPLAIN:  // 5001
+        {
+            // Explain selected code or current line
+            if (!m_hwndEditor)
+            {
+                appendToOutput("[Codex] No active editor\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            // Get selected text
+            CHARRANGE sel = {};
+            SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+            std::string selected;
+            if (sel.cpMax > sel.cpMin)
+            {
+                TEXTRANGEA tr = {};
+                tr.chrg = sel;
+                std::vector<char> buf((size_t)(sel.cpMax - sel.cpMin) + 1, 0);
+                tr.lpstrText = buf.data();
+                SendMessageA(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+                selected = buf.data();
+            }
+            
+            if (selected.empty())
+            {
+                appendToOutput("[Codex] No code selected to explain\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            // Post explanation request to chat
+            std::string prompt = "/explain\n\nExplain this code:\n```\n" + selected + "\n```\n";
+            postPromptToCopilotChat(prompt);
+            appendToOutput("[Codex] Explanation requested for selected code\n", "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Explanation requested");
+        }
+        break;
+
+        case IDM_CODEX_REFACTOR:  // 5002
+        {
+            // Refactor selected code
+            if (!m_hwndEditor)
+            {
+                appendToOutput("[Codex] No active editor\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            CHARRANGE sel = {};
+            SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+            std::string selected;
+            if (sel.cpMax > sel.cpMin)
+            {
+                TEXTRANGEA tr = {};
+                tr.chrg = sel;
+                std::vector<char> buf((size_t)(sel.cpMax - sel.cpMin) + 1, 0);
+                tr.lpstrText = buf.data();
+                SendMessageA(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+                selected = buf.data();
+            }
+            
+            if (selected.empty())
+            {
+                appendToOutput("[Codex] No code selected to refactor\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            std::string prompt = "/refactor\n\nRefactor this code for clarity and efficiency:\n```\n" + selected + "\n```\n";
+            postPromptToCopilotChat(prompt);
+            appendToOutput("[Codex] Refactor requested for selected code\n", "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Refactor requested");
+        }
+        break;
+
+        case IDM_CODEX_TEST:  // 5003
+        {
+            // Generate tests for selected code
+            if (!m_hwndEditor)
+            {
+                appendToOutput("[Codex] No active editor\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            CHARRANGE sel = {};
+            SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+            std::string selected;
+            if (sel.cpMax > sel.cpMin)
+            {
+                TEXTRANGEA tr = {};
+                tr.chrg = sel;
+                std::vector<char> buf((size_t)(sel.cpMax - sel.cpMin) + 1, 0);
+                tr.lpstrText = buf.data();
+                SendMessageA(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+                selected = buf.data();
+            }
+            
+            if (selected.empty())
+            {
+                appendToOutput("[Codex] No code selected for test generation\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            std::string prompt = "/test\n\nGenerate unit tests for this code:\n```\n" + selected + "\n```\n";
+            postPromptToCopilotChat(prompt);
+            appendToOutput("[Codex] Test generation requested\n", "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Test generation requested");
+        }
+        break;
+
+        case IDM_CODEX_FIX:  // 5004
+        {
+            // Fix issues in selected code
+            if (!m_hwndEditor)
+            {
+                appendToOutput("[Codex] No active editor\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            CHARRANGE sel = {};
+            SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+            std::string selected;
+            if (sel.cpMax > sel.cpMin)
+            {
+                TEXTRANGEA tr = {};
+                tr.chrg = sel;
+                std::vector<char> buf((size_t)(sel.cpMax - sel.cpMin) + 1, 0);
+                tr.lpstrText = buf.data();
+                SendMessageA(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+                selected = buf.data();
+            }
+            
+            if (selected.empty())
+            {
+                appendToOutput("[Codex] No code selected to fix\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            std::string prompt = "/fix\n\nFix any issues in this code:\n```\n" + selected + "\n```\n";
+            postPromptToCopilotChat(prompt);
+            appendToOutput("[Codex] Fix requested for selected code\n", "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Fix requested");
+        }
+        break;
+
+        case IDM_CODEX_DOC:  // 5005
+        {
+            // Generate documentation for selected code
+            if (!m_hwndEditor)
+            {
+                appendToOutput("[Codex] No active editor\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            CHARRANGE sel = {};
+            SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+            std::string selected;
+            if (sel.cpMax > sel.cpMin)
+            {
+                TEXTRANGEA tr = {};
+                tr.chrg = sel;
+                std::vector<char> buf((size_t)(sel.cpMax - sel.cpMin) + 1, 0);
+                tr.lpstrText = buf.data();
+                SendMessageA(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+                selected = buf.data();
+            }
+            
+            if (selected.empty())
+            {
+                appendToOutput("[Codex] No code selected for documentation\n", "Output", OutputSeverity::Warning);
+                break;
+            }
+            
+            std::string prompt = "/doc\n\nGenerate documentation for this code:\n```\n" + selected + "\n```\n";
+            postPromptToCopilotChat(prompt);
+            appendToOutput("[Codex] Documentation generation requested\n", "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Documentation requested");
+        }
+        break;
+
+        case IDM_CODEX_CHAT:  // 5006
+        {
+            // Focus chat input for general Codex chat
+            if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+            {
+                SetFocus(m_hwndCopilotChatInput);
+                appendToOutput("[Codex] Chat input focused\n", "Output", OutputSeverity::Info);
+            }
+            else
+            {
+                // Ensure chat panel is visible
+                toggleSecondarySidebar();
+                if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+                    SetFocus(m_hwndCopilotChatInput);
+            }
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Chat focused");
+        }
+        break;
+
+        case IDM_CODEX_SETTINGS:  // 5007
+        {
+            // Show Codex settings dialog
+            ShowCodexSettingsDialog();
+            appendToOutput("[Codex] Settings dialog opened\n", "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Codex: Settings opened");
+        }
+        break;
+
+        case IDM_CODEX_TOGGLE_CHAT:  // 5009
+        {
+            // Toggle AI/Agent chat panel visibility
+            toggleSecondarySidebar();
+            appendToOutput("[Codex] Chat panel toggled\n", "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+            {
+                std::string status = m_secondarySidebarVisible ? "Codex: Chat shown" : "Codex: Chat hidden";
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)status.c_str());
+            }
+        }
+        break;
+
+        default:
+            appendToOutput("[Codex] Unhandled command ID: " + std::to_string(commandId) + "\n", "Output",
                            OutputSeverity::Info);
             break;
     }
@@ -11714,6 +11991,17 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({4014, "Terminal: Clear All Terminals", "", "Terminal"});
 
     // Tools commands
+    // Codex menu commands (5000-5009)
+    m_commandRegistry.push_back({IDM_CODEX_COMPLETE, "Codex: Complete Code", "Ctrl+Alt+C", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_EXPLAIN, "Codex: Explain Code", "Ctrl+Alt+E", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_REFACTOR, "Codex: Refactor Code", "Ctrl+Alt+R", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_TEST, "Codex: Generate Tests", "Ctrl+Alt+T", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_FIX, "Codex: Fix Code", "Ctrl+Alt+F", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_DOC, "Codex: Generate Documentation", "Ctrl+Alt+D", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_CHAT, "Codex: Open Chat", "Ctrl+Alt+G", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_SETTINGS, "Codex: Settings", "", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_TOGGLE_CHAT, "Codex: Toggle Chat Panel", "Ctrl+Shift+C", "Codex"});
+
     m_commandRegistry.push_back({5001, "Tools: Start Profiling", "", "Tools"});
     m_commandRegistry.push_back({5002, "Tools: Stop Profiling", "", "Tools"});
     m_commandRegistry.push_back({5003, "Tools: Show Profile Results", "", "Tools"});

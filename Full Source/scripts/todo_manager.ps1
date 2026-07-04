@@ -63,8 +63,8 @@ $StoragePath = Resolve-RawrXDPath $StoragePath
 # TODO DATA STRUCTURES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:MAX_TODOS = 25
-$script:VERSION = "1.0.0"
+${script:MAX_TODOS} = 25
+${script:VERSION} = "1.0.0"
 
 class TodoItem {
     [int]$Id
@@ -126,7 +126,7 @@ class TodoItem {
             Source = $this.Source
             CreatedAt = $this.CreatedAt.ToString("o")
             UpdatedAt = $this.UpdatedAt.ToString("o")
-            CompletedAt = if ($this.CompletedAt) { $this.CompletedAt.ToString("o") } else { $null }
+            CompletedAt = $(if ($this.CompletedAt) { $this.CompletedAt.ToString("o") } else { $null }
             Tags = $this.Tags
             Metadata = $this.Metadata
             EstimatedMinutes = $this.EstimatedMinutes
@@ -164,7 +164,7 @@ class TodoList {
     
     TodoList([string]$storagePath) {
         $this.Items = @()
-        $this.MaxItems = $script:MAX_TODOS
+        $this.MaxItems = ${script:MAX_TODOS}
         $this.StoragePath = $storagePath
         $this.Statistics = @{
             TotalCreated = 0
@@ -281,7 +281,7 @@ class TodoList {
         }
         
         $data = @{
-            Version = $script:VERSION
+            Version = ${script:VERSION}
             SavedAt = (Get-Date).ToString("o")
             MaxItems = $this.MaxItems
             Statistics = $this.Statistics
@@ -578,7 +578,7 @@ class Win32TodoBridge {
     static [string] ExportForWin32([TodoList]$todoList) {
         # Export in format Win32IDE can consume
         $export = @{
-            Version = $script:VERSION
+            Version = ${script:VERSION}
             Timestamp = (Get-Date).ToString("o")
             Count = $todoList.Items.Count
             MaxCount = $todoList.MaxItems
@@ -636,7 +636,7 @@ switch ($Operation) {
     }
     
     "list" {
-        $filter = if ($Status -ne "pending") { $Status } else { "" }
+        $filter = $(if ($Status -ne "pending") { $Status } else { "" }
         $todoList.Display($Verbose)
     }
     

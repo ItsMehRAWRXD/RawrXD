@@ -281,7 +281,7 @@ function Find-CppEmptyBodies {
       $startLine = ($prefix -split "\r?\n").Length
       $endLine = $startLine + (($block -split "\r?\n").Length - 1)
 
-      $reason = if ($rx -eq $rxEmpty) { 'Empty C/C++ function body' } else { 'Trivial return C/C++ function body' }
+      $reason = $(if ($rx -eq $rxEmpty) { 'Empty C/C++ function body' } else { 'Trivial return C/C++ function body' }
 
       $preview = ($block -split "\r?\n" | Select-Object -First 10) -join "`n"
 

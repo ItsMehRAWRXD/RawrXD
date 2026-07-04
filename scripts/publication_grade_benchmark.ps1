@@ -266,7 +266,7 @@ function Measure-TPS {
         
         $result.TotalTime = $stopwatch.ElapsedMilliseconds
         $result.Tokens = $tokens
-        $result.TPS = if ($result.TotalTime -gt 0) { 
+        $result.TPS = $(if ($result.TotalTime -gt 0) { 
             $TokenCount / ($result.TotalTime / 1000) 
         } else { 
             0 

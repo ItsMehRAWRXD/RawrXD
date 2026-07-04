@@ -11,7 +11,7 @@ $prompt1 = "Execute this command: whoami. Use the CHEETAH_execute function."
 
 # Test 2: File write
 Write-Host "Test 2: Testing write_file..." -ForegroundColor Cyan
-$testFile = "$env:TEMP\cheetah_test.txt"
+$testFile = "${env:TEMP}\cheetah_test.txt"
 $prompt2 = "Create a file at '$testFile' with content 'CHEETAH STEALTH MODE ACTIVE'. Use the write_file function."
 
 # Test 3: File read

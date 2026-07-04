@@ -1,6 +1,6 @@
-$MSVC_Bin = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64"
-if (Test-Path $MSVC_Bin) { $env:PATH = "$MSVC_Bin;$env:PATH" }
-$Src = "$PSScriptRoot\..\src\thermal\masm"
+$Script:MSVC_Bin = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64"
+if (Test-Path $MSVC_Bin) { ${env:PATH} = "$MSVC_Bin;${env:PATH}" }
+$Script:Src = "$PSScriptRoot\..\src\thermal\masm"
 Set-Location "$PSScriptRoot\..\build"
 
 # 1-Liner Equivalent

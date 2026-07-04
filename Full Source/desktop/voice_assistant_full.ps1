@@ -256,7 +256,7 @@ class VoiceAssistant {
     }
     
     [void] ShowStatus() {
-        $status = if ($this.IsPlaying) { "▶️ Playing" } else { "⏸️ Paused" }
+        $status = $(if ($this.IsPlaying) { "▶️ Playing" } else { "⏸️ Paused" }
         $info = "Status: $status | Genre: $($this.CurrentGenre)"
         Write-Host $info -ForegroundColor Cyan
         $this.Speak($info)

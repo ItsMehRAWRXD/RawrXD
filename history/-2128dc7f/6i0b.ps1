@@ -57,11 +57,11 @@ param(
 )
 
 # Set script location for module loading
-$script:ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$script:ModulesPath = Join-Path $script:ScriptRoot "RawrXD-Modules"
+${script:ScriptRoot} = Split-Path -Parent $MyInvocation.MyCommand.Path
+${script:ModulesPath} = Join-Path ${script:ScriptRoot} "RawrXD-Modules"
 
 # Global application state
-$global:RawrXD = @{
+${global:RawrXD} = @{
     Version = "2.0.0"
     Build = "Modular-Rebuild"
     StartTime = Get-Date
@@ -77,11 +77,11 @@ try {
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
     Add-Type -AssemblyName Microsoft.VisualBasic
-    $global:RawrXD.WindowsFormsAvailable = $true
+    ${global:RawrXD}.WindowsFormsAvailable = $true
     Write-Host "✅ Windows Forms assemblies loaded successfully" -ForegroundColor Green
 }
 catch {
-    $global:RawrXD.WindowsFormsAvailable = $false
+    ${global:RawrXD}.WindowsFormsAvailable = $false
     Write-Warning "⚠️  Windows Forms not available: $($_.Exception.Message)"
 }
 
@@ -89,7 +89,7 @@ catch {
 function Import-RawrXDModule {
     param([string]$ModuleName)
     
-    $modulePath = Join-Path $script:ModulesPath "$ModuleName.psm1"
+    $modulePath = Join-Path ${script:ModulesPath} "$ModuleName.psm1"
     if (Test-Path $modulePath) {
         try {
             Import-Module $modulePath -Force -Scope Global
@@ -139,10 +139,10 @@ function Initialize-RawrXD {
         
         # Load settings
         if (Get-Command Import-RawrXDSettings -ErrorAction SilentlyContinue) {
-            $global:RawrXD.Settings = Import-RawrXDSettings
+            ${global:RawrXD}.Settings = Import-RawrXDSettings
         }
         
-        $global:RawrXD.IsInitialized = $true
+        ${global:RawrXD}.IsInitialized = $true
         Write-Host "✅ RawrXD initialized successfully" -ForegroundColor Green
         return $true
     }
@@ -154,7 +154,7 @@ function Initialize-RawrXD {
 
 # Main execution logic
 function Start-RawrXD {
-    Write-Host "🚀 Starting RawrXD v$($global:RawrXD.Version)..." -ForegroundColor Cyan
+    Write-Host "🚀 Starting RawrXD v$(${global:RawrXD}.Version)..." -ForegroundColor Cyan
     
     if (-not (Initialize-RawrXD)) {
         Write-Error "❌ Failed to initialize application"
@@ -171,7 +171,7 @@ function Start-RawrXD {
         }
     }
     else {
-        if ($global:RawrXD.WindowsFormsAvailable -and (Get-Command Start-RawrXDGUI -ErrorAction SilentlyContinue)) {
+        if (${global:RawrXD}.WindowsFormsAvailable -and (Get-Command Start-RawrXDGUI -ErrorAction SilentlyContinue)) {
             Start-RawrXDGUI
         }
         else {
@@ -198,9 +198,9 @@ catch {
 }
 finally {
     # Cleanup
-    if ($global:RawrXD.Form) {
+    if (${global:RawrXD}.Form) {
         try {
-            $global:RawrXD.Form.Dispose()
+            ${global:RawrXD}.Form.Dispose()
         }
         catch { }
     }

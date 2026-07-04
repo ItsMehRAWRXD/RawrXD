@@ -248,7 +248,7 @@ class ModelChainOrchestrator {
     }
     
     [void] LogExecutionSummary([hashtable]$execution) {
-        $successRate = if ($execution.total_chunks -gt 0) {
+        $successRate = $(if ($execution.total_chunks -gt 0) {
             [Math]::Round(($execution.processed_chunks / $execution.total_chunks) * 100, 1)
         } else {
             0

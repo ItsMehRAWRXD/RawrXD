@@ -50,7 +50,7 @@ try {
     # Check AVX2 via CPUID (simplified check)
     $hasAVX2 = $false
     try {
-        $env:OPENSSL_ia32cap = ":~0x200000000000000"
+        ${env:OPENSSL_ia32cap} = ":~0x200000000000000"
         $hasAVX2 = $true
     } catch {
         $hasAVX2 = $false
@@ -69,7 +69,7 @@ try {
 # ── Run Tests ─────────────────────────────────────────────────────────────────
 Write-Header "Running Tests"
 
-$filter = if ($Benchmark) { "PerformanceBenchmark.*" } else { "*" }
+$filter = $(if ($Benchmark) { "PerformanceBenchmark.*" } else { "*" }
 $args = @("--gtest_filter=$filter")
 
 if ($Verbose) {

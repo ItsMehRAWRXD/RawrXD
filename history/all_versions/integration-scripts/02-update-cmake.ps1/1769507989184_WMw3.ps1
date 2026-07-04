@@ -3,7 +3,7 @@
 
 param(
     [string]$RootDir = "D:\rawrxd",
-    [switch]$Backup = $true,
+    [switch]$Backup,
     [switch]$DryRun = $false
 )
 

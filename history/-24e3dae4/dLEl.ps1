@@ -114,7 +114,7 @@ Write-Host ""
 Write-Host "📁 BREAKDOWN BY CATEGORY:" -ForegroundColor Yellow
 $categories = $qtFiles | Group-Object Category | Sort-Object { $_.Count } -Descending
 foreach ($cat in $categories) {
-    $color = if ($cat.Name -eq "UI_Layer") { "Red" } elseif ($cat.Name -eq "Agentic_Core") { "Yellow" } else { "White" }
+    $color = $(if ($cat.Name -eq "UI_Layer") { "Red" } elseif ($cat.Name -eq "Agentic_Core") { "Yellow" } else { "White" }
     Write-Host "  $($cat.Name): $($cat.Count) files" -ForegroundColor $color
 }
 Write-Host ""

@@ -20,8 +20,8 @@ $ErrorActionPreference = "Stop"
 $InformationPreference = "Continue"
 
 $SmokeRoot = $PSScriptRoot
-if ($env:GITHUB_WORKSPACE -and (Test-Path $env:GITHUB_WORKSPACE)) {
-    $RepoRoot = $env:GITHUB_WORKSPACE
+if (${env:GITHUB_WORKSPACE} -and (Test-Path ${env:GITHUB_WORKSPACE})) {
+    $RepoRoot = ${env:GITHUB_WORKSPACE}
 } else {
     $RepoRoot = (Resolve-Path (Join-Path $SmokeRoot "..\..")).Path
 }
@@ -193,10 +193,10 @@ function Write-ScenarioAggregateSummary {
     Log-Info "SCENARIO EXIT-CODE SUMMARY"
     Log-Info "────────────────────────────────────────────────────────────────"
     foreach ($row in $Results) {
-        $status = if (-not $row.ScriptFound) { "SKIP (script missing)" }
+        $status = $(if (-not $row.ScriptFound) { "SKIP (script missing)" }
         elseif ($row.Passed) { "PASS" }
         else { "FAIL" }
-        $color = if ($row.Passed) { "Green" } elseif (-not $row.ScriptFound) { "Yellow" } else { "Red" }
+        $color = $(if ($row.Passed) { "Green" } elseif (-not $row.ScriptFound) { "Yellow" } else { "Red" }
         Write-Host ("  {0,-12} exit={1,3}  {2}" -f $row.Scenario, $row.ExitCode, $status) -ForegroundColor $color
     }
     $passedCount = @($Results | Where-Object { $_.Passed }).Count
@@ -245,26 +245,26 @@ function Emit-CrashEvidenceIfChanged {
 # =============================================================================
 
 $stressMode = $Stress -or $SoakMode
-$targetSubclassIterations = if ($stressMode) { $StressIterations } else { $DefaultIterations }
+$targetSubclassIterations = $(if ($stressMode) { $StressIterations } else { $DefaultIterations }
 if ($stressMode -and $Timeout -lt 600000) {
     $Timeout = 600000  # 10 minutes for soak (Scenario 2 @ 2000 iter + peer scenarios)
 }
 
 # Propagate binary + iteration budget to child harnesses / SmokeDiagnostics.
-$env:RAWRXD_BINARY_PATH = $BinaryPath
-$env:RAWRXD_SMOKE_ITERATIONS = [string]$targetSubclassIterations
-if (-not $env:RAWRXD_SMOKE_GDI_TOLERANCE) {
+${env:RAWRXD_BINARY_PATH} = $BinaryPath
+${env:RAWRXD_SMOKE_ITERATIONS} = [string]$targetSubclassIterations
+if (-not ${env:RAWRXD_SMOKE_GDI_TOLERANCE}) {
   if ($stressMode) {
     # Scale with iteration budget (keyboard-only soak; no synthetic GetDC/SaveDC loop).
     $scaledGdi = [Math]::Max(14, [int][Math]::Ceiling($targetSubclassIterations / 40.0))
-    $env:RAWRXD_SMOKE_GDI_TOLERANCE = [string]$scaledGdi
+    ${env:RAWRXD_SMOKE_GDI_TOLERANCE} = [string]$scaledGdi
   } else {
-    $env:RAWRXD_SMOKE_GDI_TOLERANCE = "10"
+    ${env:RAWRXD_SMOKE_GDI_TOLERANCE} = "10"
   }
 }
 
 $suiteStartUtc = [DateTime]::UtcNow
-$ideLogPath = Join-Path $env:APPDATA "RawrXD\ide.log"
+$ideLogPath = Join-Path ${env:APPDATA} "RawrXD\ide.log"
 
 function Test-IdeLogBadAllocationSince {
     param([DateTime]$SinceUtc)
@@ -395,8 +395,8 @@ Log-Info ""
 $scenario2Script = Join-Path $SmokeRoot "2_SubclassKeyboardTrapping.ps1"
 if (Test-Path $scenario2Script) {
     $s2CrashBefore = Get-CrashLogSnapshot -CrashLogPath $crashLogPath
-    $s2DurationMs = if ($stressMode) { 300000 } else { 30000 }
-    Log-Info "Launching Scenario 2 harness ($targetSubclassIterations iterations, GDI tolerance=$($env:RAWRXD_SMOKE_GDI_TOLERANCE))..."
+    $s2DurationMs = $(if ($stressMode) { 300000 } else { 30000 }
+    Log-Info "Launching Scenario 2 harness ($targetSubclassIterations iterations, GDI tolerance=$(${env:RAWRXD_SMOKE_GDI_TOLERANCE}))..."
     & $scenario2Script -BinaryPath $BinaryPath -IterationCount $targetSubclassIterations -TestDurationMs $s2DurationMs -Verbose:$VerboseLogging
     $s2Exit = $LASTEXITCODE
     Register-ScenarioResult -Results $scenarioResults -Name "Scenario2" -ExitCode $s2Exit

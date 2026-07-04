@@ -41,7 +41,7 @@ function Prepare-Source($asmFile,$tool,$entry){
   $content = Get-Content -Path $asmFile.FullName -Raw
   $needsRuntimeExterns = $content -match '\bcompiler_state\b'
   $hasRuntimeExterns = $content -match '(?m)^\s*extern\s+compiler_state'
-  $hasEntryGlobal = if ($entry) { $content -match "(?m)^\s*global\s+$([regex]::Escape($entry))\b" } else { $false }
+  $hasEntryGlobal = $(if ($entry) { $content -match "(?m)^\s*global\s+$([regex]::Escape($entry))\b" } else { $false }
 
   $preamble = ''
   if ($entry -and -not $hasEntryGlobal) { $preamble += "global ${entry}`n" }

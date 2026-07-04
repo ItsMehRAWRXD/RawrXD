@@ -1,27 +1,27 @@
-$ErrorActionPreference = 'Stop'
-$settingsPath = Join-Path $env:APPDATA 'Code\User\settings.json'
+$Script:ErrorActionPreference = 'Stop'
+$Script:settingsPath = Join-Path ${env:APPDATA} 'Code\User\settings.json'
 if (-not (Test-Path $settingsPath)) {
     New-Item -ItemType File -Path $settingsPath -Force | Out-Null
     Set-Content -Path $settingsPath -Value '{}' -Encoding UTF8
 }
-$ts = Get-Date -Format 'yyyyMMdd-HHmmss'
-$bak = Join-Path $env:USERPROFILE "Desktop\settings.json.backup-$ts"
+$Script:ts = Get-Date -Format 'yyyyMMdd-HHmmss'
+$Script:bak = Join-Path ${env:USERPROFILE} "Desktop\settings.json.backup-$ts"
 Copy-Item -Path $settingsPath -Destination $bak -Force
 Write-Output "BACKUP_CREATED:$bak"
 
 # Read existing settings
-$content = Get-Content -Raw -Path $settingsPath -ErrorAction SilentlyContinue
+$Script:content = Get-Content -Raw -Path $settingsPath -ErrorAction SilentlyContinue
 # Convert existing JSON to a PowerShell hashtable (dictionary) so we can set keys with dots
-$dict = @{}
+$Script:dict = @{}
 if ($content -and $content.Trim().Length -gt 0) {
     try {
-        $parsed = $content | ConvertFrom-Json -ErrorAction Stop
+$Script:parsed = $content | ConvertFrom-Json -ErrorAction Stop
         foreach ($p in $parsed.PSObject.Properties) {
             $dict[$p.Name] = $p.Value
         }
     } catch {
         # If parsing fails, start with empty hashtable
-        $dict = @{}
+$Script:dict = @{}
     }
 }
 

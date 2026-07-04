@@ -48,7 +48,7 @@ param(
     [string]$Quant   = 'Q4_K_M',
     [string]$TgtRepo,
     [string]$Prompt  = $null,
-    [string]$LlamaCppDir = $env:LLAMA_CPP_DIR,
+    [string]$LlamaCppDir = ${env:LLAMA_CPP_DIR},
     [switch]$KeepIntermediates
 )
 
@@ -60,10 +60,10 @@ $LocalMode = [bool]$InGGUF
 if ($LocalMode) {
     Write-Host "[RefuseStrip] Local mode: Processing local GGUF file" -ForegroundColor Cyan
     $InGGUF = Resolve-Path $InGGUF -ErrorAction Stop
-    if (-not $TgtRepo) { $TgtRepo = "$env:HF_USERNAME/$(Split-Path $InGGUF -LeafBase)-NO-REFUSE" }
+    if (-not $TgtRepo) { $TgtRepo = "${env:HF_USERNAME}/$(Split-Path $InGGUF -LeafBase)-NO-REFUSE" }
 } else {
     Write-Host "[RefuseStrip] Cloud mode: Streaming from HuggingFace" -ForegroundColor Cyan
-    if (-not $TgtRepo) { $TgtRepo = "$env:HF_USERNAME/$($SrcRepo.Split('/')[-1])" }
+    if (-not $TgtRepo) { $TgtRepo = "${env:HF_USERNAME}/$($SrcRepo.Split('/')[-1])" }
 }
 
 # ---------- 1.  envy-check ----------------------------------------------------
@@ -81,7 +81,7 @@ if ($LocalMode) {
         throw "convert-hf-to-gguf.py not found in $LlamaCppDir"
     }
 }
-if ($TgtRepo -and -not $env:HF_TOKEN) { 
+if ($TgtRepo -and -not ${env:HF_TOKEN}) { 
     Write-Warning "HF_TOKEN env var missing - will skip upload step"
 }
 
@@ -148,7 +148,7 @@ PY
     Write-Host "[CloudRefuse] Mapping remote GGUF tensor catalogue …" -ForegroundColor Cyan
     $baseUrl = "https://huggingface.co/$SrcRepo/resolve/main/$SrcFile"
     # download only first 512 kB (header + tensor headers)
-    $authHeader = if ($env:HF_TOKEN) { "Bearer $env:HF_TOKEN" } else { "" }
+    $authHeader = $(if (${env:HF_TOKEN}) { "Bearer ${env:HF_TOKEN}" } else { "" }
     curl -s -L -H "Authorization: $authHeader" `
          -H "Range: bytes=0-524287" `
          -o "$tmp/header.bin" $baseUrl
@@ -182,8 +182,8 @@ PY
     
     # ---------- 5.  zero-in-place (range-patch) -----------------------------------
     $client = [System.Net.Http.HttpClient]::new()
-    if ($env:HF_TOKEN) {
-        $client.DefaultRequestHeaders.Add('Authorization', "Bearer $env:HF_TOKEN")
+    if (${env:HF_TOKEN}) {
+        $client.DefaultRequestHeaders.Add('Authorization', "Bearer ${env:HF_TOKEN}")
     }
     $fs = [System.IO.File]::Create($edited)
     try {
@@ -216,7 +216,7 @@ PY
     if ($Quant -ne 'F32') {
         Write-Host "[CloudRefuse] Re-quantising to $Quant …" -ForegroundColor Cyan
         # we still need llama-quantize binary, but we stream through it
-        $env:GGML_CUDA_NO_PINNED = "1"   # keeps RAM low
+        ${env:GGML_CUDA_NO_PINNED} = "1"   # keeps RAM low
         & llama-quantize $edited $final $Quant
         Remove-Item $edited -Force
     } else {
@@ -225,9 +225,9 @@ PY
 }
 
 # ---------- 7.  upload (optional) ----------------------------------------------
-if ($TgtRepo -and $env:HF_TOKEN) {
+if ($TgtRepo -and ${env:HF_TOKEN}) {
     Write-Host "[RefuseStrip] Uploading to $TgtRepo …" -ForegroundColor Green
-    huggingface-cli upload $TgtRepo $final "$(Split-Path $final -Leaf)" --token $env:HF_TOKEN
+    huggingface-cli upload $TgtRepo $final "$(Split-Path $final -Leaf)" --token ${env:HF_TOKEN}
 } else {
     Write-Host "[RefuseStrip] Skipping upload (no TgtRepo or HF_TOKEN)" -ForegroundColor Yellow
 }
@@ -236,7 +236,7 @@ if ($TgtRepo -and $env:HF_TOKEN) {
 Write-Host "`n✅  Refusal-strip complete!" -ForegroundColor Green
 Write-Host "   Output: $final`n" -ForegroundColor Cyan
 
-if ($TgtRepo -and $env:HF_TOKEN) {
+if ($TgtRepo -and ${env:HF_TOKEN}) {
     $modelTag = "$($TgtRepo -replace '/','-')-$(Split-Path $final -Leaf -Resolve)".ToLower()
     Write-Host "   Pull into Ollama:" -ForegroundColor Yellow
     Write-Host "      ollama pull hf.co/$TgtRepo" -ForegroundColor White

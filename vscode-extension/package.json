@@ -1,20 +1,32 @@
 {
-  "name": "rawrxd-lsp-client",
-  "displayName": "RawrXD LSP Client",
-  "description": "AI-powered code completion via RawrXD SuperNode cluster",
-  "version": "0.1.0",
+  "name": "rawrxd-script",
+  "displayName": "RawrXD-Script",
+  "description": "Language support for RawrXD-Script - High-performance JavaScript engine with native debugging",
+  "version": "1.0.0",
   "publisher": "rawrxd",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/ItsMehRAWRXD/RawrXD"
   },
+  "bugs": {
+    "url": "https://github.com/ItsMehRAWRXD/RawrXD/issues"
+  },
+  "homepage": "https://github.com/ItsMehRAWRXD/RawrXD#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Machine Learning",
     "Programming Languages",
-    "Snippets"
+    "Debuggers",
+    "Language Packs"
+  ],
+  "keywords": [
+    "javascript",
+    "rawrxd",
+    "script",
+    "debugger",
+    "language-server"
   ],
   "activationEvents": [
     "onLanguage:python",
@@ -24,10 +36,10 @@
     "onLanguage:c",
     "onLanguage:asm"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/rawrxdScriptExtension.js",
   "contributes": {
     "configuration": {
-      "title": "RawrXD LSP",
+      "title": "RawrXD",
       "properties": {
         "rawrxd.enabled": {
           "type": "boolean",
@@ -48,6 +60,31 @@
           "type": "number",
           "default": 0.2,
           "description": "Sampling temperature"
+        },
+        "rawrxd-script.lsp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable RawrXD-Script Language Server"
+        },
+        "rawrxd-script.lsp.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to RawrXD_LSPServer.exe (auto-detected if empty)"
+        },
+        "rawrxd-script.debug.trace": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable DAP protocol tracing"
+        },
+        "rawrxd-script.debug.goldenMaster": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Golden Master validation by default"
+        },
+        "rawrxd-script.debug.adapterPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to RawrXDScriptDAPAdapter.exe (auto-detected if empty)"
         }
       }
     },
@@ -124,6 +161,42 @@
         "command": "rawrxd.terminalTest",
         "title": "Run Tests",
         "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd-script.run",
+        "title": "Run RawrXD-Script",
+        "category": "RawrXD-Script",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rawrxd-script.debug",
+        "title": "Debug RawrXD-Script",
+        "category": "RawrXD-Script",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "rawrxd-script.runWithGoldenMaster",
+        "title": "Run with Golden Master",
+        "category": "RawrXD-Script",
+        "icon": "$(verified)"
+      },
+      {
+        "command": "rawrxd-script.openTraceVisualizer",
+        "title": "Open Trace Visualizer",
+        "category": "RawrXD-Script",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "rawrxd-script.showRegisterView",
+        "title": "Show Register View",
+        "category": "RawrXD-Script",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "rawrxd-script.restartLSP",
+        "title": "Restart Language Server",
+        "category": "RawrXD-Script",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -147,9 +220,48 @@
           "command": "rawrxd.inlineChat",
           "group": "9_cutcopypaste@6",
           "when": "editorTextFocus"
+        },
+        {
+          "command": "rawrxd-script.run",
+          "group": "navigation@1",
+          "when": "editorLangId == rawrxd-script"
+        },
+        {
+          "command": "rawrxd-script.debug",
+          "group": "navigation@2",
+          "when": "editorLangId == rawrxd-script"
+        }
+      ],
+      "debug/toolBar": [
+        {
+          "command": "rawrxd-script.openTraceVisualizer",
+          "group": "navigation@10",
+          "when": "debugType == rawrxd-script"
         }
       ]
     },
+    "languages": [
+      {
+        "id": "rawrxd-script",
+        "aliases": [
+          "RawrXD-Script",
+          "rxs"
+        ],
+        "extensions": [
+          ".rxs",
+          ".rawrxd",
+          ".rx"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rawrxd-script",
+        "scopeName": "source.rawrxd-script",
+        "path": "./syntaxes/rawrxd-script.tmLanguage.json"
+      }
+    ],
     "keybindings": [
       {
         "command": "rawrxd.openChat",
@@ -162,6 +274,94 @@
         "key": "ctrl+i",
         "mac": "cmd+i",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "rawrxd-script.run",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorLangId == rawrxd-script"
+      },
+      {
+        "command": "rawrxd-script.debug",
+        "key": "f5",
+        "when": "editorLangId == rawrxd-script"
+      }
+    ],
+    "views": {
+      "debug": [
+        {
+          "id": "rawrxd-script.registers",
+          "name": "RawrXD Registers",
+          "when": "debugType == rawrxd-script"
+        }
+      ]
+    },
+    "debuggers": [
+      {
+        "type": "rawrxd-script",
+        "label": "RawrXD-Script",
+        "program": "./out/debugAdapter.js",
+        "runtime": "node",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to the RawrXD-Script file to debug",
+                "default": "${workspaceFolder}/main.rxs"
+              },
+              "args": {
+                "type": "array",
+                "description": "Command line arguments passed to the program",
+                "default": [],
+                "items": {
+                  "type": "string"
+                }
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory for the program",
+                "default": "${workspaceFolder}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Automatically stop after launch",
+                "default": true
+              },
+              "trace": {
+                "type": "boolean",
+                "description": "Enable logging of the Debug Adapter Protocol",
+                "default": false
+              },
+              "goldenMaster": {
+                "type": "boolean",
+                "description": "Enable Golden Master validation",
+                "default": false
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "rawrxd-script",
+            "request": "launch",
+            "name": "Debug RawrXD-Script",
+            "program": "${workspaceFolder}/main.rxs",
+            "stopOnEntry": true,
+            "trace": false
+          },
+          {
+            "type": "rawrxd-script",
+            "request": "launch",
+            "name": "Debug with Golden Master",
+            "program": "${workspaceFolder}/main.rxs",
+            "stopOnEntry": true,
+            "goldenMaster": true
+          }
+        ]
       }
     ]
   },
@@ -171,8 +371,11 @@
     "watch": "tsc -watch -p ./"
   },
   "devDependencies": {
-    "@types/vscode": "^1.85.0",
     "@types/node": "20.x",
+    "@types/vscode": "^1.85.0",
     "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
   }
 }

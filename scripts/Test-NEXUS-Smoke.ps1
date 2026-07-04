@@ -32,9 +32,9 @@ $TestExe = "$BuildDir\rawrxd_nexus_test.exe"
 $BenchExe = "$BuildDir\rawrxd_nexus_benchmark.exe"
 
 # Test counters
-$script:TestsPassed = 0
-$script:TestsFailed = 0
-$script:TestsSkipped = 0
+${script:TestsPassed} = 0
+${script:TestsFailed} = 0
+${script:TestsSkipped} = 0
 
 function Write-Header {
     param([string]$Title)
@@ -49,17 +49,17 @@ function Write-Test {
     param([string]$Name, [bool]$Passed)
     if ($Passed) {
         Write-Host "  [✓] $Name" -ForegroundColor Green
-        $script:TestsPassed++
+        ${script:TestsPassed}++
     } else {
         Write-Host "  [✗] $Name" -ForegroundColor Red
-        $script:TestsFailed++
+        ${script:TestsFailed}++
     }
 }
 
 function Write-Skip {
     param([string]$Name, [string]$Reason)
     Write-Host "  [○] $Name - $Reason" -ForegroundColor Yellow
-    $script:TestsSkipped++
+    ${script:TestsSkipped}++
 }
 
 function Test-FileExists {
@@ -349,17 +349,17 @@ if ($docsExists) {
 
 Write-Header "TEST SUMMARY"
 
-$totalTests = $script:TestsPassed + $script:TestsFailed + $script:TestsSkipped
-$passRate = if ($totalTests -gt 0) { [math]::Round(($script:TestsPassed / $totalTests) * 100, 1) } else { 0 }
+$totalTests = ${script:TestsPassed} + ${script:TestsFailed} + ${script:TestsSkipped}
+$passRate = $(if ($totalTests -gt 0) { [math]::Round((${script:TestsPassed} / $totalTests) * 100, 1) } else { 0 }
 
-Write-Host "  Passed:   $script:TestsPassed" -ForegroundColor Green
-Write-Host "  Failed:   $script:TestsFailed" -ForegroundColor Red
-Write-Host "  Skipped:  $script:TestsSkipped" -ForegroundColor Yellow
+Write-Host "  Passed:   ${script:TestsPassed}" -ForegroundColor Green
+Write-Host "  Failed:   ${script:TestsFailed}" -ForegroundColor Red
+Write-Host "  Skipped:  ${script:TestsSkipped}" -ForegroundColor Yellow
 Write-Host "  Total:    $totalTests" -ForegroundColor Cyan
 Write-Host "  Coverage: $passRate%" -ForegroundColor Cyan
 Write-Host ""
 
-if ($script:TestsFailed -eq 0) {
+if (${script:TestsFailed} -eq 0) {
     Write-Host "═══════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
     Write-Host "  ✓ ALL TESTS PASSED" -ForegroundColor Green
     Write-Host "═══════════════════════════════════════════════════════════════════════════" -ForegroundColor Green

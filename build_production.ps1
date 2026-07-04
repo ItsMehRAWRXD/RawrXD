@@ -54,11 +54,11 @@ function Build-Step {
     Write-Host "`n[$Name]" -ForegroundColor Green
     try {
         & $Action
-        $script:results += @{ Name=$Name; Status="OK" }
+        ${script:results} += @{ Name=$Name; Status="OK" }
     } catch {
         Write-Host "  [ERROR] $_" -ForegroundColor Red
-        $script:results += @{ Name=$Name; Status="FAILED" }
-        $script:totalErrors++
+        ${script:results} += @{ Name=$Name; Status="FAILED" }
+        ${script:totalErrors}++
     }
 }
 
@@ -147,7 +147,7 @@ Write-Host "`n============================================================" -For
 Write-Host " Build Summary" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 $results | ForEach-Object {
-    $color = if ($_.Status -eq "OK") { "Green" } else { "Red" }
+    $color = $(if ($_.Status -eq "OK") { "Green" } else { "Red" }
     Write-Host "  $($_.Name): $($_.Status)" -ForegroundColor $color
 }
 Write-Host "  Total Errors: $totalErrors"

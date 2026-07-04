@@ -159,7 +159,7 @@ if ($ml64) {
     foreach ($f in $CanonicalASM) {
         $path = Join-Path $MonoDir $f
         if (-not (Test-Path $path)) { continue }
-        $tempObj = Join-Path $env:TEMP ($f -replace '\.asm$', '.obj')
+        $tempObj = Join-Path ${env:TEMP} ($f -replace '\.asm$', '.obj')
         & $ml64 /c /nologo /Fo"$tempObj" "$path" 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-Host "    ${Green}✓${Reset} $f"

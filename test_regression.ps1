@@ -31,11 +31,11 @@ $buildDir = 'd:\rawrxd\build'
 
 function Write-Result {
     param([string]$Test, [bool]$Passed, [string]$Message = "")
-    $status = if ($Passed) { "PASS" } else { "FAIL" }
-    $color = if ($Passed) { "Green" } else { "Red" }
+    $status = $(if ($Passed) { "PASS" } else { "FAIL" }
+    $color = $(if ($Passed) { "Green" } else { "Red" }
     Write-Host "[$status] $Test" -ForegroundColor $color
     if ($Message) { Write-Host "       $Message" -ForegroundColor Gray }
-    $script:results += [PSCustomObject]@{ Test = $Test; Passed = $Passed; Message = $Message }
+    ${script:results} += [PSCustomObject]@{ Test = $Test; Passed = $Passed; Message = $Message }
 }
 
 Write-Host "=========================================="

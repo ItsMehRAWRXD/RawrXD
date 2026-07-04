@@ -49,7 +49,7 @@ function Send-OllamaRequest {
     `$url = "`$OllamaHost/api/generate"
     
     # If EnforceJSON, add JSON format instruction
-    `$promptWithFormat = if (`$EnforceJSON) {
+    `$promptWithFormat = $(if (`$EnforceJSON) {
         `$Prompt + "`n`nYou must respond with valid JSON in the format: {`"tool`": `"name`", `"args`": {}}"
     } else {
         `$Prompt
@@ -70,7 +70,7 @@ function Send-OllamaRequest {
 # BACKGROUND JOB/TASK MANAGEMENT (Requirement A-C Compatibility)
 # ============================================
 
-`$script:BackgroundJobs = @()
+`${script:BackgroundJobs} = @()
 
 function Start-BackgroundTask {
     param(
@@ -88,7 +88,7 @@ function Start-BackgroundTask {
         Result     = `$null
     }
     
-    `$script:BackgroundJobs += `$job
+    `${script:BackgroundJobs} += `$job
     Write-StartupLog "Background task started: `$TaskName" "INFO"
     
     return `$job

@@ -103,7 +103,7 @@ function Test-GGUFCorruption {
                         Write-Host "    [WARN] Large array detected ($arrCount elements)"
                     }
                     # Rough skip estimate
-                    $elemSize = if ($arrType -eq 8) { 8 } else { 4 }
+                    $elemSize = $(if ($arrType -eq 8) { 8 } else { 4 }
                     $stream.Position += $arrCount * $elemSize
                 } else {
                     # Skip scalar based on type

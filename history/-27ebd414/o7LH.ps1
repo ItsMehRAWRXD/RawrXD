@@ -15,11 +15,11 @@
 .PARAMETER UseSCC
     Use RawrXD-SCC instead of ml64.exe (self-hosting mode)
 .EXAMPLE
-    .\build_scc.ps1 -SourceDir "$env:LOCALAPPDATA\RawrXD\src" -UseSCC
+    .\build_scc.ps1 -SourceDir "${env:LOCALAPPDATA}\RawrXD\src" -UseSCC
 #>
 param(
     [string]$SourceDir = "d:/Stash House/RawrXD-Main/src/asm",
-    [string]$OutputDir = "$env:LOCALAPPDATA\RawrXD\obj",
+    [string]$OutputDir = "${env:LOCALAPPDATA}\RawrXD\obj",
     [switch]$UseSCC
 )
 
@@ -39,7 +39,7 @@ function Write-Phase1Log {
 $assembler = $null
 
 if ($UseSCC) {
-    $sccPath = "$env:LOCALAPPDATA\RawrXD\bin\rawrxd_scc.exe"
+    $sccPath = "${env:LOCALAPPDATA}\RawrXD\bin\rawrxd_scc.exe"
     if (Test-Path $sccPath) {
         $assembler = $sccPath
         Write-Phase1Log "Self-hosting: using RawrXD-SCC at $sccPath" "Success"
@@ -135,7 +135,7 @@ $jobs | Wait-Job | ForEach-Object {
     $result = Receive-Job $_
     if ($result.Success) {
         $compiled++
-        $sizeKB = if ($result.Size) { [math]::Round($result.Size / 1KB, 1) } else { "?" }
+        $sizeKB = $(if ($result.Size) { [math]::Round($result.Size / 1KB, 1) } else { "?" }
         Write-Phase1Log "  OK: $($result.Name) ($sizeKB KB)" "Success"
     } else {
         $failed++

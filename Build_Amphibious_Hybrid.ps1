@@ -23,7 +23,7 @@ $kitUcrt = 'C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64'
 if (!(Test-Path $ml64)) { throw "ml64.exe not found: $ml64" }
 if (!(Test-Path $link)) { throw "link.exe not found: $link" }
 
-$env:LIB = @($vcLib, $kitUm, $kitUcrt) -join ';'
+${env:LIB} = @($vcLib, $kitUm, $kitUcrt) -join ';'
 
 # Same as AutoHeal but InferenceAPI (hybrid) instead of ML_Runtime
 $commonSources = @(

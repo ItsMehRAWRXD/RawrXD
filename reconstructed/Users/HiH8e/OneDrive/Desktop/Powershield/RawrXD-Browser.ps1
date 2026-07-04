@@ -23,9 +23,9 @@ function Test-WebView2Runtime {
 
     # Check for Edge WebView2 in common locations
     $webView2Paths = @(
-      "$env:ProgramFiles\Microsoft\EdgeWebView\Application",
-      "$env:ProgramFiles(x86)\Microsoft\EdgeWebView\Application",
-      "$env:LocalAppData\Microsoft\EdgeWebView\Application"
+      "${env:ProgramFiles}\Microsoft\EdgeWebView\Application",
+      "${env:ProgramFiles}(x86)\Microsoft\EdgeWebView\Application",
+      "${env:LocalAppData}\Microsoft\EdgeWebView\Application"
     )
 
     foreach ($path in $webView2Paths) {
@@ -59,7 +59,7 @@ function Initialize-WebView2ShimFallback {
       # Verify shim functions are available
       if (Get-Command Initialize-WebView2Shim -ErrorAction SilentlyContinue) {
         Write-EmergencyLog "✅ WebView2Shim loaded successfully" "SUCCESS"
-        $script:UseWebView2FallbackAsBrowser = $true
+        ${script:UseWebView2FallbackAsBrowser} = $true
         return $true
       }
     }
@@ -143,7 +143,7 @@ function Open-PS51VideoBrowser {
     Write-StartupLog "✅ PS5.1 Video Browser launched (PID: $($process.Id))" "SUCCESS"
 
     # Track the process
-    $script:RuntimeInfo.PS51BrowserProcess = $process
+    ${script:RuntimeInfo}.PS51BrowserProcess = $process
 
   }
   catch {
@@ -162,11 +162,11 @@ function Close-PS51VideoBrowser {
     .SYNOPSIS
         Closes the PS5.1 video browser subprocess if running
     #>
-  if ($script:RuntimeInfo.PS51BrowserProcess -and -not $script:RuntimeInfo.PS51BrowserProcess.HasExited) {
+  if (${script:RuntimeInfo}.PS51BrowserProcess -and -not ${script:RuntimeInfo}.PS51BrowserProcess.HasExited) {
     try {
       Write-StartupLog "Closing PS5.1 Video Browser..." "INFO"
-      $script:RuntimeInfo.PS51BrowserProcess.Kill()
-      $script:RuntimeInfo.PS51BrowserProcess = $null
+      ${script:RuntimeInfo}.PS51BrowserProcess.Kill()
+      ${script:RuntimeInfo}.PS51BrowserProcess = $null
       Write-StartupLog "✅ PS5.1 Video Browser closed" "SUCCESS"
     }
     catch {
@@ -180,7 +180,7 @@ function Test-PS51VideoBrowserRunning {
     .SYNOPSIS
         Check if a PS5.1 video browser is currently running
     #>
-  return ($script:RuntimeInfo.PS51BrowserProcess -and -not $script:RuntimeInfo.PS51BrowserProcess.HasExited)
+  return (${script:RuntimeInfo}.PS51BrowserProcess -and -not ${script:RuntimeInfo}.PS51BrowserProcess.HasExited)
 }
 
 # ===============================
@@ -206,11 +206,11 @@ function Open-Browser {
     }
     $browserUrlBox.Text = $url
 
-    switch ($script:browserType) {
+    switch (${script:browserType}) {
       "WebView2-WPF" {
         # WPF WebView2 via ElementHost (.NET 9+ compatible)
-        if ($script:webBrowser -and $script:webBrowser._isWpf) {
-          $script:webBrowser.Navigate($url)
+        if (${script:webBrowser} -and ${script:webBrowser}._isWpf) {
+          ${script:webBrowser}.Navigate($url)
           Write-StartupLog "WPF WebView2 navigating to: $url" "INFO"
         }
       }
@@ -225,8 +225,8 @@ function Open-Browser {
       }
       "WebView2Shim" {
         # WebView2Shim navigates by opening in external browser
-        if ($script:webBrowser -and $script:webBrowser.Navigate) {
-          $script:webBrowser.Navigate($url)
+        if (${script:webBrowser} -and ${script:webBrowser}.Navigate) {
+          ${script:webBrowser}.Navigate($url)
         }
         else {
           # Fallback to Start-Process
@@ -279,7 +279,7 @@ function Initialize-DPIAwareness {
 
         if ($result) {
           Write-StartupLog "✅ DPI awareness set successfully" "SUCCESS"
-          $script:DPIAwarenessEnabled = $true
+          ${script:DPIAwarenessEnabled} = $true
         }
         else {
           Write-StartupLog "⚠️ DPI awareness API call failed" "WARNING"
@@ -402,11 +402,11 @@ function Initialize-BrowserDPIAwareness {
       Write-StartupLog "High DPI detected (Scale: $($dpiInfo.Average.ToString('F2'))x)" "INFO"
 
       # Configure WebView2 for high DPI if available
-      if ($script:webBrowser -and $script:webBrowser.CoreWebView2) {
+      if (${script:webBrowser} -and ${script:webBrowser}.CoreWebView2) {
         try {
           # Set zoom factor based on DPI
           $zoomFactor = $dpiInfo.Average
-          $script:webBrowser.CoreWebView2.ExecuteScriptAsync("document.body.style.zoom = '$zoomFactor';") | Out-Null
+          ${script:webBrowser}.CoreWebView2.ExecuteScriptAsync("document.body.style.zoom = '$zoomFactor';") | Out-Null
           Write-StartupLog "✅ WebView2 zoom set to ${zoomFactor}x for DPI" "SUCCESS"
         }
         catch {

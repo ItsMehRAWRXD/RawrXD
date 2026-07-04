@@ -788,6 +788,28 @@ enum CmdFlags : uint32_t
       CMD_REQUIRES_SELECT | CMD_ASYNC)                                                                                 \
     X(409, AI_MODEL_SELECT, "ai.modelSelect", "!ai_model", BOTH, "AIMode", handleAIModelSelect, CMD_NONE)              \
                                                                                                                        \
+    /* ═══════════════════ CODEX COMMANDS (420-429) ═══════════════════ */                                           \
+    X(420, CODEX_COMPLETE, "codex.complete", "!codex_complete", BOTH, "AIMode", handleCodexComplete,                   \
+      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET | CMD_ASYNC)                                                              \
+    X(421, CODEX_STREAM, "codex.stream", "!codex_stream", BOTH, "AIMode", handleCodexStream,                           \
+      CMD_REQUIRES_FILE | CMD_ASYNC)                                                                                   \
+    X(422, CODEX_EXPLAIN, "codex.explain", "!codex_explain", BOTH, "AIMode", handleCodexExplain,                     \
+      CMD_REQUIRES_SELECT | CMD_ASYNC)                                                                                 \
+    X(423, CODEX_REFACTOR, "codex.refactor", "!codex_refactor", BOTH, "AIMode", handleCodexRefactor,                  \
+      CMD_REQUIRES_SELECT | CMD_ASYNC)                                                                               \
+    X(424, CODEX_COMPLETE_LINE, "codex.completeLine", "!codex_line", BOTH, "AIMode", handleCodexCompleteLine,        \
+      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET | CMD_ASYNC)                                                              \
+    X(425, CODEX_COMPLETE_BLOCK, "codex.completeBlock", "!codex_block", BOTH, "AIMode", handleCodexCompleteBlock,    \
+      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET | CMD_ASYNC)                                                              \
+    X(426, CODEX_GENERATE_TESTS, "codex.generateTests", "!codex_tests", BOTH, "AIMode", handleCodexGenerateTests,  \
+      CMD_REQUIRES_FILE | CMD_ASYNC)                                                                                   \
+    X(427, CODEX_GENERATE_DOCS, "codex.generateDocs", "!codex_docs", BOTH, "AIMode", handleCodexGenerateDocs,        \
+      CMD_REQUIRES_FILE | CMD_ASYNC)                                                                                   \
+    X(428, CODEX_FIX_ERRORS, "codex.fixErrors", "!codex_fix", BOTH, "AIMode", handleCodexFixErrors,                  \
+      CMD_REQUIRES_FILE | CMD_ASYNC)                                                                                   \
+    X(429, CODEX_OPTIMIZE, "codex.optimize", "!codex_optimize", BOTH, "AIMode", handleCodexOptimize,               \
+      CMD_REQUIRES_SELECT | CMD_ASYNC)                                                                                 \
+                                                                                                                       \
     /* ═══════════════════ IDE TOOLS (ide_constants.h 501-506) ═══════════════════ */                                  \
     X(501, TOOLS_CMD_PALETTE, "tools.commandPalette", "!palette", BOTH, "Tools", handleToolsCommandPalette, CMD_NONE)  \
     X(502, TOOLS_SETTINGS, "tools.settings", "!tools_settings", BOTH, "Tools", handleToolsSettings, CMD_NONE)          \

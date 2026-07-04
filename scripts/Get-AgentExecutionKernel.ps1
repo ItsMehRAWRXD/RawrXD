@@ -23,7 +23,7 @@ function Get-AgentExecutionKernelPack {
         profile = $ProfileName
         kernel = $kernel
         overlay = $overlay
-        combined = if ([string]::IsNullOrWhiteSpace($overlay)) { $kernel } else { "$kernel $overlay" }
+        combined = $(if ([string]::IsNullOrWhiteSpace($overlay)) { $kernel } else { "$kernel $overlay" }
     }
 }
 

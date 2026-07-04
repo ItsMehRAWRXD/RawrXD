@@ -222,8 +222,8 @@ $summary = @"
 "@
 
 foreach ($result in $results) {
-    $status = if ($result.Success) { "✅ Success" } else { "❌ Failed" }
-    $reportLink = if ($result.Success) { "[View Report]($($result.ReportPath))" } else { "N/A" }
+    $status = $(if ($result.Success) { "✅ Success" } else { "❌ Failed" }
+    $reportLink = $(if ($result.Success) { "[View Report]($($result.ReportPath))" } else { "N/A" }
     $summary += "`n| $($result.Model) | $($result.Size) | $status | $reportLink |"
 }
 
@@ -253,8 +253,8 @@ Write-Host "Comparison summary saved to: $summaryPath" -ForegroundColor Green
 
 # Display results table
 $results | ForEach-Object {
-    $color = if ($_.Success) { "Green" } else { "Red" }
-    $status = if ($_.Success) { "SUCCESS" } else { "FAILED" }
+    $color = $(if ($_.Success) { "Green" } else { "Red" }
+    $status = $(if ($_.Success) { "SUCCESS" } else { "FAILED" }
     Write-Host "$($_.Model): $status" -ForegroundColor $color
 }
 

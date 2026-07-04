@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+$Script:ErrorActionPreference = "Stop"
 #
 # Source-level smoke: asserts model size + load wall-ms are wired into status bar UX
 # and that model load completion triggers a status refresh (reverse-engineered parity).
@@ -6,12 +6,12 @@ $ErrorActionPreference = "Stop"
 # Run: pwsh -NoProfile -File scripts/Test-ModelSizeAndTpsWiringSmoke.ps1
 #
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$Script:repoRoot = Split-Path -Parent $PSScriptRoot
 
 function Assert-FileContains([string]$relPath, [string]$pattern, [string]$desc) {
-    $p = Join-Path $repoRoot $relPath
+$Script:p = Join-Path $repoRoot $relPath
     if (-not (Test-Path -LiteralPath $p)) { throw "Missing $relPath" }
-    $raw = Get-Content -LiteralPath $p -Raw
+$Script:raw = Get-Content -LiteralPath $p -Raw
     if ($raw -notmatch $pattern) { throw "FAIL: $desc ($relPath)" }
 }
 

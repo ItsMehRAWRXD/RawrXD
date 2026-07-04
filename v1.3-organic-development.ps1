@@ -2,7 +2,7 @@
 # Mixed-phase implementation: Features + Optimization + Fixes + Docs
 
 param(
-    [switch]$DeployAll = $true
+    [switch]$DeployAll
 )
 
 Write-Host "================================================" -ForegroundColor Magenta

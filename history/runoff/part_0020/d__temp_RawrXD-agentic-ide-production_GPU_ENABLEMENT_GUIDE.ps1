@@ -127,8 +127,8 @@ std::cout << "Using GPU: " << (is_gpu ? "YES" : "NO") << std::endl;
 Write-Host "`n$CYAN PowerShell Environment Variable:$RESET"
 Write-Host @"
 # Set environment to force GPU backend
-`$env:GGML_GPU = 1
-`$env:GGML_BACKEND = "vulkan"
+`${env:GGML_GPU} = 1
+`${env:GGML_BACKEND} = "vulkan"
 
 # Verify
 [Environment]::GetEnvironmentVariable('GGML_GPU', 'Process')

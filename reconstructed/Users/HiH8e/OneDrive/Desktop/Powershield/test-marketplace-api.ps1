@@ -24,7 +24,7 @@ function Test-VSCodeMarketplaceAPI {
                     criteria = @(
                         @{
                             filterType = 8  # Extension name
-                            value      = if ($Query) { $Query } else { "" }
+                            value      = $(if ($Query) { $Query } else { "" }
                         }
                         @{
                             filterType = 10  # Target platform
@@ -76,7 +76,7 @@ function Test-VSCodeMarketplaceAPI {
                 $extName = $ext.extensionName
                 $displayName = $ext.displayName
                 $shortDesc = $ext.shortDescription
-                $version = if ($ext.versions -and $ext.versions[0]) { $ext.versions[0].version } else { "1.0.0" }
+                $version = $(if ($ext.versions -and $ext.versions[0]) { $ext.versions[0].version } else { "1.0.0" }
                 
                 # Get statistics
                 $downloads = 0
@@ -89,7 +89,7 @@ function Test-VSCodeMarketplaceAPI {
                     if ($ratingStat) { $rating = [math]::Round([double]$ratingStat.value, 1) }
                 }
                 
-                $category = if ($ext.categories -and $ext.categories[0]) { $ext.categories[0] } else { "Other" }
+                $category = $(if ($ext.categories -and $ext.categories[0]) { $ext.categories[0] } else { "Other" }
                 
                 $extensions += [PSCustomObject]@{
                     Id          = "$publisher.$extName"

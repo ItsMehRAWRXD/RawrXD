@@ -10,8 +10,8 @@
 # 800B OPTIMIZED LOADING
 # ============================================================================
 
-$script:FastLoadBuffer = New-Object byte[] 800
-$script:LoadOptimization = @{
+${script:FastLoadBuffer} = New-Object byte[] 800
+${script:LoadOptimization} = @{
     BufferSize = 800
     UseAsync = $true
     ParallelLoad = $true
@@ -30,8 +30,8 @@ function Invoke-FastLoad {
 }
 
 function Enable-OptimizedLoading {
-    $env:RAWRXD_OPTIMIZED_LOADING = "1"
-    $env:RAWRXD_LOAD_BUFFER_SIZE = "800"
+    ${env:RAWRXD_OPTIMIZED_LOADING} = "1"
+    ${env:RAWRXD_LOAD_BUFFER_SIZE} = "800"
 }
 
 Enable-OptimizedLoading
@@ -268,9 +268,7 @@ function Start-PipeServer {
 
 # ============================================================================
 # Main Flow
-# ============================================================================
-
-if ($StartServer) {
+# ============================================================================ $(if ($StartServer) {
     Start-PipeServer
     return
 }

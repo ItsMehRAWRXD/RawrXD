@@ -37,7 +37,7 @@
   pwsh -File .\genesis_build.ps1 -Mode monolithic -DisableRecompile
 
 .EXAMPLE
-  pwsh -File .\genesis_build.ps1 -ObjectsRoot "$env:LOCALAPPDATA\RawrXD\build" -LibDir "$env:LOCALAPPDATA\RawrXD\lib" -ResFile "$env:LOCALAPPDATA\RawrXD\rawrxd.res" -OutExe "$env:LOCALAPPDATA\RawrXD\bin\RawrXD.exe"
+  pwsh -File .\genesis_build.ps1 -ObjectsRoot "${env:LOCALAPPDATA}\RawrXD\build" -LibDir "${env:LOCALAPPDATA}\RawrXD\lib" -ResFile "${env:LOCALAPPDATA}\RawrXD\rawrxd.res" -OutExe "${env:LOCALAPPDATA}\RawrXD\bin\RawrXD.exe"
 #>
 
 [CmdletBinding()]
@@ -46,16 +46,16 @@ param(
   [string]$Mode = 'monolithic',
 
   # Link-only guard (kept for clarity; this script is always link-only)
-  [switch]$DisableRecompile = $true,
+  [switch]$DisableRecompile,
 
   # Inputs
-  [string]$ObjectsRoot = "$env:LOCALAPPDATA\RawrXD\build",
+  [string]$ObjectsRoot = "${env:LOCALAPPDATA}\RawrXD\build",
   [string]$ObjectsFile = "",
-  [string]$LibDir = "$env:LOCALAPPDATA\RawrXD\lib",
-  [string]$ResFile = "$env:LOCALAPPDATA\RawrXD\rawrxd.res",
+  [string]$LibDir = "${env:LOCALAPPDATA}\RawrXD\lib",
+  [string]$ResFile = "${env:LOCALAPPDATA}\RawrXD\rawrxd.res",
 
   # Output
-  [string]$OutExe = "$env:LOCALAPPDATA\RawrXD\bin\RawrXD.exe",
+  [string]$OutExe = "${env:LOCALAPPDATA}\RawrXD\bin\RawrXD.exe",
 
   # Link config
   [ValidateSet('WINDOWS','CONSOLE')]

@@ -1,14 +1,14 @@
-$headerFile = "d:\rawrxd\src\win32app\Win32IDE.h"
-$lines = Get-Content $headerFile
+$Script:headerFile = "d:\rawrxd\src\win32app\Win32IDE.h"
+$Script:lines = Get-Content $headerFile
 
 # Clean beginning: lines 1-1014 (indices 0-1013)
-$cleanStart = $lines[0..1013]
+$Script:cleanStart = $lines[0..1013]
 
 # Clean end: lines 1306-end (indices 1305 to end) - the PowerShell panel section onward
-$cleanEnd = $lines[1305..($lines.Count - 1)]
+$Script:cleanEnd = $lines[1305..($lines.Count - 1)]
 
 # Write the clean middle section (replacing corrupted lines 1015-1305)
-$cleanMiddle = @(
+$Script:cleanMiddle = @(
     ""
     "    // Window dimensions"
     "    int m_editorHeight;"
@@ -305,7 +305,7 @@ $cleanMiddle = @(
 Copy-Item $headerFile "$headerFile.bak" -Force
 
 # Write the new file
-$newContent = $cleanStart + $cleanMiddle + $cleanEnd
+$Script:newContent = $cleanStart + $cleanMiddle + $cleanEnd
 $newContent | Set-Content $headerFile -Encoding UTF8
 
 Write-Host "Done! New file has $($newContent.Count) lines"

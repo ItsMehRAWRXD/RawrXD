@@ -81,8 +81,8 @@
     .\Build-Monolithic.ps1 -RunAllSmoke -SmokeSizeDeltaAlertKb 1
     .\Build-Monolithic.ps1 -LinkMaxAttempts 3
     .\Build-Monolithic.ps1 -RunHeadlessSmoke -RunForcedTimeoutSmokeCase -SmokeTimeoutSec 5
-    $env:CI='true'; .\Build-Monolithic.ps1 -RunHeadlessSmoke
-    $env:CI='true'; .\Build-Monolithic.ps1 -RunHeadlessSmoke -SkipCiTimeoutCaseHook
+    ${env:CI}='true'; .\Build-Monolithic.ps1 -RunHeadlessSmoke
+    ${env:CI}='true'; .\Build-Monolithic.ps1 -RunHeadlessSmoke -SkipCiTimeoutCaseHook
 #>
 [CmdletBinding()]
 param(
@@ -121,7 +121,7 @@ if ($RunAllSmoke) {
 }
 $combinedSmokeMode = [bool]$RunAllSmoke
 
-$isCiEnvironment = (($env:CI -eq "true") -or ($env:GITHUB_ACTIONS -eq "true") -or ($env:TF_BUILD -eq "True"))
+$isCiEnvironment = ((${env:CI} -eq "true") -or (${env:GITHUB_ACTIONS} -eq "true") -or (${env:TF_BUILD} -eq "True"))
 $ciTimeoutCaseHookApplied = $false
 if (-not $SkipCiTimeoutCaseHook -and $isCiEnvironment -and $RunHeadlessSmoke -and -not $RunForcedTimeoutSmokeCase) {
     $RunForcedTimeoutSmokeCase = $true
@@ -143,14 +143,13 @@ $RootDir   = Resolve-Path (Join-Path $ScriptDir "..\..\..") # D:\rawrxd
 $ObjDir    = Join-Path $RootDir "build\monolithic\obj"
 $BinDir    = Join-Path $RootDir "build\monolithic\bin"
 $OutExe    = Join-Path $BinDir  "RawrXD_Monolithic.exe"
-$script:LastLinkLockSnapshotPath = ""
-$script:LastLinkLockSnapshotProcessCount = 0
-$script:LastLinkLockSnapshotAttempt = 0
+${script:LastLinkLockSnapshotPath} = ""
+${script:LastLinkLockSnapshotProcessCount} = 0
+${script:LastLinkLockSnapshotAttempt} = 0
 
 # ============================================================================
 # Clean
-# ============================================================================
-if ($Clean) {
+# ============================================================================ $(if ($Clean) {
     Write-Host "Cleaning monolithic build..." -ForegroundColor Magenta
     if (Test-Path $ObjDir) { Remove-Item -Recurse -Force $ObjDir }
     if (Test-Path $BinDir) { Remove-Item -Recurse -Force $BinDir }
@@ -234,13 +233,13 @@ Write-Host "============================================" -ForegroundColor Cyan
 # ============================================================================
 # Environment (INCLUDE / LIB)
 # ============================================================================
-$env:INCLUDE = [string]::Join(";", @(
+${env:INCLUDE} = [string]::Join(";", @(
     "$MSVCRoot\include",
     "$SDKRoot\Include\$SDKVer\ucrt",
     "$SDKRoot\Include\$SDKVer\shared",
     "$SDKRoot\Include\$SDKVer\um"
 ))
-$env:LIB = [string]::Join(";", @(
+${env:LIB} = [string]::Join(";", @(
     "$MSVCRoot\lib\x64",
     "$MSVCRoot\lib\onecore\x64",
     "$SDKRoot\Lib\$SDKVer\ucrt\x64",
@@ -379,9 +378,9 @@ function Invoke-LinkWithRetry {
                 linkerOutputHead = [string]((@($output) | Select-Object -First 10) -join "`n")
             }
             $lockDiag | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $lockDiagPath -Encoding UTF8
-            $script:LastLinkLockSnapshotPath = [string]$lockDiagPath
-            $script:LastLinkLockSnapshotProcessCount = [int]@($lockProcRows).Count
-            $script:LastLinkLockSnapshotAttempt = [int]$attempt
+            ${script:LastLinkLockSnapshotPath} = [string]$lockDiagPath
+            ${script:LastLinkLockSnapshotProcessCount} = [int]@($lockProcRows).Count
+            ${script:LastLinkLockSnapshotAttempt} = [int]$attempt
             Write-Host "    lock_diag=$lockDiagPath" -ForegroundColor DarkGray
 
             foreach ($proc in $lockingProcs) {
@@ -592,8 +591,7 @@ Invoke-LinkWithRetry -Exe $LINK -ToolArgs $linkArgs -Label "link RawrXD_Monolith
 
 # ============================================================================
 # Summary
-# ============================================================================
-if (Test-Path $OutExe) {
+# ============================================================================ $(if (Test-Path $OutExe) {
     $sz = [math]::Round((Get-Item $OutExe).Length / 1KB, 1)
     Write-Host "`n============================================" -ForegroundColor Green
     Write-Host " BUILD SUCCESS: $OutExe ($sz KB)" -ForegroundColor White
@@ -622,9 +620,9 @@ if (Test-Path $OutExe) {
                 timestamped = [string]$smokeReportTimestampedPath
             }
             diagnostics = [ordered]@{
-                linkLockSnapshotPath = [string]$script:LastLinkLockSnapshotPath
-                linkLockSnapshotProcessCount = [int]$script:LastLinkLockSnapshotProcessCount
-                linkLockSnapshotAttempt = [int]$script:LastLinkLockSnapshotAttempt
+                linkLockSnapshotPath = [string]${script:LastLinkLockSnapshotPath}
+                linkLockSnapshotProcessCount = [int]${script:LastLinkLockSnapshotProcessCount}
+                linkLockSnapshotAttempt = [int]${script:LastLinkLockSnapshotAttempt}
             }
             mode = [ordered]@{
                 runAllSmoke = [bool]$RunAllSmoke
@@ -855,8 +853,8 @@ if (Test-Path $OutExe) {
         Write-Host "`n=== Smoke Report ===" -ForegroundColor Cyan
         Write-Host "  report_timestamped=$smokeReportTimestampedPath" -ForegroundColor DarkGray
         Write-Host "  report=$smokeReportPath" -ForegroundColor DarkGray
-        if (-not [string]::IsNullOrWhiteSpace([string]$script:LastLinkLockSnapshotPath)) {
-            Write-Host "  link_lock_snapshot=$($script:LastLinkLockSnapshotPath)" -ForegroundColor DarkGray
+        if (-not [string]::IsNullOrWhiteSpace([string]${script:LastLinkLockSnapshotPath})) {
+            Write-Host "  link_lock_snapshot=$(${script:LastLinkLockSnapshotPath})" -ForegroundColor DarkGray
         }
 
         $smokeManifestPath = Join-Path $smokeReportDir "smoke_manifest.json"
@@ -1408,10 +1406,10 @@ if (Test-Path $OutExe) {
                 timestamp = $entryTimestamp
                 status = [string]$entry.status
                 config = [string]$entry.config
-                sizeKb = if ($entry -is [System.Collections.IDictionary]) { if ($entry.Contains('sizeKb')) { [double]$entry['sizeKb'] } else { "" } } elseif ($null -ne $entry.PSObject.Properties['sizeKb']) { [double]$entry.sizeKb } else { "" }
-                rtpWallMs = if ($entry -is [System.Collections.IDictionary]) { $m = if ($entry.Contains('metrics')) { $entry['metrics'] } else { $null }; if ($null -ne $m) { if ($m -is [System.Collections.IDictionary]) { if ($m.Contains('rtpWallMs')) { [int]$m['rtpWallMs'] } else { "" } } elseif ($null -ne $m.PSObject.Properties['rtpWallMs']) { [int]$m.rtpWallMs } else { "" } } else { "" } } else { $m = if ($null -ne $entry.PSObject.Properties['metrics']) { $entry.metrics } else { $null }; if ($null -ne $m -and $null -ne $m.PSObject.Properties['rtpWallMs']) { [int]$m.rtpWallMs } else { "" } }
-                agentWallMs = if ($entry -is [System.Collections.IDictionary]) { $m = if ($entry.Contains('metrics')) { $entry['metrics'] } else { $null }; if ($null -ne $m) { if ($m -is [System.Collections.IDictionary]) { if ($m.Contains('agentWallMs')) { [int]$m['agentWallMs'] } else { "" } } elseif ($null -ne $m.PSObject.Properties['agentWallMs']) { [int]$m.agentWallMs } else { "" } } else { "" } } else { $m = if ($null -ne $entry.PSObject.Properties['metrics']) { $entry.metrics } else { $null }; if ($null -ne $m -and $null -ne $m.PSObject.Properties['agentWallMs']) { [int]$m.agentWallMs } else { "" } }
-                benchWallMs = if ($entry -is [System.Collections.IDictionary]) { $m = if ($entry.Contains('metrics')) { $entry['metrics'] } else { $null }; if ($null -ne $m) { if ($m -is [System.Collections.IDictionary]) { if ($m.Contains('benchWallMs')) { [int]$m['benchWallMs'] } else { "" } } elseif ($null -ne $m.PSObject.Properties['benchWallMs']) { [int]$m.benchWallMs } else { "" } } else { "" } } else { $m = if ($null -ne $entry.PSObject.Properties['metrics']) { $entry.metrics } else { $null }; if ($null -ne $m -and $null -ne $m.PSObject.Properties['benchWallMs']) { [int]$m.benchWallMs } else { "" } }
+                sizeKb = $(if ($entry -is [System.Collections.IDictionary]) { if ($entry.Contains('sizeKb')) { [double]$entry['sizeKb'] } else { "" } } elseif ($null -ne $entry.PSObject.Properties['sizeKb']) { [double]$entry.sizeKb } else { "" }
+                rtpWallMs = $(if ($entry -is [System.Collections.IDictionary]) { $m = $(if ($entry.Contains('metrics')) { $entry['metrics'] } else { $null }; if ($null -ne $m) { if ($m -is [System.Collections.IDictionary]) { if ($m.Contains('rtpWallMs')) { [int]$m['rtpWallMs'] } else { "" } } elseif ($null -ne $m.PSObject.Properties['rtpWallMs']) { [int]$m.rtpWallMs } else { "" } } else { "" } } else { $m = $(if ($null -ne $entry.PSObject.Properties['metrics']) { $entry.metrics } else { $null }; if ($null -ne $m -and $null -ne $m.PSObject.Properties['rtpWallMs']) { [int]$m.rtpWallMs } else { "" } }
+                agentWallMs = $(if ($entry -is [System.Collections.IDictionary]) { $m = $(if ($entry.Contains('metrics')) { $entry['metrics'] } else { $null }; if ($null -ne $m) { if ($m -is [System.Collections.IDictionary]) { if ($m.Contains('agentWallMs')) { [int]$m['agentWallMs'] } else { "" } } elseif ($null -ne $m.PSObject.Properties['agentWallMs']) { [int]$m.agentWallMs } else { "" } } else { "" } } else { $m = $(if ($null -ne $entry.PSObject.Properties['metrics']) { $entry.metrics } else { $null }; if ($null -ne $m -and $null -ne $m.PSObject.Properties['agentWallMs']) { [int]$m.agentWallMs } else { "" } }
+                benchWallMs = $(if ($entry -is [System.Collections.IDictionary]) { $m = $(if ($entry.Contains('metrics')) { $entry['metrics'] } else { $null }; if ($null -ne $m) { if ($m -is [System.Collections.IDictionary]) { if ($m.Contains('benchWallMs')) { [int]$m['benchWallMs'] } else { "" } } elseif ($null -ne $m.PSObject.Properties['benchWallMs']) { [int]$m.benchWallMs } else { "" } } else { "" } } else { $m = $(if ($null -ne $entry.PSObject.Properties['metrics']) { $entry.metrics } else { $null }; if ($null -ne $m -and $null -ne $m.PSObject.Properties['benchWallMs']) { [int]$m.benchWallMs } else { "" } }
                 runAllSmoke = [bool]$entry.runAllSmoke
                 runRtpToolSmoke = [bool]$entry.runRtpToolSmoke
                 runHeadlessSmoke = [bool]$entry.runHeadlessSmoke
@@ -1430,7 +1428,7 @@ if (Test-Path $OutExe) {
         Write-Host "  manifest_csv=$smokeManifestCsvPath" -ForegroundColor DarkGray
         Write-Host "  manifest_health=level:$healthLevel latestStatus:$overallStatus streakAlert:$streakAlert timingAlert:$timingRegressionAlert sizeAlert:$sizeRegressionAlert reasons:$(@($healthReasons) -join ',')" -ForegroundColor DarkGray
         Write-Host "  manifest_health_details=status:$($healthReasonDetails.status) streak:$($healthReasonDetails.streak.consecutiveNonPass)/$($healthReasonDetails.streak.threshold) timing:$($healthReasonDetails.timing.peakDeltaMs)/$($healthReasonDetails.timing.thresholdMs) size:$($healthReasonDetails.size.deltaKb)/$($healthReasonDetails.size.thresholdKb)" -ForegroundColor DarkGray
-        $sizeDeltaMsg = if ($null -ne $sizeDeltaKb) { " sizeDeltaKb:$sizeDeltaKb" } else { "" }
+        $sizeDeltaMsg = $(if ($null -ne $sizeDeltaKb) { " sizeDeltaKb:$sizeDeltaKb" } else { "" }
         Write-Host "  manifest_size=sizeKb:$sz$sizeDeltaMsg" -ForegroundColor DarkGray
         Write-Host "  manifest_size_alert=thresholdKb:$SmokeSizeDeltaAlertKb alert:$sizeRegressionAlert" -ForegroundColor DarkGray
         if ($sizeRegressionAlert) {

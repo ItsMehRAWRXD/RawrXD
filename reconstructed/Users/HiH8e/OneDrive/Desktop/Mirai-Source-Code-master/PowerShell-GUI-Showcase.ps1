@@ -63,7 +63,7 @@ $codeEditor.Font = New-Object System.Drawing.Font("Consolas", 10)
 $codeEditor.Text = @"
 # PowerShell Code Editor with Syntax Highlighting
 function Get-SystemInfo {
-    param([string]`$ComputerName = `$env:COMPUTERNAME)
+    param([string]`$ComputerName = `${env:COMPUTERNAME})
     
     `$os = Get-WmiObject -Class Win32_OperatingSystem -ComputerName `$ComputerName
     `$cpu = Get-WmiObject -Class Win32_Processor -ComputerName `$ComputerName

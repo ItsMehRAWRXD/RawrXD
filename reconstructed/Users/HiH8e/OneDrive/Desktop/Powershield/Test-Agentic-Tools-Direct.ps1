@@ -7,9 +7,9 @@ Write-Host ""
 
 # Load RawrXD to get agent tools
 Write-Host "📦 Loading RawrXD and agent tools..." -ForegroundColor Yellow
-$script:agentTools = @{}
-$global:currentWorkingDir = $PWD
-$global:currentFile = $null
+${script:agentTools} = @{}
+${global:currentWorkingDir} = $PWD
+${global:currentFile} = $null
 
 # Source RawrXD to get functions (but skip GUI initialization)
 $rawrXDContent = Get-Content -Path "RawrXD.ps1" -Raw -ErrorAction SilentlyContinue
@@ -28,8 +28,8 @@ $testNum = 0
 
 function Test-Tool {
     param([string]$Name, [scriptblock]$Test)
-    $global:testNum++
-    Write-Host "[$global:testNum] $Name" -ForegroundColor Yellow
+    ${global:testNum}++
+    Write-Host "[${global:testNum}] $Name" -ForegroundColor Yellow
     try {
         $result = & $Test
         if ($result.success -ne $false) {
@@ -37,18 +37,18 @@ function Test-Tool {
             if ($result -is [hashtable] -and $result.ContainsKey("count")) {
                 Write-Host "    Detected: $($result.count) items" -ForegroundColor Gray
             }
-            $global:testResults += @{Test = $Name; Status = "PASS"; Result = $result}
+            ${global:testResults} += @{Test = $Name; Status = "PASS"; Result = $result}
             return $true
         }
         else {
             Write-Host "  ❌ FAIL: $($result.error)" -ForegroundColor Red
-            $global:testResults += @{Test = $Name; Status = "FAIL"; Result = $result}
+            ${global:testResults} += @{Test = $Name; Status = "FAIL"; Result = $result}
             return $false
         }
     }
     catch {
         Write-Host "  ❌ EXCEPTION: $($_.Exception.Message)" -ForegroundColor Red
-        $global:testResults += @{Test = $Name; Status = "EXCEPTION"; Result = $_.Exception.Message}
+        ${global:testResults} += @{Test = $Name; Status = "EXCEPTION"; Result = $_.Exception.Message}
         return $false
     }
 }
@@ -328,8 +328,8 @@ Test-Tool -Name "Get System Environment" {
         os = [System.Environment]::OSVersion.ToString()
         ps_version = $PSVersionTable.PSVersion.ToString()
         current_dir = $PWD
-        user = $env:USERNAME
-        computer = $env:COMPUTERNAME
+        user = ${env:USERNAME}
+        computer = ${env:COMPUTERNAME}
     }
 
     # Check for tools

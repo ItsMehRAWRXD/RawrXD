@@ -37,8 +37,8 @@ function Invoke-CliTestOllama {
         if ($response.models -and $response.models.Count -gt 0) {
             foreach ($model in $response.models) {
                 # Sanitize model name output to prevent injection
-                $modelName = if ($model.name) { $model.name } else { "Unknown" }
-                $modelSize = if ($model.size) { [Math]::Round($model.size / 1GB, 2) } else { 0 }
+                $modelName = $(if ($model.name) { $model.name } else { "Unknown" }
+                $modelSize = $(if ($model.size) { [Math]::Round($model.size / 1GB, 2) } else { 0 }
                 Write-Host "  • $modelName - Size: $modelSize GB" -ForegroundColor White
             }
         } else {

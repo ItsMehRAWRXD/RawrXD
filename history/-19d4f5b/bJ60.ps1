@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory=$false)][string]$Exe = "$env:USERPROFILE\OneDrive\Desktop\RawrXD-IDE\bin\Executables\RawrXD-AgenticIDE.exe",
+    [Parameter(Mandatory=$false)][string]$Exe = "${env:USERPROFILE}\OneDrive\Desktop\RawrXD-IDE\bin\Executables\RawrXD-AgenticIDE.exe",
     [Parameter(Mandatory=$false)][string]$WindeployQtPath,
     [Parameter(Mandatory=$false)][switch]$NoTranslations
 )
@@ -11,10 +11,10 @@ function Find-WindeployQt {
     if ($Hint -and (Test-Path $Hint)) { return (Resolve-Path $Hint).Path }
 
     $candidates = @()
-    $candidates += "$env:QTDIR\bin\windeployqt.exe"
-    $candidates += "$env:QT_DIR\bin\windeployqt.exe"
-    $candidates += "$env:ProgramFiles\Qt\**\bin\windeployqt.exe"
-    $candidates += "$env:ProgramFiles(x86)\Qt\**\bin\windeployqt.exe"
+    $candidates += "${env:QTDIR}\bin\windeployqt.exe"
+    $candidates += "${env:QT_DIR}\bin\windeployqt.exe"
+    $candidates += "${env:ProgramFiles}\Qt\**\bin\windeployqt.exe"
+    $candidates += "${env:ProgramFiles}(x86)\Qt\**\bin\windeployqt.exe"
     $candidates += "C:\Qt\**\bin\windeployqt.exe"
 
     foreach ($pattern in $candidates) {

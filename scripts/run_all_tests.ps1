@@ -210,7 +210,7 @@ foreach ($test in $Tests) {
     $testEnd = Get-Date
     $duration = ($testEnd - $testStart).TotalSeconds
     
-    $status = if ($process.ExitCode -eq 0) { "PASS" } else { "FAIL" }
+    $status = $(if ($process.ExitCode -eq 0) { "PASS" } else { "FAIL" }
     
     Write-Status "$($test.Name) - Exit code: $($process.ExitCode), Duration: $([math]::Round($duration, 2))s" $status
     
@@ -246,7 +246,7 @@ $TestResults | ForEach-Object {
         "FAIL" { "Red" }
         "SKIP" { "DarkGray" }
     }
-    $criticalMark = if ($_.Critical) { "*" } else { " " }
+    $criticalMark = $(if ($_.Critical) { "*" } else { " " }
     Write-Host "[$criticalMark] $($_.Name.PadRight(30)) $($_.Status.PadRight(6)) $([math]::Round($_.Duration, 2))s" -ForegroundColor $color
 }
 

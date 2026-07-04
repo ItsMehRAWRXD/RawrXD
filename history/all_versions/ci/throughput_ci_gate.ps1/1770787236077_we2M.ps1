@@ -42,10 +42,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:passed  = $true
-$script:checks  = @()
-$script:gateVersion = "1.0.0"
-$script:timestamp   = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+${script:passed}  = $true
+${script:checks}  = @()
+${script:gateVersion} = "1.0.0"
+${script:timestamp}   = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 
 # =============================================================================
 # Helper: Test-Check
@@ -55,16 +55,16 @@ function Test-Check {
     try {
         $result = & $Test
         if ($result) {
-            $script:checks += @{ Name = $Name; Status = "PASS"; Detail = "OK"; Category = $Category }
+            ${script:checks} += @{ Name = $Name; Status = "PASS"; Detail = "OK"; Category = $Category }
             if ($Verbose) { Write-Host "  ✅ $Name" -ForegroundColor Green }
         } else {
-            $script:checks += @{ Name = $Name; Status = "FAIL"; Detail = "Assertion failed"; Category = $Category }
-            $script:passed = $false
+            ${script:checks} += @{ Name = $Name; Status = "FAIL"; Detail = "Assertion failed"; Category = $Category }
+            ${script:passed} = $false
             if ($Verbose) { Write-Host "  ❌ $Name" -ForegroundColor Red }
         }
     } catch {
-        $script:checks += @{ Name = $Name; Status = "FAIL"; Detail = $_.Exception.Message; Category = $Category }
-        $script:passed = $false
+        ${script:checks} += @{ Name = $Name; Status = "FAIL"; Detail = $_.Exception.Message; Category = $Category }
+        ${script:passed} = $false
         if ($Verbose) { Write-Host "  ❌ $Name — $($_.Exception.Message)" -ForegroundColor Red }
     }
 }
@@ -79,7 +79,7 @@ function Test-Regression {
         [string]$Category = "perf"
     )
     if ($Baseline -le 0) {
-        $script:checks += @{
+        ${script:checks} += @{
             Name = "$MetricName regression check"
             Status = "SKIP"
             Detail = "No baseline ($Baseline)"
@@ -101,11 +101,11 @@ function Test-Regression {
     }
 
     if ($regressed) {
-        $script:checks += @{ Name = "$MetricName regression"; Status = "FAIL"; Detail = $detail; Category = $Category }
-        $script:passed = $false
+        ${script:checks} += @{ Name = "$MetricName regression"; Status = "FAIL"; Detail = $detail; Category = $Category }
+        ${script:passed} = $false
         if ($Verbose) { Write-Host "  ❌ $MetricName — $detail" -ForegroundColor Red }
     } else {
-        $script:checks += @{ Name = "$MetricName regression"; Status = "PASS"; Detail = $detail; Category = $Category }
+        ${script:checks} += @{ Name = "$MetricName regression"; Status = "PASS"; Detail = $detail; Category = $Category }
         if ($Verbose) { Write-Host "  ✅ $MetricName — $detail" -ForegroundColor Green }
     }
 }
@@ -115,7 +115,7 @@ function Test-Regression {
 # =============================================================================
 Write-Host ""
 Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║   THROUGHPUT CI GATE  —  Milestone T3-D  v$script:gateVersion             ║" -ForegroundColor Magenta
+Write-Host "║   THROUGHPUT CI GATE  —  Milestone T3-D  v${script:gateVersion}             ║" -ForegroundColor Magenta
 Write-Host "║   GEMM + FlashAttn + AgentLoop Replay Divergence Gate        ║" -ForegroundColor Magenta
 Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
@@ -134,8 +134,8 @@ if (Test-Path $BaselineFile) {
 } else {
     Write-Host "  ⚠  No baseline at $BaselineFile — creating seed baseline" -ForegroundColor Yellow
     $baseline = @{
-        version = $script:gateVersion
-        created = $script:timestamp
+        version = ${script:gateVersion}
+        created = ${script:timestamp}
         performance = @{
             gemm_ops_per_sec        = 0.0
             flash_attn_ops_per_sec  = 0.0
@@ -402,10 +402,10 @@ Write-Host "══════════════════════�
 Write-Host "  THROUGHPUT GATE RESULTS" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$passCount = ($script:checks | Where-Object { $_.Status -eq "PASS" }).Count
-$failCount = ($script:checks | Where-Object { $_.Status -eq "FAIL" }).Count
-$skipCount = ($script:checks | Where-Object { $_.Status -eq "SKIP" }).Count
-$totalCount = $script:checks.Count
+$passCount = (${script:checks} | Where-Object { $_.Status -eq "PASS" }).Count
+$failCount = (${script:checks} | Where-Object { $_.Status -eq "FAIL" }).Count
+$skipCount = (${script:checks} | Where-Object { $_.Status -eq "SKIP" }).Count
+$totalCount = ${script:checks}.Count
 
 Write-Host ""
 Write-Host "  Total Checks: $totalCount"
@@ -416,7 +416,7 @@ Write-Host ""
 
 if ($failCount -gt 0) {
     Write-Host "  Failed Checks:" -ForegroundColor Red
-    foreach ($check in ($script:checks | Where-Object { $_.Status -eq "FAIL" })) {
+    foreach ($check in (${script:checks} | Where-Object { $_.Status -eq "FAIL" })) {
         Write-Host "    ❌ [$($check.Category)] $($check.Name): $($check.Detail)" -ForegroundColor Red
     }
     Write-Host ""
@@ -425,11 +425,11 @@ if ($failCount -gt 0) {
 # JSON report
 $report = @{
     gate = "THROUGHPUT_CI_GATE"
-    version = $script:gateVersion
+    version = ${script:gateVersion}
     milestone = "T3-D"
-    timestamp = $script:timestamp
-    result = if ($script:passed) { "PASS" } else { "FAIL" }
-    badge = if ($script:passed) { "THROUGHPUT_GATE_PASS" } else { "THROUGHPUT_GATE_FAIL" }
+    timestamp = ${script:timestamp}
+    result = $(if (${script:passed}) { "PASS" } else { "FAIL" }
+    badge = $(if (${script:passed}) { "THROUGHPUT_GATE_PASS" } else { "THROUGHPUT_GATE_FAIL" }
     summary = @{
         total   = $totalCount
         passed  = $passCount
@@ -445,7 +445,7 @@ $report = @{
         latency_increase_pct    = $LatencyThreshold
         patch_delta_pct         = $PatchDeltaThreshold
     }
-    checks = $script:checks
+    checks = ${script:checks}
     environment = @{
         os = [System.Runtime.InteropServices.RuntimeInformation]::OSDescription
         powershell = $PSVersionTable.PSVersion.ToString()
@@ -455,7 +455,7 @@ $report = @{
 $report | ConvertTo-Json -Depth 5 | Set-Content $ReportOutput -Encoding UTF8
 Write-Host "  📄 Report: $ReportOutput" -ForegroundColor DarkGray
 
-if ($script:passed) {
+if (${script:passed}) {
     Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
     Write-Host "║   ✅  THROUGHPUT_GATE_PASS  —  No regressions detected        ║" -ForegroundColor Green
     Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Green

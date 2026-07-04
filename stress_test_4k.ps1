@@ -5,7 +5,7 @@
 param(
     [int]$Iterations = 100,
     [int]$ContextSize = 4096,
-    [switch]$Monitor = $true
+    [switch]$Monitor
 )
 
 $ErrorActionPreference = "Stop"
@@ -151,7 +151,7 @@ $tokensPerSecond = ($Iterations * $ContextSize) / $totalDuration
 $initialMemory = $memoryReadings[0]
 $finalMemory = $memoryReadings[-1]
 $memoryGrowth = $finalMemory - $initialMemory
-$memoryGrowthPercent = if ($initialMemory -gt 0) { ($memoryGrowth / $initialMemory) * 100 } else { 0 }
+$memoryGrowthPercent = $(if ($initialMemory -gt 0) { ($memoryGrowth / $initialMemory) * 100 } else { 0 }
 
 Write-Host "  Duration:        ${totalDuration:N2} seconds" -ForegroundColor White
 Write-Host "  Success Rate:    $successCount/$Iterations ($([math]::Round(($successCount/$Iterations)*100, 1))%)" -ForegroundColor $(if ($successCount -eq $Iterations) { "Green" } else { "Yellow" })

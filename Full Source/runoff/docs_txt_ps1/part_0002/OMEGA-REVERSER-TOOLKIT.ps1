@@ -14,13 +14,13 @@ param(
 )
 
 # Global variables for license validation
-$global:ValidatedLicense = $null
-$global:DecryptedMasterKey = $null
-$global:ExchangeKey = $null
-$global:ExchangeIV = $null
-$global:ExchangeValidation = $null
-$global:ExchangeLicenseId = $null
-$global:LicenseValidated = $false
+${global:ValidatedLicense} = $null
+${global:DecryptedMasterKey} = $null
+${global:ExchangeKey} = $null
+${global:ExchangeIV} = $null
+${global:ExchangeValidation} = $null
+${global:ExchangeLicenseId} = $null
+${global:LicenseValidated} = $false
 
 function Show-Help {
     Write-Host @"
@@ -79,7 +79,7 @@ OMEGA-REVERSER TOOLKIT v5.0
 }
 
 function Test-LicenseValidation {
-    if (-not $global:LicenseValidated) {
+    if (-not ${global:LicenseValidated}) {
         Write-Error "License not validated! Run Validate-License.ps1 first."
         Write-Error "Or use -LicenseFile and -ExchangeKeyFile parameters."
         return $false
@@ -103,7 +103,7 @@ function Invoke-LicenseValidation {
     $validationResult = .\Validate-License.ps1 -LicenseFile $LicenseFile -ExchangeKeyFile $ExchangeKeyFile -MasterKeyFile $MasterKeyFile
     
     if ($LASTEXITCODE -eq 0) {
-        $global:LicenseValidated = $true
+        ${global:LicenseValidated} = $true
         Write-Host "✓ License validation successful" -ForegroundColor Green
         return $true
     } else {
@@ -125,7 +125,7 @@ function Invoke-ReverseInstall {
     Write-Host "`n[✓] License validated, proceeding with installation reversal..." -ForegroundColor Green
     
     # Check license restrictions
-    $maxFiles = $global:ValidatedLicense.Restrictions.MaxExtractedFiles
+    $maxFiles = ${global:ValidatedLicense}.Restrictions.MaxExtractedFiles
     
     # Run the actual reversal
     $reversalArgs = @{
@@ -170,7 +170,7 @@ function Invoke-Deobfuscate {
     Write-Host "`n[✓] License validated, proceeding with deobfuscation..." -ForegroundColor Green
     
     # Check license restrictions
-    $maxFiles = $global:ValidatedLicense.Restrictions.MaxExtractedFiles
+    $maxFiles = ${global:ValidatedLicense}.Restrictions.MaxExtractedFiles
     
     # Run deobfuscation
     $deobfuscateArgs = @{
@@ -216,7 +216,7 @@ function Invoke-ExtractFeatures {
     $hasFeatures = $true
     
     foreach ($feature in $requiredFeatures) {
-        if ($feature -notin $global:ValidatedLicense.Features) {
+        if ($feature -notin ${global:ValidatedLicense}.Features) {
             Write-Error "License missing required feature: $feature"
             $hasFeatures = $false
         }
@@ -251,26 +251,26 @@ function Invoke-ExtractFeatures {
 }
 
 function Invoke-ShowLicenseInfo {
-    if ($global:ValidatedLicense) {
+    if (${global:ValidatedLicense}) {
         Write-Host "`nLICENSE INFORMATION:" -ForegroundColor Cyan
         Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-        Write-Host "License ID:    $($global:ValidatedLicense.LicenseId)" -ForegroundColor White
-        Write-Host "Licensee:      $($global:ValidatedLicense.LicenseeName)" -ForegroundColor White
-        Write-Host "Email:         $($global:ValidatedLicense.LicenseeEmail)" -ForegroundColor White
-        Write-Host "Type:          $($global:ValidatedLicense.LicenseType)" -ForegroundColor White
-        Write-Host "Issued:        $($global:ValidatedLicense.IssuedDate)" -ForegroundColor White
-        Write-Host "Expires:       $($global:ValidatedLicense.ExpirationDate)" -ForegroundColor $(if (([DateTime]::ParseExact($global:ValidatedLicense.ExpirationDate, "yyyy-MM-dd HH:mm:ss", $null) -lt (Get-Date).AddDays(30)) { "Red" } else { "Green" })
+        Write-Host "License ID:    $(${global:ValidatedLicense}.LicenseId)" -ForegroundColor White
+        Write-Host "Licensee:      $(${global:ValidatedLicense}.LicenseeName)" -ForegroundColor White
+        Write-Host "Email:         $(${global:ValidatedLicense}.LicenseeEmail)" -ForegroundColor White
+        Write-Host "Type:          $(${global:ValidatedLicense}.LicenseType)" -ForegroundColor White
+        Write-Host "Issued:        $(${global:ValidatedLicense}.IssuedDate)" -ForegroundColor White
+        Write-Host "Expires:       $(${global:ValidatedLicense}.ExpirationDate)" -ForegroundColor $(if (([DateTime]::ParseExact(${global:ValidatedLicense}.ExpirationDate, "yyyy-MM-dd HH:mm:ss", $null) -lt (Get-Date).AddDays(30)) { "Red" } else { "Green" })
         Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
         
         Write-Host "`nFEATURES ENABLED:" -ForegroundColor Cyan
-        foreach ($feature in $global:ValidatedLicense.Features) {
+        foreach ($feature in ${global:ValidatedLicense}.Features) {
             Write-Host "  ✓ $feature" -ForegroundColor Green
         }
         
         Write-Host "`nRESTRICTIONS:" -ForegroundColor Cyan
-        Write-Host "  Max Concurrent Users: $($global:ValidatedLicense.Restrictions.MaxConcurrentUsers)" -ForegroundColor White
-        Write-Host "  Max Extracted Files:  $($global:ValidatedLicense.Restrictions.MaxExtractedFiles)" -ForegroundColor White
-        Write-Host "  Commercial Use:       $($global:ValidatedLicense.Restrictions.CommercialUse)" -ForegroundColor White
+        Write-Host "  Max Concurrent Users: $(${global:ValidatedLicense}.Restrictions.MaxConcurrentUsers)" -ForegroundColor White
+        Write-Host "  Max Extracted Files:  $(${global:ValidatedLicense}.Restrictions.MaxExtractedFiles)" -ForegroundColor White
+        Write-Host "  Commercial Use:       $(${global:ValidatedLicense}.Restrictions.CommercialUse)" -ForegroundColor White
     } else {
         Write-Error "No license loaded. Run validation first."
     }
@@ -314,7 +314,7 @@ if ($ShowLicenseInfo) {
 
 # Validate only mode
 if ($ValidateOnly) {
-    if ($global:LicenseValidated) {
+    if (${global:LicenseValidated}) {
         Write-Host "✓ License is valid and ready for use" -ForegroundColor Green
         exit 0
     } else {
@@ -325,7 +325,7 @@ if ($ValidateOnly) {
 
 # Execute command
 if ($Command) {
-    if (-not $global:LicenseValidated) {
+    if (-not ${global:LicenseValidated}) {
         Write-Error "License must be validated before running commands!"
         Write-Error "Use -LicenseFile and -ExchangeKeyFile parameters."
         exit 1
@@ -380,9 +380,9 @@ Write-Host @"
 ╚══════════════════════════════════════════════════════════════════╝
 Duration: $($duration.ToString('hh\:mm\:ss'))
 
-$(if ($global:LicenseValidated) { "✓ License validated and active" } else { "✗ License not validated" })
+$(if (${global:LicenseValidated}) { "✓ License validated and active" } else { "✗ License not validated" })
 $(if ($Command) { "✓ Command executed: $Command" })
 
 OMEGA-REVERSER TOOLKIT v5.0
 "Extract anything. Protect everything."
-"@ -ForegroundColor $(if ($global:LicenseValidated) { "Green" } else { "Red" })
+"@ -ForegroundColor $(if (${global:LicenseValidated}) { "Green" } else { "Red" })

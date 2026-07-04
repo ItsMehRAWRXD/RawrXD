@@ -37,7 +37,7 @@ $sb = [System.Text.StringBuilder]::new()
 [void]$sb.AppendLine("")
 
 foreach ($r in $sorted) {
-  $pct = if ($totalLines -gt 0) { [math]::Round(100.0 * $r.Lines / $totalLines, 2) } else { 0 }
+  $pct = $(if ($totalLines -gt 0) { [math]::Round(100.0 * $r.Lines / $totalLines, 2) } else { 0 }
   [void]$sb.AppendLine("$($r.Path)|$($r.Lines)|$pct%")
 }
 

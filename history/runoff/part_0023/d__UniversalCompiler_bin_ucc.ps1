@@ -48,7 +48,7 @@ for ($i = 0; $i -lt $Arguments.Count; $i++) {
 # Determine output file if not specified
 if (-not $outputFile -and $inputFiles.Count -gt 0) {
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($inputFiles[0])
-    $outputFile = if ($compileOnly) { "$baseName.obj" } 
+    $outputFile = $(if ($compileOnly) { "$baseName.obj" } 
                   elseif ($assembleOnly) { "$baseName.s" } 
                   else { "$baseName.exe" }
 }
@@ -101,7 +101,7 @@ if ($inputFiles.Count -gt 0) {
 }
 
 # Compile
-$mode = if ($compileOnly) { 'compile' } elseif ($assembleOnly) { 'assemble' } else { 'full' }
+$mode = $(if ($compileOnly) { 'compile' } elseif ($assembleOnly) { 'assemble' } else { 'full' }
 
 try {
     Invoke-UniversalCompiler -InputFiles $inputFiles `

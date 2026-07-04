@@ -165,7 +165,7 @@ Write-Host "  Passed: $($TestResults.Passed)" -ForegroundColor Green
 Write-Host "  Failed: $($TestResults.Failed)" -ForegroundColor $(if ($TestResults.Failed -eq 0) { 'Green' } else { 'Red' })
 
 $percentage = [math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 2)
-$color = if ($percentage -eq 100) { 'Green' } 
+$color = $(if ($percentage -eq 100) { 'Green' } 
          elseif ($percentage -ge 80) { 'Yellow' } 
          else { 'Red' }
 

@@ -9,7 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$rootDir = if ($PSScriptRoot) { Split-Path $PSScriptRoot } else { "D:\rawrxd" }
+$rootDir = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot } else { "D:\rawrxd" }
 if (-not $OutDir) { $OutDir = Join-Path $rootDir "build_prod" }
 $asmDir = Join-Path $rootDir "src\asm\kernel_suite"
 $startTime = Get-Date

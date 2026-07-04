@@ -1,6 +1,6 @@
 # Usage:
 #   When connecting to a dev environment
-#       $Env:AWS_REGION=… $Env:AWS_SSM_CLI=… $Env:CODECATALYST_ENDPOINT=… $Env:BEARER_TOKEN_LOCATION=… $Env:SPACE_NAME=… $Env:PROJECT_NAME=… $Env:DEVENV_ID=… ./code_catalyst_connect.ps1
+#       ${Env:AWS_REGION}=… ${Env:AWS_SSM_CLI}=… ${Env:CODECATALYST_ENDPOINT}=… ${Env:BEARER_TOKEN_LOCATION}=… ${Env:SPACE_NAME}=… ${Env:PROJECT_NAME}=… ${Env:DEVENV_ID}=… ./code_catalyst_connect.ps1
 
 function Get-Timestamp {
     return Get-Date -format "[yyyy-MMM-dd HH:mm:ss]"
@@ -17,11 +17,11 @@ function Log {
         Exit 1
     }
 
-    if (!(Test-Path $global:logFileLocation)) {
-        New-Item -path $global:logFileLocation -type "file" -value ""
+    if (!(Test-Path ${global:logFileLocation})) {
+        New-Item -path ${global:logFileLocation} -type "file" -value ""
     }
 
-    $Output | Out-File -FilePath $global:logFileLocation -Append
+    $Output | Out-File -FilePath ${global:logFileLocation} -Append
     if ($Debug.IsPresent) {
         Write-Debug $Output
     }
@@ -102,7 +102,7 @@ function ExecCodeCatalyst {
 
 
 function Main {
-    $global:logFileLocation = [Environment]::GetEnvironmentVariable("LOG_FILE_LOCATION")
+    ${global:logFileLocation} = [Environment]::GetEnvironmentVariable("LOG_FILE_LOCATION")
 
     Log -Output "===================================================================="
     

@@ -177,8 +177,8 @@ if ($duplicates.Count -gt 0) {
                     $diffCount = 0
                     
                     for ($i = 0; $i -lt $maxLines; $i++) {
-                        $line1 = if ($i -lt $lines1.Count) { $lines1[$i] } else { "" }
-                        $line2 = if ($i -lt $lines2.Count) { $lines2[$i] } else { "" }
+                        $line1 = $(if ($i -lt $lines1.Count) { $lines1[$i] } else { "" }
+                        $line2 = $(if ($i -lt $lines2.Count) { $lines2[$i] } else { "" }
                         
                         if ($line1 -ne $line2) {
                             $diffCount++

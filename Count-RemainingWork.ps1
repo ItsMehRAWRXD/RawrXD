@@ -93,7 +93,7 @@ for ($fileIndex = 0; $fileIndex -lt $allFiles.Count; $fileIndex++) {
     $f = $allFiles[$fileIndex]
 
     if (-not $NoProgress) {
-        $pct = if ($totalFiles -gt 0) { [int](($fileIndex + 1) * 100 / $totalFiles) } else { 100 }
+        $pct = $(if ($totalFiles -gt 0) { [int](($fileIndex + 1) * 100 / $totalFiles) } else { 100 }
         Write-Progress -Activity 'RawrXD Remaining Work Scanner' -Status "Scanning $($f.Name) ($($fileIndex + 1)/$totalFiles)" -PercentComplete $pct
     }
 
@@ -143,7 +143,7 @@ for ($fileIndex = 0; $fileIndex -lt $allFiles.Count; $fileIndex++) {
                         File     = $name
                         Line     = $lineNumber
                         Pattern  = $p.Pat
-                        Severity = if ($isCrit) { 'CRITICAL' } elseif ($trimmed -match 'TODO|FIXME') { 'MEDIUM' } else { 'LOW' }
+                        Severity = $(if ($isCrit) { 'CRITICAL' } elseif ($trimmed -match 'TODO|FIXME') { 'MEDIUM' } else { 'LOW' }
                         Text     = $trimmed.Substring(0, [Math]::Min(90, $trimmed.Length))
                     }
 
@@ -172,7 +172,7 @@ for ($fileIndex = 0; $fileIndex -lt $allFiles.Count; $fileIndex++) {
                     File     = $name
                     Line     = $lineNumber
                     Pattern  = 'STUB_BODY'
-                    Severity = if ($isCrit) { 'CRITICAL' } else { 'LOW' }
+                    Severity = $(if ($isCrit) { 'CRITICAL' } else { 'LOW' }
                     Text     = $trimmed.Substring(0, [Math]::Min(90, $trimmed.Length))
                 }
                 if ($isCrit) { $critical += $entry } else { $low += $entry }
@@ -248,7 +248,7 @@ Write-Host "  Elapsed:           $([math]::Round($sw.Elapsed.TotalSeconds,2)) se
 Write-Host ""
 Write-Host "  Built today:       $($todayObjs.Count) .obj files" -ForegroundColor Green
 $todayObjs | ForEach-Object {
-    $sz = if ($_.Length -gt 1MB) { '{0:N1} MB' -f ($_.Length/1MB) } else { '{0:N0} KB' -f ($_.Length/1KB) }
+    $sz = $(if ($_.Length -gt 1MB) { '{0:N1} MB' -f ($_.Length/1MB) } else { '{0:N0} KB' -f ($_.Length/1KB) }
     Write-Host "    $($_.Name) ($sz)" -ForegroundColor DarkGreen
 }
 Write-Host "========================================`n" -ForegroundColor Cyan

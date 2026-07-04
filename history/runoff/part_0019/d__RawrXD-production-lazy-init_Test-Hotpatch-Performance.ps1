@@ -93,7 +93,7 @@ function Get-CompilerPath {
 
     $candidates = @()
     $candidates += Get-ChildItem -Path "C:\VS2022Enterprise" -Filter $ToolName -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-    foreach ($root in @("$env:ProgramFiles(x86)", "$env:ProgramFiles")) {
+    foreach ($root in @("${env:ProgramFiles}(x86)", "${env:ProgramFiles}")) {
         $candidates += Get-ChildItem -Path (Join-Path $root "Microsoft Visual Studio\2022") -Filter $ToolName -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
     }
     $candidates = $candidates | Where-Object { $_ } | Sort-Object -Descending -Unique
@@ -259,7 +259,7 @@ foreach ($model in $modelFiles) {
             if ($patch.Success) {
                 $times += $ms
                 $successCount++
-                $speedText = if ($ms -lt $BASELINE) { "  $('{0:+0.0;-0.0}' -f (($BASELINE-$ms)/$BASELINE*100))% faster" } else { "  $('{0:+0.0;-0.0}' -f (($ms-$BASELINE)/$BASELINE*100))% slower" }
+                $speedText = $(if ($ms -lt $BASELINE) { "  $('{0:+0.0;-0.0}' -f (($BASELINE-$ms)/$BASELINE*100))% faster" } else { "  $('{0:+0.0;-0.0}' -f (($ms-$BASELINE)/$BASELINE*100))% slower" }
                 Write-Host "✓ ${ms}ms$speedText" -ForegroundColor $(if ($ms -lt $BASELINE) { "Green" } else { "Yellow" })
             } else {
                 Write-Host "⚠ FAILED (not included in avg)" -ForegroundColor Red
@@ -306,7 +306,7 @@ $results | Format-Table -AutoSize
 
 # Only average successful runs (Avg_ms > 0)
 $successResults = $results | Where-Object { $_.Avg_ms -gt 0 }
-$avgAll = if ($successResults.Count -gt 0) { ($successResults.Avg_ms | Measure-Object -Average).Average } else { 0 }
+$avgAll = $(if ($successResults.Count -gt 0) { ($successResults.Avg_ms | Measure-Object -Average).Average } else { 0 }
 $targetMet = ($successResults | Where-Object { $_.Target_Met }).Count
 $passed = "$targetMet/$($successResults.Count)"
 

@@ -166,7 +166,7 @@ try {
     if ($outAfter.Length -le $outBefore.Length -and $outAfter -notmatch 'smoke ping') {
         Log "Chat output did not update after send (before=$($outBefore.Length) after=$($outAfter.Length))" "WARN"
         Log "Send path executed without crash; model/backend may be offline — checking ide.log for backend-not-ready block"
-        $ideLog = Join-Path $env:APPDATA "RawrXD\ide.log"
+        $ideLog = Join-Path ${env:APPDATA} "RawrXD\ide.log"
         if (Test-Path $ideLog) {
             $tail = Get-Content $ideLog -Tail 80 -ErrorAction SilentlyContinue
             if ($tail -match 'blocked: backend not ready') {

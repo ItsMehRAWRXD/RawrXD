@@ -60,7 +60,7 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
-$Script:Version = "1.0.0"
+${Script:Version} = "1.0.0"
 
 # Color output helpers
 function Write-Success { param($Message) Write-Host "✅ $Message" -ForegroundColor Green }
@@ -81,7 +81,7 @@ function Write-Section { param($Message)
 
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║  🔥 BigDaddyG Stress Test v$Script:Version                                 ║" -ForegroundColor Magenta
+Write-Host "║  🔥 BigDaddyG Stress Test v${Script:Version}                                 ║" -ForegroundColor Magenta
 Write-Host "║  Virtual VRAM Pool Validation (36.2GB Model)                        ║" -ForegroundColor Magenta
 Write-Host "╚═══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
@@ -97,10 +97,10 @@ $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
 if (-not $isAdmin) {
     Write-Warning2 "Not running as Administrator - NVMe temperature monitoring will be simulated"
     Write-Warning2 "For real thermal data, run: Start-Process pwsh -Verb RunAs -ArgumentList '-File $($MyInvocation.MyCommand.Path)'"
-    $script:SimulateThermals = $true
+    ${script:SimulateThermals} = $true
 } else {
     Write-Success "Running with Administrator privileges"
-    $script:SimulateThermals = $false
+    ${script:SimulateThermals} = $false
 }
 
 # Check model file
@@ -189,7 +189,7 @@ function Get-ThermalStatus {
     foreach ($drive in $scbConfig.drives) {
         $temp = $null
         
-        if (-not $script:SimulateThermals) {
+        if (-not ${script:SimulateThermals}) {
             # Try to get real temperature via StorageReliabilityCounter (requires admin)
             $disk = Get-PhysicalDisk | Where-Object { $_.DeviceId -eq $drive.deviceId }
             if ($disk) {
@@ -224,10 +224,10 @@ function Get-ThermalStatus {
             headroom = $drive.thermalHeadroom
             warning = $thermalConfig.thresholds.warning
             critical = $thermalConfig.thresholds.critical
-            status = if ($temp -ge $thermalConfig.thresholds.critical) { "CRITICAL" }
+            status = $(if ($temp -ge $thermalConfig.thresholds.critical) { "CRITICAL" }
                     elseif ($temp -ge $thermalConfig.thresholds.warning) { "WARNING" }
                     else { "NORMAL" }
-            simulated = $script:SimulateThermals
+            simulated = ${script:SimulateThermals}
         }
         
         if ($temp -and $temp -gt $status.maxTemp) {
@@ -265,14 +265,14 @@ function Get-ThermalStatus {
 
 # Initial thermal snapshot
 $initialStatus = Get-ThermalStatus
-Write-Info "Initial thermal status$(if ($script:SimulateThermals) { ' (SIMULATED)' } else { '' }):"
+Write-Info "Initial thermal status$(if (${script:SimulateThermals}) { ' (SIMULATED)' } else { '' }):"
 foreach ($drive in $initialStatus.drives) {
-    $tempStr = if ($drive.temperature) { "$($drive.temperature)°C" } else { "N/A" }
-    $simNote = if ($drive.simulated) { " [sim]" } else { "" }
+    $tempStr = $(if ($drive.temperature) { "$($drive.temperature)°C" } else { "N/A" }
+    $simNote = $(if ($drive.simulated) { " [sim]" } else { "" }
     Write-Host "  DeviceId $($drive.deviceId): $tempStr (Headroom: $($drive.headroom)°C)$simNote" -ForegroundColor White
 }
 
-if ($script:SimulateThermals) {
+if (${script:SimulateThermals}) {
     Write-Warning2 "Thermal data is SIMULATED - drive balancing will use simulated values"
 }
 
@@ -538,7 +538,7 @@ if ($success) {
 Write-Section "Phase 6: Generating Test Report"
 
 $report = @{
-    version = $Script:Version
+    version = ${Script:Version}
     timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
     testDurationMinutes = [math]::Round($testDuration.TotalMinutes, 2)
     model = @{

@@ -47,7 +47,7 @@ param(
 )
 
 # Initialize global analysis structures
-$global:SourceAnalysis = @{
+${global:SourceAnalysis} = @{
     TotalFiles = 0
     TotalLines = 0
     FunctionCount = 0
@@ -62,7 +62,7 @@ $global:SourceAnalysis = @{
     PerformanceBottlenecks = @()
 }
 
-$script:CurrentSourceFile = $null
+${script:CurrentSourceFile} = $null
 
 function Get-SourceDigestionTargetFiles {
     param(
@@ -97,7 +97,7 @@ function Get-SourceDigestionTargetFiles {
     return @($files | ForEach-Object { $_.FullName })
 }
 
-$global:FeatureRainbowTable = @{
+${global:FeatureRainbowTable} = @{
     CoreFeatures = @()
     OptionalFeatures = @()
     SecurityFeatures = @()
@@ -106,7 +106,7 @@ $global:FeatureRainbowTable = @{
     IntegrationFeatures = @()
 }
 
-$global:DeploymentAudit = @{
+${global:DeploymentAudit} = @{
     RequiredFiles = @()
     RequiredModules = @()
     EnvironmentVariables = @()
@@ -117,7 +117,7 @@ $global:DeploymentAudit = @{
 }
 
 # Feature extraction patterns
-$global:FeaturePatterns = @{
+${global:FeaturePatterns} = @{
     FileOperations = @('Get-Content', 'Set-Content', 'Add-Content', 'Out-File', 'Export-Csv', 'Import-Csv')
     NetworkOperations = @('Invoke-WebRequest', 'Invoke-RestMethod', 'Test-NetConnection', 'New-Object System.Net.WebClient')
     RegistryOperations = @('Get-ItemProperty', 'Set-ItemProperty', 'New-Item', 'Remove-Item', 'Get-ChildItem')
@@ -137,16 +137,16 @@ function Start-SourceDigestion {
     }
 
     $targetFiles = Get-SourceDigestionTargetFiles -Path $SourcePath -MaxFiles $MaxFiles -MaxFileSizeKB $MaxFileSizeKB
-    $global:SourceAnalysis.TotalFiles = $targetFiles.Count
+    ${global:SourceAnalysis}.TotalFiles = $targetFiles.Count
 
-    Write-Host "📊 Analyzing $($global:SourceAnalysis.TotalFiles) file(s)..." -ForegroundColor Green
+    Write-Host "📊 Analyzing $(${global:SourceAnalysis}.TotalFiles) file(s)..." -ForegroundColor Green
 
     foreach ($filePath in $targetFiles) {
         try {
-            $script:CurrentSourceFile = $filePath
+            ${script:CurrentSourceFile} = $filePath
             $sourceContent = Get-Content $filePath -Raw -ErrorAction Stop
             $lineCount = (Get-Content $filePath -ErrorAction Stop).Count
-            $global:SourceAnalysis.TotalLines += $lineCount
+            ${global:SourceAnalysis}.TotalLines += $lineCount
 
             Write-Host "   • $filePath ($lineCount lines)" -ForegroundColor DarkGray
 
@@ -170,7 +170,7 @@ function Start-SourceDigestion {
         } catch {
             Write-Host "⚠️  Skipping unreadable file: $filePath ($_)" -ForegroundColor Yellow
         } finally {
-            $script:CurrentSourceFile = $null
+            ${script:CurrentSourceFile} = $null
         }
     }
     
@@ -200,7 +200,7 @@ function Extract-Functions {
     Write-Host "🔍 Extracting functions..." -ForegroundColor Gray
     
     $functionMatches = [regex]::Matches($content, '^function\s+(\w+)\s*{', 'Multiline')
-    $global:SourceAnalysis.FunctionCount = $functionMatches.Count
+    ${global:SourceAnalysis}.FunctionCount = $functionMatches.Count
     
     foreach ($match in $functionMatches) {
         $funcName = $match.Groups[1].Value
@@ -210,7 +210,7 @@ function Extract-Functions {
         
         $funcAnalysis = @{
             Name = $funcName
-            File = $script:CurrentSourceFile
+            File = ${script:CurrentSourceFile}
             StartLine = ($content.Substring(0, $funcStart) -split "`n").Count
             EndLine = ($content.Substring(0, $funcEnd) -split "`n").Count
             Parameters = Extract-Parameters $funcBody
@@ -221,13 +221,13 @@ function Extract-Functions {
             Category = Categorize-Feature $funcName $funcBody
         }
         
-        $global:SourceAnalysis.FeatureMatrix += $funcAnalysis
+        ${global:SourceAnalysis}.FeatureMatrix += $funcAnalysis
         
         # Add to rainbow table
         Add-ToRainbowTable $funcAnalysis
     }
     
-    Write-Host "📊 Found $global:SourceAnalysis.FunctionCount functions" -ForegroundColor Green
+    Write-Host "📊 Found ${global:SourceAnalysis}.FunctionCount functions" -ForegroundColor Green
 }
 
 function Extract-Classes {
@@ -236,7 +236,7 @@ function Extract-Classes {
     Write-Host "🔍 Extracting classes..." -ForegroundColor Gray
     
     $classMatches = [regex]::Matches($content, 'class\s+(\w+)', 'Multiline')
-    $global:SourceAnalysis.ClassCount = $classMatches.Count
+    ${global:SourceAnalysis}.ClassCount = $classMatches.Count
     
     foreach ($match in $classMatches) {
         $className = $match.Groups[1].Value
@@ -246,17 +246,17 @@ function Extract-Classes {
         
         $classAnalysis = @{
             Name = $className
-            File = $script:CurrentSourceFile
+            File = ${script:CurrentSourceFile}
             Methods = Extract-ClassMethods $classBody
             Properties = Extract-ClassProperties $classBody
             Inheritance = Extract-Inheritance $classBody
             Interfaces = Extract-Interfaces $classBody
         }
         
-        $global:SourceAnalysis.FeatureMatrix += $classAnalysis
+        ${global:SourceAnalysis}.FeatureMatrix += $classAnalysis
     }
     
-    Write-Host "📊 Found $global:SourceAnalysis.ClassCount classes" -ForegroundColor Green
+    Write-Host "📊 Found ${global:SourceAnalysis}.ClassCount classes" -ForegroundColor Green
 }
 
 function Extract-Variables {
@@ -265,7 +265,7 @@ function Extract-Variables {
     Write-Host "🔍 Extracting variables..." -ForegroundColor Gray
     
     $varMatches = [regex]::Matches($content, '\$([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([^;\n]+)', 'Multiline')
-    $global:SourceAnalysis.VariableCount = $varMatches.Count
+    ${global:SourceAnalysis}.VariableCount = $varMatches.Count
     
     foreach ($match in $varMatches) {
         $varName = $match.Groups[1].Value
@@ -274,17 +274,17 @@ function Extract-Variables {
         $varAnalysis = @{
             Name = $varName
             Value = $varValue
-            File = $script:CurrentSourceFile
+            File = ${script:CurrentSourceFile}
             Type = Infer-VariableType $varValue
             Scope = Determine-Scope $content $match.Index
             IsConstant = Test-IsConstant $varValue
             IsSecure = Test-IsSecureString $varValue
         }
         
-        $global:SourceAnalysis.FeatureMatrix += $varAnalysis
+        ${global:SourceAnalysis}.FeatureMatrix += $varAnalysis
     }
     
-    Write-Host "📊 Found $global:SourceAnalysis.VariableCount variables" -ForegroundColor Green
+    Write-Host "📊 Found ${global:SourceAnalysis}.VariableCount variables" -ForegroundColor Green
 }
 
 function Extract-Dependencies {
@@ -300,7 +300,7 @@ function Extract-Dependencies {
         $dependencies += @{
             Type = 'Module'
             Name = $match.Groups[1].Value.Trim()
-            File = $script:CurrentSourceFile
+            File = ${script:CurrentSourceFile}
             LineNumber = ($content.Substring(0, $match.Index) -split "`n").Count
         }
     }
@@ -311,7 +311,7 @@ function Extract-Dependencies {
         $dependencies += @{
             Type = 'Assembly'
             Name = $match.Groups[1].Value.Trim()
-            File = $script:CurrentSourceFile
+            File = ${script:CurrentSourceFile}
             LineNumber = ($content.Substring(0, $match.Index) -split "`n").Count
         }
     }
@@ -322,15 +322,15 @@ function Extract-Dependencies {
         $dependencies += @{
             Type = 'ExternalCommand'
             Name = $match.Groups[1].Value.Trim()
-            File = $script:CurrentSourceFile
+            File = ${script:CurrentSourceFile}
             LineNumber = ($content.Substring(0, $match.Index) -split "`n").Count
         }
     }
     
-    $global:SourceAnalysis.DependencyCount = $dependencies.Count
-    $global:SourceAnalysis.DependencyTree = $dependencies
+    ${global:SourceAnalysis}.DependencyCount = $dependencies.Count
+    ${global:SourceAnalysis}.DependencyTree = $dependencies
     
-    Write-Host "📊 Found $global:SourceAnalysis.DependencyCount dependencies" -ForegroundColor Green
+    Write-Host "📊 Found ${global:SourceAnalysis}.DependencyCount dependencies" -ForegroundColor Green
 }
 
 function Analyze-ExecutionFlow {
@@ -361,7 +361,7 @@ function Analyze-ExecutionFlow {
         }
     }
     
-    $global:SourceAnalysis.ExecutionFlow = $flowAnalysis
+    ${global:SourceAnalysis}.ExecutionFlow = $flowAnalysis
     Write-Host "📊 Analyzed execution flow patterns" -ForegroundColor Green
 }
 
@@ -408,7 +408,7 @@ function Analyze-SecuritySurface {
         }
     }
     
-    $global:SourceAnalysis.SecuritySurface = $securityIssues
+    ${global:SourceAnalysis}.SecuritySurface = $securityIssues
     Write-Host "📊 Found $($securityIssues.Count) security issues" -ForegroundColor Yellow
 }
 
@@ -441,7 +441,7 @@ function Analyze-PerformanceProfile {
         }
     }
     
-    $global:SourceAnalysis.PerformanceBottlenecks = $bottlenecks
+    ${global:SourceAnalysis}.PerformanceBottlenecks = $bottlenecks
     Write-Host "📊 Found $($bottlenecks.Count) performance bottlenecks" -ForegroundColor Yellow
 }
 
@@ -454,14 +454,14 @@ function Generate-FeatureRainbowTable {
         Metadata = @{
             GeneratedDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
             SourceFile = $SourcePath
-            TotalFeatures = $global:SourceAnalysis.FeatureMatrix.Count
+            TotalFeatures = ${global:SourceAnalysis}.FeatureMatrix.Count
         }
-        CoreFeatures = $global:FeatureRainbowTable.CoreFeatures | Sort-Object Priority
-        OptionalFeatures = $global:FeatureRainbowTable.OptionalFeatures | Sort-Object Priority
-        SecurityFeatures = $global:FeatureRainbowTable.SecurityFeatures | Sort-Object Priority
-        PerformanceFeatures = $global:FeatureRainbowTable.PerformanceFeatures | Sort-Object Priority
-        UI_Features = $global:FeatureRainbowTable.UI_Features | Sort-Object Priority
-        IntegrationFeatures = $global:FeatureRainbowTable.IntegrationFeatures | Sort-Object Priority
+        CoreFeatures = ${global:FeatureRainbowTable}.CoreFeatures | Sort-Object Priority
+        OptionalFeatures = ${global:FeatureRainbowTable}.OptionalFeatures | Sort-Object Priority
+        SecurityFeatures = ${global:FeatureRainbowTable}.SecurityFeatures | Sort-Object Priority
+        PerformanceFeatures = ${global:FeatureRainbowTable}.PerformanceFeatures | Sort-Object Priority
+        UI_Features = ${global:FeatureRainbowTable}.UI_Features | Sort-Object Priority
+        IntegrationFeatures = ${global:FeatureRainbowTable}.IntegrationFeatures | Sort-Object Priority
     }
     
     $rainbowTable | ConvertTo-Json -Depth 10 | Out-File $rainbowTablePath -Encoding UTF8
@@ -478,30 +478,30 @@ function Create-DeploymentAuditReport {
     $auditContent += "Source: $SourcePath"
     $auditContent += ""
     $auditContent += "## Executive Summary"
-    $auditContent += "- Total Functions: $($global:SourceAnalysis.FunctionCount)"
-    $auditContent += "- Total Classes: $($global:SourceAnalysis.ClassCount)"
-    $auditContent += "- Total Dependencies: $($global:SourceAnalysis.DependencyCount)"
-    $auditContent += "- Complexity Score: $($global:SourceAnalysis.ComplexityScore)"
-    $auditContent += "- Security Issues: $($global:SourceAnalysis.SecuritySurface.Count)"
-    $auditContent += "- Performance Bottlenecks: $($global:SourceAnalysis.PerformanceBottlenecks.Count)"
+    $auditContent += "- Total Functions: $(${global:SourceAnalysis}.FunctionCount)"
+    $auditContent += "- Total Classes: $(${global:SourceAnalysis}.ClassCount)"
+    $auditContent += "- Total Dependencies: $(${global:SourceAnalysis}.DependencyCount)"
+    $auditContent += "- Complexity Score: $(${global:SourceAnalysis}.ComplexityScore)"
+    $auditContent += "- Security Issues: $(${global:SourceAnalysis}.SecuritySurface.Count)"
+    $auditContent += "- Performance Bottlenecks: $(${global:SourceAnalysis}.PerformanceBottlenecks.Count)"
     $auditContent += ""
     $auditContent += "## Required Files"
-    $auditContent += ($global:DeploymentAudit.RequiredFiles | ForEach-Object { "- $_" })
+    $auditContent += (${global:DeploymentAudit}.RequiredFiles | ForEach-Object { "- $_" })
     $auditContent += ""
     $auditContent += "## Required Modules"
-    $auditContent += ($global:DeploymentAudit.RequiredModules | ForEach-Object { "- $_" })
+    $auditContent += (${global:DeploymentAudit}.RequiredModules | ForEach-Object { "- $_" })
     $auditContent += ""
     $auditContent += "## Environment Variables"
-    $auditContent += ($global:DeploymentAudit.EnvironmentVariables | ForEach-Object { "- $_" })
+    $auditContent += (${global:DeploymentAudit}.EnvironmentVariables | ForEach-Object { "- $_" })
     $auditContent += ""
     $auditContent += "## Registry Keys"
-    $auditContent += ($global:DeploymentAudit.RegistryKeys | ForEach-Object { "- $_" })
+    $auditContent += (${global:DeploymentAudit}.RegistryKeys | ForEach-Object { "- $_" })
     $auditContent += ""
     $auditContent += "## Network Endpoints"
-    $auditContent += ($global:DeploymentAudit.NetworkEndpoints | ForEach-Object { "- $_" })
+    $auditContent += (${global:DeploymentAudit}.NetworkEndpoints | ForEach-Object { "- $_" })
     $auditContent += ""
     $auditContent += "## Security Recommendations"
-    foreach ($issue in $global:SourceAnalysis.SecuritySurface) {
+    foreach ($issue in ${global:SourceAnalysis}.SecuritySurface) {
         $auditContent += "### $($issue.Type) [Severity: $($issue.Severity)]"
         $auditContent += "- Location: Line $($issue.Location)"
         $auditContent += "- Recommendation: $($issue.Recommendation)"
@@ -509,7 +509,7 @@ function Create-DeploymentAuditReport {
     }
     $auditContent += ""
     $auditContent += "## Performance Recommendations"
-    foreach ($bottleneck in $global:SourceAnalysis.PerformanceBottlenecks) {
+    foreach ($bottleneck in ${global:SourceAnalysis}.PerformanceBottlenecks) {
         $auditContent += "### $($bottleneck.Type) [Severity: $($bottleneck.Severity)]"
         $auditContent += "- Location: Line $($bottleneck.Location)"
         $auditContent += "- Recommendation: $($bottleneck.Recommendation)"
@@ -536,7 +536,7 @@ function Identify-MVP_Features {
     $mvpFeatures = @()
     
     # Core functionality (must-have)
-    $coreFuncs = $global:FeatureRainbowTable.CoreFeatures | Where-Object { $_.Priority -eq 'Critical' }
+    $coreFuncs = ${global:FeatureRainbowTable}.CoreFeatures | Where-Object { $_.Priority -eq 'Critical' }
     foreach ($feature in $coreFuncs) {
         $mvpFeatures += @{
             Feature = $feature.Name
@@ -548,7 +548,7 @@ function Identify-MVP_Features {
     }
     
     # Security essentials
-    $securityFuncs = $global:FeatureRainbowTable.SecurityFeatures | Where-Object { $_.Priority -eq 'High' }
+    $securityFuncs = ${global:FeatureRainbowTable}.SecurityFeatures | Where-Object { $_.Priority -eq 'High' }
     foreach ($feature in $securityFuncs) {
         $mvpFeatures += @{
             Feature = $feature.Name
@@ -568,9 +568,9 @@ function Generate-ComprehensiveManifest {
     Write-Host "📦 Generating Comprehensive Manifest..." -ForegroundColor Cyan
     
     $manifest = @{
-        SourceAnalysis = $global:SourceAnalysis
-        FeatureRainbowTable = $global:FeatureRainbowTable
-        DeploymentAudit = $global:DeploymentAudit
+        SourceAnalysis = ${global:SourceAnalysis}
+        FeatureRainbowTable = ${global:FeatureRainbowTable}
+        DeploymentAudit = ${global:DeploymentAudit}
         Metadata = @{
             GeneratedDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
             ToolVersion = "1.0.0"
@@ -748,12 +748,12 @@ function Add-ToRainbowTable {
     param($feature)
     
     switch ($feature.Category) {
-        'Core' { $global:FeatureRainbowTable.CoreFeatures += $feature }
-        'UI' { $global:FeatureRainbowTable.UI_Features += $feature }
-        'Security' { $global:FeatureRainbowTable.SecurityFeatures += $feature }
-        'Performance' { $global:FeatureRainbowTable.PerformanceFeatures += $feature }
-        'Integration' { $global:FeatureRainbowTable.IntegrationFeatures += $feature }
-        Default { $global:FeatureRainbowTable.OptionalFeatures += $feature }
+        'Core' { ${global:FeatureRainbowTable}.CoreFeatures += $feature }
+        'UI' { ${global:FeatureRainbowTable}.UI_Features += $feature }
+        'Security' { ${global:FeatureRainbowTable}.SecurityFeatures += $feature }
+        'Performance' { ${global:FeatureRainbowTable}.PerformanceFeatures += $feature }
+        'Integration' { ${global:FeatureRainbowTable}.IntegrationFeatures += $feature }
+        Default { ${global:FeatureRainbowTable}.OptionalFeatures += $feature }
     }
 }
 

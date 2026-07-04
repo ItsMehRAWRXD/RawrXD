@@ -241,7 +241,7 @@ foreach ($m in $wmMessages) { [void]$wmSet.Add($m.Groups[1].Value) }
 
 $criticalWM = @("WM_CREATE","WM_PAINT","WM_DESTROY","WM_COMMAND","WM_SIZE","WM_CLOSE")
 foreach ($wm in $criticalWM) {
-    $status = if ($wmSet.Contains($wm)) { "Present" } else { "MISSING" }
+    $status = $(if ($wmSet.Contains($wm)) { "Present" } else { "MISSING" }
     [void]$Dataset.Commands.KeyBindings.Add(@{ Message = $wm; Status = $status })
 }
 
@@ -322,7 +322,7 @@ if ($AllContent -match "RawrXD_Tokenize|RawrXD_Inference|RawrXD_Detokenize|neura
 
 foreach ($key in $Dataset.Subsystems.Keys) {
     $s = $Dataset.Subsystems[$key]
-    $color = if ($s.Status -eq "Absent") { "Red" } else { "Green" }
+    $color = $(if ($s.Status -eq "Absent") { "Red" } else { "Green" }
     Write-Host "  $($key): $($s.Status)" -ForegroundColor $color
 }
 
@@ -620,7 +620,7 @@ Files: $($Dataset.Meta.TotalFiles) | Lines: $($Dataset.Meta.TotalLines)
 
 ### 2. Critical Win32 Messages
 $(foreach ($wm in $criticalWM) {
-    $st = if ($wmStatus[$wm]) { $wmStatus[$wm] } else { "Unknown" }
+    $st = $(if ($wmStatus[$wm]) { $wmStatus[$wm] } else { "Unknown" }
     "- $wm : $st"
 })
 

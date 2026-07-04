@@ -8,7 +8,7 @@ Write-Host "🔧 Phase 1: Assembling MASM64 Sidebar Core..." -ForegroundColor Cy
 
 # Assemble MASM64 to OBJ
 $asmFile = "D:\rawrxd\src\RawrXD_SidebarCore.asm"
-$objFile = "$env:TEMP\RawrXD_SidebarCore.obj"
+$objFile = "${env:TEMP}\RawrXD_SidebarCore.obj"
 $libFile = "D:\rawrxd\lib\RawrXD_SidebarCore.lib"
 
 # Ensure lib directory exists

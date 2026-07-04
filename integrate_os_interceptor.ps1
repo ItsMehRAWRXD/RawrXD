@@ -55,10 +55,10 @@ param(
 )
 
 # Global variables
-$script:InterceptorPath = Join-Path $PSScriptRoot "bin\os_explorer_interceptor.dll"
-$script:CLIPath = Join-Path $PSScriptRoot "bin\os_interceptor_cli.exe"
-$script:PowerShellModulePath = Join-Path $PSScriptRoot "modules\OSExplorerInterceptor.psm1"
-$script:MASMIDEPath = "C:\MASM\IDE"  # Adjust this to your MASM IDE path
+${script:InterceptorPath} = Join-Path $PSScriptRoot "bin\os_explorer_interceptor.dll"
+${script:CLIPath} = Join-Path $PSScriptRoot "bin\os_interceptor_cli.exe"
+${script:PowerShellModulePath} = Join-Path $PSScriptRoot "modules\OSExplorerInterceptor.psm1"
+${script:MASMIDEPath} = "C:\MASM\IDE"  # Adjust this to your MASM IDE path
 
 #============================================================================
 # BUILD FUNCTION
@@ -100,9 +100,9 @@ function Install-OSInterceptor {
     
     # Check if interceptor files exist
     $requiredFiles = @(
-        $script:InterceptorPath,
-        $script:CLIPath,
-        $script:PowerShellModulePath
+        ${script:InterceptorPath},
+        ${script:CLIPath},
+        ${script:PowerShellModulePath}
     )
     
     foreach ($file in $requiredFiles) {
@@ -114,16 +114,16 @@ function Install-OSInterceptor {
     }
     
     # Check if MASM IDE path exists
-    if (-not (Test-Path $script:MASMIDEPath)) {
-        Write-Warning "MASM IDE path not found: $script:MASMIDEPath"
+    if (-not (Test-Path ${script:MASMIDEPath})) {
+        Write-Warning "MASM IDE path not found: ${script:MASMIDEPath}"
         Write-Host "Please update the MASMIDEPath variable in this script" -ForegroundColor Yellow
     }
     
     # Copy files to MASM IDE directory
     try {
         # Create directories if needed
-        $ideBinPath = Join-Path $script:MASMIDEPath "bin"
-        $ideModulesPath = Join-Path $script:MASMIDEPath "modules"
+        $ideBinPath = Join-Path ${script:MASMIDEPath} "bin"
+        $ideModulesPath = Join-Path ${script:MASMIDEPath} "modules"
         
         if (-not (Test-Path $ideBinPath)) {
             New-Item -Path $ideBinPath -ItemType Directory -Force | Out-Null
@@ -134,15 +134,15 @@ function Install-OSInterceptor {
         }
         
         # Copy interceptor DLL
-        Copy-Item -Path $script:InterceptorPath -Destination $ideBinPath -Force
+        Copy-Item -Path ${script:InterceptorPath} -Destination $ideBinPath -Force
         Write-Host "  Copied: os_explorer_interceptor.dll" -ForegroundColor Green
         
         # Copy CLI executable
-        Copy-Item -Path $script:CLIPath -Destination $ideBinPath -Force
+        Copy-Item -Path ${script:CLIPath} -Destination $ideBinPath -Force
         Write-Host "  Copied: os_interceptor_cli.exe" -ForegroundColor Green
         
         # Copy PowerShell module
-        Copy-Item -Path $script:PowerShellModulePath -Destination $ideModulesPath -Force
+        Copy-Item -Path ${script:PowerShellModulePath} -Destination $ideModulesPath -Force
         Write-Host "  Copied: OSExplorerInterceptor.psm1" -ForegroundColor Green
         
         # Create integration script in MASM IDE
@@ -166,16 +166,16 @@ Write-Host "OS Explorer Interceptor integrated into MASM IDE" -ForegroundColor G
 Write-Host "Type 'osh' for help or 'osi -ProcessId <PID> -RealTimeStreaming' to start" -ForegroundColor Cyan
 
 # Auto-start if process ID provided in environment
-if (`$env:OSINTERCEPTOR_PID) {
+if (`${env:OSINTERCEPTOR_PID}) {
     try {
-        Start-OSInterceptor -ProcessId `$env:OSINTERCEPTOR_PID -RealTimeStreaming
+        Start-OSInterceptor -ProcessId `${env:OSINTERCEPTOR_PID} -RealTimeStreaming
     } catch {
         Write-Warning "Failed to auto-start interceptor: `$_"
     }
 }
 "@
         
-        $integrationScriptPath = Join-Path $script:MASMIDEPath "os_interceptor_integration.ps1"
+        $integrationScriptPath = Join-Path ${script:MASMIDEPath} "os_interceptor_integration.ps1"
         $integrationScript | Out-File -FilePath $integrationScriptPath -Encoding UTF8
         Write-Host "  Created: os_interceptor_integration.ps1" -ForegroundColor Green
         
@@ -215,9 +215,9 @@ function Test-OSInterceptor {
     
     # Check if interceptor files exist
     $requiredFiles = @(
-        $script:InterceptorPath,
-        $script:CLIPath,
-        $script:PowerShellModulePath
+        ${script:InterceptorPath},
+        ${script:CLIPath},
+        ${script:PowerShellModulePath}
     )
     
     foreach ($file in $requiredFiles) {
@@ -231,7 +231,7 @@ function Test-OSInterceptor {
     
     # Import PowerShell module
     try {
-        Import-Module $script:PowerShellModulePath -Force
+        Import-Module ${script:PowerShellModulePath} -Force
         Write-Host "  [OK] PowerShell module imported" -ForegroundColor Green
     } catch {
         Write-Host "  [FAIL] Failed to import PowerShell module: $_" -ForegroundColor Red

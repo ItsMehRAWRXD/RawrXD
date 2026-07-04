@@ -71,7 +71,7 @@ if (-not $cl) {
     $msvcBins = Get-ChildItem -Path (Join-Path $vsInstallDir 'VC\Tools\MSVC') -Recurse -Filter 'cl.exe' -ErrorAction SilentlyContinue |
         Where-Object { $_.DirectoryName -like '*Hostx64\x64*' } | Select-Object -First 1
     if ($msvcBins) {
-        $env:PATH = "$($msvcBins.DirectoryName);$env:PATH"
+        ${env:PATH} = "$($msvcBins.DirectoryName);${env:PATH}"
         $cl = Get-Command cl.exe -ErrorAction SilentlyContinue
     }
     if (-not $cl) {
@@ -97,10 +97,10 @@ foreach ($sr in @('C:\Program Files (x86)\Windows Kits\10', 'D:\Program Files (x
 $sdkVer = '10.0.22621.0'
 
 if ($msvcRoot -and $sdkRoot) {
-    $env:INCLUDE = "$msvcRoot\include;$sdkRoot\Include\$sdkVer\ucrt;$sdkRoot\Include\$sdkVer\shared;$sdkRoot\Include\$sdkVer\um;$sdkRoot\Include\$sdkVer\winrt"
-    $env:LIB     = "$msvcRoot\lib\x64;$msvcRoot\lib\onecore\x64;$sdkRoot\Lib\$sdkVer\ucrt\x64;$sdkRoot\Lib\$sdkVer\um\x64"
-    Write-Host "[Build] INCLUDE: $env:INCLUDE" -ForegroundColor DarkGray
-    Write-Host "[Build] LIB:     $env:LIB" -ForegroundColor DarkGray
+    ${env:INCLUDE} = "$msvcRoot\include;$sdkRoot\Include\$sdkVer\ucrt;$sdkRoot\Include\$sdkVer\shared;$sdkRoot\Include\$sdkVer\um;$sdkRoot\Include\$sdkVer\winrt"
+    ${env:LIB}     = "$msvcRoot\lib\x64;$msvcRoot\lib\onecore\x64;$sdkRoot\Lib\$sdkVer\ucrt\x64;$sdkRoot\Lib\$sdkVer\um\x64"
+    Write-Host "[Build] INCLUDE: ${env:INCLUDE}" -ForegroundColor DarkGray
+    Write-Host "[Build] LIB:     ${env:LIB}" -ForegroundColor DarkGray
 }
 
 # ── Compile + Link ──

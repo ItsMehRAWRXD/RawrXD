@@ -30,14 +30,14 @@ Write-Host "[OK] Fresh build directory created" -ForegroundColor Green
 # Step 3: Configure with explicit settings to avoid cache invalidation
 Write-Host "`n[INFO] Configuring CMake (single pass)..." -ForegroundColor Cyan
 
-$env:CMAKE_ASM_MASM_COMPILER = "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/ml64.exe"
+${env:CMAKE_ASM_MASM_COMPILER} = "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/ml64.exe"
 
 $cmakeArgs = @(
     "-B", $BuildDir
     "-G", "Ninja"
     "-DCMAKE_BUILD_TYPE=$BuildType"
     "-DCMAKE_CXX_STANDARD=20"
-    "-DCMAKE_ASM_MASM_COMPILER=$env:CMAKE_ASM_MASM_COMPILER"
+    "-DCMAKE_ASM_MASM_COMPILER=${env:CMAKE_ASM_MASM_COMPILER}"
 )
 
 & cmake @cmakeArgs 2>&1 | ForEach-Object {

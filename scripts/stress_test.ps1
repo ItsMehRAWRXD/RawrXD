@@ -11,8 +11,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:Results = @()
-$script:StartTime = Get-Date
+${script:Results} = @()
+${script:StartTime} = Get-Date
 
 function Write-TestHeader($testName) {
     Write-Host "`n═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
@@ -27,7 +27,7 @@ function Write-Result($test, $passed, $details) {
         Details = $details
         Timestamp = Get-Date
     }
-    $script:Results += $result
+    ${script:Results} += $result
     
     if ($passed) {
         Write-Host "  [PASS] $test`: $details" -ForegroundColor Green
@@ -301,15 +301,15 @@ Write-Host "`n══════════════════════
 Write-Host "  STRESS TEST FINAL REPORT" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$totalTests = $script:Results.Count
-$passedTests = ($script:Results | Where-Object { $_.Passed }).Count
+$totalTests = ${script:Results}.Count
+$passedTests = (${script:Results} | Where-Object { $_.Passed }).Count
 $failedTests = $totalTests - $passedTests
 
 Write-Host "`n  Total Tests: $totalTests" -ForegroundColor White
 Write-Host "  Passed: $passedTests" -ForegroundColor Green
 Write-Host "  Failed: $failedTests" -ForegroundColor $(if ($failedTests -gt 0) { "Red" } else { "Green" })
 
-$duration = (Get-Date) - $script:StartTime
+$duration = (Get-Date) - ${script:StartTime}
 Write-Host "`n  Duration: $([math]::Round($duration.TotalSeconds, 2)) seconds" -ForegroundColor Gray
 
 if ($failedTests -eq 0) {

@@ -42,8 +42,8 @@ Invoke-SelfReverseEngineer
 while ($true) {
     Start-Sleep -Seconds 5
     $currentHash = Get-FileHash $ReportPath -ErrorAction SilentlyContinue
-    if ($script:lastHash -ne $currentHash.Hash) {
-        $script:lastHash = $currentHash.Hash
+    if (${script:lastHash} -ne $currentHash.Hash) {
+        ${script:lastHash} = $currentHash.Hash
         Invoke-SelfReverseEngineer
     }
 }

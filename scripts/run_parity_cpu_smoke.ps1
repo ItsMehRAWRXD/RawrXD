@@ -35,7 +35,7 @@ $traceB = Join-Path $OutDir "cli_run_B.json"
 $traceX = Join-Path $OutDir "cli_run_X.json"
 Remove-Item -Force $traceA, $traceB, $traceX -ErrorAction SilentlyContinue
 
-$env:RAWRXD_PARITY_CPU = "1"
+${env:RAWRXD_PARITY_CPU} = "1"
 
 # Helper: invoke CLI, swallow stderr-as-PS-error noise, keep exit code.
 function Invoke-Cli {

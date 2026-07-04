@@ -11,7 +11,7 @@ param(
     [switch]$StopOnError
 )
 
-$ErrorActionPreference = if ($StopOnError) { "Stop" } else { "Continue" }
+$ErrorActionPreference = $(if ($StopOnError) { "Stop" } else { "Continue" }
 
 # Banner
 Clear-Host
@@ -114,8 +114,8 @@ Write-Host "══════════════════════�
 
 foreach ($test in $testResults.Keys) {
     $result = $testResults[$test]
-    $status = if ($result.Status -eq "Success") { "✓" } else { "✗" }
-    $color = if ($result.Status -eq "Success") { "Green" } else { "Red" }
+    $status = $(if ($result.Status -eq "Success") { "✓" } else { "✗" }
+    $color = $(if ($result.Status -eq "Success") { "Green" } else { "Red" }
     $duration = [math]::Round($result.Duration.TotalSeconds, 2)
     
     Write-Host "  $status " -ForegroundColor $color -NoNewline
@@ -209,8 +209,8 @@ if ($ExportHTML) {
     
     foreach ($test in $testResults.Keys) {
         $result = $testResults[$test]
-        $statusClass = if ($result.Status -eq "Success") { "success" } else { "failed" }
-        $failedClass = if ($result.Status -eq "Failed") { "failed" } else { "" }
+        $statusClass = $(if ($result.Status -eq "Success") { "success" } else { "failed" }
+        $failedClass = $(if ($result.Status -eq "Failed") { "failed" } else { "" }
         $duration = [math]::Round($result.Duration.TotalSeconds, 2)
         
         $htmlReport += @"

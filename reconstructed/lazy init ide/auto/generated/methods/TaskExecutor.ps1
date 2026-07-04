@@ -14,7 +14,7 @@ function Execute-Tasks {
         [array]$Tasks,
 
         [Parameter(Mandatory=$false)]
-        [string]$ProgressFile = "$env:TEMP\TaskProgress.json"
+        [string]$ProgressFile = "${env:TEMP}\TaskProgress.json"
     )
 
     $progress = @()

@@ -16,8 +16,8 @@ foreach ($variant in $Variants) {
         Remove-Item Env:\RAWRXD_VULKAN_MATMUL_KERNEL -ErrorAction SilentlyContinue
         Remove-Item Env:\RAWRXD_VULKAN_MATMUL_SPV -ErrorAction SilentlyContinue
     } else {
-        $env:RAWRXD_VULKAN_MATMUL_KERNEL = $variant
-        $env:RAWRXD_VULKAN_MATMUL_SPV = $variant
+        ${env:RAWRXD_VULKAN_MATMUL_KERNEL} = $variant
+        ${env:RAWRXD_VULKAN_MATMUL_SPV} = $variant
     }
     
     Write-Host "  Warmup..." -ForegroundColor Gray
@@ -31,7 +31,7 @@ foreach ($variant in $Variants) {
     $totalMs = $sw.ElapsedMilliseconds
     
     $phaseMatches = [regex]::Matches($output, '\[PHASE\] per_token\s+([\d.]+) ms')
-    $perTokenMs = if ($phaseMatches.Count -gt 0) { 
+    $perTokenMs = $(if ($phaseMatches.Count -gt 0) { 
         $sum = 0
         foreach ($m in $phaseMatches) { $sum += [double]$m.Groups[1].Value }
         [math]::Round($sum / $phaseMatches.Count, 1)
@@ -40,7 +40,7 @@ foreach ($variant in $Variants) {
     }
     
     $firstTokenMatch = [regex]::Match($output, '\[PHASE\] tokens=1 total_acc=([\d.]+) ms')
-    $firstTokenMs = if ($firstTokenMatch.Success) { [double]$firstTokenMatch.Groups[1].Value } else { 0 }
+    $firstTokenMs = $(if ($firstTokenMatch.Success) { [double]$firstTokenMatch.Groups[1].Value } else { 0 }
     
     $tokPerSec = [math]::Round(1000 / $perTokenMs, 1)
     
@@ -55,7 +55,7 @@ foreach ($variant in $Variants) {
     }
     $results += $result
     
-    $color = if ($tokPerSec -ge 10) { "Green" } elseif ($tokPerSec -ge 7) { "Yellow" } else { "Red" }
+    $color = $(if ($tokPerSec -ge 10) { "Green" } elseif ($tokPerSec -ge 7) { "Yellow" } else { "Red" }
     Write-Host "  Result: $perTokenMs ms/token = $tokPerSec tok/s" -ForegroundColor $color
     
     Start-Sleep -Milliseconds 500

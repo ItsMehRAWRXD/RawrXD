@@ -1,6 +1,6 @@
 param(
     [string]$MatrixPath = "tools/parity/day30_top50_ai_ide_matrix.csv",
-    [switch]$FailOnOpenStatus = $true
+    [switch]$FailOnOpenStatus
 )
 
 if (-not (Test-Path $MatrixPath)) {

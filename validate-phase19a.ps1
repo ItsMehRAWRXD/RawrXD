@@ -117,8 +117,8 @@ $Results = @(
 )
 
 foreach ($result in $Results) {
-    $StatusColor = if ($result.Result) { "Green" } else { "Red" }
-    $StatusIcon = if ($result.Result) { "✅" } else { "❌" }
+    $StatusColor = $(if ($result.Result) { "Green" } else { "Red" }
+    $StatusIcon = $(if ($result.Result) { "✅" } else { "❌" }
     Write-Host "$StatusIcon $($result.Test)" -ForegroundColor $StatusColor
     Write-Host "   $($result.Details)" -ForegroundColor Gray
 }

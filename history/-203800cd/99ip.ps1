@@ -39,9 +39,9 @@ param(
 
 # Prevent duplicate initialization
 try {
-    $global:RawrXDInitCreated = $false
-    $global:RawrXD_Mutex = New-Object System.Threading.Mutex($true, "RawrXD_HTMLBridge_Mutex", [ref]$global:RawrXDInitCreated)
-    if (-not $global:RawrXDInitCreated) {
+    ${global:RawrXDInitCreated} = $false
+    ${global:RawrXD_Mutex} = New-Object System.Threading.Mutex($true, "RawrXD_HTMLBridge_Mutex", [ref]${global:RawrXDInitCreated})
+    if (-not ${global:RawrXDInitCreated}) {
         if ($Force) {
             Write-Warning "Initialization mutex exists but -Force provided; attempting re-initialization (may conflict with existing process)."
         }
@@ -56,7 +56,7 @@ catch {
 }
 
 # Enhanced PowerShell backend for HTML IDE
-$global:IDEBridge = @{
+${global:IDEBridge} = @{
     Version         = "4.0.0-HTMLPowerShell"
     StartTime       = Get-Date
     Form            = $null
@@ -68,11 +68,11 @@ $global:IDEBridge = @{
 }
 
 # Marketplace and Extension settings
-$global:IDEBridge.MarketplaceUrl = 'https://rawrxd.local/marketplace.json' # configurable
-$global:IDEBridge.ExtensionsRoot = Join-Path -Path $PSScriptRoot -ChildPath 'Extensions'
+${global:IDEBridge}.MarketplaceUrl = 'https://rawrxd.local/marketplace.json' # configurable
+${global:IDEBridge}.ExtensionsRoot = Join-Path -Path $PSScriptRoot -ChildPath 'Extensions'
 
-if (-not (Test-Path $global:IDEBridge.ExtensionsRoot)) {
-    try { New-Item -ItemType Directory -Path $global:IDEBridge.ExtensionsRoot -Force | Out-Null } catch { }
+if (-not (Test-Path ${global:IDEBridge}.ExtensionsRoot)) {
+    try { New-Item -ItemType Directory -Path ${global:IDEBridge}.ExtensionsRoot -Force | Out-Null } catch { }
 }
 
 function ConvertTo-FileUri {
@@ -110,17 +110,17 @@ function Get-InstalledExtensions {
 
     $extensions = @()
     try {
-        if (-not (Test-Path $global:IDEBridge.ExtensionsRoot)) { return @() }
-        $dirs = Get-ChildItem -Directory -Path $global:IDEBridge.ExtensionsRoot -ErrorAction SilentlyContinue
+        if (-not (Test-Path ${global:IDEBridge}.ExtensionsRoot)) { return @() }
+        $dirs = Get-ChildItem -Directory -Path ${global:IDEBridge}.ExtensionsRoot -ErrorAction SilentlyContinue
         foreach ($d in $dirs) {
             $manifest = Ensure-ExtensionManifest -ExtensionPath $d.FullName
             $extensions += [PSCustomObject]@{
-                id          = if ($manifest) { $manifest.id } else { $d.Name }
-                name        = if ($manifest) { $manifest.name } else { $d.Name }
-                version     = if ($manifest) { $manifest.version } else { '0.0.0' }
-                enabled     = if ($manifest -and $manifest.enabled -ne $null) { $manifest.enabled } else { $true }
+                id          = $(if ($manifest) { $manifest.id } else { $d.Name }
+                name        = $(if ($manifest) { $manifest.name } else { $d.Name }
+                version     = $(if ($manifest) { $manifest.version } else { '0.0.0' }
+                enabled     = $(if ($manifest -and $manifest.enabled -ne $null) { $manifest.enabled } else { $true }
                 path        = $d.FullName
-                description = if ($manifest) { $manifest.description } else { '' }
+                description = $(if ($manifest) { $manifest.description } else { '' }
             }
         }
     }
@@ -132,7 +132,7 @@ function Get-InstalledExtensions {
 
 function Get-MarketplaceExtensions {
     [CmdletBinding()]
-    param([string]$MarketplaceUrl = $global:IDEBridge.MarketplaceUrl)
+    param([string]$MarketplaceUrl = ${global:IDEBridge}.MarketplaceUrl)
 
     try {
         $data = Invoke-RestMethod -Uri $MarketplaceUrl -Method Get -ErrorAction Stop -TimeoutSec 10
@@ -148,15 +148,15 @@ function Install-MarketplaceExtension {
     param([Parameter(Mandatory = $true)][string]$PackageUrl, [string]$Id = $null)
 
     try {
-        if (-not (Test-Path $global:IDEBridge.ExtensionsRoot)) { New-Item -ItemType Directory -Path $global:IDEBridge.ExtensionsRoot -Force | Out-Null }
-        $temp = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName())
+        if (-not (Test-Path ${global:IDEBridge}.ExtensionsRoot)) { New-Item -ItemType Directory -Path ${global:IDEBridge}.ExtensionsRoot -Force | Out-Null }
+        $temp = Join-Path ${env:TEMP} ([System.IO.Path]::GetRandomFileName())
         $downloadPath = $temp + '.zip'
         Invoke-WebRequest -Uri $PackageUrl -OutFile $downloadPath -UseBasicParsing -ErrorAction Stop
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::ExtractToDirectory($downloadPath, $temp)
         if (-not $Id) { $manifest = Ensure-ExtensionManifest -ExtensionPath $temp; if ($manifest) { $Id = $manifest.id } }
-        $destName = if ($Id) { $Id } else { [System.IO.Path]::GetFileNameWithoutExtension($PackageUrl) }
-        $dest = Join-Path $global:IDEBridge.ExtensionsRoot $destName
+        $destName = $(if ($Id) { $Id } else { [System.IO.Path]::GetFileNameWithoutExtension($PackageUrl) }
+        $dest = Join-Path ${global:IDEBridge}.ExtensionsRoot $destName
         if (Test-Path $dest) { Remove-Item -Path $dest -Recurse -Force -ErrorAction SilentlyContinue }
         Move-Item -Path $temp -Destination $dest -Force
         return @{ success = $true; id = $Id; path = $dest }
@@ -225,10 +225,10 @@ function Get-DirectoryTree {
             $node = @{
                 name      = $item.Name
                 path      = $item.FullName
-                type      = if ($item.PSIsContainer) { "folder" } else { "file" }
-                size      = if (-not $item.PSIsContainer) { $item.Length } else { $null }
+                type      = $(if ($item.PSIsContainer) { "folder" } else { "file" }
+                size      = $(if (-not $item.PSIsContainer) { $item.Length } else { $null }
                 modified  = $item.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
-                extension = if (-not $item.PSIsContainer) { $item.Extension } else { $null }
+                extension = $(if (-not $item.PSIsContainer) { $item.Extension } else { $null }
             }
             
             if ($item.PSIsContainer -and $Depth -gt 0) {
@@ -267,8 +267,8 @@ function Invoke-EnhancedOllama {
             $enhancedPrompt = "Context: Working in $Language`n`nCode/File: $Context`n`nUser Request: $Prompt"
         }
         
-        if ($global:IDEBridge.CurrentProject) {
-            $enhancedPrompt = "Project: $($global:IDEBridge.CurrentProject)`n`n$enhancedPrompt"
+        if (${global:IDEBridge}.CurrentProject) {
+            $enhancedPrompt = "Project: $(${global:IDEBridge}.CurrentProject)`n`n$enhancedPrompt"
         }
         
         # Execute Ollama command
@@ -337,7 +337,7 @@ function Start-IntegratedTerminal {
         $runspace.Open()
         $runspace.SessionStateProxy.Path.SetLocation($WorkingDirectory)
         
-        $global:IDEBridge.TerminalSession = @{
+        ${global:IDEBridge}.TerminalSession = @{
             Runspace         = $runspace
             WorkingDirectory = $WorkingDirectory
             History          = @()
@@ -354,19 +354,19 @@ function Invoke-TerminalCommand {
     param([string]$Command)
     
     try {
-        if (-not $global:IDEBridge.TerminalSession) {
+        if (-not ${global:IDEBridge}.TerminalSession) {
             Start-IntegratedTerminal | Out-Null
         }
         
         $powershell = [powershell]::Create()
-        $powershell.Runspace = $global:IDEBridge.TerminalSession.Runspace
+        $powershell.Runspace = ${global:IDEBridge}.TerminalSession.Runspace
         $powershell.AddScript($Command)
         
         $result = $powershell.Invoke()
         $errors = $powershell.Streams.Error
         
         # Add to history
-        $global:IDEBridge.TerminalSession.History += @{
+        ${global:IDEBridge}.TerminalSession.History += @{
             Command   = $Command
             Output    = $result | Out-String
             Errors    = $errors | Out-String
@@ -379,7 +379,7 @@ function Invoke-TerminalCommand {
             success          = $true
             output           = $result | Out-String
             errors           = $errors | Out-String
-            workingDirectory = $global:IDEBridge.TerminalSession.Runspace.SessionStateProxy.Path.CurrentLocation
+            workingDirectory = ${global:IDEBridge}.TerminalSession.Runspace.SessionStateProxy.Path.CurrentLocation
         }
     }
     catch {
@@ -397,14 +397,14 @@ function Setup-EnhancedWebView {
     # Try WebView2 first, fallback to WebBrowser
     try {
         # If a webview already exists for this session, reuse it to avoid duplicate event handlers
-        if ($global:IDEBridge.WebView -and ($global:IDEBridge.WebView -is [System.Windows.Forms.Control]) -and -not $global:IDEBridge.WebView.IsDisposed) {
+        if (${global:IDEBridge}.WebView -and (${global:IDEBridge}.WebView -is [System.Windows.Forms.Control]) -and -not ${global:IDEBridge}.WebView.IsDisposed) {
             Write-Host "ℹ️ Reusing existing WebView instance to prevent duplicate initialization" -ForegroundColor DarkCyan
-            return $global:IDEBridge.WebView
+            return ${global:IDEBridge}.WebView
         }
         # Check for WebView2
         $webView2Available = $false
         try {
-            Add-Type -Path "$env:USERPROFILE\.nuget\packages\microsoft.web.webview2\*\lib\net45\Microsoft.Web.WebView2.WinForms.dll"
+            Add-Type -Path "${env:USERPROFILE}\.nuget\packages\microsoft.web.webview2\*\lib\net45\Microsoft.Web.WebView2.WinForms.dll"
             $webView = New-Object Microsoft.Web.WebView2.WinForms.WebView2
             $webView2Available = $true
         }
@@ -942,8 +942,8 @@ function Start-HTMLPowerShellIDE {
         return
     }
     
-    $global:IDEBridge.WebView = $webView
-    $global:IDEBridge.Form = $form
+    ${global:IDEBridge}.WebView = $webView
+    ${global:IDEBridge}.Form = $form
     
     # Load the HTML IDE without mutating the original markup
     if (Test-Path $HtmlPath) {
@@ -1054,9 +1054,9 @@ finally {
     Write-Host "👋 Session ended" -ForegroundColor Yellow
     # Release the initialization mutex if it was created
     try {
-        if ($global:RawrXD_Mutex -ne $null) {
-            $global:RawrXD_Mutex.ReleaseMutex()
-            $global:RawrXD_Mutex.Dispose()
+        if (${global:RawrXD_Mutex} -ne $null) {
+            ${global:RawrXD_Mutex}.ReleaseMutex()
+            ${global:RawrXD_Mutex}.Dispose()
         }
     }
     catch {
@@ -1067,21 +1067,21 @@ finally {
 # Cleanup helper: disposes existing UI and resets state
 function Cleanup-HTMLBridge {
     try {
-        if ($global:IDEBridge.WebView -ne $null) {
-            try { $global:IDEBridge.WebView.Dispose() } catch { }
-            $global:IDEBridge.WebView = $null
+        if (${global:IDEBridge}.WebView -ne $null) {
+            try { ${global:IDEBridge}.WebView.Dispose() } catch { }
+            ${global:IDEBridge}.WebView = $null
         }
 
-        if ($global:IDEBridge.Form -ne $null) {
-            try { if (-not $global:IDEBridge.Form.IsDisposed) { $global:IDEBridge.Form.Close() } } catch { }
-            try { $global:IDEBridge.Form.Dispose() } catch { }
-            $global:IDEBridge.Form = $null
+        if (${global:IDEBridge}.Form -ne $null) {
+            try { if (-not ${global:IDEBridge}.Form.IsDisposed) { ${global:IDEBridge}.Form.Close() } } catch { }
+            try { ${global:IDEBridge}.Form.Dispose() } catch { }
+            ${global:IDEBridge}.Form = $null
         }
     }
     finally {
         # Reset in-memory bridge but keep version and start time for diagnostics
-        $global:IDEBridge.OpenFiles = @{}
-        $global:IDEBridge.AIModels = @()
-        $global:RawrXDHtmlBridgeInitialized = $false
+        ${global:IDEBridge}.OpenFiles = @{}
+        ${global:IDEBridge}.AIModels = @()
+        ${global:RawrXDHtmlBridgeInitialized} = $false
     }
 }

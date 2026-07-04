@@ -72,7 +72,7 @@ function Write-Section {
 
 function Write-Status {
     param([string]$Text, [string]$Status = 'INFO')
-    $color = if ($Status -eq 'OK') { $Colors.Success } elseif ($Status -eq 'ERROR') { $Colors.Error } else { $Colors.Info }
+    $color = $(if ($Status -eq 'OK') { $Colors.Success } elseif ($Status -eq 'ERROR') { $Colors.Error } else { $Colors.Info }
     Write-Host "[$Status] $Text" -ForegroundColor $color
 }
 
@@ -405,7 +405,7 @@ $report = @{
     'Build Directory' = $BuildDir
     'Output Directory' = $OutputDir
     'Compiler Count' = (Get-ChildItem $CompilerDir -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count
-    'IDE Built' = if (Get-ChildItem $BuildDir -Filter 'RawrXD.exe' -Recurse -ErrorAction SilentlyContinue) { 'Yes' } else { 'No' }
+    'IDE Built' = $(if (Get-ChildItem $BuildDir -Filter 'RawrXD.exe' -Recurse -ErrorAction SilentlyContinue) { 'Yes' } else { 'No' }
     'Total Artifacts' = $buildArtifacts.Count
 }
 

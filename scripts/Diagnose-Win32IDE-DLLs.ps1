@@ -36,7 +36,7 @@ else {
 }
 
 # Check critical DLLs in System32 and exe dir
-$sys32 = Join-Path $env:windir "System32"
+$sys32 = Join-Path ${env:windir} "System32"
 $critical = @(
     "vulkan-1.dll",      # Vulkan runtime - often missing on minimal Windows
     "D3DCOMPILER_47.dll",# DirectX shader compiler
@@ -48,15 +48,15 @@ foreach ($dll in $critical) {
     $inSys = Test-Path (Join-Path $sys32 $dll)
     $inExe = Test-Path (Join-Path $exeDir $dll)
     $ok = $inSys -or $inExe
-    $status = if ($ok) { "OK" } else { "MISSING" }
-    $color = if ($ok) { "Green" } else { "Red" }
+    $status = $(if ($ok) { "OK" } else { "MISSING" }
+    $color = $(if ($ok) { "Green" } else { "Red" }
     Write-Host "  $dll : $status (System32=$inSys, exe_dir=$inExe)" -ForegroundColor $color
 }
 
 # Suggested fixes
 Write-Host "`n--- Suggested fixes ---" -ForegroundColor Yellow
 Write-Host "  - Run from exe's directory: cd `"$exeDir`"; .\RawrXD-Win32IDE.exe"
-Write-Host "  - Debug console (see early output): `$env:RAWRXD_DEBUG_CONSOLE='1'; .\RawrXD-Win32IDE.exe"
+Write-Host "  - Debug console (see early output): `${env:RAWRXD_DEBUG_CONSOLE}='1'; .\RawrXD-Win32IDE.exe"
 Write-Host "  - Vulkan runtime: https://vulkan.lunarg.com/sdk/home"
 Write-Host "  - DirectX End-User Runtime: https://www.microsoft.com/en-us/download/details.aspx?id=35"
 Write-Host ""

@@ -25,7 +25,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 if (-not $RepoRoot) {
-    $RepoRoot = $env:RAWRXD_REPO_ROOT
+    $RepoRoot = ${env:RAWRXD_REPO_ROOT}
 }
 if (-not $RepoRoot) {
     $RepoRoot = Split-Path -Parent $PSScriptRoot

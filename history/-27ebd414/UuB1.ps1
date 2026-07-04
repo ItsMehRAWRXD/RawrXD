@@ -15,11 +15,11 @@
 .PARAMETER UseSCC
     Use RawrXD-SCC instead of ml64.exe (self-hosting mode)
 .EXAMPLE
-    .\build_scc.ps1 -SourceDir "$env:LOCALAPPDATA\RawrXD\src" -UseSCC
+    .\build_scc.ps1 -SourceDir "${env:LOCALAPPDATA}\RawrXD\src" -UseSCC
 #>
 param(
     [string]$SourceDir = "d:/Stash House/RawrXD-Main/src/asm",
-    [string]$OutputDir = "$env:LOCALAPPDATA\RawrXD\obj",
+    [string]$OutputDir = "${env:LOCALAPPDATA}\RawrXD\obj",
     [switch]$UseSCC
 )
 
@@ -49,7 +49,7 @@ if ($UseSCC) {
         (Join-Path $repoBinDir "rawrxd-scc-nasm64.exe"),     # NASM variant
         (Join-Path $repoBinDir "rawrxd_scc.exe"),            # Direct build
         (Join-Path $repoBinDir "rawrxd_compiler.exe"),       # Compiler engine
-        "$env:LOCALAPPDATA\RawrXD\bin\rawrxd_scc.exe",       # AppData fallback
+        "${env:LOCALAPPDATA}\RawrXD\bin\rawrxd_scc.exe",       # AppData fallback
         "D:\RawrXD\bin\rawrxd-scc-masm64.exe",               # Fortress default output
         "D:\RawrXD\bin\rawrxd_scc.exe"
     )
@@ -180,7 +180,7 @@ $jobs | Wait-Job | ForEach-Object {
     $result = Receive-Job $_
     if ($result.Success) {
         $compiled++
-        $sizeKB = if ($result.Size) { [math]::Round($result.Size / 1KB, 1) } else { "?" }
+        $sizeKB = $(if ($result.Size) { [math]::Round($result.Size / 1KB, 1) } else { "?" }
         Write-Phase1Log "  OK: $($result.Name) ($sizeKB KB)" "Success"
     } else {
         $failed++

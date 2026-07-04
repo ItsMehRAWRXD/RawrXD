@@ -25,13 +25,13 @@ param(
 # CONFIGURATION
 # ============================================================================
 
-$script:ScriptsRoot = Split-Path $PSScriptRoot -Parent
-$script:CLIScripts = Join-Path $script:ScriptsRoot "scripts"
-$script:GUIScripts = Join-Path $script:ScriptsRoot "src\win32app"
-@($script:CLIScripts, $script:GUIScripts) | ForEach-Object {
+${script:ScriptsRoot} = Split-Path $PSScriptRoot -Parent
+${script:CLIScripts} = Join-Path ${script:ScriptsRoot} "scripts"
+${script:GUIScripts} = Join-Path ${script:ScriptsRoot} "src\win32app"
+@(${script:CLIScripts}, ${script:GUIScripts}) | ForEach-Object {
     if (-not (Test-Path $_)) { New-Item -Path $_ -ItemType Directory -Force | Out-Null }
 }
-$script:FeatureRegistry = @{
+${script:FeatureRegistry} = @{
     "800b_Loading" = @{
         CLI_Implemented = $false
         GUI_Implemented = $false
@@ -104,7 +104,7 @@ $script:FeatureRegistry = @{
     }
 }
 
-$script:FeatureDifferences = @()
+${script:FeatureDifferences} = @()
 
 # ============================================================================
 # FEATURE DETECTION
@@ -128,7 +128,7 @@ function Test-FeatureInCLI {
     
     if ($featureFiles.ContainsKey($FeatureName)) {
         foreach ($pattern in $featureFiles[$FeatureName]) {
-            $files = Get-ChildItem -Path $script:CLIScripts -Filter $pattern -ErrorAction SilentlyContinue
+            $files = Get-ChildItem -Path ${script:CLIScripts} -Filter $pattern -ErrorAction SilentlyContinue
             if ($files) {
                 return $files[0].FullName
             }
@@ -155,7 +155,7 @@ function Test-FeatureInGUI {
     
     if ($featureFiles.ContainsKey($FeatureName)) {
         foreach ($pattern in $featureFiles[$FeatureName]) {
-            $files = Get-ChildItem -Path $script:GUIScripts -Filter $pattern -Recurse -ErrorAction SilentlyContinue
+            $files = Get-ChildItem -Path ${script:GUIScripts} -Filter $pattern -Recurse -ErrorAction SilentlyContinue
             if ($files) {
                 return $files[0].FullName
             }
@@ -176,7 +176,7 @@ function Get-FeatureStatus {
         GUI_Implemented = ($null -ne $guiPath)
         CLI_Path = $cliPath
         GUI_Path = $guiPath
-        Description = $script:FeatureRegistry[$FeatureName].Description
+        Description = ${script:FeatureRegistry}[$FeatureName].Description
         Status = "Unknown"
     }
     
@@ -202,7 +202,7 @@ function Get-AllFeatureStatus {
     Write-Host "=" * 80
     
     $results = @()
-    foreach ($featureName in $script:FeatureRegistry.Keys) {
+    foreach ($featureName in ${script:FeatureRegistry}.Keys) {
         $status = Get-FeatureStatus -FeatureName $featureName
         $results += $status
         
@@ -272,7 +272,7 @@ function Sync-Feature {
     
     if ($TargetType -eq "CLI") {
         # Copy to CLI scripts directory
-        $targetDir = $script:CLIScripts
+        $targetDir = ${script:CLIScripts}
         $targetFile = Join-Path $targetDir (Split-Path $SourcePath -Leaf)
         Copy-Item -Path $SourcePath -Destination $targetFile -Force
         
@@ -282,7 +282,7 @@ function Sync-Feature {
         Write-Host "  ✅ Copied to CLI: $targetFile" -ForegroundColor Green
     } else {
         # Copy to GUI source directory
-        $targetDir = $script:GUIScripts
+        $targetDir = ${script:GUIScripts}
         $targetFile = Join-Path $targetDir (Split-Path $SourcePath -Leaf)
         Copy-Item -Path $SourcePath -Destination $targetFile -Force
         
@@ -305,8 +305,8 @@ function Add-800bLoadingCapability {
 # 800B OPTIMIZED LOADING
 # ============================================================================
 
-`$script:FastLoadBuffer = New-Object byte[] 800
-`$script:LoadOptimization = @{
+`${script:FastLoadBuffer} = New-Object byte[] 800
+`${script:LoadOptimization} = @{
     BufferSize = 800
     UseAsync = `$true
     ParallelLoad = `$true
@@ -325,8 +325,8 @@ function Invoke-FastLoad {
 }
 
 function Enable-OptimizedLoading {
-    `$env:RAWRXD_OPTIMIZED_LOADING = "1"
-    `$env:RAWRXD_LOAD_BUFFER_SIZE = "800"
+    `${env:RAWRXD_OPTIMIZED_LOADING} = "1"
+    `${env:RAWRXD_LOAD_BUFFER_SIZE} = "800"
 }
 
 Enable-OptimizedLoading
@@ -360,7 +360,7 @@ Enable-OptimizedLoading
 function Ensure-CLIOptimizedLoading {
     $candidatePatterns = @("RawrXD-DirectOptimized.ps1", "RawrXD-IDE-Bridge.ps1")
     foreach ($pattern in $candidatePatterns) {
-        Get-ChildItem -Path $script:CLIScripts -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
+        Get-ChildItem -Path ${script:CLIScripts} -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
             Add-800bLoadingCapability -FilePath $_.FullName
         }
     }
@@ -474,9 +474,7 @@ function Export-SyncReport {
 
 # ============================================================================
 # MAIN EXECUTION
-# ============================================================================
-
-if ($AnalyzeAll) {
+# ============================================================================ $(if ($AnalyzeAll) {
     $featureStatus = Get-AllFeatureStatus
     $differences = Get-FeatureDifferences -FeatureStatus $featureStatus
     

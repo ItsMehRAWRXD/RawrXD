@@ -4,26 +4,26 @@
 # =============================================================================
 
 # Set environment variables for debug verbose mode
-$env:SOVEREIGN_TELEMETRY_ENABLED = "1"
-$env:SOVEREIGN_TELEMETRY_LEVEL = "DEBUG"
-$env:SOVEREIGN_TELEMETRY_PATH = "D:\RawrXD\logs\telemetry.log"
-$env:SOVEREIGN_IPC_VERBOSE = "1"
-$env:SOVEREIGN_MMAP_PREFETCH = "1"
-$env:SOVEREIGN_KV_CACHE_Q4K = "1"
+${env:SOVEREIGN_TELEMETRY_ENABLED} = "1"
+${env:SOVEREIGN_TELEMETRY_LEVEL} = "DEBUG"
+${env:SOVEREIGN_TELEMETRY_PATH} = "D:\RawrXD\logs\telemetry.log"
+${env:SOVEREIGN_IPC_VERBOSE} = "1"
+${env:SOVEREIGN_MMAP_PREFETCH} = "1"
+${env:SOVEREIGN_KV_CACHE_Q4K} = "1"
 
 Write-Host "=== TC15_001 Environment Configuration ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "Telemetry:"
-Write-Host "  SOVEREIGN_TELEMETRY_ENABLED = $env:SOVEREIGN_TELEMETRY_ENABLED"
-Write-Host "  SOVEREIGN_TELEMETRY_LEVEL = $env:SOVEREIGN_TELEMETRY_LEVEL"
-Write-Host "  SOVEREIGN_TELEMETRY_PATH = $env:SOVEREIGN_TELEMETRY_PATH"
+Write-Host "  SOVEREIGN_TELEMETRY_ENABLED = ${env:SOVEREIGN_TELEMETRY_ENABLED}"
+Write-Host "  SOVEREIGN_TELEMETRY_LEVEL = ${env:SOVEREIGN_TELEMETRY_LEVEL}"
+Write-Host "  SOVEREIGN_TELEMETRY_PATH = ${env:SOVEREIGN_TELEMETRY_PATH}"
 Write-Host ""
 Write-Host "IPC Bridge:"
-Write-Host "  SOVEREIGN_IPC_VERBOSE = $env:SOVEREIGN_IPC_VERBOSE"
+Write-Host "  SOVEREIGN_IPC_VERBOSE = ${env:SOVEREIGN_IPC_VERBOSE}"
 Write-Host ""
 Write-Host "Engine:"
-Write-Host "  SOVEREIGN_MMAP_PREFETCH = $env:SOVEREIGN_MMAP_PREFETCH"
-Write-Host "  SOVEREIGN_KV_CACHE_Q4K = $env:SOVEREIGN_KV_CACHE_Q4K"
+Write-Host "  SOVEREIGN_MMAP_PREFETCH = ${env:SOVEREIGN_MMAP_PREFETCH}"
+Write-Host "  SOVEREIGN_KV_CACHE_Q4K = ${env:SOVEREIGN_KV_CACHE_Q4K}"
 Write-Host ""
 
 # Create logs directory

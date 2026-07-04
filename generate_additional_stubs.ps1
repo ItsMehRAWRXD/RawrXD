@@ -3,7 +3,7 @@
 # Creates comprehensive stubs for Windows API and custom functions
 
 param(
-    [string]$OutDir = "$env:LOCALAPPDATA\RawrXD\stubs"
+    [string]$OutDir = "${env:LOCALAPPDATA}\RawrXD\stubs"
 )
 
 $ErrorActionPreference = "Stop"

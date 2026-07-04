@@ -7,7 +7,7 @@ param(
     [string]$Action = "status"
 )
 
-$ConfigPath = Join-Path $env:APPDATA "Ollama\agentic-config.json"
+$ConfigPath = Join-Path ${env:APPDATA} "Ollama\agentic-config.json"
 
 function Get-Config {
     if (Test-Path $ConfigPath) {

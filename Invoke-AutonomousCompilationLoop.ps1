@@ -67,7 +67,7 @@ function Find-Compilers {
     
     $ml64 = Get-ChildItem -Path 'C:\Program Files*', 'C:\VS*' -Recurse -Filter 'ml64.exe' -EA SilentlyContinue | 
             Select-Object -First 1
-    $link = if ($ml64) { 
+    $link = $(if ($ml64) { 
         Get-ChildItem -Path (Split-Path $ml64.Directory) -Filter 'link.exe' -EA SilentlyContinue | 
         Select-Object -First 1 
     }

@@ -56,7 +56,7 @@ param(
 )
 
 # Global deployment state
-$script:DeploymentState = @{
+${script:DeploymentState} = @{
     StartTime = Get-Date
     Phase = "Initialization"
     Status = "Running"
@@ -75,7 +75,7 @@ function Write-DeploymentLog {
     param(
         [Parameter(Mandatory=$true)][string]$Message,
         [ValidateSet('Info','Warning','Error','Debug','Success')][string]$Level = 'Info',
-        [string]$Phase = $script:DeploymentState.Phase,
+        [string]$Phase = ${script:DeploymentState}.Phase,
         [hashtable]$Data = $null
     )
     
@@ -102,18 +102,18 @@ function Write-DeploymentLog {
     }
     
     # Update deployment state
-    $script:DeploymentState.CurrentOperation = $Message
+    ${script:DeploymentState}.CurrentOperation = $Message
     if ($Level -eq 'Error') {
-        $script:DeploymentState.Errors += $Message
+        ${script:DeploymentState}.Errors += $Message
     } elseif ($Level -eq 'Warning') {
-        $script:DeploymentState.Warnings += $Message
+        ${script:DeploymentState}.Warnings += $Message
     }
 }
 
 # Update deployment phase
 function Update-DeploymentPhase {
     param([string]$Phase)
-    $script:DeploymentState.Phase = $Phase
+    ${script:DeploymentState}.Phase = $Phase
     Write-DeploymentLog -Message "Entering phase: $Phase" -Level Info
 }
 
@@ -295,8 +295,8 @@ function Start-Phase2-Testing {
         }
         
         # Update deployment state
-        $script:DeploymentState.TestsPassed = $testing.Summary.TotalPassed
-        $script:DeploymentState.TestsFailed = $testing.Summary.TotalFailed
+        ${script:DeploymentState}.TestsPassed = $testing.Summary.TotalPassed
+        ${script:DeploymentState}.TestsFailed = $testing.Summary.TotalFailed
         
         # Check if tests passed threshold
         if ($testing.Summary.OverallSuccessRate -lt 80) {
@@ -344,7 +344,7 @@ function Start-Phase3-Optimization {
         }
         
         # Update deployment state
-        $script:DeploymentState.OptimizationsApplied = $optimization.OptimizationsApplied
+        ${script:DeploymentState}.OptimizationsApplied = $optimization.OptimizationsApplied
         
         return $optimization
     } catch {
@@ -384,7 +384,7 @@ function Start-Phase4-Security {
         }
         
         # Update deployment state
-        $script:DeploymentState.SecurityMeasuresApplied = $security.SecurityMeasuresApplied
+        ${script:DeploymentState}.SecurityMeasuresApplied = $security.SecurityMeasuresApplied
         
         return $security
     } catch {
@@ -481,9 +481,9 @@ function New-DeploymentReport {
     try {
         $report = @{
             DeploymentInfo = @{
-                StartTime = $script:DeploymentState.StartTime
+                StartTime = ${script:DeploymentState}.StartTime
                 EndTime = Get-Date
-                Duration = [Math]::Round(((Get-Date) - $script:DeploymentState.StartTime).TotalMinutes, 2)
+                Duration = [Math]::Round(((Get-Date) - ${script:DeploymentState}.StartTime).TotalMinutes, 2)
                 Mode = $DeploymentMode
                 SourcePath = $SourcePath
                 TargetPath = $TargetPath
@@ -497,13 +497,13 @@ function New-DeploymentReport {
                 Memory = "Sufficient"
             }
             Statistics = @{
-                ModulesProcessed = $script:DeploymentState.ModulesProcessed
-                TestsPassed = $script:DeploymentState.TestsPassed
-                TestsFailed = $script:DeploymentState.TestsFailed
-                OptimizationsApplied = $script:DeploymentState.OptimizationsApplied
-                SecurityMeasuresApplied = $script:DeploymentState.SecurityMeasuresApplied
-                Errors = $script:DeploymentState.Errors.Count
-                Warnings = $script:DeploymentState.Warnings.Count
+                ModulesProcessed = ${script:DeploymentState}.ModulesProcessed
+                TestsPassed = ${script:DeploymentState}.TestsPassed
+                TestsFailed = ${script:DeploymentState}.TestsFailed
+                OptimizationsApplied = ${script:DeploymentState}.OptimizationsApplied
+                SecurityMeasuresApplied = ${script:DeploymentState}.SecurityMeasuresApplied
+                Errors = ${script:DeploymentState}.Errors.Count
+                Warnings = ${script:DeploymentState}.Warnings.Count
             }
             Phases = @{
                 ReverseEngineering = $DeploymentResults.Phase1_ReverseEngineering
@@ -513,8 +513,8 @@ function New-DeploymentReport {
                 Packaging = $DeploymentResults.Phase5_Packaging
                 Deployment = $DeploymentResults.Phase6_Deployment
             }
-            Errors = $script:DeploymentState.Errors
-            Warnings = $script:DeploymentState.Warnings
+            Errors = ${script:DeploymentState}.Errors
+            Warnings = ${script:DeploymentState}.Warnings
         }
         
         # Save report
@@ -542,8 +542,8 @@ function Show-FinalSummary {
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host ""
     
-    $duration = [Math]::Round(((Get-Date) - $script:DeploymentState.StartTime).TotalMinutes, 2)
-    $successRate = [Math]::Round((($script:DeploymentState.TestsPassed / ($script:DeploymentState.TestsPassed + $script:DeploymentState.TestsFailed)) * 100), 2)
+    $duration = [Math]::Round(((Get-Date) - ${script:DeploymentState}.StartTime).TotalMinutes, 2)
+    $successRate = [Math]::Round(((${script:DeploymentState}.TestsPassed / (${script:DeploymentState}.TestsPassed + ${script:DeploymentState}.TestsFailed)) * 100), 2)
     
     Write-Host "Deployment Summary:" -ForegroundColor Yellow
     Write-Host "  Duration: $duration minutes" -ForegroundColor White
@@ -554,27 +554,27 @@ function Show-FinalSummary {
     Write-Host ""
     
     Write-Host "Statistics:" -ForegroundColor Yellow
-    Write-Host "  Modules Processed: $($script:DeploymentState.ModulesProcessed)" -ForegroundColor White
-    Write-Host "  Tests Passed: $($script:DeploymentState.TestsPassed)" -ForegroundColor Green
-    Write-Host "  Tests Failed: $($script:DeploymentState.TestsFailed)" -ForegroundColor Red
+    Write-Host "  Modules Processed: $(${script:DeploymentState}.ModulesProcessed)" -ForegroundColor White
+    Write-Host "  Tests Passed: $(${script:DeploymentState}.TestsPassed)" -ForegroundColor Green
+    Write-Host "  Tests Failed: $(${script:DeploymentState}.TestsFailed)" -ForegroundColor Red
     Write-Host "  Test Success Rate: $successRate%" -ForegroundColor $(if ($successRate -ge 80) { "Green" } elseif ($successRate -ge 60) { "Yellow" } else { "Red" })
-    Write-Host "  Optimizations Applied: $($script:DeploymentState.OptimizationsApplied)" -ForegroundColor White
-    Write-Host "  Security Measures: $($script:DeploymentState.SecurityMeasuresApplied)" -ForegroundColor White
-    Write-Host "  Errors: $($script:DeploymentState.Errors.Count)" -ForegroundColor $(if ($script:DeploymentState.Errors.Count -eq 0) { "Green" } else { "Red" })
-    Write-Host "  Warnings: $($script:DeploymentState.Warnings.Count)" -ForegroundColor $(if ($script:DeploymentState.Warnings.Count -eq 0) { "Green" } else { "Yellow" })
+    Write-Host "  Optimizations Applied: $(${script:DeploymentState}.OptimizationsApplied)" -ForegroundColor White
+    Write-Host "  Security Measures: $(${script:DeploymentState}.SecurityMeasuresApplied)" -ForegroundColor White
+    Write-Host "  Errors: $(${script:DeploymentState}.Errors.Count)" -ForegroundColor $(if (${script:DeploymentState}.Errors.Count -eq 0) { "Green" } else { "Red" })
+    Write-Host "  Warnings: $(${script:DeploymentState}.Warnings.Count)" -ForegroundColor $(if (${script:DeploymentState}.Warnings.Count -eq 0) { "Green" } else { "Yellow" })
     Write-Host ""
     
-    if ($script:DeploymentState.Errors.Count -gt 0) {
+    if (${script:DeploymentState}.Errors.Count -gt 0) {
         Write-Host "Errors Encountered:" -ForegroundColor Red
-        foreach ($error in $script:DeploymentState.Errors) {
+        foreach ($error in ${script:DeploymentState}.Errors) {
             Write-Host "  - $error" -ForegroundColor Gray
         }
         Write-Host ""
     }
     
-    if ($script:DeploymentState.Warnings.Count -gt 0) {
+    if (${script:DeploymentState}.Warnings.Count -gt 0) {
         Write-Host "Warnings:" -ForegroundColor Yellow
-        foreach ($warning in $script:DeploymentState.Warnings) {
+        foreach ($warning in ${script:DeploymentState}.Warnings) {
             Write-Host "  - $warning" -ForegroundColor Gray
         }
         Write-Host ""
@@ -668,16 +668,16 @@ function Start-ProductionDeployment {
         Show-FinalSummary -DeploymentResults $phase6Results -Report $report
         
         # Update final status
-        $script:DeploymentState.Status = "Complete"
-        $script:DeploymentState.EndTime = Get-Date
+        ${script:DeploymentState}.Status = "Complete"
+        ${script:DeploymentState}.EndTime = Get-Date
         
         Write-DeploymentLog -Message "Production deployment completed successfully" -Level Success
         
         return $phase6Results
         
     } catch {
-        $script:DeploymentState.Status = "Failed"
-        $script:DeploymentState.EndTime = Get-Date
+        ${script:DeploymentState}.Status = "Failed"
+        ${script:DeploymentState}.EndTime = Get-Date
         
         Write-DeploymentLog -Message "Production deployment failed: $_" -Level Error
         Write-Host ""

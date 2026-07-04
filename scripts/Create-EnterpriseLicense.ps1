@@ -25,14 +25,13 @@ function Write-Info { param($Msg) Write-Host "  $Msg" -ForegroundColor Gray }
 
 # =============================================================================
 # Dev Unlock (RAWRXD_ENTERPRISE_DEV=1)
-# =============================================================================
-if ($DevUnlock) {
+# ============================================================================= $(if ($DevUnlock) {
     Write-Step "Enterprise Dev Unlock"
     Write-Host @"
 
   Set environment variable to unlock all Enterprise features (dev builds):
 
-    `$env:RAWRXD_ENTERPRISE_DEV = "1"
+    `${env:RAWRXD_ENTERPRISE_DEV} = "1"
 
   Then launch RawrXD IDE. All 8 features unlock:
     • DualEngine800B
@@ -48,8 +47,8 @@ if ($DevUnlock) {
         RawrXD_KeyGen or license_generator.py to create .rawrlic files.
 
 "@ -ForegroundColor Gray
-    if (-not $env:RAWRXD_ENTERPRISE_DEV) {
-        Write-Info "To enable now: `$env:RAWRXD_ENTERPRISE_DEV='1'; .\build_ide\bin\RawrXD-Win32IDE.exe"
+    if (-not ${env:RAWRXD_ENTERPRISE_DEV}) {
+        Write-Info "To enable now: `${env:RAWRXD_ENTERPRISE_DEV}='1'; .\build_ide\bin\RawrXD-Win32IDE.exe"
     } else {
         Write-Ok "RAWRXD_ENTERPRISE_DEV is already set"
     }
@@ -58,8 +57,7 @@ if ($DevUnlock) {
 
 # =============================================================================
 # Show Status
-# =============================================================================
-if ($ShowStatus) {
+# ============================================================================= $(if ($ShowStatus) {
     Write-Step "Enterprise License Status"
     $ideExe = Join-Path $PSScriptRoot "..\build_ide\bin\RawrXD-Win32IDE.exe"
     if (Test-Path $ideExe) {
@@ -88,8 +86,7 @@ if ($ShowStatus) {
 
 # =============================================================================
 # Create for Machine (RawrXD_KeyGen)
-# =============================================================================
-if ($CreateForMachine) {
+# ============================================================================= $(if ($CreateForMachine) {
     Write-Step "Create license via RawrXD_KeyGen"
     $keyGen = Join-Path $PSScriptRoot "..\build_ide\bin\RawrXD_KeyGen.exe"
     if (-not (Test-Path $keyGen)) {
@@ -106,8 +103,7 @@ if ($CreateForMachine) {
 
 # =============================================================================
 # Python Issue (license_generator.py)
-# =============================================================================
-if ($PythonIssue) {
+# ============================================================================= $(if ($PythonIssue) {
     Write-Step "Create license via Python license_generator.py"
     $pyScript = Join-Path $PSScriptRoot "..\src\tools\license_generator.py"
     if (-not (Test-Path $pyScript)) {

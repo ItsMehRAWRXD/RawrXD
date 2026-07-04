@@ -75,8 +75,8 @@ function Invoke-ProcessWithOutput {
     $ErrorActionPreference = $prevEAP
     return @{
         ExitCode = $proc.ExitCode
-        Stdout = if (Test-Path $StdoutPath) { Get-Content $StdoutPath -Raw } else { '' }
-        Stderr = if (Test-Path $StderrPath) { Get-Content $StderrPath -Raw } else { '' }
+        Stdout = $(if (Test-Path $StdoutPath) { Get-Content $StdoutPath -Raw } else { '' }
+        Stderr = $(if (Test-Path $StderrPath) { Get-Content $StderrPath -Raw } else { '' }
     }
 }
 
@@ -120,7 +120,7 @@ if (!(Test-Path $Model))  { Defer "Model file not present: $Model" $EXIT_TRACE_I
 # Probe for the inference plugin DLL.
 $plugin = Join-Path $BinDir "RawrXD_ServeInference.dll"
 if (!(Test-Path $plugin)) {
-    $envDll = $env:RAWRXD_SERVE_INFERENCE_DLL
+    $envDll = ${env:RAWRXD_SERVE_INFERENCE_DLL}
     if (-not $envDll -or -not (Test-Path $envDll)) {
         Defer "RawrXD_ServeInference.dll missing from $BinDir and RAWRXD_SERVE_INFERENCE_DLL" $EXIT_TRACE_INVALID
     }
@@ -132,21 +132,21 @@ New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 Remove-Item Env:\RAWRXD_PARITY_CPU -ErrorAction SilentlyContinue
 
 if ($DisableAutopatch) {
-    $env:RAWRXD_DISABLE_AUTOPATCH = '1'
+    ${env:RAWRXD_DISABLE_AUTOPATCH} = '1'
     Write-Host "[TUNING] Autopatch disabled (RAWRXD_DISABLE_AUTOPATCH=1)"
 } else {
     Remove-Item Env:\RAWRXD_DISABLE_AUTOPATCH -ErrorAction SilentlyContinue
 }
 
 if (-not [string]::IsNullOrWhiteSpace($MatmulKernel)) {
-    $env:RAWRXD_VULKAN_MATMUL_KERNEL = $MatmulKernel
+    ${env:RAWRXD_VULKAN_MATMUL_KERNEL} = $MatmulKernel
     Write-Host "[TUNING] MatMul kernel key: $MatmulKernel"
 } else {
     Remove-Item Env:\RAWRXD_VULKAN_MATMUL_KERNEL -ErrorAction SilentlyContinue
 }
 
 if (-not [string]::IsNullOrWhiteSpace($MatmulSpv)) {
-    $env:RAWRXD_VULKAN_MATMUL_SPV = $MatmulSpv
+    ${env:RAWRXD_VULKAN_MATMUL_SPV} = $MatmulSpv
     Write-Host "[TUNING] MatMul SPV: $MatmulSpv"
 } else {
     Remove-Item Env:\RAWRXD_VULKAN_MATMUL_SPV -ErrorAction SilentlyContinue
@@ -196,7 +196,7 @@ $cliProc = Start-Process -FilePath $cliExe `
 $cliExit = $cliProc.ExitCode
 $ErrorActionPreference = $prevEAP
 
-$cliErr = if (Test-Path $cliStderr) { Get-Content $cliStderr -Raw } else { '' }
+$cliErr = $(if (Test-Path $cliStderr) { Get-Content $cliStderr -Raw } else { '' }
 if ($cliErr -match 'No GPU backend available') {
     Defer "GPU enforcement gate fired (no Vulkan/CUDA/HIP device)." $EXIT_GPU_NOT_FOUND
 }
@@ -227,7 +227,7 @@ if ($cliJson.token_count -lt $MinRealTokens) {
 Write-Host "[OK] CLI real-model trace written: $cliTrace (backend=$($cliJson.backend), device=$($cliJson.device))"
 
 Write-Host "=== UI inference (headless driver) ==="
-$env:RAWRXD_PIPELINE_TRACE = $uiTrace
+${env:RAWRXD_PIPELINE_TRACE} = $uiTrace
 $uiDriver = Join-Path $BinDir "rawrxd-parity-ui-driver.exe"
 if (!(Test-Path $uiDriver)) {
     Write-Host "[DEFERRED] Headless UI driver not built: $uiDriver" -ForegroundColor Yellow
@@ -248,7 +248,7 @@ $uiProc = Start-Process -FilePath $uiDriver `
 $uiExit = $uiProc.ExitCode
 $ErrorActionPreference = $prevEAP
 
-$uiErr = if (Test-Path $uiStderr) { Get-Content $uiStderr -Raw } else { '' }
+$uiErr = $(if (Test-Path $uiStderr) { Get-Content $uiStderr -Raw } else { '' }
 if ($uiErr -match '\[PIPELINE PARITY-CPU\]') {
     Write-Host "[FAIL] Unexpected parity CPU fallback marker in UI run" -ForegroundColor Red
     Exit-Script $EXIT_CPU_FALLBACK

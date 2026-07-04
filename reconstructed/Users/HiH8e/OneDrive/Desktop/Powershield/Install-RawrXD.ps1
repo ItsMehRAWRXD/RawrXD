@@ -16,21 +16,21 @@ param(
     [switch]$Silent,
     [switch]$SkipCopilot,
     [switch]$SkipTemplates,
-    [string]$InstallPath = "$env:LOCALAPPDATA\RawrXD"
+    [string]$InstallPath = "${env:LOCALAPPDATA}\RawrXD"
 )
 
 #region Configuration
-$script:Config = @{
+${script:Config} = @{
     Version = "1.0.0"
     InstallPath = $InstallPath
-    LogPath = Join-Path $env:TEMP "RawrXD-Install-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+    LogPath = Join-Path ${env:TEMP} "RawrXD-Install-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
     RequiredPSVersion = [version]"7.0"
     RequiredDotNetVersion = "8.0"
     GitHubOAuthClientId = "Iv1.b507a08c87ecfe98"  # Real GitHub OAuth App ID for RawrXD
     CopilotCheckEndpoint = "https://api.github.com/user/copilot_seats"
 }
 
-$script:State = @{
+${script:State} = @{
     GitHubToken = $null
     CopilotEnabled = $false
     SelectedTemplate = $null
@@ -47,7 +47,7 @@ function Write-Log {
     
     $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $logMessage = "[$timestamp] [$Level] $Message"
-    Add-Content -Path $script:Config.LogPath -Value $logMessage -ErrorAction SilentlyContinue
+    Add-Content -Path ${script:Config}.LogPath -Value $logMessage -ErrorAction SilentlyContinue
     
     $color = switch ($Level) {
         'Success' { 'Green' }
@@ -65,8 +65,8 @@ function Test-Prerequisites {
     Write-Log "Checking prerequisites..." -Level Info
     
     # PowerShell Version
-    if ($PSVersionTable.PSVersion -lt $script:Config.RequiredPSVersion) {
-        Write-Log "PowerShell $($script:Config.RequiredPSVersion) or higher required. Current: $($PSVersionTable.PSVersion)" -Level Error
+    if ($PSVersionTable.PSVersion -lt ${script:Config}.RequiredPSVersion) {
+        Write-Log "PowerShell $(${script:Config}.RequiredPSVersion) or higher required. Current: $($PSVersionTable.PSVersion)" -Level Error
         return $false
     }
     Write-Log "PowerShell version: $($PSVersionTable.PSVersion) ✓" -Level Success
@@ -75,7 +75,7 @@ function Test-Prerequisites {
     try {
         $dotnetVersion = & dotnet --version 2>$null
         if ($LASTEXITCODE -ne 0 -or -not $dotnetVersion) {
-            Write-Log ".NET $($script:Config.RequiredDotNetVersion) runtime not found. Installing..." -Level Warning
+            Write-Log ".NET $(${script:Config}.RequiredDotNetVersion) runtime not found. Installing..." -Level Warning
             Install-DotNetRuntime
         } else {
             Write-Log ".NET version: $dotnetVersion ✓" -Level Success
@@ -111,10 +111,10 @@ function Test-Prerequisites {
 }
 
 function Install-DotNetRuntime {
-    Write-Log "Installing .NET $($script:Config.RequiredDotNetVersion) Runtime..." -Level Info
+    Write-Log "Installing .NET $(${script:Config}.RequiredDotNetVersion) Runtime..." -Level Info
     
-    $installerUrl = "https://dotnet.microsoft.com/download/dotnet/$($script:Config.RequiredDotNetVersion)/runtime"
-    $installerPath = Join-Path $env:TEMP "dotnet-runtime-installer.exe"
+    $installerUrl = "https://dotnet.microsoft.com/download/dotnet/$(${script:Config}.RequiredDotNetVersion)/runtime"
+    $installerPath = Join-Path ${env:TEMP} "dotnet-runtime-installer.exe"
     
     try {
         # Download installer
@@ -142,7 +142,7 @@ function Install-Git {
         } else {
             # Download and install Git manually
             $installerUrl = "https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/Git-2.43.0-64-bit.exe"
-            $installerPath = Join-Path $env:TEMP "git-installer.exe"
+            $installerPath = Join-Path ${env:TEMP} "git-installer.exe"
             
             Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
             Start-Process -FilePath $installerPath -ArgumentList '/VERYSILENT','/NORESTART' -Wait
@@ -150,7 +150,7 @@ function Install-Git {
         }
         
         # Refresh PATH
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        ${env:Path} = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
         
         Write-Log "Git installed successfully" -Level Success
     } catch {
@@ -176,7 +176,7 @@ function Start-GitHubAuthentication {
     try {
         # Request device code
         $deviceCodeResponse = Invoke-RestMethod -Uri $deviceCodeUri -Method Post -Body @{
-            client_id = $script:Config.GitHubOAuthClientId
+            client_id = ${script:Config}.GitHubOAuthClientId
             scope = "user:email read:user"
         } -ContentType "application/json"
         
@@ -208,20 +208,20 @@ function Start-GitHubAuthentication {
             
             try {
                 $tokenResponse = Invoke-RestMethod -Uri $tokenUri -Method Post -Body @{
-                    client_id = $script:Config.GitHubOAuthClientId
+                    client_id = ${script:Config}.GitHubOAuthClientId
                     device_code = $deviceCode
                     grant_type = "urn:ietf:params:oauth:grant-type:device_code"
                 } -ContentType "application/json"
                 
                 if ($tokenResponse.access_token) {
-                    $script:State.GitHubToken = $tokenResponse.access_token
+                    ${script:State}.GitHubToken = $tokenResponse.access_token
                     $authorized = $true
                     Write-Log "GitHub authentication successful!" -Level Success
                     
                     # Store token securely
-                    $tokenPath = Join-Path $script:Config.InstallPath "config\github-token.enc"
+                    $tokenPath = Join-Path ${script:Config}.InstallPath "config\github-token.enc"
                     $null = New-Item -Path (Split-Path $tokenPath) -ItemType Directory -Force
-                    $secureToken = ConvertTo-SecureString $script:State.GitHubToken -AsPlainText -Force
+                    $secureToken = ConvertTo-SecureString ${script:State}.GitHubToken -AsPlainText -Force
                     $encryptedToken = ConvertFrom-SecureString $secureToken
                     Set-Content -Path $tokenPath -Value $encryptedToken
                     
@@ -244,7 +244,7 @@ function Start-GitHubAuthentication {
 }
 
 function Test-CopilotSubscription {
-    if (-not $script:State.GitHubToken) {
+    if (-not ${script:State}.GitHubToken) {
         Write-Log "No GitHub token available for Copilot check" -Level Warning
         return $false
     }
@@ -253,14 +253,14 @@ function Test-CopilotSubscription {
     
     try {
         $headers = @{
-            Authorization = "Bearer $($script:State.GitHubToken)"
+            Authorization = "Bearer $(${script:State}.GitHubToken)"
             Accept = "application/vnd.github+json"
         }
         
-        $response = Invoke-RestMethod -Uri $script:Config.CopilotCheckEndpoint -Headers $headers -ErrorAction Stop
+        $response = Invoke-RestMethod -Uri ${script:Config}.CopilotCheckEndpoint -Headers $headers -ErrorAction Stop
         
         if ($response.seats -and $response.seats.Count -gt 0) {
-            $script:State.CopilotEnabled = $true
+            ${script:State}.CopilotEnabled = $true
             Write-Log "GitHub Copilot subscription active ✓" -Level Success
             return $true
         } else {
@@ -277,7 +277,7 @@ function Test-CopilotSubscription {
 #endregion
 
 #region Template System
-$script:Templates = @{
+${script:Templates} = @{
     'python' = @{
         Name = "Python Project"
         Description = "Python 3.11+ project with virtual environment, dependencies, and testing"
@@ -332,7 +332,7 @@ python main.py
         PostCreate = {
             param($Path)
             & python -m venv (Join-Path $Path ".venv")
-            $activateScript = if ($IsWindows) { ".venv\Scripts\Activate.ps1" } else { ".venv/bin/activate" }
+            $activateScript = $(if ($IsWindows) { ".venv\Scripts\Activate.ps1" } else { ".venv/bin/activate" }
             Write-Log "Virtual environment created. Activate with: $activateScript" -Level Success
         }
     }
@@ -598,8 +598,8 @@ function Show-TemplateSelector {
     
     $index = 1
     $templateKeys = @()
-    foreach ($key in $script:Templates.Keys | Sort-Object) {
-        $template = $script:Templates[$key]
+    foreach ($key in ${script:Templates}.Keys | Sort-Object) {
+        $template = ${script:Templates}[$key]
         Write-Host "  [$index] " -NoNewline -ForegroundColor Yellow
         Write-Host $template.Name -ForegroundColor White
         Write-Host "      $($template.Description)" -ForegroundColor Gray
@@ -630,12 +630,12 @@ function New-ProjectFromTemplate {
         [string]$ProjectPath
     )
     
-    if (-not $TemplateKey -or -not $script:Templates.ContainsKey($TemplateKey)) {
+    if (-not $TemplateKey -or -not ${script:Templates}.ContainsKey($TemplateKey)) {
         Write-Log "Invalid template key: $TemplateKey" -Level Error
         return $false
     }
     
-    $template = $script:Templates[$TemplateKey]
+    $template = ${script:Templates}[$TemplateKey]
     Write-Log "Creating project from template: $($template.Name)" -Level Info
     
     try {
@@ -684,16 +684,16 @@ function Install-RawrXDCore {
     
     try {
         # Create installation directory
-        $null = New-Item -Path $script:Config.InstallPath -ItemType Directory -Force
+        $null = New-Item -Path ${script:Config}.InstallPath -ItemType Directory -Force
         
         # Create subdirectories
         @('bin', 'config', 'templates', 'extensions', 'logs') | ForEach-Object {
-            $null = New-Item -Path (Join-Path $script:Config.InstallPath $_) -ItemType Directory -Force
+            $null = New-Item -Path (Join-Path ${script:Config}.InstallPath $_) -ItemType Directory -Force
         }
         
         # Copy RawrXD files from current location
         $sourceDir = $PSScriptRoot
-        $binDir = Join-Path $script:Config.InstallPath "bin"
+        $binDir = Join-Path ${script:Config}.InstallPath "bin"
         
         # Core executables and modules
         $coreFiles = @(
@@ -714,25 +714,25 @@ function Install-RawrXDCore {
         # Copy ModelLoader if exists
         $modelLoaderPath = Join-Path $sourceDir "RawrXD-ModelLoader"
         if (Test-Path $modelLoaderPath) {
-            Copy-Item -Path $modelLoaderPath -Destination $script:Config.InstallPath -Recurse -Force
+            Copy-Item -Path $modelLoaderPath -Destination ${script:Config}.InstallPath -Recurse -Force
             Write-Log "Copied: RawrXD-ModelLoader" -Level Info
         }
         
         # Create launcher script
-        $launcherPath = Join-Path $script:Config.InstallPath "RawrXD-Launch.ps1"
+        $launcherPath = Join-Path ${script:Config}.InstallPath "RawrXD-Launch.ps1"
         $launcherContent = @"
 #Requires -Version 7.0
-Set-Location '$($script:Config.InstallPath)\bin'
+Set-Location '$(${script:Config}.InstallPath)\bin'
 & '.\RawrXD.ps1' @args
 "@
         Set-Content -Path $launcherPath -Value $launcherContent
         
         # Add to PATH
         $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
-        if ($userPath -notlike "*$($script:Config.InstallPath)*") {
+        if ($userPath -notlike "*$(${script:Config}.InstallPath)*") {
             [Environment]::SetEnvironmentVariable(
                 "Path",
-                "$userPath;$($script:Config.InstallPath)",
+                "$userPath;$(${script:Config}.InstallPath)",
                 "User"
             )
             Write-Log "Added RawrXD to PATH" -Level Success
@@ -745,7 +745,7 @@ Set-Location '$($script:Config.InstallPath)\bin'
         $shortcut = $wshell.CreateShortcut($shortcutPath)
         $shortcut.TargetPath = "pwsh.exe"
         $shortcut.Arguments = "-NoProfile -File `"$launcherPath`""
-        $shortcut.WorkingDirectory = $script:Config.InstallPath
+        $shortcut.WorkingDirectory = ${script:Config}.InstallPath
         $shortcut.IconLocation = Join-Path $sourceDir "RawrXD.ico"
         $shortcut.Description = "RawrXD AI-First IDE"
         $shortcut.Save()
@@ -763,14 +763,14 @@ function Set-RawrXDConfiguration {
     Write-Log "Configuring RawrXD..." -Level Info
     
     try {
-        $configPath = Join-Path $script:Config.InstallPath "config\rawrxd-config.json"
+        $configPath = Join-Path ${script:Config}.InstallPath "config\rawrxd-config.json"
         
         $config = @{
-            Version = $script:Config.Version
+            Version = ${script:Config}.Version
             InstallDate = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-            InstallPath = $script:Config.InstallPath
-            GitHubAuthenticated = ($null -ne $script:State.GitHubToken)
-            CopilotEnabled = $script:State.CopilotEnabled
+            InstallPath = ${script:Config}.InstallPath
+            GitHubAuthenticated = ($null -ne ${script:State}.GitHubToken)
+            CopilotEnabled = ${script:State}.CopilotEnabled
             FirstRun = $true
             Telemetry = @{
                 Enabled = $false
@@ -782,7 +782,7 @@ function Set-RawrXDConfiguration {
         Write-Log "Configuration saved" -Level Success
         
         # Create first-run marker
-        $firstRunMarker = Join-Path $script:Config.InstallPath "config\.first-run"
+        $firstRunMarker = Join-Path ${script:Config}.InstallPath "config\.first-run"
         Set-Content -Path $firstRunMarker -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
         
         return $true
@@ -815,7 +815,7 @@ function Start-OnboardingWizard {
 "@ -ForegroundColor Cyan
     
     Write-Host "  Welcome to RawrXD Installation & Setup Wizard" -ForegroundColor White
-    Write-Host "  Version $($script:Config.Version)" -ForegroundColor Gray
+    Write-Host "  Version $(${script:Config}.Version)" -ForegroundColor Gray
     Write-Host ""
     
     if (-not $Silent) {
@@ -857,9 +857,9 @@ function Start-OnboardingWizard {
         if ($templateKey) {
             $projectName = Read-Host "`nEnter project name"
             if ($projectName) {
-                $projectPath = Join-Path (Join-Path $script:Config.InstallPath "templates") $projectName
+                $projectPath = Join-Path (Join-Path ${script:Config}.InstallPath "templates") $projectName
                 New-ProjectFromTemplate -TemplateKey $templateKey -ProjectPath $projectPath
-                $script:State.SelectedTemplate = $templateKey
+                ${script:State}.SelectedTemplate = $templateKey
             }
         }
     } else {
@@ -873,7 +873,7 @@ function Start-OnboardingWizard {
         return $false
     }
     
-    $script:State.InstallationComplete = $true
+    ${script:State}.InstallationComplete = $true
     return $true
 }
 
@@ -893,13 +893,13 @@ function Show-CompletionSummary {
     Write-Host "  ═══════════════════" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  Install Path:       " -NoNewline -ForegroundColor Gray
-    Write-Host $script:Config.InstallPath -ForegroundColor White
+    Write-Host ${script:Config}.InstallPath -ForegroundColor White
     Write-Host "  GitHub Auth:        " -NoNewline -ForegroundColor Gray
-    Write-Host (if ($script:State.GitHubToken) { "✓ Connected" } else { "✗ Not connected" }) -ForegroundColor $(if ($script:State.GitHubToken) { "Green" } else { "Yellow" })
+    Write-Host (if (${script:State}.GitHubToken) { "✓ Connected" } else { "✗ Not connected" }) -ForegroundColor $(if (${script:State}.GitHubToken) { "Green" } else { "Yellow" })
     Write-Host "  Copilot:            " -NoNewline -ForegroundColor Gray
-    Write-Host (if ($script:State.CopilotEnabled) { "✓ Active" } else { "✗ Not active" }) -ForegroundColor $(if ($script:State.CopilotEnabled) { "Green" } else { "Yellow" })
+    Write-Host (if (${script:State}.CopilotEnabled) { "✓ Active" } else { "✗ Not active" }) -ForegroundColor $(if (${script:State}.CopilotEnabled) { "Green" } else { "Yellow" })
     Write-Host "  Template:           " -NoNewline -ForegroundColor Gray
-    Write-Host (if ($script:State.SelectedTemplate) { $script:Templates[$script:State.SelectedTemplate].Name } else { "None" }) -ForegroundColor White
+    Write-Host (if (${script:State}.SelectedTemplate) { ${script:Templates}[${script:State}.SelectedTemplate].Name } else { "None" }) -ForegroundColor White
     Write-Host ""
     Write-Host "  Quick Start" -ForegroundColor White
     Write-Host "  ═══════════" -ForegroundColor Gray
@@ -909,7 +909,7 @@ function Show-CompletionSummary {
     Write-Host "  • Or from terminal: " -NoNewline -ForegroundColor Gray
     Write-Host "RawrXD-Launch.ps1" -ForegroundColor Cyan
     Write-Host "  • View logs:        " -NoNewline -ForegroundColor Gray
-    Write-Host $script:Config.LogPath -ForegroundColor Cyan
+    Write-Host ${script:Config}.LogPath -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  Documentation: https://github.com/ItsMehRAWRXD/RawrXD/wiki" -ForegroundColor Gray
     Write-Host ""
@@ -919,7 +919,7 @@ function Show-CompletionSummary {
 #region Main Execution
 try {
     Write-Log "═══════════════════════════════════════════════════════" -Level Info
-    Write-Log "RawrXD Installer v$($script:Config.Version) started" -Level Info
+    Write-Log "RawrXD Installer v$(${script:Config}.Version) started" -Level Info
     Write-Log "═══════════════════════════════════════════════════════" -Level Info
     
     # Run onboarding wizard
@@ -935,7 +935,7 @@ try {
             $launch = Read-Host
             
             if ($launch -eq 'Y' -or $launch -eq 'y') {
-                $launcherPath = Join-Path $script:Config.InstallPath "RawrXD-Launch.ps1"
+                $launcherPath = Join-Path ${script:Config}.InstallPath "RawrXD-Launch.ps1"
                 Start-Process pwsh -ArgumentList "-NoProfile -File `"$launcherPath`""
             }
         }
@@ -943,7 +943,7 @@ try {
         exit 0
     } else {
         Write-Log "Installation failed" -Level Error
-        Write-Host "`nInstallation failed. Check log file: $($script:Config.LogPath)" -ForegroundColor Red
+        Write-Host "`nInstallation failed. Check log file: $(${script:Config}.LogPath)" -ForegroundColor Red
         exit 1
     }
     
@@ -951,7 +951,7 @@ try {
     Write-Log "Fatal error during installation: $_" -Level Error
     Write-Log $_.ScriptStackTrace -Level Error
     Write-Host "`nFatal error: $_" -ForegroundColor Red
-    Write-Host "Check log file: $($script:Config.LogPath)" -ForegroundColor Yellow
+    Write-Host "Check log file: $(${script:Config}.LogPath)" -ForegroundColor Yellow
     exit 1
 }
 #endregion

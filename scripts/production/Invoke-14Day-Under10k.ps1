@@ -118,7 +118,7 @@ function Write-GateArtifacts {
         }
         execution = [ordered]@{
             allDays = [bool]$AllDays
-            day = if ($PSBoundParameters.ContainsKey("Day")) { $Day } else { $null }
+            day = $(if ($PSBoundParameters.ContainsKey("Day")) { $Day } else { $null }
             strict = [bool]$Strict
             fast = [bool]$Fast
             fastSmoke = [bool]$FastSmoke

@@ -9,8 +9,8 @@ param([switch]$Verbose)
 
 function Test-Result {
     param($Name, $Pass, $Details = "")
-    $symbol = if ($Pass) { "✓" } else { "✗" }
-    $color = if ($Pass) { "Green" } else { "Red" }
+    $symbol = $(if ($Pass) { "✓" } else { "✗" }
+    $color = $(if ($Pass) { "Green" } else { "Red" }
     Write-Host "  $symbol $Name" -ForegroundColor $color
     if ($Details -and $Verbose) {
         Write-Host "    → $Details" -ForegroundColor Gray

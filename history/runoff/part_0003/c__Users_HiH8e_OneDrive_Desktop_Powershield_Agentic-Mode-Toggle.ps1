@@ -12,7 +12,7 @@ param(
 )
 
 $OllamaEndpoint = "http://localhost:11434"
-$ConfigFile = "$env:APPDATA\Ollama\agentic-config.json"
+$ConfigFile = "${env:APPDATA}\Ollama\agentic-config.json"
 $ConfigDir = Split-Path -Path $ConfigFile -Parent
 
 # Ensure config directory exists
@@ -156,8 +156,8 @@ function Show-Status {
     
     $config = Load-Config
     
-    $modeStatus = if ($config.AgenticMode) { "🚀 ACTIVE" } else { "⏸️  INACTIVE" }
-    $modeColor = if ($config.AgenticMode) { "Green" } else { "Gray" }
+    $modeStatus = $(if ($config.AgenticMode) { "🚀 ACTIVE" } else { "⏸️  INACTIVE" }
+    $modeColor = $(if ($config.AgenticMode) { "Green" } else { "Gray" }
     
     Write-Host "`n┌────────────────────────────────────────────────────┐" -ForegroundColor Cyan
     Write-Host "│ AGENTIC MODE: $modeStatus" -ForegroundColor $modeColor
@@ -173,8 +173,8 @@ function Show-Status {
     Write-Host "`nAvailable Models:" -ForegroundColor Cyan
     $connection.Models | ForEach-Object {
         $isAgentic = $_ -match "agentic|stealth|unleashed"
-        $icon = if ($isAgentic) { "🚀" } else { "📦" }
-        $isCurrent = if ($_ -eq $config.AgenticModel -and $config.AgenticMode) { " ← ACTIVE" } else { "" }
+        $icon = $(if ($isAgentic) { "🚀" } else { "📦" }
+        $isCurrent = $(if ($_ -eq $config.AgenticModel -and $config.AgenticMode) { " ← ACTIVE" } else { "" }
         Write-Host "   $icon $_$isCurrent" -ForegroundColor $(if ($isAgentic) { "Green" } else { "Gray" })
     }
     

@@ -41,7 +41,7 @@ function Write-TestResult {
         Timestamp = Get-Date
     }
     
-    $script:TestResults += $Result
+    ${script:TestResults} += $Result
     
     if ($Passed) {
         Write-Host "✓ PASS: $TestName" -ForegroundColor Green

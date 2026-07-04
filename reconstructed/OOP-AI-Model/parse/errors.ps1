@@ -1,5 +1,5 @@
-$tokens = $null
-$errors = $null
+$Script:tokens = $null
+$Script:errors = $null
 
 [System.Management.Automation.Language.Parser]::ParseFile('UnifiedAgentProcessor.ps1', [ref]$tokens, [ref]$errors) | Out-Null
 

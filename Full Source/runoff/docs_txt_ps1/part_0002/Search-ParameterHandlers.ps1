@@ -119,8 +119,8 @@ else {
       if ($Detailed) {
         Write-Host "      Context:" -ForegroundColor DarkGray
         foreach ($contextLine in $match.Context) {
-          $prefix = if ($contextLine.IsMatch) { "    >>> " } else { "        " }
-          $color = if ($contextLine.IsMatch) { "Yellow" } else { "DarkGray" }
+          $prefix = $(if ($contextLine.IsMatch) { "    >>> " } else { "        " }
+          $color = $(if ($contextLine.IsMatch) { "Yellow" } else { "DarkGray" }
           Write-Host "$prefix$($contextLine.LineNumber): $($contextLine.Content)" -ForegroundColor $color
         }
       }

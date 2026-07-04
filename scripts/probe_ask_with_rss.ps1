@@ -19,8 +19,8 @@ if (-not (Test-Path $TitanHostPath)) {
     exit 2
 }
 
-$env:RAWRXD_TITAN_HOST_PATH = $TitanHostPath
-$env:RAWRXD_NATIVE_MODEL_PATH = $ModelPath
+${env:RAWRXD_TITAN_HOST_PATH} = $TitanHostPath
+${env:RAWRXD_NATIVE_MODEL_PATH} = $ModelPath
 
 $stdout = "d:\rawrxd\tmp_probe_ask_stdout.log"
 $stderr = "d:\rawrxd\tmp_probe_ask_stderr.log"

@@ -42,7 +42,7 @@ function Write-ColorOutput {
 }
 
 # Hotpatching system
-$script:HotpatchRegistry = @{
+${script:HotpatchRegistry} = @{
     Components = @{}
     Patches = @()
     LastUpdate = $null
@@ -107,7 +107,7 @@ function Initialize-DynamicBuildEnvironment {
 function Initialize-HotpatchSystem {
     Write-ColorOutput "=== INITIALIZING HOTPATCHING SYSTEM ===" "Header"
     
-    $script:HotpatchRegistry = @{
+    ${script:HotpatchRegistry} = @{
         Components = @{}
         Patches = @()
         LastUpdate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -594,7 +594,7 @@ class AIService {
 
 function New-AIService {
     param(
-        [string]`$ApiKey = `$env:OPENAI_API_KEY,
+        [string]`$ApiKey = `${env:OPENAI_API_KEY},
         [string]`$Endpoint = "https://api.openai.com/v1/completions"
     )
     
@@ -732,7 +732,7 @@ function Register-ComponentForHotpatching {
         Status = "Active"
     }
     
-    $script:HotpatchRegistry.Components[$Component.Name] = $hotpatchInfo
+    ${script:HotpatchRegistry}.Components[$Component.Name] = $hotpatchInfo
     
     Write-ColorOutput "  Registered for hotpatching: $($Component.Name)" "Hotpatch"
 }
@@ -787,7 +787,7 @@ function Start-HotpatchMonitor {
         
         # Check if this is a component that can be hotpatched
         $componentName = [System.IO.Path]::GetFileNameWithoutExtension($path)
-        if ($script:HotpatchRegistry.Components.ContainsKey($componentName)) {
+        if (${script:HotpatchRegistry}.Components.ContainsKey($componentName)) {
             Write-Host "[$timestamp] Hotpatching component: $componentName" -ForegroundColor Green
             Invoke-Hotpatch -ComponentName $componentName -FilePath $path
         }
@@ -837,16 +837,16 @@ function Invoke-Hotpatch {
         $patch.Success = $true
         
         # Update registry
-        $script:HotpatchRegistry.Patches += $patch
-        $script:HotpatchRegistry.Components[$ComponentName].LastPatched = $timestamp
-        $script:HotpatchRegistry.Components[$ComponentName].PatchCount++
-        $script:HotpatchRegistry.LastUpdate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        ${script:HotpatchRegistry}.Patches += $patch
+        ${script:HotpatchRegistry}.Components[$ComponentName].LastPatched = $timestamp
+        ${script:HotpatchRegistry}.Components[$ComponentName].PatchCount++
+        ${script:HotpatchRegistry}.LastUpdate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         
         Write-ColorOutput "  ✓ Hotpatch applied successfully" "Success"
     }
     catch {
         $patch.Error = $_.Exception.Message
-        $script:HotpatchRegistry.Patches += $patch
+        ${script:HotpatchRegistry}.Patches += $patch
         
         Write-ColorOutput "  ✗ Hotpatch failed: $($_.Exception.Message)" "Error"
     }
@@ -872,7 +872,7 @@ function Show-DynamicBuildSummary {
     
     if ($EnableHotpatching) {
         Write-ColorOutput "Hotpatched components: $($Progress.HotpatchedComponents)" "Hotpatch"
-        Write-ColorOutput "Hotpatch registry: $($script:HotpatchRegistry.Components.Count) components registered" "Hotpatch"
+        Write-ColorOutput "Hotpatch registry: $(${script:HotpatchRegistry}.Components.Count) components registered" "Hotpatch"
         Write-ColorOutput ""
     }
     

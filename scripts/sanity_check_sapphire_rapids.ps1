@@ -85,10 +85,10 @@ function Initialize-TelemetryEnvironment {
     }
     
     # Set environment variables for telemetry collection
-    $env:SOVEREIGN_TELEMETRY_DIR = $OutputDir
-    $env:SOVEREIGN_TELEMETRY_BUFFER_SIZE = $TELEMETRY_BUFFER_SIZE
-    $env:SOVEREIGN_ENABLE_AMX_COUNTERS = "1"
-    $env:SOVEREIGN_ENABLE_INT8_COUNTERS = "1"
+    ${env:SOVEREIGN_TELEMETRY_DIR} = $OutputDir
+    ${env:SOVEREIGN_TELEMETRY_BUFFER_SIZE} = $TELEMETRY_BUFFER_SIZE
+    ${env:SOVEREIGN_ENABLE_AMX_COUNTERS} = "1"
+    ${env:SOVEREIGN_ENABLE_INT8_COUNTERS} = "1"
     
     Write-Status "Telemetry environment configured" "PASS"
     Write-Host "  Output Directory: $OutputDir"

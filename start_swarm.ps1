@@ -55,7 +55,7 @@ if ($simulationOnly) {
 
 # Phase 3: Wait for Head to bind
 Write-Host "`nPhase 3: Waiting for Head node to bind..." -ForegroundColor Yellow
-$waitTime = if ($simulationOnly) { 1 } else { 3 }
+$waitTime = $(if ($simulationOnly) { 1 } else { 3 }
 for ($i = $waitTime; $i -gt 0; $i--) {
     Write-Host "  Waiting $i seconds..." -NoNewline
     Start-Sleep -Seconds 1
@@ -144,7 +144,7 @@ $swarmStatus = @{
     totalNodes = 8
     activeNodes = $activeNodes
     headNode = "127.0.0.1:5555"
-    mode = if ($simulationOnly) { "SIMULATION" } else { "LIVE" }
+    mode = $(if ($simulationOnly) { "SIMULATION" } else { "LIVE" }
 }
 
 $swarmStatus | ConvertTo-Json | Out-File "D:\RawrXD\simulation\swarm_status.json" -Force

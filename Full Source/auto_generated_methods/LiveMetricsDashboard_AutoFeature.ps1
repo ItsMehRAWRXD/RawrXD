@@ -42,15 +42,15 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 }
 
 # Global metrics storage
-$script:MetricsHistory = @{
+${script:MetricsHistory} = @{
     System = [System.Collections.Generic.List[PSCustomObject]]::new()
     Process = [System.Collections.Generic.List[PSCustomObject]]::new()
     Features = [System.Collections.Generic.List[PSCustomObject]]::new()
     Custom = [System.Collections.Generic.List[PSCustomObject]]::new()
 }
 
-$script:Baselines = @{}
-$script:Anomalies = @()
+${script:Baselines} = @{}
+${script:Anomalies} = @()
 
 function Get-SystemMetrics {
     <#
@@ -61,13 +61,13 @@ function Get-SystemMetrics {
 
     $metrics = @{
         Timestamp = (Get-Date).ToString('o')
-        Hostname = $env:COMPUTERNAME
+        Hostname = ${env:COMPUTERNAME}
     }
 
     try {
         # CPU Usage
         $cpuCounter = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction SilentlyContinue
-        $metrics.CpuPercent = if ($cpuCounter) { [Math]::Round($cpuCounter.CounterSamples[0].CookedValue, 2) } else { 0 }
+        $metrics.CpuPercent = $(if ($cpuCounter) { [Math]::Round($cpuCounter.CounterSamples[0].CookedValue, 2) } else { 0 }
 
         # Memory Usage
         $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
@@ -104,8 +104,8 @@ function Get-SystemMetrics {
         # Disk I/O
         $diskReadCounter = Get-Counter '\PhysicalDisk(_Total)\Disk Read Bytes/sec' -ErrorAction SilentlyContinue
         $diskWriteCounter = Get-Counter '\PhysicalDisk(_Total)\Disk Write Bytes/sec' -ErrorAction SilentlyContinue
-        $metrics.DiskReadBytesPerSec = if ($diskReadCounter) { [Math]::Round($diskReadCounter.CounterSamples[0].CookedValue, 0) } else { 0 }
-        $metrics.DiskWriteBytesPerSec = if ($diskWriteCounter) { [Math]::Round($diskWriteCounter.CounterSamples[0].CookedValue, 0) } else { 0 }
+        $metrics.DiskReadBytesPerSec = $(if ($diskReadCounter) { [Math]::Round($diskReadCounter.CounterSamples[0].CookedValue, 0) } else { 0 }
+        $metrics.DiskWriteBytesPerSec = $(if ($diskWriteCounter) { [Math]::Round($diskWriteCounter.CounterSamples[0].CookedValue, 0) } else { 0 }
 
         # System Uptime
         $uptime = (Get-Date) - (Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue).LastBootUpTime
@@ -275,7 +275,7 @@ function Test-MetricAnomaly {
     if (-not $Baseline) { return $null }
 
     $isAnomaly = $Value -lt $Baseline.LowerBound -or $Value -gt $Baseline.UpperBound
-    $deviation = if ($Baseline.StdDev -gt 0) {
+    $deviation = $(if ($Baseline.StdDev -gt 0) {
         [Math]::Abs($Value - $Baseline.Average) / $Baseline.StdDev
     } else { 0 }
 
@@ -285,7 +285,7 @@ function Test-MetricAnomaly {
             Value = $Value
             Expected = $Baseline.Average
             Deviation = [Math]::Round($deviation, 2)
-            Direction = if ($Value -gt $Baseline.UpperBound) { 'Above' } else { 'Below' }
+            Direction = $(if ($Value -gt $Baseline.UpperBound) { 'Above' } else { 'Below' }
             Severity = switch ([Math]::Floor($deviation)) {
                 { $_ -ge 4 } { 'Critical' }
                 { $_ -ge 3 } { 'High' }
@@ -462,7 +462,7 @@ function Invoke-LiveMetricsDashboard {
         }
 
         $iterations = 0
-        $maxIterations = if ($Continuous) { [int]::MaxValue } else { [Math]::Ceiling($DurationSeconds / $RefreshIntervalSeconds) }
+        $maxIterations = $(if ($Continuous) { [int]::MaxValue } else { [Math]::Ceiling($DurationSeconds / $RefreshIntervalSeconds) }
 
         $allMetrics = @()
 
@@ -479,20 +479,20 @@ function Invoke-LiveMetricsDashboard {
                 $currentMetrics.System = Get-SystemMetrics
 
                 # Store in history
-                $script:MetricsHistory.System.Add($currentMetrics.System)
-                if ($script:MetricsHistory.System.Count -gt $HistoryDepth) {
-                    $script:MetricsHistory.System.RemoveAt(0)
+                ${script:MetricsHistory}.System.Add($currentMetrics.System)
+                if (${script:MetricsHistory}.System.Count -gt $HistoryDepth) {
+                    ${script:MetricsHistory}.System.RemoveAt(0)
                 }
 
                 # Update baselines and check anomalies
-                if ($EnableAnomalyDetection -and $script:MetricsHistory.System.Count -ge 10) {
-                    $cpuValues = $script:MetricsHistory.System | ForEach-Object { $_.CpuPercent }
-                    $script:Baselines['CpuPercent'] = Update-MetricsBaseline -MetricName 'CpuPercent' -Values $cpuValues
+                if ($EnableAnomalyDetection -and ${script:MetricsHistory}.System.Count -ge 10) {
+                    $cpuValues = ${script:MetricsHistory}.System | ForEach-Object { $_.CpuPercent }
+                    ${script:Baselines}['CpuPercent'] = Update-MetricsBaseline -MetricName 'CpuPercent' -Values $cpuValues
 
-                    $anomaly = Test-MetricAnomaly -MetricName 'CpuPercent' -Value $currentMetrics.System.CpuPercent -Baseline $script:Baselines['CpuPercent']
+                    $anomaly = Test-MetricAnomaly -MetricName 'CpuPercent' -Value $currentMetrics.System.CpuPercent -Baseline ${script:Baselines}['CpuPercent']
                     if ($anomaly) {
-                        $script:Anomalies += $anomaly
-                        Write-StructuredLog -Message "Anomaly detected: CPU at $($currentMetrics.System.CpuPercent)% (expected ~$($script:Baselines['CpuPercent'].Average)%)" -Level Warning
+                        ${script:Anomalies} += $anomaly
+                        Write-StructuredLog -Message "Anomaly detected: CPU at $($currentMetrics.System.CpuPercent)% (expected ~$(${script:Baselines}['CpuPercent'].Average)%)" -Level Warning
                     }
                 }
             }
@@ -502,9 +502,9 @@ function Invoke-LiveMetricsDashboard {
                 Write-StructuredLog -Message "Collecting process metrics..." -Level Debug
                 $currentMetrics.Process = Get-ProcessMetrics
 
-                $script:MetricsHistory.Process.Add($currentMetrics.Process)
-                if ($script:MetricsHistory.Process.Count -gt $HistoryDepth) {
-                    $script:MetricsHistory.Process.RemoveAt(0)
+                ${script:MetricsHistory}.Process.Add($currentMetrics.Process)
+                if (${script:MetricsHistory}.Process.Count -gt $HistoryDepth) {
+                    ${script:MetricsHistory}.Process.RemoveAt(0)
                 }
             }
 
@@ -512,16 +512,16 @@ function Invoke-LiveMetricsDashboard {
             Write-StructuredLog -Message "Collecting feature metrics..." -Level Debug
             $currentMetrics.Features = Get-FeatureMetrics -MethodsDir $MethodsDir
 
-            $script:MetricsHistory.Features.Add($currentMetrics.Features)
-            if ($script:MetricsHistory.Features.Count -gt $HistoryDepth) {
-                $script:MetricsHistory.Features.RemoveAt(0)
+            ${script:MetricsHistory}.Features.Add($currentMetrics.Features)
+            if (${script:MetricsHistory}.Features.Count -gt $HistoryDepth) {
+                ${script:MetricsHistory}.Features.RemoveAt(0)
             }
 
             $allMetrics += [PSCustomObject]$currentMetrics
 
             # Export HTML dashboard if requested
             if ($ExportDashboard) {
-                Export-MetricsDashboard -CurrentMetrics $currentMetrics -History $script:MetricsHistory -OutputPath $DashboardPath
+                Export-MetricsDashboard -CurrentMetrics $currentMetrics -History ${script:MetricsHistory} -OutputPath $DashboardPath
             }
 
             # Display current metrics summary
@@ -560,15 +560,15 @@ function Invoke-LiveMetricsDashboard {
                 TotalIterations = $iterations
                 TotalFeatures = $allMetrics[-1].Features.TotalFeatures
                 AvailableFeatures = $allMetrics[-1].Features.AvailableFeatures
-                AnomaliesDetected = $script:Anomalies.Count
+                AnomaliesDetected = ${script:Anomalies}.Count
             }
-            Baselines = $script:Baselines
-            Anomalies = $script:Anomalies
+            Baselines = ${script:Baselines}
+            Anomalies = ${script:Anomalies}
             LatestMetrics = $allMetrics[-1]
             History = @{
-                System = $script:MetricsHistory.System | Select-Object -Last 10
-                Process = $script:MetricsHistory.Process | Select-Object -Last 10
-                Features = $script:MetricsHistory.Features | Select-Object -Last 10
+                System = ${script:MetricsHistory}.System | Select-Object -Last 10
+                Process = ${script:MetricsHistory}.Process | Select-Object -Last 10
+                Features = ${script:MetricsHistory}.Features | Select-Object -Last 10
             }
             AllMetrics = $allMetrics
         }

@@ -8,6 +8,9 @@
 
 #include "Win32IDE.h"
 #include "../core/shared_feature_dispatch.h"
+#include "../codex/CodexCommandHandlers.hpp"
+#include "../codex/CodexCLI.hpp"
+#include <memory>
 
 // Forward declarations of existing GUI handlers (void* idePtr signature)
 void HandleTranscendenceCoordinator(void* idePtr);
@@ -112,4 +115,69 @@ CommandResult HandlePluginSignature(const CommandContext& ctx) {
 	HandlePluginSignature(ctx.idePtr);
 	emitStatus(ctx, "Plugin Signature executed");
 	return CommandResult::ok("Plugin Signature executed");
+}
+
+// ============================================================================
+// Codex Command Handler - Phase 1 Integration
+// ============================================================================
+
+// FNV-1a 64-bit compile-time hash helper for routing subcommands cleanly
+constexpr uint64_t FilterHash(const char* str, uint64_t hash = 0xcbf29ce484222325ULL) {
+    return *str ? FilterHash(str + 1, (hash ^ *str) * 0x00000100000001B3ULL) : hash;
+}
+
+CommandResult HandleCodexCommand(const CommandContext& ctx) {
+    if (!ctx.args || ctx.args[0] == '\0') {
+        return CommandResult::failure("Missing codex subcommand. Try /codex complete or /codex stream");
+    }
+
+    // Isolate subcommand from trailing arguments
+    std::string argsStr = ctx.args;
+    size_t spacePos = argsStr.find(' ');
+    std::string subcommand = (spacePos == std::string::npos) ? argsStr : argsStr.substr(0, spacePos);
+    std::string subArgs = (spacePos == std::string::npos) ? "" : argsStr.substr(spacePos + 1);
+
+    // Get the IDE instance and its CodexCLI
+    Win32IDE* ide = static_cast<Win32IDE*>(ctx.idePtr);
+    if (!ide) {
+        return CommandResult::failure("IDE instance not available");
+    }
+
+    auto cli = ide->GetCodexCLI();
+    if (!cli) {
+        return CommandResult::failure("Codex CLI not initialized. Check Ollama connection.");
+    }
+
+    // Instantiate and pass control to the localized Codex router
+    auto router = std::make_unique<RawrXD::Codex::CodexCommandRouter>();
+    if (!router->Initialize(cli)) {
+        return CommandResult::failure("Failed to initialize Codex Command Router context.");
+    }
+
+    // Build Codex command context
+    RawrXD::Codex::CodexCommandContext codexCtx;
+    codexCtx.command = subcommand;
+    codexCtx.args = subArgs;
+    codexCtx.selectedText = ctx.selectedText;
+    codexCtx.filePath = ctx.currentFile;
+    codexCtx.lineNumber = ctx.cursorLine;
+    
+    // Wrap C-style callbacks in std::function
+    if (ctx.outputFn) {
+        codexCtx.outputFn = [ctx](const std::string& msg) {
+            ctx.outputFn(msg.c_str(), ctx.outputUserData);
+        };
+    }
+    if (ctx.errorFn) {
+        codexCtx.errorFn = [ctx](const std::string& msg) {
+            ctx.errorFn(msg.c_str(), ctx.outputUserData);
+        };
+    }
+
+    // Execute via internal router logic
+    auto internalResult = router->HandleCommand(subcommand, codexCtx);
+    
+    return internalResult.success 
+        ? CommandResult::ok(internalResult.message.c_str()) 
+        : CommandResult::failure(internalResult.message.c_str());
 }

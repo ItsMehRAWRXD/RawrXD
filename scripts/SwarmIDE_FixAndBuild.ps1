@@ -35,7 +35,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Project root = repo root (parent of scripts/)
-$root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
+$root = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
 if (-not (Test-Path $root)) { $root = "D:\rawrxd" }
 
 $buildDir = Join-Path $root "build"

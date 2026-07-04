@@ -23,7 +23,7 @@ param(
     [string[]]$Extensions = @("*.ps1", "*.psm1", "*.cpp", "*.h", "*.c", "*.asm", "*.cs", "*.py", "*.js", "*.ts", "*.java", "*.go", "*.rs"),
     
     [Parameter(Mandatory = $false)]
-    [switch]$IncludeSubdirectories = $true,
+    [switch]$IncludeSubdirectories,
     
     [Parameter(Mandatory = $false)]
     [string]$OutputLog,
@@ -243,32 +243,32 @@ function Write-PatternAlert {
 # Debounce Logic
 # ============================================================================
 
-$script:LastProcessed = @{}
-$script:ProcessQueue = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
+${script:LastProcessed} = @{}
+${script:ProcessQueue} = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
 
 # ============================================================================
 # Cache System
 # ============================================================================
 
-$script:PatternCache = @{}
-$script:CacheHits = 0
-$script:CacheMisses = 0
+${script:PatternCache} = @{}
+${script:CacheHits} = 0
+${script:CacheMisses} = 0
 
 function Get-CachedPatterns {
     param([string]$FilePath, [DateTime]$FileTime)
     
     if (-not $EnableCache) { return $null }
     
-    $entry = $script:PatternCache[$FilePath]
+    $entry = ${script:PatternCache}[$FilePath]
     if ($entry) {
         $age = ([DateTime]::Now - $entry.Timestamp).TotalSeconds
         if ($age -lt $CacheTTLSeconds -and $entry.FileTime -eq $FileTime) {
-            $script:CacheHits++
+            ${script:CacheHits}++
             return $entry.Patterns
         }
     }
     
-    $script:CacheMisses++
+    ${script:CacheMisses}++
     return $null
 }
 
@@ -277,7 +277,7 @@ function Set-CachedPatterns {
     
     if (-not $EnableCache) { return }
     
-    $script:PatternCache[$FilePath] = @{
+    ${script:PatternCache}[$FilePath] = @{
         FileTime = $FileTime
         Timestamp = [DateTime]::Now
         Patterns = $Patterns
@@ -288,13 +288,13 @@ function Should-ProcessFile {
     param([string]$FilePath)
     
     $now = [DateTime]::Now
-    $lastTime = $script:LastProcessed[$FilePath]
+    $lastTime = ${script:LastProcessed}[$FilePath]
     
     if ($lastTime -and ($now - $lastTime).TotalMilliseconds -lt $DebounceMs) {
         return $false
     }
     
-    $script:LastProcessed[$FilePath] = $now
+    ${script:LastProcessed}[$FilePath] = $now
     return $true
 }
 
@@ -302,7 +302,7 @@ function Should-ProcessFile {
 # IDE Notification System
 # ============================================================================
 
-$script:IDEPipeHandle = $null
+${script:IDEPipeHandle} = $null
 
 function Connect-IDEPipe {
     if (-not $NotifyIDE) { return $false }
@@ -315,19 +315,19 @@ function Connect-IDEPipe {
         }
         
         # Create pipe client
-        $script:IDEPipeHandle = [System.IO.Pipes.NamedPipeClientStream]::new(
+        ${script:IDEPipeHandle} = [System.IO.Pipes.NamedPipeClientStream]::new(
             ".",
             ($NotifyPipeName -replace '^\\\\.\\pipe\\', ''),
             [System.IO.Pipes.PipeDirection]::Out
         )
         
-        $script:IDEPipeHandle.Connect(1000)
+        ${script:IDEPipeHandle}.Connect(1000)
         Write-Host "[IDE] Connected to notification pipe" -ForegroundColor Green
         return $true
     }
     catch {
         Write-Verbose "Failed to connect to IDE pipe: $_"
-        $script:IDEPipeHandle = $null
+        ${script:IDEPipeHandle} = $null
         return $false
     }
 }
@@ -338,10 +338,10 @@ function Send-IDENotification {
         [object[]]$Patterns
     )
     
-    if (-not $NotifyIDE -or -not $script:IDEPipeHandle) { 
+    if (-not $NotifyIDE -or -not ${script:IDEPipeHandle}) { 
         # Try to reconnect
         if ($NotifyIDE -and -not (Connect-IDEPipe)) { return }
-        if (-not $script:IDEPipeHandle) { return }
+        if (-not ${script:IDEPipeHandle}) { return }
     }
     
     try {
@@ -362,20 +362,20 @@ function Send-IDENotification {
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($notification)
         $lenBytes = [BitConverter]::GetBytes([int]$bytes.Length)
         
-        if ($script:IDEPipeHandle -and $script:IDEPipeHandle.IsConnected) {
+        if (${script:IDEPipeHandle} -and ${script:IDEPipeHandle}.IsConnected) {
              # Use the correct Write method from NamedPipeClientStream
-             $script:IDEPipeHandle.Write($lenBytes, 0, 4)
-             $script:IDEPipeHandle.Write($bytes, 0, $bytes.Length)
+             ${script:IDEPipeHandle}.Write($lenBytes, 0, 4)
+             ${script:IDEPipeHandle}.Write($bytes, 0, $bytes.Length)
              # WaitForPipeDrain if mostly write-only, but Flush is safer for async
-             try { $script:IDEPipeHandle.Flush() } catch {}
+             try { ${script:IDEPipeHandle}.Flush() } catch {}
         }
         
         Write-Verbose "Sent IDE notification: $($Patterns.Count) patterns"
     }
     catch {
         Write-Verbose "Failed to send IDE notification: $_"
-        try { $script:IDEPipeHandle.Dispose() } catch {}
-        $script:IDEPipeHandle = $null
+        try { ${script:IDEPipeHandle}.Dispose() } catch {}
+        ${script:IDEPipeHandle} = $null
     }
 }
 
@@ -383,7 +383,7 @@ function Send-IDENotification {
 # Auto-Fix Engine
 # ============================================================================
 
-$script:AutoFixPatterns = @{
+${script:AutoFixPatterns} = @{
     # Pattern regex => replacement template
     '(?i)//\s*TODO:\s*remove\s+this\s*$' = { param($line) "" }
     '(?i)//\s*TODO:\s*uncomment\s*$' = { param($line) $line -replace '^(\s*)//\s*', '$1' }
@@ -394,8 +394,8 @@ $script:AutoFixPatterns = @{
     }
 }
 
-$script:AutoFixCount = 0
-$script:AutoFixFiles = @{}
+${script:AutoFixCount} = 0
+${script:AutoFixFiles} = @{}
 
 function Invoke-AutoFix {
     param(
@@ -443,7 +443,7 @@ function Invoke-AutoFix {
                 Write-Host "  [Line $($pattern.Line)] Removing: $($line.Trim().Substring(0, [Math]::Min(50, $line.Trim().Length)))..." -ForegroundColor Yellow
                 $lines = $lines[0..($lineIdx-1)] + $lines[($lineIdx+1)..($lines.Count-1)]
                 $modified = $true
-                $script:AutoFixCount++
+                ${script:AutoFixCount}++
             }
             # Check for "uncomment" TODO
             elseif ($pattern.Content -imatch '(TODO|FIXME):?\s*uncomment') {
@@ -451,7 +451,7 @@ function Invoke-AutoFix {
                 Write-Host "  [Line $($pattern.Line)] Uncommenting" -ForegroundColor Yellow
                 $lines[$lineIdx] = $newLine
                 $modified = $true
-                $script:AutoFixCount++
+                ${script:AutoFixCount}++
             }
         }
         
@@ -460,10 +460,10 @@ function Invoke-AutoFix {
             Set-Content -Path $FilePath -Value $newContent -NoNewline
             Write-Host "  ✓ File updated" -ForegroundColor Green
             
-            if (-not $script:AutoFixFiles.ContainsKey($FilePath)) {
-                $script:AutoFixFiles[$FilePath] = 0
+            if (-not ${script:AutoFixFiles}.ContainsKey($FilePath)) {
+                ${script:AutoFixFiles}[$FilePath] = 0
             }
-            $script:AutoFixFiles[$FilePath]++
+            ${script:AutoFixFiles}[$FilePath]++
         }
     }
     catch {
@@ -540,7 +540,7 @@ $onFileChange = {
     # Check extension
     $ext = [System.IO.Path]::GetExtension($path)
     $matchesExt = $false
-    foreach ($pattern in $using:Extensions) {
+    foreach ($pattern in ${using:Extensions}) {
         $searchExt = $pattern.TrimStart('*')
         if ($ext -eq $searchExt) {
             $matchesExt = $true
@@ -556,13 +556,13 @@ $onFileChange = {
     # Debounce
     $now = [DateTime]::Now
     $key = $path
-    if ($script:LastProcessed.ContainsKey($key)) {
-        $lastTime = $script:LastProcessed[$key]
-        if (($now - $lastTime).TotalMilliseconds -lt $using:DebounceMs) {
+    if (${script:LastProcessed}.ContainsKey($key)) {
+        $lastTime = ${script:LastProcessed}[$key]
+        if (($now - $lastTime).TotalMilliseconds -lt ${using:DebounceMs}) {
             return
         }
     }
-    $script:LastProcessed[$key] = $now
+    ${script:LastProcessed}[$key] = $now
     
     # Check cache first
     $fileTime = (Get-Item $path).LastWriteTime
@@ -594,8 +594,8 @@ $renamedJob = Register-ObjectEvent -InputObject $watcher -EventName Renamed -Act
 $watcher.EnableRaisingEvents = $true
 
 # Statistics
-$script:TotalEvents = 0
-$script:StartTime = Get-Date
+${script:TotalEvents} = 0
+${script:StartTime} = Get-Date
 
 # ============================================================================
 # Main Loop
@@ -607,7 +607,7 @@ try {
         
         # Process any queued files
         $queuedPath = $null
-        while ($script:ProcessQueue.TryDequeue([ref]$queuedPath)) {
+        while (${script:ProcessQueue}.TryDequeue([ref]$queuedPath)) {
             if (Test-Path $queuedPath) {
                 $patterns = Scan-FilePatterns -FilePath $queuedPath
                 if ($patterns.Count -gt 0) {
@@ -629,25 +629,25 @@ finally {
     $watcher.Dispose()
     
     # Close IDE pipe
-    if ($script:IDEPipeHandle) {
-        try { $script:IDEPipeHandle.Dispose() } catch {}
+    if (${script:IDEPipeHandle}) {
+        try { ${script:IDEPipeHandle}.Dispose() } catch {}
     }
     
     [RawrXD_Watcher]::ShutdownPatternEngine() | Out-Null
     
-    $runtime = (Get-Date) - $script:StartTime
+    $runtime = (Get-Date) - ${script:StartTime}
     Write-Host "[Stats] Runtime: $($runtime.ToString('hh\:mm\:ss'))" -ForegroundColor Gray
     
     if ($EnableCache) {
-        $total = $script:CacheHits + $script:CacheMisses
+        $total = ${script:CacheHits} + ${script:CacheMisses}
         if ($total -gt 0) {
-            $hitRate = [math]::Round(($script:CacheHits / $total) * 100, 1)
-            Write-Host "[Stats] Cache: $($script:CacheHits) hits, $($script:CacheMisses) misses ($hitRate% hit rate)" -ForegroundColor Gray
+            $hitRate = [math]::Round((${script:CacheHits} / $total) * 100, 1)
+            Write-Host "[Stats] Cache: $(${script:CacheHits}) hits, $(${script:CacheMisses}) misses ($hitRate% hit rate)" -ForegroundColor Gray
         }
     }
     
-    if ($AutoFix -and $script:AutoFixCount -gt 0) {
-        Write-Host "[Stats] Auto-fixed: $($script:AutoFixCount) patterns in $($script:AutoFixFiles.Count) files" -ForegroundColor Magenta
+    if ($AutoFix -and ${script:AutoFixCount} -gt 0) {
+        Write-Host "[Stats] Auto-fixed: $(${script:AutoFixCount}) patterns in $(${script:AutoFixFiles}.Count) files" -ForegroundColor Magenta
     }
     
     Write-Host "[Done]  Watcher stopped" -ForegroundColor Green

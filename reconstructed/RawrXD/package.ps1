@@ -97,7 +97,7 @@ function New-PackageManifest {
         author = "ItsMehRAWRXD"
         license = "See LICENSE"
         build_date = (Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC")
-        build_machine = $env:COMPUTERNAME
+        build_machine = ${env:COMPUTERNAME}
         architecture = "x64"
         platform = "Windows 10/11"
         minimum_os = "Windows 10 20H2 (19042)"

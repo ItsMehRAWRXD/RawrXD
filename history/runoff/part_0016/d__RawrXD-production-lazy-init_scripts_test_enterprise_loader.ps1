@@ -22,8 +22,8 @@ function Test-Feature {
         $result = & $Test
         if ($result) {
             Write-Host " ✓" -ForegroundColor Green
-            $script:testsPassed++
-            $script:testResults += [PSCustomObject]@{
+            ${script:testsPassed}++
+            ${script:testResults} += [PSCustomObject]@{
                 Category = $Category
                 Test = $Name
                 Status = "PASSED"
@@ -32,8 +32,8 @@ function Test-Feature {
             return $true
         } else {
             Write-Host " ✗" -ForegroundColor Red
-            $script:testsFailed++
-            $script:testResults += [PSCustomObject]@{
+            ${script:testsFailed}++
+            ${script:testResults} += [PSCustomObject]@{
                 Category = $Category
                 Test = $Name
                 Status = "FAILED"
@@ -43,8 +43,8 @@ function Test-Feature {
         }
     } catch {
         Write-Host " ✗" -ForegroundColor Red
-        $script:testsFailed++
-        $script:testResults += [PSCustomObject]@{
+        ${script:testsFailed}++
+        ${script:testResults} += [PSCustomObject]@{
             Category = $Category
             Test = $Name
             Status = "FAILED"
@@ -316,7 +316,7 @@ $testResults | Group-Object Category | ForEach-Object {
     $total = $_.Count
     $rate = [math]::Round(($passed / $total) * 100, 0)
     
-    $color = if ($rate -eq 100) { "Green" } elseif ($rate -ge 80) { "Yellow" } else { "Red" }
+    $color = $(if ($rate -eq 100) { "Green" } elseif ($rate -ge 80) { "Yellow" } else { "Red" }
     Write-Host "  $($_.Name): $passed/$total ($rate%)" -ForegroundColor $color
 }
 

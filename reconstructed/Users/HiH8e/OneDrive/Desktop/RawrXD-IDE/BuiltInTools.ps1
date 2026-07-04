@@ -12,9 +12,9 @@
 # MODULE VARIABLES
 # ============================================
 
-$script:BuiltInTools = @{}
-$script:ToolExecutionLog = @()
-$script:MaxLogEntries = 500
+${script:BuiltInTools} = @{}
+${script:ToolExecutionLog} = @()
+${script:MaxLogEntries} = 500
 
 # ============================================
 # FILE SYSTEM TOOLS
@@ -28,7 +28,7 @@ function New-BuiltInTool {
         [string[]]$Parameters = @()
     )
     
-    $script:BuiltInTools[$Name] = @{
+    ${script:BuiltInTools}[$Name] = @{
         Name = $Name
         Description = $Description
         Implementation = $Implementation
@@ -283,10 +283,10 @@ function Write-ToolLog {
         Error = $Error
     }
     
-    $script:ToolExecutionLog += $entry
+    ${script:ToolExecutionLog} += $entry
     
-    if ($script:ToolExecutionLog.Count -gt $script:MaxLogEntries) {
-        $script:ToolExecutionLog = $script:ToolExecutionLog[-$script:MaxLogEntries..-1]
+    if (${script:ToolExecutionLog}.Count -gt ${script:MaxLogEntries}) {
+        ${script:ToolExecutionLog} = ${script:ToolExecutionLog}[-${script:MaxLogEntries}..-1]
     }
 }
 
@@ -299,7 +299,7 @@ function Get-ToolExecutionLog {
         [int]$Last = 50
     )
     
-    return $script:ToolExecutionLog | Select-Object -Last $Last
+    return ${script:ToolExecutionLog} | Select-Object -Last $Last
 }
 
 function Get-RegisteredTools {
@@ -307,7 +307,7 @@ function Get-RegisteredTools {
     .SYNOPSIS
         Get list of registered built-in tools
     #>
-    return $script:BuiltInTools.Keys
+    return ${script:BuiltInTools}.Keys
 }
 
 function Initialize-BuiltInTools {

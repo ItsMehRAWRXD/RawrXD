@@ -49,7 +49,7 @@ $ErrorActionPreference = "Stop"
 # KNOWLEDGE BASE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:KnowledgeBase = @{
+${script:KnowledgeBase} = @{
     "swarm" = @{
         Keywords = @("swarm", "agent", "directory", "deploy", "send", "dispatch")
         Answers = @{
@@ -571,7 +571,7 @@ Type your question naturally, and I'll find the best answer!
 # ═══════════════════════════════════════════════════════════════════════════════
 
 function Start-InteractiveChatbot {
-    $chatbot = [ChatbotEngine]::new($script:KnowledgeBase)
+    $chatbot = [ChatbotEngine]::new(${script:KnowledgeBase})
     
     Clear-Host
     Write-Host @"
@@ -618,7 +618,7 @@ function Start-InteractiveChatbot {
 function Start-SingleQuestionMode {
     param([string]$Question)
     
-    $chatbot = [ChatbotEngine]::new($script:KnowledgeBase)
+    $chatbot = [ChatbotEngine]::new(${script:KnowledgeBase})
     
     Write-Host "`n🤖 RawrXD IDE Assistant" -ForegroundColor Cyan
     Write-Host "─" * 70 -ForegroundColor DarkGray
@@ -635,7 +635,7 @@ function Start-APIMode {
     
     Write-Host "`n🌐 Starting RawrXD IDE Chatbot API Server on port $Port..." -ForegroundColor Cyan
     
-    $chatbot = [ChatbotEngine]::new($script:KnowledgeBase)
+    $chatbot = [ChatbotEngine]::new(${script:KnowledgeBase})
     $listener = [System.Net.HttpListener]::new()
     $listener.Prefixes.Add("http://localhost:$Port/")
     

@@ -2,7 +2,7 @@
 # Using OMEGA-POLYGLOT v4.0 PRO and Toolkit
 
 $ErrorActionPreference = "Continue"
-$cursorBase = "C:\Users\$env:USERNAME\AppData\Local\Programs\Cursor"
+$cursorBase = "C:\Users\${env:USERNAME}\AppData\Local\Programs\Cursor"
 $outputBase = "D:\Cursor_Complete_Dump_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 
 Write-Host "=== CURSOR REVERSE ENGINEERING SUITE ===" -ForegroundColor Cyan

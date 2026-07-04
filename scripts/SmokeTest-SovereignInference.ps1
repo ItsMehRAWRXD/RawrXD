@@ -14,7 +14,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:allPassed = $true
+${script:allPassed} = $true
 
 function Test-Endpoint {
     param(
@@ -44,12 +44,12 @@ function Test-Endpoint {
             return $true
         } else {
             Write-Host "  FAIL $Name - Status $($response.StatusCode) (expected $ExpectedStatus)" -ForegroundColor Red
-            $script:allPassed = $false
+            ${script:allPassed} = $false
             return $false
         }
     } catch {
         Write-Host "  FAIL $Name - $($_.Exception.Message)" -ForegroundColor Red
-        $script:allPassed = $false
+        ${script:allPassed} = $false
         return $false
     }
 }
@@ -113,7 +113,7 @@ Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
 # Summary
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-if ($script:allPassed) {
+if (${script:allPassed}) {
     Write-Host "ALL TESTS PASSED" -ForegroundColor Green
     exit 0
 } else {

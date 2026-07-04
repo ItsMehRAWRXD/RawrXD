@@ -39,7 +39,7 @@ param(
     [switch]$ShowTaskProcessing = $false,
     
     [Parameter(Mandatory=$false)]
-    [switch]$FullDemo = $true
+    [switch]$FullDemo
 )
 
 # Import modules

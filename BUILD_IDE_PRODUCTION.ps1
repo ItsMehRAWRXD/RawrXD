@@ -103,7 +103,7 @@ function Write-Section {
 
 function Write-Status {
     param([string]$Text, [string]$Status = 'INFO')
-    $color = if ($Status -eq 'OK') { $Colors.Success } elseif ($Status -eq 'ERROR') { $Colors.Error } else { $Colors.Info }
+    $color = $(if ($Status -eq 'OK') { $Colors.Success } elseif ($Status -eq 'ERROR') { $Colors.Error } else { $Colors.Info }
     Write-Host "[$Status] $Text" -ForegroundColor $color
 }
 
@@ -311,7 +311,7 @@ if ($Target -in @('Full', 'IDE')) {
         Write-Status "Configuring with CMake..." -Status 'INFO'
         Push-Location $BuildDir
         try {
-            $generatorsToTry = if ($Generator -eq 'Auto') {
+            $generatorsToTry = $(if ($Generator -eq 'Auto') {
                 @('Visual Studio 17 2022', 'Ninja')
             } else {
                 @($Generator)
@@ -366,12 +366,12 @@ if ($Target -in @('Full', 'IDE')) {
             # Build with MSBuild
             if ($selectedGenerator -like 'Visual Studio*' -and (Test-Path $MSBuild)) {
                 Write-Status "Building with MSBuild..." -Status 'INFO'
-                $targetArg = if ($Target -eq 'IDE') { '/t:RawrXD-Win32IDE' } else { '' }
+                $targetArg = $(if ($Target -eq 'IDE') { '/t:RawrXD-Win32IDE' } else { '' }
                 $buildCmd = "& `"$MSBuild`" RawrXD.sln $targetArg /p:Configuration=$Config /p:Platform=x64 /v:minimal"
                 Invoke-Build $buildCmd "MSBuild Compilation" -Required $true
             } else {
                 Write-Status "Building with cmake --build..." -Status 'INFO'
-                $buildCmd = if ($selectedGenerator -eq 'Ninja') {
+                $buildCmd = $(if ($selectedGenerator -eq 'Ninja') {
                     if ($Target -eq 'IDE') { "cmake --build . --target RawrXD-Win32IDE" } else { "cmake --build ." }
                 } else {
                     if ($Target -eq 'IDE') {
@@ -487,7 +487,7 @@ $report = @{
     'Build Directory' = $BuildDir
     'Output Directory' = $OutputDir
     'Compiler Count' = (Get-ChildItem $CompilerDir -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count
-    'IDE Built' = if (Get-ChildItem $BuildDir -Recurse -Filter '*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -in 'RawrXD-Win32IDE.exe','rawrxd.exe' }) { 'Yes' } else { 'No' }
+    'IDE Built' = $(if (Get-ChildItem $BuildDir -Recurse -Filter '*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -in 'RawrXD-Win32IDE.exe','rawrxd.exe' }) { 'Yes' } else { 'No' }
     'Total Artifacts' = $buildArtifacts.Count
 }
 

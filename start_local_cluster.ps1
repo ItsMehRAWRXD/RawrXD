@@ -4,7 +4,7 @@
 param(
     [int]$NodeCount = 3,
     [int]$BasePort = 9001,
-    [switch]$WithHAProxy = $true,
+    [switch]$WithHAProxy,
     [switch]$WithChaos = $false
 )
 
@@ -94,7 +94,7 @@ Write-Host "Cluster Status" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 foreach ($node in $Nodes) {
-    $status = if ($node.Process.HasExited) { "EXITED" } else { "RUNNING" }
+    $status = $(if ($node.Process.HasExited) { "EXITED" } else { "RUNNING" }
     Write-Host "Node $($node.Id): http://127.0.0.1:$($node.Port) (PID: $($node.PID), $status)"
 }
 

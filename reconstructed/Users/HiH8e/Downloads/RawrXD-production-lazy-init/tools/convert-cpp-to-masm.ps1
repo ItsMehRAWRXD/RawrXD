@@ -51,7 +51,7 @@ function New-MasmStubFromHeader([string]$headerPath, [string]$outFile) {
 
 function Invoke-ClToAsm([string]$cppPath, [string]$outDir, [string]$includes) {
     # Try to locate VsDevCmd.bat for MSVC environment
-    $vsWhere = "$Env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    $vsWhere = "${Env:ProgramFiles}(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
     if (-not (Test-Path $vsWhere)) { throw "vswhere.exe not found at $vsWhere" }
     $vs = & $vsWhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
     if (-not $vs) { throw 'Visual Studio with VC tools not found' }

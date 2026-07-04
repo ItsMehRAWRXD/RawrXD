@@ -51,8 +51,8 @@ foreach ($model in $uncensoredModels.Keys | Sort-Object) {
   $info = $uncensoredModels[$model]
   $modelKeys += $model
     
-  $marker = if ($info.Recommended) { "★ RECOMMENDED" } else { "  " }
-  $agentic = if ($info.AgenticCapable) { "[Agentic]" } else { "[Chat]" }
+  $marker = $(if ($info.Recommended) { "★ RECOMMENDED" } else { "  " }
+  $agentic = $(if ($info.AgenticCapable) { "[Agentic]" } else { "[Chat]" }
     
   Write-Host "[$index] $marker $model" -ForegroundColor $(if ($info.Recommended) { "Yellow" } else { "White" })
   Write-Host "    $($info.Description)" -ForegroundColor Gray

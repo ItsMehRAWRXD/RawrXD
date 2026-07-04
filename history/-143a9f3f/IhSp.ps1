@@ -30,18 +30,18 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$script:SwarmRoot = "D:\lazy init ide"
-$script:ModelMakerScript = Join-Path $SwarmRoot "scripts\model_maker_zero_dep.ps1"
-$script:PromptEngineScript = Join-Path $SwarmRoot "scripts\system_prompt_engine.ps1"
-$script:SelfDigestScript = Join-Path $SwarmRoot "scripts\model_self_digest.ps1"
-$script:ModelOutputPath = "D:\OllamaModels\swarm_models"
-$script:SwarmConfigPath = Join-Path $SwarmRoot "logs\swarm_config"
+${script:SwarmRoot} = "D:\lazy init ide"
+${script:ModelMakerScript} = Join-Path $SwarmRoot "scripts\model_maker_zero_dep.ps1"
+${script:PromptEngineScript} = Join-Path $SwarmRoot "scripts\system_prompt_engine.ps1"
+${script:SelfDigestScript} = Join-Path $SwarmRoot "scripts\model_self_digest.ps1"
+${script:ModelOutputPath} = "D:\OllamaModels\swarm_models"
+${script:SwarmConfigPath} = Join-Path $SwarmRoot "logs\swarm_config"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SWARM MODEL DEFINITIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:SwarmModelSpecs = @{
+${script:SwarmModelSpecs} = @{
     "Architect" = @{
         Size = "7B"
         TargetSizeGB = 4.2
@@ -197,14 +197,14 @@ function Build-SwarmModels {
 "@ -ForegroundColor Cyan
 
     # Ensure output directory exists
-    if (-not (Test-Path $script:ModelOutputPath)) {
-        New-Item -ItemType Directory -Path $script:ModelOutputPath -Force | Out-Null
+    if (-not (Test-Path ${script:ModelOutputPath})) {
+        New-Item -ItemType Directory -Path ${script:ModelOutputPath} -Force | Out-Null
     }
     
     $builtModels = @{}
     
-    foreach ($agentName in $script:SwarmModelSpecs.Keys) {
-        $spec = $script:SwarmModelSpecs[$agentName]
+    foreach ($agentName in ${script:SwarmModelSpecs}.Keys) {
+        $spec = ${script:SwarmModelSpecs}[$agentName]
         
         Write-Host "`n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
         Write-Host " Building model for: $agentName" -ForegroundColor Yellow
@@ -212,13 +212,13 @@ function Build-SwarmModels {
         
         # Generate system prompt
         Write-Host "`n[1/3] Generating system prompt..." -ForegroundColor Cyan
-        $promptFile = Join-Path $env:TEMP "$agentName`_prompt.txt"
+        $promptFile = Join-Path ${env:TEMP} "$agentName`_prompt.txt"
         
         if ($spec.CustomPrompt) {
             $spec.CustomPrompt | Set-Content $promptFile
             $systemPrompt = $spec.CustomPrompt
         } else {
-            & $script:PromptEngineScript -Role $spec.Role -OutputFile $promptFile -ErrorAction Stop
+            & ${script:PromptEngineScript} -Role $spec.Role -OutputFile $promptFile -ErrorAction Stop
             $systemPrompt = Get-Content $promptFile -Raw
         }
         
@@ -233,10 +233,10 @@ function Build-SwarmModels {
             SystemPrompt = $systemPrompt
             ContextLength = $spec.ContextLength
             QuantizationType = $spec.QuantType
-            OutputPath = $script:ModelOutputPath
+            OutputPath = ${script:ModelOutputPath}
         }
         
-        $modelPath = & $script:ModelMakerScript @buildArgs
+        $modelPath = & ${script:ModelMakerScript} @buildArgs
         
         if ($LASTEXITCODE -ne 0) {
             Write-Host "  ✗ Failed to build model for $agentName" -ForegroundColor Red
@@ -259,7 +259,7 @@ function Build-SwarmModels {
     }
     
     # Save model registry
-    $registryFile = Join-Path $script:SwarmConfigPath "swarm_models_registry.json"
+    $registryFile = Join-Path ${script:SwarmConfigPath} "swarm_models_registry.json"
     $builtModels | ConvertTo-Json -Depth 10 | Set-Content $registryFile
     
     Write-Host "`n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Green
@@ -286,8 +286,8 @@ function Assign-ModelToRole {
     Write-Host "  Model role: $ModelRole" -ForegroundColor Gray
     
     # Generate prompt for the model role
-    $promptFile = Join-Path $env:TEMP "$SwarmRole`_$ModelRole`_prompt.txt"
-    & $script:PromptEngineScript -Role $ModelRole -OutputFile $promptFile
+    $promptFile = Join-Path ${env:TEMP} "$SwarmRole`_$ModelRole`_prompt.txt"
+    & ${script:PromptEngineScript} -Role $ModelRole -OutputFile $promptFile
     $systemPrompt = Get-Content $promptFile -Raw
     
     # Build specialized model
@@ -299,14 +299,14 @@ function Assign-ModelToRole {
         SystemPrompt = $systemPrompt
         ContextLength = 4096
         QuantizationType = "Q4_K"
-        OutputPath = $script:ModelOutputPath
+        OutputPath = ${script:ModelOutputPath}
     }
     
-    $modelPath = & $script:ModelMakerScript @buildArgs
+    $modelPath = & ${script:ModelMakerScript} @buildArgs
     
     # Update swarm configuration
-    $configFile = Join-Path $script:SwarmConfigPath "agent_assignments.json"
-    $config = if (Test-Path $configFile) {
+    $configFile = Join-Path ${script:SwarmConfigPath} "agent_assignments.json"
+    $config = $(if (Test-Path $configFile) {
         Get-Content $configFile -Raw | ConvertFrom-Json
     } else {
         @{}
@@ -340,7 +340,7 @@ function Start-AutoEvolution {
 
 "@ -ForegroundColor Magenta
 
-    $registryFile = Join-Path $script:SwarmConfigPath "swarm_models_registry.json"
+    $registryFile = Join-Path ${script:SwarmConfigPath} "swarm_models_registry.json"
     
     if (-not (Test-Path $registryFile)) {
         Write-Host "  No models found. Build models first with -BuildModelsForSwarm" -ForegroundColor Red
@@ -368,10 +368,10 @@ function Start-AutoEvolution {
             SourceModel = $modelPath
             Generations = 3
             MutationRate = 0.05
-            OutputPath = $script:ModelOutputPath
+            OutputPath = ${script:ModelOutputPath}
         }
         
-        & $script:SelfDigestScript @evolveArgs
+        & ${script:SelfDigestScript} @evolveArgs
         
         Write-Host "  ✓ Evolution complete for $agentName" -ForegroundColor Green
     }
@@ -390,7 +390,7 @@ function Show-SwarmModels {
     Write-Host " SWARM MODELS REGISTRY" -ForegroundColor Cyan
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
     
-    $registryFile = Join-Path $script:SwarmConfigPath "swarm_models_registry.json"
+    $registryFile = Join-Path ${script:SwarmConfigPath} "swarm_models_registry.json"
     
     if (-not (Test-Path $registryFile)) {
         Write-Host "  No models registered yet." -ForegroundColor Yellow

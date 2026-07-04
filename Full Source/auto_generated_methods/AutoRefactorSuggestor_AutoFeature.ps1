@@ -36,7 +36,7 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 }
 
 # Code smell detection patterns
-$script:CodeSmellPatterns = @(
+${script:CodeSmellPatterns} = @(
     @{
         Name = 'Write-Host in Production Code'
         Pattern = 'Write-Host\s+'
@@ -245,8 +245,8 @@ function Get-HalsteadMetrics {
 
     $vocabulary = $n1 + $n2
     $length = $N1 + $N2
-    $volume = if ($vocabulary -gt 0) { $length * [Math]::Log2($vocabulary) } else { 0 }
-    $difficulty = if ($n2 -gt 0) { ($n1 / 2) * ($N2 / $n2) } else { 0 }
+    $volume = $(if ($vocabulary -gt 0) { $length * [Math]::Log2($vocabulary) } else { 0 }
+    $difficulty = $(if ($n2 -gt 0) { ($n1 / 2) * ($N2 / $n2) } else { 0 }
     $effort = $difficulty * $volume
 
     return @{
@@ -374,7 +374,7 @@ function Invoke-AutoRefactorSuggestor {
                 foreach ($func in $functions) {
                     $funcLines = ($func.Extent.EndLineNumber - $func.Extent.StartLineNumber) + 1
                     $complexity = Get-CyclomaticComplexity -FunctionAst $func
-                    $paramCount = if ($func.Parameters) { $func.Parameters.Count } else { 0 }
+                    $paramCount = $(if ($func.Parameters) { $func.Parameters.Count } else { 0 }
                     if ($func.Body.ParamBlock) { $paramCount = $func.Body.ParamBlock.Parameters.Count }
 
                     $metrics.Functions += @{
@@ -394,7 +394,7 @@ function Invoke-AutoRefactorSuggestor {
                             Line = $func.Extent.StartLineNumber
                             Function = $func.Name
                             Issue = 'High Cyclomatic Complexity'
-                            Severity = if ($complexity -gt ($MaxCyclomaticComplexity * 2)) { 'Critical' } else { 'High' }
+                            Severity = $(if ($complexity -gt ($MaxCyclomaticComplexity * 2)) { 'Critical' } else { 'High' }
                             Category = 'Complexity'
                             Description = "Function has cyclomatic complexity of $complexity (threshold: $MaxCyclomaticComplexity)."
                             Suggestion = 'Break down into smaller functions, reduce conditional logic, or use polymorphism.'
@@ -442,7 +442,7 @@ function Invoke-AutoRefactorSuggestor {
                 $metrics.Halstead = Get-HalsteadMetrics -Content $content
 
                 # Pattern-based code smell detection
-                foreach ($smell in ($script:CodeSmellPatterns | Where-Object { $_.Type -ne 'AST' -and $_.Type -ne 'Analysis' })) {
+                foreach ($smell in (${script:CodeSmellPatterns} | Where-Object { $_.Type -ne 'AST' -and $_.Type -ne 'Analysis' })) {
                     if ($severityRank[$smell.Severity] -lt $minRank) { continue }
 
                     $matches = [regex]::Matches($content, $smell.Pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Multiline)
@@ -548,7 +548,7 @@ function Invoke-AutoRefactorSuggestor {
             }
             FileMetrics = $fileMetrics
             Suggestions = $suggestions
-            AutoFixes = if ($EnableAutoFix) { $autoFixes } else { $null }
+            AutoFixes = $(if ($EnableAutoFix) { $autoFixes } else { $null }
             DuplicateBlocks = $duplicates
         }
 

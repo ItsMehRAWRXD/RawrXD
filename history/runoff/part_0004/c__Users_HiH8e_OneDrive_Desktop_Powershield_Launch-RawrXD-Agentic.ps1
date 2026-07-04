@@ -39,19 +39,19 @@
 param(
     [string]$Model = 'bigdaddyg-fast:latest',
     [decimal]$Temperature = 0.7,
-    [switch]$AutoInit = $true,
+    [switch]$AutoInit,
     [switch]$Terminal,
     [switch]$Verbose
 )
 
 $ErrorActionPreference = 'Continue'
-$VerbosePreference = if ($Verbose) { 'Continue' } else { 'SilentlyContinue' }
+$VerbosePreference = $(if ($Verbose) { 'Continue' } else { 'SilentlyContinue' }
 
 # Script metadata
-$script:LauncherVersion = '1.0'
-$script:RawrXDPath = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-$script:ModulePath = Join-Path $script:RawrXDPath 'RawrXD-Agentic-Module.psm1'
-$script:MainIDEPath = Join-Path $script:RawrXDPath 'RawrXD.ps1'
+${script:LauncherVersion} = '1.0'
+${script:RawrXDPath} = $(if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+${script:ModulePath} = Join-Path ${script:RawrXDPath} 'RawrXD-Agentic-Module.psm1'
+${script:MainIDEPath} = Join-Path ${script:RawrXDPath} 'RawrXD.ps1'
 
 function Write-Banner {
     Write-Host "`n" -ForegroundColor White
@@ -115,19 +115,19 @@ function Test-Prerequisites {
     
     # Check module exists
     Write-Verbose "Testing module file..."
-    if (Test-Path $script:ModulePath) {
+    if (Test-Path ${script:ModulePath}) {
         Write-Status "Agentic module: FOUND" -Status 'SUCCESS'
     } else {
-        Write-Status "Agentic module: NOT FOUND ($($script:ModulePath))" -Status 'ERROR'
+        Write-Status "Agentic module: NOT FOUND ($(${script:ModulePath}))" -Status 'ERROR'
         $allGood = $false
     }
     
     # Check IDE exists
     Write-Verbose "Testing IDE file..."
-    if (Test-Path $script:MainIDEPath) {
+    if (Test-Path ${script:MainIDEPath}) {
         Write-Status "RawrXD IDE: FOUND" -Status 'SUCCESS'
     } else {
-        Write-Status "RawrXD IDE: NOT FOUND ($($script:MainIDEPath))" -Status 'ERROR'
+        Write-Status "RawrXD IDE: NOT FOUND ($(${script:MainIDEPath}))" -Status 'ERROR'
         $allGood = $false
     }
     
@@ -168,7 +168,7 @@ function Initialize-AgenticMode {
     
     try {
         Write-Verbose "Importing agentic module..."
-        Import-Module $script:ModulePath -Force -ErrorAction Stop
+        Import-Module ${script:ModulePath} -Force -ErrorAction Stop
         Write-Status "Module imported successfully" -Status 'SUCCESS'
         
         Write-Verbose "Enabling agentic capabilities..."
@@ -197,7 +197,7 @@ function Start-RawrXDIDE {
         Write-Host "`n"
         
         # Attempt to launch with error handling
-        & $script:MainIDEPath
+        & ${script:MainIDEPath}
         
     } catch {
         $errorMsg = $_.Exception.Message
@@ -270,10 +270,10 @@ function Show-ConfigInfo {
     Write-Host "    $Temperature (0=consistent, 1=creative)" -ForegroundColor Cyan
     
     Write-Host "`n  Agentic Module:" -ForegroundColor Yellow
-    Write-Host "    $script:ModulePath" -ForegroundColor Cyan
+    Write-Host "    ${script:ModulePath}" -ForegroundColor Cyan
     
     Write-Host "`n  IDE Path:" -ForegroundColor Yellow
-    Write-Host "    $script:MainIDEPath" -ForegroundColor Cyan
+    Write-Host "    ${script:MainIDEPath}" -ForegroundColor Cyan
     
     Write-Host "`n  Ollama Endpoint:" -ForegroundColor Yellow
     Write-Host "    http://localhost:11434" -ForegroundColor Cyan
@@ -286,7 +286,7 @@ function Main {
     Write-Banner
     
     # Show startup info
-    Write-Host "Version: $script:LauncherVersion" -ForegroundColor Gray
+    Write-Host "Version: ${script:LauncherVersion}" -ForegroundColor Gray
     Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
     
     # Check prerequisites

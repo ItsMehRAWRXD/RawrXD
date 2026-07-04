@@ -162,13 +162,13 @@ function Find-CircularDependencies {
     function StrongConnect {
         param([string]$v)
 
-        $indices[$v] = $script:index
-        $lowlinks[$v] = $script:index
-        $script:index++
+        $indices[$v] = ${script:index}
+        $lowlinks[$v] = ${script:index}
+        ${script:index}++
         $stack.Push($v)
         $onStack[$v] = $true
 
-        $neighbors = if ($Graph.ContainsKey($v)) { $Graph[$v] } else { @() }
+        $neighbors = $(if ($Graph.ContainsKey($v)) { $Graph[$v] } else { @() }
         foreach ($w in $neighbors) {
             if (-not $indices.ContainsKey($w)) {
                 StrongConnect -v $w
@@ -187,7 +187,7 @@ function Find-CircularDependencies {
             } while ($w -ne $v)
 
             if ($scc.Count -gt 1) {
-                $script:sccs += ,@($scc)
+                ${script:sccs} += ,@($scc)
             }
         }
     }
@@ -216,7 +216,7 @@ function Get-DependencyMetrics {
         $efferent = ($Graph[$node] | Measure-Object).Count  # Dependencies this module has
         $afferent = ($Graph.Keys | Where-Object { $Graph[$_] -contains $node } | Measure-Object).Count  # Modules depending on this
 
-        $instability = if (($efferent + $afferent) -gt 0) { $efferent / ($efferent + $afferent) } else { 0 }
+        $instability = $(if (($efferent + $afferent) -gt 0) { $efferent / ($efferent + $afferent) } else { 0 }
 
         $metrics[$node] = @{
             EfferentCoupling = $efferent
@@ -433,7 +433,7 @@ function Invoke-AutoDependencyGraph {
                 Count = $circularDeps.Count
                 Cycles = $circularDeps | ForEach-Object { $_ | ForEach-Object { [System.IO.Path]::GetFileName($_) } }
             }
-            Metrics = if ($IncludeMetrics) { $metrics } else { $null }
+            Metrics = $(if ($IncludeMetrics) { $metrics } else { $null }
             FileMetadata = $fileMetadata
             Graph = $graph
             ExportedFiles = $exportPaths

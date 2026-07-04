@@ -26,7 +26,7 @@ function Import-Module-BypassAdmin {
     $requiresPattern = '(?m)^[ \t]*#requires\b.*RunAsAdministrator'
     if ($moduleText -match $requiresPattern) {
         $tmpName = "tmp_$(Get-Random)_$(Split-Path -Leaf $ModulePath)"
-        $tmpPath = Join-Path $env:TEMP $tmpName
+        $tmpPath = Join-Path ${env:TEMP} $tmpName
         $filtered = ($moduleText -split "\r?\n") | Where-Object { -not ($_ -match $requiresPattern) }
         $filtered -join [Environment]::NewLine | Set-Content -LiteralPath $tmpPath -Encoding UTF8
         try {
@@ -57,8 +57,8 @@ Initialize-AutonomousAgentState -SourcePath $SourcePath -TargetPath $SourcePath 
 if ($Quick) {
     Write-Host "Running QUICK analysis: digest summary + module count" -ForegroundColor Yellow
 
-    if ($script:AutonomousAgentState.IDEDigest) {
-        $digest = $script:AutonomousAgentState.IDEDigest
+    if (${script:AutonomousAgentState}.IDEDigest) {
+        $digest = ${script:AutonomousAgentState}.IDEDigest
         Write-Host "IDE Digest Summary:" -ForegroundColor Green
         Write-Host " SourceFile: $($digest.SourceFile)" -ForegroundColor DarkGray
         Write-Host " Subsystems: $($digest.Subsystems.Count)" -ForegroundColor DarkGray
@@ -87,8 +87,8 @@ Write-Host "Exported state to $OutputPath" -ForegroundColor Cyan
 
 # Print short summary
 Write-Host "Summary:" -ForegroundColor Green
-Write-Host " Modules analyzed: $($script:AutonomousAgentState.Paths.Source)" -ForegroundColor DarkGray
-Write-Host " Errors logged: $($script:AutonomousAgentState.Errors.Count)" -ForegroundColor DarkGray
-Write-Host "Warnings: $($script:AutonomousAgentState.Warnings.Count)" -ForegroundColor DarkGray
+Write-Host " Modules analyzed: $(${script:AutonomousAgentState}.Paths.Source)" -ForegroundColor DarkGray
+Write-Host " Errors logged: $(${script:AutonomousAgentState}.Errors.Count)" -ForegroundColor DarkGray
+Write-Host "Warnings: $(${script:AutonomousAgentState}.Warnings.Count)" -ForegroundColor DarkGray
 
 exit 0

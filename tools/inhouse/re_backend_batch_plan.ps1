@@ -15,7 +15,7 @@ if ($BatchSize -lt 1) { throw "BatchSize must be >= 1" }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
-$ObjRoot = if ($ObjRoot) { $ObjRoot } else { $BuildDir }
+$ObjRoot = $(if ($ObjRoot) { $ObjRoot } else { $BuildDir }
 if (!(Test-Path $ObjRoot)) { throw "ObjRoot not found: $ObjRoot" }
 
 $objs = @()

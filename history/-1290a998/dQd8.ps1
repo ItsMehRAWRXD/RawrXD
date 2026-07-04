@@ -63,16 +63,16 @@ function Test-Endpoint {
         
         if ($statusCode -eq $ExpectedStatus) {
             Write-Host " ✓ PASS (Status: $statusCode)" -ForegroundColor Green
-            $script:testsPassed++
+            ${script:testsPassed}++
             return $response
         } else {
             Write-Host " ✗ FAIL (Expected: $ExpectedStatus, Got: $statusCode)" -ForegroundColor Red
-            $script:testsFailed++
+            ${script:testsFailed}++
             return $null
         }
     } catch {
         Write-Host " ✗ FAIL (Error: $($_.Exception.Message))" -ForegroundColor Red
-        $script:testsFailed++
+        ${script:testsFailed}++
         return $null
     }
 }
@@ -138,14 +138,14 @@ function Test-StreamingEndpoint {
         
         if ($statusCode -eq 200 -and $chunks -gt 0) {
             Write-Host " ✓ PASS (Status: $statusCode, Chunks: $chunks)" -ForegroundColor Green
-            $script:testsPassed++
+            ${script:testsPassed}++
         } else {
             Write-Host " ✗ FAIL (Status: $statusCode, Chunks: $chunks)" -ForegroundColor Red
-            $script:testsFailed++
+            ${script:testsFailed}++
         }
     } catch {
         Write-Host " ✗ FAIL (Error: $($_.Exception.Message))" -ForegroundColor Red
-        $script:testsFailed++
+        ${script:testsFailed}++
     }
 }
 
@@ -266,10 +266,10 @@ $results = $jobs | Wait-Job | Receive-Job
 $successCount = ($results | Where-Object { $_.StatusCode -eq 200 }).Count
 if ($successCount -eq 10) {
     Write-Host " ✓ PASS ($successCount/10 succeeded)" -ForegroundColor Green
-    $script:testsPassed++
+    ${script:testsPassed}++
 } else {
     Write-Host " ✗ FAIL ($successCount/10 succeeded)" -ForegroundColor Red
-    $script:testsFailed++
+    ${script:testsFailed}++
 }
 $jobs | Remove-Job
 
@@ -283,10 +283,10 @@ for ($i = 0; $i -lt 50; $i++) {
 }
 if ($rapidSuccess -ge 45) {
     Write-Host " ✓ PASS ($rapidSuccess/50 succeeded)" -ForegroundColor Green
-    $script:testsPassed++
+    ${script:testsPassed}++
 } else {
     Write-Host " ✗ FAIL ($rapidSuccess/50 succeeded)" -ForegroundColor Red
-    $script:testsFailed++
+    ${script:testsFailed}++
 }
 
 $largePrompt = "Large " * 50000  # ~300KB
@@ -321,10 +321,10 @@ try {
     $stream.Close()
     $tcpClient.Close()
     Write-Host " ✓ PASS (Server handled gracefully)" -ForegroundColor Green
-    $script:testsPassed++
+    ${script:testsPassed}++
 } catch {
     Write-Host " ✗ FAIL" -ForegroundColor Red
-    $script:testsFailed++
+    ${script:testsFailed}++
 }
 
 # Final Results
@@ -333,7 +333,7 @@ Write-Host "║  TEST RESULTS                                              ║" 
 Write-Host "╠════════════════════════════════════════════════════════════╣" -ForegroundColor Cyan
 Write-Host ("║  Tests Passed:  {0,3}                                       ║" -f $testsPassed) -ForegroundColor Green
 Write-Host ("║  Tests Failed:  {0,3}                                       ║" -f $testsFailed) -ForegroundColor $(if ($testsFailed -eq 0) { "Green" } else { "Red" })
-$successRate = if (($testsPassed + $testsFailed) -gt 0) { [math]::Round($testsPassed * 100 / ($testsPassed + $testsFailed)) } else { 0 }
+$successRate = $(if (($testsPassed + $testsFailed) -gt 0) { [math]::Round($testsPassed * 100 / ($testsPassed + $testsFailed)) } else { 0 }
 Write-Host ("║  Success Rate:  {0,3}%                                      ║" -f $successRate) -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 

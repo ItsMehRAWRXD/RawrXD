@@ -36,7 +36,7 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 }
 
 # Comprehensive vulnerability patterns database
-$script:VulnerabilityPatterns = @(
+${script:VulnerabilityPatterns} = @(
     # Code Execution Vulnerabilities
     @{
         Name = 'Invoke-Expression Usage'
@@ -296,7 +296,7 @@ function Get-VulnerabilityLineContext {
 
     $context = @()
     for ($i = $startLine; $i -le $endLine; $i++) {
-        $lineMarker = if ($i -eq ($MatchLineNumber - 1)) { '>>>' } else { '   ' }
+        $lineMarker = $(if ($i -eq ($MatchLineNumber - 1)) { '>>>' } else { '   ' }
         $context += "$lineMarker $($i + 1): $($Lines[$i])"
     }
 
@@ -361,7 +361,7 @@ function Invoke-SecurityVulnerabilityScanner {
                 $fileContext = Get-FileSecurityContext -FilePath $file.FullName
                 $fileVulns = @()
 
-                foreach ($vuln in $script:VulnerabilityPatterns) {
+                foreach ($vuln in ${script:VulnerabilityPatterns}) {
                     # Check severity threshold
                     if ($severityRank[$vuln.Severity] -lt $minSeverityRank) { continue }
 
@@ -384,7 +384,7 @@ function Invoke-SecurityVulnerabilityScanner {
                             CWE = $vuln.CWE
                             Description = $vuln.Description
                             Remediation = $vuln.Remediation
-                            Context = if ($IncludeContext) { Get-VulnerabilityLineContext -Lines $lines -MatchLineNumber $lineNumber -ContextLines $ContextLines } else { $null }
+                            Context = $(if ($IncludeContext) { Get-VulnerabilityLineContext -Lines $lines -MatchLineNumber $lineNumber -ContextLines $ContextLines } else { $null }
                             Timestamp = (Get-Date).ToString('o')
                         }
 

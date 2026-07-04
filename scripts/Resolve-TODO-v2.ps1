@@ -123,12 +123,12 @@ public struct EngineInfo
 # Load Rollback Module (if available)
 # ============================================================================
 $rollbackModulePath = "D:\lazy init ide\scripts\TODO-RollbackSystem.psm1"
-$script:RollbackAvailable = $false
+${script:RollbackAvailable} = $false
 
 if (Test-Path $rollbackModulePath) {
     try {
         Import-Module $rollbackModulePath -Force -ErrorAction Stop
-        $script:RollbackAvailable = $true
+        ${script:RollbackAvailable} = $true
         Write-Host "[Init] Rollback system loaded" -ForegroundColor Green
     }
     catch {
@@ -297,7 +297,7 @@ function Invoke-Benchmark {
     Write-Host ""
     
     if ($stats) {
-        $modeStr = if ($stats.Mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
+        $modeStr = $(if ($stats.Mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
         Write-Host "Engine Mode:    $modeStr" -ForegroundColor Cyan
         Write-Host "Total Scans:    $($stats.TotalScans)" -ForegroundColor White
         Write-Host "Total Matches:  $($stats.TotalMatches)" -ForegroundColor White
@@ -355,7 +355,7 @@ if ($initResult -ne 0) {
 # Check engine mode
 $stats = Get-EngineStats
 if ($stats) {
-    $modeStr = if ($stats.Mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
+    $modeStr = $(if ($stats.Mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
     Write-Host "[Init] Pattern engine initialized ($modeStr mode)" -ForegroundColor Green
 } else {
     Write-Host "[Init] Pattern engine initialized" -ForegroundColor Green
@@ -487,8 +487,7 @@ else {
     
     # =========================================================================
     # Auto-Fix with Rollback Support
-    # =========================================================================
-    if ($AutoFix -and $allPatterns.Count -gt 0) {
+    # ========================================================================= $(if ($AutoFix -and $allPatterns.Count -gt 0) {
         Write-Host ""
         Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Red
         Write-Host "║  ⚠️  AUTO-FIX MODE                                           ║" -ForegroundColor Red
@@ -499,7 +498,7 @@ else {
         $rollbackId = $null
         
         # Create rollback point
-        if ($script:RollbackAvailable -and ($CreateRollback -or $true)) {
+        if (${script:RollbackAvailable} -and ($CreateRollback -or $true)) {
             $targetFiles = $allPatterns | Select-Object -ExpandProperty File -Unique
             $rollbackId = New-TODORollbackPoint -OperationName "TODO-AutoFix-$FilterPattern" `
                 -TargetFiles $targetFiles `
@@ -513,7 +512,7 @@ else {
             Write-Host "[Rollback] Created backup point: $rollbackId" -ForegroundColor Green
             Write-Host "           To undo: Restore-TODORollbackPoint -BackupId '$rollbackId'" -ForegroundColor Gray
         }
-        elseif (-not $script:RollbackAvailable) {
+        elseif (-not ${script:RollbackAvailable}) {
             Write-Warning "Rollback module not available! Proceeding without backup."
         }
         
@@ -575,7 +574,7 @@ if ($GenerateReport) {
         ScanTimeMs = [math]::Round($sw.Elapsed.TotalMilliseconds, 2)
         TotalFiles = $files.Count
         TotalPatterns = $allPatterns.Count
-        EngineMode = if ($engineStats -and $engineStats.Mode -eq 2) { "AVX-512" } else { "Scalar" }
+        EngineMode = $(if ($engineStats -and $engineStats.Mode -eq 2) { "AVX-512" } else { "Scalar" }
         Patterns = $allPatterns | ForEach-Object {
             @{
                 File = $_.File

@@ -1,12 +1,12 @@
-$RootPath = 'd:\lazy init ide'
-$ModuleOverridePrecedence = 'BaseFirst'
-$overrideMode = 'merge'
-$RulesProfile = 'default'
-$RulesConfigPath = Join-Path $RootPath '.wiringdigestrules.json'
-$rules = Get-Content $RulesConfigPath -Raw | ConvertFrom-Json
-$resolvedRules = $rules
+$Script:RootPath = 'd:\lazy init ide'
+$Script:ModuleOverridePrecedence = 'BaseFirst'
+$Script:overrideMode = 'merge'
+$Script:RulesProfile = 'default'
+$Script:RulesConfigPath = Join-Path $RootPath '.wiringdigestrules.json'
+$Script:rules = Get-Content $RulesConfigPath -Raw | ConvertFrom-Json
+$Script:resolvedRules = $rules
 if ($rules.profiles -and $rules.profiles.$RulesProfile) {
-    $resolvedRules = $rules.profiles.$RulesProfile
+$Script:resolvedRules = $rules.profiles.$RulesProfile
 }
 "resolvedRulesType=$($resolvedRules.GetType().FullName)"
 "resolvedKeys=$($resolvedRules.PSObject.Properties.Name -join ',')"

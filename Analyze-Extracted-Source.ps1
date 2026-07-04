@@ -91,7 +91,7 @@ function Get-SourceStats {
         # Group by extension
         $fileGroups = $allFiles | Group-Object -Property Extension
         foreach ($group in $fileGroups) {
-            $ext = if ($group.Name) { $group.Name } else { "(no extension)" }
+            $ext = $(if ($group.Name) { $group.Name } else { "(no extension)" }
             $stats.FileTypes[$ext] = @{
                 Count = $group.Count
                 Size = ($group.Group | Measure-Object -Property Length -Sum).Sum
@@ -163,11 +163,11 @@ function Analyze-PackageJson {
         $analysis.Description = $package.description
         $analysis.Main = $package.main
         $analysis.Type = $package.type
-        $analysis.Author = if ($package.author) { $package.author.ToString() } else { "" }
+        $analysis.Author = $(if ($package.author) { $package.author.ToString() } else { "" }
         $analysis.License = $package.license
         $analysis.Homepage = $package.homepage
-        $analysis.Repository = if ($package.repository) { $package.repository.ToString() } else { "" }
-        $analysis.Bugs = if ($package.bugs) { $package.bugs.ToString() } else { "" }
+        $analysis.Repository = $(if ($package.repository) { $package.repository.ToString() } else { "" }
+        $analysis.Bugs = $(if ($package.bugs) { $package.bugs.ToString() } else { "" }
         $analysis.Keywords = $package.keywords
         
         if ($package.scripts) {

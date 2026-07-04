@@ -18,20 +18,20 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$extRoot = Join-Path $env:APPDATA "RawrXD\extensions"
+$extRoot = Join-Path ${env:APPDATA} "RawrXD\extensions"
 if (-not (Test-Path $extRoot)) {
     New-Item -ItemType Directory -Path $extRoot -Force | Out-Null
 }
 
 # Source dirs: Cursor first (often has Copilot/Q), then VS Code
-$cursorExt = Join-Path $env:USERPROFILE ".cursor\extensions"
-$vscodeExt = Join-Path $env:USERPROFILE ".vscode\extensions"
+$cursorExt = Join-Path ${env:USERPROFILE} ".cursor\extensions"
+$vscodeExt = Join-Path ${env:USERPROFILE} ".vscode\extensions"
 $sources = @()
 if (Test-Path $cursorExt) { $sources += $cursorExt }
 if (-not $CopyFromCursorOnly -and (Test-Path $vscodeExt)) { $sources += $vscodeExt }
 
 # By default copy only known AI extensions (Copilot, Amazon Q). Use -CopyAll to copy every extension dir.
-$pattern = if ($CopyAll) { "*" } else { "github.copilot*", "amazon.q*", "AmazonWebServices.amazon-q*" }
+$pattern = $(if ($CopyAll) { "*" } else { "github.copilot*", "amazon.q*", "AmazonWebServices.amazon-q*" }
 $copied = 0
 foreach ($srcDir in $sources) {
     $name = Split-Path $srcDir -Parent | Split-Path -Leaf

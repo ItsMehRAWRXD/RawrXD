@@ -1,14 +1,14 @@
 # RawrXD Autonomous Auto-Fix Cycle
 # Deploys a self-correcting build/test loop for the Agentic Host
 
-$script:MaxRetries = 3
-$script:LogFile = "D:\rawrxd\logs\autofix_cycle.log"
+${script:MaxRetries} = 3
+${script:LogFile} = "D:\rawrxd\logs\autofix_cycle.log"
 
 function Run-Agentic-Cycle {
     Write-Host "[Cycle] Initiating Autonomous Agentic Build/Test Loop..." -ForegroundColor Cyan
     
-    for ($i = 1; $i -le $script:MaxRetries; $i++) {
-        Write-Host "[Cycle] Attempt $i of $script:MaxRetries" -ForegroundColor Yellow
+    for ($i = 1; $i -le ${script:MaxRetries}; $i++) {
+        Write-Host "[Cycle] Attempt $i of ${script:MaxRetries}" -ForegroundColor Yellow
         
         # 1. Compile MASM & C++ via PowerBuild
         $buildResult = & 'D:\rawrxd\RawrXD-Build.ps1' -SourceDirs 'src\agentic' -Verbose 2>&1 | Out-String

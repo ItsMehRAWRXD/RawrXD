@@ -32,18 +32,18 @@ param(
 # CONFIGURATION
 # ============================================================================
 
-$script:BaseDir = Get-RawrXDRoot
-$script:ScriptsDir = Join-Path $script:BaseDir "scripts"
-$script:CompilerPath = Join-Path $script:BaseDir "compilers"
-$script:ConfigDir = Join-Path $script:BaseDir "logs\swarm_config"
+${script:BaseDir} = Get-RawrXDRoot
+${script:ScriptsDir} = Join-Path ${script:BaseDir} "scripts"
+${script:CompilerPath} = Join-Path ${script:BaseDir} "compilers"
+${script:ConfigDir} = Join-Path ${script:BaseDir} "logs\swarm_config"
 
-$script:RegistryModule = Join-Path $script:ScriptsDir "language_model_registry.psm1"
-$script:ManagerScript = Join-Path $script:ScriptsDir "language_model_manager.ps1"
-$script:IntegrationScript = Join-Path $script:ScriptsDir "language_model_integration.ps1"
+${script:RegistryModule} = Join-Path ${script:ScriptsDir} "language_model_registry.psm1"
+${script:ManagerScript} = Join-Path ${script:ScriptsDir} "language_model_manager.ps1"
+${script:IntegrationScript} = Join-Path ${script:ScriptsDir} "language_model_integration.ps1"
 
-$script:FullDocsFile = Join-Path $script:BaseDir "LANGUAGE_MODEL_REGISTRY_DOCUMENTATION.md"
-$script:QuickStartFile = Join-Path $script:BaseDir "LANGUAGE_MODEL_REGISTRY_QUICKSTART.md"
-$script:DeliveryFile = Join-Path $script:BaseDir "LANGUAGE_MODEL_REGISTRY_DELIVERY.md"
+${script:FullDocsFile} = Join-Path ${script:BaseDir} "LANGUAGE_MODEL_REGISTRY_DOCUMENTATION.md"
+${script:QuickStartFile} = Join-Path ${script:BaseDir} "LANGUAGE_MODEL_REGISTRY_QUICKSTART.md"
+${script:DeliveryFile} = Join-Path ${script:BaseDir} "LANGUAGE_MODEL_REGISTRY_DELIVERY.md"
 
 # ============================================================================
 # DISPLAY FUNCTIONS
@@ -126,7 +126,7 @@ function Test-FileExists {
     
     if (Test-Path $FilePath) {
         $item = Get-Item $FilePath
-        $size = if ($item.PSIsContainer) { "-" } else { "$($item.Length / 1KB)KB" }
+        $size = $(if ($item.PSIsContainer) { "-" } else { "$($item.Length / 1KB)KB" }
         Write-Status "$Description" "✅ PASS" "Found: $size"
         return $true
     } else {
@@ -213,8 +213,8 @@ function Test-LanguageRegistry {
 }
 
 function Test-CompilerPath {
-    if (Test-Path $script:CompilerPath -PathType Container) {
-        $compilers = @(Get-ChildItem $script:CompilerPath -Filter "*Compiler*" -ErrorAction SilentlyContinue)
+    if (Test-Path ${script:CompilerPath} -PathType Container) {
+        $compilers = @(Get-ChildItem ${script:CompilerPath} -Filter "*Compiler*" -ErrorAction SilentlyContinue)
         
         if ($compilers.Count -gt 0) {
             Write-Status "Compiler path with compilers" "✅ PASS" "$($compilers.Count) compilers found"
@@ -235,17 +235,17 @@ function Test-CompilerPath {
             return $true  # Warning, not failure
         }
     } else {
-        Write-Status "Compiler path exists" "⚠️ WARNING" "Path does not exist: $script:CompilerPath"
+        Write-Status "Compiler path exists" "⚠️ WARNING" "Path does not exist: ${script:CompilerPath}"
         return $true  # Warning, not failure
     }
 }
 
 function Test-ConfigDirectory {
-    if (Test-Path $script:ConfigDir -PathType Container) {
+    if (Test-Path ${script:ConfigDir} -PathType Container) {
         Write-Status "Configuration directory" "✅ PASS" "Found"
         return $true
     } else {
-        Write-Status "Configuration directory" "⚠️ WARNING" "Not found: $script:ConfigDir"
+        Write-Status "Configuration directory" "⚠️ WARNING" "Not found: ${script:ConfigDir}"
         return $true  # Warning, not failure
     }
 }
@@ -253,7 +253,7 @@ function Test-ConfigDirectory {
 function Test-Scripting {
     try {
         # Test PS syntax
-        $null = Get-Command $script:ManagerScript -ErrorAction Stop
+        $null = Get-Command ${script:ManagerScript} -ErrorAction Stop
         Write-Status "CLI manager script validation" "✅ PASS" "Script is valid PowerShell"
         return $true
     } catch {
@@ -264,9 +264,9 @@ function Test-Scripting {
 
 function Test-Documentation {
     $docs = @(
-        @{ File = $script:FullDocsFile; Desc = "Full documentation" },
-        @{ File = $script:QuickStartFile; Desc = "Quick start guide" },
-        @{ File = $script:DeliveryFile; Desc = "Delivery summary" }
+        @{ File = ${script:FullDocsFile}; Desc = "Full documentation" },
+        @{ File = ${script:QuickStartFile}; Desc = "Quick start guide" },
+        @{ File = ${script:DeliveryFile}; Desc = "Delivery summary" }
     )
     
     $found = 0
@@ -284,7 +284,7 @@ function Test-Documentation {
 
 function Test-QuickFunctionality {
     try {
-        Import-Module $script:RegistryModule -Force -DisableNameChecking -ErrorAction Stop | Out-Null
+        Import-Module ${script:RegistryModule} -Force -DisableNameChecking -ErrorAction Stop | Out-Null
         
         # Test Get-AllAvailableLanguages
         $langs = Get-AllAvailableLanguages
@@ -325,21 +325,21 @@ $warnings = 0
 # File System Checks
 Show-Section "FILE SYSTEM CHECKS"
 
-if (Test-FileExists $script:RegistryModule "Registry module") { $passed++ } else { $failed++ }
-if (Test-FileExists $script:ManagerScript "CLI manager tool") { $passed++ } else { $failed++ }
-if (Test-FileExists $script:IntegrationScript "Integration module") { $passed++ } else { $failed++ }
+if (Test-FileExists ${script:RegistryModule} "Registry module") { $passed++ } else { $failed++ }
+if (Test-FileExists ${script:ManagerScript} "CLI manager tool") { $passed++ } else { $failed++ }
+if (Test-FileExists ${script:IntegrationScript} "Integration module") { $passed++ } else { $failed++ }
 
 # Directory Checks
 Show-Section "DIRECTORY CHECKS"
 
-if (Test-DirectoryExists $script:ScriptsDir "Scripts directory") { $passed++ } else { $failed++ }
-if (Test-DirectoryExists $script:BaseDir "Base directory") { $passed++ } else { $failed++ }
+if (Test-DirectoryExists ${script:ScriptsDir} "Scripts directory") { $passed++ } else { $failed++ }
+if (Test-DirectoryExists ${script:BaseDir} "Base directory") { $passed++ } else { $failed++ }
 
 # Compiler & Config
 Show-Section "COMPILER & CONFIGURATION"
 
 Test-CompilerPath
-if (Test-Path $script:CompilerPath) { $passed++ } else { $warnings++ }
+if (Test-Path ${script:CompilerPath}) { $passed++ } else { $warnings++ }
 
 $configDirExists = Test-ConfigDirectory
 if ($configDirExists) { $passed++ } else { $warnings++ }
@@ -347,13 +347,13 @@ if ($configDirExists) { $passed++ } else { $warnings++ }
 # Module & Scripting
 Show-Section "MODULE & SCRIPTING"
 
-if (Test-ModuleLoadable $script:RegistryModule) { $passed++ } else { $failed++ }
+if (Test-ModuleLoadable ${script:RegistryModule}) { $passed++ } else { $failed++ }
 if (Test-Scripting) { $passed++ } else { $failed++ }
 
 # Registry Data
 Show-Section "REGISTRY DATA"
 
-if (Test-LanguageRegistry $script:RegistryModule) { $passed++ } else { $failed++ }
+if (Test-LanguageRegistry ${script:RegistryModule}) { $passed++ } else { $failed++ }
 
 # Documentation
 Show-Section "DOCUMENTATION"

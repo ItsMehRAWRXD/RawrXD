@@ -40,7 +40,7 @@ param(
 # ============================================================================
 # Configuration
 # ============================================================================
-$script:Config = @{
+${script:Config} = @{
     SafeModeBinary = "$PSScriptRoot\..\build\bin-msvc\RawrXD-SafeMode.exe"
     FallbackBinary = "$PSScriptRoot\..\build-debug\RawrXD-SafeMode.exe"
     OllamaEndpoint = "http://localhost:11434"
@@ -49,7 +49,7 @@ $script:Config = @{
         "..\models",
         "C:\models",
         "D:\models",
-        "$env:USERPROFILE\.ollama\models"
+        "${env:USERPROFILE}\.ollama\models"
     )
     DefaultModel = "llama3.2"
     MaxTokens = 512
@@ -60,7 +60,7 @@ $resolvedWorkspace = Resolve-Path $Workspace -ErrorAction SilentlyContinue
 $workspaceRootPath = $PWD.Path
 if ($resolvedWorkspace) { $workspaceRootPath = $resolvedWorkspace.Path }
 
-$script:State = @{
+${script:State} = @{
     CurrentModel = $null
     CurrentTier = "auto"
     WorkspaceRoot = $workspaceRootPath
@@ -72,28 +72,28 @@ $script:State = @{
 # ============================================================================
 # ANSI Colors
 # ============================================================================
-$script:AnsiEsc = [char]27
-$script:Colors = @{
-    Reset   = "$script:AnsiEsc[0m"
-    Red     = "$script:AnsiEsc[31m"
-    Green   = "$script:AnsiEsc[32m"
-    Yellow  = "$script:AnsiEsc[33m"
-    Blue    = "$script:AnsiEsc[34m"
-    Magenta = "$script:AnsiEsc[35m"
-    Cyan    = "$script:AnsiEsc[36m"
-    White   = "$script:AnsiEsc[37m"
-    Bold    = "$script:AnsiEsc[1m"
-    Dim     = "$script:AnsiEsc[2m"
+${script:AnsiEsc} = [char]27
+${script:Colors} = @{
+    Reset   = "${script:AnsiEsc}[0m"
+    Red     = "${script:AnsiEsc}[31m"
+    Green   = "${script:AnsiEsc}[32m"
+    Yellow  = "${script:AnsiEsc}[33m"
+    Blue    = "${script:AnsiEsc}[34m"
+    Magenta = "${script:AnsiEsc}[35m"
+    Cyan    = "${script:AnsiEsc}[36m"
+    White   = "${script:AnsiEsc}[37m"
+    Bold    = "${script:AnsiEsc}[1m"
+    Dim     = "${script:AnsiEsc}[2m"
 }
 
 function Write-ColorOutput {
     param([string]$Color, [string]$Message, [switch]$NoNewline)
     $c = ""
-    if ($script:Colors.ContainsKey($Color)) { $c = $script:Colors[$Color] }
+    if (${script:Colors}.ContainsKey($Color)) { $c = ${script:Colors}[$Color] }
     if ($NoNewline) {
-        Write-Host "$c$Message$($script:Colors.Reset)" -NoNewline
+        Write-Host "$c$Message$(${script:Colors}.Reset)" -NoNewline
     } else {
-        Write-Host "$c$Message$($script:Colors.Reset)"
+        Write-Host "$c$Message$(${script:Colors}.Reset)"
     }
 }
 
@@ -187,7 +187,7 @@ function Find-Model {
     }
     
     # Search in common locations
-    foreach ($dir in $script:Config.ModelsDir) {
+    foreach ($dir in ${script:Config}.ModelsDir) {
         $candidate = Join-Path $dir $Name
         if (Test-Path $candidate) { return (Resolve-Path $candidate).Path }
         
@@ -217,26 +217,26 @@ function Invoke-ModelRun {
     Write-Info "Loading model: $modelPath"
     
     # Use native binary if available
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary run $modelPath
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary run $modelPath
     } else {
         # Fallback to Ollama API
         try {
-            $response = Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/tags" -Method Get -ErrorAction Stop
+            $response = Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/tags" -Method Get -ErrorAction Stop
             
             # Check if model exists in Ollama
             $ollamaModel = $response.models | Where-Object { $_.name -like "*$ModelName*" }
             
             if ($ollamaModel) {
-                $script:State.CurrentModel = $ollamaModel.name
+                ${script:State}.CurrentModel = $ollamaModel.name
                 Write-Success "Model loaded: $($ollamaModel.name)"
             } else {
                 Write-Warn "Model not in Ollama. Attempting local GGUF load..."
-                $script:State.CurrentModel = $ModelName
+                ${script:State}.CurrentModel = $ModelName
             }
         } catch {
             Write-Warn "Ollama not available. Running in offline mode."
-            $script:State.CurrentModel = $ModelName
+            ${script:State}.CurrentModel = $ModelName
         }
     }
 }
@@ -247,11 +247,11 @@ function Invoke-ModelList {
     $count = 0
     
     # List local GGUF files
-    foreach ($dir in $script:Config.ModelsDir) {
+    foreach ($dir in ${script:Config}.ModelsDir) {
         if (Test-Path $dir) {
             Get-ChildItem $dir -Filter "*.gguf" -ErrorAction SilentlyContinue | ForEach-Object {
                 $sizeGB = [math]::Round($_.Length / 1GB, 2)
-                Write-Host "  $($script:Colors.Green)$($_.Name)$($script:Colors.Reset) $($script:Colors.Dim)($sizeGB GB)$($script:Colors.Reset)"
+                Write-Host "  $(${script:Colors}.Green)$($_.Name)$(${script:Colors}.Reset) $(${script:Colors}.Dim)($sizeGB GB)$(${script:Colors}.Reset)"
                 $count++
             }
         }
@@ -259,13 +259,13 @@ function Invoke-ModelList {
     
     # Also check Ollama
     try {
-        $response = Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/tags" -Method Get -ErrorAction Stop -TimeoutSec 2
+        $response = Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/tags" -Method Get -ErrorAction Stop -TimeoutSec 2
         
         if ($response.models) {
-            Write-Host "`n  $($script:Colors.Bold)Ollama Models:$($script:Colors.Reset)"
+            Write-Host "`n  $(${script:Colors}.Bold)Ollama Models:$(${script:Colors}.Reset)"
             $response.models | ForEach-Object {
                 $sizeGB = [math]::Round($_.size / 1GB, 2)
-                Write-Host "  $($script:Colors.Green)$($_.name)$($script:Colors.Reset) $($script:Colors.Dim)($sizeGB GB)$($script:Colors.Reset)"
+                Write-Host "  $(${script:Colors}.Green)$($_.name)$(${script:Colors}.Reset) $(${script:Colors}.Dim)($sizeGB GB)$(${script:Colors}.Reset)"
                 $count++
             }
         }
@@ -283,24 +283,24 @@ function Invoke-ModelList {
 function Invoke-ModelShow {
     param([string]$ModelName)
     
-    if (-not $script:State.CurrentModel -and -not $ModelName) {
+    if (-not ${script:State}.CurrentModel -and -not $ModelName) {
         Write-Warn "No model loaded. Use 'rawr run <model>' first."
         return
     }
     
     $model = $ModelName
-    if (-not $model) { $model = $script:State.CurrentModel }
+    if (-not $model) { $model = ${script:State}.CurrentModel }
     
     Write-ColorOutput Cyan "`n=== Model Information ===`n"
     Write-Host "  Model: $model"
-    Write-Host "  Tier: $($script:State.CurrentTier)"
+    Write-Host "  Tier: $(${script:State}.CurrentTier)"
     
     # Try to get more info from Ollama
     try {
-        $response = Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/show" -Method Post -Body (@{name=$model} | ConvertTo-Json) -ContentType "application/json" -TimeoutSec 5
+        $response = Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/show" -Method Post -Body (@{name=$model} | ConvertTo-Json) -ContentType "application/json" -TimeoutSec 5
         
         if ($response.modelfile) {
-            Write-Host "`n  $($script:Colors.Bold)Parameters:$($script:Colors.Reset)"
+            Write-Host "`n  $(${script:Colors}.Bold)Parameters:$(${script:Colors}.Reset)"
             Write-Host "    $($response.parameters -replace "`n", "`n    ")"
         }
     } catch {
@@ -321,14 +321,14 @@ function Invoke-Generate {
         return
     }
     
-    $model = $script:State.CurrentModel
-    if (-not $model) { $model = $script:Config.DefaultModel }
+    $model = ${script:State}.CurrentModel
+    if (-not $model) { $model = ${script:Config}.DefaultModel }
     
     Write-Info "Generating with $model...`n"
     
     # Use native binary if available
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary generate $Prompt
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary generate $Prompt
         return
     }
     
@@ -339,12 +339,12 @@ function Invoke-Generate {
             prompt = $Prompt
             stream = $false
             options = @{
-                temperature = $script:Config.Temperature
-                num_predict = $script:Config.MaxTokens
+                temperature = ${script:Config}.Temperature
+                num_predict = ${script:Config}.MaxTokens
             }
         } | ConvertTo-Json -Depth 5
         
-        $response = Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/generate" -Method Post -Body $body -ContentType "application/json"
+        $response = Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/generate" -Method Post -Body $body -ContentType "application/json"
         
         Write-Host $response.response
         Write-Host ""
@@ -362,8 +362,8 @@ function Invoke-Stream {
         return
     }
     
-    $model = $script:State.CurrentModel
-    if (-not $model) { $model = $script:Config.DefaultModel }
+    $model = ${script:State}.CurrentModel
+    if (-not $model) { $model = ${script:Config}.DefaultModel }
     
     Write-Info "Streaming with $model...`n"
     
@@ -373,12 +373,12 @@ function Invoke-Stream {
             prompt = $Prompt
             stream = $true
             options = @{
-                temperature = $script:Config.Temperature
-                num_predict = $script:Config.MaxTokens
+                temperature = ${script:Config}.Temperature
+                num_predict = ${script:Config}.MaxTokens
             }
         } | ConvertTo-Json -Depth 5
         
-        $request = [System.Net.HttpWebRequest]::Create("$($script:Config.OllamaEndpoint)/api/generate")
+        $request = [System.Net.HttpWebRequest]::Create("$(${script:Config}.OllamaEndpoint)/api/generate")
         $request.Method = "POST"
         $request.ContentType = "application/json"
         
@@ -418,8 +418,8 @@ function Invoke-Chat {
     Write-ColorOutput Cyan "`n=== Interactive Chat ==="
     Write-ColorOutput Dim "Type 'exit' to leave, '/clear' to reset history`n"
     
-    $model = $script:State.CurrentModel
-    if (-not $model) { $model = $script:Config.DefaultModel }
+    $model = ${script:State}.CurrentModel
+    if (-not $model) { $model = ${script:Config}.DefaultModel }
     $history = @()
     
     while ($true) {
@@ -443,11 +443,11 @@ function Invoke-Chat {
                 messages = $history
                 stream = $false
                 options = @{
-                    temperature = $script:Config.Temperature
+                    temperature = ${script:Config}.Temperature
                 }
             } | ConvertTo-Json -Depth 5
             
-            $response = Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/chat" -Method Post -Body $body -ContentType "application/json"
+            $response = Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/chat" -Method Post -Body $body -ContentType "application/json"
             
             $assistantMsg = $response.message.content
             $history += @{ role = "assistant"; content = $assistantMsg }
@@ -465,7 +465,7 @@ function Invoke-Chat {
 # ============================================================================
 # Agentic Tools
 # ============================================================================
-$script:ToolSchemas = @{
+${script:ToolSchemas} = @{
     file_read = @{
         description = "Read text content of a file"
         params = @{ path = "File path to read" }
@@ -531,9 +531,9 @@ $script:ToolSchemas = @{
 function Invoke-ToolList {
     Write-ColorOutput Cyan "`n=== Available Agentic Tools ===`n"
     
-    foreach ($tool in $script:ToolSchemas.Keys | Sort-Object) {
-        $schema = $script:ToolSchemas[$tool]
-        Write-Host "  $($script:Colors.Green)$tool$($script:Colors.Reset) - $($schema.description)"
+    foreach ($tool in ${script:ToolSchemas}.Keys | Sort-Object) {
+        $schema = ${script:ToolSchemas}[$tool]
+        Write-Host "  $(${script:Colors}.Green)$tool$(${script:Colors}.Reset) - $($schema.description)"
         if ($schema.required.Count -gt 0) {
             Write-ColorOutput Dim "    Required: $($schema.required -join ', ')"
         }
@@ -589,7 +589,7 @@ function Invoke-Tool {
             $recursive = $Params.recursive -eq "true"
             if (Test-Path $path) {
                 $result.success = $true
-                $items = if ($recursive) {
+                $items = $(if ($recursive) {
                     Get-ChildItem $path -Recurse | ForEach-Object { $_.FullName }
                 } else {
                     Get-ChildItem $path | ForEach-Object { $_.Name }
@@ -767,7 +767,7 @@ function Invoke-FileCommand {
             else { Write-Error2 $result.error }
         }
         "list" {
-            $path = if ($Args.Count -ge 2) { $Args[1] } else { "." }
+            $path = $(if ($Args.Count -ge 2) { $Args[1] } else { "." }
             $result = Invoke-Tool -ToolName "file_list" -Params @{ path = $path }
             if ($result.success) { $result.data.files | ForEach-Object { Write-Host "  $_" } }
             else { Write-Error2 $result.error }
@@ -830,7 +830,7 @@ function Invoke-GitCommand {
             else { Write-Error2 $result.error }
         }
         "diff" {
-            $spec = if ($Args.Count -ge 2) { $Args[1..($Args.Count-1)] -join " " } else { "" }
+            $spec = $(if ($Args.Count -ge 2) { $Args[1..($Args.Count-1)] -join " " } else { "" }
             $result = Invoke-Tool -ToolName "git_diff" -Params @{ spec = $spec }
             if ($result.success) { Write-Host $result.data }
             else { Write-Error2 $result.error }
@@ -871,15 +871,15 @@ function Invoke-Agent {
         return
     }
     
-    $model = $script:State.CurrentModel
-    if (-not $model) { $model = $script:Config.DefaultModel }
+    $model = ${script:State}.CurrentModel
+    if (-not $model) { $model = ${script:Config}.DefaultModel }
     
     Write-Info "Running agentic task: $Task`n"
     
     # Generate tool prompt
     $toolPrompt = "You can call tools using the format: TOOL:<name>:<json parameters>`nAvailable tools:`n"
-    foreach ($tool in $script:ToolSchemas.Keys | Sort-Object) {
-        $schema = $script:ToolSchemas[$tool]
+    foreach ($tool in ${script:ToolSchemas}.Keys | Sort-Object) {
+        $schema = ${script:ToolSchemas}[$tool]
         $toolPrompt += " - $tool: $($schema.description)`n"
     }
     
@@ -905,11 +905,11 @@ Otherwise, provide your final answer.
                 messages = $history
                 stream = $false
                 options = @{
-                    temperature = $script:Config.Temperature
+                    temperature = ${script:Config}.Temperature
                 }
             } | ConvertTo-Json -Depth 10
             
-            $response = Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/chat" -Method Post -Body $body -ContentType "application/json"
+            $response = Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/chat" -Method Post -Body $body -ContentType "application/json"
             
             $aiResponse = $response.message.content
             
@@ -969,13 +969,13 @@ function Invoke-Mission {
     Write-ColorOutput Dim "Zero-Day Agentic Engine taking control...`n"
     
     # Use native binary for mission execution
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary mission $Objective
-    } elseif (Test-Path $script:Config.FallbackBinary) {
-        & $script:Config.FallbackBinary mission $Objective
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary mission $Objective
+    } elseif (Test-Path ${script:Config}.FallbackBinary) {
+        & ${script:Config}.FallbackBinary mission $Objective
     } else {
         Write-Error2 "SafeMode binary not found. Build RawrXD-SafeMode first."
-        Write-Info "Binary expected at: $($script:Config.SafeModeBinary)"
+        Write-Info "Binary expected at: $(${script:Config}.SafeModeBinary)"
     }
 }
 
@@ -991,10 +991,10 @@ function Invoke-Plan {
     Write-ColorOutput Dim "Plan Orchestrator analyzing task...`n"
     
     # Use native binary for plan generation
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary plan $Objective
-    } elseif (Test-Path $script:Config.FallbackBinary) {
-        & $script:Config.FallbackBinary plan $Objective
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary plan $Objective
+    } elseif (Test-Path ${script:Config}.FallbackBinary) {
+        & ${script:Config}.FallbackBinary plan $Objective
     } else {
         Write-Error2 "SafeMode binary not found. Build RawrXD-SafeMode first."
     }
@@ -1005,10 +1005,10 @@ function Invoke-ExecutePlan {
     Write-ColorOutput Dim "Plan Orchestrator executing...`n"
     
     # Use native binary for plan execution
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary execute_plan
-    } elseif (Test-Path $script:Config.FallbackBinary) {
-        & $script:Config.FallbackBinary execute_plan
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary execute_plan
+    } elseif (Test-Path ${script:Config}.FallbackBinary) {
+        & ${script:Config}.FallbackBinary execute_plan
     } else {
         Write-Error2 "SafeMode binary not found. Build RawrXD-SafeMode first."
     }
@@ -1018,16 +1018,16 @@ function Invoke-Registry {
     Write-ColorOutput Cyan "`n=== Production Tool Registry (44+ Tools) ===`n"
     
     # Use native binary for registry listing
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary registry
-    } elseif (Test-Path $script:Config.FallbackBinary) {
-        & $script:Config.FallbackBinary registry
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary registry
+    } elseif (Test-Path ${script:Config}.FallbackBinary) {
+        & ${script:Config}.FallbackBinary registry
     } else {
         # Fallback: list local tool schemas
         Write-ColorOutput Bold "Local PowerShell Tools:"
-        foreach ($tool in $script:ToolSchemas.Keys | Sort-Object) {
-            $schema = $script:ToolSchemas[$tool]
-            Write-Host "  $($script:Colors.Green)$tool$($script:Colors.Reset) - $($schema.description)"
+        foreach ($tool in ${script:ToolSchemas}.Keys | Sort-Object) {
+            $schema = ${script:ToolSchemas}[$tool]
+            Write-Host "  $(${script:Colors}.Green)$tool$(${script:Colors}.Reset) - $($schema.description)"
         }
         Write-Host ""
         Write-Warn "For full 44+ tool registry, build RawrXD-SafeMode"
@@ -1047,10 +1047,10 @@ function Invoke-Hotpatch {
     switch ($subcmd) {
         "list" {
             Write-ColorOutput Cyan "`n=== Available Hotpatches ===`n"
-            if (Test-Path $script:Config.SafeModeBinary) {
-                & $script:Config.SafeModeBinary hotpatch list
-            } elseif (Test-Path $script:Config.FallbackBinary) {
-                & $script:Config.FallbackBinary hotpatch list
+            if (Test-Path ${script:Config}.SafeModeBinary) {
+                & ${script:Config}.SafeModeBinary hotpatch list
+            } elseif (Test-Path ${script:Config}.FallbackBinary) {
+                & ${script:Config}.FallbackBinary hotpatch list
             } else {
                 Write-Error2 "SafeMode binary not found"
             }
@@ -1062,10 +1062,10 @@ function Invoke-Hotpatch {
             }
             $patchId = $Args[1]
             Write-Info "Applying hotpatch: $patchId"
-            if (Test-Path $script:Config.SafeModeBinary) {
-                & $script:Config.SafeModeBinary hotpatch apply $patchId
-            } elseif (Test-Path $script:Config.FallbackBinary) {
-                & $script:Config.FallbackBinary hotpatch apply $patchId
+            if (Test-Path ${script:Config}.SafeModeBinary) {
+                & ${script:Config}.SafeModeBinary hotpatch apply $patchId
+            } elseif (Test-Path ${script:Config}.FallbackBinary) {
+                & ${script:Config}.FallbackBinary hotpatch apply $patchId
             } else {
                 Write-Error2 "SafeMode binary not found"
             }
@@ -1077,10 +1077,10 @@ function Invoke-Hotpatch {
             }
             $patchId = $Args[1]
             Write-Info "Reverting hotpatch: $patchId"
-            if (Test-Path $script:Config.SafeModeBinary) {
-                & $script:Config.SafeModeBinary hotpatch revert $patchId
-            } elseif (Test-Path $script:Config.FallbackBinary) {
-                & $script:Config.FallbackBinary hotpatch revert $patchId
+            if (Test-Path ${script:Config}.SafeModeBinary) {
+                & ${script:Config}.SafeModeBinary hotpatch revert $patchId
+            } elseif (Test-Path ${script:Config}.FallbackBinary) {
+                & ${script:Config}.FallbackBinary hotpatch revert $patchId
             } else {
                 Write-Error2 "SafeMode binary not found"
             }
@@ -1097,10 +1097,10 @@ function Invoke-SelfTest {
     Write-Info "Running system self-test..."
     
     # Use native binary for self-test
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary selftest
-    } elseif (Test-Path $script:Config.FallbackBinary) {
-        & $script:Config.FallbackBinary selftest
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary selftest
+    } elseif (Test-Path ${script:Config}.FallbackBinary) {
+        & ${script:Config}.FallbackBinary selftest
     } else {
         # Fallback: basic PowerShell diagnostics
         Write-ColorOutput Bold "PowerShell Fallback Diagnostics:"
@@ -1108,7 +1108,7 @@ function Invoke-SelfTest {
         # Check Ollama
         Write-Host "`n  Checking Ollama..."
         try {
-            Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/tags" -Method Get -TimeoutSec 2 | Out-Null
+            Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/tags" -Method Get -TimeoutSec 2 | Out-Null
             Write-Success "  Ollama: Running"
         } catch {
             Write-Error2 "  Ollama: Not available"
@@ -1117,7 +1117,7 @@ function Invoke-SelfTest {
         # Check models
         Write-Host "`n  Checking models..."
         $modelCount = 0
-        foreach ($dir in $script:Config.ModelsDir) {
+        foreach ($dir in ${script:Config}.ModelsDir) {
             if (Test-Path $dir) {
                 $models = Get-ChildItem $dir -Filter "*.gguf" -ErrorAction SilentlyContinue
                 $modelCount += $models.Count
@@ -1131,8 +1131,8 @@ function Invoke-SelfTest {
         
         # Check workspace
         Write-Host "`n  Checking workspace..."
-        if (Test-Path $script:State.WorkspaceRoot) {
-            Write-Success "  Workspace: $($script:State.WorkspaceRoot)"
+        if (Test-Path ${script:State}.WorkspaceRoot) {
+            Write-Success "  Workspace: $(${script:State}.WorkspaceRoot)"
         } else {
             Write-Error2 "  Workspace: Invalid"
         }
@@ -1153,10 +1153,10 @@ function Invoke-SelfTest {
 function Invoke-Telemetry {
     Write-ColorOutput Cyan "`n=== Telemetry Data ===`n"
     
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary telemetry
-    } elseif (Test-Path $script:Config.FallbackBinary) {
-        & $script:Config.FallbackBinary telemetry
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary telemetry
+    } elseif (Test-Path ${script:Config}.FallbackBinary) {
+        & ${script:Config}.FallbackBinary telemetry
     } else {
         Write-Error2 "SafeMode binary not found for full telemetry"
     }
@@ -1175,16 +1175,16 @@ function Invoke-Governor {
     switch ($subcmd) {
         "start" {
             Write-Info "Starting overclock governor..."
-            if (Test-Path $script:Config.SafeModeBinary) {
-                & $script:Config.SafeModeBinary governor start
+            if (Test-Path ${script:Config}.SafeModeBinary) {
+                & ${script:Config}.SafeModeBinary governor start
             } else {
                 Write-Error2 "SafeMode binary not found"
             }
         }
         "stop" {
             Write-Info "Stopping overclock governor..."
-            if (Test-Path $script:Config.SafeModeBinary) {
-                & $script:Config.SafeModeBinary governor stop
+            if (Test-Path ${script:Config}.SafeModeBinary) {
+                & ${script:Config}.SafeModeBinary governor stop
             } else {
                 Write-Error2 "SafeMode binary not found"
             }
@@ -1198,31 +1198,31 @@ function Invoke-Governor {
 function Invoke-Settings {
     Write-ColorOutput Cyan "`n=== Current Settings ===`n"
     
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary settings
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary settings
     } else {
         # Show PowerShell config
         Write-ColorOutput Bold "SafeMode Binary:"
-        Write-Host "  Path: $($script:Config.SafeModeBinary)"
-        Write-Host "  Available: $(Test-Path $script:Config.SafeModeBinary)"
+        Write-Host "  Path: $(${script:Config}.SafeModeBinary)"
+        Write-Host "  Available: $(Test-Path ${script:Config}.SafeModeBinary)"
         
         Write-ColorOutput Bold "`nOllama Endpoint:"
-        Write-Host "  $($script:Config.OllamaEndpoint)"
+        Write-Host "  $(${script:Config}.OllamaEndpoint)"
         
         Write-ColorOutput Bold "`nModel Directories:"
-        foreach ($dir in $script:Config.ModelsDir) {
+        foreach ($dir in ${script:Config}.ModelsDir) {
             $exists = Test-Path $dir
-            $existLabel = if ($exists) { 'exists' } else { 'not found' }
+            $existLabel = $(if ($exists) { 'exists' } else { 'not found' }
             Write-Host "  $dir ($existLabel)"
         }
         
         Write-ColorOutput Bold "`nCurrent State:"
-        $curModel = $script:State.CurrentModel
+        $curModel = ${script:State}.CurrentModel
         if (-not $curModel) { $curModel = 'None' }
         Write-Host "  Model: $curModel"
-        Write-Host "  Tier: $($script:State.CurrentTier)"
-        Write-Host "  Workspace: $($script:State.WorkspaceRoot)"
-        Write-Host "  Verbose: $($script:State.Verbose)"
+        Write-Host "  Tier: $(${script:State}.CurrentTier)"
+        Write-Host "  Workspace: $(${script:State}.WorkspaceRoot)"
+        Write-Host "  Verbose: $(${script:State}.Verbose)"
         Write-Host ""
     }
 }
@@ -1231,21 +1231,21 @@ function Set-Verbose {
     param([string]$Toggle)
     
     if ($Toggle -eq "on" -or $Toggle -eq "true" -or $Toggle -eq "1") {
-        $script:State.Verbose = $true
+        ${script:State}.Verbose = $true
         Write-Success "Verbose output enabled"
     } elseif ($Toggle -eq "off" -or $Toggle -eq "false" -or $Toggle -eq "0") {
-        $script:State.Verbose = $false
+        ${script:State}.Verbose = $false
         Write-Success "Verbose output disabled"
     } else {
-        Write-Info "Verbose: $($script:State.Verbose)"
+        Write-Info "Verbose: $(${script:State}.Verbose)"
     }
 }
 
 function Invoke-Tiers {
     Write-ColorOutput Cyan "`n=== Available Compression Tiers ===`n"
     
-    if (Test-Path $script:Config.SafeModeBinary) {
-        & $script:Config.SafeModeBinary tiers
+    if (Test-Path ${script:Config}.SafeModeBinary) {
+        & ${script:Config}.SafeModeBinary tiers
     } else {
         # List known tiers
         Write-ColorOutput Bold "Standard Tiers:"
@@ -1272,9 +1272,9 @@ function Invoke-Status {
     Write-ColorOutput Cyan "`n=== RawrXD SafeMode Status ===`n"
     
     Write-ColorOutput Bold "Model:"
-    if ($script:State.CurrentModel) {
-        Write-Host "  $($script:Colors.Green)● $($script:Colors.Reset)Loaded: $($script:State.CurrentModel)"
-        Write-Host "  Active tier: $($script:State.CurrentTier)"
+    if (${script:State}.CurrentModel) {
+        Write-Host "  $(${script:Colors}.Green)● $(${script:Colors}.Reset)Loaded: $(${script:State}.CurrentModel)"
+        Write-Host "  Active tier: $(${script:State}.CurrentTier)"
     } else {
         Write-ColorOutput Dim "  ○ No model loaded"
     }
@@ -1283,14 +1283,14 @@ function Invoke-Status {
     
     # Check Ollama
     try {
-        Invoke-RestMethod -Uri "$($script:Config.OllamaEndpoint)/api/tags" -Method Get -TimeoutSec 2 | Out-Null
-        Write-Host "  $($script:Colors.Green)● $($script:Colors.Reset)Ollama: Running"
+        Invoke-RestMethod -Uri "$(${script:Config}.OllamaEndpoint)/api/tags" -Method Get -TimeoutSec 2 | Out-Null
+        Write-Host "  $(${script:Colors}.Green)● $(${script:Colors}.Reset)Ollama: Running"
     } catch {
         Write-ColorOutput Dim "  ○ Ollama: Not available"
     }
     
     Write-ColorOutput Bold "`nWorkspace:"
-    Write-Host "  Root: $($script:State.WorkspaceRoot)"
+    Write-Host "  Root: $(${script:State}.WorkspaceRoot)"
     
     # System info
     Write-ColorOutput Bold "`nSystem:"
@@ -1320,14 +1320,14 @@ function Invoke-ApiControl {
     
     switch ($subcmd) {
         "start" {
-            $port = if ($Args.Count -ge 2) { [int]$Args[1] } else { $Port }
+            $port = $(if ($Args.Count -ge 2) { [int]$Args[1] } else { $Port }
             
             # Use native binary if available
-            if (Test-Path $script:Config.SafeModeBinary) {
+            if (Test-Path ${script:Config}.SafeModeBinary) {
                 Write-Info "Starting API server on port $port..."
-                Start-Process -FilePath $script:Config.SafeModeBinary -ArgumentList "-a", $port -NoNewWindow
+                Start-Process -FilePath ${script:Config}.SafeModeBinary -ArgumentList "-a", $port -NoNewWindow
             } else {
-                Write-Warn "Native binary not available. Ollama API at $($script:Config.OllamaEndpoint)"
+                Write-Warn "Native binary not available. Ollama API at $(${script:Config}.OllamaEndpoint)"
             }
         }
         "stop" {
@@ -1344,7 +1344,7 @@ function Set-Workspace {
     param([string]$Path)
     
     if (-not $Path) {
-        Write-Info "Current workspace: $($script:State.WorkspaceRoot)"
+        Write-Info "Current workspace: $(${script:State}.WorkspaceRoot)"
         return
     }
     
@@ -1353,9 +1353,9 @@ function Set-Workspace {
         return
     }
     
-    $script:State.WorkspaceRoot = (Resolve-Path $Path).Path
-    Set-Location $script:State.WorkspaceRoot
-    Write-Success "Workspace set to: $($script:State.WorkspaceRoot)"
+    ${script:State}.WorkspaceRoot = (Resolve-Path $Path).Path
+    Set-Location ${script:State}.WorkspaceRoot
+    Write-Success "Workspace set to: $(${script:State}.WorkspaceRoot)"
 }
 
 # ============================================================================
@@ -1373,14 +1373,14 @@ function Invoke-Repl {
         
         $tokens = $input -split '\s+', 2
         $cmd = $tokens[0].ToLower()
-        $args = if ($tokens.Count -gt 1) { $tokens[1] -split '\s+' } else { @() }
+        $args = $(if ($tokens.Count -gt 1) { $tokens[1] -split '\s+' } else { @() }
         
         switch ($cmd) {
             "help" { Show-Help }
             { $_ -in "run", "load" } { Invoke-ModelRun $args[0] }
             "list" { Invoke-ModelList }
             "show" { Invoke-ModelShow $args[0] }
-            "tier" { Write-Info "Current tier: $($script:State.CurrentTier)" }
+            "tier" { Write-Info "Current tier: $(${script:State}.CurrentTier)" }
             "tiers" { Invoke-Tiers }
             { $_ -in "gen", "generate" } { Invoke-Generate ($args -join " ") }
             "stream" { Invoke-Stream ($args -join " ") }
@@ -1416,8 +1416,7 @@ function Invoke-Repl {
 
 # ============================================================================
 # Main Entry Point
-# ============================================================================
-if ($Help) {
+# ============================================================================ $(if ($Help) {
     Show-Help
     return
 }
@@ -1431,7 +1430,7 @@ if ($Command) {
         { $_ -in "run", "load" } { Invoke-ModelRun $Arguments[0] }
         "list" { Invoke-ModelList }
         "show" { Invoke-ModelShow $Arguments[0] }
-        "tier" { Write-Info "Current tier: $($script:State.CurrentTier)" }
+        "tier" { Write-Info "Current tier: $(${script:State}.CurrentTier)" }
         "tiers" { Invoke-Tiers }
         { $_ -in "gen", "generate" } { Invoke-Generate ($Arguments -join " ") }
         "stream" { Invoke-Stream ($Arguments -join " ") }

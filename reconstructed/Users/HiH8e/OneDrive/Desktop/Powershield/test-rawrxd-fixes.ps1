@@ -6,7 +6,7 @@
     Tests:
     1. WebView2 .NET version detection
     2. $processingText initialization
-    3. $script:RecentFiles initialization  
+    3. ${script:RecentFiles} initialization  
     4. Marketplace catalog loading without token execution errors
     5. Delete confirmation system
 #>
@@ -27,19 +27,19 @@ function Test-Result {
     [string]$Message
   )
     
-  $status = if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
+  $status = $(if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
   Write-Host "$status - $TestName" -ForegroundColor $(if ($Passed) { "Green" } else { "Red" })
   if ($Message) {
     Write-Host "       $Message" -ForegroundColor Gray
   }
     
-  $script:testResults += @{
+  ${script:testResults} += @{
     Test    = $TestName
     Passed  = $Passed
     Message = $Message
   }
     
-  if ($Passed) { $script:passCount++ } else { $script:failCount++ }
+  if ($Passed) { ${script:passCount}++ } else { ${script:failCount}++ }
 }
 
 # Test 1: .NET Version Detection
@@ -73,29 +73,29 @@ Write-Host ""
 Write-Host "Test 2: Script Variable Initialization (`$processingText)" -ForegroundColor Yellow
 try {
   # Simulate the initialization from RawrXD.ps1
-  $script:processingText = ""
-  $passed = $null -ne $script:processingText
+  ${script:processingText} = ""
+  $passed = $null -ne ${script:processingText}
   Test-Result "`$processingText initialization" $passed "Variable is now initialized at script scope"
 }
 catch {
   Test-Result "`$processingText initialization" $false "Error: $_"
 }
 
-# Test 3: $script:RecentFiles initialization
+# Test 3: ${script:RecentFiles} initialization
 Write-Host ""
-Write-Host "Test 3: Script Variable Initialization (`$script:RecentFiles)" -ForegroundColor Yellow
+Write-Host "Test 3: Script Variable Initialization (`${script:RecentFiles})" -ForegroundColor Yellow
 try {
-  $script:RecentFiles = New-Object System.Collections.Generic.List[string]
-  $passed = ($script:RecentFiles -is [System.Collections.Generic.List[string]]) -and $script:RecentFiles.Count -eq 0
-  Test-Result "`$script:RecentFiles initialization" $passed "Variable is now initialized as generic List"
+  ${script:RecentFiles} = New-Object System.Collections.Generic.List[string]
+  $passed = (${script:RecentFiles} -is [System.Collections.Generic.List[string]]) -and ${script:RecentFiles}.Count -eq 0
+  Test-Result "`${script:RecentFiles} initialization" $passed "Variable is now initialized as generic List"
     
   # Test that we can add to it
-  $script:RecentFiles.Add("test.txt")
-  $passed = $script:RecentFiles.Count -eq 1
-  Test-Result "`$script:RecentFiles.Add()" $passed "Can add items without errors"
+  ${script:RecentFiles}.Add("test.txt")
+  $passed = ${script:RecentFiles}.Count -eq 1
+  Test-Result "`${script:RecentFiles}.Add()" $passed "Can add items without errors"
 }
 catch {
-  Test-Result "`$script:RecentFiles initialization" $false "Error: $_"
+  Test-Result "`${script:RecentFiles} initialization" $false "Error: $_"
 }
 
 # Test 4: Marketplace Entry Normalization (without inline if)
@@ -142,14 +142,14 @@ catch {
 Write-Host ""
 Write-Host "Test 5: Delete Confirmation System" -ForegroundColor Yellow
 try {
-  $script:PendingDelete = @{Path = $null; Confirmed = $false }
-  $passed = $null -eq $script:PendingDelete.Path -and $script:PendingDelete.Confirmed -eq $false
-  Test-Result "`$script:PendingDelete initialization" $passed "Delete confirmation structure is ready"
+  ${script:PendingDelete} = @{Path = $null; Confirmed = $false }
+  $passed = $null -eq ${script:PendingDelete}.Path -and ${script:PendingDelete}.Confirmed -eq $false
+  Test-Result "`${script:PendingDelete} initialization" $passed "Delete confirmation structure is ready"
     
   # Simulate a delete operation
-  $script:PendingDelete.Path = "C:\test\file.txt"
-  $script:PendingDelete.Confirmed = $false
-  $passed = $script:PendingDelete.Path -eq "C:\test\file.txt"
+  ${script:PendingDelete}.Path = "C:\test\file.txt"
+  ${script:PendingDelete}.Confirmed = $false
+  $passed = ${script:PendingDelete}.Path -eq "C:\test\file.txt"
   Test-Result "Delete operation staging" $passed "Can stage delete operations without MessageBox"
 }
 catch {
@@ -161,14 +161,14 @@ Write-Host ""
 Write-Host "Test 6: Variable Scoping Validation" -ForegroundColor Yellow
 try {
   # Simulate a chat operation that previously failed
-  $script:processingText = "AI (processing...): "
-  $script:RecentFiles = New-Object System.Collections.Generic.List[string]
-  $script:PendingDelete = @{Path = $null; Confirmed = $false }
+  ${script:processingText} = "AI (processing...): "
+  ${script:RecentFiles} = New-Object System.Collections.Generic.List[string]
+  ${script:PendingDelete} = @{Path = $null; Confirmed = $false }
     
   # Try accessing them (this would have failed before)
-  $check1 = $script:processingText.Length -ge 0
-  $check2 = $script:RecentFiles.Count -ge 0
-  $check3 = $null -ne $script:PendingDelete
+  $check1 = ${script:processingText}.Length -ge 0
+  $check2 = ${script:RecentFiles}.Count -ge 0
+  $check3 = $null -ne ${script:PendingDelete}
     
   $passed = $check1 -and $check2 -and $check3
   Test-Result "All variables accessible" $passed "No 'variable not initialized' errors"

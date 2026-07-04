@@ -2,7 +2,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # WebView2 Setup with comprehensive error handling
-$wvDir = "$env:TEMP\WVLibs"
+$wvDir = "${env:TEMP}\WVLibs"
 $useWebView2 = $false
 
 Write-Host "=== Rawr Browser v2.1 - Starting ===" -ForegroundColor Cyan
@@ -135,7 +135,7 @@ if ($useWebView2 -or (Test-Path "C:\Program Files (x86)\Microsoft\EdgeWebView\Ap
       Write-Host "Setting up WebView2 events..." -ForegroundColor Gray
       
       # Create initialization flag
-      $script:initializationComplete = $false
+      ${script:initializationComplete} = $false
       
       # Navigation completed event
       $navigationHandler = {
@@ -154,7 +154,7 @@ if ($useWebView2 -or (Test-Path "C:\Program Files (x86)\Microsoft\EdgeWebView\Ap
                   
             # Load the main interface
             $browser.CoreWebView2.NavigateToString($htmlContent)
-            $script:initializationComplete = $true
+            ${script:initializationComplete} = $true
           }
           else {
             Write-Host "✗ WebView2 core initialization failed" -ForegroundColor Red
@@ -169,7 +169,7 @@ if ($useWebView2 -or (Test-Path "C:\Program Files (x86)\Microsoft\EdgeWebView\Ap
       $browser.add_CoreWebView2InitializationCompleted($initHandler)
       
       # Set up user data folder
-      $userDataFolder = "$env:TEMP\RawrBrowserData"
+      $userDataFolder = "${env:TEMP}\RawrBrowserData"
       if (!(Test-Path $userDataFolder)) {
         New-Item -ItemType Directory -Path $userDataFolder -Force | Out-Null
       }

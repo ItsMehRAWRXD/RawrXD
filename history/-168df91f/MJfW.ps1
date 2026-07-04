@@ -12,15 +12,15 @@
 
 Write-Host "🚀 Loading RawrXD Modular Architecture..." -ForegroundColor Cyan
 
-$script:RawrXDRootPath = if ($env:LAZY_INIT_IDE_ROOT -and (Test-Path $env:LAZY_INIT_IDE_ROOT)) {
-    $env:LAZY_INIT_IDE_ROOT
+${script:RawrXDRootPath} = $(if (${env:LAZY_INIT_IDE_ROOT} -and (Test-Path ${env:LAZY_INIT_IDE_ROOT})) {
+    ${env:LAZY_INIT_IDE_ROOT}
 } else {
     $PSScriptRoot
 }
 
 # Import Core Module
-if (Test-Path (Join-Path $script:RawrXDRootPath "RawrXD.Core.psm1")) {
-    Import-Module (Join-Path $script:RawrXDRootPath "RawrXD.Core.psm1") -Force
+if (Test-Path (Join-Path ${script:RawrXDRootPath} "RawrXD.Core.psm1")) {
+    Import-Module (Join-Path ${script:RawrXDRootPath} "RawrXD.Core.psm1") -Force
     Write-Host "✅ Core module loaded" -ForegroundColor Green
 } else {
     Write-Host "❌ Core module not found" -ForegroundColor Red
@@ -28,8 +28,8 @@ if (Test-Path (Join-Path $script:RawrXDRootPath "RawrXD.Core.psm1")) {
 }
 
 # Import UI Module
-if (Test-Path (Join-Path $script:RawrXDRootPath "RawrXD.UI.psm1")) {
-    Import-Module (Join-Path $script:RawrXDRootPath "RawrXD.UI.psm1") -Force
+if (Test-Path (Join-Path ${script:RawrXDRootPath} "RawrXD.UI.psm1")) {
+    Import-Module (Join-Path ${script:RawrXDRootPath} "RawrXD.UI.psm1") -Force
     Write-Host "✅ UI module loaded" -ForegroundColor Green
 } else {
     Write-Host "❌ UI module not found" -ForegroundColor Red
@@ -42,7 +42,7 @@ Write-EmergencyLog "Modular architecture initialized" "SUCCESS"
 # CONFIGURATION
 # ============================================
 
-$script:ModularConfig = @{
+${script:ModularConfig} = @{
     OllamaHost = "http://localhost:11434"
     OllamaModel = "llama3"
     EnableThreading = $true
@@ -107,7 +107,7 @@ function Start-RawrXDModular {
                 $chatBox.AppendText("You: $message`r`n")
             }
             
-            Start-OllamaChatAsync -Prompt $message -Form $form -ChatBox $chatBox -StreamUI $script:ModularConfig.EnableStreaming
+            Start-OllamaChatAsync -Prompt $message -Form $form -ChatBox $chatBox -StreamUI ${script:ModularConfig}.EnableStreaming
             $chatInput.Text = ""
         }
     })
@@ -161,7 +161,7 @@ function Start-RawrXDModular {
                 }
                 
                 # Execute the tool
-                $tool = $script:agentTools[$parsedCommand.tool]
+                $tool = ${script:agentTools}[$parsedCommand.tool]
                 if ($tool.Enabled) {
                     &$tool.Handler $parsedCommand.args
                 }

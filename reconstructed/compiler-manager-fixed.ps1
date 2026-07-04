@@ -144,7 +144,7 @@ function Find-Compiler {
     }
     
     # Check PATH environment variable
-    $env:PATH -split ";" | ForEach-Object {
+    ${env:PATH} -split ";" | ForEach-Object {
         if ($_ -and (Test-Path $_)) {
             if (Test-Path "$_\cl.exe" -and -not $compilers.ContainsKey("msvc")) {
                 $compilers["msvc"] = "$_\cl.exe"

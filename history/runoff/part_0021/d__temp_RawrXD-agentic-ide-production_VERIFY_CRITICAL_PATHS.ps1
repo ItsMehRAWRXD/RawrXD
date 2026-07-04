@@ -11,7 +11,7 @@ Run this AFTER BUILD_CRITICAL_PATHS.bat to validate compilation
 
 param(
     [switch]$Verbose = $false,
-    [switch]$ShowMetrics = $true
+    [switch]$ShowMetrics
 )
 
 $ErrorActionPreference = "Stop"
@@ -228,8 +228,7 @@ Write-Host "`n[PASS] Documentation complete`n" @SUCCESS
 
 # ============================================================================
 # Phase 7: Performance Metrics Summary
-# ============================================================================
-if ($ShowMetrics) {
+# ============================================================================ $(if ($ShowMetrics) {
     Write-Host "PHASE 7: Performance Metrics Summary" @INFO
     Write-Host "──────────────────────────────────────────────────────────────────────────────────`n"
     

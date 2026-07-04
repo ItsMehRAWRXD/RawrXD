@@ -1,6 +1,6 @@
 param(
     [string]$ReleaseDir = 'D:\RawrXD-production-lazy-init\build\Release',
-    [string]$OutRoot = "$env:USERPROFILE\OneDrive\Desktop\RawrXD-IDE"
+    [string]$OutRoot = "${env:USERPROFILE}\OneDrive\Desktop\RawrXD-IDE"
 )
 
 $exeOut = Join-Path $OutRoot 'bin\Executables'

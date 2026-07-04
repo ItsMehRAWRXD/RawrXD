@@ -50,7 +50,7 @@ $tpl = Get-Content -LiteralPath $templatePath -Raw -Encoding UTF8
 $html = $tpl.Replace("__METRICS_B64__", $b64)
 
 $metaQuick = ($raw | ConvertFrom-Json).meta
-$titleSafe = if ($metaQuick.title) { $metaQuick.title } else { "RawrXD Metrics Deck" }
+$titleSafe = $(if ($metaQuick.title) { $metaQuick.title } else { "RawrXD Metrics Deck" }
 $html = $html.Replace("__TITLE_PLACEHOLDER__", [System.Net.WebUtility]::HtmlEncode($titleSafe))
 
 $outHtml = Join-Path $OutDir "deck.html"

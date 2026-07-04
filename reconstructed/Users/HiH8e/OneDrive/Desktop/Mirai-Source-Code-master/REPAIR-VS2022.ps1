@@ -25,7 +25,7 @@ Write-Host ""
 Write-Host "🧹 Step 1: Clearing Visual Studio cache..." -ForegroundColor Yellow
 
 # Clear component model cache
-$cacheDir = "$env:LOCALAPPDATA\Microsoft\VisualStudio"
+$cacheDir = "${env:LOCALAPPDATA}\Microsoft\VisualStudio"
 if (Test-Path $cacheDir) {
     Write-Host "  Clearing VS component cache..."
     Get-ChildItem "$cacheDir" -Filter "*17.0*" -Directory | ForEach-Object {
@@ -38,7 +38,7 @@ if (Test-Path $cacheDir) {
 }
 
 # Clear MEF cache
-$mefCache = "$env:TEMP\VisualStudioComponentCache"
+$mefCache = "${env:TEMP}\VisualStudioComponentCache"
 if (Test-Path $mefCache) {
     Write-Host "  Clearing MEF cache..."
     Remove-Item $mefCache -Recurse -Force -ErrorAction SilentlyContinue
@@ -48,7 +48,7 @@ if (Test-Path $mefCache) {
 
 # Clear temporary files
 Write-Host "  Clearing temporary files..."
-Get-ChildItem "$env:TEMP" -Filter "*vs*" -Directory -ErrorAction SilentlyContinue | 
+Get-ChildItem "${env:TEMP}" -Filter "*vs*" -Directory -ErrorAction SilentlyContinue | 
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "  ✅ Temp files cleared" -ForegroundColor Green

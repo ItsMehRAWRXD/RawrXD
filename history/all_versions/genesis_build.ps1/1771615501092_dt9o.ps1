@@ -4,9 +4,9 @@
 
 param(
     [string]$Root = "D:\rawrxd",
-    [string]$OutDir = "$env:LOCALAPPDATA\RawrXD\bin",
-    [string]$ObjDir = "$env:LOCALAPPDATA\RawrXD\build",
-    [string]$LibDir = "$env:LOCALAPPDATA\RawrXD\lib"
+    [string]$OutDir = "${env:LOCALAPPDATA}\RawrXD\bin",
+    [string]$ObjDir = "${env:LOCALAPPDATA}\RawrXD\build",
+    [string]$LibDir = "${env:LOCALAPPDATA}\RawrXD\lib"
 )
 
 $ErrorActionPreference = "Stop"

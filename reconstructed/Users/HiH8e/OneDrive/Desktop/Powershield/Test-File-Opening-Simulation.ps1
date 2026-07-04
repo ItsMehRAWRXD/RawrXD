@@ -27,24 +27,24 @@ Write-Host "📊 Content length: $($content.Length) characters" -ForegroundColor
 # Create a mock editor for testing
 Write-Host "🔧 Creating mock editor..." -ForegroundColor Yellow
 Add-Type -AssemblyName System.Windows.Forms
-$script:editor = New-Object System.Windows.Forms.RichTextBox
-$script:editor.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-$script:editor.ForeColor = [System.Drawing.Color]::FromArgb(255, 255, 255)
-$script:editor.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+${script:editor} = New-Object System.Windows.Forms.RichTextBox
+${script:editor}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+${script:editor}.ForeColor = [System.Drawing.Color]::FromArgb(255, 255, 255)
+${script:editor}.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
 # Test the Set-EditorTextWithVisibility function
 Write-Host "🎯 Testing Set-EditorTextWithVisibility..." -ForegroundColor Cyan
 Set-EditorTextWithVisibility -Content $content
 
-Write-Host "📝 Editor text length after setting: $($script:editor.Text.Length)" -ForegroundColor Green
-Write-Host "👁️ Editor visible text preview: $($script:editor.Text.Substring(0, [Math]::Min(50, $script:editor.Text.Length)))..." -ForegroundColor Magenta
+Write-Host "📝 Editor text length after setting: $(${script:editor}.Text.Length)" -ForegroundColor Green
+Write-Host "👁️ Editor visible text preview: $(${script:editor}.Text.Substring(0, [Math]::Min(50, ${script:editor}.Text.Length)))..." -ForegroundColor Magenta
 
 # Check if the text is actually set
-if ($script:editor.Text -eq $content) {
+if (${script:editor}.Text -eq $content) {
     Write-Host "✅ Text matches expected content" -ForegroundColor Green
 } else {
     Write-Host "❌ Text does not match expected content" -ForegroundColor Red
-    Write-Host "Expected length: $($content.Length), Actual length: $($script:editor.Text.Length)" -ForegroundColor Red
+    Write-Host "Expected length: $($content.Length), Actual length: $(${script:editor}.Text.Length)" -ForegroundColor Red
 }
 
 Write-Host "🎯 Test complete" -ForegroundColor Cyan

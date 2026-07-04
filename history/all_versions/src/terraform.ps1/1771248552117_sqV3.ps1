@@ -234,7 +234,7 @@ function peek {
 }
 
 function next {
-    $script:iSrc++
+    ${script:iSrc}++
 }
 
 function skip_ws {
@@ -244,7 +244,7 @@ function skip_ws {
             next
         } elseif ($ch -eq 10) {
             next
-            $script:lnCur++
+            ${script:lnCur}++
         } elseif ($ch -eq 47) {  # /
             next
             $ch2 = peek
@@ -265,7 +265,7 @@ function skip_ws {
                     }
                 }
             } else {
-                $script:iSrc--
+                ${script:iSrc}--
                 break
             }
         } else {
@@ -282,7 +282,7 @@ function skip_ws {
 function emit_byte {
     param([byte]$b)
     $code_buf[$cbCode] = $b
-    $script:cbCode++
+    ${script:cbCode}++
 }
 
 function emit_dword {
@@ -305,7 +305,7 @@ function main {
     $file = $args[0]
     # Read source
     $src = Get-Content $file -Raw -Encoding UTF8
-    $script:cbSrc = $src.Length
+    ${script:cbSrc} = $src.Length
     $src.ToCharArray() | ForEach-Object { $src_buf[$i] = [byte]$_; $i++ } | Out-Null
     # Lex
     # Parse

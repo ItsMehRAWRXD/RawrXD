@@ -1,9 +1,9 @@
-$ErrorActionPreference = "Stop"
-$ExcludeDirs = @(".git", "dist", "node_modules", "temp", "source_audit", "crash_dumps", "build_fresh", "build_gold", "build_prod", "build_universal", "build_ide", "build_qt_free", "build_win32_gui_test", "CMakeFiles", "build_clean", "build_ide_ninja", "build_new", "build_test_parse")
-$objFiles = Get-ChildItem -Path "D:\rawrxd" -Filter "*.obj" -Recurse -ErrorAction SilentlyContinue | Where-Object {
-    $path = $_.FullName
-    $name = $_.Name
-    $exclude = $false
+$Script:ErrorActionPreference = "Stop"
+$Script:ExcludeDirs = @(".git", "dist", "node_modules", "temp", "source_audit", "crash_dumps", "build_fresh", "build_gold", "build_prod", "build_universal", "build_ide", "build_qt_free", "build_win32_gui_test", "CMakeFiles", "build_clean", "build_ide_ninja", "build_new", "build_test_parse")
+$Script:objFiles = Get-ChildItem -Path "D:\rawrxd" -Filter "*.obj" -Recurse -ErrorAction SilentlyContinue | Where-Object {
+$Script:path = $_.FullName
+$Script:name = $_.Name
+$Script:exclude = $false
     if($name -match "\.cpp\.obj$" -or $name -match "\.c\.obj$" -or $name -match "\.cc\.obj$") { return $false }
     if($name -match "^bench_" -or $name -match "^test_" -or $name -match "compiler_from_scratch" -or $name -match "omega_pro" -or $name -match "OmegaPolyglot_v5") { return $false }
     if($name -match "dumpbin_final\.obj") { return $false }
@@ -14,13 +14,13 @@ $objFiles = Get-ChildItem -Path "D:\rawrxd" -Filter "*.obj" -Recurse -ErrorActio
     foreach($dir in $ExcludeDirs) { if($path -match "\\$dir\\" -or $path -match "CMakeFiles") { $exclude = $true; break } }
     return -not $exclude
 }
-$objFiles = $objFiles | Where-Object {
+$Script:objFiles = $objFiles | Where-Object {
     try {
-        $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+$Script:bytes = [System.IO.File]::ReadAllBytes($_.FullName)
         if ($bytes.Length -ge 4 -and $bytes[0] -eq 0 -and $bytes[1] -eq 0 -and $bytes[2] -eq 0xFF -and $bytes[3] -eq 0xFF) { return $false }
         return $true
     } catch { return $false }
 }
-$uniqueObjs = $objFiles | Sort-Object LastWriteTime -Descending | Group-Object Name | ForEach-Object { $_.Group[0] }
+$Script:uniqueObjs = $objFiles | Sort-Object LastWriteTime -Descending | Group-Object Name | ForEach-Object { $_.Group[0] }
 Write-Host "Linking $($uniqueObjs.Count) objects..."
 D:\rawrxd\tools\inhouse\link_inhouse.ps1 -Inputs $uniqueObjs.FullName

@@ -16,7 +16,7 @@ foreach ($f in $files) {
     if ($dExists -and $eExists) {
         $dSize = (Get-Item $d).Length
         $eSize = (Get-Item $e).Length
-        $match = if ($dSize -eq $eSize) { "MATCH" } else { "DIFF($dSize vs $eSize)" }
+        $match = $(if ($dSize -eq $eSize) { "MATCH" } else { "DIFF($dSize vs $eSize)" }
         Write-Host "$f : $match"
     } elseif ($dExists) { Write-Host "$f : D only" } else { Write-Host "$f : E only" }
 }

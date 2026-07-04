@@ -149,7 +149,7 @@ Write-Host "[TEST 10] File I/O & Configuration" -ForegroundColor Yellow
 
 # Check for Qt data paths
 $qt_data = [Environment]::GetEnvironmentVariable("QT_DATA_HOME")
-$sessions_dir = "$env:APPDATA\RawrXD\sessions"
+$sessions_dir = "${env:APPDATA}\RawrXD\sessions"
 
 Write-Host "  Configuration Directories:" -ForegroundColor Cyan
 Write-Host "  • Qt Data Home: $qt_data (if set)" -ForegroundColor Gray

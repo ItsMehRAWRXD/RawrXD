@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+$Script:ErrorActionPreference = "Stop"
 
 # ============================================================
 #  RAWRXD CLEAN LINKER — No brute force needed
@@ -12,17 +12,17 @@ $ErrorActionPreference = "Stop"
 #    3. Links once, deterministically
 # ============================================================
 
-$Root       = "D:\rawrxd"
-$OutDir     = "$env:LOCALAPPDATA\RawrXD\bin"
-$finalExe   = Join-Path $OutDir "RawrXD.exe"
+$Script:Root = "D:\rawrxd"
+$Script:OutDir = "${env:LOCALAPPDATA}\RawrXD\bin"
+$Script:finalExe = Join-Path $OutDir "RawrXD.exe"
 
 # ---- Resolve the best available MSVC linker ----
-$LinkerCandidates = @(
+$Script:LinkerCandidates = @(
     "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe",
     "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe",
     "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe"
 )
-$Linker = $null
+$Script:Linker = $null
 foreach ($c in $LinkerCandidates) {
     if (Test-Path $c) { $Linker = $c; break }
 }
@@ -33,11 +33,11 @@ if (-not $Linker) {
 }
 
 # ---- Resolve best MSVC lib path ----
-$MSVCLibCandidates = @(
+$Script:MSVCLibCandidates = @(
     "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64",
     "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64"
 )
-$MSVCLib = $null
+$Script:MSVCLib = $null
 foreach ($c in $MSVCLibCandidates) {
     if (Test-Path $c) { $MSVCLib = $c; break }
 }
@@ -53,7 +53,7 @@ if (!(Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | 
 . (Join-Path $Root "obj_blacklist.ps1")
 
 # ---- Get pre-validated clean objects ----
-$cleanObjs = Get-CleanObjects -Verbose
+$Script:cleanObjs = Get-CleanObjects -Verbose
 
 if ($cleanObjs.Count -eq 0) {
     Write-Host "[FATAL] No clean objects found. Cannot link." -Fore Red
@@ -63,7 +63,7 @@ if ($cleanObjs.Count -eq 0) {
 Write-Host "[LINK] Linking $($cleanObjs.Count) validated objects..." -Fore Cyan
 
 # ---- Build link arguments ----
-$linkArgs = @(
+$Script:linkArgs = @(
     "/OUT:`"$finalExe`"",
     "/SUBSYSTEM:WINDOWS",
     "/ENTRY:WinMain",
@@ -87,8 +87,8 @@ $linkArgs += "/LIBPATH:`"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0
 $linkArgs += "/LIBPATH:`"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64`""
 
 # Custom libs
-$coreLib = Join-Path $Root "lib\rawrxd_core.lib"
-$gpuLib  = Join-Path $Root "lib\rawrxd_gpu.lib"
+$Script:coreLib = Join-Path $Root "lib\rawrxd_core.lib"
+$Script:gpuLib = Join-Path $Root "lib\rawrxd_gpu.lib"
 if (Test-Path $coreLib) { $linkArgs += "`"$coreLib`"" }
 if (Test-Path $gpuLib)  { $linkArgs += "`"$gpuLib`"" }
 
@@ -99,20 +99,20 @@ $linkArgs += "kernel32.lib", "user32.lib", "gdi32.lib", "shell32.lib",
              "msvcrt.lib", "vcruntime.lib", "ucrt.lib"
 
 # ---- Write response file ----
-$rspFile = Join-Path $OutDir "link_objects.rsp"
-$rspContent = @()
+$Script:rspFile = Join-Path $OutDir "link_objects.rsp"
+$Script:rspContent = @()
 foreach ($arg in $linkArgs) { $rspContent += $arg }
 foreach ($obj in $cleanObjs) { $rspContent += "`"$($obj.FullName)`"" }
 $rspContent | Out-File -FilePath $rspFile -Encoding ASCII
 
 # ---- Also save the validated object list for audit ----
-$goodListFile = Join-Path $OutDir "good_objects.txt"
+$Script:goodListFile = Join-Path $OutDir "good_objects.txt"
 $cleanObjs | ForEach-Object { $_.FullName } | Out-File -FilePath $goodListFile -Encoding ASCII
 
 # ---- Run linker via batch (avoids PS quoting issues) ----
-$stdoutFile = Join-Path $OutDir "link_stdout.txt"
-$stderrFile = Join-Path $OutDir "link_stderr.txt"
-$batchFile  = Join-Path $OutDir "run_link.bat"
+$Script:stdoutFile = Join-Path $OutDir "link_stdout.txt"
+$Script:stderrFile = Join-Path $OutDir "link_stderr.txt"
+$Script:batchFile = Join-Path $OutDir "run_link.bat"
 
 @"
 @echo off
@@ -120,7 +120,7 @@ $batchFile  = Join-Path $OutDir "run_link.bat"
 exit /b %errorlevel%
 "@ | Set-Content -Path $batchFile -Encoding ASCII
 
-$cmdProc = Start-Process -FilePath $batchFile -NoNewWindow -Wait -PassThru
+$Script:cmdProc = Start-Process -FilePath $batchFile -NoNewWindow -Wait -PassThru
 
 # Wait for child link.exe
 Start-Sleep -Seconds 2
@@ -129,15 +129,15 @@ while (Get-Process -Name link -ErrorAction SilentlyContinue) {
     Start-Sleep -Seconds 3
 }
 
-$output      = if (Test-Path $stdoutFile) { Get-Content $stdoutFile -Raw -ErrorAction SilentlyContinue } else { "" }
-$errorOutput = if (Test-Path $stderrFile) { Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue } else { "" }
+$Script:output = $(if (Test-Path $stdoutFile) { Get-Content $stdoutFile -Raw -ErrorAction SilentlyContinue } else { "" }
+$Script:errorOutput = $(if (Test-Path $stderrFile) { Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue } else { "" }
 if ($null -eq $output) { $output = "" }
 if ($null -eq $errorOutput) { $errorOutput = "" }
-$fullOutput = $output + "`n" + $errorOutput
+$Script:fullOutput = $output + "`n" + $errorOutput
 
 # ---- Check result ----
 if ($cmdProc.ExitCode -eq 0 -or ((Test-Path $finalExe) -and $fullOutput -notmatch "fatal error")) {
-    $sz = (Get-Item $finalExe).Length
+$Script:sz = (Get-Item $finalExe).Length
     Write-Host ""
     Write-Host "============================================================" -Fore Green
     Write-Host " SUCCESS! CLEAN LINK COMPLETE (first attempt, no brute force)" -Fore Green
@@ -149,7 +149,7 @@ if ($cmdProc.ExitCode -eq 0 -or ((Test-Path $finalExe) -and $fullOutput -notmatc
     
     # Count link warnings
     if ($output) {
-        $warnCount = ([regex]::Matches($output, 'LNK\d+')).Count
+$Script:warnCount = ([regex]::Matches($output, 'LNK\d+')).Count
         if ($warnCount -gt 0) {
             Write-Host " Link warnings: $warnCount (see $stdoutFile)" -Fore Yellow
         }

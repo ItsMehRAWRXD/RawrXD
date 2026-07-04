@@ -30,7 +30,7 @@
   .\scripts\Smoke-IDE-TurnKey.ps1 -LaneBHeadless
 
 .EXAMPLE
-  $env:RAWRXD_SMOKE_MODEL = 'D:\models\TinyLlama.Q4_K_M.gguf'
+  ${env:RAWRXD_SMOKE_MODEL} = 'D:\models\TinyLlama.Q4_K_M.gguf'
   .\scripts\Smoke-IDE-TurnKey.ps1 -RunTpsSmoke -StrictTps
 #>
 param(
@@ -75,7 +75,7 @@ $params = @{
 if ($RunTpsSmoke.IsPresent) {
     $params.RunTpsSmoke = $true
 }
-elseif ($env:RAWRXD_SMOKE_MODEL -and $env:RAWRXD_SMOKE_MODEL.Trim().Length -gt 0) {
+elseif (${env:RAWRXD_SMOKE_MODEL} -and ${env:RAWRXD_SMOKE_MODEL}.Trim().Length -gt 0) {
     $params.RunTpsSmoke = $true
 }
 

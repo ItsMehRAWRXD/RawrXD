@@ -5,7 +5,7 @@
 #
 # Compares two trace envelopes emitted by:
 #   rawrxd.exe run <model> --prompt "..." --emit-json-trace cli.json
-#   $env:RAWRXD_PIPELINE_TRACE="ui.json"; RawrXD-Win32IDE.exe ...
+#   ${env:RAWRXD_PIPELINE_TRACE}="ui.json"; RawrXD-Win32IDE.exe ...
 #
 # Exit code 0 = structural match, 1 = mismatch.
 

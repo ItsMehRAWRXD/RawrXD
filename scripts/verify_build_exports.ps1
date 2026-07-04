@@ -9,7 +9,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
+$root = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
 $exe = Join-Path $root "build\$Config\RawrXD-AgenticIDE.exe"
 
 if (-not (Test-Path $exe)) {

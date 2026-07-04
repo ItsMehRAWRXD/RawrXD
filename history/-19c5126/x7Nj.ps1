@@ -318,29 +318,29 @@ function Show-CompletenessReport {
     Write-Section "IDE COMPLETENESS REPORT"
     
     Write-Host "`nCOMPLETENESS SCORE: " -NoNewline -ForegroundColor White
-    $scoreColor = if ($Analysis.CompletenessScore -ge 80) { 'Green' } 
+    $scoreColor = $(if ($Analysis.CompletenessScore -ge 80) { 'Green' } 
                   elseif ($Analysis.CompletenessScore -ge 60) { 'Yellow' } 
                   else { 'Red' }
     Write-Host "$($Analysis.CompletenessScore)%" -ForegroundColor $scoreColor
     
     Write-Host "`nIDE FEATURES:" -ForegroundColor $Colors.Info
     foreach ($feature in $Analysis.IDEFeatures.GetEnumerator()) {
-        $status = if ($feature.Value) { '✓' } else { '✗' }
-        $color = if ($feature.Value) { 'Green' } else { 'Red' }
+        $status = $(if ($feature.Value) { '✓' } else { '✗' }
+        $color = $(if ($feature.Value) { 'Green' } else { 'Red' }
         Write-Host "  $status $($feature.Key)" -ForegroundColor $color
     }
     
     Write-Host "`nCURSOR FEATURES:" -ForegroundColor $Colors.Info
     foreach ($feature in $Analysis.CursorFeatures.GetEnumerator()) {
-        $status = if ($feature.Value) { '✓' } else { '✗' }
-        $color = if ($feature.Value) { 'Green' } else { 'Red' }
+        $status = $(if ($feature.Value) { '✓' } else { '✗' }
+        $color = $(if ($feature.Value) { 'Green' } else { 'Red' }
         Write-Host "  $status $($feature.Key)" -ForegroundColor $color
     }
     
     Write-Host "`nCODEX FEATURES:" -ForegroundColor $Colors.Info
     foreach ($feature in $Analysis.CodexFeatures.GetEnumerator()) {
-        $status = if ($feature.Value) { '✓' } else { '✗' }
-        $color = if ($feature.Value) { 'Green' } else { 'Red' }
+        $status = $(if ($feature.Value) { '✓' } else { '✗' }
+        $color = $(if ($feature.Value) { 'Green' } else { 'Red' }
         Write-Host "  $status $($feature.Key)" -ForegroundColor $color
     }
     

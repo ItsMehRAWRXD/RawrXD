@@ -1,6 +1,6 @@
-$env:PATH += ";C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64";
-$env:INCLUDE += ";D:\rawrxd\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\include";
-$env:LIB += ";C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64";
+${env:PATH} += ";C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64";
+${env:INCLUDE} += ";D:\rawrxd\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\include";
+${env:LIB} += ";C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64";
 
 # Clean up locked file
 Rename-Item D:\rawrxd\build\bin\RawrXD_Native_Core.dll D:\rawrxd\build\bin\RawrXD_Native_Core.dll.old -Force -ErrorAction SilentlyContinue

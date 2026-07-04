@@ -74,7 +74,7 @@ $components = @(
 
 foreach ($comp in $components) {
     $exists = Test-Path (Join-Path $ProjectRoot $comp.Path) -ErrorAction SilentlyContinue
-    $status = if ($exists) { "✓ Present" } else { "✗ Missing" }
+    $status = $(if ($exists) { "✓ Present" } else { "✗ Missing" }
     $report += "- **$($comp.Name)**: $status - $($comp.Description)`n"
 }
 
@@ -244,7 +244,7 @@ $dependencies = @{
 foreach ($dep in $dependencies.Keys) {
     $pattern = $dependencies[$dep]
     $found = Select-String -Path "$ProjectRoot\src\*.cpp","$ProjectRoot\include\*.h" -Pattern $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
-    $status = if ($found) { "✓ Used" } else { "✗ Not detected" }
+    $status = $(if ($found) { "✓ Used" } else { "✗ Not detected" }
     $report += "- **$dep**: $status`n"
 }
 
@@ -267,7 +267,7 @@ $docs = @(
 
 foreach ($doc in $docs) {
     $exists = Test-Path (Join-Path $ProjectRoot $doc) -ErrorAction SilentlyContinue
-    $status = if ($exists) { "✓ Present" } else { "✗ Missing" }
+    $status = $(if ($exists) { "✓ Present" } else { "✗ Missing" }
     $report += "- **$doc**: $status`n"
 }
 

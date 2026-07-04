@@ -1,8 +1,8 @@
-$content = Get-Content "d:\rawrxd\link_output.txt"
-$lnk2019 = $content | Where-Object { $_ -match 'LNK2019|LNK2001' }
+$Script:content = Get-Content "d:\rawrxd\link_output.txt"
+$Script:lnk2019 = $content | Where-Object { $_ -match 'LNK2019|LNK2001' }
 
 # Extract unique symbol names  
-$symbols = @()
+$Script:symbols = @()
 foreach ($line in $lnk2019) {
     if ($line -match 'unresolved external symbol "([^"]+)"') {
         $symbols += $Matches[1]
@@ -10,12 +10,12 @@ foreach ($line in $lnk2019) {
         $symbols += $Matches[1]
     }
 }
-$unique = $symbols | Sort-Object -Unique
+$Script:unique = $symbols | Sort-Object -Unique
 
 # Sub-categorize "Other" (not matching command handler, webview2, etc.)
-$crt = @()
-$win32ide_methods = @()
-$truly_other = @()
+$Script:crt = @()
+$Script:win32ide_methods = @()
+$Script:truly_other = @()
 
 foreach ($s in $unique) {
     # Skip already categorized

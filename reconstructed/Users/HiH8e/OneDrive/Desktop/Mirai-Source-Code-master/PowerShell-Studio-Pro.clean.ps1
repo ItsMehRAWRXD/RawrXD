@@ -13,14 +13,14 @@ Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Design
 
 # Global state
-$script:CurrentProject = $null
-$script:DesignerControls = @()
-$script:SelectedControl = $null
-$script:PropertyGrid = $null
-$script:CodeEditorText = ""
-$script:DebugBreakpoints = @()
-$script:SnippetLibrary = @{}
-$script:RecentProjects = @()
+${script:CurrentProject} = $null
+${script:DesignerControls} = @()
+${script:SelectedControl} = $null
+${script:PropertyGrid} = $null
+${script:CodeEditorText} = ""
+${script:DebugBreakpoints} = @()
+${script:SnippetLibrary} = @{}
+${script:RecentProjects} = @()
 
 # (Syntax highlighting engine removed per 'no demos' simplification.)
 
@@ -46,7 +46,7 @@ function New-PSProject {
     Snippets = @()
     Created  = Get-Date
     Version  = "1.0.0"
-    Author   = $env:USERNAME
+    Author   = ${env:USERNAME}
   }
     
   $project | ConvertTo-Json -Depth 10 | Set-Content "$projectPath\project.json"
@@ -100,7 +100,7 @@ $window.ShowDialog() | Out-Null
 function Add-CodeSnippet {
   param([string]$Name, [string]$Code, [string]$Description)
     
-  $script:SnippetLibrary[$Name] = @{
+  ${script:SnippetLibrary}[$Name] = @{
     Code        = $Code
     Description = $Description
     Created     = Get-Date
@@ -172,7 +172,7 @@ function New-DesignerControl {
   $Control.add_Click({ param($sender, $e) Select-DesignerControl -Control $sender })
     
   $designerControl = [PSCustomObject]@{ Control = $Control; Type = $ControlType; Name = $Control.Name; Properties = @{}; Events = @{} }
-  $script:DesignerControls += $designerControl
+  ${script:DesignerControls} += $designerControl
   return $designerControl
 }
 
@@ -265,7 +265,7 @@ function Export-PS1X {
 function Export-DesignerToHTML {
   param([System.Windows.Forms.Form]$DesignerForm, [string]$OutputPath)
   $controls = @()
-  foreach ($dc in $script:DesignerControls) {
+  foreach ($dc in ${script:DesignerControls}) {
     $ctrl = $dc.Control
     $def = @{ type = $dc.Type.ToLower(); name = $ctrl.Name; text = $ctrl.Text }
     if ($dc.Type -eq 'Button' -and $dc.Events.ContainsKey('Click')) { $def.action = $dc.Events['Click'] }
@@ -278,10 +278,10 @@ function Export-DesignerToHTML {
 
 function Select-DesignerControl {
   param([System.Windows.Forms.Control]$Control)
-  if ($script:SelectedControl) { $script:SelectedControl.BackColor = [System.Drawing.SystemColors]::Control }
+  if (${script:SelectedControl}) { ${script:SelectedControl}.BackColor = [System.Drawing.SystemColors]::Control }
   $Control.BackColor = [System.Drawing.Color]::LightBlue
-  $script:SelectedControl = $Control
-  if ($script:PropertyGrid) { $script:PropertyGrid.SelectedObject = $Control }
+  ${script:SelectedControl} = $Control
+  if (${script:PropertyGrid}) { ${script:PropertyGrid}.SelectedObject = $Control }
 }
 
 function Export-WinFormsCode {
@@ -296,7 +296,7 @@ Add-Type -AssemblyName System.Drawing
 `$form.Size = New-Object System.Drawing.Size($($DesignerForm.Width), $($DesignerForm.Height))
 `$form.StartPosition = "CenterScreen"
 "@
-  foreach ($dc in $script:DesignerControls) {
+  foreach ($dc in ${script:DesignerControls}) {
     $ctrl = $dc.Control
     $var = "`$$($ctrl.Name)"
     $code += @"
@@ -386,8 +386,8 @@ $leftTabs.TabPages.AddRange(@($toolboxTab, $propertiesTab, $explorerTab)) | Out-
 $toolboxList = New-Object System.Windows.Forms.ListBox -Property @{ Dock = 'Fill' }
 $toolboxList.Items.AddRange(@('Button', 'TextBox', 'Label', 'CheckBox', 'RadioButton', 'ComboBox', 'ListBox', 'Panel', 'GroupBox'))
 $toolboxTab.Controls.Add($toolboxList)
-$script:PropertyGrid = New-Object System.Windows.Forms.PropertyGrid -Property @{ Dock = 'Fill'; HelpVisible = $true }
-$propertiesTab.Controls.Add($script:PropertyGrid)
+${script:PropertyGrid} = New-Object System.Windows.Forms.PropertyGrid -Property @{ Dock = 'Fill'; HelpVisible = $true }
+$propertiesTab.Controls.Add(${script:PropertyGrid})
 $explorerTree = New-Object System.Windows.Forms.TreeView -Property @{ Dock = 'Fill' }
 $explorerTab.Controls.Add($explorerTree)
 

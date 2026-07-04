@@ -38,7 +38,7 @@ if (-not (Test-Path $exe)) {
     throw "Runner executable not found: $exe"
 }
 
-$cudaDll = Join-Path $env:WINDIR "System32\nvcuda.dll"
+$cudaDll = Join-Path ${env:WINDIR} "System32\nvcuda.dll"
 if (-not (Test-Path $cudaDll)) {
     throw "NVIDIA CUDA driver not found ($cudaDll). benchmark_generation/benchmark_long_context require NVIDIA_CUDA on this lane."
 }

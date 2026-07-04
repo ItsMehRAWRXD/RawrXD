@@ -1,7 +1,7 @@
-$srcDir = "D:\rawrxd\src"
-$files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp | Where-Object { $_.FullName -notmatch "_noqt" }
+$Script:srcDir = "D:\rawrxd\src"
+$Script:files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp | Where-Object { $_.FullName -notmatch "_noqt" }
 
-$mappings = @{
+$Script:mappings = @{
     'Q_OS_WIN' = '_WIN32'
     'Q_OS_MAC' = '__APPLE__'
     'Q_OS_MACOS' = '__APPLE__'
@@ -11,29 +11,29 @@ $mappings = @{
     'Q_WS_MAC' = '__APPLE__'
 }
 
-$totalModified = 0
-$totalReplacements = 0
+$Script:totalModified = 0
+$Script:totalReplacements = 0
 
 foreach ($file in $files) {
-    $content = Get-Content -Path $file.FullName -Raw
-    $originalContent = $content
-    $fileReplacements = 0
+$Script:content = Get-Content -Path $file.FullName -Raw
+$Script:originalContent = $content
+$Script:fileReplacements = 0
 
     foreach ($key in $mappings.Keys) {
-        $val = $mappings[$key]
-        $pattern = "\b" + [regex]::Escape($key) + "\b"
-        $matches = [regex]::Matches($content, $pattern)
+$Script:val = $mappings[$key]
+$Script:pattern = "\b" + [regex]::Escape($key) + "\b"
+$Script:matches = [regex]::Matches($content, $pattern)
         if ($matches.Count -gt 0) {
-            $content = $content -replace $pattern, $val
+$Script:content = $content -replace $pattern, $val
             $fileReplacements += $matches.Count
         }
     }
     
     # Handle QT_VERSION blocks - comment them out or assume they are false
-    $qtVersionPattern = '(?m)^#if\s+QT_VERSION.*?$.*?^#endif.*?$'
+$Script:qtVersionPattern = '(?m)^#if\s+QT_VERSION.*?$.*?^#endif.*?$'
     # Actually, simpler to just replace QT_VERSION with 0
     if ($content -match "QT_VERSION") {
-        $content = $content -replace "QT_VERSION", "0"
+$Script:content = $content -replace "QT_VERSION", "0"
         $fileReplacements++
     }
 

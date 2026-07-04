@@ -33,14 +33,14 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$script:BrowserRoot = Split-Path $PSScriptRoot -Parent
-$script:ChatbotPath = Join-Path $BrowserRoot "gui\ide_chatbot.html"
+${script:BrowserRoot} = Split-Path $PSScriptRoot -Parent
+${script:ChatbotPath} = Join-Path $BrowserRoot "gui\ide_chatbot.html"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DRIVER INFORMATION DATABASE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:DriverResources = @{
+${script:DriverResources} = @{
     NVIDIA = @{
         Name = "NVIDIA Graphics Drivers"
         AutoDetectURL = "https://www.nvidia.com/download/index.aspx"
@@ -67,7 +67,7 @@ $script:DriverResources = @{
     }
 }
 
-$script:DocumentationResources = @{
+${script:DocumentationResources} = @{
     Python = "https://docs.python.org/"
     PowerShell = "https://docs.microsoft.com/powershell/"
     Qt = "https://doc.qt.io/"

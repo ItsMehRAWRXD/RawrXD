@@ -28,8 +28,8 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if (-not $BuildDir) {
-    if ($env:RAWRXD_BUILD_DIR -and $env:RAWRXD_BUILD_DIR.Trim().Length -gt 0) {
-        $BuildDir = $env:RAWRXD_BUILD_DIR
+    if (${env:RAWRXD_BUILD_DIR} -and ${env:RAWRXD_BUILD_DIR}.Trim().Length -gt 0) {
+        $BuildDir = ${env:RAWRXD_BUILD_DIR}
     }
     else {
         $BuildDir = Join-Path $repoRoot "build-win32"

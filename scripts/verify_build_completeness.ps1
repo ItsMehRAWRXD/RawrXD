@@ -17,7 +17,7 @@ $Cyan = "`e[36m"
 $Reset = "`e[0m"
 
 if (-not $ExePath) {
-    $root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
+    $root = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
     $ExePath = Join-Path $root "build" $Config "$Target.exe"
 }
 

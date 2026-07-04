@@ -56,7 +56,7 @@ for ($nodeId = 0; $nodeId -lt 8; $nodeId++) {
     Write-Host "  Node $nodeId`: Loading model shard..." -NoNewline
     
     $nodeStartTime = Get-Date
-    $shardSize = if ($syntheticMode) { 15GB } else { $modelSize / 8 }
+    $shardSize = $(if ($syntheticMode) { 15GB } else { $modelSize / 8 }
     
     try {
         # Simulate model loading
@@ -140,7 +140,7 @@ for ($nodeId = 0; $nodeId -lt 8; $nodeId++) {
     }
     $quantResults += $result
     
-    $status = if ($quantPass) { "PASS" } else { "FAIL" }
+    $status = $(if ($quantPass) { "PASS" } else { "FAIL" }
     "[$timestamp] [QUANT] Q8_0 fidelity: $([math]::Round($actualPrecision * 100, 2))% (threshold: $([math]::Round($expectedPrecision * 100, 2))%) [$status]" | Out-File $nodeLog -Append
     
     if ($quantPass) {
@@ -259,7 +259,7 @@ for ($check = 1; $check -le $driftCheckIterations; $check++) {
         DriftDetected = $stdDev -gt 0.001
     }
     
-    $status = if ($stdDev -gt 0.001) { "⚠️ DRIFT" } else { "✅ SYNC" }
+    $status = $(if ($stdDev -gt 0.001) { "⚠️ DRIFT" } else { "✅ SYNC" }
     Write-Host "    Check $check`: σ=$([math]::Round($stdDev, 6)) $status" -ForegroundColor $(if ($stdDev -gt 0.001) { "Red" } else { "Green" })
     
     Start-Sleep -Milliseconds 50

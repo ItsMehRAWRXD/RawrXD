@@ -24,8 +24,8 @@ function Write-TestResult {
         [bool]$Passed,
         [string]$Details = ""
     )
-    $status = if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
-    $color = if ($Passed) { "Green" } else { "Red" }
+    $status = $(if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
+    $color = $(if ($Passed) { "Green" } else { "Red" }
     Write-Host "$status | $TestName" -ForegroundColor $color
     if ($Details) {
         Write-Host "        └─ $Details" -ForegroundColor Gray
@@ -331,7 +331,7 @@ if ($test43) { $passCount++ } else { $failCount++ }
 Write-Header "TEST SUMMARY"
 
 $totalTests = $passCount + $failCount
-$passPercent = if ($totalTests -gt 0) { [math]::Round(($passCount / $totalTests) * 100, 2) } else { 0 }
+$passPercent = $(if ($totalTests -gt 0) { [math]::Round(($passCount / $totalTests) * 100, 2) } else { 0 }
 
 Write-Host "
 Tests Run:      $totalTests

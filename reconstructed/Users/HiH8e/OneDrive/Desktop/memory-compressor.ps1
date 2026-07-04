@@ -110,7 +110,7 @@ else { # demo
   } else {
     $c = Compress-InMemory -Input $orig -GroupSize $GroupSize
   }
-  $d = if($c.CompressedBytes -gt 0){ Decompress-InMemory -Compressed $c.Data } else { [pscustomobject]@{ CompressedBytes=0; ExpandedBytes=0; ExpansionFactor=0; Data=@(); NegativeHeader=$false; OriginalSize=0 } }
+  $d = $(if ($c.CompressedBytes -gt 0){ Decompress-InMemory -Compressed $c.Data } else { [pscustomobject]@{ CompressedBytes=0; ExpandedBytes=0; ExpansionFactor=0; Data=@(); NegativeHeader=$false; OriginalSize=0 } }
   $report = [pscustomobject]@{
     File = (Split-Path -Leaf $FilePath)
     OriginalBytes = $c.OriginalBytes
@@ -118,10 +118,10 @@ else { # demo
     CompressRatio = $c.Ratio
   ExpandedBytes = $d.ExpandedBytes
   ExpansionFactor = $d.ExpansionFactor
-  ExpandedVsOriginal = if($c.OriginalBytes -gt 0 -and $d.ExpandedBytes -gt 0){ ($d.ExpandedBytes / $c.OriginalBytes) } else { 0 }
+  ExpandedVsOriginal = $(if ($c.OriginalBytes -gt 0 -and $d.ExpandedBytes -gt 0){ ($d.ExpandedBytes / $c.OriginalBytes) } else { 0 }
   DisplayRatio = $c.DisplayRatio
     NegativeHeaderDetected = $d.NegativeHeader
-    NegativeOriginalSize = if($d.NegativeHeader){ $d.OriginalSize } else { $null }
+    NegativeOriginalSize = $(if ($d.NegativeHeader){ $d.OriginalSize } else { $null }
   }
   $report | Format-List
   if($SaveExpanded){ [IO.File]::WriteAllBytes("$FilePath.expanded", $d.Data) }

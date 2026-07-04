@@ -8,7 +8,7 @@ param(
 )
 
 $fallbackMl64 = Join-Path $VCToolsDir "ml64.exe"
-$primaryMl64 = $env:RAWRXD_ML64_PRIMARY
+$primaryMl64 = ${env:RAWRXD_ML64_PRIMARY}
 if (-not $primaryMl64) {
     # If the user has an "ours" ml64 on PATH, prefer it.
     $cmd = Get-Command ml64.exe -ErrorAction SilentlyContinue

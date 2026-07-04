@@ -82,15 +82,15 @@ if (-not $ModelPath) {
     $ModelPath = Join-Path $repoRoot "model\llama-7b-q4_0.gguf"
 }
 
-$env:RAWRXD_TPS_REF = if ($env:RAWRXD_TPS_REF) { $env:RAWRXD_TPS_REF } else { "239" }
+${env:RAWRXD_TPS_REF} = $(if (${env:RAWRXD_TPS_REF}) { ${env:RAWRXD_TPS_REF} } else { "239" }
 if ($RequireBeat) {
-    $env:RAWRXD_TPS_REQUIRE_BEAT = "1"
+    ${env:RAWRXD_TPS_REQUIRE_BEAT} = "1"
 } else {
     Remove-Item Env:\RAWRXD_TPS_REQUIRE_BEAT -ErrorAction SilentlyContinue
 }
 
 if ($DecodeProgress) {
-    $env:RAWRXD_GGUF_DECODE_PROGRESS = "1"
+    ${env:RAWRXD_GGUF_DECODE_PROGRESS} = "1"
 } else {
     Remove-Item Env:\RAWRXD_GGUF_DECODE_PROGRESS -ErrorAction SilentlyContinue
 }

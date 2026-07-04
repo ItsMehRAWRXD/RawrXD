@@ -60,7 +60,7 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
-$Script:Version = "1.0.0"
+${Script:Version} = "1.0.0"
 
 # Color output helpers
 function Write-Success { param($Message) Write-Host "✅ $Message" -ForegroundColor Green }
@@ -81,7 +81,7 @@ function Write-Section { param($Message)
 
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║  🔥 BigDaddyG Stress Test v$Script:Version                                 ║" -ForegroundColor Magenta
+Write-Host "║  🔥 BigDaddyG Stress Test v${Script:Version}                                 ║" -ForegroundColor Magenta
 Write-Host "║  Virtual VRAM Pool Validation (36.2GB Model)                        ║" -ForegroundColor Magenta
 Write-Host "╚═══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
@@ -179,7 +179,7 @@ function Get-ThermalStatus {
         $disk = Get-PhysicalDisk | Where-Object { $_.DeviceId -eq $drive.deviceId }
         if ($disk) {
             $health = Get-PhysicalDisk -UniqueId $disk.UniqueId | Get-StorageReliabilityCounter -ErrorAction SilentlyContinue
-            $temp = if ($health -and $health.Temperature) { $health.Temperature } else { $null }
+            $temp = $(if ($health -and $health.Temperature) { $health.Temperature } else { $null }
             
             $status.drives += @{
                 deviceId = $drive.deviceId
@@ -188,7 +188,7 @@ function Get-ThermalStatus {
                 headroom = $drive.thermalHeadroom
                 warning = $thermalConfig.thresholds.warning
                 critical = $thermalConfig.thresholds.critical
-                status = if ($temp -ge $thermalConfig.thresholds.critical) { "CRITICAL" }
+                status = $(if ($temp -ge $thermalConfig.thresholds.critical) { "CRITICAL" }
                         elseif ($temp -ge $thermalConfig.thresholds.warning) { "WARNING" }
                         else { "NORMAL" }
             }
@@ -225,7 +225,7 @@ function Get-ThermalStatus {
 $initialStatus = Get-ThermalStatus
 Write-Info "Initial thermal status:"
 foreach ($drive in $initialStatus.drives) {
-    $tempStr = if ($drive.temperature) { "$($drive.temperature)°C" } else { "N/A" }
+    $tempStr = $(if ($drive.temperature) { "$($drive.temperature)°C" } else { "N/A" }
     Write-Host "  DeviceId $($drive.deviceId): $tempStr (Headroom: $($drive.headroom)°C)" -ForegroundColor White
 }
 
@@ -486,7 +486,7 @@ if ($success) {
 Write-Section "Phase 6: Generating Test Report"
 
 $report = @{
-    version = $Script:Version
+    version = ${Script:Version}
     timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
     testDurationMinutes = [math]::Round($testDuration.TotalMinutes, 2)
     model = @{

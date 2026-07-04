@@ -22,7 +22,7 @@ Write-Host ""
 # STEP 1: Check model directory
 # ============================================
 
-$ollamaPath = "$env:USERPROFILE\.ollama\models"
+$ollamaPath = "${env:USERPROFILE}\.ollama\models"
 $modelDir = Join-Path $ollamaPath "manifests" "registry.ollama.ai" "library" "cheetah-stealth-agentic"
 
 Write-Host "🔍 Step 1: Locating model files..." -ForegroundColor Yellow

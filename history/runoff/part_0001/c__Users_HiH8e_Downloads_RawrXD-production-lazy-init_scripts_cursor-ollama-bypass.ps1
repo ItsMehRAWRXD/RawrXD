@@ -40,7 +40,7 @@ try {
 }
 
 # Create configuration directory
-$configDir = "$env:APPDATA\Cursor"
+$configDir = "${env:APPDATA}\Cursor"
 Write-Host "[3/5] Creating configuration directory..." -ForegroundColor Yellow
 New-Item -ItemType Directory -Force -Path "$configDir\User" | Out-Null
 Write-Host "✓ Configuration directory: $configDir" -ForegroundColor Green

@@ -27,7 +27,7 @@ param(
     [string]$Topic = "",
     [string]$MemoryFile = "",
     [switch]$SkipPrompt = $false,
-    [switch]$Watch = $true
+    [switch]$Watch
 )
 
 Set-StrictMode -Version Latest

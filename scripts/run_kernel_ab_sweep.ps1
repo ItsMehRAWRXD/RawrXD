@@ -57,8 +57,8 @@ function Invoke-BenchmarkRun {
         [int] $RunNumber
     )
     
-    $env:GGML_VK_TILE_SIZE = $Config.TileSize
-    $env:GGML_VK_FORCE_KERNEL = if ($Config.Fused) { "fused" } else { "fallback" }
+    ${env:GGML_VK_TILE_SIZE} = $Config.TileSize
+    ${env:GGML_VK_FORCE_KERNEL} = $(if ($Config.Fused) { "fused" } else { "fallback" }
     
     Write-BenchLog "Starting run $RunNumber : kernel=$($Config.Name), tile=$($Config.TileSize), fused=$($Config.Fused)"
     
@@ -77,7 +77,7 @@ function Invoke-BenchmarkRun {
         
         # Parse trace JSON if emitted
         $JsonMatch = [System.Text.RegularExpressions.Regex]::Match($RawOutput, '\{.*"token_count".*?\}', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-        $TraceJson = if ($JsonMatch.Success) { $JsonMatch.Value } else { $null }
+        $TraceJson = $(if ($JsonMatch.Success) { $JsonMatch.Value } else { $null }
         
         return @{
             Success         = $true
@@ -153,7 +153,7 @@ foreach ($Variant in $FilteredVariants) {
     $SuccessRuns = $VariantRuns | Where-Object { $_.Success }
     if ($SuccessRuns.Count -gt 0) {
         $MeanTokS = ($SuccessRuns | Measure-Object -Property TokPerSec -Average).Average
-        $StdDev = if ($SuccessRuns.Count -gt 1) {
+        $StdDev = $(if ($SuccessRuns.Count -gt 1) {
             [math]::Sqrt(($SuccessRuns | Measure-Object -Property TokPerSec -StandardDeviation).StandardDeviation)
         } else { 0 }
         

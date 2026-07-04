@@ -136,7 +136,7 @@ class CodeAnalysisProcessor : IRequestProcessor {
             $complexityCount += $keywordMatches.Count
         }
         
-        $complexityRating = if ($complexityCount -le 10) { "Low" }
+        $complexityRating = $(if ($complexityCount -le 10) { "Low" }
                            elseif ($complexityCount -le 20) { "Medium" }
                            elseif ($complexityCount -le 30) { "High" }
                            else { "Very High" }
@@ -148,7 +148,7 @@ class CodeAnalysisProcessor : IRequestProcessor {
             EmptyLines = $emptyLines
             CyclomaticComplexity = $complexityCount
             ComplexityRating = $complexityRating
-            CommentRatio = if ($codeLines -gt 0) { [math]::Round($commentLines / $codeLines, 2) } else { 0 }
+            CommentRatio = $(if ($codeLines -gt 0) { [math]::Round($commentLines / $codeLines, 2) } else { 0 }
         }
     }
     
@@ -209,7 +209,7 @@ class CodeAnalysisProcessor : IRequestProcessor {
         }
         
         # Calculate estimated performance rating
-        $rating = if ($score -ge 90) { "Excellent" }
+        $rating = $(if ($score -ge 90) { "Excellent" }
                  elseif ($score -ge 75) { "Good" }
                  elseif ($score -ge 60) { "Average" }
                  else { "Needs Improvement" }
@@ -267,7 +267,7 @@ class CodeAnalysisProcessor : IRequestProcessor {
         return @{
             StyleScore = [math]::Max($score, 0)
             Issues = $styleIssues
-            Compliance = if ($score -ge 90) { "Excellent" } elseif ($score -ge 75) { "Good" } else { "Needs Work" }
+            Compliance = $(if ($score -ge 90) { "Excellent" } elseif ($score -ge 75) { "Good" } else { "Needs Work" }
         }
     }
 }

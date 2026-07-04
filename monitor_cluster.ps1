@@ -115,7 +115,7 @@ function Show-ClusterDashboard {
             default   { "Yellow" }
         }
         
-        $latencyColor = if ($metric.RingLatency -eq 0) { "Gray" }
+        $latencyColor = $(if ($metric.RingLatency -eq 0) { "Gray" }
                        elseif ($metric.RingLatency -lt 10) { "Green" }
                        elseif ($metric.RingLatency -lt 50) { "Yellow" }
                        else { "Red" }
@@ -169,7 +169,7 @@ if (-not (Test-Path $csvPath)) {
 }
 
 $iteration = 0
-$maxIterations = if ($StressTest) { 100 } else { [int]::MaxValue }
+$maxIterations = $(if ($StressTest) { 100 } else { [int]::MaxValue }
 
 do {
     $iteration++

@@ -1,18 +1,18 @@
-$f = "D:\rawrxd\tests\test_tool_registry.cpp"
-$c = Get-Content $f -Raw
+$Script:f = "D:\rawrxd\tests\test_tool_registry.cpp"
+$Script:c = Get-Content $f -Raw
 
 # 1. Replace TestLogger class with type alias
-$c = $c -replace '(?s)class TestLogger : public Logger \{.*?\};', '// Logger has no virtual methods - use real Logger for testing.
+$Script:c = $c -replace '(?s)class TestLogger : public Logger \{.*?\};', '// Logger has no virtual methods - use real Logger for testing.
 // Log output goes to stdout/stderr via Logger built-in console handler.
 using TestLogger = Logger;'
 
 # 2. Replace TestMetrics class with type alias
-$c = $c -replace '(?s)class TestMetrics : public Metrics \{.*?\};', '// Metrics has no virtual methods - use real Metrics for testing.
+$Script:c = $c -replace '(?s)class TestMetrics : public Metrics \{.*?\};', '// Metrics has no virtual methods - use real Metrics for testing.
 // Assertions use getCounter() from the real API.
 using TestMetrics = Metrics;'
 
 # 3. Replace mock-based log/metric assertions in test_logging_and_metrics
-$c = $c -replace '(?s)    // Verify logging\s*bool hasInfoLog.*?successful\\" << std::endl;', '    // Logger writes directly to stdout; no mock interception (no virtual interface).
+$Script:c = $c -replace '(?s)    // Verify logging\s*bool hasInfoLog.*?successful\\" << std::endl;', '    // Logger writes directly to stdout; no mock interception (no virtual interface).
     std::cout << "checkmark Logging output visible above (Logger writes to console)" << std::endl;
 
     // Verify metrics via the real Metrics API

@@ -20,7 +20,7 @@ let agentMode: AgentMode | undefined;
 let terminalIntegration: TerminalIntegration | undefined;
 let sidecarClient: SidecarClient | undefined;
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('rawrxd');
     
     if (!config.get('enabled', true)) {
@@ -28,8 +28,9 @@ export function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    // Spawn the native MASM LSP client
-    const lspPath = path.join(context.extensionPath, '..', 'src', 'masm', 'LSPClient.exe');
+    // Spawn the RawrXD LSP server
+    // Use the built binary from the cmake output directory
+    const lspPath = 'd:\\rawrxd-ci-bootstrap\\build\\cmake-preset-ninja-release\\bin\\RawrXD_LSPServer.exe';
     
     try {
         lspProcess = spawn(lspPath, [], {
@@ -50,7 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
         clusterClient = new RawrXDClusterClient(endpoint);
 
         // Register completion provider for supported languages
-        const languages = ['python', 'javascript', 'typescript', 'cpp', 'c', 'asm'];
+        const languages = ['python', 'javascript', 'typescript', 'cpp', 'c', 'asm', 'rawrxd-script'];
         
         for (const lang of languages) {
             const provider = vscode.languages.registerCompletionItemProvider(

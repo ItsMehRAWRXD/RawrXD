@@ -14,7 +14,7 @@ Write-Host ""
 if (Test-Path "swarm_minimal.py") {
   Write-Host "[1/3] Starting minimal swarm controller..." -ForegroundColor Cyan
   Start-Job -ScriptBlock {
-    Set-Location $using:PWD
+    Set-Location ${using:PWD}
     py swarm_minimal.py
   } -Name "SimpleSwarm" | Out-Null
     
@@ -58,7 +58,7 @@ except KeyboardInterrupt:
   Write-Host "[✓] Created basic swarm controller" -ForegroundColor Green
     
   Start-Job -ScriptBlock {
-    Set-Location $using:PWD
+    Set-Location ${using:PWD}
     py swarm_minimal.py
   } -Name "SimpleSwarm" | Out-Null
     

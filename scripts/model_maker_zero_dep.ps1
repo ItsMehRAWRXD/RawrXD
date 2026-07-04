@@ -211,7 +211,7 @@ class BinaryModelBuilder {
                     # Quantize each weight to 4 bits
                     for ($i = 0; $i -lt $block.Length; $i += 2) {
                         $q1 = [Math]::Round(($block[$i] - $min) / $scale) -band 0x0F
-                        $q2 = if (($i + 1) -lt $block.Length) {
+                        $q2 = $(if (($i + 1) -lt $block.Length) {
                             [Math]::Round(($block[$i+1] - $min) / $scale) -band 0x0F
                         } else { 0 }
                         

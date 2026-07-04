@@ -11,7 +11,7 @@ function Get-ToolPath {
     $cmd = Get-Command $ToolName -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
 
-    $vswhere = "$Env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    $vswhere = "${Env:ProgramFiles}(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
     if (Test-Path $vswhere) {
         $vsroot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.${Architecture} -property installationPath 2>$null
         if ($vsroot) {

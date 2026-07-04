@@ -1,11 +1,11 @@
-$ErrorActionPreference = "Stop"
+$Script:ErrorActionPreference = "Stop"
 
 Write-Host "`n=== Q2_K GGUF Model Testing ===" -ForegroundColor Cyan
 Write-Host "Testing actual Q2_K quantized GGUF files" -ForegroundColor Yellow
 Write-Host ""
 
 # Test model path
-$testModel = "D:\OllamaModels\BigDaddyG-Q2_K-PRUNED-16GB.gguf"
+$Script:testModel = "D:\OllamaModels\BigDaddyG-Q2_K-PRUNED-16GB.gguf"
 
 Write-Host "Test Model: $testModel" -ForegroundColor Green
 Write-Host "Size: 15.8 GB (smaller for faster testing)" -ForegroundColor Gray
@@ -26,7 +26,7 @@ Write-Host "[2/4] Testing with RawrXD ModelLoader..." -ForegroundColor Cyan
 Write-Host "Attempting to load model metadata..." -ForegroundColor Gray
 
 # Create a simple test that just tries to open the file
-$testCode = @"
+$Script:testCode = @"
 #include <iostream>
 #include <fstream>
 #include <cstring>

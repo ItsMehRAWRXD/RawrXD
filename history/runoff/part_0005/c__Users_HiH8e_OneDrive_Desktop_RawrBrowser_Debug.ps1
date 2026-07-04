@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Drawing
 
 # Enhanced error logging with file output
 $ErrorActionPreference = "Continue"
-$logPath = Join-Path $env:TEMP "RawrBrowser_DetailedLog.txt"
+$logPath = Join-Path ${env:TEMP} "RawrBrowser_DetailedLog.txt"
 $debugMode = $true
 
 function Write-DetailedLog {
@@ -91,7 +91,7 @@ catch {
 }
 
 # WebView2 SDK setup
-$wvDir = "$env:TEMP\WVLibs"
+$wvDir = "${env:TEMP}\WVLibs"
 $useWebView2 = $false
 
 Write-DetailedLog "WebView2 SDK directory: $wvDir" "DEBUG"
@@ -191,7 +191,7 @@ if ($useWebView2) {
     $browser.Dock = [System.Windows.Forms.DockStyle]::Fill
         
     # Set user data folder
-    $userDataFolder = "$env:TEMP\RawrBrowserUserData"
+    $userDataFolder = "${env:TEMP}\RawrBrowserUserData"
     if (!(Test-Path $userDataFolder)) {
       New-Item -ItemType Directory -Path $userDataFolder -Force | Out-Null
       Write-DetailedLog "Created user data folder: $userDataFolder" "DEBUG"
@@ -204,9 +204,9 @@ if ($useWebView2) {
     $statusLabel.Text = "WebView2 control created, initializing..."
         
     # Track initialization state
-    $script:initStarted = $false
-    $script:initCompleted = $false
-    $script:navigationCompleted = $false
+    ${script:initStarted} = $false
+    ${script:initCompleted} = $false
+    ${script:navigationCompleted} = $false
         
     # Core initialization event with comprehensive error handling
     $browser.add_CoreWebView2InitializationCompleted({
@@ -217,7 +217,7 @@ if ($useWebView2) {
                 
           if ($initEvent.IsSuccess) {
             Write-DetailedLog "WebView2 core initialized successfully" "SUCCESS"
-            $script:initCompleted = $true
+            ${script:initCompleted} = $true
             $statusLabel.Text = "Loading interface..."
                     
             # Enable dev tools
@@ -393,7 +393,7 @@ if ($useWebView2) {
       param($sender, $e)
       try {
         Write-DetailedLog "Navigation completed - Success: $($e.IsSuccess)" "DEBUG"
-        $script:navigationCompleted = $true
+        ${script:navigationCompleted} = $true
         if ($e.IsSuccess) {
           $statusLabel.Text = "🦖 Rawr Browser Ready - Debug Mode Active"
         }
@@ -409,7 +409,7 @@ if ($useWebView2) {
         
   # Start initialization with timeout
   Write-DetailedLog "Starting WebView2 core initialization..." "INFO"
-  $script:initStarted = $true
+  ${script:initStarted} = $true
         
   # Use the correct overload - no parameters for default initialization
   try {
@@ -423,7 +423,7 @@ if ($useWebView2) {
   $timer = New-Object System.Windows.Forms.Timer
   $timer.Interval = 10000  # 10 second timeout
   $timer.add_Tick({
-      if (-not $script:initCompleted) {
+      if (-not ${script:initCompleted}) {
         Write-DetailedLog "WebView2 initialization timeout after 10 seconds" "ERROR"
         $statusLabel.Text = "Initialization timeout - check log for details"
         $timer.Stop()

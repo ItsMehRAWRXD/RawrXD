@@ -54,9 +54,7 @@ Write-Host "  - Linker: $(Split-Path -Leaf $LINKER)" -ForegroundColor Gray
 
 # ===================================================================
 # CLEAN (if rebuild)
-# ===================================================================
-
-if ($Rebuild) {
+# =================================================================== $(if ($Rebuild) {
     Write-Host "`n[2/6] Cleaning previous build..." -ForegroundColor Yellow
     
     if (Test-Path $OBJ_FILE) {

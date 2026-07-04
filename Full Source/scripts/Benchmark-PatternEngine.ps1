@@ -86,7 +86,7 @@ public static class $typeName
         $infoResult = $getInfoMethod.Invoke($null, @($infoBuffer))
         if ($infoResult -eq 0) {
             $mode = [System.Runtime.InteropServices.Marshal]::ReadInt32($infoBuffer, 4)
-            $modeStr = if ($mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
+            $modeStr = $(if ($mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
             Write-Host "[$EngineName] Engine mode: $modeStr" -ForegroundColor Cyan
         }
     }

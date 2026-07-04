@@ -28,7 +28,7 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$script:TestResults = @{
+${script:TestResults} = @{
     Passed = 0
     Failed = 0
     Skipped = 0
@@ -57,16 +57,16 @@ function Write-TestResult {
     
     if ($Passed) {
         Write-Host "  ✅ PASS: $TestName" -ForegroundColor Green
-        $script:TestResults.Passed++
+        ${script:TestResults}.Passed++
     } else {
         Write-Host "  ❌ FAIL: $TestName" -ForegroundColor Red
         if ($Message) {
             Write-Host "     └─ $Message" -ForegroundColor Yellow
         }
-        $script:TestResults.Failed++
+        ${script:TestResults}.Failed++
     }
     
-    $script:TestResults.Details += @{
+    ${script:TestResults}.Details += @{
         Name = $TestName
         Passed = $Passed
         Message = $Message
@@ -80,7 +80,7 @@ function Write-TestSkipped {
     if ($Reason) {
         Write-Host "     └─ $Reason" -ForegroundColor Gray
     }
-    $script:TestResults.Skipped++
+    ${script:TestResults}.Skipped++
 }
 
 function Test-FileExists {
@@ -120,8 +120,8 @@ Write-Host "║     AutoModelLoader Production Features - Smoke Tests         �
 Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
 Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
-Write-Host "Host: $env:COMPUTERNAME" -ForegroundColor Gray
-Write-Host "User: $env:USERNAME" -ForegroundColor Gray
+Write-Host "Host: ${env:COMPUTERNAME}" -ForegroundColor Gray
+Write-Host "User: ${env:USERNAME}" -ForegroundColor Gray
 Write-Host ""
 
 $ProjectRoot = "D:\RawrXD-production-lazy-init"
@@ -171,7 +171,7 @@ Test-FileContains "$SrcDir\auto_model_loader.cpp" `
     "Production model names (specific versions)"
 
 # Verify VS Code extensions directory detection
-$vscodePath = "$env:USERPROFILE\.vscode\extensions"
+$vscodePath = "${env:USERPROFILE}\.vscode\extensions"
 if (Test-Path $vscodePath) {
     $copilotExtension = Get-ChildItem $vscodePath -Directory | Where-Object { $_.Name -like "*github.copilot*" }
     if ($copilotExtension) {
@@ -365,9 +365,7 @@ if ($productionComments.Count -ge 3) {
 
 # ============================================================================
 # Phase 8: Build Verification (Optional)
-# ============================================================================
-
-if (-not $SkipBuild) {
+# ============================================================================ $(if (-not $SkipBuild) {
     Write-TestHeader "Phase 8: Build Verification"
     
     $buildDir = "$ProjectRoot\build"
@@ -419,13 +417,13 @@ Write-Host "                       TEST SUMMARY                            " -Fo
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Magenta
 Write-Host ""
 
-$total = $script:TestResults.Passed + $script:TestResults.Failed + $script:TestResults.Skipped
-$passRate = if ($total -gt 0) { [math]::Round(($script:TestResults.Passed / $total) * 100, 1) } else { 0 }
+$total = ${script:TestResults}.Passed + ${script:TestResults}.Failed + ${script:TestResults}.Skipped
+$passRate = $(if ($total -gt 0) { [math]::Round((${script:TestResults}.Passed / $total) * 100, 1) } else { 0 }
 
 Write-Host "  Total Tests:  $total" -ForegroundColor White
-Write-Host "  ✅ Passed:    $($script:TestResults.Passed)" -ForegroundColor Green
-Write-Host "  ❌ Failed:    $($script:TestResults.Failed)" -ForegroundColor Red
-Write-Host "  ⏭️  Skipped:   $($script:TestResults.Skipped)" -ForegroundColor Yellow
+Write-Host "  ✅ Passed:    $(${script:TestResults}.Passed)" -ForegroundColor Green
+Write-Host "  ❌ Failed:    $(${script:TestResults}.Failed)" -ForegroundColor Red
+Write-Host "  ⏭️  Skipped:   $(${script:TestResults}.Skipped)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  Pass Rate:    $passRate%" -ForegroundColor $(if ($passRate -ge 80) { "Green" } elseif ($passRate -ge 60) { "Yellow" } else { "Red" })
 Write-Host ""
@@ -436,15 +434,15 @@ $reportData = @{
     Timestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ss"
     Summary = @{
         Total = $total
-        Passed = $script:TestResults.Passed
-        Failed = $script:TestResults.Failed
-        Skipped = $script:TestResults.Skipped
+        Passed = ${script:TestResults}.Passed
+        Failed = ${script:TestResults}.Failed
+        Skipped = ${script:TestResults}.Skipped
         PassRate = $passRate
     }
-    Details = $script:TestResults.Details
+    Details = ${script:TestResults}.Details
     Environment = @{
-        Computer = $env:COMPUTERNAME
-        User = $env:USERNAME
+        Computer = ${env:COMPUTERNAME}
+        User = ${env:USERNAME}
         OS = [System.Environment]::OSVersion.VersionString
         PowerShell = $PSVersionTable.PSVersion.ToString()
     }
@@ -454,7 +452,7 @@ Write-Host "  📄 Report saved: $reportPath" -ForegroundColor Gray
 Write-Host ""
 
 # Exit with appropriate code
-if ($script:TestResults.Failed -gt 0) {
+if (${script:TestResults}.Failed -gt 0) {
     Write-Host "❌ Some tests failed. Please review and fix." -ForegroundColor Red
     exit 1
 } else {

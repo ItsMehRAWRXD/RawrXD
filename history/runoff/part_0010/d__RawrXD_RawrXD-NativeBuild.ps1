@@ -64,8 +64,8 @@ $ASM | ForEach-Object {
 
 # Compile C++ (native only—no external includes)
 # Resolve Windows SDK paths for system headers
-$windowsSdkDir = $env:WindowsSdkDir
-$windowsSdkVersion = ($env:WindowsSDKVersion -replace '\\$','')
+$windowsSdkDir = ${env:WindowsSdkDir}
+$windowsSdkVersion = (${env:WindowsSDKVersion} -replace '\\$','')
 
 # Fallback: probe typical install locations and prefer SDK with UCRT
 if (-not $windowsSdkDir) {
@@ -130,8 +130,8 @@ if (Test-Path $vcIncludePath) {
 }
 
 # Set INCLUDE environment variable for cl.exe
-$env:INCLUDE = $includePaths -join ";"
-Write-Host "  INCLUDE: $env:INCLUDE"
+${env:INCLUDE} = $includePaths -join ";"
+Write-Host "  INCLUDE: ${env:INCLUDE}"
 
 # Set LIB environment variable for link.exe
 $libPaths = @()
@@ -151,8 +151,8 @@ if (Test-Path $vcLibPath) {
     Write-Host "  VC Lib: $vcLibPath (exists: False)"
 }
 
-$env:LIB = $libPaths -join ";"
-Write-Host "  LIB: $env:LIB"
+${env:LIB} = $libPaths -join ";"
+Write-Host "  LIB: ${env:LIB}"
 
 if ($Config -eq "Release") {
     $CPPFLAGS += "/O2", "/Ob2", "/Oi", "/Ot", "/GL"

@@ -230,7 +230,7 @@ function Invoke-SourceExtraction {
             continue
         }
         
-        $subdir = if ($cat -eq 'Assembly') { 'asm' } else { $cat.ToLower() }
+        $subdir = $(if ($cat -eq 'Assembly') { 'asm' } else { $cat.ToLower() }
         $targetDir = "d:\rawrxd\src\$subdir"
         $catExtracted = 0
         $catNotFound = 0
@@ -383,7 +383,7 @@ if ($Clean) {
 }
 
 # Find assembler and linker (real tools or stubs)
-$asmExe = if (Test-Path "$BinDir\rawrxd_asm.exe") {
+$asmExe = $(if (Test-Path "$BinDir\rawrxd_asm.exe") {
     "$BinDir\rawrxd_asm.exe"
 } else {
     # Fallback to ml64 if available (though not recommended)
@@ -676,7 +676,7 @@ function Invoke-VerificationAndReport {
     $failCount = 0
     
     foreach ($check in $verificationResults.Keys) {
-        $status = if ($verificationResults[$check]) {
+        $status = $(if ($verificationResults[$check]) {
             $passCount++
             "PASS"
         } else {
@@ -684,7 +684,7 @@ function Invoke-VerificationAndReport {
             "FAIL"
         }
         
-        $color = if ($verificationResults[$check]) { "Green" } else { "Red" }
+        $color = $(if ($verificationResults[$check]) { "Green" } else { "Red" }
         Report "  [$status] $check" -Color $color
     }
     

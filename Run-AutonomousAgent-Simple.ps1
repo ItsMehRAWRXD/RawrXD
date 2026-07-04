@@ -154,9 +154,9 @@ Write-Host ""
 Write-Host "Starting autonomous testing..." -ForegroundColor Cyan
 try {
     $testing = Start-AutonomousTesting
-    $skippedCount = if ($null -ne $testing.TestsSkipped) { [int]$testing.TestsSkipped } else { 0 }
+    $skippedCount = $(if ($null -ne $testing.TestsSkipped) { [int]$testing.TestsSkipped } else { 0 }
     $testedCount = $testing.Tests.Count - $skippedCount
-    $successRate = if ($testedCount -gt 0) { [Math]::Round(($testing.TestsPassed / $testedCount * 100), 2) } else { 0 }
+    $successRate = $(if ($testedCount -gt 0) { [Math]::Round(($testing.TestsPassed / $testedCount * 100), 2) } else { 0 }
     
     Write-Host "✓ Autonomous testing completed successfully" -ForegroundColor Green
     Write-Host "  Tests Passed:  $($testing.TestsPassed)" -ForegroundColor White
@@ -224,7 +224,7 @@ Write-Host ""
 
 # Show final summary
 $endTime = Get-Date
-$duration = [Math]::Round(($endTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
+$duration = [Math]::Round(($endTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
 
 Write-Host "╔═══════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
 Write-Host "║                                                                   ║" -ForegroundColor Magenta

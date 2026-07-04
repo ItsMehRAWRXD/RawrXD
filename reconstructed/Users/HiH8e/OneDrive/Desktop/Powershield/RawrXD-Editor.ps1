@@ -14,11 +14,11 @@ function New-EditorFile {
     Write-DevConsole "[File] Creating new file..." "INFO"
 
     # Clear current file reference
-    $global:currentFile = $null
+    ${global:currentFile} = $null
 
     # Send command to Monaco editor
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.setValue('');
                 window.editor.focus();
@@ -43,14 +43,14 @@ function Open-EditorFile {
         $content = Get-Content -Path $filePath -Raw -ErrorAction SilentlyContinue
 
         if ($content) {
-            $global:currentFile = $filePath
+            ${global:currentFile} = $filePath
 
             # Escape content for JavaScript
             $escapedContent = $content -replace '\\', '\\' -replace "`r`n", '\n' -replace "`n", '\n' -replace '"', '\"' -replace "'", "\'"
 
             # Send to Monaco editor
-            if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-                $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+            if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+                ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
                     if (window.editor) {
                         window.editor.setValue("$escapedContent");
                         console.log('✅ File opened: $filePath');
@@ -66,20 +66,20 @@ function Open-EditorFile {
 function Save-EditorFile {
     Write-DevConsole "[File] Saving file..." "INFO"
 
-    if (-not $global:currentFile) {
+    if (-not ${global:currentFile}) {
         Save-EditorFileAs
         return
     }
 
     # Get content from Monaco editor
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             (function() {
                 if (window.editor) {
                     const content = window.editor.getValue();
                     window.chrome.webview.postMessage({
                         command: 'saveContent',
-                        params: { content: content, path: '$global:currentFile' }
+                        params: { content: content, path: '${global:currentFile}' }
                     });
                 }
             })();
@@ -96,7 +96,7 @@ function Save-EditorFileAs {
     $saveDialog.Title = "Save File As"
 
     if ($saveDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        $global:currentFile = $saveDialog.FileName
+        ${global:currentFile} = $saveDialog.FileName
         Save-EditorFile
     }
 }
@@ -114,11 +114,11 @@ function Close-AllEditorFiles {
 function Revert-EditorFile {
     Write-DevConsole "[File] Reverting file..." "INFO"
 
-    if ($global:currentFile -and (Test-Path $global:currentFile)) {
-        $content = Get-Content -Path $global:currentFile -Raw -ErrorAction SilentlyContinue
-        if ($content -and $script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
+    if (${global:currentFile} -and (Test-Path ${global:currentFile})) {
+        $content = Get-Content -Path ${global:currentFile} -Raw -ErrorAction SilentlyContinue
+        if ($content -and ${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
             $escapedContent = $content -replace '\\', '\\' -replace "`r`n", '\n' -replace "`n", '\n' -replace '"', '\"'
-            $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync("if (window.editor) { window.editor.setValue(`"$escapedContent`"); }") | Out-Null
+            ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync("if (window.editor) { window.editor.setValue(`"$escapedContent`"); }") | Out-Null
         }
     }
 }
@@ -130,8 +130,8 @@ function Revert-EditorFile {
 function Invoke-EditorCommand {
     param([string]$Command)
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.trigger('keyboard', 'editor.action.$Command');
             }
@@ -148,8 +148,8 @@ function Set-EditorTheme {
 
     Write-DevConsole "[Settings] Setting theme: $Theme" "INFO"
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.monaco) {
                 monaco.editor.setTheme('$Theme');
                 console.log('✅ Theme set: $Theme');
@@ -163,8 +163,8 @@ function Set-EditorFontSize {
 
     Write-DevConsole "[Settings] Setting font size: $Size" "INFO"
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ fontSize: $Size });
                 console.log('✅ Font size set: $Size');
@@ -178,8 +178,8 @@ function Set-EditorTabSize {
 
     Write-DevConsole "[Settings] Setting tab size: $Size" "INFO"
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ tabSize: $Size });
                 console.log('✅ Tab size set: $Size');
@@ -191,10 +191,10 @@ function Set-EditorTabSize {
 function Set-EditorWordWrap {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "'on'" } else { "'off'" }
+    $value = $(if ($Enabled) { "'on'" } else { "'off'" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ wordWrap: $value });
             }
@@ -205,10 +205,10 @@ function Set-EditorWordWrap {
 function Set-EditorLineNumbers {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "'on'" } else { "'off'" }
+    $value = $(if ($Enabled) { "'on'" } else { "'off'" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ lineNumbers: $value });
             }
@@ -219,10 +219,10 @@ function Set-EditorLineNumbers {
 function Set-EditorMinimap {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "true" } else { "false" }
+    $value = $(if ($Enabled) { "true" } else { "false" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ minimap: { enabled: $value } });
             }
@@ -234,23 +234,23 @@ function Set-EditorAutoSave {
     param([bool]$Enabled)
 
     Write-DevConsole "[Settings] Auto-save: $Enabled" "INFO"
-    $global:EditorAutoSave = $Enabled
+    ${global:EditorAutoSave} = $Enabled
 }
 
 function Set-EditorFormatOnSave {
     param([bool]$Enabled)
 
     Write-DevConsole "[Settings] Format on save: $Enabled" "INFO"
-    $global:EditorFormatOnSave = $Enabled
+    ${global:EditorFormatOnSave} = $Enabled
 }
 
 function Set-EditorBracketPairs {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "true" } else { "false" }
+    $value = $(if ($Enabled) { "true" } else { "false" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ bracketPairColorization: { enabled: $value } });
             }
@@ -265,8 +265,8 @@ function Set-EditorBracketPairs {
 function Toggle-Sidebar {
     Write-DevConsole "[View] Toggling sidebar..." "INFO"
 
-    if ($script:wpfFileTree) {
-        $script:wpfFileTree.Visibility = if ($script:wpfFileTree.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
+    if (${script:wpfFileTree}) {
+        ${script:wpfFileTree}.Visibility = $(if (${script:wpfFileTree}.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
     }
 }
 
@@ -275,16 +275,16 @@ function Toggle-TerminalPanel {
 
     # Find terminal panel in your UI structure
     # This is a placeholder - adjust based on your actual terminal control name
-    if ($script:wpfTerminalPanel) {
-        $script:wpfTerminalPanel.Visibility = if ($script:wpfTerminalPanel.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
+    if (${script:wpfTerminalPanel}) {
+        ${script:wpfTerminalPanel}.Visibility = $(if (${script:wpfTerminalPanel}.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
     }
 }
 
 function Toggle-OutputPanel {
     Write-DevConsole "[View] Toggling output panel..." "INFO"
 
-    if ($script:wpfOutputPanel) {
-        $script:wpfOutputPanel.Visibility = if ($script:wpfOutputPanel.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
+    if (${script:wpfOutputPanel}) {
+        ${script:wpfOutputPanel}.Visibility = $(if (${script:wpfOutputPanel}.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
     }
 }
 
@@ -296,28 +296,28 @@ function Toggle-ExplorerPanel {
 function Toggle-Fullscreen {
     Write-DevConsole "[View] Toggling fullscreen..." "INFO"
 
-    if ($script:wpfWindow) {
-        $script:wpfWindow.WindowState = if ($script:wpfWindow.WindowState -eq "Maximized") { "Normal" } else { "Maximized" }
+    if (${script:wpfWindow}) {
+        ${script:wpfWindow}.WindowState = $(if (${script:wpfWindow}.WindowState -eq "Maximized") { "Normal" } else { "Maximized" }
     }
 }
 
 function Adjust-EditorZoom {
     param([string]$Direction)
 
-    if (-not $global:EditorZoomLevel) { $global:EditorZoomLevel = 100 }
+    if (-not ${global:EditorZoomLevel}) { ${global:EditorZoomLevel} = 100 }
 
     switch ($Direction) {
-        "in" { $global:EditorZoomLevel += 10 }
-        "out" { $global:EditorZoomLevel -= 10 }
-        "reset" { $global:EditorZoomLevel = 100 }
+        "in" { ${global:EditorZoomLevel} += 10 }
+        "out" { ${global:EditorZoomLevel} -= 10 }
+        "reset" { ${global:EditorZoomLevel} = 100 }
     }
 
     # Clamp zoom level
-    $global:EditorZoomLevel = [Math]::Max(50, [Math]::Min(200, $global:EditorZoomLevel))
+    ${global:EditorZoomLevel} = [Math]::Max(50, [Math]::Min(200, ${global:EditorZoomLevel}))
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $zoomFactor = $global:EditorZoomLevel / 100.0
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        $zoomFactor = ${global:EditorZoomLevel} / 100.0
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             document.body.style.zoom = '$zoomFactor';
 "@) | Out-Null
     }
@@ -370,10 +370,10 @@ function Show-FindDialog {
             if ([string]::IsNullOrEmpty($findTextBox.Text)) { return }
 
             $searchText = $findTextBox.Text
-            $editorText = $script:editor.Text
-            $startIndex = $script:editor.SelectionStart + $script:editor.SelectionLength
+            $editorText = ${script:editor}.Text
+            $startIndex = ${script:editor}.SelectionStart + ${script:editor}.SelectionLength
 
-            $comparison = if ($caseSensitiveCheckbox.Checked) {
+            $comparison = $(if ($caseSensitiveCheckbox.Checked) {
                 [System.StringComparison]::Ordinal
             }
             else {
@@ -388,9 +388,9 @@ function Show-FindDialog {
             }
 
             if ($foundIndex -ge 0) {
-                $script:editor.Select($foundIndex, $searchText.Length)
-                $script:editor.ScrollToCaret()
-                $script:editor.Focus()
+                ${script:editor}.Select($foundIndex, $searchText.Length)
+                ${script:editor}.ScrollToCaret()
+                ${script:editor}.Focus()
             }
             else {
                 Write-DevConsole "Text not found: '$searchText'" "INFO"
@@ -476,10 +476,10 @@ function Show-ReplaceDialog {
             if ([string]::IsNullOrEmpty($findTextBox.Text)) { return }
 
             $searchText = $findTextBox.Text
-            $editorText = $script:editor.Text
-            $startIndex = $script:editor.SelectionStart + $script:editor.SelectionLength
+            $editorText = ${script:editor}.Text
+            $startIndex = ${script:editor}.SelectionStart + ${script:editor}.SelectionLength
 
-            $comparison = if ($caseSensitiveCheckbox.Checked) {
+            $comparison = $(if ($caseSensitiveCheckbox.Checked) {
                 [System.StringComparison]::Ordinal
             }
             else {
@@ -493,9 +493,9 @@ function Show-ReplaceDialog {
             }
 
             if ($foundIndex -ge 0) {
-                $script:editor.Select($foundIndex, $searchText.Length)
-                $script:editor.ScrollToCaret()
-                $script:editor.Focus()
+                ${script:editor}.Select($foundIndex, $searchText.Length)
+                ${script:editor}.ScrollToCaret()
+                ${script:editor}.Focus()
                 $statusLabel.Text = "Found at position $foundIndex"
                 $statusLabel.ForeColor = [System.Drawing.Color]::LightGreen
             }
@@ -512,8 +512,8 @@ function Show-ReplaceDialog {
     $replaceBtn.Location = New-Object System.Drawing.Point(350, 45)
     $replaceBtn.Size = New-Object System.Drawing.Size(80, 25)
     $replaceBtn.Add_Click({
-            if ($script:editor.SelectionLength -gt 0) {
-                $script:editor.SelectedText = $replaceTextBox.Text
+            if (${script:editor}.SelectionLength -gt 0) {
+                ${script:editor}.SelectedText = $replaceTextBox.Text
                 $statusLabel.Text = "Replaced"
                 $statusLabel.ForeColor = [System.Drawing.Color]::LightGreen
             }
@@ -532,12 +532,12 @@ function Show-ReplaceDialog {
             $replaceWith = $replaceTextBox.Text
 
             if ($caseSensitiveCheckbox.Checked) {
-                $count = ($script:editor.Text | Select-String -Pattern [regex]::Escape($searchText) -AllMatches -CaseSensitive).Matches.Count
-                $script:editor.Text = $script:editor.Text.Replace($searchText, $replaceWith)
+                $count = (${script:editor}.Text | Select-String -Pattern [regex]::Escape($searchText) -AllMatches -CaseSensitive).Matches.Count
+                ${script:editor}.Text = ${script:editor}.Text.Replace($searchText, $replaceWith)
             }
             else {
-                $count = ($script:editor.Text | Select-String -Pattern [regex]::Escape($searchText) -AllMatches).Matches.Count
-                $script:editor.Text = $script:editor.Text -ireplace [regex]::Escape($searchText), $replaceWith
+                $count = (${script:editor}.Text | Select-String -Pattern [regex]::Escape($searchText) -AllMatches).Matches.Count
+                ${script:editor}.Text = ${script:editor}.Text -ireplace [regex]::Escape($searchText), $replaceWith
             }
 
             $statusLabel.Text = "Replaced $count occurrence(s)"
@@ -561,8 +561,8 @@ function Show-ReplaceDialog {
 # ===============================
 
 function Initialize-CursorHooks {
-    if ($script:CursorHookState) { return }
-    $script:CursorHookState = @{
+    if (${script:CursorHookState}) { return }
+    ${script:CursorHookState} = @{
         ActiveStack  = New-Object "System.Collections.Generic.List[System.Collections.Hashtable]"
         CurrentStyle = "Default"
         LastReason   = "Idle"
@@ -590,7 +590,7 @@ function Update-CursorHookStyle {
         [string]$Reason = "Operation"
     )
     Initialize-CursorHooks
-    if (-not $script:RuntimeInfo.WinFormsAvailable) { return }
+    if (-not ${script:RuntimeInfo}.WinFormsAvailable) { return }
 
     $cursor = Get-CursorHookObject -Style $Style
     $useWait = $Style -in @("Wait", "Busy")
@@ -613,9 +613,9 @@ function Update-CursorHookStyle {
         # Non-fatal - cursor updates are best effort
     }
 
-    $script:CursorHookState.CurrentStyle = $Style
-    $script:CursorHookState.LastReason = $Reason
-    $script:CursorHookState.LastUpdated = Get-Date
+    ${script:CursorHookState}.CurrentStyle = $Style
+    ${script:CursorHookState}.LastReason = $Reason
+    ${script:CursorHookState}.LastUpdated = Get-Date
 }
 
 function Enter-CursorWaitState {
@@ -625,7 +625,7 @@ function Enter-CursorWaitState {
         [string]$Style = "Wait"
     )
     Initialize-CursorHooks
-    if (-not $script:RuntimeInfo.WinFormsAvailable) { return $null }
+    if (-not ${script:RuntimeInfo}.WinFormsAvailable) { return $null }
 
     $token = [guid]::NewGuid().ToString()
     $entry = @{
@@ -634,7 +634,7 @@ function Enter-CursorWaitState {
         Style     = $Style
         Timestamp = Get-Date
     }
-    $script:CursorHookState.ActiveStack.Add($entry)
+    ${script:CursorHookState}.ActiveStack.Add($entry)
     Update-CursorHookStyle -Style $Style -Reason $Reason
     return $token
 }
@@ -644,16 +644,16 @@ function Exit-CursorWaitState {
     Initialize-CursorHooks
     if (-not $Token) { return }
 
-    for ($i = $script:CursorHookState.ActiveStack.Count - 1; $i -ge 0; $i--) {
-        $entry = $script:CursorHookState.ActiveStack[$i]
+    for ($i = ${script:CursorHookState}.ActiveStack.Count - 1; $i -ge 0; $i--) {
+        $entry = ${script:CursorHookState}.ActiveStack[$i]
         if ($entry.Token -eq $Token) {
-            $script:CursorHookState.ActiveStack.RemoveAt($i)
+            ${script:CursorHookState}.ActiveStack.RemoveAt($i)
             break
         }
     }
 
-    if ($script:CursorHookState.ActiveStack.Count -gt 0) {
-        $next = $script:CursorHookState.ActiveStack[$script:CursorHookState.ActiveStack.Count - 1]
+    if (${script:CursorHookState}.ActiveStack.Count -gt 0) {
+        $next = ${script:CursorHookState}.ActiveStack[${script:CursorHookState}.ActiveStack.Count - 1]
         Update-CursorHookStyle -Style $next.Style -Reason $next.Reason
     }
     else {
@@ -664,10 +664,10 @@ function Exit-CursorWaitState {
 function Get-CursorHookStatus {
     Initialize-CursorHooks
     return @{
-        ActiveRequests = if ($script:CursorHookState.ActiveStack) { $script:CursorHookState.ActiveStack.ToArray() } else { @() }
-        CurrentStyle   = $script:CursorHookState.CurrentStyle
-        LastReason     = $script:CursorHookState.LastReason
-        LastUpdated    = $script:CursorHookState.LastUpdated
+        ActiveRequests = $(if (${script:CursorHookState}.ActiveStack) { ${script:CursorHookState}.ActiveStack.ToArray() } else { @() }
+        CurrentStyle   = ${script:CursorHookState}.CurrentStyle
+        LastReason     = ${script:CursorHookState}.LastReason
+        LastUpdated    = ${script:CursorHookState}.LastUpdated
     }
 }
 
@@ -680,11 +680,11 @@ Initialize-CursorHooks
 function Update-Explorer {
     Write-StartupLog "Updating file explorer..." "INFO"
     $explorer.Nodes.Clear()
-    $currentPath = $global:currentWorkingDir
+    $currentPath = ${global:currentWorkingDir}
 
     if (-not $currentPath) {
         $currentPath = Get-Location
-        $global:currentWorkingDir = $currentPath
+        ${global:currentWorkingDir} = $currentPath
     }
 
     $explorerPathLabel.Text = "Path: $currentPath"
@@ -722,8 +722,8 @@ function Update-Explorer {
         }
 
         # Expand the drive containing current working directory and navigate to it
-        if ($global:currentWorkingDir) {
-            $currentDrive = [System.IO.Path]::GetPathRoot($global:currentWorkingDir)
+        if (${global:currentWorkingDir}) {
+            $currentDrive = [System.IO.Path]::GetPathRoot(${global:currentWorkingDir})
             $matchingNode = $explorer.Nodes | Where-Object { $_.Tag -eq $currentDrive }
             if ($matchingNode) {
                 $matchingNode.Expand()
@@ -731,7 +731,7 @@ function Update-Explorer {
 
                 # Try to expand path to current directory
                 try {
-                    Expand-PathInTree -treeView $explorer -targetPath $global:currentWorkingDir
+                    Expand-PathInTree -treeView $explorer -targetPath ${global:currentWorkingDir}
                 }
                 catch {
                     Write-StartupLog "Could not navigate to current directory in tree: $_" "WARNING"
@@ -825,8 +825,8 @@ function Add-TreeNodeChildren {
                 $isHidden = $dir.Attributes -band [System.IO.FileAttributes]::Hidden
                 $isSystem = $dir.Attributes -band [System.IO.FileAttributes]::System
 
-                $dirIcon = if ($isHidden) { "👁️‍🗨️" } elseif ($isSystem) { "⚙️" } else { "📁" }
-                $dirName = if ($isHidden) { "$($dir.Name) (Hidden)" } else { $dir.Name }
+                $dirIcon = $(if ($isHidden) { "👁️‍🗨️" } elseif ($isSystem) { "⚙️" } else { "📁" }
+                $dirName = $(if ($isHidden) { "$($dir.Name) (Hidden)" } else { $dir.Name }
 
                 $dirNode = New-Object System.Windows.Forms.TreeNode("$dirIcon $dirName")
                 $dirNode.Tag = $dir.FullName
@@ -869,13 +869,13 @@ function Add-TreeNodeChildren {
             try {
                 $fileIcon = Get-FileIcon $file.Extension
                 $isHidden = $file.Attributes -band [System.IO.FileAttributes]::Hidden
-                $fileName = if ($isHidden) { "$($file.Name) (Hidden)" } else { $file.Name }
+                $fileName = $(if ($isHidden) { "$($file.Name) (Hidden)" } else { $file.Name }
 
                 $fileNode = New-Object System.Windows.Forms.TreeNode("$fileIcon $fileName")
                 $fileNode.Tag = $file.FullName
                 $fileNode.Name = $file.FullName
 
-                $fileSizeStr = if ($file.Length -gt 1MB) {
+                $fileSizeStr = $(if ($file.Length -gt 1MB) {
                     "$([math]::Round($file.Length / 1MB, 2)) MB"
                 }
                 elseif ($file.Length -gt 1KB) {
@@ -919,7 +919,7 @@ function Add-TreeNodeChildren {
 
         # Add summary if items were truncated
         $totalDirs = (Get-ChildItem -Path $path -Directory -Force -ErrorAction SilentlyContinue | Measure-Object).Count
-        $totalFiles = if ($showFiles) { (Get-ChildItem -Path $path -File -Force -ErrorAction SilentlyContinue | Measure-Object).Count } else { 0 }
+        $totalFiles = $(if ($showFiles) { (Get-ChildItem -Path $path -File -Force -ErrorAction SilentlyContinue | Measure-Object).Count } else { 0 }
 
         $dirCount = @($directories).Count
         $fileCount = @($files).Count
@@ -1087,14 +1087,14 @@ function Apply-EditorSettings {
 }
 
 function Show-EditorPopOut {
-    if (-not $script:editor) {
+    if (-not ${script:editor}) {
         Write-DevConsole "Editor control not initialized; cannot pop out" "WARNING"
         return
     }
 
-    if ($script:editorPopOutForm -and -not $script:editorPopOutForm.IsDisposed) {
-        $script:editorPopOutForm.BringToFront()
-        $script:editorPopOutForm.Activate()
+    if (${script:editorPopOutForm} -and -not ${script:editorPopOutForm}.IsDisposed) {
+        ${script:editorPopOutForm}.BringToFront()
+        ${script:editorPopOutForm}.Activate()
         return
     }
 
@@ -1105,64 +1105,64 @@ function Show-EditorPopOut {
 
     $editorBox = New-Object System.Windows.Forms.RichTextBox
     $editorBox.Dock = [System.Windows.Forms.DockStyle]::Fill
-    $editorBox.Font = $script:editor.Font
-    $editorBox.WordWrap = $script:editor.WordWrap
+    $editorBox.Font = ${script:editor}.Font
+    $editorBox.WordWrap = ${script:editor}.WordWrap
     $editorBox.Multiline = $true
 
     $editorForm.Controls.Add($editorBox) | Out-Null
 
-    $editorBox.Text = $script:editor.Text
+    $editorBox.Text = ${script:editor}.Text
     $editorBox.SelectionStart = $editorBox.TextLength
     $editorBox.ScrollToCaret()
 
     $syncFromMain = {
-        if ($script:editorPopOutTextBox -and -not $script:editorPopOutTextBox.IsDisposed -and $script:editorPopOutFromPopHandler) {
+        if (${script:editorPopOutTextBox} -and -not ${script:editorPopOutTextBox}.IsDisposed -and ${script:editorPopOutFromPopHandler}) {
             try {
-                $script:editorPopOutTextBox.remove_TextChanged($script:editorPopOutFromPopHandler)
+                ${script:editorPopOutTextBox}.remove_TextChanged(${script:editorPopOutFromPopHandler})
             } catch { }
-            $script:editorPopOutTextBox.Text = $script:editor.Text
-            $script:editorPopOutTextBox.SelectionStart = $script:editorPopOutTextBox.TextLength
-            $script:editorPopOutTextBox.ScrollToCaret()
+            ${script:editorPopOutTextBox}.Text = ${script:editor}.Text
+            ${script:editorPopOutTextBox}.SelectionStart = ${script:editorPopOutTextBox}.TextLength
+            ${script:editorPopOutTextBox}.ScrollToCaret()
             try {
-                $script:editorPopOutTextBox.add_TextChanged($script:editorPopOutFromPopHandler)
+                ${script:editorPopOutTextBox}.add_TextChanged(${script:editorPopOutFromPopHandler})
             } catch { }
         }
     }
 
     $syncFromPop = {
-        if ($script:editor -and -not $script:editor.IsDisposed -and $script:editorPopOutFromMainHandler) {
+        if (${script:editor} -and -not ${script:editor}.IsDisposed -and ${script:editorPopOutFromMainHandler}) {
             try {
-                $script:editor.remove_TextChanged($script:editorPopOutFromMainHandler)
+                ${script:editor}.remove_TextChanged(${script:editorPopOutFromMainHandler})
             } catch { }
-            $script:editor.Text = $script:editorPopOutTextBox.Text
-            $script:editor.SelectionStart = $script:editor.TextLength
-            $script:editor.ScrollToCaret()
+            ${script:editor}.Text = ${script:editorPopOutTextBox}.Text
+            ${script:editor}.SelectionStart = ${script:editor}.TextLength
+            ${script:editor}.ScrollToCaret()
             try {
-                $script:editor.add_TextChanged($script:editorPopOutFromMainHandler)
+                ${script:editor}.add_TextChanged(${script:editorPopOutFromMainHandler})
             } catch { }
         }
     }
 
-    $script:editorPopOutTextBox = $editorBox
-    $script:editorPopOutFromMainHandler = [System.EventHandler]$syncFromMain
-    $script:editorPopOutFromPopHandler = [System.EventHandler]$syncFromPop
+    ${script:editorPopOutTextBox} = $editorBox
+    ${script:editorPopOutFromMainHandler} = [System.EventHandler]$syncFromMain
+    ${script:editorPopOutFromPopHandler} = [System.EventHandler]$syncFromPop
 
-    $script:editor.Add_TextChanged($script:editorPopOutFromMainHandler)
-    $editorBox.Add_TextChanged($script:editorPopOutFromPopHandler)
+    ${script:editor}.Add_TextChanged(${script:editorPopOutFromMainHandler})
+    $editorBox.Add_TextChanged(${script:editorPopOutFromPopHandler})
 
     $editorForm.Add_FormClosed({
-            if ($script:editor -and -not $script:editor.IsDisposed -and $script:editorPopOutFromMainHandler) {
-                try { $script:editor.remove_TextChanged($script:editorPopOutFromMainHandler) } catch { }
+            if (${script:editor} -and -not ${script:editor}.IsDisposed -and ${script:editorPopOutFromMainHandler}) {
+                try { ${script:editor}.remove_TextChanged(${script:editorPopOutFromMainHandler}) } catch { }
             }
-            if ($script:editorPopOutTextBox -and $script:editorPopOutFromPopHandler) {
-                try { $script:editorPopOutTextBox.remove_TextChanged($script:editorPopOutFromPopHandler) } catch { }
+            if (${script:editorPopOutTextBox} -and ${script:editorPopOutFromPopHandler}) {
+                try { ${script:editorPopOutTextBox}.remove_TextChanged(${script:editorPopOutFromPopHandler}) } catch { }
             }
-            $script:editorPopOutForm = $null
-            $script:editorPopOutTextBox = $null
-            $script:editorPopOutFromMainHandler = $null
-            $script:editorPopOutFromPopHandler = $null
+            ${script:editorPopOutForm} = $null
+            ${script:editorPopOutTextBox} = $null
+            ${script:editorPopOutFromMainHandler} = $null
+            ${script:editorPopOutFromPopHandler} = $null
         })
 
-    $script:editorPopOutForm = $editorForm
+    ${script:editorPopOutForm} = $editorForm
     $editorForm.Show($form)
 }

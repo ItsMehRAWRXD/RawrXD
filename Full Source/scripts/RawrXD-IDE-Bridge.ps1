@@ -10,8 +10,8 @@
 # 800B OPTIMIZED LOADING
 # ============================================================================
 
-$script:FastLoadBuffer = New-Object byte[] 800
-$script:LoadOptimization = @{
+${script:FastLoadBuffer} = New-Object byte[] 800
+${script:LoadOptimization} = @{
     BufferSize = 800
     UseAsync = $true
     ParallelLoad = $true
@@ -30,14 +30,14 @@ function Invoke-FastLoad {
 }
 
 function Enable-OptimizedLoading {
-    $env:RAWRXD_OPTIMIZED_LOADING = "1"
-    $env:RAWRXD_LOAD_BUFFER_SIZE = "800"
+    ${env:RAWRXD_OPTIMIZED_LOADING} = "1"
+    ${env:RAWRXD_LOAD_BUFFER_SIZE} = "800"
 }
 
 Enable-OptimizedLoading
 param(
     [Parameter(Mandatory=$false)]
-    [string]$ScanPath = (Join-Path (if ($env:LAZY_INIT_IDE_ROOT) { $env:LAZY_INIT_IDE_ROOT } else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }) "src"),
+    [string]$ScanPath = (Join-Path (if (${env:LAZY_INIT_IDE_ROOT}) { ${env:LAZY_INIT_IDE_ROOT} } else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }) "src"),
 
     [Parameter(Mandatory=$false)]
     [string[]]$Extensions = @("*.ps1", "*.psm1", "*.cpp", "*.h", "*.asm", "*.cs", "*.py", "*.js", "*.ts"),
@@ -49,7 +49,7 @@ param(
     [switch]$AutoAssign,
 
     [Parameter(Mandatory=$false)]
-    [string]$TodoStoragePath = (Join-Path (if ($env:LAZY_INIT_IDE_ROOT) { $env:LAZY_INIT_IDE_ROOT } else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }) "data\todos.json"),
+    [string]$TodoStoragePath = (Join-Path (if (${env:LAZY_INIT_IDE_ROOT}) { ${env:LAZY_INIT_IDE_ROOT} } else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }) "data\todos.json"),
 
     [Parameter(Mandatory=$false)]
     [switch]$StartServer,
@@ -69,7 +69,7 @@ $ErrorActionPreference = 'Stop'
 
 # Pattern engine (PowerShell backend)
 $patternModuleCandidates = @(
-    $env:RAWRXD_PATTERN_MODULE_PATH
+    ${env:RAWRXD_PATTERN_MODULE_PATH}
     (Join-Path $PSScriptRoot "RawrXD_PatternBridge.psm1")
     (Join-Path $PSScriptRoot "RawrXD_PatternBridge\RawrXD_PatternBridge.psm1")
     (Join-Path (Split-Path $PSScriptRoot -Parent) "modules\RawrXD_PatternBridge\RawrXD_PatternBridge.psm1")
@@ -276,9 +276,7 @@ function Start-PipeServer {
 
 # ============================================================================
 # Main Flow
-# ============================================================================
-
-if ($StartServer) {
+# ============================================================================ $(if ($StartServer) {
     Start-PipeServer
     return
 }

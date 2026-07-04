@@ -40,7 +40,7 @@ function Invoke-CSharpCode {
         # Decide how to invoke:
         #  - static Main  → $null
         #  - instance Main → create object
-        $target = if ($main.IsStatic) { $null }
+        $target = $(if ($main.IsStatic) { $null }
                   else { [Activator]::CreateInstance($type) }
 
         # Accept args if present, otherwise empty string[]

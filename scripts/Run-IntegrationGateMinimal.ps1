@@ -80,12 +80,12 @@ $failed = $false
 function Invoke-Step([string]$name, [scriptblock]$block) {
     try {
         & $block
-        $script:steps[$name] = "ok"
+        ${script:steps}[$name] = "ok"
         Write-Host "[gate] PASS: $name" -ForegroundColor Green
     }
     catch {
-        $script:steps[$name] = "fail: $($_.Exception.Message)"
-        $script:failed = $true
+        ${script:steps}[$name] = "fail: $($_.Exception.Message)"
+        ${script:failed} = $true
         Write-Host "[gate] FAIL: $name — $($_.Exception.Message)" -ForegroundColor Red
     }
 }

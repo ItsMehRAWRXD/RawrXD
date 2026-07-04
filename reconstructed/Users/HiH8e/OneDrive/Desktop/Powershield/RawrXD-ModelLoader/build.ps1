@@ -5,7 +5,7 @@ param(
     [string]$Configuration = "Release",
     [switch]$CleanBuild,
     [switch]$SkipShaderCompile,
-    [switch]$UseClang = $true,  # Use Clang by default (faster compilation)
+    [switch]$UseClang,  # Use Clang by default (faster compilation)
     [switch]$AutoInitMsvc       # Attempt automatic MSVC/SDK environment initialization
     , [string]$QtDir            # Optional explicit Qt6_DIR (e.g. C:\Qt\6.7.2\msvc2019_64\lib\cmake\Qt6)
 )
@@ -24,7 +24,7 @@ function Initialize-MsvcEnvironment {
     param(
         [switch]$Force
     )
-    $alreadyHave = (Get-Command cl.exe -ErrorAction SilentlyContinue) -and $env:WindowsSdkDir -and $env:VCToolsInstallDir
+    $alreadyHave = (Get-Command cl.exe -ErrorAction SilentlyContinue) -and ${env:WindowsSdkDir} -and ${env:VCToolsInstallDir}
     if ($alreadyHave -and -not $Force) {
         Write-Host "✓ MSVC environment already initialized" -ForegroundColor Green
         return $true
@@ -65,7 +65,7 @@ function Initialize-MsvcEnvironment {
 if ($AutoInitMsvc) {
     Initialize-MsvcEnvironment | Out-Null
 } else {
-    if (-not ((Get-Command cl.exe -ErrorAction SilentlyContinue) -and $env:WindowsSdkDir)) {
+    if (-not ((Get-Command cl.exe -ErrorAction SilentlyContinue) -and ${env:WindowsSdkDir})) {
         Write-Host "⚠ MSVC/SDK environment not initialized. Use -AutoInitMsvc or run Developer PowerShell for VS 2022." -ForegroundColor Yellow
         Write-Host "  Missing: cl.exe or WindowsSdkDir; builds may fail linking system libs." -ForegroundColor Yellow
     } else {
@@ -86,7 +86,7 @@ try {
 Write-Host "✓ Vulkan will be linked against system libraries" -ForegroundColor Green
 
 # Optionally check for glslc for shader compilation
-$glslc_path = if ($env:VULKAN_SDK) { "$env:VULKAN_SDK\bin\glslc.exe" } else { $null }
+$glslc_path = $(if (${env:VULKAN_SDK}) { "${env:VULKAN_SDK}\bin\glslc.exe" } else { $null }
 if ($glslc_path -and (Test-Path $glslc_path)) {
     Write-Host "✓ glslc compiler found" -ForegroundColor Green
 } else {

@@ -36,7 +36,7 @@ Set-StrictMode -Version Latest
 # AUDIT CATEGORIES & DETECTION PATTERNS
 # ============================================================================
 
-$script:AuditCategories = @{
+${script:AuditCategories} = @{
     MissingIncludes = @{
         Pattern = 'fatal error.*: No such file|cannot open (include|source) file'
         Severity = 'Critical'
@@ -202,8 +202,8 @@ class AuditOrchestrator {
         
         $logContent = Get-Content $buildLogPath -Raw
         
-        foreach ($catName in $script:AuditCategories.Keys) {
-            $category = $script:AuditCategories[$catName]
+        foreach ($catName in ${script:AuditCategories}.Keys) {
+            $category = ${script:AuditCategories}[$catName]
             $pattern = $category.Pattern
             
             $matches = [regex]::Matches($logContent, "(?m)^(.+?)\((\d+)\).*?($pattern.*)$")
@@ -347,7 +347,7 @@ class AuditOrchestrator {
         
         Write-Host "`nWorker Statistics:" -ForegroundColor Cyan
         foreach ($worker in $this.Workers) {
-            $utilization = if ($worker.Capacity -gt 0) { 
+            $utilization = $(if ($worker.Capacity -gt 0) { 
                 [Math]::Round(($worker.CompletedTasks / $worker.Capacity) * 100, 1)
             } else { 0 }
             

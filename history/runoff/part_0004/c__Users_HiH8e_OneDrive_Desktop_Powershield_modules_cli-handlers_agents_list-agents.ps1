@@ -59,7 +59,7 @@ function Invoke-CliListAgents {
                 Write-Host "   Created: $($agent.CreatedAt)" -ForegroundColor Gray
                 
                 if ($agent.Prompt) {
-                    $promptPreview = if ($agent.Prompt.Length -gt 60) { 
+                    $promptPreview = $(if ($agent.Prompt.Length -gt 60) { 
                         $agent.Prompt.Substring(0, 60) + "..." 
                     } else { 
                         $agent.Prompt 

@@ -28,10 +28,10 @@ function Initialize-AutonomousOrchestrator {
         [string]$ModelBackend = "GGUF",
         
         [Parameter(Mandatory=$false)]
-        [string]$ModelPath = "$env:USERPROFILE\models\code-analysis.gguf",
+        [string]$ModelPath = "${env:USERPROFILE}\models\code-analysis.gguf",
         
         [Parameter(Mandatory=$false)]
-        [string]$ProgressFile = "$env:TEMP\AutonomousProgress.json"
+        [string]$ProgressFile = "${env:TEMP}\AutonomousProgress.json"
     )
 
     if (-Not (Test-Path $DirectoryPath)) {
@@ -140,7 +140,7 @@ Provide a brief analysis in JSON format:
                 LastWriteTime = $fileInfo.LastWriteTime
                 Directory = $fileInfo.Directory
                 Analysis = $analysis
-                Priority = if ($analysis) { $analysis.Priority } else { "Medium" }
+                Priority = $(if ($analysis) { $analysis.Priority } else { "Medium" }
             }
         }
 
@@ -225,7 +225,7 @@ function Generate-IntelligentTasks {
                     FileName = $file.Name
                     TaskType = "BestPractices"
                     Description = "Apply PowerShell best practices to $($file.Name)"
-                    Priority = if ($file.Priority -eq "High") { "High" } else { "Medium" }
+                    Priority = $(if ($file.Priority -eq "High") { "High" } else { "Medium" }
                     Status = "Pending"
                     EstimatedDuration = "10-30 seconds"
                 }

@@ -63,7 +63,7 @@ if (-not (Test-Path $icalPath)) {
     @{
         schema    = "RawrXD-Analysis-1.0"
         generated = (Get-Date -Format "o")
-        vulkan    = @{ sdk_path = $env:VULKAN_SDK }
+        vulkan    = @{ sdk_path = ${env:VULKAN_SDK} }
         targets   = @(
             @{ name = "RawrXD-ModelAnalysis"; executable = "RawrXD-ModelAnalysis.exe"; stream_to_terminal = $true }
         )

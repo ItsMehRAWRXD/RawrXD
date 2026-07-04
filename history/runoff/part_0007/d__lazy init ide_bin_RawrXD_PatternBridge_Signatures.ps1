@@ -94,7 +94,7 @@ function Invoke-RawrXDClassification {
             default { "Unknown" }
         }
 
-        $mappedPriority = $Script:PatternTypeMap[$type].Priority
+        $mappedPriority = ${Script:PatternTypeMap}[$type].Priority
         if ($mappedPriority -ne $null) { $priority = $mappedPriority }
 
         return [PSCustomObject]@{
@@ -162,7 +162,7 @@ if ($MyInvocation.MyCommand.Module) {
 # Compatibility Mapping Layer - Template/NonPattern schema support
 # ============================================================================
 
-$Script:PatternTypeMap = @{
+${Script:PatternTypeMap} = @{
     0 = @{ TypeName = 'UNKNOWN';  Category = 'NonPattern'; Priority = 0 }
     1 = @{ TypeName = 'BUG';      Category = 'Template';   Priority = 10 }  # Critical
     2 = @{ TypeName = 'FIXME';    Category = 'Template';   Priority = 8 }   # High
@@ -185,8 +185,8 @@ function Invoke-DirectClassify {
     $rawResult = Invoke-RawrXDClassification -CodeBuffer $bytes
 
     $typeNum = [int]$rawResult.Type
-    $mapping = $Script:PatternTypeMap[$typeNum]
-    if (-not $mapping) { $mapping = $Script:PatternTypeMap[0] }
+    $mapping = ${Script:PatternTypeMap}[$typeNum]
+    if (-not $mapping) { $mapping = ${Script:PatternTypeMap}[0] }
 
     return [PSCustomObject]@{
         Type       = $typeNum

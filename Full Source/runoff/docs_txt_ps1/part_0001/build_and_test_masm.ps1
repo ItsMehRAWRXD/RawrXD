@@ -20,7 +20,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Default to D:\RawrXD fortress; use -RootDir "E:\RawrXD" or env RAWRXD_ROOT for legacy
-if (-not $RootDir) { $RootDir = if ($env:RAWRXD_ROOT) { $env:RAWRXD_ROOT } else { "D:\RawrXD" } }
+if (-not $RootDir) { $RootDir = $(if (${env:RAWRXD_ROOT}) { ${env:RAWRXD_ROOT} } else { "D:\RawrXD" } }
 $BuildDir = "$RootDir\build"
 $TestDir = "$RootDir\tests\masm"
 

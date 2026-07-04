@@ -2,7 +2,7 @@
 param([switch]$Install, [switch]$Publish)
 
 $base = "D:\rawrxd\extensions"
-if ($env:RAWRXD_EXT_BASE) { $base = $env:RAWRXD_EXT_BASE }
+if (${env:RAWRXD_EXT_BASE}) { $base = ${env:RAWRXD_EXT_BASE} }
 
 $exts = @(
     "ItsMehRAWRXD.cursor-simple-ai",
@@ -42,7 +42,7 @@ if ($Publish) {
         $dir = Join-Path $base $id
         if (Test-Path $dir) {
             Push-Location $dir
-            npx vsce publish --pat $env:VSCE_PAT
+            npx vsce publish --pat ${env:VSCE_PAT}
             Pop-Location
         }
     }

@@ -49,7 +49,7 @@ Write-Host "${Green}✓${Reset} ml64: $ml64`n"
 
 # Resolve lib path for link (Windows Kits um\x64)
 $libPath = $null
-if ($env:LIB) { $libPath = ($env:LIB -split ';' | Where-Object { $_ -match 'um\\x64|Lib\\.*\\um' } | Select-Object -First 1) }
+if (${env:LIB}) { $libPath = (${env:LIB} -split ';' | Where-Object { $_ -match 'um\\x64|Lib\\.*\\um' } | Select-Object -First 1) }
 if (-not $libPath -and (Test-Path "C:\Program Files (x86)\Windows Kits\10\Lib")) {
     $latest = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\Lib" -Directory | Sort-Object Name -Descending | Select-Object -First 1
     if ($latest) {

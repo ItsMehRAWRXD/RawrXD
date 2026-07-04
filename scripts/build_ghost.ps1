@@ -6,7 +6,7 @@ $BuildDir = "$PSScriptRoot\..\build_ghost"
 $MSVC_Bin = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64"
 if (Test-Path $MSVC_Bin) {
     Write-Host "Found MSVC at $MSVC_Bin" -ForegroundColor Yellow
-    $env:PATH = "$MSVC_Bin;$env:PATH"
+    ${env:PATH} = "$MSVC_Bin;${env:PATH}"
 }
 
 if (!(Test-Path $BuildDir)) { New-Item -ItemType Directory -Path $BuildDir | Out-Null }

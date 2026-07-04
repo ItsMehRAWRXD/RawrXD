@@ -18,8 +18,8 @@ $joined = foreach ($p in $procs) {
     WorkingSet_MB = [math]::Round($p.WS / 1MB, 1)
     PrivateMemory_MB = [math]::Round($p.PM / 1MB, 1)
     VirtualMemory_MB = [math]::Round($p.VM / 1MB, 1)
-    Commit_MB = if ($ci) { [math]::Round($ci.PrivatePageCount / 1MB, 1) } else { $null }
-    PageFile_MB = if ($ci) { [math]::Round($ci.PageFileUsage / 1MB, 1) } else { $null }
+    Commit_MB = $(if ($ci) { [math]::Round($ci.PrivatePageCount / 1MB, 1) } else { $null }
+    PageFile_MB = $(if ($ci) { [math]::Round($ci.PageFileUsage / 1MB, 1) } else { $null }
   }
 }
 

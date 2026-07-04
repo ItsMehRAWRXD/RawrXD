@@ -73,7 +73,7 @@ if ($pingNeedsBuild) {
 $binDir = Split-Path -Parent $BinaryPath
 $ideLogCandidates = @(
     (Join-Path $binDir "RawrXD_IDE.log"),
-    (Join-Path $env:APPDATA "RawrXD\ide.log"),
+    (Join-Path ${env:APPDATA} "RawrXD\ide.log"),
     (Join-Path $logDir "scenario4_ide.log")
 )
 
@@ -87,7 +87,7 @@ function Get-IdeLogTail {
 }
 
 $preLog = Get-IdeLogTail
-$preLineCount = if ($preLog) { $preLog.Lines.Count } else { 0 }
+$preLineCount = $(if ($preLog) { $preLog.Lines.Count } else { 0 }
 
 Log "Launching IDE (smoke env, no PS pipe mock — IDE owns the pipe server)"
 $ideProc = Start-RawrIDESmokeProcess -BinaryPath $BinaryPath

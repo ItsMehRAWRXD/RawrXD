@@ -11,27 +11,27 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:passed = $true
-$script:checks = @()
+${script:passed} = $true
+${script:checks} = @()
 
 # MSVC tools path
-$env:Path = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64;$env:Path"
+${env:Path} = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64;${env:Path}"
 
 function Test-Check {
     param([string]$Name, [scriptblock]$Test)
     try {
         $result = & $Test
         if ($result) {
-            $script:checks += @{ Name = $Name; Status = "✅"; Detail = "PASS" }
+            ${script:checks} += @{ Name = $Name; Status = "✅"; Detail = "PASS" }
             if ($Verbose) { Write-Host "  ✅ $Name" -ForegroundColor Green }
         } else {
-            $script:checks += @{ Name = $Name; Status = "❌"; Detail = "FAIL" }
-            $script:passed = $false
+            ${script:checks} += @{ Name = $Name; Status = "❌"; Detail = "FAIL" }
+            ${script:passed} = $false
             if ($Verbose) { Write-Host "  ❌ $Name" -ForegroundColor Red }
         }
     } catch {
-        $script:checks += @{ Name = $Name; Status = "❌"; Detail = $_.Exception.Message }
-        $script:passed = $false
+        ${script:checks} += @{ Name = $Name; Status = "❌"; Detail = $_.Exception.Message }
+        ${script:passed} = $false
         if ($Verbose) { Write-Host "  ❌ $Name - $($_.Exception.Message)" -ForegroundColor Red }
     }
 }
@@ -95,12 +95,12 @@ Test-Check "MMF: Global\SOVEREIGN_NVME_TEMPS accessible" {
 # Summary
 Write-Host "`n────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
 Write-Host "  RESULTS:" -ForegroundColor White
-foreach ($c in $script:checks) {
+foreach ($c in ${script:checks}) {
     Write-Host "    $($c.Status) $($c.Name)" -ForegroundColor $(if ($c.Status -eq "✅") { "Green" } else { "Red" })
 }
 Write-Host "────────────────────────────────────────────────────────────`n" -ForegroundColor DarkGray
 
-if ($script:passed) {
+if (${script:passed}) {
     Write-Host "  ████████████████████████████████████████████████████████" -ForegroundColor Green
     Write-Host "  ██  ✅ DASHBOARD_LIVE_PASS - All systems nominal     ██" -ForegroundColor Green
     Write-Host "  ████████████████████████████████████████████████████████`n" -ForegroundColor Green

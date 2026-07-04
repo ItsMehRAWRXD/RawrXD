@@ -4,7 +4,7 @@
 
 param(
     [string]$Root = "D:\rawrxd",
-    [string]$OutDir = "$env:LOCALAPPDATA\RawrXD\bin"
+    [string]$OutDir = "${env:LOCALAPPDATA}\RawrXD\bin"
 )
 
 $ErrorActionPreference = "Stop"
@@ -120,7 +120,7 @@ $linkArgs = @(
 )
 
 # Add stub library
-$stubLib = "$env:LOCALAPPDATA\RawrXD\stubs\rawrxd_stubs.lib"
+$stubLib = "${env:LOCALAPPDATA}\RawrXD\stubs\rawrxd_stubs.lib"
 if(Test-Path $stubLib) {
     $linkArgs += "`"$stubLib`""
     Write-Host "[STUBS] Stub library included" -Fore Green
@@ -139,8 +139,8 @@ try {
     $proc = Start-Process -FilePath $Linker -ArgumentList $linkArgs -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$OutDir\link_output.log" -RedirectStandardError "$OutDir\link_errors.log"
     
     # Check results
-    $linkOutput = if(Test-Path "$OutDir\link_output.log") { Get-Content "$OutDir\link_output.log" -Raw } else { "" }
-    $linkErrors = if(Test-Path "$OutDir\link_errors.log") { Get-Content "$OutDir\link_errors.log" -Raw } else { "" }
+    $linkOutput = $(if (Test-Path "$OutDir\link_output.log") { Get-Content "$OutDir\link_output.log" -Raw } else { "" }
+    $linkErrors = $(if (Test-Path "$OutDir\link_errors.log") { Get-Content "$OutDir\link_errors.log" -Raw } else { "" }
     
     if($proc.ExitCode -eq 0 -and (Test-Path $finalExe)) {
         $size = (Get-Item $finalExe).Length
@@ -207,11 +207,11 @@ $DeliveryManifest = @{
     LibraryDependenciesFixed = $true
     CorruptObjectsRepaired = $true
     BuildScriptsEnhanced = $true
-    FinalStatus = if(Test-Path $finalExe) { "SUCCESS" } else { "PARTIAL" }
+    FinalStatus = $(if (Test-Path $finalExe) { "SUCCESS" } else { "PARTIAL" }
 }
 
 # Check for all created executables
-Get-ChildItem "$env:LOCALAPPDATA\RawrXD\bin" -Filter "RawrXD*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+Get-ChildItem "${env:LOCALAPPDATA}\RawrXD\bin" -Filter "RawrXD*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
     $DeliveryManifest.DeliveredExecutables += @{
         Path = $_.FullName
         Size = "$([math]::Round($_.Length / 1MB, 2)) MB"

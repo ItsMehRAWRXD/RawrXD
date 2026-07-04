@@ -34,13 +34,13 @@ function Invoke-BrowserScript {
     )
     
     try {
-        if (-not $script:webBrowser -or -not $script:webBrowser.CoreWebView2) {
+        if (-not ${script:webBrowser} -or -not ${script:webBrowser}.CoreWebView2) {
             Write-DevConsole "⚠️ WebView2 not initialized" "ERROR"
             return $null
         }
         
         # Wrap script to handle return values
-        $wrappedScript = if ($CaptureReturn) {
+        $wrappedScript = $(if ($CaptureReturn) {
             "(async function() { 
                 try { 
                     let result = await (async function() { $ScriptCode })();
@@ -54,7 +54,7 @@ function Invoke-BrowserScript {
         }
         
         # Execute with timeout
-        $task = $script:webBrowser.CoreWebView2.ExecuteScriptAsync($wrappedScript)
+        $task = ${script:webBrowser}.CoreWebView2.ExecuteScriptAsync($wrappedScript)
         $completed = $task.Wait([timespan]::FromSeconds($Timeout))
         
         if (-not $completed) {
@@ -134,7 +134,7 @@ function Search-YouTubeFromBrowser {
         Write-DevConsole "🔍 Searching YouTube: '$Query'" "INFO"
         
         # Navigate to YouTube if not already there
-        if ($script:webBrowser.CoreWebView2.Source -notlike "*youtube.com*") {
+        if (${script:webBrowser}.CoreWebView2.Source -notlike "*youtube.com*") {
             Open-Browser "https://www.youtube.com"
             Start-Sleep -Milliseconds 1000
         }
@@ -272,7 +272,7 @@ function Get-YouTubeVideoMetadata {
     
     try {
         # Navigate to video if not already there
-        if ($script:webBrowser.CoreWebView2.Source -notlike "*youtube.com/watch?v=$VideoId*") {
+        if (${script:webBrowser}.CoreWebView2.Source -notlike "*youtube.com/watch?v=$VideoId*") {
             Open-Browser "https://www.youtube.com/watch?v=$VideoId"
             Start-Sleep -Milliseconds 2000
         }
@@ -471,11 +471,11 @@ function Get-BrowserElementText {
     Path to save screenshot (PNG format)
 #>
 function Get-BrowserScreenshot {
-    param([string]$OutputPath = "$env:TEMP\browser_screenshot.png")
+    param([string]$OutputPath = "${env:TEMP}\browser_screenshot.png")
     
     try {
         # Use WebView2 native screenshot capability
-        $task = $script:webBrowser.CoreWebView2.CapturePreviewAsync(
+        $task = ${script:webBrowser}.CoreWebView2.CapturePreviewAsync(
             [Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat]::Png,
             [System.IO.File]::Create($OutputPath)
         )
@@ -520,8 +520,8 @@ function Process-AgentBrowserCommand {
         # Parse command format: /command arg1 arg2 arg3
         $parts = $CommandText.Trim().Split(' ', 3)
         $command = $parts[0] -replace '^/', ''
-        $arg1 = if ($parts.Count -gt 1) { $parts[1] } else { "" }
-        $arg2 = if ($parts.Count -gt 2) { $parts[2] } else { "" }
+        $arg1 = $(if ($parts.Count -gt 1) { $parts[1] } else { "" }
+        $arg2 = $(if ($parts.Count -gt 2) { $parts[2] } else { "" }
         
         $result = $null
         

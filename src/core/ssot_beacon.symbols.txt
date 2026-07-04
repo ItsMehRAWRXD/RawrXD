@@ -65,6 +65,16 @@ handleBackendSwitchOllama
 handleBackendSwitchOpenAI
 handleCodebaseIndex
 handleCodebaseSearch
+handleCodexComplete
+handleCodexCompleteBlock
+handleCodexCompleteLine
+handleCodexExplain
+handleCodexFixErrors
+handleCodexGenerateDocs
+handleCodexGenerateTests
+handleCodexOptimize
+handleCodexRefactor
+handleCodexStream
 handleConfidenceSetPolicy
 handleConfidenceStatus
 handleDbgAddBp

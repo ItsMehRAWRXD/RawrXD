@@ -31,9 +31,9 @@ $iFlags = @(
 )
 
 # Windows SDK includes
-$sdkDir = $env:WindowsSdkDir
+$sdkDir = ${env:WindowsSdkDir}
 if (-not $sdkDir) { $sdkDir = "${env:ProgramFiles(x86)}\Windows Kits\10\" }
-$sdkVer = $env:WindowsSDKVersion
+$sdkVer = ${env:WindowsSDKVersion}
 if (-not $sdkVer) {
     $sdkVer = (Get-ChildItem "$sdkDir\include" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
     if ($sdkVer) { $sdkVer = "$sdkVer\" }

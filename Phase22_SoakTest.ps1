@@ -5,8 +5,8 @@
 param(
     [int]$DurationHours = 24,
     [float]$TargetTPS = 336.7,
-    [switch]$LogMetrics = $true,
-    [switch]$CaptureCrashDumps = $true,
+    [switch]$LogMetrics,
+    [switch]$CaptureCrashDumps,
     [string]$OutputDir = ".\soak-test-results"
 )
 
@@ -221,7 +221,7 @@ while ((Get-Date) -lt $endTime) {
                 Timestamp = $crash.TimeCreated
                 EventID = $crash.Id
                 Message = $crash.Message
-                ExceptionCode = if ($crash.Message -match "0x[0-9a-fA-F]{8}") { $matches[0] } else { "Unknown" }
+                ExceptionCode = $(if ($crash.Message -match "0x[0-9a-fA-F]{8}") { $matches[0] } else { "Unknown" }
             }
             $metrics.crashEvents += $crashInfo
             $crashJson = $crashInfo | ConvertTo-Json -Compress
@@ -274,7 +274,7 @@ $avgCPU = ($metrics.samples | Measure-Object -Property CPU -Average).Average
 $maxMemory = ($metrics.samples | Measure-Object -Property WorkingSetMB -Maximum).Maximum
 $minMemory = ($metrics.samples | Measure-Object -Property WorkingSetMB -Minimum).Minimum
 $finalMemory = $metrics.samples[-1].WorkingSetMB
-$memoryGrowth = if ($baselineMemory -and $baselineMemory -gt 0) { (($finalMemory - $baselineMemory) / $baselineMemory) * 100 } else { 0 }
+$memoryGrowth = $(if ($baselineMemory -and $baselineMemory -gt 0) { (($finalMemory - $baselineMemory) / $baselineMemory) * 100 } else { 0 }
 
 $summary = @{
     TestConfiguration = @{

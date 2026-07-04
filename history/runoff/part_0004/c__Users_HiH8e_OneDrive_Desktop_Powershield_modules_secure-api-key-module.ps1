@@ -12,7 +12,7 @@
 # ============================================
 
 # Global configuration for this module
-$script:SecureKeyStore = @{
+${script:SecureKeyStore} = @{
     StorePath     = $null
     EncryptedKeys = @{}  # Cache decrypted keys in memory
     DPAPIScope    = 'CurrentUser'  # DPAPI protection scope
@@ -51,8 +51,8 @@ function Initialize-SecureAPIKeyStore {
             $StorePath = Join-Path $PSScriptRoot "config" ".apikeys.enc"
         }
         
-        $script:SecureKeyStore.StorePath = $StorePath
-        $script:SecureKeyStore.UseRegistry = $UseRegistry
+        ${script:SecureKeyStore}.StorePath = $StorePath
+        ${script:SecureKeyStore}.UseRegistry = $UseRegistry
         
         if ($UseRegistry) {
             # Initialize registry location
@@ -136,7 +136,7 @@ function Set-SecureAPIKey {
     
     try {
         if (-not $StorePath) {
-            $StorePath = $script:SecureKeyStore.StorePath
+            $StorePath = ${script:SecureKeyStore}.StorePath
         }
         
         if (-not $StorePath) {
@@ -164,12 +164,12 @@ function Set-SecureAPIKey {
             Encrypted   = $encryptedBase64
             Timestamp   = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
             Algorithm   = "DPAPI-CurrentUser"
-            Hostname    = $env:COMPUTERNAME
-            Username    = $env:USERNAME
+            Hostname    = ${env:COMPUTERNAME}
+            Username    = ${env:USERNAME}
         }
         
         # Determine storage method
-        if ($script:SecureKeyStore.UseRegistry) {
+        if (${script:SecureKeyStore}.UseRegistry) {
             $regPath = "HKCU:\Software\RawrXD\APIKeys"
             $regName = "key_$($KeyName)_encrypted"
             Set-ItemProperty -Path $regPath -Name $regName -Value $encryptedBase64 -Force
@@ -246,7 +246,7 @@ function Get-SecureAPIKey {
         
         # Try 1: File-based storage
         if (-not $StorePath) {
-            $StorePath = $script:SecureKeyStore.StorePath
+            $StorePath = ${script:SecureKeyStore}.StorePath
         }
         
         if ($StorePath -and (Test-Path $StorePath)) {
@@ -352,12 +352,12 @@ function Revoke-SecureAPIKey {
     
     try {
         # Remove from file storage
-        if ($script:SecureKeyStore.StorePath -and (Test-Path $script:SecureKeyStore.StorePath)) {
+        if (${script:SecureKeyStore}.StorePath -and (Test-Path ${script:SecureKeyStore}.StorePath)) {
             try {
-                $store = Get-Content -Path $script:SecureKeyStore.StorePath -Raw | ConvertFrom-Json
+                $store = Get-Content -Path ${script:SecureKeyStore}.StorePath -Raw | ConvertFrom-Json
                 if ($store.$KeyName) {
                     $store.PSObject.Properties.Remove($KeyName)
-                    $store | ConvertTo-Json | Set-Content -Path $script:SecureKeyStore.StorePath -Encoding UTF8 -Force
+                    $store | ConvertTo-Json | Set-Content -Path ${script:SecureKeyStore}.StorePath -Encoding UTF8 -Force
                 }
             }
             catch {
@@ -378,8 +378,8 @@ function Revoke-SecureAPIKey {
         }
         
         # Clear memory cache
-        if ($script:SecureKeyStore.EncryptedKeys[$KeyName]) {
-            $script:SecureKeyStore.EncryptedKeys.Remove($KeyName)
+        if (${script:SecureKeyStore}.EncryptedKeys[$KeyName]) {
+            ${script:SecureKeyStore}.EncryptedKeys.Remove($KeyName)
             [GC]::Collect()
         }
         
@@ -428,11 +428,11 @@ function Test-SecureAPIKeyIntegrity {
     try {
         # Test 1: Storage path accessible
         $result.Tests["StoragePathAccessible"] = $false
-        if ($script:SecureKeyStore.StorePath -and (Test-Path (Split-Path -Parent $script:SecureKeyStore.StorePath))) {
+        if (${script:SecureKeyStore}.StorePath -and (Test-Path (Split-Path -Parent ${script:SecureKeyStore}.StorePath))) {
             $result.Tests["StoragePathAccessible"] = $true
         } else {
             $result.IsValid = $false
-            $result.Issues += "Storage path not accessible: $($script:SecureKeyStore.StorePath)"
+            $result.Issues += "Storage path not accessible: $(${script:SecureKeyStore}.StorePath)"
         }
         
         # Test 2: Encryption round-trip
@@ -464,8 +464,8 @@ function Test-SecureAPIKeyIntegrity {
             $result.Tests["FilePermissionsRestricted"] = $true  # Skip on non-Windows
         } else {
             try {
-                if ($script:SecureKeyStore.StorePath -and (Test-Path $script:SecureKeyStore.StorePath)) {
-                    $acl = Get-Acl $script:SecureKeyStore.StorePath
+                if (${script:SecureKeyStore}.StorePath -and (Test-Path ${script:SecureKeyStore}.StorePath)) {
+                    $acl = Get-Acl ${script:SecureKeyStore}.StorePath
                     $publicAccess = $acl.Access | Where-Object { $_.IdentityReference -match "Everyone|Authenticated Users" }
                     if ($publicAccess) {
                         $result.Tests["FilePermissionsRestricted"] = $false

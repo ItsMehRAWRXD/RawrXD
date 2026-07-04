@@ -123,7 +123,7 @@ function Start-AutonomousRepair {
     $duration = $endTime - $progress.StartTime
     
     # Guard against divide-by-zero when calculating success rate
-    $successRate = if ($progress.TotalTasks -gt 0) {
+    $successRate = $(if ($progress.TotalTasks -gt 0) {
         [Math]::Round(($progress.CompletedTasks / $progress.TotalTasks) * 100, 2)
     } else {
         0.0

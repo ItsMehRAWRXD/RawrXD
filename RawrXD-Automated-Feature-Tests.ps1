@@ -19,14 +19,14 @@ function Test-Feature {
         [string]$Description
     )
     
-    $script:totalTests++
+    ${script:totalTests}++
     Write-Host "`n🔸 Testing: $FeatureName" -ForegroundColor Yellow -NoNewline
     
     try {
         $result = & $TestCode
         if ($result) {
             Write-Host " ✅ PASS" -ForegroundColor Green
-            $script:passedTests++
+            ${script:passedTests}++
             $testResults[$FeatureName] = "PASS"
         }
         else {
@@ -36,7 +36,7 @@ function Test-Feature {
     }
     catch {
         Write-Host " ❌ FAIL: $_" -ForegroundColor Red
-        $script:failedTests++
+        ${script:failedTests}++
         $testResults[$FeatureName] = "FAIL: $_"
     }
 }
@@ -97,7 +97,7 @@ Test-Feature -FeatureName "Core Functions Defined" -Category "Functions" -Descri
 # Test 7: Configuration System
 Test-Feature -FeatureName "Configuration System" -Category "Config" -Description "Test settings load/save capability" -TestCode {
     $content = Get-Content ".\RawrXD.ps1" -Raw
-    $hasSettings = $content -match "Load-Settings|Save-Settings|Save-CustomizationSettings|\`$global:settings"
+    $hasSettings = $content -match "Load-Settings|Save-Settings|Save-CustomizationSettings|\`${global:settings}"
     $hasConfig = $content -match "settings\.json|config|Configuration"
     return ($hasSettings -and $hasConfig)
 }
@@ -126,7 +126,7 @@ Test-Feature -FeatureName "Chat Interface" -Category "Chat" -Description "Verify
 Write-Host "`n📊 AUTOMATED TEST RESULTS" -ForegroundColor Cyan
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$successRate = if ($totalTests -gt 0) { [math]::Round(($passedTests / $totalTests) * 100, 1) } else { 0 }
+$successRate = $(if ($totalTests -gt 0) { [math]::Round(($passedTests / $totalTests) * 100, 1) } else { 0 }
 
 Write-Host "`n🎯 Test Summary:" -ForegroundColor White
 Write-Host "   Total Tests: $totalTests" -ForegroundColor Gray

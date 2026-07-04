@@ -11,8 +11,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:SuccessCount = 0
-$script:FailureCount = 0
+${script:SuccessCount} = 0
+${script:FailureCount} = 0
 
 # Routes that need longer timeouts
 $longTimeoutRoutes = @(
@@ -49,7 +49,7 @@ function Test-RouteWithRetry {
             }
 
             $response = Invoke-RestMethod @params
-            $script:SuccessCount++
+            ${script:SuccessCount}++
             Write-Host "  ✓ $Url ($Method) - Success" -ForegroundColor Green
             return $response
         }
@@ -62,7 +62,7 @@ function Test-RouteWithRetry {
         }
     }
 
-    $script:FailureCount++
+    ${script:FailureCount}++
     Write-Host "  ✗ $Url ($Method) - Failed: $($lastError.Exception.Message)" -ForegroundColor Red
     return $null
 }
@@ -132,12 +132,12 @@ $duration = ($endTime - $startTime).TotalSeconds
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "Results:" -ForegroundColor Cyan
-Write-Host "  Success: $script:SuccessCount" -ForegroundColor Green
-Write-Host "  Failed:  $script:FailureCount" -ForegroundColor Red
+Write-Host "  Success: ${script:SuccessCount}" -ForegroundColor Green
+Write-Host "  Failed:  ${script:FailureCount}" -ForegroundColor Red
 Write-Host "  Duration: $([math]::Round($duration, 2))s" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-if ($script:FailureCount -gt 0) {
+if (${script:FailureCount} -gt 0) {
     exit 1
 }
 exit 0

@@ -34,7 +34,7 @@ if (-not $VerboseFile) { $VerboseFile = Join-Path $repoRoot "_infer_verbose.txt"
 "MAX_TOKENS=$MaxTokens" | Add-Content -Path $StatusFile
 
 # Verbose OFF: keeps stdout clean (only generated text, no printf noise)
-$env:RAWRXD_INFER_VERBOSE = "0"
+${env:RAWRXD_INFER_VERBOSE} = "0"
 
 if (-not (Test-Path -LiteralPath $ExePath)) {
     "ERROR=EXE_NOT_FOUND" | Add-Content -Path $StatusFile

@@ -36,7 +36,7 @@ try {
 }
 
 # Check Qt6
-$env:Path += ";C:\Qt\6.7.0\msvc2019_64\bin"
+${env:Path} += ";C:\Qt\6.7.0\msvc2019_64\bin"
 if (-not (Test-Path "C:\Qt\6.7.0\msvc2019_64\bin\qmake.exe")) {
     Write-Host "  ⚠ Qt6 not found at default location" -ForegroundColor Yellow
     Write-Host "    Please ensure Qt6 is installed and in PATH" -ForegroundColor Yellow

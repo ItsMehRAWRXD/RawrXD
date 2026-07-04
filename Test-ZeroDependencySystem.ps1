@@ -20,8 +20,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Continue"
 
-$script:TestResults = @()
-$script:ScriptRoot = "D:\lazy init ide\scripts"
+${script:TestResults} = @()
+${script:ScriptRoot} = "D:\lazy init ide\scripts"
 
 function Write-TestHeader {
     param([string]$Title)
@@ -38,15 +38,15 @@ function Write-TestResult {
         [string]$Message = ""
     )
     
-    $status = if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
-    $color = if ($Passed) { "Green" } else { "Red" }
+    $status = $(if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
+    $color = $(if ($Passed) { "Green" } else { "Red" }
     
     Write-Host "  [$status] $TestName" -ForegroundColor $color
     if ($Message) {
         Write-Host "      $Message" -ForegroundColor Gray
     }
     
-    $script:TestResults += @{
+    ${script:TestResults} += @{
         Name = $TestName
         Passed = $Passed
         Message = $Message
@@ -68,7 +68,7 @@ function Test-ScriptFiles {
     )
     
     foreach ($script in $requiredScripts) {
-        $path = Join-Path $script:ScriptRoot $script
+        $path = Join-Path ${script:ScriptRoot} $script
         $exists = Test-Path $path
         Write-TestResult "Script exists: $script" $exists $path
     }
@@ -81,11 +81,11 @@ function Test-ScriptFiles {
 function Test-PromptEngine {
     Write-TestHeader "TEST 2: System Prompt Engine"
     
-    $promptScript = Join-Path $script:ScriptRoot "system_prompt_engine.ps1"
+    $promptScript = Join-Path ${script:ScriptRoot} "system_prompt_engine.ps1"
     
     try {
         # Test deterministic generation
-        $tempFile = Join-Path $env:TEMP "test_prompt.txt"
+        $tempFile = Join-Path ${env:TEMP} "test_prompt.txt"
         & $promptScript -Role "kernel-reverse-engineer" -OutputFile $tempFile -ErrorAction Stop
         
         $promptExists = Test-Path $tempFile
@@ -101,7 +101,7 @@ function Test-PromptEngine {
         }
         
         # Test random mode
-        $tempFile2 = Join-Path $env:TEMP "test_prompt_random.txt"
+        $tempFile2 = Join-Path ${env:TEMP} "test_prompt_random.txt"
         & $promptScript -Role "assembly-expert" -RandomMode -OutputFile $tempFile2 -ErrorAction Stop
         
         $randomExists = Test-Path $tempFile2
@@ -123,7 +123,7 @@ function Test-PromptEngine {
 function Test-ModelBuilder {
     Write-TestHeader "TEST 3: Model Builder Validation"
     
-    $modelScript = Join-Path $script:ScriptRoot "model_maker_zero_dep.ps1"
+    $modelScript = Join-Path ${script:ScriptRoot} "model_maker_zero_dep.ps1"
     
     try {
         # Check if script has required classes
@@ -156,7 +156,7 @@ function Test-ModelBuilder {
 function Test-SelfDigestion {
     Write-TestHeader "TEST 4: Self-Digestion Engine"
     
-    $digestScript = Join-Path $script:ScriptRoot "model_self_digest.ps1"
+    $digestScript = Join-Path ${script:ScriptRoot} "model_self_digest.ps1"
     
     try {
         $scriptContent = Get-Content $digestScript -Raw
@@ -188,7 +188,7 @@ function Test-SelfDigestion {
 function Test-SwarmIntegration {
     Write-TestHeader "TEST 5: Swarm Integration"
     
-    $swarmScript = Join-Path $script:ScriptRoot "swarm_model_integration.ps1"
+    $swarmScript = Join-Path ${script:ScriptRoot} "swarm_model_integration.ps1"
     
     try {
         $scriptContent = Get-Content $swarmScript -Raw
@@ -256,13 +256,13 @@ function Build-DemoModel {
     $confirm = Read-Host "`n  Proceed with demo build? (yes/no)"
     
     if ($confirm -eq "yes") {
-        $modelScript = Join-Path $script:ScriptRoot "model_maker_zero_dep.ps1"
-        $promptScript = Join-Path $script:ScriptRoot "system_prompt_engine.ps1"
+        $modelScript = Join-Path ${script:ScriptRoot} "model_maker_zero_dep.ps1"
+        $promptScript = Join-Path ${script:ScriptRoot} "system_prompt_engine.ps1"
         
         try {
             # Generate prompt
             Write-Host "`n  [1/2] Generating system prompt..." -ForegroundColor Cyan
-            $promptFile = Join-Path $env:TEMP "demo_prompt.txt"
+            $promptFile = Join-Path ${env:TEMP} "demo_prompt.txt"
             & $promptScript -Role "kernel-reverse-engineer" -OutputFile $promptFile
             
             if (Test-Path $promptFile) {
@@ -402,8 +402,8 @@ if ($RunAllTests) {
     # Summary
     Write-TestHeader "TEST SUMMARY"
     
-    $passed = ($script:TestResults | Where-Object { $_.Passed }).Count
-    $total = $script:TestResults.Count
+    $passed = (${script:TestResults} | Where-Object { $_.Passed }).Count
+    $total = ${script:TestResults}.Count
     $percentage = [Math]::Round(($passed / $total) * 100, 1)
     
     Write-Host "`n  Total Tests: $total" -ForegroundColor Cyan

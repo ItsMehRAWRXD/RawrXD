@@ -224,9 +224,7 @@ if ($exeSize -lt 20KB -or $exeSize -gt 300KB) {
 
 #================================================================================
 # RUN TESTS (OPTIONAL)
-#================================================================================
-
-if ($RunTests) {
+#================================================================================ $(if ($RunTests) {
     Write-Host "`n[OPTIONAL] Running test suite..." -ForegroundColor Cyan
     
     Write-Info "Executing: $EXE_FILE"

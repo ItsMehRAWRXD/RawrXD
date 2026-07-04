@@ -912,7 +912,7 @@ $Ml64Paths = @(
     "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\*\bin\Hostx64\x64\ml64.exe",
     "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\*\bin\Hostx64\x64\ml64.exe",
     "C:\Program Files (x86)\Microsoft Visual Studio\*\VC\Tools\MSVC\*\bin\Hostx64\x64\ml64.exe",
-    "$env:PATH\ml64.exe"
+    "${env:PATH}\ml64.exe"
 )
 
 $Ml64 = $null

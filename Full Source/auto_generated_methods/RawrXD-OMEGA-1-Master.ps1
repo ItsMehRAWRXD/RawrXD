@@ -348,7 +348,7 @@ if (Invoke-RawrXDAuthGate -ModuleName '{moduleName}') {{
             $"# Genome hash: {ComputeHash(string.Join(\"|\", Genome.Values))}\n" +
             $"# ReverseMarkerKeyId: {ReverseMarkerKeyId}\n" +
             $"# ObfuscationEnabled: {ObfuscationEnabled}\n" +
-                $"`$Global:RawrXDOmega = @{{ Root = '{Root}'; Generation = {MutationCount + 1}; CreatedAt = '{CreatedAt}' }}\n";
+                $"`${Global:RawrXDOmega} = @{{ Root = '{Root}'; Generation = {MutationCount + 1}; CreatedAt = '{CreatedAt}' }}\n";
             
             File.AppendAllText(scriptPath, mutation, Encoding.UTF8);
             IsMutant = true;
@@ -541,9 +541,7 @@ Write-Host "  ✓ All modules verified via SHA256 hashing" -ForegroundColor Gree
 
 # =============================================================================
 # PHASE 5: AUTONOMOUS DEPLOYMENT
-# =============================================================================
-
-if ($AutonomousMode -and -not $WhatIf) {
+# ============================================================================= $(if ($AutonomousMode -and -not $WhatIf) {
     Write-Host ""
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting autonomous deployment loop..." -ForegroundColor Green
     $OmegaEngine.StartAutonomousLoop(1000)
@@ -605,9 +603,7 @@ Write-Host ""
 
 # =============================================================================
 # PHASE 8: CONTINUOUS MONITORING LOOP
-# =============================================================================
-
-if (-not $WhatIf) {
+# ============================================================================= $(if (-not $WhatIf) {
     $monitoringLoopCount = 0
     $maxMonitoringIterations = 60  # Run for 60 iterations (~1 minute with 1s interval)
     

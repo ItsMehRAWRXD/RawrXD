@@ -137,8 +137,7 @@ if (-not $Args -or $Args.Count -eq 0) {
   Fail "No arguments. Expected /DIRECTLINK, /LIBMODE, or /LINKMODE."
 }
 
-$mode =
-  if (Parse-Switch $Args "/DIRECTLINK") { "DIRECTLINK" }
+$mode = $(if (Parse-Switch $Args "/DIRECTLINK") { "DIRECTLINK" }
   elseif (Parse-Switch $Args "/LIBMODE") { "LIBMODE" }
   elseif (Parse-Switch $Args "/LINKMODE") { "LINKMODE" }
   else { "" }

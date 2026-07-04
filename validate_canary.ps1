@@ -56,7 +56,7 @@ foreach ($node in $targetNodes) {
     }
     $connectivityResults += $result
     
-    $status = if ($ping -and $port.TcpTestSucceeded) { "✅" } elseif ($ping) { "⚠️" } else { "❌" }
+    $status = $(if ($ping -and $port.TcpTestSucceeded) { "✅" } elseif ($ping) { "⚠️" } else { "❌" }
     Write-Host " $status" -ForegroundColor $(if ($ping -and $port.TcpTestSucceeded) { "Green" } elseif ($ping) { "Yellow" } else { "Red" })
 }
 
@@ -87,9 +87,9 @@ while (((Get-Date) - $startTime).TotalSeconds -lt $Duration) {
             $content = $response.Content
             
             # Parse metrics
-            $tokens = if ($content -match 'sovereign_tokens_processed\s+(\d+)') { [int]$matches[1] } else { 0 }
-            $latency = if ($content -match 'sovereign_ring_latency_ms\s+([\d.]+)') { [float]$matches[1] } else { 0 }
-            $memory = if ($content -match 'process_memory_usage_bytes\s+(\d+)') { [int64]$matches[1] } else { 0 }
+            $tokens = $(if ($content -match 'sovereign_tokens_processed\s+(\d+)') { [int]$matches[1] } else { 0 }
+            $latency = $(if ($content -match 'sovereign_ring_latency_ms\s+([\d.]+)') { [float]$matches[1] } else { 0 }
+            $memory = $(if ($content -match 'process_memory_usage_bytes\s+(\d+)') { [int64]$matches[1] } else { 0 }
             
             $snapshot.Nodes += @{
                 NodeId = $node.Id
@@ -141,10 +141,10 @@ foreach ($node in $targetNodes) {
         $stat = [PSCustomObject]@{
             NodeId = $node.Id
             Uptime = ($nodeMetrics.Count / $totalSnapshots) * 100
-            AvgLatency = if ($latencies.Count -gt 0) { ($latencies | Measure-Object -Average).Average } else { 0 }
-            MaxLatency = if ($latencies.Count -gt 0) { ($latencies | Measure-Object -Maximum).Maximum } else { 0 }
-            AvgMemory = if ($memories.Count -gt 0) { ($memories | Measure-Object -Average).Average } else { 0 }
-            TokenDelta = if ($nodeMetrics.Count -gt 0) { $nodeMetrics[-1].Tokens - $nodeMetrics[0].Tokens } else { 0 }
+            AvgLatency = $(if ($latencies.Count -gt 0) { ($latencies | Measure-Object -Average).Average } else { 0 }
+            MaxLatency = $(if ($latencies.Count -gt 0) { ($latencies | Measure-Object -Maximum).Maximum } else { 0 }
+            AvgMemory = $(if ($memories.Count -gt 0) { ($memories | Measure-Object -Average).Average } else { 0 }
+            TokenDelta = $(if ($nodeMetrics.Count -gt 0) { $nodeMetrics[-1].Tokens - $nodeMetrics[0].Tokens } else { 0 }
         }
         $nodeStats += $stat
     }
@@ -155,8 +155,8 @@ Write-Host "  ID │ Uptime │ Avg Lat │ Max Lat │ Memory  │ Tokens" -For
 Write-Host "  ───┼────────┼─────────┼─────────┼─────────┼────────" -ForegroundColor Gray
 
 foreach ($stat in $nodeStats | Sort-Object NodeId) {
-    $uptimeColor = if ($stat.Uptime -gt 95) { "Green" } elseif ($stat.Uptime -gt 80) { "Yellow" } else { "Red" }
-    $latencyColor = if ($stat.AvgLatency -lt 50) { "Green" } elseif ($stat.AvgLatency -lt 200) { "Yellow" } else { "Red" }
+    $uptimeColor = $(if ($stat.Uptime -gt 95) { "Green" } elseif ($stat.Uptime -gt 80) { "Yellow" } else { "Red" }
+    $latencyColor = $(if ($stat.AvgLatency -lt 50) { "Green" } elseif ($stat.AvgLatency -lt 200) { "Yellow" } else { "Red" }
     
     Write-Host "  $($stat.NodeId.ToString().PadRight(2)) │ " -NoNewline
     Write-Host "$($stat.Uptime.ToString("N1").PadRight(6))%" -ForegroundColor $uptimeColor -NoNewline

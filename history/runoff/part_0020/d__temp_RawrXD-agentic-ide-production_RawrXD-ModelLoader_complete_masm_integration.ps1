@@ -86,7 +86,7 @@ function Build-Tests {
     Write-Log "Configuring CMake..." -Color $Colors.Info
     Push-Location $TestBuildDir\build
     
-    $env:CMAKE_PREFIX_PATH = $QtPath
+    ${env:CMAKE_PREFIX_PATH} = $QtPath
     cmake -G "Visual Studio 17 2022" -A x64 ..
     
     if ($LASTEXITCODE -ne 0) {
@@ -119,7 +119,7 @@ function Run-ComponentTests {
         exit 1
     }
     
-    $env:PATH = "$QtPath\bin;$env:PATH"
+    ${env:PATH} = "$QtPath\bin;${env:PATH}"
     & $testExe
     
     if ($LASTEXITCODE -ne 0) {

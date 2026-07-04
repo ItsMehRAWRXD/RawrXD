@@ -145,7 +145,7 @@ try {
     }
         
     # Show log location
-    $logPath = Join-Path $env:TEMP "RawrBrowser_Startup.log"
+    $logPath = Join-Path ${env:TEMP} "RawrBrowser_Startup.log"
     Write-BuildLog "Startup logs will be written to: $logPath" "INFO"
   }
   else {

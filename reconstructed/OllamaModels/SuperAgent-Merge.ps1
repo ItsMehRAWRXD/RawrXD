@@ -64,7 +64,7 @@ $models = Get-ChildItem "$ModelsDir\*.gguf" | ForEach-Object {
 
 Write-Host "`nAvailable GGUF models:" -ForegroundColor Cyan
 $models | ForEach-Object {
-    $sizeColor = if ($_.SizeGB -ge 30) { "Red" } 
+    $sizeColor = $(if ($_.SizeGB -ge 30) { "Red" } 
                  elseif ($_.SizeGB -ge 10) { "Yellow" }
                  elseif ($_.SizeGB -ge 4 -and $_.SizeGB -le 6) { "Green" }
                  else { "Gray" }
@@ -125,7 +125,7 @@ if (-not (Test-Path $Config.Quantize)) {
         (Join-Path $LlamaCppDir "build\bin\quantize.exe"),
         (Join-Path $LlamaCppDir "llama-quantize.exe"),
         "C:\llama.cpp\quantize.exe",
-        (Join-Path $env:USERPROFILE "llama.cpp\build\bin\Release\llama-quantize.exe")
+        (Join-Path ${env:USERPROFILE} "llama.cpp\build\bin\Release\llama-quantize.exe")
     )
     
     foreach ($alt in $altPaths) {
@@ -205,7 +205,7 @@ catch {
 }
 
 $duration = (Get-Date) - $startTime
-$outputSize = if (Test-Path $Config.OutputGGUF) {
+$outputSize = $(if (Test-Path $Config.OutputGGUF) {
     [math]::Round((Get-Item $Config.OutputGGUF).Length / 1GB, 2)
 } else { 0 }
 
@@ -290,9 +290,7 @@ Write-Host "✅ Modelfile created: $($Config.OutputModelfile)" -ForegroundColor 
 
 # ============================================
 # STEP 5: Create Ollama model (optional)
-# ============================================
-
-if ($CreateOllamaModel) {
+# ============================================ $(if ($CreateOllamaModel) {
     Write-Host "`n🚀 Creating Ollama model..." -ForegroundColor Yellow
     
     $ollamaName = $OutputName.ToLower() -replace '[^a-z0-9-]', '-'

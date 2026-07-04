@@ -14,8 +14,8 @@ Write-Host "  Configuration: $Configuration" -ForegroundColor DarkGray
 Write-Host "  Qt6 CMake dir: $QtDir" -ForegroundColor DarkGray
 
 # Set up VS environment
-$env:VSCMD_ARG_app_plat = "Desktop"
-$env:VSCMD_ARG_TGT_ARCH = "x64"
+${env:VSCMD_ARG_app_plat} = "Desktop"
+${env:VSCMD_ARG_TGT_ARCH} = "x64"
 
 # Initialize VS build tools environment
 $vcvarsCmd = $VsVcVars
@@ -44,7 +44,7 @@ Set-Location $buildDir
 
 try {
      # Export Qt6_DIR so top-level CMakeLists can pick it up
-    $env:Qt6_DIR = $QtDir
+    ${env:Qt6_DIR} = $QtDir
     Write-Host "Configuring CMake..." -ForegroundColor Yellow
     & $cmake -G "Visual Studio 17 2022" -A x64 `
         -DCMAKE_SYSTEM_VERSION="10.0.22621.0" `

@@ -11,7 +11,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$script:Verbose = $Verbose
+${script:Verbose} = $Verbose
 
 function Log($msg, [System.ConsoleColor]$color = 'White') {
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] $msg" -ForegroundColor $color
@@ -24,8 +24,8 @@ function Quote-Arg([string]$value) {
 
 function Test-Exit($label, $actual, $expected, [switch]$Soft) {
     $ok = $actual -eq $expected
-    $mark = if ($ok) { '[OK]' } else { '[FAIL]' }
-    $severity = if ($Soft -and -not $ok) { 'Yellow' } elseif (-not $ok) { 'Red' } else { 'Green' }
+    $mark = $(if ($ok) { '[OK]' } else { '[FAIL]' }
+    $severity = $(if ($Soft -and -not $ok) { 'Yellow' } elseif (-not $ok) { 'Red' } else { 'Green' }
     Log "$mark $label`: expected=$expected actual=$actual" $severity
     return $ok
 }
@@ -67,8 +67,8 @@ $traceDir = "D:\rawrxd\tmp\agentic_test_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 New-Item -ItemType Directory -Path $traceDir -Force | Out-Null
 $cliTrace = Join-Path $traceDir 'cli_parity.json'
 
-$env:RAWRXD_PARITY_CPU = '1'
-$env:RAWRXD_PIPELINE_TRACE = $null
+${env:RAWRXD_PARITY_CPU} = '1'
+${env:RAWRXD_PIPELINE_TRACE} = $null
 $cliOut = Join-Path $traceDir 'cli_parity.out.txt'
 $cliErr = Join-Path $traceDir 'cli_parity.err.txt'
 
@@ -103,7 +103,7 @@ $gpuProc = Start-Process -FilePath $cli -ArgumentList @(
     '--emit-json-trace', (Quote-Arg $gpuTrace)
 ) -RedirectStandardOutput $gpuOut -RedirectStandardError $gpuErr -NoNewWindow -PassThru -Wait
 
-$gpuErrText = if (Test-Path -LiteralPath $gpuErr) { Get-Content -LiteralPath $gpuErr -Raw } else { '' }
+$gpuErrText = $(if (Test-Path -LiteralPath $gpuErr) { Get-Content -LiteralPath $gpuErr -Raw } else { '' }
 $gpuDeferred = $gpuErrText -match 'No GPU backend available|CPU-only mode'
 
 if ($gpuDeferred) {
@@ -124,13 +124,13 @@ $smokeTrace = Join-Path $traceDir 'ui_smoke.json'
 $smokeOut = Join-Path $traceDir 'ui_smoke.out.txt'
 $smokeErr = Join-Path $traceDir 'ui_smoke.err.txt'
 
-$env:RAWRXD_SMOKE_CHAT = '1'
-$env:RAWRXD_PIPELINE_TRACE = $smokeTrace
-$env:RAWRXD_PIPELINE_STRICT = '1'
-$env:RAWRXD_PARITY_CPU = '1'
-$env:RAWRXD_SMOKE_MODEL = $ModelPath
-$env:RAWRXD_SMOKE_PROMPT = $Prompt
-$env:RAWRXD_SMOKE_MAX_TOKENS = "$MaxTokens"
+${env:RAWRXD_SMOKE_CHAT} = '1'
+${env:RAWRXD_PIPELINE_TRACE} = $smokeTrace
+${env:RAWRXD_PIPELINE_STRICT} = '1'
+${env:RAWRXD_PARITY_CPU} = '1'
+${env:RAWRXD_SMOKE_MODEL} = $ModelPath
+${env:RAWRXD_SMOKE_PROMPT} = $Prompt
+${env:RAWRXD_SMOKE_MAX_TOKENS} = "$MaxTokens"
 
 $smokeProc = Start-Process -FilePath $exe -ArgumentList @(
     '--chat-ui-smoke-noninteractive',
@@ -150,7 +150,7 @@ if ($smokeTraceReady) {
     $results += Test-Exit 'Smoke token_count > 0' ($s.token_count -gt 0) $true -Soft
     Log "Smoke: $($s.token_count) tokens, source=$($s.source)" 'Gray'
 } else {
-    $smokeErrTail = if (Test-Path -LiteralPath $smokeErr) { Get-Content -LiteralPath $smokeErr -Tail 20 } else { 'N/A' }
+    $smokeErrTail = $(if (Test-Path -LiteralPath $smokeErr) { Get-Content -LiteralPath $smokeErr -Tail 20 } else { 'N/A' }
     Log "Smoke stderr tail: $smokeErrTail" 'Red'
 }
 
@@ -160,7 +160,7 @@ if ((Test-Path -LiteralPath $smokeTrace)) {
     $cliAlignedTrace = Join-Path $traceDir 'cli_for_ui_compare.json'
     $cliAlignedOut = Join-Path $traceDir 'cli_for_ui_compare.out.txt'
     $cliAlignedErr = Join-Path $traceDir 'cli_for_ui_compare.err.txt'
-    $env:RAWRXD_PARITY_CPU = '1'
+    ${env:RAWRXD_PARITY_CPU} = '1'
     $cliAlignedProc = Start-Process -FilePath $cli -ArgumentList @(
         'run', (Quote-Arg $ModelPath),
         '--prompt', (Quote-Arg $Prompt),
@@ -244,14 +244,14 @@ Write-Host $completionBlock
 # Also emit JSON format for machine consumption
 $jsonBlock = @{
     agent_done = $true
-    status = if ($failed -eq 0) { 'success' } else { 'partial' }
+    status = $(if ($failed -eq 0) { 'success' } else { 'partial' }
     phase = '2B'
     tasks_completed = $passed
     tasks_total = $total
     commit = $commitHash
     artifacts = $artifacts
     duration_ms = [math]::Round($elapsed * 1000)
-    next = if ($failed -eq 0) { 'Phase 2C kernel tuning' } else { 'Retry failed tests' }
+    next = $(if ($failed -eq 0) { 'Phase 2C kernel tuning' } else { 'Retry failed tests' }
     timestamp = (Get-Date -Format "o")
 } | ConvertTo-Json -Depth 2
 

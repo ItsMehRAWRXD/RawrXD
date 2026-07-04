@@ -124,9 +124,9 @@ Write-Host "   • Qwen Cloud: Alibaba Cloud Dashboard"
 
 Write-Host "`n2. 🛠️ Configure Ollama:" -ForegroundColor Cyan
 Write-Host "   • Set environment variables:"
-Write-Host "     $env:ZHIPU_API_KEY = 'your-zhipu-key'"
-Write-Host "     $env:MINIMAX_API_KEY = 'your-minimax-key'"
-Write-Host "     $env:DASHSCOPE_API_KEY = 'your-alibaba-key'"
+Write-Host "     ${env:ZHIPU_API_KEY} = 'your-zhipu-key'"
+Write-Host "     ${env:MINIMAX_API_KEY} = 'your-minimax-key'"
+Write-Host "     ${env:DASHSCOPE_API_KEY} = 'your-alibaba-key'"
 
 Write-Host "`n3. 📥 Install Models:" -ForegroundColor Cyan
 Write-Host "   ollama pull glm-4.6:cloud"

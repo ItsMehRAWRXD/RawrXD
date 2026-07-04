@@ -4,7 +4,7 @@
 
 param(
     [string]$Root = "D:\rawrxd",
-    [string]$OutDir = "$env:LOCALAPPDATA\RawrXD\bin"
+    [string]$OutDir = "${env:LOCALAPPDATA}\RawrXD\bin"
 )
 
 $ErrorActionPreference = "Stop"
@@ -150,7 +150,7 @@ $linkArgs = @(
 )
 
 # Add comprehensive stub library
-$stubLib = "$env:LOCALAPPDATA\RawrXD\stubs\rawrxd_stubs.lib"
+$stubLib = "${env:LOCALAPPDATA}\RawrXD\stubs\rawrxd_stubs.lib"
 if(Test-Path $stubLib) {
     $linkArgs += "`"$stubLib`""
 }
@@ -213,7 +213,7 @@ $ResolutionReport = Join-Path $OutDir "ultimate_resolution_report.json"
     ConflictsResolved = $ConflictResolution.Keys.Count
     ExecutablePath = $finalExe
     ExecutableExists = (Test-Path $finalExe)
-    ExecutableSize = if(Test-Path $finalExe) { (Get-Item $finalExe).Length } else { 0 }
+    ExecutableSize = $(if (Test-Path $finalExe) { (Get-Item $finalExe).Length } else { 0 }
 } | ConvertTo-Json | Out-File -FilePath $ResolutionReport -Encoding UTF8
 
 Write-Host " 📊 Resolution report: $ResolutionReport" -Fore Gray

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Golden Master Trace Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 15px;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #cccccc;
+        }
+        
+        .test-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .test-item {
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .test-item:hover {
+            background: #2a2d2e;
+        }
+        
+        .test-item.active {
+            background: #37373d;
+            border-left-color: #007acc;
+        }
+        
+        .test-item.pass {
+            border-left-color: #4ec9b0;
+        }
+        
+        .test-item.fail {
+            border-left-color: #f48771;
+        }
+        
+        .test-name {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .test-category {
+            font-size: 11px;
+            color: #808080;
+        }
+        
+        .test-status {
+            float: right;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .test-status.pass {
+            background: rgba(78, 201, 176, 0.2);
+            color: #4ec9b0;
+        }
+        
+        .test-status.fail {
+            background: rgba(244, 135, 113, 0.2);
+            color: #f48771;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .toolbar {
+            height: 48px;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+        }
+        
+        .toolbar button {
+            padding: 6px 12px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .toolbar button:hover {
+            background: #1177bb;
+        }
+        
+        .toolbar button.secondary {
+            background: #3c3c3c;
+        }
+        
+        .toolbar button.secondary:hover {
+            background: #4c4c4c;
+        }
+        
+        .toolbar .spacer {
+            flex: 1;
+        }
+        
+        .toolbar .info {
+            font-size: 12px;
+            color: #808080;
+        }
+        
+        /* Content Area */
+        .content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        /* Timeline Panel */
+        .timeline-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #3e3e42;
+        }
+        
+        .panel-header {
+            padding: 10px 15px;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #bbbbbb;
+        }
+        
+        .timeline-container {
+            flex: 1;
+            overflow: auto;
+            padding: 15px;
+            position: relative;
+        }
+        
+        #timeline-canvas {
+            width: 100%;
+            min-height: 400px;
+        }
+        
+        /* Details Panel */
+        .details-panel {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            background: #252526;
+        }
+        
+        .details-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .detail-section {
+            margin-bottom: 20px;
+        }
+        
+        .detail-section h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #cccccc;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #3e3e42;
+            font-size: 12px;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #808080;
+        }
+        
+        .detail-value {
+            color: #d4d4d4;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .detail-value.hash {
+            font-size: 10px;
+            word-break: break-all;
+        }
+        
+        .detail-value.match {
+            color: #4ec9b0;
+        }
+        
+        .detail-value.mismatch {
+            color: #f48771;
+        }
+        
+        /* Opcode List */
+        .opcode-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+        }
+        
+        .opcode-item {
+            padding: 6px 10px;
+            font-size: 11px;
+            font-family: 'Consolas', monospace;
+            border-bottom: 1px solid #2d2d30;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .opcode-item:last-child {
+            border-bottom: none;
+        }
+        
+        .opcode-item:hover {
+            background: #2a2d2e;
+        }
+        
+        .opcode-index {
+            color: #808080;
+            min-width: 40px;
+        }
+        
+        .opcode-name {
+            color: #569cd6;
+        }
+        
+        .opcode-operands {
+            color: #9cdcfe;
+        }
+        
+        /* Register View */
+        .register-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .register-cell {
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .register-name {
+            font-size: 10px;
+            color: #808080;
+            margin-bottom: 4px;
+        }
+        
+        .register-value {
+            font-size: 11px;
+            font-family: 'Consolas', monospace;
+            color: #dcdcaa;
+        }
+        
+        /* Comparison View */
+        .comparison-bar {
+            height: 30px;
+            background: #3e3e42;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .comparison-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .comparison-segment.match {
+            background: #4ec9b0;
+            color: #1e1e1e;
+        }
+        
+        .comparison-segment.mismatch {
+            background: #f48771;
+            color: #1e1e1e;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #424242;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f4f4f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>🧪 Golden Masters</h2>
+            </div>
+            <div class="test-list" id="testList">
+                <!-- Test items will be populated here -->
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="toolbar">
+                <button onclick="loadTestData()">📂 Load Database</button>
+                <button onclick="runComparison()" class="secondary">🔍 Compare All</button>
+                <button onclick="exportReport()" class="secondary">📊 Export Report</button>
+                <div class="spacer"></div>
+                <div class="info" id="statusInfo">Ready</div>
+            </div>
+            
+            <div class="content">
+                <!-- Timeline Panel -->
+                <div class="timeline-panel">
+                    <div class="panel-header">Execution Timeline</div>
+                    <div class="timeline-container">
+                        <canvas id="timeline-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Details Panel -->
+                <div class="details-panel">
+                    <div class="panel-header">Test Details</div>
+                    <div class="details-content" id="detailsContent">
+                        <div class="detail-section">
+                            <h3>Select a test to view details</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+    
+    <script>
+        // Golden Master Database
+        let goldenMasters = [];
+        let currentTest = null;
+        
+        // Sample data for demonstration
+        const sampleData = [
+            {
+                testName: "test_addition",
+                category: "arithmetic",
+                status: "pass",
+                fingerprint: "a1b2c3d4e5f6789012345678",
+                eventCount: 42,
+                timestamp: Date.now(),
+                description: "Basic integer addition: 10 + 20 = 30",
+                opcodes: [
+                    { index: 0, name: "LOAD_INT", operands: "r0, 10" },
+                    { index: 1, name: "LOAD_INT", operands: "r1, 20" },
+                    { index: 2, name: "ADD", operands: "r2, r0, r1" },
+                    { index: 3, name: "RETURN", operands: "r2" }
+                ],
+                registers: {
+                    r0: "10", r1: "20", r2: "30", r3: "0",
+                    r4: "0", r5: "0", r6: "0", r7: "0",
+                    r8: "0", r9: "0", r10: "0", r11: "0",
+                    r12: "0", r13: "0", r14: "0", r15: "0"
+                }
+            },
+            {
+                testName: "test_subtraction",
+                category: "arithmetic",
+                status: "pass",
+                fingerprint: "b2c3d4e5f6a7890123456789",
+                eventCount: 38,
+                timestamp: Date.now() - 1000,
+                description: "Integer subtraction: 50 - 20 = 30",
+                opcodes: [
+                    { index: 0, name: "LOAD_INT", operands: "r0, 50" },
+                    { index: 1, name: "LOAD_INT", operands: "r1, 20" },
+                    { index: 2, name: "SUB", operands: "r2, r0, r1" },
+                    { index: 3, name: "RETURN", operands: "r2" }
+                ],
+                registers: {
+                    r0: "50", r1: "20", r2: "30", r3: "0",
+                    r4: "0", r5: "0", r6: "0", r7: "0",
+                    r8: "0", r9: "0", r10: "0", r11: "0",
+                    r12: "0", r13: "0", r14: "0", r15: "0"
+                }
+            },
+            {
+                testName: "test_loop",
+                category: "control_flow",
+                status: "fail",
+                fingerprint: "c3d4e5f6a7b8901234567890",
+                eventCount: 156,
+                timestamp: Date.now() - 2000,
+                description: "While loop with 10 iterations",
+                opcodes: [
+                    { index: 0, name: "LOAD_INT", operands: "r0, 0" },
+                    { index: 1, name: "LOAD_INT", operands: "r1, 10" },
+                    { index: 2, name: "LT", operands: "r2, r0, r1" },
+                    { index: 3, name: "JMP_COND", operands: "r2, +5" },
+                    { index: 4, name: "INC", operands: "r0, r0" },
+                    { index: 5, name: "JMP", operands: "-4" },
+                    { index: 6, name: "RETURN", operands: "r0" }
+                ],
+                registers: {
+                    r0: "10", r1: "10", r2: "false", r3: "0",
+                    r4: "0", r5: "0", r6: "0", r7: "0",
+                    r8: "0", r9: "0", r10: "0", r11: "0",
+                    r12: "0", r13: "0", r14: "0", r15: "0"
+                }
+            }
+        ];
+        
+        // Initialize
+        function init() {
+            goldenMasters = sampleData;
+            renderTestList();
+            drawTimeline();
+        }
+        
+        // Render test list
+        function renderTestList() {
+            const list = document.getElementById('testList');
+            list.innerHTML = '';
+            
+            goldenMasters.forEach(test => {
+                const item = document.createElement('div');
+                item.className = `test-item ${test.status}`;
+                item.innerHTML = `
+                    <div class="test-name">${test.testName}</div>
+                    <div class="test-category">${test.category}</div>
+                    <span class="test-status ${test.status}">${test.status.toUpperCase()}</span>
+                `;
+                item.onclick = () => selectTest(test);
+                list.appendChild(item);
+            });
+        }
+        
+        // Select test
+        function selectTest(test) {
+            currentTest = test;
+            
+            // Update active state
+            document.querySelectorAll('.test-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Update details
+            renderDetails(test);
+            
+            // Redraw timeline with highlight
+            drawTimeline(test);
+        }
+        
+        // Render details panel
+        function renderDetails(test) {
+            const content = document.getElementById('detailsContent');
+            
+            const opcodeList = test.opcodes.map(op => `
+                <div class="opcode-item">
+                    <span class="opcode-index">${op.index.toString().padStart(3, '0')}</span>
+                    <span class="opcode-name">${op.name}</span>
+                    <span class="opcode-operands">${op.operands}</span>
+                </div>
+            `).join('');
+            
+            const registerGrid = Object.entries(test.registers).map(([name, value]) => `
+                <div class="register-cell">
+                    <div class="register-name">${name}</div>
+                    <div class="register-value">${value}</div>
+                </div>
+            `).join('');
+            
+            content.innerHTML = `
+                <div class="detail-section">
+                    <h3>Test Information</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Name</span>
+                        <span class="detail-value">${test.testName}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Category</span>
+                        <span class="detail-value">${test.category}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value ${test.status}">${test.status.toUpperCase()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Event Count</span>
+                        <span class="detail-value">${test.eventCount}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Timestamp</span>
+                        <span class="detail-value">${new Date(test.timestamp).toLocaleString()}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Fingerprint</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Hash (FNV-1a)</span>
+                        <span class="detail-value hash">${test.fingerprint}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Description</h3>
+                    <div class="detail-row">
+                        <span class="detail-value">${test.description}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Opcode Sequence</h3>
+                    <div class="opcode-list">
+                        ${opcodeList}
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Final Register State</h3>
+                    <div class="register-grid">
+                        ${registerGrid}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Draw timeline
+        function drawTimeline(highlightTest = null) {
+            const canvas = document.getElementById('timeline-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = 400;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear
+            ctx.fillStyle = '#1e1e1e';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw grid
+            ctx.strokeStyle = '#2d2d30';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, height);
+                ctx.stroke();
+            }
+            
+            // Draw timeline bars for each test
+            const barHeight = 40;
+            const barSpacing = 60;
+            const maxEvents = Math.max(...goldenMasters.map(t => t.eventCount));
+            
+            goldenMasters.forEach((test, index) => {
+                const y = 50 + index * barSpacing;
+                const barWidth = (test.eventCount / maxEvents) * (width - 100);
+                
+                // Bar background
+                ctx.fillStyle = test.status === 'pass' ? 'rgba(78, 201, 176, 0.2)' : 'rgba(244, 135, 113, 0.2)';
+                ctx.fillRect(50, y, barWidth, barHeight);
+                
+                // Bar border
+                ctx.strokeStyle = test.status === 'pass' ? '#4ec9b0' : '#f48771';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(50, y, barWidth, barHeight);
+                
+                // Highlight if selected
+                if (highlightTest === test) {
+                    ctx.strokeStyle = '#007acc';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(48, y - 2, barWidth + 4, barHeight + 4);
+                }
+                
+                // Label
+                ctx.fillStyle = '#d4d4d4';
+                ctx.font = '12px "Segoe UI"';
+                ctx.fillText(test.testName, 50, y - 10);
+                
+                // Event count
+                ctx.fillStyle = '#808080';
+                ctx.font = '11px "Segoe UI"';
+                ctx.fillText(`${test.eventCount} events`, barWidth + 60, y + barHeight / 2 + 4);
+                
+                // Opcode markers
+                const opcodeSpacing = barWidth / test.opcodes.length;
+                test.opcodes.forEach((op, opIndex) => {
+                    const opX = 50 + opIndex * opcodeSpacing + opcodeSpacing / 2;
+                    ctx.fillStyle = '#569cd6';
+                    ctx.beginPath();
+                    ctx.arc(opX, y + barHeight / 2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+            
+            // Draw time axis
+            ctx.strokeStyle = '#808080';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(50, height - 30);
+            ctx.lineTo(width - 50, height - 30);
+            ctx.stroke();
+            
+            // Axis labels
+            ctx.fillStyle = '#808080';
+            ctx.font = '10px "Segoe UI"';
+            ctx.fillText('0', 50, height - 15);
+            ctx.fillText(maxEvents.toString(), width - 80, height - 15);
+        }
+        
+        // Load test data
+        function loadTestData() {
+            // In real implementation, this would load from golden_masters.db
+            document.getElementById('statusInfo').textContent = 'Loaded ' + goldenMasters.length + ' tests';
+        }
+        
+        // Run comparison
+        function runComparison() {
+            // In real implementation, this would compare current fingerprints
+            document.getElementById('statusInfo').textContent = 'Comparison complete';
+        }
+        
+        // Export report
+        function exportReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                totalTests: goldenMasters.length,
+                passed: goldenMasters.filter(t => t.status === 'pass').length,
+                failed: goldenMasters.filter(t => t.status === 'fail').length,
+                tests: goldenMasters
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'golden-master-report.json';
+            a.click();
+            
+            document.getElementById('statusInfo').textContent = 'Report exported';
+        }
+        
+        // Handle resize
+        window.addEventListener('resize', () => drawTimeline(currentTest));
+        
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

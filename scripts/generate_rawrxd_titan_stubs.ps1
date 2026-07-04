@@ -68,7 +68,7 @@ $notReady = @{
 foreach ($m in $matches) {
     $name = $m.Groups[1].Value.Trim()
     $paramsRaw = ($m.Groups[2].Value -replace '\s+', ' ').Trim()
-    $params = if ([string]::IsNullOrWhiteSpace($paramsRaw)) { 'void' } else { $paramsRaw }
+    $params = $(if ([string]::IsNullOrWhiteSpace($paramsRaw)) { 'void' } else { $paramsRaw }
 
     $defs.Add("RAWRXD_STATUS __stdcall $name($params) {")
 

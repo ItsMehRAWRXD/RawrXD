@@ -80,8 +80,8 @@ $checks = @(
 )
 
 foreach ($check in $checks) {
-  $status = if ($check.Pass) { "✓ PASS" } else { "✗ FAIL" }
-  $color = if ($check.Pass) { "Green" } else { "Red" }
+  $status = $(if ($check.Pass) { "✓ PASS" } else { "✗ FAIL" }
+  $color = $(if ($check.Pass) { "Green" } else { "Red" }
   Write-Host "  [$status] $($check.Name)" -ForegroundColor $color
   Write-Host "           Value: $($check.Value)"
   Write-Host "           Reason: $($check.Reason)`n"

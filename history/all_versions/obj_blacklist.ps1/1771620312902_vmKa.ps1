@@ -19,12 +19,12 @@
 
 $ErrorActionPreference = "Continue"
 
-$Script:Root = "D:\rawrxd"
+${Script:Root} = "D:\rawrxd"
 
 # ---- STATIC BLACKLIST ----
 # Objects permanently identified as corrupt/incompatible by the
 # brute force linker or manual audit.  LNK1136 = corrupt file format.
-$Script:BlacklistedNames = @(
+${Script:BlacklistedNames} = @(
     # --- Brute-force-identified corrupt (0 bytes, LNK1136) ---
     "omega_final_working.obj",
     "omega_final.obj",
@@ -104,7 +104,7 @@ $Script:BlacklistedNames = @(
 
 # ---- DIRECTORY EXCLUSIONS ----
 # Directories whose .obj files should never enter the link pipeline.
-$Script:ExcludeDirPatterns = @(
+${Script:ExcludeDirPatterns} = @(
     '\\\.git\\',
     '\\dist\\',
     '\\node_modules\\',
@@ -132,7 +132,7 @@ $Script:ExcludeDirPatterns = @(
 
 # ---- NAME PATTERN EXCLUSIONS ----
 # Regex patterns for object names that should never link.
-$Script:ExcludeNamePatterns = @(
+${Script:ExcludeNamePatterns} = @(
     '\.cpp\.obj$',         # CMake intermediate (double-extension)
     '\.c\.obj$',
     '\.cc\.obj$',
@@ -146,7 +146,7 @@ $Script:ExcludeNamePatterns = @(
 # ---- LNK2038 MISMATCH BLOCKLIST ----
 # Objects compiled with /MD (dynamic CRT) that conflict with /MT build.
 # These cause LNK2038: RuntimeLibrary mismatch MD vs MT.
-$Script:RuntimeMismatchObjects = @(
+${Script:RuntimeMismatchObjects} = @(
     "FeatureFlags.obj",
     "flash_attn_avx2.obj",
     "flash_attn_optimized.obj",
@@ -238,7 +238,7 @@ function Test-ValidPdata {
 # ==========================================================
 function Get-CleanObjects {
     param(
-        [string]$RootPath = $Script:Root,
+        [string]$RootPath = ${Script:Root},
         [switch]$Verbose,
         [switch]$SkipCOFFValidation
     )
@@ -266,7 +266,7 @@ function Get-CleanObjects {
         $name = $obj.Name
         
         # 1. Static blacklist check
-        if ($name -in $Script:BlacklistedNames) {
+        if ($name -in ${Script:BlacklistedNames}) {
             $stats.Blacklisted++
             if ($Verbose) { Write-Host "  [BLOCKED] Blacklisted: $name" -Fore DarkRed }
             continue
@@ -274,7 +274,7 @@ function Get-CleanObjects {
         
         # 2. Directory exclusion check
         $dirBlocked = $false
-        foreach ($pattern in $Script:ExcludeDirPatterns) {
+        foreach ($pattern in ${Script:ExcludeDirPatterns}) {
             if ($path -match $pattern) {
                 $dirBlocked = $true
                 break
@@ -288,7 +288,7 @@ function Get-CleanObjects {
         
         # 3. Name pattern exclusion
         $nameBlocked = $false
-        foreach ($pattern in $Script:ExcludeNamePatterns) {
+        foreach ($pattern in ${Script:ExcludeNamePatterns}) {
             if ($name -match $pattern) {
                 $nameBlocked = $true
                 break
@@ -308,7 +308,7 @@ function Get-CleanObjects {
         }
         
         # 5. Runtime mismatch check
-        if ($name -in $Script:RuntimeMismatchObjects) {
+        if ($name -in ${Script:RuntimeMismatchObjects}) {
             $stats.Mismatch++
             if ($Verbose) { Write-Host "  [BLOCKED] CRT mismatch (/MD vs /MT): $name" -Fore DarkMagenta }
             continue
@@ -356,7 +356,7 @@ function Get-CleanObjects {
 # Quarantine corrupt objects  (moves to .quarantine/)
 # ==========================================================
 function Invoke-QuarantineCorrupt {
-    param([string]$RootPath = $Script:Root)
+    param([string]$RootPath = ${Script:Root})
     
     $quarantine = Join-Path $RootPath ".quarantine"
     if (!(Test-Path $quarantine)) { New-Item -ItemType Directory -Path $quarantine -Force | Out-Null }
@@ -374,7 +374,7 @@ function Invoke-QuarantineCorrupt {
     
     # Move blacklisted objects
     Get-ChildItem -Path $RootPath -Filter "*.obj" -Recurse -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -in $Script:BlacklistedNames -and $_.DirectoryName -notmatch '\\\.quarantine\\' } |
+        Where-Object { $_.Name -in ${Script:BlacklistedNames} -and $_.DirectoryName -notmatch '\\\.quarantine\\' } |
         ForEach-Object {
             $dest = Join-Path $quarantine $_.Name
             Move-Item $_.FullName $dest -Force -ErrorAction SilentlyContinue
@@ -397,7 +397,6 @@ function Invoke-QuarantineCorrupt {
 
 # ==========================================================
 # Export if loaded as a module (ignored when dot-sourced)
-# ==========================================================
-if ($MyInvocation.MyCommand.ScriptBlock.Module) {
+# ========================================================== $(if ($MyInvocation.MyCommand.ScriptBlock.Module) {
     Export-ModuleMember -Function Get-CleanObjects, Test-ValidCOFF, Invoke-QuarantineCorrupt
 }

@@ -108,14 +108,14 @@ class TextProcessingProcessor : IRequestProcessor {
         $positiveMatches = ($positiveWords | Where-Object { $text -match $_ }).Count
         $negativeMatches = ($negativeWords | Where-Object { $text -match $_ }).Count
         
-        $sentiment = if ($positiveMatches -gt $negativeMatches) { "Positive" } 
+        $sentiment = $(if ($positiveMatches -gt $negativeMatches) { "Positive" } 
                     elseif ($negativeMatches -gt $positiveMatches) { "Negative" } 
                     else { "Neutral" }
         
         return @{
             Sentiment = $sentiment
             Topics = @("general")  # Would use topic modeling in real implementation
-            Complexity = if ($wordCount -gt 1000) { "High" } elseif ($wordCount -gt 200) { "Medium" } else { "Low" }
+            Complexity = $(if ($wordCount -gt 1000) { "High" } elseif ($wordCount -gt 200) { "Medium" } else { "Low" }
         }
     }
     

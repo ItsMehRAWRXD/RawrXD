@@ -1,30 +1,30 @@
-$ErrorActionPreference = 'Stop'
+$Script:ErrorActionPreference = 'Stop'
 
-$masmRoot = 'C:\masm32'
-$ml      = Join-Path $masmRoot 'bin\ml.exe'
-$link    = Join-Path $masmRoot 'bin\link.exe'
-$libPath = Join-Path $masmRoot 'lib'
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$include = Join-Path $scriptDir 'include'
-$src     = Join-Path $scriptDir 'src'
-$out     = Join-Path $scriptDir 'build'
+$Script:masmRoot = 'C:\masm32'
+$Script:ml = Join-Path $masmRoot 'bin\ml.exe'
+$Script:link = Join-Path $masmRoot 'bin\link.exe'
+$Script:libPath = Join-Path $masmRoot 'lib'
+$Script:scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Script:include = Join-Path $scriptDir 'include'
+$Script:src = Join-Path $scriptDir 'src'
+$Script:out = Join-Path $scriptDir 'build'
 
 if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null }
 
 # Create a 120MB dummy file to exercise streaming & memory mapping
-$dummy = Join-Path $out 'dummy-gguf.bin'
+$Script:dummy = Join-Path $out 'dummy-gguf.bin'
 if (-not (Test-Path $dummy)) {
     Write-Host "Creating 120MB dummy file..." -ForegroundColor Cyan
-    $fs = [System.IO.File]::Create($dummy)
+$Script:fs = [System.IO.File]::Create($dummy)
     $fs.SetLength(120MB)
     $fs.Close()
 }
 
 Write-Host "Assembling gguf_stream.asm + perf_metrics.asm + test harness..." -ForegroundColor Cyan
 
-$objs = @()
+$Script:objs = @()
 foreach ($f in @('gguf_stream','perf_metrics','gguf_stream_test')) {
-    $result = & $ml /c /coff /Cp /nologo /I"$include" /I"$masmRoot\include" /Fo "$out\$f.obj" "$src\$f.asm" 2>&1
+$Script:result = & $ml /c /coff /Cp /nologo /I"$include" /I"$masmRoot\include" /Fo "$out\$f.obj" "$src\$f.asm" 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  ✓ $f.asm compiled successfully" -ForegroundColor Green
         $objs += "$out\$f.obj"

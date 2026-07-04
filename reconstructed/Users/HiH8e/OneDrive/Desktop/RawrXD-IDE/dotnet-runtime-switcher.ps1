@@ -12,9 +12,9 @@
 # MODULE VARIABLES
 # ============================================
 
-$script:AvailableRuntimes = @()
-$script:CurrentRuntime = $null
-$script:RuntimeSwitchHistory = @()
+${script:AvailableRuntimes} = @()
+${script:CurrentRuntime} = $null
+${script:RuntimeSwitchHistory} = @()
 
 # ============================================
 # RUNTIME DETECTION
@@ -47,7 +47,7 @@ function Detect-DotNetRuntimes {
                 }
             }
             
-            $script:AvailableRuntimes = $parsed
+            ${script:AvailableRuntimes} = $parsed
             
             return @{
                 Success = $true

@@ -21,10 +21,10 @@ export class WebSocketServer extends EventEmitter {
     public start(): void {
         this.wss = new WebSocket.Server({ port: this.port });
         
-        this.wss.on('connection', (ws) => {
+        this.wss.on('connection', (ws: WebSocket) => {
             console.log('RawrXD: Client connected to chat server');
             
-            ws.on('message', (data) => {
+            ws.on('message', (data: WebSocket.Data) => {
                 try {
                     const request: ChatRequest = JSON.parse(data.toString());
                     this.handleChatRequest(ws, request);

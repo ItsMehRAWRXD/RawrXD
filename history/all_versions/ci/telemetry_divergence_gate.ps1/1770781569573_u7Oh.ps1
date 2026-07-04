@@ -24,13 +24,13 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:passed = $true
-$script:checks = @()
-$script:gateVersion = "1.0.0"
-$script:timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+${script:passed} = $true
+${script:checks} = @()
+${script:gateVersion} = "1.0.0"
+${script:timestamp} = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 
 # MSVC tools path
-$env:Path = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64;$env:Path"
+${env:Path} = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64;${env:Path}"
 
 # Source locations
 $AsmDir    = "$PSScriptRoot\..\src\asm"
@@ -82,16 +82,16 @@ function Test-Check {
     try {
         $result = & $Test
         if ($result) {
-            $script:checks += @{ Name = $Name; Status = "PASS"; Detail = "OK" }
+            ${script:checks} += @{ Name = $Name; Status = "PASS"; Detail = "OK" }
             if ($Verbose) { Write-Host "  ✅ $Name" -ForegroundColor Green }
         } else {
-            $script:checks += @{ Name = $Name; Status = "FAIL"; Detail = "Assertion failed" }
-            $script:passed = $false
+            ${script:checks} += @{ Name = $Name; Status = "FAIL"; Detail = "Assertion failed" }
+            ${script:passed} = $false
             if ($Verbose) { Write-Host "  ❌ $Name" -ForegroundColor Red }
         }
     } catch {
-        $script:checks += @{ Name = $Name; Status = "FAIL"; Detail = $_.Exception.Message }
-        $script:passed = $false
+        ${script:checks} += @{ Name = $Name; Status = "FAIL"; Detail = $_.Exception.Message }
+        ${script:passed} = $false
         if ($Verbose) { Write-Host "  ❌ $Name — $($_.Exception.Message)" -ForegroundColor Red }
     }
 }
@@ -101,7 +101,7 @@ function Test-Check {
 # =============================================================================
 Write-Host ""
 Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║   TELEMETRY DIVERGENCE CI GATE  —  Milestone T3-A  v$script:gateVersion     ║" -ForegroundColor Magenta
+Write-Host "║   TELEMETRY DIVERGENCE CI GATE  —  Milestone T3-A  v${script:gateVersion}     ║" -ForegroundColor Magenta
 Write-Host "║   Pure MASM Telemetry Kernel + Prometheus Exporter Gate      ║" -ForegroundColor Magenta
 Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
@@ -308,8 +308,8 @@ if (Test-Path $BaselineFile) {
     Write-Host "  ⚠  No baseline file found at $BaselineFile — creating initial baseline" -ForegroundColor Yellow
 
     $newBaseline = @{
-        version = $script:gateVersion
-        created = $script:timestamp
+        version = ${script:gateVersion}
+        created = ${script:timestamp}
         expected_counter_count = $ExpectedCounterSymbols.Count
         divergence_threshold_pct = $DivergenceThreshold
         metrics = @(
@@ -336,9 +336,9 @@ Write-Host "══════════════════════�
 Write-Host "  GATE RESULTS" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$passCount = ($script:checks | Where-Object { $_.Status -eq "PASS" }).Count
-$failCount = ($script:checks | Where-Object { $_.Status -eq "FAIL" }).Count
-$totalCount = $script:checks.Count
+$passCount = (${script:checks} | Where-Object { $_.Status -eq "PASS" }).Count
+$failCount = (${script:checks} | Where-Object { $_.Status -eq "FAIL" }).Count
+$totalCount = ${script:checks}.Count
 
 Write-Host ""
 Write-Host "  Total Checks: $totalCount"
@@ -349,7 +349,7 @@ Write-Host ""
 # Detailed failures
 if ($failCount -gt 0) {
     Write-Host "  Failed Checks:" -ForegroundColor Red
-    foreach ($check in ($script:checks | Where-Object { $_.Status -eq "FAIL" })) {
+    foreach ($check in (${script:checks} | Where-Object { $_.Status -eq "FAIL" })) {
         Write-Host "    ❌ $($check.Name): $($check.Detail)" -ForegroundColor Red
     }
     Write-Host ""
@@ -358,17 +358,17 @@ if ($failCount -gt 0) {
 # Write JSON report
 $report = @{
     gate = "TELEMETRY_DIVERGENCE_GATE"
-    version = $script:gateVersion
+    version = ${script:gateVersion}
     milestone = "T3-A"
-    timestamp = $script:timestamp
-    result = if ($script:passed) { "PASS" } else { "FAIL" }
-    badge = if ($script:passed) { "TELEMETRY_GATE_PASS" } else { "TELEMETRY_GATE_FAIL" }
+    timestamp = ${script:timestamp}
+    result = $(if (${script:passed}) { "PASS" } else { "FAIL" }
+    badge = $(if (${script:passed}) { "TELEMETRY_GATE_PASS" } else { "TELEMETRY_GATE_FAIL" }
     summary = @{
         total  = $totalCount
         passed = $passCount
         failed = $failCount
     }
-    checks = $script:checks
+    checks = ${script:checks}
     environment = @{
         os = [System.Runtime.InteropServices.RuntimeInformation]::OSDescription
         powershell = $PSVersionTable.PSVersion.ToString()
@@ -379,7 +379,7 @@ $report | ConvertTo-Json -Depth 5 | Set-Content $ReportOutput -Encoding UTF8
 Write-Host "  📄 Report: $ReportOutput" -ForegroundColor DarkGray
 
 # Final badge
-if ($script:passed) {
+if (${script:passed}) {
     Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
     Write-Host "║   ✅  TELEMETRY_GATE_PASS  —  All checks passed              ║" -ForegroundColor Green
     Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Green

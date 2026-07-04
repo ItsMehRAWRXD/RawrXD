@@ -149,23 +149,23 @@ function Initialize-Rawr1024Engine {
     Write-Host "🚀 Initializing Rawr1024 Dual Engine System..." -ForegroundColor Cyan
     
     # Initialize dual engines
-    $script:EngineStates = @()
+    ${script:EngineStates} = @()
     for ($i = 0; $i -lt $RAWR1024_ENGINE_COUNT; $i++) {
         $engineState = [DualEngineState]::new()
         $engineState.engine_id = $i
         $engineState.status = $ENGINE_STATUS_IDLE
         $engineState.progress_percentage = 0.0
         $engineState.throughput_mbps = 0.0
-        $script:EngineStates += $engineState
+        ${script:EngineStates} += $engineState
     }
     
     # Initialize quantum crypto
-    $script:QuantumCrypto = [QuantumCryptoState]::new()
-    $script:QuantumCrypto.is_initialized = $false
-    $script:QuantumCrypto.is_secure = $false
+    ${script:QuantumCrypto} = [QuantumCryptoState]::new()
+    ${script:QuantumCrypto}.is_initialized = $false
+    ${script:QuantumCrypto}.is_secure = $false
     
     # Initialize beacon network
-    $script:BeaconNodes = @()
+    ${script:BeaconNodes} = @()
     
     Write-Host "✅ Rawr1024 Engine Initialized - $RAWR1024_ENGINE_COUNT engines ready" -ForegroundColor Green
 }
@@ -200,7 +200,7 @@ function Load-ModelWithDualEngines {
     Write-Host "📥 Loading model with dual engines: $ModelPath" -ForegroundColor Cyan
     
     # Find idle engines
-    $idleEngines = $script:EngineStates | Where-Object { $_.status -eq $ENGINE_STATUS_IDLE }
+    $idleEngines = ${script:EngineStates} | Where-Object { $_.status -eq $ENGINE_STATUS_IDLE }
     if ($idleEngines.Count -eq 0) {
         Write-Host "❌ No idle engines available" -ForegroundColor Red
         return $false
@@ -425,9 +425,9 @@ function Apply-QuantumEncryption {
     }
     
     # Update crypto state
-    if ($script:QuantumCrypto) {
-        $script:QuantumCrypto.is_secure = $true
-        $script:QuantumCrypto.last_rotation = [DateTime]::Now.Ticks
+    if (${script:QuantumCrypto}) {
+        ${script:QuantumCrypto}.is_secure = $true
+        ${script:QuantumCrypto}.last_rotation = [DateTime]::Now.Ticks
     }
     
     return $encrypted
@@ -453,10 +453,10 @@ function Start-BeaconNetwork {
         $node.reputation = 100
         $node.is_trusted = $true
         $node.is_active = $true
-        $script:BeaconNodes += $node
+        ${script:BeaconNodes} += $node
     }
     
-    Write-Host "✅ Beacon Network started with $($script:BeaconNodes.Count) nodes" -ForegroundColor Green
+    Write-Host "✅ Beacon Network started with $(${script:BeaconNodes}.Count) nodes" -ForegroundColor Green
 }
 
 function Get-EngineStatus {
@@ -467,7 +467,7 @@ function Get-EngineStatus {
         Get-EngineStatus
     #>
     
-    if (-not $script:EngineStates) {
+    if (-not ${script:EngineStates}) {
         Write-Host "❌ Engines not initialized" -ForegroundColor Red
         return
     }
@@ -476,7 +476,7 @@ function Get-EngineStatus {
     Write-Host "🚀 Rawr1024 Dual Engine Status" -ForegroundColor Cyan
     Write-Host "=" * 50 -ForegroundColor Cyan
     
-    foreach ($engine in $script:EngineStates) {
+    foreach ($engine in ${script:EngineStates}) {
         $statusText = switch ($engine.status) {
             $ENGINE_STATUS_IDLE { "IDLE" }
             $ENGINE_STATUS_LOADING { "LOADING" }

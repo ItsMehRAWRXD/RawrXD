@@ -4,7 +4,7 @@
 
 param(
     [string]$OutputPath = "D:\RawrXD\SovereignEngine-Deployment-v1.0.zip",
-    [switch]$IncludeBinaries = $true
+    [switch]$IncludeBinaries
 )
 
 $ErrorActionPreference = "Stop"

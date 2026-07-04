@@ -22,7 +22,7 @@ $colorFixCode = @'
 # ============================================
 # COMPREHENSIVE COLOR FIX - Auto-injected
 # ============================================
-$script:IDE_COLORS = @{
+${script:IDE_COLORS} = @{
     EditorBG = [System.Drawing.Color]::FromArgb(30, 30, 30)
     EditorFG = [System.Drawing.Color]::FromArgb(220, 220, 220)
     ChatBG = [System.Drawing.Color]::FromArgb(30, 30, 30)
@@ -46,28 +46,28 @@ function Apply-ControlColors {
     try {
         switch ($ControlType) {
             "Editor" {
-                $Control.BackColor = $script:IDE_COLORS.EditorBG
-                $Control.ForeColor = $script:IDE_COLORS.EditorFG
+                $Control.BackColor = ${script:IDE_COLORS}.EditorBG
+                $Control.ForeColor = ${script:IDE_COLORS}.EditorFG
             }
             "Chat" {
-                $Control.BackColor = $script:IDE_COLORS.ChatBG
-                $Control.ForeColor = $script:IDE_COLORS.ChatFG
+                $Control.BackColor = ${script:IDE_COLORS}.ChatBG
+                $Control.ForeColor = ${script:IDE_COLORS}.ChatFG
             }
             "Input" {
-                $Control.BackColor = $script:IDE_COLORS.InputBG
-                $Control.ForeColor = $script:IDE_COLORS.InputFG
+                $Control.BackColor = ${script:IDE_COLORS}.InputBG
+                $Control.ForeColor = ${script:IDE_COLORS}.InputFG
             }
             "List" {
-                $Control.BackColor = $script:IDE_COLORS.ListBG
-                $Control.ForeColor = $script:IDE_COLORS.ListFG
+                $Control.BackColor = ${script:IDE_COLORS}.ListBG
+                $Control.ForeColor = ${script:IDE_COLORS}.ListFG
             }
             "Form" {
-                $Control.BackColor = $script:IDE_COLORS.FormBG
-                $Control.ForeColor = $script:IDE_COLORS.FormFG
+                $Control.BackColor = ${script:IDE_COLORS}.FormBG
+                $Control.ForeColor = ${script:IDE_COLORS}.FormFG
             }
             default {
-                $Control.BackColor = $script:IDE_COLORS.EditorBG
-                $Control.ForeColor = $script:IDE_COLORS.EditorFG
+                $Control.BackColor = ${script:IDE_COLORS}.EditorBG
+                $Control.ForeColor = ${script:IDE_COLORS}.EditorFG
             }
         }
         
@@ -127,7 +127,7 @@ function Add-ColorPreservationHandler {
                     if ($sender.Tag -is [hashtable] -and $sender.Tag.ColorType) {
                         $colorType = $sender.Tag.ColorType
                     }
-                    $sender.SelectionColor = $script:IDE_COLORS."$($colorType)FG"
+                    $sender.SelectionColor = ${script:IDE_COLORS}."$($colorType)FG"
                 }
             })
         }
@@ -147,8 +147,8 @@ function Apply-DarkThemeToForm {
     
     if (-not $Form) { return }
     
-    $Form.BackColor = $script:IDE_COLORS.FormBG
-    $Form.ForeColor = $script:IDE_COLORS.FormFG
+    $Form.BackColor = ${script:IDE_COLORS}.FormBG
+    $Form.ForeColor = ${script:IDE_COLORS}.FormFG
     
     # Apply to all child controls recursively
     function Apply-ToChildren {
@@ -166,11 +166,11 @@ function Apply-DarkThemeToForm {
             }
             elseif ($child -is [System.Windows.Forms.Panel] -or
                     $child -is [System.Windows.Forms.SplitContainer]) {
-                $child.BackColor = $script:IDE_COLORS.FormBG
+                $child.BackColor = ${script:IDE_COLORS}.FormBG
                 Apply-ToChildren -Parent $child
             }
             elseif ($child -is [System.Windows.Forms.Label]) {
-                $child.ForeColor = $script:IDE_COLORS.FormFG
+                $child.ForeColor = ${script:IDE_COLORS}.FormFG
             }
             elseif ($child.Controls.Count -gt 0) {
                 Apply-ToChildren -Parent $child
@@ -247,10 +247,10 @@ Write-Host "Now updating control creation code..." -ForegroundColor Yellow
 $content = Get-Content $TargetFile -Raw
 
 # Update editor creation to use color preservation
-$editorPattern = '\$script:editor\.BackColor = \[System\.Drawing\.Color\]::FromArgb\(30, 30, 30\)'
+$editorPattern = '\${script:editor}\.BackColor = \[System\.Drawing\.Color\]::FromArgb\(30, 30, 30\)'
 $editorReplacement = @'
-$script:editor.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-    Add-ColorPreservationHandler -Control $script:editor -ControlType "Editor"
+${script:editor}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+    Add-ColorPreservationHandler -Control ${script:editor} -ControlType "Editor"
 '@
 
 if ($content -match $editorPattern) {

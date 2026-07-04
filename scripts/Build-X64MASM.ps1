@@ -106,7 +106,7 @@ foreach ($f in $asmFiles) {
 if (-not $NoLink -and $objs.Count -gt 0) {
     $dllPath = Join-Path $ObjDir $DllName
     Write-Host "Linking $dllPath"
-    $env:LIB = $libPath + ";$env:LIB"
+    ${env:LIB} = $libPath + ";${env:LIB}"
     & $link /nologo /DLL /NOENTRY "/OUT:$dllPath" $objs kernel32.lib user32.lib advapi32.lib PowrProf.lib
     if ($LASTEXITCODE -ne 0) { throw "link failed" }
     Write-Host "Built: $dllPath"

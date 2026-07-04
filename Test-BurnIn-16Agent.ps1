@@ -17,10 +17,10 @@ $shipDir    = Join-Path $PSScriptRoot "Ship"
 
 $passed = 0; $failed = 0; $skipped = 0; $warnings = @()
 
-function Pass($label) { Write-Host "  [PASS] $label" -ForegroundColor Green; $script:passed++ }
-function Fail($label, $detail) { Write-Host "  [FAIL] $label — $detail" -ForegroundColor Red; $script:failed++ }
-function Skip($label) { Write-Host "  [SKIP] $label" -ForegroundColor Yellow; $script:skipped++ }
-function Warn($label, $detail) { Write-Host "  [WARN] $label — $detail" -ForegroundColor DarkYellow; $script:warnings += "$label : $detail" }
+function Pass($label) { Write-Host "  [PASS] $label" -ForegroundColor Green; ${script:passed}++ }
+function Fail($label, $detail) { Write-Host "  [FAIL] $label — $detail" -ForegroundColor Red; ${script:failed}++ }
+function Skip($label) { Write-Host "  [SKIP] $label" -ForegroundColor Yellow; ${script:skipped}++ }
+function Warn($label, $detail) { Write-Host "  [WARN] $label — $detail" -ForegroundColor DarkYellow; ${script:warnings} += "$label : $detail" }
 function Section($title) { Write-Host "`n  [$title]" -ForegroundColor Cyan }
 
 function Test-FileExists($path, $label) {
@@ -635,7 +635,7 @@ if ($SkipBuild) {
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════"
 $total = $passed + $failed
-$pct = if ($total -gt 0) { [math]::Round(($passed / $total) * 100, 1) } else { 0 }
+$pct = $(if ($total -gt 0) { [math]::Round(($passed / $total) * 100, 1) } else { 0 }
 if ($failed -eq 0) {
     Write-Host "  BURN-IN RESULT: $passed PASSED, $failed FAILED" -ForegroundColor Green
     Write-Host "  ($skipped skipped, $($warnings.Count) warnings)" -ForegroundColor DarkGray

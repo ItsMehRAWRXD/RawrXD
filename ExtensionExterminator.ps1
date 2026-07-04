@@ -10,13 +10,13 @@
 param([switch]$DestroyVSCode)
 
 # Enforce Windows (not Linux/macOS)
-if ($env:OS -ne "Windows_NT") {
+if (${env:OS} -ne "Windows_NT") {
     Write-Error "ExtensionExterminator requires Windows. This is not a Linux environment."
     exit 1
 }
 
 $ErrorActionPreference = "Continue"
-$rootDir = if ($PSScriptRoot) { $PSScriptRoot } else { "D:\rawrxd" }
+$rootDir = $(if ($PSScriptRoot) { $PSScriptRoot } else { "D:\rawrxd" }
 $extensions = @(
     "your-name.cursor-simple-ai",
     "rawrz-underground.rawrz-agentic",
@@ -192,7 +192,7 @@ Write-Host "  2. Run: regedit /s $regPath" -ForegroundColor White
 if (-not $DestroyVSCode) {
     Write-Host "  3. (Optional) Delete VS Code: .\ExtensionExterminator.ps1 -DestroyVSCode" -ForegroundColor DarkGray
 } else {
-    $vscodePath = Join-Path $env:LOCALAPPDATA "Programs\Microsoft VS Code"
+    $vscodePath = Join-Path ${env:LOCALAPPDATA} "Programs\Microsoft VS Code"
     if (Test-Path $vscodePath) {
         $confirm = Read-Host "Remove VS Code at $vscodePath ? (y/N)"
         if ($confirm -eq 'y' -or $confirm -eq 'Y') {

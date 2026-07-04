@@ -133,7 +133,7 @@ $PowerShellToolchainDefaults = @{
 }
 
 $SourceFiles = @(
-    if ($env:ASM_SOURCE) { $env:ASM_SOURCE } else { 'RawrXD_PatternBridge.asm' }
+    if (${env:ASM_SOURCE}) { ${env:ASM_SOURCE} } else { 'RawrXD_PatternBridge.asm' }
 )
 #endregion
 
@@ -145,7 +145,7 @@ function Initialize-BuildTools {
     if ($resolvedToolchain -eq 'Auto') {
         if ($AssemblerPath -and $AssemblerPath.EndsWith('.ps1')) {
             $resolvedToolchain = 'PowerShell'
-        } elseif ($env:RAWRXD_ASSEMBLER -and $env:RAWRXD_ASSEMBLER.EndsWith('.ps1')) {
+        } elseif (${env:RAWRXD_ASSEMBLER} -and ${env:RAWRXD_ASSEMBLER}.EndsWith('.ps1')) {
             $resolvedToolchain = 'PowerShell'
         } else {
             $resolvedToolchain = 'VisualStudio'
@@ -170,10 +170,10 @@ function Initialize-BuildTools {
         if (-not $Exports -or $Exports.Count -eq 0) { $Exports = $PowerShellToolchainDefaults.Exports }
 
         if ($Install) {
-            $env:RAWRXD_ASSEMBLER = $AssemblerPath
-            $env:RAWRXD_LINKER = $LinkerPath
-            $env:RAWRXD_INCLUDE_PATHS = ($IncludePaths -join ';')
-            $env:RAWRXD_LIB_PATHS = ($LibraryPaths -join ';')
+            ${env:RAWRXD_ASSEMBLER} = $AssemblerPath
+            ${env:RAWRXD_LINKER} = $LinkerPath
+            ${env:RAWRXD_INCLUDE_PATHS} = ($IncludePaths -join ';')
+            ${env:RAWRXD_LIB_PATHS} = ($LibraryPaths -join ';')
         }
     }
 
@@ -186,16 +186,16 @@ function Initialize-BuildTools {
     if ($LinkerDefFile) { $ToolchainConfig.LinkerDefFile = $LinkerDefFile }
     if ($Exports) { $ToolchainConfig.Exports = $Exports }
 
-    $envAssembler = $env:RAWRXD_ASSEMBLER
-    $envLinker = $env:RAWRXD_LINKER
-    $envIncludePaths = $env:RAWRXD_INCLUDE_PATHS
-    $envLibraryPaths = $env:RAWRXD_LIB_PATHS
+    $envAssembler = ${env:RAWRXD_ASSEMBLER}
+    $envLinker = ${env:RAWRXD_LINKER}
+    $envIncludePaths = ${env:RAWRXD_INCLUDE_PATHS}
+    $envLibraryPaths = ${env:RAWRXD_LIB_PATHS}
 
-    $AssemblerPath = if ($AssemblerPath) { $AssemblerPath } elseif ($envAssembler) { $envAssembler } else { $null }
-    $LinkerPath = if ($LinkerPath) { $LinkerPath } elseif ($envLinker) { $envLinker } else { $null }
+    $AssemblerPath = $(if ($AssemblerPath) { $AssemblerPath } elseif ($envAssembler) { $envAssembler } else { $null }
+    $LinkerPath = $(if ($LinkerPath) { $LinkerPath } elseif ($envLinker) { $envLinker } else { $null }
 
-    $IncludePaths = if ($IncludePaths) { $IncludePaths } elseif ($envIncludePaths) { $envIncludePaths -split ';' } else { @() }
-    $LibraryPaths = if ($LibraryPaths) { $LibraryPaths } elseif ($envLibraryPaths) { $envLibraryPaths -split ';' } else { @() }
+    $IncludePaths = $(if ($IncludePaths) { $IncludePaths } elseif ($envIncludePaths) { $envIncludePaths -split ';' } else { @() }
+    $LibraryPaths = $(if ($LibraryPaths) { $LibraryPaths } elseif ($envLibraryPaths) { $envLibraryPaths -split ';' } else { @() }
 
     if ($AssemblerPath -or $LinkerPath) {
         if (-not $AssemblerPath) { throw "Custom toolchain selected but AssemblerPath is missing. Set -AssemblerPath or RAWRXD_ASSEMBLER." }
@@ -538,7 +538,7 @@ function Start-Build {
     $requiredSources = @('RawrXD_PatternBridge.asm','RawrXD_PipeServer.asm','RawrXD_SIMDClassifier.asm')
     $missingSources = $requiredSources | Where-Object { -not (Test-Path (Join-Path $sourceDir $_)) }
     if (($missingSources.Count -gt 0 -or $RegenerateStubs) -and (Test-Path $generatorScript)) {
-        $suffix = if ($RegenerateStubs) { 'regenerate stubs' } else { "missing: $($missingSources -join ', ')" }
+        $suffix = $(if ($RegenerateStubs) { 'regenerate stubs' } else { "missing: $($missingSources -join ', ')" }
         Write-Host "[Build] Generating MASM sources ($suffix)..." -ForegroundColor Cyan
         $genArgs = @('-NoProfile','-ExecutionPolicy','Bypass','-File', $generatorScript, '-OutputDir', $sourceDir)
         if ($RegenerateStubs) { $genArgs += '-Force' }

@@ -289,7 +289,7 @@ if ($missing.Count -gt 0) {
     exit 1
 }
 
-$ggufBytes = if (Test-Path $SampleModelPath) {
+$ggufBytes = $(if (Test-Path $SampleModelPath) {
     Read-HeaderBytes -Path $SampleModelPath -Count 64
 } else {
     [byte[]](0x47,0x47,0x55,0x46,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00)

@@ -71,6 +71,7 @@ struct CommandResult {
     
     static CommandResult ok(const char* msg = "OK") { return {true, msg, 0}; }
     static CommandResult error(const char* msg, int code = -1) { return {false, msg, code}; }
+    static CommandResult failure(const char* msg, int code = -1) { return {false, msg, code}; }
 };
 
 // ============================================================================
@@ -91,6 +92,14 @@ struct CommandContext {
     void*         hwnd;          // Unused on non-Win32
 #endif
     void (*emitEvent)(const char* eventName, const char* payload);  // Optional telemetry/UI event
+
+    // Editor context (for commands that need text selection/file info)
+    const char*   selectedText;  // Currently selected text in editor
+    const char*   currentFile;   // Path to current file
+    int           cursorLine;    // Current cursor line number
+    
+    // Error callback
+    void (*errorFn)(const char* text, void* userData);
 
     // Output callback — CLI prints to stdout, GUI shows in status/panel
     void (*outputFn)(const char* text, void* userData);

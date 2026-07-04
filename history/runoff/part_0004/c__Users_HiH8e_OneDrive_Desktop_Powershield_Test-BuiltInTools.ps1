@@ -9,11 +9,11 @@
 # TEST CONFIGURATION
 # ============================================
 
-$script:TestResults = @()
-$script:TestPassed = 0
-$script:TestFailed = 0
-$script:TestDirectory = "C:\Users\HiH8e\OneDrive\Desktop\Powershield\ToolTests"
-$script:TestStartTime = Get-Date
+${script:TestResults} = @()
+${script:TestPassed} = 0
+${script:TestFailed} = 0
+${script:TestDirectory} = "C:\Users\HiH8e\OneDrive\Desktop\Powershield\ToolTests"
+${script:TestStartTime} = Get-Date
 
 # Colors
 $Colors = @{
@@ -45,8 +45,8 @@ function Write-TestCase {
 function Write-TestPass {
     param([string]$Message, [object]$Result = $null)
     Write-Host "  ✅ PASS: $Message" -ForegroundColor $Colors.Green
-    $script:TestPassed++
-    $script:TestResults += @{
+    ${script:TestPassed}++
+    ${script:TestResults} += @{
         Test   = $Message
         Status = "PASS"
         Result = $Result
@@ -57,8 +57,8 @@ function Write-TestFail {
     param([string]$Message, [string]$Error = "", [object]$Result = $null)
     Write-Host "  ❌ FAIL: $Message" -ForegroundColor $Colors.Red
     if ($Error) { Write-Host "         Error: $Error" -ForegroundColor $Colors.Red }
-    $script:TestFailed++
-    $script:TestResults += @{
+    ${script:TestFailed}++
+    ${script:TestResults} += @{
         Test   = $Message
         Status = "FAIL"
         Error  = $Error
@@ -79,9 +79,9 @@ function Initialize-TestEnvironment {
     Write-TestHeader "INITIALIZATION"
     
     # Create test directory
-    if (-not (Test-Path $script:TestDirectory)) {
-        New-Item -ItemType Directory -Path $script:TestDirectory -Force | Out-Null
-        Write-TestInfo "Test directory created: $script:TestDirectory"
+    if (-not (Test-Path ${script:TestDirectory})) {
+        New-Item -ItemType Directory -Path ${script:TestDirectory} -Force | Out-Null
+        Write-TestInfo "Test directory created: ${script:TestDirectory}"
     }
     
     # Define minimal Write-DevConsole if not available
@@ -135,8 +135,8 @@ function Cleanup-TestEnvironment {
     Write-TestHeader "CLEANUP"
     
     # Remove test files
-    if (Test-Path $script:TestDirectory) {
-        Remove-Item -Path $script:TestDirectory -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path ${script:TestDirectory}) {
+        Remove-Item -Path ${script:TestDirectory} -Recurse -Force -ErrorAction SilentlyContinue
         Write-TestInfo "Test directory cleaned up"
     }
     
@@ -156,7 +156,7 @@ function Test-FileOperations {
     # Test: Create File
     Write-TestCase "create_file" "Create a new file with content"
     try {
-        $testFile = Join-Path $script:TestDirectory "test-create.txt"
+        $testFile = Join-Path ${script:TestDirectory} "test-create.txt"
         $result = Invoke-AgentTool -ToolName "create_file" -Arguments @{
             file_path = $testFile
             content   = "Test content for file creation"
@@ -179,7 +179,7 @@ function Test-FileOperations {
     # Test: Read File
     Write-TestCase "read_file" "Read file contents with line range"
     try {
-        $testFile = Join-Path $script:TestDirectory "test-read.txt"
+        $testFile = Join-Path ${script:TestDirectory} "test-read.txt"
         Set-Content -Path $testFile -Value "Line 1`nLine 2`nLine 3`nLine 4`nLine 5"
         
         $result = Invoke-AgentTool -ToolName "read_file" -Arguments @{
@@ -200,7 +200,7 @@ function Test-FileOperations {
     # Test: Edit File
     Write-TestCase "edit_file" "Replace text in an existing file"
     try {
-        $testFile = Join-Path $script:TestDirectory "test-edit.txt"
+        $testFile = Join-Path ${script:TestDirectory} "test-edit.txt"
         Set-Content -Path $testFile -Value "Original content here"
         
         $result = Invoke-AgentTool -ToolName "edit_file" -Arguments @{
@@ -226,7 +226,7 @@ function Test-FileOperations {
     # Test: Create Directory
     Write-TestCase "create_directory" "Create a new directory"
     try {
-        $testDir = Join-Path $script:TestDirectory "test-subdir"
+        $testDir = Join-Path ${script:TestDirectory} "test-subdir"
         $result = Invoke-AgentTool -ToolName "create_directory" -Arguments @{
             dir_path = $testDir
         }
@@ -245,11 +245,11 @@ function Test-FileOperations {
     try {
         # Create some test files
         1..3 | ForEach-Object {
-            Set-Content -Path (Join-Path $script:TestDirectory "file$_.txt") -Value "test"
+            Set-Content -Path (Join-Path ${script:TestDirectory} "file$_.txt") -Value "test"
         }
         
         $result = Invoke-AgentTool -ToolName "list_directory" -Arguments @{
-            path = $script:TestDirectory
+            path = ${script:TestDirectory}
         }
         
         if ($result.success -and $result.count -ge 3) {
@@ -264,8 +264,8 @@ function Test-FileOperations {
     # Test: Edit Multiple Files
     Write-TestCase "edit_multiple_files" "Edit multiple files in batch"
     try {
-        $file1 = Join-Path $script:TestDirectory "batch1.txt"
-        $file2 = Join-Path $script:TestDirectory "batch2.txt"
+        $file1 = Join-Path ${script:TestDirectory} "batch1.txt"
+        $file2 = Join-Path ${script:TestDirectory} "batch2.txt"
         Set-Content -Path $file1 -Value "AAA"
         Set-Content -Path $file2 -Value "BBB"
         
@@ -297,13 +297,13 @@ function Test-SearchTools {
     Write-TestCase "file_search" "Search for files by pattern"
     try {
         # Create test files
-        Set-Content -Path (Join-Path $script:TestDirectory "search1.ps1") -Value "test"
-        Set-Content -Path (Join-Path $script:TestDirectory "search2.ps1") -Value "test"
-        Set-Content -Path (Join-Path $script:TestDirectory "search3.txt") -Value "test"
+        Set-Content -Path (Join-Path ${script:TestDirectory} "search1.ps1") -Value "test"
+        Set-Content -Path (Join-Path ${script:TestDirectory} "search2.ps1") -Value "test"
+        Set-Content -Path (Join-Path ${script:TestDirectory} "search3.txt") -Value "test"
         
         $result = Invoke-AgentTool -ToolName "file_search" -Arguments @{
             pattern   = "*.ps1"
-            directory = $script:TestDirectory
+            directory = ${script:TestDirectory}
             recurse   = $true
         }
         
@@ -319,12 +319,12 @@ function Test-SearchTools {
     # Test: Text Search (Grep)
     Write-TestCase "text_search" "Search text content in files"
     try {
-        $testFile = Join-Path $script:TestDirectory "grep-test.txt"
+        $testFile = Join-Path ${script:TestDirectory} "grep-test.txt"
         Set-Content -Path $testFile -Value "function MyFunction { }`nfunction AnotherFunction { }"
         
         $result = Invoke-AgentTool -ToolName "text_search" -Arguments @{
             pattern     = "function"
-            directory   = $script:TestDirectory
+            directory   = ${script:TestDirectory}
             file_pattern = "*.txt"
         }
         
@@ -340,12 +340,12 @@ function Test-SearchTools {
     # Test: Code Usages
     Write-TestCase "code_usages" "Find code symbol usages"
     try {
-        $testFile = Join-Path $script:TestDirectory "usage-test.txt"
+        $testFile = Join-Path ${script:TestDirectory} "usage-test.txt"
         Set-Content -Path $testFile -Value "function TestSymbol { }`nTestSymbol`nTestSymbol"
         
         $result = Invoke-AgentTool -ToolName "code_usages" -Arguments @{
             symbol    = "TestSymbol"
-            directory = $script:TestDirectory
+            directory = ${script:TestDirectory}
         }
         
         if ($result.success) {
@@ -362,7 +362,7 @@ function Test-SearchTools {
     try {
         $result = Invoke-AgentTool -ToolName "semantic_search" -Arguments @{
             query     = "file operations and manipulation"
-            directory = $script:TestDirectory
+            directory = ${script:TestDirectory}
         }
         
         if ($result.success) {
@@ -456,7 +456,7 @@ function Test-NotebookTools {
     # Test: Create Jupyter Notebook
     Write-TestCase "new_jupyter_notebook" "Create a new Jupyter notebook"
     try {
-        $notebookPath = Join-Path $script:TestDirectory "test-notebook.ipynb"
+        $notebookPath = Join-Path ${script:TestDirectory} "test-notebook.ipynb"
         $result = Invoke-AgentTool -ToolName "new_jupyter_notebook" -Arguments @{
             file_path = $notebookPath
             kernel    = "python3"
@@ -535,7 +535,7 @@ function Test-WorkspaceTools {
     # Test: New Workspace
     Write-TestCase "new_workspace" "Create new project workspace"
     try {
-        Push-Location $script:TestDirectory
+        Push-Location ${script:TestDirectory}
         $result = Invoke-AgentTool -ToolName "new_workspace" -Arguments @{
             name     = "test-workspace"
             template = "basic"
@@ -749,23 +749,23 @@ function Test-SubagentTools {
 function Generate-TestReport {
     Write-TestHeader "TEST EXECUTION REPORT"
     
-    $totalTests = $script:TestPassed + $script:TestFailed
-    $passRate = if ($totalTests -gt 0) { [math]::Round(($script:TestPassed / $totalTests) * 100, 2) } else { 0 }
+    $totalTests = ${script:TestPassed} + ${script:TestFailed}
+    $passRate = $(if ($totalTests -gt 0) { [math]::Round((${script:TestPassed} / $totalTests) * 100, 2) } else { 0 }
     
     Write-Host "`n📊 TEST SUMMARY:`n" -ForegroundColor $Colors.Cyan
     Write-Host "  Total Tests:    $totalTests" -ForegroundColor $Colors.White
-    Write-Host "  Passed:         $($script:TestPassed)" -ForegroundColor $Colors.Green
-    Write-Host "  Failed:         $($script:TestFailed)" -ForegroundColor $Colors.Red
+    Write-Host "  Passed:         $(${script:TestPassed})" -ForegroundColor $Colors.Green
+    Write-Host "  Failed:         $(${script:TestFailed})" -ForegroundColor $Colors.Red
     Write-Host "  Success Rate:   $passRate%" -ForegroundColor $(if ($passRate -ge 80) { $Colors.Green } else { $Colors.Yellow })
     
-    $duration = (Get-Date) - $script:TestStartTime
+    $duration = (Get-Date) - ${script:TestStartTime}
     Write-Host "  Duration:       $($duration.TotalSeconds.ToString('0.00')) seconds" -ForegroundColor $Colors.White
     
     Write-Host "`n📋 DETAILED RESULTS:`n" -ForegroundColor $Colors.Cyan
     
-    $script:TestResults | ForEach-Object {
-        $statusColor = if ($_.Status -eq "PASS") { $Colors.Green } else { $Colors.Red }
-        $statusIcon = if ($_.Status -eq "PASS") { "✅" } else { "❌" }
+    ${script:TestResults} | ForEach-Object {
+        $statusColor = $(if ($_.Status -eq "PASS") { $Colors.Green } else { $Colors.Red }
+        $statusIcon = $(if ($_.Status -eq "PASS") { "✅" } else { "❌" }
         Write-Host "$statusIcon $($_.Test)" -ForegroundColor $statusColor
         if ($_.Error) {
             Write-Host "   Error: $($_.Error)" -ForegroundColor $Colors.Red
@@ -774,7 +774,7 @@ function Generate-TestReport {
     
     Write-Host "`n" -NoNewline
     Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor $Colors.Cyan
-    if ($script:TestFailed -eq 0) {
+    if (${script:TestFailed} -eq 0) {
         Write-Host "║ ✅ ALL TESTS PASSED - BUILT-IN TOOLS ARE FULLY OPERATIONAL   ║" -ForegroundColor $Colors.Green
     } else {
         Write-Host "║ ⚠️  SOME TESTS FAILED - REVIEW RESULTS ABOVE                 ║" -ForegroundColor $Colors.Yellow

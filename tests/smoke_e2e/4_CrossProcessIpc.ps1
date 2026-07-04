@@ -13,7 +13,7 @@ if ([string]::IsNullOrWhiteSpace($HostPath)) {
     $HostPath = Join-Path $BinPath "RawrXD-ExtensionHost.exe"
 }
 
-$env:RAWRXD_EXTENSION_HOST_MODE = "CLIENT_SMOKE"
+${env:RAWRXD_EXTENSION_HOST_MODE} = "CLIENT_SMOKE"
 
 & (Join-Path $PSScriptRoot "4_LiveExtensionIpc.ps1") `
     -BinaryPath $BinaryPath `

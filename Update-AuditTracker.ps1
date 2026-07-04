@@ -142,7 +142,7 @@ function Generate-Report {
         $p = $phase.Value
         $md += "### $($p.name) (Target: $($p.targetDate))`n`n"
         foreach ($item in $p.items) {
-            $check = if ($item.status -eq "complete") { "x" } else { " " }
+            $check = $(if ($item.status -eq "complete") { "x" } else { " " }
             $md += "- [$check] $($item.task)`n"
         }
         $md += "`n"

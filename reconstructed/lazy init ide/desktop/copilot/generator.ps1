@@ -541,7 +541,7 @@ class CustomCopilot {
     # ═══════════════════════════════════════════════════════════════════════════════
     
     [void] OrganizeDownloads() {
-        `$downloads = "`$env:USERPROFILE\Downloads"
+        `$downloads = "`${env:USERPROFILE}\Downloads"
         
         `$fileTypes = @{
             'Images' = @('*.jpg', '*.png', '*.gif')
@@ -624,7 +624,7 @@ class CustomCopilot {
     # ═══════════════════════════════════════════════════════════════════════════════
     
     [void] PerformBackup() {
-        `$sources = @("`$env:USERPROFILE\Documents", "`$env:USERPROFILE\Pictures")
+        `$sources = @("`${env:USERPROFILE}\Documents", "`${env:USERPROFILE}\Pictures")
         `$destination = "E:\Backups\`$(Get-Date -Format 'yyyy-MM-dd')"
         
         New-Item -ItemType Directory -Path `$destination -Force | Out-Null

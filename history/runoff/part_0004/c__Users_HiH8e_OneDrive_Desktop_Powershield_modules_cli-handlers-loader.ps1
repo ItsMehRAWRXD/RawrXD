@@ -11,7 +11,7 @@
 # ============================================
 
 # Global handler registry
-$script:CliHandlerRegistry = @{
+${script:CliHandlerRegistry} = @{
     Handlers     = @{}  # CommandName → HandlerInfo
     LoadedModules = @() # List of loaded module paths
     IsInitialized = $false
@@ -48,7 +48,7 @@ function Initialize-CliHandlers {
         
         if (-not (Test-Path $HandlerPath)) {
             Write-Warning "CLI handler path does not exist: $HandlerPath"
-            return $script:CliHandlerRegistry
+            return ${script:CliHandlerRegistry}
         }
         
         # Discover handler modules
@@ -67,18 +67,18 @@ function Initialize-CliHandlers {
             
             # Find exported function
             $functionMatch = [regex]::Match($content, 'function\s+(Invoke-Cli\w+)')
-            $functionName = if ($functionMatch.Success) { $functionMatch.Groups[1].Value } else { $null }
+            $functionName = $(if ($functionMatch.Success) { $functionMatch.Groups[1].Value } else { $null }
             
             # Extract description from comment block
             $descriptionMatch = [regex]::Match($content, '\.SYNOPSIS\s*\r?\n\s*(.+?)(?=\r?\n\s*\.)')
-            $description = if ($descriptionMatch.Success) { $descriptionMatch.Groups[1].Value.Trim() } else { "CLI command: $commandName" }
+            $description = $(if ($descriptionMatch.Success) { $descriptionMatch.Groups[1].Value.Trim() } else { "CLI command: $commandName" }
             
             # Determine category from folder structure
             $relativePath = $file.FullName.Replace($HandlerPath, "").TrimStart("\", "/")
-            $category = if ($relativePath -match "^([^\\\/]+)[\\/]") { $matches[1] } else { "general" }
+            $category = $(if ($relativePath -match "^([^\\\/]+)[\\/]") { $matches[1] } else { "general" }
             
             # Register handler
-            $script:CliHandlerRegistry.Handlers[$commandName] = @{
+            ${script:CliHandlerRegistry}.Handlers[$commandName] = @{
                 CommandName    = $commandName
                 FunctionName   = $functionName
                 FilePath       = $file.FullName
@@ -89,14 +89,14 @@ function Initialize-CliHandlers {
             }
         }
         
-        $script:CliHandlerRegistry.IsInitialized = $true
-        Write-Verbose "Initialized $($script:CliHandlerRegistry.Handlers.Count) CLI handlers" -Verbose
+        ${script:CliHandlerRegistry}.IsInitialized = $true
+        Write-Verbose "Initialized $(${script:CliHandlerRegistry}.Handlers.Count) CLI handlers" -Verbose
         
-        return $script:CliHandlerRegistry
+        return ${script:CliHandlerRegistry}
     }
     catch {
         Write-Error "Failed to initialize CLI handlers: $_"
-        return $script:CliHandlerRegistry
+        return ${script:CliHandlerRegistry}
     }
 }
 
@@ -116,11 +116,11 @@ function Get-CliHandler {
         [string]$CommandName
     )
     
-    if (-not $script:CliHandlerRegistry.IsInitialized) {
+    if (-not ${script:CliHandlerRegistry}.IsInitialized) {
         Initialize-CliHandlers | Out-Null
     }
     
-    return $script:CliHandlerRegistry.Handlers[$CommandName]
+    return ${script:CliHandlerRegistry}.Handlers[$CommandName]
 }
 
 function Import-CliHandler {
@@ -165,7 +165,7 @@ function Import-CliHandler {
             if ($function) {
                 $handler.IsLoaded = $true
                 $handler.LoadedFunction = $function
-                $script:CliHandlerRegistry.LoadedModules += $handler.FilePath
+                ${script:CliHandlerRegistry}.LoadedModules += $handler.FilePath
                 
                 Write-Verbose "Loaded CLI handler: $($handler.FunctionName) from $($handler.FilePath)" -Verbose
                 return $function
@@ -266,11 +266,11 @@ function Get-CliCommands {
         [string]$Category = $null
     )
     
-    if (-not $script:CliHandlerRegistry.IsInitialized) {
+    if (-not ${script:CliHandlerRegistry}.IsInitialized) {
         Initialize-CliHandlers | Out-Null
     }
     
-    $commands = $script:CliHandlerRegistry.Handlers.Values
+    $commands = ${script:CliHandlerRegistry}.Handlers.Values
     
     if ($Category) {
         $commands = $commands | Where-Object { $_.Category -eq $Category }
@@ -310,7 +310,7 @@ function Show-CliHandlerHelp {
     foreach ($cat in $categories) {
         Write-Host "  $($cat.Name.ToUpper())" -ForegroundColor Cyan
         foreach ($cmd in $cat.Group) {
-            $status = if ($cmd.Loaded) { "✓" } else { " " }
+            $status = $(if ($cmd.Loaded) { "✓" } else { " " }
             Write-Host "    $status $($cmd.Command.PadRight(20)) $($cmd.Description)" -ForegroundColor White
         }
         Write-Host ""

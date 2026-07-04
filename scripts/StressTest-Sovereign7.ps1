@@ -121,7 +121,7 @@ function Resolve-Command {
     return $null
 }
 
-$global:TaskDefinitions = @(
+${global:TaskDefinitions} = @(
     [PSCustomObject]@{ id = "streaming"; name = "StreamingGGUFLoader" },
     [PSCustomObject]@{ id = "vulkan"; name = "VulkanCompute" },
     [PSCustomObject]@{ id = "lsp"; name = "LSP Initialize+Completion" },
@@ -233,8 +233,8 @@ foreach ($task in $TaskDefinitions) {
             }
 
             $sw.Stop()
-            $stdout = if (Test-Path $StdoutPath) { Get-Content -Path $StdoutPath -Raw -ErrorAction SilentlyContinue } else { "" }
-            $stderr = if (Test-Path $StderrPath) { Get-Content -Path $StderrPath -Raw -ErrorAction SilentlyContinue } else { "" }
+            $stdout = $(if (Test-Path $StdoutPath) { Get-Content -Path $StdoutPath -Raw -ErrorAction SilentlyContinue } else { "" }
+            $stderr = $(if (Test-Path $StderrPath) { Get-Content -Path $StderrPath -Raw -ErrorAction SilentlyContinue } else { "" }
             $exitCode = -999
             try { $exitCode = [int]$proc.ExitCode } catch { }
 
@@ -343,7 +343,7 @@ public static extern System.IntPtr LoadLibrary(string lpFileName);
                         return New-TaskResult -Status "skip" -Detail "clangd not found in PATH" -DurationMs $swTask.ElapsedMilliseconds
                     }
 
-                    $tempFile = Join-Path $env:TEMP ("rawrxd_lsp_{0}.cpp" -f ([Guid]::NewGuid().ToString("N")))
+                    $tempFile = Join-Path ${env:TEMP} ("rawrxd_lsp_{0}.cpp" -f ([Guid]::NewGuid().ToString("N")))
                     "int main(){return 0;}" | Set-Content -Path $tempFile -Encoding UTF8
 
                     try {
@@ -605,8 +605,8 @@ if ($IncludeInferenceValidation) {
             }
             else {
                 $swInference.Stop()
-                $stdout = if (Test-Path $inferenceOut) { Get-Content -Path $inferenceOut -Raw -ErrorAction SilentlyContinue } else { "" }
-                $stderr = if (Test-Path $inferenceErr) { Get-Content -Path $inferenceErr -Raw -ErrorAction SilentlyContinue } else { "" }
+                $stdout = $(if (Test-Path $inferenceOut) { Get-Content -Path $inferenceOut -Raw -ErrorAction SilentlyContinue } else { "" }
+                $stderr = $(if (Test-Path $inferenceErr) { Get-Content -Path $inferenceErr -Raw -ErrorAction SilentlyContinue } else { "" }
                 $exitCode = -999
                 try { $exitCode = [int]$proc.ExitCode } catch { }
 
@@ -619,8 +619,8 @@ if ($IncludeInferenceValidation) {
                     $results += New-ResultObject -TaskId "inference" -TaskName "InferenceLoop FAST_GENERATE" -Status "pass" -Detail $detail -DurationMs $swInference.ElapsedMilliseconds -StdoutPath $inferenceOut -StderrPath $inferenceErr
                 }
                 else {
-                    $outSnippet = if ($stdout.Length -gt 220) { $stdout.Substring(0, 220) + "..." } else { $stdout }
-                    $errSnippet = if ($stderr.Length -gt 180) { $stderr.Substring(0, 180) + "..." } else { $stderr }
+                    $outSnippet = $(if ($stdout.Length -gt 220) { $stdout.Substring(0, 220) + "..." } else { $stdout }
+                    $errSnippet = $(if ($stderr.Length -gt 180) { $stderr.Substring(0, 180) + "..." } else { $stderr }
                     $detail = "Missing PASS FAST_GENERATE (exit=$exitCode) stdout='$outSnippet' stderr='$errSnippet'"
                     $results += New-ResultObject -TaskId "inference" -TaskName "InferenceLoop FAST_GENERATE" -Status "fail" -Detail $detail -DurationMs $swInference.ElapsedMilliseconds -StdoutPath $inferenceOut -StderrPath $inferenceErr
                 }

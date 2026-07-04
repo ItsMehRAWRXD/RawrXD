@@ -27,7 +27,7 @@ param (
 )
 
 $ErrorActionPreference = 'Stop'
-$Script:CONFIG_VERSION = "2.0.0"
+${Script:CONFIG_VERSION} = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BANNER
@@ -120,7 +120,7 @@ function Get-EntropyHash {
     param([string]$ProcessorId)
     
     # Generate entropy hash from processor ID and system info
-    $entropySource = "$ProcessorId-$env:COMPUTERNAME-$env:USERNAME"
+    $entropySource = "$ProcessorId-${env:COMPUTERNAME}-${env:USERNAME}"
     $sha256 = [System.Security.Cryptography.SHA256]::Create()
     $hash = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($entropySource))
     return [BitConverter]::ToString($hash).Replace("-", "").Substring(0, 32)
@@ -270,7 +270,7 @@ function Get-GPUDetails {
                 DriverVersion   = $gpu.DriverVersion
                 VideoProcessor  = $gpu.VideoProcessor
                 AdapterRAM      = $gpu.AdapterRAM
-                AdapterRAMGB    = if ($gpu.AdapterRAM) { [math]::Round($gpu.AdapterRAM / 1GB, 2) } else { 0 }
+                AdapterRAMGB    = $(if ($gpu.AdapterRAM) { [math]::Round($gpu.AdapterRAM / 1GB, 2) } else { 0 }
                 CurrentResolution = "$($gpu.CurrentHorizontalResolution)x$($gpu.CurrentVerticalResolution)"
                 RefreshRate     = $gpu.CurrentRefreshRate
                 # Thermal settings
@@ -391,7 +391,7 @@ function New-SovereignBinding {
     $fingerprint = [BitConverter]::ToString($fingerprintHash).Replace("-", "")
     
     $binding = @{
-        Version             = $Script:CONFIG_VERSION
+        Version             = ${Script:CONFIG_VERSION}
         GeneratedAt         = [DateTime]::UtcNow.ToString("o")
         Fingerprint         = $fingerprint
         EntropyHash         = $CPU.EntropyHash
@@ -437,7 +437,7 @@ function New-ThermalGovernorConfig {
     Write-Host "🌡️  Generating Thermal Governor configuration..." -ForegroundColor Yellow
     
     $config = @{
-        Version             = $Script:CONFIG_VERSION
+        Version             = ${Script:CONFIG_VERSION}
         GeneratedAt         = [DateTime]::UtcNow.ToString("o")
         
         # PID Controller settings
@@ -502,7 +502,7 @@ function New-JitMapConfig {
     Write-Host "📍 Generating JIT-LBA mapper configuration..." -ForegroundColor Yellow
     
     $config = @{
-        Version             = $Script:CONFIG_VERSION
+        Version             = ${Script:CONFIG_VERSION}
         GeneratedAt         = [DateTime]::UtcNow.ToString("o")
         
         # MMIO settings (simulated - real values require kernel driver)
@@ -548,7 +548,7 @@ function New-PipeBridgeConfig {
     Write-Host "🔌 Generating named pipe bridge configuration..." -ForegroundColor Yellow
     
     $config = @{
-        Version             = $Script:CONFIG_VERSION
+        Version             = ${Script:CONFIG_VERSION}
         GeneratedAt         = [DateTime]::UtcNow.ToString("o")
         
         Pipes               = @{
@@ -592,7 +592,7 @@ function New-HUDConfig {
     Write-Host "🖥️  Generating HUD overlay configuration..." -ForegroundColor Yellow
     
     $config = @{
-        Version             = $Script:CONFIG_VERSION
+        Version             = ${Script:CONFIG_VERSION}
         GeneratedAt         = [DateTime]::UtcNow.ToString("o")
         
         Display             = @{

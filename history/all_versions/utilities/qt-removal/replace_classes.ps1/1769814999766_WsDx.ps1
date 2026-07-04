@@ -139,7 +139,7 @@ if (Test-Path -Path $Path -PathType Leaf) {
     Process-File -FilePath $Path
 } elseif (Test-Path -Path $Path -PathType Container) {
     # If path is text, fix for Get-ChildItem if implied
-    $Filter = if ($Recursive) { @("-Recurse") } else { @() }
+    $Filter = $(if ($Recursive) { @("-Recurse") } else { @() }
     
     $Files = Get-ChildItem -Path $Path -Include *.cpp, *.h, *.hpp @Filter
     

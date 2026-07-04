@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+$Script:ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 Write-Host "`n========================================================================"
@@ -7,15 +7,15 @@ Write-Host "150 symbols across 10 batches - Zero stubs, direct resolution"
 Write-Host "========================================================================`n"
 
 # Locate Visual Studio
-$vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-$vsInstallDir = $null
+$Script:vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+$Script:vsInstallDir = $null
 if (Test-Path $vswhere) {
-    $vsInstallDir = & $vswhere -latest -products * `
+$Script:vsInstallDir = & $vswhere -latest -products * `
         -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
         -property installationPath 2>$null | Select-Object -First 1
 }
 if (-not $vsInstallDir) {
-    $knownPaths = @(
+$Script:knownPaths = @(
         'D:\VS2022Enterprise',
         'C:\VS2022Enterprise', 
         'C:\Program Files\Microsoft Visual Studio\2022\Enterprise',
@@ -24,7 +24,7 @@ if (-not $vsInstallDir) {
     )
     foreach ($p in $knownPaths) {
         if (Test-Path "$p\VC\Auxiliary\Build\vcvars64.bat") {
-            $vsInstallDir = $p; break
+$Script:vsInstallDir = $p; break
         }
     }
 }
@@ -35,8 +35,8 @@ if (-not $vsInstallDir) {
 }
 
 # Find tools
-$MasmExe = Get-ChildItem "$vsInstallDir\VC\Tools\MSVC\*\bin\Hostx64\x64\ml64.exe" | Select-Object -First 1 -ExpandProperty FullName
-$LinkExe = Get-ChildItem "$vsInstallDir\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe" | Select-Object -First 1 -ExpandProperty FullName
+$Script:MasmExe = Get-ChildItem "$vsInstallDir\VC\Tools\MSVC\*\bin\Hostx64\x64\ml64.exe" | Select-Object -First 1 -ExpandProperty FullName
+$Script:LinkExe = Get-ChildItem "$vsInstallDir\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe" | Select-Object -First 1 -ExpandProperty FullName
 
 if (-not (Test-Path $MasmExe)) {
     Write-Error "ml64.exe not found"
@@ -44,32 +44,32 @@ if (-not (Test-Path $MasmExe)) {
 }
 
 # Get library paths
-$masmDir = Split-Path $MasmExe -Parent
-$msvcRoot = (Resolve-Path (Join-Path $masmDir "..\..\..")).Path
-$msvcLibX64 = Join-Path $msvcRoot "lib\x64"
+$Script:masmDir = Split-Path $MasmExe -Parent
+$Script:msvcRoot = (Resolve-Path (Join-Path $masmDir "..\..\..")).Path
+$Script:msvcLibX64 = Join-Path $msvcRoot "lib\x64"
 
-$sdkRoot = if (Test-Path "C:\Program Files (x86)\Windows Kits\10\Lib") {
+$Script:sdkRoot = $(if (Test-Path "C:\Program Files (x86)\Windows Kits\10\Lib") {
     "C:\Program Files (x86)\Windows Kits\10\Lib"
 } elseif (Test-Path "D:\Program Files (x86)\Windows Kits\10\Lib") {
     "D:\Program Files (x86)\Windows Kits\10\Lib"
 } else { $null }
 
-$sdkUmX64 = $null
-$sdkUcrtX64 = $null
+$Script:sdkUmX64 = $null
+$Script:sdkUcrtX64 = $null
 if ($sdkRoot) {
-    $versions = Get-ChildItem $sdkRoot -Directory | Where-Object { $_.Name -match '^\d+\.' } | Sort-Object Name -Descending
+$Script:versions = Get-ChildItem $sdkRoot -Directory | Where-Object { $_.Name -match '^\d+\.' } | Sort-Object Name -Descending
     foreach ($v in $versions) {
-        $um = Join-Path $v.FullName "um\x64"
-        $ucrt = Join-Path $v.FullName "ucrt\x64"
+$Script:um = Join-Path $v.FullName "um\x64"
+$Script:ucrt = Join-Path $v.FullName "ucrt\x64"
         if ((Test-Path $um) -and (Test-Path $ucrt)) {
-            $sdkUmX64 = $um
-            $sdkUcrtX64 = $ucrt
+$Script:sdkUmX64 = $um
+$Script:sdkUcrtX64 = $ucrt
             break
         }
     }
 }
 
-$libPaths = @()
+$Script:libPaths = @()
 foreach ($p in @($msvcLibX64, $sdkUcrtX64, $sdkUmX64)) {
     if ($p -and (Test-Path $p)) { $libPaths += $p }
 }
@@ -87,7 +87,7 @@ Write-Host "[3/4] Assembling Production Driver..."
 if ($LASTEXITCODE -ne 0) { Write-Error "Driver assembly failed"; exit 1 }
 
 Write-Host "[4/4] Linking Production Executable..."
-$linkArgs = @(
+$Script:linkArgs = @(
     "/NOLOGO", "/SUBSYSTEM:CONSOLE", "/ENTRY:main", "/MACHINE:X64"
     "/OUT:RawrXD_SymbolResolver_Production.exe"
     "production_driver_150symbols.obj"

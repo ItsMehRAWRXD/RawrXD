@@ -145,9 +145,9 @@ $explorer.add_NodeMouseDoubleClick({
                 Write-Host "✅ File content read successfully: $($content.Length) characters" -ForegroundColor Green
                 
                 # Assign to editor (this is where the magic happens)
-                if ($script:editor) {
-                    $script:editor.Text = $content
-                    $global:currentFile = $filePath
+                if (${script:editor}) {
+                    ${script:editor}.Text = $content
+                    ${global:currentFile} = $filePath
                     $form.Text = "RawrXD - $([System.IO.Path]::GetFileName($filePath))"
                     Write-Host "🎉 File opened successfully in editor!" -ForegroundColor Green
                 } else {

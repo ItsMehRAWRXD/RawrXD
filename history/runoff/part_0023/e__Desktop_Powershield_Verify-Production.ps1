@@ -12,10 +12,10 @@
 
 param(
     [switch]$Quick = $false,
-    [switch]$Full = $true
+    [switch]$Full
 )
 
-$script:TestResults = @{
+${script:TestResults} = @{
     Passed = 0
     Failed = 0
     Warnings = 0
@@ -52,8 +52,8 @@ function Write-TestResult {
         Write-Host "   $Message" -ForegroundColor Gray
     }
     
-    $script:TestResults.$Result++
-    $script:TestResults.Details += @{
+    ${script:TestResults}.$Result++
+    ${script:TestResults}.Details += @{
         Test = $TestName
         Result = $Result
         Message = $Message
@@ -171,9 +171,7 @@ try {
 
 # ============================================
 # AGENTIC ENGINE TESTS
-# ============================================
-
-if (-not $Quick) {
+# ============================================ $(if (-not $Quick) {
     Write-Host "`n═══ AGENTIC ENGINE ═══" -ForegroundColor Yellow
     
     try {
@@ -246,13 +244,13 @@ foreach ($check in $checks) {
 # ============================================
 
 Write-Host "`n═══ TEST SUMMARY ═══" -ForegroundColor Yellow
-Write-Host "✅ Passed:  $($script:TestResults.Passed)" -ForegroundColor Green
-Write-Host "⚠️  Warnings: $($script:TestResults.Warnings)" -ForegroundColor Yellow
-Write-Host "❌ Failed:  $($script:TestResults.Failed)" -ForegroundColor Red
+Write-Host "✅ Passed:  $(${script:TestResults}.Passed)" -ForegroundColor Green
+Write-Host "⚠️  Warnings: $(${script:TestResults}.Warnings)" -ForegroundColor Yellow
+Write-Host "❌ Failed:  $(${script:TestResults}.Failed)" -ForegroundColor Red
 
-if ($script:TestResults.Failed -eq 0) {
+if (${script:TestResults}.Failed -eq 0) {
     Write-Host "`n🎉 All critical tests passed! Ready for production deployment.`n" -ForegroundColor Green
-} elseif ($script:TestResults.Failed -le 2) {
+} elseif (${script:TestResults}.Failed -le 2) {
     Write-Host "`n⚠️  Some tests failed. Review above and check documentation.`n" -ForegroundColor Yellow
 } else {
     Write-Host "`n❌ Multiple test failures. Fix issues before deployment.`n" -ForegroundColor Red

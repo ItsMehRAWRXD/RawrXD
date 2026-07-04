@@ -23,16 +23,16 @@ function Test-Item {
         $result = & $Test
         if ($result) {
             Write-Host "  [PASS] $Name" -ForegroundColor Green
-            $script:testResults += @{ name = $Name; passed = $true }
+            ${script:testResults} += @{ name = $Name; passed = $true }
             return $true
         } else {
             Write-Host "  [FAIL] $Name" -ForegroundColor Red
-            $script:testResults += @{ name = $Name; passed = $false }
+            ${script:testResults} += @{ name = $Name; passed = $false }
             return $false
         }
     } catch {
         Write-Host "  [ERROR] $Name - $_" -ForegroundColor Red
-        $script:testResults += @{ name = $Name; passed = $false; error = $_.Exception.Message }
+        ${script:testResults} += @{ name = $Name; passed = $false; error = $_.Exception.Message }
         return $false
     }
 }
@@ -97,7 +97,7 @@ Test-Item "IDE launches without crash" {
 # Test 8: Check logs directory creation capability
 Write-Host "[8/8] Testing log directory..." -ForegroundColor Yellow
 Test-Item "Can create logs directory" {
-    $logsDir = "$env:LOCALAPPDATA\RawrXD\logs"
+    $logsDir = "${env:LOCALAPPDATA}\RawrXD\logs"
     if (-not (Test-Path $logsDir)) {
         New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
     }

@@ -9,16 +9,16 @@ Write-Host "  Comprehensive testing following systematic recommendations" -Foreg
 Write-Host "═══════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
 # Initialize test tracking
-$script:advancedResults = @{
+${script:advancedResults} = @{
   HighPriority = @{}
   MultiModel   = @{}
   ComplexUI    = @{}
   Performance  = @{}
   Security     = @{}
 }
-$script:totalAdvancedTests = 0
-$script:passedAdvancedTests = 0
-$script:failedAdvancedTests = 0
+${script:totalAdvancedTests} = 0
+${script:passedAdvancedTests} = 0
+${script:failedAdvancedTests} = 0
 
 # Load required assemblies
 Add-Type -AssemblyName System.Windows.Forms
@@ -33,7 +33,7 @@ function Test-AdvancedFeature {
     [scriptblock]$TestLogic
   )
     
-  $script:totalAdvancedTests++
+  ${script:totalAdvancedTests}++
   $icon = switch ($Priority) {
     "HIGH" { "🔥" }
     "MEDIUM" { "⚡" }
@@ -52,23 +52,23 @@ function Test-AdvancedFeature {
         
     if ($result -eq $true) {
       Write-Host "   ✅ PASS (${duration}ms)" -ForegroundColor Green
-      $script:passedAdvancedTests++
-      $script:advancedResults[$Category][$TestName] = "PASS"
+      ${script:passedAdvancedTests}++
+      ${script:advancedResults}[$Category][$TestName] = "PASS"
     }
     elseif ($result -eq "PARTIAL") {
       Write-Host "   ⚠️ PARTIAL (${duration}ms)" -ForegroundColor Yellow
-      $script:advancedResults[$Category][$TestName] = "PARTIAL"
+      ${script:advancedResults}[$Category][$TestName] = "PARTIAL"
     }
     else {
       Write-Host "   ❌ FAIL (${duration}ms)" -ForegroundColor Red
-      $script:failedAdvancedTests++
-      $script:advancedResults[$Category][$TestName] = "FAIL"
+      ${script:failedAdvancedTests}++
+      ${script:advancedResults}[$Category][$TestName] = "FAIL"
     }
   }
   catch {
     Write-Host "   💥 ERROR: $_" -ForegroundColor Red
-    $script:failedAdvancedTests++
-    $script:advancedResults[$Category][$TestName] = "ERROR: $_"
+    ${script:failedAdvancedTests}++
+    ${script:advancedResults}[$Category][$TestName] = "ERROR: $_"
   }
 }
 
@@ -193,8 +193,8 @@ Test-AdvancedFeature -Category "MultiModel" -TestName "Chat Tab System" -Priorit
   $hasNewChatTab = $content -match "function New-ChatTab"
   $hasRemoveChatTab = $content -match "function Remove-ChatTab"
   $hasSendChatMessage = $content -match "function Send-ChatMessage"
-  $hasChatTabsCollection = $content -match '\$script:chatTabs'
-  $hasActiveChatTabId = $content -match '\$script:activeChatTabId'
+  $hasChatTabsCollection = $content -match '\${script:chatTabs}'
+  $hasActiveChatTabId = $content -match '\${script:activeChatTabId}'
   $hasMultithreading = $content -match "UseMultithreading|threadSafeContext|RunspacePool"
     
   Write-Host "      New-ChatTab: $hasNewChatTab" -ForegroundColor Gray
@@ -245,7 +245,7 @@ Test-AdvancedFeature -Category "MultiModel" -TestName "Streaming Response Suppor
 Test-AdvancedFeature -Category "MultiModel" -TestName "Model Switching" -Priority "HIGH" -Description "Test ability to switch between different AI models" -TestLogic {
   $content = Get-Content ".\RawrXD.ps1" -Raw
     
-  $hasCurrentModel = $content -match '\$script:currentModel|\$currentModel'
+  $hasCurrentModel = $content -match '\${script:currentModel}|\$currentModel'
   $hasModelSelection = $content -match "OllamaModel|model.*dropdown|model.*combobox"
   $hasModelSwitch = $content -match "Switch-Model|change.*model|select.*model"
   $hasChatTabModel = $content -match "chatSession\.Model|\$chatSession.*Model"
@@ -294,7 +294,7 @@ Test-AdvancedFeature -Category "ComplexUI" -TestName "Settings Management" -Prio
     
   $hasLoadSettings = $content -match "function Load-Settings|Load.*Settings"
   $hasSaveSettings = $content -match "function Save.*Settings|Save-CustomizationSettings"
-  $hasGlobalSettings = $content -match '\$global:settings|\$script:settings'
+  $hasGlobalSettings = $content -match '\${global:settings}|\${script:settings}'
   $hasSettingsFile = $content -match "settings\.json|config.*json"
   $hasDefaultSettings = $content -match "default.*settings|DefaultSettings"
     
@@ -312,7 +312,7 @@ Test-AdvancedFeature -Category "ComplexUI" -TestName "Theme System" -Priority "M
   $content = Get-Content ".\RawrXD.ps1" -Raw
     
   $hasApplyTheme = $content -match "function Apply-Theme|Apply.*Theme"
-  $hasCurrentTheme = $content -match '\$script:CurrentTheme'
+  $hasCurrentTheme = $content -match '\${script:CurrentTheme}'
   $hasThemes = @("Dark", "Light", "Stealth", "Custom") | Where-Object { $content -match $_ }
   $hasThemeCommands = $content -match "/theme|switch theme|use.*theme"
   $hasCustomThemeBuilder = $content -match "Show-CustomThemeBuilder|CustomTheme"
@@ -583,7 +583,7 @@ Test-AdvancedFeature -Category "Security" -TestName "Security Logging" -Priority
 Test-AdvancedFeature -Category "Security" -TestName "Session Security" -Priority "MEDIUM" -Description "Verify session management security" -TestLogic {
   $content = Get-Content ".\RawrXD.ps1" -Raw
     
-  $hasSessionTracking = $content -match '\$script:CurrentSession|CurrentSession'
+  $hasSessionTracking = $content -match '\${script:CurrentSession}|CurrentSession'
   $hasSessionTimeout = $content -match "SessionTimeout|session.*timeout"
   $hasSessionValidation = $content -match "function Test-SessionSecurity|Test.*Session"
   $hasAuthRequired = $content -match "AuthenticationRequired|auth.*required"
@@ -651,21 +651,21 @@ Write-Host "══════════════════════�
 Write-Host "  📊 ADVANCED TESTING COMPLETE - COMPREHENSIVE RESULTS" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$overallSuccessRate = if ($script:totalAdvancedTests -gt 0) { 
-  [math]::Round(($script:passedAdvancedTests / $script:totalAdvancedTests) * 100, 1) 
+$overallSuccessRate = $(if (${script:totalAdvancedTests} -gt 0) { 
+  [math]::Round((${script:passedAdvancedTests} / ${script:totalAdvancedTests}) * 100, 1) 
 }
 else { 0 }
 
 Write-Host "`n🎯 OVERALL SUMMARY:" -ForegroundColor White
-Write-Host "   Total Tests: $($script:totalAdvancedTests)" -ForegroundColor Gray
-Write-Host "   Passed: $($script:passedAdvancedTests)" -ForegroundColor Green
-Write-Host "   Failed: $($script:failedAdvancedTests)" -ForegroundColor Red
+Write-Host "   Total Tests: $(${script:totalAdvancedTests})" -ForegroundColor Gray
+Write-Host "   Passed: $(${script:passedAdvancedTests})" -ForegroundColor Green
+Write-Host "   Failed: $(${script:failedAdvancedTests})" -ForegroundColor Red
 Write-Host "   Success Rate: $overallSuccessRate%" -ForegroundColor Cyan
 
 Write-Host "`n📋 RESULTS BY CATEGORY:" -ForegroundColor White
 
-foreach ($category in $script:advancedResults.Keys | Sort-Object) {
-  $categoryResults = $script:advancedResults[$category]
+foreach ($category in ${script:advancedResults}.Keys | Sort-Object) {
+  $categoryResults = ${script:advancedResults}[$category]
   if ($categoryResults.Count -eq 0) { continue }
     
   $categoryPassed = ($categoryResults.Values | Where-Object { $_ -eq "PASS" }).Count
@@ -714,9 +714,9 @@ Write-Host "   $grade" -ForegroundColor $gradeColor
 Write-Host "`n💡 RECOMMENDATIONS:" -ForegroundColor Cyan
 
 $failedTests = @()
-foreach ($category in $script:advancedResults.Keys) {
-  foreach ($test in $script:advancedResults[$category].Keys) {
-    if ($script:advancedResults[$category][$test] -notmatch "^PASS") {
+foreach ($category in ${script:advancedResults}.Keys) {
+  foreach ($test in ${script:advancedResults}[$category].Keys) {
+    if (${script:advancedResults}[$category][$test] -notmatch "^PASS") {
       $failedTests += "$category/$test"
     }
   }

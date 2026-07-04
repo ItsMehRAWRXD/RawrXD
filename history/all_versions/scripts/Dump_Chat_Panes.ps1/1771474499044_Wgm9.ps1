@@ -32,7 +32,7 @@ $anySwitchSet = $Cursor -or $Copilot -or $UIA -or $CDP -or $Pipes -or $Network -
 $All = $All -or (-not $anySwitchSet)
 $ErrorActionPreference = "SilentlyContinue"
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
-$script:startTime = Get-Date
+${script:startTime} = Get-Date
 
 # ---------- UI Automation: dump all visible text from Cursor/Code windows (your processes) ----------
 function Dump-UIA {
@@ -52,7 +52,7 @@ function Dump-UIA {
                 $val = $e.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::ValuePropertyId)
                 if ([string]::IsNullOrWhiteSpace($name) -and [string]::IsNullOrWhiteSpace($val)) { continue }
                 $win = $e; while ($win.Current.ControlType.ProgrammaticName -notmatch "Window") { $win = $walker.GetParent($win); if (-not $win) { break } }
-                $wintitle = if ($win) { $win.Current.Name } else { "" }
+                $wintitle = $(if ($win) { $win.Current.Name } else { "" }
                 if ($wintitle -notmatch "Cursor|Code|Visual Studio") { continue }
                 [void]$sb.AppendLine("WINDOW: $wintitle | $ctrl | Name=[$name] Value=[$val]")
             } catch { }
@@ -75,29 +75,29 @@ if ($All -or $UIA) { Dump-UIA }
 
 # ---------- Exhaustive paths ----------
 $cursorPaths = @(
-    "$env:APPDATA\Cursor",
-    "$env:LOCALAPPDATA\Cursor",
-    "$env:APPDATA\Cursor\User\globalStorage",
-    "$env:APPDATA\Cursor\User\workspaceStorage",
-    "$env:APPDATA\Cursor\User\History",
-    "$env:APPDATA\Cursor\Cache",
-    "$env:APPDATA\Cursor\CachedData",
-    "$env:APPDATA\Cursor\CachedExtensions",
-    "$env:APPDATA\Cursor\Code Cache",
-    "$env:LOCALAPPDATA\Cursor\Application Support",
-    "$env:USERPROFILE\.cursor"
+    "${env:APPDATA}\Cursor",
+    "${env:LOCALAPPDATA}\Cursor",
+    "${env:APPDATA}\Cursor\User\globalStorage",
+    "${env:APPDATA}\Cursor\User\workspaceStorage",
+    "${env:APPDATA}\Cursor\User\History",
+    "${env:APPDATA}\Cursor\Cache",
+    "${env:APPDATA}\Cursor\CachedData",
+    "${env:APPDATA}\Cursor\CachedExtensions",
+    "${env:APPDATA}\Cursor\Code Cache",
+    "${env:LOCALAPPDATA}\Cursor\Application Support",
+    "${env:USERPROFILE}\.cursor"
 )
 
 $vscodePaths = @(
-    "$env:APPDATA\Code",
-    "$env:LOCALAPPDATA\Programs\Microsoft VS Code",
-    "$env:APPDATA\Code\User\globalStorage",
-    "$env:APPDATA\Code\User\workspaceStorage",
-    "$env:APPDATA\Code\User\History",
-    "$env:APPDATA\Code\Cache",
-    "$env:APPDATA\Code\CachedData",
-    "$env:APPDATA\Code\CachedExtensions",
-    "$env:USERPROFILE\.vscode"
+    "${env:APPDATA}\Code",
+    "${env:LOCALAPPDATA}\Programs\Microsoft VS Code",
+    "${env:APPDATA}\Code\User\globalStorage",
+    "${env:APPDATA}\Code\User\workspaceStorage",
+    "${env:APPDATA}\Code\User\History",
+    "${env:APPDATA}\Code\Cache",
+    "${env:APPDATA}\Code\CachedData",
+    "${env:APPDATA}\Code\CachedExtensions",
+    "${env:USERPROFILE}\.vscode"
 )
 
 $results = @{ Cursor = @(); Copilot = @() }
@@ -149,21 +149,21 @@ if ($All -or $Copilot) { Dump-PathSet -paths $vscodePaths -tag "Copilot" }
 
 # ---------- state.vscdb raw + copy ----------
 $statePaths = @(
-    "$env:APPDATA\Cursor\User\globalStorage\state.vscdb",
-    "$env:APPDATA\Cursor\User\workspaceStorage\*\state.vscdb",
-    "$env:APPDATA\Code\User\globalStorage\state.vscdb",
-    "$env:APPDATA\Code\User\workspaceStorage\*\state.vscdb"
+    "${env:APPDATA}\Cursor\User\globalStorage\state.vscdb",
+    "${env:APPDATA}\Cursor\User\workspaceStorage\*\state.vscdb",
+    "${env:APPDATA}\Code\User\globalStorage\state.vscdb",
+    "${env:APPDATA}\Code\User\workspaceStorage\*\state.vscdb"
 )
 foreach ($sp in $statePaths) {
     if ($sp -match '\*') {
         Get-Item $sp -ErrorAction SilentlyContinue | ForEach-Object {
-            $name = if ($_.FullName -match "Cursor") { "cursor" } else { "copilot" }
+            $name = $(if ($_.FullName -match "Cursor") { "cursor" } else { "copilot" }
             $ws = Split-Path (Split-Path $_.FullName -Parent) -Leaf
             Copy-Item $_.FullName "$OutputDir\${name}_ws_$ws.vscdb" -Force
             Write-Host "Copied: ${name}_ws_$ws.vscdb" -ForegroundColor Green
         }
     } elseif (Test-Path $sp) {
-        $name = if ($sp -match "Cursor") { "cursor" } else { "copilot" }
+        $name = $(if ($sp -match "Cursor") { "cursor" } else { "copilot" }
         Copy-Item $sp "$OutputDir\${name}_state.vscdb" -Force
         Write-Host "Copied: ${name}_state.vscdb" -ForegroundColor Green
     }

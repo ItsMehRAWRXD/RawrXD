@@ -1,7 +1,7 @@
-$filePath = "src\qtapp\MainWindow_v5.cpp"
-$content = Get-Content $filePath -Raw
+$Script:filePath = "src\qtapp\MainWindow_v5.cpp"
+$Script:content = Get-Content $filePath -Raw
 
-$oldCode = @"
+$Script:oldCode = @"
 void MainWindow::scanCodeForTodos()
 {
     if (!m_todoManager || !m_fileBrowser) return;
@@ -13,7 +13,7 @@ void MainWindow::scanCodeForTodos()
 }
 "@
 
-$newCode = @"
+$Script:newCode = @"
 void MainWindow::scanCodeForTodos()
 {
     if (!m_todoManager) return;
@@ -111,6 +111,6 @@ void MainWindow::scanCodeForTodos()
 }
 "@
 
-$content = $content -replace [regex]::Escape($oldCode), $newCode
+$Script:content = $content -replace [regex]::Escape($oldCode), $newCode
 Set-Content -Path $filePath -Value $content -NoNewline
 Write-Host "File updated successfully"

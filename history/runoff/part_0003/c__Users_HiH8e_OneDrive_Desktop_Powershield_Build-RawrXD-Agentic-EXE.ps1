@@ -73,7 +73,7 @@ if ($Install) {
     } catch {
         # Fallback: Install ps2exe.ps1 manually
         Write-Status "Installing ps2exe.ps1 manually..." -Status 'WARNING'
-        $ps2exePath = "$env:TEMP\ps2exe.ps1"
+        $ps2exePath = "${env:TEMP}\ps2exe.ps1"
         
         try {
             $webClient = New-Object System.Net.WebClient
@@ -136,7 +136,7 @@ try {
                       -Verbose
     } else {
         # Fallback method using ps2exe.ps1
-        & "$env:TEMP\ps2exe.ps1" -InputFile $scriptPath `
+        & "${env:TEMP}\ps2exe.ps1" -InputFile $scriptPath `
                                  -OutputFile $exePath
     }
     

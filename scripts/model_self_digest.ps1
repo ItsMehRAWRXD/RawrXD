@@ -414,7 +414,7 @@ class ReconstructionEngine {
         Write-Host "    Layers: $($sourceArch['llama.block_count'])" -ForegroundColor Gray
         
         # Determine new parameters
-        $newContext = if ($this.TargetContext -gt 0) { $this.TargetContext } else { $sourceArch['llama.context_length'] }
+        $newContext = $(if ($this.TargetContext -gt 0) { $this.TargetContext } else { $sourceArch['llama.context_length'] }
         $newLayers = $sourceArch['llama.block_count']
         
         Write-Host "`n  Target architecture:" -ForegroundColor Yellow

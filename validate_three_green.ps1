@@ -21,10 +21,10 @@ $Results   = @()
 $ServerProc = $null
 
 function Add-Result($Name, $Pass, $Detail) {
-    $color = if ($Pass) { 'Green' } else { 'Red' }
-    $icon  = if ($Pass) { '✅' } else { '❌' }
+    $color = $(if ($Pass) { 'Green' } else { 'Red' }
+    $icon  = $(if ($Pass) { '✅' } else { '❌' }
     Write-Host "  $icon $Name — $Detail" -ForegroundColor $color
-    $script:Results += [PSCustomObject]@{ Name=$Name; Pass=$Pass; Detail=$Detail }
+    ${script:Results} += [PSCustomObject]@{ Name=$Name; Pass=$Pass; Detail=$Detail }
 }
 
 Write-Host "`n═══ Three-Green Validation ═══" -ForegroundColor Cyan
@@ -84,7 +84,7 @@ try {
     }
     
     if ($status.status -eq 'ok') {
-        $dll = if ($status.dllLoaded) { 'DLL=loaded' } else { 'DLL=fallback' }
+        $dll = $(if ($status.dllLoaded) { 'DLL=loaded' } else { 'DLL=fallback' }
         Add-Result 'Server-Status' $true "/status → ok ($dll, v$($status.version))"
     } else {
         Add-Result 'Server-Status' $false "/status returned unexpected: $($status | ConvertTo-Json -Compress)"
@@ -157,7 +157,7 @@ Write-Host "`n═══ Results ═══" -ForegroundColor Cyan
 $passed = ($Results | Where-Object Pass).Count
 $total  = $Results.Count
 $allGreen = ($passed -eq $total)
-$color = if ($allGreen) { 'Green' } else { 'Red' }
+$color = $(if ($allGreen) { 'Green' } else { 'Red' }
 Write-Host "  $passed / $total checks passed" -ForegroundColor $color
 
 if ($allGreen) {

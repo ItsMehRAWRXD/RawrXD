@@ -110,7 +110,7 @@ else {
   # Launch full system
   Write-Host "[3/4] Starting swarm controller..." -ForegroundColor Yellow
   Start-Job -ScriptBlock {
-    Set-Location $using:PWD
+    Set-Location ${using:PWD}
     py swarm_controller.py
   } -Name "SwarmController" | Out-Null
     
@@ -118,7 +118,7 @@ else {
     
   Write-Host "[4/4] Starting dashboard..." -ForegroundColor Yellow
   Start-Job -ScriptBlock {
-    Set-Location $using:PWD
+    Set-Location ${using:PWD}
     py dashboard.py
   } -Name "Dashboard" | Out-Null
     

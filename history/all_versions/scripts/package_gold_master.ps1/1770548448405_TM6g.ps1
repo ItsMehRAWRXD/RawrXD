@@ -56,10 +56,10 @@ if (-not $SkipBuild) {
     $sdkVer   = "10.0.22621.0"
 
     if (Test-Path $msvcBase) {
-        $env:PATH    = "$msvcBase\bin\Hostx64\x64;$sdkBase\bin\$sdkVer\x64;$env:PATH"
-        $env:INCLUDE = "$msvcBase\include;$sdkBase\Include\$sdkVer\ucrt;$sdkBase\Include\$sdkVer\um;$sdkBase\Include\$sdkVer\shared;$sdkBase\Include\$sdkVer\winrt;$sdkBase\Include\$sdkVer\cppwinrt"
-        $env:LIB     = "$msvcBase\lib\x64;$sdkBase\Lib\$sdkVer\ucrt\x64;$sdkBase\Lib\$sdkVer\um\x64"
-        $env:LIBPATH = "$msvcBase\lib\x64"
+        ${env:PATH}    = "$msvcBase\bin\Hostx64\x64;$sdkBase\bin\$sdkVer\x64;${env:PATH}"
+        ${env:INCLUDE} = "$msvcBase\include;$sdkBase\Include\$sdkVer\ucrt;$sdkBase\Include\$sdkVer\um;$sdkBase\Include\$sdkVer\shared;$sdkBase\Include\$sdkVer\winrt;$sdkBase\Include\$sdkVer\cppwinrt"
+        ${env:LIB}     = "$msvcBase\lib\x64;$sdkBase\Lib\$sdkVer\ucrt\x64;$sdkBase\Lib\$sdkVer\um\x64"
+        ${env:LIBPATH} = "$msvcBase\lib\x64"
     }
 
     Push-Location $RootDir
@@ -237,7 +237,7 @@ $manifest = @{
     fileCount   = $fileList.Count
     files       = $fileList
     dependencies = @{
-        vcRedist = if ($needsRedist) { "required" } else { "bundled" }
+        vcRedist = $(if ($needsRedist) { "required" } else { "bundled" }
         dotnet   = "not required"
         ollama   = "optional (localhost:11434 for AI features)"
     }
@@ -276,7 +276,7 @@ Get-ChildItem $StageDir -Recurse | ForEach-Object {
     if ($_.PSIsContainer) {
         Write-Host "$indent$($_.Name)/" -ForegroundColor Yellow
     } else {
-        $sizeStr = if ($_.Length -gt 1MB) { "$([math]::Round($_.Length/1MB, 1)) MB" }
+        $sizeStr = $(if ($_.Length -gt 1MB) { "$([math]::Round($_.Length/1MB, 1)) MB" }
                    elseif ($_.Length -gt 1KB) { "$([math]::Round($_.Length/1KB, 1)) KB" }
                    else { "$($_.Length) B" }
         Write-Host "$indent$($_.Name) ($sizeStr)" -ForegroundColor Gray

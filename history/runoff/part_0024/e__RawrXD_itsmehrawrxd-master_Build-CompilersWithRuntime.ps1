@@ -60,7 +60,7 @@ function Build-Runtime {
 }
 
 function Get-CompilerFiles {
-  $pattern = if ($Name) { "${Name}_compiler_from_scratch*.asm" } else { "*_compiler_from_scratch*.asm" }
+  $pattern = $(if ($Name) { "${Name}_compiler_from_scratch*.asm" } else { "*_compiler_from_scratch*.asm" }
   $files = Get-ChildItem -Path $PSScriptRoot -Filter $pattern -File -Recurse
   
   # Prefer _fixed versions, fallback to originals

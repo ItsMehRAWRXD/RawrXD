@@ -4,7 +4,7 @@
 
 param(
     [string]$Root = "D:\rawrxd",
-    [string]$OutDir = "$env:LOCALAPPDATA\RawrXD\bin",
+    [string]$OutDir = "${env:LOCALAPPDATA}\RawrXD\bin",
     [switch]$Verbose
 )
 
@@ -138,7 +138,7 @@ $linkArgs = @(
 )
 
 # Include comprehensive stub library
-$stubLib = "$env:LOCALAPPDATA\RawrXD\stubs\rawrxd_stubs.lib"
+$stubLib = "${env:LOCALAPPDATA}\RawrXD\stubs\rawrxd_stubs.lib"
 if(Test-Path $stubLib) {
     $linkArgs += "`"$stubLib`""
     Write-Host "[STUBS] Added comprehensive stub library" -Fore Green

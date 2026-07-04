@@ -71,7 +71,7 @@ $Colors = @{
 }
 
 # Test configuration
-$Script:TestConfig = @{
+${Script:TestConfig} = @{
     RootDir       = $PSScriptRoot | Split-Path -Parent
     TestDir       = ""
     CompilerPath  = ""
@@ -112,9 +112,9 @@ function Write-TestResult {
         [timespan]$Duration = [timespan]::Zero
     )
     
-    $status = if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
-    $color = if ($Passed) { "Green" } else { "Red" }
-    $timeStr = if ($Duration.TotalMilliseconds -gt 0) { " ({0:N0}ms)" -f $Duration.TotalMilliseconds } else { "" }
+    $status = $(if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
+    $color = $(if ($Passed) { "Green" } else { "Red" }
+    $timeStr = $(if ($Duration.TotalMilliseconds -gt 0) { " ({0:N0}ms)" -f $Duration.TotalMilliseconds } else { "" }
     
     Write-Host "  $status " -ForegroundColor $color -NoNewline
     Write-Host "$TestName$timeStr" -NoNewline
@@ -160,7 +160,7 @@ function Invoke-Compiler {
         [hashtable]$ExtraArgs = @{}
     )
     
-    $compilerPath = $Script:TestConfig.CompilerPath
+    $compilerPath = ${Script:TestConfig}.CompilerPath
     
     $args = @(
         "--input", $InputFile,
@@ -1284,7 +1284,7 @@ Main
 # TEST DEFINITIONS
 # ============================================================================
 
-$Script:LanguageTests = @(
+${Script:LanguageTests} = @(
     @{ Language = "c";          Extension = ".c";   Name = "C (C17)" },
     @{ Language = "cpp";        Extension = ".cpp"; Name = "C++ (C++20)" },
     @{ Language = "rust";       Extension = ".rs";  Name = "Rust" },
@@ -1305,27 +1305,27 @@ function Initialize-TestEnvironment {
     Write-Banner "RawrXD Universal Cross-Platform Compiler Test Suite" "Magenta"
     
     # Set paths
-    $Script:TestConfig.RootDir = if ($PSScriptRoot) { 
+    ${Script:TestConfig}.RootDir = $(if ($PSScriptRoot) { 
         $PSScriptRoot | Split-Path -Parent 
     } else { 
         "E:\RawrXD" 
     }
     
-    $Script:TestConfig.TestDir = if ($OutputDir) { 
+    ${Script:TestConfig}.TestDir = $(if ($OutputDir) { 
         $OutputDir 
     } else { 
-        Join-Path $Script:TestConfig.RootDir "test_output_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+        Join-Path ${Script:TestConfig}.RootDir "test_output_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
     }
     
-    $Script:TestConfig.CompilerPath = if ($CompilerPath) {
+    ${Script:TestConfig}.CompilerPath = $(if ($CompilerPath) {
         $CompilerPath
     } else {
         # Try to find compiler
         $possiblePaths = @(
-            (Join-Path $Script:TestConfig.RootDir "build\Release\rawrxd.exe"),
-            (Join-Path $Script:TestConfig.RootDir "build\Debug\rawrxd.exe"),
-            (Join-Path $Script:TestConfig.RootDir "bin\rawrxd.exe"),
-            (Join-Path $Script:TestConfig.RootDir "rawrxd.exe"),
+            (Join-Path ${Script:TestConfig}.RootDir "build\Release\rawrxd.exe"),
+            (Join-Path ${Script:TestConfig}.RootDir "build\Debug\rawrxd.exe"),
+            (Join-Path ${Script:TestConfig}.RootDir "bin\rawrxd.exe"),
+            (Join-Path ${Script:TestConfig}.RootDir "rawrxd.exe"),
             "rawrxd.exe"
         )
         
@@ -1338,13 +1338,13 @@ function Initialize-TestEnvironment {
     }
     
     # Create test directory
-    if (-not (Test-Path $Script:TestConfig.TestDir)) {
-        New-Item -ItemType Directory -Path $Script:TestConfig.TestDir -Force | Out-Null
+    if (-not (Test-Path ${Script:TestConfig}.TestDir)) {
+        New-Item -ItemType Directory -Path ${Script:TestConfig}.TestDir -Force | Out-Null
     }
     
-    Write-Host "  📁 Root Directory:    $($Script:TestConfig.RootDir)" -ForegroundColor Gray
-    Write-Host "  📁 Test Directory:    $($Script:TestConfig.TestDir)" -ForegroundColor Gray
-    Write-Host "  🔧 Compiler Path:     $($Script:TestConfig.CompilerPath)" -ForegroundColor Gray
+    Write-Host "  📁 Root Directory:    $(${Script:TestConfig}.RootDir)" -ForegroundColor Gray
+    Write-Host "  📁 Test Directory:    $(${Script:TestConfig}.TestDir)" -ForegroundColor Gray
+    Write-Host "  🔧 Compiler Path:     $(${Script:TestConfig}.CompilerPath)" -ForegroundColor Gray
     Write-Host "  🎯 Target Platform:   $Platform" -ForegroundColor Gray
     Write-Host "  🖥️  Target Arch:       $Target" -ForegroundColor Gray
     Write-Host "  🐛 Debug Build:       $Debug" -ForegroundColor Gray
@@ -1354,17 +1354,17 @@ function Initialize-TestEnvironment {
 function Test-CompilerExists {
     Write-SubHeader "Checking Compiler Installation"
     
-    $compilerPath = $Script:TestConfig.CompilerPath
+    $compilerPath = ${Script:TestConfig}.CompilerPath
     
     if (-not $compilerPath -or -not (Test-Path $compilerPath)) {
         Write-Host "  ⚠️  Compiler not found at expected paths" -ForegroundColor Yellow
         Write-Host "  📝 Creating mock compiler for testing..." -ForegroundColor Yellow
         
         # Create a mock compiler script for testing
-        $mockCompiler = Join-Path $Script:TestConfig.TestDir "rawrxd.exe"
+        $mockCompiler = Join-Path ${Script:TestConfig}.TestDir "rawrxd.exe"
         
         # Create a PowerShell script that simulates the compiler
-        $mockScript = Join-Path $Script:TestConfig.TestDir "rawrxd-mock.ps1"
+        $mockScript = Join-Path ${Script:TestConfig}.TestDir "rawrxd-mock.ps1"
         
 @"
 # RawrXD Mock Compiler for Testing
@@ -1434,13 +1434,13 @@ exit 1
 "@ | Out-File -FilePath $mockScript -Encoding utf8 -Force
         
         # Create batch wrapper
-        $batchWrapper = Join-Path $Script:TestConfig.TestDir "rawrxd.bat"
+        $batchWrapper = Join-Path ${Script:TestConfig}.TestDir "rawrxd.bat"
 @"
 @echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0rawrxd-mock.ps1" %*
 "@ | Out-File -FilePath $batchWrapper -Encoding ascii -Force
         
-        $Script:TestConfig.CompilerPath = $batchWrapper
+        ${Script:TestConfig}.CompilerPath = $batchWrapper
         Write-Host "  ✅ Mock compiler created at: $batchWrapper" -ForegroundColor Green
         return $true
     }
@@ -1467,11 +1467,11 @@ function Test-LanguageCompilation {
     $extension = $LanguageInfo.Extension
     $name = $LanguageInfo.Name
     
-    $Script:TestConfig.TotalTests++
+    ${Script:TestConfig}.TotalTests++
     
     # Create source file
-    $sourceFile = Join-Path $Script:TestConfig.TestDir "test_$language$extension"
-    $outputFile = Join-Path $Script:TestConfig.TestDir "test_$language.exe"
+    $sourceFile = Join-Path ${Script:TestConfig}.TestDir "test_$language$extension"
+    $outputFile = Join-Path ${Script:TestConfig}.TestDir "test_$language.exe"
     
     try {
         # Generate test source
@@ -1493,13 +1493,13 @@ function Test-LanguageCompilation {
             -ExtraArgs @{ Optimize = "3"; Static = $true; Strip = (-not $Debug) }
         
         if ($result.Success) {
-            $outputSize = if (Test-Path $outputFile) { Get-FileSize $outputFile } else { "N/A" }
+            $outputSize = $(if (Test-Path $outputFile) { Get-FileSize $outputFile } else { "N/A" }
             
             Write-TestResult -TestName "$name compilation" -Passed $true `
                 -Message "Source: $sourceSize → Output: $outputSize" `
                 -Duration $result.Duration
             
-            $Script:TestConfig.PassedTests++
+            ${Script:TestConfig}.PassedTests++
             
             # Try to run the compiled executable (if native target)
             if ($Platform -eq "native" -or $Platform -eq "windows") {
@@ -1525,13 +1525,13 @@ function Test-LanguageCompilation {
                 Write-Host "      └─ Error: $($result.Output | Select-Object -First 3)" -ForegroundColor Red
             }
             
-            $Script:TestConfig.FailedTests++
+            ${Script:TestConfig}.FailedTests++
             return $false
         }
     }
     catch {
         Write-TestResult -TestName "$name compilation" -Passed $false -Message $_.Exception.Message
-        $Script:TestConfig.FailedTests++
+        ${Script:TestConfig}.FailedTests++
         return $false
     }
 }
@@ -1547,12 +1547,12 @@ function Test-CrossPlatformTargets {
     )
     
     # Use C for cross-platform test
-    $sourceFile = Join-Path $Script:TestConfig.TestDir "test_cross_c.c"
+    $sourceFile = Join-Path ${Script:TestConfig}.TestDir "test_cross_c.c"
     $null = New-TestSourceFile -Language "c" -OutputPath $sourceFile
     
     foreach ($target in $targets) {
-        $Script:TestConfig.TotalTests++
-        $outputFile = Join-Path $Script:TestConfig.TestDir "test_cross_$($target.Platform)_$($target.Arch).exe"
+        ${Script:TestConfig}.TotalTests++
+        $outputFile = Join-Path ${Script:TestConfig}.TestDir "test_cross_$($target.Platform)_$($target.Arch).exe"
         
         $result = Invoke-Compiler `
             -InputFile $sourceFile `
@@ -1563,11 +1563,11 @@ function Test-CrossPlatformTargets {
         
         if ($result.Success) {
             Write-TestResult -TestName "C → $($target.Name)" -Passed $true -Duration $result.Duration
-            $Script:TestConfig.PassedTests++
+            ${Script:TestConfig}.PassedTests++
         }
         else {
             Write-TestResult -TestName "C → $($target.Name)" -Passed $false -Message "Cross-compilation failed"
-            $Script:TestConfig.FailedTests++
+            ${Script:TestConfig}.FailedTests++
         }
     }
 }
@@ -1575,16 +1575,16 @@ function Test-CrossPlatformTargets {
 function Test-CLIProject {
     Write-SubHeader "RawrXD CLI Project Compilation Test"
     
-    $cliSource = Join-Path $Script:TestConfig.RootDir "src\cli\rawrxd_cli_compiler.cpp"
+    $cliSource = Join-Path ${Script:TestConfig}.RootDir "src\cli\rawrxd_cli_compiler.cpp"
     
     if (-not (Test-Path $cliSource)) {
         Write-Host "  ⚠️  CLI source not found at: $cliSource" -ForegroundColor Yellow
-        $Script:TestConfig.SkippedTests++
+        ${Script:TestConfig}.SkippedTests++
         return
     }
     
-    $Script:TestConfig.TotalTests++
-    $outputFile = Join-Path $Script:TestConfig.TestDir "rawrxd_cli_compiled.exe"
+    ${Script:TestConfig}.TotalTests++
+    $outputFile = Join-Path ${Script:TestConfig}.TestDir "rawrxd_cli_compiled.exe"
     
     $sourceSize = Get-FileSize $cliSource
     Write-Host "  📄 Source: $cliSource ($sourceSize)" -ForegroundColor Gray
@@ -1605,7 +1605,7 @@ function Test-CLIProject {
         $outputSize = Get-FileSize $outputFile
         Write-TestResult -TestName "CLI Project C++ compilation" -Passed $true `
             -Message "Output: $outputSize" -Duration $sw.Elapsed
-        $Script:TestConfig.PassedTests++
+        ${Script:TestConfig}.PassedTests++
         
         # Test the compiled CLI
         Write-Host "  🔍 Testing compiled CLI..." -ForegroundColor Cyan
@@ -1619,7 +1619,7 @@ function Test-CLIProject {
     }
     else {
         Write-TestResult -TestName "CLI Project compilation" -Passed $false -Duration $sw.Elapsed
-        $Script:TestConfig.FailedTests++
+        ${Script:TestConfig}.FailedTests++
     }
 }
 
@@ -1632,8 +1632,8 @@ function Test-Benchmark {
     $iterations = 3
     
     foreach ($lang in @("c", "cpp", "rust")) {
-        $sourceFile = Join-Path $Script:TestConfig.TestDir "bench_$lang$($Script:LanguageTests | Where-Object { $_.Language -eq $lang } | Select-Object -ExpandProperty Extension)"
-        $outputFile = Join-Path $Script:TestConfig.TestDir "bench_$lang.exe"
+        $sourceFile = Join-Path ${Script:TestConfig}.TestDir "bench_$lang$(${Script:LanguageTests} | Where-Object { $_.Language -eq $lang } | Select-Object -ExpandProperty Extension)"
+        $outputFile = Join-Path ${Script:TestConfig}.TestDir "bench_$lang.exe"
         
         $null = New-TestSourceFile -Language $lang -OutputPath $sourceFile
         
@@ -1674,23 +1674,23 @@ function Test-Benchmark {
 }
 
 function Write-TestSummary {
-    $elapsed = (Get-Date) - $Script:TestConfig.StartTime
+    $elapsed = (Get-Date) - ${Script:TestConfig}.StartTime
     
     Write-Banner "Test Summary" "Cyan"
     
-    $passRate = if ($Script:TestConfig.TotalTests -gt 0) {
-        [math]::Round(($Script:TestConfig.PassedTests / $Script:TestConfig.TotalTests) * 100, 1)
+    $passRate = $(if (${Script:TestConfig}.TotalTests -gt 0) {
+        [math]::Round((${Script:TestConfig}.PassedTests / ${Script:TestConfig}.TotalTests) * 100, 1)
     } else { 0 }
     
     Write-Host "  📊 Results:" -ForegroundColor White
-    Write-Host "     Total Tests:   $($Script:TestConfig.TotalTests)" -ForegroundColor Gray
-    Write-Host "     ✅ Passed:     $($Script:TestConfig.PassedTests)" -ForegroundColor Green
-    Write-Host "     ❌ Failed:     $($Script:TestConfig.FailedTests)" -ForegroundColor Red
-    Write-Host "     ⏭️  Skipped:    $($Script:TestConfig.SkippedTests)" -ForegroundColor Yellow
+    Write-Host "     Total Tests:   $(${Script:TestConfig}.TotalTests)" -ForegroundColor Gray
+    Write-Host "     ✅ Passed:     $(${Script:TestConfig}.PassedTests)" -ForegroundColor Green
+    Write-Host "     ❌ Failed:     $(${Script:TestConfig}.FailedTests)" -ForegroundColor Red
+    Write-Host "     ⏭️  Skipped:    $(${Script:TestConfig}.SkippedTests)" -ForegroundColor Yellow
     Write-Host "     📈 Pass Rate:  $passRate%" -ForegroundColor $(if ($passRate -ge 80) { "Green" } elseif ($passRate -ge 50) { "Yellow" } else { "Red" })
     Write-Host ""
     Write-Host "  ⏱️  Total Time:   $($elapsed.ToString('mm\:ss\.fff'))" -ForegroundColor Gray
-    Write-Host "  📁 Output Dir:   $($Script:TestConfig.TestDir)" -ForegroundColor Gray
+    Write-Host "  📁 Output Dir:   $(${Script:TestConfig}.TestDir)" -ForegroundColor Gray
     
     # Generate JSON report
     $report = @{
@@ -1698,22 +1698,22 @@ function Write-TestSummary {
         duration_ms = [math]::Round($elapsed.TotalMilliseconds)
         target      = @{ platform = $Platform; arch = $Target }
         summary     = @{
-            total   = $Script:TestConfig.TotalTests
-            passed  = $Script:TestConfig.PassedTests
-            failed  = $Script:TestConfig.FailedTests
-            skipped = $Script:TestConfig.SkippedTests
+            total   = ${Script:TestConfig}.TotalTests
+            passed  = ${Script:TestConfig}.PassedTests
+            failed  = ${Script:TestConfig}.FailedTests
+            skipped = ${Script:TestConfig}.SkippedTests
             pass_rate = $passRate
         }
-        compiler_path = $Script:TestConfig.CompilerPath
+        compiler_path = ${Script:TestConfig}.CompilerPath
     }
     
-    $reportPath = Join-Path $Script:TestConfig.TestDir "test_report.json"
+    $reportPath = Join-Path ${Script:TestConfig}.TestDir "test_report.json"
     $report | ConvertTo-Json -Depth 5 | Out-File -FilePath $reportPath -Encoding utf8
     Write-Host "  📋 Report saved: $reportPath" -ForegroundColor Gray
     
     Write-Host ""
     
-    if ($Script:TestConfig.FailedTests -eq 0) {
+    if (${Script:TestConfig}.FailedTests -eq 0) {
         Write-Host "  🎉 ALL TESTS PASSED! 🎉" -ForegroundColor Green
     }
     else {
@@ -1725,13 +1725,13 @@ function Write-TestSummary {
 
 function Invoke-Cleanup {
     if ($SkipCleanup) {
-        Write-Host "  ⏭️  Cleanup skipped (artifacts preserved in: $($Script:TestConfig.TestDir))" -ForegroundColor Yellow
+        Write-Host "  ⏭️  Cleanup skipped (artifacts preserved in: $(${Script:TestConfig}.TestDir))" -ForegroundColor Yellow
         return
     }
     
     Write-Host "  🧹 Cleaning up test artifacts..." -ForegroundColor Gray
     # Don't delete - keep for inspection
-    Write-Host "  📁 Test files preserved in: $($Script:TestConfig.TestDir)" -ForegroundColor Gray
+    Write-Host "  📁 Test files preserved in: $(${Script:TestConfig}.TestDir)" -ForegroundColor Gray
 }
 
 # ============================================================================
@@ -1750,11 +1750,11 @@ function Main {
         }
         
         # Filter languages if specified
-        $languagesToTest = if ($TestOnly) {
-            $Script:LanguageTests | Where-Object { $TestOnly -contains $_.Language }
+        $languagesToTest = $(if ($TestOnly) {
+            ${Script:LanguageTests} | Where-Object { $TestOnly -contains $_.Language }
         }
         else {
-            $Script:LanguageTests
+            ${Script:LanguageTests}
         }
         
         # Run language compilation tests
@@ -1782,7 +1782,7 @@ function Main {
         Invoke-Cleanup
         
         # Return exit code
-        exit $(if ($Script:TestConfig.FailedTests -eq 0) { 0 } else { 1 })
+        exit $(if (${Script:TestConfig}.FailedTests -eq 0) { 0 } else { 1 })
     }
     catch {
         Write-Host ""

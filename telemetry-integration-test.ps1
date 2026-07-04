@@ -4,7 +4,7 @@
 param(
     [int]$DurationMinutes = 30,
     [int]$TargetTPS = 336,
-    [switch]$ValidateMetrics = $true,
+    [switch]$ValidateMetrics,
     [switch]$Verbose = $false,
     [int]$PrometheusPort = 9090
 )
@@ -262,7 +262,7 @@ function Test-LoadPerformance {
     $TestResults.MetricsCaptured = $eventCount
     $TestResults.EventsDropped = $droppedEvents
     $TestResults.PeakLatency = $peakLatency
-    $TestResults.AvgLatency = if ($eventCount -gt 0) { $latencySum / $eventCount } else { 0 }
+    $TestResults.AvgLatency = $(if ($eventCount -gt 0) { $latencySum / $eventCount } else { 0 }
     
     # Test 4.1: Event throughput
     $actualTPS = $eventCount / ($DurationMinutes * 60)
@@ -271,7 +271,7 @@ function Test-LoadPerformance {
     }
     
     # Test 4.2: Event drop rate
-    $dropRate = if ($eventCount -gt 0) { $droppedEvents / $eventCount } else { 0 }
+    $dropRate = $(if ($eventCount -gt 0) { $droppedEvents / $eventCount } else { 0 }
     Test-Assertion "Event drop rate < 0.1%" {
         $dropRate -lt 0.001
     }
@@ -402,7 +402,7 @@ function Write-TestReport {
     Write-Host "  Peak Latency: $([math]::Round($TestResults.PeakLatency, 2)) ns" -ForegroundColor White
     Write-Host ""
     
-    $passRate = if ($TestResults.TestsTotal -gt 0) { 
+    $passRate = $(if ($TestResults.TestsTotal -gt 0) { 
         ($TestResults.TestsPassed / $TestResults.TestsTotal) * 100 
     } else { 0 }
     

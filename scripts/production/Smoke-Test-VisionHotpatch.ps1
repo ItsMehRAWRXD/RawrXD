@@ -109,7 +109,7 @@ if ($visionModel) {
     $visionResp = Invoke-OllamaChatJson -Url $chatUrl -Body $visionBody
     $visionParsed = $null
     try { $visionParsed = $visionResp.body | ConvertFrom-Json -Depth 20 } catch {}
-    $visionContent = if ($visionParsed -and $visionParsed.message) { [string]$visionParsed.message.content } else { $visionResp.body.Substring(0, [Math]::Min(400, $visionResp.body.Length)) }
+    $visionContent = $(if ($visionParsed -and $visionParsed.message) { [string]$visionParsed.message.content } else { $visionResp.body.Substring(0, [Math]::Min(400, $visionResp.body.Length)) }
 
     $result.tests += [ordered]@{
         model = $visionModel
@@ -160,7 +160,7 @@ foreach ($model in $NonVisionModels) {
     $parsed = $null
     try { $parsed = $resp.body | ConvertFrom-Json -Depth 20 } catch {}
 
-    $content = if ($parsed -and $parsed.message) { [string]$parsed.message.content } else { $resp.body.Substring(0, [Math]::Min(400, $resp.body.Length)) }
+    $content = $(if ($parsed -and $parsed.message) { [string]$parsed.message.content } else { $resp.body.Substring(0, [Math]::Min(400, $resp.body.Length)) }
 
     $controlBody = @{
         model = $model
@@ -180,7 +180,7 @@ foreach ($model in $NonVisionModels) {
     $controlResp = Invoke-OllamaChatJson -Url $chatUrl -Body $controlBody
     $controlParsed = $null
     try { $controlParsed = $controlResp.body | ConvertFrom-Json -Depth 20 } catch {}
-    $controlContent = if ($controlParsed -and $controlParsed.message) { [string]$controlParsed.message.content } else { $controlResp.body.Substring(0, [Math]::Min(400, $controlResp.body.Length)) }
+    $controlContent = $(if ($controlParsed -and $controlParsed.message) { [string]$controlParsed.message.content } else { $controlResp.body.Substring(0, [Math]::Min(400, $controlResp.body.Length)) }
 
     $imageScore = Get-AnchorScore -Text $content
     $controlScore = Get-AnchorScore -Text $controlContent

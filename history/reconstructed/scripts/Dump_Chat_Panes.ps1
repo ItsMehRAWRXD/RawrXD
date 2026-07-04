@@ -32,7 +32,7 @@ $anySwitchSet = $Cursor -or $Copilot -or $UIA -or $CDP -or $Pipes -or $Network -
 $All = $All -or (-not $anySwitchSet)
 $ErrorActionPreference = "SilentlyContinue"
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
-$script:startTime = Get-Date
+${script:startTime} = Get-Date
 
 # ============================================================================
 # HELPER: Write output with timestamp
@@ -154,7 +154,7 @@ function Dump-UIA {
 public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 '@
         Add-Type -MemberDefinition $sig -Name Win32UIA -Namespace User32 -ErrorAction SilentlyContinue
-        $script:windowData = @()
+        ${script:windowData} = @()
         $cb = [User32.Win32UIA+EnumWindowsProc]{
             param($hwnd, $lparam)
             if ([User32.Win32UIA]::IsWindowVisible($hwnd)) {
@@ -166,14 +166,14 @@ public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
                     [User32.Win32UIA]::GetWindowThreadProcessId($hwnd, [ref]$pid) | Out-Null
                     $title = $sb2.ToString()
                     if ($title -match "Cursor|Code|Visual Studio") {
-                        $script:windowData += "HWND=0x$($hwnd.ToString('X')) PID=$pid TITLE=$title"
+                        ${script:windowData} += "HWND=0x$($hwnd.ToString('X')) PID=$pid TITLE=$title"
                     }
                 }
             }
             return $true
         }
         [User32.Win32UIA]::EnumWindows($cb, [IntPtr]::Zero) | Out-Null
-        $script:windowData | Set-Content $outFile -Encoding UTF8
+        ${script:windowData} | Set-Content $outFile -Encoding UTF8
         Write-Dump "UIA fallback (Win32 titles): $outFile" Yellow
     }
 }
@@ -227,8 +227,8 @@ function Dump-CDP {
         [void]$sb.AppendLine('  code.exe --remote-debugging-port=9222')
         [void]$sb.AppendLine("")
         [void]$sb.AppendLine("Or set environment variable before launching:")
-        [void]$sb.AppendLine('  $env:ELECTRON_ENABLE_LOGGING = "1"')
-        [void]$sb.AppendLine('  $env:ELECTRON_DEBUG_PORT = "9222"')
+        [void]$sb.AppendLine('  ${env:ELECTRON_ENABLE_LOGGING} = "1"')
+        [void]$sb.AppendLine('  ${env:ELECTRON_DEBUG_PORT} = "9222"')
         [System.IO.File]::WriteAllText($outFile, $sb.ToString(), [System.Text.Encoding]::UTF8)
         Write-Dump "CDP: No debug ports active. Instructions written to $outFile" Yellow
         return
@@ -413,10 +413,10 @@ function Dump-Pipes {
 
     # Enumerate VSCode socket files (used on some configs)
     $sockDirs = @(
-        "$env:TEMP",
-        "$env:LOCALAPPDATA\Temp",
-        "$env:APPDATA\Cursor",
-        "$env:APPDATA\Code"
+        "${env:TEMP}",
+        "${env:LOCALAPPDATA}\Temp",
+        "${env:APPDATA}\Cursor",
+        "${env:APPDATA}\Code"
     )
     [void]$sb.AppendLine("")
     [void]$sb.AppendLine("Socket/IPC files:")
@@ -815,10 +815,10 @@ module.exports = { activate, deactivate };
 
     # Find actual extensions directories
     $extDirs = @(
-        "$env:USERPROFILE\.vscode\extensions",
-        "$env:USERPROFILE\.cursor\extensions",
-        "$env:APPDATA\Code\User\extensions",
-        "$env:APPDATA\Cursor\User\extensions"
+        "${env:USERPROFILE}\.vscode\extensions",
+        "${env:USERPROFILE}\.cursor\extensions",
+        "${env:APPDATA}\Code\User\extensions",
+        "${env:APPDATA}\Cursor\User\extensions"
     )
     foreach ($ed in $extDirs) {
         if (Test-Path (Split-Path $ed -Parent)) {
@@ -831,7 +831,7 @@ module.exports = { activate, deactivate };
     [void]$sb.AppendLine("Then run command palette: 'RawrXD: Dump IDE State'")
     [void]$sb.AppendLine("")
     [void]$sb.AppendLine("Or auto-dump on launch:")
-    [void]$sb.AppendLine('  $env:RAWRXD_AUTO_DUMP = "1"; code .')
+    [void]$sb.AppendLine('  ${env:RAWRXD_AUTO_DUMP} = "1"; code .')
 
     # Auto-install if VS Code CLI is available
     $installed = $false
@@ -842,8 +842,8 @@ module.exports = { activate, deactivate };
             [void]$sb.AppendLine("Attempting auto-install via $cli CLI...")
             try {
                 # For folder-based extensions, copy to extensions dir
-                $targetExt = if ($cli -eq "cursor") { "$env:USERPROFILE\.cursor\extensions\rawrxd-state-dumper" }
-                              else { "$env:USERPROFILE\.vscode\extensions\rawrxd-state-dumper" }
+                $targetExt = $(if ($cli -eq "cursor") { "${env:USERPROFILE}\.cursor\extensions\rawrxd-state-dumper" }
+                              else { "${env:USERPROFILE}\.vscode\extensions\rawrxd-state-dumper" }
                 if (-not (Test-Path $targetExt)) {
                     Copy-Item -Recurse $extDir $targetExt -Force
                     [void]$sb.AppendLine("Installed to: $targetExt")
@@ -876,8 +876,8 @@ function Start-FileWatcher {
     Write-Dump "Logging to: $outFile" Cyan
 
     $watchPaths = @(
-        "$env:APPDATA\Cursor",
-        "$env:APPDATA\Code"
+        "${env:APPDATA}\Cursor",
+        "${env:APPDATA}\Code"
     ) | Where-Object { Test-Path $_ }
 
     if ($watchPaths.Count -eq 0) {
@@ -901,18 +901,18 @@ function Start-FileWatcher {
             $action = {
                 $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss.fff")
                 $line = "$ts | $($Event.SourceEventArgs.ChangeType) | $($Event.SourceEventArgs.FullPath)"
-                Add-Content $using:outFile $line
+                Add-Content ${using:outFile} $line
                 Write-Host $line -ForegroundColor DarkGray
 
                 # If it's a state.vscdb change, snapshot the ItemTable
                 if ($Event.SourceEventArgs.FullPath -match "state\.vscdb$") {
                     try {
                         Start-Sleep -Milliseconds 500  # let the write complete
-                        $snapFile = Join-Path $using:OutputDir "vscdb_snapshot_$(Get-Date -Format 'HHmmss_fff').txt"
+                        $snapFile = Join-Path ${using:OutputDir} "vscdb_snapshot_$(Get-Date -Format 'HHmmss_fff').txt"
                         # Quick read of ItemTable
                         $bytes = [System.IO.File]::ReadAllBytes($Event.SourceEventArgs.FullPath)
                         [System.IO.File]::WriteAllBytes($snapFile, $bytes[0..([Math]::Min(262144, $bytes.Length - 1))])
-                        Add-Content $using:outFile "$ts | SNAPSHOT | $snapFile"
+                        Add-Content ${using:outFile} "$ts | SNAPSHOT | $snapFile"
                     } catch { }
                 }
             }
@@ -949,39 +949,39 @@ if ($Watch) { Start-FileWatcher; return }  # -Watch is exclusive (blocks)
 
 # ---------- Exhaustive paths ----------
 $cursorPaths = @(
-    "$env:APPDATA\Cursor",
-    "$env:LOCALAPPDATA\Cursor",
-    "$env:APPDATA\Cursor\User\globalStorage",
-    "$env:APPDATA\Cursor\User\workspaceStorage",
-    "$env:APPDATA\Cursor\User\History",
-    "$env:APPDATA\Cursor\Cache",
-    "$env:APPDATA\Cursor\CachedData",
-    "$env:APPDATA\Cursor\CachedExtensions",
-    "$env:APPDATA\Cursor\Code Cache",
-    "$env:LOCALAPPDATA\Cursor\Application Support",
-    "$env:USERPROFILE\.cursor",
-    "$env:APPDATA\Cursor\logs",
-    "$env:APPDATA\Cursor\Backups",
-    "$env:APPDATA\Cursor\User\snippets",
-    "$env:APPDATA\Cursor\User\keybindings.json",
-    "$env:APPDATA\Cursor\User\settings.json",
-    "$env:APPDATA\Cursor\User\profiles"
+    "${env:APPDATA}\Cursor",
+    "${env:LOCALAPPDATA}\Cursor",
+    "${env:APPDATA}\Cursor\User\globalStorage",
+    "${env:APPDATA}\Cursor\User\workspaceStorage",
+    "${env:APPDATA}\Cursor\User\History",
+    "${env:APPDATA}\Cursor\Cache",
+    "${env:APPDATA}\Cursor\CachedData",
+    "${env:APPDATA}\Cursor\CachedExtensions",
+    "${env:APPDATA}\Cursor\Code Cache",
+    "${env:LOCALAPPDATA}\Cursor\Application Support",
+    "${env:USERPROFILE}\.cursor",
+    "${env:APPDATA}\Cursor\logs",
+    "${env:APPDATA}\Cursor\Backups",
+    "${env:APPDATA}\Cursor\User\snippets",
+    "${env:APPDATA}\Cursor\User\keybindings.json",
+    "${env:APPDATA}\Cursor\User\settings.json",
+    "${env:APPDATA}\Cursor\User\profiles"
 )
 
 $vscodePaths = @(
-    "$env:APPDATA\Code",
-    "$env:LOCALAPPDATA\Programs\Microsoft VS Code",
-    "$env:APPDATA\Code\User\globalStorage",
-    "$env:APPDATA\Code\User\workspaceStorage",
-    "$env:APPDATA\Code\User\History",
-    "$env:APPDATA\Code\Cache",
-    "$env:APPDATA\Code\CachedData",
-    "$env:APPDATA\Code\CachedExtensions",
-    "$env:USERPROFILE\.vscode",
-    "$env:APPDATA\Code\logs",
-    "$env:APPDATA\Code\Backups",
-    "$env:APPDATA\Code\User\snippets",
-    "$env:APPDATA\Code\User\profiles"
+    "${env:APPDATA}\Code",
+    "${env:LOCALAPPDATA}\Programs\Microsoft VS Code",
+    "${env:APPDATA}\Code\User\globalStorage",
+    "${env:APPDATA}\Code\User\workspaceStorage",
+    "${env:APPDATA}\Code\User\History",
+    "${env:APPDATA}\Code\Cache",
+    "${env:APPDATA}\Code\CachedData",
+    "${env:APPDATA}\Code\CachedExtensions",
+    "${env:USERPROFILE}\.vscode",
+    "${env:APPDATA}\Code\logs",
+    "${env:APPDATA}\Code\Backups",
+    "${env:APPDATA}\Code\User\snippets",
+    "${env:APPDATA}\Code\User\profiles"
 )
 
 $results = @{ Cursor = @(); Copilot = @() }
@@ -1096,21 +1096,21 @@ if ($All -or $Copilot) { Dump-PathSet -paths $vscodePaths -tag "Copilot" }
 
 # ---------- state.vscdb raw + copy ----------
 $statePaths = @(
-    "$env:APPDATA\Cursor\User\globalStorage\state.vscdb",
-    "$env:APPDATA\Cursor\User\workspaceStorage\*\state.vscdb",
-    "$env:APPDATA\Code\User\globalStorage\state.vscdb",
-    "$env:APPDATA\Code\User\workspaceStorage\*\state.vscdb"
+    "${env:APPDATA}\Cursor\User\globalStorage\state.vscdb",
+    "${env:APPDATA}\Cursor\User\workspaceStorage\*\state.vscdb",
+    "${env:APPDATA}\Code\User\globalStorage\state.vscdb",
+    "${env:APPDATA}\Code\User\workspaceStorage\*\state.vscdb"
 )
 foreach ($sp in $statePaths) {
     if ($sp -match '\*') {
         Get-Item $sp -ErrorAction SilentlyContinue | ForEach-Object {
-            $name = if ($_.FullName -match "Cursor") { "cursor" } else { "copilot" }
+            $name = $(if ($_.FullName -match "Cursor") { "cursor" } else { "copilot" }
             $ws = Split-Path (Split-Path $_.FullName -Parent) -Leaf
             Copy-Item $_.FullName "$OutputDir\${name}_ws_$ws.vscdb" -Force
             Write-Host "Copied: ${name}_ws_$ws.vscdb" -ForegroundColor Green
         }
     } elseif (Test-Path $sp) {
-        $name = if ($sp -match "Cursor") { "cursor" } else { "copilot" }
+        $name = $(if ($sp -match "Cursor") { "cursor" } else { "copilot" }
         Copy-Item $sp "$OutputDir\${name}_state.vscdb" -Force
         Write-Host "Copied: ${name}_state.vscdb" -ForegroundColor Green
     }

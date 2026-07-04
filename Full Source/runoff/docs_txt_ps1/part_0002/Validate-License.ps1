@@ -216,8 +216,8 @@ if ($LicenseFile) {
         Show-LicenseInfo -License $licenseData.License
     }
     
-    $global:ValidatedLicense = $licenseData.License
-    $global:DecryptedMasterKey = $decryptedMasterKey
+    ${global:ValidatedLicense} = $licenseData.License
+    ${global:DecryptedMasterKey} = $decryptedMasterKey
 }
 
 # Load exchange key
@@ -245,10 +245,10 @@ if ($ExchangeKeyFile) {
     $exchangeIV = [Convert]::FromBase64String($exchangeKeyData.IV)
     $exchangeValidation = [Convert]::FromBase64String($exchangeKeyData.ValidationKey)
     
-    $global:ExchangeKey = $exchangeKey
-    $global:ExchangeIV = $exchangeIV
-    $global:ExchangeValidation = $exchangeValidation
-    $global:ExchangeLicenseId = $exchangeKeyData.LicenseId
+    ${global:ExchangeKey} = $exchangeKey
+    ${global:ExchangeIV} = $exchangeIV
+    ${global:ExchangeValidation} = $exchangeValidation
+    ${global:ExchangeLicenseId} = $exchangeKeyData.LicenseId
 }
 
 $duration = (Get-Date) - $startTime

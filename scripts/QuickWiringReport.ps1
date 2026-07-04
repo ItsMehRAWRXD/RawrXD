@@ -25,8 +25,8 @@ foreach ($module in $modules) {
         }
     }
     
-    $status = if ($references -gt 0) { "WIRED" } else { "UNWIRED" }
-    $color = if ($references -gt 0) { "Green" } else { "Yellow" }
+    $status = $(if ($references -gt 0) { "WIRED" } else { "UNWIRED" }
+    $color = $(if ($references -gt 0) { "Green" } else { "Yellow" }
     
     Write-Host "  [$status] " -NoNewline -ForegroundColor $color
     Write-Host "$moduleName " -NoNewline

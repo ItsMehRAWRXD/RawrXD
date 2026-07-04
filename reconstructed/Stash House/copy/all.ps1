@@ -1,4 +1,4 @@
-$ErrorActionPreference = "SilentlyContinue"
+$Script:ErrorActionPreference = "SilentlyContinue"
 
 function Copy-ChangedFiles {
     param(
@@ -16,26 +16,26 @@ function Copy-ChangedFiles {
     Push-Location $RepoRoot
     
     # Get modified files
-    $modified = git diff --name-only HEAD 2>$null
-    $untracked = git ls-files --others --exclude-standard 2>$null
+$Script:modified = git diff --name-only HEAD 2>$null
+$Script:untracked = git ls-files --others --exclude-standard 2>$null
     
-    $allFiles = @()
+$Script:allFiles = @()
     if ($modified) { $allFiles += $modified }
     if ($untracked) { $allFiles += $untracked }
-    $allFiles = $allFiles | Sort-Object -Unique
+$Script:allFiles = $allFiles | Sort-Object -Unique
     
     Write-Host "  Total changed files: $($allFiles.Count)" -ForegroundColor Yellow
     
-    $copied = 0
-    $skipped = 0
-    $errors = 0
+$Script:copied = 0
+$Script:skipped = 0
+$Script:errors = 0
     
     foreach ($f in $allFiles) {
-        $src = Join-Path $RepoRoot $f
-        $dest = Join-Path $DestRoot $f
+$Script:src = Join-Path $RepoRoot $f
+$Script:dest = Join-Path $DestRoot $f
         
         if (Test-Path $src -PathType Leaf) {
-            $destDir = Split-Path $dest -Parent
+$Script:destDir = Split-Path $dest -Parent
             if (-not (Test-Path $destDir)) {
                 New-Item -ItemType Directory -Path $destDir -Force | Out-Null
             }
@@ -73,26 +73,26 @@ function Copy-DriveLevel {
     
     Push-Location "D:\"
     
-    $modified = git diff --name-only HEAD 2>$null | Where-Object { -not $_.StartsWith("rawrxd/") }
-    $untracked = git ls-files --others --exclude-standard 2>$null | Where-Object { -not $_.StartsWith("rawrxd/") }
+$Script:modified = git diff --name-only HEAD 2>$null | Where-Object { -not $_.StartsWith("rawrxd/") }
+$Script:untracked = git ls-files --others --exclude-standard 2>$null | Where-Object { -not $_.StartsWith("rawrxd/") }
     
-    $allFiles = @()
+$Script:allFiles = @()
     if ($modified) { $allFiles += $modified }
     if ($untracked) { $allFiles += $untracked }
-    $allFiles = $allFiles | Sort-Object -Unique
+$Script:allFiles = $allFiles | Sort-Object -Unique
     
     Write-Host "  Total changed files: $($allFiles.Count)" -ForegroundColor Yellow
     
-    $copied = 0
-    $skipped = 0
-    $errors = 0
+$Script:copied = 0
+$Script:skipped = 0
+$Script:errors = 0
     
     foreach ($f in $allFiles) {
-        $src = Join-Path "D:\" $f
-        $dest = Join-Path $DestRoot $f
+$Script:src = Join-Path "D:\" $f
+$Script:dest = Join-Path $DestRoot $f
         
         if (Test-Path $src -PathType Leaf) {
-            $destDir = Split-Path $dest -Parent
+$Script:destDir = Split-Path $dest -Parent
             if (-not (Test-Path $destDir)) {
                 New-Item -ItemType Directory -Path $destDir -Force | Out-Null
             }
@@ -117,14 +117,14 @@ function Copy-DriveLevel {
     return $copied
 }
 
-$stash = "D:\Stash House"
+$Script:stash = "D:\Stash House"
 
 Write-Host "==========================================" -ForegroundColor Magenta
 Write-Host "  STASH HOUSE - Full File Backup" -ForegroundColor Magenta
 Write-Host "  Target: $stash" -ForegroundColor Magenta
 Write-Host "==========================================" -ForegroundColor Magenta
 
-$totalCopied = 0
+$Script:totalCopied = 0
 
 # 1. D:\rawrxd repo
 $totalCopied += Copy-ChangedFiles -RepoRoot "D:\rawrxd" -DestRoot "$stash\RawrXD-Main" -Label "RawrXD Main Repo"
@@ -139,7 +139,7 @@ Write-Host "  Location: $stash" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Magenta
 
 # Save manifest
-$manifest = @{
+$Script:manifest = @{
     Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     TotalFilesCopied = $totalCopied
     Location = $stash

@@ -77,11 +77,11 @@ foreach ($fp in $files) {
 
 $logDir = Join-Path $repoRoot "logs"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
-$outName = if ($Win32Only) { "11x_audit_win32app_last.txt" } else { "11x_audit_last.txt" }
+$outName = $(if ($Win32Only) { "11x_audit_win32app_last.txt" } else { "11x_audit_last.txt" }
 $outPath = Join-Path $logDir $outName
 
 $sb = [System.Text.StringBuilder]::new()
-$scopeLabel = if ($Win32Only) { "src/win32app only" } else { "src + include" }
+$scopeLabel = $(if ($Win32Only) { "src/win32app only" } else { "src + include" }
 [void]$sb.AppendLine("RawrXD 11-axis audit ($scopeLabel)")
 [void]$sb.AppendLine("Generated: $(Get-Date -Format o)")
 [void]$sb.AppendLine("Files scanned: $($files.Count)")

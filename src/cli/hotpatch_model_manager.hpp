@@ -17,6 +17,9 @@
 #include <queue>
 #include <vector>
 
+// Include TensorInfo from interfaces
+#include "../RawrXD_Interfaces.h"
+
 // Forward declaration for llama.cpp (if available)
 struct llama_model;
 struct llama_context;
@@ -31,14 +34,10 @@ namespace RawrXD {
 namespace RawrXD {
 
 // ============================================================================
-// Tensor Info - GPU tensor metadata
+// GPU Tensor Upload Status
 // ============================================================================
-struct TensorInfo {
-    char name[64];
-    size_t offset;
-    size_t size;
-    uint32_t type;  // GGML type
-};
+// Uses TensorInfo from RawrXD_Interfaces.h
+// Additional GPU-specific metadata for upload tracking
 
 // ============================================================================
 // Model Descriptor - Wraps llama.cpp state + GPU resources
@@ -102,6 +101,9 @@ public:
     // Get current active model
     ModelDescriptor* GetActiveModel();
     
+    // Phase 3: GPU tensor upload (public for C API access)
+    bool UploadTensorsToGPU(ModelDescriptor* desc);
+    
     // Statistics
     struct Stats {
         uint64_t modelsLoaded = 0;
@@ -119,8 +121,7 @@ private:
     ModelDescriptor* LoadGGUF(const char* path);
     void FreeModelResources(ModelDescriptor* desc);
     
-    // Phase 3: GPU tensor upload
-    bool UploadTensorsToGPU(ModelDescriptor* desc);
+    // Phase 3: GPU tensor upload internals
     bool UploadTensorUnified(ModelDescriptor* desc);  // Single buffer approach
     bool UploadTensorPerTensor(ModelDescriptor* desc); // Per-tensor approach
     

@@ -40,19 +40,19 @@ function Write-TestHeader {
 function Write-TestPass {
     param([string]$Message)
     Write-Host "✓ PASS: $Message" -ForegroundColor $GREEN
-    $script:passed++
+    ${script:passed}++
 }
 
 function Write-TestFail {
     param([string]$Message)
     Write-Host "✗ FAIL: $Message" -ForegroundColor $RED
-    $script:failed++
+    ${script:failed}++
 }
 
 function Write-TestWarn {
     param([string]$Message)
     Write-Host "⚠ WARN: $Message" -ForegroundColor $YELLOW
-    $script:warnings++
+    ${script:warnings}++
 }
 
 function Write-TestInfo {
@@ -375,7 +375,7 @@ Write-Host "⚠ Warnings: $warnings" -ForegroundColor $(if ($warnings -gt 0) { $
 Write-Host ""
 
 $total = $passed + $failed + $warnings
-$passRate = if ($total -gt 0) { [math]::Round(($passed / $total) * 100, 1) } else { 0 }
+$passRate = $(if ($total -gt 0) { [math]::Round(($passed / $total) * 100, 1) } else { 0 }
 Write-Host "Pass Rate: $passRate% ($passed/$total tests)" -ForegroundColor $(if ($passRate -ge 80) { $GREEN } else { $YELLOW })
 
 Write-Host ""

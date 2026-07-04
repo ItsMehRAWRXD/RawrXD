@@ -5,7 +5,7 @@
 param(
     [string]$IDEName = "RawrXD-Win32IDE",
     [string]$BinaryPath = "D:\rawrxd\build\RawrXD-Win32IDE.exe",
-    [string]$LogDir = "$env:LOCALAPPDATA\RawrXD\WSOD-Logs",
+    [string]$LogDir = "${env:LOCALAPPDATA}\RawrXD\WSOD-Logs",
     [int]$CheckInterval = 500,  # ms
     [int]$WhiteThreshold = 95,   # % white pixels = WSOD
     [switch]$AutoHeal,
@@ -147,7 +147,7 @@ function Invoke-EmergencyHeal {
     Start-Sleep 1
     
     # Clear shader caches (D2D corruption)
-    Remove-Item "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*.d2d" -Force 2>$null
+    Remove-Item "${env:LOCALAPPDATA}\Microsoft\Windows\INetCache\*.d2d" -Force 2>$null
     
     # Restart with validation flags
     $proc = Start-Process $BinaryPath -ArgumentList "--validate-gpu","--software-render" -PassThru

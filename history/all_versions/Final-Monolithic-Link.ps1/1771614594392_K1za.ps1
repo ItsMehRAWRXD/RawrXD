@@ -33,7 +33,7 @@ if(Test-Path $vswhere) {
 
 if(!$Linker -or !(Test-Path $Linker)) {
     # Fallback to environment variable if vswhere fails
-    $Linker = "$env:VSINSTALLDIR\VC\Tools\MSVC\$env:VCToolsVersion\bin\Hostx64\x64\link.exe"
+    $Linker = "${env:VSINSTALLDIR}\VC\Tools\MSVC\${env:VCToolsVersion}\bin\Hostx64\x64\link.exe"
     if(!(Test-Path $Linker)) {
         throw "link.exe not found. Please run from a Developer Command Prompt."
     }

@@ -197,11 +197,12 @@ private:
                 offsets_correct = false;
                 break;
             }
-            // Account for overlap in next offset
+            // Account for overlap in next offset - use TokenCount() for zero-copy compatibility
+            uint32_t token_count = requests[i].TokenCount();
             if (i == 0) {
-                expected_offset += (uint32_t)requests[i].input_tokens.size();
+                expected_offset += token_count;
             } else {
-                expected_offset += (uint32_t)requests[i].input_tokens.size() - config.window_overlap;
+                expected_offset += (token_count > config.window_overlap) ? (token_count - config.window_overlap) : 0;
             }
         }
         

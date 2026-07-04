@@ -26,7 +26,7 @@ param(
     [string]$ServiceName = "RawrXDService",
     
     [Parameter(Mandatory = $false)]
-    [switch]$CreateDesktopShortcut = $true
+    [switch]$CreateDesktopShortcut
 )
 
 $ErrorActionPreference = "Stop"

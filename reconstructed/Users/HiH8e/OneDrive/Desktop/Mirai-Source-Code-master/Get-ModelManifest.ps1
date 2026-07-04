@@ -7,9 +7,9 @@ This is a clean implementation replacing legacy mixed downloader code.
 Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.Net.Http
 
-$script:ModelRegistry = @{}
-$script:ManifestCache = @{}
-$script:LayerCache = @{}
+${script:ModelRegistry} = @{}
+${script:ManifestCache} = @{}
+${script:LayerCache} = @{}
 
 function New-ModelHttpClient {
     param(
@@ -33,7 +33,7 @@ function Get-ModelManifestFileless {
         [switch]$ForceRefresh
     )
     $cacheKey = "${ModelName}:${Tag}"
-    if (-not $ForceRefresh -and $script:ManifestCache.ContainsKey($cacheKey)) { return $script:ManifestCache[$cacheKey] }
+    if (-not $ForceRefresh -and ${script:ManifestCache}.ContainsKey($cacheKey)) { return ${script:ManifestCache}[$cacheKey] }
     $http = New-ModelHttpClient
     foreach ($r in $Registries) {
         $url = "$r/v2/library/$ModelName/manifests/$Tag"
@@ -45,7 +45,7 @@ function Get-ModelManifestFileless {
                 if ($resp.IsSuccessStatusCode) {
                     $json = $resp.Content.ReadAsStringAsync().GetAwaiter().GetResult()
                     $manifest = $json | ConvertFrom-Json
-                    $script:ManifestCache[$cacheKey] = $manifest
+                    ${script:ManifestCache}[$cacheKey] = $manifest
                     return $manifest
                 }
             }
@@ -63,7 +63,7 @@ function Get-ModelLayerFileless {
         [string]$Registry = 'https://registry.ollama.ai',
         [switch]$ForceRefresh
     )
-    if (-not $ForceRefresh -and $script:LayerCache.ContainsKey($Digest)) { return $script:LayerCache[$Digest] }
+    if (-not $ForceRefresh -and ${script:LayerCache}.ContainsKey($Digest)) { return ${script:LayerCache}[$Digest] }
     $url = "$Registry/v2/blobs/sha256/$Digest"
     $http = New-ModelHttpClient
     try {
@@ -76,7 +76,7 @@ function Get-ModelLayerFileless {
         $buffer = New-Object byte[] 8192
         while (($read = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) { $ms.Write($buffer, 0, $read) }
         $bytes = $ms.ToArray()
-        $script:LayerCache[$Digest] = $bytes
+        ${script:LayerCache}[$Digest] = $bytes
         return $bytes
     }
     catch { throw "Layer download failed ($Digest): $_" }
@@ -94,7 +94,7 @@ function Get-ModelFileless {
         Name = $ModelName; Tag = $Tag; Manifest = $manifest; PullDate = Get-Date;
         LayersDownloaded = @(); Status = 'Manifest'
     }
-    $key = "${ModelName}:${Tag}"; $script:ModelRegistry[$key] = $entry
+    $key = "${ModelName}:${Tag}"; ${script:ModelRegistry}[$key] = $entry
     if ($IncludeLayers) {
         foreach ($layer in $manifest.layers) {
             try {
@@ -110,22 +110,22 @@ function Get-ModelFileless {
 }
 
 function Get-CachedModels {
-    if (-not $script:ModelRegistry.Count) { Write-Host 'No models cached.'; return }
-    foreach ($k in $script:ModelRegistry.Keys) {
-        $m = $script:ModelRegistry[$k]
+    if (-not ${script:ModelRegistry}.Count) { Write-Host 'No models cached.'; return }
+    foreach ($k in ${script:ModelRegistry}.Keys) {
+        $m = ${script:ModelRegistry}[$k]
         Write-Host ("{0} {1}:{2} Layers={3}/{4} Status={5}" -f (if ($m.Status -eq 'Complete') { '✓' } elseif ($m.Status -eq 'Partial') { '⚠' } else { '○' }), $m.Name, $m.Tag, $m.LayersDownloaded.Count, $m.Manifest.layers.Count, $m.Status)
     }
 }
 
-function Clear-ModelCache { $script:ModelRegistry.Clear(); $script:ManifestCache.Clear(); $script:LayerCache.Clear(); [GC]::Collect() }
+function Clear-ModelCache { ${script:ModelRegistry}.Clear(); ${script:ManifestCache}.Clear(); ${script:LayerCache}.Clear(); [GC]::Collect() }
 
 function Export-ModelToFile {
     param([Parameter(Mandatory)][string]$ModelName, [string]$Tag = 'latest', [Parameter(Mandatory)][string]$OutputPath)
-    $entry = $script:ModelRegistry["${ModelName}:${Tag}"]
+    $entry = ${script:ModelRegistry}["${ModelName}:${Tag}"]
     if (-not $entry) { throw "Model not cached" }
     if ($entry.Status -ne 'Complete') { throw "Model not fully downloaded (Status=$($entry.Status))" }
     $ms = [System.IO.MemoryStream]::new()
-    foreach ($d in $entry.LayersDownloaded) { $bytes = $script:LayerCache[($d -replace 'sha256:')]; $ms.Write($bytes, 0, $bytes.Length) }
+    foreach ($d in $entry.LayersDownloaded) { $bytes = ${script:LayerCache}[($d -replace 'sha256:')]; $ms.Write($bytes, 0, $bytes.Length) }
     [IO.File]::WriteAllBytes($OutputPath, $ms.ToArray()); Write-Host "Exported to $OutputPath"
 }
 

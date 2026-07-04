@@ -93,7 +93,7 @@ $RspContent += "/Fe`"$BuildDir\RawrXD_Win32IDE.exe`""
 $RspContent | Out-File -FilePath "$BuildDir\cl.rsp" -Encoding ASCII
 
 # Compile and Link
-$env:LIB = "$MSVC_BASE\lib\x64;$WIN_SDK_LIB\um\x64;$WIN_SDK_LIB\ucrt\x64"
+${env:LIB} = "$MSVC_BASE\lib\x64;$WIN_SDK_LIB\um\x64;$WIN_SDK_LIB\ucrt\x64"
 Write-Host "[*] Executing cl.exe with response file..." -ForegroundColor Yellow
 & "$ClExe" "@$BuildDir\cl.rsp" $Libs /link /SUBSYSTEM:WINDOWS /MACHINE:X64 /FORCE:MULTIPLE /NODEFAULTLIB:LIBCMT
 

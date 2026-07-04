@@ -28,7 +28,7 @@ param(
     [switch]$Terminal
 )
 
-$script:RawrXDPath = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+${script:RawrXDPath} = $(if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 
 Write-Host "`n" -ForegroundColor White
 Write-Host "╔═══════════════════════════════════════════════════════╗" -ForegroundColor Magenta
@@ -45,7 +45,7 @@ if (-not $SkipGUI) {
     Write-Host "   (If GUI has display issues, agentic functions stay available)`n" -ForegroundColor Gray
     
     try {
-        Push-Location $script:RawrXDPath
+        Push-Location ${script:RawrXDPath}
         
         # Run RawrXD but suppress non-critical GUI errors
         $rawrXDProcess = & powershell -NoProfile -ExecutionPolicy Bypass -File '.\RawrXD.ps1' 2>&1
@@ -63,7 +63,7 @@ Write-Host "✅ Agentic functions are available in this terminal session!" -Fore
 Write-Host "`n📚 Available Agentic Functions:" -ForegroundColor Cyan
 
 # Import agentic module if not already loaded
-$agenticModulePath = Join-Path $script:RawrXDPath 'RawrXD-Agentic-Module.psm1'
+$agenticModulePath = Join-Path ${script:RawrXDPath} 'RawrXD-Agentic-Module.psm1'
 if (Test-Path $agenticModulePath) {
     try {
         Import-Module $agenticModulePath -Force -ErrorAction Stop

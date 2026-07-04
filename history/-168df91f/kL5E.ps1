@@ -36,7 +36,7 @@ Write-EmergencyLog "Modular architecture initialized" "SUCCESS"
 # CONFIGURATION
 # ============================================
 
-$script:ModularConfig = @{
+${script:ModularConfig} = @{
     OllamaHost = "http://localhost:11434"
     OllamaModel = "llama3"
     EnableThreading = $true
@@ -101,7 +101,7 @@ function Start-RawrXDModular {
                 $chatBox.AppendText("You: $message`r`n")
             }
             
-            Start-OllamaChatAsync -Prompt $message -Form $form -ChatBox $chatBox -StreamUI $script:ModularConfig.EnableStreaming
+            Start-OllamaChatAsync -Prompt $message -Form $form -ChatBox $chatBox -StreamUI ${script:ModularConfig}.EnableStreaming
             $chatInput.Text = ""
         }
     })
@@ -155,7 +155,7 @@ function Start-RawrXDModular {
                 }
                 
                 # Execute the tool
-                $tool = $script:agentTools[$parsedCommand.tool]
+                $tool = ${script:agentTools}[$parsedCommand.tool]
                 if ($tool.Enabled) {
                     &$tool.Handler $parsedCommand.args
                 }

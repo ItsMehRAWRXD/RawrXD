@@ -75,8 +75,8 @@ function Invoke-Verify {
 function Invoke-List {
     $status = Get-AsmStatus
     foreach ($s in $status) {
-        $state = if ($s.Exists) { 'OK' } else { 'MISSING' }
-        $link = if ($s.InCMake) { 'linked' } else { 'not linked' }
+        $state = $(if ($s.Exists) { 'OK' } else { 'MISSING' }
+        $link = $(if ($s.InCMake) { 'linked' } else { 'not linked' }
         Write-Host "$($s.File) [$state] [$link]"
     }
     $cmakeSnippet = @"

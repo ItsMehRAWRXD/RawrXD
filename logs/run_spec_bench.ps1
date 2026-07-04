@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 # Quick wrapper to run spec bench and save output
-$env:OLLAMA_MODELS = "F:\OllamaModels"
-$env:OLLAMA_VULKAN = "false"
+${env:OLLAMA_MODELS} = "F:\OllamaModels"
+${env:OLLAMA_VULKAN} = "false"
 Remove-Item env:GGML_VK_VISIBLE_DEVICES -ErrorAction SilentlyContinue
 Remove-Item env:HIP_VISIBLE_DEVICES -ErrorAction SilentlyContinue
 

@@ -24,10 +24,10 @@ try {
     Write-Host "❌ doctl not found. Installing..." -ForegroundColor Yellow
     # Install doctl for Windows
     $doctlUrl = "https://github.com/digitalocean/doctl/releases/latest/download/doctl-1.101.0-windows-amd64.zip"
-    $doctlPath = "$env:TEMP\doctl.zip"
+    $doctlPath = "${env:TEMP}\doctl.zip"
     Invoke-WebRequest -Uri $doctlUrl -OutFile $doctlPath
-    Expand-Archive -Path $doctlPath -DestinationPath "$env:TEMP\doctl"
-    $env:PATH += ";$env:TEMP\doctl"
+    Expand-Archive -Path $doctlPath -DestinationPath "${env:TEMP}\doctl"
+    ${env:PATH} += ";${env:TEMP}\doctl"
 }
 
 # Authenticate with DigitalOcean

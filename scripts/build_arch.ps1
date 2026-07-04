@@ -116,7 +116,7 @@ Write-Host ""
 # 2. BUILD CONFIGURATION
 # ========================================================================
 
-$root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
+$root = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { $PWD.Path }
 $srcDir = Join-Path $root "src"
 $asmDir = Join-Path $srcDir "asm"
 $win32appDir = Join-Path $srcDir "win32app"
@@ -279,9 +279,7 @@ foreach ($cpp in $cppFiles) {
 
 # ========================================================================
 # 5. LINK EXECUTABLE
-# ========================================================================
-
-if ($objs.Count -eq 0) {
+# ======================================================================== $(if ($objs.Count -eq 0) {
     Write-Host "`n${Red}❌ No objects to link.${Reset}" -ForegroundColor Red
     exit 1
 }

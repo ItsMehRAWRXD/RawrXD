@@ -101,7 +101,7 @@ function Invoke-PoshLLMGenerateHandler {
 function Invoke-PoshLLMListHandler {
     try {
     # Access the models from the PoshLLM module
-    $models = $Script:PoshLLM_Models
+    $models = ${Script:PoshLLM_Models}
 
         if ($models.Count -eq 0) {
             Write-Host "No PoshLLM models found. Use 'poshllm-train' to create one." -ForegroundColor Yellow

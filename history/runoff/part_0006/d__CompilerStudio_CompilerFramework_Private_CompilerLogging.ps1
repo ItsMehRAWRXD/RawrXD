@@ -12,7 +12,7 @@ function Log-CompilerMessage {
         Timestamp = Get-Date
     }
 
-    $global:CompilerContext.Logs += $log
+    ${global:CompilerContext}.Logs += $log
 
     Write-Host "[$Level] $Message" -ForegroundColor (
         switch ($Level) {
@@ -25,5 +25,5 @@ function Log-CompilerMessage {
 }
 
 function Get-CompilerLogs {
-    return $global:CompilerContext.Logs
+    return ${global:CompilerContext}.Logs
 }

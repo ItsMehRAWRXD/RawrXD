@@ -79,8 +79,7 @@ Write-Success "CMake module verified: $moduleSource"
 
 #=============================================================================
 # Clean Build (if requested)
-#=============================================================================
-if ($Clean -and (Test-Path $BuildDir)) {
+#============================================================================= $(if ($Clean -and (Test-Path $BuildDir)) {
     Write-Info "Cleaning build directory: $BuildDir"
     Remove-Item -Recurse -Force $BuildDir
     Write-Success "Build directory cleaned"
@@ -136,8 +135,7 @@ Write-Success "Build complete"
 
 #=============================================================================
 # Shadow Run: Build-Time Kernel Validation
-#=============================================================================
-if (-not $SkipTests) {
+#============================================================================= $(if (-not $SkipTests) {
     Write-Info "Running Shadow Run validation (build-time kernel tests)..."
     
     & ctest --test-dir $BuildDir --output-on-failure -C $Configuration

@@ -67,14 +67,14 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
             [hashtable]$Data = $null
         )
         $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-        $caller = if ($Function) { $Function } else { (Get-PSCallStack)[1].FunctionName }
+        $caller = $(if ($Function) { $Function } else { (Get-PSCallStack)[1].FunctionName }
         $color = switch ($Level) { 'Error' { 'Red' } 'Warning' { 'Yellow' } 'Debug' { 'DarkGray' } default { 'Cyan' } }
         Write-Host "[$timestamp][$caller][$Level] $Message" -ForegroundColor $color
     }
 }
 
 # Build configuration
-$script:BuildConfig = @{
+${script:BuildConfig} = @{
     SourceDir = $SourceDir
     OutputDir = $OutputDir
     Version = $Version
@@ -126,14 +126,14 @@ function Test-Prerequisites {
         }
         
         # Test Docker (if not skipped)
-        if (-not $script:BuildConfig.SkipDocker) {
+        if (-not ${script:BuildConfig}.SkipDocker) {
             if (Get-Command docker -ErrorAction SilentlyContinue) {
                 $prerequisites.Docker = $true
                 $dockerVersion = docker --version
                 Write-StructuredLog -Message "✓ $dockerVersion" -Level Info -Function $functionName
             } else {
                 Write-StructuredLog -Message "✗ Docker not found (Docker builds will be skipped)" -Level Warning -Function $functionName
-                $script:BuildConfig.SkipDocker = $true
+                ${script:BuildConfig}.SkipDocker = $true
             }
         }
         
@@ -196,7 +196,7 @@ function Invoke-BuildTests {
         # Test 1: Module imports
         $testResults.TotalTests++
         try {
-            $moduleDir = Join-Path $script:BuildConfig.SourceDir 'auto_generated_methods'
+            $moduleDir = Join-Path ${script:BuildConfig}.SourceDir 'auto_generated_methods'
             $modules = Get-ChildItem -Path $moduleDir -Filter 'RawrXD.*.psm1' -ErrorAction SilentlyContinue
             
             foreach ($module in $modules) {
@@ -238,7 +238,7 @@ function Invoke-BuildTests {
         # Test 3: Quick functionality tests
         $testResults.TotalTests++
         try {
-            $quickTestsPath = Join-Path $script:BuildConfig.SourceDir 'RawrXD.QuickTests.ps1'
+            $quickTestsPath = Join-Path ${script:BuildConfig}.SourceDir 'RawrXD.QuickTests.ps1'
             if (Test-Path $quickTestsPath) {
                 & $quickTestsPath -ErrorAction Stop | Out-Null
                 $testResults.Passed++
@@ -258,7 +258,7 @@ function Invoke-BuildTests {
         # Test 4: Configuration validation
         $testResults.TotalTests++
         try {
-            $configPath = Join-Path $script:BuildConfig.SourceDir 'config'
+            $configPath = Join-Path ${script:BuildConfig}.SourceDir 'config'
             if (Test-Path $configPath) {
                 $configFiles = Get-ChildItem -Path $configPath -Filter '*.json' -ErrorAction SilentlyContinue
                 $validConfigs = 0
@@ -309,7 +309,7 @@ function New-DockerImage {
     $functionName = 'New-DockerImage'
     
     try {
-        if ($script:BuildConfig.SkipDocker) {
+        if (${script:BuildConfig}.SkipDocker) {
             Write-StructuredLog -Message "Docker builds skipped" -Level Info -Function $functionName
             return $null
         }
@@ -317,7 +317,7 @@ function New-DockerImage {
         Write-StructuredLog -Message "Creating Docker image" -Level Info -Function $functionName
         
         # Create Dockerfile if it doesn't exist
-        $dockerfilePath = Join-Path $script:BuildConfig.SourceDir 'Dockerfile'
+        $dockerfilePath = Join-Path ${script:BuildConfig}.SourceDir 'Dockerfile'
         if (-not (Test-Path $dockerfilePath)) {
             $dockerfile = @"
 FROM mcr.microsoft.com/powershell:latest
@@ -346,8 +346,8 @@ ENTRYPOINT ["pwsh", "-File", "./RawrXD.ps1"]
         }
         
         # Build Docker image
-        $imageName = "$($script:BuildConfig.DockerRegistry)/rawrxd:$($script:BuildConfig.Version)"
-        $buildContext = $script:BuildConfig.SourceDir
+        $imageName = "$(${script:BuildConfig}.DockerRegistry)/rawrxd:$(${script:BuildConfig}.Version)"
+        $buildContext = ${script:BuildConfig}.SourceDir
         
         Write-StructuredLog -Message "Building Docker image: $imageName" -Level Info -Function $functionName
         
@@ -357,7 +357,7 @@ ENTRYPOINT ["pwsh", "-File", "./RawrXD.ps1"]
             Write-StructuredLog -Message "✓ Docker image built successfully: $imageName" -Level Info -Function $functionName
             
             # Also create latest tag
-            $latestImage = "$($script:BuildConfig.DockerRegistry)/rawrxd:latest"
+            $latestImage = "$(${script:BuildConfig}.DockerRegistry)/rawrxd:latest"
             docker tag $imageName $latestImage
             
             return @{
@@ -395,16 +395,16 @@ function New-DistributionPackage {
         Write-StructuredLog -Message "Creating distribution packages" -Level Info -Function $functionName
         
         # Ensure output directory exists
-        $distDir = Join-Path $script:BuildConfig.OutputDir "v$($script:BuildConfig.Version)"
+        $distDir = Join-Path ${script:BuildConfig}.OutputDir "v$(${script:BuildConfig}.Version)"
         if (-not (Test-Path $distDir)) {
             New-Item -ItemType Directory -Path $distDir -Force | Out-Null
         }
         
         # Create ZIP package
-        $zipPath = Join-Path $distDir "RawrXD-v$($script:BuildConfig.Version).zip"
+        $zipPath = Join-Path $distDir "RawrXD-v$(${script:BuildConfig}.Version).zip"
         Write-StructuredLog -Message "Creating ZIP package: $zipPath" -Level Info -Function $functionName
         
-        $sourceFiles = Get-ChildItem -Path $script:BuildConfig.SourceDir -Recurse -File | Where-Object {
+        $sourceFiles = Get-ChildItem -Path ${script:BuildConfig}.SourceDir -Recurse -File | Where-Object {
             $_.Extension -notin @('.log', '.tmp', '.diag') -and
             $_.FullName -notlike '*\logs\*' -and
             $_.FullName -notlike '*\temp\*' -and
@@ -418,16 +418,16 @@ function New-DistributionPackage {
         
         # Create TAR.GZ package (for Linux/macOS)
         if (Get-Command tar -ErrorAction SilentlyContinue) {
-            $tarPath = Join-Path $distDir "RawrXD-v$($script:BuildConfig.Version).tar.gz"
+            $tarPath = Join-Path $distDir "RawrXD-v$(${script:BuildConfig}.Version).tar.gz"
             Write-StructuredLog -Message "Creating TAR.GZ package: $tarPath" -Level Info -Function $functionName
             
-            $tempDir = Join-Path $env:TEMP "rawrxd_build_$($script:BuildConfig.BuildTimestamp)"
+            $tempDir = Join-Path ${env:TEMP} "rawrxd_build_$(${script:BuildConfig}.BuildTimestamp)"
             if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
             New-Item -ItemType Directory -Path $tempDir | Out-Null
             
             # Copy files to temp directory
             foreach ($file in $sourceFiles) {
-                $relativePath = $file.FullName.Substring($script:BuildConfig.SourceDir.Length + 1)
+                $relativePath = $file.FullName.Substring(${script:BuildConfig}.SourceDir.Length + 1)
                 $destPath = Join-Path $tempDir $relativePath
                 $destDir = Split-Path $destPath -Parent
                 if (-not (Test-Path $destDir)) {
@@ -456,7 +456,7 @@ function New-DistributionPackage {
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>RawrXD</id>
-    <version>$($script:BuildConfig.Version)</version>
+    <version>$(${script:BuildConfig}.Version)</version>
     <title>RawrXD Auto-Generation System</title>
     <authors>RawrXD Team</authors>
     <owners>RawrXD</owners>
@@ -464,7 +464,7 @@ function New-DistributionPackage {
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/RawrXD/RawrXD</projectUrl>
     <description>Comprehensive auto-generation system for PowerShell modules and features</description>
-    <releaseNotes>Production release v$($script:BuildConfig.Version)</releaseNotes>
+    <releaseNotes>Production release v$(${script:BuildConfig}.Version)</releaseNotes>
     <copyright>Copyright 2024 RawrXD</copyright>
     <tags>powershell automation code-generation modules</tags>
   </metadata>
@@ -475,7 +475,7 @@ function New-DistributionPackage {
 "@
             $nuspec | Set-Content $nuspecPath -Encoding UTF8
             
-            $nugetPath = Join-Path $distDir "RawrXD.$($script:BuildConfig.Version).nupkg"
+            $nugetPath = Join-Path $distDir "RawrXD.$(${script:BuildConfig}.Version).nupkg"
             Write-StructuredLog -Message "Creating NuGet package: $nugetPath" -Level Info -Function $functionName
             
             # Pack the nuspec (this would require nuget.exe or dotnet pack in a real scenario)
@@ -508,22 +508,22 @@ function New-ReleaseNotes {
         Write-StructuredLog -Message "Generating release notes" -Level Info -Function $functionName
         
         $releaseNotes = @"
-# RawrXD v$($script:BuildConfig.Version) - Release Notes
+# RawrXD v$(${script:BuildConfig}.Version) - Release Notes
 
 ## Build Information
-- **Version:** $($script:BuildConfig.Version)
-- **Build Configuration:** $($script:BuildConfig.BuildConfiguration)
-- **Build ID:** $($script:BuildConfig.BuildId)
-- **Build Timestamp:** $($script:BuildConfig.BuildTimestamp)
-- **Source Directory:** $($script:BuildConfig.SourceDir)
+- **Version:** $(${script:BuildConfig}.Version)
+- **Build Configuration:** $(${script:BuildConfig}.BuildConfiguration)
+- **Build ID:** $(${script:BuildConfig}.BuildId)
+- **Build Timestamp:** $(${script:BuildConfig}.BuildTimestamp)
+- **Source Directory:** $(${script:BuildConfig}.SourceDir)
 
 ## Prerequisites Tested
 $(Test-Prerequisites | ConvertTo-Json -Depth 3)
 
 ## Build Contents
-- Production Modules: $(@(Get-ChildItem -Path (Join-Path $script:BuildConfig.SourceDir 'auto_generated_methods') -Filter 'RawrXD.*.psm1').Count) modules
-- Auto-Feature Scripts: $(@(Get-ChildItem -Path (Join-Path $script:BuildConfig.SourceDir 'auto_generated_methods') -Filter '*_AutoFeature.ps1').Count) features
-- Configuration Files: $(@(Get-ChildItem -Path (Join-Path $script:BuildConfig.SourceDir 'config') -Filter '*.json' -ErrorAction SilentlyContinue).Count) configs
+- Production Modules: $(@(Get-ChildItem -Path (Join-Path ${script:BuildConfig}.SourceDir 'auto_generated_methods') -Filter 'RawrXD.*.psm1').Count) modules
+- Auto-Feature Scripts: $(@(Get-ChildItem -Path (Join-Path ${script:BuildConfig}.SourceDir 'auto_generated_methods') -Filter '*_AutoFeature.ps1').Count) features
+- Configuration Files: $(@(Get-ChildItem -Path (Join-Path ${script:BuildConfig}.SourceDir 'config') -Filter '*.json' -ErrorAction SilentlyContinue).Count) configs
 
 ## Features
 - Comprehensive dependency analysis and graph generation
@@ -549,7 +549,7 @@ Import-Module .\RawrXD.*.psm1
 
 ### Docker (if available)
 ```bash
-docker run -v \$(pwd):/app $($script:BuildConfig.DockerRegistry)/rawrxd:$($script:BuildConfig.Version)
+docker run -v \$(pwd):/app $(${script:BuildConfig}.DockerRegistry)/rawrxd:$(${script:BuildConfig}.Version)
 ```
 
 ## Quick Start
@@ -584,10 +584,10 @@ docker run -v \$(pwd):/app $($script:BuildConfig.DockerRegistry)/rawrxd:$($scrip
 - Documentation: https://github.com/RawrXD/RawrXD/wiki
 
 ---
-*Generated by RawrXD Build System v$($script:BuildConfig.Version)*
+*Generated by RawrXD Build System v$(${script:BuildConfig}.Version)*
 "@
         
-        $releaseNotesPath = Join-Path $script:BuildConfig.OutputDir "RELEASE_NOTES_v$($script:BuildConfig.Version).md"
+        $releaseNotesPath = Join-Path ${script:BuildConfig}.OutputDir "RELEASE_NOTES_v$(${script:BuildConfig}.Version).md"
         $releaseNotes | Set-Content $releaseNotesPath -Encoding UTF8
         
         Write-StructuredLog -Message "✓ Release notes generated: $releaseNotesPath" -Level Info -Function $functionName
@@ -627,7 +627,7 @@ function Publish-Release {
         }
         
         # Copy packages to output directory
-        $distDir = Join-Path $script:BuildConfig.OutputDir "v$($script:BuildConfig.Version)"
+        $distDir = Join-Path ${script:BuildConfig}.OutputDir "v$(${script:BuildConfig}.Version)"
         foreach ($package in $Packages) {
             $destPath = Join-Path $distDir (Split-Path $package.Path -Leaf)
             if ($package.Path -ne $destPath) {
@@ -665,22 +665,22 @@ function Invoke-BuildRelease {
     $startTime = Get-Date
     
     try {
-        Write-StructuredLog -Message "Starting RawrXD Build and Release System v$($script:BuildConfig.Version)" -Level Info -Function $functionName
-        Write-StructuredLog -Message "Build ID: $($script:BuildConfig.BuildId)" -Level Info -Function $functionName
-        Write-StructuredLog -Message "Source: $($script:BuildConfig.SourceDir)" -Level Info -Function $functionName
-        Write-StructuredLog -Message "Output: $($script:BuildConfig.OutputDir)" -Level Info -Function $functionName
-        Write-StructuredLog -Message "Configuration: $($script:BuildConfig.BuildConfiguration)" -Level Info -Function $functionName
+        Write-StructuredLog -Message "Starting RawrXD Build and Release System v$(${script:BuildConfig}.Version)" -Level Info -Function $functionName
+        Write-StructuredLog -Message "Build ID: $(${script:BuildConfig}.BuildId)" -Level Info -Function $functionName
+        Write-StructuredLog -Message "Source: $(${script:BuildConfig}.SourceDir)" -Level Info -Function $functionName
+        Write-StructuredLog -Message "Output: $(${script:BuildConfig}.OutputDir)" -Level Info -Function $functionName
+        Write-StructuredLog -Message "Configuration: $(${script:BuildConfig}.BuildConfiguration)" -Level Info -Function $functionName
         
         # Test prerequisites
         $prerequisites = Test-Prerequisites
         
         # Run build tests (if not skipped)
         $testResults = $null
-        if (-not $script:BuildConfig.SkipTests) {
+        if (-not ${script:BuildConfig}.SkipTests) {
             $testResults = Invoke-BuildTests
             if ($testResults.Failed -gt 0) {
                 Write-StructuredLog -Message "Build tests failed: $($testResults.Failed) tests failed" -Level Warning -Function $functionName
-                if ($script:BuildConfig.BuildConfiguration -eq 'Production') {
+                if (${script:BuildConfig}.BuildConfiguration -eq 'Production') {
                     throw "Build tests failed in production configuration"
                 }
             }
@@ -690,7 +690,7 @@ function Invoke-BuildRelease {
         
         # Create Docker image (if not skipped)
         $dockerResult = $null
-        if (-not $script:BuildConfig.SkipDocker) {
+        if (-not ${script:BuildConfig}.SkipDocker) {
             $dockerResult = New-DockerImage
         }
         
@@ -702,15 +702,15 @@ function Invoke-BuildRelease {
         
         # Publish release (if requested)
         $publishResults = $null
-        if ($script:BuildConfig.PublishRelease) {
+        if (${script:BuildConfig}.PublishRelease) {
             $publishResults = Publish-Release -Packages $packages -ReleaseNotesPath $releaseNotesPath
         }
         
         # Build final report
         $buildReport = @{
-            BuildId = $script:BuildConfig.BuildId
-            Version = $script:BuildConfig.Version
-            BuildConfiguration = $script:BuildConfig.BuildConfiguration
+            BuildId = ${script:BuildConfig}.BuildId
+            Version = ${script:BuildConfig}.Version
+            BuildConfiguration = ${script:BuildConfig}.BuildConfiguration
             Timestamp = (Get-Date).ToString('o')
             Duration = [Math]::Round(((Get-Date) - $startTime).TotalSeconds, 2)
             Prerequisites = $prerequisites
@@ -723,7 +723,7 @@ function Invoke-BuildRelease {
         }
         
         # Save build report
-        $buildReportPath = Join-Path $script:BuildConfig.OutputDir "BuildReport_v$($script:BuildConfig.Version)_$($script:BuildConfig.BuildTimestamp).json"
+        $buildReportPath = Join-Path ${script:BuildConfig}.OutputDir "BuildReport_v$(${script:BuildConfig}.Version)_$(${script:BuildConfig}.BuildTimestamp).json"
         $buildReport | ConvertTo-Json -Depth 10 | Set-Content $buildReportPath -Encoding UTF8
         
         # Output summary

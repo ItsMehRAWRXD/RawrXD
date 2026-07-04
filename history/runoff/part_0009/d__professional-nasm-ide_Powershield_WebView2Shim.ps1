@@ -22,28 +22,28 @@ function Initialize-WebView2Shim {
   )
 
   # Global state for shim
-  $script:webView2Shim = [PSCustomObject]@{}
-  $script:webView2Shim.__currentUrl = $null
-  $script:webView2Shim.__lastHtml = $null
-  $script:webView2Shim.__available = $true
+  ${script:webView2Shim} = [PSCustomObject]@{}
+  ${script:webView2Shim}.__currentUrl = $null
+  ${script:webView2Shim}.__lastHtml = $null
+  ${script:webView2Shim}.__available = $true
 
   # Add script methods to mimic a WebView2-like object
   $wb = New-Object PSObject
   $wb | Add-Member -MemberType ScriptMethod -Name "Navigate" -Value {
     param($url)
-    $script:webView2Shim.__currentUrl = $url
+    ${script:webView2Shim}.__currentUrl = $url
     # For GUI mode, open in system browser; otherwise store
-    if ($script:GuiMode -or $script:UseWebView2FallbackAsBrowser) {
+    if (${script:GuiMode} -or ${script:UseWebView2FallbackAsBrowser}) {
       Start-Process -FilePath $url -WindowStyle Normal | Out-Null
     }
     # Try to request the page to cache it for ExecuteScriptAsync
     try {
       $response = Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{ 'User-Agent' = 'RawrXD-WebView2Shim/1.0' } -ErrorAction Stop
-      $script:webView2Shim.__lastHtml = $response.Content
+      ${script:webView2Shim}.__lastHtml = $response.Content
     }
     catch {
       Write-Verbose "[WebView2Shim] Navigate: could not fetch $url, $_"
-      $script:webView2Shim.__lastHtml = $null
+      ${script:webView2Shim}.__lastHtml = $null
     }
     return $true
   }
@@ -53,11 +53,11 @@ function Initialize-WebView2Shim {
     # Provide some safe, deterministic emulation for common commands that
     # BrowserAutomation uses (querying title, metadata, simple selectors,
     # or patterns like returning JSON strings).
-    if (-not $script:webView2Shim.__lastHtml) {
+    if (-not ${script:webView2Shim}.__lastHtml) {
       return '{"success":false,"error":"no_cached_page"}'
     }
     # Parse as HTML using simple heuristics
-    $html = $script:webView2Shim.__lastHtml
+    $html = ${script:webView2Shim}.__lastHtml
     try {
       if ($scriptJs -match 'document.title') {
         if ($html -match '<title>(.*?)</title>') { $value = ([System.Web.HttpUtility]::HtmlDecode($matches[1])) ; return (New-Object PSObject -Property @{ Result = $value }) }
@@ -136,25 +136,25 @@ function Initialize-WebView2Shim {
     }
   }
 
-  $wb | Add-Member -MemberType ScriptMethod -Name "IsAvailable" -Value { return $script:webView2Shim.__available }
-  $wb | Add-Member -MemberType ScriptMethod -Name "Close" -Value { $script:webView2Shim.__available = $false; return $true }
+  $wb | Add-Member -MemberType ScriptMethod -Name "IsAvailable" -Value { return ${script:webView2Shim}.__available }
+  $wb | Add-Member -MemberType ScriptMethod -Name "Close" -Value { ${script:webView2Shim}.__available = $false; return $true }
 
   # Create a CoreWebView2-like object for backwards compatibility with existing code that
-  # uses $script:webBrowser.CoreWebView2.*. The CoreWebView2 object provides DocumentTitle,
+  # uses ${script:webBrowser}.CoreWebView2.*. The CoreWebView2 object provides DocumentTitle,
   # Source, ExecuteScriptAsync and minimal event/host object methods.
   $core = New-Object PSObject
   $core | Add-Member -MemberType ScriptMethod -Name 'ExecuteScriptAsync' -Value {
     param($s)
     return $wb.ExecuteScriptAsync($s)
   }
-  $core | Add-Member -MemberType ScriptProperty -Name 'DocumentTitle' -Value { if ($script:webView2Shim.__lastHtml -and $script:webView2Shim.__lastHtml -match '<title>(.*?)</title>') { return ([System.Web.HttpUtility]::HtmlDecode($matches[1])) } else { return '' } }
-  $core | Add-Member -MemberType ScriptProperty -Name 'Source' -Value { return $script:webView2Shim.__currentUrl }
+  $core | Add-Member -MemberType ScriptProperty -Name 'DocumentTitle' -Value { if (${script:webView2Shim}.__lastHtml -and ${script:webView2Shim}.__lastHtml -match '<title>(.*?)</title>') { return ([System.Web.HttpUtility]::HtmlDecode($matches[1])) } else { return '' } }
+  $core | Add-Member -MemberType ScriptProperty -Name 'Source' -Value { return ${script:webView2Shim}.__currentUrl }
   $core | Add-Member -MemberType ScriptMethod -Name 'AddHostObjectToScript' -Value { param($name, $obj) Write-Verbose "[WebView2Shim] AddHostObjectToScript called for $name" }
   $core | Add-Member -MemberType ScriptMethod -Name 'Add_NavigationStarting' -Value { param($sb) Write-Verbose '[WebView2Shim] Add_NavigationStarting (no-op)' }
   $core | Add-Member -MemberType ScriptMethod -Name 'Add_NavigationCompleted' -Value { param($sb) Write-Verbose '[WebView2Shim] Add_NavigationCompleted (no-op)' }
   $wb | Add-Member -MemberType NoteProperty -Name 'CoreWebView2' -Value $core
 
-  $script:webView2Shim.WebView = $wb
+  ${script:webView2Shim}.WebView = $wb
   return $wb
 }
 
@@ -163,11 +163,11 @@ function Enable-WebView2ShimForRawrXD {
   if (-not (Get-Variable -Name 'webView2Shim' -Scope Script -ErrorAction SilentlyContinue)) {
     Initialize-WebView2Shim -ForceEnable | Out-Null
   }
-  # Expose as $script:webBrowser if none exists
+  # Expose as ${script:webBrowser} if none exists
   if (-not (Get-Variable -Name 'webBrowser' -Scope Script -ErrorAction SilentlyContinue)) {
-    Set-Variable -Name 'webBrowser' -Value $script:webView2Shim.WebView -Scope Script -Force
+    Set-Variable -Name 'webBrowser' -Value ${script:webView2Shim}.WebView -Scope Script -Force
   }
-  return $script:webView2Shim.WebView
+  return ${script:webView2Shim}.WebView
 }
 
 # Note: Export-ModuleMember removed - this file is dot-sourced, not imported as a module

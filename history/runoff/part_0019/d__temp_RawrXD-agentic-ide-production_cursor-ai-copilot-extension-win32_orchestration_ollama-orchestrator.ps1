@@ -27,9 +27,9 @@ Write-Host "🚀 RawrXD Agentic Orchestrator (Ollama - No Rate Limits)" -Foregro
 Write-Host "Model: $AgenticModel | Endpoint: $OllamaEndpoint" -ForegroundColor Gray
 
 # Set environment variables
-$env:OLLAMA_ENDPOINT = $OllamaEndpoint
-$env:OLLAMA_AGENTIC_MODEL = $AgenticModel
-$env:OLLAMA_STANDARD_MODEL = $StandardModel
+${env:OLLAMA_ENDPOINT} = $OllamaEndpoint
+${env:OLLAMA_AGENTIC_MODEL} = $AgenticModel
+${env:OLLAMA_STANDARD_MODEL} = $StandardModel
 
 # Create temporary script
 $tempScript = [System.IO.Path]::GetTempFileName() + ".js"

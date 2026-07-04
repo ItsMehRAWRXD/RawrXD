@@ -42,9 +42,7 @@ Write-Host ""
 
 # ========================================
 # PHASE 1: BUILD VALIDATION
-# ========================================
-
-if (-not $SkipBuild) {
+# ======================================== $(if (-not $SkipBuild) {
     Write-Section "Phase 1: Build Validation"
     
     Push-Location $ProjectRoot
@@ -98,9 +96,7 @@ if (-not $SkipBuild) {
 
 # ========================================
 # PHASE 2: COMPONENT TESTS
-# ========================================
-
-if (-not $SkipTests) {
+# ======================================== $(if (-not $SkipTests) {
     Write-Section "Phase 2: Component Tests"
     
     $TestExe = Join-Path $ProjectRoot "build\bin\Release\test_gui_components.exe"
@@ -118,7 +114,7 @@ if (-not $SkipTests) {
             }
             
             $TestSuccess = $LASTEXITCODE -eq 0
-            $Results.ComponentTests = if ($TestSuccess) { "PASS" } else { "FAIL" }
+            $Results.ComponentTests = $(if ($TestSuccess) { "PASS" } else { "FAIL" }
             
             Write-Host ""
             Write-Result "Component Tests" $TestSuccess
@@ -147,9 +143,7 @@ if (-not $SkipTests) {
 
 # ========================================
 # PHASE 3: RUNTIME TEST
-# ========================================
-
-if (-not $SkipRuntime) {
+# ======================================== $(if (-not $SkipRuntime) {
     Write-Section "Phase 3: Runtime Test"
     
     $ExePath = Join-Path $ProjectRoot "build\bin\Release\RawrXD-QtShell.exe"
@@ -159,8 +153,8 @@ if (-not $SkipRuntime) {
         try {
             Write-Host "Starting RawrXD in minimal mode..." -ForegroundColor Yellow
             
-            $env:RAWRXD_MINIMAL_GUI = "1"
-            $env:QTAPP_DISABLE_GGUF = "1"
+            ${env:RAWRXD_MINIMAL_GUI} = "1"
+            ${env:QTAPP_DISABLE_GGUF} = "1"
             
             # Start process and wait briefly
             $Process = Start-Process -FilePath ".\RawrXD-QtShell.exe" -PassThru -WindowStyle Hidden

@@ -1,14 +1,14 @@
-$global:currentWorkingDir = Get-Location
-$script:agentTodoExcludePaths = @('.git', 'node_modules', '.vs', 'bin', 'obj', 'dist', 'packages', '__pycache__', 'vendor')
+${global:currentWorkingDir} = Get-Location
+${script:agentTodoExcludePaths} = @('.git', 'node_modules', '.vs', 'bin', 'obj', 'dist', 'packages', '__pycache__', 'vendor')
 
 function Get-AgentTodoList {
     param(
-        [string]$RootPath = $global:currentWorkingDir,
+        [string]$RootPath = ${global:currentWorkingDir},
         [switch]$IncludeAllFiles
     )
 
     if (-not $RootPath) {
-        $RootPath = $global:currentWorkingDir
+        $RootPath = ${global:currentWorkingDir}
     }
 
     if (-not (Test-Path $RootPath)) {
@@ -25,7 +25,7 @@ function Get-AgentTodoList {
 
     $files = $files | Where-Object {
         $full = $_.FullName.ToLower()
-        -not ($script:agentTodoExcludePaths | Where-Object { $full -like "*$_*" } | Select-Object -First 1)
+        -not (${script:agentTodoExcludePaths} | Where-Object { $full -like "*$_*" } | Select-Object -First 1)
     }
 
     if (-not $IncludeAllFiles) {

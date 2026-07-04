@@ -78,8 +78,8 @@ function Ensure-BuildEnv {
     $ver = "10.0.22621.0"
 
     if ($msvc -and $sdk) {
-        $env:LIB = "$msvc\lib\x64;$msvc\lib\onecore\x64;$sdk\Lib\$ver\ucrt\x64;$sdk\Lib\$ver\um\x64"
-        $env:INCLUDE = "$msvc\include;$sdk\Include\$ver\ucrt;$sdk\Include\$ver\shared;$sdk\Include\$ver\um"
+        ${env:LIB} = "$msvc\lib\x64;$msvc\lib\onecore\x64;$sdk\Lib\$ver\ucrt\x64;$sdk\Lib\$ver\um\x64"
+        ${env:INCLUDE} = "$msvc\include;$sdk\Include\$ver\ucrt;$sdk\Include\$ver\shared;$sdk\Include\$ver\um"
         Log "Build env injected (MSVC+SDK): msvc=$msvc sdk=$sdk"
     } else {
         Log "WARNING: Could not fully resolve MSVC/SDK paths"
@@ -332,9 +332,9 @@ $DemoSummary = @{
     phase_prefail_verified = ($PreExit -ne 0)
     phase_healing_triggered = ($HealingExit -eq 0 -or $HealingExit -eq 1)
     phase_postbuild_clean = ($PostExit -eq 0)
-    healing_attempts_used = if ($Telemetry) { $Telemetry.attemptCount } else { $null }
-    healing_diagnostics_initial = if ($Telemetry) { $Telemetry.totalDiagnosticsGenerated } else { $null }
-    healing_fixes_applied = if ($Telemetry) { $Telemetry.totalFixesStaged } else { $null }
+    healing_attempts_used = $(if ($Telemetry) { $Telemetry.attemptCount } else { $null }
+    healing_diagnostics_initial = $(if ($Telemetry) { $Telemetry.totalDiagnosticsGenerated } else { $null }
+    healing_fixes_applied = $(if ($Telemetry) { $Telemetry.totalFixesStaged } else { $null }
     healing_launch_attempts = $HealingLaunchAttempts
     build_pre_exit_code = $PreExit
     build_post_exit_code = $PostExit

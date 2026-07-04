@@ -10,11 +10,11 @@ Write-Host "=== Day 30 Runbook ==="
 Write-Host "Repo: $(Get-Location)"
 Write-Host "Date: $(Get-Date -Format s)"
 
-$script:checks = @()
+${script:checks} = @()
 
 function Add-Check {
     param([string]$Name, [bool]$Ok, [string]$Details)
-    $script:checks += [pscustomobject]@{ Name = $Name; Ok = $Ok; Details = $Details }
+    ${script:checks} += [pscustomobject]@{ Name = $Name; Ok = $Ok; Details = $Details }
 }
 
 # Required artifacts
@@ -45,12 +45,12 @@ if (-not $SkipGate) {
 }
 
 Write-Host "\n=== Summary ==="
-$script:checks | ForEach-Object {
-    $mark = if ($_.Ok) { "PASS" } else { "FAIL" }
+${script:checks} | ForEach-Object {
+    $mark = $(if ($_.Ok) { "PASS" } else { "FAIL" }
     Write-Host ("[{0}] {1} :: {2}" -f $mark, $_.Name, $_.Details)
 }
 
-$failed = @($script:checks | Where-Object { -not $_.Ok })
+$failed = @(${script:checks} | Where-Object { -not $_.Ok })
 if ($failed.Count -gt 0) {
     Write-Host "\nRunbook result: FAIL"
     exit 1

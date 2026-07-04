@@ -15,10 +15,10 @@ function Start-ComprehensiveAudit {
         [string]$ModuleDirectory,
         
         [Parameter(Mandatory=$false)]
-        [string]$AuditReportPath = "$env:TEMP\RawrXD_Audit_Report_$(Get-Date -Format 'yyyyMMdd_HHmmss').json",
+        [string]$AuditReportPath = "${env:TEMP}\RawrXD_Audit_Report_$(Get-Date -Format 'yyyyMMdd_HHmmss').json",
         
         [Parameter(Mandatory=$false)]
-        [string]$TodoListPath = "$env:TEMP\RawrXD_Todo_List_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
+        [string]$TodoListPath = "${env:TEMP}\RawrXD_Todo_List_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
     )
 
     Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -200,7 +200,7 @@ function Audit-SingleModule {
             $functionName = $match.Groups[1].Value
             $functionStart = $match.Index
             $nextFunctionMatch = $functionMatches | Where-Object { $_.Index -gt $functionStart } | Select-Object -First 1
-            $functionEnd = if ($nextFunctionMatch) { $nextFunctionMatch.Index } else { $content.Length }
+            $functionEnd = $(if ($nextFunctionMatch) { $nextFunctionMatch.Index } else { $content.Length }
             $functionContent = $content.Substring($functionStart, $functionEnd - $functionStart)
             
             if ($functionContent -notmatch '\[CmdletBinding\(\)\]') {
@@ -233,7 +233,7 @@ function Audit-SingleModule {
     $codeLines = $lines | Where-Object { $_ -match '\S' -and $_ -notmatch '^\s*#' }
     $commentLines = $lines | Where-Object { $_ -match '^\s*#' }
     
-    $commentRatio = if ($codeLines.Count -gt 0) { $commentLines.Count / $codeLines.Count } else { 0 }
+    $commentRatio = $(if ($codeLines.Count -gt 0) { $commentLines.Count / $codeLines.Count } else { 0 }
     if ($commentRatio -lt 0.1) {
         $warnings += "Low comment-to-code ratio: $($commentRatio.ToString('P'))"
     }
@@ -258,7 +258,7 @@ function Audit-SingleModule {
     $score = [Math]::Max(0, $maxScore - $issuePenalty - $warningPenalty)
     
     # Determine status
-    $status = if ($score -ge 80) { "Excellent" }
+    $status = $(if ($score -ge 80) { "Excellent" }
               elseif ($score -ge 60) { "Good" }
               elseif ($score -ge 40) { "Fair" }
               elseif ($score -ge 20) { "Poor" }
@@ -275,7 +275,7 @@ function Audit-SingleModule {
         Issues = $issues
         WarningsList = $warnings
         MissingFeatures = $missingFeatures
-        FunctionCount = if ($content -match 'function\s+\w+') { ([regex]::Matches($content, 'function\s+\w+')).Count } else { 0 }
+        FunctionCount = $(if ($content -match 'function\s+\w+') { ([regex]::Matches($content, 'function\s+\w+')).Count } else { 0 }
         CodeLines = $codeLines.Count
         CommentRatio = $commentRatio.ToString("P")
         LastModified = (Get-Item $ModulePath).LastWriteTime
@@ -352,7 +352,7 @@ function Generate-AuditReport {
     $totalWarnings = ($AuditResults | Measure-Object -Property Warnings -Sum).Sum
     $totalFunctions = ($AuditResults | Measure-Object -Property FunctionCount -Sum).Sum
     
-    $averageScore = if ($totalModules -gt 0) { 
+    $averageScore = $(if ($totalModules -gt 0) { 
         ($AuditResults | Measure-Object -Property Score -Average).Average 
     } else { 0 }
     
@@ -372,11 +372,11 @@ function Generate-AuditReport {
             TotalIssues = $totalIssues
             TotalWarnings = $totalWarnings
             TotalFunctions = $totalFunctions
-            IssuesPerModule = if ($totalModules -gt 0) { [Math]::Round($totalIssues / $totalModules, 2) } else { 0 }
+            IssuesPerModule = $(if ($totalModules -gt 0) { [Math]::Round($totalIssues / $totalModules, 2) } else { 0 }
         }
         Modules = $AuditResults
         Summary = [PSCustomObject]@{
-            OverallStatus = if ($criticalModules -gt 0) { "CRITICAL" }
+            OverallStatus = $(if ($criticalModules -gt 0) { "CRITICAL" }
                            elseif ($poorModules -gt 0) { "NEEDS_IMPROVEMENT" }
                            elseif ($fairModules -gt 0) { "ACCEPTABLE" }
                            elseif ($goodModules -gt 0) { "GOOD" }

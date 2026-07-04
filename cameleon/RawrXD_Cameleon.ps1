@@ -4,7 +4,7 @@
 
 $ErrorActionPreference = "Stop"
 # When script is in d:\rawrxd\cameleon\RawrXD_Cameleon.ps1, base = d:\rawrxd\cameleon
-$base = if ($PSScriptRoot) { $PSScriptRoot } else { Join-Path (Get-Location) "cameleon" }
+$base = $(if ($PSScriptRoot) { $PSScriptRoot } else { Join-Path (Get-Location) "cameleon" }
 $null = New-Item -ItemType Directory -Force -Path $base
 
 # =============================================================================

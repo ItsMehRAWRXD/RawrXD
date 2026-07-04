@@ -14,11 +14,11 @@ Write-Host "╚═════════════════════�
 # SETUP
 # ============================================
 
-$script:agentTools = @{}
+${script:agentTools} = @{}
 function Write-DevConsole { }
 function Register-AgentTool {
     param([string]$Name, [string]$Description, [string]$Category, [string]$Version, [hashtable]$Parameters, [scriptblock]$Handler)
-    $script:agentTools[$Name] = @{ Name=$Name; Handler=$Handler }
+    ${script:agentTools}[$Name] = @{ Name=$Name; Handler=$Handler }
 }
 
 . .\BuiltInTools.ps1
@@ -28,13 +28,13 @@ Initialize-BuiltInTools
 
 function Invoke-AgentTool {
     param([string]$ToolName, [hashtable]$Parameters = @{})
-    if ($script:agentTools.ContainsKey($ToolName)) {
-        & $script:agentTools[$ToolName].Handler @Parameters
+    if (${script:agentTools}.ContainsKey($ToolName)) {
+        & ${script:agentTools}[$ToolName].Handler @Parameters
     } else { @{ success = $false; error = "Tool not found" } }
 }
 
 Write-Host "📦 Modules Loaded:" -ForegroundColor Green
-Write-Host "   - BuiltInTools: $($script:agentTools.Count) tools" -ForegroundColor Cyan
+Write-Host "   - BuiltInTools: $(${script:agentTools}.Count) tools" -ForegroundColor Cyan
 Write-Host "   - AutoToolInvocation: Ready" -ForegroundColor Cyan
 Write-Host "   - Model: $Model" -ForegroundColor Cyan
 Write-Host ""
@@ -101,7 +101,7 @@ for ($i = 1; $i -le $NumTests; $i++) {
         if ($autoResult.autoInvoked -and $autoResult.results.Count -gt 0) {
             Write-Host "🔧 Pre-execution tools: $($autoResult.results.Count)" -ForegroundColor Cyan
             foreach ($r in $autoResult.results) {
-                $icon = if ($r.success) { "✅" } else { "❌" }
+                $icon = $(if ($r.success) { "✅" } else { "❌" }
                 Write-Host "   $icon $($r.tool)" -ForegroundColor $(if ($r.success) { 'Green' } else { 'Red' })
             }
             $totalToolsUsed += $autoResult.results.Count
@@ -112,7 +112,7 @@ for ($i = 1; $i -le $NumTests; $i++) {
     Write-Host "🤖 Querying AI model in agentic mode..." -ForegroundColor Cyan
     
     $systemPrompt = @"
-You are an agentic AI assistant. You have access to these tools: $($script:agentTools.Keys -join ', ')
+You are an agentic AI assistant. You have access to these tools: $(${script:agentTools}.Keys -join ', ')
 
 When you need to access files or information, RESPOND WITH JSON in this exact format:
 {"tool_calls":[{"name":"tool_name","parameters":{"param1":"value1","param2":"value2"}}]}

@@ -52,7 +52,7 @@ $ErrorActionPreference = "Stop"
 # FORMAT SPECIFICATIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:FormatSpecs = @{
+${script:FormatSpecs} = @{
     "gguf" = @{
         Extension = ".gguf"
         LoadSpeed = "Fast"
@@ -183,7 +183,7 @@ class FormatBenchmark {
     
     [void] SimulateLoad() {
         # Simulate model loading based on format characteristics
-        $spec = $script:FormatSpecs[$this.Format]
+        $spec = ${script:FormatSpecs}[$this.Format]
         
         switch ($spec.LoadSpeed) {
             "Ultra Fast" { Start-Sleep -Milliseconds 50 }
@@ -352,7 +352,7 @@ class CloudLocalComparison {
         $speedup = $this.CloudMetrics.AverageLatency / $this.LocalMetrics.AverageLatency
         
         $this.Analysis = @{
-            Winner = if ($speedup > 1) { "Local" } else { "Cloud" }
+            Winner = $(if ($speedup > 1) { "Local" } else { "Cloud" }
             SpeedupFactor = [Math]::Abs($speedup)
             CloudFaster = $speedup < 1
             LocalFaster = $speedup > 1
@@ -386,13 +386,13 @@ class CloudLocalComparison {
         $cloudStr = "$([Math]::Round($cloud, 2))$unit".PadRight(18)
         $localStr = "$([Math]::Round($local, 2))$unit".PadRight(18)
         
-        $winner = if ($lowerIsBetter) {
+        $winner = $(if ($lowerIsBetter) {
             if ($cloud < $local) { "Cloud ✓" } else { "Local ✓" }
         } else {
             if ($cloud > $local) { "Cloud ✓" } else { "Local ✓" }
         }
         
-        $winnerColor = if ($winner -match "Cloud") { "Yellow" } else { "Green" }
+        $winnerColor = $(if ($winner -match "Cloud") { "Yellow" } else { "Green" }
         
         Write-Host "  $($name.PadRight(24))" -NoNewline
         Write-Host $cloudStr -NoNewline -ForegroundColor Gray
@@ -717,7 +717,7 @@ switch ($Operation) {
         $results = @()
         
         foreach ($format in $ModelFormats) {
-            if (-not $script:FormatSpecs.ContainsKey($format)) {
+            if (-not ${script:FormatSpecs}.ContainsKey($format)) {
                 Write-Host "  ⚠️  Unknown format: $format" -ForegroundColor Yellow
                 continue
             }
@@ -813,8 +813,8 @@ switch ($Operation) {
         Write-Host "`n  Format Specifications:" -ForegroundColor Yellow
         Write-Host "  " + ("─" * 70) -ForegroundColor Gray
         
-        foreach ($format in $script:FormatSpecs.Keys | Sort-Object) {
-            $spec = $script:FormatSpecs[$format]
+        foreach ($format in ${script:FormatSpecs}.Keys | Sort-Object) {
+            $spec = ${script:FormatSpecs}[$format]
             Write-Host "`n  $format" -ForegroundColor Cyan
             Write-Host "    Extension: $($spec.Extension)" -ForegroundColor Gray
             Write-Host "    Load Speed: $($spec.LoadSpeed)" -ForegroundColor Gray

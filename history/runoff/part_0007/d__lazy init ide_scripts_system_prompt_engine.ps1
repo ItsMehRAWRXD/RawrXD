@@ -39,7 +39,7 @@ $ErrorActionPreference = "Stop"
 # SYSTEM PROMPT TEMPLATES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-$script:PromptTemplates = @{
+${script:PromptTemplates} = @{
     "kernel-reverse-engineer" = @{
         Base = @"
 You are an elite kernel reverse engineering specialist with deep expertise in:
@@ -509,11 +509,11 @@ class SystemPromptEngine {
             return $this.CustomPrompt
         }
         
-        if (-not $script:PromptTemplates.ContainsKey($this.Role)) {
+        if (-not ${script:PromptTemplates}.ContainsKey($this.Role)) {
             throw "Unknown role: $($this.Role)"
         }
         
-        $template = $script:PromptTemplates[$this.Role]
+        $template = ${script:PromptTemplates}[$this.Role]
         $prompt = $template.Base
         
         # Add variant based on random/deterministic mode

@@ -115,7 +115,7 @@ function Invoke-Assembler {
     $nasm = Get-Command nasm -ErrorAction SilentlyContinue
     if ($nasm) {
         # Use nasm if available
-        $format = if ($Target -like "*windows*") { "win64" } else { "elf64" }
+        $format = $(if ($Target -like "*windows*") { "win64" } else { "elf64" }
         $objFile = [IO.Path]::ChangeExtension($OutputExe, ".obj")
         
         & nasm -f $format $AsmFile -o $objFile 2>&1 | Out-Null

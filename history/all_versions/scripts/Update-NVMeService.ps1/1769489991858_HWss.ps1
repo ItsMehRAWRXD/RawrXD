@@ -34,7 +34,7 @@ try {
     Write-Host "`nDrive Temperatures:" -ForegroundColor Cyan
     for ($i = 0; $i -lt $driveCount; $i++) {
         $temp = $accessor.ReadInt32(16 + ($i * 4))
-        $color = if($temp -eq -1){'Gray'}elseif($temp -gt 70){'Red'}elseif($temp -gt 55){'Yellow'}else{'Green'}
+        $color = $(if ($temp -eq -1){'Gray'}elseif($temp -gt 70){'Red'}elseif($temp -gt 55){'Yellow'}else{'Green'}
         Write-Host "  Drive ${i}: $temp °C" -ForegroundColor $color
     }
     $timestamp = $accessor.ReadInt64(144)

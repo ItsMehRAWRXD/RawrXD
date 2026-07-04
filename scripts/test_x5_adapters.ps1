@@ -9,7 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$rootDir = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
+$rootDir = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
 if (-not (Test-Path $rootDir)) { $rootDir = "D:\rawrxd" }
 Set-Location $rootDir
 

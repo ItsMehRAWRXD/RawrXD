@@ -4,8 +4,8 @@
 
 param(
     [string]$Root = "D:\rawrxd",
-    [string]$OutDir = "$env:LOCALAPPDATA\RawrXD\bin",
-    [string]$LibDir = "$env:LOCALAPPDATA\RawrXD\lib",
+    [string]$OutDir = "${env:LOCALAPPDATA}\RawrXD\bin",
+    [string]$LibDir = "${env:LOCALAPPDATA}\RawrXD\lib",
     [switch]$Force,
     [switch]$Verbose
 )
@@ -174,7 +174,7 @@ $linkArgs = @(
 $coreLib = Join-Path $Root "lib\rawrxd_core.lib"
 $gpuLib = Join-Path $Root "lib\rawrxd_gpu.lib"
 $extensionLib = Join-Path $Root "lib\rawrxd_extensions.lib"
-$stubLib = "$env:LOCALAPPDATA\RawrXD\stubs\rawrxd_stubs.lib"
+$stubLib = "${env:LOCALAPPDATA}\RawrXD\stubs\rawrxd_stubs.lib"
 
 if (Test-Path $coreLib) { $linkArgs += "`"$coreLib`"" }
 if (Test-Path $gpuLib) { $linkArgs += "`"$gpuLib`"" }

@@ -19,8 +19,8 @@ $protectedDirs | ForEach-Object { Write-Host "  - $_" -ForegroundColor Gray }
 Write-Host ""
 
 # VS Code settings location
-$vscodeSettingsPath = "$env:APPDATA\Code\User\settings.json"
-$cursorSettingsPath = "$env:APPDATA\Cursor\User\settings.json"
+$vscodeSettingsPath = "${env:APPDATA}\Code\User\settings.json"
+$cursorSettingsPath = "${env:APPDATA}\Cursor\User\settings.json"
 
 function Add-ExclusionPatterns {
     param([string]$settingsPath)

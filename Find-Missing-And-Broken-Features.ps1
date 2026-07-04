@@ -128,7 +128,7 @@ function Find-MissingIntegrationPatterns {
     else {
       $integrationTests[$integration].Found = $false
       Write-Host "   ❌ $integration" -ForegroundColor Red
-      $script:totalIssues++
+      ${script:totalIssues}++
       $missingFeatures.BrokenIntegrations += @{
         Name        = $integration
         Description = $integrationTests[$integration].Description
@@ -202,15 +202,15 @@ function Find-ExpectedFeatures {
     $critical = $expectedFeatures[$feature].Critical
         
     if ($Content -match $pattern) {
-      $emoji = if ($critical) { "✅" } else { "🟢" }
+      $emoji = $(if ($critical) { "✅" } else { "🟢" }
       Write-Host "   $emoji $feature (Found)" -ForegroundColor Green
     }
     else {
-      $emoji = if ($critical) { "❌" } else { "⚠️" }
-      $color = if ($critical) { "Red" } else { "Yellow" }
+      $emoji = $(if ($critical) { "❌" } else { "⚠️" }
+      $color = $(if ($critical) { "Red" } else { "Yellow" }
       Write-Host "   $emoji $feature (Missing)" -ForegroundColor $color
             
-      $script:totalIssues++
+      ${script:totalIssues}++
       $missingFeatures.ExpectedButNotFound += @{
         Name     = $feature
         Pattern  = $pattern
@@ -265,7 +265,7 @@ function Find-BrokenFunctions {
             
       if ($issues.Count -gt 0) {
         Write-Host "   ❌ $functionName`: $($issues -join ', ')" -ForegroundColor Red
-        $script:totalIssues++
+        ${script:totalIssues}++
         $missingFeatures.NotWorking += @{
           Name    = $functionName
           Type    = "Function"
@@ -333,7 +333,7 @@ function Test-CriticalFunctionality {
       }
       else {
         Write-Host "   ❌ $test (Failed)" -ForegroundColor Red
-        $script:totalIssues++
+        ${script:totalIssues}++
         $missingFeatures.NotWorking += @{
           Name    = $test
           Type    = "Critical System"
@@ -343,7 +343,7 @@ function Test-CriticalFunctionality {
     }
     catch {
       Write-Host "   💥 $test (Error: $_)" -ForegroundColor Red
-      $script:totalIssues++
+      ${script:totalIssues}++
       $missingFeatures.NotWorking += @{
         Name    = $test
         Type    = "Critical System"
@@ -373,7 +373,7 @@ foreach ($file in $filesToTest) {
   $readabilityResults[$file] = $readResult
     
   if (-not $readResult.Readable) {
-    $script:totalIssues++
+    ${script:totalIssues}++
     $missingFeatures.ReadabilityIssues += @{
       File  = $file
       Error = $readResult.Error
@@ -397,14 +397,14 @@ if ($readabilityResults[".\RawrXD.ps1"].Readable) {
 }
 else {
   Write-Host "`n❌ CANNOT ANALYZE: RawrXD.ps1 is not readable!" -ForegroundColor Red
-  $script:totalIssues++
+  ${script:totalIssues}++
 }
 
 Write-Host "`n📊 MISSING FEATURES & ISSUES REPORT" -ForegroundColor Red
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor Red
 
 Write-Host "`n🎯 Summary:" -ForegroundColor White
-Write-Host "   Total Issues Found: $script:totalIssues" -ForegroundColor Red
+Write-Host "   Total Issues Found: ${script:totalIssues}" -ForegroundColor Red
 Write-Host "   Expected Features Missing: $($missingFeatures.ExpectedButNotFound.Count)" -ForegroundColor Yellow
 Write-Host "   Broken Integrations: $($missingFeatures.BrokenIntegrations.Count)" -ForegroundColor Red
 Write-Host "   Non-Working Functions: $($missingFeatures.NotWorking.Count)" -ForegroundColor Red
@@ -413,7 +413,7 @@ Write-Host "   File Readability Issues: $($missingFeatures.ReadabilityIssues.Cou
 if ($missingFeatures.ExpectedButNotFound.Count -gt 0) {
   Write-Host "`n❌ MISSING EXPECTED FEATURES:" -ForegroundColor Red
   foreach ($missing in $missingFeatures.ExpectedButNotFound) {
-    $criticalText = if ($missing.Critical) { " (CRITICAL)" } else { " (Optional)" }
+    $criticalText = $(if ($missing.Critical) { " (CRITICAL)" } else { " (Optional)" }
     Write-Host "   • $($missing.Name)$criticalText" -ForegroundColor Yellow
     Write-Host "     Issue: $($missing.Issue)" -ForegroundColor Gray
   }
@@ -495,16 +495,16 @@ $analysisDuration = [math]::Round(($analysisEndTime - $analysisStartTime).TotalS
 Write-Host "`n📈 ANALYSIS COMPLETE!" -ForegroundColor Red
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor Red
 Write-Host "Duration: $analysisDuration seconds"
-Write-Host "Issues Found: $script:totalIssues"
+Write-Host "Issues Found: ${script:totalIssues}"
 Write-Host "Files Analyzed: $($readabilityResults.Keys.Count)"
 
-if ($script:totalIssues -eq 0) {
+if (${script:totalIssues} -eq 0) {
   Write-Host "`n🏆 OUTSTANDING: No issues found! RawrXD is working perfectly!" -ForegroundColor Green
 }
-elseif ($script:totalIssues -le 5) {
+elseif (${script:totalIssues} -le 5) {
   Write-Host "`n✅ GOOD: Only minor issues found, RawrXD is mostly working well!" -ForegroundColor Yellow
 }
-elseif ($script:totalIssues -le 15) {
+elseif (${script:totalIssues} -le 15) {
   Write-Host "`n⚠️ ATTENTION: Several issues found that should be addressed!" -ForegroundColor Yellow
 }
 else {

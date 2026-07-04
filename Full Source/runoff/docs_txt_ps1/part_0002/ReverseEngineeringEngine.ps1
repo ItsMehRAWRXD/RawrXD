@@ -50,7 +50,7 @@ param(
 )
 
 # Global configuration
-$global:ReverseEngineeringConfig = @{
+${global:ReverseEngineeringConfig} = @{
     Version = "1.0.0"
     EngineName = "ReverseEngineeringEngine"
     AnalysisDepth = "Deep"  # Shallow, Medium, Deep, Full
@@ -101,7 +101,7 @@ $global:ReverseEngineeringConfig = @{
 }
 
 # Analysis results storage
-$global:ReverseEngineeringResults = @{
+${global:ReverseEngineeringResults} = @{
     Binaries = [List[hashtable]]::new()
     APIs = [List[hashtable]]::new()
     Dependencies = [List[hashtable]]::new()
@@ -124,16 +124,16 @@ function Initialize-Logging {
     param($LogPath)
     
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $global:LogFile = Join-Path $LogPath "reverse_engineering_$timestamp.log"
-    $global:EmergencyLog = Join-Path $LogPath "emergency_reverse_engineering.log"
+    ${global:LogFile} = Join-Path $LogPath "reverse_engineering_$timestamp.log"
+    ${global:EmergencyLog} = Join-Path $LogPath "emergency_reverse_engineering.log"
     
     # Create log directory
     if (!(Test-Path $LogPath)) {
         New-Item -ItemType Directory -Path $LogPath -Force | Out-Null
     }
     
-    Write-Log "INFO" "Reverse Engineering Engine v$($global:ReverseEngineeringConfig.Version) initialized"
-    Write-Log "INFO" "Log file: $global:LogFile"
+    Write-Log "INFO" "Reverse Engineering Engine v$(${global:ReverseEngineeringConfig}.Version) initialized"
+    Write-Log "INFO" "Log file: ${global:LogFile}"
 }
 
 # Enhanced logging function
@@ -160,8 +160,8 @@ function Write-Log {
     Write-Host $logEntry -ForegroundColor $color
     
     # File logging
-    if ($global:LogFile) {
-        Add-Content -Path $global:LogFile -Value $logEntry -Encoding UTF8
+    if (${global:LogFile}) {
+        Add-Content -Path ${global:LogFile} -Value $logEntry -Encoding UTF8
     }
 }
 
@@ -175,15 +175,15 @@ function Load-Configuration {
             
             # Merge configurations
             foreach ($key in $configContent.PSObject.Properties.Name) {
-                if ($global:ReverseEngineeringConfig.ContainsKey($key)) {
+                if (${global:ReverseEngineeringConfig}.ContainsKey($key)) {
                     $value = $configContent.$key
                     if ($value -is [System.Management.Automation.PSCustomObject]) {
                         foreach ($subKey in $value.PSObject.Properties.Name) {
-                            $global:ReverseEngineeringConfig[$key][$subKey] = $value.$subKey
+                            ${global:ReverseEngineeringConfig}[$key][$subKey] = $value.$subKey
                         }
                     }
                     else {
-                        $global:ReverseEngineeringConfig[$key] = $value
+                        ${global:ReverseEngineeringConfig}[$key] = $value
                     }
                 }
             }
@@ -201,7 +201,7 @@ function Save-Configuration {
     param($ConfigPath)
     
     try {
-        $global:ReverseEngineeringConfig | ConvertTo-Json -Depth 10 | Out-File $ConfigPath -Encoding UTF8
+        ${global:ReverseEngineeringConfig} | ConvertTo-Json -Depth 10 | Out-File $ConfigPath -Encoding UTF8
         Write-Log "INFO" "Configuration saved to $ConfigPath"
     }
     catch {
@@ -249,37 +249,37 @@ function Start-ReverseEngineering {
     Write-Log "SUCCESS" "Discovered $($discoveryResults.TotalFiles) files"
     
     # Phase 2: Binary Analysis (if enabled)
-    if ($AnalyzeBinaries -or $global:ReverseEngineeringConfig.BinaryAnalysis.Enabled) {
+    if ($AnalyzeBinaries -or ${global:ReverseEngineeringConfig}.BinaryAnalysis.Enabled) {
         Write-Log "INFO" "Phase 2: Binary Analysis"
         $binaryResults = Start-BinaryAnalysis -TargetFiles $discoveryResults.Files
     }
     
     # Phase 3: API Extraction (if enabled)
-    if ($ExtractAPIs -or $global:ReverseEngineeringConfig.APIExtraction.Enabled) {
+    if ($ExtractAPIs -or ${global:ReverseEngineeringConfig}.APIExtraction.Enabled) {
         Write-Log "INFO" "Phase 3: API Extraction"
         $apiResults = Start-APIExtraction -TargetFiles $discoveryResults.Files
     }
     
     # Phase 4: Dependency Mapping (if enabled)
-    if ($MapDependencies -or $global:ReverseEngineeringConfig.DependencyMapping.Enabled) {
+    if ($MapDependencies -or ${global:ReverseEngineeringConfig}.DependencyMapping.Enabled) {
         Write-Log "INFO" "Phase 4: Dependency Mapping"
         $dependencyResults = Start-DependencyMapping -TargetFiles $discoveryResults.Files
     }
     
     # Phase 5: Vulnerability Detection (if enabled)
-    if ($DetectVulnerabilities -or $global:ReverseEngineeringConfig.SecurityAnalysis.Enabled) {
+    if ($DetectVulnerabilities -or ${global:ReverseEngineeringConfig}.SecurityAnalysis.Enabled) {
         Write-Log "INFO" "Phase 5: Vulnerability Detection"
         $vulnerabilityResults = Start-VulnerabilityDetection -TargetFiles $discoveryResults.Files
     }
     
     # Phase 6: Performance Analysis (if enabled)
-    if ($IdentifyBottlenecks -or $global:ReverseEngineeringConfig.PerformanceAnalysis.Enabled) {
+    if ($IdentifyBottlenecks -or ${global:ReverseEngineeringConfig}.PerformanceAnalysis.Enabled) {
         Write-Log "INFO" "Phase 6: Performance Analysis"
         $performanceResults = Start-PerformanceAnalysis -TargetFiles $discoveryResults.Files
     }
     
     # Phase 7: Code Reconstruction (if enabled)
-    if ($ReconstructStructure -or $global:ReverseEngineeringConfig.CodeReconstruction.Enabled) {
+    if ($ReconstructStructure -or ${global:ReverseEngineeringConfig}.CodeReconstruction.Enabled) {
         Write-Log "INFO" "Phase 7: Code Reconstruction"
         $reconstructionResults = Start-CodeReconstruction -TargetFiles $discoveryResults.Files
     }
@@ -293,13 +293,13 @@ function Start-ReverseEngineering {
     
     # Update statistics
     $endTime = Get-Date
-    $global:ReverseEngineeringResults.Statistics.AnalysisDuration = ($endTime - $startTime).TotalSeconds
+    ${global:ReverseEngineeringResults}.Statistics.AnalysisDuration = ($endTime - $startTime).TotalSeconds
     
     # Save results
     Save-ReverseEngineeringResults -OutputPath $OutputPath
     
     Write-Log "SUCCESS" "Reverse engineering completed successfully"
-    Write-Log "INFO" "Analysis duration: $($global:ReverseEngineeringResults.Statistics.AnalysisDuration) seconds"
+    Write-Log "INFO" "Analysis duration: $(${global:ReverseEngineeringResults}.Statistics.AnalysisDuration) seconds"
     
     return $true
 }
@@ -450,19 +450,19 @@ function Start-BinaryAnalysis {
             $binaryAnalysis.EntryPoints = $headerAnalysis.EntryPoints
             
             # Extract strings
-            if ($global:ReverseEngineeringConfig.BinaryAnalysis.ExtractStrings) {
+            if (${global:ReverseEngineeringConfig}.BinaryAnalysis.ExtractStrings) {
                 $binaryAnalysis.Strings = Extract-Strings -FilePath $file.Path
             }
             
             # Identify functions
-            if ($global:ReverseEngineeringConfig.BinaryAnalysis.IdentifyFunctions) {
+            if (${global:ReverseEngineeringConfig}.BinaryAnalysis.IdentifyFunctions) {
                 $functionAnalysis = Identify-BinaryFunctions -FilePath $file.Path
                 $binaryAnalysis.ImportedFunctions = $functionAnalysis.Imported
                 $binaryAnalysis.ExportedFunctions = $functionAnalysis.Exported
             }
             
             # Detect packers
-            if ($global:ReverseEngineeringConfig.BinaryAnalysis.DetectPackers) {
+            if (${global:ReverseEngineeringConfig}.BinaryAnalysis.DetectPackers) {
                 $packerDetection = Detect-BinaryPackers -FilePath $file.Path
                 $binaryAnalysis.Packer = $packerDetection.Packer
                 $binaryAnalysis.SecurityFeatures = $packerDetection.SecurityFeatures
@@ -483,13 +483,13 @@ function Start-BinaryAnalysis {
             })
         }
         
-        $global:ReverseEngineeringResults.Binaries.Add($binaryAnalysis)
-        $global:ReverseEngineeringResults.Statistics.TotalFunctions += $binaryAnalysis.ImportedFunctions.Count + $binaryAnalysis.ExportedFunctions.Count
+        ${global:ReverseEngineeringResults}.Binaries.Add($binaryAnalysis)
+        ${global:ReverseEngineeringResults}.Statistics.TotalFunctions += $binaryAnalysis.ImportedFunctions.Count + $binaryAnalysis.ExportedFunctions.Count
     }
     
     Write-Log "SUCCESS" "Binary analysis completed for $($binaryFiles.Count) files"
     
-    return $global:ReverseEngineeringResults.Binaries
+    return ${global:ReverseEngineeringResults}.Binaries
 }
 
 # Binary header analysis
@@ -787,10 +787,10 @@ function Start-APIExtraction {
             # Map data flows
             $apiExtraction.DataFlows = Map-DataFlows -Content $content -Language $file.Type
             
-            $global:ReverseEngineeringResults.APIs.Add($apiExtraction)
-            $global:ReverseEngineeringResults.Statistics.TotalAPIs += $apiExtraction.Endpoints.Count
-            $global:ReverseEngineeringResults.Statistics.TotalFunctions += $apiExtraction.Functions.Count
-            $global:ReverseEngineeringResults.Statistics.TotalClasses += $apiExtraction.Classes.Count
+            ${global:ReverseEngineeringResults}.APIs.Add($apiExtraction)
+            ${global:ReverseEngineeringResults}.Statistics.TotalAPIs += $apiExtraction.Endpoints.Count
+            ${global:ReverseEngineeringResults}.Statistics.TotalFunctions += $apiExtraction.Functions.Count
+            ${global:ReverseEngineeringResults}.Statistics.TotalClasses += $apiExtraction.Classes.Count
             
             $file.AnalysisStatus = "Completed"
         }
@@ -802,7 +802,7 @@ function Start-APIExtraction {
     
     Write-Log "SUCCESS" "API extraction completed for $($sourceFiles.Count) files"
     
-    return $global:ReverseEngineeringResults.APIs
+    return ${global:ReverseEngineeringResults}.APIs
 }
 
 # PowerShell API extraction
@@ -1058,7 +1058,7 @@ function Map-DataFlows {
                     Pattern = $pattern
                     Type = $patterns[$pattern]
                     Line = $match.Index
-                    Direction = if ($patterns[$pattern] -like "*Write*" -or $patterns[$pattern] -like "*Request*") { "Output" } else { "Input" }
+                    Direction = $(if ($patterns[$pattern] -like "*Write*" -or $patterns[$pattern] -like "*Request*") { "Output" } else { "Input" }
                 })
             }
         }
@@ -1161,7 +1161,7 @@ function Start-DependencyMapping {
     # Detect circular dependencies
     $dependencyGraph.CircularDependencies = Detect-CircularDependencies -Graph $dependencyGraph
     
-    $global:ReverseEngineeringResults.Dependencies = $dependencyGraph.Edges
+    ${global:ReverseEngineeringResults}.Dependencies = $dependencyGraph.Edges
     
     Write-Log "SUCCESS" "Dependency mapping completed: $($dependencyGraph.Nodes.Count) nodes, $($dependencyGraph.Edges.Count) edges"
     
@@ -1506,8 +1506,8 @@ function Start-VulnerabilityDetection {
             }
             
             if ($fileVulnerabilities.Issues.Count -gt 0) {
-                $global:ReverseEngineeringResults.Vulnerabilities.Add($fileVulnerabilities)
-                $global:ReverseEngineeringResults.Statistics.TotalVulnerabilities += $fileVulnerabilities.Issues.Count
+                ${global:ReverseEngineeringResults}.Vulnerabilities.Add($fileVulnerabilities)
+                ${global:ReverseEngineeringResults}.Statistics.TotalVulnerabilities += $fileVulnerabilities.Issues.Count
             }
             
             $file.AnalysisStatus = "Completed"
@@ -1518,9 +1518,9 @@ function Start-VulnerabilityDetection {
         }
     }
     
-    Write-Log "SUCCESS" "Vulnerability detection completed: $($global:ReverseEngineeringResults.Statistics.TotalVulnerabilities) issues found"
+    Write-Log "SUCCESS" "Vulnerability detection completed: $(${global:ReverseEngineeringResults}.Statistics.TotalVulnerabilities) issues found"
     
-    return $global:ReverseEngineeringResults.Vulnerabilities
+    return ${global:ReverseEngineeringResults}.Vulnerabilities
 }
 
 # Risk score calculation
@@ -1583,8 +1583,8 @@ function Start-PerformanceAnalysis {
             $performanceAnalysis.Recommendations = Generate-PerformanceRecommendations -Analysis $performanceAnalysis
             
             if ($performanceAnalysis.Bottlenecks.Count -gt 0 -or $performanceAnalysis.BlockingOperations.Count -gt 0) {
-                $global:ReverseEngineeringResults.Bottlenecks.Add($performanceAnalysis)
-                $global:ReverseEngineeringResults.Statistics.TotalBottlenecks += $performanceAnalysis.Bottlenecks.Count
+                ${global:ReverseEngineeringResults}.Bottlenecks.Add($performanceAnalysis)
+                ${global:ReverseEngineeringResults}.Statistics.TotalBottlenecks += $performanceAnalysis.Bottlenecks.Count
             }
             
             $file.AnalysisStatus = "Completed"
@@ -1595,9 +1595,9 @@ function Start-PerformanceAnalysis {
         }
     }
     
-    Write-Log "SUCCESS" "Performance analysis completed: $($global:ReverseEngineeringResults.Statistics.TotalBottlenecks) bottlenecks identified"
+    Write-Log "SUCCESS" "Performance analysis completed: $(${global:ReverseEngineeringResults}.Statistics.TotalBottlenecks) bottlenecks identified"
     
-    return $global:ReverseEngineeringResults.Bottlenecks
+    return ${global:ReverseEngineeringResults}.Bottlenecks
 }
 
 # Code complexity analysis
@@ -1818,7 +1818,7 @@ function Save-ReverseEngineeringResults {
     $resultsFile = Join-Path $OutputPath "reverse_engineering_results.json"
     
     try {
-        $global:ReverseEngineeringResults | ConvertTo-Json -Depth 20 | Out-File $resultsFile -Encoding UTF8
+        ${global:ReverseEngineeringResults} | ConvertTo-Json -Depth 20 | Out-File $resultsFile -Encoding UTF8
         Write-Log "INFO" "Reverse engineering results saved to $resultsFile"
     }
     catch {
@@ -1829,7 +1829,7 @@ function Save-ReverseEngineeringResults {
 # Interactive mode
 function Start-InteractiveMode {
     Write-Host "`n=== Reverse Engineering Engine - Interactive Mode ===" -ForegroundColor Cyan
-    Write-Host "Version: $($global:ReverseEngineeringConfig.Version)" -ForegroundColor Gray
+    Write-Host "Version: $(${global:ReverseEngineeringConfig}.Version)" -ForegroundColor Gray
     
     while ($true) {
         Write-Host "`nOptions:" -ForegroundColor Yellow
@@ -1890,7 +1890,7 @@ elseif ($TargetPath) {
     Start-ReverseEngineering -TargetPath $TargetPath -OutputPath $OutputPath
 }
 else {
-    Write-Host "Reverse Engineering Engine v$($global:ReverseEngineeringConfig.Version)" -ForegroundColor Cyan
+    Write-Host "Reverse Engineering Engine v$(${global:ReverseEngineeringConfig}.Version)" -ForegroundColor Cyan
     Write-Host "Use -Interactive for interactive mode or specify -TargetPath" -ForegroundColor Yellow
     Write-Host "Example: .\ReverseEngineeringEngine.ps1 -TargetPath 'C:\project' -AnalyzeBinaries -ExtractAPIs -DetectVulnerabilities" -ForegroundColor Gray
 }

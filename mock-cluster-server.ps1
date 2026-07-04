@@ -19,15 +19,15 @@ Write-Host "Simulated Nodes: $NodeCount"
 Write-Host "Chaos Mode: $ChaosMode`n"
 
 # State
-$script:RequestCount = 0
-$script:StartTime = Get-Date
-$script:Healthy = $true
-$script:LatencyMs = 50
-$script:Tps = 7234
-$script:Nodes = @()
+${script:RequestCount} = 0
+${script:StartTime} = Get-Date
+${script:Healthy} = $true
+${script:LatencyMs} = 50
+${script:Tps} = 7234
+${script:Nodes} = @()
 
 for ($i = 0; $i -lt $NodeCount; $i++) {
-    $script:Nodes += @{
+    ${script:Nodes} += @{
         Id = $i
         Status = "UP"
         Port = 9001 + $i
@@ -50,11 +50,11 @@ function Handle-Request($context) {
     $url = $request.Url.LocalPath
     $method = $request.HttpMethod
     
-    $script:RequestCount++
+    ${script:RequestCount}++
     
     # Simulate latency
-    if ($script:LatencyMs -gt 0) {
-        Start-Sleep -Milliseconds $script:LatencyMs
+    if (${script:LatencyMs} -gt 0) {
+        Start-Sleep -Milliseconds ${script:LatencyMs}
     }
     
     # Chaos mode: randomly fail requests
@@ -66,12 +66,12 @@ function Handle-Request($context) {
     
     switch ($url) {
         "/health" {
-            $status = if ($script:Healthy) { "healthy" } else { "unhealthy" }
+            $status = $(if (${script:Healthy}) { "healthy" } else { "unhealthy" }
             $body = @{
                 status = $status
-                nodes = $script:Nodes.Count
-                uptime = ((Get-Date) - $script:StartTime).TotalSeconds
-                requests = $script:RequestCount
+                nodes = ${script:Nodes}.Count
+                uptime = ((Get-Date) - ${script:StartTime}).TotalSeconds
+                requests = ${script:RequestCount}
             } | ConvertTo-Json
             
             $buffer = [System.Text.Encoding]::UTF8.GetBytes($body)
@@ -83,10 +83,10 @@ function Handle-Request($context) {
         "/metrics" {
             $body = @"
 # RawrXD Mock Metrics
-rawrxd_nodes_total $($script:Nodes.Count)
-rawrxd_tps_current $script:Tps
-rawrxd_latency_ms $script:LatencyMs
-rawrxd_requests_total $script:RequestCount
+rawrxd_nodes_total $(${script:Nodes}.Count)
+rawrxd_tps_current ${script:Tps}
+rawrxd_latency_ms ${script:LatencyMs}
+rawrxd_requests_total ${script:RequestCount}
 "@
             $buffer = [System.Text.Encoding]::UTF8.GetBytes($body)
             $response.ContentType = "text/plain"
@@ -140,9 +140,9 @@ rawrxd_requests_total $script:RequestCount
         
         "/stats" {
             $body = @{
-                nodes = $script:Nodes
-                total_tps = $script:Tps
-                avg_latency = $script:LatencyMs
+                nodes = ${script:Nodes}
+                total_tps = ${script:Tps}
+                avg_latency = ${script:LatencyMs}
             } | ConvertTo-Json
             
             $buffer = [System.Text.Encoding]::UTF8.GetBytes($body)
@@ -166,7 +166,7 @@ rawrxd_requests_total $script:RequestCount
 
 # Control endpoint
 function Show-Status {
-    Write-Host "`n$(Get-Date -Format 'HH:mm:ss') | Requests: $script:RequestCount | TPS: $script:Tps | Latency: $script:LatencyMs`ms | Nodes: $($script:Nodes.Count)" -NoNewline
+    Write-Host "`n$(Get-Date -Format 'HH:mm:ss') | Requests: ${script:RequestCount} | TPS: ${script:Tps} | Latency: ${script:LatencyMs}`ms | Nodes: $(${script:Nodes}.Count)" -NoNewline
     Write-Host "`r" -NoNewline
 }
 
@@ -176,7 +176,7 @@ try {
         $task = $listener.GetContextAsync()
         while (-not $task.IsCompleted) {
             Start-Sleep -Milliseconds 100
-            if ($script:RequestCount % 10 -eq 0) {
+            if (${script:RequestCount} % 10 -eq 0) {
                 Show-Status
             }
         }

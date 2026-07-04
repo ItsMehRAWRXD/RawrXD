@@ -1,7 +1,7 @@
-$ErrorActionPreference = "Stop"
+$Script:ErrorActionPreference = "Stop"
 
 param(
-    [string]$LogPath = "$env:LOCALAPPDATA\RawrXD\logs\ide.log",
+    [string]$LogPath = "${env:LOCALAPPDATA}\RawrXD\logs\ide.log",
     [string]$AltLogPath = ".\ide.log"
 )
 
@@ -12,7 +12,7 @@ function Resolve-LogPath {
     throw "Log file not found. Checked: $Primary, $Secondary"
 }
 
-$path = Resolve-LogPath -Primary $LogPath -Secondary $AltLogPath
+$Script:path = Resolve-LogPath -Primary $LogPath -Secondary $AltLogPath
 Write-Host "Watching log: $path" -ForegroundColor Cyan
 Write-Host "Filters: ghost_text|multicursor|peek_overlay|caret|cosmetics|ollama" -ForegroundColor Cyan
 

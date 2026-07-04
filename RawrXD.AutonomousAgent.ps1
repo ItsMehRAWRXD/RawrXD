@@ -426,7 +426,7 @@ function Generate-PowerShellModule {
 Set-StrictMode -Version Latest
 
 # Module-level variables
-`$script:Config = @{
+`${script:Config} = @{
     Name = "$ModuleName"
     ComponentType = "$($Component.ComponentType)"
     Requirement = "$($Component.Requirement)"
@@ -438,7 +438,7 @@ function Get-Config {
     .SYNOPSIS
         Gets the current configuration
     #>
-    return `$script:Config
+    return `${script:Config}
 }
 
 function Set-Config {
@@ -450,7 +450,7 @@ function Set-Config {
         Updates the configuration
     #>
     foreach (`$key in `$NewConfig.Keys) {
-        `$script:Config[`$key] = `$NewConfig[`$key]
+        `${script:Config}[`$key] = `$NewConfig[`$key]
     }
 }
 

@@ -86,13 +86,13 @@ function New-ChatTab {
         [string]$Model = "bigdaddyg-fast:latest"
     )
 
-    if ($script:chatTabs.Count -ge $script:maxChatTabs) {
-        Write-DevConsole "❌ Maximum chat tabs reached ($($script:maxChatTabs))" "ERROR"
+    if (${script:chatTabs}.Count -ge ${script:maxChatTabs}) {
+        Write-DevConsole "❌ Maximum chat tabs reached ($(${script:maxChatTabs}))" "ERROR"
         return $null
     }
 
     if ([string]::IsNullOrEmpty($TabName)) {
-        $TabName = "Chat $($script:chatTabs.Count + 1)"
+        $TabName = "Chat $(${script:chatTabs}.Count + 1)"
     }
 
     $tabId = [Guid]::NewGuid().ToString()
@@ -180,12 +180,12 @@ function New-ChatTab {
     }
 
     # Store in collection
-    $script:chatTabs[$tabId] = $chatSession
+    ${script:chatTabs}[$tabId] = $chatSession
 
     # Add to tab control
-    $script:chatTabControl.TabPages.Add($tabPage)
-    $script:chatTabControl.SelectedTab = $tabPage
-    $script:activeChatTabId = $tabId
+    ${script:chatTabControl}.TabPages.Add($tabPage)
+    ${script:chatTabControl}.SelectedTab = $tabPage
+    ${script:activeChatTabId} = $tabId
 
     # Welcome message
     $welcomeText = "🤖 Welcome to RawrXD AI Chat!`n💡 Type your message and press Enter or click Send.`n🔧 Model: $($modelCombo.SelectedItem)`n`n"
@@ -199,30 +199,30 @@ function New-ChatTab {
 function Remove-ChatTab {
     param([string]$TabId)
 
-    if (-not $script:chatTabs.ContainsKey($TabId)) {
+    if (-not ${script:chatTabs}.ContainsKey($TabId)) {
         Write-DevConsole "❌ Chat tab $TabId not found" "ERROR"
         return
     }
 
-    $chatSession = $script:chatTabs[$TabId]
+    $chatSession = ${script:chatTabs}[$TabId]
 
     # Remove from tab control
-    $script:chatTabControl.TabPages.Remove($chatSession.TabPage)
+    ${script:chatTabControl}.TabPages.Remove($chatSession.TabPage)
 
     # Clean up resources
     $chatSession.TabPage.Dispose()
 
     # Remove from collection
-    $script:chatTabs.Remove($TabId)
+    ${script:chatTabs}.Remove($TabId)
 
     # Update active tab if this was active
-    if ($script:activeChatTabId -eq $TabId) {
-        $tabPageCount = $script:chatTabControl.TabPages.Count
+    if (${script:activeChatTabId} -eq $TabId) {
+        $tabPageCount = ${script:chatTabControl}.TabPages.Count
         if ($tabPageCount -gt 0) {
-             $script:activeChatTabId = $null 
+             ${script:activeChatTabId} = $null 
         }
         else {
-            $script:activeChatTabId = $null
+            ${script:activeChatTabId} = $null
         }
     }
 
@@ -230,8 +230,8 @@ function Remove-ChatTab {
 }
 
 function Get-ActiveChatTab {
-    if ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
-        return $script:chatTabs[$script:activeChatTabId]
+    if (${script:activeChatTabId} -and ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
+        return ${script:chatTabs}[${script:activeChatTabId}]
     }
     return $null
 }
@@ -241,9 +241,9 @@ function Send-ChatMessage {
         [string]$TabId
     )
 
-    if (-not $script:chatTabs.ContainsKey($TabId)) { return }
+    if (-not ${script:chatTabs}.ContainsKey($TabId)) { return }
 
-    $chatSession = $script:chatTabs[$TabId]
+    $chatSession = ${script:chatTabs}[$TabId]
     $message = $chatSession.InputBox.Text.Trim()
 
     if ([string]::IsNullOrWhiteSpace($message)) { return }

@@ -96,7 +96,7 @@ function Show-ModelSelection {
     }
     
     for ($i = 0; $i -lt $Models.Count; $i++) {
-        $selected = if ($Models[$i].Name -eq $DefaultModel) { "✓ DEFAULT" } else { "" }
+        $selected = $(if ($Models[$i].Name -eq $DefaultModel) { "✓ DEFAULT" } else { "" }
         Write-Host "  [$($i + 1)] $($Models[$i].Name) ($($Models[$i].SizeGB) GB) $selected" -ForegroundColor Green
     }
     
@@ -226,7 +226,7 @@ function Show-ConfigSelection {
     Write-Host ""
     
     $authChoice = Read-Host "Select authentication (1-2, default: 1)"
-    $useAuth = if ($authChoice -eq "2") { $true } else { $false }
+    $useAuth = $(if ($authChoice -eq "2") { $true } else { $false }
     
     $apiKey = ""
     if ($useAuth) {

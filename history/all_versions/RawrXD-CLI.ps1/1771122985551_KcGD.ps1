@@ -27,7 +27,7 @@ $RawrXDRoot = "C:\RawrXD"
 $BinDir = Join-Path $RawrXDRoot "bin"
 $LibDir = Join-Path $RawrXDRoot "Libraries"
 $DocsDir = Join-Path $RawrXDRoot "Docs"
-$ExtensionsDir = Join-Path $env:APPDATA "RawrXD\extensions"
+$ExtensionsDir = Join-Path ${env:APPDATA} "RawrXD\extensions"
 $ExtRegistryPath = "D:\rawrxd\extensions\registry.json"
 
 function Write-Banner {
@@ -259,7 +259,7 @@ function Show-Help {
 # Main execution
 switch ($Command) {
     "generate-pe" {
-        $outputFile = if ($Arguments) { $Arguments[0] } else { "output.exe" }
+        $outputFile = $(if ($Arguments) { $Arguments[0] } else { "output.exe" }
         exit (Invoke-GeneratePE -OutputFile $outputFile)
     }
     "test-encoder" {

@@ -21,8 +21,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 # Wire the root once; all paths flow from here.
-$Script:FortressScriptRoot = $PSScriptRoot
-. (Join-Path $Script:FortressScriptRoot "RawrXD_Root.ps1")
+${Script:FortressScriptRoot} = $PSScriptRoot
+. (Join-Path ${Script:FortressScriptRoot} "RawrXD_Root.ps1")
 
 function Get-FortressRoot {
     Get-RawrXDRoot
@@ -32,7 +32,7 @@ function Invoke-FortressStatus {
     $root = Get-FortressRoot
     Write-Host ""
     Write-Host "  Fortress root: $root" -ForegroundColor Cyan
-    Write-Host "  LAZY_INIT_IDE_ROOT: $(if ($env:LAZY_INIT_IDE_ROOT) { $env:LAZY_INIT_IDE_ROOT } else { '(not set)' })" -ForegroundColor Gray
+    Write-Host "  LAZY_INIT_IDE_ROOT: $(if (${env:LAZY_INIT_IDE_ROOT}) { ${env:LAZY_INIT_IDE_ROOT} } else { '(not set)' })" -ForegroundColor Gray
     $bin = Join-Path $root "bin"
     $cli = Join-Path $root "src\cli\rawrxd_cli_compiler.cpp"
     $audit = Join-Path $root "audit_manifest"
@@ -52,7 +52,7 @@ function Invoke-FortressAudit {
         [switch]$OverwriteNewer
     )
     $dest = Get-FortressRoot
-    $auditScript = Join-Path $Script:FortressScriptRoot "Audit-E-Drive-And-BringTo-RawrXD.ps1"
+    $auditScript = Join-Path ${Script:FortressScriptRoot} "Audit-E-Drive-And-BringTo-RawrXD.ps1"
     if (-not (Test-Path $auditScript)) {
         Write-Error "Audit script not found: $auditScript"
         return
@@ -95,10 +95,10 @@ function Invoke-FortressBuild {
     Push-Location $root
     try {
         if ($Target -eq "Phase1") {
-            $script = Join-Path $Script:FortressScriptRoot "Build-Phase1.ps1"
+            $script = Join-Path ${Script:FortressScriptRoot} "Build-Phase1.ps1"
             if (Test-Path $script) { & $script } else { Write-Host "Build-Phase1.ps1 not found." -ForegroundColor Yellow }
         } elseif ($Target -eq "MASMBridge") {
-            $script = Join-Path $Script:FortressScriptRoot "Build-MASMBridge.ps1"
+            $script = Join-Path ${Script:FortressScriptRoot} "Build-MASMBridge.ps1"
             if (Test-Path $script) { & $script } else { Write-Host "Build-MASMBridge.ps1 not found." -ForegroundColor Yellow }
         } else {
             $script = Join-Path $root "tests\Test-UniversalCompiler.ps1"

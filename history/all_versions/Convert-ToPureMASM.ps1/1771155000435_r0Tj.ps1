@@ -36,8 +36,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:Issues = @()
-$script:FilesScanned = 0
+${script:Issues} = @()
+${script:FilesScanned} = 0
 if (-not $RootPath) { $RootPath = $PSScriptRoot }
 if (-not (Test-Path $RootPath)) { Write-Error "RootPath does not exist: $RootPath" }
 
@@ -140,7 +140,7 @@ function Invoke-FilePlaceholderScan {
         [string]$RelativePath
     )
     if (-not $FilePath -or -not (Test-Path $FilePath -PathType Leaf)) { return }
-    $script:FilesScanned++
+    ${script:FilesScanned}++
     $content = Get-Content -Path $FilePath -Raw -ErrorAction SilentlyContinue
     if (-not $content) { return }
 
@@ -157,7 +157,7 @@ function Invoke-FilePlaceholderScan {
                 $pos += $line.Length + 1
                 $lineNum++
             }
-            $script:Issues += [PSCustomObject]@{
+            ${script:Issues} += [PSCustomObject]@{
                 File         = $RelativePath
                 Line         = $lineNum
                 Category     = $pat.Category
@@ -219,12 +219,12 @@ function Write-Report {
 RawrXD Pure MASM Conversion Report
 Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Root: $RootPath
-Files scanned: $($script:FilesScanned)
-Issues found: $($script:Issues.Count)
+Files scanned: $(${script:FilesScanned})
+Issues found: $(${script:Issues}.Count)
 ================================================================================
 
 "@
-    $byFile = $script:Issues | Group-Object File
+    $byFile = ${script:Issues} | Group-Object File
     foreach ($g in $byFile) {
         $report += "`n--- $($g.Name) ---`n"
         foreach ($i in $g.Group) {
@@ -244,8 +244,8 @@ if ($Scan -or $Report) {
         $report | Out-File -FilePath $OutputFile -Encoding utf8
         Write-Host "Report written to $OutputFile" -ForegroundColor Green
     }
-    if ($script:Issues.Count -gt 0) {
-        Write-Host "`n$($script:Issues.Count) placeholder/scaffold issues found. Run with -Fix to apply fixes." -ForegroundColor Yellow
+    if (${script:Issues}.Count -gt 0) {
+        Write-Host "`n$(${script:Issues}.Count) placeholder/scaffold issues found. Run with -Fix to apply fixes." -ForegroundColor Yellow
         exit 1
     }
 }
@@ -253,12 +253,12 @@ if ($Scan -or $Report) {
 if ($Fix) {
     Invoke-AllPlaceholderScans
     if ($DryRun) {
-        Write-Host "Dry run — would fix $($script:Issues.Count) issues" -ForegroundColor Yellow
-        $script:Issues | Format-Table -AutoSize
+        Write-Host "Dry run — would fix $(${script:Issues}.Count) issues" -ForegroundColor Yellow
+        ${script:Issues} | Format-Table -AutoSize
     } else {
         # Fixes are applied by direct file edits (handled by IDE/agent)
         Write-Host "Fix mode: Run this script after manual edits. Issues to fix:" -ForegroundColor Cyan
-        $script:Issues | Group-Object File | ForEach-Object {
+        ${script:Issues} | Group-Object File | ForEach-Object {
             Write-Host "  $($_.Name): $($_.Count) issues"
         }
     }

@@ -58,8 +58,8 @@ $agg = foreach ($g in ($enriched | Group-Object { "{0}|{1}" -f $_.numExperts, $_
     $inGroup = @($g.Group)
     $gF = @($inGroup | Where-Object { $_.timed_grouped_faster })
     $lF = @($inGroup | Where-Object { -not $_.timed_grouped_faster })
-    $minWorkGf = if ($gF.Count -gt 0) { ($gF | Measure-Object -Property work_product -Minimum).Minimum } else { $null }
-    $maxWorkLf = if ($lF.Count -gt 0) { ($lF | Measure-Object -Property work_product -Maximum).Maximum } else { $null }
+    $minWorkGf = $(if ($gF.Count -gt 0) { ($gF | Measure-Object -Property work_product -Minimum).Minimum } else { $null }
+    $maxWorkLf = $(if ($lF.Count -gt 0) { ($lF | Measure-Object -Property work_product -Maximum).Maximum } else { $null }
     [pscustomobject]@{
         numExperts              = $kExp
         repeat                  = $rep

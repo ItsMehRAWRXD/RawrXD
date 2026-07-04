@@ -1,6 +1,6 @@
-$src = Get-Content "D:\rawrxd\Ship\RawrXD_Win32_IDE.cpp" -Raw
-$p=0; $f=0
-$tests = @(
+$Script:src = Get-Content "D:\rawrxd\Ship\RawrXD_Win32_IDE.cpp" -Raw
+$Script:p =0; $f=0
+$Script:tests = @(
     @('ID_FILE_OPENFOLDER defined', '#define\s+ID_FILE_OPENFOLDER'),
     @('IDM_FILE_OPENFOLDER alias', '#define\s+IDM_FILE_OPENFOLDER'),
     @('Open Folder menu item', 'Open &Folder'),

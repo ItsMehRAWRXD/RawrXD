@@ -1,14 +1,14 @@
-$global:currentWorkingDir = Get-Location
-$script:agentTodoExcludePaths = @('.git', 'node_modules', '.vs', 'bin', 'obj', 'dist', 'packages', '__pycache__', 'vendor', 'training_output', '.venv')
+${global:currentWorkingDir} = Get-Location
+${script:agentTodoExcludePaths} = @('.git', 'node_modules', '.vs', 'bin', 'obj', 'dist', 'packages', '__pycache__', 'vendor', 'training_output', '.venv')
 
 function Get-AgentTodoList {
     param(
-        [string]$RootPath = $global:currentWorkingDir,
+        [string]$RootPath = ${global:currentWorkingDir},
         [switch]$IncludeAllFiles
     )
 
     if (-not $RootPath) {
-        $RootPath = $global:currentWorkingDir
+        $RootPath = ${global:currentWorkingDir}
     }
 
     $normalizedRoot = [System.IO.Path]::GetFullPath($RootPath)
@@ -21,7 +21,7 @@ function Get-AgentTodoList {
 
     $files = $files | Where-Object {
         $full = $_.FullName.ToLower()
-        -not ($script:agentTodoExcludePaths | Where-Object { $full -like "*$_*" } | Select-Object -First 1)
+        -not (${script:agentTodoExcludePaths} | Where-Object { $full -like "*$_*" } | Select-Object -First 1)
     }
 
     $matches = Select-String -Path ($files | Select-Object -ExpandProperty FullName) -Pattern 'TODO|FIXME|XXX' -AllMatches -ErrorAction SilentlyContinue

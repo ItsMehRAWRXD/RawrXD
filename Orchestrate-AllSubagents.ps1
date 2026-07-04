@@ -197,7 +197,7 @@ function Invoke-SingleSubagent {
     }
     if ($Fix -and $p) { $p['AutoFix'] = $true }
     try {
-        $output = if ($p) { & $Agent.Script @p } else { & $Agent.Script }
+        $output = $(if ($p) { & $Agent.Script @p } else { & $Agent.Script }
         $fixCount = Extract-FixCount $output $Agent.FixKey
         return @{ Name = $Agent.Name; Fixes = $fixCount; Output = $output; Error = $null }
     }
@@ -231,7 +231,7 @@ for ($i = 1; $i -le $MaxIterations; $i++) {
     $globalStats.Iterations = $i
     $cycleFixCount = 0
 
-    $results = if ($Parallel) {
+    $results = $(if ($Parallel) {
         Invoke-SubagentParallel -Agents $subagents -Fix:$AutoFix
     }
     else {

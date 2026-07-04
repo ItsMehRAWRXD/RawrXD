@@ -48,8 +48,8 @@ Describe 'RawrXD.UI.psm1 Exported Functions' {
     It 'Invoke-UIUpdate executes action' {
         $form = New-Object System.Windows.Forms.Form
         $called = $false
-        Invoke-UIUpdate -Control $form -Action { $script:called = $true }
-        $script:called | Should -Be $true
+        Invoke-UIUpdate -Control $form -Action { ${script:called} = $true }
+        ${script:called} | Should -Be $true
     }
     It 'Initialize-WebView2Safe returns a control' {
         $form = New-Object System.Windows.Forms.Form

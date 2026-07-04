@@ -28,7 +28,7 @@ param(
     [string]$BuildScope = "full",
     [switch]$UseDualEngine,
     [int]$ModelCount = 8,
-    [switch]$EnableCodeSelection = $true,
+    [switch]$EnableCodeSelection,
     [switch]$ShowProgress,
     [string]$QtMasmIdePath = "D:\lazy init ide"
 )

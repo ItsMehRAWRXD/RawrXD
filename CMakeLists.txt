@@ -227,6 +227,8 @@ if(RAWRXD_BUILD_CLI)
         src/cli/pipe_server_callback.cpp
         src/cli/hotpatch_model_manager.cpp
         src/cli/hotpatch_inference_integration.cpp
+        src/cli/inference_worker_rcu.cpp
+        src/cli/gguf_validator.cpp
         src/gguf_loader.cpp
         src/masm/cli_history.asm
         src/masm/RawrXD_PipeServer_v2.asm
@@ -283,6 +285,21 @@ if(RAWRXD_BUILD_CLI)
     add_executable(rawrxd-hotpatch
         src/cli/hotpatch_client.cpp
     )
+    
+    # Inference + Epoch-RCU integration test
+    add_executable(test-inference-rcu
+        test_inference_rcu_integration.cpp
+        src/masm/rawrxd_hotpatch_router_simple.asm
+    )
+    set_target_properties(test-inference-rcu PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_link_libraries(test-inference-rcu PRIVATE
+        kernel32 user32 advapi32
+    )
+    
     set_target_properties(rawrxd-hotpatch PROPERTIES
         EXCLUDE_FROM_ALL TRUE
         EXCLUDE_FROM_DEFAULT_BUILD TRUE
@@ -295,6 +312,35 @@ if(RAWRXD_BUILD_CLI)
     endif()
     target_link_libraries(rawrxd-hotpatch PRIVATE
         kernel32 user32 advapi32
+    )
+
+    # RawrXD-Script JavaScript Runtime Executable
+    # Full orchestrator: JS → Lexer → Parser → Compiler → MASM → Output
+    add_executable(RawrXD_Script
+        src/script/runtime/main_full.cpp
+        src/script/runtime/runtime_minimal.cpp
+        src/script/lexer/lexer.cpp
+        src/script/parser/parser.cpp
+        src/script/bytecode/bytecode.cpp
+        src/script/compiler/compiler.cpp
+    )
+    set_target_properties(RawrXD_Script PROPERTIES
+        OUTPUT_NAME RawrXD_Script
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+        CXX_STANDARD 20
+    )
+    target_include_directories(RawrXD_Script PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/script
+        ${CMAKE_SOURCE_DIR}/src/script/lexer
+        ${CMAKE_SOURCE_DIR}/src/script/parser
+        ${CMAKE_SOURCE_DIR}/src/script/bytecode
+        ${CMAKE_SOURCE_DIR}/src/script/compiler
+        ${CMAKE_SOURCE_DIR}/src/script/runtime
+    )
+    target_link_libraries(RawrXD_Script PRIVATE
+        kernel32
+        user32
     )
 endif()
 
@@ -1803,6 +1849,7 @@ endif()
 # =============================================================================
 add_subdirectory(src)
 add_subdirectory(src/reverse_engineering)
+add_subdirectory(src/codex)
 
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
@@ -3832,6 +3879,45 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
     add_dependencies(RawrXD-TitanHost RawrXD_Titan)
 endif()
 
+# =============================================================================
+# RawrXD LSP Client - Standalone executable for VS Code:/Cursor integration
+# =============================================================================
+# Builds RawrXD_LSPClient.exe from MASM source
+# Output: ${CMAKE_BINARY_DIR}/bin/RawrXD_LSPClient.exe
+# =============================================================================
+if(RAWR_HAS_MASM AND WIN32)
+    set(LSPCLIENT_ASM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/masm/RawrXD_LSPClient.asm)
+    set(LSPCLIENT_OBJ ${CMAKE_CURRENT_BINARY_DIR}/RawrXD_LSPClient.obj)
+    set(LSPCLIENT_EXE ${CMAKE_CURRENT_BINARY_DIR}/bin/RawrXD_LSPClient.exe)
+    
+    # Custom command to assemble
+    add_custom_command(
+        OUTPUT ${LSPCLIENT_OBJ}
+        COMMAND ${CMAKE_ASM_MASM_COMPILER} /c /W3 /nologo /Zi /Fo${LSPCLIENT_OBJ} ${LSPCLIENT_ASM_SRC}
+        DEPENDS ${LSPCLIENT_ASM_SRC}
+        COMMENT "Assembling RawrXD_LSPClient.asm"
+    )
+    
+    # Custom command to link (use full path to link.exe with proper lib paths)
+    set(LINK_EXE "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/link.exe")
+    set(WIN10_SDK_LIB "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64")
+    set(UCRT_LIB "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64")
+    set(VC_LIB "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64")
+    add_custom_command(
+        OUTPUT ${LSPCLIENT_EXE}
+        COMMAND ${LINK_EXE} /SUBSYSTEM:CONSOLE /ENTRY:main /NODEFAULTLIB /OUT:${LSPCLIENT_EXE} ${LSPCLIENT_OBJ} /LIBPATH:${WIN10_SDK_LIB} /LIBPATH:${UCRT_LIB} /LIBPATH:${VC_LIB} kernel32.lib
+        DEPENDS ${LSPCLIENT_OBJ}
+        COMMENT "Linking RawrXD_LSPClient.exe"
+    )
+    
+    # Custom target
+    add_custom_target(RawrXD_LSPClient ALL DEPENDS ${LSPCLIENT_EXE})
+    
+    message(STATUS "[LSP] RawrXD_LSPClient target added (MASM64 -> bin/RawrXD_LSPClient.exe)")
+else()
+    message(STATUS "[LSP] RawrXD_LSPClient skipped (requires MASM64 + WIN32)")
+endif()
+
 add_executable(rawrxd-monaco-gen
     src/monaco_gen.cpp
     src/engine/react_ide_generator.cpp
@@ -3920,6 +4006,13 @@ if(WIN32)
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/ASM_Bridge_Implementation.cpp
         src/win32app/Win32IDE_Commands.cpp
+        src/win32app/Win32IDE_CodexCommands.cpp
+        src/codex/CodexCLI.cpp
+        src/codex/CodexSettings.cpp
+        src/codex/CodexSettingsDialog.cpp
+        src/codex/CodexCommandHandlers.cpp
+        src/codex/CodexMenuIntegration.cpp
+        src/codex/HttpClient.cpp
         src/win32app/Win32IDE_CodeActions.cpp
         src/win32app/Win32IDE_Hierarchy.cpp
         src/win32app/Win32IDE_ModelLab.cpp
@@ -4064,7 +4157,6 @@ if(WIN32)
         src/win32app/Win32IDE_MultiResponse.cpp
         src/win32app/Win32IDE_ExecutionGovernor.cpp
         src/win32app/Win32IDE_LayerEviction.cpp
-        src/win32app/Win32IDE_SemanticIndexShim.cpp
         src/win32app/Win32IDE_SubAgent.cpp
         src/win32app/Win32IDE_AgentHistory.cpp
         src/win32app/Win32IDE_AgentPanel.cpp
@@ -8951,9 +9043,13 @@ message(STATUS "[SuperNode] test_llama_decode target added")
 
 # =============================================================================
 # RawrXD HTTP Server - OpenAI-compatible API server
+# Phase 7: Added decoder endpoint for splitter->decoder integration
 # =============================================================================
 add_executable(rawrxd_http_server EXCLUDE_FROM_ALL
     src/server/rawrxd_http_server_main.cpp
+    src/server/rawrxd_http_decoder_endpoint.cpp
+    src/core/llama_decode_internal.cpp
+    src/core/sovereign_transformer_forward.cpp
 )
 
 target_compile_features(rawrxd_http_server PRIVATE cxx_std_17)
@@ -8984,3 +9080,190 @@ set_target_properties(rawrxd_http_server PROPERTIES
 )
 
 message(STATUS "[HTTPServer] rawrxd_http_server target added")
+
+# =============================================================================
+# Phase 8: HTTP Splitter Client Test
+# Validates splitter -> HTTP decoder endpoint integration
+# =============================================================================
+add_executable(test_http_splitter_client EXCLUDE_FROM_ALL
+    src/core/test_http_splitter_client.cpp
+    src/core/sovereign_http_splitter_client.cpp
+)
+
+target_compile_features(test_http_splitter_client PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_http_splitter_client PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(test_http_splitter_client PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(test_http_splitter_client PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(test_http_splitter_client PRIVATE kernel32 ws2_32)
+    else()
+        target_link_libraries(test_http_splitter_client PRIVATE kernel32 ws2_32 pthread)
+    endif()
+endif()
+
+set_target_properties(test_http_splitter_client PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_http_splitter_client
+)
+
+message(STATUS "[Phase8] test_http_splitter_client target added")
+
+# =============================================================================
+# Phase 9: End-to-End Integration Test
+# Full pipeline: Batch Splitter -> HTTP Client -> HTTP Server -> Decoder
+# =============================================================================
+add_executable(test_e2e_splitter_decoder EXCLUDE_FROM_ALL
+    src/core/test_e2e_splitter_decoder.cpp
+    src/core/sovereign_http_splitter_client.cpp
+)
+
+target_compile_features(test_e2e_splitter_decoder PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_e2e_splitter_decoder PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(test_e2e_splitter_decoder PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(test_e2e_splitter_decoder PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(test_e2e_splitter_decoder PRIVATE kernel32 ws2_32)
+    else()
+        target_link_libraries(test_e2e_splitter_decoder PRIVATE kernel32 ws2_32 pthread)
+    endif()
+endif()
+
+set_target_properties(test_e2e_splitter_decoder PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_e2e_splitter_decoder
+)
+
+message(STATUS "[Phase9] test_e2e_splitter_decoder target added")
+
+# =============================================================================
+# Phase 10: Production Monitor Test
+# Validates monitoring, metrics, logging, and graceful shutdown
+# =============================================================================
+add_executable(test_production_monitor EXCLUDE_FROM_ALL
+    src/core/test_production_monitor.cpp
+    src/core/sovereign_production_monitor.cpp
+)
+
+target_compile_features(test_production_monitor PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_production_monitor PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(test_production_monitor PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(test_production_monitor PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(test_production_monitor PRIVATE kernel32 ws2_32 psapi)
+    else()
+        target_link_libraries(test_production_monitor PRIVATE kernel32 ws2_32 pthread psapi)
+    endif()
+endif()
+
+set_target_properties(test_production_monitor PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_production_monitor
+)
+
+message(STATUS "[Phase10] test_production_monitor target added")
+
+# =============================================================================
+# Phase 11: Performance Benchmark Suite
+# TPS, latency, and throughput measurement
+# =============================================================================
+add_executable(test_benchmark_suite EXCLUDE_FROM_ALL
+    src/core/test_benchmark_suite.cpp
+    src/core/sovereign_benchmark_suite.cpp
+)
+
+target_compile_features(test_benchmark_suite PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_benchmark_suite PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(test_benchmark_suite PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(test_benchmark_suite PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(test_benchmark_suite PRIVATE kernel32 ws2_32 psapi)
+    else()
+        target_link_libraries(test_benchmark_suite PRIVATE kernel32 ws2_32 pthread psapi)
+    endif()
+endif()
+
+set_target_properties(test_benchmark_suite PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_benchmark_suite
+)
+
+message(STATUS "[Phase11] test_benchmark_suite target added")
+
+# =============================================================================
+# Phase 12: Final Integration Test
+# Complete system validation
+# =============================================================================
+add_executable(test_phase12_final_integration EXCLUDE_FROM_ALL
+    src/core/test_phase12_final_integration.cpp
+    src/core/sovereign_http_splitter_client.cpp
+    src/core/sovereign_production_monitor.cpp
+    src/core/sovereign_benchmark_suite.cpp
+)
+
+target_compile_features(test_phase12_final_integration PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_phase12_final_integration PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+else()
+    target_compile_options(test_phase12_final_integration PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
+endif()
+
+target_include_directories(test_phase12_final_integration PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(WIN32)
+    if(MSVC)
+        target_link_libraries(test_phase12_final_integration PRIVATE kernel32 ws2_32 psapi)
+    else()
+        target_link_libraries(test_phase12_final_integration PRIVATE kernel32 ws2_32 pthread psapi)
+    endif()
+endif()
+
+set_target_properties(test_phase12_final_integration PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_phase12_final_integration
+)
+
+message(STATUS "[Phase12] test_phase12_final_integration target added")

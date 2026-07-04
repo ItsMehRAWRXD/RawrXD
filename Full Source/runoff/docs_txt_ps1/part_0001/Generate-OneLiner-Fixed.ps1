@@ -47,9 +47,9 @@ try {
     # Add $args parsing at the beginning
     $argsParsing = @"
 # Parse arguments from `$args
-`$MaxIterations = if (`$args.Count -gt 0) { [int]`$args[0] } else { 5 }
-`$SleepIntervalMs = if (`$args.Count -gt 1) { [int]`$args[1] } else { 3000 }
-`$WhatIf = if (`$args.Count -gt 2) { [bool]`$args[2] } else { `$false }
+`$MaxIterations = $(if (`$args.Count -gt 0) { [int]`$args[0] } else { 5 }
+`$SleepIntervalMs = $(if (`$args.Count -gt 1) { [int]`$args[1] } else { 3000 }
+`$WhatIf = $(if (`$args.Count -gt 2) { [bool]`$args[2] } else { `$false }
 
 "@
     

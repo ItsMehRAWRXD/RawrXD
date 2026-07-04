@@ -60,9 +60,9 @@ function Find-C-Compiler {
     # Prefer gcc if available, else clang from common Windows locations or PATH
     try { if (Get-Command gcc -ErrorAction Stop) { return 'gcc' } } catch {}
     $candidates = @(
-        Join-Path $env:ProgramFiles 'LLVM\bin\clang.exe'),
+        Join-Path ${env:ProgramFiles} 'LLVM\bin\clang.exe'),
         'C:\Program Files\LLVM\bin\clang.exe',
-        (Join-Path $env:LLVM_HOME 'bin\clang.exe'),
+        (Join-Path ${env:LLVM_HOME} 'bin\clang.exe'),
         'clang'
     $candidates = $candidates | Where-Object { $_ }
     foreach ($c in $candidates) {
@@ -71,7 +71,7 @@ function Find-C-Compiler {
             elseif (Test-Path $c) { return $c }
         } catch {}
     }
-    if ($env:CC) { return $env:CC }
+    if (${env:CC}) { return ${env:CC} }
     return $null
 }
 
@@ -79,9 +79,9 @@ function Find-CPP-Compiler {
     # Prefer g++ if available, else clang++ from common Windows locations or PATH
     try { if (Get-Command g++ -ErrorAction Stop) { return 'g++' } } catch {}
     $candidates = @(
-        Join-Path $env:ProgramFiles 'LLVM\bin\clang++.exe'),
+        Join-Path ${env:ProgramFiles} 'LLVM\bin\clang++.exe'),
         'C:\Program Files\LLVM\bin\clang++.exe',
-        (Join-Path $env:LLVM_HOME 'bin\clang++.exe'),
+        (Join-Path ${env:LLVM_HOME} 'bin\clang++.exe'),
         'clang++'
     $candidates = $candidates | Where-Object { $_ }
     foreach ($c in $candidates) {
@@ -90,7 +90,7 @@ function Find-CPP-Compiler {
             elseif (Test-Path $c) { return $c }
         } catch {}
     }
-    if ($env:CXX) { return $env:CXX }
+    if (${env:CXX}) { return ${env:CXX} }
     return $null
 }
 
@@ -143,7 +143,7 @@ function Invoke-UniversalCompiler {
     Write-Host "  Optimization: $Optimization" -ForegroundColor Gray
     
     # Create temp directory
-    $tempDir = Join-Path $env:TEMP "universal_compile_$([Guid]::NewGuid().ToString('N'))"
+    $tempDir = Join-Path ${env:TEMP} "universal_compile_$([Guid]::NewGuid().ToString('N'))"
     New-Item $tempDir -ItemType Directory -Force | Out-Null
     
     try {
@@ -364,7 +364,7 @@ function Invoke-UniversalBuild {
     
     # Insert universal compiler function before the language table
     if ($content -notmatch 'Invoke-UniversalBuild') {
-        $insertPosition = $content.IndexOf('$Script:OmegaTable')
+        $insertPosition = $content.IndexOf('${Script:OmegaTable}')
         if ($insertPosition -gt 0) {
             $content = $content.Insert($insertPosition, $universalCompilerWrapper)
             Write-Host "  ✓ Inserted universal compiler integration" -ForegroundColor Green
@@ -460,9 +460,7 @@ function Show-IntegrationSummary {
     Write-Host "════════════════════════════════════════════════════════════════════════`n" -ForegroundColor Magenta
 }
 
-# ============= EXECUTE INTEGRATION =============
-
-if ($MyInvocation.InvocationName -ne '.') {
+# ============= EXECUTE INTEGRATION ============= $(if ($MyInvocation.InvocationName -ne '.') {
     Write-Host "[INTEGRATION] Starting universal compiler integration..." -ForegroundColor Cyan
     
     # Update OmegaBuild

@@ -1,4 +1,4 @@
-$base = 'http://127.0.0.1:8765'
+$Script:base = 'http://127.0.0.1:8765'
 
 function PostJson($route, $obj) {
     Invoke-RestMethod -Method Post -Uri "$base/$route" -Body ($obj | ConvertTo-Json -Depth 6) -ContentType 'application/json'
@@ -11,7 +11,7 @@ PostJson 'fs/list' @{ path = "C:\\Users\\HiH8e\\OneDrive\\Desktop" } | Format-Li
 PostJson 'fs/read' @{ path = "C:\\Users\\HiH8e\\OneDrive\\Desktop\\Powershield\\AGENTIC-GIT-TOOLS.md" } | Format-List
 
 # Write and append file
-$target = "D:\\temp\\agenttools-test.txt"
+$Script:target = "D:\\temp\\agenttools-test.txt"
 PostJson 'fs/write' @{ path = $target; content = "Hello from AgentTools $(Get-Date)" } | Format-List
 PostJson 'fs/append' @{ path = $target; content = "`nAnother line $(Get-Date)" } | Format-List
 

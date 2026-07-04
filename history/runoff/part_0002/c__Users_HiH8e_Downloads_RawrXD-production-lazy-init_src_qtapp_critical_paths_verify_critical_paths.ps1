@@ -16,7 +16,7 @@
 param(
     [string]$BuildDir = ".\build",
     [string]$SourceDir = ".\src\qtapp\critical_paths",
-    [switch]$ShowMetrics = $true,
+    [switch]$ShowMetrics,
     [switch]$SkipCompile = $false,
     [switch]$SkipLink = $false,
     [switch]$Verbose = $false
@@ -123,8 +123,7 @@ if (-not $allFilesPresent) {
 
 # ==============================================================================
 # PHASE 3: MASM COMPILATION
-# ==============================================================================
-if ($SkipCompile) {
+# ============================================================================== $(if ($SkipCompile) {
     Write-Host "`n[3/7] SKIPPING MASM COMPILATION (--SkipCompile)" -ForegroundColor $colorWarning
 } else {
     Write-Host "`n[3/7] COMPILING MASM ASSEMBLY FILES..." -ForegroundColor $colorInfo
@@ -242,8 +241,7 @@ Write-Host "  Total code size: $totalSize bytes" -ForegroundColor $colorInfo
 
 # ==============================================================================
 # PHASE 6: LINKING VERIFICATION
-# ==============================================================================
-if ($SkipLink) {
+# ============================================================================== $(if ($SkipLink) {
     Write-Host "`n[6/7] SKIPPING LINKER VERIFICATION (--SkipLink)" -ForegroundColor $colorWarning
 } else {
     Write-Host "`n[6/7] VERIFYING LINKER CONFIGURATION..." -ForegroundColor $colorInfo
@@ -282,8 +280,7 @@ if ($SkipLink) {
 
 # ==============================================================================
 # PHASE 7: PERFORMANCE METRICS
-# ==============================================================================
-if ($ShowMetrics) {
+# ============================================================================== $(if ($ShowMetrics) {
     Write-Host "`n[7/7] PERFORMANCE METRICS & PROJECTIONS..." -ForegroundColor $colorInfo
 
     Write-Host @"

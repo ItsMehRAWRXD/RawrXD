@@ -80,15 +80,15 @@ function Get-FunctionDocumentation {
     }
 
     # Extract parameters
-    $params = if ($FunctionAst.Parameters) { $FunctionAst.Parameters } elseif ($paramBlock) { $paramBlock.Parameters } else { @() }
+    $params = $(if ($FunctionAst.Parameters) { $FunctionAst.Parameters } elseif ($paramBlock) { $paramBlock.Parameters } else { @() }
 
     foreach ($param in $params) {
         $paramInfo = @{
             Name = $param.Name.VariablePath.UserPath
-            Type = if ($param.StaticType) { $param.StaticType.Name } else { 'Object' }
+            Type = $(if ($param.StaticType) { $param.StaticType.Name } else { 'Object' }
             Mandatory = $false
             Position = $null
-            DefaultValue = if ($param.DefaultValue) { $param.DefaultValue.Extent.Text } else { $null }
+            DefaultValue = $(if ($param.DefaultValue) { $param.DefaultValue.Extent.Text } else { $null }
             ValidateSet = @()
             HelpMessage = $null
             Aliases = @()
@@ -317,9 +317,9 @@ $(if ($func.IsAdvancedFunction) { "**Advanced Function:** Yes`n" })
 |------|------|-----------|---------|-------------|
 "@
                 foreach ($param in $func.Parameters) {
-                    $mandatory = if ($param.Mandatory) { '✓' } else { '' }
-                    $default = if ($param.DefaultValue) { "``$($param.DefaultValue)``" } else { '-' }
-                    $desc = if ($param.HelpMessage) { $param.HelpMessage } else { '-' }
+                    $mandatory = $(if ($param.Mandatory) { '✓' } else { '' }
+                    $default = $(if ($param.DefaultValue) { "``$($param.DefaultValue)``" } else { '-' }
+                    $desc = $(if ($param.HelpMessage) { $param.HelpMessage } else { '-' }
                     $md += "| $($param.Name) | $($param.Type) | $mandatory | $default | $desc |`n"
                 }
             }
@@ -504,8 +504,8 @@ function Invoke-SourceCodeSummarizer {
                     $synopsisMatch = [regex]::Match($helpText, '\.SYNOPSIS\s*\r?\n\s*(.+?)(?=\r?\n\s*\.|\r?\n\s*#>)')
                     $descMatch = [regex]::Match($helpText, '\.DESCRIPTION\s*\r?\n\s*([\s\S]+?)(?=\r?\n\s*\.|\r?\n\s*#>)')
                     $moduleDoc = @{
-                        Synopsis = if ($synopsisMatch.Success) { $synopsisMatch.Groups[1].Value.Trim() } else { $null }
-                        Description = if ($descMatch.Success) { $descMatch.Groups[1].Value.Trim() } else { $null }
+                        Synopsis = $(if ($synopsisMatch.Success) { $synopsisMatch.Groups[1].Value.Trim() } else { $null }
+                        Description = $(if ($descMatch.Success) { $descMatch.Groups[1].Value.Trim() } else { $null }
                     }
                 }
 
@@ -527,7 +527,7 @@ function Invoke-SourceCodeSummarizer {
         }
 
         # Calculate averages
-        $avgComplexity = if ($allFiles.Count -gt 0) { [Math]::Round($totalComplexity / $allFiles.Count, 2) } else { 0 }
+        $avgComplexity = $(if ($allFiles.Count -gt 0) { [Math]::Round($totalComplexity / $allFiles.Count, 2) } else { 0 }
 
         # Build comprehensive report
         $report = [PSCustomObject]@{

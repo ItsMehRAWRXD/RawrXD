@@ -8,9 +8,9 @@ param(
     [int]$ContextTokens = 32768,
     [int]$MaxTokens = 512,
     [int]$Cycles = 100,
-    [switch]$EnableMmapFallback = $true,
+    [switch]$EnableMmapFallback,
     [switch]$EnableGpuBatching = $false,  # Not yet implemented
-    [switch]$EnablePhaseAwareMetrics = $true,
+    [switch]$EnablePhaseAwareMetrics,
     [string]$OutputDir = "D:\rawrxd\test_results\70b_stress_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 )
 
@@ -42,28 +42,28 @@ function Log-Message {
 Log-Message "Configuring environment for 70B stress test..."
 
 # KV Cache Configuration
-$env:RAWRXD_KV_RECENT_TOKENS = "32768"      # Recent context window
-$env:RAWRXD_KV_MID_TOKENS = "65536"         # Mid-tier context
-$env:RAWRXD_KV_APERTURE_MONITORING = "1"    # Enable aperture flush monitoring
-$env:RAWRXD_KV_FLUSH_THRESHOLD = "0.15"     # Aperture thrashing threshold
+${env:RAWRXD_KV_RECENT_TOKENS} = "32768"      # Recent context window
+${env:RAWRXD_KV_MID_TOKENS} = "65536"         # Mid-tier context
+${env:RAWRXD_KV_APERTURE_MONITORING} = "1"    # Enable aperture flush monitoring
+${env:RAWRXD_KV_FLUSH_THRESHOLD} = "0.15"     # Aperture thrashing threshold
 
 # Extension Logging
-$env:RAWRXD_EXTENSION_LOG = Join-Path $OutputDir "extension_events.log"
-$env:RAWRXD_EXTENSION_LOG_LEVEL = "DEBUG"   # Capture all diagnostic events
+${env:RAWRXD_EXTENSION_LOG} = Join-Path $OutputDir "extension_events.log"
+${env:RAWRXD_EXTENSION_LOG_LEVEL} = "DEBUG"   # Capture all diagnostic events
 
 # Streaming Configuration
-$env:RAWRXD_STREAMING_MMAP_FALLBACK = if ($EnableMmapFallback) { "1" } else { "0" }
-$env:RAWRXD_STREAMING_GPU_BATCHING = if ($EnableGpuBatching) { "1" } } else { "0" }
-$env:RAWRXD_STREAMING_PHASE_AWARE = if ($EnablePhaseAwareMetrics) { "1" } else { "0" }
+${env:RAWRXD_STREAMING_MMAP_FALLBACK} = $(if ($EnableMmapFallback) { "1" } else { "0" }
+${env:RAWRXD_STREAMING_GPU_BATCHING} = $(if ($EnableGpuBatching) { "1" } } else { "0" }
+${env:RAWRXD_STREAMING_PHASE_AWARE} = $(if ($EnablePhaseAwareMetrics) { "1" } else { "0" }
 
 # Memory Configuration
-$env:RAWRXD_MAX_PINNED_MB = "14336"         # 14GB pinned limit for 16GB VRAM systems
-$env:RAWRXD_PREFETCH_WINDOW = "3"            # 3-layer prefetch window
-$env:RAWRXD_EVICTION_THRESHOLD = "0.85"       # Evict when 85% of budget used
+${env:RAWRXD_MAX_PINNED_MB} = "14336"         # 14GB pinned limit for 16GB VRAM systems
+${env:RAWRXD_PREFETCH_WINDOW} = "3"            # 3-layer prefetch window
+${env:RAWRXD_EVICTION_THRESHOLD} = "0.85"       # Evict when 85% of budget used
 
 # Hotpatch Configuration
-$env:RAWRXD_HOTPATCH_AUTOPATCH = "1"         # Enable autopatch
-$env:RAWRXD_HOTPATCH_UNRESTRICTIVE_DIAL = "0.7"  # 70% aggression
+${env:RAWRXD_HOTPATCH_AUTOPATCH} = "1"         # Enable autopatch
+${env:RAWRXD_HOTPATCH_UNRESTRICTIVE_DIAL} = "0.7"  # 70% aggression
 
 Log-Message "Environment configured:"
 Log-Message "  Model: $ModelPath"
@@ -199,7 +199,7 @@ for ($cycle = 1; $cycle -le $Cycles; $cycle++) {
     # Progress report every 10 cycles
     if ($cycle % 10 -eq 0) {
         $progress = [math]::Round(($cycle / $Cycles) * 100, 1)
-        $tps = if ($metrics.totalTimeMs -gt 0) { 
+        $tps = $(if ($metrics.totalTimeMs -gt 0) { 
             [math]::Round($metrics.totalTokensGenerated / ($metrics.totalTimeMs / 1000), 2)
         } else { 0 }
         Log-Message "Progress: $progress% complete | TPS: $tps | Success: $($metrics.cyclesCompleted)/$cycle"
@@ -212,7 +212,7 @@ for ($cycle = 1; $cycle -le $Cycles; $cycle++) {
 Log-Message "Stress test completed. Generating report..."
 
 $metrics.endTime = Get-Date -Format "o"
-$metrics.avgTps = if ($metrics.totalTimeMs -gt 0) {
+$metrics.avgTps = $(if ($metrics.totalTimeMs -gt 0) {
     [math]::Round($metrics.totalTokensGenerated / ($metrics.totalTimeMs / 1000), 2)
 } else { 0 }
 $metrics.successRate = [math]::Round(($metrics.cyclesCompleted / $Cycles) * 100, 2)
@@ -280,7 +280,7 @@ $(if ($metrics.successRate -ge 95) {
 ## Artifacts
 
 - Metrics JSON: $MetricsFile
-- Extension Events: $($env:RAWRXD_EXTENSION_LOG)
+- Extension Events: $(${env:RAWRXD_EXTENSION_LOG})
 - Cycle Logs: $OutputDir\cycle_*.log
 "@
 

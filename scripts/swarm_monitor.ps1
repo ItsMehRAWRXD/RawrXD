@@ -5,7 +5,7 @@ param(
     [int]$IntervalSeconds = 10
 )
 
-$root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
+$root = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
 $failedJson = Join-Path $root "failed_files.json"
 $completionLog = Join-Path $root "completion_log.txt"
 $batchFailed = Join-Path $root "batch_*_failed.json"
@@ -16,7 +16,7 @@ function Show-Status {
 
     if (Test-Path $failedJson) {
         $data = Get-Content $failedJson -Raw -ErrorAction SilentlyContinue | ConvertFrom-Json
-        $n = if ($data -is [array]) { $data.Count } else { 1 }
+        $n = $(if ($data -is [array]) { $data.Count } else { 1 }
         Write-Host "  failed_files.json: $n file(s) to fix" -ForegroundColor $(if ($n -eq 0) { "Green" } else { "Yellow" })
     } else {
         Write-Host "  failed_files.json: (none — smoke test not run or all passed)" -ForegroundColor Gray

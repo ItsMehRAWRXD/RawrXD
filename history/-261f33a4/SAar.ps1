@@ -315,7 +315,7 @@ function Start-OllamaWithStub {
     Write-Host "╚═══════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
     
     # Set Ollama models directory
-    $env:OLLAMA_MODELS = $StubDir
+    ${env:OLLAMA_MODELS} = $StubDir
     
     # Check if Ollama is running
     $ollamaRunning = Get-Process ollama -ErrorAction SilentlyContinue

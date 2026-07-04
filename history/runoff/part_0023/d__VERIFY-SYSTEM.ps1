@@ -72,8 +72,8 @@ function Write-Test {
         [string]$Type = 'Info'
     )
     
-    $Status = if ($Pass) { '✅ PASS' } else { '❌ FAIL' }
-    $Color = if ($Pass) { $Colors.Success } else { $Colors.Error }
+    $Status = $(if ($Pass) { '✅ PASS' } else { '❌ FAIL' }
+    $Color = $(if ($Pass) { $Colors.Success } else { $Colors.Error }
     
     Write-Host "$Status : $Name" -ForegroundColor $Color
     if ($Details) {
@@ -100,7 +100,7 @@ function Test-FileExists {
         [bool]$Critical = $true
     )
     
-    $desc = if ($Description) { "$Description - " } else { '' }
+    $desc = $(if ($Description) { "$Description - " } else { '' }
     $exists = Test-Path $FilePath
     
     if ($exists) {
@@ -120,7 +120,7 @@ function Test-DirectoryExists {
         [bool]$Critical = $true
     )
     
-    $desc = if ($Description) { "$Description - " } else { '' }
+    $desc = $(if ($Description) { "$Description - " } else { '' }
     $exists = Test-Path -PathType Container $DirPath
     
     if ($exists) {
@@ -140,7 +140,7 @@ function Test-Executable {
         [string[]]$TestArgs = @()
     )
     
-    $desc = if ($Description) { "$Description - " } else { '' }
+    $desc = $(if ($Description) { "$Description - " } else { '' }
     
     # Check existence
     if (-not (Test-Path $ExePath)) {
@@ -369,7 +369,7 @@ function Show-Summary {
     Write-TestHeader "VERIFICATION SUMMARY"
     
     $total = $TestResults.Passed + $TestResults.Failed
-    $passRate = if ($total -gt 0) { [Math]::Round(($TestResults.Passed / $total) * 100, 1) } else { 0 }
+    $passRate = $(if ($total -gt 0) { [Math]::Round(($TestResults.Passed / $total) * 100, 1) } else { 0 }
     
     Write-Host "Total Tests:     $total" -ForegroundColor $Colors.Info
     Write-Host "✅ Passed:        $($TestResults.Passed)" -ForegroundColor $Colors.Success

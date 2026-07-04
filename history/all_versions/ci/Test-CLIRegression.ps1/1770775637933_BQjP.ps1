@@ -29,10 +29,10 @@ $ErrorActionPreference = "Stop"
 # ============================================================
 # Setup
 # ============================================================
-$script:TotalTests  = 0
-$script:PassedTests = 0
-$script:FailedTests = 0
-$script:Results     = @()
+${script:TotalTests}  = 0
+${script:PassedTests} = 0
+${script:FailedTests} = 0
+${script:Results}     = @()
 
 if ($WorkDir) { Push-Location $WorkDir }
 
@@ -70,7 +70,7 @@ function Test-Mode {
         [int]$LatencyOverrideMs = 0
     )
 
-    $script:TotalTests++
+    ${script:TotalTests}++
     $testResult = @{
         Name    = $Name
         Switch  = $Switch
@@ -82,7 +82,7 @@ function Test-Mode {
     if ($Skip) {
         $testResult.Status = "SKIPPED"
         $testResult.Detail = $SkipReason
-        $script:Results += [PSCustomObject]$testResult
+        ${script:Results} += [PSCustomObject]$testResult
         Write-Host "  ⏭  $Name — SKIPPED ($SkipReason)" -ForegroundColor Yellow
         return
     }
@@ -101,8 +101,8 @@ function Test-Mode {
 
         $proc = Start-Process -FilePath $BinaryPath -ArgumentList $argString `
             -NoNewWindow -Wait -PassThru `
-            -RedirectStandardOutput "$env:TEMP\rawrxd_stdout.txt" `
-            -RedirectStandardError "$env:TEMP\rawrxd_stderr.txt" `
+            -RedirectStandardOutput "${env:TEMP}\rawrxd_stdout.txt" `
+            -RedirectStandardError "${env:TEMP}\rawrxd_stderr.txt" `
             -ErrorAction Stop
 
         $stopwatch.Stop()
@@ -110,8 +110,8 @@ function Test-Mode {
         $testResult.Latency = [int]$elapsedMs
 
         $stdout = ""
-        if (Test-Path "$env:TEMP\rawrxd_stdout.txt") {
-            $stdout = Get-Content "$env:TEMP\rawrxd_stdout.txt" -Raw -ErrorAction SilentlyContinue
+        if (Test-Path "${env:TEMP}\rawrxd_stdout.txt") {
+            $stdout = Get-Content "${env:TEMP}\rawrxd_stdout.txt" -Raw -ErrorAction SilentlyContinue
         }
 
         # Assert: Exit code
@@ -121,7 +121,7 @@ function Test-Mode {
         }
 
         # Assert: Latency within bounds
-        $effectiveThreshold = if ($LatencyOverrideMs -gt 0) { $LatencyOverrideMs } else { $LatencyThresholdMs }
+        $effectiveThreshold = $(if ($LatencyOverrideMs -gt 0) { $LatencyOverrideMs } else { $LatencyThresholdMs }
         if ($elapsedMs -gt $effectiveThreshold) {
             throw "LATENCY: $([int]$elapsedMs)ms exceeds threshold ${effectiveThreshold}ms"
         }
@@ -160,21 +160,21 @@ function Test-Mode {
 
         $testResult.Status = "PASS"
         $testResult.Detail = "$([int]$elapsedMs)ms"
-        $script:PassedTests++
+        ${script:PassedTests}++
         Write-Host "  ✅ $Name — PASS ($([int]$elapsedMs)ms)" -ForegroundColor Green
 
     } catch {
         $testResult.Status = "FAIL"
         $testResult.Detail = $_.Exception.Message
-        $script:FailedTests++
+        ${script:FailedTests}++
         Write-Host "  ❌ $Name — FAIL: $($_.Exception.Message)" -ForegroundColor Red
     } finally {
         # Cleanup temp files
-        Remove-Item "$env:TEMP\rawrxd_stdout.txt" -Force -ErrorAction SilentlyContinue
-        Remove-Item "$env:TEMP\rawrxd_stderr.txt" -Force -ErrorAction SilentlyContinue
+        Remove-Item "${env:TEMP}\rawrxd_stdout.txt" -Force -ErrorAction SilentlyContinue
+        Remove-Item "${env:TEMP}\rawrxd_stderr.txt" -Force -ErrorAction SilentlyContinue
     }
 
-    $script:Results += [PSCustomObject]$testResult
+    ${script:Results} += [PSCustomObject]$testResult
 }
 
 function Test-RegistryCleanup {
@@ -273,7 +273,7 @@ Test-Mode -Name "uac" -Switch "-uac" `
 Write-Host ""
 Write-Host "─── Phase 7: Log File Validation ───" -ForegroundColor White
 
-$script:TotalTests++
+${script:TotalTests}++
 try {
     if (-not (Test-Path "rawrxd_ide.log")) {
         throw "rawrxd_ide.log not generated"
@@ -285,19 +285,19 @@ try {
     if ($logContent -notmatch "Latency") {
         throw "Log file missing latency entries"
     }
-    $script:PassedTests++
+    ${script:PassedTests}++
     Write-Host "  ✅ log-file-format — PASS" -ForegroundColor Green
-    $script:Results += [PSCustomObject]@{ Name="log-file-format"; Switch="N/A"; Status="PASS"; Detail="Structured log validated"; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="log-file-format"; Switch="N/A"; Status="PASS"; Detail="Structured log validated"; Latency=0 }
 } catch {
-    $script:FailedTests++
+    ${script:FailedTests}++
     Write-Host "  ❌ log-file-format — FAIL: $($_.Exception.Message)" -ForegroundColor Red
-    $script:Results += [PSCustomObject]@{ Name="log-file-format"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="log-file-format"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
 }
 
 Write-Host ""
 Write-Host "─── Phase 8: Artifact Integrity + Schema Validation ───" -ForegroundColor White
 
-$script:TotalTests++
+${script:TotalTests}++
 try {
     if (Test-Path "trace_map.json") {
         $traceContent = Get-Content "trace_map.json" -Raw
@@ -310,16 +310,16 @@ try {
     } else {
         throw "trace_map.json not found (should exist from compile test)"
     }
-    $script:PassedTests++
+    ${script:PassedTests}++
     Write-Host "  ✅ trace-map-integrity — PASS" -ForegroundColor Green
-    $script:Results += [PSCustomObject]@{ Name="trace-map-integrity"; Switch="N/A"; Status="PASS"; Detail="JSON structure valid"; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="trace-map-integrity"; Switch="N/A"; Status="PASS"; Detail="JSON structure valid"; Latency=0 }
 } catch {
-    $script:FailedTests++
+    ${script:FailedTests}++
     Write-Host "  ❌ trace-map-integrity — FAIL: $($_.Exception.Message)" -ForegroundColor Red
-    $script:Results += [PSCustomObject]@{ Name="trace-map-integrity"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="trace-map-integrity"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
 }
 
-$script:TotalTests++
+${script:TotalTests}++
 try {
     if (Test-Path "bbcov_report.json") {
         $bbcovContent = Get-Content "bbcov_report.json" -Raw
@@ -329,17 +329,17 @@ try {
     } else {
         throw "bbcov_report.json not found (should exist from bbcov test)"
     }
-    $script:PassedTests++
+    ${script:PassedTests}++
     Write-Host "  ✅ bbcov-report-integrity — PASS" -ForegroundColor Green
-    $script:Results += [PSCustomObject]@{ Name="bbcov-report-integrity"; Switch="N/A"; Status="PASS"; Detail="JSON structure valid"; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="bbcov-report-integrity"; Switch="N/A"; Status="PASS"; Detail="JSON structure valid"; Latency=0 }
 } catch {
-    $script:FailedTests++
+    ${script:FailedTests}++
     Write-Host "  ❌ bbcov-report-integrity — FAIL: $($_.Exception.Message)" -ForegroundColor Red
-    $script:Results += [PSCustomObject]@{ Name="bbcov-report-integrity"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="bbcov-report-integrity"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
 }
 
 # CovFusion report integrity
-$script:TotalTests++
+${script:TotalTests}++
 try {
     if (Test-Path "covfusion_report.json") {
         $cfContent = Get-Content "covfusion_report.json" -Raw
@@ -352,17 +352,17 @@ try {
     } else {
         throw "covfusion_report.json not found (should exist from covfuse test)"
     }
-    $script:PassedTests++
+    ${script:PassedTests}++
     Write-Host "  ✅ covfusion-report-integrity — PASS" -ForegroundColor Green
-    $script:Results += [PSCustomObject]@{ Name="covfusion-report-integrity"; Switch="N/A"; Status="PASS"; Detail="JSON structure + schema_version valid"; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="covfusion-report-integrity"; Switch="N/A"; Status="PASS"; Detail="JSON structure + schema_version valid"; Latency=0 }
 } catch {
-    $script:FailedTests++
+    ${script:FailedTests}++
     Write-Host "  ❌ covfusion-report-integrity — FAIL: $($_.Exception.Message)" -ForegroundColor Red
-    $script:Results += [PSCustomObject]@{ Name="covfusion-report-integrity"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="covfusion-report-integrity"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
 }
 
 # Schema version validation across all available reports
-$script:TotalTests++
+${script:TotalTests}++
 try {
     $schemaFiles = @(
         @{ File="bbcov_report.json";     Key="basic_block_coverage" },
@@ -380,17 +380,17 @@ try {
     if ($schemaErrors.Count -gt 0) {
         throw "Schema validation failed: $($schemaErrors -join '; ')"
     }
-    $script:PassedTests++
+    ${script:PassedTests}++
     Write-Host "  ✅ schema-version-v1 — PASS" -ForegroundColor Green
-    $script:Results += [PSCustomObject]@{ Name="schema-version-v1"; Switch="N/A"; Status="PASS"; Detail="All reports have schema_version:1"; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="schema-version-v1"; Switch="N/A"; Status="PASS"; Detail="All reports have schema_version:1"; Latency=0 }
 } catch {
-    $script:FailedTests++
+    ${script:FailedTests}++
     Write-Host "  ❌ schema-version-v1 — FAIL: $($_.Exception.Message)" -ForegroundColor Red
-    $script:Results += [PSCustomObject]@{ Name="schema-version-v1"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="schema-version-v1"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
 }
 
 # RVA-only address validation (no absolute VAs in reports)
-$script:TotalTests++
+${script:TotalTests}++
 try {
     $rvaErrors = @()
     foreach ($reportFile in @("bbcov_report.json", "covfusion_report.json")) {
@@ -405,13 +405,13 @@ try {
     if ($rvaErrors.Count -gt 0) {
         throw "ASLR leak: $($rvaErrors -join '; ')"
     }
-    $script:PassedTests++
+    ${script:PassedTests}++
     Write-Host "  ✅ rva-only-addresses — PASS" -ForegroundColor Green
-    $script:Results += [PSCustomObject]@{ Name="rva-only-addresses"; Switch="N/A"; Status="PASS"; Detail="No absolute VAs detected in reports"; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="rva-only-addresses"; Switch="N/A"; Status="PASS"; Detail="No absolute VAs detected in reports"; Latency=0 }
 } catch {
-    $script:FailedTests++
+    ${script:FailedTests}++
     Write-Host "  ❌ rva-only-addresses — FAIL: $($_.Exception.Message)" -ForegroundColor Red
-    $script:Results += [PSCustomObject]@{ Name="rva-only-addresses"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
+    ${script:Results} += [PSCustomObject]@{ Name="rva-only-addresses"; Switch="N/A"; Status="FAIL"; Detail=$_.Exception.Message; Latency=0 }
 }
 
 # ============================================================
@@ -423,7 +423,7 @@ Write-Host "  RESULTS SUMMARY" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 
-$script:Results | Format-Table -Property @(
+${script:Results} | Format-Table -Property @(
     @{Label="Test"; Expression={$_.Name}; Width=25},
     @{Label="Switch"; Expression={$_.Switch}; Width=12},
     @{Label="Status"; Expression={$_.Status}; Width=8},
@@ -432,11 +432,11 @@ $script:Results | Format-Table -Property @(
 ) -AutoSize
 
 Write-Host ""
-$passColor = if ($script:FailedTests -eq 0) { "Green" } else { "Red" }
-Write-Host "  Total:   $($script:TotalTests)" -ForegroundColor White
-Write-Host "  Passed:  $($script:PassedTests)" -ForegroundColor Green
-Write-Host "  Failed:  $($script:FailedTests)" -ForegroundColor $(if ($script:FailedTests -gt 0) {"Red"} else {"Green"})
-Write-Host "  Skipped: $($script:TotalTests - $script:PassedTests - $script:FailedTests)" -ForegroundColor Yellow
+$passColor = $(if (${script:FailedTests} -eq 0) { "Green" } else { "Red" }
+Write-Host "  Total:   $(${script:TotalTests})" -ForegroundColor White
+Write-Host "  Passed:  $(${script:PassedTests})" -ForegroundColor Green
+Write-Host "  Failed:  $(${script:FailedTests})" -ForegroundColor $(if (${script:FailedTests} -gt 0) {"Red"} else {"Green"})
+Write-Host "  Skipped: $(${script:TotalTests} - ${script:PassedTests} - ${script:FailedTests})" -ForegroundColor Yellow
 Write-Host ""
 
 # Generate machine-readable output for CI
@@ -444,11 +444,11 @@ $ciReport = @{
     timestamp   = (Get-Date -Format "o")
     binary      = $BinaryPath
     contract    = "CLI_CONTRACT_v1.0 (v1.1 addendum)"
-    total       = $script:TotalTests
-    passed      = $script:PassedTests
-    failed      = $script:FailedTests
-    skipped     = ($script:TotalTests - $script:PassedTests - $script:FailedTests)
-    tests       = $script:Results | ForEach-Object {
+    total       = ${script:TotalTests}
+    passed      = ${script:PassedTests}
+    failed      = ${script:FailedTests}
+    skipped     = (${script:TotalTests} - ${script:PassedTests} - ${script:FailedTests})
+    tests       = ${script:Results} | ForEach-Object {
         @{
             name    = $_.Name
             switch  = $_.Switch
@@ -464,9 +464,9 @@ Write-Host "  CI report written to: ci_regression_report.json" -ForegroundColor 
 if ($WorkDir) { Pop-Location }
 
 # Exit with appropriate code for CI
-if ($script:FailedTests -gt 0) {
+if (${script:FailedTests} -gt 0) {
     Write-Host ""
-    Write-Host "  ⚠ $($script:FailedTests) test(s) FAILED — pipeline should fail" -ForegroundColor Red
+    Write-Host "  ⚠ $(${script:FailedTests}) test(s) FAILED — pipeline should fail" -ForegroundColor Red
     exit 1
 } else {
     Write-Host ""

@@ -84,18 +84,18 @@ function Invoke-ModelLoad() {
     Write-Status "Context: $ContextLength tokens" "Gray"
     
     # Set environment variables for the loader
-    $env:RAWRXD_MODEL_PATH = $ModelPath
-    $env:RAWRXD_CONFIG_PATH = $ConfigPath
-    $env:RAWRXD_CONTEXT_LENGTH = $ContextLength
-    $env:RAWRXD_ENABLE_MMAP_FALLBACK = "1"
-    $env:RAWRXD_SLIDING_WINDOW_SIZE = "2147483648"  # 2GB
-    $env:RAWRXD_PREFETCH_AHEAD = "3"
-    $env:RAWRXD_MAX_RESIDENT_LAYERS = "8"
-    $env:RAWRXD_KV_CACHE_SIZE = "8589934592"  # 8GB
-    $env:RAWRXD_LOG_MEMORY = if ($Verbose) { "1" } else { "0" }
+    ${env:RAWRXD_MODEL_PATH} = $ModelPath
+    ${env:RAWRXD_CONFIG_PATH} = $ConfigPath
+    ${env:RAWRXD_CONTEXT_LENGTH} = $ContextLength
+    ${env:RAWRXD_ENABLE_MMAP_FALLBACK} = "1"
+    ${env:RAWRXD_SLIDING_WINDOW_SIZE} = "2147483648"  # 2GB
+    ${env:RAWRXD_PREFETCH_AHEAD} = "3"
+    ${env:RAWRXD_MAX_RESIDENT_LAYERS} = "8"
+    ${env:RAWRXD_KV_CACHE_SIZE} = "8589934592"  # 8GB
+    ${env:RAWRXD_LOG_MEMORY} = $(if ($Verbose) { "1" } else { "0" }
     
     # Check for headless minimal mode (reduces overhead)
-    $env:RAWRXD_HEADLESS_MINIMAL = "1"
+    ${env:RAWRXD_HEADLESS_MINIMAL} = "1"
     
     # Find the loader executable
     $loaderPath = "..\build\bin\RawrXD-Headless.exe"

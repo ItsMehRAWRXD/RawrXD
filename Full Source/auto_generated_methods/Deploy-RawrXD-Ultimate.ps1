@@ -93,7 +93,7 @@ param(
 )
 
 # Global deployment state
-$script:DeploymentState = @{
+${script:DeploymentState} = @{
     Version = "3.0.0"
     BuildDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     StartTime = Get-Date
@@ -125,7 +125,7 @@ function Write-DeploymentLog {
     param(
         [Parameter(Mandatory=$true)][string]$Message,
         [ValidateSet('Info','Warning','Error','Debug','Success','Critical','Phase')][string]$Level = 'Info',
-        [string]$Phase = $script:DeploymentState.Phase,
+        [string]$Phase = ${script:DeploymentState}.Phase,
         [hashtable]$Data = $null
     )
     
@@ -144,16 +144,16 @@ function Write-DeploymentLog {
     Write-Host $logEntry -ForegroundColor $color
     
     # Update state
-    $script:DeploymentState.CurrentOperation = $Message
+    ${script:DeploymentState}.CurrentOperation = $Message
     if ($Level -eq 'Error' -or $Level -eq 'Critical') {
-        $script:DeploymentState.Errors.Add($Message)
+        ${script:DeploymentState}.Errors.Add($Message)
     } elseif ($Level -eq 'Warning') {
-        $script:DeploymentState.Warnings.Add($Message)
+        ${script:DeploymentState}.Warnings.Add($Message)
     }
     
     # Log to file
-    if ($script:DeploymentState.Paths.Log) {
-        $logFile = Join-Path $script:DeploymentState.Paths.Log "UltimateDeployment_$(Get-Date -Format 'yyyyMMdd').log"
+    if (${script:DeploymentState}.Paths.Log) {
+        $logFile = Join-Path ${script:DeploymentState}.Paths.Log "UltimateDeployment_$(Get-Date -Format 'yyyyMMdd').log"
         $logDir = Split-Path $logFile -Parent
         if (-not (Test-Path $logDir)) {
             New-Item -Path $logDir -ItemType Directory -Force | Out-Null
@@ -165,7 +165,7 @@ function Write-DeploymentLog {
 # Update deployment phase
 function Update-DeploymentPhase {
     param([string]$Phase)
-    $script:DeploymentState.Phase = $Phase
+    ${script:DeploymentState}.Phase = $Phase
     Write-DeploymentLog -Message "═══════════════════════════════════════════════════════════════════" -Level Phase
     Write-DeploymentLog -Message "ENTERING PHASE: $Phase" -Level Phase
     Write-DeploymentLog -Message "═══════════════════════════════════════════════════════════════════" -Level Phase
@@ -227,7 +227,7 @@ function Test-SystemPrerequisites {
     }
     
     # Check disk space
-    $drive = Split-Path $script:DeploymentState.Paths.Target -Qualifier
+    $drive = Split-Path ${script:DeploymentState}.Paths.Target -Qualifier
     $disk = Get-WmiObject -Class Win32_LogicalDisk -Filter "DeviceID='$drive'"
     $freeSpaceGB = [Math]::Round($disk.FreeSpace / 1GB, 2)
     $prereqs.DiskSpace = $freeSpaceGB -gt 5
@@ -294,7 +294,7 @@ function Import-RequiredModules {
     }
     
     foreach ($module in $requiredModules) {
-        $modulePath = Join-Path $script:DeploymentState.Paths.Source $module
+        $modulePath = Join-Path ${script:DeploymentState}.Paths.Source $module
         
         if (Test-Path $modulePath) {
             try {
@@ -331,13 +331,13 @@ function Start-Phase1-ReverseEngineering {
     
     try {
         # Import reverse engineering module
-        $reverseEngineeringModule = Join-Path $script:DeploymentState.Paths.Source "RawrXD.ReverseEngineering.psm1"
+        $reverseEngineeringModule = Join-Path ${script:DeploymentState}.Paths.Source "RawrXD.ReverseEngineering.psm1"
         if (Test-Path $reverseEngineeringModule) {
             Import-Module $reverseEngineeringModule -Force -Global -ErrorAction SilentlyContinue
         }
         
         # Run complete reverse engineering
-        $analysis = Invoke-CompleteReverseEngineering -ModulePath $script:DeploymentState.Paths.Source -AnalysisDepth Comprehensive
+        $analysis = Invoke-CompleteReverseEngineering -ModulePath ${script:DeploymentState}.Paths.Source -AnalysisDepth Comprehensive
         
         Write-DeploymentLog -Message "Reverse engineering completed" -Level Success -Data @{
             Duration = $analysis.Duration
@@ -359,7 +359,7 @@ function Start-Phase1-ReverseEngineering {
         Write-DeploymentLog -Message "  Average Complexity: $($analysis.QualityMetrics.AverageComplexity)" -Level Info
         
         # Save analysis results
-        $analysisPath = Join-Path $script:DeploymentState.Paths.Log "ReverseEngineering_$(Get-Date -Format 'yyyyMMdd_HHmmss').xml"
+        $analysisPath = Join-Path ${script:DeploymentState}.Paths.Log "ReverseEngineering_$(Get-Date -Format 'yyyyMMdd_HHmmss').xml"
         $analysis | Export-Clixml -Path $analysisPath -Force
         Write-DeploymentLog -Message "Analysis saved to: $analysisPath" -Level Success
         
@@ -392,13 +392,13 @@ function Start-Phase2-FeatureGeneration {
     
     try {
         # Import autonomous enhancement module
-        $enhancementModule = Join-Path $script:DeploymentState.Paths.Source "RawrXD.AutonomousEnhancement.psm1"
+        $enhancementModule = Join-Path ${script:DeploymentState}.Paths.Source "RawrXD.AutonomousEnhancement.psm1"
         if (Test-Path $enhancementModule) {
             Import-Module $enhancementModule -Force -Global -ErrorAction SilentlyContinue
         }
         
         # Generate features
-        $generation = Scaffold-MissingFeatures -AnalysisResults $AnalysisResults -OutputPath $script:DeploymentState.Paths.Source
+        $generation = Scaffold-MissingFeatures -AnalysisResults $AnalysisResults -OutputPath ${script:DeploymentState}.Paths.Source
         
         Write-DeploymentLog -Message "Feature generation completed" -Level Success -Data @{
             Duration = $generation.Duration
@@ -408,7 +408,7 @@ function Start-Phase2-FeatureGeneration {
         }
         
         # Update state
-        $script:DeploymentState.FeaturesGenerated = $generation.FeaturesGenerated
+        ${script:DeploymentState}.FeaturesGenerated = $generation.FeaturesGenerated
         
         return $generation
         
@@ -436,18 +436,18 @@ function Start-Phase3-Testing {
     
     try {
         # Import test framework
-        $testFrameworkModule = Join-Path $script:DeploymentState.Paths.Source "RawrXD.TestFramework.psm1"
+        $testFrameworkModule = Join-Path ${script:DeploymentState}.Paths.Source "RawrXD.TestFramework.psm1"
         if (Test-Path $testFrameworkModule) {
             Import-Module $testFrameworkModule -Force -Global -ErrorAction SilentlyContinue
         }
         
         # Get all module paths
-        $modulePaths = Get-ChildItem -Path $script:DeploymentState.Paths.Source -Filter "RawrXD*.psm1" | Select-Object -ExpandProperty FullName
+        $modulePaths = Get-ChildItem -Path ${script:DeploymentState}.Paths.Source -Filter "RawrXD*.psm1" | Select-Object -ExpandProperty FullName
         
         Write-DeploymentLog -Message "Found $($modulePaths.Count) modules to test" -Level Info
         
         # Run comprehensive test suite
-        $testResults = Invoke-ComprehensiveTestSuite -ModulePaths $modulePaths -OutputPath (Join-Path $script:DeploymentState.Paths.Log "Tests")
+        $testResults = Invoke-ComprehensiveTestSuite -ModulePaths $modulePaths -OutputPath (Join-Path ${script:DeploymentState}.Paths.Log "Tests")
         
         Write-DeploymentLog -Message "Testing completed" -Level Success -Data @{
             Duration = $testResults.Duration
@@ -472,8 +472,8 @@ function Start-Phase3-Testing {
         }
         
         # Update state
-        $script:DeploymentState.TestsPassed = $testResults.Summary.TotalPassed
-        $script:DeploymentState.TestsFailed = $testResults.Summary.TotalFailed
+        ${script:DeploymentState}.TestsPassed = $testResults.Summary.TotalPassed
+        ${script:DeploymentState}.TestsFailed = $testResults.Summary.TotalFailed
         
         return $testResults
         
@@ -499,7 +499,7 @@ function Start-Phase4-Optimization {
     
     try {
         # Import production deployer
-        $deployerModule = Join-Path $script:DeploymentState.Paths.Source "RawrXD.ProductionDeployer.psm1"
+        $deployerModule = Join-Path ${script:DeploymentState}.Paths.Source "RawrXD.ProductionDeployer.psm1"
         if (Test-Path $deployerModule) {
             Import-Module $deployerModule -Force -Global -ErrorAction SilentlyContinue
         }
@@ -511,7 +511,7 @@ function Start-Phase4-Optimization {
             'Maximum' { 'Maximum' }
         }
         
-        $optimization = Optimize-ModulesForProduction -ModulePath $script:DeploymentState.Paths.Source -OptimizationLevel $optimizationLevel
+        $optimization = Optimize-ModulesForProduction -ModulePath ${script:DeploymentState}.Paths.Source -OptimizationLevel $optimizationLevel
         
         Write-DeploymentLog -Message "Optimization completed" -Level Success -Data @{
             Duration = $optimization.Duration
@@ -526,7 +526,7 @@ function Start-Phase4-Optimization {
         }
         
         # Update state
-        $script:DeploymentState.OptimizationsApplied = $optimization.OptimizationsApplied
+        ${script:DeploymentState}.OptimizationsApplied = $optimization.OptimizationsApplied
         
         return $optimization
         
@@ -552,7 +552,7 @@ function Start-Phase5-Security {
     
     try {
         # Import production deployer
-        $deployerModule = Join-Path $script:DeploymentState.Paths.Source "RawrXD.ProductionDeployer.psm1"
+        $deployerModule = Join-Path ${script:DeploymentState}.Paths.Source "RawrXD.ProductionDeployer.psm1"
         if (Test-Path $deployerModule) {
             Import-Module $deployerModule -Force -Global -ErrorAction SilentlyContinue
         }
@@ -564,7 +564,7 @@ function Start-Phase5-Security {
             'Maximum' { 'Maximum' }
         }
         
-        $security = Harden-Security -ModulePath $script:DeploymentState.Paths.Source -HardeningLevel $hardeningLevel
+        $security = Harden-Security -ModulePath ${script:DeploymentState}.Paths.Source -HardeningLevel $hardeningLevel
         
         Write-DeploymentLog -Message "Security hardening completed" -Level Success -Data @{
             Duration = $security.Duration
@@ -575,8 +575,8 @@ function Start-Phase5-Security {
         }
         
         # Update state
-        $script:DeploymentState.SecurityMeasuresApplied = $security.SecurityMeasuresApplied
-        $script:DeploymentState.VulnerabilitiesFixed = $security.VulnerabilitiesFixed
+        ${script:DeploymentState}.SecurityMeasuresApplied = $security.SecurityMeasuresApplied
+        ${script:DeploymentState}.VulnerabilitiesFixed = $security.VulnerabilitiesFixed
         
         return $security
         
@@ -594,16 +594,16 @@ function Start-Phase6-Packaging {
     
     try {
         # Import production deployer
-        $deployerModule = Join-Path $script:DeploymentState.Paths.Source "RawrXD.ProductionDeployer.psm1"
+        $deployerModule = Join-Path ${script:DeploymentState}.Paths.Source "RawrXD.ProductionDeployer.psm1"
         if (Test-Path $deployerModule) {
             Import-Module $deployerModule -Force -Global -ErrorAction SilentlyContinue
         }
         
         # Create package
-        $packagePath = Join-Path (Split-Path $script:DeploymentState.Paths.Target -Parent) "Packages"
+        $packagePath = Join-Path (Split-Path ${script:DeploymentState}.Paths.Target -Parent) "Packages"
         $packageName = "RawrXD_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
         
-        $packaging = New-ProductionPackage -SourcePath $script:DeploymentState.Paths.Source -OutputPath $packagePath -PackageName $packageName
+        $packaging = New-ProductionPackage -SourcePath ${script:DeploymentState}.Paths.Source -OutputPath $packagePath -PackageName $packageName
         
         Write-DeploymentLog -Message "Production package created" -Level Success -Data @{
             Duration = $packaging.Duration
@@ -616,7 +616,7 @@ function Start-Phase6-Packaging {
         }
         
         # Update state
-        $script:DeploymentState.Paths.Package = $packaging.PackagePath
+        ${script:DeploymentState}.Paths.Package = $packaging.PackagePath
         
         return $packaging
         
@@ -631,41 +631,41 @@ function Start-Phase7-Deployment {
     Update-DeploymentPhase -Phase "FinalDeployment"
     
     Write-DeploymentLog -Message "Starting final deployment" -Level Info
-    Write-DeploymentLog -Message "Source: $($script:DeploymentState.Paths.Source)" -Level Info
-    Write-DeploymentLog -Message "Target: $($script:DeploymentState.Paths.Target)" -Level Info
-    Write-DeploymentLog -Message "Backup: $($script:DeploymentState.Paths.Backup)" -Level Info
+    Write-DeploymentLog -Message "Source: $(${script:DeploymentState}.Paths.Source)" -Level Info
+    Write-DeploymentLog -Message "Target: $(${script:DeploymentState}.Paths.Target)" -Level Info
+    Write-DeploymentLog -Message "Backup: $(${script:DeploymentState}.Paths.Backup)" -Level Info
     
     try {
         # Import production deployer
-        $deployerModule = Join-Path $script:DeploymentState.Paths.Source "RawrXD.ProductionDeployer.psm1"
+        $deployerModule = Join-Path ${script:DeploymentState}.Paths.Source "RawrXD.ProductionDeployer.psm1"
         if (Test-Path $deployerModule) {
             Import-Module $deployerModule -Force -Global -ErrorAction SilentlyContinue
         }
         
         # Backup existing if present
-        if (Test-Path $script:DeploymentState.Paths.Target) {
-            $backupDir = "$($script:DeploymentState.Paths.Backup)\$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+        if (Test-Path ${script:DeploymentState}.Paths.Target) {
+            $backupDir = "$(${script:DeploymentState}.Paths.Backup)\$(Get-Date -Format 'yyyyMMdd_HHmmss')"
             if (-not (Test-Path $backupDir)) {
                 New-Item -Path $backupDir -ItemType Directory -Force | Out-Null
             }
             
-            Copy-Item -Path "$($script:DeploymentState.Paths.Target)\*" -Destination $backupDir -Recurse -Force
+            Copy-Item -Path "$(${script:DeploymentState}.Paths.Target)\*" -Destination $backupDir -Recurse -Force
             Write-DeploymentLog -Message "✓ Created backup: $backupDir" -Level Success
         }
         
         # Create target directory
-        if (-not (Test-Path $script:DeploymentState.Paths.Target)) {
-            New-Item -Path $script:DeploymentState.Paths.Target -ItemType Directory -Force | Out-Null
-            Write-DeploymentLog -Message "Created target directory: $($script:DeploymentState.Paths.Target)" -Level Success
+        if (-not (Test-Path ${script:DeploymentState}.Paths.Target)) {
+            New-Item -Path ${script:DeploymentState}.Paths.Target -ItemType Directory -Force | Out-Null
+            Write-DeploymentLog -Message "Created target directory: $(${script:DeploymentState}.Paths.Target)" -Level Success
         }
         
         # Deploy modules
-        $modules = Get-ChildItem -Path $script:DeploymentState.Paths.Source -Filter "RawrXD*.psm1"
+        $modules = Get-ChildItem -Path ${script:DeploymentState}.Paths.Source -Filter "RawrXD*.psm1"
         $deployedCount = 0
         
         foreach ($module in $modules) {
             try {
-                $destPath = Join-Path $script:DeploymentState.Paths.Target $module.Name
+                $destPath = Join-Path ${script:DeploymentState}.Paths.Target $module.Name
                 Copy-Item -Path $module.FullName -Destination $destPath -Force
                 $deployedCount++
                 Write-DeploymentLog -Message "✓ Deployed: $($module.Name)" -Level Success
@@ -676,11 +676,11 @@ function Start-Phase7-Deployment {
         }
         
         # Deploy optimized versions if they exist
-        $optimizedModules = Get-ChildItem -Path $script:DeploymentState.Paths.Source -Filter "RawrXD*.Optimized.psm1"
+        $optimizedModules = Get-ChildItem -Path ${script:DeploymentState}.Paths.Source -Filter "RawrXD*.Optimized.psm1"
         foreach ($module in $optimizedModules) {
             try {
                 $destName = $module.Name -replace '\.Optimized', ''
-                $destPath = Join-Path $script:DeploymentState.Paths.Target $destName
+                $destPath = Join-Path ${script:DeploymentState}.Paths.Target $destName
                 Copy-Item -Path $module.FullName -Destination $destPath -Force
                 Write-DeploymentLog -Message "✓ Deployed optimized: $destName" -Level Success
                 
@@ -690,11 +690,11 @@ function Start-Phase7-Deployment {
         }
         
         # Deploy hardened versions if they exist
-        $hardenedModules = Get-ChildItem -Path $script:DeploymentState.Paths.Source -Filter "RawrXD*.Hardened.psm1"
+        $hardenedModules = Get-ChildItem -Path ${script:DeploymentState}.Paths.Source -Filter "RawrXD*.Hardened.psm1"
         foreach ($module in $hardenedModules) {
             try {
                 $destName = $module.Name -replace '\.Hardened', ''
-                $destPath = Join-Path $script:DeploymentState.Paths.Target $destName
+                $destPath = Join-Path ${script:DeploymentState}.Paths.Target $destName
                 Copy-Item -Path $module.FullName -Destination $destPath -Force
                 Write-DeploymentLog -Message "✓ Deployed hardened: $destName" -Level Success
                 
@@ -704,16 +704,16 @@ function Start-Phase7-Deployment {
         }
         
         # Update state
-        $script:DeploymentState.ModulesProcessed = $deployedCount
+        ${script:DeploymentState}.ModulesProcessed = $deployedCount
         
         Write-DeploymentLog -Message "Deployment completed" -Level Success -Data @{
             ModulesDeployed = $deployedCount
-            TargetPath = $script:DeploymentState.Paths.Target
+            TargetPath = ${script:DeploymentState}.Paths.Target
         }
         
         return @{
             ModulesDeployed = $deployedCount
-            TargetPath = $script:DeploymentState.Paths.Target
+            TargetPath = ${script:DeploymentState}.Paths.Target
             Success = $true
         }
         
@@ -728,11 +728,11 @@ function Start-Phase8-Validation {
     Update-DeploymentPhase -Phase "Validation"
     
     Write-DeploymentLog -Message "Starting deployment validation" -Level Info
-    Write-DeploymentLog -Message "Target: $($script:DeploymentState.Paths.Target)" -Level Info
+    Write-DeploymentLog -Message "Target: $(${script:DeploymentState}.Paths.Target)" -Level Info
     
     try {
         # Import master module
-        $masterModule = Join-Path $script:DeploymentState.Paths.Target "RawrXD.Master.psm1"
+        $masterModule = Join-Path ${script:DeploymentState}.Paths.Target "RawrXD.Master.psm1"
         if (Test-Path $masterModule) {
             Import-Module $masterModule -Force -Global -ErrorAction SilentlyContinue
         }
@@ -754,7 +754,7 @@ function Start-Phase8-Validation {
         Write-DeploymentLog -Message "Testing module import" -Level Info
         
         try {
-            $modules = Get-ChildItem -Path $script:DeploymentState.Paths.Target -Filter "RawrXD*.psm1"
+            $modules = Get-ChildItem -Path ${script:DeploymentState}.Paths.Target -Filter "RawrXD*.psm1"
             
             foreach ($module in $modules) {
                 Import-Module $module.FullName -Force -Global -ErrorAction Stop
@@ -844,21 +844,21 @@ function New-FinalDeploymentReport {
     
     try {
         $endTime = Get-Date
-        $totalDuration = [Math]::Round(($endTime - $script:DeploymentState.StartTime).TotalMinutes, 2)
+        $totalDuration = [Math]::Round(($endTime - ${script:DeploymentState}.StartTime).TotalMinutes, 2)
         
         $report = @{
             DeploymentInfo = @{
-                Version = $script:DeploymentState.Version
-                BuildDate = $script:DeploymentState.BuildDate
-                StartTime = $script:DeploymentState.StartTime
+                Version = ${script:DeploymentState}.Version
+                BuildDate = ${script:DeploymentState}.BuildDate
+                StartTime = ${script:DeploymentState}.StartTime
                 EndTime = $endTime
                 Duration = $totalDuration
-                Mode = $script:DeploymentState.Mode
-                SourcePath = $script:DeploymentState.Paths.Source
-                TargetPath = $script:DeploymentState.Paths.Target
-                LogPath = $script:DeploymentState.Paths.Log
-                BackupPath = $script:DeploymentState.Paths.Backup
-                PackagePath = $script:DeploymentState.Paths.Package
+                Mode = ${script:DeploymentState}.Mode
+                SourcePath = ${script:DeploymentState}.Paths.Source
+                TargetPath = ${script:DeploymentState}.Paths.Target
+                LogPath = ${script:DeploymentState}.Paths.Log
+                BackupPath = ${script:DeploymentState}.Paths.Backup
+                PackagePath = ${script:DeploymentState}.Paths.Package
                 OverallSuccess = $true
                 WhatIf = $WhatIf
             }
@@ -881,15 +881,15 @@ function New-FinalDeploymentReport {
                 Validation = $Phase8Results
             }
             Statistics = @{
-                ModulesProcessed = $script:DeploymentState.ModulesProcessed
-                TestsPassed = $script:DeploymentState.TestsPassed
-                TestsFailed = $script:DeploymentState.TestsFailed
-                OptimizationsApplied = $script:DeploymentState.OptimizationsApplied
-                SecurityMeasuresApplied = $script:DeploymentState.SecurityMeasuresApplied
-                FeaturesGenerated = $script:DeploymentState.FeaturesGenerated
-                VulnerabilitiesFixed = $script:DeploymentState.VulnerabilitiesFixed
-                Errors = $script:DeploymentState.Errors.Count
-                Warnings = $script:DeploymentState.Warnings.Count
+                ModulesProcessed = ${script:DeploymentState}.ModulesProcessed
+                TestsPassed = ${script:DeploymentState}.TestsPassed
+                TestsFailed = ${script:DeploymentState}.TestsFailed
+                OptimizationsApplied = ${script:DeploymentState}.OptimizationsApplied
+                SecurityMeasuresApplied = ${script:DeploymentState}.SecurityMeasuresApplied
+                FeaturesGenerated = ${script:DeploymentState}.FeaturesGenerated
+                VulnerabilitiesFixed = ${script:DeploymentState}.VulnerabilitiesFixed
+                Errors = ${script:DeploymentState}.Errors.Count
+                Warnings = ${script:DeploymentState}.Warnings.Count
             }
             Summary = @{
                 TotalDuration = $totalDuration
@@ -926,10 +926,10 @@ function New-FinalDeploymentReport {
         
         # Generate next steps
         $nextSteps = @(
-            "Verify deployment at: $($script:DeploymentState.Paths.Target)",
-            "Test functionality with: Import-Module '$($script:DeploymentState.Paths.Target)\RawrXD.Master.psm1'",
+            "Verify deployment at: $(${script:DeploymentState}.Paths.Target)",
+            "Test functionality with: Import-Module '$(${script:DeploymentState}.Paths.Target)\RawrXD.Master.psm1'",
             "Run: Get-MasterSystemStatus",
-            "Review logs at: $($script:DeploymentState.Paths.Log)",
+            "Review logs at: $(${script:DeploymentState}.Paths.Log)",
             "Monitor performance and security",
             "Implement recommendations",
             "Schedule regular maintenance and updates"
@@ -938,7 +938,7 @@ function New-FinalDeploymentReport {
         $report.Summary.NextSteps = $nextSteps
         
         # Save report
-        $reportPath = Join-Path $script:DeploymentState.Paths.Log "UltimateDeploymentReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').xml"
+        $reportPath = Join-Path ${script:DeploymentState}.Paths.Log "UltimateDeploymentReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').xml"
         $report | Export-Clixml -Path $reportPath -Force
         
         Write-DeploymentLog -Message "Final deployment report saved: $reportPath" -Level Success
@@ -990,7 +990,7 @@ function Show-FinalSummary {
     
     if ($Report.Statistics.Errors -gt 0) {
         Write-Host "Errors Encountered:" -ForegroundColor Red
-        foreach ($error in $script:DeploymentState.Errors) {
+        foreach ($error in ${script:DeploymentState}.Errors) {
             Write-Host "  • $error" -ForegroundColor Gray
         }
         Write-Host ""
@@ -998,7 +998,7 @@ function Show-FinalSummary {
     
     if ($Report.Statistics.Warnings -gt 0) {
         Write-Host "Warnings:" -ForegroundColor Yellow
-        foreach ($warning in $script:DeploymentState.Warnings) {
+        foreach ($warning in ${script:DeploymentState}.Warnings) {
             Write-Host "  • $warning" -ForegroundColor Gray
         }
         Write-Host ""
@@ -1043,10 +1043,10 @@ function Start-UltimateDeployment {
     
     # Show configuration
     Write-Host "Deployment Configuration:" -ForegroundColor Yellow
-    Write-Host "  Source: $($script:DeploymentState.Paths.Source)" -ForegroundColor White
-    Write-Host "  Target: $($script:DeploymentState.Paths.Target)" -ForegroundColor White
-    Write-Host "  Log: $($script:DeploymentState.Paths.Log)" -ForegroundColor White
-    Write-Host "  Backup: $($script:DeploymentState.Paths.Backup)" -ForegroundColor White
+    Write-Host "  Source: $(${script:DeploymentState}.Paths.Source)" -ForegroundColor White
+    Write-Host "  Target: $(${script:DeploymentState}.Paths.Target)" -ForegroundColor White
+    Write-Host "  Log: $(${script:DeploymentState}.Paths.Log)" -ForegroundColor White
+    Write-Host "  Backup: $(${script:DeploymentState}.Paths.Backup)" -ForegroundColor White
     Write-Host "  Mode: $Mode" -ForegroundColor White
     Write-Host "  Skip Testing: $SkipTesting" -ForegroundColor White
     Write-Host "  Skip Optimization: $SkipOptimization" -ForegroundColor White
@@ -1141,16 +1141,16 @@ function Start-UltimateDeployment {
         Show-FinalSummary -Report $finalReport
         
         # Update final status
-        $script:DeploymentState.Status = "Complete"
-        $script:DeploymentState.EndTime = Get-Date
+        ${script:DeploymentState}.Status = "Complete"
+        ${script:DeploymentState}.EndTime = Get-Date
         
         Write-DeploymentLog -Message "Ultimate production deployment completed successfully" -Level Success
         
         return $finalReport
         
     } catch {
-        $script:DeploymentState.Status = "Failed"
-        $script:DeploymentState.EndTime = Get-Date
+        ${script:DeploymentState}.Status = "Failed"
+        ${script:DeploymentState}.EndTime = Get-Date
         
         Write-DeploymentLog -Message "Ultimate production deployment failed: $_" -Level Critical
         
@@ -1163,7 +1163,7 @@ function Start-UltimateDeployment {
         Write-Host ""
         Write-Host "Error: $_" -ForegroundColor Red
         Write-Host ""
-        Write-Host "Please check the logs at: $($script:DeploymentState.Paths.Log)" -ForegroundColor Yellow
+        Write-Host "Please check the logs at: $(${script:DeploymentState}.Paths.Log)" -ForegroundColor Yellow
         Write-Host ""
         
         throw

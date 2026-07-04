@@ -43,7 +43,7 @@ Write-Host "Launching HexMag Engine on port $Port..." -ForegroundColor Green
 Write-Host "API Endpoint: http://localhost:$Port/ask" -ForegroundColor Gray
 Write-Host "Press Ctrl+C to stop." -ForegroundColor Yellow
 
-$Env:PYTHONPATH = "$ServiceDir;$Env:PYTHONPATH"
+${Env:PYTHONPATH} = "$ServiceDir;${Env:PYTHONPATH}"
 
 try {
     python "$HexMagDir\hexmag_engine.py" --port $Port

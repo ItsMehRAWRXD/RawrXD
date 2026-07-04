@@ -23,7 +23,7 @@ function Generate-OneLiner {
         [string[]]$Tasks,
         
         [Parameter(Mandatory=$false)]
-        [string]$OutputPath = "$env:TEMP\RawrXD_Omega_$(Get-Random).ps1",
+        [string]$OutputPath = "${env:TEMP}\RawrXD_Omega_$(Get-Random).ps1",
         
         [Parameter(Mandatory=$false)]
         [switch]$EmitShellcode,
@@ -54,7 +54,7 @@ function Generate-OneLiner {
             "execute"       = "Write-Host '🚀 Executing Payload...' -ForegroundColor Green"
             "loop"          = "1..3 | ForEach-Object { Write-Host `"[Ω] Iteration `$_`"; Start-Sleep -Milliseconds 200 }"
             "self-mutate"   = "Set-Content -Path `$MyInvocation.MyCommand.Path -Value ((Get-Content `$MyInvocation.MyCommand.Path -Raw) + `"`n#Mutated @ `$(Get-Date)`")"
-            "hotpatch"      = if ($CustomDllPath -and (Test-Path $CustomDllPath)) { "[System.Reflection.Assembly]::Load([Convert]::FromBase64String('$([Convert]::ToBase64String([IO.File]::ReadAllBytes($CustomDllPath)))'))"; } else { "Write-Host 'Hotpatch: No DLL specified' -ForegroundColor Yellow" }
+            "hotpatch"      = $(if ($CustomDllPath -and (Test-Path $CustomDllPath)) { "[System.Reflection.Assembly]::Load([Convert]::FromBase64String('$([Convert]::ToBase64String([IO.File]::ReadAllBytes($CustomDllPath)))'))"; } else { "Write-Host 'Hotpatch: No DLL specified' -ForegroundColor Yellow" }
             "memory-alloc"  = "`$addr=[System.Runtime.InteropServices.Marshal]::AllocHGlobal(4096); Write-Host `"Allocated: `$addr`""
             "memory-free"   = "`$addr=[IntPtr]::Zero; [System.Runtime.InteropServices.Marshal]::FreeHGlobal(`$addr)"
             "cpu-info"      = "(Get-CimInstance Win32_Processor).Name"
@@ -124,7 +124,7 @@ function Generate-OneLiner {
             ScriptPath  = $OutputPath
             RawCode     = $flattened
             TaskCount   = $Tasks.Count
-            EncodedSize = if ($EncodeBase64) { $b64.Length } else { $flattened.Length }
+            EncodedSize = $(if ($EncodeBase64) { $b64.Length } else { $flattened.Length }
             Hardened    = $Hardened.IsPresent
             Timestamp   = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         }
@@ -204,7 +204,7 @@ function Invoke-OneLinerGenerator {
         [string[]]$CustomTasks,
         
         [Parameter(Mandatory=$false)]
-        [string]$OutputDirectory = "$env:TEMP\RawrXD_OneLiners"
+        [string]$OutputDirectory = "${env:TEMP}\RawrXD_OneLiners"
     )
 
     if (-not (Test-Path $OutputDirectory)) {

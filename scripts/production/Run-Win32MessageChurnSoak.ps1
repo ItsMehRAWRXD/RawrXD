@@ -68,13 +68,13 @@ function Find-EditorHwnd {
         [void][NativeWin32]::GetClassName($hwnd, $sb, $sb.Capacity)
         $cn = $sb.ToString()
         if ($cn -like "RichEdit*" -or $cn -like "RICHEDIT*" -or $cn -like "Scintilla*" -or $cn -like "Edit*") {
-            $script:editor = $hwnd
+            ${script:editor} = $hwnd
             return $false
         }
         return $true
     }
     [void][NativeWin32]::EnumChildWindows($Main, $callback, [IntPtr]::Zero)
-    return $script:editor
+    return ${script:editor}
 }
 
 $startTime = Get-Date

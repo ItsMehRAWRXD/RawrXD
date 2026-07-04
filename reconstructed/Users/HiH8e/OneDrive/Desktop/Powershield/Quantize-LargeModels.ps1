@@ -109,9 +109,7 @@ if (-not $hasOllama -and -not $hasLlamaCpp) {
 
 # ============================================
 # IF QUANTIZATION TOOLS AVAILABLE
-# ============================================
-
-if ($hasLlamaCpp) {
+# ============================================ $(if ($hasLlamaCpp) {
     
     Write-Host "🔧 Step 2: Quantizing model (this may take 30+ minutes)..." -ForegroundColor Yellow
     Write-Host ""

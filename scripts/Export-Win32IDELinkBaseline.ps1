@@ -130,7 +130,7 @@ if (-not (Test-Path $jsonPath)) {
 $baseline = Get-Content $jsonPath -Raw | ConvertFrom-Json
 $exitCode = 0
 $sizeDelta = $snapshot.binary_size_bytes - [int64]$baseline.binary_size_bytes
-$sizePct = if ($baseline.binary_size_bytes -gt 0) { 100.0 * $sizeDelta / $baseline.binary_size_bytes } else { 0 }
+$sizePct = $(if ($baseline.binary_size_bytes -gt 0) { 100.0 * $sizeDelta / $baseline.binary_size_bytes } else { 0 }
 
 Write-Host "[link-baseline] binary_size=$($snapshot.binary_size_bytes) delta=${sizeDelta} (${sizePct:N2}%) imports=$($snapshot.import_count)"
 

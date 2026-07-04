@@ -8,7 +8,7 @@ param(
     [string]$ModulePath = $PSScriptRoot,
     
     [Parameter(Mandatory=$false)]
-    [switch]$GenerateFineTuningReport = $true,
+    [switch]$GenerateFineTuningReport,
     
     [Parameter(Mandatory=$false)]
     [switch]$ApplyOptimizations = $false

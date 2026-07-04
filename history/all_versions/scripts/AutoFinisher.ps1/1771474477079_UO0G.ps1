@@ -79,7 +79,7 @@ New-Item -ItemType Directory -Path "$BuildDir\obj" -Force | Out-Null
 New-Item -ItemType Directory -Path "$BuildDir\rewritten" -Force | Out-Null
 
 # Set LIB environment for linker
-$env:LIB = "$MSVC_LIB;$SDK_UM;$SDK_UCRT"
+${env:LIB} = "$MSVC_LIB;$SDK_UM;$SDK_UCRT"
 
 #==============================================================================
 # KNOWN WINAPI → EXTRN MAPPING
@@ -327,7 +327,7 @@ function Convert-SdkToPureMl64 {
         param($m)
         $changed = $true
         $func = $m.Groups[1].Value
-        $argsStr = if ($m.Groups[2].Success) { $m.Groups[2].Value } else { "" }
+        $argsStr = $(if ($m.Groups[2].Success) { $m.Groups[2].Value } else { "" }
 
         $args = @()
         if ($argsStr.Trim()) {
@@ -389,7 +389,7 @@ function Convert-SdkToPureMl64 {
     })
 
     # --- Remove EXTERNDEF → replace with extrn (ml64 prefers extrn) ---
-    $Content = $Content -replace '(?m)^\s*EXTERNDEF\s+(\w+)\s*:\s*PROC', 'extrn $1:proc'
+    $Content = $Content -replace '(?m)^\s*EXTERNDEF\s+(\w+)\s*:\s*PROC', 'extrn ${1:proc}'
 
     # --- Remove .LISTALL, .LIST, .NOLIST directives ---
     $Content = $Content -replace '(?m)^\s*\.(LISTALL|LIST|NOLIST)\s*$', '; [AutoFinisher] REMOVED: .$1'
@@ -786,8 +786,8 @@ function Invoke-ML64 {
 
     $proc = Start-Process -FilePath $ML64 -ArgumentList $ml64Args -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$BuildDir\ml64_stdout.txt" -RedirectStandardError "$BuildDir\ml64_stderr.txt"
 
-    $stdout = if (Test-Path "$BuildDir\ml64_stdout.txt") { Get-Content "$BuildDir\ml64_stdout.txt" -Raw } else { "" }
-    $stderr = if (Test-Path "$BuildDir\ml64_stderr.txt") { Get-Content "$BuildDir\ml64_stderr.txt" -Raw } else { "" }
+    $stdout = $(if (Test-Path "$BuildDir\ml64_stdout.txt") { Get-Content "$BuildDir\ml64_stdout.txt" -Raw } else { "" }
+    $stderr = $(if (Test-Path "$BuildDir\ml64_stderr.txt") { Get-Content "$BuildDir\ml64_stderr.txt" -Raw } else { "" }
 
     if ($proc.ExitCode -ne 0 -or -not (Test-Path $ObjFile)) {
         Write-Status "  COMPILE FAILED:" "Red"
@@ -849,8 +849,8 @@ function Invoke-Link {
 
     $proc = Start-Process -FilePath $LINK -ArgumentList $linkArgs -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$BuildDir\link_stdout.txt" -RedirectStandardError "$BuildDir\link_stderr.txt"
 
-    $stdout = if (Test-Path "$BuildDir\link_stdout.txt") { Get-Content "$BuildDir\link_stdout.txt" -Raw } else { "" }
-    $stderr = if (Test-Path "$BuildDir\link_stderr.txt") { Get-Content "$BuildDir\link_stderr.txt" -Raw } else { "" }
+    $stdout = $(if (Test-Path "$BuildDir\link_stdout.txt") { Get-Content "$BuildDir\link_stdout.txt" -Raw } else { "" }
+    $stderr = $(if (Test-Path "$BuildDir\link_stderr.txt") { Get-Content "$BuildDir\link_stderr.txt" -Raw } else { "" }
 
     if ($proc.ExitCode -ne 0 -or -not (Test-Path $OutputFile)) {
         Write-Status "  LINK FAILED:" "Red"
@@ -881,9 +881,9 @@ function Invoke-Verify {
     }
 
     $dumpOut = & $DUMPBIN /HEADERS $BinaryFile 2>&1 | Out-String
-    $machine = if ($dumpOut -match 'machine\s*\((\w+)\)') { $matches[1] } else { "UNKNOWN" }
-    $subsys  = if ($dumpOut -match 'subsystem\s*\((.+?)\)') { $matches[1].Trim() } else { "UNKNOWN" }
-    $entry   = if ($dumpOut -match 'entry point\s*\((\w+)\)') { $matches[1] } else { "NONE" }
+    $machine = $(if ($dumpOut -match 'machine\s*\((\w+)\)') { $matches[1] } else { "UNKNOWN" }
+    $subsys  = $(if ($dumpOut -match 'subsystem\s*\((.+?)\)') { $matches[1].Trim() } else { "UNKNOWN" }
+    $entry   = $(if ($dumpOut -match 'entry point\s*\((\w+)\)') { $matches[1] } else { "NONE" }
     $size    = (Get-Item $BinaryFile).Length
 
     Write-Host ""
@@ -998,8 +998,7 @@ function Process-AsmFile {
     $content = $resolveResult.Content
     $extraIncDirs = $resolveResult.AddedIncludeDirs
 
-    # === Phase 2: SDK Translation ===
-    if ($hasHutchSDK) {
+    # === Phase 2: SDK Translation === $(if ($hasHutchSDK) {
         Write-Status "Phase 2: Translating SDK constructs..." "Cyan"
         $content = Convert-SdkToPureMl64 -Content $content
     } else {
@@ -1057,7 +1056,7 @@ function Process-AsmFile {
 
     # === Phase 7: Link ===
     Write-Status "Phase 7: Linking..." "Cyan"
-    $ext = if ($OutputType -eq "DLL") { ".dll" } else { ".exe" }
+    $ext = $(if ($OutputType -eq "DLL") { ".dll" } else { ".exe" }
     $outFile = "$BuildDir\$baseName$ext"
 
     $linked = Invoke-Link -ObjFiles @($objFile) -OutputFile $outFile `
@@ -1126,9 +1125,9 @@ function Process-BatchBuild {
     Write-Host ""
 
     foreach ($r in $results) {
-        $icon = if ($r.Success) { "[OK]" } else { "[FAIL]" }
-        $color = if ($r.Success) { "Green" } else { "Red" }
-        $detail = if ($r.Output) { " -> $(Split-Path $r.Output -Leaf)" } else { " (stopped at $($r.Phase))" }
+        $icon = $(if ($r.Success) { "[OK]" } else { "[FAIL]" }
+        $color = $(if ($r.Success) { "Green" } else { "Red" }
+        $detail = $(if ($r.Output) { " -> $(Split-Path $r.Output -Leaf)" } else { " (stopped at $($r.Phase))" }
         Write-Host "  $icon $($r.File)$detail" -ForegroundColor $color
     }
 

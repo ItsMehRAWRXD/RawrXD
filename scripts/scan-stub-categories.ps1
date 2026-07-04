@@ -102,7 +102,7 @@ $total = 0
 foreach ($cat in $results.Keys | Sort-Object) {
     $count = $results[$cat]
     $total += $count
-    $color = if ($count -gt 0) { 'Red' } else { 'Green' }
+    $color = $(if ($count -gt 0) { 'Red' } else { 'Green' }
     Write-Host ('{0,-30} : {1,4}' -f $cat, $count) -ForegroundColor $color
 }
 Write-Host ('{0,-30} : {1,4}' -f 'TOTAL', $total) -ForegroundColor Yellow

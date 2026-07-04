@@ -22,9 +22,9 @@ function Get-FileVersion([string]$path) {
 }
 
 $Root = (Resolve-Path $Root).Path
-$BuildDir = if ($BuildDir) { $BuildDir } else { (Join-Path $Root "build_gold") }
+$BuildDir = $(if ($BuildDir) { $BuildDir } else { (Join-Path $Root "build_gold") }
 $BuildDir = (Resolve-Path $BuildDir).Path
-$OutDir = if ($OutDir) { $OutDir } else { (Join-Path $Root "build_inhouse\re_msvc") }
+$OutDir = $(if ($OutDir) { $OutDir } else { (Join-Path $Root "build_inhouse\re_msvc") }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 

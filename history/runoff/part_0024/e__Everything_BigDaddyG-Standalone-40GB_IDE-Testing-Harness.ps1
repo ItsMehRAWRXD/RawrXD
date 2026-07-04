@@ -567,7 +567,7 @@ function Show-Summary {
         $failed = ($_.Group | Where-Object { $_.Status -eq 'FAIL' }).Count
         $total = $_.Group.Count
         
-        $status = if ($failed -eq 0) { '✅' } else { '❌' }
+        $status = $(if ($failed -eq 0) { '✅' } else { '❌' }
         ColorOutput "  $status $($_.Name): $passed/$total passed" $(if ($failed -eq 0) { 'Green' } else { 'Red' })
     }
     

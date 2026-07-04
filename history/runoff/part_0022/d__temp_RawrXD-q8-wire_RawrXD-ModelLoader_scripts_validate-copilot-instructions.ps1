@@ -7,8 +7,8 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$script:errors = @()
-$script:warnings = @()
+${script:errors} = @()
+${script:warnings} = @()
 $repoRoot = Get-Location
 
 Write-Host "🔍 Validating Copilot Instructions..." -ForegroundColor Cyan
@@ -28,14 +28,14 @@ $instructions = Get-Content $instructionsFile -Raw
 # Function to add error
 function Add-ValidationError {
     param([string]$message)
-    $script:errors += $message
+    ${script:errors} += $message
     Write-Host "  ❌ $message" -ForegroundColor Red
 }
 
 # Function to add warning
 function Add-ValidationWarning {
     param([string]$message)
-    $script:warnings += $message
+    ${script:warnings} += $message
     Write-Host "  ⚠️  $message" -ForegroundColor Yellow
 }
 
@@ -162,23 +162,23 @@ Write-Host "=" * 60 -ForegroundColor Cyan
 Write-Host "VALIDATION SUMMARY" -ForegroundColor Cyan
 Write-Host "=" * 60 -ForegroundColor Cyan
 
-if ($script:errors.Count -eq 0 -and $script:warnings.Count -eq 0) {
+if (${script:errors}.Count -eq 0 -and ${script:warnings}.Count -eq 0) {
     Write-Host "✅ All validations passed!" -ForegroundColor Green
     exit 0
 } else {
-    if ($script:errors.Count -gt 0) {
+    if (${script:errors}.Count -gt 0) {
         Write-Host ""
-        Write-Host "❌ ERRORS: $($script:errors.Count)" -ForegroundColor Red
+        Write-Host "❌ ERRORS: $(${script:errors}.Count)" -ForegroundColor Red
         Write-Host "Please fix these issues before committing." -ForegroundColor Red
     }
     
-    if ($script:warnings.Count -gt 0) {
+    if (${script:warnings}.Count -gt 0) {
         Write-Host ""
-        Write-Host "⚠️  WARNINGS: $($script:warnings.Count)" -ForegroundColor Yellow
+        Write-Host "⚠️  WARNINGS: $(${script:warnings}.Count)" -ForegroundColor Yellow
         Write-Host "Review these items before committing." -ForegroundColor Yellow
     }
     
-    if ($script:errors.Count -gt 0) {
+    if (${script:errors}.Count -gt 0) {
         exit 1
     } else {
         exit 0

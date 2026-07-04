@@ -22,6 +22,9 @@ namespace nlohmann {
             null, object, array, string, boolean, number_integer, number_unsigned, number_float, binary, discarded
         };
 
+        // Exception type alias for compatibility with real nlohmann/json
+        using exception = std::runtime_error;
+
         json() : type_(0) {}
         
         // Remove explicit to allow implicit conversions

@@ -32,11 +32,11 @@ function Write-Header($message) {
 }
 
 function Write-Result($test, $status, $duration, $details = "") {
-    $color = if ($status -eq "PASS") { "Green" } elseif ($status -eq "FAIL") { "Red" } else { "Yellow" }
+    $color = $(if ($status -eq "PASS") { "Green" } elseif ($status -eq "FAIL") { "Red" } else { "Yellow" }
     Write-Host "[$status] $test (${duration}ms)" -ForegroundColor $color
     if ($details) { Write-Host "  $details" -ForegroundColor Gray }
     
-    $script:ValidationResults += [PSCustomObject]@{
+    ${script:ValidationResults} += [PSCustomObject]@{
         Test = $test
         Status = $status
         Duration = $duration
@@ -62,8 +62,7 @@ if ($tagExists) {
 
 # ============================================================================
 # Validation 2: Build Verification
-# ============================================================================
-if (-not $SkipBuild) {
+# ============================================================================ $(if (-not $SkipBuild) {
     Write-Header "VALIDATION 2: Build Verification"
     
     $buildStart = Get-Date
@@ -106,8 +105,7 @@ if (-not $SkipBuild) {
 
 # ============================================================================
 # Validation 3: AST Scope Tests
-# ============================================================================
-if (-not $SkipTests) {
+# ============================================================================ $(if (-not $SkipTests) {
     Write-Header "VALIDATION 3: AST Scope-Awareness Tests"
     
     $testPath = "tests\ast_test.exe"
@@ -231,7 +229,7 @@ foreach ($file in $cppFiles) {
     $rawPtrCount += $rawPtrMatches.Count
 }
 
-$ratio = if ($smartPtrCount + $rawPtrCount -gt 0) { 
+$ratio = $(if ($smartPtrCount + $rawPtrCount -gt 0) { 
     $smartPtrCount / ($smartPtrCount + $rawPtrCount) 
 } else { 
     1.0 

@@ -209,7 +209,7 @@ function Invoke-RawrZPayload {
             $Script = Get-Content $Script -Raw
         }
         
-        if ($Target -eq "localhost" -or $Target -eq $env:COMPUTERNAME) {
+        if ($Target -eq "localhost" -or $Target -eq ${env:COMPUTERNAME}) {
             # Local execution
             Write-Host "[AGENT]    🎯 Local execution..." -ForegroundColor DarkYellow
             
@@ -368,7 +368,7 @@ function Invoke-PortScan {
                 
                 if ($wait -and $tcpClient.Connected) {
                     $tcpClient.EndConnect($connect)
-                    $service = if ($serviceMap.ContainsKey($port)) { $serviceMap[$port] } else { "Unknown" }
+                    $service = $(if ($serviceMap.ContainsKey($port)) { $serviceMap[$port] } else { "Unknown" }
                     
                     # Try banner grab for some services
                     $banner = ""
@@ -439,7 +439,7 @@ function Invoke-PortScan {
         
         Write-Host "[AGENT] ✅ Found $($openPorts.Count) open ports:" -ForegroundColor Green
         foreach ($port in $openPorts) {
-            $bannerInfo = if ($port.Banner) { " - $($port.Banner.Substring(0, [Math]::Min(50, $port.Banner.Length)))..." } else { "" }
+            $bannerInfo = $(if ($port.Banner) { " - $($port.Banner.Substring(0, [Math]::Min(50, $port.Banner.Length)))..." } else { "" }
             Write-Host "[AGENT]    ✅ $($port.Port) - $($port.Service)$bannerInfo" -ForegroundColor Green
         }
         
@@ -620,7 +620,7 @@ function Invoke-ProcessOperation {
             }
             
             'Info' {
-                $proc = if ($ProcessId) { Get-Process -Id $ProcessId } else { Get-Process -Name $ProcessName | Select-Object -First 1 }
+                $proc = $(if ($ProcessId) { Get-Process -Id $ProcessId } else { Get-Process -Name $ProcessName | Select-Object -First 1 }
                 $info = @{
                     Name = $proc.Name
                     Id = $proc.Id
@@ -682,8 +682,8 @@ function Get-SystemInfo {
                 Architecture = (Get-WmiObject Win32_OperatingSystem).OSArchitecture
                 LastBootTime = (Get-WmiObject Win32_OperatingSystem).ConvertToDateTime((Get-WmiObject Win32_OperatingSystem).LastBootUpTime)
                 CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-                ComputerName = $env:COMPUTERNAME
-                Domain = $env:USERDOMAIN
+                ComputerName = ${env:COMPUTERNAME}
+                Domain = ${env:USERDOMAIN}
             }
         }
         
@@ -1100,7 +1100,7 @@ function Invoke-LogAnalysis {
     try {
         Write-Host "[AGENT] 📊 Log Analysis: $Path" -ForegroundColor Cyan
         
-        $files = if (Test-Path $Path -PathType Container) {
+        $files = $(if (Test-Path $Path -PathType Container) {
             Get-ChildItem -Path $Path -Filter "*.log" -Recurse | Select-Object -First 20
         }
         else {
@@ -1116,7 +1116,7 @@ function Invoke-LogAnalysis {
             Statistics = @{}
         }
         
-        $cutoffTime = if ($TimeRange) { (Get-Date).AddHours(-$TimeRange) } else { $null }
+        $cutoffTime = $(if ($TimeRange) { (Get-Date).AddHours(-$TimeRange) } else { $null }
         
         foreach ($file in $files) {
             $lines = Get-Content $file.FullName

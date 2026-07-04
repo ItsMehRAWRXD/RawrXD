@@ -13,8 +13,8 @@ try {
   # Check if key variables are properly initialized
   Write-Host "`n🔧 Checking Key Components:" -ForegroundColor Cyan
     
-  # 1. Check if $script:editor is defined
-  if ($rawrContent -match '\$script:editor\s*=\s*New-Object') {
+  # 1. Check if ${script:editor} is defined
+  if ($rawrContent -match '\${script:editor}\s*=\s*New-Object') {
     Write-Host "✅ Editor variable initialization found" -ForegroundColor Green
   }
   else {
@@ -40,8 +40,8 @@ try {
     }
   }
     
-  # 4. Check if $global:currentFile is used
-  if ($rawrContent -match '\$global:currentFile') {
+  # 4. Check if ${global:currentFile} is used
+  if ($rawrContent -match '\${global:currentFile}') {
     Write-Host "✅ Global currentFile variable usage found" -ForegroundColor Green
   }
   else {
@@ -66,7 +66,7 @@ try {
     $checkLines = [Math]::Min(20, $lines.Count - $doubleClickStart)
     for ($j = 0; $j -lt $checkLines; $j++) {
       $line = $lines[$doubleClickStart + $j].Trim()
-      if ($line -match '^\s*\$script:editor\.Text\s*=\s*\$content\s*$') {
+      if ($line -match '^\s*\${script:editor}\.Text\s*=\s*\$content\s*$') {
         Write-Host "✅ Editor text assignment found at line: $($doubleClickStart + $j + 1)" -ForegroundColor Green
         break
       }
@@ -132,7 +132,7 @@ try {
       Write-Host "⚠️ Limited error handling in double-click handler" -ForegroundColor Yellow
     }
         
-    if ($handlerSection -match '\$script:editor\.Text\s*=\s*\$content') {
+    if ($handlerSection -match '\${script:editor}\.Text\s*=\s*\$content') {
       Write-Host "✅ Editor text assignment found in handler" -ForegroundColor Green
     }
     else {

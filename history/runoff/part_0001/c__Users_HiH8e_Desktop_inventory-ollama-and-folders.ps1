@@ -8,7 +8,7 @@ Improvements added:
 #>
 
 param(
-    [switch]$DryRun = $true,
+    [switch]$DryRun,
     [switch]$AllowModifyOutsideWorkspace = $false
 )
 
@@ -55,7 +55,7 @@ Get-PathStats $desktopNew  | ForEach-Object { Write-Host (Format-Stats $_) }
 Get-PathStats $targetRoot  | ForEach-Object { Write-Host (Format-Stats $_) }
 
 Write-Host '--- Ollama directories ---' -ForegroundColor Yellow
-$paths = @("$env:USERPROFILE\.ollama", "$env:LOCALAPPDATA\ollama", 'C:\ProgramData\ollama')
+$paths = @("${env:USERPROFILE}\.ollama", "${env:LOCALAPPDATA}\ollama", 'C:\ProgramData\ollama')
 foreach($p in $paths){ Get-PathStats $p | ForEach-Object { Write-Host (Format-Stats $_) } }
 
 Write-Host '--- Ollama ls (if available) ---' -ForegroundColor Yellow

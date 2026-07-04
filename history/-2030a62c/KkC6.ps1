@@ -43,13 +43,13 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 }
 
 # Circuit breaker state
-$script:CircuitBreakers = @{}
+${script:CircuitBreakers} = @{}
 
 function Get-CircuitBreakerState {
     param([string]$ComponentName)
 
-    if (-not $script:CircuitBreakers.ContainsKey($ComponentName)) {
-        $script:CircuitBreakers[$ComponentName] = @{
+    if (-not ${script:CircuitBreakers}.ContainsKey($ComponentName)) {
+        ${script:CircuitBreakers}[$ComponentName] = @{
             State = 'Closed'  # Closed = operational, Open = blocked, HalfOpen = testing
             FailureCount = 0
             LastFailure = $null
@@ -57,7 +57,7 @@ function Get-CircuitBreakerState {
             ResetTime = $null
         }
     }
-    return $script:CircuitBreakers[$ComponentName]
+    return ${script:CircuitBreakers}[$ComponentName]
 }
 
 function Update-CircuitBreaker {
@@ -288,7 +288,7 @@ function Invoke-ResourceCleanup {
         }
 
         # Clear error variable
-        $global:Error.Clear()
+        ${global:Error}.Clear()
         $cleanup.Actions += "Cleared error history"
 
         # Force garbage collection
@@ -326,7 +326,7 @@ function Get-SystemHealthReport {
         Timestamp = (Get-Date).ToString('o')
         OverallHealth = 'Healthy'
         Components = @()
-        CircuitBreakers = $script:CircuitBreakers
+        CircuitBreakers = ${script:CircuitBreakers}
         SystemMetrics = @{}
         Recommendations = @()
     }
@@ -393,8 +393,8 @@ function Get-SystemHealthReport {
     if ($criticalCount -gt 0) {
         $report.Recommendations += "$criticalCount components in critical state. Run with -EnableAutoRecovery to attempt repairs."
     }
-    foreach ($cb in $script:CircuitBreakers.Keys) {
-        if ($script:CircuitBreakers[$cb].State -eq 'Open') {
+    foreach ($cb in ${script:CircuitBreakers}.Keys) {
+        if (${script:CircuitBreakers}[$cb].State -eq 'Open') {
             $report.Recommendations += "Circuit breaker open for $cb. Component is temporarily disabled."
         }
     }

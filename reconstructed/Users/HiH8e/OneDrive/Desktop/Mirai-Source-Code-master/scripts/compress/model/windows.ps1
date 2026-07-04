@@ -124,7 +124,7 @@ $metadata | ConvertTo-Json | Out-File (Join-Path $OutputDir "model_metadata.json
 
 # Calculate compression stats
 $compressedSize = ($metadata.chunks | Measure-Object -Property compressed_size -Sum).Sum
-$ratio = if ($modelSize -gt 0) { [math]::Round(($compressedSize / $modelSize) * 100, 2) } else { 0 }
+$ratio = $(if ($modelSize -gt 0) { [math]::Round(($compressedSize / $modelSize) * 100, 2) } else { 0 }
 $saved = $modelSize - $compressedSize
 
 Write-Host "Compression complete!"

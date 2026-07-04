@@ -1,13 +1,13 @@
-$ErrorActionPreference = 'Continue'
+$Script:ErrorActionPreference = 'Continue'
 
-$masmRoot = 'C:\masm32'
-$ml      = Join-Path $masmRoot 'bin\ml.exe'
-$link    = Join-Path $masmRoot 'bin\link.exe'
-$libPath = Join-Path $masmRoot 'lib'
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$include = Join-Path $scriptDir 'include'
-$src     = Join-Path $scriptDir 'src'
-$out     = Join-Path $scriptDir 'build'
+$Script:masmRoot = 'C:\masm32'
+$Script:ml = Join-Path $masmRoot 'bin\ml.exe'
+$Script:link = Join-Path $masmRoot 'bin\link.exe'
+$Script:libPath = Join-Path $masmRoot 'lib'
+$Script:scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Script:include = Join-Path $scriptDir 'include'
+$Script:src = Join-Path $scriptDir 'src'
+$Script:out = Join-Path $scriptDir 'build'
 
 if (-not (Test-Path $masmRoot)) {
     Write-Error "MASM32 not found at $masmRoot"
@@ -16,12 +16,12 @@ if (-not (Test-Path $masmRoot)) {
 if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null }
 
 # Core working modules for production-ready IDE
-$workingFiles = @('masm_main','engine','window','config_manager','orchestra','tab_control_minimal','file_tree_working_enhanced','menu_system','ui_layout')
-$compiledObjs = @()
+$Script:workingFiles = @('masm_main','engine','window','config_manager','orchestra','tab_control_minimal','file_tree_working_enhanced','menu_system','ui_layout')
+$Script:compiledObjs = @()
 
 foreach ($f in $workingFiles) {
     Write-Host "Assembling $f.asm..." -ForegroundColor Cyan
-    $result = & $ml /c /coff /Cp /nologo /I $include /Fo "$out\$f.obj" "$src\$f.asm" 2>&1
+$Script:result = & $ml /c /coff /Cp /nologo /I $include /Fo "$out\$f.obj" "$src\$f.asm" 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  ✓ $f.asm compiled successfully" -ForegroundColor Green
         $compiledObjs += "$out\$f.obj"

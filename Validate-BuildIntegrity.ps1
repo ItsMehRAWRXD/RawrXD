@@ -54,7 +54,7 @@ $ValidationResults = @{
         Version      = "15.0.0-GOLD"
         Validator    = "RawrXD-BuildCert-v1"
         Platform     = "MASM64/x64"
-        ML64Path     = if ($hasMl64) { $ml64 } else { "NOT FOUND" }
+        ML64Path     = $(if ($hasMl64) { $ml64 } else { "NOT FOUND" }
         RepoRoot     = $RepoRoot
     }
     Modules = @()
@@ -92,7 +92,7 @@ function Test-MasmSyntax {
         return @{ Status = "SKIPPED"; Errors = 0; Warnings = 0; Output = "ml64 check skipped" }
     }
 
-    $tempObj = Join-Path $env:TEMP ($FileName -replace '\.asm$', '.obj')
+    $tempObj = Join-Path ${env:TEMP} ($FileName -replace '\.asm$', '.obj')
 
     try {
         # Include path for .inc files

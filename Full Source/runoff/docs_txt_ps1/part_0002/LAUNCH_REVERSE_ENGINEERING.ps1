@@ -137,7 +137,7 @@ switch ($choice) {
         Write-Host "  [2] Production build (15-30 minutes)" -ForegroundColor White
         $buildChoice = Read-Host "Select build mode (1-2)"
         
-        $buildMode = if ($buildChoice -eq "1") { "quick" } else { "production" }
+        $buildMode = $(if ($buildChoice -eq "1") { "quick" } else { "production" }
         & "$projectRoot\BUILD_ORCHESTRATOR.ps1" -Mode $buildMode
         Read-Host "`nPress Enter to continue"
     }

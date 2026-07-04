@@ -14,7 +14,7 @@
 # ============================================================================
 
 param(
-    [string]$OllamaHost = $env:OLLAMA_HOST,
+    [string]$OllamaHost = ${env:OLLAMA_HOST},
     [string]$OutputDir = $PSScriptRoot,
     [switch]$SmokeEachModel,
     [switch]$SkipGenerate,
@@ -24,14 +24,14 @@ param(
 if (-not $OllamaHost) { $OllamaHost = "http://localhost:11434" }
 $OllamaHost = $OllamaHost.TrimEnd('/')
 
-$script:Failed = 0
-$script:Passed = 0
+${script:Failed} = 0
+${script:Passed} = 0
 
 function Write-Result { param([string]$Name, [bool]$Ok, [string]$Detail = "")
-    $script:Passed += [int]$Ok
-    if (-not $Ok) { $script:Failed += 1 }
-    $tag = if ($Ok) { "PASS" } else { "FAIL" }
-    $color = if ($Ok) { "Green" } else { "Red" }
+    ${script:Passed} += [int]$Ok
+    if (-not $Ok) { ${script:Failed} += 1 }
+    $tag = $(if ($Ok) { "PASS" } else { "FAIL" }
+    $color = $(if ($Ok) { "Green" } else { "Red" }
     Write-Host "  [$tag] $Name" -ForegroundColor $color
     if ($Detail) { Write-Host "         $Detail" -ForegroundColor Gray }
 }
@@ -120,7 +120,7 @@ $export = @{
     ollama_host = $OllamaHost
     count = $fullList.Count
     models = $fullList
-    ollama_list_cli = if ($cliList) { $cliList } else { $null }
+    ollama_list_cli = $(if ($cliList) { $cliList } else { $null }
 }
 $export | ConvertTo-Json -Depth 6 | Set-Content -Path $jsonPath -Encoding UTF8
 Write-Result "Write OllamaAvailableModels.json" $true $jsonPath
@@ -193,9 +193,9 @@ if (-not $SkipGenerate) {
 # ----------------------------------------------------------------------------
 Write-Host ""
 Write-Host "=== Summary ===" -ForegroundColor Cyan
-Write-Host "  Passed: $script:Passed" -ForegroundColor Green
-if ($script:Failed -gt 0) {
-    Write-Host "  Failed: $script:Failed" -ForegroundColor Red
+Write-Host "  Passed: ${script:Passed}" -ForegroundColor Green
+if (${script:Failed} -gt 0) {
+    Write-Host "  Failed: ${script:Failed}" -ForegroundColor Red
     exit 1
 }
 Write-Host "  Model list: $jsonPath" -ForegroundColor Gray

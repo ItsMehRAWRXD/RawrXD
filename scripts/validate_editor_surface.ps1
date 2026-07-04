@@ -24,7 +24,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
+$ProjectRoot = $(if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { "D:\rawrxd" }
 if (-not (Test-Path $ProjectRoot)) { $ProjectRoot = "D:\rawrxd" }
 
 function Find-RawrXDExe {

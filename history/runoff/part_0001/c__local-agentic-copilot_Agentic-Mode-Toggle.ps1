@@ -17,7 +17,7 @@ This PowerShell script allows you to toggle Agentic Mode from the command line.
 
 ## Configuration
 
-Configuration is saved to: `$env:APPDATA\Ollama\agentic-config.json`
+Configuration is saved to: `${env:APPDATA}\Ollama\agentic-config.json`
 
 ## Parameters
 

@@ -17,7 +17,7 @@ param(
     [string[]]$Passthrough
 )
 
-$ProjectRoot = if ($PSScriptRoot) { $PSScriptRoot } else { 'D:\rawrxd' }
+$ProjectRoot = $(if ($PSScriptRoot) { $PSScriptRoot } else { 'D:\rawrxd' }
 $buildBin = Join-Path $ProjectRoot 'build\bin'
 $buildBinRelease = Join-Path $ProjectRoot 'build\bin\Release'
 

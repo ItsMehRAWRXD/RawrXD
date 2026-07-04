@@ -26,7 +26,7 @@ foreach ($manifestName in $batchFiles) {
         # Invoke the subagent swarm on this specific manifest        
         & $FixerPath -ManifestPath $manifestPath -MaxParallel 16 -FilesPerBatch 100
 
-        $status = if ($LASTEXITCODE -eq 0) { "SUCCESS" } else { "PARTIAL" }
+        $status = $(if ($LASTEXITCODE -eq 0) { "SUCCESS" } else { "PARTIAL" }
         Write-Host ">>> [BATCH $($manifestName -replace 'batch_(\d+)_failed\.json', '$1')] Status: $status" -ForegroundColor $(if ($status -eq "SUCCESS") { "Green" } else { "Yellow" })
     } else {
         Write-Host ">>> [BATCH $($manifestName -replace 'batch_(\d+)_failed\.json', '$1')] Skipped: $manifestName not found." -ForegroundColor DarkGray

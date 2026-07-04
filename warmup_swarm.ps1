@@ -156,7 +156,7 @@ $summary = @{
     portsBound = $boundPorts
     workersVerified = $workerLogsVerified
     ringSequenceValid = $sequenceValid
-    status = if ($sequenceValid -and $workerLogsVerified -eq 7) { "PASS" } else { "PARTIAL" }
+    status = $(if ($sequenceValid -and $workerLogsVerified -eq 7) { "PASS" } else { "PARTIAL" }
 }
 
 Write-Host "`nResults:" -ForegroundColor White

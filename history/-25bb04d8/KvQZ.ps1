@@ -31,7 +31,7 @@ for ($i = 0; $i < $lines.Count; $i++) {
     
     for ($j = 0; $j < $line.Length; $j++) {
         $char = $line[$j]
-        $prevChar = if ($j -gt 0) { $line[$j-1] } else { '' }
+        $prevChar = $(if ($j -gt 0) { $line[$j-1] } else { '' }
         
         # Track string state
         if ($char -eq '"' -and $prevChar -ne '`') {

@@ -12,12 +12,12 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # Script configuration
-$script:RawrXDPath = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-$script:ModulePath = Join-Path $script:RawrXDPath 'RawrXD-Agentic-Module.psm1'
+${script:RawrXDPath} = $(if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+${script:ModulePath} = Join-Path ${script:RawrXDPath} 'RawrXD-Agentic-Module.psm1'
 
 # Import module
 try {
-    Import-Module $script:ModulePath -Force -ErrorAction Stop
+    Import-Module ${script:ModulePath} -Force -ErrorAction Stop
     Enable-RawrXDAgentic -Model 'bigdaddyg-fast:latest'
 } catch {
     [System.Windows.Forms.MessageBox]::Show("Failed to initialize agentic mode: $_", "Error", "OK", "Error")

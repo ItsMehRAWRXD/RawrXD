@@ -76,12 +76,12 @@ $failed = $false
 function Invoke-Step([string]$name, [scriptblock]$block) {
     try {
         & $block
-        $script:steps[$name] = "ok"
+        ${script:steps}[$name] = "ok"
         Write-Host "[turnkey] PASS: $name" -ForegroundColor Green
     }
     catch {
-        $script:steps[$name] = "fail: $($_.Exception.Message)"
-        $script:failed = $true
+        ${script:steps}[$name] = "fail: $($_.Exception.Message)"
+        ${script:failed} = $true
         Write-Host "[turnkey] FAIL: $name — $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -152,12 +152,12 @@ if (-not $SkipCopilotCli) {
     }
     if ($engine) {
         Invoke-Step "headless_copilot_smoke" {
-            $prevFast = $env:RAWRXD_COPILOT_SMOKE_FAST_EXIT
-            $env:RAWRXD_COPILOT_SMOKE_FAST_EXIT = "1"
+            $prevFast = ${env:RAWRXD_COPILOT_SMOKE_FAST_EXIT}
+            ${env:RAWRXD_COPILOT_SMOKE_FAST_EXIT} = "1"
             $out = & $engine --copilot-smoke 2>&1
             $ex = $LASTEXITCODE
-            if ($null -ne $prevFast) { $env:RAWRXD_COPILOT_SMOKE_FAST_EXIT = $prevFast } else { Remove-Item Env:RAWRXD_COPILOT_SMOKE_FAST_EXIT -ErrorAction SilentlyContinue }
-            $txt = if ($out -is [array]) { $out -join "`n" } else { [string]$out }
+            if ($null -ne $prevFast) { ${env:RAWRXD_COPILOT_SMOKE_FAST_EXIT} = $prevFast } else { Remove-Item Env:RAWRXD_COPILOT_SMOKE_FAST_EXIT -ErrorAction SilentlyContinue }
+            $txt = $(if ($out -is [array]) { $out -join "`n" } else { [string]$out }
             $ok = ($txt -match 'COPILOT_SMOKE_JSON:.*"ok"\s*:\s*true') -and ($txt -match 'EXIT=0')
             if (-not $ok -and $ex -ne 0) { throw "RawrEngine exit $ex`n$txt" }
             if (-not $ok) { throw "missing COPILOT_SMOKE_JSON ok:true and EXIT=0 in stdout`n$txt" }
@@ -197,7 +197,7 @@ else {
     $steps["win32_agentic_registry_smoke"] = "skipped: -SkipAgenticExe"
 }
 
-$wantTps = (-not $SkipTps) -and ($RunTpsSmoke -or ($env:RAWRXD_SMOKE_MODEL -and $env:RAWRXD_SMOKE_MODEL.Trim().Length -gt 0))
+$wantTps = (-not $SkipTps) -and ($RunTpsSmoke -or (${env:RAWRXD_SMOKE_MODEL} -and ${env:RAWRXD_SMOKE_MODEL}.Trim().Length -gt 0))
 
 if ($wantTps) {
     if (-not $BuildDir) {
@@ -211,8 +211,8 @@ if ($wantTps) {
         }
     }
     if (-not $ModelPath) {
-        if ($env:RAWRXD_SMOKE_MODEL -and (Test-Path -LiteralPath $env:RAWRXD_SMOKE_MODEL)) {
-            $ModelPath = $env:RAWRXD_SMOKE_MODEL
+        if (${env:RAWRXD_SMOKE_MODEL} -and (Test-Path -LiteralPath ${env:RAWRXD_SMOKE_MODEL})) {
+            $ModelPath = ${env:RAWRXD_SMOKE_MODEL}
         }
         else {
             $ModelPath = Join-Path $repoRoot "model\llama-7b-q4_0.gguf"
@@ -240,7 +240,7 @@ if ($wantTps) {
 
     if ($tpsExe -and (Test-Path -LiteralPath $ModelPath)) {
         Invoke-Step "tps_smoke" {
-            $env:RAWRXD_TPS_MACHINE_JSON = "1"
+            ${env:RAWRXD_TPS_MACHINE_JSON} = "1"
             & $tpsExe $ModelPath 8
             $code = $LASTEXITCODE
             if ($code -ne 0 -and $StrictTps) { throw "RawrXD-TpsSmoke exit $code" }

@@ -149,7 +149,7 @@ function Show-TestResults {
     Write-Host ""
     
     $TestResults.GetEnumerator() | ForEach-Object {
-        $status = if ($_.Value -match "Found|Complete|Yes") { "✅" } elseif ($_.Value -match "Missing|Incomplete|No") { "❌" } else { "⚠️" }
+        $status = $(if ($_.Value -match "Found|Complete|Yes") { "✅" } elseif ($_.Value -match "Missing|Incomplete|No") { "❌" } else { "⚠️" }
         Write-Host "  $status $($_.Key): $($_.Value)" -ForegroundColor $(if ($_.Value -match "Found|Complete|Yes") { "Green" } elseif ($_.Value -match "Missing|Incomplete|No") { "Red" } else { "Yellow" })
     }
     

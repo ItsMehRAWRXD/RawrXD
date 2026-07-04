@@ -252,7 +252,7 @@ class SourceDigester {
             $headings += $match.Groups[1].Value
         }
         
-        $fileInfo.Synopsis = if ($headings.Count -gt 0) { $headings[0] } else { "" }
+        $fileInfo.Synopsis = $(if ($headings.Count -gt 0) { $headings[0] } else { "" }
         
         # Extract code blocks
         $codeBlockPattern = '```(\w+)\s+([\s\S]*?)```'

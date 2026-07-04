@@ -2,8 +2,8 @@
 # Cursor can't find the command when manifest/JS use wrong spelling
 
 $bases = @(
-    "$env:USERPROFILE\.cursor\extensions",
-    "$env:USERPROFILE\.vscode\extensions"
+    "${env:USERPROFILE}\.cursor\extensions",
+    "${env:USERPROFILE}\.vscode\extensions"
 )
 
 $patched = 0

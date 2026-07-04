@@ -322,8 +322,8 @@ $consoleOutput.ReadOnly = $true
 $consolePanel.Controls.Add($consoleOutput)
 
 # Global Variables
-$script:currentFile = $null
-$script:isDirty = $false
+${script:currentFile} = $null
+${script:isDirty} = $false
 
 # Helper Functions
 function Update-Preview {
@@ -380,8 +380,8 @@ function Save-File {
     }
         
     $codeEditor.Text | Set-Content -Path $Path -Encoding UTF8
-    $script:currentFile = $Path
-    $script:isDirty = $false
+    ${script:currentFile} = $Path
+    ${script:isDirty} = $false
     $mainForm.Text = "PowerShell HTML Browser & IDE - $([System.IO.Path]::GetFileName($Path))"
     $statusLabel.Text = "Saved: $Path"
     Log-Console "File saved: $Path"
@@ -405,8 +405,8 @@ function Open-File {
     try {
       $content = Get-Content -Path $openDialog.FileName -Raw
       $codeEditor.Text = $content
-      $script:currentFile = $openDialog.FileName
-      $script:isDirty = $false
+      ${script:currentFile} = $openDialog.FileName
+      ${script:isDirty} = $false
       $mainForm.Text = "PowerShell HTML Browser & IDE - $([System.IO.Path]::GetFileName($openDialog.FileName))"
       $statusLabel.Text = "Loaded: $($openDialog.FileName)"
       Update-Preview
@@ -426,7 +426,7 @@ function Open-File {
 
 # Event Handlers
 $codeEditor.add_TextChanged({
-    $script:isDirty = $true
+    ${script:isDirty} = $true
     Update-LineCol
   })
 
@@ -435,7 +435,7 @@ $codeEditor.add_SelectionChanged({
   })
 
 $newFileItem.add_Click({
-    if ($script:isDirty) {
+    if (${script:isDirty}) {
       $result = [System.Windows.Forms.MessageBox]::Show(
         "Do you want to save changes?",
         "Unsaved Changes",
@@ -444,7 +444,7 @@ $newFileItem.add_Click({
       )
         
       if ($result -eq "Yes") {
-        Save-File -Path $script:currentFile
+        Save-File -Path ${script:currentFile}
       }
       elseif ($result -eq "Cancel") {
         return
@@ -462,8 +462,8 @@ $newFileItem.add_Click({
 </body>
 </html>
 "@
-    $script:currentFile = $null
-    $script:isDirty = $false
+    ${script:currentFile} = $null
+    ${script:isDirty} = $false
     $mainForm.Text = "PowerShell HTML Browser & IDE - New Document"
     Update-Preview
     Log-Console "New file created"
@@ -471,7 +471,7 @@ $newFileItem.add_Click({
 
 $openFileItem.add_Click({ Open-File })
 
-$saveFileItem.add_Click({ Save-File -Path $script:currentFile })
+$saveFileItem.add_Click({ Save-File -Path ${script:currentFile} })
 
 $refreshItem.add_Click({ Update-Preview })
 
@@ -506,7 +506,7 @@ $devToolsItem.add_Click({
 
 # WebBrowser Events
 $webBrowser.add_DocumentCompleted({
-    $urlLabel.Text = if ($webBrowser.DocumentTitle) { $webBrowser.DocumentTitle } else { "Preview" }
+    $urlLabel.Text = $(if ($webBrowser.DocumentTitle) { $webBrowser.DocumentTitle } else { "Preview" }
     Log-Console "Document loaded: $($webBrowser.DocumentTitle)"
   })
 
@@ -519,7 +519,7 @@ $webBrowser.add_Navigating({
 $mainForm.add_FormClosing({
     param($sender, $e)
     
-    if ($script:isDirty) {
+    if (${script:isDirty}) {
       $result = [System.Windows.Forms.MessageBox]::Show(
         "Do you want to save changes before closing?",
         "Unsaved Changes",
@@ -528,7 +528,7 @@ $mainForm.add_FormClosing({
       )
         
       if ($result -eq "Yes") {
-        Save-File -Path $script:currentFile
+        Save-File -Path ${script:currentFile}
       }
       elseif ($result -eq "Cancel") {
         $e.Cancel = $true
@@ -541,7 +541,7 @@ $mainForm.add_KeyDown({
     param($sender, $e)
     
     if ($e.Control -and $e.KeyCode -eq "S") {
-      Save-File -Path $script:currentFile
+      Save-File -Path ${script:currentFile}
       $e.Handled = $true
     }
     elseif ($e.KeyCode -eq "F5") {

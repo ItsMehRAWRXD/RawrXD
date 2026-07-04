@@ -13,6 +13,7 @@
 #include <atomic>
 #include <mutex>
 #include <unordered_map>
+#include <map>
 #include <optional>
 #include <algorithm>
 #include <cstring>
@@ -238,6 +239,10 @@ public:
         std::atomic<bool> is_complete{false};
         std::vector<uint32_t> output_tokens;  // Aggregated output
         
+        // Ordered aggregation: store segments by index for out-of-order completion
+        std::map<uint32_t, std::vector<uint32_t>> completed_segments_map;
+        std::atomic<uint32_t> segments_done{0};
+        
         explicit SequenceState(uint64_t id, uint32_t segments)
             : sequence_id(id)
             , total_segments(segments)
@@ -285,13 +290,28 @@ public:
         state->segment_completed[segment_index] = true;
         state->completed_segments++;
         
-        // Append output tokens
-        state->output_tokens.insert(state->output_tokens.end(), 
-                                      output_tokens.begin(), output_tokens.end());
+        // Store segment tokens by index for ordered aggregation
+        state->completed_segments_map[segment_index] = output_tokens;
         
         // Check if sequence is complete
-        if (state->completed_segments >= state->total_segments) {
+        if (++state->segments_done == state->total_segments) {
             state->is_complete.store(true);
+            
+            // Pre-calculate total size to avoid reallocations
+            size_t total_tokens = 0;
+            for (const auto& [idx, tokens] : state->completed_segments_map) {
+                total_tokens += tokens.size();
+            }
+            state->output_tokens.reserve(total_tokens);
+            
+            // Flatten in segment order (guaranteed by std::map key ordering)
+            for (uint32_t i = 0; i < state->total_segments; ++i) {
+                const auto& seg_it = state->completed_segments_map.find(i);
+                if (seg_it != state->completed_segments_map.end()) {
+                    state->output_tokens.insert(state->output_tokens.end(),
+                                                seg_it->second.begin(), seg_it->second.end());
+                }
+            }
         }
         
         return true;
@@ -455,12 +475,11 @@ public:
             // Calculate position offset for RoPE
             req.seq_meta.position_offset = offset;
             
-            // Extract tokens for this chunk
+            // Extract tokens for this chunk - ZERO-COPY: use pointer view instead of copy
             uint32_t chunk_size = chunk_sizes[i];
-            req.input_tokens.assign(
-                input_tokens.begin() + offset,
-                input_tokens.begin() + std::min(offset + chunk_size, (uint32_t)input_tokens.size())
-            );
+            req.input_tokens_ptr = input_tokens.data() + offset;
+            req.input_token_count = std::min(chunk_size, (uint32_t)input_tokens.size() - offset);
+            req.use_zero_copy_input = true;
             
             // Select worker
             int worker_id = strategy_->SelectWorkerForChunk(i, num_workers, workers);

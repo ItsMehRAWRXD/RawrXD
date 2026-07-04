@@ -4,7 +4,7 @@
 param([string] $Path = "")
 
 $ErrorActionPreference = "Stop"
-$lines = if ($Path) { Get-Content -LiteralPath $Path } else { $input | ForEach-Object { $_ } }
+$lines = $(if ($Path) { Get-Content -LiteralPath $Path } else { $input | ForEach-Object { $_ } }
 $rows = foreach ($line in $lines) {
     if ($line -notmatch '\[MoEPathDiverge\]') { continue }
     $o = [ordered]@{}

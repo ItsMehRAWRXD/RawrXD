@@ -14,7 +14,7 @@
 # THEME DEFINITIONS
 # ============================================================
 
-$script:EditorThemes = @{
+${script:EditorThemes} = @{
     "Dark+" = @{
         Background = [System.Drawing.Color]::FromArgb(30, 30, 30)
         Foreground = [System.Drawing.Color]::FromArgb(220, 220, 220)
@@ -94,7 +94,7 @@ $script:EditorThemes = @{
     }
 }
 
-$script:CurrentTheme = "Dark+"
+${script:CurrentTheme} = "Dark+"
 
 # ============================================================
 # RICHTEXTBOX EDITOR FUNCTIONS
@@ -113,63 +113,63 @@ function Set-RichTextBoxTheme {
         [string]$ThemeName
     )
     
-    if (-not $script:editor) {
+    if (-not ${script:editor}) {
         Write-DevConsole "[Theme] Editor not available" "WARNING"
         return
     }
     
-    if (-not $script:EditorThemes.ContainsKey($ThemeName)) {
+    if (-not ${script:EditorThemes}.ContainsKey($ThemeName)) {
         Write-DevConsole "[Theme] Unknown theme: $ThemeName" "WARNING"
         return
     }
     
-    $theme = $script:EditorThemes[$ThemeName]
-    $script:CurrentTheme = $ThemeName
+    $theme = ${script:EditorThemes}[$ThemeName]
+    ${script:CurrentTheme} = $ThemeName
     
     try {
         # Ensure we're on the UI thread
-        if ($script:editor.InvokeRequired) {
-            $script:editor.Invoke([System.Action] {
+        if (${script:editor}.InvokeRequired) {
+            ${script:editor}.Invoke([System.Action] {
                 param($t)
-                $script:editor.BackColor = $t.Background
-                $script:editor.ForeColor = $t.Foreground
+                ${script:editor}.BackColor = $t.Background
+                ${script:editor}.ForeColor = $t.Foreground
                 
                 # Apply theme to all existing text
-                if ($script:editor.Text.Length -gt 0) {
-                    $selStart = $script:editor.SelectionStart
-                    $selLength = $script:editor.SelectionLength
+                if (${script:editor}.Text.Length -gt 0) {
+                    $selStart = ${script:editor}.SelectionStart
+                    $selLength = ${script:editor}.SelectionLength
                     
-                    $script:editor.SelectAll()
-                    $script:editor.SelectionColor = $t.Foreground
-                    $script:editor.DeselectAll()
+                    ${script:editor}.SelectAll()
+                    ${script:editor}.SelectionColor = $t.Foreground
+                    ${script:editor}.DeselectAll()
                     
-                    $script:editor.SelectionStart = $selStart
-                    $script:editor.SelectionLength = $selLength
+                    ${script:editor}.SelectionStart = $selStart
+                    ${script:editor}.SelectionLength = $selLength
                 }
                 
                 # Set default color for new text
-                $script:editor.SelectionColor = $t.Foreground
+                ${script:editor}.SelectionColor = $t.Foreground
             }, $theme)
         }
         else {
-            $script:editor.BackColor = $theme.Background
-            $script:editor.ForeColor = $theme.Foreground
+            ${script:editor}.BackColor = $theme.Background
+            ${script:editor}.ForeColor = $theme.Foreground
             
             # Apply theme to all existing text
-            if ($script:editor.Text.Length -gt 0) {
-                $selStart = $script:editor.SelectionStart
-                $selLength = $script:editor.SelectionLength
+            if (${script:editor}.Text.Length -gt 0) {
+                $selStart = ${script:editor}.SelectionStart
+                $selLength = ${script:editor}.SelectionLength
                 
-                $script:editor.SelectAll()
-                $script:editor.SelectionColor = $theme.Foreground
-                $script:editor.DeselectAll()
+                ${script:editor}.SelectAll()
+                ${script:editor}.SelectionColor = $theme.Foreground
+                ${script:editor}.DeselectAll()
                 
-                $script:editor.SelectionStart = $selStart
-                $script:editor.SelectionLength = $selLength
+                ${script:editor}.SelectionStart = $selStart
+                ${script:editor}.SelectionLength = $selLength
             }
             
             # Set default color for new text
-            $script:editor.SelectionColor = $theme.Foreground
+            ${script:editor}.SelectionColor = $theme.Foreground
         }
         
         Write-DevConsole "[Theme] Applied theme: $ThemeName" "SUCCESS"
@@ -192,7 +192,7 @@ function Set-RichTextBoxFontSize {
         [int]$Size
     )
     
-    if (-not $script:editor) {
+    if (-not ${script:editor}) {
         Write-DevConsole "[FontSize] Editor not available" "WARNING"
         return
     }
@@ -203,17 +203,17 @@ function Set-RichTextBoxFontSize {
     }
     
     try {
-        $currentFont = $script:editor.Font
+        $currentFont = ${script:editor}.Font
         $newFont = New-Object System.Drawing.Font($currentFont.FontFamily, $Size, $currentFont.Style)
         
-        if ($script:editor.InvokeRequired) {
-            $script:editor.Invoke([System.Action] {
+        if (${script:editor}.InvokeRequired) {
+            ${script:editor}.Invoke([System.Action] {
                 param($f)
-                $script:editor.Font = $f
+                ${script:editor}.Font = $f
             }, $newFont)
         }
         else {
-            $script:editor.Font = $newFont
+            ${script:editor}.Font = $newFont
         }
         
         Write-DevConsole "[FontSize] Set font size to $Size" "SUCCESS"
@@ -236,23 +236,23 @@ function Set-RichTextBoxFontFamily {
         [string]$FontFamily
     )
     
-    if (-not $script:editor) {
+    if (-not ${script:editor}) {
         Write-DevConsole "[FontFamily] Editor not available" "WARNING"
         return
     }
     
     try {
-        $currentFont = $script:editor.Font
+        $currentFont = ${script:editor}.Font
         $newFont = New-Object System.Drawing.Font($FontFamily, $currentFont.Size, $currentFont.Style)
         
-        if ($script:editor.InvokeRequired) {
-            $script:editor.Invoke([System.Action] {
+        if (${script:editor}.InvokeRequired) {
+            ${script:editor}.Invoke([System.Action] {
                 param($f)
-                $script:editor.Font = $f
+                ${script:editor}.Font = $f
             }, $newFont)
         }
         else {
-            $script:editor.Font = $newFont
+            ${script:editor}.Font = $newFont
         }
         
         Write-DevConsole "[FontFamily] Set font family to $FontFamily" "SUCCESS"
@@ -276,7 +276,7 @@ function Set-RichTextBoxTabSize {
         [int]$Size
     )
     
-    if (-not $script:editor) {
+    if (-not ${script:editor}) {
         Write-DevConsole "[TabSize] Editor not available" "WARNING"
         return
     }
@@ -284,10 +284,10 @@ function Set-RichTextBoxTabSize {
     try {
         # RichTextBox doesn't have a direct TabSize property
         # We'll store it in settings and use it for indentation
-        if (-not $global:settings) {
-            $global:settings = @{}
+        if (-not ${global:settings}) {
+            ${global:settings} = @{}
         }
-        $global:settings.TabSize = $Size
+        ${global:settings}.TabSize = $Size
         
         Write-DevConsole "[TabSize] Set tab size to $Size spaces" "SUCCESS"
     }
@@ -309,20 +309,20 @@ function Set-RichTextBoxWordWrap {
         [bool]$Enabled
     )
     
-    if (-not $script:editor) {
+    if (-not ${script:editor}) {
         Write-DevConsole "[WordWrap] Editor not available" "WARNING"
         return
     }
     
     try {
-        if ($script:editor.InvokeRequired) {
-            $script:editor.Invoke([System.Action] {
+        if (${script:editor}.InvokeRequired) {
+            ${script:editor}.Invoke([System.Action] {
                 param($enabled)
-                $script:editor.WordWrap = $enabled
+                ${script:editor}.WordWrap = $enabled
             }, $Enabled)
         }
         else {
-            $script:editor.WordWrap = $Enabled
+            ${script:editor}.WordWrap = $Enabled
         }
         
         Write-DevConsole "[WordWrap] Word wrap $(if ($Enabled) { 'enabled' } else { 'disabled' })" "SUCCESS"
@@ -364,7 +364,7 @@ function Set-RichTextBoxZoom {
         [int]$ZoomPercent
     )
     
-    if (-not $script:editor) {
+    if (-not ${script:editor}) {
         Write-DevConsole "[Zoom] Editor not available" "WARNING"
         return
     }
@@ -387,7 +387,7 @@ function Get-RichTextBoxTheme {
     .SYNOPSIS
         Gets the current theme name
     #>
-    return $script:CurrentTheme
+    return ${script:CurrentTheme}
 }
 
 function Get-AvailableThemes {
@@ -395,7 +395,7 @@ function Get-AvailableThemes {
     .SYNOPSIS
         Gets list of available theme names
     #>
-    return $script:EditorThemes.Keys | Sort-Object
+    return ${script:EditorThemes}.Keys | Sort-Object
 }
 
 # Note: Export-ModuleMember removed - this file is dot-sourced, not imported as a module

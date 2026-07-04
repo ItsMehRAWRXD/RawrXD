@@ -182,7 +182,7 @@ function Find-PotentialCensorshipLayers {
         Write-Host ""
         
         foreach ($layer in ($suspiciousLayers | Sort-Object -Property Score -Descending)) {
-            $color = if ($layer.Score -ge 70) { "Red" } 
+            $color = $(if ($layer.Score -ge 70) { "Red" } 
                     elseif ($layer.Score -ge 40) { "Yellow" } 
                     else { "Cyan" }
             

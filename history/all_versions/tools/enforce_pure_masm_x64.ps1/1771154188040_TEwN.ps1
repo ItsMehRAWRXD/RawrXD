@@ -119,7 +119,7 @@ foreach ($f in $allFiles) {
 $targetStatus = @()
 $missingAsm = @()
 $targetScaffoldHits = @()
-$cmakeContent = if (Test-Path $cmakePath) { Get-Content -Path $cmakePath -Raw } else { "" }
+$cmakeContent = $(if (Test-Path $cmakePath) { Get-Content -Path $cmakePath -Raw } else { "" }
 
 foreach ($m in $targetMap) {
     $sourceAbs = Join-Path $RepoRoot $m.Source

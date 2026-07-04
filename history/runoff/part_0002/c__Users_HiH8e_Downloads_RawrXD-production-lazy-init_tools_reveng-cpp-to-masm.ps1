@@ -10,7 +10,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 function Resolve-DevCmd {
-  $vsWhere = "$Env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+  $vsWhere = "${Env:ProgramFiles}(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
   if (Test-Path $vsWhere) {
     $vs = & $vsWhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
     if ($vs) {

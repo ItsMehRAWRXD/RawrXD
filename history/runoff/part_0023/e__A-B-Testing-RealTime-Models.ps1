@@ -93,7 +93,7 @@ $testPrompts = @(
 )
 
 # Initialize results tracking
-$global:results = @{
+${global:results} = @{
     ModelA = @()
     ModelB = @()
     ComparisonMetrics = $null
@@ -300,7 +300,7 @@ function Generate-ComparisonReport {
     Write-Host "  │  Model A: $($MetricsA.AvgLatencyMs)ms" -ForegroundColor Cyan
     Write-Host "  │  Model B: $($MetricsB.AvgLatencyMs)ms" -ForegroundColor Magenta
     $latencyDiff = [math]::Round($MetricsA.AvgLatencyMs - $MetricsB.AvgLatencyMs, 2)
-    $winner = if ($latencyDiff -gt 0) { "Model B is FASTER" } else { "Model A is FASTER" }
+    $winner = $(if ($latencyDiff -gt 0) { "Model B is FASTER" } else { "Model A is FASTER" }
     Write-Host "  │  Difference: $([math]::Abs($latencyDiff))ms ($winner)" -ForegroundColor Green
     
     Write-Host "  ├─ Min:" -ForegroundColor White
@@ -320,7 +320,7 @@ function Generate-ComparisonReport {
     Write-Host "  │  Model A: $($MetricsA.AvgTokensPerSec) tokens/sec" -ForegroundColor Cyan
     Write-Host "  │  Model B: $($MetricsB.AvgTokensPerSec) tokens/sec" -ForegroundColor Magenta
     $tpsDiff = [math]::Round($MetricsA.AvgTokensPerSec - $MetricsB.AvgTokensPerSec, 2)
-    $winner = if ($tpsDiff -gt 0) { "Model A is FASTER" } else { "Model B is FASTER" }
+    $winner = $(if ($tpsDiff -gt 0) { "Model A is FASTER" } else { "Model B is FASTER" }
     Write-Host "  │  Difference: $([math]::Abs($tpsDiff)) tokens/sec ($winner)" -ForegroundColor Green
     
     Write-Host "  ├─ Max:" -ForegroundColor White
@@ -331,9 +331,9 @@ function Generate-ComparisonReport {
     
     # Calculate winner
     Write-Host "`n🏆 OVERALL WINNER" -ForegroundColor Yellow
-    $latencyScore = if ($MetricsA.AvgLatencyMs -lt $MetricsB.AvgLatencyMs) { 1 } else { 0 }
-    $tpsScore = if ($MetricsA.AvgTokensPerSec -gt $MetricsB.AvgTokensPerSec) { 1 } else { 0 }
-    $successScore = if ($MetricsA.SuccessRate -gt $MetricsB.SuccessRate) { 1 } else { 0 }
+    $latencyScore = $(if ($MetricsA.AvgLatencyMs -lt $MetricsB.AvgLatencyMs) { 1 } else { 0 }
+    $tpsScore = $(if ($MetricsA.AvgTokensPerSec -gt $MetricsB.AvgTokensPerSec) { 1 } else { 0 }
+    $successScore = $(if ($MetricsA.SuccessRate -gt $MetricsB.SuccessRate) { 1 } else { 0 }
     
     $totalScore = $latencyScore + $tpsScore + $successScore
     
@@ -368,13 +368,13 @@ $metricsA = Calculate-Metrics -Results $resultsA
 $metricsB = Calculate-Metrics -Results $resultsB
 
 # Store results
-$global:results.ModelA = $resultsA
-$global:results.ModelB = $resultsB
-$global:results.ComparisonMetrics = @{
+${global:results}.ModelA = $resultsA
+${global:results}.ModelB = $resultsB
+${global:results}.ComparisonMetrics = @{
     ModelA = $metricsA
     ModelB = $metricsB
 }
-$global:results.EndTime = Get-Date
+${global:results}.EndTime = Get-Date
 
 # Generate and display report
 Generate-ComparisonReport -MetricsA $metricsA -MetricsB $metricsB
@@ -384,9 +384,9 @@ Write-Host "`n📁 Saving detailed results to: $OutputFile" -ForegroundColor Yel
 
 $jsonOutput = @{
     TestMetadata = @{
-        StartTime = $global:results.StartTime
-        EndTime = $global:results.EndTime
-        DurationSeconds = [math]::Round(($global:results.EndTime - $global:results.StartTime).TotalSeconds, 2)
+        StartTime = ${global:results}.StartTime
+        EndTime = ${global:results}.EndTime
+        DurationSeconds = [math]::Round((${global:results}.EndTime - ${global:results}.StartTime).TotalSeconds, 2)
         ModelA = $ModelA
         ModelB = $ModelB
         TestsPerModel = $NumTests

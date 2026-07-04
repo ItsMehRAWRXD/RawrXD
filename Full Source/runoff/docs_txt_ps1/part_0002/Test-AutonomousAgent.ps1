@@ -78,7 +78,7 @@ $WarningPreference = "Continue"
 $InformationPreference = "Continue"
 
 # Global test state
-$script:TestState = @{
+${script:TestState} = @{
     Version = "3.0.0"
     StartTime = Get-Date
     EndTime = $null
@@ -138,9 +138,9 @@ function Write-TestLog {
     
     # Update state
     if ($Level -eq 'Error' -or $Level -eq 'Critical') {
-        $script:TestState.Errors.Add($Message)
+        ${script:TestState}.Errors.Add($Message)
     } elseif ($Level -eq 'Warning') {
-        $script:TestState.Warnings.Add($Message)
+        ${script:TestState}.Warnings.Add($Message)
     }
     
     # Log to file
@@ -172,7 +172,7 @@ function Show-Configuration {
     Write-Host "  WhatIf: $WhatIf" -ForegroundColor White
     Write-Host "  Verbose: $Verbose" -ForegroundColor White
     Write-Host "  Generate Report: $GenerateReport" -ForegroundColor White
-    Write-Host "  Start Time: $($script:TestState.StartTime)" -ForegroundColor White
+    Write-Host "  Start Time: $(${script:TestState}.StartTime)" -ForegroundColor White
     Write-Host ""
 }
 
@@ -264,12 +264,12 @@ function Test-ModuleImport {
         Write-TestLog -Message "Module import test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.ModuleImport = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.ModuleImport = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -439,12 +439,12 @@ function Test-FunctionValidation {
         Write-TestLog -Message "Function validation test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.FunctionValidation = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.FunctionValidation = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -501,12 +501,12 @@ function Test-SelfAnalysis {
         Write-TestLog -Message "Self-analysis test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.SelfAnalysis = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.SelfAnalysis = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -563,12 +563,12 @@ function Test-FeatureGeneration {
         Write-TestLog -Message "Feature generation test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.FeatureGeneration = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.FeatureGeneration = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -622,12 +622,12 @@ function Test-AutonomousTesting {
         Write-TestLog -Message "Autonomous testing test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.AutonomousTesting = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.AutonomousTesting = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -678,12 +678,12 @@ function Test-Optimization {
         Write-TestLog -Message "Optimization test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.Optimization = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.Optimization = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -734,12 +734,12 @@ function Test-ContinuousImprovement {
         Write-TestLog -Message "Continuous improvement test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.ContinuousImprovement = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.ContinuousImprovement = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -792,12 +792,12 @@ function Test-Integration {
         Write-TestLog -Message "Integration test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.Integration = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.Integration = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -853,12 +853,12 @@ function Test-Performance {
         Write-TestLog -Message "Performance test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.Performance = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.Performance = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -909,12 +909,12 @@ function Test-Security {
         Write-TestLog -Message "Security test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.Security = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.Security = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -968,12 +968,12 @@ function Test-Regression {
         Write-TestLog -Message "Regression test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.Regression = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.Regression = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -1027,12 +1027,12 @@ function Test-SelfTest {
         Write-TestLog -Message "Self-test test failed: $_" -Level Error
     }
     
-    $script:TestState.Results.SelfTest = $results
-    $script:TestState.Tests.Total++
+    ${script:TestState}.Results.SelfTest = $results
+    ${script:TestState}.Tests.Total++
     if ($results.Success) {
-        $script:TestState.Tests.Passed++
+        ${script:TestState}.Tests.Passed++
     } else {
-        $script:TestState.Tests.Failed++
+        ${script:TestState}.Tests.Failed++
     }
     
     return $results
@@ -1045,7 +1045,7 @@ function Show-FinalResults {
     Write-TestLog -Message "═══════════════════════════════════════════════════════════════════" -Level Test
     
     $endTime = Get-Date
-    $duration = [Math]::Round(($endTime - $script:TestState.StartTime).TotalMinutes, 2)
+    $duration = [Math]::Round(($endTime - ${script:TestState}.StartTime).TotalMinutes, 2)
     
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
@@ -1057,32 +1057,32 @@ function Show-FinalResults {
     
     Write-Host "Test Summary:" -ForegroundColor Yellow
     Write-Host "  Duration: $duration minutes" -ForegroundColor White
-    Write-Host "  Test Type: $($script:TestState.TestType)" -ForegroundColor White
-    Write-Host "  Iterations: $($script:TestState.Iterations)" -ForegroundColor White
-    Write-Host "  Status: $(if($script:TestState.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if($script:TestState.Success){'Green'}else{'Red'})
+    Write-Host "  Test Type: $(${script:TestState}.TestType)" -ForegroundColor White
+    Write-Host "  Iterations: $(${script:TestState}.Iterations)" -ForegroundColor White
+    Write-Host "  Status: $(if(${script:TestState}.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if(${script:TestState}.Success){'Green'}else{'Red'})
     Write-Host ""
     
     Write-Host "Test Statistics:" -ForegroundColor Yellow
-    Write-Host "  Total Tests: $($script:TestState.Tests.Total)" -ForegroundColor White
-    Write-Host "  Tests Passed: $($script:TestState.Tests.Passed)" -ForegroundColor Green
-    Write-Host "  Tests Failed: $($script:TestState.Tests.Failed)" -ForegroundColor Red
-    Write-Host "  Tests Skipped: $($script:TestState.Tests.Skipped)" -ForegroundColor Yellow
-    Write-Host "  Success Rate: $([Math]::Round(($script:TestState.Tests.Passed / $script:TestState.Tests.Total * 100), 2))%" -ForegroundColor White
-    Write-Host "  Errors: $($script:TestState.Errors.Count)" -ForegroundColor $(if($script:TestState.Errors.Count -eq 0){'Green'}else{'Red'})
-    Write-Host "  Warnings: $($script:TestState.Warnings.Count)" -ForegroundColor $(if($script:TestState.Warnings.Count -eq 0){'Green'}else{'Yellow'})
+    Write-Host "  Total Tests: $(${script:TestState}.Tests.Total)" -ForegroundColor White
+    Write-Host "  Tests Passed: $(${script:TestState}.Tests.Passed)" -ForegroundColor Green
+    Write-Host "  Tests Failed: $(${script:TestState}.Tests.Failed)" -ForegroundColor Red
+    Write-Host "  Tests Skipped: $(${script:TestState}.Tests.Skipped)" -ForegroundColor Yellow
+    Write-Host "  Success Rate: $([Math]::Round((${script:TestState}.Tests.Passed / ${script:TestState}.Tests.Total * 100), 2))%" -ForegroundColor White
+    Write-Host "  Errors: $(${script:TestState}.Errors.Count)" -ForegroundColor $(if(${script:TestState}.Errors.Count -eq 0){'Green'}else{'Red'})
+    Write-Host "  Warnings: $(${script:TestState}.Warnings.Count)" -ForegroundColor $(if(${script:TestState}.Warnings.Count -eq 0){'Green'}else{'Yellow'})
     Write-Host ""
     
-    if ($script:TestState.Errors.Count -gt 0) {
+    if (${script:TestState}.Errors.Count -gt 0) {
         Write-Host "Errors:" -ForegroundColor Red
-        foreach ($error in $script:TestState.Errors) {
+        foreach ($error in ${script:TestState}.Errors) {
             Write-Host "  • $error" -ForegroundColor Gray
         }
         Write-Host ""
     }
     
-    if ($script:TestState.Warnings.Count -gt 0) {
+    if (${script:TestState}.Warnings.Count -gt 0) {
         Write-Host "Warnings:" -ForegroundColor Yellow
-        foreach ($warning in $script:TestState.Warnings) {
+        foreach ($warning in ${script:TestState}.Warnings) {
             Write-Host "  • $warning" -ForegroundColor Gray
         }
         Write-Host ""
@@ -1145,21 +1145,21 @@ function Start-AllTests {
         $selfTestResult = Test-SelfTest
         
         # Update final status
-        $script:TestState.EndTime = Get-Date
-        $script:TestState.Duration = [Math]::Round(($script:TestState.EndTime - $script:TestState.StartTime).TotalMinutes, 2)
-        $script:TestState.Success = ($script:TestState.Tests.Failed -eq 0)
+        ${script:TestState}.EndTime = Get-Date
+        ${script:TestState}.Duration = [Math]::Round((${script:TestState}.EndTime - ${script:TestState}.StartTime).TotalMinutes, 2)
+        ${script:TestState}.Success = (${script:TestState}.Tests.Failed -eq 0)
         
         Write-TestLog -Message "Test suite completed successfully" -Level Success
         
         # Show final results
         Show-FinalResults
         
-        return $script:TestState
+        return ${script:TestState}
         
     } catch {
-        $script:TestState.EndTime = Get-Date
-        $script:TestState.Duration = [Math]::Round(($script:TestState.EndTime - $script:TestState.StartTime).TotalMinutes, 2)
-        $script:TestState.Success = $false
+        ${script:TestState}.EndTime = Get-Date
+        ${script:TestState}.Duration = [Math]::Round((${script:TestState}.EndTime - ${script:TestState}.StartTime).TotalMinutes, 2)
+        ${script:TestState}.Success = $false
         
         Write-TestLog -Message "Test suite failed: $_" -Level Critical
         

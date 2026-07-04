@@ -85,8 +85,8 @@ Test-Component "Get-RealHealthMetrics function exists" {
 
 $metrics = $null
 Test-Component "Get-RealHealthMetrics executes without errors" {
-    $script:metrics = Get-RealHealthMetrics
-    $script:metrics -ne $null
+    ${script:metrics} = Get-RealHealthMetrics
+    ${script:metrics} -ne $null
 }
 
 if ($metrics) {
@@ -227,7 +227,7 @@ Test-Component "New-ChatTabWithLimit function exists" {
 }
 
 Test-Component "Tab limit variables initialized" {
-    $script:MaxEditorTabs -eq 1000 -and $script:MaxChatTabs -eq 1000
+    ${script:MaxEditorTabs} -eq 1000 -and ${script:MaxChatTabs} -eq 1000
 }
 
 Write-Host "`n✅ Tab management ready with 1,000 limit enforcement" -ForegroundColor Green

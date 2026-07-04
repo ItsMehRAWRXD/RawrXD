@@ -9,7 +9,7 @@ param(
     [string]$OutDir = "D:\rawrxd\build",
     [string]$CMakeBuildDir = "D:\rawrxd\build",
     [switch]$PureASM = $false,          # Nuclear option: C++ objects excluded
-    [switch]$CreateASMGlue = $true       # Auto-generate missing ASM symbols
+    [switch]$CreateASMGlue       # Auto-generate missing ASM symbols
 )
 
 $ErrorActionPreference = "Stop"

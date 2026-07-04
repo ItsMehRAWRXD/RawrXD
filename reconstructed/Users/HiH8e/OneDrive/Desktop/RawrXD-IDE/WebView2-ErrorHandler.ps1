@@ -18,7 +18,7 @@
 # MODULE VARIABLES
 # ============================================
 
-$script:WebView2Status = @{
+${script:WebView2Status} = @{
     Loaded = $false
     AssemblyPath = ""
     Error = ""
@@ -26,9 +26,9 @@ $script:WebView2Status = @{
     FrameworkVersion = [System.Runtime.InteropServices.RuntimeInformation]::FrameworkDescription
 }
 
-$script:AssemblySearchPaths = @(
-    "$env:TEMP\WVLibs",
-    "$env:APPDATA\RawrXD\WebView2",
+${script:AssemblySearchPaths} = @(
+    "${env:TEMP}\WVLibs",
+    "${env:APPDATA}\RawrXD\WebView2",
     "$PSScriptRoot\WebView2Libs",
     "${env:ProgramFiles}\Microsoft\WebView2",
     "${env:ProgramFiles(x86)}\Microsoft\WebView2"
@@ -43,7 +43,7 @@ function Test-WebView2AssemblyAvailable {
     .SYNOPSIS
         Test if WebView2 assemblies are available in any search path
     #>
-    foreach ($path in $script:AssemblySearchPaths) {
+    foreach ($path in ${script:AssemblySearchPaths}) {
         if (Test-Path $path) {
             $winFormsdll = Join-Path $path "Microsoft.Web.WebView2.WinForms.dll"
             $coreDll = Join-Path $path "Microsoft.Web.WebView2.Core.dll"
@@ -127,8 +127,8 @@ function Load-WebView2Assemblies {
             Add-Type -Path $pathResult.WinFormsDll -ErrorAction Stop
             Write-Host "[WebView2] ✅ WinForms assembly loaded" -ForegroundColor Green
             
-            $script:WebView2Status.Loaded = $true
-            $script:WebView2Status.AssemblyPath = $pathResult.Path
+            ${script:WebView2Status}.Loaded = $true
+            ${script:WebView2Status}.AssemblyPath = $pathResult.Path
             
             return @{
                 Success = $true
@@ -179,7 +179,7 @@ function Initialize-LegacyBrowser {
         # IE-based browser is always available on Windows
         Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
         
-        $script:WebView2Status.FallbackMode = $true
+        ${script:WebView2Status}.FallbackMode = $true
         
         Write-Host "[Browser] ✅ Legacy browser initialized successfully" -ForegroundColor Green
         
@@ -296,16 +296,16 @@ function Get-WebView2DiagnosticsInfo {
         Get detailed diagnostic information about WebView2 status
     #>
     $diagnostics = @{
-        FrameworkVersion = $script:WebView2Status.FrameworkVersion
-        WebView2Loaded = $script:WebView2Status.Loaded
-        WebView2Path = $script:WebView2Status.AssemblyPath
-        WebView2Error = $script:WebView2Status.Error
-        FallbackMode = $script:WebView2Status.FallbackMode
-        SearchPaths = $script:AssemblySearchPaths
+        FrameworkVersion = ${script:WebView2Status}.FrameworkVersion
+        WebView2Loaded = ${script:WebView2Status}.Loaded
+        WebView2Path = ${script:WebView2Status}.AssemblyPath
+        WebView2Error = ${script:WebView2Status}.Error
+        FallbackMode = ${script:WebView2Status}.FallbackMode
+        SearchPaths = ${script:AssemblySearchPaths}
         PathsAvailable = @()
     }
     
-    foreach ($path in $script:AssemblySearchPaths) {
+    foreach ($path in ${script:AssemblySearchPaths}) {
         if (Test-Path $path) {
             $diagnostics.PathsAvailable += @{
                 Path = $path
@@ -339,12 +339,12 @@ SOLUTION OPTIONS (Try in this order):
    - Restart RawrXD
 
 2️⃣  Update .NET Framework:
-   - Current .NET: $($script:WebView2Status.FrameworkVersion)
+   - Current .NET: $(${script:WebView2Status}.FrameworkVersion)
    - Download latest .NET: https://dotnet.microsoft.com/download
    - Install and restart
 
 3️⃣  Portable WebView2 (if admin install unavailable):
-   - Extract WebView2 NuGet package to: $env:TEMP\WVLibs
+   - Extract WebView2 NuGet package to: ${env:TEMP}\WVLibs
    - Restart RawrXD
 
 ✅ WORKAROUND:

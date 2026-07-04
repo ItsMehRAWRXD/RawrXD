@@ -73,7 +73,7 @@ function Invoke-CliVSCodePopular {
             }
             
             $downloadsFormatted = "{0:N0}" -f $downloads
-            $ratingStars = if ($rating -gt 0) { "⭐ $rating/5.0" } else { "" }
+            $ratingStars = $(if ($rating -gt 0) { "⭐ $rating/5.0" } else { "" }
             
             Write-Host "[$index] 📦 $displayName v$version $ratingStars" -ForegroundColor White
             Write-Host "     $($ext.shortDescription)" -ForegroundColor Gray

@@ -104,7 +104,7 @@ function Test-LanguageDetection {
 
     foreach ($test in $testCases) {
         $detected = Detect-Language -Text $test
-        $preview = if ($test.Length -gt 40) { $test.Substring(0, 40) + "..." } else { $test }
+        $preview = $(if ($test.Length -gt 40) { $test.Substring(0, 40) + "..." } else { $test }
         Write-Host "  Text: $preview" -ForegroundColor Gray
         Write-Host "  Detected: $detected" -ForegroundColor Green
         Write-Host ""

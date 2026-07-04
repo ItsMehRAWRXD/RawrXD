@@ -121,7 +121,7 @@ function Test-Build {
     Write-Success "Test executable found"
     
     # Run tests
-    $env:PATH = "C:\Qt\6.7.3\msvc2022_64\bin;$env:PATH"
+    ${env:PATH} = "C:\Qt\6.7.3\msvc2022_64\bin;${env:PATH}"
     
     $output = & $testExe 2>&1
     

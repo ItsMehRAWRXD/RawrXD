@@ -63,15 +63,15 @@ function Initialize-Toolchain {
     Remove-Item $tempFile
 
     # Verify tools
-    $script:Ml64 = Get-Command ml64.exe -ErrorAction Stop
-    $script:Cl = Get-Command cl.exe -ErrorAction Stop
-    $script:Link = Get-Command link.exe -ErrorAction Stop
-    $script:Lib = Get-Command lib.exe -ErrorAction Stop
+    ${script:Ml64} = Get-Command ml64.exe -ErrorAction Stop
+    ${script:Cl} = Get-Command cl.exe -ErrorAction Stop
+    ${script:Link} = Get-Command link.exe -ErrorAction Stop
+    ${script:Lib} = Get-Command lib.exe -ErrorAction Stop
 
     Write-Host "[+] Toolchain ready:" -ForegroundColor Green
-    Write-Host "    ml64: $($script:Ml64.Source)"
-    Write-Host "    cl:   $($script:Cl.Source)"
-    Write-Host "    link: $($script:Link.Source)"
+    Write-Host "    ml64: $(${script:Ml64}.Source)"
+    Write-Host "    cl:   $(${script:Cl}.Source)"
+    Write-Host "    link: $(${script:Link}.Source)"
 }
 
 # =============================================================================
@@ -94,7 +94,7 @@ function Get-SourceFiles {
         
         # MASM files
         Get-ChildItem -Path $dir -Recurse -Filter "*.asm" | ForEach-Object {
-            $obj = Join-Path $script:ObjDirAbs ($_.BaseName + ".obj")
+            $obj = Join-Path ${script:ObjDirAbs} ($_.BaseName + ".obj")
             $files += [SourceFile]@{
                 Path = $_.FullName
                 Type = "ASM"
@@ -106,7 +106,7 @@ function Get-SourceFiles {
         
         # C++ files
         Get-ChildItem -Path $dir -Recurse -Include "*.cpp","*.cxx" | ForEach-Object {
-            $obj = Join-Path $script:ObjDirAbs ($_.BaseName + ".obj")
+            $obj = Join-Path ${script:ObjDirAbs} ($_.BaseName + ".obj")
             $files += [SourceFile]@{
                 Path = $_.FullName
                 Type = "CPP"
@@ -166,8 +166,8 @@ function Test-IncrementalBuild {
 # 3. COMPILATION FUNCTIONS
 # =============================================================================
 
-$script:BuildLog = @()
-$script:ErrorCount = 0
+${script:BuildLog} = @()
+${script:ErrorCount} = 0
 
 function Invoke-MasmCompile {
     param([SourceFile]$File)
@@ -176,7 +176,7 @@ function Invoke-MasmCompile {
     Write-Host $log -ForegroundColor Yellow -NoNewline
     
     # Resolve obj path to absolute
-    $absObj = Join-Path $script:ObjDirAbs (Split-Path $File.ObjPath -Leaf)
+    $absObj = Join-Path ${script:ObjDirAbs} (Split-Path $File.ObjPath -Leaf)
     
     # MASM flags (ml64 only supports /c /Zi /Fo /W /nologo /D /I)
     $flags = @(
@@ -198,23 +198,23 @@ function Invoke-MasmCompile {
     $flags += "/Fo$absObj"
     
     try {
-        $output = & $script:Ml64.Source $flags $File.Path 2>&1
+        $output = & ${script:Ml64}.Source $flags $File.Path 2>&1
         $exitCode = $LASTEXITCODE
         
         if ($exitCode -eq 0) {
             Write-Host " [OK]" -ForegroundColor Green
-            $script:BuildLog += "[PASS] $log"
+            ${script:BuildLog} += "[PASS] $log"
         }
         else {
             Write-Host " [FAIL]" -ForegroundColor Red
-            $script:ErrorCount++
-            $script:BuildLog += "[FAIL] $log`n$output"
+            ${script:ErrorCount}++
+            ${script:BuildLog} += "[FAIL] $log`n$output"
             Write-Host $output -ForegroundColor Red
         }
     }
     catch {
         Write-Host " [ERROR] $_" -ForegroundColor Red
-        $script:ErrorCount++
+        ${script:ErrorCount}++
     }
 }
 
@@ -225,7 +225,7 @@ function Invoke-CppCompile {
     Write-Host $log -ForegroundColor Cyan -NoNewline
     
     # Resolve obj path to absolute
-    $absObj = Join-Path $script:ObjDirAbs (Split-Path $File.ObjPath -Leaf)
+    $absObj = Join-Path ${script:ObjDirAbs} (Split-Path $File.ObjPath -Leaf)
     
     # C++ flags
     $flags = @(
@@ -260,10 +260,10 @@ function Invoke-CppCompile {
     $flags += "/I`".\3rdparty`""
     
     # Windows SDK paths (auto-detected from env)
-    if ($env:WindowsSdkDir) {
-        $flags += "/I`"$($env:WindowsSdkDir)Include\$($env:WindowsSDKVersion)um`""
-        $flags += "/I`"$($env:WindowsSdkDir)Include\$($env:WindowsSDKVersion)shared`""
-        $flags += "/I`"$($env:WindowsSdkDir)Include\$($env:WindowsSDKVersion)ucrt`""
+    if (${env:WindowsSdkDir}) {
+        $flags += "/I`"$(${env:WindowsSdkDir})Include\$(${env:WindowsSDKVersion})um`""
+        $flags += "/I`"$(${env:WindowsSdkDir})Include\$(${env:WindowsSDKVersion})shared`""
+        $flags += "/I`"$(${env:WindowsSdkDir})Include\$(${env:WindowsSDKVersion})ucrt`""
     }
     
     # Preprocessor defs
@@ -274,23 +274,23 @@ function Invoke-CppCompile {
     $flags += "/DNOMINMAX"
     
     try {
-        $output = & $script:Cl.Source $flags $File.Path 2>&1
+        $output = & ${script:Cl}.Source $flags $File.Path 2>&1
         $exitCode = $LASTEXITCODE
         
         if ($exitCode -eq 0) {
             Write-Host " [OK]" -ForegroundColor Green
-            $script:BuildLog += "[PASS] $log"
+            ${script:BuildLog} += "[PASS] $log"
         }
         else {
             Write-Host " [FAIL]" -ForegroundColor Red
-            $script:ErrorCount++
-            $script:BuildLog += "[FAIL] $log`n$output"
+            ${script:ErrorCount}++
+            ${script:BuildLog} += "[FAIL] $log`n$output"
             Write-Host $output -ForegroundColor Red
         }
     }
     catch {
         Write-Host " [ERROR] $_" -ForegroundColor Red
-        $script:ErrorCount++
+        ${script:ErrorCount}++
     }
 }
 
@@ -309,7 +309,7 @@ function Invoke-Link {
     $outPath = Join-Path $OutputDir $Target
     
     # Auto-detect entry point
-    $entry = if ($EntryPoint) { $EntryPoint } 
+    $entry = $(if ($EntryPoint) { $EntryPoint } 
              elseif ($Subsystem -eq "CONSOLE") { "mainCRTStartup" }
              else { "WinMainCRTStartup" }
     
@@ -354,7 +354,7 @@ function Invoke-Link {
     $linkArgs = $flags + $objFiles + $libs
     
     try {
-        $output = & $script:Link.Source $linkArgs 2>&1
+        $output = & ${script:Link}.Source $linkArgs 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Host "[+] Link successful: $outPath" -ForegroundColor Green
             $size = (Get-Item $outPath).Length / 1MB
@@ -363,12 +363,12 @@ function Invoke-Link {
         else {
             Write-Host "[-] Link failed:" -ForegroundColor Red
             Write-Host $output -ForegroundColor Red
-            $script:ErrorCount++
+            ${script:ErrorCount}++
         }
     }
     catch {
         Write-Host "[-] Link error: $_" -ForegroundColor Red
-        $script:ErrorCount++
+        ${script:ErrorCount}++
     }
 }
 
@@ -380,8 +380,8 @@ function Start-Build {
     # Setup directories (resolve to absolute paths)
     if (-not (Test-Path $ObjDir)) { New-Item -ItemType Directory -Path $ObjDir -Force | Out-Null }
     if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null }
-    $script:ObjDirAbs = (Resolve-Path $ObjDir).Path
-    $script:OutputDirAbs = (Resolve-Path $OutputDir).Path
+    ${script:ObjDirAbs} = (Resolve-Path $ObjDir).Path
+    ${script:OutputDirAbs} = (Resolve-Path $OutputDir).Path
     
     if ($Clean) {
         Write-Host "[*] Cleaning build artifacts..." -ForegroundColor Yellow
@@ -429,7 +429,7 @@ function Start-Build {
             $cppFiles | ForEach-Object -Parallel {
                 # Note: Requires script scope variables to be passed explicitly in PS7
                 Invoke-CppCompile $_
-            } -ThrottleLimit $env:NUMBER_OF_PROCESSORS
+            } -ThrottleLimit ${env:NUMBER_OF_PROCESSORS}
         }
         else {
             $cppFiles | ForEach-Object { Invoke-CppCompile $_ }
@@ -437,23 +437,23 @@ function Start-Build {
     }
     
     # Link phase (only if compiles succeeded)
-    if ($script:ErrorCount -eq 0) {
+    if (${script:ErrorCount} -eq 0) {
         Invoke-Link $sources
     }
     else {
-        Write-Host "`n[!] Skipping link due to $($script:ErrorCount) error(s)" -ForegroundColor Red
+        Write-Host "`n[!] Skipping link due to $(${script:ErrorCount}) error(s)" -ForegroundColor Red
     }
     
     $stopwatch.Stop()
     Write-Host "`nBuild completed in $($stopwatch.Elapsed.TotalSeconds.ToString('F2'))s" -ForegroundColor White
     
     # Summary
-    if ($script:ErrorCount -eq 0) {
+    if (${script:ErrorCount} -eq 0) {
         Write-Host "STATUS: SUCCESS" -ForegroundColor Green -BackgroundColor Black
         exit 0
     }
     else {
-        Write-Host "STATUS: FAILED ($($script:ErrorCount) errors)" -ForegroundColor Red -BackgroundColor Black
+        Write-Host "STATUS: FAILED ($(${script:ErrorCount}) errors)" -ForegroundColor Red -BackgroundColor Black
         exit 1
     }
 }

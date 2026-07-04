@@ -13,7 +13,7 @@ param(
 # ============================================================================
 
 $ErrorActionPreference = "SilentlyContinue"
-$VerbosePreference = if ($Verbose) { "Continue" } else { "SilentlyContinue" }
+$VerbosePreference = $(if ($Verbose) { "Continue" } else { "SilentlyContinue" }
 
 # Color definitions
 $Colors = @{
@@ -45,8 +45,8 @@ function Write-Section {
 
 function Write-TestResult {
     param([string]$TestName, [bool]$Passed, [string]$Message = "")
-    $Status = if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
-    $Color = if ($Passed) { $Colors.Success } else { $Colors.Error }
+    $Status = $(if ($Passed) { "✅ PASS" } else { "❌ FAIL" }
+    $Color = $(if ($Passed) { $Colors.Success } else { $Colors.Error }
     
     Write-Host "  [$Status] $TestName" -ForegroundColor $Color
     if ($Message) { Write-Host "         $Message" -ForegroundColor $Colors.Debug }
@@ -269,7 +269,7 @@ function Invoke-RawrXDDiagnostics {
     Write-Section "DIAGNOSTIC SUMMARY"
     
     $total = $Results.Passed + $Results.Failed
-    $passRate = if ($total -gt 0) { [math]::Round(($Results.Passed / $total) * 100, 1) } else { 0 }
+    $passRate = $(if ($total -gt 0) { [math]::Round(($Results.Passed / $total) * 100, 1) } else { 0 }
     
     Write-Host ""
     Write-Host "  Tests Passed:   $($Results.Passed) ✅" -ForegroundColor $Colors.Success

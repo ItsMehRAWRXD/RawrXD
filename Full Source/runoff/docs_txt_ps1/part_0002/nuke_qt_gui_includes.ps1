@@ -1,7 +1,7 @@
-$srcDir = "D:\rawrxd\src"
-$files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp
+$Script:srcDir = "D:\rawrxd\src"
+$Script:files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp
 
-$qtIncludes = @(
+$Script:qtIncludes = @(
     '#include <QApplication>',
     '#include <QWidget>',
     '#include <QMainWindow>',
@@ -23,32 +23,32 @@ $qtIncludes = @(
     '#include <QTableView>'
 )
 
-$totalModified = 0
-$totalRemoved = 0
+$Script:totalModified = 0
+$Script:totalRemoved = 0
 
 foreach ($file in $files) {
-    $content = Get-Content -Path $file.FullName -Raw
+$Script:content = Get-Content -Path $file.FullName -Raw
     if (-not $content) { continue }
     
-    $originalContent = $content
-    $fileRemovals = 0
+$Script:originalContent = $content
+$Script:fileRemovals = 0
     
     foreach ($include in $qtIncludes) {
-        $pattern = [regex]::Escape($include)
-        $matches = [regex]::Matches($content, "(?m)^$pattern\s*$")
+$Script:pattern = [regex]::Escape($include)
+$Script:matches = [regex]::Matches($content, "(?m)^$pattern\s*$")
         if ($matches.Count -gt 0) {
-            $content = $content -replace "(?m)^$pattern\s*$", ''
+$Script:content = $content -replace "(?m)^$pattern\s*$", ''
             $fileRemovals += $matches.Count
         }
     }
     
     # Also remove forward declarations like "class QWidget;"
-    $content = $content -replace '(?m)^\s*class\s+Q[A-Z]\w+;\s*$', ''
+$Script:content = $content -replace '(?m)^\s*class\s+Q[A-Z]\w+;\s*$', ''
     
     # Remove QApplication usage patterns
-    $content = $content -replace 'QApplication::clipboard\(\)', 'nullptr'
-    $content = $content -replace 'QApplication::processEvents\(\)', '// processEvents()'
-    $content = $content -replace 'QApplication::instance\(\)', 'nullptr'
+$Script:content = $content -replace 'QApplication::clipboard\(\)', 'nullptr'
+$Script:content = $content -replace 'QApplication::processEvents\(\)', '// processEvents()'
+$Script:content = $content -replace 'QApplication::instance\(\)', 'nullptr'
     
     if ($content -ne $originalContent) {
         Set-Content -Path $file.FullName -Value $content -Encoding UTF8

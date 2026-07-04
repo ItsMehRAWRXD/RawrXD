@@ -15,8 +15,8 @@ function Start-RawrIDESmokeProcess {
     $psi.EnvironmentVariables['RAWRXD_DISABLE_SESSION_RESTORE'] = '1'
     $psi.EnvironmentVariables['RAWRXD_SMOKE_SKIP_GPU'] = '1'
     $psi.EnvironmentVariables['RAWRXD_SMOKE_ENABLE_COPILOT_CHAT'] = '1'
-    if ($env:RAWRXD_SMOKE_GDI_TOLERANCE) {
-        $psi.EnvironmentVariables['RAWRXD_SMOKE_GDI_TOLERANCE'] = [string]$env:RAWRXD_SMOKE_GDI_TOLERANCE
+    if (${env:RAWRXD_SMOKE_GDI_TOLERANCE}) {
+        $psi.EnvironmentVariables['RAWRXD_SMOKE_GDI_TOLERANCE'] = [string]${env:RAWRXD_SMOKE_GDI_TOLERANCE}
     }
     foreach ($kv in $ExtraEnvironment.GetEnumerator()) {
         $psi.EnvironmentVariables[$kv.Key] = [string]$kv.Value
@@ -33,8 +33,8 @@ function Resolve-SmokeCompanionBinaries {
 
     $binDir = Split-Path -Parent $BinaryPath
     if (-not $RepoRoot) {
-        if ($env:GITHUB_WORKSPACE -and (Test-Path $env:GITHUB_WORKSPACE)) {
-            $RepoRoot = $env:GITHUB_WORKSPACE
+        if (${env:GITHUB_WORKSPACE} -and (Test-Path ${env:GITHUB_WORKSPACE})) {
+            $RepoRoot = ${env:GITHUB_WORKSPACE}
         } else {
             $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
         }

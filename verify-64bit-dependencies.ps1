@@ -205,8 +205,8 @@ Write-Host ""
 Write-Host "5. Vulkan SDK" -ForegroundColor Cyan
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkCyan
 
-if ($env:VULKAN_SDK) {
-    Write-Status "VULKAN_SDK: $env:VULKAN_SDK" "Success"
+if (${env:VULKAN_SDK}) {
+    Write-Status "VULKAN_SDK: ${env:VULKAN_SDK}" "Success"
     
     $vulkanDlls = @(
         "Lib\vulkan.lib",
@@ -215,7 +215,7 @@ if ($env:VULKAN_SDK) {
     
     $vulkanFound = $true
     foreach ($dll in $vulkanDlls) {
-        $fullPath = Join-Path $env:VULKAN_SDK $dll
+        $fullPath = Join-Path ${env:VULKAN_SDK} $dll
         if (Test-Path $fullPath) {
             if ($dll -like "*.dll") {
                 $arch = Check-PEArchitecture $fullPath

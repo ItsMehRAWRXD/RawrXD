@@ -46,11 +46,11 @@ if(-not $ChunkSize){
 
 # Determine sentinel flag from fractional part
 $fractional = $Ratio - [Math]::Floor($Ratio)
-$SentinelFlag = if($fractional -gt 0){1}else{0}
+$SentinelFlag = $(if ($fractional -gt 0){1}else{0}
 
 if(-not $ExpansionFactor){
   # choose a modest expansion vs original chunk; user can override
-  $ExpansionFactor = if($ChunkSize -gt 2048){[int]($ChunkSize/4)} else {$ChunkSize}
+  $ExpansionFactor = $(if ($ChunkSize -gt 2048){[int]($ChunkSize/4)} else {$ChunkSize}
 }
 
 # Map fold method to id

@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Continue"
+$Script:ErrorActionPreference = "Continue"
 
 # ============================================================
 #  RAWRXD CLEAN LINKER — No brute force needed
@@ -12,17 +12,17 @@ $ErrorActionPreference = "Continue"
 #    3. Links once, deterministically
 # ============================================================
 
-$Root       = "D:\rawrxd"
-$OutDir     = "$env:LOCALAPPDATA\RawrXD\bin"
-$finalExe   = Join-Path $OutDir "RawrXD.exe"
+$Script:Root = "D:\rawrxd"
+$Script:OutDir = "${env:LOCALAPPDATA}\RawrXD\bin"
+$Script:finalExe = Join-Path $OutDir "RawrXD.exe"
 
 # ---- Resolve the best available MSVC linker ----
-$LinkerCandidates = @(
+$Script:LinkerCandidates = @(
     "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe",
     "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe",
     "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe"
 )
-$Linker = $null
+$Script:Linker = $null
 foreach ($c in $LinkerCandidates) {
     if (Test-Path $c) { $Linker = $c; break }
 }
@@ -33,11 +33,11 @@ if (-not $Linker) {
 }
 
 # ---- Resolve best MSVC lib path ----
-$MSVCLibCandidates = @(
+$Script:MSVCLibCandidates = @(
     "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64",
     "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64"
 )
-$MSVCLib = $null
+$Script:MSVCLib = $null
 foreach ($c in $MSVCLibCandidates) {
     if (Test-Path $c) { $MSVCLib = $c; break }
 }
@@ -53,7 +53,7 @@ if (!(Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | 
 . (Join-Path $Root "obj_blacklist.ps1")
 
 # ---- Get pre-validated clean objects ----
-$cleanObjs = Get-CleanObjects -Verbose
+$Script:cleanObjs = Get-CleanObjects -Verbose
 
 if ($cleanObjs.Count -eq 0) {
     Write-Host "[FATAL] No clean objects found. Cannot link." -Fore Red
@@ -63,7 +63,7 @@ if ($cleanObjs.Count -eq 0) {
 Write-Host "[LINK] Linking $($cleanObjs.Count) validated objects..." -Fore Cyan
 
 # ---- Build link arguments ----
-$linkArgs = @(
+$Script:linkArgs = @(
     "/OUT:`"$finalExe`"",
     "/SUBSYSTEM:WINDOWS",
     "/ENTRY:WinMain",
@@ -80,7 +80,7 @@ $linkArgs = @(
 )
 
 # Add ALL available MSVC lib paths (some have different CRT versions)
-$AllMSVCLibPaths = @(
+$Script:AllMSVCLibPaths = @(
     "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64",
     "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64"
 )
@@ -91,8 +91,8 @@ $linkArgs += "/LIBPATH:`"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0
 $linkArgs += "/LIBPATH:`"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64`""
 
 # Custom libs
-$coreLib = Join-Path $Root "lib\rawrxd_core.lib"
-$gpuLib  = Join-Path $Root "lib\rawrxd_gpu.lib"
+$Script:coreLib = Join-Path $Root "lib\rawrxd_core.lib"
+$Script:gpuLib = Join-Path $Root "lib\rawrxd_gpu.lib"
 if (Test-Path $coreLib) { $linkArgs += "`"$coreLib`"" }
 if (Test-Path $gpuLib)  { $linkArgs += "`"$gpuLib`"" }
 
@@ -108,20 +108,20 @@ $linkArgs += "kernel32.lib", "user32.lib", "gdi32.lib", "shell32.lib",
 # ---- Link with auto-learn loop ----
 # If LNK1223 (corrupt .pdata) or LNK1136 (corrupt file) is detected,
 # the offending .obj is blacklisted and the link retried automatically.
-$maxRetries = 30
-$attempt = 1
-$additionalBlacklist = @()
-$stdoutFile = Join-Path $OutDir "link_stdout.txt"
-$stderrFile = Join-Path $OutDir "link_stderr.txt"
-$batchFile  = Join-Path $OutDir "run_link.bat"
-$rspFile    = Join-Path $OutDir "link_objects.rsp"
-$linkExitCode = -1
+$Script:maxRetries = 30
+$Script:attempt = 1
+$Script:additionalBlacklist = @()
+$Script:stdoutFile = Join-Path $OutDir "link_stdout.txt"
+$Script:stderrFile = Join-Path $OutDir "link_stderr.txt"
+$Script:batchFile = Join-Path $OutDir "run_link.bat"
+$Script:rspFile = Join-Path $OutDir "link_objects.rsp"
+$Script:linkExitCode = -1
 
 while ($attempt -le $maxRetries) {
     # Rebuild response file excluding any newly-discovered corrupt objects
-    $rspContent = [System.Collections.ArrayList]@()
+$Script:rspContent = [System.Collections.ArrayList]@()
     foreach ($arg in $linkArgs) { [void]$rspContent.Add($arg) }
-    $filteredObjs = @($cleanObjs | Where-Object { $_.Name -notin $additionalBlacklist })
+$Script:filteredObjs = @($cleanObjs | Where-Object { $_.Name -notin $additionalBlacklist })
     foreach ($obj in $filteredObjs) { [void]$rspContent.Add("`"$($obj.FullName)`"") }
     [System.IO.File]::WriteAllLines($rspFile, [string[]]$rspContent.ToArray())
     
@@ -143,28 +143,28 @@ exit /b %errorlevel%
 "@ | Set-Content -Path $batchFile -Encoding ASCII
 
     # Execute synchronously via cmd /c
-    $proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "`"$batchFile`"" `
+$Script:proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "`"$batchFile`"" `
         -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$OutDir\bat_stdout.tmp" -RedirectStandardError "$OutDir\bat_stderr.tmp"
-    $linkExitCode = $proc.ExitCode
+$Script:linkExitCode = $proc.ExitCode
 
     # Extra safety: wait for any lingering link.exe (shouldn't happen with cmd /c /Wait)
-    $waited = 0
+$Script:waited = 0
     while ((Get-Process -Name link -ErrorAction SilentlyContinue) -and $waited -lt 30) {
         Start-Sleep -Seconds 1
         $waited++
     }
 
     # Read outputs
-    $output      = if (Test-Path $stdoutFile) { Get-Content $stdoutFile -Raw -ErrorAction SilentlyContinue } else { "" }
-    $errorOutput = if (Test-Path $stderrFile) { Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue } else { "" }
+$Script:output = $(if (Test-Path $stdoutFile) { Get-Content $stdoutFile -Raw -ErrorAction SilentlyContinue } else { "" }
+$Script:errorOutput = $(if (Test-Path $stderrFile) { Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue } else { "" }
     if ($null -eq $output) { $output = "" }
     if ($null -eq $errorOutput) { $errorOutput = "" }
-    $fullOutput = $output + "`n" + $errorOutput
+$Script:fullOutput = $output + "`n" + $errorOutput
 
     # Auto-learn: check for LNK1223 (corrupt .pdata)
-    $lnk1223Match = [regex]::Match($fullOutput, '([a-zA-Z0-9_.\-]+\.obj)\s*:\s*fatal error LNK1223')
+$Script:lnk1223Match = [regex]::Match($fullOutput, '([a-zA-Z0-9_.\-]+\.obj)\s*:\s*fatal error LNK1223')
     if ($lnk1223Match.Success) {
-        $badObj = $lnk1223Match.Groups[1].Value
+$Script:badObj = $lnk1223Match.Groups[1].Value
         Write-Host "  [AUTO-BLOCK] LNK1223 corrupt .pdata: $badObj" -Fore Red
         $additionalBlacklist += $badObj
         $attempt++
@@ -172,9 +172,9 @@ exit /b %errorlevel%
     }
     
     # Auto-learn: check for LNK1136 (corrupt file)
-    $lnk1136Match = [regex]::Match($fullOutput, '([a-zA-Z0-9_.\-]+\.obj)\s*:\s*fatal error LNK1136')
+$Script:lnk1136Match = [regex]::Match($fullOutput, '([a-zA-Z0-9_.\-]+\.obj)\s*:\s*fatal error LNK1136')
     if ($lnk1136Match.Success) {
-        $badObj = $lnk1136Match.Groups[1].Value
+$Script:badObj = $lnk1136Match.Groups[1].Value
         Write-Host "  [AUTO-BLOCK] LNK1136 corrupt file: $badObj" -Fore Red
         $additionalBlacklist += $badObj
         $attempt++
@@ -182,9 +182,9 @@ exit /b %errorlevel%
     }
 
     # Auto-learn: check for LNK1181 (can't open input)
-    $lnk1181Match = [regex]::Match($fullOutput, 'fatal error LNK1181.*?cannot open.*?([a-zA-Z0-9_.\-]+\.obj)')
+$Script:lnk1181Match = [regex]::Match($fullOutput, 'fatal error LNK1181.*?cannot open.*?([a-zA-Z0-9_.\-]+\.obj)')
     if ($lnk1181Match.Success) {
-        $badObj = $lnk1181Match.Groups[1].Value
+$Script:badObj = $lnk1181Match.Groups[1].Value
         Write-Host "  [AUTO-BLOCK] LNK1181 missing input: $badObj" -Fore Red
         $additionalBlacklist += $badObj
         $attempt++
@@ -196,7 +196,7 @@ exit /b %errorlevel%
 }
 
 # ---- Save audit trail ----
-$goodListFile = Join-Path $OutDir "good_objects.txt"
+$Script:goodListFile = Join-Path $OutDir "good_objects.txt"
 $filteredObjs | ForEach-Object { $_.FullName } | Out-File -FilePath $goodListFile -Encoding ASCII
 
 if ($additionalBlacklist.Count -gt 0) {
@@ -207,17 +207,17 @@ if ($additionalBlacklist.Count -gt 0) {
     Write-Host "  These should be added to obj_blacklist.ps1 BlacklistedNames for permanent blocking." -Fore DarkGray
     
     # Auto-append to blacklist file for next run
-    $autoLearnFile = Join-Path $OutDir "auto_learned_blacklist.txt"
+$Script:autoLearnFile = Join-Path $OutDir "auto_learned_blacklist.txt"
     $additionalBlacklist | Out-File -FilePath $autoLearnFile -Encoding ASCII
     Write-Host "  Saved to: $autoLearnFile" -Fore DarkGray
 }
 
 # ---- Check result ----
-$exeExists = Test-Path $finalExe
-$hasFatalError = $fullOutput -match "fatal error"
+$Script:exeExists = Test-Path $finalExe
+$Script:hasFatalError = $fullOutput -match "fatal error"
 
 if ($exeExists -and -not $hasFatalError) {
-    $sz = (Get-Item $finalExe).Length
+$Script:sz = (Get-Item $finalExe).Length
     Write-Host ""
     Write-Host "============================================================" -Fore Green
     Write-Host " SUCCESS! CLEAN LINK COMPLETE" -Fore Green
@@ -229,7 +229,7 @@ if ($exeExists -and -not $hasFatalError) {
     Write-Host "============================================================" -Fore Green
     
     if ($output) {
-        $warnCount = ([regex]::Matches($output, 'LNK\d+')).Count
+$Script:warnCount = ([regex]::Matches($output, 'LNK\d+')).Count
         if ($warnCount -gt 0) {
             Write-Host " Link warnings: $warnCount (see $stdoutFile)" -Fore Yellow
         }
@@ -237,7 +237,7 @@ if ($exeExists -and -not $hasFatalError) {
     
     # Verify PE header
     try {
-        $peBytes = [System.IO.File]::ReadAllBytes($finalExe)
+$Script:peBytes = [System.IO.File]::ReadAllBytes($finalExe)
         if ($peBytes[0] -eq 0x4D -and $peBytes[1] -eq 0x5A) {
             Write-Host " PE header:   VALID (MZ)" -Fore Green
         } else {

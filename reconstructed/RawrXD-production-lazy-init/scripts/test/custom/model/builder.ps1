@@ -9,7 +9,7 @@
 
 param(
     [switch]$FullTest = $false,
-    [switch]$QuickTest = $true
+    [switch]$QuickTest
 )
 
 $ErrorActionPreference = "Continue"
@@ -34,16 +34,16 @@ function Test-Feature {
         $result = & $Test
         if ($result) {
             Write-Host "  ✓ PASS" -ForegroundColor Green
-            $script:testsPassed++
+            ${script:testsPassed}++
             return $true
         } else {
             Write-Host "  ✗ FAIL" -ForegroundColor Red
-            $script:testsFailed++
+            ${script:testsFailed}++
             return $false
         }
     } catch {
         Write-Host "  ✗ ERROR: $_" -ForegroundColor Red
-        $script:testsFailed++
+        ${script:testsFailed}++
         return $false
     }
 }
@@ -347,7 +347,7 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 
 $totalTests = $testsPassed + $testsFailed + $testsSkipped
-$passRate = if ($totalTests -gt 0) { [math]::Round(($testsPassed / $totalTests) * 100, 1) } else { 0 }
+$passRate = $(if ($totalTests -gt 0) { [math]::Round(($testsPassed / $totalTests) * 100, 1) } else { 0 }
 
 Write-Host "Total Tests:   $totalTests" -ForegroundColor White
 Write-Host "Passed:        " -NoNewline -ForegroundColor White

@@ -163,7 +163,7 @@ function Test-IsMultiConfigGenerator {
 
 function Get-GeneratorSafeBuildDir {
     param([string]$Root, [string]$RequestedDir, [string]$RequestedGenerator)
-    $requestedFull = if ([System.IO.Path]::IsPathRooted($RequestedDir)) { $RequestedDir } else { Join-Path $Root $RequestedDir }
+    $requestedFull = $(if ([System.IO.Path]::IsPathRooted($RequestedDir)) { $RequestedDir } else { Join-Path $Root $RequestedDir }
     $cacheGen = Get-CMakeCacheValue -BuildDirectory $requestedFull -VarName "CMAKE_GENERATOR"
     if ([string]::IsNullOrWhiteSpace($cacheGen) -or $cacheGen -eq $RequestedGenerator) {
         return $requestedFull

@@ -256,7 +256,7 @@ function Show-Help {
 # Main execution
 switch ($Command) {
     "generate-pe" {
-        $outputFile = if ($Arguments) { $Arguments[0] } else { "output.exe" }
+        $outputFile = $(if ($Arguments) { $Arguments[0] } else { "output.exe" }
         exit (Invoke-GeneratePE -OutputFile $outputFile)
     }
     "test-encoder" {

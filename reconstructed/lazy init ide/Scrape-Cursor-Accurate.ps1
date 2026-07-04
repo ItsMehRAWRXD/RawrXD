@@ -140,12 +140,12 @@ function Find-CursorInstallation {
     Write-ColorOutput "=== LOCATING CURSOR INSTALLATION ===" "Header"
     
     $possiblePaths = @(
-        "$env:LOCALAPPDATA\Programs\cursor",
-        "$env:APPDATA\Cursor",
-        "$env:ProgramFiles\Cursor",
-        "$env:ProgramFiles(x86)\Cursor",
-        "$env:USERPROFILE\AppData\Local\cursor",
-        "$env:USERPROFILE\AppData\Roaming\cursor"
+        "${env:LOCALAPPDATA}\Programs\cursor",
+        "${env:APPDATA}\Cursor",
+        "${env:ProgramFiles}\Cursor",
+        "${env:ProgramFiles}(x86)\Cursor",
+        "${env:USERPROFILE}\AppData\Local\cursor",
+        "${env:USERPROFILE}\AppData\Roaming\cursor"
     )
     
     $cursorInfo = $null
@@ -253,7 +253,7 @@ function Analyze-CursorInstallation {
     }
     
     # Analyze user data directory
-    $userDataDir = "$env:APPDATA\Cursor"
+    $userDataDir = "${env:APPDATA}\Cursor"
     if (Test-Path $userDataDir) {
         Write-ColorOutput "→ Analyzing user data directory: $userDataDir" "Detail"
         

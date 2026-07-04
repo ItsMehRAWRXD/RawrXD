@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+$Script:ErrorActionPreference = "Stop"
 
 param(
     [string]$Host = "http://127.0.0.1:11434",
@@ -10,14 +10,14 @@ if (-not (Test-Path $OutDir)) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
 }
 
-$tagsPath = Join-Path $OutDir "ollama_tags.json"
-$genPath  = Join-Path $OutDir "ollama_generate.json"
+$Script:tagsPath = Join-Path $OutDir "ollama_tags.json"
+$Script:genPath = Join-Path $OutDir "ollama_generate.json"
 
 Write-Host "Querying tags → $tagsPath" -ForegroundColor Cyan
 Invoke-RestMethod -Method Get -Uri "$Host/api/tags" -OutFile $tagsPath
 
 Write-Host "Generating sample on $Model → $genPath" -ForegroundColor Cyan
-$payload = @{
+$Script:payload = @{
     model  = $Model
     prompt = "hello from rawrxd validation"
 } | ConvertTo-Json

@@ -64,8 +64,8 @@ $ASM | ForEach-Object {
 
 # Compile C++ (native only—no external includes)
 # Resolve Windows SDK paths for system headers
-$windowsSdkDir = $env:WindowsSdkDir
-$windowsSdkVersion = ($env:WindowsSDKVersion -replace '\\$','')
+$windowsSdkDir = ${env:WindowsSdkDir}
+$windowsSdkVersion = (${env:WindowsSDKVersion} -replace '\\$','')
 
 # Fallback: probe typical install locations and prefer SDK with UCRT
 if (-not $windowsSdkDir) {

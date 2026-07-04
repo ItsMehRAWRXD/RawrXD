@@ -1,25 +1,25 @@
-$ErrorActionPreference = 'Stop'
+$Script:ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$BinDir = Join-Path $RepoRoot 'bin'
-$LogDir = Join-Path $RepoRoot 'logs'
-$VictimAsm = Join-Path $RepoRoot 'src\debugger\Victim.asm'
-$VictimObj = Join-Path $BinDir 'Victim.obj'
-$VictimExe = Join-Path $BinDir 'Victim.exe'
-$VictimBuildScript = Join-Path $RepoRoot 'build_victim_auto.bat'
-$BeaconExe = Join-Path $BinDir 'BeaconDebugger.exe'
-$BuildScript = Join-Path $RepoRoot 'FinalBuild_Mingw.bat'
-$CmdExe = 'C:\Windows\System32\cmd.exe'
-$NodeExe = 'C:\Program Files\nodejs\node.exe'
+$Script:RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Script:BinDir = Join-Path $RepoRoot 'bin'
+$Script:LogDir = Join-Path $RepoRoot 'logs'
+$Script:VictimAsm = Join-Path $RepoRoot 'src\debugger\Victim.asm'
+$Script:VictimObj = Join-Path $BinDir 'Victim.obj'
+$Script:VictimExe = Join-Path $BinDir 'Victim.exe'
+$Script:VictimBuildScript = Join-Path $RepoRoot 'build_victim_auto.bat'
+$Script:BeaconExe = Join-Path $BinDir 'BeaconDebugger.exe'
+$Script:BuildScript = Join-Path $RepoRoot 'FinalBuild_Mingw.bat'
+$Script:CmdExe = 'C:\Windows\System32\cmd.exe'
+$Script:NodeExe = 'C:\Program Files\nodejs\node.exe'
 
-$Ml64Exe = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe'
-$LinkExe = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe'
-$ToolBinDir = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64'
-$MsvcLibX64 = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64'
-$SdkLibUmX64 = 'C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64'
+$Script:Ml64Exe = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe'
+$Script:LinkExe = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe'
+$Script:ToolBinDir = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64'
+$Script:MsvcLibX64 = 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64'
+$Script:SdkLibUmX64 = 'C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64'
 
-$env:PATH = "$ToolBinDir;$($env:PATH)"
+${env:PATH} = "$ToolBinDir;$(${env:PATH})"
 
 if (-not (Test-Path $LogDir)) {
     New-Item -ItemType Directory -Path $LogDir | Out-Null
@@ -59,19 +59,19 @@ function Send-DapRequest {
         [hashtable]$Arguments = @{}
     )
 
-    $payloadObj = [ordered]@{
+$Script:payloadObj = [ordered]@{
         seq = $Seq
         type = 'request'
         command = $Command
         arguments = $Arguments
     }
 
-    $json = $payloadObj | ConvertTo-Json -Compress -Depth 20
-    $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($json)
-    $header = "Content-Length: $($payloadBytes.Length)`r`n`r`n"
-    $headerBytes = [System.Text.Encoding]::ASCII.GetBytes($header)
+$Script:json = $payloadObj | ConvertTo-Json -Compress -Depth 20
+$Script:payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+$Script:header = "Content-Length: $($payloadBytes.Length)`r`n`r`n"
+$Script:headerBytes = [System.Text.Encoding]::ASCII.GetBytes($header)
 
-    $stream = $Process.StandardInput.BaseStream
+$Script:stream = $Process.StandardInput.BaseStream
     $stream.Write($headerBytes, 0, $headerBytes.Length)
     $stream.Write($payloadBytes, 0, $payloadBytes.Length)
     $stream.Flush()
@@ -83,8 +83,8 @@ function Read-DapMessage {
         [int]$TimeoutMs = 10000
     )
 
-    $reader = $Process.StandardOutput
-    $watch = [System.Diagnostics.Stopwatch]::StartNew()
+$Script:reader = $Process.StandardOutput
+$Script:watch = [System.Diagnostics.Stopwatch]::StartNew()
 
     while ($reader.Peek() -lt 0) {
         if ($watch.ElapsedMilliseconds -gt $TimeoutMs) {
@@ -92,9 +92,9 @@ function Read-DapMessage {
         }
     }
 
-    $contentLength = 0
+$Script:contentLength = 0
     while ($true) {
-        $line = $reader.ReadLine()
+$Script:line = $reader.ReadLine()
         if ($null -eq $line) {
             throw 'DAP stdout closed while reading header'
         }
@@ -102,7 +102,7 @@ function Read-DapMessage {
             break
         }
         if ($line.StartsWith('Content-Length:', [System.StringComparison]::OrdinalIgnoreCase)) {
-            $contentLength = [int]($line.Substring(15).Trim())
+$Script:contentLength = [int]($line.Substring(15).Trim())
         }
     }
 
@@ -110,17 +110,17 @@ function Read-DapMessage {
         throw 'Invalid Content-Length in DAP header'
     }
 
-    $buffer = New-Object char[] $contentLength
-    $offset = 0
+$Script:buffer = New-Object char[] $contentLength
+$Script:offset = 0
     while ($offset -lt $contentLength) {
-        $read = $reader.Read($buffer, $offset, $contentLength - $offset)
+$Script:read = $reader.Read($buffer, $offset, $contentLength - $offset)
         if ($read -le 0) {
             throw 'DAP stdout closed while reading body'
         }
         $offset += $read
     }
 
-    $json = -join $buffer
+$Script:json = -join $buffer
     return ($json | ConvertFrom-Json)
 }
 
@@ -133,18 +133,18 @@ function Wait-ForDapArtifacts {
         [int]$TimeoutMs = 15000
     )
 
-    $response = $null
-    $eventMsg = $null
-    $watch = [System.Diagnostics.Stopwatch]::StartNew()
+$Script:response = $null
+$Script:eventMsg = $null
+$Script:watch = [System.Diagnostics.Stopwatch]::StartNew()
 
     while ($watch.ElapsedMilliseconds -lt $TimeoutMs) {
-        $msg = Read-DapMessage -Process $Process -TimeoutMs ($TimeoutMs - [int]$watch.ElapsedMilliseconds)
+$Script:msg = Read-DapMessage -Process $Process -TimeoutMs ($TimeoutMs - [int]$watch.ElapsedMilliseconds)
 
         if ($msg.type -eq 'response' -and $msg.request_seq -eq $ExpectedRequestSeq -and $msg.command -eq $ExpectedResponseCommand) {
-            $response = $msg
+$Script:response = $msg
         }
         elseif ($ExpectedEvent -and $msg.type -eq 'event' -and $msg.event -eq $ExpectedEvent) {
-            $eventMsg = $msg
+$Script:eventMsg = $msg
         }
 
         if ($response -and (($ExpectedEvent -and $eventMsg) -or (-not $ExpectedEvent))) {
@@ -164,29 +164,29 @@ if (-not (Test-Path $BeaconExe)) {
     throw "Expected BeaconDebugger binary missing: $BeaconExe"
 }
 
-$victimBuildSucceeded = $true
+$Script:victimBuildSucceeded = $true
 try {
     Invoke-Step -Name 'Build Victim.exe (Batch)' -Exe $CmdExe -Args @('/c', $VictimBuildScript)
 }
 catch {
-    $victimBuildSucceeded = $false
+$Script:victimBuildSucceeded = $false
     Write-Host "WARN: Victim build failed; validation will continue with fallback target if available." -ForegroundColor Yellow
 }
 
-$LaunchTarget = $VictimExe
+$Script:LaunchTarget = $VictimExe
 if (-not (Test-Path $LaunchTarget)) {
-    $fallbackExe = Join-Path $RepoRoot 'Quick.exe'
+$Script:fallbackExe = Join-Path $RepoRoot 'Quick.exe'
     if (-not (Test-Path $fallbackExe)) {
         throw "No launch target available. Missing: $VictimExe and $fallbackExe"
     }
 
     Write-Host "WARN: Victim.exe not found; using fallback launch target: $fallbackExe" -ForegroundColor Yellow
-    $LaunchTarget = $fallbackExe
+$Script:LaunchTarget = $fallbackExe
 }
 
 Write-Host "`n=== DAP Live Validation ===" -ForegroundColor Cyan
-$dapLog = Join-Path $LogDir 'beacon_auto_validation.log'
-$liveDriver = Join-Path $RepoRoot 'dap-live-beacon-test.js'
+$Script:dapLog = Join-Path $LogDir 'beacon_auto_validation.log'
+$Script:liveDriver = Join-Path $RepoRoot 'dap-live-beacon-test.js'
 if (-not (Test-Path $liveDriver)) {
     throw "Missing live DAP driver: $liveDriver"
 }

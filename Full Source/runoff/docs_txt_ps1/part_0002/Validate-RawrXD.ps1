@@ -278,7 +278,7 @@ $securityPatterns = @{
   'cmd\.exe|cmd\s/c'                       = 'Command execution detected'
   'powershell\.exe.*-e\s'                  = 'Encoded PowerShell execution'
   'DownloadString|DownloadFile'            = 'Network download functionality'
-  '\$env:temp|\$env:tmp'                   = 'Temporary directory usage'
+  '\${env:temp}|\${env:tmp}'                   = 'Temporary directory usage'
   'ConvertFrom-SecureString.*-AsPlainText' = 'Potential credential exposure'
   'Start-Process.*-Credential'             = 'Process started with credentials'
 }
@@ -427,11 +427,11 @@ else {
   Write-Host "❌ Dependencies: Install missing assemblies before running"
 }
 
-$statusColor = if ($ValidationResults.OverallScore -ge 90) { "Green" } 
+$statusColor = $(if ($ValidationResults.OverallScore -ge 90) { "Green" } 
 elseif ($ValidationResults.OverallScore -ge 75) { "Yellow" } 
 else { "Red" }
 
-$statusEmoji = if ($ValidationResults.OverallScore -ge 90) { "🎉" } 
+$statusEmoji = $(if ($ValidationResults.OverallScore -ge 90) { "🎉" } 
 elseif ($ValidationResults.OverallScore -ge 75) { "⚠️" } 
 else { "❌" }
 

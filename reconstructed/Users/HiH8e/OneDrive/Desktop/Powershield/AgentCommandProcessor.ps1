@@ -7,10 +7,8 @@
 #   • Registry + metadata driven command wiring
 #   • Shared state for history, downloads, and help caching
 #   • Dependency guards so optional modules can be toggled safely
-# =============================================================================
-
-if (-not $script:AgentCommandState) {
-    $script:AgentCommandState = [ordered]@{
+# ============================================================================= $(if (-not ${script:AgentCommandState}) {
+    ${script:AgentCommandState} = [ordered]@{
         Initialized        = $false
         RegistryVersion    = 0
         RegisteredCommands = @{}
@@ -29,17 +27,17 @@ function Initialize-AgentCommandProcessor {
         [switch]$SuppressLog
     )
 
-    if ($script:AgentCommandState.Initialized -and -not $ForceRefresh) {
+    if (${script:AgentCommandState}.Initialized -and -not $ForceRefresh) {
         return
     }
 
-    $script:AgentCommandState.RegisteredCommands.Clear()
-    $script:AgentCommandState.Aliases = @{}
-    $script:AgentCommandState.RegistryVersion++
-    $script:AgentCommandState.Initialized = $true
+    ${script:AgentCommandState}.RegisteredCommands.Clear()
+    ${script:AgentCommandState}.Aliases = @{}
+    ${script:AgentCommandState}.RegistryVersion++
+    ${script:AgentCommandState}.Initialized = $true
 
     if (-not $SuppressLog) {
-        Write-DevConsole "🤖 Initializing AgentCommandProcessor (v$($script:AgentCommandState.RegistryVersion))" "INFO"
+        Write-DevConsole "🤖 Initializing AgentCommandProcessor (v$(${script:AgentCommandState}.RegistryVersion))" "INFO"
     }
 
     Register-DefaultAgentCommands
@@ -73,16 +71,16 @@ function Register-AgentCommand {
         Handler     = $Handler
     }
 
-    $script:AgentCommandState.RegisteredCommands[$canonical] = $metadata
+    ${script:AgentCommandState}.RegisteredCommands[$canonical] = $metadata
 
     foreach ($alias in $Aliases) {
-        $script:AgentCommandState.Aliases[$alias.ToLower()] = $canonical
+        ${script:AgentCommandState}.Aliases[$alias.ToLower()] = $canonical
     }
 }
 
 function Get-AgentCommandRegistry {
     Initialize-AgentCommandProcessor
-    return $script:AgentCommandState.RegisteredCommands.GetEnumerator() | Sort-Object { $_.Value.Category }, { $_.Key }
+    return ${script:AgentCommandState}.RegisteredCommands.GetEnumerator() | Sort-Object { $_.Value.Category }, { $_.Key }
 }
 
 function Process-AgentCommand {
@@ -171,7 +169,7 @@ function Resolve-AgentCommand {
         return @{ Success = $false; Message = "Unknown command '$actionToken'" }
     }
 
-    $commandMetadata = $script:AgentCommandState.RegisteredCommands[$canonical]
+    $commandMetadata = ${script:AgentCommandState}.RegisteredCommands[$canonical]
     $argumentInfo = Convert-AgentTokensToArguments -Tokens $tokens
 
     return @{
@@ -187,11 +185,11 @@ function Resolve-AgentCommand {
 function Get-AgentCanonicalName {
     param([string]$Name)
     $lower = $Name.ToLower()
-    if ($script:AgentCommandState.RegisteredCommands.ContainsKey($lower)) {
+    if (${script:AgentCommandState}.RegisteredCommands.ContainsKey($lower)) {
         return $lower
     }
-    if ($script:AgentCommandState.Aliases.ContainsKey($lower)) {
-        return $script:AgentCommandState.Aliases[$lower]
+    if (${script:AgentCommandState}.Aliases.ContainsKey($lower)) {
+        return ${script:AgentCommandState}.Aliases[$lower]
     }
     return $null
 }
@@ -289,9 +287,9 @@ function Add-AgentCommandHistory {
         Context     = $Context
     }
 
-    $script:AgentCommandState.History.Add($entry)
-    if ($script:AgentCommandState.History.Count -gt 200) {
-        $script:AgentCommandState.History.RemoveAt(0)
+    ${script:AgentCommandState}.History.Add($entry)
+    if (${script:AgentCommandState}.History.Count -gt 200) {
+        ${script:AgentCommandState}.History.RemoveAt(0)
     }
 }
 
@@ -346,11 +344,11 @@ function Test-AgentOptionalTool {
     )
 
     $state = $null
-    if ($script:OptionalToolState) {
-        $state = $script:OptionalToolState
+    if (${script:OptionalToolState}) {
+        $state = ${script:OptionalToolState}
     }
-    elseif ($script:CurrentSettings -and $script:CurrentSettings.ContainsKey('OptionalTools')) {
-        $state = $script:CurrentSettings.OptionalTools
+    elseif (${script:CurrentSettings} -and ${script:CurrentSettings}.ContainsKey('OptionalTools')) {
+        $state = ${script:CurrentSettings}.OptionalTools
     }
 
     if ($state -and $state.ContainsKey($ToolKey)) {
@@ -387,8 +385,8 @@ function Invoke-AgentSearch {
     $flags      = $ExecutionContext.Flags
     $onProgress = $ExecutionContext.OnProgress
 
-    $source = if ($args.Count -gt 0) { $args[0] } elseif ($flags['source']) { $flags['source'] } else { 'youtube' }
-    $query  = if ($args.Count -gt 1) { [string]::Join(' ', $args[1..($args.Count - 1)]) } elseif ($flags['query']) { $flags['query'] } else { '' }
+    $source = $(if ($args.Count -gt 0) { $args[0] } elseif ($flags['source']) { $flags['source'] } else { 'youtube' }
+    $query  = $(if ($args.Count -gt 1) { [string]::Join(' ', $args[1..($args.Count - 1)]) } elseif ($flags['query']) { $flags['query'] } else { '' }
 
     if (-not $query) {
         return New-AgentCommandResponse -Status "error" -Message "Search query missing"
@@ -413,7 +411,7 @@ function Invoke-AgentSearch {
         return New-AgentCommandResponse -Status "error" -Message "No results found"
     }
 
-    $script:AgentCommandState.LastSearchResults = $results
+    ${script:AgentCommandState}.LastSearchResults = $results
     $formatted = Format-AgentSearchResults -Results $results
 
     Invoke-Progress "✅ Found $($results.Count) results" $onProgress
@@ -454,14 +452,14 @@ function Invoke-AgentDownload {
 
     $target = $args[0]
     $quality = $flags['quality'] ?? $args[1] ?? 'best'
-    $destination = $flags['dest'] ?? $flags['destination'] ?? $args[2] ?? (Join-Path $env:USERPROFILE 'Videos')
+    $destination = $flags['dest'] ?? $flags['destination'] ?? $args[2] ?? (Join-Path ${env:USERPROFILE} 'Videos')
 
-    if ($target -match '^[0-9]+$' -and $script:AgentCommandState.LastSearchResults.Count -gt 0) {
+    if ($target -match '^[0-9]+$' -and ${script:AgentCommandState}.LastSearchResults.Count -gt 0) {
         $index = [int]$target - 1
-        if ($index -lt 0 -or $index -ge $script:AgentCommandState.LastSearchResults.Count) {
+        if ($index -lt 0 -or $index -ge ${script:AgentCommandState}.LastSearchResults.Count) {
             return New-AgentCommandResponse -Status "error" -Message "Search result number '$target' is invalid"
         }
-        $target = $script:AgentCommandState.LastSearchResults[$index].URL
+        $target = ${script:AgentCommandState}.LastSearchResults[$index].URL
     }
 
     Invoke-Progress "📥 Starting download ($quality): $target" $onProgress
@@ -484,9 +482,9 @@ function Invoke-AgentDownload {
         Time   = Get-Date
     }
 
-    $script:AgentCommandState.ActiveDownloads.Add($downloadEntry)
-    if ($script:AgentCommandState.ActiveDownloads.Count -gt 25) {
-        $script:AgentCommandState.ActiveDownloads.RemoveAt(0)
+    ${script:AgentCommandState}.ActiveDownloads.Add($downloadEntry)
+    if (${script:AgentCommandState}.ActiveDownloads.Count -gt 25) {
+        ${script:AgentCommandState}.ActiveDownloads.RemoveAt(0)
     }
 
     Invoke-Progress "✅ Download complete: $validatedPath" $onProgress
@@ -530,12 +528,12 @@ function Invoke-AgentPlayback {
     }
 
     $target = $args[0]
-    if ($target -match '^[0-9]+$' -and $script:AgentCommandState.LastSearchResults.Count -gt 0) {
+    if ($target -match '^[0-9]+$' -and ${script:AgentCommandState}.LastSearchResults.Count -gt 0) {
         $index = [int]$target - 1
-        if ($index -lt 0 -or $index -ge $script:AgentCommandState.LastSearchResults.Count) {
+        if ($index -lt 0 -or $index -ge ${script:AgentCommandState}.LastSearchResults.Count) {
             return New-AgentCommandResponse -Status "error" -Message "Search result number '$target' is invalid"
         }
-        $target = $script:AgentCommandState.LastSearchResults[$index].URL
+        $target = ${script:AgentCommandState}.LastSearchResults[$index].URL
     }
 
     Invoke-Progress "▶️  Opening: $target" $onProgress
@@ -560,7 +558,7 @@ function Invoke-AgentPlaylistCommand {
     $action = $args[0].ToLower()
     switch ($action) {
         'create' {
-            $query = if ($args.Count -gt 1) { [string]::Join(' ', $args[1..($args.Count - 1)]) } else { $flags['query'] }
+            $query = $(if ($args.Count -gt 1) { [string]::Join(' ', $args[1..($args.Count - 1)]) } else { $flags['query'] }
             if (-not $query) {
                 return New-AgentCommandResponse -Status "error" -Message "Playlist query missing"
             }
@@ -573,7 +571,7 @@ function Invoke-AgentPlaylistCommand {
                 return New-AgentCommandResponse -Status "error" -Message "No videos for playlist"
             }
 
-            $playlistDir = Join-Path $env:USERPROFILE 'Videos'
+            $playlistDir = Join-Path ${env:USERPROFILE} 'Videos'
             if (-not (Test-Path $playlistDir)) {
                 New-Item -Path $playlistDir -ItemType Directory -Force | Out-Null
             }
@@ -590,7 +588,7 @@ function Invoke-AgentPlaylistCommand {
             return [ordered]@{ Status = 'success'; Message = 'Playlist created'; Path = $playlistPath; Count = $results.Count }
         }
         'list' {
-            $files = Get-ChildItem (Join-Path $env:USERPROFILE 'Videos') -Filter '*.m3u' -ErrorAction SilentlyContinue
+            $files = Get-ChildItem (Join-Path ${env:USERPROFILE} 'Videos') -Filter '*.m3u' -ErrorAction SilentlyContinue
             return [ordered]@{ Status = 'success'; Message = "Found $($files.Count) playlists"; Files = $files }
         }
         default {
@@ -669,7 +667,7 @@ function Invoke-AgentStatusCommand {
     $report = @()
     foreach ($dep in $dependencies) {
         $available = [bool](Get-Command $dep.Command -ErrorAction SilentlyContinue)
-        $enabled = if ($dep.ToolKey) { Test-AgentOptionalTool -ToolKey $dep.ToolKey } else { $true }
+        $enabled = $(if ($dep.ToolKey) { Test-AgentOptionalTool -ToolKey $dep.ToolKey } else { $true }
         $report += [ordered]@{
             Component = $dep.Name
             Command   = $dep.Command
@@ -696,8 +694,8 @@ function Invoke-AgentStatusCommand {
         Message       = 'Agent status'
         Components    = $report
         OptionalTools = $optionalInfo
-        History       = $script:AgentCommandState.History
-        Downloads     = $script:AgentCommandState.ActiveDownloads
+        History       = ${script:AgentCommandState}.History
+        Downloads     = ${script:AgentCommandState}.ActiveDownloads
     }
 }
 
@@ -709,7 +707,7 @@ function Invoke-AgentHelpCommand {
 
     foreach ($entry in $registry) {
         $cmd = $entry.Value
-        $aliasText = if ($cmd.Aliases.Count -gt 0) { " (aliases: " + ($cmd.Aliases -join ', ') + ")" } else { '' }
+        $aliasText = $(if ($cmd.Aliases.Count -gt 0) { " (aliases: " + ($cmd.Aliases -join ', ') + ")" } else { '' }
         $lines += "• /$($cmd.Name)$aliasText"
         $lines += "  $($cmd.Description)"
         $lines += "  Usage: $($cmd.Usage)"
@@ -720,7 +718,7 @@ function Invoke-AgentHelpCommand {
     }
 
     $text = [string]::Join("`r`n", $lines)
-    $script:AgentCommandState.LastHelpRender = $text
+    ${script:AgentCommandState}.LastHelpRender = $text
 
     return [ordered]@{ Status = 'success'; Message = 'Help generated'; Display = $text }
 }
@@ -738,9 +736,9 @@ function Write-AgentCommandTelemetry {
             Status    = $Response.Status
             Message   = $Response.Message
         }
-        $script:AgentCommandState.InitializationLog.Add((ConvertTo-Json $entry -Compress))
-        if ($script:AgentCommandState.InitializationLog.Count -gt 50) {
-            $script:AgentCommandState.InitializationLog.RemoveAt(0)
+        ${script:AgentCommandState}.InitializationLog.Add((ConvertTo-Json $entry -Compress))
+        if (${script:AgentCommandState}.InitializationLog.Count -gt 50) {
+            ${script:AgentCommandState}.InitializationLog.RemoveAt(0)
         }
     }
     catch {

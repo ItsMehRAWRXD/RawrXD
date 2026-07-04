@@ -92,9 +92,9 @@ function Measure-RealTPS {
     # Phi-3-Mini: ~3.8B params -> ~7.6B FLOPs per token (2x params rule)
     # TinyLlama: ~1B params -> ~2B FLOPs per token
     
-    $modelClass = if ($fileSize -lt 1GB) { "tiny" } else { "medium" }
+    $modelClass = $(if ($fileSize -lt 1GB) { "tiny" } else { "medium" }
     
-    [double]$flopsPerToken = if ($modelClass -eq "tiny") { 
+    [double]$flopsPerToken = $(if ($modelClass -eq "tiny") { 
         2_000_000_000  # TinyLlama: ~2B FLOPs per token
     } else { 
         7_600_000_000  # Phi-3-Mini: ~7.6B FLOPs per token
@@ -138,7 +138,7 @@ function Measure-RealTPS {
     
     # Agentic viability
     [double]$timePerAgentLoop = ($loadSw.ElapsedMilliseconds + $tokenSw.ElapsedMilliseconds) / 1000.0
-    $agentic = if ($timePerAgentLoop -lt 30) { "✅ GOOD" } else { "⚠️ SLOW" }
+    $agentic = $(if ($timePerAgentLoop -lt 30) { "✅ GOOD" } else { "⚠️ SLOW" }
     Write-Host "    Agentic Loop (100 token): $agentic (~$([math]::Round($timePerAgentLoop, 1))s)"
     
     return @{

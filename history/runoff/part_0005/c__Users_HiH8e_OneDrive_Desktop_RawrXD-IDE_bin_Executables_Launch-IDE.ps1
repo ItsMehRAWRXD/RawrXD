@@ -72,9 +72,9 @@ Write-Host "[*] Launching RawrXD-AgenticIDE..." -ForegroundColor Cyan
 Write-Host ""
 
 # Launch IDE with environment configuration
-$env:RAWRXD_MODEL = $Model
-$env:RAWRXD_ENDPOINT = $Endpoint
-$env:RAWRXD_TIMEOUT = $Timeout
+${env:RAWRXD_MODEL} = $Model
+${env:RAWRXD_ENDPOINT} = $Endpoint
+${env:RAWRXD_TIMEOUT} = $Timeout
 
 try {
     & $ideExe

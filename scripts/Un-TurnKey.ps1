@@ -62,7 +62,7 @@ $ErrorActionPreference = "Stop"
 # CONFIGURATION
 # ============================================================================
 
-$script:Config = @{
+${script:Config} = @{
     RepoRoot = $null
     BackupTimestamp = Get-Date -Format "yyyyMMdd_HHmmss"
     ItemsToClean = @()
@@ -76,13 +76,13 @@ $script:Config = @{
 # ============================================================================
 
 function Initialize-UnTurnKey {
-    $script:Config.RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+    ${script:Config}.RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
     
     if (-not $Force -and -not $WhatIf) {
         Write-Host ""
         Write-Host "╔══════════════════════════════════════════════════════════════════╗" -ForegroundColor Yellow
         Write-Host "║  RawrXD Un-TurnKey Cleanup                                       ║" -ForegroundColor Yellow
-        Write-Host "║  Repository: $($script:Config.RepoRoot)" -ForegroundColor Yellow
+        Write-Host "║  Repository: $(${script:Config}.RepoRoot)" -ForegroundColor Yellow
         Write-Host "╚══════════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "This will clean up build artifacts, logs, and temporary files." -ForegroundColor Yellow
@@ -97,10 +97,10 @@ function Initialize-UnTurnKey {
     
     # Set default backup path
     if ([string]::IsNullOrWhiteSpace($BackupPath)) {
-        $script:Config.BackupPath = Join-Path $env:TEMP "rawrxd_unturnkey_backup_$($script:Config.BackupTimestamp)"
+        ${script:Config}.BackupPath = Join-Path ${env:TEMP} "rawrxd_unturnkey_backup_$(${script:Config}.BackupTimestamp)"
     }
     else {
-        $script:Config.BackupPath = $BackupPath
+        ${script:Config}.BackupPath = $BackupPath
     }
 }
 
@@ -114,7 +114,7 @@ function Invoke-PreCleanupBackup {
     Write-Host "`n[BACKUP] Creating pre-cleanup backup..." -ForegroundColor Cyan
     
     try {
-        New-Item -ItemType Directory -Path $script:Config.BackupPath -Force | Out-Null
+        New-Item -ItemType Directory -Path ${script:Config}.BackupPath -Force | Out-Null
         
         $backupItems = @(
             @{ Source = "src"; Dest = "src_backup" },
@@ -124,8 +124,8 @@ function Invoke-PreCleanupBackup {
         )
         
         foreach ($item in $backupItems) {
-            $sourcePath = Join-Path $script:Config.RepoRoot $item.Source
-            $destPath = Join-Path $script:Config.BackupPath $item.Dest
+            $sourcePath = Join-Path ${script:Config}.RepoRoot $item.Source
+            $destPath = Join-Path ${script:Config}.BackupPath $item.Dest
             
             if (Test-Path $sourcePath) {
                 if ($WhatIf) {
@@ -141,16 +141,16 @@ function Invoke-PreCleanupBackup {
         # Create backup manifest
         $manifest = @{
             timestamp = (Get-Date).ToString("o")
-            computer = $env:COMPUTERNAME
-            user = $env:USERNAME
-            backupPath = $script:Config.BackupPath
+            computer = ${env:COMPUTERNAME}
+            user = ${env:USERNAME}
+            backupPath = ${script:Config}.BackupPath
             items = $backupItems | ForEach-Object { $_.Source }
         }
         
-        $manifestPath = Join-Path $script:Config.BackupPath "backup_manifest.json"
+        $manifestPath = Join-Path ${script:Config}.BackupPath "backup_manifest.json"
         $manifest | ConvertTo-Json | Out-File -FilePath $manifestPath -Encoding utf8
         
-        Write-Host "  [BACKUP] Complete: $($script:Config.BackupPath)" -ForegroundColor Green
+        Write-Host "  [BACKUP] Complete: $(${script:Config}.BackupPath)" -ForegroundColor Green
     }
     catch {
         Write-Error "Backup failed: $_"
@@ -170,7 +170,7 @@ function Remove-CleanupItem {
         [switch]$Force
     )
     
-    $fullPath = Join-Path $script:Config.RepoRoot $Path
+    $fullPath = Join-Path ${script:Config}.RepoRoot $Path
     
     if (-not (Test-Path $fullPath)) {
         return
@@ -197,12 +197,12 @@ function Remove-CleanupItem {
     else {
         try {
             Remove-Item -Path $fullPath -Recurse:$Recurse -Force:$Force -ErrorAction Stop
-            $script:Config.ItemsCleaned++
-            $script:Config.BytesFreed += $size
+            ${script:Config}.ItemsCleaned++
+            ${script:Config}.BytesFreed += $size
             Write-Host "  [CLEANED] $Description ($([math]::Round($size / 1MB, 2)) MB)" -ForegroundColor Green
         }
         catch {
-            $script:Config.ItemsFailed++
+            ${script:Config}.ItemsFailed++
             Write-Host "  [FAILED] $Description - $_" -ForegroundColor Red
         }
     }
@@ -222,8 +222,8 @@ function Invoke-BuildCleanup {
             Remove-CleanupItem -Path $item -Description "Build probe: $item" -Recurse -Force
         }
 
-        $cmakeBuildDirs = Get-ChildItem -Path $script:Config.RepoRoot -Directory -Filter "cmake-build-*" -ErrorAction SilentlyContinue
-        $repoPath = $script:Config.RepoRoot.Path
+        $cmakeBuildDirs = Get-ChildItem -Path ${script:Config}.RepoRoot -Directory -Filter "cmake-build-*" -ErrorAction SilentlyContinue
+        $repoPath = ${script:Config}.RepoRoot.Path
         foreach ($match in $cmakeBuildDirs) {
             Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description "Build probe: $($match.Name)" -Recurse -Force
         }
@@ -233,9 +233,9 @@ function Invoke-BuildCleanup {
     $buildDirs = @("build", "build-win32", "build-ninja", "build-ninja-ctx2", "build_smoke_auto", "out", "cmake-build-*")
     
     foreach ($dir in $buildDirs) {
-        $pattern = Join-Path $script:Config.RepoRoot $dir
+        $pattern = Join-Path ${script:Config}.RepoRoot $dir
         $matches = Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue
-        $repoPath = $script:Config.RepoRoot.Path
+        $repoPath = ${script:Config}.RepoRoot.Path
         foreach ($match in $matches) {
             Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description "Build: $($match.Name)" -Recurse -Force
         }
@@ -252,9 +252,9 @@ function Invoke-BuildCleanup {
         @{ Path = "CMakeFiles"; Desc = "CMake files" }
     )
     
-    $repoPath = $script:Config.RepoRoot.Path
+    $repoPath = ${script:Config}.RepoRoot.Path
     foreach ($artifact in $artifacts) {
-        $matches = Get-ChildItem -Path $script:Config.RepoRoot -Filter $artifact.Path -Recurse -ErrorAction SilentlyContinue
+        $matches = Get-ChildItem -Path ${script:Config}.RepoRoot -Filter $artifact.Path -Recurse -ErrorAction SilentlyContinue
         foreach ($match in $matches) {
             Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description $artifact.Desc
         }
@@ -275,8 +275,8 @@ function Invoke-LogCleanup {
             Remove-CleanupItem -Path $dir -Description "Log probe: $dir" -Recurse -Force
         }
 
-        $repoPath = $script:Config.RepoRoot.Path
-        $rootLogs = Get-ChildItem -Path $script:Config.RepoRoot -File -Filter "*.log" -ErrorAction SilentlyContinue
+        $repoPath = ${script:Config}.RepoRoot.Path
+        $rootLogs = Get-ChildItem -Path ${script:Config}.RepoRoot -File -Filter "*.log" -ErrorAction SilentlyContinue
         foreach ($match in $rootLogs) {
             Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description "Log probe: $($match.Name)"
         }
@@ -285,9 +285,9 @@ function Invoke-LogCleanup {
     
     $logPatterns = @("*.log", "*.log.*", "logs\*", "_logs\*")
     
-    $repoPath = $script:Config.RepoRoot.Path
+    $repoPath = ${script:Config}.RepoRoot.Path
     foreach ($pattern in $logPatterns) {
-        $matches = Get-ChildItem -Path $script:Config.RepoRoot -Filter $pattern -Recurse -ErrorAction SilentlyContinue
+        $matches = Get-ChildItem -Path ${script:Config}.RepoRoot -Filter $pattern -Recurse -ErrorAction SilentlyContinue
         foreach ($match in $matches) {
             Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description "Log: $($match.Name)"
         }
@@ -303,10 +303,10 @@ function Invoke-TempCleanup {
             Remove-CleanupItem -Path $dir -Description "Temp probe: $dir" -Recurse -Force
         }
 
-        $repoPath = $script:Config.RepoRoot.Path
+        $repoPath = ${script:Config}.RepoRoot.Path
         $rootPatterns = @("*.tmp", "*.temp", "*~", "*.bak", "*.old")
         foreach ($pattern in $rootPatterns) {
-            $matches = Get-ChildItem -Path $script:Config.RepoRoot -File -Filter $pattern -ErrorAction SilentlyContinue
+            $matches = Get-ChildItem -Path ${script:Config}.RepoRoot -File -Filter $pattern -ErrorAction SilentlyContinue
             foreach ($match in $matches) {
                 Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description "Temp probe: $($match.Name)"
             }
@@ -326,9 +326,9 @@ function Invoke-TempCleanup {
         ".vscode\*"
     )
     
-    $repoPath = $script:Config.RepoRoot.Path
+    $repoPath = ${script:Config}.RepoRoot.Path
     foreach ($pattern in $tempPatterns) {
-        $matches = Get-ChildItem -Path $script:Config.RepoRoot -Filter $pattern -Recurse -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer }
+        $matches = Get-ChildItem -Path ${script:Config}.RepoRoot -Filter $pattern -Recurse -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer }
         foreach ($match in $matches) {
             Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description "Temp: $($match.Name)"
         }
@@ -355,9 +355,9 @@ function Invoke-CacheCleanup {
         ".m2"
     )
     
-    $repoPath = $script:Config.RepoRoot.Path
+    $repoPath = ${script:Config}.RepoRoot.Path
     foreach ($dir in $cacheDirs) {
-        $matches = Get-ChildItem -Path $script:Config.RepoRoot -Filter $dir -Recurse -Directory -ErrorAction SilentlyContinue
+        $matches = Get-ChildItem -Path ${script:Config}.RepoRoot -Filter $dir -Recurse -Directory -ErrorAction SilentlyContinue
         foreach ($match in $matches) {
             Remove-CleanupItem -Path $match.FullName.Replace($repoPath + "\", "") -Description "Cache: $($match.Name)" -Recurse -Force
         }
@@ -373,10 +373,10 @@ function Invoke-ReportCleanup {
     }
     
     # Keep recent reports but clean old ones
-    $reportDir = Join-Path $script:Config.RepoRoot "reports"
+    $reportDir = Join-Path ${script:Config}.RepoRoot "reports"
     if (Test-Path $reportDir) {
         $cutoffDate = (Get-Date).AddDays(-7)
-        $repoPath = $script:Config.RepoRoot.Path
+        $repoPath = ${script:Config}.RepoRoot.Path
         $oldReports = Get-ChildItem -Path $reportDir -Filter "*.json" -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -lt $cutoffDate }
         
         foreach ($report in $oldReports) {
@@ -398,12 +398,12 @@ function Write-CleanupSummary {
         Write-Host "  Mode: WhatIf (no changes made)" -ForegroundColor Yellow
     }
     else {
-        Write-Host "  Items Cleaned: $($script:Config.ItemsCleaned)" -ForegroundColor Green
-        Write-Host "  Items Failed: $($script:Config.ItemsFailed)" -ForegroundColor $(if ($script:Config.ItemsFailed -gt 0) { "Red" } else { "Green" })
-        Write-Host "  Space Freed: $([math]::Round($script:Config.BytesFreed / 1MB, 2)) MB" -ForegroundColor Green
+        Write-Host "  Items Cleaned: $(${script:Config}.ItemsCleaned)" -ForegroundColor Green
+        Write-Host "  Items Failed: $(${script:Config}.ItemsFailed)" -ForegroundColor $(if (${script:Config}.ItemsFailed -gt 0) { "Red" } else { "Green" })
+        Write-Host "  Space Freed: $([math]::Round(${script:Config}.BytesFreed / 1MB, 2)) MB" -ForegroundColor Green
         
         if ($BackupFirst) {
-            Write-Host "  Backup Location: $($script:Config.BackupPath)" -ForegroundColor Cyan
+            Write-Host "  Backup Location: $(${script:Config}.BackupPath)" -ForegroundColor Cyan
         }
     }
     
@@ -428,4 +428,4 @@ Invoke-ReportCleanup
 
 Write-CleanupSummary
 
-exit [int]($script:Config.ItemsFailed -gt 0)
+exit [int](${script:Config}.ItemsFailed -gt 0)

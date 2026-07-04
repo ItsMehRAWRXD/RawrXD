@@ -6,11 +6,11 @@ function Invoke-OllamaAnalysis{param([string]$CrashContent);try{$body=@{model=$M
 ---
 $CrashContent";stream=$false}|ConvertTo-Json;$r=Invoke-RestMethod -Uri "$OllamaUrl/api/generate" -Method Post -ContentType "application/json" -Body $body -TimeoutSec 30;if($r.response -match '\{[\s\S]*\}'){return $Matches[0]|ConvertFrom-Json}}catch{Write-RecoveryLog "Ollama failed: " "ERROR"};return $null}
 Write-RecoveryLog "Recovery launcher started. Log=$LogPath"
-$crashContent=if(Test-Path $LogPath){Get-Content $LogPath -Raw}else{""}
+$crashContent= $(if (Test-Path $LogPath){Get-Content $LogPath -Raw}else{""}
 $analysis=Invoke-OllamaAnalysis -CrashContent $crashContent
 $cfg=@{"features.extensionSystem"=$false;"features.vulkanCompute"=$false;"performance.vulkanRenderer"=$false;"performance.gpuTextRendering"=$false}
 if($analysis -and $analysis.suggested_config){$analysis.suggested_config.PSObject.Properties|%{$cfg[$_.Name]=$_.Value};Write-RecoveryLog "Agent: $($analysis.likely_cause)"}
-$cfgPath=if($ExePath){Join-Path(Split-Path $ExePath -Parent)"rawrxd.config.json"}else{"rawrxd.config.json"}
+$cfgPath= $(if ($ExePath){Join-Path(Split-Path $ExePath -Parent)"rawrxd.config.json"}else{"rawrxd.config.json"}
 if(Test-Path $cfgPath){$existing=Get-Content $cfgPath -Raw|ConvertFrom-Json;$existing.PSObject.Properties|%{if(-not $cfg.ContainsKey($_.Name)){$cfg[$_.Name]=$_.Value}}}
 New-Item -ItemType Directory -Force -Path "crash_dumps"|Out-Null
 @{timestamp=(Get-Date -Format "o");logPath=$LogPath;suggested_config=$cfg}|ConvertTo-Json -Depth 5|Set-Content "crash_dumps\recovery_suggestions.json"

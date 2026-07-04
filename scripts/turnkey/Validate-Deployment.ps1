@@ -8,16 +8,16 @@ param(
     [string]$ConfigPath = "",
     [int]$TimeoutSeconds = 30,
     [switch]$GenerateReport,
-    [string]$ReportPath = "$env:TEMP\rawrxd-validation-report.json"
+    [string]$ReportPath = "${env:TEMP}\rawrxd-validation-report.json"
 )
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "Continue"
 
 # Configuration
-$script:ProjectRoot = Resolve-Path "$PSScriptRoot\..\.."
-$script:TestResults = @()
-$script:OverallStatus = "UNKNOWN"
+${script:ProjectRoot} = Resolve-Path "$PSScriptRoot\..\.."
+${script:TestResults} = @()
+${script:OverallStatus} = "UNKNOWN"
 
 function Write-TestResult {
     param(
@@ -35,10 +35,10 @@ function Write-TestResult {
         Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     }
     
-    $script:TestResults += $result
+    ${script:TestResults} += $result
     
-    $status = if ($Passed) { "✓ PASS" } else { "✗ FAIL" }
-    $color = if ($Passed) { "Green" } else { "Red" }
+    $status = $(if ($Passed) { "✓ PASS" } else { "✗ FAIL" }
+    $color = $(if ($Passed) { "Green" } else { "Red" }
     
     Write-Host "[$status] $TestName" -ForegroundColor $color
     if ($Message) {
@@ -147,7 +147,7 @@ function Test-Dependencies {
         $missing = @()
         
         foreach ($dll in $requiredDlls) {
-            $dllPath = Join-Path $env:SystemRoot "System32\$dll"
+            $dllPath = Join-Path ${env:SystemRoot} "System32\$dll"
             if (-not (Test-Path $dllPath)) {
                 $allFound = $false
                 $missing += $dll
@@ -202,7 +202,7 @@ function Test-Configuration {
         }
 
         $passed = $missing.Count -eq 0
-        $message = if ($passed) {
+        $message = $(if ($passed) {
             "Valid JSON structure with required deployment settings"
         } else {
             "Missing required settings: $($missing -join ', ')"
@@ -226,7 +226,7 @@ function Test-DirectoryStructure {
     
     $allExist = $true
     foreach ($dir in $requiredDirs) {
-        $dirPath = Join-Path $script:ProjectRoot $dir
+        $dirPath = Join-Path ${script:ProjectRoot} $dir
         $exists = Test-Path $dirPath
         if (-not $exists) {
             $allExist = $false
@@ -296,20 +296,20 @@ function Test-Performance {
 function New-ValidationReport {
     param([string]$ReportPath)
     
-    $passed = ($script:TestResults | Where-Object { $_.Passed }).Count
-    $failed = ($script:TestResults | Where-Object { -not $_.Passed }).Count
-    $total = $script:TestResults.Count
+    $passed = (${script:TestResults} | Where-Object { $_.Passed }).Count
+    $failed = (${script:TestResults} | Where-Object { -not $_.Passed }).Count
+    $total = ${script:TestResults}.Count
     
     $report = [PSCustomObject]@{
         ValidationTimestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        OverallStatus = if ($failed -eq 0) { "PASS" } else { "FAIL" }
+        OverallStatus = $(if ($failed -eq 0) { "PASS" } else { "FAIL" }
         Summary = [PSCustomObject]@{
             TotalTests = $total
             Passed = $passed
             Failed = $failed
-            PassRate = if ($total -gt 0) { [math]::Round(($passed / $total) * 100, 2) } else { 0 }
+            PassRate = $(if ($total -gt 0) { [math]::Round(($passed / $total) * 100, 2) } else { 0 }
         }
-        Results = $script:TestResults
+        Results = ${script:TestResults}
     }
     
     $report | ConvertTo-Json -Depth 3 | Out-File $ReportPath
@@ -320,9 +320,9 @@ function New-ValidationReport {
 }
 
 function Show-Summary {
-    $passed = ($script:TestResults | Where-Object { $_.Passed }).Count
-    $failed = ($script:TestResults | Where-Object { -not $_.Passed }).Count
-    $total = $script:TestResults.Count
+    $passed = (${script:TestResults} | Where-Object { $_.Passed }).Count
+    $failed = (${script:TestResults} | Where-Object { -not $_.Passed }).Count
+    $total = ${script:TestResults}.Count
     
     Write-Host ""
     Write-Host "=== Validation Summary ===" -ForegroundColor Cyan
@@ -338,15 +338,15 @@ function Show-Summary {
     if ($failed -eq 0) {
         Write-Host ""
         Write-Host "✓ DEPLOYMENT VALIDATED SUCCESSFULLY" -ForegroundColor Green
-        $script:OverallStatus = "PASS"
+        ${script:OverallStatus} = "PASS"
     } else {
         Write-Host ""
         Write-Host "✗ DEPLOYMENT VALIDATION FAILED" -ForegroundColor Red
-        $script:OverallStatus = "FAIL"
+        ${script:OverallStatus} = "FAIL"
         
         Write-Host ""
         Write-Host "Failed tests:" -ForegroundColor Red
-        $script:TestResults | Where-Object { -not $_.Passed } | ForEach-Object {
+        ${script:TestResults} | Where-Object { -not $_.Passed } | ForEach-Object {
             Write-Host "  - $($_.TestName): $($_.Message)" -ForegroundColor Red
         }
     }
@@ -359,12 +359,12 @@ Write-Host ""
 # Auto-detect paths if not provided
 if (-not $BinaryPath) {
     $possiblePaths = @(
-        "$script:ProjectRoot\bin-turnkey\RawrXD-Win32IDE.exe",
-        "$script:ProjectRoot\build-ninja\bin\RawrXD-Win32IDE.exe",
-        "$script:ProjectRoot\build-turnkey\bin\RawrXD-Win32IDE.exe",
-        "$script:ProjectRoot\build\bin\Release\RawrXD-Win32IDE.exe",
-        "$script:ProjectRoot\bin\RawrXD-Win32IDE.exe",
-        "$script:ProjectRoot\RawrXD-Win32IDE.exe"
+        "${script:ProjectRoot}\bin-turnkey\RawrXD-Win32IDE.exe",
+        "${script:ProjectRoot}\build-ninja\bin\RawrXD-Win32IDE.exe",
+        "${script:ProjectRoot}\build-turnkey\bin\RawrXD-Win32IDE.exe",
+        "${script:ProjectRoot}\build\bin\Release\RawrXD-Win32IDE.exe",
+        "${script:ProjectRoot}\bin\RawrXD-Win32IDE.exe",
+        "${script:ProjectRoot}\RawrXD-Win32IDE.exe"
     )
     
     foreach ($path in $possiblePaths) {
@@ -378,8 +378,8 @@ if (-not $BinaryPath) {
 
 if (-not $ConfigPath) {
     $possibleConfigs = @(
-        "$script:ProjectRoot\rawrxd.config.json",
-        "$env:APPDATA\RawrXD\rawrxd.config.json"
+        "${script:ProjectRoot}\rawrxd.config.json",
+        "${env:APPDATA}\RawrXD\rawrxd.config.json"
     )
     
     foreach ($path in $possibleConfigs) {
@@ -416,11 +416,11 @@ if ($ConfigPath) {
 
 # Check for build artifacts
 $binDirs = @(
-    "$script:ProjectRoot\bin-turnkey",
-    "$script:ProjectRoot\build-ninja\bin",
-    "$script:ProjectRoot\bin",
-    "$script:ProjectRoot\build-turnkey\bin",
-    "$script:ProjectRoot\build\bin\Release"
+    "${script:ProjectRoot}\bin-turnkey",
+    "${script:ProjectRoot}\build-ninja\bin",
+    "${script:ProjectRoot}\bin",
+    "${script:ProjectRoot}\build-turnkey\bin",
+    "${script:ProjectRoot}\build\bin\Release"
 )
 
 $binDirFound = $false
@@ -445,4 +445,4 @@ if ($GenerateReport) {
 }
 
 # Exit with appropriate code
-exit $(if ($script:OverallStatus -eq "PASS") { 0 } else { 1 })
+exit $(if (${script:OverallStatus} -eq "PASS") { 0 } else { 1 })

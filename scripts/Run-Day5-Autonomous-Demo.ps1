@@ -50,7 +50,7 @@ $steps = New-Object System.Collections.Generic.List[object]
 
 $steps.Add((Invoke-Step -Name "Plan workflow" -Action {
     # Simulated autonomous plan includes all day5 transition states.
-    $global:DemoTodo = @(
+    ${global:DemoTodo} = @(
         [pscustomobject]@{ id = 1; title = "Collect context"; status = "completed"; dependencies = @() },
         [pscustomobject]@{ id = 2; title = "Run quality gate"; status = "in-progress"; dependencies = @(1) },
         [pscustomobject]@{ id = 3; title = "Publish report"; status = "blocked"; dependencies = @(2);
@@ -81,11 +81,11 @@ if (-not $SkipBenchmark) {
 }
 
 $steps.Add((Invoke-Step -Name "Validate demo evidence" -Action {
-    if ($null -eq $global:DemoTodo -or $global:DemoTodo.Count -lt 3) {
+    if ($null -eq ${global:DemoTodo} -or ${global:DemoTodo}.Count -lt 3) {
         throw "Demo todo evidence not initialized"
     }
 
-    $statuses = $global:DemoTodo | ForEach-Object { $_.status }
+    $statuses = ${global:DemoTodo} | ForEach-Object { $_.status }
     $required = @("completed", "in-progress", "blocked")
     foreach ($s in $required) {
         if (-not ($statuses -contains $s)) {
@@ -93,22 +93,22 @@ $steps.Add((Invoke-Step -Name "Validate demo evidence" -Action {
         }
     }
 
-    $blocked = $global:DemoTodo | Where-Object { $_.status -eq "blocked" } | Select-Object -First 1
+    $blocked = ${global:DemoTodo} | Where-Object { $_.status -eq "blocked" } | Select-Object -First 1
     if ($null -eq $blocked.blocker -or [string]::IsNullOrWhiteSpace($blocked.blocker.reason)) {
         throw "Blocked task missing blocker metadata"
     }
 }))
 
 $blockedSteps = @($steps | Where-Object { $_.status -eq "blocked" })
-$verdict = if ($blockedSteps.Count -eq 0) { "Pass" } else { "Blocked" }
+$verdict = $(if ($blockedSteps.Count -eq 0) { "Pass" } else { "Blocked" }
 
 $report = [pscustomobject]@{
     timestamp_utc = [DateTime]::UtcNow.ToString("o")
     gate = "Day 5 Autonomous Operation Demonstration"
     verdict = $verdict
     steps = $steps
-    demo_todo = $global:DemoTodo
-    next_action = if ($verdict -eq "Pass") { "Proceed to Phase 2 Day 6 extension host runtime foundation" } else { "Fix blocked step and rerun day5 demo" }
+    demo_todo = ${global:DemoTodo}
+    next_action = $(if ($verdict -eq "Pass") { "Proceed to Phase 2 Day 6 extension host runtime foundation" } else { "Fix blocked step and rerun day5 demo" }
 }
 
 $dir = Split-Path -Parent $OutputPath

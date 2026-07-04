@@ -140,7 +140,7 @@ function Link-Files {
     Log "Linking: $(Split-Path $Output -Leaf)" BUILD
     
     $objArgs = ($Objects | ForEach-Object { "`"$_`"" }) -join ' '
-    $libArgs = if ($Libraries.Count -gt 0) { ($Libraries -join ' ') } else { 'kernel32.lib' }
+    $libArgs = $(if ($Libraries.Count -gt 0) { ($Libraries -join ' ') } else { 'kernel32.lib' }
     
     $cmd = "& `"$Link`" /SUBSYSTEM:CONSOLE /OUT:`"$Output`" $objArgs $libArgs 2>&1"
     

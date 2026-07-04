@@ -131,7 +131,7 @@ foreach ($category in $AuditResults.Categories.Keys) {
         if ($AuditResults.PatternHits[$category].Contains($p)) { $foundCount++ }
     }
 
-    $score = if ($patternCount -gt 0) { [math]::Min(100, [math]::Round(($foundCount / $patternCount) * 100)) } else { 0 }
+    $score = $(if ($patternCount -gt 0) { [math]::Min(100, [math]::Round(($foundCount / $patternCount) * 100)) } else { 0 }
     $AuditResults.Categories[$category].Score = $score
 
     $missing = $patternList | Where-Object { -not $AuditResults.PatternHits[$category].Contains($_) }

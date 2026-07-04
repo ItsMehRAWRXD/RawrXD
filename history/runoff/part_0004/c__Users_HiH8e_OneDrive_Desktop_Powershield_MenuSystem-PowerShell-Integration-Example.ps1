@@ -261,7 +261,7 @@ function Set-EditorTheme {
     $webView.ExecuteScriptAsync($script)
     
     # Save to settings
-    $global:EditorSettings.theme = $Theme
+    ${global:EditorSettings}.theme = $Theme
     Save-EditorSettings
     
     return @{ theme = $Theme }
@@ -282,7 +282,7 @@ function Set-EditorFontSize {
 "@
     $webView.ExecuteScriptAsync($script)
     
-    $global:EditorSettings.fontSize = $Size
+    ${global:EditorSettings}.fontSize = $Size
     Save-EditorSettings
     
     return @{ fontSize = $Size }
@@ -321,7 +321,7 @@ function Set-AIModel {
     
     Write-Host "Setting AI Model: $Model" -ForegroundColor Cyan
     
-    $global:AISettings.model = $Model
+    ${global:AISettings}.model = $Model
     Save-AISettings
     
     # Reinitialize AI service with new model

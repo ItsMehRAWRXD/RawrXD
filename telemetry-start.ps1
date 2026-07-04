@@ -136,17 +136,17 @@ function Start-SimulationMode {
         }
         
         while ($true) {
-            $script:Metrics.InferenceCount += (Get-Random -Minimum 1 -Maximum 5)
-            $script:Metrics.TokenCount += (Get-Random -Minimum 10 -Maximum 100)
-            $script:Metrics.LatencyTotal += (Get-Random -Minimum 15000 -Maximum 25000)
+            ${script:Metrics}.InferenceCount += (Get-Random -Minimum 1 -Maximum 5)
+            ${script:Metrics}.TokenCount += (Get-Random -Minimum 10 -Maximum 100)
+            ${script:Metrics}.LatencyTotal += (Get-Random -Minimum 15000 -Maximum 25000)
             
-            if ((Get-Random) -gt 0.1) { $script:Metrics.CacheHits++ }
-            else { $script:Metrics.CacheMisses++ }
+            if ((Get-Random) -gt 0.1) { ${script:Metrics}.CacheHits++ }
+            else { ${script:Metrics}.CacheMisses++ }
             
             $r = Get-Random
-            if ($r -lt 0.85) { $script:Metrics.INT8Count++ }
-            elseif ($r -lt 0.95) { $script:Metrics.BF16Count++ }
-            else { $script:Metrics.FP32Count++ }
+            if ($r -lt 0.85) { ${script:Metrics}.INT8Count++ }
+            elseif ($r -lt 0.95) { ${script:Metrics}.BF16Count++ }
+            else { ${script:Metrics}.FP32Count++ }
             
             Start-Sleep -Milliseconds 500
         }
@@ -268,10 +268,10 @@ function Show-DashboardOnly {
             Write-Host "  Total Inferences: $($Metrics.InferenceCount)" -ForegroundColor White
             Write-Host "  Total Tokens: $($Metrics.TokenCount)" -ForegroundColor White
             
-            $avgLatency = if ($Metrics.InferenceCount -gt 0) { 
+            $avgLatency = $(if ($Metrics.InferenceCount -gt 0) { 
                 [math]::Round($Metrics.LatencyTotal / $Metrics.InferenceCount / 1000.0, 2) 
             } else { 0 }
-            $latencyColor = if($avgLatency -lt 25){"Green"}elseif($avgLatency -lt 50){"Yellow"}else{"Red"}
+            $latencyColor = $(if ($avgLatency -lt 25){"Green"}elseif($avgLatency -lt 50){"Yellow"}else{"Red"}
             Write-Host "  Avg Latency: $avgLatency ms" -ForegroundColor $latencyColor
             
             Write-Host ""
@@ -279,10 +279,10 @@ function Show-DashboardOnly {
             # Cache stats
             Write-Host "Cache Metrics:" -ForegroundColor Yellow
             $cacheTotal = $Metrics.CacheHits + $Metrics.CacheMisses
-            $cacheHitRate = if ($cacheTotal -gt 0) { 
+            $cacheHitRate = $(if ($cacheTotal -gt 0) { 
                 [math]::Round($Metrics.CacheHits / $cacheTotal * 100, 1) 
             } else { 0 }
-            $cacheColor = if($cacheHitRate -gt 90){"Green"}elseif($cacheHitRate -gt 80){"Yellow"}else{"Red"}
+            $cacheColor = $(if ($cacheHitRate -gt 90){"Green"}elseif($cacheHitRate -gt 80){"Yellow"}else{"Red"}
             Write-Host "  Hit Rate: $cacheHitRate%" -ForegroundColor $cacheColor
             Write-Host "  Hits: $($Metrics.CacheHits) | Misses: $($Metrics.CacheMisses)" -ForegroundColor Gray
             
@@ -305,7 +305,7 @@ function Show-DashboardOnly {
             
             # Security
             Write-Host "Security:" -ForegroundColor Yellow
-            $secColor = if($Metrics.SecurityEvents -eq 0){"Green"}else{"Red"}
+            $secColor = $(if ($Metrics.SecurityEvents -eq 0){"Green"}else{"Red"}
             Write-Host "  Events: $($Metrics.SecurityEvents)" -ForegroundColor $secColor
             
             Write-Host ""

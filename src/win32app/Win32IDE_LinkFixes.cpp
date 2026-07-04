@@ -10,6 +10,7 @@
 
 #include "BATCH2_CONTEXT.h"
 #include "Win32IDE.h"
+#include "Win32IDE_HotpatchIntegration.hpp"
 #include "AnnotationTypes.h"
 #include "DiagnosticTranslator.h"
 #include "resource.h"
@@ -176,6 +177,46 @@ extern "C" __declspec(dllexport) void handleToolsSettings() {
     MessageBoxA(nullptr, "Settings dialog", "Tools Operation", MB_OK);
 }
 
+// Phase 5: Hotpatch handlers
+extern "C" __declspec(dllexport) void handleToolsHotpatch() {
+    // Open file dialog to select new model
+    wchar_t filename[MAX_PATH] = {0};
+    OPENFILENAMEW ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFilter = L"GGUF Models (*.gguf)\0*.gguf\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = filename;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    
+    if (GetOpenFileNameW(&ofn)) {
+        char utf8Path[MAX_PATH * 3];
+        WideCharToMultiByte(CP_UTF8, 0, filename, -1, utf8Path, sizeof(utf8Path), nullptr, nullptr);
+        
+        // Request hotpatch via integration layer
+        RawrXD::IDEHotpatchIntegration::Instance().RequestHotpatch(utf8Path);
+        
+        MessageBoxA(nullptr, utf8Path, "Hotpatch Requested", MB_OK);
+    }
+}
+
+extern "C" __declspec(dllexport) void handleToolsHotpatchStatus() {
+    auto status = RawrXD::IDEHotpatchIntegration::Instance().GetStatus();
+    
+    char msg[512];
+    snprintf(msg, sizeof(msg),
+        "Epoch: %llu\n"
+        "Swap Pending: %s\n"
+        "Active Model: %s\n"
+        "Pending Model: %s",
+        status.epoch,
+        status.swapPending ? "Yes" : "No",
+        status.activeModel.empty() ? "(none)" : status.activeModel.c_str(),
+        status.pendingModel.empty() ? "(none)" : status.pendingModel.c_str()
+    );
+    
+    MessageBoxA(nullptr, msg, "Hotpatch Status", MB_OK);
+}
+
 // Help menu handlers
 extern "C" __declspec(dllexport) void handleHelpContents() {
     MessageBoxA(nullptr, "Help contents", "Help Operation", MB_OK);
@@ -261,6 +302,8 @@ extern "C" __declspec(dllexport) LRESULT CALLBACK MainWndProc(HWND hwnd, UINT ms
                 case ID_TOOLS_PLUGINS: handleToolsPlugins(); break;
                 case ID_TOOLS_EXTENSIONS: handleToolsExtensions(); break;
                 case ID_TOOLS_SETTINGS: handleToolsSettings(); break;
+                case ID_TOOLS_HOTPATCH: handleToolsHotpatch(); break;
+                case ID_TOOLS_HOTPATCH_STATUS: handleToolsHotpatchStatus(); break;
 
                 case ID_HELP_CONTENTS: handleHelpContents(); break;
                 case ID_HELP_INDEX: handleHelpIndex(); break;

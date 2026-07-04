@@ -19,11 +19,11 @@ function Invoke-TestFileOperationsHandler {
 function Invoke-TestSettingsPersistenceHandler {
     Write-Host "`n=== Settings Persistence Test ===" -ForegroundColor Cyan
     try {
-        $originalFontSize = $global:settings.EditorFontSize
+        $originalFontSize = ${global:settings}.EditorFontSize
         Invoke-CliSetSetting -SettingName "EditorFontSize" -SettingValue "14"
         Start-Sleep -Milliseconds 100
         Invoke-CliGetSettings -SettingName "EditorFontSize"
-        if ($global:settings.EditorFontSize -eq 14) {
+        if (${global:settings}.EditorFontSize -eq 14) {
             Write-Host "✓ Settings persistence works" -ForegroundColor Green
             Invoke-CliSetSetting -SettingName "EditorFontSize" -SettingValue $originalFontSize
             return 0

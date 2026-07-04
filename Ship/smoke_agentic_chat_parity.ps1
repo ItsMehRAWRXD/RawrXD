@@ -6,7 +6,7 @@
 # Fast source-only (no exes): pwsh -File scripts/Smoke-IDE-TurnKey.ps1
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$requireEngine = ($env:RAWRXD_SMOKE_REQUIRE_ENGINE -eq "1")
+$requireEngine = (${env:RAWRXD_SMOKE_REQUIRE_ENGINE} -eq "1")
 
 function Find-FirstExe {
     param([string[]]$Candidates)
@@ -66,7 +66,7 @@ if ($engine) {
     Write-Host "smoke_agentic_chat_parity: RawrEngine=$engine" -ForegroundColor Cyan
     $copilotOut = & $engine --copilot-smoke 2>&1
     $copilotExit = $LASTEXITCODE
-    $copilotText = if ($copilotOut -is [array]) { $copilotOut -join "`n" } else { [string]$copilotOut }
+    $copilotText = $(if ($copilotOut -is [array]) { $copilotOut -join "`n" } else { [string]$copilotOut }
     # Some Lane B builds print COPILOT_SMOKE_JSON + EXIT=0 then hit a late teardown fault; treat stdout as source of truth.
     $copilotStdoutOk = ($copilotText -match 'COPILOT_SMOKE_JSON:.*"ok"\s*:\s*true') -and ($copilotText -match 'EXIT=0')
     if (-not $copilotStdoutOk -and $copilotExit -ne 0) {

@@ -13,7 +13,7 @@ param(
   [string]$TestLevel = "COMPREHENSIVE",
     
   [Parameter(Mandatory = $false)]
-  [switch]$GenerateReport = $true,
+  [switch]$GenerateReport,
     
   [Parameter(Mandatory = $false)]
   [string]$OutputPath = ".\HEADLESS-AGENTIC-TEST-RESULTS.md",
@@ -23,13 +23,13 @@ param(
 )
 
 # Test configuration and globals
-$script:TestResults = @()
-$script:TestStartTime = Get-Date
-$script:TotalTests = 0
-$script:PassedTests = 0
-$script:FailedTests = 0
-$script:WarningTests = 0
-$script:CustomModelResults = @{}
+${script:TestResults} = @()
+${script:TestStartTime} = Get-Date
+${script:TotalTests} = 0
+${script:PassedTests} = 0
+${script:FailedTests} = 0
+${script:WarningTests} = 0
+${script:CustomModelResults} = @{}
 
 # Colors for output
 $Red = "Red"
@@ -55,7 +55,7 @@ function Write-TestResult {
     [string]$ModelName = ""
   )
     
-  $script:TotalTests++
+  ${script:TotalTests}++
     
   $colorMap = @{
     "PASS" = $Green
@@ -65,19 +65,19 @@ function Write-TestResult {
   }
     
   $icon = switch ($Status) {
-    "PASS" { "✅"; $script:PassedTests++ }
-    "FAIL" { "❌"; $script:FailedTests++ }
-    "WARN" { "⚠️"; $script:WarningTests++ }
+    "PASS" { "✅"; ${script:PassedTests}++ }
+    "FAIL" { "❌"; ${script:FailedTests}++ }
+    "WARN" { "⚠️"; ${script:WarningTests}++ }
     "INFO" { "ℹ️" }
   }
     
-  $modelPrefix = if ($ModelName) { "[$ModelName] " } else { "" }
+  $modelPrefix = $(if ($ModelName) { "[$ModelName] " } else { "" }
   Write-Host "$icon [$Category] $modelPrefix$TestName" -ForegroundColor $colorMap[$Status]
   if ($Details) {
     Write-Host "   └─ $Details" -ForegroundColor Gray
   }
     
-  $script:TestResults += @{
+  ${script:TestResults} += @{
     TestName  = $TestName
     Category  = $Category
     Status    = $Status
@@ -140,7 +140,7 @@ function Test-CustomModelCapabilities {
   }
     
   # If specific models specified, filter to those
-  $modelsToTest = if ($TargetModels.Count -gt 0) {
+  $modelsToTest = $(if ($TargetModels.Count -gt 0) {
     $Models | Where-Object { $_.name -in $TargetModels }
   }
   else {
@@ -164,7 +164,7 @@ function Test-SingleModelCapabilities {
     
   Write-Host "`n🔹 Testing Model: $ModelName" -ForegroundColor Yellow
     
-  $script:CustomModelResults[$ModelName] = @{
+  ${script:CustomModelResults}[$ModelName] = @{
     BasicGeneration   = $false
     CodeAnalysis      = $false
     TextSummarization = $false
@@ -217,7 +217,7 @@ function Test-BasicGeneration {
         
     if ($response.response -match "BASIC_TEST_SUCCESS") {
       Write-TestResult "Basic Generation" "PASS" "Response time: $([math]::Round($responseTime, 0))ms" "MODEL_TEST" $ModelName
-      $script:CustomModelResults[$ModelName].BasicGeneration = $true
+      ${script:CustomModelResults}[$ModelName].BasicGeneration = $true
     }
     elseif ($response.response) {
       Write-TestResult "Basic Generation" "WARN" "Responded but not as expected: '$($response.response.Substring(0, [Math]::Min(50, $response.response.Length)))...'" "MODEL_TEST" $ModelName
@@ -226,12 +226,12 @@ function Test-BasicGeneration {
       Write-TestResult "Basic Generation" "FAIL" "No response received" "MODEL_TEST" $ModelName
     }
         
-    $script:CustomModelResults[$ModelName].ResponseTime = $responseTime
+    ${script:CustomModelResults}[$ModelName].ResponseTime = $responseTime
         
   }
   catch {
     Write-TestResult "Basic Generation" "FAIL" "Generation failed: $($_.Exception.Message)" "MODEL_TEST" $ModelName
-    $script:CustomModelResults[$ModelName].ErrorCount++
+    ${script:CustomModelResults}[$ModelName].ErrorCount++
   }
 }
 
@@ -265,11 +265,11 @@ def calculate_factorial(n):
         
     if ($response.response -match "CODE_ANALYSIS_COMPLETE") {
       Write-TestResult "Code Analysis" "PASS" "Successfully analyzed code" "MODEL_TEST" $ModelName
-      $script:CustomModelResults[$ModelName].CodeAnalysis = $true
+      ${script:CustomModelResults}[$ModelName].CodeAnalysis = $true
     }
     elseif ($response.response -match "(function|recursive|factorial|improvement)" -and $response.response.Length -gt 20) {
       Write-TestResult "Code Analysis" "PASS" "Provided relevant analysis" "MODEL_TEST" $ModelName
-      $script:CustomModelResults[$ModelName].CodeAnalysis = $true
+      ${script:CustomModelResults}[$ModelName].CodeAnalysis = $true
     }
     else {
       Write-TestResult "Code Analysis" "WARN" "Response unclear or incomplete" "MODEL_TEST" $ModelName
@@ -278,7 +278,7 @@ def calculate_factorial(n):
   }
   catch {
     Write-TestResult "Code Analysis" "FAIL" "Analysis failed: $($_.Exception.Message)" "MODEL_TEST" $ModelName
-    $script:CustomModelResults[$ModelName].ErrorCount++
+    ${script:CustomModelResults}[$ModelName].ErrorCount++
   }
 }
 
@@ -306,7 +306,7 @@ Artificial intelligence (AI) is intelligence demonstrated by machines, in contra
         
     if ($response.response -match "SUMMARY:" -and $response.response -match "(AI|artificial intelligence|machine)" -and $response.response.Length -lt 500) {
       Write-TestResult "Text Summarization" "PASS" "Successfully summarized text" "MODEL_TEST" $ModelName
-      $script:CustomModelResults[$ModelName].TextSummarization = $true
+      ${script:CustomModelResults}[$ModelName].TextSummarization = $true
     }
     else {
       Write-TestResult "Text Summarization" "WARN" "Summary unclear or too long" "MODEL_TEST" $ModelName
@@ -315,7 +315,7 @@ Artificial intelligence (AI) is intelligence demonstrated by machines, in contra
   }
   catch {
     Write-TestResult "Text Summarization" "FAIL" "Summarization failed: $($_.Exception.Message)" "MODEL_TEST" $ModelName
-    $script:CustomModelResults[$ModelName].ErrorCount++
+    ${script:CustomModelResults}[$ModelName].ErrorCount++
   }
 }
 
@@ -339,11 +339,11 @@ function Test-QuestionAnswering {
         
     if ($response.response -match "Paris" -and $response.response -match "QUESTION_ANSWERED") {
       Write-TestResult "Question Answering" "PASS" "Correctly answered factual question" "MODEL_TEST" $ModelName
-      $script:CustomModelResults[$ModelName].QuestionAnswering = $true
+      ${script:CustomModelResults}[$ModelName].QuestionAnswering = $true
     }
     elseif ($response.response -match "Paris") {
       Write-TestResult "Question Answering" "PASS" "Correct answer provided" "MODEL_TEST" $ModelName
-      $script:CustomModelResults[$ModelName].QuestionAnswering = $true
+      ${script:CustomModelResults}[$ModelName].QuestionAnswering = $true
     }
     else {
       Write-TestResult "Question Answering" "WARN" "Answer unclear or incorrect" "MODEL_TEST" $ModelName
@@ -352,7 +352,7 @@ function Test-QuestionAnswering {
   }
   catch {
     Write-TestResult "Question Answering" "FAIL" "Q&A failed: $($_.Exception.Message)" "MODEL_TEST" $ModelName
-    $script:CustomModelResults[$ModelName].ErrorCount++
+    ${script:CustomModelResults}[$ModelName].ErrorCount++
   }
 }
 
@@ -451,7 +451,7 @@ function Test-ModelPerformance {
         if ($response.response) {
           $approxTokens = ($response.response.Split(' ').Count)
           $tokensPerSecond = $approxTokens / (($endTime - $startTime).TotalSeconds)
-          $script:CustomModelResults[$ModelName].TokenThroughput = [math]::Round($tokensPerSecond, 1)
+          ${script:CustomModelResults}[$ModelName].TokenThroughput = [math]::Round($tokensPerSecond, 1)
         }
                 
       }
@@ -462,7 +462,7 @@ function Test-ModelPerformance {
         
     if ($responseTimes.Count -gt 0) {
       $avgResponseTime = ($responseTimes | Measure-Object -Average).Average
-      $script:CustomModelResults[$ModelName].ResponseTime = [math]::Round($avgResponseTime, 0)
+      ${script:CustomModelResults}[$ModelName].ResponseTime = [math]::Round($avgResponseTime, 0)
             
       if ($avgResponseTime -lt 2000) {
         Write-TestResult "Response Time" "PASS" "Average: $([math]::Round($avgResponseTime, 0))ms (Fast)" "PERFORMANCE" $ModelName
@@ -474,8 +474,8 @@ function Test-ModelPerformance {
         Write-TestResult "Response Time" "WARN" "Average: $([math]::Round($avgResponseTime, 0))ms (Slow)" "PERFORMANCE" $ModelName
       }
             
-      if ($script:CustomModelResults[$ModelName].TokenThroughput -gt 0) {
-        Write-TestResult "Token Throughput" "INFO" "$($script:CustomModelResults[$ModelName].TokenThroughput) tokens/second" "PERFORMANCE" $ModelName
+      if (${script:CustomModelResults}[$ModelName].TokenThroughput -gt 0) {
+        Write-TestResult "Token Throughput" "INFO" "$(${script:CustomModelResults}[$ModelName].TokenThroughput) tokens/second" "PERFORMANCE" $ModelName
       }
     }
         
@@ -593,7 +593,7 @@ function Generate-HeadlessReport {
   Write-TestHeader "GENERATING COMPREHENSIVE HEADLESS REPORT"
     
   $testEndTime = Get-Date
-  $testDuration = [math]::Round(($testEndTime - $script:TestStartTime).TotalSeconds, 2)
+  $testDuration = [math]::Round(($testEndTime - ${script:TestStartTime}).TotalSeconds, 2)
   
   $reportContent = @"
 # 🤖 Headless Agentic Test Results - Custom Models
@@ -606,20 +606,20 @@ function Generate-HeadlessReport {
 ## 📊 Executive Summary
 
 **Overall Results**:
-- 🎯 **Total Tests**: $script:TotalTests
-- ✅ **Passed**: $script:PassedTests ($([math]::Round(($script:PassedTests / $script:TotalTests) * 100, 1))%)
-- ❌ **Failed**: $script:FailedTests ($([math]::Round(($script:FailedTests / $script:TotalTests) * 100, 1))%)
-- ⚠️ **Warnings**: $script:WarningTests ($([math]::Round(($script:WarningTests / $script:TotalTests) * 100, 1))%)
+- 🎯 **Total Tests**: ${script:TotalTests}
+- ✅ **Passed**: ${script:PassedTests} ($([math]::Round((${script:PassedTests} / ${script:TotalTests}) * 100, 1))%)
+- ❌ **Failed**: ${script:FailedTests} ($([math]::Round((${script:FailedTests} / ${script:TotalTests}) * 100, 1))%)
+- ⚠️ **Warnings**: ${script:WarningTests} ($([math]::Round((${script:WarningTests} / ${script:TotalTests}) * 100, 1))%)
 
-**Success Rate**: $([math]::Round((($script:PassedTests + $script:WarningTests) / $script:TotalTests) * 100, 1))%
+**Success Rate**: $([math]::Round(((${script:PassedTests} + ${script:WarningTests}) / ${script:TotalTests}) * 100, 1))%
 
 ## 🎯 Custom Model Performance Summary
 
 "@
 
   # Add custom model results
-  foreach ($modelName in $script:CustomModelResults.Keys) {
-    $results = $script:CustomModelResults[$modelName]
+  foreach ($modelName in ${script:CustomModelResults}.Keys) {
+    $results = ${script:CustomModelResults}[$modelName]
     $capabilities = @()
     if ($results.BasicGeneration) { $capabilities += "Basic Generation" }
     if ($results.CodeAnalysis) { $capabilities += "Code Analysis" }
@@ -648,7 +648,7 @@ function Generate-HeadlessReport {
 "@
 
   # Group results by category
-  $categories = $script:TestResults | Group-Object Category | Sort-Object Name
+  $categories = ${script:TestResults} | Group-Object Category | Sort-Object Name
     
   foreach ($category in $categories) {
     $reportContent += "`n### 🔸 $($category.Name)`n`n"
@@ -661,7 +661,7 @@ function Generate-HeadlessReport {
         "INFO" { "ℹ️" }
       }
             
-      $modelInfo = if ($test.ModelName) { " [$($test.ModelName)]" } else { "" }
+      $modelInfo = $(if ($test.ModelName) { " [$($test.ModelName)]" } else { "" }
       $statusText = "$($test.Status)"
       $reportContent += "- $icon **$($test.TestName)**${modelInfo}: ${statusText}"
       if ($test.Details) {
@@ -700,7 +700,7 @@ function Generate-HeadlessReport {
 "@
 
   # Rank models by overall performance
-  $rankedModels = $script:CustomModelResults.GetEnumerator() | 
+  $rankedModels = ${script:CustomModelResults}.GetEnumerator() | 
   Sort-Object { 
     $r = $_.Value
     $score = 0
@@ -732,7 +732,7 @@ function Generate-HeadlessReport {
 ---
 
 *Report generated by RawrXD Headless Agentic Test Suite v1.0*
-*Custom models tested: $($script:CustomModelResults.Count)*
+*Custom models tested: $(${script:CustomModelResults}.Count)*
 *Total test duration: $([math]::Round($testDuration/60, 1)) minutes*
 "@
 
@@ -744,9 +744,9 @@ function Generate-HeadlessReport {
     Write-Host "`n🎯 " -NoNewline -ForegroundColor Magenta
     Write-Host "HEADLESS AGENTIC TEST SUMMARY" -ForegroundColor Cyan
     Write-Host "   Custom Models Tested: " -NoNewline -ForegroundColor Gray
-    Write-Host "$($script:CustomModelResults.Count)" -ForegroundColor White
+    Write-Host "$(${script:CustomModelResults}.Count)" -ForegroundColor White
     Write-Host "   Success Rate: " -NoNewline -ForegroundColor Gray
-    Write-Host "$([math]::Round((($script:PassedTests + $script:WarningTests) / $script:TotalTests) * 100, 1))%" -ForegroundColor Green
+    Write-Host "$([math]::Round(((${script:PassedTests} + ${script:WarningTests}) / ${script:TotalTests}) * 100, 1))%" -ForegroundColor Green
     Write-Host "   Report: " -NoNewline -ForegroundColor Gray
     Write-Host "$OutputPath" -ForegroundColor Yellow
         
@@ -786,12 +786,12 @@ function Start-HeadlessAgenticTests {
   Generate-HeadlessReport
     
   $finalEndTime = Get-Date
-  $finalDuration = [math]::Round(($finalEndTime - $script:TestStartTime).TotalSeconds, 2)
+  $finalDuration = [math]::Round(($finalEndTime - ${script:TestStartTime}).TotalSeconds, 2)
     
   Write-Host "`n🏁 " -NoNewline -ForegroundColor Magenta
   Write-Host "HEADLESS AGENTIC TESTING COMPLETE!" -ForegroundColor Green
   Write-Host "Duration: $finalDuration seconds" -ForegroundColor Gray
-  Write-Host "Models Tested: $($script:CustomModelResults.Count)" -ForegroundColor Gray
+  Write-Host "Models Tested: $(${script:CustomModelResults}.Count)" -ForegroundColor Gray
 }
 
 # Execute the headless test suite

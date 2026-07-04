@@ -256,4 +256,8 @@ export class SmartActionsController {
             }
         });
     }
+
+    dispose(): void {
+        // Cleanup any resources
+    }
 }

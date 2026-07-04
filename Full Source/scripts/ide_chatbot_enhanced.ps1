@@ -264,7 +264,7 @@ class EnhancedChatbot {
         # Fallback: External API (OpenAI/Anthropic) when enabled
         if ($answer -eq "" -and $this.UseExternalAPIFallback) {
             try {
-                $provider = if ($env:ANTHROPIC_API_KEY) { "anthropic" } else { "openai" }
+                $provider = $(if (${env:ANTHROPIC_API_KEY}) { "anthropic" } else { "openai" }
                 $extResult = & "$PSScriptRoot\RawrXD_Drive.ps1" -Action api -Prompt $question 2>&1
                 if ($extResult -and $extResult -notmatch "error|required") {
                     $answer = "🌐 **External API ($provider):**`n`n$extResult"

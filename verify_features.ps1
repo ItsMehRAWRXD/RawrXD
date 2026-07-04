@@ -138,7 +138,7 @@ foreach ($sig in $ExpectedSignatures.Keys) {
     
     if ($DetectedSignatures.ContainsKey($sig)) {
         $actual = $DetectedSignatures[$sig]
-        $status = if ($actual -eq $expected) { "VERIFIED" } else { "MISMATCH" }
+        $status = $(if ($actual -eq $expected) { "VERIFIED" } else { "MISMATCH" }
     } else {
         $actual = "NOT_INVOKED"
         $status = "PENDING"
@@ -183,7 +183,7 @@ $Matrix.summary = @{
     verified = $verifiedCount
     pending = $pendingCount
     mismatch = $mismatchCount
-    completionRate = if ($Matrix.features.Count -gt 0) { [math]::Round($verifiedCount / $Matrix.features.Count, 4) } else { 0 }
+    completionRate = $(if ($Matrix.features.Count -gt 0) { [math]::Round($verifiedCount / $Matrix.features.Count, 4) } else { 0 }
 }
 
 # Export to JSON
@@ -200,7 +200,7 @@ Write-Host ""
 Write-Host "Category Summary:" -ForegroundColor White
 foreach ($cat in $Matrix.categories.Keys | Sort-Object) {
     $stats = $Matrix.categories[$cat]
-    $color = if ($stats.pending -eq $stats.total) { "DarkGray" } elseif ($stats.verified -eq $stats.total) { "Green" } else { "Yellow" }
+    $color = $(if ($stats.pending -eq $stats.total) { "DarkGray" } elseif ($stats.verified -eq $stats.total) { "Green" } else { "Yellow" }
     Write-Host "  $cat`: $($stats.verified)/$($stats.total) verified, $($stats.pending) pending" -ForegroundColor $color
 }
 

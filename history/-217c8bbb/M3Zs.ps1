@@ -19,7 +19,7 @@ param(
 )
 
 # Manifest structure
-$global:Manifest = @{
+${global:Manifest} = @{
     Metadata = @{}
     Functions = @{}
     GUIComponents = @{}
@@ -304,7 +304,7 @@ function Analyze-AgenticSystems {
     $agentic.Logging.Implemented = ($functions.Keys | Where-Object { $_ -match 'Log|Write|Register' }).Count -gt 0
     
     # Check for session management
-    $agentic.SessionManagement.Implemented = ($content | Select-String -Pattern '\$script:CurrentSession').Count -gt 0
+    $agentic.SessionManagement.Implemented = ($content | Select-String -Pattern '\${script:CurrentSession}').Count -gt 0
     
     return $agentic
 }
@@ -463,21 +463,21 @@ function Show-SummaryReport {
     Write-Host "`n🖥️  GUI COMPONENTS:" -ForegroundColor Yellow
     foreach ($component in $manifest.GUIComponents.Keys) {
         $status = $manifest.GUIComponents[$component].Implemented
-        $color = if ($status) { "Green" } else { "Red" }
+        $color = $(if ($status) { "Green" } else { "Red" }
         Write-Host "   $component`: $(if($status){'✓ Implemented'}else{'✗ Missing'})" -ForegroundColor $color
     }
     
     Write-Host "`n🤖 AGENTIC SYSTEMS:" -ForegroundColor Yellow
     foreach ($system in $manifest.AgenticSystems.Keys) {
         $status = $manifest.AgenticSystems[$system].Implemented
-        $color = if ($status) { "Green" } else { "Red" }
+        $color = $(if ($status) { "Green" } else { "Red" }
         Write-Host "   $system`: $(if($status){'✓ Implemented'}else{'✗ Missing'})" -ForegroundColor $color
     }
     
     Write-Host "`n🔗 INTEGRATIONS:" -ForegroundColor Yellow
     foreach ($integration in $manifest.Integrations.Keys) {
         $status = $manifest.Integrations[$integration].Implemented
-        $color = if ($status) { "Green" } else { "Red" }
+        $color = $(if ($status) { "Green" } else { "Red" }
         Write-Host "   $integration`: $(if($status){'✓ Implemented'}else{'✗ Missing'})" -ForegroundColor $color
     }
     

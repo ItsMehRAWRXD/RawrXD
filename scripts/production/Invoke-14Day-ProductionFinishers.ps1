@@ -111,7 +111,7 @@ function Save-Result {
     $md += ""
     $md += "## Checks"
     foreach ($c in $Result.checks) {
-        $icon = if ($c.passed) { "PASS" } else { "FAIL" }
+        $icon = $(if ($c.passed) { "PASS" } else { "FAIL" }
         $md += "- [$icon] $($c.name): $($c.detail)"
     }
     $md += ""
@@ -169,9 +169,9 @@ function Invoke-CmdSafe {
         $proc.WaitForExit()
     }
     $endedAt = Get-Date
-    $stdout = if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
-    $stderr = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
-    $code = if ($timedOut) { 124 } else { $proc.ExitCode }
+    $stdout = $(if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
+    $stderr = $(if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
+    $code = $(if ($timedOut) { 124 } else { $proc.ExitCode }
     $output = @($stdout, $stderr) | Where-Object { $_ -and $_.Trim().Length -gt 0 }
     $durationSeconds = [Math]::Round(($endedAt - $startedAt).TotalSeconds, 2)
     return [pscustomobject]@{ code = $code; output = ($output -join "`n"); durationSeconds = $durationSeconds; timedOut = $timedOut; timeoutSeconds = $CommandTimeoutSeconds }
@@ -289,9 +289,9 @@ function Invoke-PwshScriptSafe {
     else {
         $proc.WaitForExit()
     }
-    $stdout = if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
-    $stderr = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
-    $code = if ($timedOut) { 124 } else { $proc.ExitCode }
+    $stdout = $(if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
+    $stderr = $(if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
+    $code = $(if ($timedOut) { 124 } else { $proc.ExitCode }
     $output = @($stdout, $stderr) | Where-Object { $_ -and $_.Trim().Length -gt 0 }
     return [pscustomobject]@{
         code = $code
@@ -466,7 +466,7 @@ function Invoke-Day {
                         $effectiveTargets = @("RawrEngine")
                     }
 
-                    $targetNote = if ($effectiveTargets.Count -gt 0) {
+                    $targetNote = $(if ($effectiveTargets.Count -gt 0) {
                         "targets=$($effectiveTargets -join ',')"
                     } else {
                         "targets=full-graph"
@@ -931,8 +931,8 @@ function Invoke-Day {
                     $r.metrics.qualityGatePassDays = [int]$qualityPayload.dayCounts.pass
                     $r.metrics.qualityGateRiskDays = [int]$qualityPayload.dayCounts.proceedWithRisk
                     $r.metrics.qualityGateBlockedDays = [int]$qualityPayload.dayCounts.blocked
-                    $r.metrics.qualityGateBlockedDayList = if ($qualityPayload.blockedDays) { ($qualityPayload.blockedDays -join ",") } else { "" }
-                    $r.metrics.qualityGateRiskDayList = if ($qualityPayload.riskDays) { ($qualityPayload.riskDays -join ",") } else { "" }
+                    $r.metrics.qualityGateBlockedDayList = $(if ($qualityPayload.blockedDays) { ($qualityPayload.blockedDays -join ",") } else { "" }
+                    $r.metrics.qualityGateRiskDayList = $(if ($qualityPayload.riskDays) { ($qualityPayload.riskDays -join ",") } else { "" }
                     if ($qualityPayload.PSObject.Properties.Name -contains "phaseTransitions") {
                         $phaseTransitionPasses = 0
                         $phaseTransitionNoGos = 0

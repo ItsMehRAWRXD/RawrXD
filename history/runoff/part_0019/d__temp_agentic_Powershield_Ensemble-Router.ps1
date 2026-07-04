@@ -170,7 +170,7 @@ function Get-QueryComplexity {
   }
 
   # Determine tier
-  $tier = if ($score -ge 50) { 'Large' }
+  $tier = $(if ($score -ge 50) { 'Large' }
           elseif ($score -ge 20) { 'Medium' }
           else { 'Small' }
 
@@ -224,7 +224,7 @@ function Invoke-ModelQuery {
   try {
     $resp = Invoke-RestMethod -Uri "http://$OllamaServer/api/generate" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 300
     $elapsed = (Get-Date) - $startTime
-    $tokPerSec = if ($resp.eval_count -and $resp.eval_duration) {
+    $tokPerSec = $(if ($resp.eval_count -and $resp.eval_duration) {
       [math]::Round($resp.eval_count / ($resp.eval_duration / 1e9), 1)
     } else { '?' }
 
@@ -331,7 +331,7 @@ function Invoke-InteractiveChat {
   $currentForceTier = 'Auto'
 
   while ($true) {
-    $tierLabel = if ($currentForceTier -ne 'Auto') { "[$currentForceTier]" } else { "[Auto]" }
+    $tierLabel = $(if ($currentForceTier -ne 'Auto') { "[$currentForceTier]" } else { "[Auto]" }
     Write-Host "  $tierLabel " -NoNewline -ForegroundColor (if ($currentForceTier -ne 'Auto') { Get-TierColor $currentForceTier } else { 'Cyan' })
     $input = Read-Host "You"
 

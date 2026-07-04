@@ -59,7 +59,7 @@ Write-Host "PHASE 1: Environment Initialization" -ForegroundColor Yellow
 Write-Host "═" * 70 -ForegroundColor Gray
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$moduleDir = if (Test-Path "$scriptDir\auto_generated_methods") { "$scriptDir\auto_generated_methods" } else { $scriptDir }
+$moduleDir = $(if (Test-Path "$scriptDir\auto_generated_methods") { "$scriptDir\auto_generated_methods" } else { $scriptDir }
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $logDir = Join-Path $scriptDir "logs"
 $logFile = Join-Path $logDir "RawrXD-Production-$timestamp.log"
@@ -176,8 +176,8 @@ $systemChecks = @{
 
 $allChecksPass = $true
 foreach ($check in $systemChecks.GetEnumerator()) {
-    $status = if ($check.Value) { "✓ PASS" } else { "✗ FAIL"; $allCheckPass = $false }
-    $color = if ($check.Value) { "Green" } else { "Red" }
+    $status = $(if ($check.Value) { "✓ PASS" } else { "✗ FAIL"; $allCheckPass = $false }
+    $color = $(if ($check.Value) { "Green" } else { "Red" }
     Write-Host "  $status : $($check.Key)" -ForegroundColor $color
     Write-Log "$($check.Key): $status"
 }

@@ -91,7 +91,7 @@ function Get-ObfuscatedFiles {
             try {
                 $content = Get-Content $file.FullName -Raw -ErrorAction SilentlyContinue
                 $lines = $content -split "`n"
-                $avgLineLength = if ($lines.Count -gt 0) { ($lines | ForEach-Object { $_.Length } | Measure-Object -Average).Average } else { 0 }
+                $avgLineLength = $(if ($lines.Count -gt 0) { ($lines | ForEach-Object { $_.Length } | Measure-Object -Average).Average } else { 0 }
                 
                 # Detect obfuscation patterns
                 $isObfuscated = $false
@@ -129,7 +129,7 @@ function Get-ObfuscatedFiles {
                         Lines = $lines.Count
                         AvgLineLength = $avgLineLength
                         Type = $obfuscationType
-                        Confidence = if ($obfuscationType -eq "Minified") { "High" } else { "Medium" }
+                        Confidence = $(if ($obfuscationType -eq "Minified") { "High" } else { "Medium" }
                     }
                 }
                 
@@ -368,7 +368,7 @@ function Reconstruct-SourceStructure {
                     $reconstruction.SourceMapFiles++
                     
                     # Determine original path
-                    $originalPath = if ($sourceMapInfo.OriginalPath) { $sourceMapInfo.OriginalPath } else { $relativePath }
+                    $originalPath = $(if ($sourceMapInfo.OriginalPath) { $sourceMapInfo.OriginalPath } else { $relativePath }
                     
                     # Validate the path - ensure it's not JavaScript code
                     if ($originalPath -match '[;{}()]' -or $originalPath.Length -gt 200 -or $originalPath -match 'function\s*\(' -or $originalPath -match 'const\s+\w+\s*=') {

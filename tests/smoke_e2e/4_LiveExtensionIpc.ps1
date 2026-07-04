@@ -55,7 +55,7 @@ if (-not (Test-Path $BinaryPath)) {
     exit 1
 }
 
-$smokeVerbose = $Verbose -or ($env:RAWRXD_SMOKE_VERBOSE -eq '1')
+$smokeVerbose = $Verbose -or (${env:RAWRXD_SMOKE_VERBOSE} -eq '1')
 $companions = Resolve-SmokeCompanionBinaries -BinaryPath $BinaryPath -RepoRoot $RepoRoot
 if (-not $HostPath) { $HostPath = $companions.HostPath }
 if (-not $PingPath) { $PingPath = $companions.PingPath }
@@ -68,7 +68,7 @@ if ($smokeVerbose) {
 }
 $ideLogCandidates = @(
     (Join-Path $binDir "RawrXD_IDE.log"),
-    (Join-Path $env:APPDATA "RawrXD\ide.log")
+    (Join-Path ${env:APPDATA} "RawrXD\ide.log")
 )
 
 function Get-IdeLogTail {
@@ -133,7 +133,7 @@ $clientExit = 0
 $clientName = ""
 
 if (Test-Path $HostPath) {
-    $hostArgs = if ($FullSmoke -or $env:RAWRXD_SMOKE_IPC_FULL -eq "1") {
+    $hostArgs = $(if ($FullSmoke -or ${env:RAWRXD_SMOKE_IPC_FULL} -eq "1") {
         "--connect-smoke", "--full-smoke"
     } else {
         "--connect-smoke"
@@ -190,7 +190,7 @@ Start-Sleep -Milliseconds $IngestWaitMs
 
 $needLegacy = $true
 $needSegment = $false
-if ($FullSmoke -or $env:RAWRXD_SMOKE_IPC_FULL -eq "1") {
+if ($FullSmoke -or ${env:RAWRXD_SMOKE_IPC_FULL} -eq "1") {
     $needLegacy = $true
     $needSegment = $true
 }

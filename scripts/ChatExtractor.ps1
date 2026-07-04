@@ -11,31 +11,31 @@ New-Item $OutDir -ItemType Directory -Force | Out-Null
 
 $Paths = @{
     Cursor = @{
-        State = "$env:APPDATA\Cursor\User\globalStorage"
-        WorkspaceState = "$env:APPDATA\Cursor\User\workspaceStorage"
-        History = "$env:APPDATA\Cursor\User\History"
-        Extensions = "$env:USERPROFILE\.cursor\extensions"
-        Cache = "$env:APPDATA\Cursor\Cache"
-        CachedData = "$env:APPDATA\Cursor\CachedData"
-        GPUCache = "$env:APPDATA\Cursor\GPUCache"
-        CodeCache = "$env:APPDATA\Cursor\Code Cache"
-        LocalStorage = "$env:APPDATA\Cursor\Local Storage"
-        SessionStorage = "$env:APPDATA\Cursor\Session Storage"
-        IndexedDB = "$env:APPDATA\Cursor\IndexedDB"
-        blob_storage = "$env:APPDATA\Cursor\blob_storage"
-        ServiceWorker = "$env:APPDATA\Cursor\Service Worker"
-        Logs = "$env:APPDATA\Cursor\logs"
+        State = "${env:APPDATA}\Cursor\User\globalStorage"
+        WorkspaceState = "${env:APPDATA}\Cursor\User\workspaceStorage"
+        History = "${env:APPDATA}\Cursor\User\History"
+        Extensions = "${env:USERPROFILE}\.cursor\extensions"
+        Cache = "${env:APPDATA}\Cursor\Cache"
+        CachedData = "${env:APPDATA}\Cursor\CachedData"
+        GPUCache = "${env:APPDATA}\Cursor\GPUCache"
+        CodeCache = "${env:APPDATA}\Cursor\Code Cache"
+        LocalStorage = "${env:APPDATA}\Cursor\Local Storage"
+        SessionStorage = "${env:APPDATA}\Cursor\Session Storage"
+        IndexedDB = "${env:APPDATA}\Cursor\IndexedDB"
+        blob_storage = "${env:APPDATA}\Cursor\blob_storage"
+        ServiceWorker = "${env:APPDATA}\Cursor\Service Worker"
+        Logs = "${env:APPDATA}\Cursor\logs"
     }
     VSCode = @{
-        State = "$env:APPDATA\Code\User\globalStorage"
-        WorkspaceState = "$env:APPDATA\Code\User\workspaceStorage"
-        History = "$env:APPDATA\Code\User\History"
-        Extensions = "$env:USERPROFILE\.vscode\extensions"
+        State = "${env:APPDATA}\Code\User\globalStorage"
+        WorkspaceState = "${env:APPDATA}\Code\User\workspaceStorage"
+        History = "${env:APPDATA}\Code\User\History"
+        Extensions = "${env:USERPROFILE}\.vscode\extensions"
     }
     GitHub = @{
-        Copilot = "$env:USERPROFILE\.copilot"
-        CopilotChat = "$env:APPDATA\GitHub Copilot"
-        GlobalStorage = "$env:APPDATA\Code\User\globalStorage\github.copilot*"
+        Copilot = "${env:USERPROFILE}\.copilot"
+        CopilotChat = "${env:APPDATA}\GitHub Copilot"
+        GlobalStorage = "${env:APPDATA}\Code\User\globalStorage\github.copilot*"
     }
 }
 
@@ -118,11 +118,11 @@ if ($Targets -contains "cursor") {
             Get-ChildItem $p -Filter "*.db" -Recurse -EA 0 | ForEach-Object { Extract-SQLite $_.FullName "$cOut\$k`_$($_.BaseName)" }
         }
     }
-    $gs = "$env:APPDATA\Cursor\User\globalStorage"
+    $gs = "${env:APPDATA}\Cursor\User\globalStorage"
     Extract-Storage $gs "$cOut\globalStorage"
-    $wsRoot = "$env:APPDATA\Cursor\User\workspaceStorage"
+    $wsRoot = "${env:APPDATA}\Cursor\User\workspaceStorage"
     Extract-Storage $wsRoot "$cOut\workspaceStorage"
-    Get-ChildItem "$env:APPDATA\Cursor" -Filter "*.json" -Recurse -EA 0 | ForEach-Object {
+    Get-ChildItem "${env:APPDATA}\Cursor" -Filter "*.json" -Recurse -EA 0 | ForEach-Object {
         (Get-Content $_.FullName -Raw) | Out-File "$cOut\json_$($_.Name)" -Force
     }
 }
@@ -131,9 +131,9 @@ if ($Targets -contains "cursor") {
 if ($Targets -contains "github" -or $Targets -contains "vscode") {
     $gOut = "$OutDir\github_copilot"
     New-Item $gOut -ItemType Directory -Force | Out-Null
-    Dump-All "$env:USERPROFILE\.copilot" $gOut
-    Dump-All "$env:APPDATA\GitHub Copilot" $gOut 2>$null
-    Get-ChildItem "$env:APPDATA\Code\User\globalStorage" -Filter "*copilot*" -Directory -EA 0 | ForEach-Object {
+    Dump-All "${env:USERPROFILE}\.copilot" $gOut
+    Dump-All "${env:APPDATA}\GitHub Copilot" $gOut 2>$null
+    Get-ChildItem "${env:APPDATA}\Code\User\globalStorage" -Filter "*copilot*" -Directory -EA 0 | ForEach-Object {
         Dump-All $_.FullName "$gOut\copilot_$($_.Name)"
         Extract-Storage $_.FullName "$gOut\copilot_$($_.Name)"
     }
@@ -142,7 +142,7 @@ if ($Targets -contains "github" -or $Targets -contains "vscode") {
 # Extension API surface (package.json manifests)
 $extOut = "$OutDir\extensions_api"
 New-Item $extOut -ItemType Directory -Force | Out-Null
-@("$env:USERPROFILE\.cursor\extensions", "$env:USERPROFILE\.vscode\extensions") | ForEach-Object {
+@("${env:USERPROFILE}\.cursor\extensions", "${env:USERPROFILE}\.vscode\extensions") | ForEach-Object {
     if (Test-Path $_) {
         Get-ChildItem $_ -Filter "package.json" -Recurse -Depth 2 -EA 0 | ForEach-Object {
             $p = Get-Content $_.FullName -Raw | ConvertFrom-Json -EA 0
@@ -156,13 +156,13 @@ New-Item $extOut -ItemType Directory -Force | Out-Null
 
 # Reverse install order (by mtime)
 $installOrder = @()
-Get-ChildItem "$env:USERPROFILE\.cursor\extensions" -Directory -EA 0 | ForEach-Object {
+Get-ChildItem "${env:USERPROFILE}\.cursor\extensions" -Directory -EA 0 | ForEach-Object {
     $installOrder += [PSCustomObject]@{ Name = $_.Name; Installed = $_.LastWriteTime }
 }
 $installOrder | Sort-Object Installed -Descending | Export-Csv "$OutDir\extension_install_order.csv" -NoTypeInformation -Force
 
 # IndexedDB / LevelDB (chat blobs)
-$idb = "$env:APPDATA\Cursor\IndexedDB"
+$idb = "${env:APPDATA}\Cursor\IndexedDB"
 if (Test-Path $idb) {
     Get-ChildItem $idb -Recurse -File -EA 0 | ForEach-Object {
         $hex = [BitConverter]::ToString([IO.File]::ReadAllBytes($_.FullName)).Replace("-","")
@@ -171,7 +171,7 @@ if (Test-Path $idb) {
 }
 
 # Local Storage (chat-related)
-$ls = "$env:APPDATA\Cursor\Local Storage\leveldb"
+$ls = "${env:APPDATA}\Cursor\Local Storage\leveldb"
 if (Test-Path $ls) {
     Get-ChildItem $ls -Filter "*.log" -EA 0 | ForEach-Object {
         Get-Content $_.FullName -Raw -Encoding Byte | ForEach-Object { [System.Text.Encoding]::UTF8.GetString($_) } | Out-File "$OutDir\localstorage_$($_.Name).txt" -Force

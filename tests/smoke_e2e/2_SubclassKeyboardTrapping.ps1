@@ -54,9 +54,7 @@ Log ""
 # 3. Verify subclass proc is installed (GetWindowSubclass)
 # 4. Send simulated Tab key to verify interception
 # 5. Monitor for GDI resource leaks before/after overlay operations
-# =============================================================================
-
-if (-not ("Win32Api" -as [type])) {
+# ============================================================================= $(if (-not ("Win32Api" -as [type])) {
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -263,7 +261,7 @@ for ($iter = 1; $iter -le $IterationCount; $iter++) {
 
     if (($iter % 50) -eq 0) {
         $procPump = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
-        $mainPump = if ($procPump) { $procPump.MainWindowHandle } else { [IntPtr]::Zero }
+        $mainPump = $(if ($procPump) { $procPump.MainWindowHandle } else { [IntPtr]::Zero }
         foreach ($hwndPump in @($chatInputHwnd, $mainPump)) {
             if ($hwndPump -ne [IntPtr]::Zero -and [Win32Api]::IsWindow($hwndPump)) {
                 for ($p = 0; $p -lt 16; $p++) {
@@ -281,7 +279,7 @@ for ($iter = 1; $iter -le $IterationCount; $iter++) {
 
 # Flush pending paint/teardown messages before the final GDI snapshot (reduces async teardown noise).
 $procNowFlush = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
-$mainWndFlush = if ($procNowFlush) { $procNowFlush.MainWindowHandle } else { [IntPtr]::Zero }
+$mainWndFlush = $(if ($procNowFlush) { $procNowFlush.MainWindowHandle } else { [IntPtr]::Zero }
 foreach ($hwndFlush in @($chatInputHwnd, $mainWndFlush)) {
     if ($hwndFlush -ne [IntPtr]::Zero -and [Win32Api]::IsWindow($hwndFlush)) {
         for ($flush = 0; $flush -lt 32; $flush++) {
@@ -323,8 +321,8 @@ if ($pairFailures -gt 0) {
 
 # Default scales with iteration budget; coordinator may override via RAWRXD_SMOKE_GDI_TOLERANCE.
 $gdiTolerance = [Math]::Max(14, [int][Math]::Ceiling($IterationCount / 40.0))
-if ($env:RAWRXD_SMOKE_GDI_TOLERANCE -match '^\d+$') {
-    $gdiTolerance = [int]$env:RAWRXD_SMOKE_GDI_TOLERANCE
+if (${env:RAWRXD_SMOKE_GDI_TOLERANCE} -match '^\d+$') {
+    $gdiTolerance = [int]${env:RAWRXD_SMOKE_GDI_TOLERANCE}
 }
 
 $procStillAlive = $null -ne (Get-Process -Id $process.Id -ErrorAction SilentlyContinue)
@@ -335,8 +333,8 @@ if (-not $procStillAlive -or -not $hwndStillValid) {
     Log "✓ GDI delta check skipped (async window-manager cleanup)" "SUCCESS"
 } else {
     $userTolerance = 16
-    if ($env:RAWRXD_SMOKE_USER_TOLERANCE -match '^\d+$') {
-        $userTolerance = [int]$env:RAWRXD_SMOKE_USER_TOLERANCE
+    if (${env:RAWRXD_SMOKE_USER_TOLERANCE} -match '^\d+$') {
+        $userTolerance = [int]${env:RAWRXD_SMOKE_USER_TOLERANCE}
     }
     if ($userDelta -gt $userTolerance) {
         Log "✗ USER object leak detected (accumulation +$userDelta handles, tolerance=$userTolerance)" "ERROR"

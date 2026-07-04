@@ -22,10 +22,10 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$script:TotalTests = 0
-$script:PassedTests = 0
-$script:FailedTests = 0
-$script:SkippedTests = 0
+${script:TotalTests} = 0
+${script:PassedTests} = 0
+${script:FailedTests} = 0
+${script:SkippedTests} = 0
 
 $ProjectRoot = $PSScriptRoot
 
@@ -40,13 +40,13 @@ function Test-Assert {
         [string]$Detail = ""
     )
 
-    $script:TotalTests++
+    ${script:TotalTests}++
 
     if ($Condition) {
-        $script:PassedTests++
+        ${script:PassedTests}++
         Write-Host "  [PASS] $Name" -ForegroundColor Green
     } else {
-        $script:FailedTests++
+        ${script:FailedTests}++
         Write-Host "  [FAIL] $Name" -ForegroundColor Red
         if ($Detail) { Write-Host "         $Detail" -ForegroundColor DarkRed }
     }
@@ -54,8 +54,8 @@ function Test-Assert {
 
 function Test-Skip {
     param([string]$Name, [string]$Reason = "")
-    $script:TotalTests++
-    $script:SkippedTests++
+    ${script:TotalTests}++
+    ${script:SkippedTests}++
     Write-Host "  [SKIP] $Name$(if($Reason){' — ' + $Reason})" -ForegroundColor Yellow
 }
 
@@ -171,8 +171,8 @@ function Test-UnitTests {
     $testExe = Get-TestExe
     if ($testExe) {
         try {
-            $proc = Start-Process -FilePath $testExe -ArgumentList "--quick" -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\rawrxd_test.txt" -RedirectStandardError "$env:TEMP\rawrxd_test_err.txt"
-            $output = Get-Content "$env:TEMP\rawrxd_test.txt" -ErrorAction SilentlyContinue | Out-String
+            $proc = Start-Process -FilePath $testExe -ArgumentList "--quick" -Wait -PassThru -NoNewWindow -RedirectStandardOutput "${env:TEMP}\rawrxd_test.txt" -RedirectStandardError "${env:TEMP}\rawrxd_test_err.txt"
+            $output = Get-Content "${env:TEMP}\rawrxd_test.txt" -ErrorAction SilentlyContinue | Out-String
             Test-Assert "Self-test gate passed" ($proc.ExitCode -eq 0) "Exit code: $($proc.ExitCode)"
             if ($Verbose -and $output) { Write-Host $output -ForegroundColor Gray }
         } catch {
@@ -187,7 +187,7 @@ function Test-UnitTests {
     $testExes = Get-ChildItem $testDir -Filter "test_*.exe" -Recurse -ErrorAction SilentlyContinue
     foreach ($te in $testExes) {
         try {
-            $proc = Start-Process -FilePath $te.FullName -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\rawrxd_ut.txt" 2>$null
+            $proc = Start-Process -FilePath $te.FullName -Wait -PassThru -NoNewWindow -RedirectStandardOutput "${env:TEMP}\rawrxd_ut.txt" 2>$null
             $timeout = (Get-Date).AddSeconds($Timeout)
             if (-not $proc.HasExited -and (Get-Date) -gt $timeout) {
                 $proc.Kill()
@@ -221,7 +221,7 @@ function Test-IntegrationTests {
 
     # 1. Headless launch test (--help should return immediately)
     try {
-        $proc = Start-Process -FilePath $exe -ArgumentList "--help" -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\rawrxd_help.txt" -RedirectStandardError "$env:TEMP\rawrxd_help_err.txt"
+        $proc = Start-Process -FilePath $exe -ArgumentList "--help" -Wait -PassThru -NoNewWindow -RedirectStandardOutput "${env:TEMP}\rawrxd_help.txt" -RedirectStandardError "${env:TEMP}\rawrxd_help_err.txt"
         # Exit code 0 or 1 are acceptable (some apps return 1 for help)
         Test-Assert "Headless --help exits cleanly" ($proc.ExitCode -in 0, 1) "Exit code: $($proc.ExitCode)"
     } catch {
@@ -230,8 +230,8 @@ function Test-IntegrationTests {
 
     # 2. Version flag
     try {
-        $proc = Start-Process -FilePath $exe -ArgumentList "--version" -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\rawrxd_ver.txt" 2>$null
-        $verOutput = Get-Content "$env:TEMP\rawrxd_ver.txt" -ErrorAction SilentlyContinue | Out-String
+        $proc = Start-Process -FilePath $exe -ArgumentList "--version" -Wait -PassThru -NoNewWindow -RedirectStandardOutput "${env:TEMP}\rawrxd_ver.txt" 2>$null
+        $verOutput = Get-Content "${env:TEMP}\rawrxd_ver.txt" -ErrorAction SilentlyContinue | Out-String
         Test-Assert "Version flag works" ($proc.ExitCode -in 0, 1) "Exit: $($proc.ExitCode), Output: $verOutput"
     } catch {
         Test-Skip "Version flag" "Process failed to start"
@@ -410,11 +410,11 @@ $elapsed = (Get-Date) - $startTime
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Results: $($script:PassedTests)/$($script:TotalTests) passed" -ForegroundColor $(if ($script:FailedTests -gt 0) { "Yellow" } else { "Green" })
-Write-Host "  Passed:  $($script:PassedTests)" -ForegroundColor Green
-Write-Host "  Failed:  $($script:FailedTests)" -ForegroundColor $(if ($script:FailedTests -gt 0) { "Red" } else { "Green" })
-Write-Host "  Skipped: $($script:SkippedTests)" -ForegroundColor Yellow
+Write-Host "  Results: $(${script:PassedTests})/$(${script:TotalTests}) passed" -ForegroundColor $(if (${script:FailedTests} -gt 0) { "Yellow" } else { "Green" })
+Write-Host "  Passed:  $(${script:PassedTests})" -ForegroundColor Green
+Write-Host "  Failed:  $(${script:FailedTests})" -ForegroundColor $(if (${script:FailedTests} -gt 0) { "Red" } else { "Green" })
+Write-Host "  Skipped: $(${script:SkippedTests})" -ForegroundColor Yellow
 Write-Host "  Time:    $([math]::Round($elapsed.TotalSeconds, 2))s" -ForegroundColor Gray
 Write-Host "========================================" -ForegroundColor Cyan
 
-if ($script:FailedTests -gt 0) { exit 1 }
+if (${script:FailedTests} -gt 0) { exit 1 }

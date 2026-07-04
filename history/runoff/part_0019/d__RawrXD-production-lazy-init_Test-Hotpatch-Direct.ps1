@@ -8,7 +8,7 @@ Write-Host "DLL full path: $dllPath"
 Write-Host "DLL exists: $(Test-Path $dllPath)"
 
 # Add build directory to PATH so DLL can be found
-$env:PATH = "$(Get-Location)\build;$env:PATH"
+${env:PATH} = "$(Get-Location)\build;${env:PATH}"
 Write-Host "Updated PATH to include build directory"
 Write-Host ""
 

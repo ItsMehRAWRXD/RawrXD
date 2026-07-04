@@ -6,8 +6,8 @@
 # appropriate built-in tools without requiring manual /execute_tool commands.
 
 # Track auto-tool execution for this session
-if (-not $script:autoToolStats) {
-    $script:autoToolStats = @{
+if (-not ${script:autoToolStats}) {
+    ${script:autoToolStats} = @{
         TotalInvocations = 0
         SuccessfulTools = 0
         FailedTools = 0
@@ -34,7 +34,7 @@ function Get-IntentBasedToolCalls {
         [string]$UserMessage,
         
         [Parameter(Mandatory = $false)]
-        [string]$CurrentWorkingDir = $global:currentWorkingDir
+        [string]$CurrentWorkingDir = ${global:currentWorkingDir}
     )
     
     if (-not $CurrentWorkingDir) {
@@ -46,15 +46,14 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # FILE CREATION PATTERNS
-    # ============================================
-    if ($msgLower -match 'create\s+(a\s+)?(new\s+)?file\s+(?:called\s+|named\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)' -or
+    # ============================================ $(if ($msgLower -match 'create\s+(a\s+)?(new\s+)?file\s+(?:called\s+|named\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)' -or
         $msgLower -match 'make\s+(a\s+)?(?:new\s+)?file\s+(?:called\s+|named\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)') {
         
         $fileName = $Matches[3] -replace '[''"]', ''
         $fileName = $fileName.Trim()
         
         # Resolve path
-        $fullPath = if ([System.IO.Path]::IsPathRooted($fileName)) {
+        $fullPath = $(if ([System.IO.Path]::IsPathRooted($fileName)) {
             $fileName
         } else {
             Join-Path $CurrentWorkingDir $fileName
@@ -79,16 +78,15 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # DIRECTORY CREATION PATTERNS
-    # ============================================
-    if ($msgLower -match 'create\s+(a\s+)?(new\s+)?(directory|folder|dir)\s+(?:called\s+|named\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)' -or
+    # ============================================ $(if ($msgLower -match 'create\s+(a\s+)?(new\s+)?(directory|folder|dir)\s+(?:called\s+|named\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)' -or
         $msgLower -match 'make\s+(a\s+)?(?:new\s+)?(directory|folder|dir)\s+(?:called\s+|named\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)' -or
         $msgLower -match 'mkdir\s+[''"]?([^''"]+?)[''"]?(?:\s|$)') {
         
-        $dirName = if ($Matches[4]) { $Matches[4] } else { $Matches[1] }
+        $dirName = $(if ($Matches[4]) { $Matches[4] } else { $Matches[1] }
         $dirName = $dirName -replace '[''"]', '' | Select-Object -First 1
         $dirName = $dirName.Trim()
         
-        $fullPath = if ([System.IO.Path]::IsPathRooted($dirName)) {
+        $fullPath = $(if ([System.IO.Path]::IsPathRooted($dirName)) {
             $dirName
         } else {
             Join-Path $CurrentWorkingDir $dirName
@@ -105,8 +103,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # FILE READING PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:read|show|display|open|view)\s+(?:the\s+)?(?:file|code|content)?\s*[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
+    # ============================================ $(if ($msgLower -match '(?:read|show|display|open|view)\s+(?:the\s+)?(?:file|code|content)?\s*[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
         $msgLower -match 'what(?:''s|\s+is)\s+in\s+(?:the\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?') {
         
         $filePath = $Matches[1] -replace '[''"]', ''
@@ -143,12 +140,11 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # DIRECTORY LISTING PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:list|show|display)\s+(?:the\s+)?(?:files?|contents?|directory)\s+(?:in\s+|of\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]*)?[''"]?' -or
+    # ============================================ $(if ($msgLower -match '(?:list|show|display)\s+(?:the\s+)?(?:files?|contents?|directory)\s+(?:in\s+|of\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]*)?[''"]?' -or
         $msgLower -match '(?:ls|dir)\s+[''"]?([a-z]:\\[^''"]+|[./][^''"]*)?[''"]?' -or
         $msgLower -match 'what(?:''s|\s+is)\s+in\s+(?:the\s+)?(?:directory|folder)\s+[''"]?([a-z]:\\[^''"]+|[./][^''"]*)?[''"]?') {
         
-        $dirPath = if ($Matches[1]) { $Matches[1] -replace '[''"]', '' } else { $CurrentWorkingDir }
+        $dirPath = $(if ($Matches[1]) { $Matches[1] -replace '[''"]', '' } else { $CurrentWorkingDir }
         $dirPath = $dirPath.Trim()
         
         if (-not [System.IO.Path]::IsPathRooted($dirPath)) {
@@ -166,8 +162,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # FILE EDITING PATTERNS
-    # ============================================
-    if ($msgLower -match 'edit\s+(?:the\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
+    # ============================================ $(if ($msgLower -match 'edit\s+(?:the\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
         $msgLower -match 'modify\s+(?:the\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
         $msgLower -match 'change\s+(?:in\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?') {
         
@@ -206,8 +201,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # TERMINAL/COMMAND EXECUTION PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:run|execute)\s+(?:the\s+)?(?:command|script)?\s*[''"](.+?)[''"]' -or
+    # ============================================ $(if ($msgLower -match '(?:run|execute)\s+(?:the\s+)?(?:command|script)?\s*[''"](.+?)[''"]' -or
         $msgLower -match '/exec\s+(.+)$' -or
         $msgLower -match '/term\s+(.+)$') {
         
@@ -225,12 +219,11 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # SEARCH PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:search|find|grep)\s+(?:for\s+)?[''"](.+?)[''"](?:\s+in\s+(.+))?' -or
+    # ============================================ $(if ($msgLower -match '(?:search|find|grep)\s+(?:for\s+)?[''"](.+?)[''"](?:\s+in\s+(.+))?' -or
         $msgLower -match 'where\s+(?:is|are)\s+[''"](.+?)[''"]') {
         
         $searchTerm = $Matches[1]
-        $searchPath = if ($Matches[2]) { 
+        $searchPath = $(if ($Matches[2]) { 
             $Matches[2] -replace '[''"]', ''
         } else { 
             $CurrentWorkingDir 
@@ -252,8 +245,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # FILE/DIRECTORY INFO PATTERNS
-    # ============================================
-    if ($msgLower -match 'what(?:''s|\s+is)\s+(?:the\s+)?(?:size|info|information)\s+of\s+[''"]?([^''"]+?)[''"]?' -or
+    # ============================================ $(if ($msgLower -match 'what(?:''s|\s+is)\s+(?:the\s+)?(?:size|info|information)\s+of\s+[''"]?([^''"]+?)[''"]?' -or
         $msgLower -match 'show\s+(?:me\s+)?(?:info|information|details)\s+(?:about\s+|for\s+)?[''"]?([^''"]+?)[''"]?') {
         
         $targetPath = $Matches[1] -replace '[''"]', ''
@@ -274,8 +266,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # GIT STATUS PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:git\s+)?(?:show|check|get)\s+(?:git\s+)?status' -or
+    # ============================================ $(if ($msgLower -match '(?:git\s+)?(?:show|check|get)\s+(?:git\s+)?status' -or
         $msgLower -match 'what(?:''s|\s+is)\s+(?:the\s+)?git\s+status' -or
         $msgLower -match 'show\s+(?:me\s+)?(?:the\s+)?repo(?:sitory)?\s+status' -or
         $msgLower -match '/git\s+status') {
@@ -291,8 +282,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # DELETE FILE PATTERNS
-    # ============================================
-    if ($msgLower -match 'delete\s+(?:the\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
+    # ============================================ $(if ($msgLower -match 'delete\s+(?:the\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
         $msgLower -match 'remove\s+(?:the\s+)?(?:file\s+)?[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
         $msgLower -match 'rm\s+[''"]?([^''"]+?)[''"]?(?:\s|$)') {
         
@@ -314,8 +304,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # WRITE/SAVE FILE PATTERNS
-    # ============================================
-    if ($msgLower -match 'write\s+[''"](.+?)[''"]\s+to\s+(?:file\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)' -or
+    # ============================================ $(if ($msgLower -match 'write\s+[''"](.+?)[''"]\s+to\s+(?:file\s+)?[''"]?([^''"]+?)[''"]?(?:\s|$)' -or
         $msgLower -match 'save\s+[''"](.+?)[''"]\s+(?:to|as)\s+[''"]?([^''"]+?)[''"]?(?:\s|$)') {
         
         $content = $Matches[1]
@@ -338,11 +327,10 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # BROWSE/OPEN URL PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:open|browse|go\s+to|navigate\s+to)\s+(?:url\s+)?[''"]?(https?://[^''"]+?)[''"]?(?:\s|$)' -or
+    # ============================================ $(if ($msgLower -match '(?:open|browse|go\s+to|navigate\s+to)\s+(?:url\s+)?[''"]?(https?://[^''"]+?)[''"]?(?:\s|$)' -or
         $msgLower -match 'search\s+(?:for\s+)?[''"](.+?)[''"]\s+(?:on\s+)?google') {
         
-        $url = if ($Matches[1] -match '^https?://') { 
+        $url = $(if ($Matches[1] -match '^https?://') { 
             $Matches[1] 
         } else { 
             "https://www.google.com/search?q=$([uri]::EscapeDataString($Matches[1]))" 
@@ -359,8 +347,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # ENVIRONMENT INFO PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:show|get|what(?:''s|\s+is))\s+(?:the\s+)?(?:environment|env|system)\s+(?:info|information|details)?' -or
+    # ============================================ $(if ($msgLower -match '(?:show|get|what(?:''s|\s+is))\s+(?:the\s+)?(?:environment|env|system)\s+(?:info|information|details)?' -or
         $msgLower -match 'what(?:''s|\s+is)\s+(?:my\s+)?(?:powershell|ps)\s+version') {
         
         $toolCalls += @{
@@ -372,8 +359,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # TODO/TASK PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:list|show)\s+(?:all\s+)?(?:the\s+)?todos?' -or
+    # ============================================ $(if ($msgLower -match '(?:list|show)\s+(?:all\s+)?(?:the\s+)?todos?' -or
         $msgLower -match 'what(?:''s|\s+are)\s+(?:the\s+)?(?:remaining\s+)?todos?') {
         
         $toolCalls += @{
@@ -387,8 +373,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # PROJECT STRUCTURE PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:show|display|get)\s+(?:the\s+)?project\s+(?:structure|tree|layout)' -or
+    # ============================================ $(if ($msgLower -match '(?:show|display|get)\s+(?:the\s+)?project\s+(?:structure|tree|layout)' -or
         $msgLower -match 'what(?:''s|\s+is)\s+(?:the\s+)?(?:project|folder)\s+(?:structure|tree)') {
         
         $toolCalls += @{
@@ -403,8 +388,7 @@ function Get-IntentBasedToolCalls {
     
     # ============================================
     # ANALYZE CODE PATTERNS
-    # ============================================
-    if ($msgLower -match '(?:analyze|check|lint)\s+(?:the\s+)?(?:code|file)\s+[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
+    # ============================================ $(if ($msgLower -match '(?:analyze|check|lint)\s+(?:the\s+)?(?:code|file)\s+[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?' -or
         $msgLower -match 'find\s+(?:errors|issues|problems)\s+in\s+[''"]?([a-z]:\\[^''"]+|[./][^''"]+?)[''"]?') {
         
         $filePath = $Matches[1] -replace '[''"]', ''
@@ -446,7 +430,7 @@ function Invoke-AutoToolCalling {
         [string]$UserMessage,
         
         [Parameter(Mandatory = $false)]
-        [string]$CurrentWorkingDir = $global:currentWorkingDir,
+        [string]$CurrentWorkingDir = ${global:currentWorkingDir},
         
         [Parameter(Mandatory = $false)]
         [double]$ConfidenceThreshold = 0.80
@@ -516,18 +500,18 @@ function Invoke-AutoToolCalling {
     }
     
     # Update stats
-    $script:autoToolStats.TotalInvocations++
+    ${script:autoToolStats}.TotalInvocations++
     foreach ($result in $results) {
         if ($result.success) {
-            $script:autoToolStats.SuccessfulTools++
+            ${script:autoToolStats}.SuccessfulTools++
         } else {
-            $script:autoToolStats.FailedTools++
+            ${script:autoToolStats}.FailedTools++
         }
         
-        if (-not $script:autoToolStats.ToolUsage[$result.tool]) {
-            $script:autoToolStats.ToolUsage[$result.tool] = 0
+        if (-not ${script:autoToolStats}.ToolUsage[$result.tool]) {
+            ${script:autoToolStats}.ToolUsage[$result.tool] = 0
         }
-        $script:autoToolStats.ToolUsage[$result.tool]++
+        ${script:autoToolStats}.ToolUsage[$result.tool]++
     }
 }
 
@@ -615,7 +599,7 @@ function Get-AutoToolStats {
     .DESCRIPTION
         Returns a summary of auto-tool usage during the current session
     #>
-    return $script:autoToolStats
+    return ${script:autoToolStats}
 }
 
 function Reset-AutoToolStats {
@@ -623,7 +607,7 @@ function Reset-AutoToolStats {
     .SYNOPSIS
         Reset auto-tool statistics
     #>
-    $script:autoToolStats = @{
+    ${script:autoToolStats} = @{
         TotalInvocations = 0
         SuccessfulTools = 0
         FailedTools = 0
@@ -657,4 +641,4 @@ function Get-AvailableAutoTools {
 }
 
 # Export functions for external use
-$script:AutoToolInvocationLoaded = $true
+${script:AutoToolInvocationLoaded} = $true

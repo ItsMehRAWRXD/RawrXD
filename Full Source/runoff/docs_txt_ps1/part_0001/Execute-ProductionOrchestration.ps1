@@ -67,7 +67,7 @@ $WarningPreference = "Continue"
 $InformationPreference = "Continue"
 
 # Global execution state
-$script:ExecutionState = @{
+${script:ExecutionState} = @{
     Version = "3.0.0"
     StartTime = Get-Date
     EndTime = $null
@@ -119,9 +119,9 @@ function Write-ExecutionLog {
     
     # Update state
     if ($Level -eq 'Error' -or $Level -eq 'Critical') {
-        $script:ExecutionState.Errors.Add($Message)
+        ${script:ExecutionState}.Errors.Add($Message)
     } elseif ($Level -eq 'Warning') {
-        $script:ExecutionState.Warnings.Add($Message)
+        ${script:ExecutionState}.Warnings.Add($Message)
     }
     
     # Log to file
@@ -151,7 +151,7 @@ function Show-Configuration {
     Write-Host "  Mode: $Mode" -ForegroundColor White
     Write-Host "  WhatIf: $WhatIf" -ForegroundColor White
     Write-Host "  Verbose: $Verbose" -ForegroundColor White
-    Write-Host "  Start Time: $($script:ExecutionState.StartTime)" -ForegroundColor White
+    Write-Host "  Start Time: $(${script:ExecutionState}.StartTime)" -ForegroundColor White
     Write-Host ""
 }
 
@@ -217,7 +217,7 @@ function Execute-SystemValidation {
             throw "System validation failed. Please address the issues above."
         }
         
-        $script:ExecutionState.Results.SystemValidation = $prereqs
+        ${script:ExecutionState}.Results.SystemValidation = $prereqs
         return $prereqs
         
     } catch {
@@ -244,7 +244,7 @@ function Import-ProductionOrchestrator {
         
         Write-ExecutionLog -Message "✓ Production orchestrator imported successfully" -Level Success
         
-        $script:ExecutionState.Results.ModuleImport = @{
+        ${script:ExecutionState}.Results.ModuleImport = @{
             Success = $true
             ModulePath = $modulePath
             Timestamp = Get-Date
@@ -280,42 +280,42 @@ function Execute-OrchestrationPipeline {
         # Phase 1: Reverse Engineering
         Write-ExecutionLog -Message "Executing Phase 1: Reverse Engineering" -Level Info
         $phase1Results = Start-Phase1-ReverseEngineering
-        $script:ExecutionState.Results.ReverseEngineering = $phase1Results
+        ${script:ExecutionState}.Results.ReverseEngineering = $phase1Results
         
         # Phase 2: Feature Generation
         Write-ExecutionLog -Message "Executing Phase 2: Feature Generation" -Level Info
         $phase2Results = Start-Phase2-FeatureGeneration -AnalysisResults $phase1Results
-        $script:ExecutionState.Results.FeatureGeneration = $phase2Results
+        ${script:ExecutionState}.Results.FeatureGeneration = $phase2Results
         
         # Phase 3: Testing
         Write-ExecutionLog -Message "Executing Phase 3: Comprehensive Testing" -Level Info
         $phase3Results = Start-Phase3-Testing -AnalysisResults $phase1Results
-        $script:ExecutionState.Results.Testing = $phase3Results
+        ${script:ExecutionState}.Results.Testing = $phase3Results
         
         # Phase 4: Optimization
         Write-ExecutionLog -Message "Executing Phase 4: Performance Optimization" -Level Info
         $phase4Results = Start-Phase4-Optimization -AnalysisResults $phase1Results
-        $script:ExecutionState.Results.Optimization = $phase4Results
+        ${script:ExecutionState}.Results.Optimization = $phase4Results
         
         # Phase 5: Security Hardening
         Write-ExecutionLog -Message "Executing Phase 5: Security Hardening" -Level Info
         $phase5Results = Start-Phase5-Security -AnalysisResults $phase1Results
-        $script:ExecutionState.Results.SecurityHardening = $phase5Results
+        ${script:ExecutionState}.Results.SecurityHardening = $phase5Results
         
         # Phase 6: Packaging
         Write-ExecutionLog -Message "Executing Phase 6: Production Packaging" -Level Info
         $phase6Results = Start-Phase6-Packaging
-        $script:ExecutionState.Results.Packaging = $phase6Results
+        ${script:ExecutionState}.Results.Packaging = $phase6Results
         
         # Phase 7: Deployment
         Write-ExecutionLog -Message "Executing Phase 7: Final Deployment" -Level Info
         $phase7Results = Start-Phase7-Deployment
-        $script:ExecutionState.Results.Deployment = $phase7Results
+        ${script:ExecutionState}.Results.Deployment = $phase7Results
         
         # Phase 8: Validation
         Write-ExecutionLog -Message "Executing Phase 8: Validation" -Level Info
         $phase8Results = Start-Phase8-Validation
-        $script:ExecutionState.Results.Validation = $phase8Results
+        ${script:ExecutionState}.Results.Validation = $phase8Results
         
         # Generate final report
         Write-ExecutionLog -Message "Generating final orchestration report" -Level Info
@@ -329,7 +329,7 @@ function Execute-OrchestrationPipeline {
             -Phase7Results $phase7Results `
             -Phase8Results $phase8Results
         
-        $script:ExecutionState.Results.FinalReport = $finalReport
+        ${script:ExecutionState}.Results.FinalReport = $finalReport
         
         Write-ExecutionLog -Message "✓ Complete orchestration pipeline executed successfully" -Level Success
         
@@ -350,7 +350,7 @@ function Show-FinalResults {
     Write-ExecutionLog -Message "═══════════════════════════════════════════════════════════════════" -Level Phase
     
     $endTime = Get-Date
-    $duration = [Math]::Round(($endTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
+    $duration = [Math]::Round(($endTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
     
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -364,7 +364,7 @@ function Show-FinalResults {
     Write-Host "  Duration: $duration minutes" -ForegroundColor White
     Write-Host "  Mode: $Mode" -ForegroundColor White
     Write-Host "  WhatIf: $WhatIf" -ForegroundColor White
-    Write-Host "  Status: $(if($script:ExecutionState.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if($script:ExecutionState.Success){'Green'}else{'Red'})
+    Write-Host "  Status: $(if(${script:ExecutionState}.Success){'SUCCESS'}else{'FAILED'})" -ForegroundColor $(if(${script:ExecutionState}.Success){'Green'}else{'Red'})
     Write-Host ""
     
     if ($FinalReport) {
@@ -392,17 +392,17 @@ function Show-FinalResults {
         Write-Host ""
     }
     
-    if ($script:ExecutionState.Errors.Count -gt 0) {
+    if (${script:ExecutionState}.Errors.Count -gt 0) {
         Write-Host "Errors:" -ForegroundColor Red
-        foreach ($error in $script:ExecutionState.Errors) {
+        foreach ($error in ${script:ExecutionState}.Errors) {
             Write-Host "  • $error" -ForegroundColor Gray
         }
         Write-Host ""
     }
     
-    if ($script:ExecutionState.Warnings.Count -gt 0) {
+    if (${script:ExecutionState}.Warnings.Count -gt 0) {
         Write-Host "Warnings:" -ForegroundColor Yellow
-        foreach ($warning in $script:ExecutionState.Warnings) {
+        foreach ($warning in ${script:ExecutionState}.Warnings) {
             Write-Host "  • $warning" -ForegroundColor Gray
         }
         Write-Host ""
@@ -441,20 +441,20 @@ function Start-MainExecution {
         Show-FinalResults -FinalReport $finalReport
         
         # Update execution state
-        $script:ExecutionState.EndTime = Get-Date
-        $script:ExecutionState.Duration = [Math]::Round(($script:ExecutionState.EndTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
-        $script:ExecutionState.Status = "Complete"
-        $script:ExecutionState.Success = $true
+        ${script:ExecutionState}.EndTime = Get-Date
+        ${script:ExecutionState}.Duration = [Math]::Round((${script:ExecutionState}.EndTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
+        ${script:ExecutionState}.Status = "Complete"
+        ${script:ExecutionState}.Success = $true
         
         Write-ExecutionLog -Message "Production orchestration execution completed successfully" -Level Success
         
-        return $script:ExecutionState
+        return ${script:ExecutionState}
         
     } catch {
-        $script:ExecutionState.EndTime = Get-Date
-        $script:ExecutionState.Duration = [Math]::Round(($script:ExecutionState.EndTime - $script:ExecutionState.StartTime).TotalMinutes, 2)
-        $script:ExecutionState.Status = "Failed"
-        $script:ExecutionState.Success = $false
+        ${script:ExecutionState}.EndTime = Get-Date
+        ${script:ExecutionState}.Duration = [Math]::Round((${script:ExecutionState}.EndTime - ${script:ExecutionState}.StartTime).TotalMinutes, 2)
+        ${script:ExecutionState}.Status = "Failed"
+        ${script:ExecutionState}.Success = $false
         
         Write-ExecutionLog -Message "Production orchestration execution failed: $_" -Level Critical
         

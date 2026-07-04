@@ -7,19 +7,19 @@ param(
   [string]$TestLevel = "COMPREHENSIVE",
     
   [Parameter(Mandatory = $false)]
-  [switch]$GenerateReport = $true,
+  [switch]$GenerateReport,
     
   [Parameter(Mandatory = $false)]
   [string]$OutputPath = ".\AGENTIC-TEST-RESULTS.md"
 )
 
 # Test configuration
-$script:TestResults = @()
-$script:TestStartTime = Get-Date
-$script:TotalTests = 0
-$script:PassedTests = 0
-$script:FailedTests = 0
-$script:WarningTests = 0
+${script:TestResults} = @()
+${script:TestStartTime} = Get-Date
+${script:TotalTests} = 0
+${script:PassedTests} = 0
+${script:FailedTests} = 0
+${script:WarningTests} = 0
 
 # Colors for output
 $Red = "Red"
@@ -44,7 +44,7 @@ function Write-TestResult {
     [string]$Category = "GENERAL"
   )
     
-  $script:TotalTests++
+  ${script:TotalTests}++
   
   # Normalize status to handle variations
   $normalizedStatus = switch -Wildcard ($Status.ToUpper()) {
@@ -63,9 +63,9 @@ function Write-TestResult {
   }
     
   $icon = switch ($normalizedStatus) {
-    "PASS" { "✅"; $script:PassedTests++ }
-    "FAIL" { "❌"; $script:FailedTests++ }
-    "WARN" { "⚠️"; $script:WarningTests++ }
+    "PASS" { "✅"; ${script:PassedTests}++ }
+    "FAIL" { "❌"; ${script:FailedTests}++ }
+    "WARN" { "⚠️"; ${script:WarningTests}++ }
     "INFO" { "ℹ️" }
     default { "❓" }
   }
@@ -78,7 +78,7 @@ function Write-TestResult {
     Write-Host "   └─ $Details" -ForegroundColor Gray
   }
     
-  $script:TestResults += @{
+  ${script:TestResults} += @{
     TestName  = $TestName
     Category  = $Category
     Status    = $normalizedStatus
@@ -316,7 +316,7 @@ if (Get-Command Initialize-SecurityConfig -ErrorAction SilentlyContinue) {
       if ($result -match "^([^:]+):([^:]+)(:.*)?$") {
         $testName = $matches[1]
         $status = $matches[2]
-        $details = if ($matches[3]) { $matches[3].Substring(1) } else { "" }
+        $details = $(if ($matches[3]) { $matches[3].Substring(1) } else { "" }
                 
         Write-TestResult "Agent $testName" $status $details "AGENT_SIMULATION"
       }
@@ -417,25 +417,25 @@ function Generate-TestReport {
   $reportContent = @"
 # 🤖 RawrXD Full Agentic Test Results
 **Test Date**: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")  
-**Test Duration**: $([math]::Round((Get-Date - $script:TestStartTime).TotalSeconds, 2)) seconds  
+**Test Duration**: $([math]::Round((Get-Date - ${script:TestStartTime}).TotalSeconds, 2)) seconds  
 **Test Level**: $TestLevel
 
 ## 📊 Executive Summary
 
 **Overall Results**:
-- 🎯 **Total Tests**: $script:TotalTests
-- ✅ **Passed**: $script:PassedTests ($([math]::Round(($script:PassedTests / $script:TotalTests) * 100, 1))%)
-- ❌ **Failed**: $script:FailedTests ($([math]::Round(($script:FailedTests / $script:TotalTests) * 100, 1))%)
-- ⚠️ **Warnings**: $script:WarningTests ($([math]::Round(($script:WarningTests / $script:TotalTests) * 100, 1))%)
+- 🎯 **Total Tests**: ${script:TotalTests}
+- ✅ **Passed**: ${script:PassedTests} ($([math]::Round((${script:PassedTests} / ${script:TotalTests}) * 100, 1))%)
+- ❌ **Failed**: ${script:FailedTests} ($([math]::Round((${script:FailedTests} / ${script:TotalTests}) * 100, 1))%)
+- ⚠️ **Warnings**: ${script:WarningTests} ($([math]::Round((${script:WarningTests} / ${script:TotalTests}) * 100, 1))%)
 
-**Success Rate**: $([math]::Round((($script:PassedTests + $script:WarningTests) / $script:TotalTests) * 100, 1))%
+**Success Rate**: $([math]::Round(((${script:PassedTests} + ${script:WarningTests}) / ${script:TotalTests}) * 100, 1))%
 
 ## 📋 Detailed Test Results
 
 "@
 
   # Group results by category
-  $categories = $script:TestResults | Group-Object Category | Sort-Object Name
+  $categories = ${script:TestResults} | Group-Object Category | Sort-Object Name
     
   foreach ($category in $categories) {
     $reportContent += "`n### 🔸 $($category.Name)`n`n"
@@ -482,11 +482,11 @@ function Generate-TestReport {
 
 ## 📈 Agentic Capabilities Assessment
 
-**AI Integration Score**: $([math]::Round((($script:TestResults | Where-Object { $_.Category -eq "AGENT_CAPABILITIES" -and $_.Status -eq "PASS" }).Count / ($script:TestResults | Where-Object { $_.Category -eq "AGENT_CAPABILITIES" }).Count) * 100, 1))%
+**AI Integration Score**: $([math]::Round(((${script:TestResults} | Where-Object { $_.Category -eq "AGENT_CAPABILITIES" -and $_.Status -eq "PASS" }).Count / (${script:TestResults} | Where-Object { $_.Category -eq "AGENT_CAPABILITIES" }).Count) * 100, 1))%
 
-**Security Score**: $([math]::Round((($script:TestResults | Where-Object { $_.Category -eq "SECURITY" -and $_.Status -eq "PASS" }).Count / ($script:TestResults | Where-Object { $_.Category -eq "SECURITY" }).Count) * 100, 1))%
+**Security Score**: $([math]::Round(((${script:TestResults} | Where-Object { $_.Category -eq "SECURITY" -and $_.Status -eq "PASS" }).Count / (${script:TestResults} | Where-Object { $_.Category -eq "SECURITY" }).Count) * 100, 1))%
 
-**UI Integration Score**: $([math]::Round((($script:TestResults | Where-Object { $_.Category -eq "UI_COMPONENTS" -and $_.Status -eq "PASS" }).Count / ($script:TestResults | Where-Object { $_.Category -eq "UI_COMPONENTS" }).Count) * 100, 1))%
+**UI Integration Score**: $([math]::Round(((${script:TestResults} | Where-Object { $_.Category -eq "UI_COMPONENTS" -and $_.Status -eq "PASS" }).Count / (${script:TestResults} | Where-Object { $_.Category -eq "UI_COMPONENTS" }).Count) * 100, 1))%
 
 ---
 
@@ -502,9 +502,9 @@ function Generate-TestReport {
     Write-Host "`n🎯 " -NoNewline -ForegroundColor Magenta
     Write-Host "FINAL AGENTIC TEST SUMMARY" -ForegroundColor Cyan
     Write-Host "   Total Tests: " -NoNewline -ForegroundColor Gray
-    Write-Host "$script:TotalTests" -ForegroundColor White
+    Write-Host "${script:TotalTests}" -ForegroundColor White
     Write-Host "   Success Rate: " -NoNewline -ForegroundColor Gray
-    Write-Host "$([math]::Round((($script:PassedTests + $script:WarningTests) / $script:TotalTests) * 100, 1))%" -ForegroundColor Green
+    Write-Host "$([math]::Round(((${script:PassedTests} + ${script:WarningTests}) / ${script:TotalTests}) * 100, 1))%" -ForegroundColor Green
     Write-Host "   Report: " -NoNewline -ForegroundColor Gray
     Write-Host "$OutputPath" -ForegroundColor Yellow
         
@@ -542,7 +542,7 @@ function Start-AgenticTests {
     
   Write-Host "`n🏁 " -NoNewline -ForegroundColor Magenta
   Write-Host "AGENTIC TESTING COMPLETE!" -ForegroundColor Green
-  Write-Host "Duration: $([math]::Round((Get-Date - $script:TestStartTime).TotalSeconds, 2)) seconds" -ForegroundColor Gray
+  Write-Host "Duration: $([math]::Round((Get-Date - ${script:TestStartTime}).TotalSeconds, 2)) seconds" -ForegroundColor Gray
 }
 
 # Execute the test suite

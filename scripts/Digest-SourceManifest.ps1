@@ -45,17 +45,17 @@ foreach ($f in $allFiles) {
     $relPath = $f.FullName.Substring($RepoRoot.Length).TrimStart("\", "/")
     $ext     = $f.Extension.TrimStart(".")
     if ($manifest.byExtension.ContainsKey($ext)) { $manifest.byExtension[$ext]++ }
-    $root = if ($f.FullName.StartsWith($srcDir)) { "src" } else { "Ship" }
+    $root = $(if ($f.FullName.StartsWith($srcDir)) { "src" } else { "Ship" }
     $manifest.byRoot[$root]++
 
     # Module = first path segment under src or Ship (e.g. src/agentic -> agentic, Ship -> Ship)
     $parts = $relPath -split [regex]::Escape([IO.Path]::DirectorySeparatorChar)
-    $module = if ($parts.Length -ge 2) { $parts[1] } else { $parts[0] }
+    $module = $(if ($parts.Length -ge 2) { $parts[1] } else { $parts[0] }
     if (-not $manifest.modules.ContainsKey($module)) { $manifest.modules[$module] = 0 }
     $manifest.modules[$module]++
 
     $lines = Get-Content -LiteralPath $f.FullName -ErrorAction SilentlyContinue
-    $lineCount = if ($lines) { $lines.Count } else { 0 }
+    $lineCount = $(if ($lines) { $lines.Count } else { 0 }
     $includes = @()
     $namespaces = @()
     foreach ($line in $lines) {

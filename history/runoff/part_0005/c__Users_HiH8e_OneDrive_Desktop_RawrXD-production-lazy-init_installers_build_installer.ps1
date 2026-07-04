@@ -24,7 +24,7 @@ if (-not (Test-Path $scriptPath)) {
     exit 1
 }
 
-$env:SOURCE_ROOT = $SourceRoot
+${env:SOURCE_ROOT} = $SourceRoot
 
 # NSIS uses OutFile inside the script; override by copying if needed
 $cmd = "makensis /DSOURCE_ROOT=`"$SourceRoot`" /DOutFile=`"$Output`" `"$scriptPath`""

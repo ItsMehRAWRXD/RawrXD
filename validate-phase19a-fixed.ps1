@@ -95,8 +95,8 @@ Write-Host "PHASE 19A VALIDATION SUMMARY" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$P99Status = if ($P99Pass) { "✅ PASSED" } else { "❌ FAILED" }
-$ScaleStatus = if ($ScalePass) { "✅ PASSED" } else { "❌ FAILED" }
+$P99Status = $(if ($P99Pass) { "✅ PASSED" } else { "❌ FAILED" }
+$ScaleStatus = $(if ($ScalePass) { "✅ PASSED" } else { "❌ FAILED" }
 
 Write-Host "$P99Status P99 Latency Stability" -ForegroundColor $(if($P99Pass){"Green"}else{"Red"})
 Write-Host "     Avg: $([math]::Round($AvgP99,2))ms, Max: $([math]::Round($MaxP99,2))ms (Target: <$P99Target ms)" -ForegroundColor Gray

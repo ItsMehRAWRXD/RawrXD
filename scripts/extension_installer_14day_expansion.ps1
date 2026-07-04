@@ -64,18 +64,18 @@ function Ensure-Dir([string]$Path) {
 }
 
 function Run-Smoke([string[]]$SmokeArgs, [string]$Label) {
-    $exe = Find-ExtensionInstallerExe -Bd $script:ResolvedBuildDir
-    if (-not $exe -and $TryBuildSmoke -and $script:ResolvedBuildDir) {
-        Write-Host "[14D] Building ExtensionInstallerSmoke in $($script:ResolvedBuildDir)" -ForegroundColor Cyan
-        & cmake --build $script:ResolvedBuildDir --target ExtensionInstallerSmoke --parallel
+    $exe = Find-ExtensionInstallerExe -Bd ${script:ResolvedBuildDir}
+    if (-not $exe -and $TryBuildSmoke -and ${script:ResolvedBuildDir}) {
+        Write-Host "[14D] Building ExtensionInstallerSmoke in $(${script:ResolvedBuildDir})" -ForegroundColor Cyan
+        & cmake --build ${script:ResolvedBuildDir} --target ExtensionInstallerSmoke --parallel
         if ($LASTEXITCODE -ne 0) {
             throw "cmake build ExtensionInstallerSmoke exit $LASTEXITCODE"
         }
-        $exe = Find-ExtensionInstallerExe -Bd $script:ResolvedBuildDir
+        $exe = Find-ExtensionInstallerExe -Bd ${script:ResolvedBuildDir}
     }
 
     if (-not (Test-Path $exe)) {
-        throw "Smoke test executable not found under build dir '$($script:ResolvedBuildDir)'; set -BuildDir, configure CMake tree, or pass -TryBuildSmoke"
+        throw "Smoke test executable not found under build dir '$(${script:ResolvedBuildDir})'; set -BuildDir, configure CMake tree, or pass -TryBuildSmoke"
     }
 
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -140,7 +140,7 @@ function Run-IntegrationGateMinimal([string]$Label) {
 
 Ensure-Dir $ReportDir
 
-$script:ResolvedBuildDir = Resolve-BuildDir -Prefer $BuildDir
+${script:ResolvedBuildDir} = Resolve-BuildDir -Prefer $BuildDir
 
 $results = @()
 
@@ -242,7 +242,7 @@ $summaryPath = Join-Path $ReportDir ("summary_day{0:00}_{1}.txt" -f $Day, (Get-D
 $summary = @()
 $summary += "RawrXD Extension Installer expansion (days 1-15; day 15 adds integration gate)"
 $summary += "Day=$Day Live=$Live LiveInstall=$LiveInstall Strict=$Strict SkipIntegrationGate=$SkipIntegrationGate TryBuildSmoke=$TryBuildSmoke"
-$summary += "ResolvedBuildDir=$script:ResolvedBuildDir"
+$summary += "ResolvedBuildDir=${script:ResolvedBuildDir}"
 $summary += ""
 foreach ($r in $results) {
     $summary += ("Label={0}" -f $r.Label)

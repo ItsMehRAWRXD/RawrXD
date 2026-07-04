@@ -44,8 +44,8 @@ function Fail-Check {
         Log "✓ $Name" "SUCCESS"
     } else {
         Log "✗ $Name" "ERROR"
-        $script:passed = $false
-        $script:failures++
+        ${script:passed} = $false
+        ${script:failures}++
     }
 }
 

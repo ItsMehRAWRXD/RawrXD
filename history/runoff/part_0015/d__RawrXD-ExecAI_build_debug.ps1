@@ -1,7 +1,7 @@
-$ML64 = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
-$LINK = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
-$LIB_PATH = "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
-$CDB = "C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe"
+$Script:ML64 = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
+$Script:LINK = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
+$Script:LIB_PATH = "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
+$Script:CDB = "C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe"
 
 Set-Location "D:\RawrXD-ExecAI"
 

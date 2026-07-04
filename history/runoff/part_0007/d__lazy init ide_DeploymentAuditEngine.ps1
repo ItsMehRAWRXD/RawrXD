@@ -47,7 +47,7 @@ param(
 )
 
 # Global configuration
-$global:DeploymentAuditConfig = @{
+${global:DeploymentAuditConfig} = @{
     Version = "1.0.0"
     EngineName = "DeploymentAuditEngine"
     AuditDepth = "Comprehensive"  # Basic, Standard, Comprehensive, Full
@@ -87,7 +87,7 @@ $global:DeploymentAuditConfig = @{
 }
 
 # Audit results storage
-$global:DeploymentAuditResults = @{
+${global:DeploymentAuditResults} = @{
     ConfigurationIssues = [List[hashtable]]::new()
     SecurityGaps = [List[hashtable]]::new()
     MissingDependencies = [List[hashtable]]::new()
@@ -116,16 +116,16 @@ function Initialize-Logging {
     param($LogPath)
     
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $global:LogFile = Join-Path $LogPath "deployment_audit_$timestamp.log"
-    $global:EmergencyLog = Join-Path $LogPath "emergency_deployment_audit.log"
+    ${global:LogFile} = Join-Path $LogPath "deployment_audit_$timestamp.log"
+    ${global:EmergencyLog} = Join-Path $LogPath "emergency_deployment_audit.log"
     
     # Create log directory
     if (!(Test-Path $LogPath)) {
         New-Item -ItemType Directory -Path $LogPath -Force | Out-Null
     }
     
-    Write-Log "INFO" "Deployment Audit Engine v$($global:DeploymentAuditConfig.Version) initialized"
-    Write-Log "INFO" "Log file: $global:LogFile"
+    Write-Log "INFO" "Deployment Audit Engine v$(${global:DeploymentAuditConfig}.Version) initialized"
+    Write-Log "INFO" "Log file: ${global:LogFile}"
 }
 
 # Enhanced logging function
@@ -152,8 +152,8 @@ function Write-Log {
     Write-Host $logEntry -ForegroundColor $color
     
     # File logging
-    if ($global:LogFile) {
-        Add-Content -Path $global:LogFile -Value $logEntry -Encoding UTF8
+    if (${global:LogFile}) {
+        Add-Content -Path ${global:LogFile} -Value $logEntry -Encoding UTF8
     }
 }
 
@@ -167,15 +167,15 @@ function Load-Configuration {
             
             # Merge configurations
             foreach ($key in $configContent.PSObject.Properties.Name) {
-                if ($global:DeploymentAuditConfig.ContainsKey($key)) {
+                if (${global:DeploymentAuditConfig}.ContainsKey($key)) {
                     $value = $configContent.$key
                     if ($value -is [System.Management.Automation.PSCustomObject]) {
                         foreach ($subKey in $value.PSObject.Properties.Name) {
-                            $global:DeploymentAuditConfig[$key][$subKey] = $value.$subKey
+                            ${global:DeploymentAuditConfig}[$key][$subKey] = $value.$subKey
                         }
                     }
                     else {
-                        $global:DeploymentAuditConfig[$key] = $value
+                        ${global:DeploymentAuditConfig}[$key] = $value
                     }
                 }
             }
@@ -193,7 +193,7 @@ function Save-Configuration {
     param($ConfigPath)
     
     try {
-        $global:DeploymentAuditConfig | ConvertTo-Json -Depth 10 | Out-File $ConfigPath -Encoding UTF8
+        ${global:DeploymentAuditConfig} | ConvertTo-Json -Depth 10 | Out-File $ConfigPath -Encoding UTF8
         Write-Log "INFO" "Configuration saved to $ConfigPath"
     }
     catch {
@@ -241,19 +241,19 @@ function Start-DeploymentAudit {
     Write-Log "SUCCESS" "Discovered $($discoveryResults.TotalFiles) files across $($discoveryResults.ComponentCount) components"
     
     # Phase 2: Configuration Validation (if enabled)
-    if ($ValidateConfiguration -or $global:DeploymentAuditConfig.ConfigurationValidation.Enabled) {
+    if ($ValidateConfiguration -or ${global:DeploymentAuditConfig}.ConfigurationValidation.Enabled) {
         Write-Log "INFO" "Phase 2: Configuration Validation"
         $configResults = Start-ConfigurationValidation -ProjectFiles $discoveryResults.Files
     }
     
     # Phase 3: Security Checking (if enabled)
-    if ($CheckSecurity -or $global:DeploymentAuditConfig.SecurityChecking.Enabled) {
+    if ($CheckSecurity -or ${global:DeploymentAuditConfig}.SecurityChecking.Enabled) {
         Write-Log "INFO" "Phase 3: Security Assessment"
         $securityResults = Start-SecurityAssessment -ProjectFiles $discoveryResults.Files
     }
     
     # Phase 4: Dependency Verification (if enabled)
-    if ($VerifyDependencies -or $global:DeploymentAuditConfig.DependencyVerification.Enabled) {
+    if ($VerifyDependencies -or ${global:DeploymentAuditConfig}.DependencyVerification.Enabled) {
         Write-Log "INFO" "Phase 4: Dependency Verification"
         $dependencyResults = Start-DependencyVerification -ProjectPath $ProjectPath
     }
@@ -265,7 +265,7 @@ function Start-DeploymentAudit {
     }
     
     # Phase 6: Compliance Checking (if enabled)
-    if ($CheckCompliance -or $global:DeploymentAuditConfig.ComplianceFrameworks.Count -gt 0) {
+    if ($CheckCompliance -or ${global:DeploymentAuditConfig}.ComplianceFrameworks.Count -gt 0) {
         Write-Log "INFO" "Phase 6: Compliance Verification"
         $complianceResults = Start-ComplianceChecking -ProjectFiles $discoveryResults.Files
     }
@@ -283,7 +283,7 @@ function Start-DeploymentAudit {
     
     # Update statistics
     $endTime = Get-Date
-    $global:DeploymentAuditResults.BaselineMetrics.AnalysisDuration = ($endTime - $startTime).TotalSeconds
+    ${global:DeploymentAuditResults}.BaselineMetrics.AnalysisDuration = ($endTime - $startTime).TotalSeconds
     
     # Calculate overall readiness
     Calculate-DeploymentReadiness
@@ -292,9 +292,9 @@ function Start-DeploymentAudit {
     Save-DeploymentAuditResults -OutputPath $OutputPath
     
     Write-Log "SUCCESS" "Deployment audit completed successfully"
-    Write-Log "INFO" "Analysis duration: $($global:DeploymentAuditResults.BaselineMetrics.AnalysisDuration) seconds"
-    Write-Log "INFO" "Deployment Readiness: $($global:DeploymentAuditResults.DeploymentReadiness.Status)"
-    Write-Log "INFO" "Overall Risk Level: $($global:DeploymentAuditResults.RiskAssessment.OverallRisk)"
+    Write-Log "INFO" "Analysis duration: $(${global:DeploymentAuditResults}.BaselineMetrics.AnalysisDuration) seconds"
+    Write-Log "INFO" "Deployment Readiness: $(${global:DeploymentAuditResults}.DeploymentReadiness.Status)"
+    Write-Log "INFO" "Overall Risk Level: $(${global:DeploymentAuditResults}.RiskAssessment.OverallRisk)"
     
     return $true
 }
@@ -509,7 +509,7 @@ function Start-ConfigurationValidation {
         
         try {
             # Check file permissions
-            if ($global:DeploymentAuditConfig.ConfigurationValidation.CheckFilePermissions) {
+            if (${global:DeploymentAuditConfig}.ConfigurationValidation.CheckFilePermissions) {
                 $permissionCheck = Test-FilePermissions -FilePath $file.Path
                 if ($permissionCheck.HasIssues) {
                     $configValidation.Issues.AddRange($permissionCheck.Issues)
@@ -519,7 +519,7 @@ function Start-ConfigurationValidation {
             }
             
             # Validate syntax
-            if ($global:DeploymentAuditConfig.ConfigurationValidation.ValidateSyntax) {
+            if (${global:DeploymentAuditConfig}.ConfigurationValidation.ValidateSyntax) {
                 $syntaxValidation = Test-ConfigurationSyntax -File $file
                 if ($syntaxValidation.HasErrors) {
                     $configValidation.Issues.AddRange($syntaxValidation.Errors)
@@ -529,7 +529,7 @@ function Start-ConfigurationValidation {
             }
             
             # Verify paths
-            if ($global:DeploymentAuditConfig.ConfigurationValidation.VerifyPaths) {
+            if (${global:DeploymentAuditConfig}.ConfigurationValidation.VerifyPaths) {
                 $pathVerification = Test-ConfigurationPaths -File $file
                 if ($pathVerification.HasInvalidPaths) {
                     $configValidation.Issues.AddRange($pathVerification.InvalidPaths)
@@ -539,7 +539,7 @@ function Start-ConfigurationValidation {
             }
             
             # Check environment variables
-            if ($global:DeploymentAuditConfig.ConfigurationValidation.CheckEnvironmentVariables) {
+            if (${global:DeploymentAuditConfig}.ConfigurationValidation.CheckEnvironmentVariables) {
                 $envCheck = Test-EnvironmentVariables -File $file
                 if ($envCheck.MissingVariables.Count -gt 0) {
                     $configValidation.Warnings.AddRange($envCheck.MissingVariables)
@@ -553,7 +553,7 @@ function Start-ConfigurationValidation {
             }
             
             if (!$configValidation.IsValid) {
-                $global:DeploymentAuditResults.ConfigurationIssues.Add($configValidation)
+                ${global:DeploymentAuditResults}.ConfigurationIssues.Add($configValidation)
             }
             
             $file.AnalysisStatus = "Completed"
@@ -568,13 +568,13 @@ function Start-ConfigurationValidation {
                 Line = 0
             })
             $configValidation.IsValid = $false
-            $global:DeploymentAuditResults.ConfigurationIssues.Add($configValidation)
+            ${global:DeploymentAuditResults}.ConfigurationIssues.Add($configValidation)
         }
     }
     
-    Write-Log "SUCCESS" "Configuration validation completed: $($global:DeploymentAuditResults.ConfigurationIssues.Count) issues found"
+    Write-Log "SUCCESS" "Configuration validation completed: $(${global:DeploymentAuditResults}.ConfigurationIssues.Count) issues found"
     
-    return $global:DeploymentAuditResults.ConfigurationIssues
+    return ${global:DeploymentAuditResults}.ConfigurationIssues
 }
 
 # File permissions test
@@ -954,7 +954,7 @@ function Test-ConfigurationPaths {
                 $result.HasInvalidPaths = $true
                 $result.InvalidPaths.Add(@{
                     Type = "InvalidPath"
-                    Severity = if ($file.Criticality -eq "High") { "High" } else { "Medium" }
+                    Severity = $(if ($file.Criticality -eq "High") { "High" } else { "Medium" }
                     Description = "Path does not exist: $path"
                     FullPath = $fullPath
                     PathType = $pathType
@@ -1013,7 +1013,7 @@ function Test-EnvironmentVariables {
                     if ([string]::IsNullOrEmpty($envValue)) {
                         $result.MissingVariables.Add(@{
                             Name = $varName
-                            Severity = if ($file.Criticality -eq "High") { "High" } else { "Medium" }
+                            Severity = $(if ($file.Criticality -eq "High") { "High" } else { "Medium" }
                             Description = "Environment variable is not set"
                             Recommendation = "Set the environment variable or provide default value"
                         })
@@ -1134,7 +1134,7 @@ function Start-SecurityAssessment {
             }
             
             # Check file permissions
-            if ($global:DeploymentAuditConfig.SecurityChecking.CheckFilePermissions) {
+            if (${global:DeploymentAuditConfig}.SecurityChecking.CheckFilePermissions) {
                 $permissionCheck = Test-SecurityFilePermissions -FilePath $file.Path
                 if ($permissionCheck.HasSecurityIssues) {
                     $fileSecurity.PermissionIssues.AddRange($permissionCheck.SecurityIssues)
@@ -1143,7 +1143,7 @@ function Start-SecurityAssessment {
             }
             
             # Validate authentication mechanisms
-            if ($global:DeploymentAuditConfig.SecurityChecking.VerifyAuthentication) {
+            if (${global:DeploymentAuditConfig}.SecurityChecking.VerifyAuthentication) {
                 $authValidation = Test-AuthenticationSecurity -File $file -Content $content
                 if ($authValidation.HasIssues) {
                     $fileSecurity.AuthenticationIssues.AddRange($authValidation.Issues)
@@ -1152,7 +1152,7 @@ function Start-SecurityAssessment {
             }
             
             # Check authorization implementation
-            if ($global:DeploymentAuditConfig.SecurityChecking.CheckAuthorization) {
+            if (${global:DeploymentAuditConfig}.SecurityChecking.CheckAuthorization) {
                 $authzValidation = Test-AuthorizationSecurity -File $file -Content $content
                 if ($authzValidation.HasIssues) {
                     $fileSecurity.AuthorizationIssues.AddRange($authzValidation.Issues)
@@ -1161,7 +1161,7 @@ function Start-SecurityAssessment {
             }
             
             # Audit logging implementation
-            if ($global:DeploymentAuditConfig.SecurityChecking.AuditLogging) {
+            if (${global:DeploymentAuditConfig}.SecurityChecking.AuditLogging) {
                 $loggingValidation = Test-LoggingImplementation -File $file -Content $content
                 if ($loggingValidation.HasIssues) {
                     $fileSecurity.LoggingIssues.AddRange($loggingValidation.Issues)
@@ -1175,7 +1175,7 @@ function Start-SecurityAssessment {
             }
             
             if ($fileSecurity.Issues.Count -gt 0) {
-                $global:DeploymentAuditResults.SecurityGaps.Add($fileSecurity)
+                ${global:DeploymentAuditResults}.SecurityGaps.Add($fileSecurity)
             }
             
             $file.AnalysisStatus = "Completed"
@@ -1186,9 +1186,9 @@ function Start-SecurityAssessment {
         }
     }
     
-    Write-Log "SUCCESS" "Security assessment completed: $($global:DeploymentAuditResults.SecurityGaps.Count) files with security issues"
+    Write-Log "SUCCESS" "Security assessment completed: $(${global:DeploymentAuditResults}.SecurityGaps.Count) files with security issues"
     
-    return $global:DeploymentAuditResults.SecurityGaps
+    return ${global:DeploymentAuditResults}.SecurityGaps
 }
 
 # Security file permissions test
@@ -1343,7 +1343,7 @@ function Test-AuthenticationSecurity {
                         Type = $weakAuth
                         Severity = $patternInfo.Severity
                         Description = $patternInfo.Description
-                        Line = if ($matches.Count -gt 0) { $matches[0].Index } else { 0 }
+                        Line = $(if ($matches.Count -gt 0) { $matches[0].Index } else { 0 }
                         Recommendation = $patternInfo.Recommendation
                     })
                 }
@@ -1664,28 +1664,28 @@ function Start-DependencyVerification {
                 }
                 
                 # Check for version conflicts
-                if ($global:DeploymentAuditConfig.DependencyVerification.CheckVersionCompatibility) {
+                if (${global:DeploymentAuditConfig}.DependencyVerification.CheckVersionCompatibility) {
                     $versionConflicts = Test-VersionCompatibility -Dependencies $dependencies
                     $depVerification.VersionConflicts.AddRange($versionConflicts)
                     $depVerification.Issues.AddRange($versionConflicts)
                 }
                 
                 # Scan for vulnerabilities
-                if ($global:DeploymentAuditConfig.DependencyVerification.ScanForVulnerabilities) {
+                if (${global:DeploymentAuditConfig}.DependencyVerification.ScanForVulnerabilities) {
                     $vulnerableDeps = Test-DependencyVulnerabilities -Dependencies $dependencies -FileType $depFile.Type
                     $depVerification.VulnerableDependencies.AddRange($vulnerableDeps)
                     $depVerification.Issues.AddRange($vulnerableDeps)
                 }
                 
                 # Validate licenses
-                if ($global:DeploymentAuditConfig.DependencyVerification.ValidateLicenses) {
+                if (${global:DeploymentAuditConfig}.DependencyVerification.ValidateLicenses) {
                     $licenseIssues = Test-DependencyLicenses -Dependencies $dependencies
                     $depVerification.LicenseIssues.AddRange($licenseIssues)
                     $depVerification.Issues.AddRange($licenseIssues)
                 }
                 
                 # Check dependency integrity
-                if ($global:DeploymentAuditConfig.DependencyVerification.VerifyIntegrity) {
+                if (${global:DeploymentAuditConfig}.DependencyVerification.VerifyIntegrity) {
                     $integrityIssues = Test-DependencyIntegrity -Dependencies $dependencies -ProjectPath $ProjectPath
                     $depVerification.Issues.AddRange($integrityIssues)
                 }
@@ -1712,7 +1712,7 @@ function Start-DependencyVerification {
         }
     }
     
-    $global:DeploymentAuditResults.MissingDependencies = $dependencyIssues
+    ${global:DeploymentAuditResults}.MissingDependencies = $dependencyIssues
     
     Write-Log "SUCCESS" "Dependency verification completed: $($dependencyIssues.Count) dependency files with issues"
     
@@ -1835,9 +1835,9 @@ function Calculate-DeploymentReadiness {
     $lowIssues = 0
     
     # Count issues by severity
-    foreach ($issueCategory in @($global:DeploymentAuditResults.ConfigurationIssues, 
-                                 $global:DeploymentAuditResults.SecurityGaps, 
-                                 $global:DeploymentAuditResults.MissingDependencies)) {
+    foreach ($issueCategory in @(${global:DeploymentAuditResults}.ConfigurationIssues, 
+                                 ${global:DeploymentAuditResults}.SecurityGaps, 
+                                 ${global:DeploymentAuditResults}.MissingDependencies)) {
         foreach ($issue in $issueCategory) {
             $totalIssues++
             $totalRiskScore += $issue.RiskScore
@@ -1854,42 +1854,42 @@ function Calculate-DeploymentReadiness {
     }
     
     # Update risk assessment
-    $global:DeploymentAuditResults.RiskAssessment.OverallRisk = Get-RiskLevel -Score $totalRiskScore
-    $global:DeploymentAuditResults.RiskAssessment.RiskScore = $totalRiskScore
-    $global:DeploymentAuditResults.RiskAssessment.CriticalIssues = $criticalIssues
-    $global:DeploymentAuditResults.RiskAssessment.HighIssues = $highIssues
-    $global:DeploymentAuditResults.RiskAssessment.MediumIssues = $mediumIssues
-    $global:DeploymentAuditResults.RiskAssessment.LowIssues = $lowIssues
+    ${global:DeploymentAuditResults}.RiskAssessment.OverallRisk = Get-RiskLevel -Score $totalRiskScore
+    ${global:DeploymentAuditResults}.RiskAssessment.RiskScore = $totalRiskScore
+    ${global:DeploymentAuditResults}.RiskAssessment.CriticalIssues = $criticalIssues
+    ${global:DeploymentAuditResults}.RiskAssessment.HighIssues = $highIssues
+    ${global:DeploymentAuditResults}.RiskAssessment.MediumIssues = $mediumIssues
+    ${global:DeploymentAuditResults}.RiskAssessment.LowIssues = $lowIssues
     
     # Determine readiness status
     if ($criticalIssues -eq 0 -and $highIssues -eq 0) {
-        $global:DeploymentAuditResults.DeploymentReadiness.Status = "Ready"
+        ${global:DeploymentAuditResults}.DeploymentReadiness.Status = "Ready"
     }
     elseif ($criticalIssues -eq 0 -and $highIssues -le 3) {
-        $global:DeploymentAuditResults.DeploymentReadiness.Status = "ReadyWithWarnings"
+        ${global:DeploymentAuditResults}.DeploymentReadiness.Status = "ReadyWithWarnings"
     }
     elseif ($criticalIssues -eq 0) {
-        $global:DeploymentAuditResults.DeploymentReadiness.Status = "NotReady"
+        ${global:DeploymentAuditResults}.DeploymentReadiness.Status = "NotReady"
     }
     else {
-        $global:DeploymentAuditResults.DeploymentReadiness.Status = "Blocked"
+        ${global:DeploymentAuditResults}.DeploymentReadiness.Status = "Blocked"
     }
     
     # Generate recommendations
     if ($criticalIssues -gt 0) {
-        $global:DeploymentAuditResults.DeploymentReadiness.Blockers.Add("$criticalIssues critical issues must be resolved")
+        ${global:DeploymentAuditResults}.DeploymentReadiness.Blockers.Add("$criticalIssues critical issues must be resolved")
     }
     
     if ($highIssues -gt 0) {
-        $global:DeploymentAuditResults.DeploymentReadiness.Warnings.Add("$highIssues high-severity issues should be addressed")
+        ${global:DeploymentAuditResults}.DeploymentReadiness.Warnings.Add("$highIssues high-severity issues should be addressed")
     }
     
     if ($mediumIssues -gt 0) {
-        $global:DeploymentAuditResults.DeploymentReadiness.Recommendations.Add("Review $mediumIssues medium-severity issues")
+        ${global:DeploymentAuditResults}.DeploymentReadiness.Recommendations.Add("Review $mediumIssues medium-severity issues")
     }
     
-    Write-Log "INFO" "Deployment readiness: $($global:DeploymentAuditResults.DeploymentReadiness.Status)"
-    Write-Log "INFO" "Risk level: $($global:DeploymentAuditResults.RiskAssessment.OverallRisk)"
+    Write-Log "INFO" "Deployment readiness: $(${global:DeploymentAuditResults}.DeploymentReadiness.Status)"
+    Write-Log "INFO" "Risk level: $(${global:DeploymentAuditResults}.RiskAssessment.OverallRisk)"
     Write-Log "INFO" "Total issues: $totalIssues (Critical: $criticalIssues, High: $highIssues, Medium: $mediumIssues, Low: $lowIssues)"
 }
 
@@ -2003,7 +2003,7 @@ function Save-DeploymentAuditResults {
     $resultsFile = Join-Path $OutputPath "deployment_audit_results.json"
     
     try {
-        $global:DeploymentAuditResults | ConvertTo-Json -Depth 20 | Out-File $resultsFile -Encoding UTF8
+        ${global:DeploymentAuditResults} | ConvertTo-Json -Depth 20 | Out-File $resultsFile -Encoding UTF8
         Write-Log "INFO" "Deployment audit results saved to $resultsFile"
     }
     catch {
@@ -2014,7 +2014,7 @@ function Save-DeploymentAuditResults {
 # Interactive mode
 function Start-InteractiveMode {
     Write-Host "`n=== Deployment Audit Engine - Interactive Mode ===" -ForegroundColor Cyan
-    Write-Host "Version: $($global:DeploymentAuditConfig.Version)" -ForegroundColor Gray
+    Write-Host "Version: $(${global:DeploymentAuditConfig}.Version)" -ForegroundColor Gray
     
     while ($true) {
         Write-Host "`nOptions:" -ForegroundColor Yellow
@@ -2074,7 +2074,7 @@ elseif ($ProjectPath) {
     Start-DeploymentAudit -ProjectPath $ProjectPath -OutputPath $OutputPath
 }
 else {
-    Write-Host "Deployment Audit Engine v$($global:DeploymentAuditConfig.Version)" -ForegroundColor Cyan
+    Write-Host "Deployment Audit Engine v$(${global:DeploymentAuditConfig}.Version)" -ForegroundColor Cyan
     Write-Host "Use -Interactive for interactive mode or specify -ProjectPath" -ForegroundColor Yellow
     Write-Host "Example: .\DeploymentAuditEngine.ps1 -ProjectPath 'C:\project' -CheckSecurity -VerifyDependencies -GenerateReadinessReport" -ForegroundColor Gray
 }

@@ -21,8 +21,7 @@
 
 # ============================================================================
 # STRUCTURED LOGGING (Standalone fallback)
-# ============================================================================
-if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
+# ============================================================================ $(if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
     function Write-StructuredLog {
         param(
             [Parameter(Mandatory=$true)][string]$Message,
@@ -45,7 +44,7 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
 # ============================================================================
 # DIGESTION REGISTRY (Global State)
 # ============================================================================
-$script:DigestionState = @{
+${script:DigestionState} = @{
     Cache = @{}                      # FileHash -> DigestedResult
     SymbolTable = @{}                # SymbolName -> Location info
     CrossReferences = @{}            # Symbol -> @(References)
@@ -103,26 +102,26 @@ function Get-CachedDigestion {
         [Parameter(Mandatory=$true)][string]$FilePath
     )
     
-    if (-not $script:DigestionState.Configuration.CacheEnabled) {
+    if (-not ${script:DigestionState}.Configuration.CacheEnabled) {
         return $null
     }
     
     $hash = Get-FileContentHash -FilePath $FilePath
     if (-not $hash) { return $null }
     
-    if ($script:DigestionState.Cache.ContainsKey($hash)) {
+    if (${script:DigestionState}.Cache.ContainsKey($hash)) {
         Write-StructuredLog -Message "Cache hit for: $FilePath" -Level Debug
-        return $script:DigestionState.Cache[$hash]
+        return ${script:DigestionState}.Cache[$hash]
     }
     
     # Check disk cache
-    $cacheDir = $script:DigestionState.Configuration.CacheDirectory
+    $cacheDir = ${script:DigestionState}.Configuration.CacheDirectory
     $cacheFile = Join-Path $cacheDir "$hash.json"
     
     if (Test-Path $cacheFile) {
         try {
             $cached = Get-Content $cacheFile -Raw | ConvertFrom-Json -AsHashtable
-            $script:DigestionState.Cache[$hash] = $cached
+            ${script:DigestionState}.Cache[$hash] = $cached
             Write-StructuredLog -Message "Disk cache hit for: $FilePath" -Level Debug
             return $cached
         } catch {
@@ -141,7 +140,7 @@ function Save-DigestionToCache {
         [Parameter(Mandatory=$true)][hashtable]$Digestion
     )
     
-    if (-not $script:DigestionState.Configuration.CacheEnabled) {
+    if (-not ${script:DigestionState}.Configuration.CacheEnabled) {
         return
     }
     
@@ -149,10 +148,10 @@ function Save-DigestionToCache {
     if (-not $hash) { return }
     
     # Memory cache
-    $script:DigestionState.Cache[$hash] = $Digestion
+    ${script:DigestionState}.Cache[$hash] = $Digestion
     
     # Disk cache
-    $cacheDir = $script:DigestionState.Configuration.CacheDirectory
+    $cacheDir = ${script:DigestionState}.Configuration.CacheDirectory
     if (-not (Test-Path $cacheDir)) {
         New-Item -Path $cacheDir -ItemType Directory -Force | Out-Null
     }
@@ -241,7 +240,7 @@ function Invoke-PowerShellDigestion {
                 foreach ($param in $func.Parameters) {
                     $funcInfo.Parameters += @{
                         Name = $param.Name.VariablePath.UserPath
-                        Type = if ($param.StaticType) { $param.StaticType.Name } else { 'Object' }
+                        Type = $(if ($param.StaticType) { $param.StaticType.Name } else { 'Object' }
                         IsMandatory = $param.Attributes | Where-Object { 
                             $_.TypeName.Name -eq 'Parameter' -and 
                             $_.NamedArguments | Where-Object { $_.ArgumentName -eq 'Mandatory' -and $_.Argument.Value -eq $true }
@@ -312,12 +311,12 @@ function Invoke-PowerShellDigestion {
                     $classInfo.Methods += @{
                         Name = $member.Name
                         IsStatic = $member.IsStatic
-                        ReturnType = if ($member.ReturnType) { $member.ReturnType.TypeName.Name } else { 'void' }
+                        ReturnType = $(if ($member.ReturnType) { $member.ReturnType.TypeName.Name } else { 'void' }
                     }
                 } elseif ($member -is [System.Management.Automation.Language.PropertyMemberAst]) {
                     $classInfo.Members += @{
                         Name = $member.Name
-                        Type = if ($member.PropertyType) { $member.PropertyType.TypeName.Name } else { 'Object' }
+                        Type = $(if ($member.PropertyType) { $member.PropertyType.TypeName.Name } else { 'Object' }
                     }
                 }
             }
@@ -462,7 +461,7 @@ function Invoke-PythonDigestion {
                 if ($trimmed -match '^class\s+(\w+)(?:\s*\(([^)]*)\))?') {
                     $result.Classes += @{
                         Name = $matches[1]
-                        BaseTypes = if ($matches[2]) { $matches[2] -split ',' | ForEach-Object { $_.Trim() } } else { @() }
+                        BaseTypes = $(if ($matches[2]) { $matches[2] -split ',' | ForEach-Object { $_.Trim() } } else { @() }
                         StartLine = $lineNum
                     }
                 }
@@ -470,7 +469,7 @@ function Invoke-PythonDigestion {
                 # Import detection
                 if ($trimmed -match '^import\s+(.+)$' -or $trimmed -match '^from\s+(\S+)\s+import') {
                     $result.Imports += @{
-                        Type = if ($trimmed.StartsWith('from')) { 'FromImport' } else { 'Import' }
+                        Type = $(if ($trimmed.StartsWith('from')) { 'FromImport' } else { 'Import' }
                         Name = $matches[1]
                         Line = $lineNum
                     }
@@ -501,7 +500,7 @@ function Invoke-JavaScriptDigestion {
     )
     
     $result = @{
-        Language = if ($FilePath -match '\.ts$') { 'TypeScript' } else { 'JavaScript' }
+        Language = $(if ($FilePath -match '\.ts$') { 'TypeScript' } else { 'JavaScript' }
         FilePath = $FilePath
         Functions = @()
         Classes = @()
@@ -560,7 +559,7 @@ function Invoke-JavaScriptDigestion {
                 $trimmed -match '(\w+)\s*:\s*(?:async\s+)?function\s*\(([^)]*)\)') {
                 $result.Functions += @{
                     Name = $matches[1]
-                    Parameters = if ($matches[2]) { $matches[2] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ } } else { @() }
+                    Parameters = $(if ($matches[2]) { $matches[2] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ } } else { @() }
                     StartLine = $lineNum
                     IsArrow = $trimmed -match '=>'
                     IsAsync = $trimmed -match 'async'
@@ -583,7 +582,7 @@ function Invoke-JavaScriptDigestion {
                 $result.Imports += @{
                     Name = $matches[1]
                     Line = $lineNum
-                    Type = if ($trimmed -match 'require') { 'CommonJS' } else { 'ESModule' }
+                    Type = $(if ($trimmed -match 'require') { 'CommonJS' } else { 'ESModule' }
                 }
             }
             
@@ -591,7 +590,7 @@ function Invoke-JavaScriptDigestion {
             if ($trimmed -match '^export\s+(default\s+)?(?:function|class|const|let|var)?\s*(\w+)?' -or
                 $trimmed -match 'module\.exports\s*=') {
                 $result.Exports += @{
-                    Name = if ($matches[2]) { $matches[2] } else { 'default' }
+                    Name = $(if ($matches[2]) { $matches[2] } else { 'default' }
                     IsDefault = $trimmed -match 'default|module\.exports'
                     Line = $lineNum
                 }
@@ -691,7 +690,7 @@ function Update-SymbolTable {
     # Add functions to symbol table
     foreach ($func in $Digestion.Functions) {
         $symbolKey = "$($func.Name)::function"
-        $script:DigestionState.SymbolTable[$symbolKey] = @{
+        ${script:DigestionState}.SymbolTable[$symbolKey] = @{
             Name = $func.Name
             Type = 'Function'
             File = $filePath
@@ -704,7 +703,7 @@ function Update-SymbolTable {
     # Add classes
     foreach ($class in $Digestion.Classes) {
         $symbolKey = "$($class.Name)::class"
-        $script:DigestionState.SymbolTable[$symbolKey] = @{
+        ${script:DigestionState}.SymbolTable[$symbolKey] = @{
             Name = $class.Name
             Type = 'Class'
             File = $filePath
@@ -731,7 +730,7 @@ function Update-DependencyGraph {
         $dependencies += $import.Name
     }
     
-    $script:DigestionState.DependencyGraph[$filePath] = $dependencies
+    ${script:DigestionState}.DependencyGraph[$filePath] = $dependencies
 }
 
 # ============================================================================
@@ -776,7 +775,7 @@ function Invoke-SourceDigestionOrchestratorAuto {
     }
     
     # Reset metrics
-    $script:DigestionState.Metrics = @{
+    ${script:DigestionState}.Metrics = @{
         TotalFiles = 0
         TotalLines = 0
         TotalFunctions = 0
@@ -784,11 +783,11 @@ function Invoke-SourceDigestionOrchestratorAuto {
         ComplexityScore = 0
         TechnicalDebt = 0
     }
-    $script:DigestionState.ProcessedFiles = @()
-    $script:DigestionState.FailedFiles = @()
+    ${script:DigestionState}.ProcessedFiles = @()
+    ${script:DigestionState}.FailedFiles = @()
     
     if ($NoCache) {
-        $script:DigestionState.Configuration.CacheEnabled = $false
+        ${script:DigestionState}.Configuration.CacheEnabled = $false
     }
     
     # Ensure output directory exists
@@ -808,7 +807,7 @@ function Invoke-SourceDigestionOrchestratorAuto {
         }
         
         # Exclude patterns
-        $excludes = $script:DigestionState.Configuration.ExcludePatterns
+        $excludes = ${script:DigestionState}.Configuration.ExcludePatterns
         $filesToProcess = $filesToProcess | Where-Object {
             $path = $_.FullName
             $excluded = $false
@@ -840,15 +839,15 @@ function Invoke-SourceDigestionOrchestratorAuto {
             $cached = Get-CachedDigestion -FilePath $file.FullName
             if ($cached) {
                 $allDigestions += $cached
-                $script:DigestionState.ProcessedFiles += $file.FullName
+                ${script:DigestionState}.ProcessedFiles += $file.FullName
                 
                 # Update aggregate metrics
                 if ($cached.Metrics) {
-                    $script:DigestionState.Metrics.TotalLines += $cached.Metrics.Lines
-                    $script:DigestionState.Metrics.TotalFunctions += $cached.Metrics.Functions
-                    $script:DigestionState.Metrics.TotalClasses += $cached.Metrics.Classes
+                    ${script:DigestionState}.Metrics.TotalLines += $cached.Metrics.Lines
+                    ${script:DigestionState}.Metrics.TotalFunctions += $cached.Metrics.Functions
+                    ${script:DigestionState}.Metrics.TotalClasses += $cached.Metrics.Classes
                     if ($cached.Metrics.CyclomaticComplexity) {
-                        $script:DigestionState.Metrics.ComplexityScore += $cached.Metrics.CyclomaticComplexity
+                        ${script:DigestionState}.Metrics.ComplexityScore += $cached.Metrics.CyclomaticComplexity
                     }
                 }
                 continue
@@ -874,7 +873,7 @@ function Invoke-SourceDigestionOrchestratorAuto {
             
             if ($digestion) {
                 $allDigestions += $digestion
-                $script:DigestionState.ProcessedFiles += $file.FullName
+                ${script:DigestionState}.ProcessedFiles += $file.FullName
                 
                 # Cache the result
                 Save-DigestionToCache -FilePath $file.FullName -Digestion $digestion
@@ -890,43 +889,43 @@ function Invoke-SourceDigestionOrchestratorAuto {
                 }
                 
                 # Aggregate metrics
-                $script:DigestionState.Metrics.TotalLines += $digestion.Metrics.Lines
-                $script:DigestionState.Metrics.TotalFunctions += $digestion.Metrics.Functions
-                $script:DigestionState.Metrics.TotalClasses += $digestion.Metrics.Classes
+                ${script:DigestionState}.Metrics.TotalLines += $digestion.Metrics.Lines
+                ${script:DigestionState}.Metrics.TotalFunctions += $digestion.Metrics.Functions
+                ${script:DigestionState}.Metrics.TotalClasses += $digestion.Metrics.Classes
                 if ($digestion.Metrics.CyclomaticComplexity) {
-                    $script:DigestionState.Metrics.ComplexityScore += $digestion.Metrics.CyclomaticComplexity
+                    ${script:DigestionState}.Metrics.ComplexityScore += $digestion.Metrics.CyclomaticComplexity
                 }
             }
         } catch {
             Write-StructuredLog -Message "Failed to digest: $($file.FullName)" -Level Warning -Context @{Error = $_.Exception.Message}
-            $script:DigestionState.FailedFiles += $file.FullName
+            ${script:DigestionState}.FailedFiles += $file.FullName
         }
     }
     
-    $script:DigestionState.Metrics.TotalFiles = $script:DigestionState.ProcessedFiles.Count
+    ${script:DigestionState}.Metrics.TotalFiles = ${script:DigestionState}.ProcessedFiles.Count
     
     # Calculate technical debt estimate (simplified)
-    if ($script:DigestionState.Metrics.ComplexityScore -gt 0) {
-        $avgComplexity = $script:DigestionState.Metrics.ComplexityScore / [math]::Max(1, $script:DigestionState.Metrics.TotalFunctions)
-        $script:DigestionState.Metrics.TechnicalDebt = [math]::Round($avgComplexity * $script:DigestionState.Metrics.TotalFunctions * 0.1, 2)
+    if (${script:DigestionState}.Metrics.ComplexityScore -gt 0) {
+        $avgComplexity = ${script:DigestionState}.Metrics.ComplexityScore / [math]::Max(1, ${script:DigestionState}.Metrics.TotalFunctions)
+        ${script:DigestionState}.Metrics.TechnicalDebt = [math]::Round($avgComplexity * ${script:DigestionState}.Metrics.TotalFunctions * 0.1, 2)
     }
     
     $stopwatch.Stop()
     
     # Generate output
     $result = @{
-        Success = $script:DigestionState.FailedFiles.Count -eq 0
-        ProcessedFiles = $script:DigestionState.ProcessedFiles.Count
-        FailedFiles = $script:DigestionState.FailedFiles.Count
+        Success = ${script:DigestionState}.FailedFiles.Count -eq 0
+        ProcessedFiles = ${script:DigestionState}.ProcessedFiles.Count
+        FailedFiles = ${script:DigestionState}.FailedFiles.Count
         Duration = $stopwatch.Elapsed.TotalMilliseconds
-        Metrics = $script:DigestionState.Metrics
+        Metrics = ${script:DigestionState}.Metrics
         Manifest = $manifestResult
     }
     
     if ($OutputLevel -eq 'All') {
         $result.Digestions = $allDigestions
-        $result.SymbolTable = $script:DigestionState.SymbolTable
-        $result.DependencyGraph = $script:DigestionState.DependencyGraph
+        $result.SymbolTable = ${script:DigestionState}.SymbolTable
+        $result.DependencyGraph = ${script:DigestionState}.DependencyGraph
     }
     
     # Save summary to output directory
@@ -934,10 +933,10 @@ function Invoke-SourceDigestionOrchestratorAuto {
     $result | ConvertTo-Json -Depth 10 | Set-Content $summaryPath -Encoding UTF8
     
     Write-StructuredLog -Message "Source Digestion complete" -Level Info -Context @{
-        Processed = $script:DigestionState.ProcessedFiles.Count
-        Failed = $script:DigestionState.FailedFiles.Count
-        TotalLines = $script:DigestionState.Metrics.TotalLines
-        TotalFunctions = $script:DigestionState.Metrics.TotalFunctions
+        Processed = ${script:DigestionState}.ProcessedFiles.Count
+        Failed = ${script:DigestionState}.FailedFiles.Count
+        TotalLines = ${script:DigestionState}.Metrics.TotalLines
+        TotalFunctions = ${script:DigestionState}.Metrics.TotalFunctions
         DurationMs = [math]::Round($stopwatch.Elapsed.TotalMilliseconds, 2)
     }
     
@@ -948,20 +947,20 @@ function Invoke-SourceDigestionOrchestratorAuto {
 # UTILITY FUNCTIONS
 # ============================================================================
 function Get-SymbolTable {
-    return $script:DigestionState.SymbolTable
+    return ${script:DigestionState}.SymbolTable
 }
 
 function Get-DependencyGraph {
-    return $script:DigestionState.DependencyGraph
+    return ${script:DigestionState}.DependencyGraph
 }
 
 function Get-DigestionMetrics {
-    return $script:DigestionState.Metrics
+    return ${script:DigestionState}.Metrics
 }
 
 function Clear-DigestionCache {
-    $script:DigestionState.Cache.Clear()
-    $cacheDir = $script:DigestionState.Configuration.CacheDirectory
+    ${script:DigestionState}.Cache.Clear()
+    $cacheDir = ${script:DigestionState}.Configuration.CacheDirectory
     if (Test-Path $cacheDir) {
         Remove-Item "$cacheDir/*.json" -Force -ErrorAction SilentlyContinue
     }

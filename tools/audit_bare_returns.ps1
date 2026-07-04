@@ -1,40 +1,40 @@
-$ErrorActionPreference = 'Stop'
+$Script:ErrorActionPreference = 'Stop'
 
-$root = (Get-Location).Path
-$files = Get-ChildItem -Path src -Recurse -File -Include *.cpp,*.cc,*.cxx,*.c,*.h,*.hpp
-$pattern = '(?ms)^\s*(?:template\s*<[^{};]+>\s*)?(?<sig>(?:[\w:\<\>\~\*&\s]+?)\s+[\w:~]+\s*\([^;{}]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?)\s*\{\s*return\s*(?<ret>0|false|nullptr|\{\}|"")\s*;\s*\}'
-$ctrlStarts = @('if', 'for', 'while', 'switch', 'catch')
-$qualOnly = @('static', 'virtual', 'inline', 'constexpr', 'consteval', 'constinit', 'friend', 'explicit')
+$Script:root = (Get-Location).Path
+$Script:files = Get-ChildItem -Path src -Recurse -File -Include *.cpp,*.cc,*.cxx,*.c,*.h,*.hpp
+$Script:pattern = '(?ms)^\s*(?:template\s*<[^{};]+>\s*)?(?<sig>(?:[\w:\<\>\~\*&\s]+?)\s+[\w:~]+\s*\([^;{}]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?)\s*\{\s*return\s*(?<ret>0|false|nullptr|\{\}|"")\s*;\s*\}'
+$Script:ctrlStarts = @('if', 'for', 'while', 'switch', 'catch')
+$Script:qualOnly = @('static', 'virtual', 'inline', 'constexpr', 'consteval', 'constinit', 'friend', 'explicit')
 
 function Is-LikelyCppFunction([string]$sig) {
     if ([string]::IsNullOrWhiteSpace($sig)) { return $false }
-    $s = ($sig -replace '\s+', ' ').Trim()
-    $lower = $s.ToLowerInvariant()
+$Script:s = ($sig -replace '\s+', ' ').Trim()
+$Script:lower = $s.ToLowerInvariant()
     foreach ($kw in $ctrlStarts) {
         if ($lower.StartsWith("$kw ") -or $lower.StartsWith("$kw(")) { return $false }
     }
     if ($lower.StartsWith('function ')) { return $false }
     if ($s -match '\.\.\.args') { return $false }
 
-    $paren = $s.IndexOf('(')
+$Script:paren = $s.IndexOf('(')
     if ($paren -lt 1) { return $false }
-    $pre = $s.Substring(0, $paren).Trim()
-    $tokens = @($pre -split '\s+' | Where-Object { $_ -ne '' })
+$Script:pre = $s.Substring(0, $paren).Trim()
+$Script:tokens = @($pre -split '\s+' | Where-Object { $_ -ne '' })
     if ($tokens.Count -le 1) { return $false }
     if ($tokens.Count -eq 2 -and ($qualOnly -contains $tokens[0].ToLowerInvariant())) { return $false }
     return $true
 }
 
-$results = New-Object System.Collections.Generic.List[object]
+$Script:results = New-Object System.Collections.Generic.List[object]
 foreach ($f in $files) {
-    $text = Get-Content -Raw -LiteralPath $f.FullName
+$Script:text = Get-Content -Raw -LiteralPath $f.FullName
     if ([string]::IsNullOrWhiteSpace($text)) { continue }
-    $matches = [regex]::Matches($text, $pattern)
+$Script:matches = [regex]::Matches($text, $pattern)
     foreach ($m in $matches) {
-        $sig = ($m.Groups['sig'].Value -replace '\s+', ' ').Trim()
+$Script:sig = ($m.Groups['sig'].Value -replace '\s+', ' ').Trim()
         if (-not (Is-LikelyCppFunction $sig)) { continue }
-        $line = ([regex]::Matches($text.Substring(0, $m.Index), "`n")).Count + 1
-        $rel = Resolve-Path -LiteralPath $f.FullName -Relative
+$Script:line = ([regex]::Matches($text.Substring(0, $m.Index), "`n")).Count + 1
+$Script:rel = Resolve-Path -LiteralPath $f.FullName -Relative
         if ($rel.StartsWith('.\')) { $rel = $rel.Substring(2) }
         $results.Add([pscustomobject]@{
                 File      = $rel
@@ -45,9 +45,9 @@ foreach ($f in $files) {
     }
 }
 
-$grouped = $results | Sort-Object File, Line | Group-Object File
-$outPath = Join-Path $root 'IDE_BARE_RETURN_FUNCTIONS_AUDIT.md'
-$sb = New-Object System.Text.StringBuilder
+$Script:grouped = $results | Sort-Object File, Line | Group-Object File
+$Script:outPath = Join-Path $root 'IDE_BARE_RETURN_FUNCTIONS_AUDIT.md'
+$Script:sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine('# Bare Return Function Audit')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('- Scope: `src/**/*.cpp|cc|cxx|c|h|hpp`')
@@ -59,7 +59,7 @@ $sb = New-Object System.Text.StringBuilder
 foreach ($g in $grouped) {
     [void]$sb.AppendLine("## $($g.Name)")
     foreach ($r in ($g.Group | Sort-Object Line)) {
-        $sigEsc = $r.Signature.Replace('`', '``')
+$Script:sigEsc = $r.Signature.Replace('`', '``')
         [void]$sb.AppendLine(('- L{0}: `{1}` -> `return {2};`' -f $r.Line, $sigEsc, $r.Return))
     }
     [void]$sb.AppendLine('')

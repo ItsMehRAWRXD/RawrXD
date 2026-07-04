@@ -51,8 +51,8 @@ if ($feat.enabled) {
   Write-Host "Expires: $($feat.expires) | Channel: $($feat.beacon.channel)" -ForegroundColor Gray
 
   if ($SetEnv) {
-    $env:ENABLE_GEMINI_3_FLASH_PREVIEW = "true"
-    $env:DEFAULT_MODEL = $feat.defaultModel
+    ${env:ENABLE_GEMINI_3_FLASH_PREVIEW} = "true"
+    ${env:DEFAULT_MODEL} = $feat.defaultModel
     Write-Host "Environment variables set for current session." -ForegroundColor Green
   }
 

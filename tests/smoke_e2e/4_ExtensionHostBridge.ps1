@@ -16,7 +16,7 @@ if (-not (Test-Path $PingPath)) {
 }
 
 if ($FullSmoke) {
-    $env:RAWRXD_SMOKE_IPC_FULL = "1"
+    ${env:RAWRXD_SMOKE_IPC_FULL} = "1"
 }
 
 & (Join-Path $PSScriptRoot "4_LiveExtensionIpc.ps1") `

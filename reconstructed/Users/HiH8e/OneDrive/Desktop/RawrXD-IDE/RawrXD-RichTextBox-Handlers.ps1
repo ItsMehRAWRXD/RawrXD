@@ -12,8 +12,8 @@
 # MODULE VARIABLES
 # ============================================
 
-$script:RichTextBoxControls = @{}
-$script:EventHandlers = @{}
+${script:RichTextBoxControls} = @{}
+${script:EventHandlers} = @{}
 
 # ============================================
 # RICHTEXTBOX INITIALIZATION
@@ -29,7 +29,7 @@ function Register-RichTextBox {
         [object]$Control
     )
     
-    $script:RichTextBoxControls[$ControlName] = @{
+    ${script:RichTextBoxControls}[$ControlName] = @{
         Name = $ControlName
         Control = $Control
         RegisteredAt = Get-Date
@@ -48,8 +48,8 @@ function Get-RegisteredRichTextBoxes {
         Get list of registered RichTextBox controls
     #>
     return @{
-        Count = $script:RichTextBoxControls.Count
-        Controls = $script:RichTextBoxControls.Keys
+        Count = ${script:RichTextBoxControls}.Count
+        Controls = ${script:RichTextBoxControls}.Keys
     }
 }
 

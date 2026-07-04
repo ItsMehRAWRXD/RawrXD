@@ -8,18 +8,18 @@ $ErrorActionPreference = "Stop"
 # Root paths (aligned with swarm_control_center.ps1)
 . "$PSScriptRoot\\RawrXD_Root.ps1"
 
-$script:SwarmRoot = Get-RawrXDRoot
-$script:ConfigDir = Join-Path $SwarmRoot "logs/swarm_config"
-$script:BeaconDir = Join-Path $SwarmRoot "logs/swarm_beacon"
-$script:MemoryDir = Join-Path $SwarmRoot "logs/swarm_memory"
-$script:ModelsConfigFile = Join-Path $ConfigDir "models.json"
-$script:ModelSourcesFile = Join-Path $ConfigDir "model_sources.json"
+${script:SwarmRoot} = Get-RawrXDRoot
+${script:ConfigDir} = Join-Path $SwarmRoot "logs/swarm_config"
+${script:BeaconDir} = Join-Path $SwarmRoot "logs/swarm_beacon"
+${script:MemoryDir} = Join-Path $SwarmRoot "logs/swarm_memory"
+${script:ModelsConfigFile} = Join-Path $ConfigDir "models.json"
+${script:ModelSourcesFile} = Join-Path $ConfigDir "model_sources.json"
 
 # Ensure config directory exists
 if (-not (Test-Path $ConfigDir)) { New-Item -Path $ConfigDir -ItemType Directory -Force | Out-Null }
 
 # Defaults for model sources
-$script:DefaultModelSources = @{
+${script:DefaultModelSources} = @{
     LocalGGUF = @{
         Roots = @()
     }

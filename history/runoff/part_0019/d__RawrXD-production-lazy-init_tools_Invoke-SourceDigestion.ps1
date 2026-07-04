@@ -65,7 +65,7 @@ param(
 # CONFIGURATION
 # ============================================================================
 
-$Script:Config = @{
+${Script:Config} = @{
     SourceExtensions = @('.cpp', '.c', '.h', '.hpp', '.asm', '.inc', '.py', '.ps1', '.bat', '.sh', '.cmake')
     ExcludePatterns = @('build/', 'obj/', 'bin/', '.git/', 'CMakeFiles/', 'autogen/', '.dir/', 'Debug/', 'Release/', 'x64/')
     
@@ -210,7 +210,7 @@ function Get-SourceFiles {
     
     $files = @()
     
-    foreach ($ext in $Script:Config.SourceExtensions) {
+    foreach ($ext in ${Script:Config}.SourceExtensions) {
         $found = Get-ChildItem -Path $RootPath -Filter "*$ext" -Recurse -File -ErrorAction SilentlyContinue
         $files += $found
     }
@@ -219,7 +219,7 @@ function Get-SourceFiles {
     $filtered = $files | Where-Object {
         $path = $_.FullName
         $exclude = $false
-        foreach ($pattern in $Script:Config.ExcludePatterns) {
+        foreach ($pattern in ${Script:Config}.ExcludePatterns) {
             if ($path -like "*$pattern*") {
                 $exclude = $true
                 break
@@ -294,7 +294,7 @@ function Analyze-File {
         $lineNum = 0
         foreach ($line in $lines) {
             $lineNum++
-            foreach ($pattern in $Script:Config.StubPatterns) {
+            foreach ($pattern in ${Script:Config}.StubPatterns) {
                 if ($line -match $pattern) {
                     [void]$analysis.Stubs.Add(@{
                         LineNumber = $lineNum
@@ -341,8 +341,8 @@ function Get-FileCategory {
     
     $pathLower = $RelativePath.ToLower()
     
-    foreach ($category in $Script:Config.Categories.Keys) {
-        foreach ($pattern in $Script:Config.Categories[$category]) {
+    foreach ($category in ${Script:Config}.Categories.Keys) {
+        foreach ($pattern in ${Script:Config}.Categories[$category]) {
             if ($pathLower -like "*$pattern*") {
                 return $category
             }
@@ -358,8 +358,8 @@ function Analyze-Components {
     $components = @{}
     
     # Check critical components
-    foreach ($name in $Script:Config.CriticalComponents.Keys) {
-        $expectedPath = $Script:Config.CriticalComponents[$name]
+    foreach ($name in ${Script:Config}.CriticalComponents.Keys) {
+        $expectedPath = ${Script:Config}.CriticalComponents[$name]
         $status = [ComponentStatus]::new()
         $status.Name = $name
         
@@ -593,7 +593,7 @@ function Export-ManifestMarkdown {
     $lines += ""
     $health = $Manifest.OverallHealth
     $healthBar = ("█" * [Math]::Floor($health / 5)) + ("░" * (20 - [Math]::Floor($health / 5)))
-    $status = if ($health -ge 80) { "🟢 Excellent" } elseif ($health -ge 60) { "🟡 Good" } elseif ($health -ge 40) { "🟠 Needs Work" } else { "🔴 Critical" }
+    $status = $(if ($health -ge 80) { "🟢 Excellent" } elseif ($health -ge 60) { "🟡 Good" } elseif ($health -ge 40) { "🟠 Needs Work" } else { "🔴 Critical" }
     $lines += "``````"
     $lines += "[$healthBar] $health% - $status"
     $lines += "``````"
@@ -645,7 +645,7 @@ function Export-ManifestMarkdown {
         if ($files.Count -gt 0) {
             $avgCompletion = $avgCompletion / $files.Count
         }
-        $statusIcon = if ($avgCompletion -ge 90) { "✅" } elseif ($avgCompletion -ge 70) { "🟡" } elseif ($avgCompletion -ge 50) { "🟠" } else { "🔴" }
+        $statusIcon = $(if ($avgCompletion -ge 90) { "✅" } elseif ($avgCompletion -ge 70) { "🟡" } elseif ($avgCompletion -ge 50) { "🟠" } else { "🔴" }
         $lines += "| $([CultureInfo]::CurrentCulture.TextInfo.ToTitleCase($category)) | $($files.Count) | $statusIcon $([Math]::Round($avgCompletion, 0))% |"
     }
     $lines += ""
@@ -709,13 +709,13 @@ function Show-Summary {
     # Health bar
     $health = $Manifest.OverallHealth
     $healthBar = ("█" * [Math]::Floor($health / 5)) + ("░" * (20 - [Math]::Floor($health / 5)))
-    $healthColor = if ($health -ge 80) { 'Green' } elseif ($health -ge 60) { 'Yellow' } else { 'Red' }
+    $healthColor = $(if ($health -ge 80) { 'Green' } elseif ($health -ge 60) { 'Yellow' } else { 'Red' }
     Write-Host "`n💪 HEALTH: [$healthBar] $health%" -ForegroundColor $healthColor
     
     # Completion bar
     $completion = [int]$Manifest.OverallCompletion
     $compBar = ("█" * [Math]::Floor($completion / 5)) + ("░" * (20 - [Math]::Floor($completion / 5)))
-    $compColor = if ($completion -ge 80) { 'Green' } elseif ($completion -ge 60) { 'Yellow' } else { 'Red' }
+    $compColor = $(if ($completion -ge 80) { 'Green' } elseif ($completion -ge 60) { 'Yellow' } else { 'Red' }
     Write-Host "✅ COMPLETION: [$compBar] $([Math]::Round($Manifest.OverallCompletion, 1))%" -ForegroundColor $compColor
     
     # Critical issues
@@ -749,7 +749,7 @@ Show-Summary -Manifest $manifest
 
 # Export reports
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$basePath = if ($ExportPath) { $ExportPath } else { "D:\RawrXD-production-lazy-init" }
+$basePath = $(if ($ExportPath) { $ExportPath } else { "D:\RawrXD-production-lazy-init" }
 
 switch ($OutputFormat) {
     'json' {

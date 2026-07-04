@@ -211,22 +211,22 @@ class EnhancedDesktopCopilot {
         $tab.Controls.Add($dragLabel)
         
         # Image display area
-        $script:imageBox = New-Object System.Windows.Forms.PictureBox
-        $script:imageBox.Location = New-Object System.Drawing.Point(20, 70)
-        $script:imageBox.Size = New-Object System.Drawing.Size(900, 380)
-        $script:imageBox.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::Zoom
-        $script:imageBox.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
-        $script:imageBox.BackColor = [System.Drawing.Color]::FromArgb(50, 50, 50)
-        $tab.Controls.Add($script:imageBox)
+        ${script:imageBox} = New-Object System.Windows.Forms.PictureBox
+        ${script:imageBox}.Location = New-Object System.Drawing.Point(20, 70)
+        ${script:imageBox}.Size = New-Object System.Drawing.Size(900, 380)
+        ${script:imageBox}.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::Zoom
+        ${script:imageBox}.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
+        ${script:imageBox}.BackColor = [System.Drawing.Color]::FromArgb(50, 50, 50)
+        $tab.Controls.Add(${script:imageBox})
         
         # Info label
-        $script:mediaInfoLabel = New-Object System.Windows.Forms.Label
-        $script:mediaInfoLabel.Location = New-Object System.Drawing.Point(20, 460)
-        $script:mediaInfoLabel.Size = New-Object System.Drawing.Size(900, 60)
-        $script:mediaInfoLabel.Font = New-Object System.Drawing.Font("Consolas", 9)
-        $script:mediaInfoLabel.BackColor = [System.Drawing.Color]::FromArgb(240, 240, 245)
-        $script:mediaInfoLabel.Padding = New-Object System.Windows.Forms.Padding(5)
-        $tab.Controls.Add($script:mediaInfoLabel)
+        ${script:mediaInfoLabel} = New-Object System.Windows.Forms.Label
+        ${script:mediaInfoLabel}.Location = New-Object System.Drawing.Point(20, 460)
+        ${script:mediaInfoLabel}.Size = New-Object System.Drawing.Size(900, 60)
+        ${script:mediaInfoLabel}.Font = New-Object System.Drawing.Font("Consolas", 9)
+        ${script:mediaInfoLabel}.BackColor = [System.Drawing.Color]::FromArgb(240, 240, 245)
+        ${script:mediaInfoLabel}.Padding = New-Object System.Windows.Forms.Padding(5)
+        $tab.Controls.Add(${script:mediaInfoLabel})
         
         $this.TabControl.TabPages.Add($tab)
     }
@@ -266,11 +266,11 @@ class EnhancedDesktopCopilot {
         $tab.Controls.Add($dragLabel)
         
         # File list
-        $script:fileListBox = New-Object System.Windows.Forms.ListBox
-        $script:fileListBox.Location = New-Object System.Drawing.Point(20, 80)
-        $script:fileListBox.Size = New-Object System.Drawing.Size(900, 300)
-        $script:fileListBox.Font = New-Object System.Drawing.Font("Consolas", 9)
-        $tab.Controls.Add($script:fileListBox)
+        ${script:fileListBox} = New-Object System.Windows.Forms.ListBox
+        ${script:fileListBox}.Location = New-Object System.Drawing.Point(20, 80)
+        ${script:fileListBox}.Size = New-Object System.Drawing.Size(900, 300)
+        ${script:fileListBox}.Font = New-Object System.Drawing.Font("Consolas", 9)
+        $tab.Controls.Add(${script:fileListBox})
         
         # Action buttons
         $analyzeBtn = New-Object System.Windows.Forms.Button
@@ -301,18 +301,18 @@ class EnhancedDesktopCopilot {
         $clearBtn.ForeColor = [System.Drawing.Color]::White
         $clearBtn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
         $clearBtn.add_Click({ 
-            $script:fileListBox.Items.Clear()
+            ${script:fileListBox}.Items.Clear()
             $this.DroppedItems.Clear()
         }.GetNewClosure())
         $tab.Controls.Add($clearBtn)
         
         # Info label
-        $script:fileInfoLabel = New-Object System.Windows.Forms.Label
-        $script:fileInfoLabel.Location = New-Object System.Drawing.Point(20, 435)
-        $script:fileInfoLabel.Size = New-Object System.Drawing.Size(900, 55)
-        $script:fileInfoLabel.Font = New-Object System.Drawing.Font("Consolas", 9)
-        $script:fileInfoLabel.BackColor = [System.Drawing.Color]::FromArgb(240, 240, 245)
-        $tab.Controls.Add($script:fileInfoLabel)
+        ${script:fileInfoLabel} = New-Object System.Windows.Forms.Label
+        ${script:fileInfoLabel}.Location = New-Object System.Drawing.Point(20, 435)
+        ${script:fileInfoLabel}.Size = New-Object System.Drawing.Size(900, 55)
+        ${script:fileInfoLabel}.Font = New-Object System.Drawing.Font("Consolas", 9)
+        ${script:fileInfoLabel}.BackColor = [System.Drawing.Color]::FromArgb(240, 240, 245)
+        $tab.Controls.Add(${script:fileInfoLabel})
         
         $this.TabControl.TabPages.Add($tab)
     }
@@ -329,12 +329,12 @@ class EnhancedDesktopCopilot {
         $urlLabel.Size = New-Object System.Drawing.Size(100, 25)
         $tab.Controls.Add($urlLabel)
         
-        $script:urlBox = New-Object System.Windows.Forms.TextBox
-        $script:urlBox.Location = New-Object System.Drawing.Point(130, 20)
-        $script:urlBox.Size = New-Object System.Drawing.Size(650, 30)
-        $script:urlBox.Font = New-Object System.Drawing.Font("Segoe UI", 11)
-        $script:urlBox.Text = "https://example.com"
-        $tab.Controls.Add($script:urlBox)
+        ${script:urlBox} = New-Object System.Windows.Forms.TextBox
+        ${script:urlBox}.Location = New-Object System.Drawing.Point(130, 20)
+        ${script:urlBox}.Size = New-Object System.Drawing.Size(650, 30)
+        ${script:urlBox}.Font = New-Object System.Drawing.Font("Segoe UI", 11)
+        ${script:urlBox}.Text = "https://example.com"
+        $tab.Controls.Add(${script:urlBox})
         
         $openBtn = New-Object System.Windows.Forms.Button
         $openBtn.Text = "🌐 Open"
@@ -344,22 +344,22 @@ class EnhancedDesktopCopilot {
         $openBtn.ForeColor = [System.Drawing.Color]::White
         $openBtn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
         $openBtn.add_Click({ 
-            Start-Process $script:urlBox.Text
+            Start-Process ${script:urlBox}.Text
             $this.TrayIcon.ShowBalloonTip(2000, "Browser Opened", "Opening in default browser", [System.Windows.Forms.ToolTipIcon]::Info)
         }.GetNewClosure())
         $tab.Controls.Add($openBtn)
         
         # Content preview
-        $script:webPreviewBox = New-Object System.Windows.Forms.TextBox
-        $script:webPreviewBox.Location = New-Object System.Drawing.Point(20, 65)
-        $script:webPreviewBox.Size = New-Object System.Drawing.Size(900, 400)
-        $script:webPreviewBox.Multiline = $true
-        $script:webPreviewBox.ScrollBars = "Vertical"
-        $script:webPreviewBox.Font = New-Object System.Drawing.Font("Consolas", 9)
-        $script:webPreviewBox.ReadOnly = $true
-        $script:webPreviewBox.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-        $script:webPreviewBox.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)
-        $tab.Controls.Add($script:webPreviewBox)
+        ${script:webPreviewBox} = New-Object System.Windows.Forms.TextBox
+        ${script:webPreviewBox}.Location = New-Object System.Drawing.Point(20, 65)
+        ${script:webPreviewBox}.Size = New-Object System.Drawing.Size(900, 400)
+        ${script:webPreviewBox}.Multiline = $true
+        ${script:webPreviewBox}.ScrollBars = "Vertical"
+        ${script:webPreviewBox}.Font = New-Object System.Drawing.Font("Consolas", 9)
+        ${script:webPreviewBox}.ReadOnly = $true
+        ${script:webPreviewBox}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        ${script:webPreviewBox}.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)
+        $tab.Controls.Add(${script:webPreviewBox})
         
         # Fetch button
         $fetchBtn = New-Object System.Windows.Forms.Button
@@ -380,16 +380,16 @@ class EnhancedDesktopCopilot {
         $tab.Text = "💻 System Info"
         $tab.BackColor = [System.Drawing.Color]::White
         
-        $script:systemInfoBox = New-Object System.Windows.Forms.TextBox
-        $script:systemInfoBox.Location = New-Object System.Drawing.Point(20, 20)
-        $script:systemInfoBox.Size = New-Object System.Drawing.Size(900, 460)
-        $script:systemInfoBox.Multiline = $true
-        $script:systemInfoBox.ScrollBars = "Vertical"
-        $script:systemInfoBox.Font = New-Object System.Drawing.Font("Consolas", 9)
-        $script:systemInfoBox.ReadOnly = $true
-        $script:systemInfoBox.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-        $script:systemInfoBox.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)
-        $tab.Controls.Add($script:systemInfoBox)
+        ${script:systemInfoBox} = New-Object System.Windows.Forms.TextBox
+        ${script:systemInfoBox}.Location = New-Object System.Drawing.Point(20, 20)
+        ${script:systemInfoBox}.Size = New-Object System.Drawing.Size(900, 460)
+        ${script:systemInfoBox}.Multiline = $true
+        ${script:systemInfoBox}.ScrollBars = "Vertical"
+        ${script:systemInfoBox}.Font = New-Object System.Drawing.Font("Consolas", 9)
+        ${script:systemInfoBox}.ReadOnly = $true
+        ${script:systemInfoBox}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        ${script:systemInfoBox}.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)
+        $tab.Controls.Add(${script:systemInfoBox})
         
         $refreshBtn = New-Object System.Windows.Forms.Button
         $refreshBtn.Text = "🔄 Refresh"
@@ -416,10 +416,10 @@ class EnhancedDesktopCopilot {
                 
                 $fileInfo = Get-Item $file
                 if ($fileInfo.PSIsContainer) {
-                    $script:fileListBox.Items.Add("📁 $($fileInfo.Name) (Folder)")
+                    ${script:fileListBox}.Items.Add("📁 $($fileInfo.Name) (Folder)")
                 }
                 else {
-                    $script:fileListBox.Items.Add("📄 $($fileInfo.Name)")
+                    ${script:fileListBox}.Items.Add("📄 $($fileInfo.Name)")
                 }
             }
             
@@ -439,12 +439,12 @@ class EnhancedDesktopCopilot {
                 if ($imageExtensions -contains $ext) {
                     try {
                         $image = New-Object System.Drawing.Bitmap($file)
-                        $script:imageBox.Image = $image
+                        ${script:imageBox}.Image = $image
                         
                         $fileInfo = Get-Item $file
                         $sizeMB = [Math]::Round($fileInfo.Length / 1MB, 2)
                         
-                        $script:mediaInfoLabel.Text = @"
+                        ${script:mediaInfoLabel}.Text = @"
 File: $($fileInfo.Name)
 Size: $sizeMB MB | Dimensions: $($image.Width)x$($image.Height)px
 Path: $file
@@ -454,7 +454,7 @@ Modified: $($fileInfo.LastWriteTime)
                         $this.TrayIcon.ShowBalloonTip(2000, "Image Loaded", "Displaying: $($fileInfo.Name)", [System.Windows.Forms.ToolTipIcon]::Info)
                     }
                     catch {
-                        $script:mediaInfoLabel.Text = "❌ Error loading image: $_"
+                        ${script:mediaInfoLabel}.Text = "❌ Error loading image: $_"
                     }
                     break
                 }
@@ -466,7 +466,7 @@ Modified: $($fileInfo.LastWriteTime)
         if ($e.Data.GetDataPresent([System.Windows.Forms.DataFormats]::FileDrop)) {
             $files = $e.Data.GetData([System.Windows.Forms.DataFormats]::FileDrop)
             
-            $script:fileListBox.Items.Clear()
+            ${script:fileListBox}.Items.Clear()
             $this.DroppedItems.Clear()
             
             foreach ($file in $files) {
@@ -474,11 +474,11 @@ Modified: $($fileInfo.LastWriteTime)
                 
                 $fileInfo = Get-Item $file
                 if ($fileInfo.PSIsContainer) {
-                    $script:fileListBox.Items.Add("📁 $($fileInfo.Name) (Folder)")
+                    ${script:fileListBox}.Items.Add("📁 $($fileInfo.Name) (Folder)")
                 }
                 else {
                     $sizeMB = [Math]::Round($fileInfo.Length / 1MB, 2)
-                    $script:fileListBox.Items.Add("📄 $($fileInfo.Name) ($sizeMB MB)")
+                    ${script:fileListBox}.Items.Add("📄 $($fileInfo.Name) ($sizeMB MB)")
                 }
             }
             
@@ -488,7 +488,7 @@ Modified: $($fileInfo.LastWriteTime)
     
     [void] AnalyzeDroppedFiles() {
         if ($this.DroppedItems.Count -eq 0) {
-            $script:fileInfoLabel.Text = "❌ No files dropped yet"
+            ${script:fileInfoLabel}.Text = "❌ No files dropped yet"
             return
         }
         
@@ -540,12 +540,12 @@ Modified: $($fileInfo.LastWriteTime)
             $info += "  $type: $($typeBreakdown[$type]) file(s)`r`n"
         }
         
-        $script:fileInfoLabel.Text = $info
+        ${script:fileInfoLabel}.Text = $info
     }
     
     [void] OrganizeFiles() {
         if ($this.DroppedItems.Count -eq 0) {
-            $script:fileInfoLabel.Text = "❌ No files to organize"
+            ${script:fileInfoLabel}.Text = "❌ No files to organize"
             return
         }
         
@@ -581,19 +581,19 @@ Modified: $($fileInfo.LastWriteTime)
         }
         
         $info += "`r`nTotal Files Organized: $organized"
-        $script:fileInfoLabel.Text = $info
+        ${script:fileInfoLabel}.Text = $info
         $this.TrayIcon.ShowBalloonTip(3000, "Organization Complete", "$organized files organized!", [System.Windows.Forms.ToolTipIcon]::Info)
     }
     
     [void] FetchWebsitePreview() {
-        $url = $script:urlBox.Text
+        $url = ${script:urlBox}.Text
         
         if ([string]::IsNullOrWhiteSpace($url)) {
-            $script:webPreviewBox.Text = "❌ Please enter a URL"
+            ${script:webPreviewBox}.Text = "❌ Please enter a URL"
             return
         }
         
-        $script:webPreviewBox.Text = "⏳ Fetching content..."
+        ${script:webPreviewBox}.Text = "⏳ Fetching content..."
         $this.MainWindow.Refresh()
         
         try {
@@ -620,10 +620,10 @@ $text
 💡 Click "Open" button to view full website in browser
 "@
             
-            $script:webPreviewBox.Text = $preview
+            ${script:webPreviewBox}.Text = $preview
         }
         catch {
-            $script:webPreviewBox.Text = "❌ Error fetching website:`r`n$_`r`n`r`n💡 Try opening in browser instead"
+            ${script:webPreviewBox}.Text = "❌ Error fetching website:`r`n$_`r`n`r`n💡 Try opening in browser instead"
         }
     }
     
@@ -671,8 +671,8 @@ catch {
 
 🖥️  COMPUTER INFO
 ─────────────────────────────────────────────────────────────
-Computer Name:      $env:COMPUTERNAME
-Username:           $env:USERNAME
+Computer Name:      ${env:COMPUTERNAME}
+Username:           ${env:USERNAME}
 OS:                 $([System.Environment]::OSVersion.VersionString)
 Processors:         $((Get-WmiObject Win32_Processor).ProcessorCount)
 RAM:                $memTotalGB GB
@@ -680,10 +680,10 @@ RAM:                $memTotalGB GB
 ═══════════════════════════════════════════════════════════════
 "@
             
-            $script:systemInfoBox.Text = $info
+            ${script:systemInfoBox}.Text = $info
         }
         catch {
-            $script:systemInfoBox.Text = "❌ Error retrieving system info: $_"
+            ${script:systemInfoBox}.Text = "❌ Error retrieving system info: $_"
         }
     }
     
@@ -701,25 +701,25 @@ RAM:                $memTotalGB GB
     }
     
     [void] FixCommonIssues() {
-        $script:systemInfoBox.Text = "🔧 FIXING COMMON ISSUES...`r`n`r`n"
+        ${script:systemInfoBox}.Text = "🔧 FIXING COMMON ISSUES...`r`n`r`n"
         
         try {
-            $script:systemInfoBox.AppendText("Cleaning temp files...`r`n")
+            ${script:systemInfoBox}.AppendText("Cleaning temp files...`r`n")
             $tempPath = [System.IO.Path]::GetTempPath()
             $files = Get-ChildItem $tempPath -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-7) }
             $count = $files.Count
             $files | Remove-Item -Force -ErrorAction SilentlyContinue
-            $script:systemInfoBox.AppendText("✅ Cleaned $count temp files`r`n`r`n")
+            ${script:systemInfoBox}.AppendText("✅ Cleaned $count temp files`r`n`r`n")
             
-            $script:systemInfoBox.AppendText("Flushing DNS...`r`n")
+            ${script:systemInfoBox}.AppendText("Flushing DNS...`r`n")
             ipconfig /flushdns | Out-Null
-            $script:systemInfoBox.AppendText("✅ DNS flushed`r`n`r`n")
+            ${script:systemInfoBox}.AppendText("✅ DNS flushed`r`n`r`n")
             
-            $script:systemInfoBox.AppendText("✅ Common fixes applied!`r`n")
+            ${script:systemInfoBox}.AppendText("✅ Common fixes applied!`r`n")
             $this.TrayIcon.ShowBalloonTip(2000, "Fixes Applied", "Common issues fixed!", [System.Windows.Forms.ToolTipIcon]::Info)
         }
         catch {
-            $script:systemInfoBox.AppendText("❌ Error: $_`r`n")
+            ${script:systemInfoBox}.AppendText("❌ Error: $_`r`n")
         }
     }
     
@@ -737,7 +737,7 @@ RAM:                $memTotalGB GB
             }
         }
         
-        $script:systemInfoBox.Text = $historyText
+        ${script:systemInfoBox}.Text = $historyText
     }
     
     [void] StartSystemMonitoring() {
@@ -764,7 +764,7 @@ RAM:                $memTotalGB GB
     }
     
     [void] Run() {
-        if (-not $script:Silent) {
+        if (-not ${script:Silent}) {
             Write-Host "`n✅ Enhanced Copilot running in system tray!" -ForegroundColor Green
             Write-Host "   • Drag files/folders to window or tray" -ForegroundColor Cyan
             Write-Host "   • View images and websites" -ForegroundColor Cyan

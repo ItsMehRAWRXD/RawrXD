@@ -28,7 +28,7 @@ function Invoke-MarketplaceSearchHandler {
         else {
             Write-Host "Found $($results.Count) extension(s):`n" -ForegroundColor Green
             foreach ($ext in $results) {
-                $downloads = if ($ext.Downloads) { "{0:N0}" -f $ext.Downloads } else { "N/A" }
+                $downloads = $(if ($ext.Downloads) { "{0:N0}" -f $ext.Downloads } else { "N/A" }
                 Write-Host "📦 $($ext.Name) v$($ext.Version)" -ForegroundColor White
                 Write-Host "   $($ext.Description)" -ForegroundColor Gray
                 Write-Host "   Author: $($ext.Author) | Downloads: $downloads | ID: $($ext.Id)" -ForegroundColor DarkGray
@@ -85,12 +85,12 @@ function Invoke-MarketplaceInstallHandler {
 function Invoke-ListExtensionsHandler {
     try {
         Write-Host "`n=== Installed Extensions ===" -ForegroundColor Cyan
-        if ($script:extensionRegistry.Count -eq 0) {
+        if (${script:extensionRegistry}.Count -eq 0) {
             Write-Host "No extensions installed" -ForegroundColor Gray
         }
         else {
-            foreach ($ext in $script:extensionRegistry) {
-                $status = if ($ext.Enabled) { "✅ ENABLED" } else { "⏸️ DISABLED" }
+            foreach ($ext in ${script:extensionRegistry}) {
+                $status = $(if ($ext.Enabled) { "✅ ENABLED" } else { "⏸️ DISABLED" }
                 Write-Host "📦 $($ext.Name) v$($ext.Version) $status" -ForegroundColor White
                 Write-Host "   $($ext.Description)" -ForegroundColor Gray
                 Write-Host "   ID: $($ext.Id)" -ForegroundColor DarkGray

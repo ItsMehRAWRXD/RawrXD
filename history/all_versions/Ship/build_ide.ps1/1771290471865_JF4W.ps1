@@ -26,9 +26,9 @@ $sdkLib  = "$sdkBase\Lib\$sdkVer"
 if (!(Test-Path $clExe)) { Write-Host "ERROR: cl.exe not found at $clExe" -ForegroundColor Red; exit 1 }
 
 # Environment
-$env:PATH = "$vsBase\VC\Tools\MSVC\$msvcVer\bin\Hostx64\x64;$env:PATH"
-$env:INCLUDE = "$vcInc;$sdkInc\ucrt;$sdkInc\um;$sdkInc\shared;$sdkInc\winrt"
-$env:LIB = "$vcLib;$sdkLib\ucrt\x64;$sdkLib\um\x64"
+${env:PATH} = "$vsBase\VC\Tools\MSVC\$msvcVer\bin\Hostx64\x64;${env:PATH}"
+${env:INCLUDE} = "$vcInc;$sdkInc\ucrt;$sdkInc\um;$sdkInc\shared;$sdkInc\winrt"
+${env:LIB} = "$vcLib;$sdkLib\ucrt\x64;$sdkLib\um\x64"
 
 $shipDir = "D:\rawrxd\Ship"
 $buildDir = "$shipDir\build"
@@ -64,7 +64,7 @@ function Build-DLL {
     }
     
     $ext = [System.IO.Path]::GetExtension($Source).ToLower()
-    $langFlag = if ($ext -eq ".c") { "/TC" } else { "/TP" }
+    $langFlag = $(if ($ext -eq ".c") { "/TC" } else { "/TP" }
     
     $cmd = "& '$clExe' $commonFlags $langFlag /LD `"$srcPath`" /Fe`"$dllPath`" /Fo`"$objPath`" /link $commonLibs $ExtraLibs /DLL /NOLOGO 2>&1"
     $output = Invoke-Expression $cmd
@@ -99,7 +99,7 @@ $phase1 = @(
 )
 
 foreach ($item in $phase1) {
-    $extra = if ($item.Count -gt 2) { $item[2] } else { "" }
+    $extra = $(if ($item.Count -gt 2) { $item[2] } else { "" }
     if (Build-DLL $item[0] $item[1] $extra) { $totalSuccess++ } else { $totalFail++; $failedFiles += $item[0] }
 }
 
@@ -122,7 +122,7 @@ $phase2 = @(
 )
 
 foreach ($item in $phase2) {
-    $extra = if ($item.Count -gt 2) { $item[2] } else { "" }
+    $extra = $(if ($item.Count -gt 2) { $item[2] } else { "" }
     if (Build-DLL $item[0] $item[1] $extra) { $totalSuccess++ } else { $totalFail++; $failedFiles += $item[0] }
 }
 
@@ -142,7 +142,7 @@ $phase3 = @(
 )
 
 foreach ($item in $phase3) {
-    $extra = if ($item.Count -gt 2) { $item[2] } else { "" }
+    $extra = $(if ($item.Count -gt 2) { $item[2] } else { "" }
     if (Build-DLL $item[0] $item[1] $extra) { $totalSuccess++ } else { $totalFail++; $failedFiles += $item[0] }
 }
 
@@ -164,7 +164,7 @@ $phase4 = @(
 )
 
 foreach ($item in $phase4) {
-    $extra = if ($item.Count -gt 2) { $item[2] } else { "" }
+    $extra = $(if ($item.Count -gt 2) { $item[2] } else { "" }
     if (Build-DLL $item[0] $item[1] $extra) { $totalSuccess++ } else { $totalFail++; $failedFiles += $item[0] }
 }
 

@@ -4,7 +4,7 @@ Add-Type -AssemblyName System.Drawing
 Write-Host "=== RAWR BROWSER - FINAL WORKING VERSION ===" -ForegroundColor Green
 
 # Comprehensive WebView2 setup
-$wvDir = "$env:TEMP\WVLibs"
+$wvDir = "${env:TEMP}\WVLibs"
 $useWebView2 = $false
 
 # Download WebView2 SDK if needed
@@ -68,7 +68,7 @@ if ($useWebView2) {
     $form.Controls.Add($webView)
         
     # Track initialization state
-    $script:webViewReady = $false
+    ${script:webViewReady} = $false
         
     # Core initialization completed event
     $webView.add_CoreWebView2InitializationCompleted({

@@ -3,7 +3,7 @@
 # [STEP] layer heartbeats: also mirrored to OutputDebugString (rawrxd_transformer.cpp) — use DebugView or VS Output while inferring.
 
 $ErrorActionPreference = "Stop"
-$log = Join-Path $env:APPDATA "RawrXD\ide.log"
+$log = Join-Path ${env:APPDATA} "RawrXD\ide.log"
 if (-not (Test-Path -LiteralPath $log)) {
     Write-Host "Log not found: $log"
     Write-Host "Launch IDE once (deferred init creates RawrXD dir and opens ide.log)."

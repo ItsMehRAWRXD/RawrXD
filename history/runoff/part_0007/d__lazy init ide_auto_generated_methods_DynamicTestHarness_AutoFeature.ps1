@@ -278,7 +278,7 @@ function Export-TestResults {
 <testsuites name="RawrXD Test Suite" tests="$($Report.Summary.TotalTests)" failures="$($Report.Summary.Failed)" errors="0" time="$([Math]::Round($Report.Summary.TotalDurationMs / 1000, 3))">
   <testsuite name="PowerShell Tests" tests="$($Report.Summary.TotalTests)" failures="$($Report.Summary.Failed)" errors="0" time="$([Math]::Round($Report.Summary.TotalDurationMs / 1000, 3))">
 $(foreach ($result in $Report.Results) {
-    $status = if ($result.Status -eq 'Failed') { "    <failure message=`"$([System.Security.SecurityElement]::Escape($result.ErrorMessage))`"><![CDATA[$($result.StackTrace)]]></failure>" } else { '' }
+    $status = $(if ($result.Status -eq 'Failed') { "    <failure message=`"$([System.Security.SecurityElement]::Escape($result.ErrorMessage))`"><![CDATA[$($result.StackTrace)]]></failure>" } else { '' }
     "    <testcase name=`"$([System.Security.SecurityElement]::Escape($result.TestName))`" classname=`"$([System.Security.SecurityElement]::Escape($result.TestFile))`" time=`"$([Math]::Round($result.DurationMs / 1000, 3))`">
 $status
     </testcase>"
@@ -293,8 +293,8 @@ $status
     # HTML Report
     if ($Format -in @('HTML', 'All')) {
         $htmlPath = Join-Path $OutputDir 'test_report.html'
-        $passRate = if ($Report.Summary.TotalTests -gt 0) { [Math]::Round(($Report.Summary.Passed / $Report.Summary.TotalTests) * 100, 1) } else { 0 }
-        $statusColor = if ($passRate -ge 90) { '#4CAF50' } elseif ($passRate -ge 70) { '#FFC107' } else { '#F44336' }
+        $passRate = $(if ($Report.Summary.TotalTests -gt 0) { [Math]::Round(($Report.Summary.Passed / $Report.Summary.TotalTests) * 100, 1) } else { 0 }
+        $statusColor = $(if ($passRate -ge 90) { '#4CAF50' } elseif ($passRate -ge 70) { '#FFC107' } else { '#F44336' }
 
         $html = @"
 <!DOCTYPE html>
@@ -565,9 +565,9 @@ function Test-SampleFunction {
                 Passed = $passed
                 Failed = $failed
                 Skipped = $skipped
-                PassRate = if ($results.Count -gt 0) { [Math]::Round(($passed / $results.Count) * 100, 2) } else { 0 }
+                PassRate = $(if ($results.Count -gt 0) { [Math]::Round(($passed / $results.Count) * 100, 2) } else { 0 }
                 TotalDurationMs = $totalDuration
-                AverageDurationMs = if ($results.Count -gt 0) { [Math]::Round(($results | ForEach-Object { $_.DurationMs } | Measure-Object -Sum).Sum / $results.Count, 2) } else { 0 }
+                AverageDurationMs = $(if ($results.Count -gt 0) { [Math]::Round(($results | ForEach-Object { $_.DurationMs } | Measure-Object -Sum).Sum / $results.Count, 2) } else { 0 }
             }
             Coverage = $coverageData
             TestFiles = $testFiles | ForEach-Object { @{ Name = $_.Name; Path = $_.FullName } }

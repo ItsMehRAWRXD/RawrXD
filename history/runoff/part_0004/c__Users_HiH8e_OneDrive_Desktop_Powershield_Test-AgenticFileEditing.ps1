@@ -141,8 +141,8 @@ function Format-FileList {
     $output = "📁 Contents of: $Path`n`n"
     
     foreach ($item in $items) {
-        $type = if ($item.PSIsContainer) { "📁" } else { "📄" }
-        $size = if ($item.PSIsContainer) { "" } else { " (" + ($item.Length / 1KB).ToString("F1") + " KB)" }
+        $type = $(if ($item.PSIsContainer) { "📁" } else { "📄" }
+        $size = $(if ($item.PSIsContainer) { "" } else { " (" + ($item.Length / 1KB).ToString("F1") + " KB)" }
         $output += "$type $($item.Name)$size`n"
     }
     
@@ -275,7 +275,7 @@ function Get-AgenticStatus {
     #>
     return @{
         Timestamp = Get-Date
-        ComputerName = `$env:COMPUTERNAME
+        ComputerName = `${env:COMPUTERNAME}
         PSVersion = `$PSVersionTable.PSVersion
         AgentStatus = "Active"
         TasksCompleted = 4

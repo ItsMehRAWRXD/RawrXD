@@ -124,7 +124,7 @@ try {
     $foundModels = @()
     
     # Test multiple paths including D:\OllamaModels
-    $testPaths = @("C:\\", "D:\\", "D:\\OllamaModels", "$env:USERPROFILE")
+    $testPaths = @("C:\\", "D:\\", "D:\\OllamaModels", "${env:USERPROFILE}")
     
     foreach ($path in $testPaths) {
         if (Test-Path $path) {
@@ -202,7 +202,7 @@ catch {
 Write-Host "`n7. REAL FILE OPERATIONS TEST..." -ForegroundColor Yellow
 try {
     # REAL: Create, write, read, delete test file
-    $testFile = Join-Path $env:TEMP "rawrxd_test_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+    $testFile = Join-Path ${env:TEMP} "rawrxd_test_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
     $testContent = "Real file operation test - $(Get-Date)"
     
     # Create file

@@ -30,7 +30,7 @@ param(
 )
 
 # Enhanced PowerShell backend for HTML IDE
-$global:IDEBridge = @{
+${global:IDEBridge} = @{
     Version = "4.0.0-HTMLPowerShell"
     StartTime = Get-Date
     Form = $null
@@ -56,10 +56,10 @@ function Get-DirectoryTree {
             $node = @{
                 name = $item.Name
                 path = $item.FullName
-                type = if ($item.PSIsContainer) { "folder" } else { "file" }
-                size = if (-not $item.PSIsContainer) { $item.Length } else { $null }
+                type = $(if ($item.PSIsContainer) { "folder" } else { "file" }
+                size = $(if (-not $item.PSIsContainer) { $item.Length } else { $null }
                 modified = $item.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
-                extension = if (-not $item.PSIsContainer) { $item.Extension } else { $null }
+                extension = $(if (-not $item.PSIsContainer) { $item.Extension } else { $null }
             }
             
             if ($item.PSIsContainer -and $Depth -gt 0) {
@@ -98,8 +98,8 @@ function Invoke-EnhancedOllama {
             $enhancedPrompt = "Context: Working in $Language`n`nCode/File: $Context`n`nUser Request: $Prompt"
         }
         
-        if ($global:IDEBridge.CurrentProject) {
-            $enhancedPrompt = "Project: $($global:IDEBridge.CurrentProject)`n`n$enhancedPrompt"
+        if (${global:IDEBridge}.CurrentProject) {
+            $enhancedPrompt = "Project: $(${global:IDEBridge}.CurrentProject)`n`n$enhancedPrompt"
         }
         
         # Execute Ollama command
@@ -168,7 +168,7 @@ function Start-IntegratedTerminal {
         $runspace.Open()
         $runspace.SessionStateProxy.Path.SetLocation($WorkingDirectory)
         
-        $global:IDEBridge.TerminalSession = @{
+        ${global:IDEBridge}.TerminalSession = @{
             Runspace = $runspace
             WorkingDirectory = $WorkingDirectory
             History = @()
@@ -185,19 +185,19 @@ function Invoke-TerminalCommand {
     param([string]$Command)
     
     try {
-        if (-not $global:IDEBridge.TerminalSession) {
+        if (-not ${global:IDEBridge}.TerminalSession) {
             Start-IntegratedTerminal | Out-Null
         }
         
         $powershell = [powershell]::Create()
-        $powershell.Runspace = $global:IDEBridge.TerminalSession.Runspace
+        $powershell.Runspace = ${global:IDEBridge}.TerminalSession.Runspace
         $powershell.AddScript($Command)
         
         $result = $powershell.Invoke()
         $errors = $powershell.Streams.Error
         
         # Add to history
-        $global:IDEBridge.TerminalSession.History += @{
+        ${global:IDEBridge}.TerminalSession.History += @{
             Command = $Command
             Output = $result | Out-String
             Errors = $errors | Out-String
@@ -210,7 +210,7 @@ function Invoke-TerminalCommand {
             success = $true
             output = $result | Out-String
             errors = $errors | Out-String
-            workingDirectory = $global:IDEBridge.TerminalSession.Runspace.SessionStateProxy.Path.CurrentLocation
+            workingDirectory = ${global:IDEBridge}.TerminalSession.Runspace.SessionStateProxy.Path.CurrentLocation
         }
     }
     catch {
@@ -230,7 +230,7 @@ function Setup-EnhancedWebView {
         # Check for WebView2
         $webView2Available = $false
         try {
-            Add-Type -Path "$env:USERPROFILE\.nuget\packages\microsoft.web.webview2\*\lib\net45\Microsoft.Web.WebView2.WinForms.dll"
+            Add-Type -Path "${env:USERPROFILE}\.nuget\packages\microsoft.web.webview2\*\lib\net45\Microsoft.Web.WebView2.WinForms.dll"
             $webView = New-Object Microsoft.Web.WebView2.WinForms.WebView2
             $webView2Available = $true
         }
@@ -571,8 +571,8 @@ function Start-HTMLPowerShellIDE {
     
     # Set up WebView
     $webView = Setup-EnhancedWebView -Form $form
-    $global:IDEBridge.WebView = $webView
-    $global:IDEBridge.Form = $form
+    ${global:IDEBridge}.WebView = $webView
+    ${global:IDEBridge}.Form = $form
     
     # Load the HTML IDE
     if (Test-Path $HtmlPath) {

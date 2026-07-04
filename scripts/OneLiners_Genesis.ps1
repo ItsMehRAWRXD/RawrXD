@@ -18,7 +18,7 @@
 # cmake -S D:\rawrxd -B D:\rawrxd\build_prod -G Ninja -DRAWR_ARCH=x64; cmake --build D:\rawrxd\build_prod --config Release --target RawrXD-Agent
 
 # 6. IDE LAUNCH
-# Stop-Process RawrXD* -Force -EA 0; Start-Sleep -Milliseconds 500; $env:OLLAMA_HOST="http://localhost:11434"; Start-Process "D:\rawrxd\build_prod\RawrXD-AgenticIDE.exe" -ArgumentList "--agent-mode" -WorkingDirectory D:\rawrxd; Write-Host "IDE started" -fg Green
+# Stop-Process RawrXD* -Force -EA 0; Start-Sleep -Milliseconds 500; ${env:OLLAMA_HOST}="http://localhost:11434"; Start-Process "D:\rawrxd\build_prod\RawrXD-AgenticIDE.exe" -ArgumentList "--agent-mode" -WorkingDirectory D:\rawrxd; Write-Host "IDE started" -fg Green
 
 # 7. GENESIS RUN (start autonomous code gen)
 # Start-Process "D:\rawrxd\build_prod\genesis.exe" -WorkingDirectory D:\rawrxd -NoNewWindow; Write-Host "Genesis engine running — press Q to stop" -fg Magenta

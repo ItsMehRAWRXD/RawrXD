@@ -27,7 +27,7 @@ $RawrXDRoot = "C:\RawrXD"
 $BinDir = Join-Path $RawrXDRoot "bin"
 $LibDir = Join-Path $RawrXDRoot "Libraries"
 $DocsDir = Join-Path $RawrXDRoot "Docs"
-$ExtensionsDir = Join-Path $env:APPDATA "RawrXD\extensions"
+$ExtensionsDir = Join-Path ${env:APPDATA} "RawrXD\extensions"
 $ExtRegistryPath = "D:\rawrxd\extensions\registry.json"
 
 function Write-Banner {
@@ -291,7 +291,7 @@ function Invoke-InstallExtension {
         Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
 
         $installPath = Join-Path $ExtensionsDir $extId
-        $vsixPath    = Join-Path $env:TEMP "$extId.vsix"
+        $vsixPath    = Join-Path ${env:TEMP} "$extId.vsix"
 
         # --- Step 1: Query VS Code Marketplace ---
         Write-Host "🔍 Querying VS Code Marketplace..." -ForegroundColor Gray
@@ -499,8 +499,8 @@ function Invoke-ListExtensions {
         $name = $_.Name
         $ext  = $_.Value
         $count++
-        $status = if ($ext.Enabled) { "✓ Enabled" } else { "✗ Disabled" }
-        $color  = if ($ext.Enabled) { "Green" } else { "DarkGray" }
+        $status = $(if ($ext.Enabled) { "✓ Enabled" } else { "✗ Disabled" }
+        $color  = $(if ($ext.Enabled) { "Green" } else { "DarkGray" }
 
         Write-Host "  $status  $name" -ForegroundColor $color
         if ($ext.DisplayName) {
@@ -658,7 +658,7 @@ function Show-Help {
 # Main execution
 switch ($Command) {
     "generate-pe" {
-        $outputFile = if ($Arguments) { $Arguments[0] } else { "output.exe" }
+        $outputFile = $(if ($Arguments) { $Arguments[0] } else { "output.exe" }
         exit (Invoke-GeneratePE -OutputFile $outputFile)
     }
     "test-encoder" {

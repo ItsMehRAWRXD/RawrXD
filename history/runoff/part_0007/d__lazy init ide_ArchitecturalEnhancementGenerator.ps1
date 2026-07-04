@@ -10,7 +10,7 @@
 # CONFIGURATION
 # ============================================
 
-$script:Config = @{
+${script:Config} = @{
     SourcePath = "D:\lazy init ide\RawrXD.ps1"
     OutputDir = "D:\lazy init ide\architectural_enhancements"
     ModulesDir = "D:\lazy init ide\modules"
@@ -32,7 +32,7 @@ function Write-EnhancementLog {
         "ERROR" { "Red" }; "WARNING" { "Yellow" }; "SUCCESS" { "Green" }; default { "Cyan" }
     })
     
-    Add-Content -Path $script:Config.LogFile -Value $logEntry -Encoding UTF8
+    Add-Content -Path ${script:Config}.LogFile -Value $logEntry -Encoding UTF8
 }
 
 # ============================================
@@ -270,7 +270,7 @@ function Implement-ArchitecturalEnhancements {
     Write-EnhancementLog "Starting automated implementation..." "INFO"
     
     # Create output directories
-    $directories = @($script:Config.OutputDir, $script:Config.ModulesDir, $script:Config.BackupDir)
+    $directories = @(${script:Config}.OutputDir, ${script:Config}.ModulesDir, ${script:Config}.BackupDir)
     foreach ($dir in $directories) {
         if (-not (Test-Path $dir)) {
             New-Item -ItemType Directory -Path $dir -Force | Out-Null
@@ -279,13 +279,13 @@ function Implement-ArchitecturalEnhancements {
     }
     
     # Backup original file
-    $backupPath = Join-Path $script:Config.BackupDir "RawrXD_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').ps1"
-    Copy-Item -Path $script:Config.SourcePath -Destination $backupPath
+    $backupPath = Join-Path ${script:Config}.BackupDir "RawrXD_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').ps1"
+    Copy-Item -Path ${script:Config}.SourcePath -Destination $backupPath
     Write-EnhancementLog "Backup created: $backupPath" "SUCCESS"
     
     # Generate enhancement report
     $report = Generate-EnhancementReport -Blueprint $Blueprint -ThreadingEnhancements $ThreadingEnhancements -SecurityEnhancements $SecurityEnhancements
-    $reportPath = Join-Path $script:Config.OutputDir "architectural_enhancement_report.md"
+    $reportPath = Join-Path ${script:Config}.OutputDir "architectural_enhancement_report.md"
     $report | Out-File -FilePath $reportPath -Encoding UTF8
     Write-EnhancementLog "Enhancement report generated: $reportPath" "SUCCESS"
     
@@ -369,7 +369,7 @@ $(($functions | ForEach-Object { "# - $_" }) -join "`n")
 Export-ModuleMember -Function *
 "@
         
-        $modulePath = Join-Path $script:Config.ModulesDir "RawrXD.$moduleName.psm1"
+        $modulePath = Join-Path ${script:Config}.ModulesDir "RawrXD.$moduleName.psm1"
         $moduleContent | Out-File -FilePath $modulePath -Encoding UTF8
         Write-EnhancementLog "Generated module: $modulePath" "SUCCESS"
     }
@@ -397,7 +397,7 @@ $(($ThreadingEnhancements.ThreadSafePatterns | ForEach-Object {
 # Priority: $($_.Priority)" }) -join "`n`n")
 "@
     
-    $threadingPath = Join-Path $script:Config.OutputDir "ThreadingEnhancements.ps1"
+    $threadingPath = Join-Path ${script:Config}.OutputDir "ThreadingEnhancements.ps1"
     $threadingContent | Out-File -FilePath $threadingPath -Encoding UTF8
     Write-EnhancementLog "Generated threading enhancements: $threadingPath" "SUCCESS"
 }
@@ -449,7 +449,7 @@ function Test-InputSafetyEnhanced {
 }
 "@
     
-    $securityPath = Join-Path $script:Config.OutputDir "SecurityEnhancements.ps1"
+    $securityPath = Join-Path ${script:Config}.OutputDir "SecurityEnhancements.ps1"
     $securityContent | Out-File -FilePath $securityPath -Encoding UTF8
     Write-EnhancementLog "Generated security enhancements: $securityPath" "SUCCESS"
 }
@@ -460,10 +460,10 @@ function Test-InputSafetyEnhanced {
 
 function Start-ArchitecturalEnhancement {
     Write-EnhancementLog "Starting RawrXD Architectural Enhancement Generator" "INFO"
-    Write-EnhancementLog "Source: $($script:Config.SourcePath)" "INFO"
+    Write-EnhancementLog "Source: $(${script:Config}.SourcePath)" "INFO"
     
     # Step 1: Analyze current architecture
-    $analysis = Analyze-Architecture -SourcePath $script:Config.SourcePath
+    $analysis = Analyze-Architecture -SourcePath ${script:Config}.SourcePath
     if (-not $analysis) {
         Write-EnhancementLog "Architecture analysis failed" "ERROR"
         return
@@ -482,7 +482,7 @@ function Start-ArchitecturalEnhancement {
     Implement-ArchitecturalEnhancements -Blueprint $blueprint -ThreadingEnhancements $threadingEnhancements -SecurityEnhancements $securityEnhancements
     
     Write-EnhancementLog "Architectural enhancement process completed successfully" "SUCCESS"
-    Write-EnhancementLog "Check $($script:Config.OutputDir) for generated files" "INFO"
+    Write-EnhancementLog "Check $(${script:Config}.OutputDir) for generated files" "INFO"
 }
 
 # Execute the enhancement generator

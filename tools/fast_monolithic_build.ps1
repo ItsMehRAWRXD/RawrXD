@@ -68,7 +68,7 @@ function Ensure-Dir([string]$path) {
 }
 
 $Root = (Resolve-Path $Root).Path
-$BuildDir = if ($BuildDir) { $BuildDir } else { (Join-Path $Root "build_gold") }
+$BuildDir = $(if ($BuildDir) { $BuildDir } else { (Join-Path $Root "build_gold") }
 $BuildDir = (Resolve-Path $BuildDir).Path
 
 $rspCandidates = @(

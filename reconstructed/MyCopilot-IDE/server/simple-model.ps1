@@ -9,7 +9,7 @@ param(
 $prefix = $InputObject
 if (-not $prefix) { $prefix = ($Args -join ' ') }
 $lines = ($prefix -split "`r?`n")
-$last = if ($lines.Count -gt 0) { $lines[-1] } else { '' }
+$last = $(if ($lines.Count -gt 0) { $lines[-1] } else { '' }
 
 # Basic bracket/delimiter completions
 if ($last -match '\{$') { 

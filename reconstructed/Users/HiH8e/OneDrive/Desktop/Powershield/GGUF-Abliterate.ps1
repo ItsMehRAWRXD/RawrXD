@@ -247,7 +247,7 @@ if __name__ == '__main__':
     sys.exit(0 if success else 1)
 "@
 
-    $tempPyScript = Join-Path $env:TEMP "gguf_abliterate_temp.py"
+    $tempPyScript = Join-Path ${env:TEMP} "gguf_abliterate_temp.py"
     $pythonScript | Out-File -FilePath $tempPyScript -Encoding UTF8 -Force
     
     Write-Info "Running Python abliteration script..."

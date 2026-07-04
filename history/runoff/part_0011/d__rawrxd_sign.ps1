@@ -21,8 +21,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:SignedCount = 0
-$script:FailedCount = 0
+${script:SignedCount} = 0
+${script:FailedCount} = 0
 
 # ============================================================================
 # Discover build output directory
@@ -151,16 +151,16 @@ function Sign-Binary {
         $output = & $SignToolPath @signArgs 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  [OK] $fileName" -ForegroundColor Green
-            $script:SignedCount++
+            ${script:SignedCount}++
             return $true
         } else {
             Write-Host "  [FAIL] $fileName : $output" -ForegroundColor Red
-            $script:FailedCount++
+            ${script:FailedCount}++
             return $false
         }
     } catch {
         Write-Host "  [ERROR] $fileName : $($_.Exception.Message)" -ForegroundColor Red
-        $script:FailedCount++
+        ${script:FailedCount}++
         return $false
     }
 }
@@ -231,7 +231,7 @@ foreach ($bin in $binaries) {
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Signed: $($script:SignedCount)  |  Failed: $($script:FailedCount)" -ForegroundColor $(if ($script:FailedCount -gt 0) { "Yellow" } else { "Green" })
+Write-Host "  Signed: $(${script:SignedCount})  |  Failed: $(${script:FailedCount})" -ForegroundColor $(if (${script:FailedCount} -gt 0) { "Yellow" } else { "Green" })
 Write-Host "========================================" -ForegroundColor Cyan
 
-if ($script:FailedCount -gt 0) { exit 1 }
+if (${script:FailedCount} -gt 0) { exit 1 }

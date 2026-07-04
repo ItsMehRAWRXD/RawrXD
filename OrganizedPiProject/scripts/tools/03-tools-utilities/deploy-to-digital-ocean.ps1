@@ -51,14 +51,14 @@ Write-Host "🔑 Authenticating with DigitalOcean..." -ForegroundColor Blue
 & doctl auth init --access-token $DO_TOKEN
 
 # Step 3: Create SSH key if it doesn't exist
-if (!(Test-Path "$env:USERPROFILE\.ssh\id_rsa")) {
+if (!(Test-Path "${env:USERPROFILE}\.ssh\id_rsa")) {
     Write-Host "🔑 Generating SSH key..." -ForegroundColor Yellow
-    & ssh-keygen -t rsa -b 4096 -f "$env:USERPROFILE\.ssh\id_rsa" -N '""'
+    & ssh-keygen -t rsa -b 4096 -f "${env:USERPROFILE}\.ssh\id_rsa" -N '""'
 }
 
 # Step 4: Add SSH key to DigitalOcean
 Write-Host "🔑 Adding SSH key to DigitalOcean..." -ForegroundColor Blue
-& doctl compute ssh-key import rawrz-key --public-key-file "$env:USERPROFILE\.ssh\id_rsa.pub" 2>$null
+& doctl compute ssh-key import rawrz-key --public-key-file "${env:USERPROFILE}\.ssh\id_rsa.pub" 2>$null
 
 # Step 5: Deploy each project
 Write-Host "🚀 Starting DigitalOcean deployment..." -ForegroundColor Green

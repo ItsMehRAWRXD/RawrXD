@@ -1,7 +1,7 @@
-$srcDir = "D:\rawrxd\src"
-$files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp | Where-Object { $_.FullName -notmatch "_noqt" }
+$Script:srcDir = "D:\rawrxd\src"
+$Script:files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp | Where-Object { $_.FullName -notmatch "_noqt" }
 
-$mappings = @{
+$Script:mappings = @{
     'QTextStream' = 'std::stringstream'
     'QHeaderView' = 'void'
     'QTreeView' = 'void'
@@ -96,29 +96,29 @@ $mappings = @{
     'emit ' = ''
 }
 
-$totalModified = 0
-$totalReplacements = 0
+$Script:totalModified = 0
+$Script:totalReplacements = 0
 
 foreach ($file in $files) {
-    $content = Get-Content -Path $file.FullName -Raw
-    $originalContent = $content
-    $fileReplacements = 0
+$Script:content = Get-Content -Path $file.FullName -Raw
+$Script:originalContent = $content
+$Script:fileReplacements = 0
 
     foreach ($key in $mappings.Keys) {
-        $val = $mappings[$key]
-        $pattern = [regex]::Escape($key)
-        $matches = [regex]::Matches($content, $pattern)
+$Script:val = $mappings[$key]
+$Script:pattern = [regex]::Escape($key)
+$Script:matches = [regex]::Matches($content, $pattern)
         if ($matches.Count -gt 0) {
-            $content = $content -replace $pattern, $val
+$Script:content = $content -replace $pattern, $val
             $fileReplacements += $matches.Count
         }
     }
 
     # Remove includes for logging/telemetry/instrumentation
-    $loggerIncludes = '(?m)^#include\s+["<].*?(telemetry|logger|metrics|profiler|observability).*?[">]\s*$'
-    $matches = [regex]::Matches($content, $loggerIncludes)
+$Script:loggerIncludes = '(?m)^#include\s+["<].*?(telemetry|logger|metrics|profiler|observability).*?[">]\s*$'
+$Script:matches = [regex]::Matches($content, $loggerIncludes)
     if ($matches.Count -gt 0) {
-        $content = $content -replace $loggerIncludes, ''
+$Script:content = $content -replace $loggerIncludes, ''
         $fileReplacements += $matches.Count
     }
 

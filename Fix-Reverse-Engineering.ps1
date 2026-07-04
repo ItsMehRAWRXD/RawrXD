@@ -384,7 +384,7 @@ function Extract-Protected-Files {
             $content = Get-Content $js.FullName -Raw -ErrorAction SilentlyContinue
             if ($content -and ($content.Length -gt 0)) {
                 $lines = $content -split "`n"
-                $avgLineLength = if ($lines.Count -gt 0) { $content.Length / $lines.Count } else { 0 }
+                $avgLineLength = $(if ($lines.Count -gt 0) { $content.Length / $lines.Count } else { 0 }
                 
                 # If average line length is very high, likely obfuscated
                 if ($avgLineLength -gt 1000) {

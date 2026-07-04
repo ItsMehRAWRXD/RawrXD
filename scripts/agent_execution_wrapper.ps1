@@ -56,9 +56,9 @@ Write-ExecutionLog "Log file: $logFile" "INFO"
 Write-ExecutionLog "Strict mode: $Strict" "INFO"
 
 $promptPack = Get-AgentExecutionKernelPack -ProfileName $PromptProfile
-$env:RAWRXD_AGENT_EXECUTION_KERNEL = $promptPack.kernel
-$env:RAWRXD_AGENT_EXECUTION_OVERLAY = $promptPack.overlay
-$env:RAWRXD_AGENT_EXECUTION_PROFILE = $promptPack.profile
+${env:RAWRXD_AGENT_EXECUTION_KERNEL} = $promptPack.kernel
+${env:RAWRXD_AGENT_EXECUTION_OVERLAY} = $promptPack.overlay
+${env:RAWRXD_AGENT_EXECUTION_PROFILE} = $promptPack.profile
 if ($PromptProfile -ne "default") {
     Write-ExecutionLog "Prompt profile: $PromptProfile" "INFO"
 }

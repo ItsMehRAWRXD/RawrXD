@@ -20,7 +20,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$repoRoot = $env:RAWRXD_REPO_ROOT
+$repoRoot = ${env:RAWRXD_REPO_ROOT}
 if (-not $repoRoot -or -not (Test-Path -LiteralPath $repoRoot)) {
     $repoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 }

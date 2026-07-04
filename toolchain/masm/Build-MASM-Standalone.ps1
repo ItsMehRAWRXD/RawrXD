@@ -40,7 +40,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ScriptDir = $PSScriptRoot
-$RawrXD = if ($env:RAWRXD_ROOT) { $env:RAWRXD_ROOT } else { (Resolve-Path (Join-Path $ScriptDir "..\..")).Path }
+$RawrXD = $(if (${env:RAWRXD_ROOT}) { ${env:RAWRXD_ROOT} } else { (Resolve-Path (Join-Path $ScriptDir "..\..")).Path }
 if (-not $OutDir) { $OutDir = Join-Path $ScriptDir "bin\$Architecture" }
 
 $UnifiedScript = Join-Path $ScriptDir "Unified-PowerShell-Compiler-RawrXD.ps1"
@@ -94,10 +94,10 @@ function Find-MSVCTools {
     }
     if (-not $msvcRoot -or -not (Test-Path $msvcRoot)) { throw "MSVC not found" }
     $ver = Get-ChildItem $msvcRoot -Directory | Sort-Object Name -Descending | Select-Object -First 1
-    $hostArch = if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
+    $hostArch = $(if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
     $bin = Join-Path $ver.FullName "bin\Hostx64\$hostArch"
     $lib = Join-Path $ver.FullName "lib\$hostArch"
-    $asm = if ($Arch -eq 'x64') { 'ml64.exe' } else { 'ml.exe' }
+    $asm = $(if ($Arch -eq 'x64') { 'ml64.exe' } else { 'ml.exe' }
     $ml = Join-Path $bin $asm
     $link = Join-Path $bin 'link.exe'
     if (-not (Test-Path $ml) -or -not (Test-Path $link)) { throw "ml/link not in $bin" }
@@ -106,7 +106,7 @@ function Find-MSVCTools {
 
 function Find-Kits {
     param([string]$Arch)
-    $a = if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
+    $a = $(if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
     $roots = @(
         'C:\Program Files (x86)\Windows Kits\10\Lib',
         'D:\Program Files (x86)\Windows Kits\10\Lib'
@@ -144,17 +144,17 @@ foreach ($src in $sources) {
     $objs += $obj
 }
 
-$outName = if ($OutputType -eq 'dll') {
-    $n = if ($sources.Count -eq 1) { [IO.Path]::GetFileNameWithoutExtension($sources[0]) } else { "Output" }
+$outName = $(if ($OutputType -eq 'dll') {
+    $n = $(if ($sources.Count -eq 1) { [IO.Path]::GetFileNameWithoutExtension($sources[0]) } else { "Output" }
     Join-Path $OutDir ($n + '.dll')
 } else {
-    $n = if ($sources.Count -eq 1) { [IO.Path]::GetFileNameWithoutExtension($sources[0]) } else { "Output" }
+    $n = $(if ($sources.Count -eq 1) { [IO.Path]::GetFileNameWithoutExtension($sources[0]) } else { "Output" }
     Join-Path $OutDir ($n + '.exe')
 }
 
-$entry = if ($Entry) { $Entry } else { if ($OutputType -eq 'dll') { 'DllMain' } else { 'WinMain' } }
+$entry = $(if ($Entry) { $Entry } else { if ($OutputType -eq 'dll') { 'DllMain' } else { 'WinMain' } }
 $sub = $SubSystem
-$machine = if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
+$machine = $(if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
 $linkArgs = @('/nologo', $machine, "/subsystem:$sub")
 if ($OutputType -eq 'dll') {
     $linkArgs += '/DLL'

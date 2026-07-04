@@ -21,11 +21,11 @@ Write-Host "[2] Applying color fixes..." -ForegroundColor Yellow
 Write-Host ""
 
 # Fix 1: Ensure editor has bright white text on dark background
-$fix1Old = '$script:editor.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-$script:editor.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)  # Light gray (very visible)'
+$fix1Old = '${script:editor}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+${script:editor}.ForeColor = [System.Drawing.Color]::FromArgb(220, 220, 220)  # Light gray (very visible)'
 
-$fix1New = '$script:editor.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)  # Dark background
-$script:editor.ForeColor = [System.Drawing.Color]::White  # Pure white text - maximum visibility'
+$fix1New = '${script:editor}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)  # Dark background
+${script:editor}.ForeColor = [System.Drawing.Color]::White  # Pure white text - maximum visibility'
 
 if ((Get-Content $filePath) -match [regex]::Escape($fix1Old)) {
     Write-Host "    ✓ Fix 1: Changing editor ForeColor to pure white" -ForegroundColor Green

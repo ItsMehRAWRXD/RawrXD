@@ -36,7 +36,7 @@ Set-StrictMode -Version Latest
 # PATCH DEFINITIONS
 # ============================================================================
 
-$script:PatchRules = @{
+${script:PatchRules} = @{
     Includes = @(
         @{
             Name = 'Add missing Windows.h'
@@ -226,8 +226,8 @@ function Invoke-PatchApplication {
     Write-Host "║        POWERSHELL PATCH ENGINE - STARTING                ║" -ForegroundColor Cyan
     Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     
-    $categoriesToApply = if ($Category -eq 'All') {
-        $script:PatchRules.Keys
+    $categoriesToApply = $(if ($Category -eq 'All') {
+        ${script:PatchRules}.Keys
     } else {
         @($Category)
     }
@@ -242,7 +242,7 @@ function Invoke-PatchApplication {
     foreach ($cat in $categoriesToApply) {
         Write-Host "`n[CATEGORY: $cat]" -ForegroundColor Yellow
         
-        $rules = $script:PatchRules[$cat]
+        $rules = ${script:PatchRules}[$cat]
         if (-not $rules) {
             Write-Warning "No rules defined for category: $cat"
             continue
@@ -253,7 +253,7 @@ function Invoke-PatchApplication {
         foreach ($rule in $rules) {
             Write-Host "  Applying: $($rule.Name)" -ForegroundColor Cyan
             
-            $filePattern = if ($rule.FilePattern) { $rule.FilePattern } else { '*.cpp' }
+            $filePattern = $(if ($rule.FilePattern) { $rule.FilePattern } else { '*.cpp' }
             $files = Get-FilesToPatch -FilePatterns @($filePattern)
             
             Write-Host "    Scanning $($files.Count) files..." -ForegroundColor Gray

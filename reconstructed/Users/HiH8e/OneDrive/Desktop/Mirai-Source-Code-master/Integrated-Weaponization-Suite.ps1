@@ -358,7 +358,7 @@ void beacon_checkin() {
     
   $outputFile = "$($BuildConfig.OutputDir)\beacon_$BeaconMode_$Architecture.exe"
     
-  $compiler = if ($Architecture -eq "win64") { "x86_64-w64-mingw32-gcc" } else { "i686-w64-mingw32-gcc" }
+  $compiler = $(if ($Architecture -eq "win64") { "x86_64-w64-mingw32-gcc" } else { "i686-w64-mingw32-gcc" }
   if (-not (Get-Command $compiler -ErrorAction SilentlyContinue)) {
     $compiler = "gcc"
   }

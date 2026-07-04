@@ -6,8 +6,8 @@ param(
 )
 
 # Configuration
-$script:AuditResults = @()
-$script:ProjectGroups = @{}
+${script:AuditResults} = @()
+${script:ProjectGroups} = @{}
 
 # Project indicators
 $projectIndicators = @{
@@ -162,7 +162,7 @@ function Measure-ProjectCompleteness {
     }
     $maxQualityPoints += 20
     
-    $metrics.QualityScore = if ($maxQualityPoints -gt 0) { [math]::Round(($qualityPoints / $maxQualityPoints) * 100, 1) } else { 0 }
+    $metrics.QualityScore = $(if ($maxQualityPoints -gt 0) { [math]::Round(($qualityPoints / $maxQualityPoints) * 100, 1) } else { 0 }
     
     # Calculate completion score based on multiple factors
     $completionPoints = 0
@@ -211,7 +211,7 @@ function Measure-ProjectCompleteness {
     }
     $maxCompletionPoints += 10
     
-    $metrics.CompletionScore = if ($maxCompletionPoints -gt 0) { [math]::Round(($completionPoints / $maxCompletionPoints) * 100, 1) } else { 0 }
+    $metrics.CompletionScore = $(if ($maxCompletionPoints -gt 0) { [math]::Round(($completionPoints / $maxCompletionPoints) * 100, 1) } else { 0 }
     
     return $metrics
 }
@@ -283,7 +283,7 @@ Write-Host ""
 foreach ($project in $projects) {
     Write-Host "Analyzing: $($project.Name)" -ForegroundColor Cyan
     $metrics = Measure-ProjectCompleteness -ProjectPath $project.FullName -ProjectName $project.Name
-    $script:AuditResults += $metrics
+    ${script:AuditResults} += $metrics
     
     Write-Host "  Type: $($metrics.Type)" -ForegroundColor Gray
     Write-Host "  Files: $($metrics.TotalFiles) total, $($metrics.SourceFiles) source" -ForegroundColor Gray
@@ -305,15 +305,15 @@ Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 
 ## Summary
 - Total Projects Found: $($projects.Count)
-- Average Completion: $([math]::Round(($script:AuditResults | Measure-Object -Property CompletionScore -Average).Average, 1))%
-- Average Quality: $([math]::Round(($script:AuditResults | Measure-Object -Property QualityScore -Average).Average, 1))%
+- Average Completion: $([math]::Round((${script:AuditResults} | Measure-Object -Property CompletionScore -Average).Average, 1))%
+- Average Quality: $([math]::Round((${script:AuditResults} | Measure-Object -Property QualityScore -Average).Average, 1))%
 
 ## Project Details
 
 "@
 
-foreach ($result in ($script:AuditResults | Sort-Object -Property CompletionScore -Descending)) {
-    $status = if ($result.CompletionScore -ge 70) { "🟢 Production Ready" } 
+foreach ($result in (${script:AuditResults} | Sort-Object -Property CompletionScore -Descending)) {
+    $status = $(if ($result.CompletionScore -ge 70) { "🟢 Production Ready" } 
               elseif ($result.CompletionScore -ge 50) { "🟡 In Development" }
               elseif ($result.CompletionScore -ge 30) { "🟠 Early Stage" }
               else { "🔴 Incomplete/Abandoned" }
@@ -357,7 +357,7 @@ $report += @"
 ### High Priority Projects (>70% completion)
 "@
 
-$highPriority = $script:AuditResults | Where-Object { $_.CompletionScore -ge 70 }
+$highPriority = ${script:AuditResults} | Where-Object { $_.CompletionScore -ge 70 }
 if ($highPriority.Count -gt 0) {
     foreach ($proj in $highPriority) {
         $report += "`n- **$($proj.Name)** - Focus on quality improvements and finalization"
@@ -368,7 +368,7 @@ if ($highPriority.Count -gt 0) {
 
 $report += "`n`n### Medium Priority Projects (40-70% completion)"
 
-$medPriority = $script:AuditResults | Where-Object { $_.CompletionScore -ge 40 -and $_.CompletionScore -lt 70 }
+$medPriority = ${script:AuditResults} | Where-Object { $_.CompletionScore -ge 40 -and $_.CompletionScore -lt 70 }
 if ($medPriority.Count -gt 0) {
     foreach ($proj in $medPriority) {
         $report += "`n- **$($proj.Name)** - Continue development to reach production readiness"
@@ -379,7 +379,7 @@ if ($medPriority.Count -gt 0) {
 
 $report += "`n`n### Low Priority Projects (<40% completion)"
 
-$lowPriority = $script:AuditResults | Where-Object { $_.CompletionScore -lt 40 }
+$lowPriority = ${script:AuditResults} | Where-Object { $_.CompletionScore -lt 40 }
 if ($lowPriority.Count -gt 0) {
     foreach ($proj in $lowPriority) {
         $report += "`n- **$($proj.Name)** - Consider archiving or major refactor needed"
@@ -415,8 +415,8 @@ Write-Host "=====================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host ("{0,-40} {1,-15} {2,12} {3,12}" -f "Project", "Type", "Completion", "Quality") -ForegroundColor Yellow
 
-foreach ($result in ($script:AuditResults | Sort-Object -Property CompletionScore -Descending)) {
-    $color = if ($result.CompletionScore -ge 70) { "Green" } 
+foreach ($result in (${script:AuditResults} | Sort-Object -Property CompletionScore -Descending)) {
+    $color = $(if ($result.CompletionScore -ge 70) { "Green" } 
              elseif ($result.CompletionScore -ge 40) { "Yellow" } 
              else { "Red" }
     

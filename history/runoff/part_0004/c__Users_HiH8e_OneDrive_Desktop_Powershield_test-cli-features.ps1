@@ -5,7 +5,7 @@
 $scriptPath = Join-Path $PSScriptRoot "RawrXD.ps1"
 
 # Set up CLI mode variables
-$script:SkipGUIInit = $true
+${script:SkipGUIInit} = $true
 $CliMode = $true
 
 # Source the main script (in a try/catch to handle any errors)

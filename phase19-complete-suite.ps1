@@ -2,7 +2,7 @@
 # Sovereign Engine v1.2_INT8 — All Optimization Tracks
 
 param(
-    [switch]$ExecuteAll = $true
+    [switch]$ExecuteAll
 )
 
 Write-Host "================================================" -ForegroundColor Cyan
@@ -33,7 +33,7 @@ $KernelProfiles = @(
 
 Write-Host "  Top Input Patterns by Error Rate:" -ForegroundColor White
 foreach ($profile in $KernelProfiles | Sort-Object MaxError -Descending) {
-    $color = if ($profile.MaxError -gt 2.0) { "Yellow" } else { "Green" }
+    $color = $(if ($profile.MaxError -gt 2.0) { "Yellow" } else { "Green" }
     Write-Host "    • $($profile.Pattern): $($profile.MaxError)% max error ($($profile.Frequency)% of traffic)" -ForegroundColor $color
 }
 

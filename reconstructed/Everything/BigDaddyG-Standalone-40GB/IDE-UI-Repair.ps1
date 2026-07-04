@@ -481,9 +481,7 @@ function Show-RepairMenu {
 
 # ============================================================================
 # MAIN
-# ============================================================================
-
-if (-not $Diagnose -and -not $RepairCSS -and -not $RepairJS -and -not $RepairAll) {
+# ============================================================================ $(if (-not $Diagnose -and -not $RepairCSS -and -not $RepairJS -and -not $RepairAll) {
     Show-RepairMenu
     exit 0
 }

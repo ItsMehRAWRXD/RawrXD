@@ -39,8 +39,7 @@ $Win32IDE = Join-Path $SrcRoot "win32app\Win32IDE.h"
 
 # =============================================================================
 # VALIDATION MODE — Quick CI-friendly check
-# =============================================================================
-if ($Validate) {
+# ============================================================================= $(if ($Validate) {
     Write-Host "`n[Validate] Checking COMMAND_TABLE coverage..." -ForegroundColor Cyan
     $result = & python $AuditScript --src-root $SrcRoot --quiet 2>&1
     if ($LASTEXITCODE -eq 0) {
@@ -54,8 +53,7 @@ if ($Validate) {
 
 # =============================================================================
 # GENERATE MODE — Produce X-macro lines for missing entries
-# =============================================================================
-if ($Generate) {
+# ============================================================================= $(if ($Generate) {
     Write-Host "`n[Generate] Producing COMMAND_TABLE entries for missing IDM_* defines..." -ForegroundColor Cyan
     & python $AuditScript --src-root $SrcRoot --generate
     exit $LASTEXITCODE
@@ -63,8 +61,7 @@ if ($Generate) {
 
 # =============================================================================
 # WATCH MODE — Monitor source files and re-audit on changes
-# =============================================================================
-if ($Watch) {
+# ============================================================================= $(if ($Watch) {
     Write-Host "`n[Watch] Monitoring COMMAND_TABLE sources for changes..." -ForegroundColor Cyan
     Write-Host "  Watching: command_registry.hpp, Win32IDE.h, ide_constants.h" -ForegroundColor DarkGray
     Write-Host "  Press Ctrl+C to stop`n" -ForegroundColor DarkGray

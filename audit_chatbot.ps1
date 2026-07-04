@@ -1,15 +1,15 @@
-$file = "D:\rawrxd\gui\ide_chatbot.html"
-$c = [IO.File]::ReadAllText($file)
-$lines = [IO.File]::ReadAllLines($file)
-$out = @()
+$Script:file = "D:\rawrxd\gui\ide_chatbot.html"
+$Script:c = [IO.File]::ReadAllText($file)
+$Script:lines = [IO.File]::ReadAllLines($file)
+$Script:out = @()
 
 $out += "=== AUDIT OF ide_chatbot.html ==="
 $out += "Total lines: $($lines.Count)"
 $out += ""
 
 # 1. Script tag balance
-$openScript = [regex]::Matches($c, '<script[\s>]').Count
-$closeScript = [regex]::Matches($c, '</script>').Count
+$Script:openScript = [regex]::Matches($c, '<script[\s>]').Count
+$Script:closeScript = [regex]::Matches($c, '</script>').Count
 $out += "=== 1. SCRIPT TAG BALANCE ==="
 $out += "Opening <script: $openScript"
 $out += "Closing </script>: $closeScript"
@@ -24,25 +24,25 @@ $out += ""
 # 2. HTML structure
 $out += "=== 2. HTML STRUCTURE ==="
 foreach ($tag in @("html","head","body","style")) {
-  $op = [regex]::Matches($c, "<$tag[\s>]").Count
-  $cl = [regex]::Matches($c, "</$tag>").Count
+$Script:op = [regex]::Matches($c, "<$tag[\s>]").Count
+$Script:cl = [regex]::Matches($c, "</$tag>").Count
   $out += "$tag : open=$op close=$cl match=$($op -eq $cl)"
 }
 $out += ""
 
 # 3. Duplicate functions
-$funcMatches = [regex]::Matches($c, 'function\s+(\w+)\s*\(')
-$funcMap = @{}
+$Script:funcMatches = [regex]::Matches($c, 'function\s+(\w+)\s*\(')
+$Script:funcMap = @{}
 for ($i=0; $i -lt $lines.Count; $i++) {
   if ($lines[$i] -match 'function\s+(\w+)\s*\(') {
-    $name = $Matches[1]
+$Script:name = $Matches[1]
     if (-not $funcMap.ContainsKey($name)) { $funcMap[$name] = @() }
     $funcMap[$name] += ($i+1)
   }
 }
 $out += "=== 3. DUPLICATE FUNCTIONS ==="
 $out += "Total unique function names: $($funcMap.Count)"
-$dupCount = 0
+$Script:dupCount = 0
 $funcMap.GetEnumerator() | Sort-Object Key | ForEach-Object {
   if ($_.Value.Count -gt 1) {
     $dupCount++
@@ -54,9 +54,9 @@ $out += ""
 
 # 4. Dead onclick references
 $out += "=== 4. DEAD ONCLICK REFERENCES ==="
-$onclickNames = [regex]::Matches($c, 'onclick="(\w+)\(') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
-$funcNames = $funcMap.Keys
-$deadCount = 0
+$Script:onclickNames = [regex]::Matches($c, 'onclick="(\w+)\(') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+$Script:funcNames = $funcMap.Keys
+$Script:deadCount = 0
 foreach ($oc in $onclickNames) {
   if ($oc -notin $funcNames) {
     # Also check if it's a global/window method or property
@@ -70,64 +70,64 @@ $out += ""
 
 # 5. Backend-Switcher
 $out += "=== 5. BACKEND-SWITCHER PANEL ==="
-$hasShowBackendSwitcher = $c -match 'function\s+showBackendSwitcher\s*\('
+$Script:hasShowBackendSwitcher = $c -match 'function\s+showBackendSwitcher\s*\('
 $out += "showBackendSwitcher function: $hasShowBackendSwitcher"
-$hasBackendSwitcherDiv = $c -match 'id="[^"]*backend-switcher[^"]*"'
+$Script:hasBackendSwitcherDiv = $c -match 'id="[^"]*backend-switcher[^"]*"'
 $out += "backend-switcher div: $hasBackendSwitcherDiv"
 if ($hasBackendSwitcherDiv) { $out += "  ID match: $($Matches[0])" }
 $out += ""
 
 # 6. Router panel
 $out += "=== 6. ROUTER PANEL ==="
-$hasShowRouter = $c -match 'function\s+showRouterPanel\s*\('
+$Script:hasShowRouter = $c -match 'function\s+showRouterPanel\s*\('
 $out += "showRouterPanel function: $hasShowRouter"
-$hasRouterDiv = [regex]::Matches($c, 'id="[^"]*router[^"]*"') | ForEach-Object { $_.Value }
+$Script:hasRouterDiv = [regex]::Matches($c, 'id="[^"]*router[^"]*"') | ForEach-Object { $_.Value }
 $out += "Router divs: $($hasRouterDiv -join '; ')"
 $out += ""
 
 # 7. Swarm panel
 $out += "=== 7. SWARM PANEL ==="
-$hasShowSwarm = $c -match 'function\s+showSwarmPanel\s*\('
+$Script:hasShowSwarm = $c -match 'function\s+showSwarmPanel\s*\('
 $out += "showSwarmPanel function: $hasShowSwarm"
-$hasSwarmDiv = [regex]::Matches($c, 'id="[^"]*swarm[^"]*"') | ForEach-Object { $_.Value }
+$Script:hasSwarmDiv = [regex]::Matches($c, 'id="[^"]*swarm[^"]*"') | ForEach-Object { $_.Value }
 $out += "Swarm divs: $($hasSwarmDiv -join '; ')"
 $out += ""
 
 # 8. Safety dashboard
 $out += "=== 8. SAFETY DASHBOARD ==="
-$hasSafetyFunc = [regex]::Matches($c, 'function\s+\w*[Ss]afety\w*\s*\(') | ForEach-Object { $_.Value }
+$Script:hasSafetyFunc = [regex]::Matches($c, 'function\s+\w*[Ss]afety\w*\s*\(') | ForEach-Object { $_.Value }
 $out += "Safety functions: $($hasSafetyFunc -join '; ')"
-$hasSafetyDiv = [regex]::Matches($c, 'id="[^"]*safety[^"]*"') | ForEach-Object { $_.Value }
+$Script:hasSafetyDiv = [regex]::Matches($c, 'id="[^"]*safety[^"]*"') | ForEach-Object { $_.Value }
 $out += "Safety divs: $($hasSafetyDiv -join '; ')"
 $out += ""
 
 # 9. ASM debugger
 $out += "=== 9. ASM DEBUGGER ==="
-$hasAsmDebugger = [regex]::Matches($c, 'function\s+\w*[Aa]sm[Dd]ebug\w*\s*\(') | ForEach-Object { $_.Value }
+$Script:hasAsmDebugger = [regex]::Matches($c, 'function\s+\w*[Aa]sm[Dd]ebug\w*\s*\(') | ForEach-Object { $_.Value }
 $out += "ASM debugger functions: $($hasAsmDebugger -join '; ')"
-$hasShowAsm = $c -match 'showAsmDebugger'
+$Script:hasShowAsm = $c -match 'showAsmDebugger'
 $out += "showAsmDebugger reference exists: $hasShowAsm"
 $out += ""
 
 # 10. Standalone titlebar
 $out += "=== 10. STANDALONE TITLEBAR ==="
-$hasTitlebarDiv = $c -match 'id="standaloneTitlebar"'
+$Script:hasTitlebarDiv = $c -match 'id="standaloneTitlebar"'
 $out += "div#standaloneTitlebar exists: $hasTitlebarDiv"
-$hasTitlebarCSS = $c -match '\.standalone-titlebar'
+$Script:hasTitlebarCSS = $c -match '\.standalone-titlebar'
 $out += "CSS .standalone-titlebar exists: $hasTitlebarCSS"
-$hasTitlebarJS = [regex]::Matches($c, 'standaloneTitlebar') | Measure-Object | Select-Object -ExpandProperty Count
+$Script:hasTitlebarJS = [regex]::Matches($c, 'standaloneTitlebar') | Measure-Object | Select-Object -ExpandProperty Count
 $out += "JS references to standaloneTitlebar: $hasTitlebarJS"
 $out += ""
 
 # 11. connectBackend
 $out += "=== 11. CONNECT BACKEND ==="
-$hasConnectBackend = $c -match 'function\s+connectBackend\s*\('
+$Script:hasConnectBackend = $c -match 'function\s+connectBackend\s*\('
 $out += "connectBackend function: $hasConnectBackend"
-$hasServePy = $c -match 'serve\.py'
+$Script:hasServePy = $c -match 'serve\.py'
 $out += "serve.py reference: $hasServePy"
-$hasOllama = $c -match 'ollama'
+$Script:hasOllama = $c -match 'ollama'
 $out += "Ollama reference: $hasOllama"
-$hasOffline = $c -match 'offline'
+$Script:hasOffline = $c -match 'offline'
 $out += "Offline reference: $hasOffline"
 # Find the line range for connectBackend
 for ($i=0; $i -lt $lines.Count; $i++) {
@@ -139,12 +139,12 @@ $out += ""
 
 # 12. CSP meta tag
 $out += "=== 12. CONTENT-SECURITY-POLICY ==="
-$cspMatches = [regex]::Matches($c, '<meta[^>]*Content-Security-Policy[^>]*>')
+$Script:cspMatches = [regex]::Matches($c, '<meta[^>]*Content-Security-Policy[^>]*>')
 $out += "CSP meta tags found: $($cspMatches.Count)"
 foreach ($m in $cspMatches) { $out += "  $($m.Value.Substring(0,[Math]::Min(200,$m.Value.Length)))" }
-$hasFileProto = $c -match "file://"
+$Script:hasFileProto = $c -match "file://"
 $out += "file:// in CSP or document: $hasFileProto"
-$hasLocalhost = $c -match 'localhost'
+$Script:hasLocalhost = $c -match 'localhost'
 $out += "localhost reference: $hasLocalhost"
 
 $out | Out-File "D:\rawrxd\audit_result.txt" -Encoding UTF8

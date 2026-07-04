@@ -23,8 +23,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:TestResults = @()
-$script:StartTime = Get-Date
+${script:TestResults} = @()
+${script:StartTime} = Get-Date
 
 # =============================================================================
 # Utility Functions
@@ -378,7 +378,7 @@ function Invoke-ChaosTestSuite {
     Write-ChaosLog "Cluster healthy: $($initialStatus.nodes) nodes" "PASS"
     
     # Execute scenarios
-    $scenarios = if ($Scenario -eq "all") {
+    $scenarios = $(if ($Scenario -eq "all") {
         @("node-failure", "network-partition", "memory-pressure", "cpu-starvation", "latency-spike")
     } else {
         @($Scenario)
@@ -402,7 +402,7 @@ function Invoke-ChaosTestSuite {
         $result.timestamp = Get-Date -Format "o"
         $results += $result
         
-        $status = if ($result.passed) { "PASS" } else { "FAIL" }
+        $status = $(if ($result.passed) { "PASS" } else { "FAIL" }
         Write-ChaosLog "Scenario '$sc': $status" $status
         
         # Cool down between scenarios

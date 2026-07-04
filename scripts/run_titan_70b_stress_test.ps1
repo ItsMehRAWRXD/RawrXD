@@ -38,10 +38,10 @@ Write-Host "[Run] Starting Titan 70B stress test..." -ForegroundColor Green
 Write-Host "      Turns: $Turns | Warmup: $Warmup" -ForegroundColor Gray
 Write-Host ""
 
-$env:RAWRXD_TITAN_TURNS = $Turns
-$env:RAWRXD_TITAN_WARMUP = $Warmup
-$env:RAWRXD_TITAN_VERBOSE = $Verbose
-$env:RAWRXD_TITAN_OUTPUT = $OutputPath
+${env:RAWRXD_TITAN_TURNS} = $Turns
+${env:RAWRXD_TITAN_WARMUP} = $Warmup
+${env:RAWRXD_TITAN_VERBOSE} = $Verbose
+${env:RAWRXD_TITAN_OUTPUT} = $OutputPath
 
 $startTime = Get-Date
 try {

@@ -85,7 +85,7 @@ function Split-Gguf {
     
     try {
         while (($read = $fs.Read($buf, 0, $buf.Length)) -gt 0) {
-            $shardPath = Join-Path $OutDir "shard_$([int]$idx:D4).gguf"
+            $shardPath = Join-Path $OutDir "shard_$([int]${idx:D4}).gguf"
             [System.IO.File]::WriteAllBytes($shardPath, $buf[0..($read - 1)])
             
             $totalRead += $read
@@ -363,7 +363,7 @@ try {
     # 8. (Optional) Launch Ollama
     if ($LaunchOllama) {
         Write-Host "Launching Ollama..." -ForegroundColor Yellow
-        $env:OLLAMA_MODELS = $OutDir
+        ${env:OLLAMA_MODELS} = $OutDir
         
         # Start Ollama process
         try {
@@ -380,7 +380,7 @@ try {
     }
     else {
         Write-Host "To use this model with Ollama, run:" -ForegroundColor Yellow
-        Write-Host "  `$env:OLLAMA_MODELS = '$OutDir'" -ForegroundColor Cyan
+        Write-Host "  `${env:OLLAMA_MODELS} = '$OutDir'" -ForegroundColor Cyan
         Write-Host "  ollama run $MmfName" -ForegroundColor Cyan
     }
     

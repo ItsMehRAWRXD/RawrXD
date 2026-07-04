@@ -156,8 +156,8 @@ foreach ($line in $models) {
       default { "Yellow" }
     }
         
-    $subscriptionIcon = if ($modelType.Contains("Cloud") -or $modelType.Contains("Subscription")) { " 💳" } else { "" }
-    $customIcon = if ($isCustom) { " 🔧" } else { "" }
+    $subscriptionIcon = $(if ($modelType.Contains("Cloud") -or $modelType.Contains("Subscription")) { " 💳" } else { "" }
+    $customIcon = $(if ($isCustom) { " 🔧" } else { "" }
         
     Write-Host "  $modelName" -ForegroundColor $color -NoNewline
     Write-Host "$subscriptionIcon$customIcon" -ForegroundColor Yellow -NoNewline

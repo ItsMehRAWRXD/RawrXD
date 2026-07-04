@@ -10,14 +10,14 @@
 # ============================================================================
 
 param(
-    [switch]$Build = $true,
-    [switch]$Test = $true,
-    [switch]$Report = $true,
+    [switch]$Build,
+    [switch]$Test,
+    [switch]$Report,
     [switch]$Verbose = $false
 )
 
 $ErrorActionPreference = "Stop"
-$script:StartTime = Get-Date
+${script:StartTime} = Get-Date
 
 # Color codes for output
 $Colors = @{
@@ -244,16 +244,15 @@ if ($Test) {
 
 # ============================================================================
 # Phase 4: Report Generation
-# ============================================================================
-if ($Report) {
+# ============================================================================ $(if ($Report) {
     Write-Header "PHASE 4: SYSTEMATIC VALIDATION REPORT"
     
     $reportPath = "D:\rawrxd\both_tres_systematic_report.md"
-    $dockStatus = if ($ComponentResults.AdvancedDocking.Pass) { "✅ PASS" } else { "⚠️ PARTIAL" }
-    $titanStatus = if ($ComponentResults.Titan70B.Pass) { "✅ PASS" } else { "❌ FAIL" }
-    $tresStatus = if ($ComponentResults.TRES.Pass) { "✅ PASS" } else { "⚠️ PARTIAL" }
-    $intStatus = if ($IntegrationResults.Pass) { "✅ PASS" } else { "❌ FAIL" }
-    $buildStatus = if ($BuildResults.Overall) { "✅ PASS" } else { "⚠️ PARTIAL" }
+    $dockStatus = $(if ($ComponentResults.AdvancedDocking.Pass) { "✅ PASS" } else { "⚠️ PARTIAL" }
+    $titanStatus = $(if ($ComponentResults.Titan70B.Pass) { "✅ PASS" } else { "❌ FAIL" }
+    $tresStatus = $(if ($ComponentResults.TRES.Pass) { "✅ PASS" } else { "⚠️ PARTIAL" }
+    $intStatus = $(if ($IntegrationResults.Pass) { "✅ PASS" } else { "❌ FAIL" }
+    $buildStatus = $(if ($BuildResults.Overall) { "✅ PASS" } else { "⚠️ PARTIAL" }
     
     $dockDetails = $ComponentResults.AdvancedDocking.Details -join ', '
     $titanDetails = $ComponentResults.Titan70B.Details -join ', '
@@ -269,7 +268,7 @@ if ($Report) {
     }
     
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $duration = [math]::Round(((Get-Date) - $script:StartTime).TotalSeconds, 2)
+    $duration = [math]::Round(((Get-Date) - ${script:StartTime}).TotalSeconds, 2)
     
     $reportLines = @(
         "# Both + TRES Systematic Integration Report"
@@ -412,7 +411,7 @@ if ($Report) {
 }
 
 # Return exit code
-$exitCode = if ($ComponentResults.AdvancedDocking.Pass -and 
+$exitCode = $(if ($ComponentResults.AdvancedDocking.Pass -and 
                 $ComponentResults.Titan70B.Pass -and 
                 $ComponentResults.TRES.Pass -and 
                 $IntegrationResults.Pass) { 0 } else { 1 }

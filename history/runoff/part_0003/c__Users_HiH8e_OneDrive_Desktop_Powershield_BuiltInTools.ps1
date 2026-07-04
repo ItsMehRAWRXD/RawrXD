@@ -295,7 +295,7 @@ function Initialize-BuiltInTools {
         -Handler {
             param($pattern, $directory = $PWD, $recurse = $true)
             try {
-                $files = if ($recurse) {
+                $files = $(if ($recurse) {
                     Get-ChildItem -Path $directory -Filter $pattern -Recurse -File -ErrorAction SilentlyContinue
                 } else {
                     Get-ChildItem -Path $directory -Filter $pattern -File -ErrorAction SilentlyContinue
@@ -379,8 +379,8 @@ function Initialize-BuiltInTools {
                     items = @($items | ForEach-Object {
                         @{
                             name = $_.Name
-                            type = if ($_.PSIsContainer) { "directory" } else { "file" }
-                            size = if (-not $_.PSIsContainer) { $_.Length } else { 0 }
+                            type = $(if ($_.PSIsContainer) { "directory" } else { "file" }
+                            size = $(if (-not $_.PSIsContainer) { $_.Length } else { 0 }
                         }
                     })
                 }
@@ -401,7 +401,7 @@ function Initialize-BuiltInTools {
             param($file_path, $start_line = 0, $end_line = 0)
             try {
                 if (Test-Path $file_path) {
-                    $content = if ($start_line -gt 0 -and $end_line -gt 0) {
+                    $content = $(if ($start_line -gt 0 -and $end_line -gt 0) {
                         Get-Content $file_path | Select-Object -Skip ($start_line - 1) -First ($end_line - $start_line + 1)
                     } else {
                         Get-Content $file_path
@@ -610,28 +610,28 @@ function Initialize-BuiltInTools {
         -Handler {
             param($action, $task = "", $id = 0)
             try {
-                if (-not $script:TodoList) {
-                    $script:TodoList = @()
+                if (-not ${script:TodoList}) {
+                    ${script:TodoList} = @()
                 }
                 
                 switch ($action) {
                     "add" {
-                        $newId = ($script:TodoList.Count + 1)
-                        $script:TodoList += @{ id = $newId; task = $task; completed = $false }
+                        $newId = (${script:TodoList}.Count + 1)
+                        ${script:TodoList} += @{ id = $newId; task = $task; completed = $false }
                         return @{ success = $true; action = "added"; id = $newId }
                     }
                     "list" {
-                        return @{ success = $true; todos = $script:TodoList }
+                        return @{ success = $true; todos = ${script:TodoList} }
                     }
                     "complete" {
-                        $todo = $script:TodoList | Where-Object { $_.id -eq $id } | Select-Object -First 1
+                        $todo = ${script:TodoList} | Where-Object { $_.id -eq $id } | Select-Object -First 1
                         if ($todo) {
                             $todo.completed = $true
                             return @{ success = $true; action = "completed"; id = $id }
                         }
                     }
                     "delete" {
-                        $script:TodoList = @($script:TodoList | Where-Object { $_.id -ne $id })
+                        ${script:TodoList} = @(${script:TodoList} | Where-Object { $_.id -ne $id })
                         return @{ success = $true; action = "deleted"; id = $id }
                     }
                 }

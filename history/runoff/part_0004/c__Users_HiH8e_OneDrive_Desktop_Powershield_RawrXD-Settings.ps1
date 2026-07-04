@@ -135,51 +135,51 @@ function Show-IDESettings {
     $generalTab.Controls.Add($startupGroup)
 
     $startupGroup.Controls.Add((& $createLabel "Startup Behavior:" 15 25))
-    $script:startupBehaviorCombo = & $createCombo 200 22 @("LastSession", "NewFile", "Empty") $global:settings.StartupBehavior
-    $startupGroup.Controls.Add($script:startupBehaviorCombo)
+    ${script:startupBehaviorCombo} = & $createCombo 200 22 @("LastSession", "NewFile", "Empty") ${global:settings}.StartupBehavior
+    $startupGroup.Controls.Add(${script:startupBehaviorCombo})
 
-    $script:checkUpdatesCheck = & $createCheckbox "Check for updates on startup" 15 55 $global:settings.CheckForUpdates
-    $startupGroup.Controls.Add($script:checkUpdatesCheck)
+    ${script:checkUpdatesCheck} = & $createCheckbox "Check for updates on startup" 15 55 ${global:settings}.CheckForUpdates
+    $startupGroup.Controls.Add(${script:checkUpdatesCheck})
 
-    $script:rememberWindowCheck = & $createCheckbox "Remember window position and size" 15 85 $global:settings.RememberWindowState
-    $startupGroup.Controls.Add($script:rememberWindowCheck)
+    ${script:rememberWindowCheck} = & $createCheckbox "Remember window position and size" 15 85 ${global:settings}.RememberWindowState
+    $startupGroup.Controls.Add(${script:rememberWindowCheck})
 
     # Exit Group
     $exitGroup = & $createGroup "Exit Behavior" 15 155 350 100
     $generalTab.Controls.Add($exitGroup)
 
-    $script:confirmExitCheck = & $createCheckbox "Confirm before exit" 15 25 $global:settings.ConfirmOnExit
-    $exitGroup.Controls.Add($script:confirmExitCheck)
+    ${script:confirmExitCheck} = & $createCheckbox "Confirm before exit" 15 25 ${global:settings}.ConfirmOnExit
+    $exitGroup.Controls.Add(${script:confirmExitCheck})
 
     $exitGroup.Controls.Add((& $createLabel "Max Recent Files:" 15 60))
-    $script:maxRecentNumeric = & $createNumeric 200 57 5 50 $global:settings.MaxRecentFiles
-    $exitGroup.Controls.Add($script:maxRecentNumeric)
+    ${script:maxRecentNumeric} = & $createNumeric 200 57 5 50 ${global:settings}.MaxRecentFiles
+    $exitGroup.Controls.Add(${script:maxRecentNumeric})
 
     # Auto-Save Group
     $autoSaveGroup = & $createGroup "Auto-Save" 380 15 355 130
     $generalTab.Controls.Add($autoSaveGroup)
 
-    $script:autoSaveCheck = & $createCheckbox "Enable Auto-Save" 15 25 $global:settings.AutoSaveEnabled
-    $autoSaveGroup.Controls.Add($script:autoSaveCheck)
+    ${script:autoSaveCheck} = & $createCheckbox "Enable Auto-Save" 15 25 ${global:settings}.AutoSaveEnabled
+    $autoSaveGroup.Controls.Add(${script:autoSaveCheck})
 
     $autoSaveGroup.Controls.Add((& $createLabel "Interval (seconds):" 15 60))
-    $script:autoSaveIntervalNumeric = & $createNumeric 180 57 5 300 $global:settings.AutoSaveInterval
-    $autoSaveGroup.Controls.Add($script:autoSaveIntervalNumeric)
+    ${script:autoSaveIntervalNumeric} = & $createNumeric 180 57 5 300 ${global:settings}.AutoSaveInterval
+    $autoSaveGroup.Controls.Add(${script:autoSaveIntervalNumeric})
 
-    $script:createBackupsCheck = & $createCheckbox "Create backup files" 15 95 $global:settings.CreateBackups
-    $autoSaveGroup.Controls.Add($script:createBackupsCheck)
+    ${script:createBackupsCheck} = & $createCheckbox "Create backup files" 15 95 ${global:settings}.CreateBackups
+    $autoSaveGroup.Controls.Add(${script:createBackupsCheck})
 
     # Tabs Group
     $tabsGroup = & $createGroup "Tabs" 380 155 355 100
     $generalTab.Controls.Add($tabsGroup)
 
     $tabsGroup.Controls.Add((& $createLabel "Max Editor Tabs:" 15 30))
-    $script:maxTabsNumeric = & $createNumeric 180 27 1 100 $global:settings.MaxTabs
-    $tabsGroup.Controls.Add($script:maxTabsNumeric)
+    ${script:maxTabsNumeric} = & $createNumeric 180 27 1 100 ${global:settings}.MaxTabs
+    $tabsGroup.Controls.Add(${script:maxTabsNumeric})
 
     $tabsGroup.Controls.Add((& $createLabel "Max Chat Tabs:" 15 65))
-    $script:maxChatTabsNumeric = & $createNumeric 180 62 1 50 $global:settings.MaxChatTabs
-    $tabsGroup.Controls.Add($script:maxChatTabsNumeric)
+    ${script:maxChatTabsNumeric} = & $createNumeric 180 62 1 50 ${global:settings}.MaxChatTabs
+    $tabsGroup.Controls.Add(${script:maxChatTabsNumeric})
 
     # =====================
     # TAB 2: EDITOR
@@ -194,59 +194,59 @@ function Show-IDESettings {
     $editorTab.Controls.Add($fontGroup)
 
     $fontGroup.Controls.Add((& $createLabel "Font Family:" 15 30))
-    $script:editorFontCombo = & $createCombo 150 27 @("Consolas", "Cascadia Code", "Fira Code", "JetBrains Mono", "Source Code Pro", "Courier New", "Monaco", "Menlo") $global:settings.EditorFontFamily
-    $fontGroup.Controls.Add($script:editorFontCombo)
+    ${script:editorFontCombo} = & $createCombo 150 27 @("Consolas", "Cascadia Code", "Fira Code", "JetBrains Mono", "Source Code Pro", "Courier New", "Monaco", "Menlo") ${global:settings}.EditorFontFamily
+    $fontGroup.Controls.Add(${script:editorFontCombo})
 
     $fontGroup.Controls.Add((& $createLabel "Size:" 15 65))
-    $script:editorFontSizeNumeric = & $createNumeric 150 62 8 72 $global:settings.EditorFontSize 60
-    $fontGroup.Controls.Add($script:editorFontSizeNumeric)
+    ${script:editorFontSizeNumeric} = & $createNumeric 150 62 8 72 ${global:settings}.EditorFontSize 60
+    $fontGroup.Controls.Add(${script:editorFontSizeNumeric})
 
     # Indentation Group
     $indentGroup = & $createGroup "Indentation" 380 15 355 100
     $editorTab.Controls.Add($indentGroup)
 
     $indentGroup.Controls.Add((& $createLabel "Tab Size:" 15 30))
-    $script:tabSizeNumeric = & $createNumeric 150 27 1 8 $global:settings.TabSize 60
-    $indentGroup.Controls.Add($script:tabSizeNumeric)
+    ${script:tabSizeNumeric} = & $createNumeric 150 27 1 8 ${global:settings}.TabSize 60
+    $indentGroup.Controls.Add(${script:tabSizeNumeric})
 
-    $script:autoIndentCheck = & $createCheckbox "Auto Indent" 15 65 $global:settings.AutoIndent
-    $indentGroup.Controls.Add($script:autoIndentCheck)
+    ${script:autoIndentCheck} = & $createCheckbox "Auto Indent" 15 65 ${global:settings}.AutoIndent
+    $indentGroup.Controls.Add(${script:autoIndentCheck})
 
     # Display Group
     $displayGroup = & $createGroup "Display Options" 15 125 350 180
     $editorTab.Controls.Add($displayGroup)
 
-    $script:lineNumbersCheck = & $createCheckbox "Show Line Numbers" 15 25 $global:settings.ShowLineNumbers
-    $displayGroup.Controls.Add($script:lineNumbersCheck)
+    ${script:lineNumbersCheck} = & $createCheckbox "Show Line Numbers" 15 25 ${global:settings}.ShowLineNumbers
+    $displayGroup.Controls.Add(${script:lineNumbersCheck})
 
-    $script:wordWrapCheck = & $createCheckbox "Word Wrap" 15 55 $global:settings.WrapText
-    $displayGroup.Controls.Add($script:wordWrapCheck)
+    ${script:wordWrapCheck} = & $createCheckbox "Word Wrap" 15 55 ${global:settings}.WrapText
+    $displayGroup.Controls.Add(${script:wordWrapCheck})
 
-    $script:whitespaceCheck = & $createCheckbox "Show Whitespace Characters" 15 85 $global:settings.ShowWhitespace
-    $displayGroup.Controls.Add($script:whitespaceCheck)
+    ${script:whitespaceCheck} = & $createCheckbox "Show Whitespace Characters" 15 85 ${global:settings}.ShowWhitespace
+    $displayGroup.Controls.Add(${script:whitespaceCheck})
 
-    $script:highlightLineCheck = & $createCheckbox "Highlight Current Line" 15 115 $global:settings.HighlightCurrentLine
-    $displayGroup.Controls.Add($script:highlightLineCheck)
+    ${script:highlightLineCheck} = & $createCheckbox "Highlight Current Line" 15 115 ${global:settings}.HighlightCurrentLine
+    $displayGroup.Controls.Add(${script:highlightLineCheck})
 
-    $script:miniMapCheck = & $createCheckbox "Show Mini Map" 15 145 $global:settings.MiniMap
-    $displayGroup.Controls.Add($script:miniMapCheck)
+    ${script:miniMapCheck} = & $createCheckbox "Show Mini Map" 15 145 ${global:settings}.MiniMap
+    $displayGroup.Controls.Add(${script:miniMapCheck})
 
     # Features Group
     $featuresGroup = & $createGroup "Features" 380 125 355 180
     $editorTab.Controls.Add($featuresGroup)
 
-    $script:syntaxHighlightCheck = & $createCheckbox "Syntax Highlighting" 15 25 $global:settings.CodeHighlighting
-    $featuresGroup.Controls.Add($script:syntaxHighlightCheck)
+    ${script:syntaxHighlightCheck} = & $createCheckbox "Syntax Highlighting" 15 25 ${global:settings}.CodeHighlighting
+    $featuresGroup.Controls.Add(${script:syntaxHighlightCheck})
 
-    $script:autoCompleteCheck = & $createCheckbox "Auto Complete" 15 55 $global:settings.AutoComplete
-    $featuresGroup.Controls.Add($script:autoCompleteCheck)
+    ${script:autoCompleteCheck} = & $createCheckbox "Auto Complete" 15 55 ${global:settings}.AutoComplete
+    $featuresGroup.Controls.Add(${script:autoCompleteCheck})
 
-    $script:bracketMatchCheck = & $createCheckbox "Bracket Matching" 15 85 $global:settings.BracketMatching
-    $featuresGroup.Controls.Add($script:bracketMatchCheck)
+    ${script:bracketMatchCheck} = & $createCheckbox "Bracket Matching" 15 85 ${global:settings}.BracketMatching
+    $featuresGroup.Controls.Add(${script:bracketMatchCheck})
 
     $featuresGroup.Controls.Add((& $createLabel "Max Undo History:" 15 120))
-    $script:maxUndoNumeric = & $createNumeric 180 117 10 1000 $global:settings.MaxUndoHistory
-    $featuresGroup.Controls.Add($script:maxUndoNumeric)
+    ${script:maxUndoNumeric} = & $createNumeric 180 117 10 1000 ${global:settings}.MaxUndoHistory
+    $featuresGroup.Controls.Add(${script:maxUndoNumeric})
 
     # =====================
     # TAB 3: APPEARANCE
@@ -261,53 +261,53 @@ function Show-IDESettings {
     $appearanceTab.Controls.Add($themeGroup)
 
     $themeGroup.Controls.Add((& $createLabel "UI Theme:" 15 30))
-    $script:themeCombo = & $createCombo 150 27 @("Dark", "Light", "High Contrast", "Monokai", "Solarized", "Nord") $global:settings.ThemeMode
-    $themeGroup.Controls.Add($script:themeCombo)
+    ${script:themeCombo} = & $createCombo 150 27 @("Dark", "Light", "High Contrast", "Monokai", "Solarized", "Nord") ${global:settings}.ThemeMode
+    $themeGroup.Controls.Add(${script:themeCombo})
 
     $themeGroup.Controls.Add((& $createLabel "Editor Theme:" 15 65))
-    $script:editorThemeCombo = & $createCombo 150 62 @("Monokai", "One Dark", "Dracula", "GitHub", "Solarized", "Tomorrow Night", "Material") $global:settings.EditorTheme
-    $themeGroup.Controls.Add($script:editorThemeCombo)
+    ${script:editorThemeCombo} = & $createCombo 150 62 @("Monokai", "One Dark", "Dracula", "GitHub", "Solarized", "Tomorrow Night", "Material") ${global:settings}.EditorTheme
+    $themeGroup.Controls.Add(${script:editorThemeCombo})
 
     $themeGroup.Controls.Add((& $createLabel "Accent Color:" 15 100))
-    $script:accentColorBtn = New-Object System.Windows.Forms.Button
-    $script:accentColorBtn.Location = New-Object System.Drawing.Point(150, 97)
-    $script:accentColorBtn.Size = New-Object System.Drawing.Size(100, 25)
-    $script:accentColorBtn.Text = $global:settings.AccentColor
-    $script:accentColorBtn.BackColor = [System.Drawing.ColorTranslator]::FromHtml($global:settings.AccentColor)
-    $script:accentColorBtn.FlatStyle = "Flat"
-    $script:accentColorBtn.Add_Click({
+    ${script:accentColorBtn} = New-Object System.Windows.Forms.Button
+    ${script:accentColorBtn}.Location = New-Object System.Drawing.Point(150, 97)
+    ${script:accentColorBtn}.Size = New-Object System.Drawing.Size(100, 25)
+    ${script:accentColorBtn}.Text = ${global:settings}.AccentColor
+    ${script:accentColorBtn}.BackColor = [System.Drawing.ColorTranslator]::FromHtml(${global:settings}.AccentColor)
+    ${script:accentColorBtn}.FlatStyle = "Flat"
+    ${script:accentColorBtn}.Add_Click({
         $colorDialog = New-Object System.Windows.Forms.ColorDialog
-        $colorDialog.Color = $script:accentColorBtn.BackColor
+        $colorDialog.Color = ${script:accentColorBtn}.BackColor
         if ($colorDialog.ShowDialog() -eq "OK") {
-            $script:accentColorBtn.BackColor = $colorDialog.Color
-            $script:accentColorBtn.Text = "#" + $colorDialog.Color.R.ToString("X2") + $colorDialog.Color.G.ToString("X2") + $colorDialog.Color.B.ToString("X2")
+            ${script:accentColorBtn}.BackColor = $colorDialog.Color
+            ${script:accentColorBtn}.Text = "#" + $colorDialog.Color.R.ToString("X2") + $colorDialog.Color.G.ToString("X2") + $colorDialog.Color.B.ToString("X2")
         }
     })
-    $themeGroup.Controls.Add($script:accentColorBtn)
+    $themeGroup.Controls.Add(${script:accentColorBtn})
 
     # UI Group
     $uiGroup = & $createGroup "User Interface" 380 15 355 140
     $appearanceTab.Controls.Add($uiGroup)
 
     $uiGroup.Controls.Add((& $createLabel "UI Scale (%):" 15 30))
-    $script:uiScaleNumeric = & $createNumeric 150 27 75 200 $global:settings.UIScale 60
-    $uiGroup.Controls.Add($script:uiScaleNumeric)
+    ${script:uiScaleNumeric} = & $createNumeric 150 27 75 200 ${global:settings}.UIScale 60
+    $uiGroup.Controls.Add(${script:uiScaleNumeric})
 
-    $script:showToolbarCheck = & $createCheckbox "Show Toolbar" 15 60 $global:settings.ShowToolbar
-    $uiGroup.Controls.Add($script:showToolbarCheck)
+    ${script:showToolbarCheck} = & $createCheckbox "Show Toolbar" 15 60 ${global:settings}.ShowToolbar
+    $uiGroup.Controls.Add(${script:showToolbarCheck})
 
-    $script:showStatusBarCheck = & $createCheckbox "Show Status Bar" 15 90 $global:settings.ShowStatusBar
-    $uiGroup.Controls.Add($script:showStatusBarCheck)
+    ${script:showStatusBarCheck} = & $createCheckbox "Show Status Bar" 15 90 ${global:settings}.ShowStatusBar
+    $uiGroup.Controls.Add(${script:showStatusBarCheck})
 
     # Animation Group
     $animGroup = & $createGroup "Effects" 15 165 350 100
     $appearanceTab.Controls.Add($animGroup)
 
-    $script:animationsCheck = & $createCheckbox "Enable Animations" 15 30 $global:settings.AnimationsEnabled
-    $animGroup.Controls.Add($script:animationsCheck)
+    ${script:animationsCheck} = & $createCheckbox "Enable Animations" 15 30 ${global:settings}.AnimationsEnabled
+    $animGroup.Controls.Add(${script:animationsCheck})
 
-    $script:compactModeCheck = & $createCheckbox "Compact Mode" 15 60 $global:settings.CompactMode
-    $animGroup.Controls.Add($script:compactModeCheck)
+    ${script:compactModeCheck} = & $createCheckbox "Compact Mode" 15 60 ${global:settings}.CompactMode
+    $animGroup.Controls.Add(${script:compactModeCheck})
 
     # =====================
     # TAB 4: KEYBOARD SHORTCUTS
@@ -321,19 +321,19 @@ function Show-IDESettings {
     $hotkeyLabel = & $createLabel "Configure keyboard shortcuts:" 15 15 300
     $hotkeyTab.Controls.Add($hotkeyLabel)
 
-    $script:hotkeyListView = New-Object System.Windows.Forms.ListView
-    $script:hotkeyListView.Location = New-Object System.Drawing.Point(15, 45)
-    $script:hotkeyListView.Size = New-Object System.Drawing.Size(720, 380)
-    $script:hotkeyListView.View = [System.Windows.Forms.View]::Details
-    $script:hotkeyListView.FullRowSelect = $true
-    $script:hotkeyListView.GridLines = $true
-    $script:hotkeyListView.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
-    $script:hotkeyListView.ForeColor = [System.Drawing.Color]::White
-    $script:hotkeyListView.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    ${script:hotkeyListView} = New-Object System.Windows.Forms.ListView
+    ${script:hotkeyListView}.Location = New-Object System.Drawing.Point(15, 45)
+    ${script:hotkeyListView}.Size = New-Object System.Drawing.Size(720, 380)
+    ${script:hotkeyListView}.View = [System.Windows.Forms.View]::Details
+    ${script:hotkeyListView}.FullRowSelect = $true
+    ${script:hotkeyListView}.GridLines = $true
+    ${script:hotkeyListView}.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+    ${script:hotkeyListView}.ForeColor = [System.Drawing.Color]::White
+    ${script:hotkeyListView}.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
-    $script:hotkeyListView.Columns.Add("Command", 200) | Out-Null
-    $script:hotkeyListView.Columns.Add("Shortcut", 150) | Out-Null
-    $script:hotkeyListView.Columns.Add("Category", 150) | Out-Null
+    ${script:hotkeyListView}.Columns.Add("Command", 200) | Out-Null
+    ${script:hotkeyListView}.Columns.Add("Shortcut", 150) | Out-Null
+    ${script:hotkeyListView}.Columns.Add("Category", 150) | Out-Null
 
     # Populate hotkeys
     $hotkeyCategories = @{
@@ -346,14 +346,14 @@ function Show-IDESettings {
         "Settings" = "General"; "ZoomIn" = "View"; "ZoomOut" = "View"; "ResetZoom" = "View"
     }
 
-    foreach ($key in $global:settings.Hotkeys.Keys | Sort-Object) {
+    foreach ($key in ${global:settings}.Hotkeys.Keys | Sort-Object) {
         $item = New-Object System.Windows.Forms.ListViewItem($key)
-        $item.SubItems.Add($global:settings.Hotkeys[$key]) | Out-Null
-        $category = if ($hotkeyCategories.ContainsKey($key)) { $hotkeyCategories[$key] } else { "Other" }
+        $item.SubItems.Add(${global:settings}.Hotkeys[$key]) | Out-Null
+        $category = $(if ($hotkeyCategories.ContainsKey($key)) { $hotkeyCategories[$key] } else { "Other" }
         $item.SubItems.Add($category) | Out-Null
-        $script:hotkeyListView.Items.Add($item) | Out-Null
+        ${script:hotkeyListView}.Items.Add($item) | Out-Null
     }
-    $hotkeyTab.Controls.Add($script:hotkeyListView)
+    $hotkeyTab.Controls.Add(${script:hotkeyListView})
 
     # Edit hotkey button
     $editHotkeyBtn = New-Object System.Windows.Forms.Button
@@ -364,11 +364,11 @@ function Show-IDESettings {
     $editHotkeyBtn.ForeColor = [System.Drawing.Color]::White
     $editHotkeyBtn.FlatStyle = "Flat"
     $editHotkeyBtn.Add_Click({
-        if ($script:hotkeyListView.SelectedItems.Count -eq 0) {
+        if (${script:hotkeyListView}.SelectedItems.Count -eq 0) {
             [System.Windows.Forms.MessageBox]::Show("Please select a command to edit.", "No Selection", "OK", "Information")
             return
         }
-        $selectedItem = $script:hotkeyListView.SelectedItems[0]
+        $selectedItem = ${script:hotkeyListView}.SelectedItems[0]
         $command = $selectedItem.Text
         $currentShortcut = $selectedItem.SubItems[1].Text
 
@@ -417,8 +417,8 @@ function Show-IDESettings {
             }
 
             if ($parts.Count -gt 0) {
-                $script:capturedKey = $parts -join "+"
-                $sender.Text = $script:capturedKey
+                ${script:capturedKey} = $parts -join "+"
+                $sender.Text = ${script:capturedKey}
             }
         })
 
@@ -471,7 +471,7 @@ function Show-IDESettings {
                 "CommandPalette" = "Ctrl+Shift+P"; "ToggleTerminal" = 'Ctrl+`'; "ToggleBrowser" = "Ctrl+B"; "ToggleChat" = "Ctrl+Shift+C"; "ToggleFullscreen" = "F11"
                 "SendMessage" = "Ctrl+Enter"; "NewChatTab" = "Ctrl+T"; "Settings" = "Ctrl+,"; "ZoomIn" = "Ctrl+Plus"; "ZoomOut" = "Ctrl+Minus"; "ResetZoom" = "Ctrl+0"
             }
-            foreach ($item in $script:hotkeyListView.Items) {
+            foreach ($item in ${script:hotkeyListView}.Items) {
                 if ($defaults.ContainsKey($item.Text)) {
                     $item.SubItems[1].Text = $defaults[$item.Text]
                 }
@@ -493,65 +493,65 @@ function Show-IDESettings {
     $aiTab.Controls.Add($modelGroup)
 
     $modelGroup.Controls.Add((& $createLabel "Default Model:" 15 30))
-    $script:aiModelCombo = & $createCombo 150 27 @("bigdaddyg-fast:latest", "llama3.2", "llama3.2:1b", "llama3.1", "codellama", "mistral", "qwen2.5-coder", "deepseek-coder") $global:settings.OllamaModel 180
-    $modelGroup.Controls.Add($script:aiModelCombo)
+    ${script:aiModelCombo} = & $createCombo 150 27 @("bigdaddyg-fast:latest", "llama3.2", "llama3.2:1b", "llama3.1", "codellama", "mistral", "qwen2.5-coder", "deepseek-coder") ${global:settings}.OllamaModel 180
+    $modelGroup.Controls.Add(${script:aiModelCombo})
 
     $modelGroup.Controls.Add((& $createLabel "Endpoint URL:" 15 65))
-    $script:endpointTextbox = & $createTextbox 150 62 $global:settings.OllamaEndpoint 180
-    $modelGroup.Controls.Add($script:endpointTextbox)
+    ${script:endpointTextbox} = & $createTextbox 150 62 ${global:settings}.OllamaEndpoint 180
+    $modelGroup.Controls.Add(${script:endpointTextbox})
 
     $modelGroup.Controls.Add((& $createLabel "Max Tokens:" 15 100))
-    $script:maxTokensNumeric = & $createNumeric 150 97 256 32768 $global:settings.MaxTokens 100
-    $modelGroup.Controls.Add($script:maxTokensNumeric)
+    ${script:maxTokensNumeric} = & $createNumeric 150 97 256 32768 ${global:settings}.MaxTokens 100
+    $modelGroup.Controls.Add(${script:maxTokensNumeric})
 
-    $script:streamResponsesCheck = & $createCheckbox "Stream Responses" 15 130 $global:settings.StreamResponses
-    $modelGroup.Controls.Add($script:streamResponsesCheck)
+    ${script:streamResponsesCheck} = & $createCheckbox "Stream Responses" 15 130 ${global:settings}.StreamResponses
+    $modelGroup.Controls.Add(${script:streamResponsesCheck})
 
     # Parameters Group
     $paramsGroup = & $createGroup "Generation Parameters" 380 15 355 160
     $aiTab.Controls.Add($paramsGroup)
 
     $paramsGroup.Controls.Add((& $createLabel "Temperature:" 15 30))
-    $script:temperatureTrack = New-Object System.Windows.Forms.TrackBar
-    $script:temperatureTrack.Location = New-Object System.Drawing.Point(130, 25)
-    $script:temperatureTrack.Size = New-Object System.Drawing.Size(150, 30)
-    $script:temperatureTrack.Minimum = 0
-    $script:temperatureTrack.Maximum = 20
-    $script:temperatureTrack.Value = [int]($global:settings.Temperature * 10)
-    $script:temperatureTrack.TickFrequency = 2
-    $paramsGroup.Controls.Add($script:temperatureTrack)
+    ${script:temperatureTrack} = New-Object System.Windows.Forms.TrackBar
+    ${script:temperatureTrack}.Location = New-Object System.Drawing.Point(130, 25)
+    ${script:temperatureTrack}.Size = New-Object System.Drawing.Size(150, 30)
+    ${script:temperatureTrack}.Minimum = 0
+    ${script:temperatureTrack}.Maximum = 20
+    ${script:temperatureTrack}.Value = [int](${global:settings}.Temperature * 10)
+    ${script:temperatureTrack}.TickFrequency = 2
+    $paramsGroup.Controls.Add(${script:temperatureTrack})
 
-    $script:tempValueLabel = & $createLabel $global:settings.Temperature.ToString("0.0") 290 30 50
-    $paramsGroup.Controls.Add($script:tempValueLabel)
-    $script:temperatureTrack.Add_ValueChanged({ $script:tempValueLabel.Text = ($script:temperatureTrack.Value / 10).ToString("0.0") })
+    ${script:tempValueLabel} = & $createLabel ${global:settings}.Temperature.ToString("0.0") 290 30 50
+    $paramsGroup.Controls.Add(${script:tempValueLabel})
+    ${script:temperatureTrack}.Add_ValueChanged({ ${script:tempValueLabel}.Text = (${script:temperatureTrack}.Value / 10).ToString("0.0") })
 
     $paramsGroup.Controls.Add((& $createLabel "Top P:" 15 70))
-    $script:topPTrack = New-Object System.Windows.Forms.TrackBar
-    $script:topPTrack.Location = New-Object System.Drawing.Point(130, 65)
-    $script:topPTrack.Size = New-Object System.Drawing.Size(150, 30)
-    $script:topPTrack.Minimum = 0
-    $script:topPTrack.Maximum = 10
-    $script:topPTrack.Value = [int]($global:settings.TopP * 10)
-    $script:topPTrack.TickFrequency = 1
-    $paramsGroup.Controls.Add($script:topPTrack)
+    ${script:topPTrack} = New-Object System.Windows.Forms.TrackBar
+    ${script:topPTrack}.Location = New-Object System.Drawing.Point(130, 65)
+    ${script:topPTrack}.Size = New-Object System.Drawing.Size(150, 30)
+    ${script:topPTrack}.Minimum = 0
+    ${script:topPTrack}.Maximum = 10
+    ${script:topPTrack}.Value = [int](${global:settings}.TopP * 10)
+    ${script:topPTrack}.TickFrequency = 1
+    $paramsGroup.Controls.Add(${script:topPTrack})
 
-    $script:topPValueLabel = & $createLabel $global:settings.TopP.ToString("0.0") 290 70 50
-    $paramsGroup.Controls.Add($script:topPValueLabel)
-    $script:topPTrack.Add_ValueChanged({ $script:topPValueLabel.Text = ($script:topPTrack.Value / 10).ToString("0.0") })
+    ${script:topPValueLabel} = & $createLabel ${global:settings}.TopP.ToString("0.0") 290 70 50
+    $paramsGroup.Controls.Add(${script:topPValueLabel})
+    ${script:topPTrack}.Add_ValueChanged({ ${script:topPValueLabel}.Text = (${script:topPTrack}.Value / 10).ToString("0.0") })
 
     # Chat Group
     $chatGroup = & $createGroup "Chat Display" 15 185 350 120
     $aiTab.Controls.Add($chatGroup)
 
     $chatGroup.Controls.Add((& $createLabel "Chat Font Size:" 15 30))
-    $script:chatFontSizeNumeric = & $createNumeric 150 27 8 24 $global:settings.ChatFontSize 60
-    $chatGroup.Controls.Add($script:chatFontSizeNumeric)
+    ${script:chatFontSizeNumeric} = & $createNumeric 150 27 8 24 ${global:settings}.ChatFontSize 60
+    $chatGroup.Controls.Add(${script:chatFontSizeNumeric})
 
-    $script:showTimestampsCheck = & $createCheckbox "Show Timestamps" 15 60 $global:settings.ShowTimestamps
-    $chatGroup.Controls.Add($script:showTimestampsCheck)
+    ${script:showTimestampsCheck} = & $createCheckbox "Show Timestamps" 15 60 ${global:settings}.ShowTimestamps
+    $chatGroup.Controls.Add(${script:showTimestampsCheck})
 
-    $script:autoScrollChatCheck = & $createCheckbox "Auto-scroll to New Messages" 15 90 $global:settings.AutoScrollChat
-    $chatGroup.Controls.Add($script:autoScrollChatCheck)
+    ${script:autoScrollChatCheck} = & $createCheckbox "Auto-scroll to New Messages" 15 90 ${global:settings}.AutoScrollChat
+    $chatGroup.Controls.Add(${script:autoScrollChatCheck})
 
     # =====================
     # TAB 6: BROWSER
@@ -566,25 +566,25 @@ function Show-IDESettings {
     $browserTab.Controls.Add($engineGroup)
 
     $engineGroup.Controls.Add((& $createLabel "Rendering Engine:" 15 30))
-    $script:browserEngineCombo = & $createCombo 150 27 @("WebView2", "PS51-Bridge", "Legacy") $global:settings.BrowserEngine
-    $engineGroup.Controls.Add($script:browserEngineCombo)
+    ${script:browserEngineCombo} = & $createCombo 150 27 @("WebView2", "PS51-Bridge", "Legacy") ${global:settings}.BrowserEngine
+    $engineGroup.Controls.Add(${script:browserEngineCombo})
 
     $engineGroup.Controls.Add((& $createLabel "Home Page:" 15 70))
-    $script:homePageTextbox = & $createTextbox 150 67 $global:settings.BrowserHomePage 180
-    $engineGroup.Controls.Add($script:homePageTextbox)
+    ${script:homePageTextbox} = & $createTextbox 150 67 ${global:settings}.BrowserHomePage 180
+    $engineGroup.Controls.Add(${script:homePageTextbox})
 
     # Features Group
     $browserFeaturesGroup = & $createGroup "Browser Features" 380 15 355 120
     $browserTab.Controls.Add($browserFeaturesGroup)
 
-    $script:enableJSCheck = & $createCheckbox "Enable JavaScript" 15 30 $global:settings.EnableJavaScript
-    $browserFeaturesGroup.Controls.Add($script:enableJSCheck)
+    ${script:enableJSCheck} = & $createCheckbox "Enable JavaScript" 15 30 ${global:settings}.EnableJavaScript
+    $browserFeaturesGroup.Controls.Add(${script:enableJSCheck})
 
-    $script:enableCookiesCheck = & $createCheckbox "Enable Cookies" 15 60 $global:settings.EnableCookies
-    $browserFeaturesGroup.Controls.Add($script:enableCookiesCheck)
+    ${script:enableCookiesCheck} = & $createCheckbox "Enable Cookies" 15 60 ${global:settings}.EnableCookies
+    $browserFeaturesGroup.Controls.Add(${script:enableCookiesCheck})
 
-    $script:clearCacheCheck = & $createCheckbox "Clear Cache on Exit" 15 90 $global:settings.ClearCacheOnExit
-    $browserFeaturesGroup.Controls.Add($script:clearCacheCheck)
+    ${script:clearCacheCheck} = & $createCheckbox "Clear Cache on Exit" 15 90 ${global:settings}.ClearCacheOnExit
+    $browserFeaturesGroup.Controls.Add(${script:clearCacheCheck})
 
     # =====================
     # TAB 7: TERMINAL
@@ -599,20 +599,20 @@ function Show-IDESettings {
     $terminalTab.Controls.Add($termFontGroup)
 
     $termFontGroup.Controls.Add((& $createLabel "Font Family:" 15 30))
-    $script:termFontCombo = & $createCombo 150 27 @("Cascadia Mono", "Consolas", "Courier New", "Lucida Console", "Source Code Pro") $global:settings.TerminalFontFamily
-    $termFontGroup.Controls.Add($script:termFontCombo)
+    ${script:termFontCombo} = & $createCombo 150 27 @("Cascadia Mono", "Consolas", "Courier New", "Lucida Console", "Source Code Pro") ${global:settings}.TerminalFontFamily
+    $termFontGroup.Controls.Add(${script:termFontCombo})
 
     $termFontGroup.Controls.Add((& $createLabel "Font Size:" 15 65))
-    $script:termFontSizeNumeric = & $createNumeric 150 62 8 24 $global:settings.TerminalFontSize 60
-    $termFontGroup.Controls.Add($script:termFontSizeNumeric)
+    ${script:termFontSizeNumeric} = & $createNumeric 150 62 8 24 ${global:settings}.TerminalFontSize 60
+    $termFontGroup.Controls.Add(${script:termFontSizeNumeric})
 
     # Terminal Buffer Group
     $termBufferGroup = & $createGroup "Buffer Settings" 380 15 355 100
     $terminalTab.Controls.Add($termBufferGroup)
 
     $termBufferGroup.Controls.Add((& $createLabel "Scrollback Lines:" 15 30))
-    $script:scrollbackNumeric = & $createNumeric 150 27 100 10000 $global:settings.TerminalScrollback 100
-    $termBufferGroup.Controls.Add($script:scrollbackNumeric)
+    ${script:scrollbackNumeric} = & $createNumeric 150 27 100 10000 ${global:settings}.TerminalScrollback 100
+    $termBufferGroup.Controls.Add(${script:scrollbackNumeric})
 
     # =====================
     # TAB 8: ADVANCED
@@ -626,26 +626,26 @@ function Show-IDESettings {
     $debugGroup = & $createGroup "Debugging" 15 15 350 130
     $advancedTab.Controls.Add($debugGroup)
 
-    $script:debugModeCheck = & $createCheckbox "Enable Debug Mode" 15 30 $global:settings.DebugMode
-    $debugGroup.Controls.Add($script:debugModeCheck)
+    ${script:debugModeCheck} = & $createCheckbox "Enable Debug Mode" 15 30 ${global:settings}.DebugMode
+    $debugGroup.Controls.Add(${script:debugModeCheck})
 
     $debugGroup.Controls.Add((& $createLabel "Log Level:" 15 65))
-    $script:logLevelCombo = & $createCombo 150 62 @("Debug", "Info", "Warning", "Error") $global:settings.LogLevel
-    $debugGroup.Controls.Add($script:logLevelCombo)
+    ${script:logLevelCombo} = & $createCombo 150 62 @("Debug", "Info", "Warning", "Error") ${global:settings}.LogLevel
+    $debugGroup.Controls.Add(${script:logLevelCombo})
 
-    $script:telemetryCheck = & $createCheckbox "Enable Telemetry" 15 100 $global:settings.EnableTelemetry
-    $debugGroup.Controls.Add($script:telemetryCheck)
+    ${script:telemetryCheck} = & $createCheckbox "Enable Telemetry" 15 100 ${global:settings}.EnableTelemetry
+    $debugGroup.Controls.Add(${script:telemetryCheck})
 
     # Performance Group
     $perfGroup = & $createGroup "Performance" 380 15 355 130
     $advancedTab.Controls.Add($perfGroup)
 
-    $script:lazyLoadCheck = & $createCheckbox "Lazy Load Tabs" 15 30 $global:settings.LazyLoadTabs
-    $perfGroup.Controls.Add($script:lazyLoadCheck)
+    ${script:lazyLoadCheck} = & $createCheckbox "Lazy Load Tabs" 15 30 ${global:settings}.LazyLoadTabs
+    $perfGroup.Controls.Add(${script:lazyLoadCheck})
 
     $perfGroup.Controls.Add((& $createLabel "Syntax Highlight Delay (ms):" 15 65))
-    $script:highlightDelayNumeric = & $createNumeric 220 62 0 500 $global:settings.SyntaxHighlightDelay 80
-    $perfGroup.Controls.Add($script:highlightDelayNumeric)
+    ${script:highlightDelayNumeric} = & $createNumeric 220 62 0 500 ${global:settings}.SyntaxHighlightDelay 80
+    $perfGroup.Controls.Add(${script:highlightDelayNumeric})
 
     # Data Management Group
     $dataGroup = & $createGroup "Data Management" 15 155 720 100
@@ -662,7 +662,7 @@ function Show-IDESettings {
         $result = [System.Windows.Forms.MessageBox]::Show("This will clear all cached data. Continue?", "Clear Cache", "YesNo", "Warning")
         if ($result -eq "Yes") {
             # Clear WebView2 cache
-            $cachePath = "$env:TEMP\RawrXD-WebView2-*"
+            $cachePath = "${env:TEMP}\RawrXD-WebView2-*"
             Get-ChildItem $cachePath -Directory -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
             [System.Windows.Forms.MessageBox]::Show("Cache cleared successfully.", "Done", "OK", "Information")
         }
@@ -679,7 +679,7 @@ function Show-IDESettings {
     $resetSettingsBtn.Add_Click({
         $result = [System.Windows.Forms.MessageBox]::Show("This will reset ALL settings to defaults. This cannot be undone. Continue?", "Reset Settings", "YesNo", "Warning")
         if ($result -eq "Yes") {
-            $settingsPath = Join-Path $env:APPDATA "RawrXD\settings.json"
+            $settingsPath = Join-Path ${env:APPDATA} "RawrXD\settings.json"
             if (Test-Path $settingsPath) {
                 Remove-Item $settingsPath -Force
             }
@@ -700,7 +700,7 @@ function Show-IDESettings {
         $saveDialog.Filter = "JSON Files (*.json)|*.json"
         $saveDialog.FileName = "RawrXD-Settings-Backup.json"
         if ($saveDialog.ShowDialog() -eq "OK") {
-            $global:settings | ConvertTo-Json -Depth 5 | Out-File $saveDialog.FileName -Encoding UTF8
+            ${global:settings} | ConvertTo-Json -Depth 5 | Out-File $saveDialog.FileName -Encoding UTF8
             [System.Windows.Forms.MessageBox]::Show("Settings exported successfully.", "Export Complete", "OK", "Information")
         }
     })
@@ -720,8 +720,8 @@ function Show-IDESettings {
             try {
                 $imported = Get-Content $openDialog.FileName | ConvertFrom-Json
                 foreach ($prop in $imported.PSObject.Properties) {
-                    if ($global:settings.ContainsKey($prop.Name)) {
-                        $global:settings[$prop.Name] = $prop.Value
+                    if (${global:settings}.ContainsKey($prop.Name)) {
+                        ${global:settings}[$prop.Name] = $prop.Value
                     }
                 }
                 Save-Settings
@@ -776,77 +776,77 @@ function Show-IDESettings {
     # Apply settings function
     $applySettings = {
         # General
-        $global:settings.StartupBehavior = $script:startupBehaviorCombo.SelectedItem
-        $global:settings.CheckForUpdates = $script:checkUpdatesCheck.Checked
-        $global:settings.RememberWindowState = $script:rememberWindowCheck.Checked
-        $global:settings.ConfirmOnExit = $script:confirmExitCheck.Checked
-        $global:settings.MaxRecentFiles = $script:maxRecentNumeric.Value
-        $global:settings.AutoSaveEnabled = $script:autoSaveCheck.Checked
-        $global:settings.AutoSaveInterval = $script:autoSaveIntervalNumeric.Value
-        $global:settings.CreateBackups = $script:createBackupsCheck.Checked
-        $global:settings.MaxTabs = $script:maxTabsNumeric.Value
-        $global:settings.MaxChatTabs = $script:maxChatTabsNumeric.Value
+        ${global:settings}.StartupBehavior = ${script:startupBehaviorCombo}.SelectedItem
+        ${global:settings}.CheckForUpdates = ${script:checkUpdatesCheck}.Checked
+        ${global:settings}.RememberWindowState = ${script:rememberWindowCheck}.Checked
+        ${global:settings}.ConfirmOnExit = ${script:confirmExitCheck}.Checked
+        ${global:settings}.MaxRecentFiles = ${script:maxRecentNumeric}.Value
+        ${global:settings}.AutoSaveEnabled = ${script:autoSaveCheck}.Checked
+        ${global:settings}.AutoSaveInterval = ${script:autoSaveIntervalNumeric}.Value
+        ${global:settings}.CreateBackups = ${script:createBackupsCheck}.Checked
+        ${global:settings}.MaxTabs = ${script:maxTabsNumeric}.Value
+        ${global:settings}.MaxChatTabs = ${script:maxChatTabsNumeric}.Value
 
         # Editor
-        $global:settings.EditorFontFamily = $script:editorFontCombo.SelectedItem
-        $global:settings.EditorFontSize = $script:editorFontSizeNumeric.Value
-        $global:settings.TabSize = $script:tabSizeNumeric.Value
-        $global:settings.AutoIndent = $script:autoIndentCheck.Checked
-        $global:settings.ShowLineNumbers = $script:lineNumbersCheck.Checked
-        $global:settings.WrapText = $script:wordWrapCheck.Checked
-        $global:settings.ShowWhitespace = $script:whitespaceCheck.Checked
-        $global:settings.HighlightCurrentLine = $script:highlightLineCheck.Checked
-        $global:settings.MiniMap = $script:miniMapCheck.Checked
-        $global:settings.CodeHighlighting = $script:syntaxHighlightCheck.Checked
-        $global:settings.AutoComplete = $script:autoCompleteCheck.Checked
-        $global:settings.BracketMatching = $script:bracketMatchCheck.Checked
-        $global:settings.MaxUndoHistory = $script:maxUndoNumeric.Value
+        ${global:settings}.EditorFontFamily = ${script:editorFontCombo}.SelectedItem
+        ${global:settings}.EditorFontSize = ${script:editorFontSizeNumeric}.Value
+        ${global:settings}.TabSize = ${script:tabSizeNumeric}.Value
+        ${global:settings}.AutoIndent = ${script:autoIndentCheck}.Checked
+        ${global:settings}.ShowLineNumbers = ${script:lineNumbersCheck}.Checked
+        ${global:settings}.WrapText = ${script:wordWrapCheck}.Checked
+        ${global:settings}.ShowWhitespace = ${script:whitespaceCheck}.Checked
+        ${global:settings}.HighlightCurrentLine = ${script:highlightLineCheck}.Checked
+        ${global:settings}.MiniMap = ${script:miniMapCheck}.Checked
+        ${global:settings}.CodeHighlighting = ${script:syntaxHighlightCheck}.Checked
+        ${global:settings}.AutoComplete = ${script:autoCompleteCheck}.Checked
+        ${global:settings}.BracketMatching = ${script:bracketMatchCheck}.Checked
+        ${global:settings}.MaxUndoHistory = ${script:maxUndoNumeric}.Value
 
         # Appearance
-        $global:settings.ThemeMode = $script:themeCombo.SelectedItem
-        $global:settings.EditorTheme = $script:editorThemeCombo.SelectedItem
-        $global:settings.AccentColor = $script:accentColorBtn.Text
-        $global:settings.UIScale = $script:uiScaleNumeric.Value
-        $global:settings.ShowToolbar = $script:showToolbarCheck.Checked
-        $global:settings.ShowStatusBar = $script:showStatusBarCheck.Checked
-        $global:settings.AnimationsEnabled = $script:animationsCheck.Checked
-        $global:settings.CompactMode = $script:compactModeCheck.Checked
+        ${global:settings}.ThemeMode = ${script:themeCombo}.SelectedItem
+        ${global:settings}.EditorTheme = ${script:editorThemeCombo}.SelectedItem
+        ${global:settings}.AccentColor = ${script:accentColorBtn}.Text
+        ${global:settings}.UIScale = ${script:uiScaleNumeric}.Value
+        ${global:settings}.ShowToolbar = ${script:showToolbarCheck}.Checked
+        ${global:settings}.ShowStatusBar = ${script:showStatusBarCheck}.Checked
+        ${global:settings}.AnimationsEnabled = ${script:animationsCheck}.Checked
+        ${global:settings}.CompactMode = ${script:compactModeCheck}.Checked
 
         # Hotkeys
-        $global:settings.Hotkeys = @{}
-        foreach ($item in $script:hotkeyListView.Items) {
-            $global:settings.Hotkeys[$item.Text] = $item.SubItems[1].Text
+        ${global:settings}.Hotkeys = @{}
+        foreach ($item in ${script:hotkeyListView}.Items) {
+            ${global:settings}.Hotkeys[$item.Text] = $item.SubItems[1].Text
         }
 
         # AI/Chat
-        $global:settings.OllamaModel = $script:aiModelCombo.SelectedItem
-        $global:settings.OllamaEndpoint = $script:endpointTextbox.Text
-        $global:settings.MaxTokens = $script:maxTokensNumeric.Value
-        $global:settings.StreamResponses = $script:streamResponsesCheck.Checked
-        $global:settings.Temperature = $script:temperatureTrack.Value / 10
-        $global:settings.TopP = $script:topPTrack.Value / 10
-        $global:settings.ChatFontSize = $script:chatFontSizeNumeric.Value
-        $global:settings.ShowTimestamps = $script:showTimestampsCheck.Checked
-        $global:settings.AutoScrollChat = $script:autoScrollChatCheck.Checked
+        ${global:settings}.OllamaModel = ${script:aiModelCombo}.SelectedItem
+        ${global:settings}.OllamaEndpoint = ${script:endpointTextbox}.Text
+        ${global:settings}.MaxTokens = ${script:maxTokensNumeric}.Value
+        ${global:settings}.StreamResponses = ${script:streamResponsesCheck}.Checked
+        ${global:settings}.Temperature = ${script:temperatureTrack}.Value / 10
+        ${global:settings}.TopP = ${script:topPTrack}.Value / 10
+        ${global:settings}.ChatFontSize = ${script:chatFontSizeNumeric}.Value
+        ${global:settings}.ShowTimestamps = ${script:showTimestampsCheck}.Checked
+        ${global:settings}.AutoScrollChat = ${script:autoScrollChatCheck}.Checked
 
         # Browser
-        $global:settings.BrowserEngine = $script:browserEngineCombo.SelectedItem
-        $global:settings.BrowserHomePage = $script:homePageTextbox.Text
-        $global:settings.EnableJavaScript = $script:enableJSCheck.Checked
-        $global:settings.EnableCookies = $script:enableCookiesCheck.Checked
-        $global:settings.ClearCacheOnExit = $script:clearCacheCheck.Checked
+        ${global:settings}.BrowserEngine = ${script:browserEngineCombo}.SelectedItem
+        ${global:settings}.BrowserHomePage = ${script:homePageTextbox}.Text
+        ${global:settings}.EnableJavaScript = ${script:enableJSCheck}.Checked
+        ${global:settings}.EnableCookies = ${script:enableCookiesCheck}.Checked
+        ${global:settings}.ClearCacheOnExit = ${script:clearCacheCheck}.Checked
 
         # Terminal
-        $global:settings.TerminalFontFamily = $script:termFontCombo.SelectedItem
-        $global:settings.TerminalFontSize = $script:termFontSizeNumeric.Value
-        $global:settings.TerminalScrollback = $script:scrollbackNumeric.Value
+        ${global:settings}.TerminalFontFamily = ${script:termFontCombo}.SelectedItem
+        ${global:settings}.TerminalFontSize = ${script:termFontSizeNumeric}.Value
+        ${global:settings}.TerminalScrollback = ${script:scrollbackNumeric}.Value
 
         # Advanced
-        $global:settings.DebugMode = $script:debugModeCheck.Checked
-        $global:settings.LogLevel = $script:logLevelCombo.SelectedItem
-        $global:settings.EnableTelemetry = $script:telemetryCheck.Checked
-        $global:settings.LazyLoadTabs = $script:lazyLoadCheck.Checked
-        $global:settings.SyntaxHighlightDelay = $script:highlightDelayNumeric.Value
+        ${global:settings}.DebugMode = ${script:debugModeCheck}.Checked
+        ${global:settings}.LogLevel = ${script:logLevelCombo}.SelectedItem
+        ${global:settings}.EnableTelemetry = ${script:telemetryCheck}.Checked
+        ${global:settings}.LazyLoadTabs = ${script:lazyLoadCheck}.Checked
+        ${global:settings}.SyntaxHighlightDelay = ${script:highlightDelayNumeric}.Value
 
         # Save and apply
         Save-Settings
@@ -944,7 +944,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
     $parallelMsgBtn.add_Click({
             $cursorToken = Enter-CursorWaitState -Reason "Bulk:ParallelChats" -Style "Wait"
             try {
-                $activeChatIds = @($script:chatTabs.Keys | Select-Object -First 3)
+                $activeChatIds = @(${script:chatTabs}.Keys | Select-Object -First 3)
                 if ($activeChatIds.Count -eq 0) {
                     Write-DevConsole "⚠ No active chats to test" "WARNING"
                     return
@@ -962,7 +962,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
                 $testMsgCount = $testMessages.Count
                 for ($i = 0; $i -lt [Math]::Min($activeChatIds.Count, $testMsgCount); $i++) {
                     $chatId = $activeChatIds[$i]
-                    $chatSession = $script:chatTabs[$chatId]
+                    $chatSession = ${script:chatTabs}[$chatId]
 
                     # Add test message to input
                     $chatSession.InputBox.Text = $testMessages[$i]
@@ -1003,7 +1003,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
 
                 # Task 1: File analysis
                 $task1Id = New-AgentTask -Name "File Analysis" -Description "Analyze current file structure"
-                $task1 = $global:agentContext.Tasks | Where-Object { $_.Id -eq $task1Id } | Select-Object -First 1
+                $task1 = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $task1Id } | Select-Object -First 1
                 $task1.Steps = @(
                     @{ Type = "tool"; Description = "List directory"; Tool = "list_directory"; Arguments = @{} }
                     @{ Type = "ai_query"; Description = "Analyze structure"; Query = "Analyze the file structure" }
@@ -1012,7 +1012,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
 
                 # Task 2: Environment check
                 $task2Id = New-AgentTask -Name "Environment Check" -Description "Check system environment"
-                $task2 = $global:agentContext.Tasks | Where-Object { $_.Id -eq $task2Id } | Select-Object -First 1
+                $task2 = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $task2Id } | Select-Object -First 1
                 $task2.Steps = @(
                     @{ Type = "command"; Description = "Get PowerShell version"; Command = '$PSVersionTable.PSVersion' }
                     @{ Type = "tool"; Description = "Get environment"; Tool = "get_environment"; Arguments = @{} }
@@ -1021,7 +1021,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
 
                 # Task 3: Code generation
                 $task3Id = New-AgentTask -Name "Code Generation" -Description "Generate sample code"
-                $task3 = $global:agentContext.Tasks | Where-Object { $_.Id -eq $task3Id } | Select-Object -First 1
+                $task3 = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $task3Id } | Select-Object -First 1
                 $task3.Steps = @(
                     @{ Type = "ai_query"; Description = "Generate PowerShell function"; Query = "Create a simple PowerShell function" }
                     @{ Type = "edit"; Description = "Save generated code"; File = "generated_code.ps1"; Content = "# Generated code" }
@@ -1224,35 +1224,35 @@ function Show-SessionInfo {
     $infoText.ForeColor = [System.Drawing.Color]::White
     $infoText.Font = New-Object System.Drawing.Font("Consolas", 10)
 
-    $sessionDuration = ((Get-Date) - $script:CurrentSession.StartTime)
-    $lastActivityAgo = ((Get-Date) - $script:CurrentSession.LastActivity)
+    $sessionDuration = ((Get-Date) - ${script:CurrentSession}.StartTime)
+    $lastActivityAgo = ((Get-Date) - ${script:CurrentSession}.LastActivity)
 
     $sessionInfo = @"
 SESSION INFORMATION
 ═══════════════════════════════════════
-Session ID: $($script:CurrentSession.SessionId)
-User ID: $(if ($script:CurrentSession.UserId) { $script:CurrentSession.UserId } else { "Anonymous" })
-Authenticated: $($script:CurrentSession.IsAuthenticated)
-Security Level: $($script:CurrentSession.SecurityLevel)
-Login Attempts: $($script:CurrentSession.LoginAttempts)
+Session ID: $(${script:CurrentSession}.SessionId)
+User ID: $(if (${script:CurrentSession}.UserId) { ${script:CurrentSession}.UserId } else { "Anonymous" })
+Authenticated: $(${script:CurrentSession}.IsAuthenticated)
+Security Level: $(${script:CurrentSession}.SecurityLevel)
+Login Attempts: $(${script:CurrentSession}.LoginAttempts)
 
 TIMING
 ═══════════════════════════════════════
-Start Time: $($script:CurrentSession.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
+Start Time: $(${script:CurrentSession}.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
 Duration: $($sessionDuration.Hours)h $($sessionDuration.Minutes)m $($sessionDuration.Seconds)s
 Last Activity: $([math]::Round($lastActivityAgo.TotalMinutes, 2)) minutes ago
 
 SECURITY CONFIGURATION
 ═══════════════════════════════════════
-Stealth Mode: $($script:SecurityConfig.StealthMode)
-Encrypt Sensitive Data: $($script:SecurityConfig.EncryptSensitiveData)
-Validate Inputs: $($script:SecurityConfig.ValidateAllInputs)
-Secure Connections: $($script:UseHTTPS)
-Session Timeout: $($script:SecurityConfig.SessionTimeout)s
-Max Login Attempts: $($script:SecurityConfig.MaxLoginAttempts)
-Log Security Events: $($script:SecurityConfig.LogSecurityEvents)
-Anti-Forensics: $($script:SecurityConfig.AntiForensics)
-Process Hiding: $($script:SecurityConfig.ProcessHiding)
+Stealth Mode: $(${script:SecurityConfig}.StealthMode)
+Encrypt Sensitive Data: $(${script:SecurityConfig}.EncryptSensitiveData)
+Validate Inputs: $(${script:SecurityConfig}.ValidateAllInputs)
+Secure Connections: $(${script:UseHTTPS})
+Session Timeout: $(${script:SecurityConfig}.SessionTimeout)s
+Max Login Attempts: $(${script:SecurityConfig}.MaxLoginAttempts)
+Log Security Events: $(${script:SecurityConfig}.LogSecurityEvents)
+Anti-Forensics: $(${script:SecurityConfig}.AntiForensics)
+Process Hiding: $(${script:SecurityConfig}.ProcessHiding)
 
 SYSTEM INFORMATION
 ═══════════════════════════════════════
@@ -1261,13 +1261,13 @@ User Context: $([Environment]::UserName)
 Machine Name: $([Environment]::MachineName)
 OS Version: $([Environment]::OSVersion.VersionString)
 PowerShell Version: $($PSVersionTable.PSVersion)
-Security Events Logged: $(@($script:SecurityLog).Count)
+Security Events Logged: $(@(${script:SecurityLog}).Count)
 
 OLLAMA CONNECTION
 ═══════════════════════════════════════
 Endpoint: $OllamaAPIEndpoint
-HTTPS Enabled: $script:UseHTTPS
-API Key Configured: $($null -ne $script:OllamaAPIKey)
+HTTPS Enabled: ${script:UseHTTPS}
+API Key Configured: $($null -ne ${script:OllamaAPIKey})
 Model: $OllamaModel
 "@
 
@@ -1277,7 +1277,7 @@ Model: $OllamaModel
 }
 
 function Show-SecurityLog {
-    $secLogCount = @($script:SecurityLog).Count
+    $secLogCount = @(${script:SecurityLog}).Count
     $logForm = New-Object System.Windows.Forms.Form
     $logForm.Text = "Security Event Log ($secLogCount events)"
     $logForm.Size = New-Object System.Drawing.Size(800, 600)
@@ -1302,7 +1302,7 @@ function Show-SecurityLog {
     $logGrid.Columns.Add("Details", "Details") | Out-Null
 
     # Add data
-    foreach ($entry in $script:SecurityLog) {
+    foreach ($entry in ${script:SecurityLog}) {
         $row = @($entry.Timestamp, $entry.Level, $entry.Event, $entry.Details)
         $logGrid.Rows.Add($row) | Out-Null
 
@@ -1418,7 +1418,7 @@ function Show-EncryptionTest {
     $encryptBtn.Add_Click({
             try {
                 $plainText = $inputBox.Text
-                $encrypted = [StealthCrypto]::Encrypt($plainText, $script:CurrentSession.EncryptionKey)
+                $encrypted = [StealthCrypto]::Encrypt($plainText, ${script:CurrentSession}.EncryptionKey)
                 $encryptedBox.Text = $encrypted
                 $hash = [StealthCrypto]::Hash($plainText)
                 $infoBox.Text = "Encryption successful!`r`nOriginal length: $($plainText.Length) chars`r`nEncrypted length: $($encrypted.Length) chars`r`nSHA256 Hash: $hash"
@@ -1431,7 +1431,7 @@ function Show-EncryptionTest {
     $decryptBtn.Add_Click({
             try {
                 if ($encryptedBox.Text) {
-                    $decrypted = [StealthCrypto]::Decrypt($encryptedBox.Text, $script:CurrentSession.EncryptionKey)
+                    $decrypted = [StealthCrypto]::Decrypt($encryptedBox.Text, ${script:CurrentSession}.EncryptionKey)
                     $decryptedBox.Text = $decrypted
                     $match = $decrypted -eq $inputBox.Text
                     $infoBox.AppendText("`r`nDecryption successful!`r`nMatches original: $match")
@@ -1482,7 +1482,7 @@ Hash Value: $($hash1.Substring(0, 16))...
 
 SECURITY STATUS:
 Algorithm: AES-256-CBC
-Key Size: $($script:CurrentSession.EncryptionKey.Length * 8) bits
+Key Size: $(${script:CurrentSession}.EncryptionKey.Length * 8) bits
 Session Key: Yes (unique per session)
 "@
 
@@ -1575,8 +1575,8 @@ function Optimize-UIPerformance {
         Enable-ControlDoubleBuffering -Control $form
 
         # Optimize text rendering
-        if ($script:editor) {
-            Enable-ControlDoubleBuffering -Control $script:editor
+        if (${script:editor}) {
+            Enable-ControlDoubleBuffering -Control ${script:editor}
         }
 
         Write-DevConsole "🎨 UI performance optimized" "SUCCESS"
@@ -1719,32 +1719,32 @@ HANDLE COUNT:
 
 OLLAMA STATUS:
   Connection Status: $(if (Test-OllamaConnection) { "✅ Connected" } else { "❌ Disconnected" })
-  Active Servers: $(@($script:OllamaServers).Count)
+  Active Servers: $(@(${script:OllamaServers}).Count)
 
 REAL-TIME MONITORING:
-  Status Updates: $(if ($script:RealTimeMonitoring.StatusTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
-  Performance Tracking: $(if ($script:RealTimeMonitoring.PerformanceTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
-  Network Monitoring: $(if ($script:RealTimeMonitoring.NetworkTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
+  Status Updates: $(if (${script:RealTimeMonitoring}.StatusTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
+  Performance Tracking: $(if (${script:RealTimeMonitoring}.PerformanceTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
+  Network Monitoring: $(if (${script:RealTimeMonitoring}.NetworkTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
 
 ERROR HANDLING:
-  Total Errors Handled: $($script:ErrorStats.TotalErrors)
-  Critical Errors: $($script:ErrorStats.CriticalErrors)
-  Security Events: $($script:ErrorStats.SecurityErrors)
-  Auto-Recovery Actions: $($script:ErrorStats.AutoRecoveryCount)
+  Total Errors Handled: $(${script:ErrorStats}.TotalErrors)
+  Critical Errors: $(${script:ErrorStats}.CriticalErrors)
+  Security Events: $(${script:ErrorStats}.SecurityErrors)
+  Auto-Recovery Actions: $(${script:ErrorStats}.AutoRecoveryCount)
 
 SECURITY STATUS:
-  Authentication: $(if ($script:CurrentSession) { "✅ Authenticated" } else { "❌ Not Authenticated" })
-  Session Active: $(if ($script:CurrentSession) { "✅ Active (ID: $($script:CurrentSession.SessionId.Substring(0,8))...)" } else { "❌ No Session" })
-  Encryption: $(if ($script:CurrentSession -and $script:CurrentSession.EncryptionKey) { "✅ AES-256-CBC" } else { "❌ Not Available" })
-  Stealth Mode: $(if ($script:StealthModeActive) { "✅ Active" } else { "❌ Inactive" })
+  Authentication: $(if (${script:CurrentSession}) { "✅ Authenticated" } else { "❌ Not Authenticated" })
+  Session Active: $(if (${script:CurrentSession}) { "✅ Active (ID: $(${script:CurrentSession}.SessionId.Substring(0,8))...)" } else { "❌ No Session" })
+  Encryption: $(if (${script:CurrentSession} -and ${script:CurrentSession}.EncryptionKey) { "✅ AES-256-CBC" } else { "❌ Not Available" })
+  Stealth Mode: $(if (${script:StealthModeActive}) { "✅ Active" } else { "❌ Inactive" })
 
 CUSTOMIZATION:
-  Current Theme: $($script:CurrentTheme)
-  Font Size: $($script:CurrentFontSize)pt
-  UI Scale: $($script:CurrentUIScale * 100)%
+  Current Theme: $(${script:CurrentTheme})
+  Font Size: $(${script:CurrentFontSize})pt
+  UI Scale: $(${script:CurrentUIScale} * 100)%
 
 RECOMMENDATIONS:
-$(if ($process.WorkingSet64 -gt 500MB) { "⚠️ High memory usage detected - consider restarting`n" })$(if (@($process.Threads).Count -gt 50) { "⚠️ High thread count - check for resource leaks`n" })$(if (-not (Test-OllamaConnection)) { "⚠️ Ollama connection lost - check server status`n" })$(if ($script:ErrorStats.CriticalErrors -gt 0) { "🚨 Critical errors detected - review error logs`n" })
+$(if ($process.WorkingSet64 -gt 500MB) { "⚠️ High memory usage detected - consider restarting`n" })$(if (@($process.Threads).Count -gt 50) { "⚠️ High thread count - check for resource leaks`n" })$(if (-not (Test-OllamaConnection)) { "⚠️ Ollama connection lost - check server status`n" })$(if (${script:ErrorStats}.CriticalErrors -gt 0) { "🚨 Critical errors detected - review error logs`n" })
 "@
 
         $TextBox.Text = $perfInfo
@@ -1764,7 +1764,7 @@ function Start-PerformanceProfiler {
 
     Write-DevConsole "🔍 Starting performance profiler for $DurationSeconds seconds..." "INFO"
 
-    $script:ProfilerData = @{
+    ${script:ProfilerData} = @{
         StartTime = Get-Date
         Samples   = @()
         IsRunning = $true
@@ -1778,7 +1778,7 @@ function Start-PerformanceProfiler {
     $profilerTimer.Add_Tick({
             if ($sampleCount -ge $maxSamples) {
                 $profilerTimer.Stop()
-                $script:ProfilerData.IsRunning = $false
+                ${script:ProfilerData}.IsRunning = $false
                 Show-ProfilerResults
                 return
             }
@@ -1793,7 +1793,7 @@ function Start-PerformanceProfiler {
                     HandleCount   = $process.HandleCount
                 }
 
-                $script:ProfilerData.Samples += $sample
+                ${script:ProfilerData}.Samples += $sample
                 $sampleCount++
 
                 Write-DevConsole "📊 Profiler sample $sampleCount/$maxSamples collected" "INFO"
@@ -1807,7 +1807,7 @@ function Start-PerformanceProfiler {
 }
 
 function Show-ProfilerResults {
-    if (-not $script:ProfilerData -or $script:ProfilerData.Samples.Count -eq 0) {
+    if (-not ${script:ProfilerData} -or ${script:ProfilerData}.Samples.Count -eq 0) {
         Write-DevConsole "⚠️ No profiler data available" "WARNING"
         return
     }
@@ -1826,7 +1826,7 @@ function Show-ProfilerResults {
     $resultsForm.Controls.Add($resultsTextBox)
 
     # Calculate statistics
-    $samples = @($script:ProfilerData.Samples)
+    $samples = @(${script:ProfilerData}.Samples)
     $sampleCount = $samples.Count
     $duration = ($samples[-1].Timestamp - $samples[0].Timestamp).TotalSeconds
 
@@ -1843,7 +1843,7 @@ PERFORMANCE PROFILER RESULTS
 ═══════════════════════════════════════════════════════
 
 PROFILING SESSION:
-  Start Time: $($script:ProfilerData.StartTime)
+  Start Time: $(${script:ProfilerData}.StartTime)
   Duration: $([math]::Round($duration, 2)) seconds
   Sample Count: $sampleCount
   Sample Rate: $([math]::Round($sampleCount / $duration, 2)) samples/second
@@ -1940,8 +1940,8 @@ function Apply-Theme {
 
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.BackColor = $bgColor
                         $session.ChatBox.ForeColor = $textColor
@@ -1959,9 +1959,9 @@ function Apply-Theme {
 
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.BackColor = $bgColor
-                $script:editor.ForeColor = $textColor
+            if (${script:editor}) {
+                ${script:editor}.BackColor = $bgColor
+                ${script:editor}.ForeColor = $textColor
             }
         }
         catch {
@@ -1969,7 +1969,7 @@ function Apply-Theme {
         }
 
         # Save theme preference
-        $script:CurrentTheme = $ThemeName
+        ${script:CurrentTheme} = $ThemeName
         Save-CustomizationSettings
 
         Write-DevConsole "✅ $ThemeName theme applied successfully" "SUCCESS"
@@ -1994,8 +1994,8 @@ function Apply-FontSize {
 
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.Font = New-Object System.Drawing.Font("Consolas", $Size)
                     }
@@ -2011,8 +2011,8 @@ function Apply-FontSize {
 
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.Font = New-Object System.Drawing.Font("Consolas", $Size)
+            if (${script:editor}) {
+                ${script:editor}.Font = New-Object System.Drawing.Font("Consolas", $Size)
             }
         }
         catch {
@@ -2020,7 +2020,7 @@ function Apply-FontSize {
         }
 
         # Save font preference
-        $script:CurrentFontSize = $Size
+        ${script:CurrentFontSize} = $Size
         Save-CustomizationSettings
 
         Write-DevConsole "✅ Font size set to ${Size}pt successfully" "SUCCESS"
@@ -2057,7 +2057,7 @@ function Apply-UIScaling {
         }
 
         # Save scaling preference
-        $script:CurrentUIScale = $Scale
+        ${script:CurrentUIScale} = $Scale
         Save-CustomizationSettings
 
         Write-DevConsole "✅ UI scaling set to $($Scale * 100)% successfully" "SUCCESS"
@@ -2137,7 +2137,7 @@ function Show-CustomThemeBuilder {
             $colorDialog = New-Object System.Windows.Forms.ColorDialog
             if ($colorDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
                 $textButton.BackColor = $colorDialog.Color
-                $textButton.ForeColor = if ($colorDialog.Color.GetBrightness() -gt 0.5) { [System.Drawing.Color]::Black } else { [System.Drawing.Color]::White }
+                $textButton.ForeColor = $(if ($colorDialog.Color.GetBrightness() -gt 0.5) { [System.Drawing.Color]::Black } else { [System.Drawing.Color]::White }
             }
         })
 
@@ -2223,8 +2223,8 @@ function Apply-CustomTheme {
 
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.BackColor = $BackColor
                         $session.ChatBox.ForeColor = $TextColor
@@ -2242,9 +2242,9 @@ function Apply-CustomTheme {
 
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.BackColor = $BackColor
-                $script:editor.ForeColor = $TextColor
+            if (${script:editor}) {
+                ${script:editor}.BackColor = $BackColor
+                ${script:editor}.ForeColor = $TextColor
             }
         }
         catch {
@@ -2252,12 +2252,12 @@ function Apply-CustomTheme {
         }
 
         # Save custom theme
-        $script:CustomTheme = @{
+        ${script:CustomTheme} = @{
             BackColor  = $BackColor
             TextColor  = $TextColor
             PanelColor = $PanelColor
         }
-        $script:CurrentTheme = "Custom"
+        ${script:CurrentTheme} = "Custom"
         Save-CustomizationSettings
 
         Write-DevConsole "✅ Custom theme applied successfully" "SUCCESS"
@@ -2314,15 +2314,15 @@ function Save-UILayout {
                 X = $form.Location.X
                 Y = $form.Location.Y
             }
-            LeftPanelWidth    = if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
+            LeftPanelWidth    = $(if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
             StatusPanelHeight = 30  # Default value as status panel doesn't exist
-            SplitterDistance  = if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
-            Theme             = $script:CurrentTheme
-            FontSize          = $script:CurrentFontSize
-            UIScale           = $script:CurrentUIScale
+            SplitterDistance  = $(if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
+            Theme             = ${script:CurrentTheme}
+            FontSize          = ${script:CurrentFontSize}
+            UIScale           = ${script:CurrentUIScale}
         }
 
-        $layoutPath = Join-Path $env:USERPROFILE "RawrXD_Layout.json"
+        $layoutPath = Join-Path ${env:USERPROFILE} "RawrXD_Layout.json"
         $layoutData | ConvertTo-Json -Depth 3 | Set-Content -Path $layoutPath
 
         Write-DevConsole "✅ UI layout saved to: $layoutPath" "SUCCESS"
@@ -2334,7 +2334,7 @@ function Save-UILayout {
 
 function Load-UILayout {
     try {
-        $layoutPath = Join-Path $env:USERPROFILE "RawrXD_Layout.json"
+        $layoutPath = Join-Path ${env:USERPROFILE} "RawrXD_Layout.json"
 
         if (Test-Path $layoutPath) {
             $layoutData = Get-Content -Path $layoutPath | ConvertFrom-Json
@@ -2372,13 +2372,13 @@ function Load-UILayout {
 function Save-CustomizationSettings {
     try {
         $settings = @{
-            Theme       = $script:CurrentTheme
-            FontSize    = $script:CurrentFontSize
-            UIScale     = $script:CurrentUIScale
-            CustomTheme = $script:CustomTheme
+            Theme       = ${script:CurrentTheme}
+            FontSize    = ${script:CurrentFontSize}
+            UIScale     = ${script:CurrentUIScale}
+            CustomTheme = ${script:CustomTheme}
         }
 
-        $settingsPath = Join-Path $env:USERPROFILE "RawrXD_Customization.json"
+        $settingsPath = Join-Path ${env:USERPROFILE} "RawrXD_Customization.json"
         $settings | ConvertTo-Json -Depth 3 | Set-Content -Path $settingsPath
     }
     catch {
@@ -2388,29 +2388,29 @@ function Save-CustomizationSettings {
 
 function Load-CustomizationSettings {
     try {
-        $settingsPath = Join-Path $env:USERPROFILE "RawrXD_Customization.json"
+        $settingsPath = Join-Path ${env:USERPROFILE} "RawrXD_Customization.json"
 
         if (Test-Path $settingsPath) {
             $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
 
-            $script:CurrentTheme = if ($settings.Theme) { $settings.Theme } else { "Stealth-Cheetah" }
-            $script:CurrentFontSize = if ($settings.FontSize) { $settings.FontSize } else { 14 }
-            $script:CurrentUIScale = if ($settings.UIScale) { $settings.UIScale } else { 1.0 }
-            $script:CustomTheme = $settings.CustomTheme
+            ${script:CurrentTheme} = $(if ($settings.Theme) { $settings.Theme } else { "Stealth-Cheetah" }
+            ${script:CurrentFontSize} = $(if ($settings.FontSize) { $settings.FontSize } else { 14 }
+            ${script:CurrentUIScale} = $(if ($settings.UIScale) { $settings.UIScale } else { 1.0 }
+            ${script:CustomTheme} = $settings.CustomTheme
 
             # Apply loaded settings
-            if ($script:CurrentTheme -ne "Stealth-Cheetah") {
-                Apply-Theme $script:CurrentTheme
+            if (${script:CurrentTheme} -ne "Stealth-Cheetah") {
+                Apply-Theme ${script:CurrentTheme}
             }
             else {
                 # Apply default Stealth-Cheetah theme
                 Apply-Theme "Stealth-Cheetah"
             }
-            if ($script:CurrentFontSize -ne 14) {
-                Apply-FontSize $script:CurrentFontSize
+            if (${script:CurrentFontSize} -ne 14) {
+                Apply-FontSize ${script:CurrentFontSize}
             }
-            if ($script:CurrentUIScale -ne 1.0) {
-                Apply-UIScaling $script:CurrentUIScale
+            if (${script:CurrentUIScale} -ne 1.0) {
+                Apply-UIScaling ${script:CurrentUIScale}
             }
         }
         else {
@@ -2438,8 +2438,8 @@ function Get-AIErrorDashboard {
 
     try {
         # Load AI error statistics
-        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
-        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+        $statsFile = Join-Path ${script:EmergencyLogPath} "ai_error_stats.json"
+        $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
 
         $dashboard = @"
 ═══════════════════════════════════════════════════════════
@@ -2538,10 +2538,10 @@ function Get-AIErrorDashboard {
         $dashboard += @"
 
 🏥 SYSTEM HEALTH:
-   Current Session: $($script:CurrentSession.SessionId)
-   Session Start: $($script:CurrentSession.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
-   Last Activity: $($script:CurrentSession.LastActivity.ToString("yyyy-MM-dd HH:mm:ss"))
-   Agent Mode: $(if ($global:AgentMode) { "🟢 ACTIVE" } else { "🔴 INACTIVE" })
+   Current Session: $(${script:CurrentSession}.SessionId)
+   Session Start: $(${script:CurrentSession}.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
+   Last Activity: $(${script:CurrentSession}.LastActivity.ToString("yyyy-MM-dd HH:mm:ss"))
+   Agent Mode: $(if (${global:AgentMode}) { "🟢 ACTIVE" } else { "🔴 INACTIVE" })
    Ollama Connection: $(if (Test-NetConnection -ComputerName localhost -Port 11434 -InformationLevel Quiet) { "🟢 ONLINE" } else { "🔴 OFFLINE" })
 
 💡 QUICK ACTIONS:
@@ -2560,8 +2560,8 @@ function Get-AIErrorDashboard {
 ❌ Error generating AI Error Dashboard: $($_.Exception.Message)
 
 Basic Info:
-- Emergency Log Path: $script:EmergencyLogPath
-- Current Session: $($script:CurrentSession.SessionId)
+- Emergency Log Path: ${script:EmergencyLogPath}
+- Current Session: $(${script:CurrentSession}.SessionId)
 - Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 "@
     }
@@ -2569,8 +2569,8 @@ Basic Info:
 
 function Clear-AIErrorStatistics {
     try {
-        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
-        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+        $statsFile = Join-Path ${script:EmergencyLogPath} "ai_error_stats.json"
+        $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
 
         # Reset statistics file
         if (Test-Path $statsFile) {
@@ -2599,13 +2599,13 @@ function Clear-AIErrorStatistics {
 # ============================================
 
 # Initialize customization variables
-$script:CurrentTheme = "Stealth-Cheetah"  # Default to stealth-cheetah theme
-$script:CurrentFontSize = 14
-$script:CurrentUIScale = 1.0
-$script:CustomTheme = $null
+${script:CurrentTheme} = "Stealth-Cheetah"  # Default to stealth-cheetah theme
+${script:CurrentFontSize} = 14
+${script:CurrentUIScale} = 1.0
+${script:CustomTheme} = $null
 
 # Initialize error statistics
-$script:ErrorStats = @{
+${script:ErrorStats} = @{
     TotalErrors       = 0
     CriticalErrors    = 0
     SecurityErrors    = 0

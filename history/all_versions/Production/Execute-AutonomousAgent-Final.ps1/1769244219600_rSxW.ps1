@@ -14,7 +14,7 @@ param(
 )
 
 # Global variables
-$Script:AgentState = @{
+${Script:AgentState} = @{
     Version = "3.0.0"
     StartTime = Get-Date
     Status = "Initializing"
@@ -75,7 +75,7 @@ function Load-Configuration {
     
     try {
         $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
-        $Script:AgentState.Config = $config
+        ${Script:AgentState}.Config = $config
         Write-AgentLog -Message "Main configuration loaded successfully" -Level Success
     } catch {
         throw "Failed to load main configuration: $_"
@@ -88,7 +88,7 @@ function Load-Configuration {
     
     try {
         $modelConfig = Get-Content $ModelConfigPath -Raw | ConvertFrom-Json
-        $Script:AgentState.ModelConfig = $modelConfig
+        ${Script:AgentState}.ModelConfig = $modelConfig
         Write-AgentLog -Message "Model configuration loaded successfully" -Level Success
     } catch {
         throw "Failed to load model configuration: $_"
@@ -104,7 +104,7 @@ function Load-Configuration {
 function Initialize-AgentModules {
     Write-AgentLog -Message "Initializing agent modules" -Level Info
     
-    $modulesPath = $Script:AgentState.Config.deployment.sourcePath
+    $modulesPath = ${Script:AgentState}.Config.deployment.sourcePath
     if (-not (Test-Path $modulesPath)) {
         throw "Modules path not found: $modulesPath"
     }
@@ -119,7 +119,7 @@ function Initialize-AgentModules {
             Write-AgentLog -Message "✓ Initialized: $($module.Name)" -Level Success
         } catch {
             Write-AgentLog -Message "✗ Failed to initialize: $($module.Name) - $_" -Level Error
-            $Script:AgentState.Errors.Add("Failed to initialize $($module.Name): $_")
+            ${Script:AgentState}.Errors.Add("Failed to initialize $($module.Name): $_")
         }
     }
     
@@ -133,7 +133,7 @@ function Initialize-AgentModules {
 
 # Execute self-mutation if enabled
 function Invoke-SelfMutation {
-    if (-not $Script:AgentState.SelfMutationEnabled) {
+    if (-not ${Script:AgentState}.SelfMutationEnabled) {
         Write-AgentLog -Message "Self-mutation disabled - skipping" -Level Info
         return $null
     }
@@ -143,7 +143,7 @@ function Invoke-SelfMutation {
     try {
         # Check if self-mutation function exists
         if (Get-Command "Invoke-SelfMutation" -ErrorAction SilentlyContinue) {
-            $mutationResult = Invoke-SelfMutation -Mode $Script:AgentState.Mode
+            $mutationResult = Invoke-SelfMutation -Mode ${Script:AgentState}.Mode
             Write-AgentLog -Message "Self-mutation completed successfully" -Level Success
             return $mutationResult
         } else {
@@ -152,14 +152,14 @@ function Invoke-SelfMutation {
         }
     } catch {
         Write-AgentLog -Message "Self-mutation failed: $_" -Level Error
-        $Script:AgentState.Errors.Add("Self-mutation failed: $_")
+        ${Script:AgentState}.Errors.Add("Self-mutation failed: $_")
         return $null
     }
 }
 
 # Start real-time monitoring
 function Start-RealTimeMonitoring {
-    if (-not $Script:AgentState.RealTimeMonitoringEnabled) {
+    if (-not ${Script:AgentState}.RealTimeMonitoringEnabled) {
         Write-AgentLog -Message "Real-time monitoring disabled - skipping" -Level Info
         return $null
     }
@@ -169,7 +169,7 @@ function Start-RealTimeMonitoring {
     try {
         # Check if monitoring function exists
         if (Get-Command "Start-RealTimeMonitoring" -ErrorAction SilentlyContinue) {
-            $monitoringJob = Start-RealTimeMonitoring -Config $Script:AgentState.ModelConfig.monitoring_configuration
+            $monitoringJob = Start-RealTimeMonitoring -Config ${Script:AgentState}.ModelConfig.monitoring_configuration
             Write-AgentLog -Message "Real-time monitoring started successfully" -Level Success
             return $monitoringJob
         } else {
@@ -178,7 +178,7 @@ function Start-RealTimeMonitoring {
         }
     } catch {
         Write-AgentLog -Message "Real-time monitoring failed to start: $_" -Level Error
-        $Script:AgentState.Warnings.Add("Real-time monitoring failed: $_")
+        ${Script:AgentState}.Warnings.Add("Real-time monitoring failed: $_")
         return $null
     }
 }
@@ -193,7 +193,7 @@ function Invoke-AgentTasks {
     try {
         Write-AgentLog -Message "Executing system health check" -Level Info
         if (Get-Command "Test-SystemHealth" -ErrorAction SilentlyContinue) {
-            $healthResult = Test-SystemHealth -Config $Script:AgentState.Config
+            $healthResult = Test-SystemHealth -Config ${Script:AgentState}.Config
             $tasks += @{ Name = "SystemHealthCheck"; Result = $healthResult; Success = $true }
             Write-AgentLog -Message "System health check completed" -Level Success
         } else {
@@ -208,7 +208,7 @@ function Invoke-AgentTasks {
     try {
         Write-AgentLog -Message "Executing performance optimization" -Level Info
         if (Get-Command "Optimize-Performance" -ErrorAction SilentlyContinue) {
-            $optimizationResult = Optimize-Performance -Mode $Script:AgentState.Mode
+            $optimizationResult = Optimize-Performance -Mode ${Script:AgentState}.Mode
             $tasks += @{ Name = "PerformanceOptimization"; Result = $optimizationResult; Success = $true }
             Write-AgentLog -Message "Performance optimization completed" -Level Success
         } else {
@@ -223,7 +223,7 @@ function Invoke-AgentTasks {
     try {
         Write-AgentLog -Message "Executing security validation" -Level Info
         if (Get-Command "Validate-Security" -ErrorAction SilentlyContinue) {
-            $securityResult = Validate-Security -Config $Script:AgentState.Config.security
+            $securityResult = Validate-Security -Config ${Script:AgentState}.Config.security
             $tasks += @{ Name = "SecurityValidation"; Result = $securityResult; Success = $true }
             Write-AgentLog -Message "Security validation completed" -Level Success
         } else {
@@ -245,21 +245,21 @@ function New-AgentReport {
     Write-AgentLog -Message "Generating agent report" -Level Info
     
     $endTime = Get-Date
-    $duration = [Math]::Round(($endTime - $Script:AgentState.StartTime).TotalMinutes, 2)
+    $duration = [Math]::Round(($endTime - ${Script:AgentState}.StartTime).TotalMinutes, 2)
     
     $successfulTasks = $Tasks | Where-Object { $_.Success -eq $true } | Measure-Object | Select-Object -ExpandProperty Count
     $failedTasks = $Tasks | Where-Object { $_.Success -eq $false } | Measure-Object | Select-Object -ExpandProperty Count
     
     $report = @{
         AgentInfo = @{
-            Version = $Script:AgentState.Version
-            StartTime = $Script:AgentState.StartTime
+            Version = ${Script:AgentState}.Version
+            StartTime = ${Script:AgentState}.StartTime
             EndTime = $endTime
             Duration = $duration
-            Mode = $Script:AgentState.Mode
-            SelfMutationEnabled = $Script:AgentState.SelfMutationEnabled
-            RealTimeMonitoringEnabled = $Script:AgentState.RealTimeMonitoringEnabled
-            Status = $Script:AgentState.Status
+            Mode = ${Script:AgentState}.Mode
+            SelfMutationEnabled = ${Script:AgentState}.SelfMutationEnabled
+            RealTimeMonitoringEnabled = ${Script:AgentState}.RealTimeMonitoringEnabled
+            Status = ${Script:AgentState}.Status
         }
         Tasks = @{
             Total = $Tasks.Count
@@ -269,10 +269,10 @@ function New-AgentReport {
         }
         SelfMutation = $SelfMutationResult
         Monitoring = $MonitoringJob
-        Errors = $Script:AgentState.Errors
-        Warnings = $Script:AgentState.Warnings
+        Errors = ${Script:AgentState}.Errors
+        Warnings = ${Script:AgentState}.Warnings
         Summary = @{
-            OverallSuccess = ($failedTasks -eq 0 -and $Script:AgentState.Errors.Count -eq 0)
+            OverallSuccess = ($failedTasks -eq 0 -and ${Script:AgentState}.Errors.Count -eq 0)
             Recommendations = @()
         }
     }
@@ -282,15 +282,15 @@ function New-AgentReport {
         $report.Summary.Recommendations += "Review and fix failed tasks: $failedTasks task(s) failed"
     }
     
-    if ($Script:AgentState.Errors.Count -gt 0) {
-        $report.Summary.Recommendations += "Address system errors: $($Script:AgentState.Errors.Count) error(s) encountered"
+    if (${Script:AgentState}.Errors.Count -gt 0) {
+        $report.Summary.Recommendations += "Address system errors: $(${Script:AgentState}.Errors.Count) error(s) encountered"
     }
     
-    if (-not $Script:AgentState.SelfMutationEnabled) {
+    if (-not ${Script:AgentState}.SelfMutationEnabled) {
         $report.Summary.Recommendations += "Consider enabling self-mutation for adaptive capabilities"
     }
     
-    if (-not $Script:AgentState.RealTimeMonitoringEnabled) {
+    if (-not ${Script:AgentState}.RealTimeMonitoringEnabled) {
         $report.Summary.Recommendations += "Consider enabling real-time monitoring for better observability"
     }
     
@@ -319,14 +319,14 @@ function Start-AutonomousAgent {
     
     try {
         # Update agent state
-        $Script:AgentState.Status = "Initializing"
+        ${Script:AgentState}.Status = "Initializing"
         
         # Load configuration
         $configurations = Load-Configuration -ConfigPath $ConfigPath -ModelConfigPath $ModelConfigPath
         
         if ($DryRun) {
             Write-AgentLog -Message "Dry run mode enabled - agent will validate configuration only" -Level Warning
-            $Script:AgentState.Status = "DryRunCompleted"
+            ${Script:AgentState}.Status = "DryRunCompleted"
             return @{
                 Success = $true
                 DryRun = $true
@@ -337,33 +337,33 @@ function Start-AutonomousAgent {
         }
         
         # Initialize modules
-        $Script:AgentState.Status = "InitializingModules"
+        ${Script:AgentState}.Status = "InitializingModules"
         $initializedModules = Initialize-AgentModules
         
         # Execute self-mutation
-        $Script:AgentState.Status = "SelfMutation"
+        ${Script:AgentState}.Status = "SelfMutation"
         $selfMutationResult = Invoke-SelfMutation
         
         # Start real-time monitoring
-        $Script:AgentState.Status = "StartingMonitoring"
+        ${Script:AgentState}.Status = "StartingMonitoring"
         $monitoringJob = Start-RealTimeMonitoring
         
         # Execute agent tasks
-        $Script:AgentState.Status = "ExecutingTasks"
+        ${Script:AgentState}.Status = "ExecutingTasks"
         $tasks = Invoke-AgentTasks
         
         # Generate report
-        $Script:AgentState.Status = "GeneratingReport"
+        ${Script:AgentState}.Status = "GeneratingReport"
         $report = New-AgentReport -Tasks $tasks -SelfMutationResult $selfMutationResult -MonitoringJob $monitoringJob
         
         # Update final status
-        $Script:AgentState.Status = "Completed"
+        ${Script:AgentState}.Status = "Completed"
         
         Write-Host ""
         Write-Host "==================================================" -ForegroundColor Green
         Write-Host "           AGENT EXECUTION COMPLETED" -ForegroundColor Green
         Write-Host "==================================================" -ForegroundColor Green
-        Write-Host "Status: $($Script:AgentState.Status)" -ForegroundColor White
+        Write-Host "Status: $(${Script:AgentState}.Status)" -ForegroundColor White
         Write-Host "Tasks: $($report.Tasks.Successful)/$($report.Tasks.Total) successful" -ForegroundColor $(if ($report.Tasks.Failed -eq 0) { "Green" } else { "Yellow" })
         Write-Host "Duration: $($report.AgentInfo.Duration) minutes" -ForegroundColor White
         Write-Host ""
@@ -371,8 +371,8 @@ function Start-AutonomousAgent {
         return $report
         
     } catch {
-        $Script:AgentState.Status = "Failed"
-        $Script:AgentState.Errors.Add($_)
+        ${Script:AgentState}.Status = "Failed"
+        ${Script:AgentState}.Errors.Add($_)
         
         Write-Host ""
         Write-Host "==================================================" -ForegroundColor Red

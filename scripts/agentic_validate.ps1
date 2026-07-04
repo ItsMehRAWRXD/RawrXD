@@ -40,12 +40,12 @@ if (![string]::IsNullOrWhiteSpace($traceDir) -and !(Test-Path -LiteralPath $trac
     New-Item -ItemType Directory -Path $traceDir -Force | Out-Null
 }
 
-$env:RAWRXD_SMOKE_CHAT = "1"
-$env:RAWRXD_PIPELINE_TRACE = $Trace
-$env:RAWRXD_PIPELINE_STRICT = "1"
-$env:RAWRXD_PARITY_CPU = "1"
-$env:RAWRXD_SMOKE_MODEL = $Model
-$env:RAWRXD_SMOKE_PROMPT = "Reply with exactly: OK"
+${env:RAWRXD_SMOKE_CHAT} = "1"
+${env:RAWRXD_PIPELINE_TRACE} = $Trace
+${env:RAWRXD_PIPELINE_STRICT} = "1"
+${env:RAWRXD_PARITY_CPU} = "1"
+${env:RAWRXD_SMOKE_MODEL} = $Model
+${env:RAWRXD_SMOKE_PROMPT} = "Reply with exactly: OK"
 
 if (Test-Path -LiteralPath $Trace) {
     Remove-Item -LiteralPath $Trace -ErrorAction SilentlyContinue

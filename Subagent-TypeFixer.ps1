@@ -44,7 +44,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # ── Type-fix definitions ─────────────────────────────────────────────────────
-$script:TypeFixes = @(
+${script:TypeFixes} = @(
     # ── C4244: size_t → int ──────────────────────────────────────────────────
     @{
         Name    = 'size_t to int (C4244)'
@@ -200,10 +200,10 @@ $report = [PSCustomObject]@{
 
 $backedUp = [System.Collections.Generic.HashSet[string]]::new()
 
-$totalPatterns = $script:TypeFixes.Count
+$totalPatterns = ${script:TypeFixes}.Count
 $patIdx = 0
 
-foreach ($fixDef in $script:TypeFixes) {
+foreach ($fixDef in ${script:TypeFixes}) {
     $patIdx++
     Write-Progress -Activity 'TypeFixer — Scanning' `
         -Status "Pattern $patIdx / $totalPatterns : $($fixDef.Name)" `

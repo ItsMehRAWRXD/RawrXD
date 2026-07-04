@@ -174,7 +174,7 @@ function Simulate-InferencePerformance {
     $totalTimeMs = $loadTimeMs + $firstTokenMs + (($TokenCount - 1) * $perTokenMs)
     $totalTimeSeconds = $totalTimeMs / 1000
     
-    $tokensPerSecond = if ($totalTimeSeconds -gt 0) {
+    $tokensPerSecond = $(if ($totalTimeSeconds -gt 0) {
         $TokenCount / $totalTimeSeconds
     } else {
         0

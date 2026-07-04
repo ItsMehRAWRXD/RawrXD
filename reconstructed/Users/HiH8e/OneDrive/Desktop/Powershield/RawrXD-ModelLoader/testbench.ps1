@@ -8,8 +8,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:FailCount = 0
-$script:PassCount = 0
+${script:FailCount} = 0
+${script:PassCount} = 0
 
 function Test-Widget {
     param(
@@ -24,7 +24,7 @@ function Test-Widget {
     $exePath = Join-Path $BuildDir "bin-msvc\Release\RawrXD-QtShell.exe"
     if (-not (Test-Path $exePath)) {
         Write-Host "  ❌ FAIL: Binary not found at $exePath" -ForegroundColor Red
-        $script:FailCount++
+        ${script:FailCount}++
         return $false
     }
     
@@ -35,7 +35,7 @@ function Test-Widget {
         if (-not $completed) {
             $proc.Kill()
             Write-Host "  ❌ FAIL: Timeout after ${TimeoutSec}s" -ForegroundColor Red
-            $script:FailCount++
+            ${script:FailCount}++
             return $false
         }
         
@@ -49,7 +49,7 @@ function Test-Widget {
         
         if ($proc.ExitCode -ne 0) {
             Write-Host "  ❌ FAIL: Exit code $($proc.ExitCode)" -ForegroundColor Red
-            $script:FailCount++
+            ${script:FailCount}++
             return $false
         }
         
@@ -58,12 +58,12 @@ function Test-Widget {
             if ($Verbose) {
                 Write-Host "  Got: $output" -ForegroundColor Yellow
             }
-            $script:FailCount++
+            ${script:FailCount}++
             return $false
         }
         
         Write-Host "  ✅ PASS" -ForegroundColor Green
-        $script:PassCount++
+        ${script:PassCount}++
         return $true
         
     } finally {
@@ -92,18 +92,18 @@ if (Test-Path $exePath) {
     
     if ($sizeBytes -gt 204800) {
         Write-Host "  ⚠️  WARNING: Exceeds 200 KB budget!" -ForegroundColor Yellow
-        $script:FailCount++
+        ${script:FailCount}++
     } else {
         Write-Host "  ✅ Within 200 KB budget" -ForegroundColor Green
-        $script:PassCount++
+        ${script:PassCount}++
     }
 }
 
 Write-Host "`n════════════════════════════════════════════════════" -ForegroundColor Magenta
-Write-Host "  Results: $script:PassCount passed, $script:FailCount failed" -ForegroundColor $(if ($script:FailCount -eq 0) { "Green" } else { "Red" })
+Write-Host "  Results: ${script:PassCount} passed, ${script:FailCount} failed" -ForegroundColor $(if (${script:FailCount} -eq 0) { "Green" } else { "Red" })
 Write-Host "════════════════════════════════════════════════════" -ForegroundColor Magenta
 
-if ($script:FailCount -gt 0) {
+if (${script:FailCount} -gt 0) {
     Write-Host "`n❌ Some tests failed. Fix before shipping." -ForegroundColor Red
     exit 1
 } else {

@@ -52,7 +52,7 @@ Write-Host "[telemetry] Binary: $BinaryPath"
 Write-Host "[telemetry] Duration: ${DurationSec}s (warmup ${WarmupSec}s)"
 
 $timestamp = [DateTime]::UtcNow.ToString("o")
-$hostname  = $env:COMPUTERNAME
+$hostname  = ${env:COMPUTERNAME}
 
 # Memory bandwidth snapshot (pre-run)
 $memBefore = Get-ProcessMemoryBandwidth -pid $PID
@@ -87,7 +87,7 @@ $baseline = @{
         p95        = $tpsSorted[[int]($tpsSorted.Count * 0.95)]
         p99        = $tpsSorted[[int]($tpsSorted.Count * 0.99)]
         max        = $tpsSorted[-1]
-        stddev     = if ($tpsValues.Count -gt 1) {
+        stddev     = $(if ($tpsValues.Count -gt 1) {
             $avg = ($tpsValues | Measure-Object -Average).Average
             [math]::Sqrt(($tpsValues | ForEach-Object { ($_ - $avg) * ($_ - $avg) } | Measure-Object -Sum).Sum / ($tpsValues.Count - 1))
         } else { 0 }

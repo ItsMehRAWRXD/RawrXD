@@ -10,7 +10,7 @@ param(
 )
 
 # Test Results Storage
-$Global:TestResults = @{
+${Global:TestResults} = @{
     startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     binaryPath = $BinaryPath
     totalTests = 0
@@ -29,12 +29,12 @@ function Log-TestResult {
         details = $Details
         timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     }
-    $Global:TestResults.testSuites += $result
-    $Global:TestResults.totalTests++
-    if ($Status -eq "PASS") { $Global:TestResults.passedTests++ }
-    else { $Global:TestResults.failedTests++ }
+    ${Global:TestResults}.testSuites += $result
+    ${Global:TestResults}.totalTests++
+    if ($Status -eq "PASS") { ${Global:TestResults}.passedTests++ }
+    else { ${Global:TestResults}.failedTests++ }
     
-    $color = if ($Status -eq "PASS") { "Green" } else { "Red" }
+    $color = $(if ($Status -eq "PASS") { "Green" } else { "Red" }
     Write-Host "  [$Status] $Test ($([math]::Round($Duration, 2)) ms)" -ForegroundColor $color
     if ($Details) { Write-Host "    $Details" -ForegroundColor Gray }
 }
@@ -254,26 +254,26 @@ Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "PERFECT SMOKE TEST - FINAL RESULTS" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-$Global:TestResults.endTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$Global:TestResults.passRate = if ($Global:TestResults.totalTests -gt 0) { 
-    [math]::Round(($Global:TestResults.passedTests / $Global:TestResults.totalTests) * 100, 2) 
+${Global:TestResults}.endTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+${Global:TestResults}.passRate = $(if (${Global:TestResults}.totalTests -gt 0) { 
+    [math]::Round((${Global:TestResults}.passedTests / ${Global:TestResults}.totalTests) * 100, 2) 
 } else { 0 }
 
 # Export results
-$json = $Global:TestResults | ConvertTo-Json -Depth 10
+$json = ${Global:TestResults} | ConvertTo-Json -Depth 10
 $json | Out-File -FilePath $LogPath -Encoding UTF8
 
-Write-Host "`nTotal Tests:    $($Global:TestResults.totalTests)" -ForegroundColor White
-Write-Host "Passed:         $($Global:TestResults.passedTests)" -ForegroundColor Green
-Write-Host "Failed:         $($Global:TestResults.failedTests)" -ForegroundColor Red
-Write-Host "Pass Rate:      $($Global:TestResults.passRate)%" -ForegroundColor $(if ($Global:TestResults.passRate -eq 100) { "Green" } elseif ($Global:TestResults.passRate -ge 95) { "Yellow" } else { "Red" })
+Write-Host "`nTotal Tests:    $(${Global:TestResults}.totalTests)" -ForegroundColor White
+Write-Host "Passed:         $(${Global:TestResults}.passedTests)" -ForegroundColor Green
+Write-Host "Failed:         $(${Global:TestResults}.failedTests)" -ForegroundColor Red
+Write-Host "Pass Rate:      $(${Global:TestResults}.passRate)%" -ForegroundColor $(if (${Global:TestResults}.passRate -eq 100) { "Green" } elseif (${Global:TestResults}.passRate -ge 95) { "Yellow" } else { "Red" })
 Write-Host ""
 
-if ($Global:TestResults.passRate -eq 100) {
+if (${Global:TestResults}.passRate -eq 100) {
     Write-Host "🎉 PERFECT SCORE - 100% PASS RATE ACHIEVED!" -ForegroundColor Green
     Write-Host "✅ RawrXD Win32IDE is PRODUCTION READY" -ForegroundColor Green
     exit 0
-} elseif ($Global:TestResults.passRate -ge 95) {
+} elseif (${Global:TestResults}.passRate -ge 95) {
     Write-Host "✅ EXCELLENT - PRODUCTION READY (95%+)" -ForegroundColor Green
     exit 0
 } else {

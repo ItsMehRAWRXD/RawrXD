@@ -25693,6 +25693,144 @@ CommandResult handleEditMulticursorAdd(const CommandContext& ctx)
     ctx.output("Multicursor added\n");
     return CommandResult::ok("edit.multicursorAdd");
 }
+
+// ============================================================================
+// CODEX COMMAND HANDLERS (command_registry 420-429)
+// ============================================================================
+
+CommandResult handleCodexComplete(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 420, 0);
+        return CommandResult::ok("codex.complete");
+    }
+
+    // CLI mode: use existing AI inline complete
+    return handleAIInlineComplete(ctx);
+}
+
+CommandResult handleCodexStream(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 421, 0);
+        return CommandResult::ok("codex.stream");
+    }
+
+    // CLI mode: streaming output
+    ctx.output("[Codex] Streaming mode activated\n");
+    ctx.output("Use !codex_stream <prompt> for streaming responses\n");
+    return CommandResult::ok("codex.stream");
+}
+
+CommandResult handleCodexExplain(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 422, 0);
+        return CommandResult::ok("codex.explain");
+    }
+
+    // CLI mode: use existing AI explain
+    return handleAIExplainCode(ctx);
+}
+
+CommandResult handleCodexRefactor(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 423, 0);
+        return CommandResult::ok("codex.refactor");
+    }
+
+    // CLI mode: use existing AI refactor
+    return handleAIRefactor(ctx);
+}
+
+CommandResult handleCodexCompleteLine(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 424, 0);
+        return CommandResult::ok("codex.completeLine");
+    }
+
+    // CLI mode: line completion
+    ctx.output("[Codex] Line completion requested\n");
+    return handleAIInlineComplete(ctx);
+}
+
+CommandResult handleCodexCompleteBlock(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 425, 0);
+        return CommandResult::ok("codex.completeBlock");
+    }
+
+    // CLI mode: block completion
+    ctx.output("[Codex] Block completion requested\n");
+    return handleAIInlineComplete(ctx);
+}
+
+CommandResult handleCodexGenerateTests(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 426, 0);
+        return CommandResult::ok("codex.generateTests");
+    }
+
+    // CLI mode: use existing AI test generation
+    return handleAIGenerateTests(ctx);
+}
+
+CommandResult handleCodexGenerateDocs(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 427, 0);
+        return CommandResult::ok("codex.generateDocs");
+    }
+
+    // CLI mode: use existing AI doc generation
+    return handleAIGenerateDocs(ctx);
+}
+
+CommandResult handleCodexFixErrors(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 428, 0);
+        return CommandResult::ok("codex.fixErrors");
+    }
+
+    // CLI mode: use existing AI fix errors
+    return handleAIFixErrors(ctx);
+}
+
+CommandResult handleCodexOptimize(const CommandContext& ctx)
+{
+    if (ctx.isGui && ctx.idePtr)
+    {
+        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
+        PostMessageA(hwnd, WM_COMMAND, 429, 0);
+        return CommandResult::ok("codex.optimize");
+    }
+
+    // CLI mode: use existing AI optimize
+    return handleAIOptimizeCode(ctx);
+}
 #endif
 
 

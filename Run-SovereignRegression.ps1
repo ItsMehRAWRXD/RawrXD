@@ -27,7 +27,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:StartTime = Get-Date
+${script:StartTime} = Get-Date
 
 # ── Configuration ───────────────────────────────────────────────────────────
 $ProjectRoot = $PSScriptRoot
@@ -90,13 +90,13 @@ call "$vcvars" x64 >nul 2>&1
 cd /d "$ProjectRoot"
 "$cl" /std:c++20 /EHsc /W3 /nologo /Fe:"$Executable" "$TestSource" /I include /I src /D_CRT_SECURE_NO_WARNINGS /link /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64"
 "@
-    $batPath = Join-Path $env:TEMP "build_regress_$(Get-Random).bat"
+    $batPath = Join-Path ${env:TEMP} "build_regress_$(Get-Random).bat"
     Set-Content -Path $batPath -Value $cmd -Encoding ASCII
 
     try {
-        $proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $batPath -PassThru -Wait -NoNewWindow -RedirectStandardOutput "$env:TEMP\regress_build_out.log" -RedirectStandardError "$env:TEMP\regress_build_err.log"
-        $stdout = Get-Content "$env:TEMP\regress_build_out.log" -Raw -ErrorAction SilentlyContinue
-        $stderr = Get-Content "$env:TEMP\regress_build_err.log" -Raw -ErrorAction SilentlyContinue
+        $proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $batPath -PassThru -Wait -NoNewWindow -RedirectStandardOutput "${env:TEMP}\regress_build_out.log" -RedirectStandardError "${env:TEMP}\regress_build_err.log"
+        $stdout = Get-Content "${env:TEMP}\regress_build_out.log" -Raw -ErrorAction SilentlyContinue
+        $stderr = Get-Content "${env:TEMP}\regress_build_err.log" -Raw -ErrorAction SilentlyContinue
 
         if ($proc.ExitCode -ne 0) {
             Write-RegressLog "BUILD FAILED (exit $($proc.ExitCode))" "ERROR"
@@ -123,9 +123,9 @@ function Invoke-Test {
     if ($Quiet) { $args += "--quiet" }
     if ($TestFilter) { $args += "--filter"; $args += $TestFilter }
 
-    $proc = Start-Process -FilePath $Executable -ArgumentList $args -PassThru -Wait -NoNewWindow -RedirectStandardOutput "$env:TEMP\regress_run_out.log" -RedirectStandardError "$env:TEMP\regress_run_err.log"
-    $stdout = Get-Content "$env:TEMP\regress_run_out.log" -Raw -ErrorAction SilentlyContinue
-    $stderr = Get-Content "$env:TEMP\regress_run_err.log" -Raw -ErrorAction SilentlyContinue
+    $proc = Start-Process -FilePath $Executable -ArgumentList $args -PassThru -Wait -NoNewWindow -RedirectStandardOutput "${env:TEMP}\regress_run_out.log" -RedirectStandardError "${env:TEMP}\regress_run_err.log"
+    $stdout = Get-Content "${env:TEMP}\regress_run_out.log" -Raw -ErrorAction SilentlyContinue
+    $stderr = Get-Content "${env:TEMP}\regress_run_err.log" -Raw -ErrorAction SilentlyContinue
 
     Write-RegressLog "Test output:" "INFO"
     if ($stdout) { Write-RegressLog $stdout "INFO" }
@@ -151,7 +151,7 @@ function Invoke-Test {
 try {
     Write-RegressLog "================================================"
     Write-RegressLog "RawrXD Sovereign Regression Runner"
-    Write-RegressLog "Started: $($script:StartTime)"
+    Write-RegressLog "Started: $(${script:StartTime})"
     Write-RegressLog "================================================"
 
     if (!$NoBuild) {
@@ -169,7 +169,7 @@ try {
     }
 
     $results = Invoke-Test
-    $duration = (Get-Date) - $script:StartTime
+    $duration = (Get-Date) - ${script:StartTime}
 
     Write-RegressLog "================================================"
     Write-RegressLog "Results: $($results.Passed) passed, $($results.Failed) failed"

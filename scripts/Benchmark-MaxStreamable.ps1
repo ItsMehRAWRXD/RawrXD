@@ -186,7 +186,7 @@ function Get-BestOneAdditionEstimate {
     $observedPeakBytes = [UInt64]$StreamJson.observed_peak_bytes
     $estimatedCurrentMaxBytes = [UInt64]$StreamJson.estimated_current_max_bytes
 
-    $observedDeltaBytes = if ($observedPeakBytes -gt $baselineOverheadBytes) { [UInt64]($observedPeakBytes - $baselineOverheadBytes) } else { [UInt64]0 }
+    $observedDeltaBytes = $(if ($observedPeakBytes -gt $baselineOverheadBytes) { [UInt64]($observedPeakBytes - $baselineOverheadBytes) } else { [UInt64]0 }
     $effectiveCurrentWorkingSet = [UInt64][Math]::Max(1.0, [Math]::Max([double]$largestZoneBytes, [double]$observedDeltaBytes))
 
     $sweep = @(
@@ -217,7 +217,7 @@ function Get-BestOneAdditionEstimate {
         }
     }
 
-    $bestDeltaBytes = if ($bestMaxBytes -gt $estimatedCurrentMaxBytes) { [UInt64]($bestMaxBytes - $estimatedCurrentMaxBytes) } else { [UInt64]0 }
+    $bestDeltaBytes = $(if ($bestMaxBytes -gt $estimatedCurrentMaxBytes) { [UInt64]($bestMaxBytes - $estimatedCurrentMaxBytes) } else { [UInt64]0 }
 
     return [pscustomobject]@{
         BestWindowMB       = $bestWindowMB
@@ -294,7 +294,7 @@ $jsonPath = Join-Path $OutputDir "max_streamable_benchmark_$stamp.json"
 $csvPath = Join-Path $OutputDir "max_streamable_benchmark_$stamp.csv"
 $mdPath = Join-Path $OutputDir "max_streamable_benchmark_$stamp.md"
 
-$effectiveWindowSweepMB = if ($OneAdditionWindowSweepMB -and $OneAdditionWindowSweepMB.Count -gt 0) {
+$effectiveWindowSweepMB = $(if ($OneAdditionWindowSweepMB -and $OneAdditionWindowSweepMB.Count -gt 0) {
     @($OneAdditionWindowSweepMB | Where-Object { $_ -gt 0 } | Sort-Object -Unique)
 }
 else {
@@ -325,48 +325,48 @@ for ($i = 0; $i -lt $models.Count; $i++) {
             File                         = $model.FullName
             SizeBytes                    = [UInt64]$model.Length
             SizeGiB                      = Convert-BytesToGiB -Bytes ([UInt64]$model.Length)
-            StreamExit                   = if ($streamJson) { [int]$streamJson.exit } else { [int]$streamResult.ExitCode }
-            StreamPhase                  = if ($streamJson) { [string]$streamJson.phase } elseif ($streamResult.TimedOut) { "timeout" } else { "no_json" }
-            Streamable                   = if ($streamJson) { [bool]$streamJson.streamable } else { $false }
-            Arch                         = if ($streamJson) { [string]$streamJson.arch } else { "" }
-            Layers                       = if ($streamJson) { [int]$streamJson.layers } else { 0 }
-            ContextLength                = if ($streamJson) { [int]$streamJson.context_length } else { 0 }
-            Embed                        = if ($streamJson) { [int]$streamJson.embed } else { 0 }
-            Vocab                        = if ($streamJson) { [UInt64]$streamJson.vocab } else { 0 }
-            ZoneCount                    = if ($streamJson) { [int]$streamJson.zone_count } else { 0 }
-            LargestZoneBytes             = if ($streamJson) { [UInt64]$streamJson.largest_zone_bytes } else { 0 }
-            LargestZoneGiB               = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.largest_zone_bytes) } else { 0 }
-            LargestZoneName              = if ($streamJson) { [string]$streamJson.largest_zone_name } else { "" }
-            LargestTensorBytes           = if ($streamJson) { [UInt64]$streamJson.largest_tensor_bytes } else { 0 }
-            LargestTensorGiB             = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.largest_tensor_bytes) } else { 0 }
-            ObservedPeakBytes            = if ($streamJson) { [UInt64]$streamJson.observed_peak_bytes } else { 0 }
-            ObservedPeakGiB              = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.observed_peak_bytes) } else { 0 }
-            WorkingBudgetBytes           = if ($streamJson) { [UInt64]$streamJson.working_budget_bytes } else { 0 }
-            WorkingBudgetGiB             = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.working_budget_bytes) } else { 0 }
-            EstimatedCurrentMaxBytes     = if ($streamJson) { [UInt64]$streamJson.estimated_current_max_bytes } else { 0 }
-            EstimatedCurrentMaxGiB       = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.estimated_current_max_bytes) } else { 0 }
-            OneAddition                  = if ($streamJson) { [string]$streamJson.one_addition } else { "mapped_window_view" }
-            OneAdditionWindowBytes       = if ($streamJson) { [UInt64]$streamJson.one_addition_window_bytes } else { 0 }
-            OneAdditionWindowGiB         = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.one_addition_window_bytes) } else { 0 }
-            EstimatedOneAdditionMaxBytes = if ($streamJson) { [UInt64]$streamJson.estimated_one_addition_max_bytes } else { 0 }
-            EstimatedOneAdditionMaxGiB   = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.estimated_one_addition_max_bytes) } else { 0 }
-            EstimatedDeltaBytes          = if ($streamJson) { [UInt64]$streamJson.estimated_delta_bytes } else { 0 }
-            EstimatedDeltaGiB            = if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.estimated_delta_bytes) } else { 0 }
+            StreamExit                   = $(if ($streamJson) { [int]$streamJson.exit } else { [int]$streamResult.ExitCode }
+            StreamPhase                  = $(if ($streamJson) { [string]$streamJson.phase } elseif ($streamResult.TimedOut) { "timeout" } else { "no_json" }
+            Streamable                   = $(if ($streamJson) { [bool]$streamJson.streamable } else { $false }
+            Arch                         = $(if ($streamJson) { [string]$streamJson.arch } else { "" }
+            Layers                       = $(if ($streamJson) { [int]$streamJson.layers } else { 0 }
+            ContextLength                = $(if ($streamJson) { [int]$streamJson.context_length } else { 0 }
+            Embed                        = $(if ($streamJson) { [int]$streamJson.embed } else { 0 }
+            Vocab                        = $(if ($streamJson) { [UInt64]$streamJson.vocab } else { 0 }
+            ZoneCount                    = $(if ($streamJson) { [int]$streamJson.zone_count } else { 0 }
+            LargestZoneBytes             = $(if ($streamJson) { [UInt64]$streamJson.largest_zone_bytes } else { 0 }
+            LargestZoneGiB               = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.largest_zone_bytes) } else { 0 }
+            LargestZoneName              = $(if ($streamJson) { [string]$streamJson.largest_zone_name } else { "" }
+            LargestTensorBytes           = $(if ($streamJson) { [UInt64]$streamJson.largest_tensor_bytes } else { 0 }
+            LargestTensorGiB             = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.largest_tensor_bytes) } else { 0 }
+            ObservedPeakBytes            = $(if ($streamJson) { [UInt64]$streamJson.observed_peak_bytes } else { 0 }
+            ObservedPeakGiB              = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.observed_peak_bytes) } else { 0 }
+            WorkingBudgetBytes           = $(if ($streamJson) { [UInt64]$streamJson.working_budget_bytes } else { 0 }
+            WorkingBudgetGiB             = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.working_budget_bytes) } else { 0 }
+            EstimatedCurrentMaxBytes     = $(if ($streamJson) { [UInt64]$streamJson.estimated_current_max_bytes } else { 0 }
+            EstimatedCurrentMaxGiB       = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.estimated_current_max_bytes) } else { 0 }
+            OneAddition                  = $(if ($streamJson) { [string]$streamJson.one_addition } else { "mapped_window_view" }
+            OneAdditionWindowBytes       = $(if ($streamJson) { [UInt64]$streamJson.one_addition_window_bytes } else { 0 }
+            OneAdditionWindowGiB         = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.one_addition_window_bytes) } else { 0 }
+            EstimatedOneAdditionMaxBytes = $(if ($streamJson) { [UInt64]$streamJson.estimated_one_addition_max_bytes } else { 0 }
+            EstimatedOneAdditionMaxGiB   = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.estimated_one_addition_max_bytes) } else { 0 }
+            EstimatedDeltaBytes          = $(if ($streamJson) { [UInt64]$streamJson.estimated_delta_bytes } else { 0 }
+            EstimatedDeltaGiB            = $(if ($streamJson) { Convert-BytesToGiB -Bytes ([UInt64]$streamJson.estimated_delta_bytes) } else { 0 }
             BestOneAdditionWindowMB      = [int]$bestOneAddition.BestWindowMB
             BestOneAdditionMaxBytes      = [UInt64]$bestOneAddition.BestMaxBytes
             BestOneAdditionMaxGiB        = [double]$bestOneAddition.BestMaxGiB
             BestOneAdditionDeltaBytes    = [UInt64]$bestOneAddition.BestDeltaBytes
             BestOneAdditionDeltaGiB      = [double]$bestOneAddition.BestDeltaGiB
             OneAdditionSweepMB           = (($bestOneAddition.SweepEvaluatedMB | ForEach-Object { [string]$_ }) -join ",")
-            OpenMs                       = if ($streamJson) { [double]$streamJson.open_ms } else { 0.0 }
-            ProbeMs                      = if ($streamJson) { [double]$streamJson.probe_ms } else { 0.0 }
-            StreamDetail                 = if ($streamJson) { [string]$streamJson.detail } else { (($streamResult.StdErr + " " + $streamResult.StdOut).Trim()) }
-            TpsExit                      = if ($tpsJson) { [int]$tpsJson.exit } else { "" }
-            TpsPhase                     = if ($tpsJson) { [string]$tpsJson.phase } elseif ($tpsResult -and $tpsResult.TimedOut) { "timeout" } else { "" }
-            Tps                          = if ($tpsJson) { [double]$tpsJson.tps } else { "" }
-            TpsWallS                     = if ($tpsJson) { [double]$tpsJson.wall_s } else { "" }
-            TpsSteps                     = if ($tpsJson) { [int]$tpsJson.steps } else { "" }
-            TpsDetail                    = if ($tpsJson) { [string]$tpsJson.detail } else { "" }
+            OpenMs                       = $(if ($streamJson) { [double]$streamJson.open_ms } else { 0.0 }
+            ProbeMs                      = $(if ($streamJson) { [double]$streamJson.probe_ms } else { 0.0 }
+            StreamDetail                 = $(if ($streamJson) { [string]$streamJson.detail } else { (($streamResult.StdErr + " " + $streamResult.StdOut).Trim()) }
+            TpsExit                      = $(if ($tpsJson) { [int]$tpsJson.exit } else { "" }
+            TpsPhase                     = $(if ($tpsJson) { [string]$tpsJson.phase } elseif ($tpsResult -and $tpsResult.TimedOut) { "timeout" } else { "" }
+            Tps                          = $(if ($tpsJson) { [double]$tpsJson.tps } else { "" }
+            TpsWallS                     = $(if ($tpsJson) { [double]$tpsJson.wall_s } else { "" }
+            TpsSteps                     = $(if ($tpsJson) { [int]$tpsJson.steps } else { "" }
+            TpsDetail                    = $(if ($tpsJson) { [string]$tpsJson.detail } else { "" }
         }) | Out-Null
 }
 
@@ -398,10 +398,10 @@ $summary = [ordered]@{
     meaningful_zone_floor_bytes = [UInt64]$minMeaningfulZoneBytes
     mapped_window_mb = $MappedWindowMB
     one_addition_window_sweep_mb = $effectiveWindowSweepMB
-    actual_max_streamed = if ($largestActual) { [ordered]@{ file = $largestActual.File; size_bytes = [UInt64]$largestActual.SizeBytes; size_gib = [double]$largestActual.SizeGiB; largest_zone_bytes = [UInt64]$largestActual.LargestZoneBytes; largest_zone_gib = [double]$largestActual.LargestZoneGiB; observed_peak_bytes = [UInt64]$largestActual.ObservedPeakBytes; observed_peak_gib = [double]$largestActual.ObservedPeakGiB; context_length = [int]$largestActual.ContextLength; tps = $largestActual.Tps } } else { $null }
-    estimated_current_ceiling = if ($largestEstimatedCurrent) { [ordered]@{ file = $largestEstimatedCurrent.File; estimated_max_bytes = [UInt64]$largestEstimatedCurrent.EstimatedCurrentMaxBytes; estimated_max_gib = [double]$largestEstimatedCurrent.EstimatedCurrentMaxGiB } } else { $null }
-    estimated_one_addition_ceiling = if ($largestEstimatedOneAddition) { [ordered]@{ file = $largestEstimatedOneAddition.File; estimated_max_bytes = [UInt64]$largestEstimatedOneAddition.EstimatedOneAdditionMaxBytes; estimated_max_gib = [double]$largestEstimatedOneAddition.EstimatedOneAdditionMaxGiB; delta_bytes = [UInt64]$largestEstimatedOneAddition.EstimatedDeltaBytes; delta_gib = [double]$largestEstimatedOneAddition.EstimatedDeltaGiB; one_addition = $largestEstimatedOneAddition.OneAddition; mapped_window_gib = [double]$largestEstimatedOneAddition.OneAdditionWindowGiB } } else { $null }
-    estimated_best_one_addition_ceiling = if ($largestBestOneAddition) { [ordered]@{ file = $largestBestOneAddition.File; estimated_max_bytes = [UInt64]$largestBestOneAddition.BestOneAdditionMaxBytes; estimated_max_gib = [double]$largestBestOneAddition.BestOneAdditionMaxGiB; delta_bytes = [UInt64]$largestBestOneAddition.BestOneAdditionDeltaBytes; delta_gib = [double]$largestBestOneAddition.BestOneAdditionDeltaGiB; one_addition = $largestBestOneAddition.OneAddition; best_window_mb = [int]$largestBestOneAddition.BestOneAdditionWindowMB } } else { $null }
+    actual_max_streamed = $(if ($largestActual) { [ordered]@{ file = $largestActual.File; size_bytes = [UInt64]$largestActual.SizeBytes; size_gib = [double]$largestActual.SizeGiB; largest_zone_bytes = [UInt64]$largestActual.LargestZoneBytes; largest_zone_gib = [double]$largestActual.LargestZoneGiB; observed_peak_bytes = [UInt64]$largestActual.ObservedPeakBytes; observed_peak_gib = [double]$largestActual.ObservedPeakGiB; context_length = [int]$largestActual.ContextLength; tps = $largestActual.Tps } } else { $null }
+    estimated_current_ceiling = $(if ($largestEstimatedCurrent) { [ordered]@{ file = $largestEstimatedCurrent.File; estimated_max_bytes = [UInt64]$largestEstimatedCurrent.EstimatedCurrentMaxBytes; estimated_max_gib = [double]$largestEstimatedCurrent.EstimatedCurrentMaxGiB } } else { $null }
+    estimated_one_addition_ceiling = $(if ($largestEstimatedOneAddition) { [ordered]@{ file = $largestEstimatedOneAddition.File; estimated_max_bytes = [UInt64]$largestEstimatedOneAddition.EstimatedOneAdditionMaxBytes; estimated_max_gib = [double]$largestEstimatedOneAddition.EstimatedOneAdditionMaxGiB; delta_bytes = [UInt64]$largestEstimatedOneAddition.EstimatedDeltaBytes; delta_gib = [double]$largestEstimatedOneAddition.EstimatedDeltaGiB; one_addition = $largestEstimatedOneAddition.OneAddition; mapped_window_gib = [double]$largestEstimatedOneAddition.OneAdditionWindowGiB } } else { $null }
+    estimated_best_one_addition_ceiling = $(if ($largestBestOneAddition) { [ordered]@{ file = $largestBestOneAddition.File; estimated_max_bytes = [UInt64]$largestBestOneAddition.BestOneAdditionMaxBytes; estimated_max_gib = [double]$largestBestOneAddition.BestOneAdditionMaxGiB; delta_bytes = [UInt64]$largestBestOneAddition.BestOneAdditionDeltaBytes; delta_gib = [double]$largestBestOneAddition.BestOneAdditionDeltaGiB; one_addition = $largestBestOneAddition.OneAddition; best_window_mb = [int]$largestBestOneAddition.BestOneAdditionWindowMB } } else { $null }
 }
 
 [pscustomobject]@{ summary = $summary; rows = $rowArray } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $jsonPath -Encoding utf8

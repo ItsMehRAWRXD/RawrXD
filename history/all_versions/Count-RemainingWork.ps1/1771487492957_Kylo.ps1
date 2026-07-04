@@ -67,7 +67,7 @@ foreach ($f in $allFiles) {
                     File     = $name
                     Line     = $ln
                     Pattern  = $p.Pat
-                    Severity = if ($isCrit) { 'CRITICAL' } elseif ($trimmed -match 'TODO|FIXME') { 'MEDIUM' } else { 'LOW' }
+                    Severity = $(if ($isCrit) { 'CRITICAL' } elseif ($trimmed -match 'TODO|FIXME') { 'MEDIUM' } else { 'LOW' }
                     Text     = $trimmed.Substring(0, [Math]::Min(90, $trimmed.Length))
                 }
 
@@ -88,7 +88,7 @@ foreach ($f in $allFiles) {
                 File     = $name
                 Line     = $ln
                 Pattern  = 'STUB_BODY'
-                Severity = if ($isCrit) { 'CRITICAL' } else { 'LOW' }
+                Severity = $(if ($isCrit) { 'CRITICAL' } else { 'LOW' }
                 Text     = $trimmed.Substring(0, [Math]::Min(90, $trimmed.Length))
             }
             if ($isCrit) { $critical += $entry } else { $low += $entry }
@@ -139,7 +139,7 @@ Write-Host "  Total remaining:   $($critical.Count + $medium.Count + $low.Count)
 Write-Host ""
 Write-Host "  Built today:       $($todayObjs.Count) .obj files" -ForegroundColor Green
 $todayObjs | ForEach-Object {
-    $sz = if ($_.Length -gt 1MB) { '{0:N1} MB' -f ($_.Length/1MB) } else { '{0:N0} KB' -f ($_.Length/1KB) }
+    $sz = $(if ($_.Length -gt 1MB) { '{0:N1} MB' -f ($_.Length/1MB) } else { '{0:N0} KB' -f ($_.Length/1KB) }
     Write-Host "    $($_.Name) ($sz)" -ForegroundColor DarkGreen
 }
 Write-Host "========================================`n" -ForegroundColor Cyan

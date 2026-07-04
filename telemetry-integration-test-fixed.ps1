@@ -3,7 +3,7 @@
 
 param(
     [int]$MaxDurationMinutes = 10,
-    [switch]$ValidateMetrics = $true,
+    [switch]$ValidateMetrics,
     [int]$MaxTargetTPS = 336,
     [switch]$Verbose
 )
@@ -222,7 +222,7 @@ function Test-LoadRamping {
         }
         $results += $result
         
-        $status = if ($result.Success) { "PASS" } else { "WARN" }
+        $status = $(if ($result.Success) { "PASS" } else { "WARN" }
         Write-TestLog "  $tps TPS: $($result.ActualTPS) actual, $errors errors" $status
         
         # If we fail at a lower TPS, don't continue ramping
@@ -291,7 +291,7 @@ function Show-TestSummary($Results) {
     $totalTests = 0
     
     foreach ($result in $Results) {
-        $status = if ($result.Success) { "✅ PASS" } else { "⚠️  PARTIAL" }
+        $status = $(if ($result.Success) { "✅ PASS" } else { "⚠️  PARTIAL" }
         Write-Host "  $($result.Name): $($result.Passed)/$($result.Total) $status" -ForegroundColor $(if($result.Success){"Green"}else{"Yellow"})
         $totalPassed += $result.Passed
         $totalTests += $result.Total

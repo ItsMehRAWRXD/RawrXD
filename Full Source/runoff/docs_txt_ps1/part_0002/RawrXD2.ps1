@@ -8,11 +8,11 @@
 # ============================================
 # EMERGENCY LOGGING SETUP
 
-$script:EmergencyLogPath = Join-Path $env:APPDATA "RawrXD"
-if (-not (Test-Path $script:EmergencyLogPath)) {
-    try { New-Item -ItemType Directory -Path $script:EmergencyLogPath -Force | Out-Null } catch { }
+${script:EmergencyLogPath} = Join-Path ${env:APPDATA} "RawrXD"
+if (-not (Test-Path ${script:EmergencyLogPath})) {
+    try { New-Item -ItemType Directory -Path ${script:EmergencyLogPath} -Force | Out-Null } catch { }
 }
-$script:StartupLogFile = Join-Path $script:EmergencyLogPath "startup.log"
+${script:StartupLogFile} = Join-Path ${script:EmergencyLogPath} "startup.log"
 
 function Write-EmergencyLog {
     param(
@@ -24,8 +24,8 @@ function Write-EmergencyLog {
     try {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
         $logEntry = "[$timestamp] [$Level] $Message"
-        if ($script:StartupLogFile) {
-            Add-Content -Path $script:StartupLogFile -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+        if (${script:StartupLogFile}) {
+            Add-Content -Path ${script:StartupLogFile} -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
         }
 
         if ($Level -in @("ERROR", "CRITICAL")) {
@@ -33,7 +33,7 @@ function Write-EmergencyLog {
         }
     }
     catch {
-        $displayColor = if ($Level -eq "ERROR") { "Red" } else { "Yellow" }
+        $displayColor = $(if ($Level -eq "ERROR") { "Red" } else { "Yellow" }
         Write-Host "[$Level] $Message" -ForegroundColor $displayColor
     }
 }
@@ -65,9 +65,9 @@ function Write-StartupLog {
 
     Write-Host $logEntry -ForegroundColor $color
 
-    if ($script:StartupLogFile) {
+    if (${script:StartupLogFile}) {
         try {
-            Add-Content -Path $script:StartupLogFile -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+            Add-Content -Path ${script:StartupLogFile} -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
         }
         catch { }
     }
@@ -102,7 +102,7 @@ function Get-OllamaModels {
             "$PSScriptRoot\OllamaModels",
             "D:\OllamaModels",
             "C:\OllamaModels",
-            "$env:USERPROFILE\OllamaModels",
+            "${env:USERPROFILE}\OllamaModels",
             "$PSScriptRoot\models",
             "$PSScriptRoot"
         ) | Select-Object -Unique
@@ -124,7 +124,7 @@ function Get-OllamaModels {
 
         # 3) Include configured fallback if present
         try {
-            if ($script:settings -and $script:settings.OllamaModel) { $models += $script:settings.OllamaModel }
+            if (${script:settings} -and ${script:settings}.OllamaModel) { $models += ${script:settings}.OllamaModel }
         } catch { }
 
         # 4) Final sensible defaults - try to get models dynamically
@@ -250,8 +250,8 @@ try {
 # AGENT TOOLS INITIALIZATION
 # ============================================
 # Initialize agent tools registry
-if (-not $script:agentTools) {
-    $script:agentTools = @{}
+if (-not ${script:agentTools}) {
+    ${script:agentTools} = @{}
 }
 
 # Define Register-AgentTool function early so it's available for BuiltInTools.ps1
@@ -276,11 +276,11 @@ function Register-AgentTool {
         [string]$Version = "1.0"
     )
 
-    if (-not $script:agentTools) {
-        $script:agentTools = @{}
+    if (-not ${script:agentTools}) {
+        ${script:agentTools} = @{}
     }
 
-    $script:agentTools[$Name] = @{
+    ${script:agentTools}[$Name] = @{
         Name        = $Name
         Description = $Description
         Parameters  = $Parameters
@@ -301,7 +301,7 @@ function Initialize-AgentTools {
     #>
     Write-StartupLog "🔧 Initializing Agent Tools System..." "INFO"
     
-    $toolsBefore = $script:agentTools.Count
+    $toolsBefore = ${script:agentTools}.Count
     
     # Load Built-In Tools Module
     $builtInToolsPath = Join-Path $PSScriptRoot "BuiltInTools.ps1"
@@ -339,7 +339,7 @@ function Initialize-AgentTools {
         }
     }
     
-    $toolsAfter = $script:agentTools.Count
+    $toolsAfter = ${script:agentTools}.Count
     $toolsRegistered = $toolsAfter - $toolsBefore
     
     Write-StartupLog "📊 Agent Tools: $toolsAfter total ($toolsRegistered new)" "INFO"
@@ -348,7 +348,7 @@ function Initialize-AgentTools {
     $criticalTools = @("read_file", "list_directory", "execute_command", "write_file")
     $missingTools = @()
     foreach ($toolName in $criticalTools) {
-        if (-not $script:agentTools.ContainsKey($toolName)) {
+        if (-not ${script:agentTools}.ContainsKey($toolName)) {
             $missingTools += $toolName
         }
     }
@@ -376,16 +376,16 @@ Initialize-AgentTools | Out-Null
 # ============================================
 
 # Ollama Host Process Management
-$script:OllamaHostProcess = $null
-$script:OllamaHostEndpoint = "http://127.0.0.1:5886"
+${script:OllamaHostProcess} = $null
+${script:OllamaHostEndpoint} = "http://127.0.0.1:5886"
 
 function Start-OllamaHost {
     <#
     .SYNOPSIS
         Start the C# Ollama host process
     #>
-    if ($script:OllamaHostProcess -and -not $script:OllamaHostProcess.HasExited) {
-        Write-StartupLog "Ollama host already running on $script:OllamaHostEndpoint" "INFO"
+    if (${script:OllamaHostProcess} -and -not ${script:OllamaHostProcess}.HasExited) {
+        Write-StartupLog "Ollama host already running on ${script:OllamaHostEndpoint}" "INFO"
         return $true
     }
 
@@ -402,7 +402,7 @@ function Start-OllamaHost {
             }
         }
 
-        $script:OllamaHostProcess = Start-Process -FilePath $hostExePath `
+        ${script:OllamaHostProcess} = Start-Process -FilePath $hostExePath `
             -ArgumentList "--port", "5886", "--ollama-endpoint", "http://localhost:11434" `
             -NoNewWindow -PassThru
         
@@ -411,9 +411,9 @@ function Start-OllamaHost {
         
         for ($i = 0; $i -lt 10; $i++) {
             try {
-                $health = Invoke-RestMethod -Uri "$script:OllamaHostEndpoint/health" -TimeoutSec 1 -ErrorAction Stop
+                $health = Invoke-RestMethod -Uri "${script:OllamaHostEndpoint}/health" -TimeoutSec 1 -ErrorAction Stop
                 if ($health.status -eq "ok") {
-                    Write-StartupLog "Ollama host started successfully on $script:OllamaHostEndpoint" "SUCCESS"
+                    Write-StartupLog "Ollama host started successfully on ${script:OllamaHostEndpoint}" "SUCCESS"
                     return $true
                 }
             }
@@ -436,10 +436,10 @@ function Stop-OllamaHost {
     .SYNOPSIS
         Stop the Ollama host process
     #>
-    if ($script:OllamaHostProcess -and -not $script:OllamaHostProcess.HasExited) {
+    if (${script:OllamaHostProcess} -and -not ${script:OllamaHostProcess}.HasExited) {
         try {
-            $script:OllamaHostProcess.Kill()
-            $script:OllamaHostProcess = $null
+            ${script:OllamaHostProcess}.Kill()
+            ${script:OllamaHostProcess} = $null
             Write-StartupLog "Ollama host stopped" "INFO"
         }
         catch {
@@ -470,7 +470,7 @@ function Invoke-OllamaRequest {
             Temperature = $Temperature
         } | ConvertTo-Json -Compress
         
-        $response = Invoke-RestMethod -Uri "$script:OllamaHostEndpoint/api/RawrXDOllama" `
+        $response = Invoke-RestMethod -Uri "${script:OllamaHostEndpoint}/api/RawrXDOllama" `
             -Method Post `
             -Body $body `
             -ContentType "application/json" `
@@ -511,13 +511,13 @@ function Invoke-AgenticShellCommand {
     }
     
     try {
-        $model = if ($Parameters.ContainsKey('model') -and $Parameters['model']) { $Parameters['model'] } else { "cheetah-stealth-agentic:latest" }
-        $temperature = if ($Parameters.ContainsKey('temperature') -and $Parameters['temperature']) { $Parameters['temperature'] } else { 0.9 }
+        $model = $(if ($Parameters.ContainsKey('model') -and $Parameters['model']) { $Parameters['model'] } else { "cheetah-stealth-agentic:latest" }
+        $temperature = $(if ($Parameters.ContainsKey('temperature') -and $Parameters['temperature']) { $Parameters['temperature'] } else { 0.9 }
         
         switch ($Command) {
             'generate' {
-                $prompt = if ($Parameters.ContainsKey('prompt') -and $Parameters['prompt']) { $Parameters['prompt'] } else { (Read-Host "Enter code generation prompt") }
-                $language = if ($Parameters.ContainsKey('language') -and $Parameters['language']) { $Parameters['language'] } else { "powershell" }
+                $prompt = $(if ($Parameters.ContainsKey('prompt') -and $Parameters['prompt']) { $Parameters['prompt'] } else { (Read-Host "Enter code generation prompt") }
+                $language = $(if ($Parameters.ContainsKey('language') -and $Parameters['language']) { $Parameters['language'] } else { "powershell" }
                 
                 $fullPrompt = "Generate $language code for: $prompt`n`nProvide only the code, no explanations."
                 $result = Invoke-OllamaRequest -Model $model -Prompt $fullPrompt -Temperature $temperature
@@ -526,8 +526,8 @@ function Invoke-AgenticShellCommand {
                 return $result
             }
             'analyze' {
-                $code = if ($Parameters.ContainsKey('code') -and $Parameters['code']) { $Parameters['code'] } else { (Get-Clipboard) }
-                $type = if ($Parameters.ContainsKey('type') -and $Parameters['type']) { $Parameters['type'] } else { "improve" }
+                $code = $(if ($Parameters.ContainsKey('code') -and $Parameters['code']) { $Parameters['code'] } else { (Get-Clipboard) }
+                $type = $(if ($Parameters.ContainsKey('type') -and $Parameters['type']) { $Parameters['type'] } else { "improve" }
                 
                 $fullPrompt = "Analyze this code and suggest $type improvements:`n`n$code`n`nProvide specific recommendations."
                 $result = Invoke-OllamaRequest -Model $model -Prompt $fullPrompt -Temperature $temperature
@@ -536,8 +536,8 @@ function Invoke-AgenticShellCommand {
                 return $result
             }
             'refactor' {
-                $code = if ($Parameters.ContainsKey('code') -and $Parameters['code']) { $Parameters['code'] } else { (Get-Clipboard) }
-                $objective = if ($Parameters.ContainsKey('objective') -and $Parameters['objective']) { $Parameters['objective'] } else { "improve readability and performance" }
+                $code = $(if ($Parameters.ContainsKey('code') -and $Parameters['code']) { $Parameters['code'] } else { (Get-Clipboard) }
+                $objective = $(if ($Parameters.ContainsKey('objective') -and $Parameters['objective']) { $Parameters['objective'] } else { "improve readability and performance" }
                 
                 $fullPrompt = "Refactor this code to $objective`n`n$code`n`nProvide the refactored code."
                 $result = Invoke-OllamaRequest -Model $model -Prompt $fullPrompt -Temperature $temperature
@@ -546,8 +546,8 @@ function Invoke-AgenticShellCommand {
                 return $result
             }
             'complete' {
-                $partial = if ($Parameters.ContainsKey('partial') -and $Parameters['partial']) { $Parameters['partial'] } else { (Read-Host "Enter partial code") }
-                $context = if ($Parameters.ContainsKey('context') -and $Parameters['context']) { $Parameters['context'] } else { "code completion" }
+                $partial = $(if ($Parameters.ContainsKey('partial') -and $Parameters['partial']) { $Parameters['partial'] } else { (Read-Host "Enter partial code") }
+                $context = $(if ($Parameters.ContainsKey('context') -and $Parameters['context']) { $Parameters['context'] } else { "code completion" }
                 
                 $fullPrompt = "Complete this code snippet ($context):`n`n$partial`n`nProvide the completed code."
                 $result = Invoke-OllamaRequest -Model $model -Prompt $fullPrompt -Temperature $temperature
@@ -557,11 +557,11 @@ function Invoke-AgenticShellCommand {
             }
             'status' {
                 try {
-                    $health = Invoke-RestMethod -Uri "$script:OllamaHostEndpoint/health" -TimeoutSec 2
+                    $health = Invoke-RestMethod -Uri "${script:OllamaHostEndpoint}/health" -TimeoutSec 2
                     Write-DevConsole "✅ Ollama host is healthy: $($health.status)" "SUCCESS"
                     return @{
                         Status = "healthy"
-                        Endpoint = $script:OllamaHostEndpoint
+                        Endpoint = ${script:OllamaHostEndpoint}
                         Mode = $health.mode
                     }
                 }
@@ -743,15 +743,15 @@ function Register-AgenticHotkeys {
 
 # ============================================
 
-$script:activeEditorContext = @{
+${script:activeEditorContext} = @{
     Form    = $null
     Editor  = $null
     FilePath = $null
 }
 
 function Get-ActiveEditorControl {
-    if ($script:activeEditorContext.Editor -and -not $script:activeEditorContext.Editor.IsDisposed) {
-        return $script:activeEditorContext.Editor
+    if (${script:activeEditorContext}.Editor -and -not ${script:activeEditorContext}.Editor.IsDisposed) {
+        return ${script:activeEditorContext}.Editor
     }
     return $null
 }
@@ -768,12 +768,12 @@ function Analyze-FileForInsights {
         [string]$AnalysisType = "general"  # general, errors, performance, security, style
     )
 
-    if (-not $script:activeEditorContext.FilePath) {
+    if (-not ${script:activeEditorContext}.FilePath) {
         [System.Windows.Forms.MessageBox]::Show("No file is currently open in the editor.", "No Active File", "OK", "Information") | Out-Null
         return
     }
 
-    $filePath = $script:activeEditorContext.FilePath
+    $filePath = ${script:activeEditorContext}.FilePath
     
     if (-not (Test-Path $filePath)) {
         Write-DevConsole "❌ File not found: $filePath" "ERROR"
@@ -833,7 +833,7 @@ function Analyze-FileForInsights {
         
         # Optional: Auto-send the analysis
         # Uncomment the next line if you want it to auto-send immediately
-        # Send-ChatMessage -TabId $script:activeChatTabId
+        # Send-ChatMessage -TabId ${script:activeChatTabId}
     }
     catch {
         Write-DevConsole "❌ Error preparing file analysis: $_" "ERROR"
@@ -861,18 +861,18 @@ function Set-ActiveEditorContext {
         )
 
     if ($Editor -and -not $Editor.IsDisposed) {
-        $script:activeEditorContext = @{
+        ${script:activeEditorContext} = @{
             Form    = $Form
             Editor  = $Editor
             FilePath = $FilePath
         }
-        $script:editor = $Editor
-        $script:lastEditorText = $Editor.Text
+        ${script:editor} = $Editor
+        ${script:lastEditorText} = $Editor.Text
         if ($FilePath) {
-            $global:currentFile = $FilePath
+            ${global:currentFile} = $FilePath
         }
         else {
-            $global:currentFile = $null
+            ${global:currentFile} = $null
         }
     }
 }
@@ -880,15 +880,15 @@ function Set-ActiveEditorContext {
 function Clear-ActiveEditorContext {
         param([System.Windows.Forms.Form]$Form)
 
-    if ($script:activeEditorContext.Form -and ($script:activeEditorContext.Form -eq $Form)) {
-        $script:activeEditorContext = @{
+    if (${script:activeEditorContext}.Form -and (${script:activeEditorContext}.Form -eq $Form)) {
+        ${script:activeEditorContext} = @{
             Form    = $null
             Editor  = $null
             FilePath = $null
         }
-        $script:editor = $null
-        $script:lastEditorText = ""
-        $global:currentFile = $null
+        ${script:editor} = $null
+        ${script:lastEditorText} = ""
+        ${global:currentFile} = $null
     }
 }
 
@@ -914,7 +914,7 @@ function Set-EditorTextWithVisibility {
         $targetEditor.SuspendLayout()
         
         # Calculate changes for visual indication
-        $oldLines = if ($targetEditor.Text) { ($targetEditor.Text -split "\r?\n").Count } else { 0 }
+        $oldLines = $(if ($targetEditor.Text) { ($targetEditor.Text -split "\r?\n").Count } else { 0 }
         $newLines = ($Content -split "\r?\n").Count
         $linesAdded = [Math]::Max(0, $newLines - $oldLines)
         $linesRemoved = [Math]::Max(0, $oldLines - $newLines)
@@ -923,13 +923,13 @@ function Set-EditorTextWithVisibility {
         $targetEditor.SelectionStart = 0
         $targetEditor.SelectionLength = 0
         $targetEditor.ScrollToCaret()
-        $script:lastEditorText = $Content
-        if ($script:undoStack) { $script:undoStack.Clear() }
-        if ($script:redoStack) { $script:redoStack.Clear() }
+        ${script:lastEditorText} = $Content
+        if (${script:undoStack}) { ${script:undoStack}.Clear() }
+        if (${script:redoStack}) { ${script:redoStack}.Clear() }
         
         # Show edit indication if there were changes
         if ($linesAdded -gt 0 -or $linesRemoved -gt 0) {
-            $currentFile = if ($global:currentFile) { $global:currentFile } else { "Editor" }
+            $currentFile = $(if (${global:currentFile}) { ${global:currentFile} } else { "Editor" }
             Show-CodeEditBox -FilePath $currentFile -LinesAdded $linesAdded -LinesRemoved $linesRemoved
         }
     }
@@ -945,31 +945,31 @@ function Set-EditorTextWithVisibility {
 function Add-FileToRecentList {
     param([string]$Path)
 
-    if ([string]::IsNullOrWhiteSpace($Path) -or -not $script:RecentFiles) { return }
+    if ([string]::IsNullOrWhiteSpace($Path) -or -not ${script:RecentFiles}) { return }
 
-    if ($script:RecentFiles.Contains($Path)) {
-        [void]$script:RecentFiles.Remove($Path)
+    if (${script:RecentFiles}.Contains($Path)) {
+        [void]${script:RecentFiles}.Remove($Path)
     }
 
-    $script:RecentFiles.Insert(0, $Path)
+    ${script:RecentFiles}.Insert(0, $Path)
 
     $maxRecent = 10
-    if ($global:settings -and ($global:settings -is [System.Collections.IDictionary]) -and $global:settings.ContainsKey('MaxRecentFiles')) {
-        $maxRecent = [int]$global:settings.MaxRecentFiles
+    if (${global:settings} -and (${global:settings} -is [System.Collections.IDictionary]) -and ${global:settings}.ContainsKey('MaxRecentFiles')) {
+        $maxRecent = [int]${global:settings}.MaxRecentFiles
     }
 
-    while ($script:RecentFiles.Count -gt $maxRecent) {
-        $script:RecentFiles.RemoveAt($script:RecentFiles.Count - 1)
+    while (${script:RecentFiles}.Count -gt $maxRecent) {
+        ${script:RecentFiles}.RemoveAt(${script:RecentFiles}.Count - 1)
     }
 }
 
 function Invoke-ActiveEditorSave {
     param([switch]$SaveAs)
 
-    $activeForm = $script:activeEditorContext.Form
+    $activeForm = ${script:activeEditorContext}.Form
     if (-not $activeForm -or $activeForm.IsDisposed) {
-        if ($script:editorPopOutForms) {
-            foreach ($form in $script:editorPopOutForms.Values) {
+        if (${script:editorPopOutForms}) {
+            foreach ($form in ${script:editorPopOutForms}.Values) {
                 if ($form -and -not $form.IsDisposed) {
                     $form.Activate()
                     $activeForm = $form
@@ -990,7 +990,7 @@ function Invoke-ActiveEditorSave {
         return
     }
 
-    $handler = if ($SaveAs) { $tag.SaveHandlers.SaveAs } else { $tag.SaveHandlers.Save }
+    $handler = $(if ($SaveAs) { $tag.SaveHandlers.SaveAs } else { $tag.SaveHandlers.Save }
     if ($handler -and $handler -is [ScriptBlock]) {
         & $handler
     }
@@ -1020,10 +1020,10 @@ function Get-ExtensionSetting {
     #>
     param([string]$Name)
     if ($Name) {
-        if ($script:extensionSettings.ContainsKey($Name)) { return $script:extensionSettings[$Name] }
+        if (${script:extensionSettings}.ContainsKey($Name)) { return ${script:extensionSettings}[$Name] }
         return $null
     }
-    return [PSCustomObject]($script:extensionSettings)
+    return [PSCustomObject](${script:extensionSettings})
 }
 
 # Extension download functionality removed - use VS Code extension marketplace
@@ -1037,31 +1037,31 @@ function Inject-RawrExtensionsIntoHtml {
 
     $result = $Html
 
-    foreach ($snippet in $script:extensionSnippets.Languages) {
+    foreach ($snippet in ${script:extensionSnippets}.Languages) {
         $result = $result -replace '//LANGUAGES', "$snippet`n    //LANGUAGES"
     }
 
-    foreach ($snippet in $script:extensionSnippets.Themes) {
+    foreach ($snippet in ${script:extensionSnippets}.Themes) {
         $result = $result -replace '//THEMES', "$snippet`n    //THEMES"
     }
 
-    foreach ($snippet in $script:extensionSnippets.Snippets) {
+    foreach ($snippet in ${script:extensionSnippets}.Snippets) {
         $result = $result -replace '//SNIPPETS', "$snippet`n    //SNIPPETS"
     }
 
-    foreach ($snippet in $script:extensionSnippets.Keybindings) {
+    foreach ($snippet in ${script:extensionSnippets}.Keybindings) {
         $result = $result -replace '//KEYBINDINGS', "$snippet`n    //KEYBINDINGS"
     }
 
-    foreach ($snippet in $script:extensionSnippets.Settings) {
+    foreach ($snippet in ${script:extensionSnippets}.Settings) {
         $result = $result -replace '//SETTINGS', "$snippet`n    //SETTINGS"
     }
 
     $summaryInserted = $false
-    if ($script:registeredExtensions.Count -gt 0) {
-        $namesJson = (@($script:registeredExtensions) | Sort-Object | ConvertTo-Json -Compress)
+    if (${script:registeredExtensions}.Count -gt 0) {
+        $namesJson = (@(${script:registeredExtensions}) | Sort-Object | ConvertTo-Json -Compress)
         $summarySnippet = @"
-window.extCount = $($script:registeredExtensions.Count);
+window.extCount = $(${script:registeredExtensions}.Count);
 window.extNames = $namesJson;
 const extSpan = document.getElementById('extList');
 if (extSpan) { extSpan.textContent = window.extNames.join(', '); }
@@ -1070,7 +1070,7 @@ if (extSpan) { extSpan.textContent = window.extNames.join(', '); }
         $summaryInserted = $true
     }
 
-    foreach ($snippet in $script:extensionSnippets.Commands) {
+    foreach ($snippet in ${script:extensionSnippets}.Commands) {
         $result = $result -replace '//COMMANDS', "$snippet`n    //COMMANDS"
     }
 
@@ -1088,7 +1088,7 @@ if (extSpan) { extSpan.textContent = window.extNames.join(', '); }
 # ============================================
 
 # Error categories and severity levels
-$script:ErrorCategories = @{
+${script:ErrorCategories} = @{
     Critical       = "CRITICAL"
     Security       = "SECURITY"
     Network        = "NETWORK"
@@ -1100,7 +1100,7 @@ $script:ErrorCategories = @{
 }
 
 # Error notification settings
-$script:ErrorNotificationConfig = @{
+${script:ErrorNotificationConfig} = @{
     EnableEmailNotifications = $false
     EmailRecipient           = "admin@company.com"
     SMTPServer               = "smtp.company.com"
@@ -1112,7 +1112,7 @@ $script:ErrorNotificationConfig = @{
 }
 
 # Error tracking and rate limiting
-$script:ErrorTracker = @{
+${script:ErrorTracker} = @{
     ErrorCount       = 0
     LastErrorTime    = Get-Date
     ErrorHistory     = @()
@@ -1143,19 +1143,19 @@ function Register-ErrorHandler {
     )
 
     $currentTime = Get-Date
-    $timeSinceLastError = ($currentTime - $script:ErrorTracker.LastErrorTime).TotalMinutes
+    $timeSinceLastError = ($currentTime - ${script:ErrorTracker}.LastErrorTime).TotalMinutes
 
     # Rate limiting: prevent error spam
     if ($timeSinceLastError -lt 1) {
-        $script:ErrorTracker.ErrorCount++
-        if ($script:ErrorTracker.ErrorCount -gt $script:ErrorNotificationConfig.MaxErrorsPerMinute) {
+        ${script:ErrorTracker}.ErrorCount++
+        if (${script:ErrorTracker}.ErrorCount -gt ${script:ErrorNotificationConfig}.MaxErrorsPerMinute) {
             Write-StartupLog "Error rate limit exceeded, suppressing notifications" "WARNING"
             return
         }
     }
     else {
-        $script:ErrorTracker.ErrorCount = 1
-        $script:ErrorTracker.LastErrorTime = $currentTime
+        ${script:ErrorTracker}.ErrorCount = 1
+        ${script:ErrorTracker}.LastErrorTime = $currentTime
     }
 
     # Create detailed error record
@@ -1165,7 +1165,7 @@ function Register-ErrorHandler {
         Category       = $ErrorCategory
         Severity       = $Severity
         SourceFunction = $SourceFunction
-        SessionId      = $script:CurrentSession.SessionId
+        SessionId      = ${script:CurrentSession}.SessionId
         ProcessId      = $PID
         UserContext    = [Environment]::UserName
         MachineName    = [Environment]::MachineName
@@ -1174,11 +1174,11 @@ function Register-ErrorHandler {
     }
 
     # Add to error history
-    $script:ErrorTracker.ErrorHistory += $errorRecord
+    ${script:ErrorTracker}.ErrorHistory += $errorRecord
 
     # Keep only last 100 errors to prevent memory issues
-    if (@($script:ErrorTracker.ErrorHistory).Count -gt 100) {
-        $script:ErrorTracker.ErrorHistory = $script:ErrorTracker.ErrorHistory | Select-Object -Last 100
+    if (@(${script:ErrorTracker}.ErrorHistory).Count -gt 100) {
+        ${script:ErrorTracker}.ErrorHistory = ${script:ErrorTracker}.ErrorHistory | Select-Object -Last 100
     }
 
     # Log to startup log
@@ -1191,7 +1191,7 @@ function Register-ErrorHandler {
     }
 
     # Log to Windows Event Log
-    if ($script:ErrorNotificationConfig.LogToEventLog) {
+    if (${script:ErrorNotificationConfig}.LogToEventLog) {
         try {
             if (-not ([System.Diagnostics.EventLog]::SourceExists("RawrXD"))) {
                 [System.Diagnostics.EventLog]::CreateEventSource("RawrXD", "Application")
@@ -1213,12 +1213,12 @@ function Register-ErrorHandler {
     }
 
     # (Removed stray injected text that corrupted parsing)
-    if ($ShowToUser -and $script:ErrorNotificationConfig.EnablePopupNotifications) {
+    if ($ShowToUser -and ${script:ErrorNotificationConfig}.EnablePopupNotifications) {
         Show-ErrorNotification -ErrorRecord $errorRecord
     }
 
     # Sound notification
-    if ($script:ErrorNotificationConfig.EnableSoundNotifications -and $Severity -in @("HIGH", "CRITICAL")) {
+    if (${script:ErrorNotificationConfig}.EnableSoundNotifications -and $Severity -in @("HIGH", "CRITICAL")) {
         try {
             [System.Media.SystemSounds]::Exclamation.Play()
         }
@@ -1226,7 +1226,7 @@ function Register-ErrorHandler {
     }
 
     # Email notification for critical errors
-    if ($script:ErrorNotificationConfig.EnableEmailNotifications -and $Severity -eq "CRITICAL") {
+    if (${script:ErrorNotificationConfig}.EnableEmailNotifications -and $Severity -eq "CRITICAL") {
         Send-ErrorNotificationEmail -ErrorRecord $errorRecord
     }
 
@@ -1236,7 +1236,7 @@ function Register-ErrorHandler {
     Publish-ProblemsPanelUpdate -Force
 }
 
-$script:ProblemsPanelState = @{
+${script:ProblemsPanelState} = @{
     LastPayload   = $null
     LastPublished = $null
 }
@@ -1254,8 +1254,8 @@ function Get-ProblemsPanelSnapshot {
         }
 
         $errorHistory = @()
-        if ($script:ErrorTracker -and $script:ErrorTracker.ErrorHistory) {
-            $errorHistory = $script:ErrorTracker.ErrorHistory |
+        if (${script:ErrorTracker} -and ${script:ErrorTracker}.ErrorHistory) {
+            $errorHistory = ${script:ErrorTracker}.ErrorHistory |
             Select-Object -Last 25 |
             ForEach-Object {
                 $additional = @{}
@@ -1299,16 +1299,16 @@ function Publish-ProblemsPanelUpdate {
 
     try {
         # Safety check: Don't run if form isn't loaded yet
-        if (-not $script:form -or -not $script:form.Visible) { 
+        if (-not ${script:form} -or -not ${script:form}.Visible) { 
             return 
         }
 
         $webView = $null
-        if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-            $webView = $script:wpfWebBrowser.CoreWebView2
+        if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+            $webView = ${script:wpfWebBrowser}.CoreWebView2
         }
-        elseif ($script:webBrowser -and $script:webBrowser.CoreWebView2) {
-            $webView = $script:webBrowser.CoreWebView2
+        elseif (${script:webBrowser} -and ${script:webBrowser}.CoreWebView2) {
+            $webView = ${script:webBrowser}.CoreWebView2
         }
 
         if (-not $webView) { return }
@@ -1317,15 +1317,15 @@ function Publish-ProblemsPanelUpdate {
         if (-not $snapshot) { return }
 
         $payloadJson = $snapshot | ConvertTo-Json -Depth 8 -Compress
-        if (-not $Force -and $script:ProblemsPanelState.LastPayload -eq $payloadJson) {
+        if (-not $Force -and ${script:ProblemsPanelState}.LastPayload -eq $payloadJson) {
             return
         }
 
         $message = @{ type = "problemsUpdate"; payload = $snapshot } | ConvertTo-Json -Depth 8 -Compress
         $webView.PostWebMessageAsJson($message)
 
-        $script:ProblemsPanelState.LastPayload = $payloadJson
-        $script:ProblemsPanelState.LastPublished = Get-Date
+        ${script:ProblemsPanelState}.LastPayload = $payloadJson
+        ${script:ProblemsPanelState}.LastPublished = Get-Date
     }
     catch {
         Write-StartupLog "Failed to publish Problems panel update: $($_.Exception.Message)" "DEBUG"
@@ -1333,12 +1333,12 @@ function Publish-ProblemsPanelUpdate {
 }
 
 function Start-ProblemsPanelPublisher {
-    if ($script:ProblemsPublisherTimer) { return }
+    if (${script:ProblemsPublisherTimer}) { return }
 
     try {
-        $script:ProblemsPublisherTimer = New-Object System.Windows.Forms.Timer
-        $script:ProblemsPublisherTimer.Interval = 4000
-        $script:ProblemsPublisherTimer.Add_Tick({
+        ${script:ProblemsPublisherTimer} = New-Object System.Windows.Forms.Timer
+        ${script:ProblemsPublisherTimer}.Interval = 4000
+        ${script:ProblemsPublisherTimer}.Add_Tick({
             try {
                 Publish-ProblemsPanelUpdate
             }
@@ -1347,7 +1347,7 @@ function Start-ProblemsPanelPublisher {
                 Write-StartupLog "Problems panel timer error: $($_.Exception.Message)" "DEBUG"
             }
         })
-        $script:ProblemsPublisherTimer.Start()
+        ${script:ProblemsPublisherTimer}.Start()
         Write-StartupLog "Problems panel publisher timer started" "DEBUG"
     }
     catch {
@@ -1429,10 +1429,10 @@ function Invoke-MenuCommand {
                     if (Test-Path $handlerPath) { . $handlerPath }
                 }
                 # Get current zoom and increase by 10%
-                $currentZoom = if ($global:settings -and $global:settings.ZoomLevel) { $global:settings.ZoomLevel } else { 100 }
+                $currentZoom = $(if (${global:settings} -and ${global:settings}.ZoomLevel) { ${global:settings}.ZoomLevel } else { 100 }
                 $newZoom = [math]::Min(200, $currentZoom + 10)
-                if (-not $global:settings) { $global:settings = @{} }
-                $global:settings.ZoomLevel = $newZoom
+                if (-not ${global:settings}) { ${global:settings} = @{} }
+                ${global:settings}.ZoomLevel = $newZoom
                 Set-RichTextBoxZoom -ZoomPercent $newZoom
             }
             "view.zoomOut" { 
@@ -1441,10 +1441,10 @@ function Invoke-MenuCommand {
                     if (Test-Path $handlerPath) { . $handlerPath }
                 }
                 # Get current zoom and decrease by 10%
-                $currentZoom = if ($global:settings -and $global:settings.ZoomLevel) { $global:settings.ZoomLevel } else { 100 }
+                $currentZoom = $(if (${global:settings} -and ${global:settings}.ZoomLevel) { ${global:settings}.ZoomLevel } else { 100 }
                 $newZoom = [math]::Max(75, $currentZoom - 10)
-                if (-not $global:settings) { $global:settings = @{} }
-                $global:settings.ZoomLevel = $newZoom
+                if (-not ${global:settings}) { ${global:settings} = @{} }
+                ${global:settings}.ZoomLevel = $newZoom
                 Set-RichTextBoxZoom -ZoomPercent $newZoom
             }
             "view.resetZoom" { 
@@ -1452,8 +1452,8 @@ function Invoke-MenuCommand {
                     $handlerPath = Join-Path $PSScriptRoot "RawrXD-RichTextBox-Handlers.ps1"
                     if (Test-Path $handlerPath) { . $handlerPath }
                 }
-                if (-not $global:settings) { $global:settings = @{} }
-                $global:settings.ZoomLevel = 100
+                if (-not ${global:settings}) { ${global:settings} = @{} }
+                ${global:settings}.ZoomLevel = 100
                 Set-RichTextBoxZoom -ZoomPercent 100
             }
 
@@ -1575,7 +1575,7 @@ function Send-CommandResponse {
         [string]$Error = $null
     )
 
-    if (-not $script:wpfWebBrowser -or -not $script:wpfWebBrowser.CoreWebView2) {
+    if (-not ${script:wpfWebBrowser} -or -not ${script:wpfWebBrowser}.CoreWebView2) {
         return
     }
 
@@ -1588,7 +1588,7 @@ function Send-CommandResponse {
     if ($Error) { $response.error = $Error }
 
     $json = $response | ConvertTo-Json -Compress
-    $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync("window.handlePowerShellResponse($json)") | Out-Null
+    ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync("window.handlePowerShellResponse($json)") | Out-Null
 }
 
 # ============================================================
@@ -1599,11 +1599,11 @@ function New-EditorFile {
     Write-DevConsole "[File] Creating new file..." "INFO"
 
     # Clear current file reference
-    $global:currentFile = $null
+    ${global:currentFile} = $null
 
     # Send command to Monaco editor
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.setValue('');
                 window.editor.focus();
@@ -1628,14 +1628,14 @@ function Open-EditorFile {
         $content = Get-Content -Path $filePath -Raw -ErrorAction SilentlyContinue
 
         if ($content) {
-            $global:currentFile = $filePath
+            ${global:currentFile} = $filePath
 
             # Escape content for JavaScript
             $escapedContent = $content -replace '\\', '\\' -replace "`r`n", '\n' -replace "`n", '\n' -replace '"', '\"' -replace "'", "\'"
 
             # Send to Monaco editor
-            if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-                $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+            if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+                ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
                     if (window.editor) {
                         window.editor.setValue("$escapedContent");
                         console.log('✅ File opened: $filePath');
@@ -1651,20 +1651,20 @@ function Open-EditorFile {
 function Save-EditorFile {
     Write-DevConsole "[File] Saving file..." "INFO"
 
-    if (-not $global:currentFile) {
+    if (-not ${global:currentFile}) {
         Save-EditorFileAs
         return
     }
 
     # Get content from Monaco editor
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             (function() {
                 if (window.editor) {
                     const content = window.editor.getValue();
                     window.chrome.webview.postMessage({
                         command: 'saveContent',
-                        params: { content: content, path: '$global:currentFile' }
+                        params: { content: content, path: '${global:currentFile}' }
                     });
                 }
             })();
@@ -1681,7 +1681,7 @@ function Save-EditorFileAs {
     $saveDialog.Title = "Save File As"
 
     if ($saveDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        $global:currentFile = $saveDialog.FileName
+        ${global:currentFile} = $saveDialog.FileName
         Save-EditorFile
     }
 }
@@ -1699,11 +1699,11 @@ function Close-AllEditorFiles {
 function Revert-EditorFile {
     Write-DevConsole "[File] Reverting file..." "INFO"
 
-    if ($global:currentFile -and (Test-Path $global:currentFile)) {
-        $content = Get-Content -Path $global:currentFile -Raw -ErrorAction SilentlyContinue
-        if ($content -and $script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
+    if (${global:currentFile} -and (Test-Path ${global:currentFile})) {
+        $content = Get-Content -Path ${global:currentFile} -Raw -ErrorAction SilentlyContinue
+        if ($content -and ${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
             $escapedContent = $content -replace '\\', '\\' -replace "`r`n", '\n' -replace "`n", '\n' -replace '"', '\"'
-            $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync("if (window.editor) { window.editor.setValue(`"$escapedContent`"); }") | Out-Null
+            ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync("if (window.editor) { window.editor.setValue(`"$escapedContent`"); }") | Out-Null
         }
     }
 }
@@ -1715,8 +1715,8 @@ function Revert-EditorFile {
 function Invoke-EditorCommand {
     param([string]$Command)
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.trigger('keyboard', 'editor.action.$Command');
             }
@@ -1733,8 +1733,8 @@ function Set-EditorTheme {
 
     Write-DevConsole "[Settings] Setting theme: $Theme" "INFO"
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.monaco) {
                 monaco.editor.setTheme('$Theme');
                 console.log('✅ Theme set: $Theme');
@@ -1748,8 +1748,8 @@ function Set-EditorFontSize {
 
     Write-DevConsole "[Settings] Setting font size: $Size" "INFO"
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ fontSize: $Size });
                 console.log('✅ Font size set: $Size');
@@ -1763,8 +1763,8 @@ function Set-EditorTabSize {
 
     Write-DevConsole "[Settings] Setting tab size: $Size" "INFO"
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ tabSize: $Size });
                 console.log('✅ Tab size set: $Size');
@@ -1776,10 +1776,10 @@ function Set-EditorTabSize {
 function Set-EditorWordWrap {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "'on'" } else { "'off'" }
+    $value = $(if ($Enabled) { "'on'" } else { "'off'" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ wordWrap: $value });
             }
@@ -1790,10 +1790,10 @@ function Set-EditorWordWrap {
 function Set-EditorLineNumbers {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "'on'" } else { "'off'" }
+    $value = $(if ($Enabled) { "'on'" } else { "'off'" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ lineNumbers: $value });
             }
@@ -1804,10 +1804,10 @@ function Set-EditorLineNumbers {
 function Set-EditorMinimap {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "true" } else { "false" }
+    $value = $(if ($Enabled) { "true" } else { "false" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ minimap: { enabled: $value } });
             }
@@ -1819,23 +1819,23 @@ function Set-EditorAutoSave {
     param([bool]$Enabled)
 
     Write-DevConsole "[Settings] Auto-save: $Enabled" "INFO"
-    $global:EditorAutoSave = $Enabled
+    ${global:EditorAutoSave} = $Enabled
 }
 
 function Set-EditorFormatOnSave {
     param([bool]$Enabled)
 
     Write-DevConsole "[Settings] Format on save: $Enabled" "INFO"
-    $global:EditorFormatOnSave = $Enabled
+    ${global:EditorFormatOnSave} = $Enabled
 }
 
 function Set-EditorBracketPairs {
     param([bool]$Enabled)
 
-    $value = if ($Enabled) { "true" } else { "false" }
+    $value = $(if ($Enabled) { "true" } else { "false" }
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             if (window.editor) {
                 window.editor.updateOptions({ bracketPairColorization: { enabled: $value } });
             }
@@ -1850,8 +1850,8 @@ function Set-EditorBracketPairs {
 function Toggle-Sidebar {
     Write-DevConsole "[View] Toggling sidebar..." "INFO"
 
-    if ($script:wpfFileTree) {
-        $script:wpfFileTree.Visibility = if ($script:wpfFileTree.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
+    if (${script:wpfFileTree}) {
+        ${script:wpfFileTree}.Visibility = $(if (${script:wpfFileTree}.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
     }
 }
 
@@ -1859,11 +1859,11 @@ function Toggle-TerminalPanel {
     Write-DevConsole "[View] Toggling terminal..." "INFO"
 
     # Toggle terminal panel visibility - supports multiple panel naming conventions
-    $terminalPanel = if ($script:wpfTerminalPanel) { $script:wpfTerminalPanel } elseif ($script:terminalPanel) { $script:terminalPanel } else { $script:bottomPanel }
+    $terminalPanel = $(if (${script:wpfTerminalPanel}) { ${script:wpfTerminalPanel} } elseif (${script:terminalPanel}) { ${script:terminalPanel} } else { ${script:bottomPanel} }
     
     if ($terminalPanel) {
         if ($terminalPanel -is [System.Windows.UIElement]) {
-            $terminalPanel.Visibility = if ($terminalPanel.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
+            $terminalPanel.Visibility = $(if ($terminalPanel.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
         }
         elseif ($terminalPanel -is [System.Windows.Forms.Control]) {
             $terminalPanel.Visible = -not $terminalPanel.Visible
@@ -1877,8 +1877,8 @@ function Toggle-TerminalPanel {
 function Toggle-OutputPanel {
     Write-DevConsole "[View] Toggling output panel..." "INFO"
 
-    if ($script:wpfOutputPanel) {
-        $script:wpfOutputPanel.Visibility = if ($script:wpfOutputPanel.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
+    if (${script:wpfOutputPanel}) {
+        ${script:wpfOutputPanel}.Visibility = $(if (${script:wpfOutputPanel}.Visibility -eq "Visible") { "Collapsed" } else { "Visible" }
     }
 }
 
@@ -1890,28 +1890,28 @@ function Toggle-ExplorerPanel {
 function Toggle-Fullscreen {
     Write-DevConsole "[View] Toggling fullscreen..." "INFO"
 
-    if ($script:wpfWindow) {
-        $script:wpfWindow.WindowState = if ($script:wpfWindow.WindowState -eq "Maximized") { "Normal" } else { "Maximized" }
+    if (${script:wpfWindow}) {
+        ${script:wpfWindow}.WindowState = $(if (${script:wpfWindow}.WindowState -eq "Maximized") { "Normal" } else { "Maximized" }
     }
 }
 
 function Adjust-EditorZoom {
     param([string]$Direction)
 
-    if (-not $global:EditorZoomLevel) { $global:EditorZoomLevel = 100 }
+    if (-not ${global:EditorZoomLevel}) { ${global:EditorZoomLevel} = 100 }
 
     switch ($Direction) {
-        "in" { $global:EditorZoomLevel += 10 }
-        "out" { $global:EditorZoomLevel -= 10 }
-        "reset" { $global:EditorZoomLevel = 100 }
+        "in" { ${global:EditorZoomLevel} += 10 }
+        "out" { ${global:EditorZoomLevel} -= 10 }
+        "reset" { ${global:EditorZoomLevel} = 100 }
     }
 
     # Clamp zoom level
-    $global:EditorZoomLevel = [Math]::Max(50, [Math]::Min(200, $global:EditorZoomLevel))
+    ${global:EditorZoomLevel} = [Math]::Max(50, [Math]::Min(200, ${global:EditorZoomLevel}))
 
-    if ($script:wpfWebBrowser -and $script:wpfWebBrowser.CoreWebView2) {
-        $zoomFactor = $global:EditorZoomLevel / 100.0
-        $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync(@"
+    if (${script:wpfWebBrowser} -and ${script:wpfWebBrowser}.CoreWebView2) {
+        $zoomFactor = ${global:EditorZoomLevel} / 100.0
+        ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync(@"
             document.body.style.zoom = '$zoomFactor';
 "@) | Out-Null
     }
@@ -2149,7 +2149,7 @@ function Send-ErrorNotificationEmail {
     param([hashtable]$ErrorRecord)
 
     try {
-        if (-not $script:ErrorNotificationConfig.EmailRecipient -or -not $script:ErrorNotificationConfig.SMTPServer) {
+        if (-not ${script:ErrorNotificationConfig}.EmailRecipient -or -not ${script:ErrorNotificationConfig}.SMTPServer) {
             return
         }
 
@@ -2176,7 +2176,7 @@ $($ErrorRecord.AdditionalData | ConvertTo-Json -Depth 2)
 Please investigate this issue immediately.
 "@
 
-        Send-MailMessage -To $script:ErrorNotificationConfig.EmailRecipient -Subject $subject -Body $body -SmtpServer $script:ErrorNotificationConfig.SMTPServer -From "rawrxd-noreply@company.com"
+        Send-MailMessage -To ${script:ErrorNotificationConfig}.EmailRecipient -Subject $subject -Body $body -SmtpServer ${script:ErrorNotificationConfig}.SMTPServer -From "rawrxd-noreply@company.com"
         Write-StartupLog "Critical error notification email sent" "INFO"
     }
     catch {
@@ -2212,11 +2212,11 @@ function Invoke-AutoRecovery {
 
 function Get-ErrorStatistics {
     return @{
-        TotalErrors      = @($script:ErrorTracker.ErrorHistory).Count
-        ErrorsByCategory = $script:ErrorTracker.ErrorHistory | Group-Object Category | ForEach-Object { @{ $_.Name = $_.Count } }
-        ErrorsBySeverity = $script:ErrorTracker.ErrorHistory | Group-Object Severity | ForEach-Object { @{ $_.Name = $_.Count } }
-        RecentErrors     = $script:ErrorTracker.ErrorHistory | Where-Object { [datetime]$_.Timestamp -gt (Get-Date).AddMinutes(-10) }
-        LastError        = $script:ErrorTracker.ErrorHistory | Select-Object -Last 1
+        TotalErrors      = @(${script:ErrorTracker}.ErrorHistory).Count
+        ErrorsByCategory = ${script:ErrorTracker}.ErrorHistory | Group-Object Category | ForEach-Object { @{ $_.Name = $_.Count } }
+        ErrorsBySeverity = ${script:ErrorTracker}.ErrorHistory | Group-Object Severity | ForEach-Object { @{ $_.Name = $_.Count } }
+        RecentErrors     = ${script:ErrorTracker}.ErrorHistory | Where-Object { [datetime]$_.Timestamp -gt (Get-Date).AddMinutes(-10) }
+        LastError        = ${script:ErrorTracker}.ErrorHistory | Select-Object -Last 1
     }
 }
 
@@ -2246,7 +2246,7 @@ function Show-ErrorReportDialog {
     $statsGrid.Columns.Add("Source", "Source") | Out-Null
 
     # Add error data
-    foreach ($errItem in $script:ErrorTracker.ErrorHistory) {
+    foreach ($errItem in ${script:ErrorTracker}.ErrorHistory) {
         $row = @($errItem.Timestamp, $errItem.Category, $errItem.Severity, $errItem.Message, $errItem.SourceFunction)
         $statsGrid.Rows.Add($row) | Out-Null
 
@@ -2326,7 +2326,7 @@ function Show-FindDialog {
             $editorText = $editorControl.Text
             $startIndex = $editorControl.SelectionStart + $editorControl.SelectionLength
 
-            $comparison = if ($caseSensitiveCheckbox.Checked) {
+            $comparison = $(if ($caseSensitiveCheckbox.Checked) {
                 [System.StringComparison]::Ordinal
             }
             else {
@@ -2441,7 +2441,7 @@ function Show-ReplaceDialog {
             $editorText = $editorControl.Text
             $startIndex = $editorControl.SelectionStart + $editorControl.SelectionLength
 
-            $comparison = if ($caseSensitiveCheckbox.Checked) {
+            $comparison = $(if ($caseSensitiveCheckbox.Checked) {
                 [System.StringComparison]::Ordinal
             }
             else {
@@ -2536,9 +2536,9 @@ Write-EmergencyLog "RUNTIME COMPATIBILITY DETECTION" "INFO"
 Write-EmergencyLog "═══════════════════════════════════════════════════════" "INFO"
 
 # Global runtime detection results - used throughout the application
-$script:RuntimeInfo = @{
+${script:RuntimeInfo} = @{
     PowerShellVersion         = $PSVersionTable.PSVersion
-    PowerShellEdition         = if ($PSVersionTable.PSEdition) { $PSVersionTable.PSEdition } else { "Desktop" }
+    PowerShellEdition         = $(if ($PSVersionTable.PSEdition) { $PSVersionTable.PSEdition } else { "Desktop" }
     DotNetVersion             = $null
     DotNetMajorVersion        = 0
     IsWindowsPowerShell       = $false
@@ -2578,34 +2578,34 @@ function Initialize-RuntimeDetection {
         }
         Write-EmergencyLog "PowerShell Version: $($psVersion.Major).$($psVersion.Minor).$buildOrPatch" "INFO"
 
-        $script:RuntimeInfo.PowerShellVersion = $psVersion
-        $script:RuntimeInfo.IsWindowsPowerShell = ($psVersion.Major -eq 5)
-        $script:RuntimeInfo.IsPowerShellCore = ($psVersion.Major -ge 6)
-        $script:RuntimeInfo.IsPowerShell7Plus = ($psVersion.Major -ge 7)
+        ${script:RuntimeInfo}.PowerShellVersion = $psVersion
+        ${script:RuntimeInfo}.IsWindowsPowerShell = ($psVersion.Major -eq 5)
+        ${script:RuntimeInfo}.IsPowerShellCore = ($psVersion.Major -ge 6)
+        ${script:RuntimeInfo}.IsPowerShell7Plus = ($psVersion.Major -ge 7)
 
-        if ($script:RuntimeInfo.IsWindowsPowerShell) {
+        if (${script:RuntimeInfo}.IsWindowsPowerShell) {
             Write-EmergencyLog "✅ Windows PowerShell 5.1 detected - Full compatibility mode" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.IsPowerShell7Plus) {
+        elseif (${script:RuntimeInfo}.IsPowerShell7Plus) {
             Write-EmergencyLog "⚠️ PowerShell $($psVersion.Major).$($psVersion.Minor) detected - Checking .NET compatibility" "WARNING"
         }
 
         # 2. .NET Runtime Version Detection
         try {
             $dotnetDescription = [System.Runtime.InteropServices.RuntimeInformation]::FrameworkDescription
-            $script:RuntimeInfo.DotNetVersion = $dotnetDescription
+            ${script:RuntimeInfo}.DotNetVersion = $dotnetDescription
             Write-EmergencyLog ".NET Runtime: $dotnetDescription" "INFO"
 
             # Parse major version from description (e.g., ".NET 9.0.0" or ".NET Framework 4.8.9261.0")
             if ($dotnetDescription -match "\.NET\s+(\d+)") {
-                $script:RuntimeInfo.DotNetMajorVersion = [int]$matches[1]
-                Write-EmergencyLog ".NET Major Version: $($script:RuntimeInfo.DotNetMajorVersion)" "INFO"
+                ${script:RuntimeInfo}.DotNetMajorVersion = [int]$matches[1]
+                Write-EmergencyLog ".NET Major Version: $(${script:RuntimeInfo}.DotNetMajorVersion)" "INFO"
 
                 # .NET 9+ has breaking changes with System.Windows.Forms.ContextMenu
-                if ($script:RuntimeInfo.DotNetMajorVersion -ge 9) {
-                    $script:RuntimeInfo.IsNet9OrLater = $true
-                    $script:RuntimeInfo.IsNet8OrEarlier = $false
-                    $script:RuntimeInfo.ContextMenuAvailable = $false
+                if (${script:RuntimeInfo}.DotNetMajorVersion -ge 9) {
+                    ${script:RuntimeInfo}.IsNet9OrLater = $true
+                    ${script:RuntimeInfo}.IsNet8OrEarlier = $false
+                    ${script:RuntimeInfo}.ContextMenuAvailable = $false
                     # Suppress .NET 9 ContextMenu deprecation warning - using ContextMenuStrip instead
                     # Write-EmergencyLog "⚠️ .NET 9+ detected - System.Windows.Forms.ContextMenu NOT available" "WARNING"
                     # Write-EmergencyLog "   Will use ContextMenuStrip for all context menus" "INFO"
@@ -2613,85 +2613,85 @@ function Initialize-RuntimeDetection {
             }
             elseif ($dotnetDescription -match "\.NET Framework\s+(\d+)\.(\d+)") {
                 # .NET Framework always supports ContextMenu
-                $script:RuntimeInfo.DotNetMajorVersion = [int]$matches[1]
-                $script:RuntimeInfo.IsNet8OrEarlier = $true
-                $script:RuntimeInfo.ContextMenuAvailable = $true
+                ${script:RuntimeInfo}.DotNetMajorVersion = [int]$matches[1]
+                ${script:RuntimeInfo}.IsNet8OrEarlier = $true
+                ${script:RuntimeInfo}.ContextMenuAvailable = $true
                 Write-EmergencyLog "✅ .NET Framework $($matches[1]).$($matches[2]) - Full ContextMenu support" "SUCCESS"
             }
         }
         catch {
             Write-EmergencyLog "Could not detect .NET version: $($_.Exception.Message)" "WARNING"
             # Assume conservative defaults
-            if ($script:RuntimeInfo.IsPowerShell7Plus) {
-                $script:RuntimeInfo.IsNet9OrLater = $true
-                $script:RuntimeInfo.ContextMenuAvailable = $false
+            if (${script:RuntimeInfo}.IsPowerShell7Plus) {
+                ${script:RuntimeInfo}.IsNet9OrLater = $true
+                ${script:RuntimeInfo}.ContextMenuAvailable = $false
             }
         }
 
         # 3. WebView2 Runtime Detection
-        $script:RuntimeInfo.WebView2Available = Test-WebView2Runtime
+        ${script:RuntimeInfo}.WebView2Available = Test-WebView2Runtime
 
         # 4. PS5.1 Browser Bridge Detection (for hybrid mode on PS7+)
         $ps51BrowserHostPath = Join-Path $PSScriptRoot "PS51-Browser-Host.ps1"
         $browserBridgePath = Join-Path $PSScriptRoot "BrowserBridge.psm1"
-        $script:RuntimeInfo.PS51BrowserAvailable = (Test-Path $ps51BrowserHostPath) -and (Test-Path $browserBridgePath)
+        ${script:RuntimeInfo}.PS51BrowserAvailable = (Test-Path $ps51BrowserHostPath) -and (Test-Path $browserBridgePath)
 
-        if ($script:RuntimeInfo.PS51BrowserAvailable) {
+        if (${script:RuntimeInfo}.PS51BrowserAvailable) {
             Write-EmergencyLog "✅ PS5.1 Browser Bridge available for hybrid mode" "SUCCESS"
         }
 
         # 5. Determine Browser Strategy based on runtime
-        if ($script:RuntimeInfo.IsWindowsPowerShell) {
+        if (${script:RuntimeInfo}.IsWindowsPowerShell) {
             # Windows PowerShell 5.1 - Native WebBrowser has full video support
-            $script:RuntimeInfo.BrowserImplementation = "native"
-            $script:RuntimeInfo.UseLegacyBrowser = $false
+            ${script:RuntimeInfo}.BrowserImplementation = "native"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $false
             Write-EmergencyLog "✅ PS5.1 Native Mode - Full WebBrowser video support" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.IsPowerShell7Plus -and $script:RuntimeInfo.PS51BrowserAvailable) {
+        elseif (${script:RuntimeInfo}.IsPowerShell7Plus -and ${script:RuntimeInfo}.PS51BrowserAvailable) {
             # PowerShell 7+ with PS5.1 bridge available - BEST OPTION for video
-            $script:RuntimeInfo.BrowserImplementation = "ps51-bridge"
-            $script:RuntimeInfo.UsePS51BrowserBridge = $true
-            $script:RuntimeInfo.UseLegacyBrowser = $false
+            ${script:RuntimeInfo}.BrowserImplementation = "ps51-bridge"
+            ${script:RuntimeInfo}.UsePS51BrowserBridge = $true
+            ${script:RuntimeInfo}.UseLegacyBrowser = $false
             Write-EmergencyLog "🎬 PS7+ Hybrid Mode - Using PS5.1 subprocess for full video support" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.WebView2Available -and -not $script:RuntimeInfo.IsNet9OrLater) {
+        elseif (${script:RuntimeInfo}.WebView2Available -and -not ${script:RuntimeInfo}.IsNet9OrLater) {
             # WebView2 available and no .NET 9 issues
-            $script:RuntimeInfo.BrowserImplementation = "webview2"
-            $script:RuntimeInfo.UseLegacyBrowser = $false
+            ${script:RuntimeInfo}.BrowserImplementation = "webview2"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $false
             Write-EmergencyLog "✅ WebView2 Mode - Modern browser engine available" "SUCCESS"
         }
-        elseif ($script:RuntimeInfo.IsNet9OrLater) {
+        elseif (${script:RuntimeInfo}.IsNet9OrLater) {
             # .NET 9+ without PS5.1 bridge - need WebView2Shim
             # Suppress .NET 9 ContextMenu warning - using ContextMenuStrip workaround
             # Write-EmergencyLog "⚠️ .NET 9+ detected - WebView2 WinForms may have ContextMenu issues" "WARNING"
-            $script:RuntimeInfo.BrowserImplementation = "shim"
-            $script:RuntimeInfo.UseLegacyBrowser = $true
+            ${script:RuntimeInfo}.BrowserImplementation = "shim"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $true
         }
         else {
             # Fallback to legacy browser
-            $script:RuntimeInfo.BrowserImplementation = "legacy"
-            $script:RuntimeInfo.UseLegacyBrowser = $true
+            ${script:RuntimeInfo}.BrowserImplementation = "legacy"
+            ${script:RuntimeInfo}.UseLegacyBrowser = $true
             Write-EmergencyLog "WebView2 Runtime not installed - Using legacy browser" "WARNING"
         }
 
         # 6. Load WebView2Shim as fallback if needed (but not if using PS5.1 bridge)
-        if ($script:RuntimeInfo.UseLegacyBrowser -and -not $script:RuntimeInfo.UsePS51BrowserBridge) {
+        if (${script:RuntimeInfo}.UseLegacyBrowser -and -not ${script:RuntimeInfo}.UsePS51BrowserBridge) {
             $shimLoaded = Initialize-WebView2ShimFallback
-            $script:RuntimeInfo.WebView2ShimLoaded = $shimLoaded
+            ${script:RuntimeInfo}.WebView2ShimLoaded = $shimLoaded
         }
 
-        $script:RuntimeInfo.DetectionComplete = $true
+        ${script:RuntimeInfo}.DetectionComplete = $true
 
         # Output summary
         Write-EmergencyLog "═══════════════════════════════════════════════════════" "INFO"
         Write-EmergencyLog "RUNTIME DETECTION SUMMARY:" "INFO"
-        Write-EmergencyLog "  PowerShell: $($script:RuntimeInfo.PowerShellVersion) ($($script:RuntimeInfo.PowerShellEdition))" "INFO"
-        Write-EmergencyLog "  .NET Runtime: $($script:RuntimeInfo.DotNetVersion)" "INFO"
-        Write-EmergencyLog "  ContextMenu Available: $($script:RuntimeInfo.ContextMenuAvailable)" "INFO"
-        Write-EmergencyLog "  WebView2 Available: $($script:RuntimeInfo.WebView2Available)" "INFO"
-        Write-EmergencyLog "  PS5.1 Browser Bridge: $($script:RuntimeInfo.PS51BrowserAvailable)" "INFO"
-        Write-EmergencyLog "  Browser Implementation: $($script:RuntimeInfo.BrowserImplementation)" "INFO"
-        Write-EmergencyLog "  Use Legacy Browser: $($script:RuntimeInfo.UseLegacyBrowser)" "INFO"
+        Write-EmergencyLog "  PowerShell: $(${script:RuntimeInfo}.PowerShellVersion) ($(${script:RuntimeInfo}.PowerShellEdition))" "INFO"
+        Write-EmergencyLog "  .NET Runtime: $(${script:RuntimeInfo}.DotNetVersion)" "INFO"
+        Write-EmergencyLog "  ContextMenu Available: $(${script:RuntimeInfo}.ContextMenuAvailable)" "INFO"
+        Write-EmergencyLog "  WebView2 Available: $(${script:RuntimeInfo}.WebView2Available)" "INFO"
+        Write-EmergencyLog "  PS5.1 Browser Bridge: $(${script:RuntimeInfo}.PS51BrowserAvailable)" "INFO"
+        Write-EmergencyLog "  Browser Implementation: $(${script:RuntimeInfo}.BrowserImplementation)" "INFO"
+        Write-EmergencyLog "  Use Legacy Browser: $(${script:RuntimeInfo}.UseLegacyBrowser)" "INFO"
         Write-EmergencyLog "═══════════════════════════════════════════════════════" "INFO"
 
         return $true
@@ -2699,8 +2699,8 @@ function Initialize-RuntimeDetection {
     catch {
         Write-EmergencyLog "❌ Runtime detection failed: $($_.Exception.Message)" "CRITICAL"
         # Set safe defaults
-        $script:RuntimeInfo.UseLegacyBrowser = $true
-        $script:RuntimeInfo.ContextMenuAvailable = $false
+        ${script:RuntimeInfo}.UseLegacyBrowser = $true
+        ${script:RuntimeInfo}.ContextMenuAvailable = $false
         return $false
     }
 }
@@ -2719,9 +2719,9 @@ function Test-WebView2Runtime {
 
         # Check for Edge WebView2 in common locations
         $webView2Paths = @(
-            "$env:ProgramFiles\Microsoft\EdgeWebView\Application",
-            "$env:ProgramFiles(x86)\Microsoft\EdgeWebView\Application",
-            "$env:LocalAppData\Microsoft\EdgeWebView\Application"
+            "${env:ProgramFiles}\Microsoft\EdgeWebView\Application",
+            "${env:ProgramFiles}(x86)\Microsoft\EdgeWebView\Application",
+            "${env:LocalAppData}\Microsoft\EdgeWebView\Application"
         )
 
         foreach ($path in $webView2Paths) {
@@ -2755,7 +2755,7 @@ function Initialize-WebView2ShimFallback {
             # Verify shim functions are available
             if (Get-Command Initialize-WebView2Shim -ErrorAction SilentlyContinue) {
                 Write-EmergencyLog "✅ WebView2Shim loaded successfully" "SUCCESS"
-                $script:UseWebView2FallbackAsBrowser = $true
+                ${script:UseWebView2FallbackAsBrowser} = $true
                 return $true
             }
         }
@@ -2772,7 +2772,7 @@ function Initialize-WebView2ShimFallback {
 }
 
 # Initialize DotNetSwitchEnabled to false by default (will be set by switcher module if loaded)
-$script:DotNetSwitchEnabled = $false
+${script:DotNetSwitchEnabled} = $false
 
 function Initialize-RichTextBoxHandlers {
     <#
@@ -2864,26 +2864,26 @@ function Initialize-DotNetRuntimeSwitcherModule {
                 Initialize-DotNetRuntimeSwitcher -ErrorAction Stop
 
                 # Mark as enabled if initialization succeeded
-                $script:DotNetSwitchEnabled = $true
+                ${script:DotNetSwitchEnabled} = $true
 
                 Write-StartupLog "✅ .NET Runtime Switcher loaded successfully" "SUCCESS"
                 return $true
             }
             else {
                 Write-StartupLog "Initialize-DotNetRuntimeSwitcher function not found in module" "ERROR"
-                $script:DotNetSwitchEnabled = $false
+                ${script:DotNetSwitchEnabled} = $false
                 return $false
             }
         }
         else {
             Write-StartupLog ".NET Runtime Switcher not found at: $switcherPath" "WARNING"
-            $script:DotNetSwitchEnabled = $false
+            ${script:DotNetSwitchEnabled} = $false
             return $false
         }
     }
     catch {
         Write-StartupLog "Failed to load .NET Runtime Switcher: $($_.Exception.Message)" "ERROR"
-        $script:DotNetSwitchEnabled = $false
+        ${script:DotNetSwitchEnabled} = $false
         return $false
     }
 }
@@ -2957,46 +2957,46 @@ function Show-RuntimeInfo {
 ═══════════════════════════════════════════════════════
 
 POWERSHELL:
-  Version: $($script:RuntimeInfo.PowerShellVersion)
-  Edition: $($script:RuntimeInfo.PowerShellEdition)
-  Is Windows PowerShell 5.1: $($script:RuntimeInfo.IsWindowsPowerShell)
-  Is PowerShell Core 6+: $($script:RuntimeInfo.IsPowerShellCore)
-  Is PowerShell 7+: $($script:RuntimeInfo.IsPowerShell7Plus)
+  Version: $(${script:RuntimeInfo}.PowerShellVersion)
+  Edition: $(${script:RuntimeInfo}.PowerShellEdition)
+  Is Windows PowerShell 5.1: $(${script:RuntimeInfo}.IsWindowsPowerShell)
+  Is PowerShell Core 6+: $(${script:RuntimeInfo}.IsPowerShellCore)
+  Is PowerShell 7+: $(${script:RuntimeInfo}.IsPowerShell7Plus)
 
 .NET RUNTIME:
-  Full Description: $($script:RuntimeInfo.DotNetVersion)
-  Major Version: $($script:RuntimeInfo.DotNetMajorVersion)
-  Is .NET 9 or later: $($script:RuntimeInfo.IsNet9OrLater)
-  Is .NET 8 or earlier: $($script:RuntimeInfo.IsNet8OrEarlier)
+  Full Description: $(${script:RuntimeInfo}.DotNetVersion)
+  Major Version: $(${script:RuntimeInfo}.DotNetMajorVersion)
+  Is .NET 9 or later: $(${script:RuntimeInfo}.IsNet9OrLater)
+  Is .NET 8 or earlier: $(${script:RuntimeInfo}.IsNet8OrEarlier)
 
 WINFORMS COMPATIBILITY:
-  Windows Forms Available: $($script:RuntimeInfo.WinFormsAvailable)
-  ContextMenu Available: $($script:RuntimeInfo.ContextMenuAvailable)
-  ContextMenuStrip Available: $($script:RuntimeInfo.ContextMenuStripAvailable)
+  Windows Forms Available: $(${script:RuntimeInfo}.WinFormsAvailable)
+  ContextMenu Available: $(${script:RuntimeInfo}.ContextMenuAvailable)
+  ContextMenuStrip Available: $(${script:RuntimeInfo}.ContextMenuStripAvailable)
 
 BROWSER:
-  WebView2 Runtime Installed: $($script:RuntimeInfo.WebView2Available)
-  WebView2Shim Loaded: $($script:RuntimeInfo.WebView2ShimLoaded)
-  Using Legacy Browser: $($script:RuntimeInfo.UseLegacyBrowser)
-  Current Browser Type: $($script:browserType)
-  WebView2 Active: $($script:useWebView2)
+  WebView2 Runtime Installed: $(${script:RuntimeInfo}.WebView2Available)
+  WebView2Shim Loaded: $(${script:RuntimeInfo}.WebView2ShimLoaded)
+  Using Legacy Browser: $(${script:RuntimeInfo}.UseLegacyBrowser)
+  Current Browser Type: $(${script:browserType})
+  WebView2 Active: $(${script:useWebView2})
 
 DETECTION STATUS:
-  Detection Complete: $($script:RuntimeInfo.DetectionComplete)
-  .NET Compatible for WebView2: $($script:NetVersionCompatible)
+  Detection Complete: $(${script:RuntimeInfo}.DetectionComplete)
+  .NET Compatible for WebView2: $(${script:NetVersionCompatible})
 
 ═══════════════════════════════════════════════════════
 
 RECOMMENDATIONS:
 "@
 
-    if ($script:RuntimeInfo.IsNet9OrLater) {
+    if (${script:RuntimeInfo}.IsNet9OrLater) {
         $info += "`n• You're on .NET 9+. WebView2 WinForms may have issues.`n• Using WebView2Shim/legacy browser for compatibility.`n• For full WebView2 support, use Windows PowerShell 5.1."
     }
-    elseif ($script:RuntimeInfo.IsPowerShell7Plus -and -not $script:useWebView2) {
+    elseif (${script:RuntimeInfo}.IsPowerShell7Plus -and -not ${script:useWebView2}) {
         $info += "`n• PowerShell 7+ detected but WebView2 unavailable.`n• Install WebView2 Runtime for better browser experience.`n• Or use Windows PowerShell 5.1 for full compatibility."
     }
-    elseif ($script:RuntimeInfo.IsWindowsPowerShell) {
+    elseif (${script:RuntimeInfo}.IsWindowsPowerShell) {
         $info += "`n• Windows PowerShell 5.1 - Full compatibility mode.`n• All features should work correctly."
     }
     else {
@@ -3013,7 +3013,7 @@ function Get-RuntimeInfoObject {
     .SYNOPSIS
         Returns the runtime info hashtable for programmatic access
     #>
-    return $script:RuntimeInfo
+    return ${script:RuntimeInfo}
 }
 
 # Run runtime detection immediately
@@ -3035,10 +3035,10 @@ function Initialize-WindowsForms {
 
     try {
         # Check PowerShell version (use cached runtime info)
-        $psVersion = $script:RuntimeInfo.PowerShellVersion
+        $psVersion = ${script:RuntimeInfo}.PowerShellVersion
         Write-EmergencyLog "PowerShell Version: $psVersion" "INFO"
 
-        if ($script:RuntimeInfo.IsPowerShellCore) {
+        if (${script:RuntimeInfo}.IsPowerShellCore) {
             Write-EmergencyLog "PowerShell Core/7+ detected - using Microsoft.WindowsDesktop.App" "INFO"
 
             # For PowerShell Core 6+, we need Microsoft.WindowsDesktop.App
@@ -3116,26 +3116,26 @@ function Initialize-WindowsForms {
             $testForm.Dispose()
             Write-EmergencyLog "✅ Windows Forms is functional" "SUCCESS"
 
-            $script:RuntimeInfo.WinFormsAvailable = $true
+            ${script:RuntimeInfo}.WinFormsAvailable = $true
             return $true
         }
         catch {
             Write-EmergencyLog "❌ Windows Forms not functional: $($_.Exception.Message)" "CRITICAL"
-            $script:RuntimeInfo.WinFormsAvailable = $false
+            ${script:RuntimeInfo}.WinFormsAvailable = $false
             return $false
         }
     }
     catch {
         Write-EmergencyLog "❌ Critical error initializing Windows Forms: $($_.Exception.Message)" "CRITICAL"
-        $script:RuntimeInfo.WinFormsAvailable = $false
+        ${script:RuntimeInfo}.WinFormsAvailable = $false
         return $false
     }
 }
 
 # Initialize Windows Forms and store result
-$script:WindowsFormsAvailable = Initialize-WindowsForms
+${script:WindowsFormsAvailable} = Initialize-WindowsForms
 
-if (-not $script:WindowsFormsAvailable) {
+if (-not ${script:WindowsFormsAvailable}) {
     Write-EmergencyLog "═══════════════════════════════════════════════════════" "CRITICAL"
     Write-EmergencyLog "CRITICAL ERROR: Windows Forms is not available!" "CRITICAL"
     Write-EmergencyLog "This can happen in PowerShell Core 6+ environments." "CRITICAL"
@@ -3194,11 +3194,11 @@ function Start-ConsoleMode {
         # Initialize AI/Ollama connection
         if (Test-NetConnection -ComputerName localhost -Port 11434 -InformationLevel Quiet -ErrorAction SilentlyContinue) {
             Write-Host "✅ Ollama service detected on localhost:11434" -ForegroundColor Green
-            $script:ConsoleOllamaAvailable = $true
+            ${script:ConsoleOllamaAvailable} = $true
         }
         else {
             Write-Host "⚠️ Ollama service not detected" -ForegroundColor Yellow
-            $script:ConsoleOllamaAvailable = $false
+            ${script:ConsoleOllamaAvailable} = $false
         }
 
         # Show available commands
@@ -3255,14 +3255,14 @@ Type a command to get started, or /help for more information.
 function Start-ConsoleInteractiveMode {
     param()
 
-    $script:ConsoleRunning = $true
-    $script:ConsoleHistory = @()
+    ${script:ConsoleRunning} = $true
+    ${script:ConsoleHistory} = @()
 
     Write-Host ""
     Write-Host "🚀 Console mode ready! Type /help for commands or /exit to quit." -ForegroundColor Green
     Write-Host ""
 
-    while ($script:ConsoleRunning) {
+    while (${script:ConsoleRunning}) {
         try {
             # Show prompt
             Write-Host "RawrXD> " -NoNewline -ForegroundColor Cyan
@@ -3271,7 +3271,7 @@ function Start-ConsoleInteractiveMode {
             $userInput = Read-Host
 
             if (-not [string]::IsNullOrWhiteSpace($userInput)) {
-                $script:ConsoleHistory += $userInput
+                ${script:ConsoleHistory} += $userInput
                 Process-ConsoleCommand $userInput.Trim()
             }
         }
@@ -3288,7 +3288,7 @@ function Process-ConsoleCommand {
     # Parse command and arguments
     $parts = $Command -split '\s+', 2
     $cmd = $parts[0].ToLower()
-    $arguments = if ($parts.Length -gt 1) { $parts[1] } else { "" }
+    $arguments = $(if ($parts.Length -gt 1) { $parts[1] } else { "" }
 
     switch ($cmd) {
         "/help" {
@@ -3297,20 +3297,20 @@ function Process-ConsoleCommand {
 
         "/exit" {
             Write-Host "👋 Goodbye!" -ForegroundColor Green
-            $script:ConsoleRunning = $false
+            ${script:ConsoleRunning} = $false
         }
 
         "/status" {
             Write-Host "📊 RAWRXD STATUS:" -ForegroundColor Cyan
             Write-Host "   PowerShell: $($PSVersionTable.PSVersion)" -ForegroundColor Gray
             Write-Host "   Platform: $($PSVersionTable.Platform)" -ForegroundColor Gray
-            Write-Host "   Windows Forms: $(if ($script:WindowsFormsAvailable) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
-            Write-Host "   Ollama: $(if ($script:ConsoleOllamaAvailable) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
-            Write-Host "   Session ID: $($script:CurrentSession.SessionId)" -ForegroundColor Gray
+            Write-Host "   Windows Forms: $(if (${script:WindowsFormsAvailable}) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
+            Write-Host "   Ollama: $(if (${script:ConsoleOllamaAvailable}) { '✅ Available' } else { '❌ Not Available' })" -ForegroundColor Gray
+            Write-Host "   Session ID: $(${script:CurrentSession}.SessionId)" -ForegroundColor Gray
         }
 
         "/ask" {
-            if (-not $script:ConsoleOllamaAvailable) {
+            if (-not ${script:ConsoleOllamaAvailable}) {
                 Write-Host "❌ Ollama service not available. Please start Ollama first." -ForegroundColor Red
                 return
             }
@@ -3332,19 +3332,19 @@ function Process-ConsoleCommand {
         }
 
         "/models" {
-            if (-not $script:ConsoleOllamaAvailable -and $script:AIBackend -eq "Ollama") {
+            if (-not ${script:ConsoleOllamaAvailable} -and ${script:AIBackend} -eq "Ollama") {
                 Write-Host "❌ Ollama service not available" -ForegroundColor Red
                 return
             }
 
             try {
-                Write-Host "🧠 Available AI Models (Backend: $script:AIBackend):" -ForegroundColor Cyan
+                Write-Host "🧠 Available AI Models (Backend: ${script:AIBackend}):" -ForegroundColor Cyan
                 
-                if ($script:AIBackend -eq "LMStudio") {
+                if (${script:AIBackend} -eq "LMStudio") {
                     $models = Get-LMStudioModels
                     if ($models.Count -gt 0) {
                         foreach ($model in $models) {
-                            $marker = if ($model -eq $script:LMStudioConfig.CurrentModel) { "👉" } else { "  " }
+                            $marker = $(if ($model -eq ${script:LMStudioConfig}.CurrentModel) { "👉" } else { "  " }
                             Write-Host "$marker $model" -ForegroundColor Gray
                         }
                     }
@@ -3356,7 +3356,7 @@ function Process-ConsoleCommand {
                     $models = Get-AvailableModels
                     if ($models.Count -gt 0) {
                         foreach ($model in $models) {
-                            $marker = if ($model -eq $OllamaModel) { "👉" } else { "  " }
+                            $marker = $(if ($model -eq $OllamaModel) { "👉" } else { "  " }
                             Write-Host "$marker $model" -ForegroundColor Gray
                         }
                     }
@@ -3425,12 +3425,12 @@ function Process-ConsoleCommand {
         }
 
         "/list" {
-            $path = if ([string]::IsNullOrWhiteSpace($arguments)) { Get-Location } else { $arguments }
+            $path = $(if ([string]::IsNullOrWhiteSpace($arguments)) { Get-Location } else { $arguments }
             try {
                 Write-Host "📁 Contents of: $path" -ForegroundColor Cyan
                 Get-ChildItem $path | ForEach-Object {
-                    $icon = if ($_.PSIsContainer) { "📁" } else { "📄" }
-                    $size = if (-not $_.PSIsContainer) { " ($($_.Length) bytes)" } else { "" }
+                    $icon = $(if ($_.PSIsContainer) { "📁" } else { "📄" }
+                    $size = $(if (-not $_.PSIsContainer) { " ($($_.Length) bytes)" } else { "" }
                     Write-Host "   $icon $($_.Name)$size" -ForegroundColor Gray
                 }
             }
@@ -3451,14 +3451,14 @@ function Process-ConsoleCommand {
 
         "/logs" {
             try {
-                if (Test-Path $script:StartupLogFile) {
+                if (Test-Path ${script:StartupLogFile}) {
                     Write-Host "📋 Recent log entries:" -ForegroundColor Cyan
-                    Get-Content $script:StartupLogFile -Tail 20 | ForEach-Object {
+                    Get-Content ${script:StartupLogFile} -Tail 20 | ForEach-Object {
                         Write-Host "   $_" -ForegroundColor Gray
                     }
                 }
                 else {
-                    Write-Host "❌ Log file not found: $script:StartupLogFile" -ForegroundColor Red
+                    Write-Host "❌ Log file not found: ${script:StartupLogFile}" -ForegroundColor Red
                 }
             }
             catch {
@@ -3469,9 +3469,9 @@ function Process-ConsoleCommand {
         "/settings" {
             Write-Host "⚙️ Current Settings:" -ForegroundColor Cyan
             Write-Host "   Ollama Model: $OllamaModel" -ForegroundColor Gray
-            Write-Host "   Emergency Log: $script:EmergencyLogPath" -ForegroundColor Gray
-            Write-Host "   Session Timeout: $($script:SecurityConfig.SessionTimeout) seconds" -ForegroundColor Gray
-            Write-Host "   Debug Mode: $($global:settings.DebugMode)" -ForegroundColor Gray
+            Write-Host "   Emergency Log: ${script:EmergencyLogPath}" -ForegroundColor Gray
+            Write-Host "   Session Timeout: $(${script:SecurityConfig}.SessionTimeout) seconds" -ForegroundColor Gray
+            Write-Host "   Debug Mode: $(${global:settings}.DebugMode)" -ForegroundColor Gray
         }
 
         default {
@@ -3481,7 +3481,7 @@ function Process-ConsoleCommand {
             }
             else {
                 # Treat as AI chat if Ollama is available
-                if ($script:ConsoleOllamaAvailable) {
+                if (${script:ConsoleOllamaAvailable}) {
                     Write-Host "🤖 Chatting with AI..." -ForegroundColor Yellow
                     try {
                         $response = Send-OllamaRequest $Command $OllamaModel
@@ -3593,7 +3593,7 @@ public static class StealthCrypto {
 "@
 
 # Global security configuration
-$script:SecurityConfig = @{
+${script:SecurityConfig} = @{
     EncryptSensitiveData   = $true
     ValidateAllInputs      = $true
     SecureConnections      = $true
@@ -3607,7 +3607,7 @@ $script:SecurityConfig = @{
 }
 
 # Session management
-$script:CurrentSession = @{
+${script:CurrentSession} = @{
     UserId          = $null
     SessionId       = [System.Guid]::NewGuid().ToString()
     StartTime       = Get-Date
@@ -3619,10 +3619,10 @@ $script:CurrentSession = @{
 }
 
 # Agentic command state management
-$script:PendingDelete = $null
+${script:PendingDelete} = $null
 
 # Security event logging
-$script:SecurityLog = @()
+${script:SecurityLog} = @()
 
 function Write-SecurityLog {
     param(
@@ -3631,11 +3631,11 @@ function Write-SecurityLog {
         [string]$Details = ""
     )
 
-    if (-not $script:SecurityConfig.LogSecurityEvents) { return }
+    if (-not ${script:SecurityConfig}.LogSecurityEvents) { return }
 
     $logEntry = @{
         Timestamp   = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        SessionId   = $script:CurrentSession.SessionId
+        SessionId   = ${script:CurrentSession}.SessionId
         Event       = $EventName
         Level       = $Level
         Details     = $Details
@@ -3643,10 +3643,10 @@ function Write-SecurityLog {
         UserContext = [Environment]::UserName
     }
 
-    $script:SecurityLog += $logEntry
+    ${script:SecurityLog} += $logEntry
 
     # Write to console if debug mode
-    if ($script:DebugMode) {
+    if (${script:DebugMode}) {
         Write-Host "[$Level] Security: $EventName" -ForegroundColor $(
             switch ($Level) {
                 "ERROR" { "Red" }
@@ -3661,12 +3661,12 @@ function Write-SecurityLog {
 function Protect-SensitiveString {
     param([string]$Data)
 
-    if (-not $script:SecurityConfig.EncryptSensitiveData -or [string]::IsNullOrEmpty($Data)) {
+    if (-not ${script:SecurityConfig}.EncryptSensitiveData -or [string]::IsNullOrEmpty($Data)) {
         return $Data
     }
 
     try {
-        $encrypted = [StealthCrypto]::Encrypt($Data, $script:CurrentSession.EncryptionKey)
+        $encrypted = [StealthCrypto]::Encrypt($Data, ${script:CurrentSession}.EncryptionKey)
         Write-SecurityLog "Data encrypted" "DEBUG" "Length: $($Data.Length)"
         return $encrypted
     }
@@ -3679,12 +3679,12 @@ function Protect-SensitiveString {
 function Unprotect-SensitiveString {
     param([string]$EncryptedData)
 
-    if (-not $script:SecurityConfig.EncryptSensitiveData -or [string]::IsNullOrEmpty($EncryptedData)) {
+    if (-not ${script:SecurityConfig}.EncryptSensitiveData -or [string]::IsNullOrEmpty($EncryptedData)) {
         return $EncryptedData
     }
 
     try {
-        $decrypted = [StealthCrypto]::Decrypt($EncryptedData, $script:CurrentSession.EncryptionKey)
+        $decrypted = [StealthCrypto]::Decrypt($EncryptedData, ${script:CurrentSession}.EncryptionKey)
         Write-SecurityLog "Data decrypted" "DEBUG" "Success"
         return $decrypted
     }
@@ -3697,7 +3697,7 @@ function Unprotect-SensitiveString {
 function Test-InputSafety {
     param([string]$InputText, [string]$Type = "General")
 
-    if (-not $script:SecurityConfig.ValidateAllInputs) { return $true }
+    if (-not ${script:SecurityConfig}.ValidateAllInputs) { return $true }
 
     # Basic validation patterns
     $dangerousPatterns = @(
@@ -3723,7 +3723,7 @@ function Test-InputSafety {
 function Enable-StealthMode {
     param([bool]$Enable = $true)
 
-    $script:SecurityConfig.StealthMode = $Enable
+    ${script:SecurityConfig}.StealthMode = $Enable
 
     if ($Enable) {
         Write-SecurityLog "Stealth mode enabled" "INFO"
@@ -3733,7 +3733,7 @@ function Enable-StealthMode {
         [System.GC]::WaitForPendingFinalizers()
 
         # Hide from process list (basic obfuscation)
-        if ($script:SecurityConfig.ProcessHiding) {
+        if (${script:SecurityConfig}.ProcessHiding) {
             try {
                 $process = Get-Process -Id $PID
                 $process.ProcessName = "svchost"  # This doesn't actually work but shows intent
@@ -3742,10 +3742,10 @@ function Enable-StealthMode {
         }
 
         # Enable anti-forensics measures
-        if ($script:SecurityConfig.AntiForensics) {
+        if (${script:SecurityConfig}.AntiForensics) {
             # Clear PowerShell history
-            if (Test-Path "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt") {
-                Clear-Content "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt" -Force -ErrorAction SilentlyContinue
+            if (Test-Path "${env:APPDATA}\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt") {
+                Clear-Content "${env:APPDATA}\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt" -Force -ErrorAction SilentlyContinue
             }
         }
     }
@@ -3756,10 +3756,10 @@ function Enable-StealthMode {
 
 function Test-SessionSecurity {
     $currentTime = Get-Date
-    $sessionDuration = ($currentTime - $script:CurrentSession.StartTime).TotalSeconds
+    $sessionDuration = ($currentTime - ${script:CurrentSession}.StartTime).TotalSeconds
 
     # Check session timeout
-    if ($script:SecurityConfig.AuthenticationRequired -and $sessionDuration -gt $script:SecurityConfig.SessionTimeout) {
+    if (${script:SecurityConfig}.AuthenticationRequired -and $sessionDuration -gt ${script:SecurityConfig}.SessionTimeout) {
         Write-SecurityLog "Session timeout exceeded" "WARNING" "Duration: $sessionDuration seconds"
         return $false
     }
@@ -3823,7 +3823,7 @@ function Write-ErrorLog {
         }
 
         # Use existing Write-StartupLog for immediate logging
-        $logMessage = if ($IsAIRelated) {
+        $logMessage = $(if ($IsAIRelated) {
             "[AI-$ErrorCategory - $Severity] $ErrorMessage"
         }
         else {
@@ -3849,7 +3849,7 @@ function Write-ErrorLog {
         Write-SecurityLog "Error logged: $ErrorMessage" "ERROR" $securityContext
 
         # Real-time AI error notification to chat if available and AI-related
-        if ($IsAIRelated -and $script:chatBox -and $ShowToUser) {
+        if ($IsAIRelated -and ${script:chatBox} -and $ShowToUser) {
             $aiErrorNotification = "🤖 AI Agent Error [$Severity]: $ErrorMessage"
             if ($AgentContext) {
                 $aiErrorNotification += "`nContext: $AgentContext"
@@ -3857,7 +3857,7 @@ function Write-ErrorLog {
             if ($AIModel) {
                 $aiErrorNotification += "`nModel: $AIModel"
             }
-            $script:chatBox.AppendText("Agent > $aiErrorNotification`r`n`r`n")
+            ${script:chatBox}.AppendText("Agent > $aiErrorNotification`r`n`r`n")
         }
     }
     catch {
@@ -3883,7 +3883,7 @@ function Write-AgenticErrorLog {
 
     try {
         # Create AI-specific log directory
-        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+        $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
         if (-not (Test-Path $aiLogPath)) {
             New-Item -ItemType Directory -Path $aiLogPath -Force | Out-Null
         }
@@ -3936,7 +3936,7 @@ function Update-AIErrorStatistics {
 
     try {
         # AI statistics file
-        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
+        $statsFile = Join-Path ${script:EmergencyLogPath} "ai_error_stats.json"
 
         # Load existing stats or create new
         $stats = @{
@@ -3998,8 +3998,8 @@ function Initialize-SecurityConfig {
     Write-StartupLog "Initializing security configuration..." "INFO"
 
     # Initialize security configuration if not already done
-    if (-not $script:SecurityConfig) {
-        $script:SecurityConfig = @{
+    if (-not ${script:SecurityConfig}) {
+        ${script:SecurityConfig} = @{
             EncryptSensitiveData  = $EnableEncryption
             StealthMode           = $EnableStealthMode
             ProcessHiding         = $false
@@ -4021,14 +4021,14 @@ function Initialize-SecurityConfig {
     }
 
     # Validate configuration
-    if (-not $script:SecurityConfig.ContainsKey('MaxFileSize')) {
-        $script:SecurityConfig.MaxFileSize = 10MB
+    if (-not ${script:SecurityConfig}.ContainsKey('MaxFileSize')) {
+        ${script:SecurityConfig}.MaxFileSize = 10MB
     }
-    if (-not $script:SecurityConfig.ContainsKey('AllowedExtensions')) {
-        $script:SecurityConfig.AllowedExtensions = @('.txt', '.md', '.ps1', '.json', '.xml', '.yaml', '.yml', '.log')
+    if (-not ${script:SecurityConfig}.ContainsKey('AllowedExtensions')) {
+        ${script:SecurityConfig}.AllowedExtensions = @('.txt', '.md', '.ps1', '.json', '.xml', '.yaml', '.yml', '.log')
     }
-    if (-not $script:SecurityConfig.ContainsKey('SessionTimeout')) {
-        $script:SecurityConfig.SessionTimeout = 3600  # 1 hour - consistent with main config
+    if (-not ${script:SecurityConfig}.ContainsKey('SessionTimeout')) {
+        ${script:SecurityConfig}.SessionTimeout = 3600  # 1 hour - consistent with main config
     }
 
     Write-SecurityLog "Security configuration initialized successfully" "SUCCESS" "Configuration validated and ready"
@@ -4061,7 +4061,7 @@ function Process-AgentCommand {
             # ===== AGENTIC COMMANDS =====
             "agentic.generate" {
                 if ($Parameters.ContainsKey('prompt')) {
-                    $language = if ($Parameters.language) { $Parameters.language } else { "powershell" }
+                    $language = $(if ($Parameters.language) { $Parameters.language } else { "powershell" }
                     $result = Invoke-RawrXDAgenticCodeGen -Prompt $Parameters.prompt -Language $language
                     Write-StartupLog "Agentic code generation completed" "SUCCESS"
                     return $result
@@ -4069,7 +4069,7 @@ function Process-AgentCommand {
             }
             "agentic.analyze" {
                 if ($Parameters.ContainsKey('code')) {
-                    $type = if ($Parameters.type) { $Parameters.type } else { "improve" }
+                    $type = $(if ($Parameters.type) { $Parameters.type } else { "improve" }
                     $result = Invoke-RawrXDAgenticAnalysis -Code $Parameters.code -AnalysisType $type
                     Write-StartupLog "Agentic code analysis completed: $type" "SUCCESS"
                     return $result
@@ -4077,7 +4077,7 @@ function Process-AgentCommand {
             }
             "agentic.refactor" {
                 if ($Parameters.ContainsKey('code')) {
-                    $objective = if ($Parameters.objective) { $Parameters.objective } else { "improve" }
+                    $objective = $(if ($Parameters.objective) { $Parameters.objective } else { "improve" }
                     $result = Invoke-RawrXDAgenticRefactor -Code $Parameters.code -Objective $objective
                     Write-StartupLog "Agentic refactoring completed" "SUCCESS"
                     return $result
@@ -4085,7 +4085,7 @@ function Process-AgentCommand {
             }
             "agentic.complete" {
                 if ($Parameters.ContainsKey('partial')) {
-                    $context = if ($Parameters.context) { $Parameters.context } else { "code" }
+                    $context = $(if ($Parameters.context) { $Parameters.context } else { "code" }
                     $result = Invoke-RawrXDAgenticCompletion -Partial $Parameters.partial -Context $context
                     Write-StartupLog "Agentic completion generated" "SUCCESS"
                     return $result
@@ -4146,7 +4146,7 @@ function Load-Settings {
     try {
         # Determine config file path
         if ([string]::IsNullOrEmpty($ConfigPath)) {
-            $ConfigPath = Join-Path $env:TEMP "RawrXD_Settings.json"
+            $ConfigPath = Join-Path ${env:TEMP} "RawrXD_Settings.json"
         }
 
         Write-StartupLog "Loading settings from: $ConfigPath" "INFO"
@@ -4189,7 +4189,7 @@ function Load-Settings {
             Write-StartupLog "Default settings created and saved" "SUCCESS"
 
             # Apply default settings to application
-            $script:CurrentSettings = $defaultSettings
+            ${script:CurrentSettings} = $defaultSettings
             return $true
         }
 
@@ -4198,21 +4198,21 @@ function Load-Settings {
         $loadedSettings = $settingsContent | ConvertFrom-Json
 
         # Convert PSCustomObject to hashtable for easier manipulation
-        $script:CurrentSettings = @{}
+        ${script:CurrentSettings} = @{}
         $loadedSettings.PSObject.Properties | ForEach-Object {
-            $script:CurrentSettings[$_.Name] = $_.Value
+            ${script:CurrentSettings}[$_.Name] = $_.Value
         }
 
         Write-StartupLog "Settings loaded successfully" "SUCCESS"
-        Write-SecurityLog "Configuration loaded" "SUCCESS" "File: $ConfigPath, Settings count: $($script:CurrentSettings.Keys.Count)"
+        Write-SecurityLog "Configuration loaded" "SUCCESS" "File: $ConfigPath, Settings count: $(${script:CurrentSettings}.Keys.Count)"
 
         # Apply loaded settings to UI if forms are available
-        if ($script:form -and $script:CurrentSettings.ContainsKey('WindowState')) {
+        if (${script:form} -and ${script:CurrentSettings}.ContainsKey('WindowState')) {
             Apply-WindowSettings
         }
 
-        if ($script:CurrentSettings.ContainsKey('Theme')) {
-            Apply-Theme -ThemeName $script:CurrentSettings.Theme
+        if (${script:CurrentSettings}.ContainsKey('Theme')) {
+            Apply-Theme -ThemeName ${script:CurrentSettings}.Theme
         }
 
         return $true
@@ -4222,7 +4222,7 @@ function Load-Settings {
         Write-ErrorLog "Failed to load settings: $_" "FILE" "MEDIUM" "Load-Settings" @{ConfigPath = $ConfigPath; Error = $_.Exception.Message }
 
         # Create emergency fallback settings
-        $script:CurrentSettings = @{
+        ${script:CurrentSettings} = @{
             Theme      = "Dark"
             FontSize   = 12
             FontFamily = "Consolas"
@@ -4237,26 +4237,26 @@ function Load-Settings {
 # Helper function for Load-Settings
 function Apply-WindowSettings {
     param(
-        [hashtable]$WindowSettings = $script:CurrentSettings.WindowState,
-        [System.Windows.Forms.Form]$TargetForm = $script:form
+        [hashtable]$WindowSettings = ${script:CurrentSettings}.WindowState,
+        [System.Windows.Forms.Form]$TargetForm = ${script:form}
     )
 
-    if (-not $TargetForm -or -not $script:CurrentSettings.ContainsKey('WindowState')) {
+    if (-not $TargetForm -or -not ${script:CurrentSettings}.ContainsKey('WindowState')) {
         return
     }
 
     try {
-        $windowState = $script:CurrentSettings.WindowState
+        $windowState = ${script:CurrentSettings}.WindowState
 
         if ($windowState.Maximized) {
-            $script:form.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
+            ${script:form}.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
         }
         else {
-            $script:form.WindowState = [System.Windows.Forms.FormWindowState]::Normal
-            $script:form.Width = $windowState.Width
-            $script:form.Height = $windowState.Height
-            $script:form.Left = $windowState.Left
-            $script:form.Top = $windowState.Top
+            ${script:form}.WindowState = [System.Windows.Forms.FormWindowState]::Normal
+            ${script:form}.Width = $windowState.Width
+            ${script:form}.Height = $windowState.Height
+            ${script:form}.Left = $windowState.Left
+            ${script:form}.Top = $windowState.Top
         }
 
         Write-StartupLog "Window settings applied successfully" "SUCCESS"
@@ -4271,7 +4271,7 @@ function Apply-WindowSettings {
 # ============================================
 
 # Telemetry configuration
-$script:TelemetryConfig = @{
+${script:TelemetryConfig} = @{
     EnableTelemetry        = $true
     EnableInsights         = $true
     RealTimeAnalysis       = $true
@@ -4284,11 +4284,11 @@ $script:TelemetryConfig = @{
         CPUUsage     = 80  # 80%
     }
     InsightsRetentionDays  = 30
-    ExportPath             = Join-Path $env:TEMP "RawrXD_Insights"
+    ExportPath             = Join-Path ${env:TEMP} "RawrXD_Insights"
 }
 
 # Global telemetry storage
-$script:TelemetryData = @{
+${script:TelemetryData} = @{
     SessionMetrics     = @{
         StartTime        = Get-Date
         EventCount       = 0
@@ -4325,7 +4325,7 @@ function Update-Insights {
         [hashtable]$Metadata = @{}
     )
 
-    if (-not $script:TelemetryConfig.EnableInsights) { return }
+    if (-not ${script:TelemetryConfig}.EnableInsights) { return }
 
     try {
         $timestamp = Get-Date
@@ -4335,25 +4335,25 @@ function Update-Insights {
             EventData = $EventData
             Category  = $EventCategory
             Metadata  = $Metadata
-            SessionId = $script:CurrentSession.SessionId
+            SessionId = ${script:CurrentSession}.SessionId
         }
 
         # Store insight
-        $script:TelemetryData.InsightsHistory += $insight
-        $script:TelemetryData.SessionMetrics.EventCount++
+        ${script:TelemetryData}.InsightsHistory += $insight
+        ${script:TelemetryData}.SessionMetrics.EventCount++
 
         # Real-time analysis if enabled
-        if ($script:TelemetryConfig.RealTimeAnalysis) {
+        if (${script:TelemetryConfig}.RealTimeAnalysis) {
             Analyze-RealTimeInsights -Insight $insight
         }
 
         # Log to console if debug mode
-        if ($script:DebugMode) {
+        if (${script:DebugMode}) {
             Write-StartupLog "🔍 INSIGHT: [$EventCategory] $EventName - $EventData" "INFO"
         }
 
         # Performance tracking
-        if ($script:TelemetryConfig.PerformanceTracking) {
+        if (${script:TelemetryConfig}.PerformanceTracking) {
             Update-PerformanceMetrics
         }
 
@@ -4364,7 +4364,7 @@ function Update-Insights {
         Cleanup-OldInsights
 
         # Send email notification if configured
-        if ($script:ErrorNotificationConfig.EnableEmailNotifications -and $EventCategory -eq "ERROR") {
+        if (${script:ErrorNotificationConfig}.EnableEmailNotifications -and $EventCategory -eq "ERROR") {
             Send-InsightEmailNotification -EventName $EventName -EventData $EventData -Category $EventCategory
         }
 
@@ -4383,7 +4383,7 @@ function Send-InsightEmailNotification {
     )
 
     try {
-        $emailConfig = $script:ErrorNotificationConfig.EmailSettings
+        $emailConfig = ${script:ErrorNotificationConfig}.EmailSettings
         if (-not $emailConfig) { return }
 
         $subject = "RawrXD Application Insight: $Category - $EventName"
@@ -4394,14 +4394,14 @@ Event: $EventName
 Category: $Category
 Data: $EventData
 Timestamp: $(Get-Date)
-Session ID: $($script:CurrentSession.SessionId)
-Machine: $env:COMPUTERNAME
-User: $env:USERNAME
+Session ID: $(${script:CurrentSession}.SessionId)
+Machine: ${env:COMPUTERNAME}
+User: ${env:USERNAME}
 
 Performance Metrics:
-- Memory Usage: $(if ($script:TelemetryData.PerformanceMetrics.MemoryUsage -and $script:TelemetryData.PerformanceMetrics.MemoryUsage.Count -gt 0) { $script:TelemetryData.PerformanceMetrics.MemoryUsage[-1].Value } else { "N/A" })MB
-- Event Count: $($script:TelemetryData.SessionMetrics.EventCount)
-- Error Count: $($script:TelemetryData.SessionMetrics.ErrorCount)
+- Memory Usage: $(if (${script:TelemetryData}.PerformanceMetrics.MemoryUsage -and ${script:TelemetryData}.PerformanceMetrics.MemoryUsage.Count -gt 0) { ${script:TelemetryData}.PerformanceMetrics.MemoryUsage[-1].Value } else { "N/A" })MB
+- Event Count: $(${script:TelemetryData}.SessionMetrics.EventCount)
+- Error Count: $(${script:TelemetryData}.SessionMetrics.ErrorCount)
 
 This notification was sent automatically by RawrXD's telemetry system.
 "@
@@ -4434,20 +4434,20 @@ function Analyze-RealTimeInsights {
 
     try {
         # Pattern detection
-        $recentInsights = $script:TelemetryData.InsightsHistory | Where-Object {
+        $recentInsights = ${script:TelemetryData}.InsightsHistory | Where-Object {
             $_.Timestamp -gt (Get-Date).AddMinutes(-5)
         }
 
         # Error pattern detection
         if ($Insight.Category -eq "ERROR") {
-            $script:TelemetryData.SessionMetrics.ErrorCount++
+            ${script:TelemetryData}.SessionMetrics.ErrorCount++
             $recentErrors = @($recentInsights | Where-Object { $_.Category -eq "ERROR" })
-            $recentErrorCount = if ($recentErrors) { $recentErrors.Count } else { 0 }
+            $recentErrorCount = $(if ($recentErrors) { $recentErrors.Count } else { 0 }
             if ($recentErrorCount -gt 3) {
                 Send-AlertNotification -Type "ErrorSpike" -Message "High error rate detected: $recentErrorCount errors in 5 minutes"
 
                 # Track error patterns
-                $script:TelemetryData.UserBehavior.ErrorPatterns += @{
+                ${script:TelemetryData}.UserBehavior.ErrorPatterns += @{
                     Timestamp  = Get-Date
                     ErrorCount = $recentErrorCount
                     Pattern    = "ErrorSpike"
@@ -4465,23 +4465,23 @@ function Analyze-RealTimeInsights {
 
         # User behavior analysis
         if ($Insight.Category -eq "UserInteraction") {
-            $script:TelemetryData.SessionMetrics.UserInteractions++
+            ${script:TelemetryData}.SessionMetrics.UserInteractions++
             Analyze-UserBehavior -Insight $Insight
         }
 
         # AI request tracking
         if ($Insight.Category -eq "AI") {
-            $script:TelemetryData.SessionMetrics.AIRequests++
+            ${script:TelemetryData}.SessionMetrics.AIRequests++
         }
 
         # File operation tracking
         if ($Insight.Category -eq "FileSystem") {
-            $script:TelemetryData.SessionMetrics.FileOperations++
+            ${script:TelemetryData}.SessionMetrics.FileOperations++
         }
 
         # Network request tracking
         if ($Insight.Category -eq "Network") {
-            $script:TelemetryData.SessionMetrics.NetworkRequests++
+            ${script:TelemetryData}.SessionMetrics.NetworkRequests++
         }
 
     }
@@ -4497,14 +4497,14 @@ function Update-PerformanceMetrics {
         if ($process) {
             # Memory usage
             $memoryMB = [math]::Round($process.WorkingSet64 / 1MB, 2)
-            $script:TelemetryData.PerformanceMetrics.MemoryUsage += @{
+            ${script:TelemetryData}.PerformanceMetrics.MemoryUsage += @{
                 Timestamp = Get-Date
                 Value     = $memoryMB
             }
 
             # CPU usage (approximation)
             $cpuTime = $process.TotalProcessorTime.TotalMilliseconds
-            $script:TelemetryData.PerformanceMetrics.CPUUsage += @{
+            ${script:TelemetryData}.PerformanceMetrics.CPUUsage += @{
                 Timestamp = Get-Date
                 Value     = $cpuTime
             }
@@ -4514,7 +4514,7 @@ function Update-PerformanceMetrics {
                 $diskCounters = Get-Counter "\Process($($process.ProcessName)*)\IO Data Bytes/sec" -ErrorAction SilentlyContinue
                 if ($diskCounters) {
                     $diskIO = $diskCounters.CounterSamples[0].CookedValue
-                    $script:TelemetryData.PerformanceMetrics.DiskIO += @{
+                    ${script:TelemetryData}.PerformanceMetrics.DiskIO += @{
                         Timestamp = Get-Date
                         Value     = $diskIO
                     }
@@ -4525,13 +4525,13 @@ function Update-PerformanceMetrics {
             }
 
             # Trim old metrics (keep last 100 entries)
-            if ($script:TelemetryData.PerformanceMetrics.MemoryUsage -and $script:TelemetryData.PerformanceMetrics.MemoryUsage.Count -gt 100) {
-                $script:TelemetryData.PerformanceMetrics.MemoryUsage = $script:TelemetryData.PerformanceMetrics.MemoryUsage[-100..-1]
-                if ($script:TelemetryData.PerformanceMetrics.CPUUsage) {
-                    $script:TelemetryData.PerformanceMetrics.CPUUsage = $script:TelemetryData.PerformanceMetrics.CPUUsage[-100..-1]
+            if (${script:TelemetryData}.PerformanceMetrics.MemoryUsage -and ${script:TelemetryData}.PerformanceMetrics.MemoryUsage.Count -gt 100) {
+                ${script:TelemetryData}.PerformanceMetrics.MemoryUsage = ${script:TelemetryData}.PerformanceMetrics.MemoryUsage[-100..-1]
+                if (${script:TelemetryData}.PerformanceMetrics.CPUUsage) {
+                    ${script:TelemetryData}.PerformanceMetrics.CPUUsage = ${script:TelemetryData}.PerformanceMetrics.CPUUsage[-100..-1]
                 }
-                if ($script:TelemetryData.PerformanceMetrics.DiskIO -and $script:TelemetryData.PerformanceMetrics.DiskIO.Count -gt 100) {
-                    $script:TelemetryData.PerformanceMetrics.DiskIO = $script:TelemetryData.PerformanceMetrics.DiskIO[-100..-1]
+                if (${script:TelemetryData}.PerformanceMetrics.DiskIO -and ${script:TelemetryData}.PerformanceMetrics.DiskIO.Count -gt 100) {
+                    ${script:TelemetryData}.PerformanceMetrics.DiskIO = ${script:TelemetryData}.PerformanceMetrics.DiskIO[-100..-1]
                 }
             }
         }
@@ -4545,34 +4545,34 @@ function Update-PerformanceMetrics {
 function Check-InsightThresholds {
     try {
         # Check if telemetry data and config are properly initialized
-        if (-not $script:TelemetryConfig -or -not $script:TelemetryConfig.NotificationThresholds) {
+        if (-not ${script:TelemetryConfig} -or -not ${script:TelemetryConfig}.NotificationThresholds) {
             Write-StartupLog "Telemetry configuration not initialized, skipping threshold checks" "DEBUG"
             return
         }
 
-        if (-not $script:TelemetryData -or -not $script:TelemetryData.PerformanceMetrics) {
+        if (-not ${script:TelemetryData} -or -not ${script:TelemetryData}.PerformanceMetrics) {
             Write-StartupLog "Telemetry data not initialized, skipping threshold checks" "DEBUG"
             return
         }
 
-        $thresholds = $script:TelemetryConfig.NotificationThresholds
+        $thresholds = ${script:TelemetryConfig}.NotificationThresholds
 
         # Check memory usage with proper null checking
-        if ($script:TelemetryData.PerformanceMetrics.MemoryUsage -and @($script:TelemetryData.PerformanceMetrics.MemoryUsage).Count -gt 0) {
-            $latestMemory = $script:TelemetryData.PerformanceMetrics.MemoryUsage | Select-Object -Last 1
+        if (${script:TelemetryData}.PerformanceMetrics.MemoryUsage -and @(${script:TelemetryData}.PerformanceMetrics.MemoryUsage).Count -gt 0) {
+            $latestMemory = ${script:TelemetryData}.PerformanceMetrics.MemoryUsage | Select-Object -Last 1
             if ($latestMemory -and $latestMemory.Value -gt $thresholds.MemoryUsage) {
                 Send-AlertNotification -Type "MemoryUsage" -Message "High memory usage: $($latestMemory.Value)MB" -Severity "HIGH"
             }
         }
 
         # Check error rate with proper null checking
-        if ($script:TelemetryData.InsightsHistory -and @($script:TelemetryData.InsightsHistory).Count -gt 0) {
-            $recentInsights = @($script:TelemetryData.InsightsHistory | Where-Object {
+        if (${script:TelemetryData}.InsightsHistory -and @(${script:TelemetryData}.InsightsHistory).Count -gt 0) {
+            $recentInsights = @(${script:TelemetryData}.InsightsHistory | Where-Object {
                     $_.Timestamp -gt (Get-Date).AddMinutes(-10)
                 })
             if ($recentInsights -and $recentInsights.Count -gt 0) {
                 $errorInsights = @($recentInsights | Where-Object { $_.Category -eq "ERROR" })
-                $errorCount = if ($errorInsights) { $errorInsights.Count } else { 0 }
+                $errorCount = $(if ($errorInsights) { $errorInsights.Count } else { 0 }
                 $errorRate = $errorCount / $recentInsights.Count
                 if ($errorRate -gt $thresholds.ErrorRate) {
                     Send-AlertNotification -Type "ErrorRate" -Message "High error rate: $([math]::Round($errorRate * 100, 1))%" -Severity "HIGH"
@@ -4581,8 +4581,8 @@ function Check-InsightThresholds {
         }
 
         # Check response times with proper null checking
-        if ($script:TelemetryData.PerformanceMetrics.ResponseTimes -and @($script:TelemetryData.PerformanceMetrics.ResponseTimes).Count -gt 0) {
-            $recentResponseTimes = @($script:TelemetryData.PerformanceMetrics.ResponseTimes | Where-Object {
+        if (${script:TelemetryData}.PerformanceMetrics.ResponseTimes -and @(${script:TelemetryData}.PerformanceMetrics.ResponseTimes).Count -gt 0) {
+            $recentResponseTimes = @(${script:TelemetryData}.PerformanceMetrics.ResponseTimes | Where-Object {
                     $_.Timestamp -gt (Get-Date).AddMinutes(-5)
                 })
             if ($recentResponseTimes -and $recentResponseTimes.Count -gt 0) {
@@ -4607,15 +4607,15 @@ function Analyze-UserBehavior {
         # Track feature usage
         if ($Insight.Metadata.ContainsKey("Feature")) {
             $feature = $Insight.Metadata.Feature
-            if (-not $script:TelemetryData.UserBehavior.FeatureUsage.ContainsKey($feature)) {
-                $script:TelemetryData.UserBehavior.FeatureUsage[$feature] = 0
+            if (-not ${script:TelemetryData}.UserBehavior.FeatureUsage.ContainsKey($feature)) {
+                ${script:TelemetryData}.UserBehavior.FeatureUsage[$feature] = 0
             }
-            $script:TelemetryData.UserBehavior.FeatureUsage[$feature]++
+            ${script:TelemetryData}.UserBehavior.FeatureUsage[$feature]++
         }
 
         # Track navigation patterns
         if ($Insight.EventName -eq "Navigation") {
-            $script:TelemetryData.UserBehavior.NavigationPatterns += @{
+            ${script:TelemetryData}.UserBehavior.NavigationPatterns += @{
                 Timestamp = $Insight.Timestamp
                 Target    = $Insight.EventData
                 Source    = $Insight.Metadata.Source
@@ -4623,8 +4623,8 @@ function Analyze-UserBehavior {
         }
 
         # Generate insights based on usage patterns
-        if ($script:TelemetryData.UserBehavior.FeatureUsage -and @($script:TelemetryData.UserBehavior.FeatureUsage).Count -gt 0) {
-            $mostUsed = ($script:TelemetryData.UserBehavior.FeatureUsage.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
+        if (${script:TelemetryData}.UserBehavior.FeatureUsage -and @(${script:TelemetryData}.UserBehavior.FeatureUsage).Count -gt 0) {
+            $mostUsed = (${script:TelemetryData}.UserBehavior.FeatureUsage.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
             Update-Insights -EventName "PopularFeature" -EventData $mostUsed -EventCategory "Analytics" -Metadata @{Type = "FeatureAnalysis" }
         }
 
@@ -4647,7 +4647,7 @@ function Send-AlertNotification {
         Register-ErrorHandler -ErrorMessage $Message -ErrorCategory "ALERT" -Severity $Severity -SourceFunction "TelemetrySystem"
 
         # Show desktop notification if possible
-        if ($script:TelemetryConfig.EnableTelemetry) {
+        if (${script:TelemetryConfig}.EnableTelemetry) {
             Show-DesktopNotification -Title "RawrXD Alert" -Message $Message -Type $Type
         }
 
@@ -4721,8 +4721,8 @@ function Show-DesktopNotification {
 # Insights cleanup
 function Cleanup-OldInsights {
     try {
-        $cutoffDate = (Get-Date).AddDays(-$script:TelemetryConfig.InsightsRetentionDays)
-        $script:TelemetryData.InsightsHistory = $script:TelemetryData.InsightsHistory | Where-Object {
+        $cutoffDate = (Get-Date).AddDays(-${script:TelemetryConfig}.InsightsRetentionDays)
+        ${script:TelemetryData}.InsightsHistory = ${script:TelemetryData}.InsightsHistory | Where-Object {
             $_.Timestamp -gt $cutoffDate
         }
     }
@@ -4734,7 +4734,7 @@ function Cleanup-OldInsights {
 # Export insights report
 function Export-InsightsReport {
     param(
-        [string]$OutputPath = $script:TelemetryConfig.ExportPath
+        [string]$OutputPath = ${script:TelemetryConfig}.ExportPath
     )
 
     $cursorToken = Enter-CursorWaitState -Reason "Telemetry:Export" -Style "Wait"
@@ -4747,17 +4747,17 @@ function Export-InsightsReport {
 
         $report = @{
             GeneratedAt        = Get-Date
-            SessionMetrics     = $script:TelemetryData.SessionMetrics
-            PerformanceMetrics = $script:TelemetryData.PerformanceMetrics
-            UserBehavior       = $script:TelemetryData.UserBehavior
-            InsightsHistory    = $script:TelemetryData.InsightsHistory[-50..-1]  # Last 50 insights
-            Configuration      = $script:TelemetryConfig
+            SessionMetrics     = ${script:TelemetryData}.SessionMetrics
+            PerformanceMetrics = ${script:TelemetryData}.PerformanceMetrics
+            UserBehavior       = ${script:TelemetryData}.UserBehavior
+            InsightsHistory    = ${script:TelemetryData}.InsightsHistory[-50..-1]  # Last 50 insights
+            Configuration      = ${script:TelemetryConfig}
             SystemInfo         = @{
                 PSVersion      = $PSVersionTable.PSVersion
                 Platform       = [System.Environment]::OSVersion.Platform
                 ProcessorCount = [System.Environment]::ProcessorCount
-                MachineName    = $env:COMPUTERNAME
-                UserName       = $env:USERNAME
+                MachineName    = ${env:COMPUTERNAME}
+                UserName       = ${env:USERNAME}
             }
         }
 
@@ -4906,7 +4906,7 @@ function Show-AuthenticationDialog {
     $buttonPanel.Controls.Add($cancelBtn)
 
     # Event handlers
-    $script:authResult = $false
+    ${script:authResult} = $false
 
     $loginBtn.Add_Click({
         $username = $usernameBox.Text.Trim()
@@ -4920,13 +4920,13 @@ function Show-AuthenticationDialog {
             }
 
         if ($username -and $validCredentials.ContainsKey($username) -and $validCredentials[$username] -eq $password) {
-            $script:CurrentSession.UserId = $username
-            $script:SecurityConfig.StealthMode = $stealthCheck.Checked
-            $script:UseHTTPS = $httpsCheck.Checked
-            $script:SecurityConfig.EncryptSensitiveData = $encryptCheck.Checked
-            if ($script:UseHTTPS) { $script:OllamaAPIEndpoint = $OllamaSecureEndpoint }
+            ${script:CurrentSession}.UserId = $username
+            ${script:SecurityConfig}.StealthMode = $stealthCheck.Checked
+            ${script:UseHTTPS} = $httpsCheck.Checked
+            ${script:SecurityConfig}.EncryptSensitiveData = $encryptCheck.Checked
+            if (${script:UseHTTPS}) { ${script:OllamaAPIEndpoint} = $OllamaSecureEndpoint }
             Write-SecurityLog "User '$username' authenticated successfully" "SUCCESS" "Options: Stealth=$($stealthCheck.Checked), HTTPS=$($httpsCheck.Checked), Encrypt=$($encryptCheck.Checked)"
-            $script:authResult = $true
+            ${script:authResult} = $true
             $authForm.DialogResult = "OK"
             $authForm.Close()
         }
@@ -4957,23 +4957,23 @@ if (Test-Path "$localWvDir\Microsoft.Web.WebView2.WinForms.dll") {
     Write-StartupLog "Using local WebView2Libs folder: $wvDir" "INFO"
 }
 else {
-    $wvDir = "$env:TEMP\WVLibs"
+    $wvDir = "${env:TEMP}\WVLibs"
     Write-StartupLog "Using temp WebView2 folder: $wvDir" "INFO"
 }
-$script:useWebView2 = $false
-$script:useWpfWebView2 = $false  # .NET 9+ uses WPF WebView2 via ElementHost
-$script:browserType = "Unknown"
+${script:useWebView2} = $false
+${script:useWpfWebView2} = $false  # .NET 9+ uses WPF WebView2 via ElementHost
+${script:browserType} = "Unknown"
 
 # CONFIGURATION: Set to $true to skip WebView2 entirely and use RichTextBox/legacy browser
 # This avoids DLL loading issues on systems where WebView2 assemblies aren't compatible
-$script:ForceDisableWebView2 = $false  # Set to $false to attempt WebView2 loading
+${script:ForceDisableWebView2} = $false  # Set to $false to attempt WebView2 loading
 
-if ($script:ForceDisableWebView2) {
+if (${script:ForceDisableWebView2}) {
     Write-StartupLog "WebView2 disabled by configuration - using RichTextBox editor and legacy browser" "INFO"
-    $script:useWebView2 = $false
-    $script:useWpfWebView2 = $false
-    $script:browserType = "Legacy"
-    $script:NetVersionCompatible = $false
+    ${script:useWebView2} = $false
+    ${script:useWpfWebView2} = $false
+    ${script:browserType} = "Legacy"
+    ${script:NetVersionCompatible} = $false
 }
 else {
 
@@ -4982,19 +4982,19 @@ Write-StartupLog "WEBVIEW2/BROWSER INITIALIZATION" "INFO"
 Write-StartupLog "═══════════════════════════════════════════════════════" "INFO"
 
 # Use runtime detection results from earlier initialization
-if ($script:RuntimeInfo.DetectionComplete) {
+if (${script:RuntimeInfo}.DetectionComplete) {
     Write-StartupLog "Using cached runtime detection results..." "INFO"
     
     # Try WinForms WebView2 first for all .NET Core versions (netcoreapp3.0 DLLs are compatible with .NET 5-9)
     # The ContextMenu deprecation issue has been addressed in newer WebView2 SDK versions
-    $script:NetVersionCompatible = $true
-    $script:useWpfWebView2 = $false  # Try WinForms first
+    ${script:NetVersionCompatible} = $true
+    ${script:useWpfWebView2} = $false  # Try WinForms first
     
-    if ($script:RuntimeInfo.IsNet9OrLater) {
-        Write-StartupLog "🔧 .NET $($script:RuntimeInfo.DotNetMajorVersion) detected - Attempting WinForms WebView2 (netcoreapp3.0 compatible)" "INFO"
+    if (${script:RuntimeInfo}.IsNet9OrLater) {
+        Write-StartupLog "🔧 .NET $(${script:RuntimeInfo}.DotNetMajorVersion) detected - Attempting WinForms WebView2 (netcoreapp3.0 compatible)" "INFO"
     }
     else {
-        Write-StartupLog ".NET $($script:RuntimeInfo.DotNetMajorVersion) detected - Using standard WinForms WebView2" "INFO"
+        Write-StartupLog ".NET $(${script:RuntimeInfo}.DotNetMajorVersion) detected - Using standard WinForms WebView2" "INFO"
     }
 }
 else {
@@ -5004,8 +5004,8 @@ else {
     $dotnetVersion = [System.Runtime.InteropServices.RuntimeInformation]::FrameworkDescription
     Write-StartupLog ".NET Runtime: $dotnetVersion" "INFO"
 
-    $script:NetVersionCompatible = $true
-    $script:useWpfWebView2 = $false  # Try WinForms first
+    ${script:NetVersionCompatible} = $true
+    ${script:useWpfWebView2} = $false  # Try WinForms first
     
     if ($dotnetVersion -match "\.NET\s+(\d+)") {
         $majorVersion = [int]$matches[1]
@@ -5014,14 +5014,14 @@ else {
 }
 
 # Check if we should skip WebView2 entirely and use the shim
-if ($script:RuntimeInfo.UseLegacyBrowser) {
+if (${script:RuntimeInfo}.UseLegacyBrowser) {
     Write-StartupLog "Browser Mode: Legacy/Shim (WebView2 skipped per configuration)" "INFO"
-    $script:useWebView2 = $false
-    $script:useWpfWebView2 = $false
-    $script:browserType = "LegacyShim"
+    ${script:useWebView2} = $false
+    ${script:useWpfWebView2} = $false
+    ${script:browserType} = "LegacyShim"
 
     # Ensure WebView2Shim is loaded
-    if (-not $script:RuntimeInfo.WebView2ShimLoaded) {
+    if (-not ${script:RuntimeInfo}.WebView2ShimLoaded) {
         $shimLoaded = Initialize-WebView2ShimFallback
         if ($shimLoaded) {
             Write-StartupLog "✅ WebView2Shim fallback activated" "SUCCESS"
@@ -5033,7 +5033,7 @@ if ($script:RuntimeInfo.UseLegacyBrowser) {
 }
 else {
     # Attempt WebView2 loading (WPF or WinForms based on .NET version)
-    if ($script:useWpfWebView2) {
+    if (${script:useWpfWebView2}) {
         Write-StartupLog "Browser Mode: WPF WebView2 via ElementHost (.NET 9+ compatible)" "INFO"
     }
     else {
@@ -5041,7 +5041,7 @@ else {
     }
 
     # Check if WebView2 Runtime is already installed system-wide
-    $webView2Installed = $script:RuntimeInfo.WebView2Available
+    $webView2Installed = ${script:RuntimeInfo}.WebView2Available
     if (-not $webView2Installed) {
         $webView2Installed = Test-Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
     }
@@ -5104,9 +5104,9 @@ else {
             catch {
                 Write-StartupLog "⚠️ Could not download WebView2: $($_.Exception.Message)" "WARNING"
                 Write-StartupLog "   Falling back to legacy browser" "INFO"
-                $script:NetVersionCompatible = $false
-                $script:useWebView2 = $false
-                $script:useWpfWebView2 = $false
+                ${script:NetVersionCompatible} = $false
+                ${script:useWebView2} = $false
+                ${script:useWpfWebView2} = $false
             }
         }
     }
@@ -5115,7 +5115,7 @@ else {
     # .NET 9+: Use WPF WebView2 via ElementHost (bypasses ContextMenu deprecation)
     # .NET 8 and earlier: Use standard WinForms WebView2
 
-    if ($script:useWpfWebView2) {
+    if (${script:useWpfWebView2}) {
         # .NET 9+ PATH: Load WPF WebView2 and WindowsFormsIntegration
         Write-StartupLog "Loading WPF WebView2 assemblies for .NET 9+ compatibility..." "INFO"
 
@@ -5133,8 +5133,8 @@ else {
             # Load WPF WebView2
             if (Test-Path "$wvDir\Microsoft.Web.WebView2.Wpf.dll") {
                 Add-Type -Path "$wvDir\Microsoft.Web.WebView2.Wpf.dll" -ErrorAction Stop
-                $script:useWebView2 = $true
-                $script:browserType = "WebView2-WPF"
+                ${script:useWebView2} = $true
+                ${script:browserType} = "WebView2-WPF"
                 Write-StartupLog "✅ WPF WebView2 loaded successfully (.NET 9+ compatible!)" "SUCCESS"
                 Write-StartupLog "   YouTube and modern web content fully supported!" "SUCCESS"
             }
@@ -5145,13 +5145,13 @@ else {
         catch {
             Write-StartupLog "⚠️ WPF WebView2 load failed: $($_.Exception.Message)" "WARNING"
             Write-StartupLog "   Falling back to PS5.1 Browser Bridge for video support" "INFO"
-            $script:useWebView2 = $false
-            $script:useWpfWebView2 = $false
-            $script:browserType = "PS51-Bridge"
-            $script:RuntimeInfo.UsePS51BrowserBridge = $true
+            ${script:useWebView2} = $false
+            ${script:useWpfWebView2} = $false
+            ${script:browserType} = "PS51-Bridge"
+            ${script:RuntimeInfo}.UsePS51BrowserBridge = $true
         }
     }
-    elseif ($script:NetVersionCompatible -and (Test-Path "$wvDir\Microsoft.Web.WebView2.WinForms.dll")) {
+    elseif (${script:NetVersionCompatible} -and (Test-Path "$wvDir\Microsoft.Web.WebView2.WinForms.dll")) {
         # Standard WinForms WebView2 - netcoreapp3.0 DLLs are compatible with .NET 5-9
         Write-StartupLog "Loading WebView2 WinForms assemblies from: $wvDir" "INFO"
         try {
@@ -5167,8 +5167,8 @@ else {
             Write-StartupLog "  Loading WinForms DLL..." "DEBUG"
             Add-Type -Path $winFormsPath -ErrorAction Stop
             
-            $script:useWebView2 = $true
-            $script:browserType = "WebView2"
+            ${script:useWebView2} = $true
+            ${script:browserType} = "WebView2"
             Write-StartupLog "✅ WebView2 WinForms loaded successfully!" "SUCCESS"
         }
         catch {
@@ -5178,27 +5178,27 @@ else {
             if ($_.Exception.Message -match "ContextMenu|obsolete|deprecated") {
                 Write-StartupLog "   ContextMenu deprecation detected - switching to WPF WebView2" "WARNING"
                 # Try WPF fallback
-                $script:useWpfWebView2 = $true
+                ${script:useWpfWebView2} = $true
                 try {
                     Add-Type -AssemblyName WindowsFormsIntegration -ErrorAction Stop
                     Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
                     if (Test-Path "$wvDir\Microsoft.Web.WebView2.Wpf.dll") {
                         Add-Type -Path "$wvDir\Microsoft.Web.WebView2.Wpf.dll" -ErrorAction Stop
-                        $script:useWebView2 = $true
-                        $script:browserType = "WebView2-WPF"
+                        ${script:useWebView2} = $true
+                        ${script:browserType} = "WebView2-WPF"
                         Write-StartupLog "✅ Switched to WPF WebView2 successfully!" "SUCCESS"
                     }
                 }
                 catch {
                     Write-StartupLog "   WPF fallback also failed: $($_.Exception.Message)" "WARNING"
-                    $script:useWebView2 = $false
-                    $script:useWpfWebView2 = $false
+                    ${script:useWebView2} = $false
+                    ${script:useWpfWebView2} = $false
                 }
             }
 
-            if (-not $script:useWebView2) {
-                $script:NetVersionCompatible = $false
-                $script:browserType = "LegacyFallback"
+            if (-not ${script:useWebView2}) {
+                ${script:NetVersionCompatible} = $false
+                ${script:browserType} = "LegacyFallback"
             }
         }
     }
@@ -5207,33 +5207,33 @@ else {
         # This might work with system-installed WebView2
         try {
             Add-Type -AssemblyName "Microsoft.Web.WebView2.WinForms" -ErrorAction Stop
-            $script:useWebView2 = $true
-            $script:browserType = "WebView2-System"
+            ${script:useWebView2} = $true
+            ${script:browserType} = "WebView2-System"
             Write-StartupLog "✅ WebView2 loaded from system installation" "SUCCESS"
         }
         catch {
             Write-StartupLog "⚠️ Could not load WebView2 from system: $($_.Exception.Message)" "WARNING"
-            $script:useWebView2 = $false
-            $script:browserType = "LegacyFallback"
+            ${script:useWebView2} = $false
+            ${script:browserType} = "LegacyFallback"
         }
     }
     else {
-        $script:useWebView2 = $false
-        $script:browserType = "LegacyFallback"
+        ${script:useWebView2} = $false
+        ${script:browserType} = "LegacyFallback"
     }
 }
 
 # Final browser status output
 Write-StartupLog "═══════════════════════════════════════════════════════" "INFO"
 Write-StartupLog "BROWSER INITIALIZATION COMPLETE" "INFO"
-Write-StartupLog "  Browser Type: $($script:browserType)" "INFO"
-Write-StartupLog "  WebView2 Active: $($script:useWebView2)" "INFO"
-Write-StartupLog "  WPF Mode (.NET 9+): $($script:useWpfWebView2)" "INFO"
-Write-StartupLog "  .NET Compatible: $($script:NetVersionCompatible)" "INFO"
-if ($script:useWpfWebView2) {
+Write-StartupLog "  Browser Type: $(${script:browserType})" "INFO"
+Write-StartupLog "  WebView2 Active: $(${script:useWebView2})" "INFO"
+Write-StartupLog "  WPF Mode (.NET 9+): $(${script:useWpfWebView2})" "INFO"
+Write-StartupLog "  .NET Compatible: $(${script:NetVersionCompatible})" "INFO"
+if (${script:useWpfWebView2}) {
     Write-StartupLog "  ✅ Using WPF WebView2 via ElementHost - Full .NET 9 support!" "SUCCESS"
 }
-elseif (-not $script:useWebView2) {
+elseif (-not ${script:useWebView2}) {
     Write-StartupLog "  Note: YouTube embeds may not work in legacy mode" "WARNING"
 }
 Write-StartupLog "═══════════════════════════════════════════════════════" "INFO"
@@ -5243,9 +5243,9 @@ Write-StartupLog "════════════════════�
 $OllamaAPIEndpoint = "http://localhost:11434/api/generate"  # Default API Endpoint
 $OllamaSecureEndpoint = "https://localhost:11434/api/generate"  # HTTPS Endpoint (if configured)
 $OllamaModel = "bigdaddyg-fast:latest" # Default Ollama Model
-$script:OllamaAPIKey = $null  # API key for authentication (if required)
-$script:UseHTTPS = $false     # Enable HTTPS for Ollama connections
-$script:DebugMode = $false    # Enable debug logging
+${script:OllamaAPIKey} = $null  # API key for authentication (if required)
+${script:UseHTTPS} = $false     # Enable HTTPS for Ollama connections
+${script:DebugMode} = $false    # Enable debug logging
 
 # ============================================
 # LM STUDIO API SUPPORT
@@ -5253,7 +5253,7 @@ $script:DebugMode = $false    # Enable debug logging
 # LM Studio provides an OpenAI-compatible API on localhost:1234
 # It's more user-friendly than Ollama with a better UI for model management
 
-$script:LMStudioConfig = @{
+${script:LMStudioConfig} = @{
     BaseURL         = "http://localhost:1234"
     APIEndpoint     = "http://localhost:1234/v1/chat/completions"
     ModelsEndpoint  = "http://localhost:1234/v1/models"
@@ -5269,7 +5269,7 @@ $script:LMStudioConfig = @{
 }
 
 # AI Backend Selection (Ollama or LMStudio)
-$script:AIBackend = "Ollama"  # Options: "Ollama", "LMStudio"
+${script:AIBackend} = "Ollama"  # Options: "Ollama", "LMStudio"
 
 function Test-LMStudioConnection {
     <#
@@ -5279,20 +5279,20 @@ function Test-LMStudioConnection {
         Checks the LM Studio API endpoint and returns connection status
     #>
     try {
-        $response = Invoke-RestMethod -Uri $script:LMStudioConfig.ModelsEndpoint -Method GET -TimeoutSec 5
-        $script:LMStudioConfig.Status = "Online"
-        $script:LMStudioConfig.LastCheck = Get-Date
+        $response = Invoke-RestMethod -Uri ${script:LMStudioConfig}.ModelsEndpoint -Method GET -TimeoutSec 5
+        ${script:LMStudioConfig}.Status = "Online"
+        ${script:LMStudioConfig}.LastCheck = Get-Date
         
         # Get loaded model info
         if ($response.data -and $response.data.Count -gt 0) {
-            $script:LMStudioConfig.CurrentModel = $response.data[0].id
-            Write-DevConsole "🟢 LM Studio connected - Model: $($script:LMStudioConfig.CurrentModel)" "SUCCESS"
+            ${script:LMStudioConfig}.CurrentModel = $response.data[0].id
+            Write-DevConsole "🟢 LM Studio connected - Model: $(${script:LMStudioConfig}.CurrentModel)" "SUCCESS"
         }
         return $true
     }
     catch {
-        $script:LMStudioConfig.Status = "Offline"
-        $script:LMStudioConfig.LastCheck = Get-Date
+        ${script:LMStudioConfig}.Status = "Offline"
+        ${script:LMStudioConfig}.LastCheck = Get-Date
         Write-DevConsole "🔴 LM Studio not available: $($_.Exception.Message)" "WARNING"
         return $false
     }
@@ -5306,7 +5306,7 @@ function Get-LMStudioModels {
         Returns models loaded in LM Studio server
     #>
     try {
-        $response = Invoke-RestMethod -Uri $script:LMStudioConfig.ModelsEndpoint -Method GET -TimeoutSec 10
+        $response = Invoke-RestMethod -Uri ${script:LMStudioConfig}.ModelsEndpoint -Method GET -TimeoutSec 10
         if ($response.data) {
             return $response.data | ForEach-Object { $_.id }
         }
@@ -5341,7 +5341,7 @@ function Send-LMStudioRequest {
     )
 
     # Security checks
-    $script:CurrentSession.LastActivity = Get-Date
+    ${script:CurrentSession}.LastActivity = Get-Date
 
     if (-not (Test-SessionSecurity)) {
         Write-SecurityLog "Session security check failed" "ERROR"
@@ -5369,13 +5369,13 @@ function Send-LMStudioRequest {
     )
 
     $body = @{
-        model             = if ($Model) { $Model } else { $script:LMStudioConfig.CurrentModel }
+        model             = $(if ($Model) { $Model } else { ${script:LMStudioConfig}.CurrentModel }
         messages          = $messages
-        temperature       = $script:LMStudioConfig.Temperature
-        max_tokens        = $script:LMStudioConfig.MaxTokens
-        top_p             = $script:LMStudioConfig.TopP
-        frequency_penalty = $script:LMStudioConfig.FrequencyPenalty
-        presence_penalty  = $script:LMStudioConfig.PresencePenalty
+        temperature       = ${script:LMStudioConfig}.Temperature
+        max_tokens        = ${script:LMStudioConfig}.MaxTokens
+        top_p             = ${script:LMStudioConfig}.TopP
+        frequency_penalty = ${script:LMStudioConfig}.FrequencyPenalty
+        presence_penalty  = ${script:LMStudioConfig}.PresencePenalty
         stream            = $false
     }
 
@@ -5386,9 +5386,9 @@ function Send-LMStudioRequest {
         try {
             $jsonBody = $body | ConvertTo-Json -Depth 10
             
-            Write-DevConsole "Attempt $($retryCount + 1)/$maxRetries - POST $($script:LMStudioConfig.APIEndpoint)" "DEBUG"
+            Write-DevConsole "Attempt $($retryCount + 1)/$maxRetries - POST $(${script:LMStudioConfig}.APIEndpoint)" "DEBUG"
 
-            $response = Invoke-RestMethod -Uri $script:LMStudioConfig.APIEndpoint `
+            $response = Invoke-RestMethod -Uri ${script:LMStudioConfig}.APIEndpoint `
                 -Method POST `
                 -Body $jsonBody `
                 -ContentType "application/json" `
@@ -5403,9 +5403,9 @@ function Send-LMStudioRequest {
                 # Log metrics
                 $metrics = @{
                     Model           = $response.model
-                    PromptTokens    = if ($response.usage) { $response.usage.prompt_tokens } else { "N/A" }
-                    CompletionTokens = if ($response.usage) { $response.usage.completion_tokens } else { "N/A" }
-                    TotalTokens     = if ($response.usage) { $response.usage.total_tokens } else { "N/A" }
+                    PromptTokens    = $(if ($response.usage) { $response.usage.prompt_tokens } else { "N/A" }
+                    CompletionTokens = $(if ($response.usage) { $response.usage.completion_tokens } else { "N/A" }
+                    TotalTokens     = $(if ($response.usage) { $response.usage.total_tokens } else { "N/A" }
                     FinishReason    = $response.choices[0].finish_reason
                 }
                 Write-DevConsole "📊 Tokens: $($metrics.TotalTokens) | Finish: $($metrics.FinishReason)" "INFO"
@@ -5436,7 +5436,7 @@ function Send-LMStudioRequest {
 
             # Final failure - provide diagnostic info
             $diagnosticMsg = @"
-❌ Connection failed to LM Studio API at $($script:LMStudioConfig.APIEndpoint)
+❌ Connection failed to LM Studio API at $(${script:LMStudioConfig}.APIEndpoint)
 
 Troubleshooting steps:
 1. Make sure LM Studio is running
@@ -5448,7 +5448,7 @@ To enable LM Studio server:
 - Open LM Studio → Local Server tab → Start Server
 
 Test manually:
-  Invoke-RestMethod -Uri "$($script:LMStudioConfig.ModelsEndpoint)" -Method GET
+  Invoke-RestMethod -Uri "$(${script:LMStudioConfig}.ModelsEndpoint)" -Method GET
 
 Error: $errorMsg
 "@
@@ -5483,7 +5483,7 @@ function Send-AIRequest {
     )
 
     # Determine which backend to use
-    $targetBackend = if ($Backend -eq "Auto") { $script:AIBackend } else { $Backend }
+    $targetBackend = $(if ($Backend -eq "Auto") { ${script:AIBackend} } else { $Backend }
 
     Write-DevConsole "🤖 AI Request → Backend: $targetBackend" "INFO"
 
@@ -5518,19 +5518,19 @@ function Switch-AIBackend {
         [string]$Backend
     )
 
-    $previousBackend = $script:AIBackend
+    $previousBackend = ${script:AIBackend}
 
     switch ($Backend) {
         "LMStudio" {
             if (Test-LMStudioConnection) {
-                $script:AIBackend = "LMStudio"
-                $script:LMStudioConfig.IsEnabled = $true
+                ${script:AIBackend} = "LMStudio"
+                ${script:LMStudioConfig}.IsEnabled = $true
                 Write-DevConsole "✅ Switched to LM Studio backend" "SUCCESS"
-                Write-DevConsole "   Model: $($script:LMStudioConfig.CurrentModel)" "INFO"
+                Write-DevConsole "   Model: $(${script:LMStudioConfig}.CurrentModel)" "INFO"
                 return @{
                     Success = $true
                     Backend = "LMStudio"
-                    Model   = $script:LMStudioConfig.CurrentModel
+                    Model   = ${script:LMStudioConfig}.CurrentModel
                     Message = "Successfully switched to LM Studio"
                 }
             }
@@ -5544,8 +5544,8 @@ function Switch-AIBackend {
             }
         }
         "Ollama" {
-            $script:AIBackend = "Ollama"
-            $script:LMStudioConfig.IsEnabled = $false
+            ${script:AIBackend} = "Ollama"
+            ${script:LMStudioConfig}.IsEnabled = $false
             Write-DevConsole "✅ Switched to Ollama backend" "SUCCESS"
             return @{
                 Success = $true
@@ -5566,16 +5566,16 @@ function Get-AIBackendStatus {
     #>
     
     $status = @{
-        CurrentBackend = $script:AIBackend
+        CurrentBackend = ${script:AIBackend}
         Ollama         = @{
             Status = "Unknown"
             Model  = $OllamaModel
             URL    = $OllamaAPIEndpoint
         }
         LMStudio       = @{
-            Status = $script:LMStudioConfig.Status
-            Model  = $script:LMStudioConfig.CurrentModel
-            URL    = $script:LMStudioConfig.BaseURL
+            Status = ${script:LMStudioConfig}.Status
+            Model  = ${script:LMStudioConfig}.CurrentModel
+            URL    = ${script:LMStudioConfig}.BaseURL
         }
     }
 
@@ -5591,8 +5591,8 @@ function Get-AIBackendStatus {
 
     # Test LM Studio
     Test-LMStudioConnection | Out-Null
-    $status.LMStudio.Status = $script:LMStudioConfig.Status
-    $status.LMStudio.Model = $script:LMStudioConfig.CurrentModel
+    $status.LMStudio.Status = ${script:LMStudioConfig}.Status
+    $status.LMStudio.Model = ${script:LMStudioConfig}.CurrentModel
 
     return $status
 }
@@ -5632,10 +5632,10 @@ function Show-ToolPreferences {
     )
     
     # Initialize enabled tools from settings or enable all by default
-    if (-not $global:settings.EnabledAgentTools) {
-        $global:settings.EnabledAgentTools = @{}
+    if (-not ${global:settings}.EnabledAgentTools) {
+        ${global:settings}.EnabledAgentTools = @{}
         foreach ($tool in $allTools) {
-            $global:settings.EnabledAgentTools[$tool.Name] = $true
+            ${global:settings}.EnabledAgentTools[$tool.Name] = $true
         }
     }
     
@@ -5688,7 +5688,7 @@ function Show-ToolPreferences {
         $checkbox.ForeColor = [System.Drawing.Color]::White
         $checkbox.Location = New-Object System.Drawing.Point(10, $yPosition)
         $checkbox.Size = New-Object System.Drawing.Size(460, 25)
-        $checkbox.Checked = $global:settings.EnabledAgentTools[$tool.Name] -ne $false
+        $checkbox.Checked = ${global:settings}.EnabledAgentTools[$tool.Name] -ne $false
         $checkboxes[$tool.Name] = $checkbox
         $panel.Controls.Add($checkbox)
         $yPosition += 30
@@ -5750,13 +5750,13 @@ function Show-ToolPreferences {
     $okBtn.Add_Click({
         # Save checkbox states to settings
         foreach ($tool in $allTools) {
-            $global:settings.EnabledAgentTools[$tool.Name] = $checkboxes[$tool.Name].Checked
+            ${global:settings}.EnabledAgentTools[$tool.Name] = $checkboxes[$tool.Name].Checked
         }
         
         # Save settings to file
         try {
             $settingsPath = Join-Path $PSScriptRoot "settings.json"
-            $global:settings | ConvertTo-Json -Depth 10 | Set-Content $settingsPath -Encoding UTF8
+            ${global:settings} | ConvertTo-Json -Depth 10 | Set-Content $settingsPath -Encoding UTF8
             Write-Host "[ToolPrefs] Saved tool preferences to settings.json" -ForegroundColor Green
         }
         catch {
@@ -5842,8 +5842,8 @@ function Show-ReadCompleteBox {
     )
     
     $fileName = Split-Path $FilePath -Leaf
-    $emoji = if ($Success) { "✅" } else { "❌" }
-    $status = if ($Success) { "Read completed" } else { "Read failed" }
+    $emoji = $(if ($Success) { "✅" } else { "❌" }
+    $status = $(if ($Success) { "Read completed" } else { "Read failed" }
     
     $topLine = "┌─────────────────────────────────────────────────────────────────────────────┐"
     $bottomLine = "└─────────────────────────────────────────────────────────────────────────────┘"
@@ -5883,7 +5883,7 @@ function Show-CodeEditBox {
     )
     
     $fileName = Split-Path $FilePath -Leaf
-    $operation = if ($LinesAdded -gt 0 -and $LinesRemoved -eq 0) { "Added" }
+    $operation = $(if ($LinesAdded -gt 0 -and $LinesRemoved -eq 0) { "Added" }
                 elseif ($LinesRemoved -gt 0 -and $LinesAdded -eq 0) { "Removed" }
                 elseif ($LinesAdded -gt 0 -and $LinesRemoved -gt 0) { "Modified" }
                 else { $EditType }
@@ -5947,7 +5947,7 @@ function Show-AIBackendSelector {
 
     $ollamaStatusLabel = New-Object System.Windows.Forms.Label
     $ollamaStatusLabel.Text = "Status: $($status.Ollama.Status)"
-    $ollamaStatusLabel.ForeColor = if ($status.Ollama.Status -eq "Online") { [System.Drawing.Color]::LightGreen } else { [System.Drawing.Color]::Salmon }
+    $ollamaStatusLabel.ForeColor = $(if ($status.Ollama.Status -eq "Online") { [System.Drawing.Color]::LightGreen } else { [System.Drawing.Color]::Salmon }
     $ollamaStatusLabel.Location = New-Object System.Drawing.Point(15, 25)
     $ollamaStatusLabel.AutoSize = $true
     $ollamaGroup.Controls.Add($ollamaStatusLabel)
@@ -5985,7 +5985,7 @@ function Show-AIBackendSelector {
 
     $lmStatusLabel = New-Object System.Windows.Forms.Label
     $lmStatusLabel.Text = "Status: $($status.LMStudio.Status)"
-    $lmStatusLabel.ForeColor = if ($status.LMStudio.Status -eq "Online") { [System.Drawing.Color]::LightGreen } else { [System.Drawing.Color]::Salmon }
+    $lmStatusLabel.ForeColor = $(if ($status.LMStudio.Status -eq "Online") { [System.Drawing.Color]::LightGreen } else { [System.Drawing.Color]::Salmon }
     $lmStatusLabel.Location = New-Object System.Drawing.Point(15, 25)
     $lmStatusLabel.AutoSize = $true
     $lmGroup.Controls.Add($lmStatusLabel)
@@ -6053,7 +6053,7 @@ function Show-AIBackendSelector {
 # ============================================
 
 # Ollama server configuration and management
-$script:OllamaServers = @{
+${script:OllamaServers} = @{
     "Local"       = @{
         Name                = "Local Server"
         BaseURL             = "http://localhost:11434"
@@ -6108,9 +6108,9 @@ $script:OllamaServers = @{
 }
 
 # Current active server and connection settings
-$script:CurrentOllamaServer = "Local"
-$script:OllamaConnectionPool = @{}
-$script:OllamaHealthMonitor = $null
+${script:CurrentOllamaServer} = "Local"
+${script:OllamaConnectionPool} = @{}
+${script:OllamaHealthMonitor} = $null
 
 function Connect-OllamaServer {
     param(
@@ -6134,21 +6134,21 @@ function Connect-OllamaServer {
     )
 
     try {
-        if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+        if (-not ${script:OllamaServers}.ContainsKey($ServerName)) {
             Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found in configuration" -ErrorCategory "OLLAMA" -Severity "HIGH" -SourceFunction "Connect-OllamaServer"
             return $false
         }
 
-        $server = $script:OllamaServers[$ServerName]
-        $baseUrl = if ($UseHTTPS) { $server.SecureURL } else { $server.BaseURL }
+        $server = ${script:OllamaServers}[$ServerName]
+        $baseUrl = $(if ($UseHTTPS) { $server.SecureURL } else { $server.BaseURL }
 
         # Create connection object
         $connection = @{
             ServerName     = $ServerName
             BaseURL        = $baseUrl
-            Username       = if ($Username) { $Username } else { $server.Username }
-            Password       = if ($Password) { $Password } else { $server.Password }
-            APIKey         = if ($APIKey) { $APIKey } else { $server.APIKey }
+            Username       = $(if ($Username) { $Username } else { $server.Username }
+            Password       = $(if ($Password) { $Password } else { $server.Password }
+            APIKey         = $(if ($APIKey) { $APIKey } else { $server.APIKey }
             UseHTTPS       = $UseHTTPS
             Timeout        = $server.Timeout
             MaxRetries     = $server.MaxRetries
@@ -6202,7 +6202,7 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
         $server.LastConnection = Get-Date
 
         # Store connection in pool
-        $script:OllamaConnectionPool[$ServerName] = $connection
+        ${script:OllamaConnectionPool}[$ServerName] = $connection
 
         Write-StartupLog "✅ Connected to Ollama server '$ServerName' ($([math]::Round($connectionTime, 2))ms)" "SUCCESS"
         Register-ErrorHandler -ErrorMessage "Successfully connected to server '$ServerName'" -ErrorCategory "OLLAMA" -Severity "LOW" -SourceFunction "Connect-OllamaServer" -ShowToUser $false
@@ -6234,12 +6234,12 @@ function Authenticate-OllamaUser {
     )
 
     try {
-        if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+        if (-not ${script:OllamaServers}.ContainsKey($ServerName)) {
             Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found for authentication" -ErrorCategory "AUTH" -Severity "HIGH" -SourceFunction "Authenticate-OllamaUser"
             return $false
         }
 
-        $server = $script:OllamaServers[$ServerName]
+        $server = ${script:OllamaServers}[$ServerName]
         $authUrl = "$($server.BaseURL)/api/auth/login"  # Hypothetical auth endpoint
 
         $authData = @{
@@ -6274,21 +6274,21 @@ function Switch-OllamaServer {
     )
 
     try {
-        if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+        if (-not ${script:OllamaServers}.ContainsKey($ServerName)) {
             Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Switch-OllamaServer"
             return $false
         }
 
-        $previousServer = $script:CurrentOllamaServer
-        $server = $script:OllamaServers[$ServerName]
+        $previousServer = ${script:CurrentOllamaServer}
+        $server = ${script:OllamaServers}[$ServerName]
 
         # Test connection to new server
         if (Test-OllamaServerConnection -ServerName $ServerName) {
-            $script:CurrentOllamaServer = $ServerName
+            ${script:CurrentOllamaServer} = $ServerName
 
             # Update global endpoints
-            $global:OllamaAPIEndpoint = "$($server.BaseURL)/api/generate"
-            $global:OllamaSecureEndpoint = "$($server.SecureURL)/api/generate"
+            ${global:OllamaAPIEndpoint} = "$($server.BaseURL)/api/generate"
+            ${global:OllamaSecureEndpoint} = "$($server.SecureURL)/api/generate"
 
             Write-StartupLog "✅ Switched to Ollama server '$ServerName'" "SUCCESS"
 
@@ -6315,9 +6315,9 @@ function Test-OllamaServerConnection {
     param([string]$ServerName)
 
     try {
-        if (-not $ServerName) { $ServerName = $script:CurrentOllamaServer }
+        if (-not $ServerName) { $ServerName = ${script:CurrentOllamaServer} }
 
-        $server = $script:OllamaServers[$ServerName]
+        $server = ${script:OllamaServers}[$ServerName]
         if (-not $server) { return $false }
 
         $testUrl = "$($server.BaseURL)/api/tags"
@@ -6339,9 +6339,9 @@ function Get-OllamaServerModels {
     param([string]$ServerName)
 
     try {
-        if (-not $ServerName) { $ServerName = $script:CurrentOllamaServer }
+        if (-not $ServerName) { $ServerName = ${script:CurrentOllamaServer} }
 
-        $server = $script:OllamaServers[$ServerName]
+        $server = ${script:OllamaServers}[$ServerName]
         if (-not $server) { return @() }
         
         # Skip inactive remote servers (fake/placeholder servers)
@@ -6365,18 +6365,18 @@ function Get-OllamaServerModels {
 }
 
 function Start-OllamaHealthMonitoring {
-    if ($script:OllamaHealthMonitor) {
-        $script:OllamaHealthMonitor.Stop()
-        $script:OllamaHealthMonitor.Dispose()
+    if (${script:OllamaHealthMonitor}) {
+        ${script:OllamaHealthMonitor}.Stop()
+        ${script:OllamaHealthMonitor}.Dispose()
     }
 
-    $script:OllamaHealthMonitor = New-Object System.Windows.Forms.Timer
-    $script:OllamaHealthMonitor.Interval = 30000  # Check every 30 seconds
-    $script:OllamaHealthMonitor.add_Tick({
+    ${script:OllamaHealthMonitor} = New-Object System.Windows.Forms.Timer
+    ${script:OllamaHealthMonitor}.Interval = 30000  # Check every 30 seconds
+    ${script:OllamaHealthMonitor}.add_Tick({
         try {
-            if (-not $script:OllamaServers) { return }
-            foreach ($serverName in $script:OllamaServers.Keys) {
-                $server = $script:OllamaServers[$serverName]
+            if (-not ${script:OllamaServers}) { return }
+            foreach ($serverName in ${script:OllamaServers}.Keys) {
+                $server = ${script:OllamaServers}[$serverName]
                 if ($server.IsActive) {
                     $previousStatus = $server.Status
                     $isOnline = Test-OllamaServerConnection -ServerName $serverName
@@ -6394,7 +6394,7 @@ function Start-OllamaHealthMonitoring {
             # Silently ignore timer errors to prevent app crash
         }
         })
-    $script:OllamaHealthMonitor.Start()
+    ${script:OllamaHealthMonitor}.Start()
 
     Write-StartupLog "✅ Ollama health monitoring started" "INFO"
 }
@@ -6428,8 +6428,8 @@ function Show-OllamaServerManager {
     $serverGrid.Columns.Add("LastConnection", "Last Connection") | Out-Null
 
     # Populate server data
-    foreach ($serverName in $script:OllamaServers.Keys) {
-        $server = $script:OllamaServers[$serverName]
+    foreach ($serverName in ${script:OllamaServers}.Keys) {
+        $server = ${script:OllamaServers}[$serverName]
         $row = @(
             $server.Name,
             $server.Status,
@@ -6489,7 +6489,7 @@ function Show-OllamaServerManager {
     $connectBtn.Add_Click({
             if ($serverGrid.SelectedRows -and $serverGrid.SelectedRows.Count -gt 0) {
                 $serverName = $serverGrid.SelectedRows[0].Cells[0].Value
-                $serverKey = $script:OllamaServers.Keys | Where-Object { $script:OllamaServers[$_].Name -eq $serverName }
+                $serverKey = ${script:OllamaServers}.Keys | Where-Object { ${script:OllamaServers}[$_].Name -eq $serverName }
                 if ($serverKey) {
                     Connect-OllamaServer -ServerName $serverKey
                     # Refresh display
@@ -6501,7 +6501,7 @@ function Show-OllamaServerManager {
     $switchBtn.Add_Click({
             if ($serverGrid.SelectedRows -and $serverGrid.SelectedRows.Count -gt 0) {
                 $serverName = $serverGrid.SelectedRows[0].Cells[0].Value
-                $serverKey = $script:OllamaServers.Keys | Where-Object { $script:OllamaServers[$_].Name -eq $serverName }
+                $serverKey = ${script:OllamaServers}.Keys | Where-Object { ${script:OllamaServers}[$_].Name -eq $serverName }
                 if ($serverKey) {
                     Switch-OllamaServer -ServerName $serverKey
                     Write-DevConsole "Switched to server: $serverName" "INFO"
@@ -6511,8 +6511,8 @@ function Show-OllamaServerManager {
 
     $refreshBtn.Add_Click({
             # Test only active server connections (skip inactive fake servers)
-            foreach ($serverName in $script:OllamaServers.Keys) {
-                $server = $script:OllamaServers[$serverName]
+            foreach ($serverName in ${script:OllamaServers}.Keys) {
+                $server = ${script:OllamaServers}[$serverName]
                 if ($server.IsActive -or $serverName -eq "Local") {
                     Test-OllamaServerConnection -ServerName $serverName
                     Get-OllamaServerModels -ServerName $serverName
@@ -6529,16 +6529,16 @@ function Show-OllamaServerManager {
 
 # Security initialization
 Write-SecurityLog "Application starting" "INFO" "Version: 2.0, Security: Enabled"
-$script:CurrentSession.LastActivity = Get-Date
+${script:CurrentSession}.LastActivity = Get-Date
 
 # Initialize security configuration from environment or config file
-$configPath = Join-Path $env:APPDATA "RawrXD\security.json"
+$configPath = Join-Path ${env:APPDATA} "RawrXD\security.json"
 if (Test-Path $configPath) {
     try {
         $savedConfig = Get-Content $configPath | ConvertFrom-Json
         foreach ($key in $savedConfig.PSObject.Properties.Name) {
-            if ($script:SecurityConfig.ContainsKey($key)) {
-                $script:SecurityConfig[$key] = $savedConfig.$key
+            if (${script:SecurityConfig}.ContainsKey($key)) {
+                ${script:SecurityConfig}[$key] = $savedConfig.$key
             }
         }
         Write-SecurityLog "Security configuration loaded" "SUCCESS" "Source: $configPath"
@@ -6596,10 +6596,8 @@ $form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::Dpi
 
 # ============================================
 # GLOBAL AGENT TOOL PREFERENCES MENU
-# ============================================
-
-if (-not $script:AgentToolPreferences) {
-    $script:AgentToolPreferences = [ordered]@{
+# ============================================ $(if (-not ${script:AgentToolPreferences}) {
+    ${script:AgentToolPreferences} = [ordered]@{
         ChangedFiles   = $true
         EditFiles      = $true
         ReadFiles      = $true
@@ -6615,25 +6613,25 @@ if (-not $script:AgentToolPreferences) {
     }
 }
 
-$script:AgentToolPrefsPath = Join-Path (Join-Path $env:APPDATA 'RawrXD') 'agent-tools.json'
+${script:AgentToolPrefsPath} = Join-Path (Join-Path ${env:APPDATA} 'RawrXD') 'agent-tools.json'
 
 function Save-AgentToolPreferences {
     try {
-        $dir = Split-Path $script:AgentToolPrefsPath
+        $dir = Split-Path ${script:AgentToolPrefsPath}
         if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-        $script:AgentToolPreferences | ConvertTo-Json | Set-Content -Path $script:AgentToolPrefsPath -Encoding UTF8
+        ${script:AgentToolPreferences} | ConvertTo-Json | Set-Content -Path ${script:AgentToolPrefsPath} -Encoding UTF8
         Write-StartupLog "Agent tool preferences saved" "DEBUG"
     }
     catch { Write-StartupLog "Failed to save agent tool preferences: $($_.Exception.Message)" "WARNING" }
 }
 
 function Load-AgentToolPreferences {
-    if (Test-Path $script:AgentToolPrefsPath) {
+    if (Test-Path ${script:AgentToolPrefsPath}) {
         try {
-            $loaded = Get-Content -Raw -Path $script:AgentToolPrefsPath | ConvertFrom-Json
+            $loaded = Get-Content -Raw -Path ${script:AgentToolPrefsPath} | ConvertFrom-Json
             foreach ($prop in $loaded.PSObject.Properties.Name) {
-                if ($script:AgentToolPreferences.Contains($prop)) {
-                    $script:AgentToolPreferences[$prop] = [bool]$loaded.$prop
+                if (${script:AgentToolPreferences}.Contains($prop)) {
+                    ${script:AgentToolPreferences}[$prop] = [bool]$loaded.$prop
                 }
             }
             Write-StartupLog "Agent tool preferences loaded" "INFO"
@@ -6643,19 +6641,19 @@ function Load-AgentToolPreferences {
 }
 
 function Get-EnabledAgentTools {
-    return ($script:AgentToolPreferences.GetEnumerator() | Where-Object { $_.Value } | ForEach-Object { $_.Key })
+    return (${script:AgentToolPreferences}.GetEnumerator() | Where-Object { $_.Value } | ForEach-Object { $_.Key })
 }
 
 function Set-AgentToolPreference {
     param([string]$Name, [bool]$Enabled)
-    if ($script:AgentToolPreferences.Contains($Name)) {
-        $script:AgentToolPreferences[$Name] = $Enabled
+    if (${script:AgentToolPreferences}.Contains($Name)) {
+        ${script:AgentToolPreferences}[$Name] = $Enabled
         Write-StartupLog "Tool preference updated: $Name => $Enabled" "INFO"
         Save-AgentToolPreferences
     }
 }
 
-function Is-AgentToolAllowed { param([string]$Name) return ($script:AgentToolPreferences.Contains($Name) -and $script:AgentToolPreferences[$Name]) }
+function Is-AgentToolAllowed { param([string]$Name) return (${script:AgentToolPreferences}.Contains($Name) -and ${script:AgentToolPreferences}[$Name]) }
 function Filter-AgentToolRequest { param([string[]]$Requested) return @($Requested | Where-Object { Is-AgentToolAllowed $_ }) }
 
 function Initialize-AgentToolsMenu {
@@ -6663,17 +6661,17 @@ function Initialize-AgentToolsMenu {
     if (-not $TargetForm) { return }
 
     # Create Tools menu items (will be added to main menu later)
-    $script:agentToolsMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem
-    $script:agentToolsMenuItem.Text = "Agent Tool Preferences"
+    ${script:agentToolsMenuItem} = New-Object System.Windows.Forms.ToolStripMenuItem
+    ${script:agentToolsMenuItem}.Text = "Agent Tool Preferences"
 
     $addItem = {
         param($label,$key)
         $item = New-Object System.Windows.Forms.ToolStripMenuItem
         $item.Text = $label
-        $item.Checked = [bool]$script:AgentToolPreferences[$key]
+        $item.Checked = [bool]${script:AgentToolPreferences}[$key]
         $item.CheckOnClick = $true
         $item.Add_Click({ Set-AgentToolPreference -Name $key -Enabled:$item.Checked })
-        $script:agentToolsMenuItem.DropDownItems.Add($item) | Out-Null
+        ${script:agentToolsMenuItem}.DropDownItems.Add($item) | Out-Null
     }
 
     & $addItem 'Changed Files (Diff)' 'ChangedFiles'
@@ -6695,18 +6693,18 @@ function Initialize-AgentToolsMenu {
         $enabled = (Get-EnabledAgentTools) -join ', '
         [System.Windows.Forms.MessageBox]::Show("Enabled Agent Tools:`n$enabled","Agent Tools","OK","Information") | Out-Null
     })
-    $script:agentToolsMenuItem.DropDownItems.Add($refreshItem) | Out-Null
+    ${script:agentToolsMenuItem}.DropDownItems.Add($refreshItem) | Out-Null
 
     # Create individual tool preferences menu item
-    $script:toolPreferencesMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem
-    $script:toolPreferencesMenuItem.Text = "Tool Preferences"
-    $script:toolPreferencesMenuItem.Add_Click({ Show-ToolPreferences })
+    ${script:toolPreferencesMenuItem} = New-Object System.Windows.Forms.ToolStripMenuItem
+    ${script:toolPreferencesMenuItem}.Text = "Tool Preferences"
+    ${script:toolPreferencesMenuItem}.Add_Click({ Show-ToolPreferences })
 
     # Add Agentic Pipeline Test
-    $script:testAgenticPipelineItem = New-Object System.Windows.Forms.ToolStripMenuItem
-    $script:testAgenticPipelineItem.Text = "Test Agentic Pipeline"
-    $script:testAgenticPipelineItem.Add_Click({ Invoke-AgenticSelfTest })
-    $script:agentToolsMenuItem.DropDownItems.Add($script:testAgenticPipelineItem) | Out-Null
+    ${script:testAgenticPipelineItem} = New-Object System.Windows.Forms.ToolStripMenuItem
+    ${script:testAgenticPipelineItem}.Text = "Test Agentic Pipeline"
+    ${script:testAgenticPipelineItem}.Add_Click({ Invoke-AgenticSelfTest })
+    ${script:agentToolsMenuItem}.DropDownItems.Add(${script:testAgenticPipelineItem}) | Out-Null
 
     # Note: The Tools menu will be added to the main MenuStrip later when $menu is created
     Write-StartupLog "Agent tools menu items prepared" "INFO"
@@ -6727,12 +6725,12 @@ function Invoke-AgenticSelfTest {
     if ($result -ne [System.Windows.Forms.DialogResult]::Yes) { return }
     
     # Get active chat session
-    if (-not $script:activeChatTabId -or -not $script:chatTabs.ContainsKey($script:activeChatTabId)) {
+    if (-not ${script:activeChatTabId} -or -not ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
         [System.Windows.Forms.MessageBox]::Show("No active chat tab found. Please open a chat tab first.", "Error", "OK", "Error")
         return
     }
     
-    $chatSession = $script:chatTabs[$script:activeChatTabId]
+    $chatSession = ${script:chatTabs}[${script:activeChatTabId}]
     $model = $chatSession.ModelCombo.SelectedItem
     
     if ($model -notmatch "agent|cheetah") {
@@ -6750,21 +6748,21 @@ function Invoke-AgenticSelfTest {
     }
     
     # Trigger send
-    Send-ChatMessage -TabId $script:activeChatTabId
+    Send-ChatMessage -TabId ${script:activeChatTabId}
 }
 
 Load-AgentToolPreferences
 Initialize-AgentToolsMenu -TargetForm $form
 
 # Security check and optional authentication
-if ($script:SecurityConfig.AuthenticationRequired) {
+if (${script:SecurityConfig}.AuthenticationRequired) {
     $authResult = Show-AuthenticationDialog
     if (-not $authResult) {
         Write-SecurityLog "Authentication failed or cancelled" "ERROR"
         Write-DevConsole "Authentication required to access this application." "WARNING"
         exit
     }
-    $script:CurrentSession.IsAuthenticated = $true
+    ${script:CurrentSession}.IsAuthenticated = $true
     Write-SecurityLog "User authenticated successfully" "SUCCESS"
 }
 
@@ -6776,13 +6774,13 @@ $form.Add_FormClosing({
     })
 
 $form.Add_Activated({
-        $script:CurrentSession.LastActivity = Get-Date
+        ${script:CurrentSession}.LastActivity = Get-Date
     })
 
 # Add security status to title bar
 $form.Add_Shown({
-        $securityIndicator = if ($script:SecurityConfig.StealthMode) { "🔒 STEALTH" }
-        elseif ($script:SecurityConfig.EncryptSensitiveData) { "🔐 SECURE" }
+        $securityIndicator = $(if (${script:SecurityConfig}.StealthMode) { "🔒 STEALTH" }
+        elseif (${script:SecurityConfig}.EncryptSensitiveData) { "🔐 SECURE" }
         else { "🔓 STANDARD" }
         $form.Text = "RawrXD - Secure AI Editor [$securityIndicator]"
         
@@ -6952,8 +6950,8 @@ function Initialize-EditorContextMenu {
 Write-StartupLog "Initializing tabbed code editor..." "INFO"
 
 # Initialize editor tabs collection
-$script:editorTabs = @{}  # Hashtable: FilePath -> TabPage
-$script:editorBoxes = @{} # Hashtable: FilePath -> RichTextBox
+${script:editorTabs} = @{}  # Hashtable: FilePath -> TabPage
+${script:editorBoxes} = @{} # Hashtable: FilePath -> RichTextBox
 
 # Fallback Editor Container
 $fallbackEditorContainer = New-Object System.Windows.Forms.Panel
@@ -6998,27 +6996,27 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
     $editorToolbar.Controls.Add($closeTabBtn) | Out-Null
 
     # Editor Status Label (File Path)
-    $script:editorStatusLabel = New-Object System.Windows.Forms.Label
-    $script:editorStatusLabel.Text = "No file opened"
-    $script:editorStatusLabel.Dock = [System.Windows.Forms.DockStyle]::Fill
-    $script:editorStatusLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleLeft
-    $script:editorStatusLabel.Padding = New-Object System.Windows.Forms.Padding(10, 0, 0, 0)
-    $script:editorStatusLabel.ForeColor = [System.Drawing.Color]::White
-    $editorToolbar.Controls.Add($script:editorStatusLabel) | Out-Null
+    ${script:editorStatusLabel} = New-Object System.Windows.Forms.Label
+    ${script:editorStatusLabel}.Text = "No file opened"
+    ${script:editorStatusLabel}.Dock = [System.Windows.Forms.DockStyle]::Fill
+    ${script:editorStatusLabel}.TextAlign = [System.Drawing.ContentAlignment]::MiddleLeft
+    ${script:editorStatusLabel}.Padding = New-Object System.Windows.Forms.Padding(10, 0, 0, 0)
+    ${script:editorStatusLabel}.ForeColor = [System.Drawing.Color]::White
+    $editorToolbar.Controls.Add(${script:editorStatusLabel}) | Out-Null
 
     # Editor TabControl for multiple files
-    $script:editorTabControl = New-Object System.Windows.Forms.TabControl
-    $script:editorTabControl.Dock = [System.Windows.Forms.DockStyle]::Fill
-    $script:editorTabControl.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-    $script:editorTabControl.Appearance = [System.Windows.Forms.TabAppearance]::Normal
-    $script:editorTabControl.Padding = New-Object System.Drawing.Point(8, 4)
-    $script:editorTabControl.ItemSize = New-Object System.Drawing.Size(150, 24)
-    $script:editorTabControl.SizeMode = [System.Windows.Forms.TabSizeMode]::Normal
-    $fallbackEditorContainer.Controls.Add($script:editorTabControl) | Out-Null
+    ${script:editorTabControl} = New-Object System.Windows.Forms.TabControl
+    ${script:editorTabControl}.Dock = [System.Windows.Forms.DockStyle]::Fill
+    ${script:editorTabControl}.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    ${script:editorTabControl}.Appearance = [System.Windows.Forms.TabAppearance]::Normal
+    ${script:editorTabControl}.Padding = New-Object System.Drawing.Point(8, 4)
+    ${script:editorTabControl}.ItemSize = New-Object System.Drawing.Size(150, 24)
+    ${script:editorTabControl}.SizeMode = [System.Windows.Forms.TabSizeMode]::Normal
+    $fallbackEditorContainer.Controls.Add(${script:editorTabControl}) | Out-Null
 
     # Style the TabControl for dark theme
-    $script:editorTabControl.DrawMode = [System.Windows.Forms.TabDrawMode]::OwnerDrawFixed
-    $script:editorTabControl.Add_DrawItem({
+    ${script:editorTabControl}.DrawMode = [System.Windows.Forms.TabDrawMode]::OwnerDrawFixed
+    ${script:editorTabControl}.Add_DrawItem({
         param($sender, $e)
         try {
             $tabPage = $sender.TabPages[$e.Index]
@@ -7051,7 +7049,7 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
     $welcomeTab.Text = "Welcome"
     $welcomeTab.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
     $welcomeTab.Tag = $null  # No file associated
-    $script:editorTabControl.TabPages.Add($welcomeTab)
+    ${script:editorTabControl}.TabPages.Add($welcomeTab)
     
     $welcomeEditor = New-Object System.Windows.Forms.RichTextBox
     $welcomeEditor.Dock = [System.Windows.Forms.DockStyle]::Fill
@@ -7066,27 +7064,27 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
     $welcomeTab.Controls.Add($welcomeEditor)
     
     # Keep reference for compatibility
-    $script:editorBox = $welcomeEditor
+    ${script:editorBox} = $welcomeEditor
     
     # Tab selection changed - update status
-    $script:editorTabControl.Add_SelectedIndexChanged({
+    ${script:editorTabControl}.Add_SelectedIndexChanged({
         try {
-            $selectedTab = $script:editorTabControl.SelectedTab
+            $selectedTab = ${script:editorTabControl}.SelectedTab
             if ($selectedTab -and $selectedTab.Tag) {
-                $script:editorStatusLabel.Text = "Editing: $($selectedTab.Tag)"
-                $script:editorStatusLabel.Tag = $selectedTab.Tag
+                ${script:editorStatusLabel}.Text = "Editing: $($selectedTab.Tag)"
+                ${script:editorStatusLabel}.Tag = $selectedTab.Tag
                 # Update editorBox reference to current tab's editor
-                $script:editorBox = $script:editorBoxes[$selectedTab.Tag]
+                ${script:editorBox} = ${script:editorBoxes}[$selectedTab.Tag]
             } elseif ($selectedTab) {
-                $script:editorStatusLabel.Text = $selectedTab.Text
-                $script:editorStatusLabel.Tag = $null
+                ${script:editorStatusLabel}.Text = $selectedTab.Text
+                ${script:editorStatusLabel}.Tag = $null
             }
         }
         catch { }
     })
     
     # Middle-click to close tab
-    $script:editorTabControl.Add_MouseClick({
+    ${script:editorTabControl}.Add_MouseClick({
         param($sender, $e)
         try {
             if ($e.Button -eq [System.Windows.Forms.MouseButtons]::Middle) {
@@ -7096,7 +7094,7 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
                         $tabToClose = $sender.TabPages[$i]
                         if ($tabToClose.Tag) {
                             # Check for unsaved changes
-                            $editor = $script:editorBoxes[$tabToClose.Tag]
+                            $editor = ${script:editorBoxes}[$tabToClose.Tag]
                             if ($editor -and $editor.Modified) {
                                 $result = [System.Windows.Forms.MessageBox]::Show(
                                     "Save changes to $($tabToClose.Text)?",
@@ -7111,8 +7109,8 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
                                     return
                                 }
                             }
-                            $script:editorTabs.Remove($tabToClose.Tag)
-                            $script:editorBoxes.Remove($tabToClose.Tag)
+                            ${script:editorTabs}.Remove($tabToClose.Tag)
+                            ${script:editorBoxes}.Remove($tabToClose.Tag)
                         }
                         $sender.TabPages.Remove($tabToClose)
                         Write-DevConsole "📑 Closed tab: $($tabToClose.Text)" "INFO"
@@ -7127,9 +7125,9 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
     # Save Action - save current tab
     $saveBtn.Add_Click({
         try {
-            $selectedTab = $script:editorTabControl.SelectedTab
+            $selectedTab = ${script:editorTabControl}.SelectedTab
             if ($selectedTab -and $selectedTab.Tag) {
-                $editor = $script:editorBoxes[$selectedTab.Tag]
+                $editor = ${script:editorBoxes}[$selectedTab.Tag]
                 if ($editor) {
                     $editor.Text | Set-Content -Path $selectedTab.Tag
                     $editor.Modified = $false
@@ -7137,7 +7135,7 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
                     if ($selectedTab.Text.EndsWith(" *")) {
                         $selectedTab.Text = $selectedTab.Text.TrimEnd(" *")
                     }
-                    $script:editorStatusLabel.Text = "Saved: $($selectedTab.Tag)"
+                    ${script:editorStatusLabel}.Text = "Saved: $($selectedTab.Tag)"
                     Write-DevConsole "✅ File saved: $($selectedTab.Tag)" "SUCCESS"
                 }
             }
@@ -7151,14 +7149,14 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
     $saveAllBtn.Add_Click({
         try {
             $savedCount = 0
-            foreach ($filePath in $script:editorBoxes.Keys) {
-                $editor = $script:editorBoxes[$filePath]
+            foreach ($filePath in ${script:editorBoxes}.Keys) {
+                $editor = ${script:editorBoxes}[$filePath]
                 if ($editor -and $editor.Modified) {
                     $editor.Text | Set-Content -Path $filePath
                     $editor.Modified = $false
                     $savedCount++
                     # Update tab title
-                    $tab = $script:editorTabs[$filePath]
+                    $tab = ${script:editorTabs}[$filePath]
                     if ($tab -and $tab.Text.EndsWith(" *")) {
                         $tab.Text = $tab.Text.TrimEnd(" *")
                     }
@@ -7174,10 +7172,10 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
     # Close Tab Action
     $closeTabBtn.Add_Click({
         try {
-            $selectedTab = $script:editorTabControl.SelectedTab
+            $selectedTab = ${script:editorTabControl}.SelectedTab
             if ($selectedTab) {
                 if ($selectedTab.Tag) {
-                    $editor = $script:editorBoxes[$selectedTab.Tag]
+                    $editor = ${script:editorBoxes}[$selectedTab.Tag]
                     if ($editor -and $editor.Modified) {
                         $result = [System.Windows.Forms.MessageBox]::Show(
                             "Save changes to $($selectedTab.Text)?",
@@ -7192,10 +7190,10 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
                             return
                         }
                     }
-                    $script:editorTabs.Remove($selectedTab.Tag)
-                    $script:editorBoxes.Remove($selectedTab.Tag)
+                    ${script:editorTabs}.Remove($selectedTab.Tag)
+                    ${script:editorBoxes}.Remove($selectedTab.Tag)
                 }
-                $script:editorTabControl.TabPages.Remove($selectedTab)
+                ${script:editorTabControl}.TabPages.Remove($selectedTab)
                 Write-DevConsole "📑 Closed tab: $($selectedTab.Text)" "INFO"
             }
         }
@@ -7204,25 +7202,25 @@ $leftSplitter.Panel2.Controls.Add($fallbackEditorContainer) | Out-Null
 
 function Set-EditorText {
     param([string]$Text)
-    if ($script:monacoReady) {
+    if (${script:monacoReady}) {
         $escapedText = ConvertTo-JsString -InputObject $Text
         $js = "setText(`$($escapedText)');"
-        $script:monacoWebView.ExecuteScriptAsync($js) | Out-Null
+        ${script:monacoWebView}.ExecuteScriptAsync($js) | Out-Null
     }
 }
 
 function Get-EditorText {
-    if ($script:monacoReady) {
-        return $script:monacoWebView.ExecuteScriptAsync("getText();")
+    if (${script:monacoReady}) {
+        return ${script:monacoWebView}.ExecuteScriptAsync("getText();")
     }
     return [System.Threading.Tasks.Task]::FromResult("")
 }
 
 function Set-EditorLanguage {
     param([string]$Language)
-    if ($script:monacoReady) {
+    if (${script:monacoReady}) {
         $js = "setLanguage('$Language');"
-        $script:monacoWebView.ExecuteScriptAsync($js) | Out-Null
+        ${script:monacoWebView}.ExecuteScriptAsync($js) | Out-Null
     }
 }
 
@@ -7281,7 +7279,7 @@ function Open-FileInTab {
     param(
         [Parameter(Mandatory=$true)]
         [string]$FilePath,
-        [switch]$SwitchToTab = $true
+        [switch]$SwitchToTab
     )
     
     try {
@@ -7295,20 +7293,20 @@ function Open-FileInTab {
             return $null
         }
         
-        if (-not $script:editorTabControl) {
+        if (-not ${script:editorTabControl}) {
             Write-DevConsole "⚠️ Editor tab control not initialized" "WARNING"
             return $null
         }
         
         # Check if file is already open
-        if ($script:editorTabs.ContainsKey($FilePath)) {
+        if (${script:editorTabs}.ContainsKey($FilePath)) {
             if ($SwitchToTab) {
-                $script:editorTabControl.SelectedTab = $script:editorTabs[$FilePath]
-                $script:editorBox = $script:editorBoxes[$FilePath]
-                $script:editorStatusLabel.Text = "Editing: $FilePath"
-                $script:editorStatusLabel.Tag = $FilePath
+                ${script:editorTabControl}.SelectedTab = ${script:editorTabs}[$FilePath]
+                ${script:editorBox} = ${script:editorBoxes}[$FilePath]
+                ${script:editorStatusLabel}.Text = "Editing: $FilePath"
+                ${script:editorStatusLabel}.Tag = $FilePath
             }
-            return $script:editorTabs[$FilePath]
+            return ${script:editorTabs}[$FilePath]
         }
         
         # Create new tab
@@ -7353,17 +7351,17 @@ function Open-FileInTab {
         $newTab.Controls.Add($newEditor)
         
         # Store references
-        $script:editorTabs[$FilePath] = $newTab
-        $script:editorBoxes[$FilePath] = $newEditor
+        ${script:editorTabs}[$FilePath] = $newTab
+        ${script:editorBoxes}[$FilePath] = $newEditor
         
         # Add tab
-        $script:editorTabControl.TabPages.Add($newTab)
+        ${script:editorTabControl}.TabPages.Add($newTab)
         
         if ($SwitchToTab) {
-            $script:editorTabControl.SelectedTab = $newTab
-            $script:editorBox = $newEditor
-            $script:editorStatusLabel.Text = "Editing: $FilePath"
-            $script:editorStatusLabel.Tag = $FilePath
+            ${script:editorTabControl}.SelectedTab = $newTab
+            ${script:editorBox} = $newEditor
+            ${script:editorStatusLabel}.Text = "Editing: $FilePath"
+            ${script:editorStatusLabel}.Tag = $FilePath
         }
         
         Write-DevConsole "📑 Opened: $fileName" "SUCCESS"
@@ -7392,19 +7390,19 @@ function Close-EditorTab {
     try {
         $tabToClose = $null
         
-        if ($FilePath -and $script:editorTabs.ContainsKey($FilePath)) {
-            $tabToClose = $script:editorTabs[$FilePath]
+        if ($FilePath -and ${script:editorTabs}.ContainsKey($FilePath)) {
+            $tabToClose = ${script:editorTabs}[$FilePath]
         }
-        elseif (-not $FilePath -and $script:editorTabControl) {
-            $tabToClose = $script:editorTabControl.SelectedTab
+        elseif (-not $FilePath -and ${script:editorTabControl}) {
+            $tabToClose = ${script:editorTabControl}.SelectedTab
             $FilePath = $tabToClose.Tag
         }
         
         if (-not $tabToClose) { return }
         
         # Check for unsaved changes
-        if (-not $Force -and $FilePath -and $script:editorBoxes.ContainsKey($FilePath)) {
-            $editor = $script:editorBoxes[$FilePath]
+        if (-not $Force -and $FilePath -and ${script:editorBoxes}.ContainsKey($FilePath)) {
+            $editor = ${script:editorBoxes}[$FilePath]
             if ($editor.Modified) {
                 $result = [System.Windows.Forms.MessageBox]::Show(
                     "Save changes to $([System.IO.Path]::GetFileName($FilePath))?",
@@ -7423,12 +7421,12 @@ function Close-EditorTab {
         
         # Remove from collections
         if ($FilePath) {
-            $script:editorTabs.Remove($FilePath)
-            $script:editorBoxes.Remove($FilePath)
+            ${script:editorTabs}.Remove($FilePath)
+            ${script:editorBoxes}.Remove($FilePath)
         }
         
         # Remove tab
-        $script:editorTabControl.TabPages.Remove($tabToClose)
+        ${script:editorTabControl}.TabPages.Remove($tabToClose)
         Write-DevConsole "📑 Closed: $($tabToClose.Text)" "INFO"
     }
     catch {
@@ -7441,12 +7439,12 @@ function Get-OpenEditorTabs {
     .SYNOPSIS
         Returns list of currently open editor tabs
     #>
-    if ($script:editorTabs) {
-        return $script:editorTabs.Keys | ForEach-Object {
+    if (${script:editorTabs}) {
+        return ${script:editorTabs}.Keys | ForEach-Object {
             [PSCustomObject]@{
                 FilePath = $_
                 FileName = [System.IO.Path]::GetFileName($_)
-                Modified = $script:editorBoxes[$_].Modified
+                Modified = ${script:editorBoxes}[$_].Modified
             }
         }
     }
@@ -7491,8 +7489,8 @@ $explorer.add_BeforeExpand({
                         foreach ($dir in $subdirs) {
                             try {
                                 $isHidden = $dir.Attributes -band [System.IO.FileAttributes]::Hidden
-                                $dirIcon = if ($isHidden) { "📁💀" } else { "📁" }
-                                $dirName = if ($isHidden) { "$($dir.Name) (Hidden)" } else { $dir.Name }
+                                $dirIcon = $(if ($isHidden) { "📁💀" } else { "📁" }
+                                $dirName = $(if ($isHidden) { "$($dir.Name) (Hidden)" } else { $dir.Name }
 
                                 $dirNode = New-Object System.Windows.Forms.TreeNode("$dirIcon $dirName")
                                 $dirNode.Tag = $dir.FullName
@@ -7523,7 +7521,7 @@ $explorer.add_BeforeExpand({
                             try {
                                 $fileIcon = Get-FileIcon $file.Extension
                                 $isHidden = $file.Attributes -band [System.IO.FileAttributes]::Hidden
-                                $fileName = if ($isHidden) { "$($file.Name) (Hidden)" } else { $file.Name }
+                                $fileName = $(if ($isHidden) { "$($file.Name) (Hidden)" } else { $file.Name }
 
                                 $fileNode = New-Object System.Windows.Forms.TreeNode("$fileIcon $fileName")
                                 $fileNode.Tag = $file.FullName
@@ -7601,10 +7599,10 @@ $explorer.add_NodeMouseDoubleClick({
                 $cursorToken = Enter-CursorWaitState -Reason "FileLoad:$([System.IO.Path]::GetFileName($filePath))" -Style "Wait"
                 try {
                     # Debug: Check what editor components are available
-                    $hasTabControl = $null -ne $script:editorTabControl
-                    $hasEditorBox = $null -ne $script:editorBox
-                    $tabControlInfo = if ($hasTabControl) { 
-                        "Visible=$($script:editorTabControl.Visible), Handle=$($script:editorTabControl.IsHandleCreated)" 
+                    $hasTabControl = $null -ne ${script:editorTabControl}
+                    $hasEditorBox = $null -ne ${script:editorBox}
+                    $tabControlInfo = $(if ($hasTabControl) { 
+                        "Visible=$(${script:editorTabControl}.Visible), Handle=$(${script:editorTabControl}.IsHandleCreated)" 
                     } else { 
                         "NULL" 
                     }
@@ -7614,7 +7612,7 @@ $explorer.add_NodeMouseDoubleClick({
                     if (-not $hasTabControl -and -not $hasEditorBox) {
                         Write-DevConsole "❌ CRITICAL: No editor components initialized!" "ERROR"
                         [System.Windows.Forms.MessageBox]::Show(
-                            "Editor failed to initialize properly.`n`nPlease restart RawrXD.`n`nIf this persists, check the startup log at:`n$($script:StartupLogFile)",
+                            "Editor failed to initialize properly.`n`nPlease restart RawrXD.`n`nIf this persists, check the startup log at:`n$(${script:StartupLogFile})",
                             "Editor Initialization Error",
                             [System.Windows.Forms.MessageBoxButtons]::OK,
                             [System.Windows.Forms.MessageBoxIcon]::Error
@@ -7624,12 +7622,12 @@ $explorer.add_NodeMouseDoubleClick({
                     
                     if ($hasTabControl) {
                         # Check if file is already open in a tab
-                        if ($script:editorTabs.ContainsKey($filePath)) {
+                        if (${script:editorTabs}.ContainsKey($filePath)) {
                             # Switch to existing tab
-                            $script:editorTabControl.SelectedTab = $script:editorTabs[$filePath]
-                            $script:editorBox = $script:editorBoxes[$filePath]
-                            $script:editorStatusLabel.Text = "Editing: $filePath"
-                            $script:editorStatusLabel.Tag = $filePath
+                            ${script:editorTabControl}.SelectedTab = ${script:editorTabs}[$filePath]
+                            ${script:editorBox} = ${script:editorBoxes}[$filePath]
+                            ${script:editorStatusLabel}.Text = "Editing: $filePath"
+                            ${script:editorStatusLabel}.Tag = $filePath
                             Write-DevConsole "📑 Switched to existing tab: $([System.IO.Path]::GetFileName($filePath))" "INFO"
                         } else {
                             # Create new tab for file
@@ -7675,21 +7673,21 @@ $explorer.add_NodeMouseDoubleClick({
                             $newTab.Controls.Add($newEditor)
                             
                             # Store references
-                            $script:editorTabs[$filePath] = $newTab
-                            $script:editorBoxes[$filePath] = $newEditor
+                            ${script:editorTabs}[$filePath] = $newTab
+                            ${script:editorBoxes}[$filePath] = $newEditor
                             
                             # Add and select tab
-                            $script:editorTabControl.TabPages.Add($newTab)
-                            $script:editorTabControl.SelectedTab = $newTab
+                            ${script:editorTabControl}.TabPages.Add($newTab)
+                            ${script:editorTabControl}.SelectedTab = $newTab
                             
                             # Update current editor reference
-                            $script:editorBox = $newEditor
-                            $script:editorStatusLabel.Text = "Editing: $filePath"
-                            $script:editorStatusLabel.Tag = $filePath
+                            ${script:editorBox} = $newEditor
+                            ${script:editorStatusLabel}.Text = "Editing: $filePath"
+                            ${script:editorStatusLabel}.Tag = $filePath
                             
                             Write-DevConsole "📑 Opened in new tab: $fileName" "SUCCESS"
                         }
-                    } elseif ($script:editorBox) {
+                    } elseif (${script:editorBox}) {
                         # Fallback to single editor mode
                         Write-DevConsole "📝 Loading into single editor mode" "INFO"
                         Show-ProgressBox -Operation "Reading" -FilePath $filePath -LineRange "All" -SearchTarget "File content for editor"
@@ -7699,10 +7697,10 @@ $explorer.add_NodeMouseDoubleClick({
 
                         Show-ReadCompleteBox -FilePath $filePath -ContentSummary "Loaded into editor" -CharacterCount $content.Length -LineCount $lineCount
                         
-                        $script:editorBox.Text = $content
-                        $script:currentFile = $filePath
-                        $script:editorStatusLabel.Text = "Editing: $filePath"
-                        $script:editorStatusLabel.Tag = $filePath
+                        ${script:editorBox}.Text = $content
+                        ${script:currentFile} = $filePath
+                        ${script:editorStatusLabel}.Text = "Editing: $filePath"
+                        ${script:editorStatusLabel}.Tag = $filePath
                         
                         Write-DevConsole "✅ File loaded into single editor" "SUCCESS"
                     } else {
@@ -7786,17 +7784,17 @@ $openInRawrItem.Add_Click({
 
                 $cursorToken = Enter-CursorWaitState -Reason "FileLoad:$([System.IO.Path]::GetFileName($filePath))" -Style "Wait"
                 try {
-                    if ($script:editorTabControl) {
+                    if (${script:editorTabControl}) {
                         # Use the tabbed editor system
                         Open-FileInTab -FilePath $filePath
-                        $global:currentFile = $filePath
+                        ${global:currentFile} = $filePath
                         Write-DevConsole "🎉 File opened successfully in tab!" "SUCCESS"
-                    } elseif ($script:editorBox) {
+                    } elseif (${script:editorBox}) {
                         $content = Get-Content -Path $filePath -Raw
-                        $script:editorBox.Text = $content
-                        $script:editorStatusLabel.Text = "Editing: $filePath"
-                        $script:editorStatusLabel.Tag = $filePath
-                        $global:currentFile = $filePath
+                        ${script:editorBox}.Text = $content
+                        ${script:editorStatusLabel}.Text = "Editing: $filePath"
+                        ${script:editorStatusLabel}.Tag = $filePath
+                        ${global:currentFile} = $filePath
                         Write-DevConsole "🎉 File opened successfully in embedded editor!" "SUCCESS"
                     } else {
                         Write-DevConsole "❌ No editor available" "ERROR"
@@ -7808,10 +7806,10 @@ $openInRawrItem.Add_Click({
                         )
                     }
                     # Update last activity if session exists
-                    if ($script:CurrentSession) { $script:CurrentSession.LastActivity = Get-Date }
+                    if (${script:CurrentSession}) { ${script:CurrentSession}.LastActivity = Get-Date }
                     # Optional: Add to recent files
-                    if ($script:RecentFiles -and $script:RecentFiles.Count -lt 10 -and $filePath -notin $script:RecentFiles) {
-                        $script:RecentFiles.Add($filePath)
+                    if (${script:RecentFiles} -and ${script:RecentFiles}.Count -lt 10 -and $filePath -notin ${script:RecentFiles}) {
+                        ${script:RecentFiles}.Add($filePath)
                     }
                 }
                 catch {
@@ -7991,7 +7989,7 @@ function Initialize-ChatSubsystem {
             # Example of wiring UI events to the loaded functions
             # This assumes New-ChatTab is defined in RawrXD-Chat.ps1
             # $newChatBtn.Add_Click({ New-ChatTab -TabName "New Chat" | Out-Null })
-            # $closeChatBtn.Add_Click({ if ($script:activeChatTabId) { Remove-ChatTab -TabId $script:activeChatTabId } })
+            # $closeChatBtn.Add_Click({ if (${script:activeChatTabId}) { Remove-ChatTab -TabId ${script:activeChatTabId} } })
 
             return $true
         }
@@ -8007,7 +8005,7 @@ function Initialize-ChatSubsystem {
 }
 
 # Initialize the chat subsystem immediately after UI controls are created
-$script:ChatSubsystemLoaded = Initialize-ChatSubsystem -PSScriptRoot $PSScriptRoot
+${script:ChatSubsystemLoaded} = Initialize-ChatSubsystem -PSScriptRoot $PSScriptRoot
 # ============================================
 
 # Chat toolbar
@@ -8038,12 +8036,12 @@ $bulkActionsBtn.Width = 80
 $chatToolbar.Controls.Add($bulkActionsBtn) | Out-Null
 
 # Chat Status Label
-$script:chatStatusLabel = New-Object System.Windows.Forms.Label
-$script:chatStatusLabel.Text = "No active chats"
-$script:chatStatusLabel.Dock = [System.Windows.Forms.DockStyle]::Fill
-$script:chatStatusLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleLeft
-$script:chatStatusLabel.Padding = New-Object System.Windows.Forms.Padding(10, 0, 0, 0)
-$chatToolbar.Controls.Add($script:chatStatusLabel) | Out-Null
+${script:chatStatusLabel} = New-Object System.Windows.Forms.Label
+${script:chatStatusLabel}.Text = "No active chats"
+${script:chatStatusLabel}.Dock = [System.Windows.Forms.DockStyle]::Fill
+${script:chatStatusLabel}.TextAlign = [System.Drawing.ContentAlignment]::MiddleLeft
+${script:chatStatusLabel}.Padding = New-Object System.Windows.Forms.Padding(10, 0, 0, 0)
+$chatToolbar.Controls.Add(${script:chatStatusLabel}) | Out-Null
 
 # Git Tab
 $gitTab = New-Object System.Windows.Forms.TabPage
@@ -8122,14 +8120,14 @@ $ollamaToolbar.Dock = [System.Windows.Forms.DockStyle]::Top
 $ollamaToolbar.Height = 30
 $agentTasksContainer.Controls.Add($ollamaToolbar) | Out-Null
 
-$script:ollamaStatusLabel = New-Object System.Windows.Forms.Label
-$script:ollamaStatusLabel.Text = "🔴 Ollama: Initializing..."
-$script:ollamaStatusLabel.Dock = [System.Windows.Forms.DockStyle]::Left
-$script:ollamaStatusLabel.Width = 200
-$script:ollamaStatusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
-$script:ollamaStatusLabel.ForeColor = 'Orange'
-$script:ollamaStatusLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleLeft
-$ollamaToolbar.Controls.Add($script:ollamaStatusLabel) | Out-Null
+${script:ollamaStatusLabel} = New-Object System.Windows.Forms.Label
+${script:ollamaStatusLabel}.Text = "🔴 Ollama: Initializing..."
+${script:ollamaStatusLabel}.Dock = [System.Windows.Forms.DockStyle]::Left
+${script:ollamaStatusLabel}.Width = 200
+${script:ollamaStatusLabel}.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+${script:ollamaStatusLabel}.ForeColor = 'Orange'
+${script:ollamaStatusLabel}.TextAlign = [System.Drawing.ContentAlignment]::MiddleLeft
+$ollamaToolbar.Controls.Add(${script:ollamaStatusLabel}) | Out-Null
 
 $ollamaStartBtn = New-Object System.Windows.Forms.Button
 $ollamaStartBtn.Text = "Start"
@@ -8175,14 +8173,14 @@ $agentTasksList.Columns.Add("Time", 100) | Out-Null
 $agentTasksList.Add_SelectedIndexChanged({
         if ($agentTasksList.SelectedItems -and $agentTasksList.SelectedItems.Count -gt 0) {
             $taskId = $agentTasksList.SelectedItems[0].Tag
-            $task = $global:agentContext.Tasks | Where-Object { $_.Id -eq $taskId } | Select-Object -First 1
+            $task = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $taskId } | Select-Object -First 1
             if ($task) {
                 $agentTaskDetails.Clear()
                 $agentTaskDetails.AppendText("Task: $($task.Name)`r`n")
                 $agentTaskDetails.AppendText("Status: $($task.Status)`r`n")
                 $agentTaskDetails.AppendText("Steps:`r`n")
                 foreach ($step in $task.Steps) {
-                    $status = if ($step.Completed) { "✓" } else { "○" }
+                    $status = $(if ($step.Completed) { "✓" } else { "○" }
                     $agentTaskDetails.AppendText("  $status $($step.Description)`r`n")
                 }
             }
@@ -8255,9 +8253,9 @@ $agentInputContainer.Controls.Add($agentSendBtn) | Out-Null
 
 # Terminal Tab
 $terminalTab = New-Object System.Windows.Forms.TabPage
-$global:terminalSessionCounter = 1
-$global:terminalSessionLock = $false
-$global:terminalSessionOwner = $null
+${global:terminalSessionCounter} = 1
+${global:terminalSessionLock} = $false
+${global:terminalSessionOwner} = $null
 $terminalTab.Text = "Terminal (Session 1)"
 $rightTabControl.TabPages.Add($terminalTab) | Out-Null
 
@@ -8307,19 +8305,19 @@ $terminalInput.ForeColor = [System.Drawing.Color]::FromArgb(0, 255, 0)
 $terminalInputContainer.Controls.Add($terminalInput) | Out-Null
 
 # Global variables
-$global:currentWorkingDir = Get-Location
-$global:terminalHistory = @()
-$global:terminalHistoryIndex = -1
-$global:currentFile = $null
+${global:currentWorkingDir} = Get-Location
+${global:terminalHistory} = @()
+${global:terminalHistoryIndex} = -1
+${global:currentFile} = $null
 
 # Ollama Server Management
-$global:ollamaProcess = $null
-$global:ollamaStartupAttempted = $false
-$global:ollamaServerStatus = "Stopped"
-$script:ollamaTimer = $null
+${global:ollamaProcess} = $null
+${global:ollamaStartupAttempted} = $false
+${global:ollamaServerStatus} = "Stopped"
+${script:ollamaTimer} = $null
 
 # Settings & Configuration
-$global:settings = @{
+${global:settings} = @{
     # AI/Model Settings
     OllamaModel      = $OllamaModel
     OllamaEndpoint   = "http://localhost:11434"
@@ -8435,21 +8433,21 @@ $global:settings = @{
 # Note: Set-EditorSettings is called later after function definition
 
 # Settings file path
-$script:settingsPath = Join-Path $env:APPDATA "RawrXD\settings.json"
+${script:settingsPath} = Join-Path ${env:APPDATA} "RawrXD\settings.json"
 
 # Chat Tab Management
-$script:chatTabs = @{}  # TabId -> ChatTab object
-$script:activeChatTabId = $null
-$script:chatTabCounter = 0
-$script:maxChatTabs = 10
-$script:chatJobs = @()  # Active chat processing jobs
-$script:chatJobMonitorTimer = $null  # Timer for monitoring chat jobs
+${script:chatTabs} = @{}  # TabId -> ChatTab object
+${script:activeChatTabId} = $null
+${script:chatTabCounter} = 0
+${script:maxChatTabs} = 10
+${script:chatJobs} = @()  # Active chat processing jobs
+${script:chatJobMonitorTimer} = $null  # Timer for monitoring chat jobs
 
 # CRITICAL FIX: Initialize variables used in chat processing and file operations
 # These were causing "variable not set" errors in latest.log
-$script:RecentFiles = New-Object System.Collections.Generic.List[string]  # Track recently opened files (max 10)
-$script:processingText = ""  # Will be set when chat processing starts, prevents uninitialized variable errors
-$script:PendingDelete = @{Path = $null; Confirmed = $false }  # For in-chat delete confirmations
+${script:RecentFiles} = New-Object System.Collections.Generic.List[string]  # Track recently opened files (max 10)
+${script:processingText} = ""  # Will be set when chat processing starts, prevents uninitialized variable errors
+${script:PendingDelete} = @{Path = $null; Confirmed = $false }  # For in-chat delete confirmations
 
 # ============================================
 # MULTI-BACKEND AI SUPPORT (Ollama, llama.cpp, llamafile)
@@ -8461,8 +8459,8 @@ $script:PendingDelete = @{Path = $null; Confirmed = $false }  # For in-chat dele
 # Dynamically populated model capabilities based on detected models
 # Base capability profiles for known models
 
-$script:ModelCapabilities = @{}
-$script:ModelProfiles = @{
+${script:ModelCapabilities} = @{}
+${script:ModelProfiles} = @{
     "cheetah-stealth-agentic" = @{
         Name           = "Cheetah Stealth Agentic"
         Speed          = "Instant cloud API - cheetah-stealth-agentic model has insta replies like cloud"
@@ -8574,15 +8572,15 @@ function Update-ModelCapabilities {
     .SYNOPSIS
         Dynamically update model capabilities from detected models
     .DESCRIPTION
-        Scans available models and populates $script:ModelCapabilities with
-        profiles from $script:ModelProfiles, auto-detecting model types.
-        Also updates $global:agentContext.ModelCapabilities for global access.
+        Scans available models and populates ${script:ModelCapabilities} with
+        profiles from ${script:ModelProfiles}, auto-detecting model types.
+        Also updates ${global:agentContext}.ModelCapabilities for global access.
     #>
     param([switch]$Force)
     
     # Clear if forcing refresh
     if ($Force) {
-        $script:ModelCapabilities = @{}
+        ${script:ModelCapabilities} = @{}
     }
     
     # Get all available models
@@ -8590,31 +8588,31 @@ function Update-ModelCapabilities {
     
     foreach ($modelName in $availableModels) {
         # Skip if already processed
-        if ($script:ModelCapabilities.ContainsKey($modelName)) {
+        if (${script:ModelCapabilities}.ContainsKey($modelName)) {
             continue
         }
         
         # Find matching profile by checking common keywords
         $matchedProfile = $null
         
-        foreach ($profileKey in $script:ModelProfiles.Keys) {
+        foreach ($profileKey in ${script:ModelProfiles}.Keys) {
             if ($modelName -match $profileKey -or $modelName -match ($profileKey -replace "-", "[_-]?")) {
-                $matchedProfile = $script:ModelProfiles[$profileKey]
+                $matchedProfile = ${script:ModelProfiles}[$profileKey]
                 break
             }
         }
         
         # Use matched profile or create generic entry
         if ($matchedProfile) {
-            $script:ModelCapabilities[$modelName] = @{
-                Backend = if ($modelName -match '\.gguf$') { "LlamaCPP" } else { "Ollama" }
+            ${script:ModelCapabilities}[$modelName] = @{
+                Backend = $(if ($modelName -match '\.gguf$') { "LlamaCPP" } else { "Ollama" }
             } + $matchedProfile
         }
         else {
             # Generic fallback for unknown models
-            $script:ModelCapabilities[$modelName] = @{
+            ${script:ModelCapabilities}[$modelName] = @{
                 Name           = $modelName
-                Backend        = if ($modelName -match '\.gguf$') { "LlamaCPP" } else { "Ollama" }
+                Backend        = $(if ($modelName -match '\.gguf$') { "LlamaCPP" } else { "Ollama" }
                 Speed          = "Unknown"
                 ReasoningLevel = "Moderate"
                 RealtimeUpdates = "Unknown"
@@ -8630,11 +8628,11 @@ function Update-ModelCapabilities {
     }
     
     # Sync to global context for agentic access
-    if ($global:agentContext) {
-        $global:agentContext.ModelCapabilities = $script:ModelCapabilities.Clone()
+    if (${global:agentContext}) {
+        ${global:agentContext}.ModelCapabilities = ${script:ModelCapabilities}.Clone()
     }
     
-    Write-DevConsole "📊 Model capabilities updated: $($script:ModelCapabilities.Count) models" "INFO"
+    Write-DevConsole "📊 Model capabilities updated: $(${script:ModelCapabilities}.Count) models" "INFO"
 }
 
 # Initialize model capabilities on first load
@@ -8642,7 +8640,7 @@ Update-ModelCapabilities
 
 # ============================================
 # AI Backend Configuration - SERVERLESS DIRECT GGUF
-$script:AIBackend = @{
+${script:AIBackend} = @{
     # Primary backend: "DirectGGUF" = Memoryless streaming from disk (NO SERVER)
     Primary           = "DirectGGUF"  # Pure direct GGUF loading - NO Ollama, NO servers
     
@@ -8683,7 +8681,7 @@ $script:AIBackend = @{
     HideConsoleOutput   = $false
     AutoComplete        = $true
     CodeSnippetsEnabled = $true
-    CodeSnippetsPath    = "$env:USERPROFILE\.rawrxd\snippets"
+    CodeSnippetsPath    = "${env:USERPROFILE}\.rawrxd\snippets"
     
     # Inline Completions (GGUF direct)
     InlineCompletionsEnabled = $true
@@ -8692,7 +8690,7 @@ $script:AIBackend = @{
     InlineCompletionsMaxTokens = 32
     
     # Debug/Performance Tracking
-    DebugLogPath        = "$env:USERPROFILE\.rawrxd\debug.log"
+    DebugLogPath        = "${env:USERPROFILE}\.rawrxd\debug.log"
     TrackMemoryUsage    = $false
     TrackExecutionTime  = $true
     VerboseAIResponses  = $false
@@ -8708,7 +8706,7 @@ $script:AIBackend = @{
 # Like a game engine: streams model chunks from disk on-demand
 # Load zones: only keep active tensors in memory, unload when switching
 
-$script:PoshLLM = @{
+${script:PoshLLM} = @{
     # Model file handle (memory-mapped)
     ModelPath       = $null
     FileStream      = $null
@@ -8780,17 +8778,17 @@ function Open-GGUFModel {
     # Close any existing model
     Close-GGUFModel
     
-    $script:PoshLLM.ModelPath = $ModelPath
-    $script:PoshLLM.MaxZoneSizeMB = $MaxZoneMB
+    ${script:PoshLLM}.ModelPath = $ModelPath
+    ${script:PoshLLM}.MaxZoneSizeMB = $MaxZoneMB
     
     # Open file for streaming (don't load into memory!)
-    $script:PoshLLM.FileStream = [System.IO.File]::Open(
+    ${script:PoshLLM}.FileStream = [System.IO.File]::Open(
         $ModelPath,
         [System.IO.FileMode]::Open,
         [System.IO.FileAccess]::Read,
         [System.IO.FileShare]::Read
     )
-    $script:PoshLLM.BinaryReader = [System.IO.BinaryReader]::new($script:PoshLLM.FileStream)
+    ${script:PoshLLM}.BinaryReader = [System.IO.BinaryReader]::new(${script:PoshLLM}.FileStream)
     
     # Read GGUF header (tiny - just metadata)
     $headerStart = Get-Date
@@ -8798,9 +8796,9 @@ function Open-GGUFModel {
     $headerTime = ((Get-Date) - $headerStart).TotalMilliseconds
     
     Write-Host "✅ Model indexed in $([math]::Round($headerTime))ms" -ForegroundColor Green
-    Write-Host "   Tensors: $($script:PoshLLM.TensorCount)" -ForegroundColor Yellow
-    Write-Host "   Vocab: $($script:PoshLLM.VocabSize) tokens" -ForegroundColor Yellow
-    Write-Host "   Architecture: $($script:PoshLLM.Architecture)" -ForegroundColor Yellow
+    Write-Host "   Tensors: $(${script:PoshLLM}.TensorCount)" -ForegroundColor Yellow
+    Write-Host "   Vocab: $(${script:PoshLLM}.VocabSize) tokens" -ForegroundColor Yellow
+    Write-Host "   Architecture: $(${script:PoshLLM}.Architecture)" -ForegroundColor Yellow
     Write-Host "   Memory used: ~$([math]::Round([GC]::GetTotalMemory($false) / 1MB))MB (index only)" -ForegroundColor Magenta
     
     return $true
@@ -8811,7 +8809,7 @@ function Read-GGUFHeader {
     .SYNOPSIS
         Reads GGUF header and builds tensor index (no tensor data loaded!)
     #>
-    $reader = $script:PoshLLM.BinaryReader
+    $reader = ${script:PoshLLM}.BinaryReader
     $reader.BaseStream.Position = 0
     
     # Magic number: "GGUF" (4 bytes)
@@ -8819,38 +8817,38 @@ function Read-GGUFHeader {
     if ($magic -ne "GGUF") {
         throw "Invalid GGUF file - magic mismatch: $magic"
     }
-    $script:PoshLLM.Magic = $magic
+    ${script:PoshLLM}.Magic = $magic
     
     # Version (4 bytes, little-endian uint32)
-    $script:PoshLLM.Version = $reader.ReadUInt32()
+    ${script:PoshLLM}.Version = $reader.ReadUInt32()
     
     # Tensor count (8 bytes, uint64)
-    $script:PoshLLM.TensorCount = $reader.ReadUInt64()
+    ${script:PoshLLM}.TensorCount = $reader.ReadUInt64()
     
     # Metadata KV count (8 bytes, uint64)
-    $script:PoshLLM.MetadataKVCount = $reader.ReadUInt64()
+    ${script:PoshLLM}.MetadataKVCount = $reader.ReadUInt64()
     
-    Write-Host "   GGUF v$($script:PoshLLM.Version), $($script:PoshLLM.TensorCount) tensors, $($script:PoshLLM.MetadataKVCount) metadata" -ForegroundColor Gray
+    Write-Host "   GGUF v$(${script:PoshLLM}.Version), $(${script:PoshLLM}.TensorCount) tensors, $(${script:PoshLLM}.MetadataKVCount) metadata" -ForegroundColor Gray
     
     # Read metadata key-value pairs
-    for ($i = 0; $i -lt $script:PoshLLM.MetadataKVCount; $i++) {
+    for ($i = 0; $i -lt ${script:PoshLLM}.MetadataKVCount; $i++) {
         $kv = Read-GGUFMetadataKV
         
         # Extract important model info
         switch -Wildcard ($kv.Key) {
-            "general.architecture" { $script:PoshLLM.Architecture = $kv.Value }
-            "*.context_length" { $script:PoshLLM.ContextLength = $kv.Value }
-            "*.embedding_length" { $script:PoshLLM.EmbeddingLength = $kv.Value }
-            "*.block_count" { $script:PoshLLM.LayerCount = $kv.Value }
-            "*.attention.head_count" { $script:PoshLLM.HeadCount = $kv.Value }
+            "general.architecture" { ${script:PoshLLM}.Architecture = $kv.Value }
+            "*.context_length" { ${script:PoshLLM}.ContextLength = $kv.Value }
+            "*.embedding_length" { ${script:PoshLLM}.EmbeddingLength = $kv.Value }
+            "*.block_count" { ${script:PoshLLM}.LayerCount = $kv.Value }
+            "*.attention.head_count" { ${script:PoshLLM}.HeadCount = $kv.Value }
             "tokenizer.ggml.tokens" { 
                 # Build vocabulary
                 $tokens = $kv.Value
                 for ($t = 0; $t -lt $tokens.Count; $t++) {
-                    $script:PoshLLM.Vocab[$t] = $tokens[$t]
-                    $script:PoshLLM.VocabReverse[$tokens[$t]] = $t
+                    ${script:PoshLLM}.Vocab[$t] = $tokens[$t]
+                    ${script:PoshLLM}.VocabReverse[$tokens[$t]] = $t
                 }
-                $script:PoshLLM.VocabSize = $tokens.Count
+                ${script:PoshLLM}.VocabSize = $tokens.Count
             }
         }
     }
@@ -8860,7 +8858,7 @@ function Read-GGUFHeader {
     
     # First pass: read tensor info headers
     $tensorInfos = @()
-    for ($i = 0; $i -lt $script:PoshLLM.TensorCount; $i++) {
+    for ($i = 0; $i -lt ${script:PoshLLM}.TensorCount; $i++) {
         $info = Read-GGUFTensorInfo
         $tensorInfos += $info
     }
@@ -8874,7 +8872,7 @@ function Read-GGUFHeader {
     # Second pass: calculate actual data offsets
     $offset = $dataStart
     foreach ($info in $tensorInfos) {
-        $script:PoshLLM.TensorIndex[$info.Name] = @{
+        ${script:PoshLLM}.TensorIndex[$info.Name] = @{
             Offset = $offset
             Size   = $info.DataSize
             Type   = $info.Type
@@ -8894,7 +8892,7 @@ function Read-GGUFMetadataKV {
     .SYNOPSIS
         Reads a single metadata key-value pair from GGUF
     #>
-    $reader = $script:PoshLLM.BinaryReader
+    $reader = ${script:PoshLLM}.BinaryReader
     
     # Key (string)
     $keyLen = $reader.ReadUInt64()
@@ -8949,7 +8947,7 @@ function Read-GGUFTensorInfo {
     .SYNOPSIS
         Reads tensor metadata (not the actual data!)
     #>
-    $reader = $script:PoshLLM.BinaryReader
+    $reader = ${script:PoshLLM}.BinaryReader
     
     # Tensor name
     $nameLen = $reader.ReadUInt64()
@@ -9034,21 +9032,21 @@ function Load-TensorZone {
     )
     
     # Already loaded?
-    if ($script:PoshLLM.ZoneCache.ContainsKey($ZoneName)) {
-        $script:PoshLLM.ActiveZone = $ZoneName
-        return $script:PoshLLM.ZoneCache[$ZoneName]
+    if (${script:PoshLLM}.ZoneCache.ContainsKey($ZoneName)) {
+        ${script:PoshLLM}.ActiveZone = $ZoneName
+        return ${script:PoshLLM}.ZoneCache[$ZoneName]
     }
     
     Write-Host "🔄 Loading zone: $ZoneName" -ForegroundColor Yellow
-    $script:PoshLLM.ZoneLoads++
+    ${script:PoshLLM}.ZoneLoads++
     
     # Unload old zones if cache is full
-    while ($script:PoshLLM.ZoneCache.Count -ge $script:PoshLLM.MaxCacheZones) {
+    while (${script:PoshLLM}.ZoneCache.Count -ge ${script:PoshLLM}.MaxCacheZones) {
         Unload-OldestZone
     }
     
     # Find tensors in this zone
-    $zoneTensors = $script:PoshLLM.TensorIndex.GetEnumerator() | 
+    $zoneTensors = ${script:PoshLLM}.TensorIndex.GetEnumerator() | 
         Where-Object { $_.Value.Zone -eq $ZoneName }
     
     $zoneData = @{}
@@ -9058,7 +9056,7 @@ function Load-TensorZone {
         $info = $tensor.Value
         
         # Check if we'd exceed zone size limit
-        if (($zoneSizeBytes + $info.Size) / 1MB -gt $script:PoshLLM.MaxZoneSizeMB) {
+        if (($zoneSizeBytes + $info.Size) / 1MB -gt ${script:PoshLLM}.MaxZoneSizeMB) {
             Write-Host "   ⚠ Zone size limit reached, partial load" -ForegroundColor DarkYellow
             break
         }
@@ -9072,11 +9070,11 @@ function Load-TensorZone {
         }
         
         $zoneSizeBytes += $info.Size
-        $script:PoshLLM.BytesStreamed += $info.Size
+        ${script:PoshLLM}.BytesStreamed += $info.Size
     }
     
-    $script:PoshLLM.ZoneCache[$ZoneName] = $zoneData
-    $script:PoshLLM.ActiveZone = $ZoneName
+    ${script:PoshLLM}.ZoneCache[$ZoneName] = $zoneData
+    ${script:PoshLLM}.ActiveZone = $ZoneName
     
     Write-Host "   ✅ Loaded $([math]::Round($zoneSizeBytes / 1MB, 1))MB ($($zoneData.Count) tensors)" -ForegroundColor Green
     
@@ -9088,15 +9086,15 @@ function Unload-OldestZone {
     .SYNOPSIS
         Unloads the least recently used zone to free memory
     #>
-    if ($script:PoshLLM.ZoneCache.Count -eq 0) { return }
+    if (${script:PoshLLM}.ZoneCache.Count -eq 0) { return }
     
     # Get first zone (oldest)
-    $oldestZone = $script:PoshLLM.ZoneCache.Keys | Select-Object -First 1
+    $oldestZone = ${script:PoshLLM}.ZoneCache.Keys | Select-Object -First 1
     
     Write-Host "🗑️ Unloading zone: $oldestZone" -ForegroundColor DarkGray
-    $script:PoshLLM.ZoneUnloads++
+    ${script:PoshLLM}.ZoneUnloads++
     
-    $script:PoshLLM.ZoneCache.Remove($oldestZone)
+    ${script:PoshLLM}.ZoneCache.Remove($oldestZone)
     [GC]::Collect()
 }
 
@@ -9110,7 +9108,7 @@ function Read-TensorData {
         [long]$Size
     )
     
-    $reader = $script:PoshLLM.BinaryReader
+    $reader = ${script:PoshLLM}.BinaryReader
     $reader.BaseStream.Position = $Offset
     return $reader.ReadBytes([int]$Size)
 }
@@ -9122,19 +9120,19 @@ function Get-LoadedTensor {
     #>
     param([string]$TensorName)
     
-    if (-not $script:PoshLLM.TensorIndex.ContainsKey($TensorName)) {
+    if (-not ${script:PoshLLM}.TensorIndex.ContainsKey($TensorName)) {
         throw "Tensor not found: $TensorName"
     }
     
-    $info = $script:PoshLLM.TensorIndex[$TensorName]
+    $info = ${script:PoshLLM}.TensorIndex[$TensorName]
     $zone = $info.Zone
     
     # Load zone if not in cache
-    if (-not $script:PoshLLM.ZoneCache.ContainsKey($zone)) {
+    if (-not ${script:PoshLLM}.ZoneCache.ContainsKey($zone)) {
         Load-TensorZone -ZoneName $zone
     }
     
-    return $script:PoshLLM.ZoneCache[$zone][$TensorName]
+    return ${script:PoshLLM}.ZoneCache[$zone][$TensorName]
 }
 
 # ============================================
@@ -9153,7 +9151,7 @@ function Invoke-PoshLLMInference {
         [float]$Temperature = 0.7
     )
     
-    if (-not $script:PoshLLM.FileStream) {
+    if (-not ${script:PoshLLM}.FileStream) {
         throw "No model loaded! Call Open-GGUFModel first."
     }
     
@@ -9180,7 +9178,7 @@ function Invoke-PoshLLMInference {
         $outputTokens += $nextToken
         
         # Stream output
-        $tokenText = $script:PoshLLM.Vocab[$nextToken]
+        $tokenText = ${script:PoshLLM}.Vocab[$nextToken]
         Write-Host $tokenText -NoNewline -ForegroundColor White
     }
     
@@ -9190,8 +9188,8 @@ function Invoke-PoshLLMInference {
     $tokensPerSec = $outputTokens.Count / $elapsed
     
     Write-Host "✅ Generated $($outputTokens.Count) tokens in $([math]::Round($elapsed, 1))s ($([math]::Round($tokensPerSec, 1)) tok/s)" -ForegroundColor Green
-    Write-Host "   Zone loads: $($script:PoshLLM.ZoneLoads), Unloads: $($script:PoshLLM.ZoneUnloads)" -ForegroundColor Gray
-    Write-Host "   Bytes streamed: $([math]::Round($script:PoshLLM.BytesStreamed / 1MB, 1))MB" -ForegroundColor Gray
+    Write-Host "   Zone loads: $(${script:PoshLLM}.ZoneLoads), Unloads: $(${script:PoshLLM}.ZoneUnloads)" -ForegroundColor Gray
+    Write-Host "   Bytes streamed: $([math]::Round(${script:PoshLLM}.BytesStreamed / 1MB, 1))MB" -ForegroundColor Gray
     
     # Decode output
     return Invoke-Detokenize -Tokens $outputTokens
@@ -9211,22 +9209,22 @@ function Invoke-Tokenize {
     $words = $text -split '\s+'
     
     foreach ($word in $words) {
-        if ($script:PoshLLM.VocabReverse.ContainsKey($word)) {
-            $tokens += $script:PoshLLM.VocabReverse[$word]
+        if (${script:PoshLLM}.VocabReverse.ContainsKey($word)) {
+            $tokens += ${script:PoshLLM}.VocabReverse[$word]
         } else {
             # Character fallback
             foreach ($char in $word.ToCharArray()) {
                 $charStr = [string]$char
-                if ($script:PoshLLM.VocabReverse.ContainsKey($charStr)) {
-                    $tokens += $script:PoshLLM.VocabReverse[$charStr]
+                if (${script:PoshLLM}.VocabReverse.ContainsKey($charStr)) {
+                    $tokens += ${script:PoshLLM}.VocabReverse[$charStr]
                 } else {
                     $tokens += 0  # UNK token
                 }
             }
         }
         # Add space token
-        if ($script:PoshLLM.VocabReverse.ContainsKey(" ")) {
-            $tokens += $script:PoshLLM.VocabReverse[" "]
+        if (${script:PoshLLM}.VocabReverse.ContainsKey(" ")) {
+            $tokens += ${script:PoshLLM}.VocabReverse[" "]
         }
     }
     
@@ -9242,8 +9240,8 @@ function Invoke-Detokenize {
     
     $text = ""
     foreach ($token in $Tokens) {
-        if ($script:PoshLLM.Vocab.ContainsKey($token)) {
-            $text += $script:PoshLLM.Vocab[$token]
+        if (${script:PoshLLM}.Vocab.ContainsKey($token)) {
+            $text += ${script:PoshLLM}.Vocab[$token]
         }
     }
     return $text
@@ -9263,7 +9261,7 @@ function Invoke-ForwardPass {
     $lastToken = $Tokens[-1]
     
     # For each layer zone, process
-    for ($z = 0; $z -lt [math]::Ceiling($script:PoshLLM.LayerCount / 8); $z++) {
+    for ($z = 0; $z -lt [math]::Ceiling(${script:PoshLLM}.LayerCount / 8); $z++) {
         $layerZone = Load-TensorZone -ZoneName "layers_$z"
         # Process layers in this zone...
         # (Simplified - real impl would do attention + FFN)
@@ -9273,7 +9271,7 @@ function Invoke-ForwardPass {
     $outputZone = Load-TensorZone -ZoneName "output"
     
     # Return logits (simplified - random for now)
-    $logits = [float[]]::new($script:PoshLLM.VocabSize)
+    $logits = [float[]]::new(${script:PoshLLM}.VocabSize)
     $random = [Random]::new()
     for ($i = 0; $i -lt $logits.Length; $i++) {
         $logits[$i] = $random.NextDouble() * 2 - 1
@@ -9331,19 +9329,19 @@ function Close-GGUFModel {
     .SYNOPSIS
         Closes model file and frees all memory
     #>
-    if ($script:PoshLLM.BinaryReader) {
-        $script:PoshLLM.BinaryReader.Close()
-        $script:PoshLLM.BinaryReader = $null
+    if (${script:PoshLLM}.BinaryReader) {
+        ${script:PoshLLM}.BinaryReader.Close()
+        ${script:PoshLLM}.BinaryReader = $null
     }
-    if ($script:PoshLLM.FileStream) {
-        $script:PoshLLM.FileStream.Close()
-        $script:PoshLLM.FileStream = $null
+    if (${script:PoshLLM}.FileStream) {
+        ${script:PoshLLM}.FileStream.Close()
+        ${script:PoshLLM}.FileStream = $null
     }
     
-    $script:PoshLLM.ZoneCache = @{}
-    $script:PoshLLM.TensorIndex = @{}
-    $script:PoshLLM.Vocab = @{}
-    $script:PoshLLM.VocabReverse = @{}
+    ${script:PoshLLM}.ZoneCache = @{}
+    ${script:PoshLLM}.TensorIndex = @{}
+    ${script:PoshLLM}.Vocab = @{}
+    ${script:PoshLLM}.VocabReverse = @{}
     
     [GC]::Collect()
     Write-Host "🔒 Model closed, memory freed" -ForegroundColor Green
@@ -9355,23 +9353,23 @@ function Get-PoshLLMStatus {
         Get current PoshLLM engine status
     #>
     return @{
-        ModelPath       = $script:PoshLLM.ModelPath
-        Architecture    = $script:PoshLLM.Architecture
-        TensorCount     = $script:PoshLLM.TensorCount
-        VocabSize       = $script:PoshLLM.VocabSize
-        LayerCount      = $script:PoshLLM.LayerCount
-        ContextLength   = $script:PoshLLM.ContextLength
-        ActiveZone      = $script:PoshLLM.ActiveZone
-        CachedZones     = $script:PoshLLM.ZoneCache.Keys -join ", "
-        ZoneLoads       = $script:PoshLLM.ZoneLoads
-        ZoneUnloads     = $script:PoshLLM.ZoneUnloads
-        BytesStreamed   = "$([math]::Round($script:PoshLLM.BytesStreamed / 1MB, 1)) MB"
+        ModelPath       = ${script:PoshLLM}.ModelPath
+        Architecture    = ${script:PoshLLM}.Architecture
+        TensorCount     = ${script:PoshLLM}.TensorCount
+        VocabSize       = ${script:PoshLLM}.VocabSize
+        LayerCount      = ${script:PoshLLM}.LayerCount
+        ContextLength   = ${script:PoshLLM}.ContextLength
+        ActiveZone      = ${script:PoshLLM}.ActiveZone
+        CachedZones     = ${script:PoshLLM}.ZoneCache.Keys -join ", "
+        ZoneLoads       = ${script:PoshLLM}.ZoneLoads
+        ZoneUnloads     = ${script:PoshLLM}.ZoneUnloads
+        BytesStreamed   = "$([math]::Round(${script:PoshLLM}.BytesStreamed / 1MB, 1)) MB"
         MemoryUsed      = "$([math]::Round([GC]::GetTotalMemory($false) / 1MB)) MB"
     }
 }
 
 # Legacy state for compatibility
-$script:DirectGGUFState = @{
+${script:DirectGGUFState} = @{
     ModelLoaded     = $false
     CurrentModel    = $null
     LastInference   = $null
@@ -9380,10 +9378,10 @@ $script:DirectGGUFState = @{
 }
 
 # Code Snippets Storage
-$script:AICodeSnippets = @{}
+${script:AICodeSnippets} = @{}
 
 # Debug/Performance Metrics
-$script:AIDebugMetrics = @{
+${script:AIDebugMetrics} = @{
     TotalQueries       = 0
     TotalTokens        = 0
     AverageLatencyMs   = 0
@@ -9393,7 +9391,7 @@ $script:AIDebugMetrics = @{
 }
 
 # AI Backend availability cache (to avoid repeated network checks)
-$script:BackendCache = @{
+${script:BackendCache} = @{
     OllamaAvailable     = $null
     LlamaCPPAvailable   = $null
     LlamaFileAvailable  = $null
@@ -9412,21 +9410,21 @@ function Test-AIBackendAvailability {
     #>
     $now = Get-Date
     # Only check every 10 seconds max to avoid hammering services
-    if (($now - $script:BackendCache.LastChecked).TotalSeconds -lt 10 -and 
-        $script:BackendCache.OllamaAvailable -ne $null) {
+    if (($now - ${script:BackendCache}.LastChecked).TotalSeconds -lt 10 -and 
+        ${script:BackendCache}.OllamaAvailable -ne $null) {
         return
     }
     
     Write-DevConsole "🔍 Checking AI backend availability (parallel)..." "DEBUG"
     
     # Test llama.cpp FIRST (instant - just file check)
-    if (Test-Path $script:AIBackend.LlamaCPPPath) {
-        $script:BackendCache.LlamaCPPAvailable = $true
-        Write-DevConsole "✅ llama.cpp found at $($script:AIBackend.LlamaCPPPath)" "SUCCESS"
+    if (Test-Path ${script:AIBackend}.LlamaCPPPath) {
+        ${script:BackendCache}.LlamaCPPAvailable = $true
+        Write-DevConsole "✅ llama.cpp found at $(${script:AIBackend}.LlamaCPPPath)" "SUCCESS"
     }
     else {
-        $script:BackendCache.LlamaCPPAvailable = $false
-        Write-DevConsole "⚠ llama.cpp not found at $($script:AIBackend.LlamaCPPPath)" "WARNING"
+        ${script:BackendCache}.LlamaCPPAvailable = $false
+        Write-DevConsole "⚠ llama.cpp not found at $(${script:AIBackend}.LlamaCPPPath)" "WARNING"
     }
     
     # Test Ollama in background job (2 second timeout) - don't block for this
@@ -9436,29 +9434,29 @@ function Test-AIBackendAvailability {
             $response = Invoke-RestMethod -Uri "$endpoint/api/tags" -TimeoutSec 2 -ErrorAction Stop
             return $true
         } catch { return $false }
-    } -ArgumentList $script:AIBackend.OllamaEndpoint
+    } -ArgumentList ${script:AIBackend}.OllamaEndpoint
     
     # Test ReverseHttp (instant - just config check)
-    if ($script:AIBackend.ReverseHttpEnabled -and $script:AIBackend.ReverseHttpEndpoint -and $script:AIBackend.ReverseHttpToken) {
-        $script:BackendCache.ReverseHttpAvailable = $true
+    if (${script:AIBackend}.ReverseHttpEnabled -and ${script:AIBackend}.ReverseHttpEndpoint -and ${script:AIBackend}.ReverseHttpToken) {
+        ${script:BackendCache}.ReverseHttpAvailable = $true
         Write-DevConsole "✅ ReverseHttp backend enabled" "SUCCESS"
     }
     else {
-        $script:BackendCache.ReverseHttpAvailable = $false
+        ${script:BackendCache}.ReverseHttpAvailable = $false
     }
     
     # Test llamafile (instant - file check)
     $llamafileLocations = @(
         "C:\Program Files\llamafile\llamafile.exe",
         "C:\Program Files (x86)\llamafile\llamafile.exe",
-        "$env:LOCALAPPDATA\llamafile\llamafile.exe"
+        "${env:LOCALAPPDATA}\llamafile\llamafile.exe"
     )
     
-    $script:BackendCache.LlamaFileAvailable = $false
+    ${script:BackendCache}.LlamaFileAvailable = $false
     foreach ($loc in $llamafileLocations) {
         if ($loc -and (Test-Path $loc)) {
-            $script:AIBackend.LlamaFilePath = $loc
-            $script:BackendCache.LlamaFileAvailable = $true
+            ${script:AIBackend}.LlamaFilePath = $loc
+            ${script:BackendCache}.LlamaFileAvailable = $true
             Write-DevConsole "✅ llamafile found at $loc" "SUCCESS"
             break
         }
@@ -9467,19 +9465,19 @@ function Test-AIBackendAvailability {
     # Wait for Ollama check (max 2 seconds)
     $ollamaResult = Wait-Job -Job $ollamaJob -Timeout 2
     if ($ollamaResult -and $ollamaResult.State -eq 'Completed') {
-        $script:BackendCache.OllamaAvailable = Receive-Job -Job $ollamaJob
-        if ($script:BackendCache.OllamaAvailable) {
-            Write-DevConsole "✅ Ollama detected at $($script:AIBackend.OllamaEndpoint)" "SUCCESS"
+        ${script:BackendCache}.OllamaAvailable = Receive-Job -Job $ollamaJob
+        if (${script:BackendCache}.OllamaAvailable) {
+            Write-DevConsole "✅ Ollama detected at $(${script:AIBackend}.OllamaEndpoint)" "SUCCESS"
         } else {
             Write-DevConsole "⚠ Ollama not available" "WARNING"
         }
     } else {
-        $script:BackendCache.OllamaAvailable = $false
+        ${script:BackendCache}.OllamaAvailable = $false
         Write-DevConsole "⚠ Ollama check timed out" "WARNING"
     }
     Remove-Job -Job $ollamaJob -Force -ErrorAction SilentlyContinue
     
-    $script:BackendCache.LastChecked = $now
+    ${script:BackendCache}.LastChecked = $now
 }
 
 function Get-SelectiveAIBackend {
@@ -9489,28 +9487,28 @@ function Get-SelectiveAIBackend {
     #>
     Test-AIBackendAvailability
     
-    switch ($script:AIBackend.Primary) {
+    switch (${script:AIBackend}.Primary) {
         "Ollama" {
-            if ($script:BackendCache.OllamaAvailable) { return "Ollama" }
+            if (${script:BackendCache}.OllamaAvailable) { return "Ollama" }
             Write-DevConsole "Ollama selected but not available, trying fallbacks..." "WARNING"
         }
         "LlamaCPP" {
-            if ($script:BackendCache.LlamaCPPAvailable) { return "LlamaCPP" }
+            if (${script:BackendCache}.LlamaCPPAvailable) { return "LlamaCPP" }
             Write-DevConsole "llama.cpp selected but not available, trying fallbacks..." "WARNING"
         }
         "LlamaFile" {
-            if ($script:BackendCache.LlamaFileAvailable) { return "LlamaFile" }
+            if (${script:BackendCache}.LlamaFileAvailable) { return "LlamaFile" }
             Write-DevConsole "llamafile selected but not available, trying fallbacks..." "WARNING"
         }
         "ReverseHttp" {
-            if ($script:BackendCache.ReverseHttpAvailable) { return "ReverseHttp" }
+            if (${script:BackendCache}.ReverseHttpAvailable) { return "ReverseHttp" }
             Write-DevConsole "ReverseHttp selected but not available, trying fallbacks..." "WARNING"
         }
         default {  # "Auto"
-            if ($script:BackendCache.OllamaAvailable) { return "Ollama" }
-            if ($script:BackendCache.LlamaCPPAvailable) { return "LlamaCPP" }
-            if ($script:BackendCache.LlamaFileAvailable) { return "LlamaFile" }
-            if ($script:BackendCache.ReverseHttpAvailable) { return "ReverseHttp" }
+            if (${script:BackendCache}.OllamaAvailable) { return "Ollama" }
+            if (${script:BackendCache}.LlamaCPPAvailable) { return "LlamaCPP" }
+            if (${script:BackendCache}.LlamaFileAvailable) { return "LlamaFile" }
+            if (${script:BackendCache}.ReverseHttpAvailable) { return "ReverseHttp" }
         }
     }
     
@@ -9524,7 +9522,7 @@ function Get-AzAIConfig {
         Returns a configuration object for the specified backend (currently ReverseHttp only)
     .DESCRIPTION
         Provides a structured object similar to the user example for easier external script integration.
-        This does NOT replace existing $script:AIBackend usage; it is a convenience wrapper.
+        This does NOT replace existing ${script:AIBackend} usage; it is a convenience wrapper.
     .PARAMETER Backend
         Backend name (e.g. 'ReverseHttp')
     #>
@@ -9535,14 +9533,14 @@ function Get-AzAIConfig {
             $cfg = [ordered]@{
                 Backend     = 'ReverseHttp'
                 ReverseHttp = @{
-                    endpoint              = $script:AIBackend.ReverseHttpEndpoint
-                    token                 = $script:AIBackend.ReverseHttpToken
-                    model                 = $script:AIBackend.ReverseHttpModel
-                    streamMode            = $script:AIBackend.ReverseHttpStreamMode
-                    extraHeaders          = $script:AIBackend.ReverseHttpExtraHeaders
-                    allowRawFallback      = $script:AIBackend.ReverseHttpAllowRawFallback
-                    rawFallbackIntervalMs = $script:AIBackend.ReverseHttpRawFallbackIntervalMs
-                    timeoutMs             = $script:AIBackend.ReverseHttpTimeoutMs
+                    endpoint              = ${script:AIBackend}.ReverseHttpEndpoint
+                    token                 = ${script:AIBackend}.ReverseHttpToken
+                    model                 = ${script:AIBackend}.ReverseHttpModel
+                    streamMode            = ${script:AIBackend}.ReverseHttpStreamMode
+                    extraHeaders          = ${script:AIBackend}.ReverseHttpExtraHeaders
+                    allowRawFallback      = ${script:AIBackend}.ReverseHttpAllowRawFallback
+                    rawFallbackIntervalMs = ${script:AIBackend}.ReverseHttpRawFallbackIntervalMs
+                    timeoutMs             = ${script:AIBackend}.ReverseHttpTimeoutMs
                 }
             }
             return [PSCustomObject]$cfg
@@ -9613,7 +9611,7 @@ function Invoke-OllamaQuery {
     )
     
     if (-not $Model) {
-        $Model = $script:AIBackend.FallbackModel
+        $Model = ${script:AIBackend}.FallbackModel
     }
     
     try {
@@ -9621,11 +9619,11 @@ function Invoke-OllamaQuery {
             model       = $Model
             prompt      = $Prompt
             stream      = $false
-            temperature = $script:AIBackend.Temperature
-            top_p       = $script:AIBackend.TopP
+            temperature = ${script:AIBackend}.Temperature
+            top_p       = ${script:AIBackend}.TopP
         } | ConvertTo-Json
         
-        $response = Invoke-RestMethod -Uri "$($script:AIBackend.OllamaEndpoint)/api/generate" `
+        $response = Invoke-RestMethod -Uri "$(${script:AIBackend}.OllamaEndpoint)/api/generate" `
             -Method POST `
             -Body $body `
             -ContentType "application/json" `
@@ -9689,15 +9687,15 @@ function Invoke-LlamaCPPQuery {
     )
     
     if (-not $Model) {
-        $Model = $script:AIBackend.DefaultModel
+        $Model = ${script:AIBackend}.DefaultModel
     }
     
     # Resolve model path
-    $modelPath = if ([System.IO.Path]::IsPathRooted($Model)) {
+    $modelPath = $(if ([System.IO.Path]::IsPathRooted($Model)) {
         $Model
     }
     else {
-        Join-Path $script:AIBackend.LlamaCPPModels $Model
+        Join-Path ${script:AIBackend}.LlamaCPPModels $Model
     }
     
     if (-not (Test-Path $modelPath)) {
@@ -9717,23 +9715,23 @@ function Invoke-LlamaCPPQuery {
         # Build llama.cpp arguments
         $llamaArgs = @(
             "-m", "`"$modelPath`"",
-            "-n", $script:AIBackend.MaxTokens,
+            "-n", ${script:AIBackend}.MaxTokens,
             "-t", 4,
-            "--temp", $script:AIBackend.Temperature,
-            "--top_p", $script:AIBackend.TopP,
+            "--temp", ${script:AIBackend}.Temperature,
+            "--top_p", ${script:AIBackend}.TopP,
             "--no-display-prompt",
             "-p", "`"$escapedPrompt`""
         ) -join " "
         
         # Use ProcessStartInfo for proper output capture
         $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = $script:AIBackend.LlamaCPPPath
+        $psi.FileName = ${script:AIBackend}.LlamaCPPPath
         $psi.Arguments = $llamaArgs
         $psi.UseShellExecute = $false
         $psi.RedirectStandardOutput = $true
         $psi.RedirectStandardError = $true
         $psi.CreateNoWindow = $true
-        $psi.WorkingDirectory = Split-Path $script:AIBackend.LlamaCPPPath -Parent
+        $psi.WorkingDirectory = Split-Path ${script:AIBackend}.LlamaCPPPath -Parent
         
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $psi
@@ -9802,7 +9800,7 @@ function Invoke-LlamaCPPQuery {
 # ============================================
 # Process monitoring and async inference for responsive UI
 
-$script:LlamaProcessMonitor = @{
+${script:LlamaProcessMonitor} = @{
     ActiveProcess = $null
     ActiveJob = $null
     LastStartTime = $null
@@ -9830,14 +9828,14 @@ function Invoke-LlamaCPPQueryAsync {
     )
     
     if (-not $Model) {
-        $Model = $script:AIBackend.DefaultModel
+        $Model = ${script:AIBackend}.DefaultModel
     }
     
     # Resolve model path
-    $modelPath = if ([System.IO.Path]::IsPathRooted($Model)) {
+    $modelPath = $(if ([System.IO.Path]::IsPathRooted($Model)) {
         $Model
     } else {
-        Join-Path $script:AIBackend.LlamaCPPModels $Model
+        Join-Path ${script:AIBackend}.LlamaCPPModels $Model
     }
     
     if (-not (Test-Path $modelPath)) {
@@ -9846,8 +9844,8 @@ function Invoke-LlamaCPPQueryAsync {
     }
     
     # Store model info for monitoring
-    $script:LlamaProcessMonitor.CurrentModel = $modelPath
-    $script:LlamaProcessMonitor.LastStartTime = Get-Date
+    ${script:LlamaProcessMonitor}.CurrentModel = $modelPath
+    ${script:LlamaProcessMonitor}.LastStartTime = Get-Date
     
     Write-DevConsole "🚀 Starting async llama.cpp inference: $(Split-Path -Leaf $modelPath)" "INFO"
     
@@ -9910,15 +9908,15 @@ function Invoke-LlamaCPPQueryAsync {
     
     # Start the job
     $job = Start-Job -ScriptBlock $jobScript -ArgumentList @(
-        $script:AIBackend.LlamaCPPPath,
+        ${script:AIBackend}.LlamaCPPPath,
         $modelPath,
         $Prompt,
-        $script:AIBackend.MaxTokens,
-        $script:AIBackend.Temperature,
-        $script:AIBackend.TopP
+        ${script:AIBackend}.MaxTokens,
+        ${script:AIBackend}.Temperature,
+        ${script:AIBackend}.TopP
     )
     
-    $script:LlamaProcessMonitor.ActiveJob = $job
+    ${script:LlamaProcessMonitor}.ActiveJob = $job
     
     # Return job info for polling
     return @{
@@ -9950,7 +9948,7 @@ function Get-LlamaJobResult {
     if ($Wait) {
         $result = Receive-Job -Job $job -Wait
         Remove-Job -Job $job -Force
-        $script:LlamaProcessMonitor.ActiveJob = $null
+        ${script:LlamaProcessMonitor}.ActiveJob = $null
         return @{ Status = "Completed"; Result = $result }
     }
     
@@ -9959,13 +9957,13 @@ function Get-LlamaJobResult {
         "Completed" {
             $result = Receive-Job -Job $job
             Remove-Job -Job $job -Force
-            $script:LlamaProcessMonitor.ActiveJob = $null
+            ${script:LlamaProcessMonitor}.ActiveJob = $null
             return @{ Status = "Completed"; Result = $result }
         }
         "Failed" {
             $error = $job.ChildJobs[0].JobStateInfo.Reason.Message
             Remove-Job -Job $job -Force
-            $script:LlamaProcessMonitor.ActiveJob = $null
+            ${script:LlamaProcessMonitor}.ActiveJob = $null
             return @{ Status = "Failed"; Result = @{ Success = $false; Error = $error } }
         }
         default {
@@ -9988,7 +9986,7 @@ function Stop-LlamaJob {
     # Kill any lingering llama-cli processes
     Get-Process -Name "llama-cli" -ErrorAction SilentlyContinue | Stop-Process -Force
     
-    $script:LlamaProcessMonitor.ActiveJob = $null
+    ${script:LlamaProcessMonitor}.ActiveJob = $null
     Write-DevConsole "🛑 Llama job cancelled" "WARNING"
 }
 
@@ -10002,7 +10000,7 @@ function Watch-LlamaMemory {
     foreach ($proc in $llamaProcesses) {
         $memoryMB = [math]::Round($proc.WorkingSet64 / 1MB, 0)
         
-        if ($memoryMB -gt $script:LlamaProcessMonitor.MemoryThresholdMB) {
+        if ($memoryMB -gt ${script:LlamaProcessMonitor}.MemoryThresholdMB) {
             Write-DevConsole "⚠️ llama-cli using ${memoryMB}MB - exceeds threshold, killing..." "WARNING"
             $proc | Stop-Process -Force
             
@@ -10021,11 +10019,11 @@ function Get-LlamaBackendStatus {
         Get current status of llama.cpp backend
     #>
     $status = @{
-        Available = (Test-Path $script:AIBackend.LlamaCPPPath)
-        BinaryPath = $script:AIBackend.LlamaCPPPath
-        ModelPath = $script:AIBackend.LlamaCPPModels
-        CurrentModel = $script:LlamaProcessMonitor.CurrentModel
-        ActiveJob = ($script:LlamaProcessMonitor.ActiveJob -ne $null)
+        Available = (Test-Path ${script:AIBackend}.LlamaCPPPath)
+        BinaryPath = ${script:AIBackend}.LlamaCPPPath
+        ModelPath = ${script:AIBackend}.LlamaCPPModels
+        CurrentModel = ${script:LlamaProcessMonitor}.CurrentModel
+        ActiveJob = (${script:LlamaProcessMonitor}.ActiveJob -ne $null)
         ActiveProcesses = (Get-Process -Name "llama-cli" -ErrorAction SilentlyContinue).Count
         MemoryUsageMB = 0
     }
@@ -10064,8 +10062,8 @@ function Invoke-LlamaFileQuery {
         
         $body = @{
             prompt      = $Prompt
-            temperature = $script:AIBackend.Temperature
-            n_predict   = $script:AIBackend.MaxTokens
+            temperature = ${script:AIBackend}.Temperature
+            n_predict   = ${script:AIBackend}.MaxTokens
         } | ConvertTo-Json
         
         $response = Invoke-RestMethod -Uri "$llamafileEndpoint/api/completion" `
@@ -10104,24 +10102,24 @@ function Invoke-ReverseHttpQuery {
         [string[]]$StopWords = @()
     )
     
-    $endpoint = $script:AIBackend.ReverseHttpEndpoint
-    $token = $script:AIBackend.ReverseHttpToken
-    $streamMode = $script:AIBackend.ReverseHttpStreamMode
+    $endpoint = ${script:AIBackend}.ReverseHttpEndpoint
+    $token = ${script:AIBackend}.ReverseHttpToken
+    $streamMode = ${script:AIBackend}.ReverseHttpStreamMode
     
     if (-not $endpoint -or -not $token) {
         throw "ReverseHttp not configured: missing endpoint or token"
     }
     
     if (-not $Model) {
-        $Model = $script:AIBackend.ReverseHttpModel
+        $Model = ${script:AIBackend}.ReverseHttpModel
     }
     
     Write-DevConsole "📡 Sending ReverseHttp request to $endpoint..." "DEBUG"
     
     try {
         # Build request payload (generic format, adjust per target API)
-        $effTemp = if ($Temperature) { $Temperature } else { $script:AIBackend.Temperature }
-        $effMax  = if ($MaxTokens) { $MaxTokens } else { $script:AIBackend.MaxTokens }
+        $effTemp = $(if ($Temperature) { $Temperature } else { ${script:AIBackend}.Temperature }
+        $effMax  = $(if ($MaxTokens) { $MaxTokens } else { ${script:AIBackend}.MaxTokens }
 
         $payload = @{
             prompt      = $Prompt
@@ -10154,9 +10152,9 @@ function Invoke-ReverseHttpQuery {
         }
         
         # Merge extra headers if configured
-        if ($script:AIBackend.ReverseHttpExtraHeaders) {
-            foreach ($key in $script:AIBackend.ReverseHttpExtraHeaders.Keys) {
-                $headers[$key] = $script:AIBackend.ReverseHttpExtraHeaders[$key]
+        if (${script:AIBackend}.ReverseHttpExtraHeaders) {
+            foreach ($key in ${script:AIBackend}.ReverseHttpExtraHeaders.Keys) {
+                $headers[$key] = ${script:AIBackend}.ReverseHttpExtraHeaders[$key]
             }
         }
         
@@ -10166,7 +10164,7 @@ function Invoke-ReverseHttpQuery {
         Add-Type -AssemblyName System.Net.Http -ErrorAction SilentlyContinue
         
         $httpClient = [System.Net.Http.HttpClient]::new()
-        $httpClient.Timeout = [TimeSpan]::FromMilliseconds($script:AIBackend.ReverseHttpTimeoutMs)
+        $httpClient.Timeout = [TimeSpan]::FromMilliseconds(${script:AIBackend}.ReverseHttpTimeoutMs)
         
         $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Post, $endpoint)
         $request.Content = [System.Net.Http.StringContent]::new($body, [System.Text.Encoding]::UTF8, "application/json")
@@ -10191,8 +10189,8 @@ function Invoke-ReverseHttpQuery {
         $buffer = ""
         $rawAccum = ""
         $lastYield = [DateTime]::UtcNow
-        $fallbackInterval = [TimeSpan]::FromMilliseconds($script:AIBackend.ReverseHttpRawFallbackIntervalMs)
-        $allowFallback = [bool]$script:AIBackend.ReverseHttpAllowRawFallback
+        $fallbackInterval = [TimeSpan]::FromMilliseconds(${script:AIBackend}.ReverseHttpRawFallbackIntervalMs)
+        $allowFallback = [bool]${script:AIBackend}.ReverseHttpAllowRawFallback
 
         while (-not $reader.EndOfStream) {
             $line = $reader.ReadLine()
@@ -10349,7 +10347,7 @@ function Write-AIDebugLog {
         [hashtable]$Data = @{}
     )
     
-    if (-not $script:AIBackend.DebugMode) { return }
+    if (-not ${script:AIBackend}.DebugMode) { return }
     
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
     $logEntry = "[$timestamp] [$Level] $Message"
@@ -10360,16 +10358,16 @@ function Write-AIDebugLog {
     }
     
     # Ensure directory exists
-    $logDir = Split-Path $script:AIBackend.DebugLogPath -Parent
+    $logDir = Split-Path ${script:AIBackend}.DebugLogPath -Parent
     if (-not (Test-Path $logDir)) {
         New-Item -ItemType Directory -Path $logDir -Force | Out-Null
     }
     
     # Append to log file
-    Add-Content -Path $script:AIBackend.DebugLogPath -Value $logEntry -ErrorAction SilentlyContinue
+    Add-Content -Path ${script:AIBackend}.DebugLogPath -Value $logEntry -ErrorAction SilentlyContinue
     
     # Also output to console if not hidden
-    if (-not $script:AIBackend.HideConsoleOutput -and $Level -ne "DEBUG") {
+    if (-not ${script:AIBackend}.HideConsoleOutput -and $Level -ne "DEBUG") {
         $color = switch ($Level) {
             "INFO" { "Cyan" }
             "WARN" { "Yellow" }
@@ -10396,7 +10394,7 @@ function Measure-AIQueryPerformance {
         [string]$QueryName = "AIQuery"
     )
     
-    $startMemory = if ($script:AIBackend.TrackMemoryUsage) {
+    $startMemory = $(if (${script:AIBackend}.TrackMemoryUsage) {
         [System.GC]::Collect()
         [System.GC]::WaitForPendingFinalizers()
         [System.GC]::Collect()
@@ -10409,22 +10407,22 @@ function Measure-AIQueryPerformance {
         $result = & $ScriptBlock
         $stopwatch.Stop()
         
-        $endMemory = if ($script:AIBackend.TrackMemoryUsage) {
+        $endMemory = $(if (${script:AIBackend}.TrackMemoryUsage) {
             (Get-Process -Id $PID).WorkingSet64 / 1MB
         } else { 0 }
         
         # Update metrics
-        $script:AIDebugMetrics.TotalQueries++
-        $script:AIDebugMetrics.LastQueryLatencyMs = $stopwatch.ElapsedMilliseconds
-        $script:AIDebugMetrics.AverageLatencyMs = (
-            ($script:AIDebugMetrics.AverageLatencyMs * ($script:AIDebugMetrics.TotalQueries - 1)) + 
+        ${script:AIDebugMetrics}.TotalQueries++
+        ${script:AIDebugMetrics}.LastQueryLatencyMs = $stopwatch.ElapsedMilliseconds
+        ${script:AIDebugMetrics}.AverageLatencyMs = (
+            (${script:AIDebugMetrics}.AverageLatencyMs * (${script:AIDebugMetrics}.TotalQueries - 1)) + 
             $stopwatch.ElapsedMilliseconds
-        ) / $script:AIDebugMetrics.TotalQueries
+        ) / ${script:AIDebugMetrics}.TotalQueries
         
         Write-AIDebugLog -Message "$QueryName completed" -Level "PERF" -Data @{
             LatencyMs = $stopwatch.ElapsedMilliseconds
             MemoryDeltaMB = [math]::Round($endMemory - $startMemory, 2)
-            TotalQueries = $script:AIDebugMetrics.TotalQueries
+            TotalQueries = ${script:AIDebugMetrics}.TotalQueries
         }
         
         return $result
@@ -10445,18 +10443,18 @@ function Get-AIDebugMetrics {
     .EXAMPLE
         Get-AIDebugMetrics | Format-List
     #>
-    $sessionDuration = (Get-Date) - $script:AIDebugMetrics.SessionStartTime
+    $sessionDuration = (Get-Date) - ${script:AIDebugMetrics}.SessionStartTime
     
     return [PSCustomObject]@{
-        TotalQueries       = $script:AIDebugMetrics.TotalQueries
-        AverageLatencyMs   = [math]::Round($script:AIDebugMetrics.AverageLatencyMs, 2)
-        LastQueryLatencyMs = $script:AIDebugMetrics.LastQueryLatencyMs
+        TotalQueries       = ${script:AIDebugMetrics}.TotalQueries
+        AverageLatencyMs   = [math]::Round(${script:AIDebugMetrics}.AverageLatencyMs, 2)
+        LastQueryLatencyMs = ${script:AIDebugMetrics}.LastQueryLatencyMs
         SessionDuration    = $sessionDuration.ToString("hh\:mm\:ss")
-        QueriesPerHour     = if ($sessionDuration.TotalHours -gt 0) {
-            [math]::Round($script:AIDebugMetrics.TotalQueries / $sessionDuration.TotalHours, 2)
+        QueriesPerHour     = $(if ($sessionDuration.TotalHours -gt 0) {
+            [math]::Round(${script:AIDebugMetrics}.TotalQueries / $sessionDuration.TotalHours, 2)
         } else { 0 }
-        DebugMode          = $script:AIBackend.DebugMode
-        DebugLogPath       = $script:AIBackend.DebugLogPath
+        DebugMode          = ${script:AIBackend}.DebugMode
+        DebugLogPath       = ${script:AIBackend}.DebugLogPath
     }
 }
 
@@ -10465,13 +10463,13 @@ function Clear-AIDebugLog {
     .SYNOPSIS
         Clear the AI debug log file
     #>
-    if (Test-Path $script:AIBackend.DebugLogPath) {
-        Remove-Item $script:AIBackend.DebugLogPath -Force
-        Write-Host "🗑️ Debug log cleared: $($script:AIBackend.DebugLogPath)" -ForegroundColor Green
+    if (Test-Path ${script:AIBackend}.DebugLogPath) {
+        Remove-Item ${script:AIBackend}.DebugLogPath -Force
+        Write-Host "🗑️ Debug log cleared: $(${script:AIBackend}.DebugLogPath)" -ForegroundColor Green
     }
     
     # Reset metrics
-    $script:AIDebugMetrics = @{
+    ${script:AIDebugMetrics} = @{
         TotalQueries       = 0
         TotalTokens        = 0
         AverageLatencyMs   = 0
@@ -10490,9 +10488,9 @@ function Initialize-AICodeSnippets {
     .SYNOPSIS
         Initialize the code snippet storage and load saved snippets
     #>
-    if (-not $script:AIBackend.CodeSnippetsEnabled) { return }
+    if (-not ${script:AIBackend}.CodeSnippetsEnabled) { return }
     
-    $snippetDir = $script:AIBackend.CodeSnippetsPath
+    $snippetDir = ${script:AIBackend}.CodeSnippetsPath
     if (-not (Test-Path $snippetDir)) {
         New-Item -ItemType Directory -Path $snippetDir -Force | Out-Null
         Write-AIDebugLog "Created snippets directory: $snippetDir" "INFO"
@@ -10503,7 +10501,7 @@ function Initialize-AICodeSnippets {
     foreach ($file in $snippetFiles) {
         try {
             $snippet = Get-Content $file.FullName -Raw | ConvertFrom-Json
-            $script:AICodeSnippets[$snippet.Name] = @{
+            ${script:AICodeSnippets}[$snippet.Name] = @{
                 Name        = $snippet.Name
                 Description = $snippet.Description
                 Command     = $snippet.Command
@@ -10518,7 +10516,7 @@ function Initialize-AICodeSnippets {
         }
     }
     
-    Write-AIDebugLog "Loaded $($script:AICodeSnippets.Count) code snippets" "INFO"
+    Write-AIDebugLog "Loaded $(${script:AICodeSnippets}.Count) code snippets" "INFO"
 }
 
 function New-AIBackendCodeSnippet {
@@ -10550,8 +10548,8 @@ function New-AIBackendCodeSnippet {
         [string[]]$Tags = @()
     )
     
-    if (-not $script:AIBackend.CodeSnippetsEnabled) {
-        Write-Host "❌ Code snippets are disabled. Enable with: `$script:AIBackend.CodeSnippetsEnabled = `$true" -ForegroundColor Red
+    if (-not ${script:AIBackend}.CodeSnippetsEnabled) {
+        Write-Host "❌ Code snippets are disabled. Enable with: `${script:AIBackend}.CodeSnippetsEnabled = `$true" -ForegroundColor Red
         return
     }
     
@@ -10567,7 +10565,7 @@ function New-AIBackendCodeSnippet {
         CreatedAt   = (Get-Date).ToString("o")
     }
     
-    $script:AICodeSnippets[$Name] = $snippet
+    ${script:AICodeSnippets}[$Name] = $snippet
     
     Write-Host "✅ Created code snippet: $Name" -ForegroundColor Green
     Write-AIDebugLog "Created snippet: $Name" "INFO" -Data @{ Category = $Category; CommandLength = $Command.Length }
@@ -10592,14 +10590,14 @@ function Save-AIBackendCodeSnippet {
         [string]$Path
     )
     
-    if (-not $script:AIBackend.CodeSnippetsEnabled) {
+    if (-not ${script:AIBackend}.CodeSnippetsEnabled) {
         Write-Host "❌ Code snippets are disabled" -ForegroundColor Red
         return
     }
     
-    $snippetsToSave = if ($Name) {
-        if ($script:AICodeSnippets.ContainsKey($Name)) {
-            @{ $Name = $script:AICodeSnippets[$Name] }
+    $snippetsToSave = $(if ($Name) {
+        if (${script:AICodeSnippets}.ContainsKey($Name)) {
+            @{ $Name = ${script:AICodeSnippets}[$Name] }
         }
         else {
             Write-Host "❌ Snippet not found: $Name" -ForegroundColor Red
@@ -10607,7 +10605,7 @@ function Save-AIBackendCodeSnippet {
         }
     }
     else {
-        $script:AICodeSnippets
+        ${script:AICodeSnippets}
     }
     
     $savedCount = 0
@@ -10615,11 +10613,11 @@ function Save-AIBackendCodeSnippet {
         $snippet = $snippetsToSave[$key]
         $safeName = $key -replace '[^\w\-]', '_'
         
-        $targetPath = if ($Path -and $Name) {
+        $targetPath = $(if ($Path -and $Name) {
             $Path
         }
         else {
-            Join-Path $script:AIBackend.CodeSnippetsPath "$safeName.json"
+            Join-Path ${script:AIBackend}.CodeSnippetsPath "$safeName.json"
         }
         
         # Ensure directory exists
@@ -10658,12 +10656,12 @@ function Get-AIBackendCodeSnippets {
         [string]$Name
     )
     
-    if (-not $script:AIBackend.CodeSnippetsEnabled) {
+    if (-not ${script:AIBackend}.CodeSnippetsEnabled) {
         Write-Host "❌ Code snippets are disabled" -ForegroundColor Red
         return @()
     }
     
-    $results = $script:AICodeSnippets.Values
+    $results = ${script:AICodeSnippets}.Values
     
     if ($Name) {
         $results = $results | Where-Object { $_.Name -eq $Name }
@@ -10683,7 +10681,7 @@ function Get-AIBackendCodeSnippets {
             Category    = $_.Category
             Description = $_.Description
             Tags        = ($_.Tags -join ", ")
-            Command     = if ($_.Command.Length -gt 50) { $_.Command.Substring(0, 47) + "..." } else { $_.Command }
+            Command     = $(if ($_.Command.Length -gt 50) { $_.Command.Substring(0, 47) + "..." } else { $_.Command }
             CreatedAt   = $_.CreatedAt
         }
     }
@@ -10707,12 +10705,12 @@ function Invoke-AIBackendCodeSnippet {
         [switch]$WhatIf
     )
     
-    if (-not $script:AICodeSnippets.ContainsKey($Name)) {
+    if (-not ${script:AICodeSnippets}.ContainsKey($Name)) {
         Write-Host "❌ Snippet not found: $Name" -ForegroundColor Red
         return
     }
     
-    $snippet = $script:AICodeSnippets[$Name]
+    $snippet = ${script:AICodeSnippets}[$Name]
     
     if ($WhatIf) {
         Write-Host "📋 Would execute snippet '$Name':" -ForegroundColor Cyan
@@ -10749,18 +10747,18 @@ function Remove-AIBackendCodeSnippet {
         [switch]$DeleteFile
     )
     
-    if (-not $script:AICodeSnippets.ContainsKey($Name)) {
+    if (-not ${script:AICodeSnippets}.ContainsKey($Name)) {
         Write-Host "❌ Snippet not found: $Name" -ForegroundColor Red
         return
     }
     
-    $snippet = $script:AICodeSnippets[$Name]
+    $snippet = ${script:AICodeSnippets}[$Name]
     
     if ($DeleteFile -and $snippet.FilePath -and (Test-Path $snippet.FilePath)) {
         Remove-Item $snippet.FilePath -Force
     }
     
-    $script:AICodeSnippets.Remove($Name)
+    ${script:AICodeSnippets}.Remove($Name)
     Write-Host "🗑️ Removed snippet: $Name" -ForegroundColor Yellow
     Write-AIDebugLog "Removed snippet: $Name" "INFO"
 }
@@ -10770,7 +10768,7 @@ function Show-AIBackendCodeSnippetUI {
     .SYNOPSIS
         Show code snippet manager UI dialog
     #>
-    if (-not $script:RuntimeInfo.WinFormsAvailable) {
+    if (-not ${script:RuntimeInfo}.WinFormsAvailable) {
         Write-Host "❌ WinForms not available for UI" -ForegroundColor Red
         return
     }
@@ -10796,7 +10794,7 @@ function Show-AIBackendCodeSnippetUI {
     $listView.Columns.Add("Description", 160) | Out-Null
     
     # Populate list
-    foreach ($snippet in $script:AICodeSnippets.Values) {
+    foreach ($snippet in ${script:AICodeSnippets}.Values) {
         $item = New-Object System.Windows.Forms.ListViewItem($snippet.Name)
         $item.SubItems.Add($snippet.Category) | Out-Null
         $item.SubItems.Add($snippet.Description) | Out-Null
@@ -10825,8 +10823,8 @@ function Show-AIBackendCodeSnippetUI {
     $listView.Add_SelectedIndexChanged({
         if ($listView.SelectedItems.Count -gt 0) {
             $name = $listView.SelectedItems[0].Text
-            if ($script:AICodeSnippets.ContainsKey($name)) {
-                $previewBox.Text = $script:AICodeSnippets[$name].Command
+            if (${script:AICodeSnippets}.ContainsKey($name)) {
+                $previewBox.Text = ${script:AICodeSnippets}[$name].Command
             }
         }
     })
@@ -10898,7 +10896,7 @@ function Show-AIBackendCodeSnippetUI {
                 $inputForm.Close()
                 # Refresh main list
                 $listView.Items.Clear()
-                foreach ($snippet in $script:AICodeSnippets.Values) {
+                foreach ($snippet in ${script:AICodeSnippets}.Values) {
                     $item = New-Object System.Windows.Forms.ListViewItem($snippet.Name)
                     $item.SubItems.Add($snippet.Category) | Out-Null
                     $item.SubItems.Add($snippet.Description) | Out-Null
@@ -10961,7 +10959,7 @@ function Get-AIAutoCompleteSuggestions {
         [string]$Context = ""
     )
     
-    if (-not $script:AIBackend.AutoComplete) {
+    if (-not ${script:AIBackend}.AutoComplete) {
         return @()
     }
     
@@ -11031,15 +11029,15 @@ function Get-AvailableModels {
     
     # Fallback to GGUF directory scan
     $models = @()
-    if (Test-Path $script:AIBackend.LlamaCPPModels) {
-        $ggufFiles = Get-ChildItem -Path $script:AIBackend.LlamaCPPModels -Filter "*.gguf" -ErrorAction SilentlyContinue
+    if (Test-Path ${script:AIBackend}.LlamaCPPModels) {
+        $ggufFiles = Get-ChildItem -Path ${script:AIBackend}.LlamaCPPModels -Filter "*.gguf" -ErrorAction SilentlyContinue
         $models += $ggufFiles | Select-Object -ExpandProperty Name
     }
     
     # Get Ollama models if available
-    if ($script:BackendCache.OllamaAvailable) {
+    if (${script:BackendCache}.OllamaAvailable) {
         try {
-            $response = Invoke-RestMethod -Uri "$($script:AIBackend.OllamaEndpoint)/api/tags" `
+            $response = Invoke-RestMethod -Uri "$(${script:AIBackend}.OllamaEndpoint)/api/tags" `
                 -TimeoutSec 5 -ErrorAction Stop
             $models += $response.models | Select-Object -ExpandProperty Name
         }
@@ -11122,9 +11120,9 @@ function Show-ModelCapabilities {
     $modelListBox.SelectionMode = [System.Windows.Forms.SelectionMode]::One
     
     # Populate models alphabetically
-    $sortedModels = $script:ModelCapabilities.Keys | Sort-Object
+    $sortedModels = ${script:ModelCapabilities}.Keys | Sort-Object
     foreach ($modelKey in $sortedModels) {
-        $model = $script:ModelCapabilities[$modelKey]
+        $model = ${script:ModelCapabilities}[$modelKey]
         $modelListBox.Items.Add($modelKey) | Out-Null
     }
     
@@ -11157,7 +11155,7 @@ function Show-ModelCapabilities {
     $modelListBox.add_SelectedIndexChanged({
             if ($modelListBox.SelectedIndex -ge 0) {
                 $selectedKey = $modelListBox.SelectedItem
-                $selectedModel = $script:ModelCapabilities[$selectedKey]
+                $selectedModel = ${script:ModelCapabilities}[$selectedKey]
                 
                 $details = @"
 ╔════════════════════════════════════════════╗
@@ -11240,35 +11238,35 @@ function Show-AIBackendSettings {
     $autoRadio.Text = "🔄 Auto (Try Ollama first, fall back to llama.cpp)"
     $autoRadio.Location = New-Object System.Drawing.Point(20, 30)
     $autoRadio.Size = New-Object System.Drawing.Size(520, 20)
-    $autoRadio.Checked = ($script:AIBackend.Primary -eq "Auto")
+    $autoRadio.Checked = (${script:AIBackend}.Primary -eq "Auto")
     $backendGroupBox.Controls.Add($autoRadio)
     
     $ollamaRadio = New-Object System.Windows.Forms.RadioButton
     $ollamaRadio.Text = "🔴 Ollama (Requires running Ollama service)"
     $ollamaRadio.Location = New-Object System.Drawing.Point(20, 55)
     $ollamaRadio.Size = New-Object System.Drawing.Size(520, 20)
-    $ollamaRadio.Checked = ($script:AIBackend.Primary -eq "Ollama")
+    $ollamaRadio.Checked = (${script:AIBackend}.Primary -eq "Ollama")
     $backendGroupBox.Controls.Add($ollamaRadio)
     
     $llamacppRadio = New-Object System.Windows.Forms.RadioButton
     $llamacppRadio.Text = "⚙️ llama.cpp (Direct GGUF loading, no service needed)"
     $llamacppRadio.Location = New-Object System.Drawing.Point(20, 80)
     $llamacppRadio.Size = New-Object System.Drawing.Size(520, 20)
-    $llamacppRadio.Checked = ($script:AIBackend.Primary -eq "LlamaCPP")
+    $llamacppRadio.Checked = (${script:AIBackend}.Primary -eq "LlamaCPP")
     $backendGroupBox.Controls.Add($llamacppRadio)
     
     $llamafileRadio = New-Object System.Windows.Forms.RadioButton
     $llamafileRadio.Text = "📦 llamafile (Single-file GGUF executable)"
     $llamafileRadio.Location = New-Object System.Drawing.Point(20, 105)
     $llamafileRadio.Size = New-Object System.Drawing.Size(520, 20)
-    $llamafileRadio.Checked = ($script:AIBackend.Primary -eq "LlamaFile")
+    $llamafileRadio.Checked = (${script:AIBackend}.Primary -eq "LlamaFile")
     $backendGroupBox.Controls.Add($llamafileRadio)
     
     $reverseHttpRadio = New-Object System.Windows.Forms.RadioButton
     $reverseHttpRadio.Text = "🌐 ReverseHttp (Experimental reverse-engineered API)"
     $reverseHttpRadio.Location = New-Object System.Drawing.Point(280, 30)
     $reverseHttpRadio.Size = New-Object System.Drawing.Size(260, 20)
-    $reverseHttpRadio.Checked = ($script:AIBackend.Primary -eq "ReverseHttp")
+    $reverseHttpRadio.Checked = (${script:AIBackend}.Primary -eq "ReverseHttp")
     $backendGroupBox.Controls.Add($reverseHttpRadio)
     
     # ReverseHttp Configure Button
@@ -11305,8 +11303,8 @@ function Show-AIBackendSettings {
     $availableModels = Get-OllamaModels
     if ($availableModels -and $availableModels.Count -gt 0) {
         $modelCombo.Items.AddRange($availableModels)
-        if ($script:AIBackend.DefaultModel -in $availableModels) {
-            $modelCombo.SelectedItem = $script:AIBackend.DefaultModel
+        if (${script:AIBackend}.DefaultModel -in $availableModels) {
+            $modelCombo.SelectedItem = ${script:AIBackend}.DefaultModel
         }
         else {
             $modelCombo.SelectedIndex = 0
@@ -11332,7 +11330,7 @@ function Show-AIBackendSettings {
     $pathsGroupBox.Controls.Add($llamacppLabel)
     
     $llamacppPath = New-Object System.Windows.Forms.TextBox
-    $llamacppPath.Text = $script:AIBackend.LlamaCPPPath
+    $llamacppPath.Text = ${script:AIBackend}.LlamaCPPPath
     $llamacppPath.Location = New-Object System.Drawing.Point(110, 23)
     $llamacppPath.Size = New-Object System.Drawing.Size(340, 20)
     $llamacppPath.BackColor = [System.Drawing.Color]::FromArgb(40, 40, 40)
@@ -11347,7 +11345,7 @@ function Show-AIBackendSettings {
     $pathsGroupBox.Controls.Add($modelDirLabel)
     
     $modelDirPath = New-Object System.Windows.Forms.TextBox
-    $modelDirPath.Text = $script:AIBackend.LlamaCPPModels
+    $modelDirPath.Text = ${script:AIBackend}.LlamaCPPModels
     $modelDirPath.Location = New-Object System.Drawing.Point(110, 53)
     $modelDirPath.Size = New-Object System.Drawing.Size(340, 20)
     $modelDirPath.BackColor = [System.Drawing.Color]::FromArgb(40, 40, 40)
@@ -11374,13 +11372,13 @@ function Show-AIBackendSettings {
     # Populate status
     Test-AIBackendAvailability
     $statusText.Text = ""
-    if ($script:BackendCache.OllamaAvailable) { $statusText.AppendText("✅ Ollama  ") }
+    if (${script:BackendCache}.OllamaAvailable) { $statusText.AppendText("✅ Ollama  ") }
     else { $statusText.AppendText("❌ Ollama  ") }
-    if ($script:BackendCache.LlamaCPPAvailable) { $statusText.AppendText("✅ llama.cpp  ") }
+    if (${script:BackendCache}.LlamaCPPAvailable) { $statusText.AppendText("✅ llama.cpp  ") }
     else { $statusText.AppendText("❌ llama.cpp  ") }
-    if ($script:BackendCache.LlamaFileAvailable) { $statusText.AppendText("✅ llamafile`n") }
+    if (${script:BackendCache}.LlamaFileAvailable) { $statusText.AppendText("✅ llamafile`n") }
     else { $statusText.AppendText("❌ llamafile`n") }
-    if ($script:BackendCache.ReverseHttpAvailable) { $statusText.AppendText("✅ ReverseHttp (configured)") }
+    if (${script:BackendCache}.ReverseHttpAvailable) { $statusText.AppendText("✅ ReverseHttp (configured)") }
     else { $statusText.AppendText("❌ ReverseHttp (not configured)") }
     
     $settingsForm.Controls.Add($statusText)
@@ -11394,15 +11392,15 @@ function Show-AIBackendSettings {
     $okBtn.ForeColor = [System.Drawing.Color]::White
     $okBtn.Add_Click({
         # Save settings
-        if ($autoRadio.Checked) { $script:AIBackend.Primary = "Auto" }
-        elseif ($ollamaRadio.Checked) { $script:AIBackend.Primary = "Ollama" }
-        elseif ($llamacppRadio.Checked) { $script:AIBackend.Primary = "LlamaCPP" }
-        elseif ($llamafileRadio.Checked) { $script:AIBackend.Primary = "LlamaFile" }
-        elseif ($reverseHttpRadio.Checked) { $script:AIBackend.Primary = "ReverseHttp" }
+        if ($autoRadio.Checked) { ${script:AIBackend}.Primary = "Auto" }
+        elseif ($ollamaRadio.Checked) { ${script:AIBackend}.Primary = "Ollama" }
+        elseif ($llamacppRadio.Checked) { ${script:AIBackend}.Primary = "LlamaCPP" }
+        elseif ($llamafileRadio.Checked) { ${script:AIBackend}.Primary = "LlamaFile" }
+        elseif ($reverseHttpRadio.Checked) { ${script:AIBackend}.Primary = "ReverseHttp" }
         
-        $script:AIBackend.DefaultModel = $modelCombo.SelectedItem
-        $script:AIBackend.LlamaCPPPath = $llamacppPath.Text
-        $script:AIBackend.LlamaCPPModels = $modelDirPath.Text
+        ${script:AIBackend}.DefaultModel = $modelCombo.SelectedItem
+        ${script:AIBackend}.LlamaCPPPath = $llamacppPath.Text
+        ${script:AIBackend}.LlamaCPPModels = $modelDirPath.Text
         
         Write-DevConsole "✅ AI Backend settings saved" "SUCCESS"
         $settingsForm.Close()
@@ -11463,7 +11461,7 @@ function Show-ReverseHttpSettings {
     $enableCheck.Text = "Enable ReverseHttp Backend"
     $enableCheck.Location = New-Object System.Drawing.Point(20, 70)
     $enableCheck.Size = New-Object System.Drawing.Size(250, 22)
-    $enableCheck.Checked = $script:AIBackend.ReverseHttpEnabled
+    $enableCheck.Checked = ${script:AIBackend}.ReverseHttpEnabled
     $enableCheck.ForeColor = [System.Drawing.Color]::White
     $form.Controls.Add($enableCheck)
     
@@ -11475,7 +11473,7 @@ function Show-ReverseHttpSettings {
     $form.Controls.Add($endpointLabel)
     
     $endpointBox = New-Object System.Windows.Forms.TextBox
-    $endpointBox.Text = $script:AIBackend.ReverseHttpEndpoint
+    $endpointBox.Text = ${script:AIBackend}.ReverseHttpEndpoint
     $endpointBox.Location = New-Object System.Drawing.Point(20, 127)
     $endpointBox.Size = New-Object System.Drawing.Size(490, 22)
     $endpointBox.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
@@ -11490,7 +11488,7 @@ function Show-ReverseHttpSettings {
     $form.Controls.Add($tokenLabel)
     
     $tokenBox = New-Object System.Windows.Forms.TextBox
-    $tokenBox.Text = $script:AIBackend.ReverseHttpToken
+    $tokenBox.Text = ${script:AIBackend}.ReverseHttpToken
     $tokenBox.Location = New-Object System.Drawing.Point(20, 182)
     $tokenBox.Size = New-Object System.Drawing.Size(490, 22)
     $tokenBox.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
@@ -11516,7 +11514,7 @@ function Show-ReverseHttpSettings {
     $form.Controls.Add($modelLabel)
     
     $modelBox = New-Object System.Windows.Forms.TextBox
-    $modelBox.Text = $script:AIBackend.ReverseHttpModel
+    $modelBox.Text = ${script:AIBackend}.ReverseHttpModel
     $modelBox.Location = New-Object System.Drawing.Point(20, 237)
     $modelBox.Size = New-Object System.Drawing.Size(240, 22)
     $modelBox.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
@@ -11537,7 +11535,7 @@ function Show-ReverseHttpSettings {
     $streamCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
     $streamCombo.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
     $streamCombo.ForeColor = [System.Drawing.Color]::White
-    $streamCombo.SelectedItem = $script:AIBackend.ReverseHttpStreamMode
+    $streamCombo.SelectedItem = ${script:AIBackend}.ReverseHttpStreamMode
     if (-not $streamCombo.SelectedItem) { $streamCombo.SelectedIndex = 0 }
     $form.Controls.Add($streamCombo)
     
@@ -11551,8 +11549,8 @@ function Show-ReverseHttpSettings {
     $headersBox = New-Object System.Windows.Forms.TextBox
     $headersBox.Multiline = $true
     $headersBox.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
-    $currentHeaders = if ($script:AIBackend.ReverseHttpExtraHeaders.Count -gt 0) {
-        $script:AIBackend.ReverseHttpExtraHeaders | ConvertTo-Json -Compress
+    $currentHeaders = $(if (${script:AIBackend}.ReverseHttpExtraHeaders.Count -gt 0) {
+        ${script:AIBackend}.ReverseHttpExtraHeaders | ConvertTo-Json -Compress
     } else { "{}" }
     $headersBox.Text = $currentHeaders
     $headersBox.Location = New-Object System.Drawing.Point(20, 297)
@@ -11576,26 +11574,26 @@ function Show-ReverseHttpSettings {
         $form.Refresh()
         
         # Temporarily apply settings for test
-        $oldEnabled = $script:AIBackend.ReverseHttpEnabled
-        $oldEndpoint = $script:AIBackend.ReverseHttpEndpoint
-        $oldToken = $script:AIBackend.ReverseHttpToken
-        $oldModel = $script:AIBackend.ReverseHttpModel
-        $oldStream = $script:AIBackend.ReverseHttpStreamMode
+        $oldEnabled = ${script:AIBackend}.ReverseHttpEnabled
+        $oldEndpoint = ${script:AIBackend}.ReverseHttpEndpoint
+        $oldToken = ${script:AIBackend}.ReverseHttpToken
+        $oldModel = ${script:AIBackend}.ReverseHttpModel
+        $oldStream = ${script:AIBackend}.ReverseHttpStreamMode
         
-        $script:AIBackend.ReverseHttpEnabled = $enableCheck.Checked
-        $script:AIBackend.ReverseHttpEndpoint = $endpointBox.Text
-        $script:AIBackend.ReverseHttpToken = $tokenBox.Text
-        $script:AIBackend.ReverseHttpModel = $modelBox.Text
-        $script:AIBackend.ReverseHttpStreamMode = $streamCombo.SelectedItem
+        ${script:AIBackend}.ReverseHttpEnabled = $enableCheck.Checked
+        ${script:AIBackend}.ReverseHttpEndpoint = $endpointBox.Text
+        ${script:AIBackend}.ReverseHttpToken = $tokenBox.Text
+        ${script:AIBackend}.ReverseHttpModel = $modelBox.Text
+        ${script:AIBackend}.ReverseHttpStreamMode = $streamCombo.SelectedItem
         
         $result = Test-ReverseHttpBackend -Verbose
         
         # Restore old settings
-        $script:AIBackend.ReverseHttpEnabled = $oldEnabled
-        $script:AIBackend.ReverseHttpEndpoint = $oldEndpoint
-        $script:AIBackend.ReverseHttpToken = $oldToken
-        $script:AIBackend.ReverseHttpModel = $oldModel
-        $script:AIBackend.ReverseHttpStreamMode = $oldStream
+        ${script:AIBackend}.ReverseHttpEnabled = $oldEnabled
+        ${script:AIBackend}.ReverseHttpEndpoint = $oldEndpoint
+        ${script:AIBackend}.ReverseHttpToken = $oldToken
+        ${script:AIBackend}.ReverseHttpModel = $oldModel
+        ${script:AIBackend}.ReverseHttpStreamMode = $oldStream
         
         if ($result.Success) {
             $resultBox.Text = "✅ Success! Response: $($result.Response.Substring(0, [Math]::Min(150, $result.Response.Length)))..."
@@ -11633,9 +11631,9 @@ function Show-ReverseHttpSettings {
         # Validate headers JSON
         try {
             $parsedHeaders = $headersBox.Text | ConvertFrom-Json -ErrorAction Stop
-            $script:AIBackend.ReverseHttpExtraHeaders = @{}
+            ${script:AIBackend}.ReverseHttpExtraHeaders = @{}
             $parsedHeaders.PSObject.Properties | ForEach-Object {
-                $script:AIBackend.ReverseHttpExtraHeaders[$_.Name] = $_.Value
+                ${script:AIBackend}.ReverseHttpExtraHeaders[$_.Name] = $_.Value
             }
         }
         catch {
@@ -11643,14 +11641,14 @@ function Show-ReverseHttpSettings {
             return
         }
         
-        $script:AIBackend.ReverseHttpEnabled = $enableCheck.Checked
-        $script:AIBackend.ReverseHttpEndpoint = $endpointBox.Text.Trim()
-        $script:AIBackend.ReverseHttpToken = $tokenBox.Text
-        $script:AIBackend.ReverseHttpModel = $modelBox.Text.Trim()
-        $script:AIBackend.ReverseHttpStreamMode = $streamCombo.SelectedItem
+        ${script:AIBackend}.ReverseHttpEnabled = $enableCheck.Checked
+        ${script:AIBackend}.ReverseHttpEndpoint = $endpointBox.Text.Trim()
+        ${script:AIBackend}.ReverseHttpToken = $tokenBox.Text
+        ${script:AIBackend}.ReverseHttpModel = $modelBox.Text.Trim()
+        ${script:AIBackend}.ReverseHttpStreamMode = $streamCombo.SelectedItem
         
         # Force re-check availability
-        $script:BackendCache.LastChecked = Get-Date -Year 2000
+        ${script:BackendCache}.LastChecked = Get-Date -Year 2000
         Test-AIBackendAvailability
         
         Write-DevConsole "✅ ReverseHttp settings saved" "SUCCESS"
@@ -11700,26 +11698,26 @@ function Test-ReverseHttpBackend {
     }
     
     # Check configuration
-    if (-not $script:AIBackend.ReverseHttpEnabled) {
+    if (-not ${script:AIBackend}.ReverseHttpEnabled) {
         $result.Error = "ReverseHttp backend is not enabled"
         return $result
     }
     
-    if (-not $script:AIBackend.ReverseHttpEndpoint) {
+    if (-not ${script:AIBackend}.ReverseHttpEndpoint) {
         $result.Error = "ReverseHttp endpoint is not configured"
         return $result
     }
     
-    if (-not $script:AIBackend.ReverseHttpToken) {
+    if (-not ${script:AIBackend}.ReverseHttpToken) {
         $result.Error = "ReverseHttp token is not configured"
         return $result
     }
     
     if ($Verbose) {
         Write-Host "🧪 Testing ReverseHttp backend..." -ForegroundColor Cyan
-        Write-Host "   Endpoint: $($script:AIBackend.ReverseHttpEndpoint)" -ForegroundColor Gray
-        Write-Host "   Model: $($script:AIBackend.ReverseHttpModel)" -ForegroundColor Gray
-        Write-Host "   Stream Mode: $($script:AIBackend.ReverseHttpStreamMode)" -ForegroundColor Gray
+        Write-Host "   Endpoint: $(${script:AIBackend}.ReverseHttpEndpoint)" -ForegroundColor Gray
+        Write-Host "   Model: $(${script:AIBackend}.ReverseHttpModel)" -ForegroundColor Gray
+        Write-Host "   Stream Mode: $(${script:AIBackend}.ReverseHttpStreamMode)" -ForegroundColor Gray
     }
     
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -11802,7 +11800,7 @@ try {
     Write-Host "✅ Success! Latency: $($stopwatch.ElapsedMilliseconds)ms" -ForegroundColor Green
     
     # Extract response based on format
-    $text = if ($response.choices) {
+    $text = $(if ($response.choices) {
         $response.choices[0].message.content
     } elseif ($response.content) {
         $response.content
@@ -11822,8 +11820,8 @@ catch {
 
 
 function Initialize-CursorHooks {
-    if ($script:CursorHookState) { return }
-    $script:CursorHookState = @{
+    if (${script:CursorHookState}) { return }
+    ${script:CursorHookState} = @{
         ActiveStack  = New-Object "System.Collections.Generic.List[System.Collections.Hashtable]"
         CurrentStyle = "Default"
         LastReason   = "Idle"
@@ -11851,7 +11849,7 @@ function Update-CursorHookStyle {
         [string]$Reason = "Operation"
     )
     Initialize-CursorHooks
-    if (-not $script:RuntimeInfo.WinFormsAvailable) { return }
+    if (-not ${script:RuntimeInfo}.WinFormsAvailable) { return }
 
     $cursor = Get-CursorHookObject -Style $Style
     $useWait = $Style -in @("Wait", "Busy")
@@ -11874,9 +11872,9 @@ function Update-CursorHookStyle {
         # Non-fatal - cursor updates are best effort
     }
 
-    $script:CursorHookState.CurrentStyle = $Style
-    $script:CursorHookState.LastReason = $Reason
-    $script:CursorHookState.LastUpdated = Get-Date
+    ${script:CursorHookState}.CurrentStyle = $Style
+    ${script:CursorHookState}.LastReason = $Reason
+    ${script:CursorHookState}.LastUpdated = Get-Date
 }
 
 function Enter-CursorWaitState {
@@ -11886,7 +11884,7 @@ function Enter-CursorWaitState {
         [string]$Style = "Wait"
     )
     Initialize-CursorHooks
-    if (-not $script:RuntimeInfo.WinFormsAvailable) { return $null }
+    if (-not ${script:RuntimeInfo}.WinFormsAvailable) { return $null }
 
     $token = [guid]::NewGuid().ToString()
     $entry = @{
@@ -11895,7 +11893,7 @@ function Enter-CursorWaitState {
         Style     = $Style
         Timestamp = Get-Date
     }
-    $script:CursorHookState.ActiveStack.Add($entry)
+    ${script:CursorHookState}.ActiveStack.Add($entry)
     Update-CursorHookStyle -Style $Style -Reason $Reason
     return $token
 }
@@ -11905,16 +11903,16 @@ function Exit-CursorWaitState {
     Initialize-CursorHooks
     if (-not $Token) { return }
 
-    for ($i = $script:CursorHookState.ActiveStack.Count - 1; $i -ge 0; $i--) {
-        $entry = $script:CursorHookState.ActiveStack[$i]
+    for ($i = ${script:CursorHookState}.ActiveStack.Count - 1; $i -ge 0; $i--) {
+        $entry = ${script:CursorHookState}.ActiveStack[$i]
         if ($entry.Token -eq $Token) {
-            $script:CursorHookState.ActiveStack.RemoveAt($i)
+            ${script:CursorHookState}.ActiveStack.RemoveAt($i)
             break
         }
     }
 
-    if ($script:CursorHookState.ActiveStack.Count -gt 0) {
-        $next = $script:CursorHookState.ActiveStack[$script:CursorHookState.ActiveStack.Count - 1]
+    if (${script:CursorHookState}.ActiveStack.Count -gt 0) {
+        $next = ${script:CursorHookState}.ActiveStack[${script:CursorHookState}.ActiveStack.Count - 1]
         Update-CursorHookStyle -Style $next.Style -Reason $next.Reason
     }
     else {
@@ -11925,20 +11923,20 @@ function Exit-CursorWaitState {
 function Get-CursorHookStatus {
     Initialize-CursorHooks
     return @{
-        ActiveRequests = if ($script:CursorHookState.ActiveStack) { $script:CursorHookState.ActiveStack.ToArray() } else { @() }
-        CurrentStyle   = $script:CursorHookState.CurrentStyle
-        LastReason     = $script:CursorHookState.LastReason
-        LastUpdated    = $script:CursorHookState.LastUpdated
+        ActiveRequests = $(if (${script:CursorHookState}.ActiveStack) { ${script:CursorHookState}.ActiveStack.ToArray() } else { @() }
+        CurrentStyle   = ${script:CursorHookState}.CurrentStyle
+        LastReason     = ${script:CursorHookState}.LastReason
+        LastUpdated    = ${script:CursorHookState}.LastUpdated
     }
 }
 
 Initialize-CursorHooks
 
 # .NET Runtime Switcher state - initialized to false, set to true when module loads successfully
-$script:DotNetSwitchEnabled = $false  # Menu bar checks this before adding switcher menu item
+${script:DotNetSwitchEnabled} = $false  # Menu bar checks this before adding switcher menu item
 
 # Agentic System State
-$global:agentContext = @{
+${global:agentContext} = @{
     SessionId        = [guid]::NewGuid().ToString()
     StartTime        = Get-Date
     Messages         = @()
@@ -11957,7 +11955,7 @@ $global:agentContext = @{
 # ============================================
 
 # Enhanced dependency tracking based on BigDaddyG's recommendation
-$script:DependencyTracker = @{
+${script:DependencyTracker} = @{
     Dependencies      = @{}
     BuildSystems      = @{}
     PackageManagers   = @{}
@@ -11999,8 +11997,8 @@ function Track-Dependency {
 
         # Check if dependency already exists
         $dependencyKey = "$DependencyType`:$DependencyName"
-        if ($script:DependencyTracker.Dependencies.ContainsKey($dependencyKey)) {
-            $existing = $script:DependencyTracker.Dependencies[$dependencyKey]
+        if (${script:DependencyTracker}.Dependencies.ContainsKey($dependencyKey)) {
+            $existing = ${script:DependencyTracker}.Dependencies[$dependencyKey]
             $dependency.FirstSeen = $existing.FirstSeen
 
             # Check for version conflicts
@@ -12012,14 +12010,14 @@ function Track-Dependency {
                     Timestamp       = $timestamp
                     Resolved        = $false
                 }
-                $script:DependencyTracker.VersionConflicts += $conflict
+                ${script:DependencyTracker}.VersionConflicts += $conflict
                 Write-StartupLog "⚠️ Version conflict detected: $DependencyName (`$(`$existing.Version) vs `$Version)" "WARNING"
             }
         }
 
         # Store dependency
-        $script:DependencyTracker.Dependencies[$dependencyKey] = $dependency
-        $global:agentContext.DependencyGraph[$dependencyKey] = $dependency
+        ${script:DependencyTracker}.Dependencies[$dependencyKey] = $dependency
+        ${global:agentContext}.DependencyGraph[$dependencyKey] = $dependency
 
         # Log the dependency tracking
         Write-StartupLog "📦 Dependency tracked: [$DependencyType] $DependencyName $(if($Version){"v$Version"})" "INFO"
@@ -12030,12 +12028,12 @@ function Track-Dependency {
         }
 
         # Auto-analyze dependency if enabled
-        if ($script:DependencyTracker.AutoResolution) {
+        if (${script:DependencyTracker}.AutoResolution) {
             Analyze-DependencyHealth -DependencyKey $dependencyKey
         }
 
         # Security scanning if enabled
-        if ($script:DependencyTracker.SecurityScanning) {
+        if (${script:DependencyTracker}.SecurityScanning) {
             Start-DependencySecurityScan -DependencyKey $dependencyKey
         }
 
@@ -12050,7 +12048,7 @@ function Analyze-DependencyHealth {
     param([string]$DependencyKey)
 
     try {
-        $dependency = $script:DependencyTracker.Dependencies[$DependencyKey]
+        $dependency = ${script:DependencyTracker}.Dependencies[$DependencyKey]
         if (-not $dependency) { return }
 
         $healthScore = 100
@@ -12066,10 +12064,10 @@ function Analyze-DependencyHealth {
         }
 
         # Check for known conflicts
-        $conflicts = @($script:DependencyTracker.VersionConflicts | Where-Object {
+        $conflicts = @(${script:DependencyTracker}.VersionConflicts | Where-Object {
                 $_.DependencyName -eq $dependency.Name -and -not $_.Resolved
             })
-        $conflictCount = if ($conflicts) { $conflicts.Count } else { 0 }
+        $conflictCount = $(if ($conflicts) { $conflicts.Count } else { 0 }
         if ($conflictCount -gt 0) {
             $healthScore -= ($conflictCount * 15)
             $issues += "Has $conflictCount unresolved version conflict(s)"
@@ -12077,7 +12075,7 @@ function Analyze-DependencyHealth {
 
         # Check build system compatibility
         if (-not [string]::IsNullOrEmpty($dependency.BuildSystem)) {
-            if (-not $script:DependencyTracker.BuildSystems.ContainsKey($dependency.BuildSystem)) {
+            if (-not ${script:DependencyTracker}.BuildSystems.ContainsKey($dependency.BuildSystem)) {
                 $healthScore -= 10
                 $issues += "Unknown build system: $($dependency.BuildSystem)"
             }
@@ -12105,7 +12103,7 @@ function Start-DependencySecurityScan {
     param([string]$DependencyKey)
 
     try {
-        $dependency = $script:DependencyTracker.Dependencies[$DependencyKey]
+        $dependency = ${script:DependencyTracker}.Dependencies[$DependencyKey]
         if (-not $dependency) { return }
 
         # Basic security checks
@@ -12165,7 +12163,7 @@ function Register-BuildSystem {
             ProjectsUsing  = @()
         }
 
-        $script:DependencyTracker.BuildSystems[$Name] = $buildSystem
+        ${script:DependencyTracker}.BuildSystems[$Name] = $buildSystem
         Write-StartupLog "🔧 Build system registered: $Name" "INFO"
 
     }
@@ -12211,7 +12209,7 @@ function Detect-ProjectDependencies {
             foreach ($req in $requirements) {
                 if ($req -match "^([^=><!\s]+)([=><!=]+.+)?") {
                     $depName = $matches[1]
-                    $version = if ($matches[2]) { $matches[2] } else { "" }
+                    $version = $(if ($matches[2]) { $matches[2] } else { "" }
                     Track-Dependency -DependencyName $depName -DependencyType "python" -Version $version -ProjectPath $projectPath -BuildSystem "pip"
                     $detectedDependencies += "$depName$version"
                 }
@@ -12226,7 +12224,7 @@ function Detect-ProjectDependencies {
                 $packageRefs = $projectXml.Project.ItemGroup.PackageReference
                 foreach ($package in $packageRefs) {
                     if ($package.Include) {
-                        $version = if ($package.Version) { $package.Version } else { "" }
+                        $version = $(if ($package.Version) { $package.Version } else { "" }
                         Track-Dependency -DependencyName $package.Include -DependencyType "nuget" -Version $version -ProjectPath $projectPath -BuildSystem "dotnet"
                         $detectedDependencies += "$($package.Include)@$version"
                     }
@@ -12281,7 +12279,7 @@ function Resolve-DependencyConflicts {
     param([switch]$AutoResolve = $false)
 
     try {
-        $unresolvedConflicts = @($script:DependencyTracker.VersionConflicts | Where-Object { -not $_.Resolved })
+        $unresolvedConflicts = @(${script:DependencyTracker}.VersionConflicts | Where-Object { -not $_.Resolved })
 
         if ($unresolvedConflicts.Count -eq 0) {
             Write-StartupLog "✅ No dependency conflicts to resolve" "SUCCESS"
@@ -12330,21 +12328,21 @@ function Resolve-DependencyConflicts {
 
 # Export dependency report
 function Export-DependencyReport {
-    param([string]$OutputPath = (Join-Path $env:TEMP "RawrXD_Dependencies.json"))
+    param([string]$OutputPath = (Join-Path ${env:TEMP} "RawrXD_Dependencies.json"))
 
     try {
         $report = @{
             GeneratedAt       = Get-Date
             ProjectPath       = (Get-Location).Path
-            TotalDependencies = if ($script:DependencyTracker.Dependencies) { @($script:DependencyTracker.Dependencies).Count } else { 0 }
-            Dependencies      = $script:DependencyTracker.Dependencies
-            BuildSystems      = $script:DependencyTracker.BuildSystems
-            VersionConflicts  = $script:DependencyTracker.VersionConflicts
+            TotalDependencies = $(if (${script:DependencyTracker}.Dependencies) { @(${script:DependencyTracker}.Dependencies).Count } else { 0 }
+            Dependencies      = ${script:DependencyTracker}.Dependencies
+            BuildSystems      = ${script:DependencyTracker}.BuildSystems
+            VersionConflicts  = ${script:DependencyTracker}.VersionConflicts
             HealthSummary     = @{
-                HealthyDependencies   = if ($script:DependencyTracker.Dependencies.Values) { @($script:DependencyTracker.Dependencies.Values | Where-Object { $_.SecurityScore -ge 80 }).Count } else { 0 }
-                UnhealthyDependencies = if ($script:DependencyTracker.Dependencies.Values) { @($script:DependencyTracker.Dependencies.Values | Where-Object { $_.SecurityScore -lt 80 }).Count } else { 0 }
-                SecurityIssues        = if ($script:DependencyTracker.Dependencies.Values) { @($script:DependencyTracker.Dependencies.Values | Where-Object { $_.SecurityIssues }).Count } else { 0 }
-                UnresolvedConflicts   = if ($script:DependencyTracker.VersionConflicts) { @($script:DependencyTracker.VersionConflicts | Where-Object { -not $_.Resolved }).Count } else { 0 }
+                HealthyDependencies   = $(if (${script:DependencyTracker}.Dependencies.Values) { @(${script:DependencyTracker}.Dependencies.Values | Where-Object { $_.SecurityScore -ge 80 }).Count } else { 0 }
+                UnhealthyDependencies = $(if (${script:DependencyTracker}.Dependencies.Values) { @(${script:DependencyTracker}.Dependencies.Values | Where-Object { $_.SecurityScore -lt 80 }).Count } else { 0 }
+                SecurityIssues        = $(if (${script:DependencyTracker}.Dependencies.Values) { @(${script:DependencyTracker}.Dependencies.Values | Where-Object { $_.SecurityIssues }).Count } else { 0 }
+                UnresolvedConflicts   = $(if (${script:DependencyTracker}.VersionConflicts) { @(${script:DependencyTracker}.VersionConflicts | Where-Object { -not $_.Resolved }).Count } else { 0 }
             }
         }
 
@@ -12372,7 +12370,7 @@ Register-BuildSystem -Name "cargo" -ConfigFile "Cargo.toml" -DependencyFile "Car
 # ============================================
 
 # Thread-safe collections using ConcurrentDictionary equivalents
-$script:threadSafeContext = @{
+${script:threadSafeContext} = @{
     RunspacePool       = $null
     ActiveJobs         = [System.Collections.Hashtable]::Synchronized(@{})
     TaskQueue          = [System.Collections.Queue]::Synchronized((New-Object System.Collections.Queue))
@@ -12383,17 +12381,17 @@ $script:threadSafeContext = @{
 }
 
 # Runspace session state for sharing variables
-$script:sessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+${script:sessionState} = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
 
 # Add required assemblies and types to session state
-$script:sessionState.ImportPSModule(@('Microsoft.PowerShell.Utility', 'Microsoft.PowerShell.Management'))
+${script:sessionState}.ImportPSModule(@('Microsoft.PowerShell.Utility', 'Microsoft.PowerShell.Management'))
 
 # Thread-safe logging queue
-$script:logQueue = [System.Collections.Queue]::Synchronized((New-Object System.Collections.Queue))
-$script:logProcessingTimer = $null
+${script:logQueue} = [System.Collections.Queue]::Synchronized((New-Object System.Collections.Queue))
+${script:logProcessingTimer} = $null
 
 # Agent worker states
-$script:agentWorkers = @{
+${script:agentWorkers} = @{
     ChatProcessor = @{ Status = "Idle"; CurrentTask = $null; LastActivity = Get-Date }
     FileProcessor = @{ Status = "Idle"; CurrentTask = $null; LastActivity = Get-Date }
     CommandRunner = @{ Status = "Idle"; CurrentTask = $null; LastActivity = Get-Date }
@@ -12401,46 +12399,46 @@ $script:agentWorkers = @{
 }
 
 # Chat History Persistence
-$script:chatHistoryPath = Join-Path $env:APPDATA "RawrXD\chat_history.txt"
-$script:chatHistoryDir = Split-Path $script:chatHistoryPath
-if (-not (Test-Path $script:chatHistoryDir)) {
-    New-Item -ItemType Directory -Path $script:chatHistoryDir -Force | Out-Null
+${script:chatHistoryPath} = Join-Path ${env:APPDATA} "RawrXD\chat_history.txt"
+${script:chatHistoryDir} = Split-Path ${script:chatHistoryPath}
+if (-not (Test-Path ${script:chatHistoryDir})) {
+    New-Item -ItemType Directory -Path ${script:chatHistoryDir} -Force | Out-Null
 }
 
 # Extension Marketplace System
-$script:extensionsDir = Join-Path $env:APPDATA "RawrXD\Extensions"
-if (-not (Test-Path $script:extensionsDir)) {
-    New-Item -ItemType Directory -Path $script:extensionsDir -Force | Out-Null
+${script:extensionsDir} = Join-Path ${env:APPDATA} "RawrXD\Extensions"
+if (-not (Test-Path ${script:extensionsDir})) {
+    New-Item -ItemType Directory -Path ${script:extensionsDir} -Force | Out-Null
 }
 
-$script:extensionRegistry = @()
-$script:marketplaceCache = @()
-$script:marketplaceSources = @(
+${script:extensionRegistry} = @()
+${script:marketplaceCache} = @()
+${script:marketplaceSources} = @(
     @{ Name = "Visual Studio Marketplace"; Url = "https://marketplace.visualstudio.com/VSCode"; ApiUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" }
 )
-$script:marketplaceLastRefresh = $null
+${script:marketplaceLastRefresh} = $null
 
 # Agent Tools System
-$script:agentTools = @{}
+${script:agentTools} = @{}
 
 # Extension Capabilities
-$script:CAP_SYNTAX_HIGHLIGHT = 1
-$script:CAP_CODE_COMPLETION = 2
-$script:CAP_DEBUGGING = 4
-$script:CAP_LINTING = 8
-$script:CAP_FORMATTING = 16
-$script:CAP_REFACTORING = 32
-$script:CAP_BUILD_SYSTEM = 64
-$script:CAP_GIT_INTEGRATION = 128
-$script:CAP_MODEL_DAMPENING = 256
-$script:CAP_AI_ASSIST = 512
+${script:CAP_SYNTAX_HIGHLIGHT} = 1
+${script:CAP_CODE_COMPLETION} = 2
+${script:CAP_DEBUGGING} = 4
+${script:CAP_LINTING} = 8
+${script:CAP_FORMATTING} = 16
+${script:CAP_REFACTORING} = 32
+${script:CAP_BUILD_SYSTEM} = 64
+${script:CAP_GIT_INTEGRATION} = 128
+${script:CAP_MODEL_DAMPENING} = 256
+${script:CAP_AI_ASSIST} = 512
 
 # ============================================
 # ADVANCED AGENT TASK MANAGEMENT SYSTEM
 # ============================================
 
 # Task management configuration based on BigDaddyG's recommendation
-$script:TaskManager = @{
+${script:TaskManager} = @{
     EnableScheduling         = $true
     EnablePriorityQueue      = $true
     EnableResourceTracking   = $true
@@ -12457,7 +12455,7 @@ $script:TaskManager = @{
 }
 
 # Task storage and tracking
-$script:TaskRegistry = @{
+${script:TaskRegistry} = @{
     ActiveTasks    = @{}
     CompletedTasks = @{}
     FailedTasks    = @{}
@@ -12467,7 +12465,7 @@ $script:TaskRegistry = @{
 }
 
 # Task priority levels
-$script:TaskPriority = @{
+${script:TaskPriority} = @{
     CRITICAL   = 1
     HIGH       = 2
     NORMAL     = 3
@@ -12485,7 +12483,7 @@ function Schedule-AgentTask {
         [Parameter(Mandatory)]
         [scriptblock]$TaskScript,
         [datetime]$TaskDeadline = (Get-Date).AddHours(1),
-        [int]$Priority = $script:TaskPriority.NORMAL,
+        [int]$Priority = ${script:TaskPriority}.NORMAL,
         [hashtable]$Dependencies = @{},
         [hashtable]$ResourceRequirements = @{},
         [hashtable]$Metadata = @{}
@@ -12519,7 +12517,7 @@ function Schedule-AgentTask {
 
         # Validate dependencies
         foreach ($dep in $Dependencies.Keys) {
-            if (-not $script:TaskRegistry.CompletedTasks.ContainsKey($dep)) {
+            if (-not ${script:TaskRegistry}.CompletedTasks.ContainsKey($dep)) {
                 throw "Dependency task '$dep' not found or not completed"
             }
         }
@@ -12532,7 +12530,7 @@ function Schedule-AgentTask {
         }
 
         # Store task
-        $script:TaskRegistry.ScheduledTasks[$taskId] = $task
+        ${script:TaskRegistry}.ScheduledTasks[$taskId] = $task
 
         # Log task scheduling
         Write-StartupLog "📅 Task scheduled: [$TaskType] $TaskName (ID: $($taskId.Substring(0,8)))" "INFO"
@@ -12562,7 +12560,7 @@ function Test-ResourceAvailability {
     param([hashtable]$Requirements)
 
     try {
-        $limits = $script:TaskManager.ResourceLimits
+        $limits = ${script:TaskManager}.ResourceLimits
         $result = @{ Available = $true; Reason = "" }
 
         # Check memory requirements
@@ -12578,15 +12576,15 @@ function Test-ResourceAvailability {
         }
 
         # Check concurrent task limits
-        $activeTasks = if ($script:TaskRegistry.ActiveTasks) { @($script:TaskRegistry.ActiveTasks).Count } else { 0 }
-        if ($activeTasks -ge $script:TaskManager.MaxConcurrentTasks) {
+        $activeTasks = $(if (${script:TaskRegistry}.ActiveTasks) { @(${script:TaskRegistry}.ActiveTasks).Count } else { 0 }
+        if ($activeTasks -ge ${script:TaskManager}.MaxConcurrentTasks) {
             $result.Available = $false
-            $result.Reason = "Maximum concurrent tasks reached: $activeTasks/$($script:TaskManager.MaxConcurrentTasks)"
+            $result.Reason = "Maximum concurrent tasks reached: $activeTasks/$(${script:TaskManager}.MaxConcurrentTasks)"
         }
 
         # Check disk space requirements
         if ($Requirements.ContainsKey("DiskSpaceMB")) {
-            $drive = Get-WmiObject -Class Win32_LogicalDisk | Where-Object { $_.DeviceID -eq $env:SystemDrive }
+            $drive = Get-WmiObject -Class Win32_LogicalDisk | Where-Object { $_.DeviceID -eq ${env:SystemDrive} }
             $availableSpaceMB = [math]::Round($drive.FreeSpace / 1MB, 2)
             $requiredSpace = $Requirements.DiskSpaceMB
 
@@ -12609,15 +12607,15 @@ function Start-ScheduledTaskExecution {
     param([string]$TaskId)
 
     try {
-        $task = $script:TaskRegistry.ScheduledTasks[$TaskId]
+        $task = ${script:TaskRegistry}.ScheduledTasks[$TaskId]
         if (-not $task) {
             Write-Warning "Task $TaskId not found in scheduled tasks"
             return
         }
 
         # Move task from scheduled to active
-        $script:TaskRegistry.ActiveTasks[$TaskId] = $task
-        $script:TaskRegistry.ScheduledTasks.Remove($TaskId)
+        ${script:TaskRegistry}.ActiveTasks[$TaskId] = $task
+        ${script:TaskRegistry}.ScheduledTasks.Remove($TaskId)
 
         # Update task status
         $task.Status = "Running"
@@ -12677,7 +12675,7 @@ function Monitor-TaskExecution {
     param([string]$TaskId)
 
     try {
-        $task = $script:TaskRegistry.ActiveTasks[$TaskId]
+        $task = ${script:TaskRegistry}.ActiveTasks[$TaskId]
         if (-not $task) { return }
 
         $job = Get-Job -Id $task.JobId -ErrorAction SilentlyContinue
@@ -12692,7 +12690,7 @@ function Monitor-TaskExecution {
                 param($timerSender, $e)
 
                 try {
-                    $currentTask = $script:TaskRegistry.ActiveTasks[$TaskId]
+                    $currentTask = ${script:TaskRegistry}.ActiveTasks[$TaskId]
                     if (-not $currentTask) {
                         $timer.Stop()
                         $timer.Dispose()
@@ -12724,7 +12722,7 @@ function Monitor-TaskExecution {
 
                     # Check timeout
                     $executionTime = (Get-Date) - $currentTask.StartedAt
-                    if ($executionTime.TotalMinutes -gt $script:TaskManager.TaskTimeoutMinutes) {
+                    if ($executionTime.TotalMinutes -gt ${script:TaskManager}.TaskTimeoutMinutes) {
                         Stop-Job -Job $currentJob
                         Remove-Job -Job $currentJob
                         Fail-TaskExecution -TaskId $TaskId -Reason "Task timeout after $($executionTime.TotalMinutes) minutes"
@@ -12760,18 +12758,18 @@ function Complete-TaskExecution {
     )
 
     try {
-        $task = $script:TaskRegistry.ActiveTasks[$TaskId]
+        $task = ${script:TaskRegistry}.ActiveTasks[$TaskId]
         if (-not $task) { return }
 
         # Move task from active to completed/failed
-        $script:TaskRegistry.ActiveTasks.Remove($TaskId)
+        ${script:TaskRegistry}.ActiveTasks.Remove($TaskId)
 
         if ($Success -and $Result.Success) {
             $task.Status = "Completed"
             $task.CompletedAt = $Result.CompletedAt
             $task.ExecutionTime = $Result.ExecutionTime
             $task.Progress = 100
-            $script:TaskRegistry.CompletedTasks[$TaskId] = $task
+            ${script:TaskRegistry}.CompletedTasks[$TaskId] = $task
 
             Write-StartupLog "✅ Task completed: $($task.Name) ($(([math]::Round($Result.ExecutionTime, 0)))ms)" "SUCCESS"
             Update-Insights -EventName "TaskCompleted" -EventData $task.Name -EventCategory "TaskManagement" -Metadata @{
@@ -12782,15 +12780,15 @@ function Complete-TaskExecution {
         }
         else {
             $task.Status = "Failed"
-            $task.LastError = if ($Result.Error) { $Result.Error } else { "Unknown error" }
+            $task.LastError = $(if ($Result.Error) { $Result.Error } else { "Unknown error" }
             $task.CompletedAt = Get-Date
 
             # Check if we should retry
-            if ($task.RetryCount -lt $script:TaskManager.RetryAttempts) {
+            if ($task.RetryCount -lt ${script:TaskManager}.RetryAttempts) {
                 Retry-FailedTask -TaskId $TaskId
             }
             else {
-                $script:TaskRegistry.FailedTasks[$TaskId] = $task
+                ${script:TaskRegistry}.FailedTasks[$TaskId] = $task
                 Write-StartupLog "❌ Task failed permanently: $($task.Name) - $($task.LastError)" "ERROR"
                 Update-Insights -EventName "TaskFailed" -EventData $task.Name -EventCategory "TaskManagement" -Metadata @{
                     TaskId     = $TaskId
@@ -12801,11 +12799,11 @@ function Complete-TaskExecution {
         }
 
         # Update task history
-        $script:TaskRegistry.TaskHistory += $task
+        ${script:TaskRegistry}.TaskHistory += $task
 
         # Cleanup old history (keep last 100 tasks)
-        if ($script:TaskRegistry.TaskHistory -and @($script:TaskRegistry.TaskHistory).Count -gt 100) {
-            $script:TaskRegistry.TaskHistory = $script:TaskRegistry.TaskHistory[-100..-1]
+        if (${script:TaskRegistry}.TaskHistory -and @(${script:TaskRegistry}.TaskHistory).Count -gt 100) {
+            ${script:TaskRegistry}.TaskHistory = ${script:TaskRegistry}.TaskHistory[-100..-1]
         }
 
     }
@@ -12819,9 +12817,9 @@ function Retry-FailedTask {
     param([string]$TaskId)
 
     try {
-        $task = $script:TaskRegistry.FailedTasks[$TaskId]
+        $task = ${script:TaskRegistry}.FailedTasks[$TaskId]
         if (-not $task) {
-            $task = $script:TaskRegistry.ActiveTasks[$TaskId]
+            $task = ${script:TaskRegistry}.ActiveTasks[$TaskId]
         }
         if (-not $task) { return }
 
@@ -12829,19 +12827,19 @@ function Retry-FailedTask {
         $task.Status = "Retrying"
 
         # Apply backoff delay
-        $delaySeconds = [math]::Pow($script:TaskManager.BackoffMultiplier, $task.RetryCount)
-        Write-StartupLog "🔄 Retrying task: $($task.Name) (Attempt $($task.RetryCount)/$($script:TaskManager.RetryAttempts)) in $delaySeconds seconds" "INFO"
+        $delaySeconds = [math]::Pow(${script:TaskManager}.BackoffMultiplier, $task.RetryCount)
+        Write-StartupLog "🔄 Retrying task: $($task.Name) (Attempt $($task.RetryCount)/$(${script:TaskManager}.RetryAttempts)) in $delaySeconds seconds" "INFO"
 
         # Schedule retry
         Start-Sleep -Seconds $delaySeconds
 
         # Move back to scheduled tasks
-        $script:TaskRegistry.ScheduledTasks[$TaskId] = $task
-        if ($script:TaskRegistry.FailedTasks.ContainsKey($TaskId)) {
-            $script:TaskRegistry.FailedTasks.Remove($TaskId)
+        ${script:TaskRegistry}.ScheduledTasks[$TaskId] = $task
+        if (${script:TaskRegistry}.FailedTasks.ContainsKey($TaskId)) {
+            ${script:TaskRegistry}.FailedTasks.Remove($TaskId)
         }
-        if ($script:TaskRegistry.ActiveTasks.ContainsKey($TaskId)) {
-            $script:TaskRegistry.ActiveTasks.Remove($TaskId)
+        if (${script:TaskRegistry}.ActiveTasks.ContainsKey($TaskId)) {
+            ${script:TaskRegistry}.ActiveTasks.Remove($TaskId)
         }
 
         # Attempt to start again
@@ -12861,7 +12859,7 @@ function Fail-TaskExecution {
     )
 
     try {
-        $task = $script:TaskRegistry.ActiveTasks[$TaskId]
+        $task = ${script:TaskRegistry}.ActiveTasks[$TaskId]
         if (-not $task) { return }
 
         $task.Status = "Failed"
@@ -12869,14 +12867,14 @@ function Fail-TaskExecution {
         $task.CompletedAt = Get-Date
 
         # Move to failed tasks
-        $script:TaskRegistry.ActiveTasks.Remove($TaskId)
-        $script:TaskRegistry.FailedTasks[$TaskId] = $task
+        ${script:TaskRegistry}.ActiveTasks.Remove($TaskId)
+        ${script:TaskRegistry}.FailedTasks[$TaskId] = $task
 
         Write-StartupLog "❌ Task failed: $($task.Name) - $Reason" "ERROR"
         Update-Insights -EventName "TaskFailed" -EventData $task.Name -EventCategory "TaskManagement" -Metadata @{
             TaskId        = $TaskId
             Reason        = $Reason
-            ExecutionTime = if ($task.StartedAt) { ((Get-Date) - $task.StartedAt).TotalMilliseconds } else { 0 }
+            ExecutionTime = $(if ($task.StartedAt) { ((Get-Date) - $task.StartedAt).TotalMilliseconds } else { 0 }
         }
 
         Send-AlertNotification -Type "TaskFailed" -Message "Task failed: $($task.Name) - $Reason" -Severity "HIGH"
@@ -12891,20 +12889,20 @@ function Fail-TaskExecution {
 function Get-TaskStatusReport {
     try {
         $report = @{
-            ActiveTasks          = if ($script:TaskRegistry.ActiveTasks) { @($script:TaskRegistry.ActiveTasks).Count } else { 0 }
-            ScheduledTasks       = if ($script:TaskRegistry.ScheduledTasks) { @($script:TaskRegistry.ScheduledTasks).Count } else { 0 }
-            CompletedTasks       = if ($script:TaskRegistry.CompletedTasks) { @($script:TaskRegistry.CompletedTasks).Count } else { 0 }
-            FailedTasks          = if ($script:TaskRegistry.FailedTasks) { @($script:TaskRegistry.FailedTasks).Count } else { 0 }
+            ActiveTasks          = $(if (${script:TaskRegistry}.ActiveTasks) { @(${script:TaskRegistry}.ActiveTasks).Count } else { 0 }
+            ScheduledTasks       = $(if (${script:TaskRegistry}.ScheduledTasks) { @(${script:TaskRegistry}.ScheduledTasks).Count } else { 0 }
+            CompletedTasks       = $(if (${script:TaskRegistry}.CompletedTasks) { @(${script:TaskRegistry}.CompletedTasks).Count } else { 0 }
+            FailedTasks          = $(if (${script:TaskRegistry}.FailedTasks) { @(${script:TaskRegistry}.FailedTasks).Count } else { 0 }
             TotalTasks           = (
-                (if ($script:TaskRegistry.ActiveTasks) { @($script:TaskRegistry.ActiveTasks).Count } else { 0 }) +
-                (if ($script:TaskRegistry.ScheduledTasks) { @($script:TaskRegistry.ScheduledTasks).Count } else { 0 }) +
-                (if ($script:TaskRegistry.CompletedTasks) { @($script:TaskRegistry.CompletedTasks).Count } else { 0 }) +
-                (if ($script:TaskRegistry.FailedTasks) { @($script:TaskRegistry.FailedTasks).Count } else { 0 })
+                (if (${script:TaskRegistry}.ActiveTasks) { @(${script:TaskRegistry}.ActiveTasks).Count } else { 0 }) +
+                (if (${script:TaskRegistry}.ScheduledTasks) { @(${script:TaskRegistry}.ScheduledTasks).Count } else { 0 }) +
+                (if (${script:TaskRegistry}.CompletedTasks) { @(${script:TaskRegistry}.CompletedTasks).Count } else { 0 }) +
+                (if (${script:TaskRegistry}.FailedTasks) { @(${script:TaskRegistry}.FailedTasks).Count } else { 0 })
             )
             SuccessRate          = 0
             AverageExecutionTime = 0
             ResourceUsage        = @{
-                MemoryMB = if (Get-Process -Id $PID -ErrorAction SilentlyContinue) { [math]::Round((Get-Process -Id $PID).WorkingSet64 / 1MB, 2) } else { 0 }
+                MemoryMB = $(if (Get-Process -Id $PID -ErrorAction SilentlyContinue) { [math]::Round((Get-Process -Id $PID).WorkingSet64 / 1MB, 2) } else { 0 }
             }
         }
 
@@ -12914,7 +12912,7 @@ function Get-TaskStatusReport {
         }
 
         # Calculate average execution time
-        $completedTasks = @($script:TaskRegistry.CompletedTasks.Values | Where-Object { $_.ExecutionTime })
+        $completedTasks = @(${script:TaskRegistry}.CompletedTasks.Values | Where-Object { $_.ExecutionTime })
         if ($completedTasks.Count -gt 0) {
             $report.AverageExecutionTime = [math]::Round(($completedTasks | Measure-Object -Property ExecutionTime -Average).Average, 0)
         }
@@ -12930,18 +12928,18 @@ function Get-TaskStatusReport {
 
 # Export task management report
 function Export-TaskReport {
-    param([string]$OutputPath = (Join-Path $env:TEMP "RawrXD_Tasks.json"))
+    param([string]$OutputPath = (Join-Path ${env:TEMP} "RawrXD_Tasks.json"))
 
     try {
         $report = @{
             GeneratedAt    = Get-Date
             StatusReport   = Get-TaskStatusReport
-            ActiveTasks    = $script:TaskRegistry.ActiveTasks
-            ScheduledTasks = $script:TaskRegistry.ScheduledTasks
-            CompletedTasks = $script:TaskRegistry.CompletedTasks
-            FailedTasks    = $script:TaskRegistry.FailedTasks
-            TaskHistory    = $script:TaskRegistry.TaskHistory[-50..-1]  # Last 50 tasks
-            Configuration  = $script:TaskManager
+            ActiveTasks    = ${script:TaskRegistry}.ActiveTasks
+            ScheduledTasks = ${script:TaskRegistry}.ScheduledTasks
+            CompletedTasks = ${script:TaskRegistry}.CompletedTasks
+            FailedTasks    = ${script:TaskRegistry}.FailedTasks
+            TaskHistory    = ${script:TaskRegistry}.TaskHistory[-50..-1]  # Last 50 tasks
+            Configuration  = ${script:TaskManager}
         }
 
         $report | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
@@ -12965,27 +12963,27 @@ function Invoke-TaskMaintenance {
 
         # Clean up old completed tasks (older than 24 hours)
         $oldCompleted = @()
-        foreach ($taskId in $script:TaskRegistry.CompletedTasks.Keys) {
-            $task = $script:TaskRegistry.CompletedTasks[$taskId]
+        foreach ($taskId in ${script:TaskRegistry}.CompletedTasks.Keys) {
+            $task = ${script:TaskRegistry}.CompletedTasks[$taskId]
             if ($task.CompletedAt -and ($now - $task.CompletedAt).TotalHours -gt 24) {
                 $oldCompleted += $taskId
             }
         }
         foreach ($taskId in $oldCompleted) {
-            $script:TaskRegistry.CompletedTasks.Remove($taskId)
+            ${script:TaskRegistry}.CompletedTasks.Remove($taskId)
             $cleanupCount++
         }
 
         # Clean up old failed tasks (older than 7 days)
         $oldFailed = @()
-        foreach ($taskId in $script:TaskRegistry.FailedTasks.Keys) {
-            $task = $script:TaskRegistry.FailedTasks[$taskId]
+        foreach ($taskId in ${script:TaskRegistry}.FailedTasks.Keys) {
+            $task = ${script:TaskRegistry}.FailedTasks[$taskId]
             if ($task.CompletedAt -and ($now - $task.CompletedAt).TotalDays -gt 7) {
                 $oldFailed += $taskId
             }
         }
         foreach ($taskId in $oldFailed) {
-            $script:TaskRegistry.FailedTasks.Remove($taskId)
+            ${script:TaskRegistry}.FailedTasks.Remove($taskId)
             $cleanupCount++
         }
 
@@ -13005,14 +13003,14 @@ Write-StartupLog "🎯 Advanced Task Management System initialized" "SUCCESS"
 Update-Insights -EventName "TaskManagementStarted" -EventData "System ready" -EventCategory "TaskManagement"
 
 # Language IDs
-$script:LANG_ASM = 0
-$script:LANG_PYTHON = 1
-$script:LANG_C = 2
-$script:LANG_CPP = 3
-$script:LANG_RUST = 4
-$script:LANG_GO = 5
-$script:LANG_JAVASCRIPT = 6
-$script:LANG_CUSTOM = 999
+${script:LANG_ASM} = 0
+${script:LANG_PYTHON} = 1
+${script:LANG_C} = 2
+${script:LANG_CPP} = 3
+${script:LANG_RUST} = 4
+${script:LANG_GO} = 5
+${script:LANG_JAVASCRIPT} = 6
+${script:LANG_CUSTOM} = 999
 
 # Browser Tab
 $browserTab = New-Object System.Windows.Forms.TabPage
@@ -13094,18 +13092,18 @@ $browserPS51Btn.Add_Click({
 # WebBrowser control (WebView2, PS5.1-Bridge, WebView2Shim, or IE fallback)
 # This section uses runtime detection to choose the appropriate browser engine
 Write-StartupLog "Initializing browser control..." "INFO"
-Write-StartupLog "  Current browser type setting: $($script:browserType)" "DEBUG"
-Write-StartupLog "  UseWebView2: $($script:useWebView2)" "DEBUG"
-Write-StartupLog "  RuntimeInfo.BrowserImplementation: $($script:RuntimeInfo.BrowserImplementation)" "DEBUG"
-Write-StartupLog "  RuntimeInfo.UsePS51BrowserBridge: $($script:RuntimeInfo.UsePS51BrowserBridge)" "DEBUG"
-Write-StartupLog "  RuntimeInfo.UseLegacyBrowser: $($script:RuntimeInfo.UseLegacyBrowser)" "DEBUG"
+Write-StartupLog "  Current browser type setting: $(${script:browserType})" "DEBUG"
+Write-StartupLog "  UseWebView2: $(${script:useWebView2})" "DEBUG"
+Write-StartupLog "  RuntimeInfo.BrowserImplementation: $(${script:RuntimeInfo}.BrowserImplementation)" "DEBUG"
+Write-StartupLog "  RuntimeInfo.UsePS51BrowserBridge: $(${script:RuntimeInfo}.UsePS51BrowserBridge)" "DEBUG"
+Write-StartupLog "  RuntimeInfo.UseLegacyBrowser: $(${script:RuntimeInfo}.UseLegacyBrowser)" "DEBUG"
 
 # Priority: PS5.1 Bridge (best video support) > Native PS5.1 > WebView2 > Shim > Legacy
-if ($script:RuntimeInfo.UsePS51BrowserBridge) {
+if (${script:RuntimeInfo}.UsePS51BrowserBridge) {
     # PowerShell 7+ with PS5.1 Browser Bridge - Show info panel, use subprocess for actual browsing
     Write-StartupLog "🎬 Initializing PS5.1 Browser Bridge for video support..." "INFO"
 
-    $script:browserType = "PS51-Bridge"
+    ${script:browserType} = "PS51-Bridge"
 
     # Create info panel explaining the hybrid mode
     $bridgeInfoPanel = New-Object System.Windows.Forms.Panel
@@ -13116,7 +13114,7 @@ if ($script:RuntimeInfo.UsePS51BrowserBridge) {
     $bridgeInfoLabel.Text = @"
 🎬 PS5.1 Browser Bridge Mode
 
-Running on: PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor) / .NET $($script:RuntimeInfo.DotNetMajorVersion)
+Running on: PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor) / .NET $(${script:RuntimeInfo}.DotNetMajorVersion)
 
 For FULL video and YouTube support, click the red [🎬 Video] button
 or press the [Open Video Browser] button below.
@@ -13183,14 +13181,14 @@ The main IDE continues running on PowerShell 7.5 for optimal performance.
 
     Write-StartupLog "✅ PS5.1 Browser Bridge panel initialized" "SUCCESS"
 }
-elseif ($script:useWpfWebView2 -and $script:useWebView2) {
+elseif (${script:useWpfWebView2} -and ${script:useWebView2}) {
     # .NET 9+ PATH: Use WPF WebView2 via ElementHost (bypasses ContextMenu deprecation)
     Write-StartupLog "🚀 Initializing WPF WebView2 via ElementHost (.NET 9+ compatible)..." "INFO"
 
     try {
         # Clean up old WebView2 user data folders from previous sessions (older than 1 day)
         try {
-            $oldFolders = Get-ChildItem $env:TEMP -Directory -Filter "RawrXD-WebView2-*" -ErrorAction SilentlyContinue |
+            $oldFolders = Get-ChildItem ${env:TEMP} -Directory -Filter "RawrXD-WebView2-*" -ErrorAction SilentlyContinue |
             Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-1) }
             if ($oldFolders) {
                 Write-StartupLog "Cleaning up $($oldFolders.Count) old WebView2 user data folders..." "DEBUG"
@@ -13202,57 +13200,57 @@ elseif ($script:useWpfWebView2 -and $script:useWebView2) {
         }
 
         # Create a unique user data folder to avoid access conflicts
-        $script:wpfWebView2UserDataFolder = Join-Path $env:TEMP "RawrXD-WebView2-$($PID)"
-        Write-StartupLog "WebView2 user data folder: $($script:wpfWebView2UserDataFolder)" "DEBUG"
+        ${script:wpfWebView2UserDataFolder} = Join-Path ${env:TEMP} "RawrXD-WebView2-$($PID)"
+        Write-StartupLog "WebView2 user data folder: $(${script:wpfWebView2UserDataFolder})" "DEBUG"
 
         # Create ElementHost to embed WPF control in WinForms
-        $script:wpfElementHost = New-Object System.Windows.Forms.Integration.ElementHost
-        $script:wpfElementHost.Dock = [System.Windows.Forms.DockStyle]::Fill
+        ${script:wpfElementHost} = New-Object System.Windows.Forms.Integration.ElementHost
+        ${script:wpfElementHost}.Dock = [System.Windows.Forms.DockStyle]::Fill
 
         # Create WPF WebView2 control
-        $script:wpfWebBrowser = New-Object Microsoft.Web.WebView2.Wpf.WebView2
+        ${script:wpfWebBrowser} = New-Object Microsoft.Web.WebView2.Wpf.WebView2
 
         # IMPORTANT: Set WPF control properties for proper input handling
-        $script:wpfWebBrowser.Focusable = $true
+        ${script:wpfWebBrowser}.Focusable = $true
 
         # Set the WPF control as the child of ElementHost
-        $script:wpfElementHost.Child = $script:wpfWebBrowser
+        ${script:wpfElementHost}.Child = ${script:wpfWebBrowser}
 
         # CRITICAL: Add focus event to properly route input to WebView2
-        $script:wpfElementHost.Add_Enter({
-            if ($script:wpfWebBrowser) {
-                $script:wpfWebBrowser.Focus()
+        ${script:wpfElementHost}.Add_Enter({
+            if (${script:wpfWebBrowser}) {
+                ${script:wpfWebBrowser}.Focus()
             }
         })
 
         # Add click handler to ensure focus is properly set
-        $script:wpfElementHost.Add_Click({
-            if ($script:wpfWebBrowser) {
-                $script:wpfWebBrowser.Focus()
+        ${script:wpfElementHost}.Add_Click({
+            if (${script:wpfWebBrowser}) {
+                ${script:wpfWebBrowser}.Focus()
             }
         })
 
         # Add to container
-        $browserContainer.Controls.Add($script:wpfElementHost) | Out-Null
+        $browserContainer.Controls.Add(${script:wpfElementHost}) | Out-Null
 
         # CRITICAL: Send ElementHost to back so toolbar stays on top
         # This ensures proper z-order for docking
-        $script:wpfElementHost.SendToBack()
+        ${script:wpfElementHost}.SendToBack()
 
         # Force layout update to ensure proper sizing
         $browserContainer.PerformLayout()
 
         # Create WebView2 environment with custom user data folder
-        $script:wpfWebView2Environment = [Microsoft.Web.WebView2.Core.CoreWebView2Environment]::CreateAsync(
+        ${script:wpfWebView2Environment} = [Microsoft.Web.WebView2.Core.CoreWebView2Environment]::CreateAsync(
             $null,  # browserExecutableFolder - use default
-            $script:wpfWebView2UserDataFolder,  # userDataFolder - unique per process
+            ${script:wpfWebView2UserDataFolder},  # userDataFolder - unique per process
             $null   # options
         ).GetAwaiter().GetResult()
 
         Write-StartupLog "WebView2 environment created successfully" "DEBUG"
 
         # Set up CoreWebView2InitializationCompleted event BEFORE calling EnsureCoreWebView2Async
-        $script:wpfWebBrowser.Add_CoreWebView2InitializationCompleted({
+        ${script:wpfWebBrowser}.Add_CoreWebView2InitializationCompleted({
                 param($sender, $args)
                 try {
                     if ($args.IsSuccess) {
@@ -13429,7 +13427,7 @@ elseif ($script:useWpfWebView2 -and $script:useWebView2) {
             })
 
         # Set up navigation event handlers
-        $script:wpfWebBrowser.Add_NavigationCompleted({
+        ${script:wpfWebBrowser}.Add_NavigationCompleted({
                 param($sender, $args)
                 try {
                     if ($args.IsSuccess -and $sender.CoreWebView2) {
@@ -13446,17 +13444,17 @@ elseif ($script:useWpfWebView2 -and $script:useWebView2) {
             })
 
         # Initialize WebView2 with the custom environment
-        $initTask = $script:wpfWebBrowser.EnsureCoreWebView2Async($script:wpfWebView2Environment)
+        $initTask = ${script:wpfWebBrowser}.EnsureCoreWebView2Async(${script:wpfWebView2Environment})
         Write-StartupLog "WPF WebView2 initialization started with custom environment..." "INFO"
 
         # Create a wrapper object for compatibility with existing code
-        $script:webBrowser = [PSCustomObject]@{
-            _wpfWebView2 = $script:wpfWebBrowser
+        ${script:webBrowser} = [PSCustomObject]@{
+            _wpfWebView2 = ${script:wpfWebBrowser}
             _isWpf       = $true
         }
 
         # Add methods to the wrapper
-        $script:webBrowser | Add-Member -MemberType ScriptMethod -Name Navigate -Value {
+        ${script:webBrowser} | Add-Member -MemberType ScriptMethod -Name Navigate -Value {
             param([string]$url)
             if (-not $url.StartsWith("http")) { $url = "https://$url" }
             if ($this._wpfWebView2.CoreWebView2) {
@@ -13468,49 +13466,49 @@ elseif ($script:useWpfWebView2 -and $script:useWebView2) {
             }
         }
 
-        $script:webBrowser | Add-Member -MemberType ScriptMethod -Name GoBack -Value {
+        ${script:webBrowser} | Add-Member -MemberType ScriptMethod -Name GoBack -Value {
             if ($this._wpfWebView2.CoreWebView2 -and $this._wpfWebView2.CanGoBack) {
                 $this._wpfWebView2.GoBack()
             }
         }
 
-        $script:webBrowser | Add-Member -MemberType ScriptMethod -Name GoForward -Value {
+        ${script:webBrowser} | Add-Member -MemberType ScriptMethod -Name GoForward -Value {
             if ($this._wpfWebView2.CoreWebView2 -and $this._wpfWebView2.CanGoForward) {
                 $this._wpfWebView2.GoForward()
             }
         }
 
-        $script:webBrowser | Add-Member -MemberType ScriptMethod -Name Refresh -Value {
+        ${script:webBrowser} | Add-Member -MemberType ScriptMethod -Name Refresh -Value {
             if ($this._wpfWebView2.CoreWebView2) {
                 $this._wpfWebView2.Reload()
             }
         }
 
-        $script:webBrowser | Add-Member -MemberType ScriptProperty -Name Url -Value {
+        ${script:webBrowser} | Add-Member -MemberType ScriptProperty -Name Url -Value {
             if ($this._wpfWebView2.CoreWebView2) {
                 return $this._wpfWebView2.CoreWebView2.Source
             }
             return $null
         }
 
-        $script:browserType = "WebView2-WPF"
+        ${script:browserType} = "WebView2-WPF"
         Write-StartupLog "✅ WPF WebView2 control created - YouTube ready on .NET 9+!" "SUCCESS"
     }
     catch {
         Write-StartupLog "❌ WPF WebView2 initialization failed: $($_.Exception.Message)" "ERROR"
-        $script:useWpfWebView2 = $false
-        $script:useWebView2 = $false
-        $script:browserType = "LegacyFallback"
+        ${script:useWpfWebView2} = $false
+        ${script:useWebView2} = $false
+        ${script:browserType} = "LegacyFallback"
         # Will fall through to legacy browser below
     }
 }
-elseif ($script:useWebView2 -and -not $script:RuntimeInfo.UseLegacyBrowser -and $script:RuntimeInfo.BrowserImplementation -eq "webview2") {
+elseif (${script:useWebView2} -and -not ${script:RuntimeInfo}.UseLegacyBrowser -and ${script:RuntimeInfo}.BrowserImplementation -eq "webview2") {
     # Attempt to use full WebView2
     try {
         Write-StartupLog "Initializing WebView2 browser..." "INFO"
-        $script:webBrowser = New-Object Microsoft.Web.WebView2.WinForms.WebView2
-        $script:webBrowser.Dock = [System.Windows.Forms.DockStyle]::Fill
-        $browserContainer.Controls.Add($script:webBrowser) | Out-Null
+        ${script:webBrowser} = New-Object Microsoft.Web.WebView2.WinForms.WebView2
+        ${script:webBrowser}.Dock = [System.Windows.Forms.DockStyle]::Fill
+        $browserContainer.Controls.Add(${script:webBrowser}) | Out-Null
 
         # Initialize WebView2 with proper error handling
         try {
@@ -13531,22 +13529,22 @@ elseif ($script:useWebView2 -and -not $script:RuntimeInfo.UseLegacyBrowser -and 
                             Publish-ProblemsPanelUpdate -Force
 
                             # Add host object for agentic control
-                            $script:webBrowser.CoreWebView2.AddHostObjectToScript("rawrAgent", @{
+                            ${script:webBrowser}.CoreWebView2.AddHostObjectToScript("rawrAgent", @{
                                     getPageTitle  = {
-                                        return $script:webBrowser.CoreWebView2.DocumentTitle
+                                        return ${script:webBrowser}.CoreWebView2.DocumentTitle
                                     }
                                     getPageUrl    = {
-                                        return $script:webBrowser.CoreWebView2.Source.ToString()
+                                        return ${script:webBrowser}.CoreWebView2.Source.ToString()
                                     }
                                     executeScript = {
                                         param($script)
-                                        return $script:webBrowser.CoreWebView2.ExecuteScriptAsync($script).Result
+                                        return ${script:webBrowser}.CoreWebView2.ExecuteScriptAsync($script).Result
                                     }
                                 })
 
                             # Configure WebView2 settings for login flows
                             try {
-                                $settings = $script:webBrowser.CoreWebView2.Settings
+                                $settings = ${script:webBrowser}.CoreWebView2.Settings
                                 $settings.AreDefaultContextMenusEnabled = $true
                                 $settings.AreDefaultScriptDialogsEnabled = $true
                                 $settings.AreHostObjectsAllowed = $true
@@ -13560,17 +13558,17 @@ elseif ($script:useWebView2 -and -not $script:RuntimeInfo.UseLegacyBrowser -and 
                             }
 
                             # Set up navigation events
-                            $script:webBrowser.CoreWebView2.Add_NavigationStarting({
+                            ${script:webBrowser}.CoreWebView2.Add_NavigationStarting({
                                     param($startSender, $navArgs)
                                     Write-StartupLog "Navigating to: $($navArgs.Uri)" "INFO"
                                 })
 
-                            $script:webBrowser.CoreWebView2.Add_NavigationCompleted({
+                            ${script:webBrowser}.CoreWebView2.Add_NavigationCompleted({
                                     param($completeSender, $navArgs)
                                     if ($navArgs.IsSuccess) {
                                         Write-StartupLog "Navigation completed successfully" "SUCCESS"
                                         if ($browserUrlBox) {
-                                            $browserUrlBox.Text = $script:webBrowser.CoreWebView2.Source.ToString()
+                                            $browserUrlBox.Text = ${script:webBrowser}.CoreWebView2.Source.ToString()
                                         }
                                     }
                                     else {
@@ -13586,27 +13584,27 @@ elseif ($script:useWebView2 -and -not $script:RuntimeInfo.UseLegacyBrowser -and 
         }
         catch {
             Write-StartupLog "WebView2 initialization failed: $($_.Exception.Message)" "ERROR"
-            $script:useWebView2 = $false
+            ${script:useWebView2} = $false
         }
 
-        $script:browserType = "WebView2"
+        ${script:browserType} = "WebView2"
     }
     catch {
         Write-StartupLog "WebView2 initialization failed: $_" "ERROR"
-        $script:useWebView2 = $false
-        $script:browserType = "WebBrowser"
+        ${script:useWebView2} = $false
+        ${script:browserType} = "WebBrowser"
     }
 }
-elseif ($script:RuntimeInfo.WebView2ShimLoaded) {
+elseif (${script:RuntimeInfo}.WebView2ShimLoaded) {
     # Use WebView2Shim for .NET 9+ or when WebView2 is unavailable
     Write-StartupLog "Using WebView2Shim fallback browser..." "INFO"
     try {
         # Initialize the shim browser
-        $script:webBrowser = Enable-WebView2ShimForRawrXD
+        ${script:webBrowser} = Enable-WebView2ShimForRawrXD
 
-        if ($script:webBrowser) {
+        if (${script:webBrowser}) {
             Write-StartupLog "✅ WebView2Shim browser initialized" "SUCCESS"
-            $script:browserType = "WebView2Shim"
+            ${script:browserType} = "WebView2Shim"
 
             # Create a placeholder panel for the shim (it opens external browser)
             $shimPlaceholder = New-Object System.Windows.Forms.Panel
@@ -13614,7 +13612,7 @@ elseif ($script:RuntimeInfo.WebView2ShimLoaded) {
             $shimPlaceholder.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
 
             $shimLabel = New-Object System.Windows.Forms.Label
-            $shimLabel.Text = "🌐 WebView2Shim Mode`n`nBrowser opens in external window for .NET $($script:RuntimeInfo.DotNetMajorVersion) compatibility.`nYouTube and web pages will open in your default browser."
+            $shimLabel.Text = "🌐 WebView2Shim Mode`n`nBrowser opens in external window for .NET $(${script:RuntimeInfo}.DotNetMajorVersion) compatibility.`nYouTube and web pages will open in your default browser."
             $shimLabel.ForeColor = [System.Drawing.Color]::LightGray
             $shimLabel.Font = New-Object System.Drawing.Font("Segoe UI", 11)
             $shimLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
@@ -13629,32 +13627,32 @@ elseif ($script:RuntimeInfo.WebView2ShimLoaded) {
     }
     catch {
         Write-StartupLog "WebView2Shim initialization failed: $($_.Exception.Message)" "ERROR"
-        $script:browserType = "WebBrowser"
+        ${script:browserType} = "WebBrowser"
         # Fall through to legacy browser
     }
 }
 
-if (-not $script:useWebView2 -and $script:browserType -ne "WebView2Shim") {
+if (-not ${script:useWebView2} -and ${script:browserType} -ne "WebView2Shim") {
     # Fallback to old WebBrowser control (IE-based)
     Write-StartupLog "Using legacy WebBrowser control (IE-based)" "WARNING"
-    $script:webBrowser = New-Object System.Windows.Forms.WebBrowser
-    $script:webBrowser.Dock = [System.Windows.Forms.DockStyle]::Fill
-    $script:webBrowser.ScriptErrorsSuppressed = $true
-    $script:webBrowser.IsWebBrowserContextMenuEnabled = $true
-    $script:webBrowser.AllowNavigation = $true
+    ${script:webBrowser} = New-Object System.Windows.Forms.WebBrowser
+    ${script:webBrowser}.Dock = [System.Windows.Forms.DockStyle]::Fill
+    ${script:webBrowser}.ScriptErrorsSuppressed = $true
+    ${script:webBrowser}.IsWebBrowserContextMenuEnabled = $true
+    ${script:webBrowser}.AllowNavigation = $true
 
     # Add navigation events for legacy browser
-    $script:webBrowser.Add_Navigated({
+    ${script:webBrowser}.Add_Navigated({
             param($legacySender, $navEventArgs)
             $browserUrlBox.Text = $navEventArgs.Url.ToString()
             Write-StartupLog "Legacy browser navigated to: $($navEventArgs.Url)" "INFO"
         })
 
-    $browserContainer.Controls.Add($script:webBrowser) | Out-Null
-    $script:browserType = "WebBrowser"
+    $browserContainer.Controls.Add(${script:webBrowser}) | Out-Null
+    ${script:browserType} = "WebBrowser"
 }
 
-Write-StartupLog "✅ Browser control initialized: $($script:browserType)" "SUCCESS"
+Write-StartupLog "✅ Browser control initialized: $(${script:browserType})" "SUCCESS"
 
 # ============================================
 # DEV TOOLS TAB
@@ -13700,28 +13698,28 @@ $exportLogBtn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 $devToolbar.Controls.Add($exportLogBtn) | Out-Null
 
 # Console output
-$global:devConsole = New-Object System.Windows.Forms.RichTextBox
-$global:devConsole.Dock = [System.Windows.Forms.DockStyle]::Fill
-$global:devConsole.ReadOnly = $true
-$global:devConsole.Font = New-Object System.Drawing.Font("Consolas", 9)
-$global:devConsole.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
-$global:devConsole.ForeColor = [System.Drawing.Color]::LightGray
-$global:devConsole.WordWrap = $false
+${global:devConsole} = New-Object System.Windows.Forms.RichTextBox
+${global:devConsole}.Dock = [System.Windows.Forms.DockStyle]::Fill
+${global:devConsole}.ReadOnly = $true
+${global:devConsole}.Font = New-Object System.Drawing.Font("Consolas", 9)
+${global:devConsole}.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
+${global:devConsole}.ForeColor = [System.Drawing.Color]::LightGray
+${global:devConsole}.WordWrap = $false
 
 # Add GotFocus handler to preserve devConsole colors
-$global:devConsole.Add_GotFocus({
+${global:devConsole}.Add_GotFocus({
         param($sender, $e)
         $sender.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
         $sender.ForeColor = [System.Drawing.Color]::LightGray
     })
 
-$devToolsContainer.Controls.Add($global:devConsole) | Out-Null
+$devToolsContainer.Controls.Add(${global:devConsole}) | Out-Null
 
 # Dev Console logging uses the shared Write-DevConsole helper defined near the script top.
 
 # Clear console button handler
 $clearConsoleBtn.Add_Click({
-        $global:devConsole.Clear()
+        ${global:devConsole}.Clear()
         Write-DevConsole "Console cleared" "INFO"
     })
 
@@ -13734,7 +13732,7 @@ $exportLogBtn.Add_Click({
             $saveDialog.FileName = "RawrXD_DevLog_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 
             if ($saveDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-                [System.IO.File]::WriteAllText($saveDialog.FileName, $global:devConsole.Text)
+                [System.IO.File]::WriteAllText($saveDialog.FileName, ${global:devConsole}.Text)
                 Write-DevConsole "✅ Log exported successfully to: $($saveDialog.FileName)" "SUCCESS"
                 Write-StartupLog "Log export completed: $($saveDialog.FileName)" "SUCCESS"
             }
@@ -13748,8 +13746,8 @@ $exportLogBtn.Add_Click({
 Write-DevConsole "═══════════════════════════════════════════════════════" "INFO"
 Write-DevConsole "RawrXD Developer Console Initialized" "SUCCESS"
 Write-DevConsole "PowerShell Version: $($PSVersionTable.PSVersion)" "INFO"
-Write-DevConsole "Browser Type: $script:browserType" "INFO"
-Write-DevConsole "WebView2 Enabled: $script:useWebView2" "INFO"
+Write-DevConsole "Browser Type: ${script:browserType}" "INFO"
+Write-DevConsole "WebView2 Enabled: ${script:useWebView2}" "INFO"
 Write-DevConsole "═══════════════════════════════════════════════════════" "INFO"
 
 # ============================================
@@ -13769,7 +13767,7 @@ function Start-OllamaServer {
         if (-not $ollamaPath) {
             Write-StartupLog "Ollama not found in PATH - install Ollama from ollama.ai" "WARNING"
             Write-DevConsole "Ollama not found in PATH. Please install Ollama from https://ollama.ai" "WARNING"
-            $global:ollamaServerStatus = "Not Found"
+            ${global:ollamaServerStatus} = "Not Found"
             return $false
         }
 
@@ -13778,8 +13776,8 @@ function Start-OllamaServer {
         if ($existingProcess) {
             Write-StartupLog "Ollama server already running (PID: $($existingProcess.Id))" "SUCCESS"
             Write-DevConsole "Ollama server already running (PID: $($existingProcess.Id))" "SUCCESS"
-            $global:ollamaProcess = $existingProcess
-            $global:ollamaServerStatus = "Running"
+            ${global:ollamaProcess} = $existingProcess
+            ${global:ollamaServerStatus} = "Running"
             return $true
         }
 
@@ -13792,24 +13790,24 @@ function Start-OllamaServer {
         $processInfo.RedirectStandardOutput = $true
         $processInfo.RedirectStandardError = $true
 
-        $global:ollamaProcess = [System.Diagnostics.Process]::Start($processInfo)
+        ${global:ollamaProcess} = [System.Diagnostics.Process]::Start($processInfo)
 
-        if ($global:ollamaProcess) {
-            Write-StartupLog "Ollama server started successfully (PID: $($global:ollamaProcess.Id))" "SUCCESS"
-            Write-DevConsole "✓ Ollama server started (PID: $($global:ollamaProcess.Id))" "SUCCESS"
-            $global:ollamaServerStatus = "Starting"
+        if (${global:ollamaProcess}) {
+            Write-StartupLog "Ollama server started successfully (PID: $(${global:ollamaProcess}.Id))" "SUCCESS"
+            Write-DevConsole "✓ Ollama server started (PID: $(${global:ollamaProcess}.Id))" "SUCCESS"
+            ${global:ollamaServerStatus} = "Starting"
 
             # Wait for server to initialize
             Start-Sleep -Seconds 3
 
             # Test connection
             if (Test-OllamaConnection) {
-                $global:ollamaServerStatus = "Running"
+                ${global:ollamaServerStatus} = "Running"
                 Write-DevConsole "✓ Ollama server ready and responding" "SUCCESS"
                 return $true
             }
             else {
-                $global:ollamaServerStatus = "Failed to Connect"
+                ${global:ollamaServerStatus} = "Failed to Connect"
                 Write-DevConsole "✗ Ollama server started but not responding" "WARNING"
                 return $false
             }
@@ -13817,14 +13815,14 @@ function Start-OllamaServer {
         else {
             Write-StartupLog "Failed to start Ollama server" "ERROR"
             Write-DevConsole "✗ Failed to start Ollama server" "ERROR"
-            $global:ollamaServerStatus = "Failed"
+            ${global:ollamaServerStatus} = "Failed"
             return $false
         }
     }
     catch {
         Write-StartupLog "Error starting Ollama server: $_" "ERROR"
         Write-DevConsole "Error starting Ollama server: $_" "ERROR"
-        $global:ollamaServerStatus = "Error"
+        ${global:ollamaServerStatus} = "Error"
         return $false
     }
 }
@@ -13836,9 +13834,9 @@ function Stop-OllamaServer {
     try {
         Write-DevConsole "Stopping Ollama server..." "INFO"
 
-        if ($global:ollamaProcess -and -not $global:ollamaProcess.HasExited) {
-            $global:ollamaProcess.Kill()
-            $global:ollamaProcess.WaitForExit(5000)  # Wait up to 5 seconds
+        if (${global:ollamaProcess} -and -not ${global:ollamaProcess}.HasExited) {
+            ${global:ollamaProcess}.Kill()
+            ${global:ollamaProcess}.WaitForExit(5000)  # Wait up to 5 seconds
             Write-DevConsole "✓ Ollama server stopped" "SUCCESS"
         }
 
@@ -13853,13 +13851,13 @@ function Stop-OllamaServer {
             }
         }
 
-        $global:ollamaProcess = $null
-        $global:ollamaServerStatus = "Stopped"
+        ${global:ollamaProcess} = $null
+        ${global:ollamaServerStatus} = "Stopped"
         return $true
     }
     catch {
         Write-DevConsole "Error stopping Ollama server: $_" "ERROR"
-        $global:ollamaServerStatus = "Error"
+        ${global:ollamaServerStatus} = "Error"
         return $false
     }
 }
@@ -13892,9 +13890,9 @@ function Get-OllamaStatus {
     param()
 
     return @{
-        Status     = $global:ollamaServerStatus
-        ProcessId  = if ($global:ollamaProcess) { $global:ollamaProcess.Id } else { $null }
-        IsRunning  = if ($global:ollamaProcess) { -not $global:ollamaProcess.HasExited } else { $false }
+        Status     = ${global:ollamaServerStatus}
+        ProcessId  = $(if (${global:ollamaProcess}) { ${global:ollamaProcess}.Id } else { $null }
+        IsRunning  = $(if (${global:ollamaProcess}) { -not ${global:ollamaProcess}.HasExited } else { $false }
         Connection = Test-OllamaConnection
     }
 }
@@ -13903,29 +13901,29 @@ function Update-OllamaStatusDisplay {
     [CmdletBinding()]
     param()
 
-    if ($script:ollamaStatusLabel) {
+    if (${script:ollamaStatusLabel}) {
         $status = Get-OllamaStatus
 
         switch ($status.Status) {
             "Running" {
-                $script:ollamaStatusLabel.Text = "🟢 Ollama: Running"
-                $script:ollamaStatusLabel.ForeColor = [System.Drawing.Color]::Green
+                ${script:ollamaStatusLabel}.Text = "🟢 Ollama: Running"
+                ${script:ollamaStatusLabel}.ForeColor = [System.Drawing.Color]::Green
             }
             "Starting" {
-                $script:ollamaStatusLabel.Text = "🟡 Ollama: Starting..."
-                $script:ollamaStatusLabel.ForeColor = [System.Drawing.Color]::Orange
+                ${script:ollamaStatusLabel}.Text = "🟡 Ollama: Starting..."
+                ${script:ollamaStatusLabel}.ForeColor = [System.Drawing.Color]::Orange
             }
             "Stopped" {
-                $script:ollamaStatusLabel.Text = "🔴 Ollama: Stopped"
-                $script:ollamaStatusLabel.ForeColor = [System.Drawing.Color]::Red
+                ${script:ollamaStatusLabel}.Text = "🔴 Ollama: Stopped"
+                ${script:ollamaStatusLabel}.ForeColor = [System.Drawing.Color]::Red
             }
             "Not Found" {
-                $script:ollamaStatusLabel.Text = "❌ Ollama: Not Installed"
-                $script:ollamaStatusLabel.ForeColor = [System.Drawing.Color]::DarkRed
+                ${script:ollamaStatusLabel}.Text = "❌ Ollama: Not Installed"
+                ${script:ollamaStatusLabel}.ForeColor = [System.Drawing.Color]::DarkRed
             }
             default {
-                $script:ollamaStatusLabel.Text = "⚠️ Ollama: $($status.Status)"
-                $script:ollamaStatusLabel.ForeColor = [System.Drawing.Color]::Orange
+                ${script:ollamaStatusLabel}.Text = "⚠️ Ollama: $($status.Status)"
+                ${script:ollamaStatusLabel}.ForeColor = [System.Drawing.Color]::Orange
             }
         }
     }
@@ -13951,21 +13949,21 @@ $editMenu = New-Object System.Windows.Forms.ToolStripMenuItem "Edit"
 $menu.Items.Add($editMenu) | Out-Null
 
 # Undo/Redo stack management
-$script:undoStack = [System.Collections.Generic.Stack[string]]::new()
-$script:redoStack = [System.Collections.Generic.Stack[string]]::new()
-$script:lastEditorText = ""
-$script:isUndoRedoOperation = $false
+${script:undoStack} = [System.Collections.Generic.Stack[string]]::new()
+${script:redoStack} = [System.Collections.Generic.Stack[string]]::new()
+${script:lastEditorText} = ""
+${script:isUndoRedoOperation} = $false
 
 # Undo menu item
 $undoItem = New-Object System.Windows.Forms.ToolStripMenuItem "Undo"
 $undoItem.ShortcutKeys = [System.Windows.Forms.Keys]::Control -bor [System.Windows.Forms.Keys]::Z
 $undoItem.Add_Click({
         $editorControl = Get-ActiveEditorControl
-        if ($editorControl -and $script:undoStack.Count -gt 0) {
-            $script:isUndoRedoOperation = $true
-            $script:redoStack.Push($editorControl.Text)
-            Set-EditorTextWithVisibility -Content $script:undoStack.Pop()
-            $script:isUndoRedoOperation = $false
+        if ($editorControl -and ${script:undoStack}.Count -gt 0) {
+            ${script:isUndoRedoOperation} = $true
+            ${script:redoStack}.Push($editorControl.Text)
+            Set-EditorTextWithVisibility -Content ${script:undoStack}.Pop()
+            ${script:isUndoRedoOperation} = $false
             Update-UndoRedoMenuState
         }
     })
@@ -13975,11 +13973,11 @@ $redoItem = New-Object System.Windows.Forms.ToolStripMenuItem "Redo"
 $redoItem.ShortcutKeys = [System.Windows.Forms.Keys]::Control -bor [System.Windows.Forms.Keys]::Y
 $redoItem.Add_Click({
         $editorControl = Get-ActiveEditorControl
-        if ($editorControl -and $script:redoStack.Count -gt 0) {
-            $script:isUndoRedoOperation = $true
-            $script:undoStack.Push($editorControl.Text)
-            Set-EditorTextWithVisibility -Content $script:redoStack.Pop()
-            $script:isUndoRedoOperation = $false
+        if ($editorControl -and ${script:redoStack}.Count -gt 0) {
+            ${script:isUndoRedoOperation} = $true
+            ${script:undoStack}.Push($editorControl.Text)
+            Set-EditorTextWithVisibility -Content ${script:redoStack}.Pop()
+            ${script:isUndoRedoOperation} = $false
             Update-UndoRedoMenuState
         }
     })
@@ -14049,8 +14047,8 @@ $editMenu.DropDownItems.AddRange(@($undoItem, $redoItem, $editSeparator1, $cutIt
 
 # Function to update undo/redo menu state
 function Update-UndoRedoMenuState {
-    $undoItem.Enabled = ($script:undoStack.Count -gt 0)
-    $redoItem.Enabled = ($script:redoStack.Count -gt 0)
+    $undoItem.Enabled = (${script:undoStack}.Count -gt 0)
+    $redoItem.Enabled = (${script:redoStack}.Count -gt 0)
 }
 
 # Chat Menu
@@ -14095,13 +14093,13 @@ $toolsMenu = New-Object System.Windows.Forms.ToolStripMenuItem "Tools"
 $menu.Items.Add($toolsMenu) | Out-Null
 
 # Add Agent Tools submenu (created earlier in Initialize-AgentToolsMenu)
-if ($script:agentToolsMenuItem) {
-    $toolsMenu.DropDownItems.Add($script:agentToolsMenuItem) | Out-Null
+if (${script:agentToolsMenuItem}) {
+    $toolsMenu.DropDownItems.Add(${script:agentToolsMenuItem}) | Out-Null
 }
 
 # Add individual Tool Preferences menu item
-if ($script:toolPreferencesMenuItem) {
-    $toolsMenu.DropDownItems.Add($script:toolPreferencesMenuItem) | Out-Null
+if (${script:toolPreferencesMenuItem}) {
+    $toolsMenu.DropDownItems.Add(${script:toolPreferencesMenuItem}) | Out-Null
 }
 
 # Tool Preferences
@@ -14331,7 +14329,7 @@ $sessionInfoItem = New-Object System.Windows.Forms.ToolStripMenuItem "Session In
 $encryptionTestItem = New-Object System.Windows.Forms.ToolStripMenuItem "Test Encryption..."
 
 # Add checkable items
-$stealthModeItem.Checked = $script:SecurityConfig.StealthMode
+$stealthModeItem.Checked = ${script:SecurityConfig}.StealthMode
 $stealthModeItem.CheckOnClick = $true
 
 $securityMenu.DropDownItems.AddRange(@(
@@ -14356,13 +14354,13 @@ $securitySettingsItem.Add_Click({
 
 $stealthModeItem.Add_Click({
         try {
-            if (-not $script:SecurityConfig) {
+            if (-not ${script:SecurityConfig}) {
                 Write-DevConsole "SecurityConfig not initialized" "WARNING"
                 return
             }
             Enable-StealthMode -Enable $stealthModeItem.Checked
-            $securityIndicator = if ($script:SecurityConfig.StealthMode) { "🔒 STEALTH" }
-            elseif ($script:SecurityConfig.EncryptSensitiveData) { "🔐 SECURE" }
+            $securityIndicator = $(if (${script:SecurityConfig}.StealthMode) { "🔒 STEALTH" }
+            elseif (${script:SecurityConfig}.EncryptSensitiveData) { "🔐 SECURE" }
             else { "🔓 STANDARD" }
             if ($form) {
                 $form.Text = "RawrXD - Secure AI Editor [$securityIndicator]"
@@ -14430,7 +14428,7 @@ $perfToolsItem.DropDownItems.AddRange(@($perfMonitorItem, $perfOptimizerItem, $p
 $toolsMenu.DropDownItems.Add($perfToolsItem) | Out-Null
 
 # .NET Runtime Switcher Menu (for testing features on different .NET versions)
-if ($script:DotNetSwitchEnabled) {
+if (${script:DotNetSwitchEnabled}) {
     $dotnetRuntimeMenu = Add-DotNetSwitcherMenu
     $menu.Items.Add($dotnetRuntimeMenu) | Out-Null
 }
@@ -14480,7 +14478,7 @@ $perfRealTimeItem.Add_Click({
     })
 
 # Agent Mode Toggle - Start with Agent Mode ON for agentic editing
-$global:AgentMode = $true
+${global:AgentMode} = $true
 $toggle = New-Object System.Windows.Forms.ToolStripMenuItem
 $toggle.Text = "Agent Mode: ON"
 $toggle.ForeColor = 'Green'
@@ -14516,8 +14514,8 @@ $aboutItem.Add_Click({
 })
 
 $toggle.Add_Click({
-        $global:AgentMode = -not $global:AgentMode
-        if ($global:AgentMode) {
+        ${global:AgentMode} = -not ${global:AgentMode}
+        if (${global:AgentMode}) {
             $toggle.Text = "Agent Mode: ON"
             $toggle.ForeColor = 'Green'
             $agentStatusLabel.Text = "Agent Status: Active - Agentic editing enabled"
@@ -14553,7 +14551,7 @@ function Save-ChatHistory {
             $chatContent = $activeChat.ChatBox.Text
             if ($chatContent) {
                 # Save current session to persistent file
-                Set-Content -Path $script:chatHistoryPath -Value $chatContent -ErrorAction Stop
+                Set-Content -Path ${script:chatHistoryPath} -Value $chatContent -ErrorAction Stop
                 Write-DevConsole "✅ Chat history saved for $($activeChat.TabPage.Text)" "SUCCESS"
             }
         }
@@ -14574,8 +14572,8 @@ function Get-ChatHistory {
     param()
 
     try {
-        if (Test-Path $script:chatHistoryPath) {
-            $content = Get-Content -Path $script:chatHistoryPath -Raw -ErrorAction Stop
+        if (Test-Path ${script:chatHistoryPath}) {
+            $content = Get-Content -Path ${script:chatHistoryPath} -Raw -ErrorAction Stop
             if ($content) {
                 $activeChat = Get-ActiveChatTab
                 if ($activeChat) {
@@ -14656,7 +14654,7 @@ function Import-ChatHistory {
 }
 
 # Pop-out Chat Window Support
-$script:chatPopOutForms = @{}
+${script:chatPopOutForms} = @{}
 
 function Show-ChatPopOut {
     $activeChat = Get-ActiveChatTab
@@ -14665,21 +14663,21 @@ function Show-ChatPopOut {
         return
     }
 
-    $chatId = $script:activeChatTabId
+    $chatId = ${script:activeChatTabId}
     if (-not $chatId) {
         Write-DevConsole "Active chat tab has no ID; cannot pop out" "ERROR"
         return
     }
 
-    if ($script:chatPopOutForms.ContainsKey($chatId)) {
-        $existingForm = $script:chatPopOutForms[$chatId]
+    if (${script:chatPopOutForms}.ContainsKey($chatId)) {
+        $existingForm = ${script:chatPopOutForms}[$chatId]
         if ($existingForm -and -not $existingForm.IsDisposed) {
             $existingForm.BringToFront()
             $existingForm.Activate()
             return
         }
         else {
-            $script:chatPopOutForms.Remove($chatId) | Out-Null
+            ${script:chatPopOutForms}.Remove($chatId) | Out-Null
         }
     }
 
@@ -14730,10 +14728,10 @@ function Show-ChatPopOut {
             $activeChat.InputBox.Text = $text
             $activeChat.InputBox.SelectionStart = $activeChat.InputBox.TextLength
             $activeChat.InputBox.ScrollToCaret()
-            $script:activeChatTabId = $chatId
+            ${script:activeChatTabId} = $chatId
                 
                 # Send message with proper TabId
-                if ($script:chatTabs.ContainsKey($chatId)) {
+                if (${script:chatTabs}.ContainsKey($chatId)) {
                     Send-ChatMessage -TabId $chatId
                 }
                 else {
@@ -14763,17 +14761,17 @@ function Show-ChatPopOut {
         })
 
     $chatForm.Add_FormClosed({
-            if ($script:chatPopOutForms.ContainsKey($chatId)) {
-                $script:chatPopOutForms.Remove($chatId) | Out-Null
+            if (${script:chatPopOutForms}.ContainsKey($chatId)) {
+                ${script:chatPopOutForms}.Remove($chatId) | Out-Null
             }
         })
 
-    $script:chatPopOutForms[$chatId] = $chatForm
+    ${script:chatPopOutForms}[$chatId] = $chatForm
     $chatForm.Show($form)
 }
 
 # Pop-out Editor Window Support
-$script:editorPopOutForms = @{}  # Dictionary to track multiple pop-out editors by file path
+${script:editorPopOutForms} = @{}  # Dictionary to track multiple pop-out editors by file path
 
 function Open-FileInPopOutEditor {
     param(
@@ -14785,7 +14783,7 @@ function Open-FileInPopOutEditor {
     try {
         $isFileBacked = -not [string]::IsNullOrWhiteSpace($FilePath)
         $content = $InitialContent
-        $displayName = if ($isFileBacked) { [System.IO.Path]::GetFileName($FilePath) } else { $Title }
+        $displayName = $(if ($isFileBacked) { [System.IO.Path]::GetFileName($FilePath) } else { $Title }
 
         if ($isFileBacked) {
             if (-not (Test-Path $FilePath)) {
@@ -14799,8 +14797,8 @@ function Open-FileInPopOutEditor {
                 return
             }
 
-            if ($script:editorPopOutForms.ContainsKey($FilePath)) {
-                $existingForm = $script:editorPopOutForms[$FilePath]
+            if (${script:editorPopOutForms}.ContainsKey($FilePath)) {
+                $existingForm = ${script:editorPopOutForms}[$FilePath]
                 if ($existingForm -and -not $existingForm.IsDisposed) {
                     $existingForm.BringToFront()
                     $existingForm.Activate()
@@ -14808,7 +14806,7 @@ function Open-FileInPopOutEditor {
                     return
                 }
                 else {
-                    $script:editorPopOutForms.Remove($FilePath) | Out-Null
+                    ${script:editorPopOutForms}.Remove($FilePath) | Out-Null
                 }
             }
 
@@ -14845,7 +14843,7 @@ function Open-FileInPopOutEditor {
         }
 
         $editorForm = New-Object System.Windows.Forms.Form
-        $editorForm.Text = if ($isFileBacked) { "Pop-Out Editor - $displayName" } else { $Title }
+        $editorForm.Text = $(if ($isFileBacked) { "Pop-Out Editor - $displayName" } else { $Title }
         $editorForm.Size = New-Object System.Drawing.Size(1000, 750)
         $editorForm.StartPosition = "CenterScreen"
         $editorForm.MinimumSize = New-Object System.Drawing.Size(400, 300)
@@ -14871,7 +14869,7 @@ function Open-FileInPopOutEditor {
         
         $editorBox.Text = $content
         Write-DevConsole "📝 Content assigned to editor: $($editorBox.Text.Length) characters" "INFO"
-        $script:lastEditorText = $content
+        ${script:lastEditorText} = $content
 
         if (Get-Command "Apply-SyntaxHighlighting" -ErrorAction SilentlyContinue) {
             try {
@@ -14887,7 +14885,7 @@ function Open-FileInPopOutEditor {
         }
 
         $formMetadata = [ordered]@{
-            FilePath    = if ($isFileBacked) { $FilePath } else { $null }
+            FilePath    = $(if ($isFileBacked) { $FilePath } else { $null }
             DisplayName = $displayName
             IsDirty     = $false
         }
@@ -14912,7 +14910,7 @@ function Open-FileInPopOutEditor {
         $saveAction = {
             param([bool]$forceSaveAs)
 
-            $currentMetadata = if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
+            $currentMetadata = $(if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
             if (-not $currentMetadata) {
                 Write-DevConsole "Pop-out editor metadata unavailable during save" "WARNING"
                 return $false
@@ -14952,8 +14950,8 @@ function Open-FileInPopOutEditor {
                 }
 
                 [System.IO.File]::WriteAllText($targetPath, $contentToSave, [System.Text.Encoding]::UTF8)
-                if ($formMetadata.FilePath -and $formMetadata.FilePath -ne $targetPath -and $script:editorPopOutForms.ContainsKey($formMetadata.FilePath)) {
-                    $script:editorPopOutForms.Remove($formMetadata.FilePath) | Out-Null
+                if ($formMetadata.FilePath -and $formMetadata.FilePath -ne $targetPath -and ${script:editorPopOutForms}.ContainsKey($formMetadata.FilePath)) {
+                    ${script:editorPopOutForms}.Remove($formMetadata.FilePath) | Out-Null
                 }
 
                 $formMetadata.FilePath = $targetPath
@@ -14963,8 +14961,8 @@ function Open-FileInPopOutEditor {
                 Write-DevConsole "✅ File saved: $targetPath" "SUCCESS"
                 Write-SecurityLog "File saved" "SUCCESS" "File: $targetPath, Size: $($contentToSave.Length) chars"
 
-                if (-not $script:editorPopOutForms.ContainsKey($targetPath)) {
-                    $script:editorPopOutForms[$targetPath] = $editorForm
+                if (-not ${script:editorPopOutForms}.ContainsKey($targetPath)) {
+                    ${script:editorPopOutForms}[$targetPath] = $editorForm
                 }
 
                 Set-ActiveEditorContext -Form $editorForm -Editor $editorBox -FilePath $targetPath
@@ -15007,7 +15005,7 @@ function Open-FileInPopOutEditor {
         $editorForm.Controls.Add($editorBox) | Out-Null
 
         $editorBox.Add_TextChanged({
-            $currentMetadata = if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
+            $currentMetadata = $(if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
                 if (-not $currentMetadata) { return }
                 if (-not $currentMetadata.IsDirty) {
                     $currentMetadata.IsDirty = $true
@@ -15016,21 +15014,21 @@ function Open-FileInPopOutEditor {
                     }
                 }
 
-                if (-not $script:isUndoRedoOperation -and $script:undoStack -and $script:redoStack) {
+                if (-not ${script:isUndoRedoOperation} -and ${script:undoStack} -and ${script:redoStack}) {
                     $currentText = $editorBox.Text
-                    if ($script:lastEditorText -ne $currentText) {
-                        $script:undoStack.Push($script:lastEditorText)
-                        $script:redoStack.Clear()
-                        $script:lastEditorText = $currentText
+                    if (${script:lastEditorText} -ne $currentText) {
+                        ${script:undoStack}.Push(${script:lastEditorText})
+                        ${script:redoStack}.Clear()
+                        ${script:lastEditorText} = $currentText
 
-                        if ($script:undoStack.Count -gt 100) {
+                        if (${script:undoStack}.Count -gt 100) {
                             $tempStack = [System.Collections.Generic.Stack[string]]::new()
                             for ($i = 0; $i -lt 50; $i++) {
-                                $tempStack.Push($script:undoStack.Pop())
+                                $tempStack.Push(${script:undoStack}.Pop())
                             }
-                            $script:undoStack.Clear()
+                            ${script:undoStack}.Clear()
                             while ($tempStack.Count -gt 0) {
-                                $script:undoStack.Push($tempStack.Pop())
+                                ${script:undoStack}.Push($tempStack.Pop())
                             }
                         }
                     }
@@ -15039,7 +15037,7 @@ function Open-FileInPopOutEditor {
 
         $editorForm.Add_FormClosing({
             param($sender, $e)
-            $currentMetadata = if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
+            $currentMetadata = $(if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
             if (-not $currentMetadata) { return }
             if ($currentMetadata.IsDirty) {
                     $result = [System.Windows.Forms.MessageBox]::Show(
@@ -15051,7 +15049,7 @@ function Open-FileInPopOutEditor {
 
                     switch ($result) {
                         "Yes" {
-                            $saved = if ($saveAction -is [scriptblock]) { $saveAction.Invoke($false) } else { $false }
+                            $saved = $(if ($saveAction -is [scriptblock]) { $saveAction.Invoke($false) } else { $false }
                             if (-not $saved) {
                                 $e.Cancel = $true
                                 return
@@ -15066,29 +15064,29 @@ function Open-FileInPopOutEditor {
             })
 
         $editorForm.Add_FormClosed({
-                $currentMetadata = if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
-                if ($currentMetadata -and $currentMetadata.FilePath -and $script:editorPopOutForms.ContainsKey($currentMetadata.FilePath)) {
-                    $script:editorPopOutForms.Remove($currentMetadata.FilePath) | Out-Null
+                $currentMetadata = $(if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
+                if ($currentMetadata -and $currentMetadata.FilePath -and ${script:editorPopOutForms}.ContainsKey($currentMetadata.FilePath)) {
+                    ${script:editorPopOutForms}.Remove($currentMetadata.FilePath) | Out-Null
                 }
                 Clear-ActiveEditorContext -Form $editorForm
             })
 
         $editorForm.Add_Activated({
-                $currentMetadata = if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
+                $currentMetadata = $(if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
                 if ($currentMetadata) {
                     Set-ActiveEditorContext -Form $editorForm -Editor $editorBox -FilePath $currentMetadata.FilePath
                 }
             })
 
         $editorForm.Add_Shown({
-                $currentMetadata = if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
+                $currentMetadata = $(if ($invokeMetadata -is [scriptblock]) { $invokeMetadata.Invoke() } else { $null }
                 if ($currentMetadata) {
                     Set-ActiveEditorContext -Form $editorForm -Editor $editorBox -FilePath $currentMetadata.FilePath
                 }
             })
 
-        if ($isFileBacked -and -not $script:editorPopOutForms.ContainsKey($FilePath)) {
-            $script:editorPopOutForms[$FilePath] = $editorForm
+        if ($isFileBacked -and -not ${script:editorPopOutForms}.ContainsKey($FilePath)) {
+            ${script:editorPopOutForms}[$FilePath] = $editorForm
         }
 
         $editorForm.Tag = @{
@@ -15165,7 +15163,7 @@ $openItem.Add_Click({
                 }
 
                 # If encryption is enabled, we can optionally decrypt files with .secure extension
-                if ($extension -eq '.secure' -and $script:SecurityConfig.EncryptSensitiveData) {
+                if ($extension -eq '.secure' -and ${script:SecurityConfig}.EncryptSensitiveData) {
                     try {
                         $content = Unprotect-SensitiveString -EncryptedData $content
                         Write-SecurityLog "Encrypted file decrypted successfully" "SUCCESS" "File: $fileName"
@@ -15183,8 +15181,8 @@ $openItem.Add_Click({
                 Write-SecurityLog "File opened successfully" "SUCCESS" "File: $fileName, Size: $($content.Length) chars"
 
                 # Update last activity
-                if ($script:CurrentSession) {
-                    $script:CurrentSession.LastActivity = Get-Date
+                if (${script:CurrentSession}) {
+                    ${script:CurrentSession}.LastActivity = Get-Date
                 }
             }
             catch {
@@ -15205,7 +15203,7 @@ $browseItem.Add_Click({
         if ($folder.ShowDialog() -eq "OK") {
             Write-DevConsole "Folder selected: $($folder.SelectedPath)" "INFO"
             # Update working directory to selected folder
-            $global:currentWorkingDir = $folder.SelectedPath
+            ${global:currentWorkingDir} = $folder.SelectedPath
             Update-Explorer
         }
     })
@@ -15329,8 +15327,8 @@ $newChatBtn.Add_Click({
     })
 
 $closeChatBtn.Add_Click({
-        if ($script:activeChatTabId) {
-            Remove-ChatTab -TabId $script:activeChatTabId
+        if (${script:activeChatTabId}) {
+            Remove-ChatTab -TabId ${script:activeChatTabId}
         }
         else {
             Write-DevConsole "⚠ No active chat tab to close" "WARNING"
@@ -15345,7 +15343,7 @@ $bulkActionsBtn.Add_Click({
 # Chat tab control event handlers
 $chatTabControl.Add_SelectedIndexChanged({
         if ($chatTabControl.SelectedTab) {
-            $script:activeChatTabId = $chatTabControl.SelectedTab.Name
+            ${script:activeChatTabId} = $chatTabControl.SelectedTab.Name
             $activeChat = Get-ActiveChatTab
             if ($activeChat) {
                 $activeChat.IsActive = $true
@@ -15365,7 +15363,7 @@ $chatTabControl.Add_MouseClick({
                 if ($tabRect.Contains($e.Location)) {
                     $tabToClose = $sender.TabPages[$i]
                     $tabId = $tabToClose.Name
-                    if ($script:chatTabs.ContainsKey($tabId)) {
+                    if (${script:chatTabs}.ContainsKey($tabId)) {
                         Remove-ChatTab -TabId $tabId
                     }
                     break
@@ -15445,11 +15443,11 @@ $duplicateChatItem.Text = "📋 Duplicate Chat"
 $duplicateChatItem.Add_Click({
     try {
         $selectedTab = $chatTabControl.SelectedTab
-        if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
-            $originalChat = $script:chatTabs[$selectedTab.Name]
+        if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
+            $originalChat = ${script:chatTabs}[$selectedTab.Name]
             $newTabId = New-ChatTab -TabName "$($selectedTab.Text) (Copy)"
-            if ($newTabId -and $script:chatTabs.ContainsKey($newTabId)) {
-                $newChat = $script:chatTabs[$newTabId]
+            if ($newTabId -and ${script:chatTabs}.ContainsKey($newTabId)) {
+                $newChat = ${script:chatTabs}[$newTabId]
                 # Copy chat history
                 $newChat.ChatBox.Text = $originalChat.ChatBox.Text
                 $newChat.Messages = $originalChat.Messages.Clone()
@@ -15467,7 +15465,7 @@ $clearChatItem.Text = "🗑️ Clear Chat History"
 $clearChatItem.Add_Click({
     try {
         $selectedTab = $chatTabControl.SelectedTab
-        if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
+        if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
             $result = [System.Windows.Forms.MessageBox]::Show(
                 "Clear all messages in this chat?",
                 "Clear Chat",
@@ -15475,7 +15473,7 @@ $clearChatItem.Add_Click({
                 [System.Windows.Forms.MessageBoxIcon]::Question
             )
             if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
-                $chatSession = $script:chatTabs[$selectedTab.Name]
+                $chatSession = ${script:chatTabs}[$selectedTab.Name]
                 $chatSession.ChatBox.Clear()
                 $chatSession.Messages = @()
                 Write-DevConsole "🗑️ Cleared chat: $($selectedTab.Text)" "INFO"
@@ -15495,8 +15493,8 @@ $exportChatItem.Text = "💾 Export Chat..."
 $exportChatItem.Add_Click({
     try {
         $selectedTab = $chatTabControl.SelectedTab
-        if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
-            $chatSession = $script:chatTabs[$selectedTab.Name]
+        if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
+            $chatSession = ${script:chatTabs}[$selectedTab.Name]
             $saveDialog = New-Object System.Windows.Forms.SaveFileDialog
             $saveDialog.Filter = "Text Files (*.txt)|*.txt|Markdown Files (*.md)|*.md|All Files (*.*)|*.*"
             $saveDialog.FileName = "$($selectedTab.Text)_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
@@ -15519,7 +15517,7 @@ $closeChatTabItem.Text = "✖ Close Tab"
 $closeChatTabItem.Add_Click({
     try {
         $selectedTab = $chatTabControl.SelectedTab
-        if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
+        if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
             Remove-ChatTab -TabId $selectedTab.Name
         }
     }
@@ -15535,7 +15533,7 @@ $closeOtherChatsItem.Add_Click({
         $selectedTab = $chatTabControl.SelectedTab
         if ($selectedTab) {
             $tabsToClose = @()
-            foreach ($tabId in $script:chatTabs.Keys) {
+            foreach ($tabId in ${script:chatTabs}.Keys) {
                 if ($tabId -ne $selectedTab.Name) {
                     $tabsToClose += $tabId
                 }
@@ -15562,7 +15560,7 @@ $closeAllChatsItem.Add_Click({
             [System.Windows.Forms.MessageBoxIcon]::Question
         )
         if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
-            $tabsToClose = @($script:chatTabs.Keys)
+            $tabsToClose = @(${script:chatTabs}.Keys)
             foreach ($tabId in $tabsToClose) {
                 Remove-ChatTab -TabId $tabId
             }
@@ -15584,7 +15582,7 @@ function Send-OllamaRequest {
     )
 
     # Security checks
-    $script:CurrentSession.LastActivity = Get-Date
+    ${script:CurrentSession}.LastActivity = Get-Date
 
     # Validate session security
     if (-not (Test-SessionSecurity)) {
@@ -15607,19 +15605,19 @@ function Send-OllamaRequest {
     Write-SecurityLog "Ollama request initiated" "INFO" "Model: $Model, PromptLength: $($Prompt.Length)"
 
     # Encrypt prompt if security is enabled (stored for logging purposes)
-    if ($script:SecurityConfig.EncryptSensitiveData) {
+    if (${script:SecurityConfig}.EncryptSensitiveData) {
         $null = Protect-SensitiveString -Data $Prompt
     }
 
     # Determine endpoint based on security settings
-    $endpoint = if ($script:UseHTTPS) {
+    $endpoint = $(if (${script:UseHTTPS}) {
         $OllamaSecureEndpoint
     }
     else {
         $OllamaAPIEndpoint
     }
 
-    $tagsEndpoint = if ($script:UseHTTPS) {
+    $tagsEndpoint = $(if (${script:UseHTTPS}) {
         "https://localhost:11434/api/tags"
     }
     else {
@@ -15632,13 +15630,13 @@ function Send-OllamaRequest {
 
         # Prepare headers for secure connections
         $headers = @{}
-        if ($script:OllamaAPIKey) {
-            $headers["Authorization"] = "Bearer $script:OllamaAPIKey"
+        if (${script:OllamaAPIKey}) {
+            $headers["Authorization"] = "Bearer ${script:OllamaAPIKey}"
             Write-SecurityLog "Using API key authentication" "DEBUG"
         }
 
         # Configure SSL/TLS settings for HTTPS
-        if ($script:UseHTTPS) {
+        if (${script:UseHTTPS}) {
             # Allow self-signed certificates for local Ollama instance
             add-type @"
 using System.Net;
@@ -15654,7 +15652,7 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
             Write-SecurityLog "HTTPS connection configured with TLS 1.2" "INFO"
         }
 
-        $modelsResponse = if (@($headers).Count -gt 0) {
+        $modelsResponse = $(if (@($headers).Count -gt 0) {
             Invoke-RestMethod -Uri $tagsEndpoint -Method GET -Headers $headers -TimeoutSec 10
         }
         else {
@@ -15713,13 +15711,13 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
 
     $body = @{
         model  = $Model
-        prompt = if ($script:SecurityConfig.EncryptSensitiveData) { $Prompt } else { $Prompt }  # Don't double-encrypt
+        prompt = $(if (${script:SecurityConfig}.EncryptSensitiveData) { $Prompt } else { $Prompt }  # Don't double-encrypt
         stream = $false
     }
 
     # Add additional security parameters if available
-    if ($script:OllamaAPIKey) {
-        $body.api_key = $script:OllamaAPIKey
+    if (${script:OllamaAPIKey}) {
+        $body.api_key = ${script:OllamaAPIKey}
     }
 
     # Retry logic with exponential backoff
@@ -15731,9 +15729,9 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
             $jsonBody = $body | ConvertTo-Json -Depth 10
 
             Write-DevConsole "Attempt $($retryCount + 1)/$maxRetries - POST $endpoint" "DEBUG"
-            Write-SecurityLog "API request attempt" "DEBUG" "Retry: $retryCount, HTTPS: $script:UseHTTPS"
+            Write-SecurityLog "API request attempt" "DEBUG" "Retry: $retryCount, HTTPS: ${script:UseHTTPS}"
 
-            $response = if (@($headers).Count -gt 0) {
+            $response = $(if (@($headers).Count -gt 0) {
                 Invoke-RestMethod -Uri $endpoint -Method POST -Body $jsonBody -ContentType "application/json" -Headers $headers -TimeoutSec 30
             }
             else {
@@ -15751,12 +15749,12 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
                     Model           = $Model
                     RetryCount      = $retryCount
                     Endpoint        = $endpoint
-                    UseHTTPS        = $script:UseHTTPS
+                    UseHTTPS        = ${script:UseHTTPS}
                     PromptLength    = $Prompt.Length
-                    HasAPIKey       = ($null -ne $script:OllamaAPIKey)
-                    ResponseTime    = if ($response.total_duration) { $response.total_duration } else { "Unknown" }
-                    LoadDuration    = if ($response.load_duration) { $response.load_duration } else { "Unknown" }
-                    PromptEvalCount = if ($response.prompt_eval_count) { $response.prompt_eval_count } else { "Unknown" }
+                    HasAPIKey       = ($null -ne ${script:OllamaAPIKey})
+                    ResponseTime    = $(if ($response.total_duration) { $response.total_duration } else { "Unknown" }
+                    LoadDuration    = $(if ($response.load_duration) { $response.load_duration } else { "Unknown" }
+                    PromptEvalCount = $(if ($response.prompt_eval_count) { $response.prompt_eval_count } else { "Unknown" }
                 }
 
                 Write-ErrorLog -ErrorMessage "AI response generated successfully" `
@@ -15771,7 +15769,7 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
 
                 # Decrypt response if it was encrypted
                 $finalResponse = $response.response
-                if ($script:SecurityConfig.EncryptSensitiveData -and $response.encrypted) {
+                if (${script:SecurityConfig}.EncryptSensitiveData -and $response.encrypted) {
                     $finalResponse = Unprotect-SensitiveString -EncryptedData $response.response
                 }
 
@@ -15798,10 +15796,10 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
                 MaxRetries   = $maxRetries
                 Model        = $Model
                 Endpoint     = $endpoint
-                UseHTTPS     = $script:UseHTTPS
-                HasAPIKey    = ($null -ne $script:OllamaAPIKey)
+                UseHTTPS     = ${script:UseHTTPS}
+                HasAPIKey    = ($null -ne ${script:OllamaAPIKey})
                 PromptLength = $Prompt.Length
-                ErrorType    = if ($errorMsg -match "Unable to connect") { "CONNECTION" } elseif ($errorMsg -match "timeout") { "TIMEOUT" } elseif ($errorMsg -match "refused") { "REFUSED" } else { "OTHER" }
+                ErrorType    = $(if ($errorMsg -match "Unable to connect") { "CONNECTION" } elseif ($errorMsg -match "timeout") { "TIMEOUT" } elseif ($errorMsg -match "refused") { "REFUSED" } else { "OTHER" }
                 ResponseTime = $null
             }
 
@@ -15831,7 +15829,7 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
             Write-SecurityLog "Final Ollama API failure" "ERROR" $errorMsg
 
             # Provide helpful diagnostic info
-            $protocolInfo = if ($script:UseHTTPS) { "HTTPS (secure)" } else { "HTTP (insecure)" }
+            $protocolInfo = $(if (${script:UseHTTPS}) { "HTTPS (secure)" } else { "HTTP (insecure)" }
             $diagnosticMsg = @"
 Connection failed to Ollama API at $endpoint [$protocolInfo]
 
@@ -15840,14 +15838,14 @@ Troubleshooting steps:
 2. Start Ollama service if needed: ollama serve
 3. Verify models are installed: ollama list
 4. Test endpoint manually: Invoke-RestMethod -Uri $tagsEndpoint
-$(if ($script:UseHTTPS) { "5. Verify HTTPS configuration: Check SSL certificate" })
-$(if ($script:OllamaAPIKey) { "6. Verify API key is valid and not expired" })
+$(if (${script:UseHTTPS}) { "5. Verify HTTPS configuration: Check SSL certificate" })
+$(if (${script:OllamaAPIKey}) { "6. Verify API key is valid and not expired" })
 
 Security Status:
-- HTTPS: $($script:UseHTTPS)
-- API Key Auth: $($null -ne $script:OllamaAPIKey)
-- Data Encryption: $($script:SecurityConfig.EncryptSensitiveData)
-- Session ID: $($script:CurrentSession.SessionId)
+- HTTPS: $(${script:UseHTTPS})
+- API Key Auth: $($null -ne ${script:OllamaAPIKey})
+- Data Encryption: $(${script:SecurityConfig}.EncryptSensitiveData)
+- Session ID: $(${script:CurrentSession}.SessionId)
 
 Error details: $errorMsg
 "@
@@ -15903,8 +15901,8 @@ function Refresh-ModelList {
         Refreshes model list in all chat tabs
     #>
     $models = Get-AvailableOllamaModels
-    if ($script:chatTabs) {
-        foreach ($session in $script:chatTabs.Values) {
+    if (${script:chatTabs}) {
+        foreach ($session in ${script:chatTabs}.Values) {
             if ($session.ModelCombo) {
                 $currentSelection = $session.ModelCombo.SelectedItem
                 $session.ModelCombo.Items.Clear()
@@ -15955,7 +15953,7 @@ function Invoke-AgenticChat {
         [Parameter(Mandatory = $true)]
         [string]$UserMessage,
         
-        [string]$Model = $global:settings.OllamaModel,
+        [string]$Model = ${global:settings}.OllamaModel,
         
         [int]$MaxIterations = 10,
         
@@ -16000,7 +15998,7 @@ $toolList
 2. ⛔ NEVER make up directory listings - ALWAYS use list_directory
 3. ⛔ NEVER fabricate analysis - USE TOOLS to get real data
 4. ✅ ALWAYS use ABSOLUTE paths (C:/Users/... NOT ./file)
-5. ✅ Current directory: $global:currentWorkingDir
+5. ✅ Current directory: ${global:currentWorkingDir}
 6. ✅ Multiple tool calls allowed - use them sequentially
 7. ✅ After receiving tool results, analyze ONLY that real data
 8. ✅ JSON parameters must be valid - use double quotes
@@ -16140,8 +16138,8 @@ $toolList
             $format = $toolCall.Format
             
             # Validate tool exists before attempting to parse parameters
-            if (-not $script:agentTools -or -not $script:agentTools.ContainsKey($toolName)) {
-                $errorMsg = "Tool '$toolName' not found. Available tools: $($script:agentTools.Keys -join ', ')"
+            if (-not ${script:agentTools} -or -not ${script:agentTools}.ContainsKey($toolName)) {
+                $errorMsg = "Tool '$toolName' not found. Available tools: $(${script:agentTools}.Keys -join ', ')"
                 Write-DevConsole "[AGENTIC] $errorMsg" "ERROR"
                 $errorResult = @{ success = $false; error = $errorMsg }
                 $conversation += @{
@@ -16234,14 +16232,14 @@ $toolList
                 }
                 
                 if ($Verbose) {
-                    $preview = if ($resultJson.Length -gt 200) { 
+                    $preview = $(if ($resultJson.Length -gt 200) { 
                         $resultJson.Substring(0, 200) + "..." 
                     } else { 
                         $resultJson 
                     }
                     Write-DevConsole "[AGENTIC] Tool $toolName returned: $preview" "SUCCESS"
                 } else {
-                    $status = if ($result.success) { "SUCCESS" } else { "FAILED" }
+                    $status = $(if ($result.success) { "SUCCESS" } else { "FAILED" }
                     Write-DevConsole "[AGENTIC] Tool ${toolName}: $status" $status
                 }
             }
@@ -16297,7 +16295,7 @@ function Send-Chat {
     $chatBox = $activeChat.ChatBox
 
     # Security validation
-    $script:CurrentSession.LastActivity = Get-Date
+    ${script:CurrentSession}.LastActivity = Get-Date
 
     # Validate session security
     if (-not (Test-SessionSecurity)) {
@@ -16307,10 +16305,10 @@ function Send-Chat {
     }
 
     # Handle pending delete confirmation (chat-based, no popups)
-    if ($script:PendingDelete) {
+    if (${script:PendingDelete}) {
         $msgLower = $msg.Trim().ToLower()
-        $pendingPath = $script:PendingDelete.Path
-        $pendingType = $script:PendingDelete.Type
+        $pendingPath = ${script:PendingDelete}.Path
+        $pendingType = ${script:PendingDelete}.Type
 
         if ($msgLower -eq "yes" -or $msgLower -eq "y") {
             # Proceed with deletion
@@ -16324,13 +16322,13 @@ function Send-Chat {
                 $chatBox.AppendText("Agent > ❌ Error deleting ${pendingType}: $_`r`n`r`n")
                 Write-DevConsole "Error deleting file via agentic command: $_" "ERROR"
             }
-            $script:PendingDelete = $null
+            ${script:PendingDelete} = $null
             return
         }
         elseif ($msgLower -eq "no" -or $msgLower -eq "n" -or $msgLower -eq "cancel") {
             # Cancel deletion
             $chatBox.AppendText("Agent > ❌ Delete cancelled for ${pendingType}: $pendingPath`r`n`r`n")
-            $script:PendingDelete = $null
+            ${script:PendingDelete} = $null
             return
         }
         else {
@@ -16349,7 +16347,7 @@ function Send-Chat {
     }
 
     # Log chat activity (but don't log sensitive content in stealth mode)
-    $logContent = if ($script:SecurityConfig.StealthMode) {
+    $logContent = $(if (${script:SecurityConfig}.StealthMode) {
         "Length: $($msg.Length), Type: User"
     }
     else {
@@ -16360,7 +16358,7 @@ function Send-Chat {
     Write-DevConsole "User message: $msg" "INFO"
 
     # Encrypt message for storage if security is enabled (for audit purposes)
-    if ($script:SecurityConfig.EncryptSensitiveData) {
+    if (${script:SecurityConfig}.EncryptSensitiveData) {
         $null = Protect-SensitiveString -Data $msg
     }
 
@@ -16424,8 +16422,8 @@ function Send-Chat {
     }
 
     # Auto-enable Agent Mode if request requires it
-    if ($requiresAgentMode -and -not $global:AgentMode) {
-        $global:AgentMode = $true
+    if ($requiresAgentMode -and -not ${global:AgentMode}) {
+        ${global:AgentMode} = $true
         $toggle.Text = "Agent Mode: ON"
         $toggle.ForeColor = 'Green'
         $agentStatusLabel.Text = "Agent Status: Active - Auto-enabled for agentic request"
@@ -16435,11 +16433,10 @@ function Send-Chat {
     }
 
     # Handle Agent Mode
-    if ($global:AgentMode) {
+    if (${global:AgentMode}) {
         # ============================================
         # AI Backend Commands
-        # ============================================
-        if ($msg -match "^/backend$" -or $msg -match "^/ai\s*$") {
+        # ============================================ $(if ($msg -match "^/backend$" -or $msg -match "^/ai\s*$") {
             $status = Get-AIBackendStatus
             $chatBox.AppendText("Agent > 🤖 AI Backend Status:`r`n")
             $chatBox.AppendText("═══════════════════════════════════════════`r`n")
@@ -16454,7 +16451,7 @@ function Send-Chat {
 
         if ($msg -match "^/backend\s+(ollama|lmstudio)$") {
             $targetBackend = $Matches[1]
-            $backendName = if ($targetBackend -eq "ollama") { "Ollama" } else { "LMStudio" }
+            $backendName = $(if ($targetBackend -eq "ollama") { "Ollama" } else { "LMStudio" }
             $result = Switch-AIBackend -Backend $backendName
             if ($result.Success) {
                 $chatBox.AppendText("Agent > ✅ $($result.Message)`r`n")
@@ -16467,13 +16464,13 @@ function Send-Chat {
         }
 
         if ($msg -match "^/models$") {
-            $chatBox.AppendText("Agent > 🧠 Available AI Models (Backend: $script:AIBackend)`r`n")
+            $chatBox.AppendText("Agent > 🧠 Available AI Models (Backend: ${script:AIBackend})`r`n")
             try {
-                if ($script:AIBackend -eq "LMStudio") {
+                if (${script:AIBackend} -eq "LMStudio") {
                     $models = Get-LMStudioModels
                     if ($models.Count -gt 0) {
                         foreach ($model in $models) {
-                            $marker = if ($model -eq $script:LMStudioConfig.CurrentModel) { "👉" } else { "  " }
+                            $marker = $(if ($model -eq ${script:LMStudioConfig}.CurrentModel) { "👉" } else { "  " }
                             $chatBox.AppendText("   $marker $model`r`n")
                         }
                     }
@@ -16485,7 +16482,7 @@ function Send-Chat {
                     $models = Get-OllamaModels
                     if ($models.Count -gt 0) {
                         foreach ($model in $models) {
-                            $marker = if ($model -eq $OllamaModel) { "👉" } else { "  " }
+                            $marker = $(if ($model -eq $OllamaModel) { "👉" } else { "  " }
                             $chatBox.AppendText("   $marker $model`r`n")
                         }
                     }
@@ -16527,14 +16524,14 @@ function Send-Chat {
         # Get current page info
         if ($msg -match "^/pageinfo$" -or $msg -match "^/browserinfo$") {
             try {
-                if ($script:browserType -eq "WebView2" -and $script:webBrowser.CoreWebView2) {
-                    $title = $script:webBrowser.CoreWebView2.DocumentTitle
-                    $url = $script:webBrowser.CoreWebView2.Source.ToString()
+                if (${script:browserType} -eq "WebView2" -and ${script:webBrowser}.CoreWebView2) {
+                    $title = ${script:webBrowser}.CoreWebView2.DocumentTitle
+                    $url = ${script:webBrowser}.CoreWebView2.Source.ToString()
                     $chatBox.AppendText("Agent > Current Page:`r`nTitle: $title`r`nURL: $url`r`n`r`n")
                 }
                 else {
-                    $title = $script:webBrowser.DocumentTitle
-                    $url = $script:webBrowser.Url.ToString()
+                    $title = ${script:webBrowser}.DocumentTitle
+                    $url = ${script:webBrowser}.Url.ToString()
                     $chatBox.AppendText("Agent > Current Page:`r`nTitle: $title`r`nURL: $url`r`n`r`n")
                 }
             }
@@ -16567,7 +16564,7 @@ function Send-Chat {
         # Extract page content
         if ($msg -match "^/extract$" -or $msg -match "^/getcontent$") {
             try {
-                if ($script:browserType -eq "WebView2" -and $webBrowser.CoreWebView2) {
+                if (${script:browserType} -eq "WebView2" -and $webBrowser.CoreWebView2) {
                     $script = "document.body.innerText"
                     $chatBox.AppendText("Agent > Extracting page content...`r`n")
                     # Use async with timeout to prevent UI freeze
@@ -16644,7 +16641,7 @@ function Send-Chat {
 
         if ($msg -match "extract\s+(?:page\s+)?(?:content|text)|get\s+(?:page\s+)?(?:content|text)|read\s+(?:the\s+)?page") {
             try {
-                if ($script:browserType -eq "WebView2" -and $webBrowser.CoreWebView2) {
+                if (${script:browserType} -eq "WebView2" -and $webBrowser.CoreWebView2) {
                     $script = "document.body.innerText"
                     $chatBox.AppendText("Agent > Extracting page content...`r`n")
                     # Use async with timeout to prevent UI freeze
@@ -16683,8 +16680,7 @@ function Send-Chat {
 
         # ============================================
         # Git Agentic Commands
-        # ============================================
-        if ($msg -match "^/git\s+status$" -or $msg -eq "/gitstatus") {
+        # ============================================ $(if ($msg -match "^/git\s+status$" -or $msg -eq "/gitstatus") {
             $status = Get-GitStatus
             $chatBox.AppendText("Agent > Git Status:`r`n$status`r`n`r`n")
             Update-GitStatus
@@ -16755,8 +16751,7 @@ function Send-Chat {
 
         # ============================================
         # Terminal Agentic Commands
-        # ============================================
-        if ($msg -match "^/term\s+(.+)$" -or $msg -match "^/terminal\s+(.+)$" -or $msg -match "^/exec\s+(.+)$") {
+        # ============================================ $(if ($msg -match "^/term\s+(.+)$" -or $msg -match "^/terminal\s+(.+)$" -or $msg -match "^/exec\s+(.+)$") {
             $command = $Matches[1]
             Invoke-TerminalCommand $command
             $chatBox.AppendText("Agent > Executed: $command`r`n")
@@ -16788,14 +16783,13 @@ function Send-Chat {
 
         # ============================================
         # File Browser Agentic Commands
-        # ============================================
-        if ($msg -match "^/cd\s+(.+)$" -or $msg -match "^/navigate\s+(.+)$") {
+        # ============================================ $(if ($msg -match "^/cd\s+(.+)$" -or $msg -match "^/navigate\s+(.+)$") {
             $path = $Matches[1]
             if (Test-Path $path) {
-                $global:currentWorkingDir = Resolve-Path $path
-                Set-Location $global:currentWorkingDir
+                ${global:currentWorkingDir} = Resolve-Path $path
+                Set-Location ${global:currentWorkingDir}
                 Update-Explorer
-                $chatBox.AppendText("Agent > Changed directory to: $global:currentWorkingDir`r`n`r`n")
+                $chatBox.AppendText("Agent > Changed directory to: ${global:currentWorkingDir}`r`n`r`n")
             }
             else {
                 $chatBox.AppendText("Agent > Path not found: $path`r`n`r`n")
@@ -16804,12 +16798,12 @@ function Send-Chat {
         }
 
         if ($msg -match "^/ls\s*(.*)$" -or $msg -match "^/list\s*(.*)$" -or $msg -match "^/dir\s*(.*)$") {
-            $path = if ($Matches[1]) { $Matches[1] } else { $global:currentWorkingDir }
+            $path = $(if ($Matches[1]) { $Matches[1] } else { ${global:currentWorkingDir} }
             try {
                 $items = Get-ChildItem -Path $path -ErrorAction Stop
                 $output = "Contents of $path :`r`n"
                 foreach ($item in $items) {
-                    $type = if ($item.PSIsContainer) { "[DIR]" } else { "[FILE]" }
+                    $type = $(if ($item.PSIsContainer) { "[DIR]" } else { "[FILE]" }
                     $output += "$type $($item.Name)`r`n"
                 }
                 $chatBox.AppendText("Agent > $output`r`n")
@@ -16826,7 +16820,7 @@ function Send-Chat {
                 try {
                     $content = [System.IO.File]::ReadAllText($filePath)
                     Set-EditorTextWithVisibility -Content $content
-                    $global:currentFile = $filePath
+                    ${global:currentFile} = $filePath
                     $form.Text = "AI Text Editor - $filePath"
                     $chatBox.AppendText("Agent > Opened file: $filePath`r`n`r`n")
                 }
@@ -16856,7 +16850,7 @@ function Send-Chat {
         if ($msg -eq "/browse" -or $msg -eq "/explorer") {
             $folder = New-Object System.Windows.Forms.FolderBrowserDialog
             if ($folder.ShowDialog() -eq "OK") {
-                $global:currentWorkingDir = $folder.SelectedPath
+                ${global:currentWorkingDir} = $folder.SelectedPath
                 Update-Explorer
                 $chatBox.AppendText("Agent > Browsed: $($folder.SelectedPath)`r`n`r`n")
             }
@@ -16897,7 +16891,7 @@ function Send-Chat {
         # View AI Logs command
         if ($msg -match "^/(ai-logs|ai_logs|logs)$") {
             try {
-                $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+                $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
                 if (Test-Path $aiLogPath) {
                     $todayLog = Join-Path $aiLogPath "ai_errors_$(Get-Date -Format 'yyyy-MM-dd').log"
                     if (Test-Path $todayLog) {
@@ -16921,10 +16915,9 @@ function Send-Chat {
 
         # ============================================
         # File/Directory Creation Commands
-        # ============================================
-        if ($msg -match "^/mkdir\s+(.+)$" -or $msg -match "^/md\s+(.+)$" -or $msg -match "^/newdir\s+(.+)$") {
+        # ============================================ $(if ($msg -match "^/mkdir\s+(.+)$" -or $msg -match "^/md\s+(.+)$" -or $msg -match "^/newdir\s+(.+)$") {
             $dirName = $Matches[1].Trim()
-            $fullPath = if ([System.IO.Path]::IsPathRooted($dirName)) { $dirName } else { Join-Path $global:currentWorkingDir $dirName }
+            $fullPath = $(if ([System.IO.Path]::IsPathRooted($dirName)) { $dirName } else { Join-Path ${global:currentWorkingDir} $dirName }
             try {
                 New-Item -ItemType Directory -Path $fullPath -Force | Out-Null
                 Update-Explorer
@@ -16938,7 +16931,7 @@ function Send-Chat {
 
         if ($msg -match "^/touch\s+(.+)$" -or $msg -match "^/newfile\s+(.+)$" -or $msg -match "^/create\s+(.+)$") {
             $fileName = $Matches[1].Trim()
-            $fullPath = if ([System.IO.Path]::IsPathRooted($fileName)) { $fileName } else { Join-Path $global:currentWorkingDir $fileName }
+            $fullPath = $(if ([System.IO.Path]::IsPathRooted($fileName)) { $fileName } else { Join-Path ${global:currentWorkingDir} $fileName }
             try {
                 if (-not (Test-Path $fullPath)) {
                     New-Item -ItemType File -Path $fullPath -Force | Out-Null
@@ -16959,22 +16952,22 @@ function Send-Chat {
 
         if ($msg -match "^/rm\s+(.+)$" -or $msg -match "^/delete\s+(.+)$" -or $msg -match "^/del\s+(.+)$") {
             $target = $Matches[1].Trim()
-            $fullPath = if ([System.IO.Path]::IsPathRooted($target)) { $target } else { Join-Path $global:currentWorkingDir $target }
+            $fullPath = $(if ([System.IO.Path]::IsPathRooted($target)) { $target } else { Join-Path ${global:currentWorkingDir} $target }
             if (Test-Path $fullPath) {
                 # Check if this is a confirmation response to a previous delete request
-                if ($script:PendingDelete -and $script:PendingDelete.Path -eq $fullPath) {
+                if (${script:PendingDelete} -and ${script:PendingDelete}.Path -eq $fullPath) {
                     # This is a follow-up message, skip the original delete logic
-                    $script:PendingDelete = $null
+                    ${script:PendingDelete} = $null
                     return
                 }
 
                 # Use chat-based confirmation instead of popup dialog
-                $itemType = if (Test-Path $fullPath -PathType Container) { "directory" } else { "file" }
+                $itemType = $(if (Test-Path $fullPath -PathType Container) { "directory" } else { "file" }
                 $chatBox.AppendText("Agent > ⚠️ Confirm deletion of ${itemType} '$fullPath'`r`n")
                 $chatBox.AppendText("Agent > Type 'yes' to confirm deletion or 'no' to cancel`r`n`r`n")
 
                 # Store pending delete operation
-                $script:PendingDelete = @{
+                ${script:PendingDelete} = @{
                     Path      = $fullPath
                     Type      = $itemType
                     Timestamp = Get-Date
@@ -16987,7 +16980,7 @@ function Send-Chat {
         }
 
         if ($msg -match "^/pwd$" -or $msg -match "^/cwd$") {
-            $chatBox.AppendText("Agent > Current directory: $global:currentWorkingDir`r`n`r`n")
+            $chatBox.AppendText("Agent > Current directory: ${global:currentWorkingDir}`r`n`r`n")
             return
         }
 
@@ -16996,14 +16989,14 @@ function Send-Chat {
             $msg -match "(?:what's|whats)\s+in\s+(?:the\s+)?(?:folder|directory)\s+(.+)") {
             $path = $Matches[1].Trim()
             if (-not $path -or $path -eq "here" -or $path -eq "current") {
-                $path = $global:currentWorkingDir
+                $path = ${global:currentWorkingDir}
             }
             try {
                 $items = Get-ChildItem -Path $path -ErrorAction Stop
                 $output = "Contents of $path :`r`n"
                 foreach ($item in $items) {
-                    $type = if ($item.PSIsContainer) { "[DIR]" } else { "[FILE]" }
-                    $size = if (-not $item.PSIsContainer) { " ($([math]::Round($item.Length/1KB, 2)) KB)" } else { "" }
+                    $type = $(if ($item.PSIsContainer) { "[DIR]" } else { "[FILE]" }
+                    $size = $(if (-not $item.PSIsContainer) { " ($([math]::Round($item.Length/1KB, 2)) KB)" } else { "" }
                     $output += "$type $($item.Name)$size`r`n"
                 }
                 $chatBox.AppendText("Agent > $output`r`n")
@@ -17021,22 +17014,22 @@ function Send-Chat {
 
             # If it's a relative path, try to resolve it from current directory first
             if (-not [System.IO.Path]::IsPathRooted($path)) {
-                $possiblePath = Join-Path $global:currentWorkingDir $path
+                $possiblePath = Join-Path ${global:currentWorkingDir} $path
                 if (Test-Path $possiblePath) {
                     $path = $possiblePath
                 }
             }
 
             if (Test-Path $path) {
-                $global:currentWorkingDir = Resolve-Path $path
-                Set-Location $global:currentWorkingDir
+                ${global:currentWorkingDir} = Resolve-Path $path
+                Set-Location ${global:currentWorkingDir}
                 Update-Explorer
-                $explorerPathLabel.Text = "Path: $global:currentWorkingDir"
-                $chatBox.AppendText("Agent > ✓ Changed directory to: $global:currentWorkingDir`r`n`r`n")
+                $explorerPathLabel.Text = "Path: ${global:currentWorkingDir}"
+                $chatBox.AppendText("Agent > ✓ Changed directory to: ${global:currentWorkingDir}`r`n`r`n")
             }
             else {
                 $chatBox.AppendText("Agent > ✗ Path not found: $path`r`n")
-                $chatBox.AppendText("        Current directory: $global:currentWorkingDir`r`n")
+                $chatBox.AppendText("        Current directory: ${global:currentWorkingDir}`r`n")
                 $chatBox.AppendText("        Tip: Use full path like 'C:\Users\...' or relative like 'Powershield'`r`n`r`n")
             }
             return
@@ -17048,7 +17041,7 @@ function Send-Chat {
 
             # Try relative path first, then absolute
             if (-not (Test-Path $filePath)) {
-                $fullPath = Join-Path $global:currentWorkingDir $filePath
+                $fullPath = Join-Path ${global:currentWorkingDir} $filePath
                 if (Test-Path $fullPath) {
                     $filePath = $fullPath
                 }
@@ -17059,17 +17052,17 @@ function Send-Chat {
                     $fileInfo = Get-Item $filePath
                     if ($fileInfo.PSIsContainer) {
                         # It's a directory/project
-                        $global:currentWorkingDir = $filePath
-                        Set-Location $global:currentWorkingDir
+                        ${global:currentWorkingDir} = $filePath
+                        Set-Location ${global:currentWorkingDir}
                         Update-Explorer
-                        $explorerPathLabel.Text = "Path: $global:currentWorkingDir"
+                        $explorerPathLabel.Text = "Path: ${global:currentWorkingDir}"
                         $chatBox.AppendText("Agent > Opened project folder: $filePath`r`n`r`n")
                     }
                     else {
                         # It's a file
                         $content = [System.IO.File]::ReadAllText($filePath)
                         Set-EditorTextWithVisibility -Content $content
-                        $global:currentFile = $filePath
+                        ${global:currentFile} = $filePath
                         $form.Text = "AI Text Editor - $filePath"
                         $chatBox.AppendText("Agent > Opened file: $filePath ($($fileInfo.Length) bytes)`r`n`r`n")
                     }
@@ -17086,12 +17079,12 @@ function Send-Chat {
 
         if ($msg -match "(?:show|open|display)\s+(?:the\s+)?(?:file\s+)?(?:explorer|browser|tree)") {
             Update-Explorer
-            $chatBox.AppendText("Agent > File explorer refreshed. Current path: $global:currentWorkingDir`r`n`r`n")
+            $chatBox.AppendText("Agent > File explorer refreshed. Current path: ${global:currentWorkingDir}`r`n`r`n")
             return
         }
 
         if ($msg -match "(?:save|write)\s+(?:this|the|current)\s+(?:file|code|content)(?:\s+as\s+(.+))?") {
-            $fileName = if ($Matches[1]) { $Matches[1].Trim() -replace '["'']', '' } else { $global:currentFile }
+            $fileName = $(if ($Matches[1]) { $Matches[1].Trim() -replace '["'']', '' } else { ${global:currentFile} }
 
             if (-not $fileName) {
                 $chatBox.AppendText("Agent > Please specify a filename`r`n`r`n")
@@ -17099,10 +17092,10 @@ function Send-Chat {
             }
 
             try {
-                [System.IO.File]::WriteAllText($fileName, $script:editor.Text)
-                $global:currentFile = $fileName
+                [System.IO.File]::WriteAllText($fileName, ${script:editor}.Text)
+                ${global:currentFile} = $fileName
                 $form.Text = "AI Text Editor - $fileName"
-                $chatBox.AppendText("Agent > Saved file: $fileName ($($script:editor.Text.Length) bytes)`r`n`r`n")
+                $chatBox.AppendText("Agent > Saved file: $fileName ($(${script:editor}.Text.Length) bytes)`r`n`r`n")
             }
             catch {
                 $chatBox.AppendText("Agent > Error saving file: $_`r`n`r`n")
@@ -17113,10 +17106,10 @@ function Send-Chat {
         if ($msg -match "(?:create|make)\s+(?:a\s+)?(?:new\s+)?(?:file|project)\s+(?:called\s+|named\s+)?(.+)") {
             $fileName = $Matches[1].Trim() -replace '["'']', ''
             try {
-                $fullPath = Join-Path $global:currentWorkingDir $fileName
+                $fullPath = Join-Path ${global:currentWorkingDir} $fileName
                 [System.IO.File]::WriteAllText($fullPath, "")
                 Set-EditorTextWithVisibility -Content ""
-                $global:currentFile = $fullPath
+                ${global:currentFile} = $fullPath
                 $form.Text = "AI Text Editor - $fullPath"
                 Update-Explorer
                 $chatBox.AppendText("Agent > Created new file: $fullPath`r`n`r`n")
@@ -17129,10 +17122,9 @@ function Send-Chat {
 
         # ============================================
         # Agentic Workflow Commands
-        # ============================================
-        if ($msg -match "^/workflow\s+(.+)$" -or $msg -match "^/task\s+(.+)$" -or $msg -match "^/agent\s+(.+)$") {
+        # ============================================ $(if ($msg -match "^/workflow\s+(.+)$" -or $msg -match "^/task\s+(.+)$" -or $msg -match "^/agent\s+(.+)$") {
             $goal = $Matches[1]
-            $context = if ($script:editor.Text) { "Current file: $($script:editor.Text.Substring(0, [Math]::Min(500, $script:editor.Text.Length)))" } else { "" }
+            $context = $(if (${script:editor}.Text) { "Current file: $(${script:editor}.Text.Substring(0, [Math]::Min(500, ${script:editor}.Text.Length)))" } else { "" }
             $task = Invoke-AgenticWorkflow -Goal $goal -Context $context
             $chatBox.AppendText("Agent > Started workflow: $goal`r`nTask ID: $($task.Id)`r`n`r`n")
             $rightTabControl.SelectedTab = $agentTasksTab
@@ -17160,7 +17152,7 @@ function Send-Chat {
         }
 
         if ($msg -match "^/deps\s*(.*)$") {
-            $path = if ($Matches[1]) { $Matches[1] } else { $global:currentWorkingDir }
+            $path = $(if ($Matches[1]) { $Matches[1] } else { ${global:currentWorkingDir} }
             $deps = Get-ProjectDependencies -Path $path
             $chatBox.AppendText("Agent > Dependencies for $path :`r`n")
             $chatBox.AppendText("  Type: $($deps.Type)`r`n")
@@ -17171,10 +17163,9 @@ function Send-Chat {
 
         # ============================================
         # Coding/Copilot Commands
-        # ============================================
-        if ($msg -match "^/code\s+(.+)$" -or $msg -match "^/generate\s+(.+)$") {
+        # ============================================ $(if ($msg -match "^/code\s+(.+)$" -or $msg -match "^/generate\s+(.+)$") {
             $prompt = $Matches[1]
-            $context = if ($script:editor.Text) { "Current editor content: $($script:editor.Text)" } else { "" }
+            $context = $(if (${script:editor}.Text) { "Current editor content: $(${script:editor}.Text)" } else { "" }
             try {
                 $code = Invoke-CodeGeneration $prompt $context
 
@@ -17211,7 +17202,7 @@ function Send-Chat {
         }
 
         if ($msg -eq "/review" -or $msg -match "^/review\s+(.+)$") {
-            $code = if ($msg -match "^/review\s+(.+)$") { $Matches[1] } else { $script:editor.Text }
+            $code = $(if ($msg -match "^/review\s+(.+)$") { $Matches[1] } else { ${script:editor}.Text }
 
             if ($code -and $code.Trim()) {
                 $codeLength = $code.Length
@@ -17230,10 +17221,10 @@ function Send-Chat {
                 }
             }
             else {
-                $currentFile = if ($global:currentFile) { Split-Path -Leaf $global:currentFile } else { "none" }
+                $currentFile = $(if (${global:currentFile}) { Split-Path -Leaf ${global:currentFile} } else { "none" }
                 $chatBox.AppendText("Agent > No code to review in editor.`r`n")
                 $chatBox.AppendText("Current file: $currentFile`r`n")
-                $chatBox.AppendText("Editor content length: $($script:editor.Text.Length) characters`r`n")
+                $chatBox.AppendText("Editor content length: $(${script:editor}.Text.Length) characters`r`n")
                 $chatBox.AppendText("Tip: Open a file or paste code into the editor first.`r`n`r`n")
             }
             return
@@ -17241,7 +17232,7 @@ function Send-Chat {
 
         # /tools - List all available agent tools
         if ($msg -eq "/tools" -or $msg -match "^/tools\s*(.*)$") {
-            $filter = if ($msg -match "^/tools\s+(.+)$") { $Matches[1] } else { "" }
+            $filter = $(if ($msg -match "^/tools\s+(.+)$") { $Matches[1] } else { "" }
 
             $chatBox.AppendText("╔════════════════════════════════════════════════════╗`r`n")
             $chatBox.AppendText("║         🔧 REGISTERED AGENT TOOLS                  ║`r`n")
@@ -17276,7 +17267,7 @@ function Send-Chat {
         # /execute_tool - Execute a specific tool
         if ($msg -match "^/execute[_\-]?tool\s+(\w+)(?:\s+(.+))?$") {
             $toolName = $Matches[1]
-            $paramsJson = if ($Matches[2]) { $Matches[2] } else { "{}" }
+            $paramsJson = $(if ($Matches[2]) { $Matches[2] } else { "{}" }
 
             try {
                 $params = ConvertFrom-Json $paramsJson -AsHashtable
@@ -17302,7 +17293,7 @@ function Send-Chat {
 
         if ($msg -match "^/refactor\s+(.+)$") {
             $instructions = $Matches[1]
-            $code = $script:editor.Text
+            $code = ${script:editor}.Text
             if ($code) {
                 try {
                     $refactored = Invoke-CodeRefactor $code $instructions
@@ -17320,7 +17311,7 @@ function Send-Chat {
         }
 
         if ($msg -match "summarize|rewrite|cleaner|improve|refactor") {
-            $content = $script:editor.Text
+            $content = ${script:editor}.Text
 
             if (-not $content.Trim()) {
                 $chatBox.AppendText("Agent > Left editor is empty.`r`n`r`n")
@@ -17368,7 +17359,7 @@ TEXT END:
     # If the request mentions files/directories/auditing, gather REAL data first
     $contextData = ""
 
-    if ($global:AgentMode -and $requiresAgentMode) {
+    if (${global:AgentMode} -and $requiresAgentMode) {
         $chatBox.AppendText("Agent > *Gathering real filesystem context...*`r`n")
 
         # Extract path references from the message
@@ -17388,7 +17379,7 @@ TEXT END:
 
         # Default to current working directory if no path specified
         if (-not $targetPaths -and ($msg -match 'audit|scan|analyze|view|list|show')) {
-            $targetPaths += $global:currentWorkingDir
+            $targetPaths += ${global:currentWorkingDir}
         }
 
         # Gather context for each path
@@ -17462,7 +17453,7 @@ $($gatheredContext -join "`n")
     }
 
     # Build enhanced prompt with context
-    $enhancedPrompt = if ($contextData) {
+    $enhancedPrompt = $(if ($contextData) {
         @"
 $contextData
 
@@ -17480,7 +17471,7 @@ Based on the REAL filesystem data above, respond to the user's request. Use ONLY
         $autoToolResult = $null
         if (Test-RequiresAutoTooling -UserMessage $msg) {
             Write-DevConsole "[AUTO-TOOL] Detecting tools for: $($msg.Substring(0, [Math]::Min(50, $msg.Length)))..." "INFO"
-            $autoToolResult = Invoke-AutoToolCalling -UserMessage $msg -CurrentWorkingDir $global:currentWorkingDir
+            $autoToolResult = Invoke-AutoToolCalling -UserMessage $msg -CurrentWorkingDir ${global:currentWorkingDir}
             
             if ($autoToolResult.autoInvoked -and $autoToolResult.executedTools.Count -gt 0) {
                 $chatBox.AppendText("Agent > 🔧 Auto-invoked tools: ")
@@ -17503,7 +17494,7 @@ Based on the REAL filesystem data above, respond to the user's request. Use ONLY
         }
         
         # Use agentic tool-calling loop when Agent Mode is enabled
-        if ($global:AgentMode -and $requiresAgentMode) {
+        if (${global:AgentMode} -and $requiresAgentMode) {
             $chatBox.AppendText("Agent > *Using agentic tool-calling mode...*`r`n")
             
             try {
@@ -17514,7 +17505,7 @@ Based on the REAL filesystem data above, respond to the user's request. Use ONLY
                     if ($result.toolCalls -and $result.toolCalls.Count -gt 0) {
                         $chatBox.AppendText("Agent > 🔧 Tools executed ($($result.toolCalls.Count)):`r`n")
                         foreach ($toolCall in $result.toolCalls) {
-                            $status = if ($toolCall.result.success) { "✅" } else { "❌" }
+                            $status = $(if ($toolCall.result.success) { "✅" } else { "❌" }
                             $toolName = $toolCall.tool
                             $chatBox.AppendText("Agent >   $status $toolName`r`n")
                             if (-not $toolCall.result.success -and $toolCall.result.error) {
@@ -17526,7 +17517,7 @@ Based on the REAL filesystem data above, respond to the user's request. Use ONLY
                     $response = $result.response
                 }
                 else {
-                    $response = if ($result -is [string]) { $result } else { "Error: Invalid response format from agentic chat" }
+                    $response = $(if ($result -is [string]) { $result } else { "Error: Invalid response format from agentic chat" }
                 }
             }
             catch {
@@ -17622,7 +17613,7 @@ function Open-PS51VideoBrowser {
         Write-StartupLog "✅ PS5.1 Video Browser launched (PID: $($process.Id))" "SUCCESS"
 
         # Track the process
-        $script:RuntimeInfo.PS51BrowserProcess = $process
+        ${script:RuntimeInfo}.PS51BrowserProcess = $process
 
     }
     catch {
@@ -17641,11 +17632,11 @@ function Close-PS51VideoBrowser {
     .SYNOPSIS
         Closes the PS5.1 video browser subprocess if running
     #>
-    if ($script:RuntimeInfo.PS51BrowserProcess -and -not $script:RuntimeInfo.PS51BrowserProcess.HasExited) {
+    if (${script:RuntimeInfo}.PS51BrowserProcess -and -not ${script:RuntimeInfo}.PS51BrowserProcess.HasExited) {
         try {
             Write-StartupLog "Closing PS5.1 Video Browser..." "INFO"
-            $script:RuntimeInfo.PS51BrowserProcess.Kill()
-            $script:RuntimeInfo.PS51BrowserProcess = $null
+            ${script:RuntimeInfo}.PS51BrowserProcess.Kill()
+            ${script:RuntimeInfo}.PS51BrowserProcess = $null
             Write-StartupLog "✅ PS5.1 Video Browser closed" "SUCCESS"
         }
         catch {
@@ -17659,7 +17650,7 @@ function Test-PS51VideoBrowserRunning {
     .SYNOPSIS
         Check if a PS5.1 video browser is currently running
     #>
-    return ($script:RuntimeInfo.PS51BrowserProcess -and -not $script:RuntimeInfo.PS51BrowserProcess.HasExited)
+    return (${script:RuntimeInfo}.PS51BrowserProcess -and -not ${script:RuntimeInfo}.PS51BrowserProcess.HasExited)
 }
 
 # Browser Navigation Function
@@ -17682,11 +17673,11 @@ function Open-Browser {
         }
         $browserUrlBox.Text = $url
 
-        switch ($script:browserType) {
+        switch (${script:browserType}) {
             "WebView2-WPF" {
                 # WPF WebView2 via ElementHost (.NET 9+ compatible)
-                if ($script:webBrowser -and $script:webBrowser._isWpf) {
-                    $script:webBrowser.Navigate($url)
+                if (${script:webBrowser} -and ${script:webBrowser}._isWpf) {
+                    ${script:webBrowser}.Navigate($url)
                     Write-StartupLog "WPF WebView2 navigating to: $url" "INFO"
                 }
             }
@@ -17701,8 +17692,8 @@ function Open-Browser {
             }
             "WebView2Shim" {
                 # WebView2Shim navigates by opening in external browser
-                if ($script:webBrowser -and $script:webBrowser.Navigate) {
-                    $script:webBrowser.Navigate($url)
+                if (${script:webBrowser} -and ${script:webBrowser}.Navigate) {
+                    ${script:webBrowser}.Navigate($url)
                 }
                 else {
                     # Fallback to Start-Process
@@ -17734,11 +17725,11 @@ $browserUrlBox.Add_KeyDown({
     })
 
 $browserBackBtn.Add_Click({
-        switch ($script:browserType) {
+        switch (${script:browserType}) {
             "WebView2-WPF" {
                 # WPF WebView2 wrapper has GoBack method
-                if ($script:webBrowser -and $script:webBrowser._isWpf) {
-                    $script:webBrowser.GoBack()
+                if (${script:webBrowser} -and ${script:webBrowser}._isWpf) {
+                    ${script:webBrowser}.GoBack()
                 }
             }
             "WebView2" {
@@ -17759,11 +17750,11 @@ $browserBackBtn.Add_Click({
     })
 
 $browserForwardBtn.Add_Click({
-        switch ($script:browserType) {
+        switch (${script:browserType}) {
             "WebView2-WPF" {
                 # WPF WebView2 wrapper has GoForward method
-                if ($script:webBrowser -and $script:webBrowser._isWpf) {
-                    $script:webBrowser.GoForward()
+                if (${script:webBrowser} -and ${script:webBrowser}._isWpf) {
+                    ${script:webBrowser}.GoForward()
                 }
             }
             "WebView2" {
@@ -17784,11 +17775,11 @@ $browserForwardBtn.Add_Click({
     })
 
 $browserRefreshBtn.Add_Click({
-        switch ($script:browserType) {
+        switch (${script:browserType}) {
             "WebView2-WPF" {
                 # WPF WebView2 wrapper has Refresh method
-                if ($script:webBrowser -and $script:webBrowser._isWpf) {
-                    $script:webBrowser.Refresh()
+                if (${script:webBrowser} -and ${script:webBrowser}._isWpf) {
+                    ${script:webBrowser}.Refresh()
                 }
             }
             "WebView2" {
@@ -17811,7 +17802,7 @@ $browserRefreshBtn.Add_Click({
     })
 
 # Update URL box when browser navigates
-if ($script:browserType -eq "WebView2" -and $webBrowser -and $webBrowser.GetType().Name -eq "WebView2") {
+if (${script:browserType} -eq "WebView2" -and $webBrowser -and $webBrowser.GetType().Name -eq "WebView2") {
     try {
         # Use direct event binding instead of CoreWebView2InitializationCompleted
         # which may not be available on all WebView2 versions
@@ -17831,11 +17822,11 @@ if ($script:browserType -eq "WebView2" -and $webBrowser -and $webBrowser.GetType
         Write-StartupLog "Failed to set up WebView2 navigation events: $($_.Exception.Message)" "DEBUG"
     }
 }
-elseif ($script:browserType -eq "WebView2-WPF" -and $script:wpfWebBrowser) {
+elseif (${script:browserType} -eq "WebView2-WPF" -and ${script:wpfWebBrowser}) {
     # For WPF WebView2, the navigation events are already set up in the initialization
     Write-StartupLog "WPF WebView2 navigation events already configured" "DEBUG"
 }
-elseif ($script:browserType -ne "PS51-Bridge" -and $script:browserType -ne "LegacyFallback" -and $webBrowser) {
+elseif (${script:browserType} -ne "PS51-Bridge" -and ${script:browserType} -ne "LegacyFallback" -and $webBrowser) {
     try {
         # For other browser types that support NavigationCompleted
         if ($webBrowser.GetType().GetMethod('add_NavigationCompleted')) {
@@ -17848,7 +17839,7 @@ elseif ($script:browserType -ne "PS51-Bridge" -and $script:browserType -ne "Lega
         }
     }
     catch {
-        Write-StartupLog "Browser navigation event setup skipped: $($script:browserType)" "DEBUG"
+        Write-StartupLog "Browser navigation event setup skipped: $(${script:browserType})" "DEBUG"
     }
 }
 
@@ -17864,7 +17855,7 @@ $form.Add_Shown({
 # Git Functions
 # ============================================
 function Get-GitStatus {
-    $currentDir = if ($global:currentFile) { Split-Path $global:currentFile } else { Get-Location }
+    $currentDir = $(if (${global:currentFile}) { Split-Path ${global:currentFile} } else { Get-Location }
     if (-not (Test-Path (Join-Path $currentDir ".git"))) {
         return "Not a Git repository"
     }
@@ -17906,7 +17897,7 @@ function Invoke-GitCommand {
         [string[]]$Arguments
     )
 
-    $currentDir = if ($global:currentFile) { Split-Path $global:currentFile } else { Get-Location }
+    $currentDir = $(if (${global:currentFile}) { Split-Path ${global:currentFile} } else { Get-Location }
     if (-not (Test-Path (Join-Path $currentDir ".git"))) {
         return "Not a Git repository"
     }
@@ -17948,13 +17939,13 @@ function Start-NewTerminalSession {
         [string]$initiator = "System"
     )
 
-    $global:terminalSessionCounter++
+    ${global:terminalSessionCounter}++
     $terminalOutput.Clear()
     $terminalInput.Clear()
-    $terminalTab.Text = "Terminal (Session $global:terminalSessionCounter)"
-    Write-TerminalOutput "`r`n--- Terminal Session $global:terminalSessionCounter started by $initiator ---`r`n" "Gray"
-    $global:terminalSessionLock = $false
-    $global:terminalSessionOwner = $null
+    $terminalTab.Text = "Terminal (Session ${global:terminalSessionCounter})"
+    Write-TerminalOutput "`r`n--- Terminal Session ${global:terminalSessionCounter} started by $initiator ---`r`n" "Gray"
+    ${global:terminalSessionLock} = $false
+    ${global:terminalSessionOwner} = $null
 }
 
 function Acquire-TerminalControl {
@@ -17964,15 +17955,15 @@ function Acquire-TerminalControl {
 
     if (-not $owner) { $owner = "Agent" }
 
-    if ($global:terminalSessionLock -and $global:terminalSessionOwner -and $global:terminalSessionOwner -ne $owner) {
-        Write-TerminalOutput "Terminal currently reserved by $($global:terminalSessionOwner). Starting a new session for $owner...`r`n" "Yellow"
+    if (${global:terminalSessionLock} -and ${global:terminalSessionOwner} -and ${global:terminalSessionOwner} -ne $owner) {
+        Write-TerminalOutput "Terminal currently reserved by $(${global:terminalSessionOwner}). Starting a new session for $owner...`r`n" "Yellow"
         Start-NewTerminalSession -initiator $owner
     }
 
-    $global:terminalSessionLock = $true
-    $global:terminalSessionOwner = $owner
+    ${global:terminalSessionLock} = $true
+    ${global:terminalSessionOwner} = $owner
     if ($terminalTab.Text -notmatch "Session\s+\d+") {
-        $terminalTab.Text = "Terminal (Session $global:terminalSessionCounter)"
+        $terminalTab.Text = "Terminal (Session ${global:terminalSessionCounter})"
     }
 
     Write-TerminalOutput "Terminal allocated to $owner.`r`n" "Gray"
@@ -17985,13 +17976,13 @@ function Release-TerminalControl {
 
     if (-not $owner) { $owner = "Agent" }
 
-    if ($global:terminalSessionOwner -and $global:terminalSessionOwner -ne $owner) {
-        Write-TerminalOutput "Terminal is owned by $($global:terminalSessionOwner); $owner cannot release it.`r`n" "Yellow"
+    if (${global:terminalSessionOwner} -and ${global:terminalSessionOwner} -ne $owner) {
+        Write-TerminalOutput "Terminal is owned by $(${global:terminalSessionOwner}); $owner cannot release it.`r`n" "Yellow"
         return
     }
 
-    $global:terminalSessionLock = $false
-    $global:terminalSessionOwner = $null
+    ${global:terminalSessionLock} = $false
+    ${global:terminalSessionOwner} = $null
     Write-TerminalOutput "Terminal released by $owner.`r`n" "Gray"
 }
 
@@ -18012,26 +18003,26 @@ function Invoke-TerminalCommand {
     Acquire-TerminalControl -Owner "Manual"
 
     try {
-        Write-TerminalOutput "PS $($global:currentWorkingDir)> $command`r`n" "Cyan"
+        Write-TerminalOutput "PS $(${global:currentWorkingDir})> $command`r`n" "Cyan"
 
         # Add to history
-        $global:terminalHistory += $command
-        $global:terminalHistoryIndex = @($global:terminalHistory).Count
+        ${global:terminalHistory} += $command
+        ${global:terminalHistoryIndex} = @(${global:terminalHistory}).Count
 
         # Change directory commands
         if ($command -match "^cd\s+(.+)$") {
             $path = $Matches[1]
             if ($path -eq "..") {
-                $global:currentWorkingDir = Split-Path $global:currentWorkingDir
+                ${global:currentWorkingDir} = Split-Path ${global:currentWorkingDir}
             }
             elseif (Test-Path $path) {
-                $global:currentWorkingDir = Resolve-Path $path
+                ${global:currentWorkingDir} = Resolve-Path $path
             }
             else {
                 Write-TerminalOutput "Path not found: $path`r`n" "Red"
                 return
             }
-            Set-Location $global:currentWorkingDir
+            Set-Location ${global:currentWorkingDir}
             Write-TerminalOutput "`r`n"
             return
         }
@@ -18054,11 +18045,11 @@ function Invoke-TerminalCommand {
 function Update-Explorer {
     Write-StartupLog "Updating file explorer..." "INFO"
     $explorer.Nodes.Clear()
-    $currentPath = $global:currentWorkingDir
+    $currentPath = ${global:currentWorkingDir}
 
     if (-not $currentPath) {
         $currentPath = Get-Location
-        $global:currentWorkingDir = $currentPath
+        ${global:currentWorkingDir} = $currentPath
     }
 
     $explorerPathLabel.Text = "Path: $currentPath"
@@ -18096,8 +18087,8 @@ function Update-Explorer {
         }
 
         # Expand the drive containing current working directory and navigate to it
-        if ($global:currentWorkingDir) {
-            $currentDrive = [System.IO.Path]::GetPathRoot($global:currentWorkingDir)
+        if (${global:currentWorkingDir}) {
+            $currentDrive = [System.IO.Path]::GetPathRoot(${global:currentWorkingDir})
             $matchingNode = $explorer.Nodes | Where-Object { $_.Tag -eq $currentDrive }
             if ($matchingNode) {
                 $matchingNode.Expand()
@@ -18105,8 +18096,8 @@ function Update-Explorer {
 
                 # Try to expand path to current directory
                 try {
-                    if (-not [string]::IsNullOrEmpty($global:currentWorkingDir)) {
-                    Expand-PathInTree -treeView $explorer -targetPath $global:currentWorkingDir
+                    if (-not [string]::IsNullOrEmpty(${global:currentWorkingDir})) {
+                    Expand-PathInTree -treeView $explorer -targetPath ${global:currentWorkingDir}
                     }
                 }
                 catch {
@@ -18201,8 +18192,8 @@ function Add-TreeNodeChildren {
                 $isHidden = $dir.Attributes -band [System.IO.FileAttributes]::Hidden
                 $isSystem = $dir.Attributes -band [System.IO.FileAttributes]::System
 
-                $dirIcon = if ($isHidden) { "👁️‍🗨️" } elseif ($isSystem) { "⚙️" } else { "📁" }
-                $dirName = if ($isHidden) { "$($dir.Name) (Hidden)" } else { $dir.Name }
+                $dirIcon = $(if ($isHidden) { "👁️‍🗨️" } elseif ($isSystem) { "⚙️" } else { "📁" }
+                $dirName = $(if ($isHidden) { "$($dir.Name) (Hidden)" } else { $dir.Name }
 
                 $dirNode = New-Object System.Windows.Forms.TreeNode("$dirIcon $dirName")
                 $dirNode.Tag = $dir.FullName
@@ -18245,13 +18236,13 @@ function Add-TreeNodeChildren {
             try {
                 $fileIcon = Get-FileIcon $file.Extension
                 $isHidden = $file.Attributes -band [System.IO.FileAttributes]::Hidden
-                $fileName = if ($isHidden) { "$($file.Name) (Hidden)" } else { $file.Name }
+                $fileName = $(if ($isHidden) { "$($file.Name) (Hidden)" } else { $file.Name }
 
                 $fileNode = New-Object System.Windows.Forms.TreeNode("$fileIcon $fileName")
                 $fileNode.Tag = $file.FullName
                 $fileNode.Name = $file.FullName
 
-                $fileSizeStr = if ($file.Length -gt 1MB) {
+                $fileSizeStr = $(if ($file.Length -gt 1MB) {
                     "$([math]::Round($file.Length / 1MB, 2)) MB"
                 }
                 elseif ($file.Length -gt 1KB) {
@@ -18295,7 +18286,7 @@ function Add-TreeNodeChildren {
 
         # Add summary if items were truncated
         $totalDirs = (Get-ChildItem -Path $path -Directory -Force -ErrorAction SilentlyContinue | Measure-Object).Count
-        $totalFiles = if ($showFiles) { (Get-ChildItem -Path $path -File -Force -ErrorAction SilentlyContinue | Measure-Object).Count } else { 0 }
+        $totalFiles = $(if ($showFiles) { (Get-ChildItem -Path $path -File -Force -ErrorAction SilentlyContinue | Measure-Object).Count } else { 0 }
 
         $dirCount = @($directories).Count
         $fileCount = @($files).Count
@@ -18425,22 +18416,22 @@ function Expand-ExplorerNode {
 function Resolve-MarketplaceLanguageCode {
     param($LanguageInput)
 
-    if ($null -eq $LanguageInput) { return $script:LANG_CUSTOM }
+    if ($null -eq $LanguageInput) { return ${script:LANG_CUSTOM} }
     if ($LanguageInput -is [int]) { return $LanguageInput }
     if ($LanguageInput -match '^\d+$') { return [int]$LanguageInput }
 
     $token = $LanguageInput.ToString().ToLower()
     switch ($token) {
-        'asm' { return $script:LANG_ASM }
-        'python' { return $script:LANG_PYTHON }
-        'c' { return $script:LANG_C }
-        'cpp' { return $script:LANG_CPP }
-        'c++' { return $script:LANG_CPP }
-        'rust' { return $script:LANG_RUST }
-        'go' { return $script:LANG_GO }
-        'js' { return $script:LANG_JAVASCRIPT }
-        'javascript' { return $script:LANG_JAVASCRIPT }
-        default { return $script:LANG_CUSTOM }
+        'asm' { return ${script:LANG_ASM} }
+        'python' { return ${script:LANG_PYTHON} }
+        'c' { return ${script:LANG_C} }
+        'cpp' { return ${script:LANG_CPP} }
+        'c++' { return ${script:LANG_CPP} }
+        'rust' { return ${script:LANG_RUST} }
+        'go' { return ${script:LANG_GO} }
+        'js' { return ${script:LANG_JAVASCRIPT} }
+        'javascript' { return ${script:LANG_JAVASCRIPT} }
+        default { return ${script:LANG_CUSTOM} }
     }
 }
 
@@ -18460,7 +18451,7 @@ function Normalize-MarketplaceEntry {
     }
 
     $langInput = $Entry.Language
-    if (-not $langInput) { $langInput = $script:LANG_CUSTOM }
+    if (-not $langInput) { $langInput = ${script:LANG_CUSTOM} }
     $language = Resolve-MarketplaceLanguageCode -Input $langInput
 
     $downloads = $Entry.Downloads
@@ -18531,17 +18522,17 @@ function Normalize-MarketplaceEntry {
 function Determine-MarketplaceLanguageFromTags {
     param([object[]]$Tags)
 
-    if (-not $Tags) { return $script:LANG_CUSTOM }
+    if (-not $Tags) { return ${script:LANG_CUSTOM} }
 
     foreach ($tag in $Tags) {
         if (-not $tag) { continue }
         $candidate = Resolve-MarketplaceLanguageCode -LanguageInput $tag
-        if ($candidate -ne $script:LANG_CUSTOM) {
+        if ($candidate -ne ${script:LANG_CUSTOM}) {
             return $candidate
         }
     }
 
-    return $script:LANG_CUSTOM
+    return ${script:LANG_CUSTOM}
 }
 
 function Convert-MarketplaceApiExtension {
@@ -18578,9 +18569,9 @@ function Convert-MarketplaceApiExtension {
         }
     }
 
-    $category = if ($Extension.categories) { ($Extension.categories -join ', ') } else { 'Marketplace' }
-    $source = if ($SourceName) { $SourceName } else { 'Marketplace' }
-    $author = if ($Extension.publisher) { if ($Extension.publisher.displayName) { $Extension.publisher.displayName } else { $Extension.publisher.publisherName } } else { 'RawrXD Community' }
+    $category = $(if ($Extension.categories) { ($Extension.categories -join ', ') } else { 'Marketplace' }
+    $source = $(if ($SourceName) { $SourceName } else { 'Marketplace' }
+    $author = $(if ($Extension.publisher) { if ($Extension.publisher.displayName) { $Extension.publisher.displayName } else { $Extension.publisher.publisherName } } else { 'RawrXD Community' }
 
     $manifestFile = $null
     if ($versionInfo -and $versionInfo.files) {
@@ -18588,20 +18579,20 @@ function Convert-MarketplaceApiExtension {
     }
 
     $normalized = @{
-        Id            = if ($Extension.extensionName) { $Extension.extensionName } else { $Extension.extensionId }
+        Id            = $(if ($Extension.extensionName) { $Extension.extensionName } else { $Extension.extensionId }
         Name          = $Extension.displayName
         Description   = $Extension.shortDescription
         Author        = $author
         Language      = $language
         Capabilities  = 0
-        Version       = if ($versionInfo -and $versionInfo.version) { $versionInfo.version } else { '1.0.0' }
+        Version       = $(if ($versionInfo -and $versionInfo.version) { $versionInfo.version } else { '1.0.0' }
         Category      = $category
         Downloads     = $downloads
         Rating        = $rating
-        Tags          = if ($Extension.tags) { $Extension.tags } else { @() }
-        MarketplaceId = if ($Extension.publisher -and $Extension.publisher.publisherName -and $Extension.extensionName) { "$($Extension.publisher.publisherName).$($Extension.extensionName)" } else { $Extension.extensionId }
+        Tags          = $(if ($Extension.tags) { $Extension.tags } else { @() }
+        MarketplaceId = $(if ($Extension.publisher -and $Extension.publisher.publisherName -and $Extension.extensionName) { "$($Extension.publisher.publisherName).$($Extension.extensionName)" } else { $Extension.extensionId }
         Source        = $source
-        EntryPoint    = if ($manifestFile) { $manifestFile.source } else { $null }
+        EntryPoint    = $(if ($manifestFile) { $manifestFile.source } else { $null }
     }
 
     return Normalize-MarketplaceEntry -Entry $normalized
@@ -18664,11 +18655,11 @@ function Get-MarketplaceApiExtensions {
 
 function Get-MarketplaceSeedData {
     $seeds = @(
-        @{ Id = 'python-toolkit'; Name = 'Python Productivity Pack'; Description = 'Linting, formatting, and debugging helpers for Python developers.'; Author = 'RawrXD'; Language = $script:LANG_PYTHON; Capabilities = ($script:CAP_SYNTAX_HIGHLIGHT -bor $script:CAP_CODE_COMPLETION -bor $script:CAP_LINTING -bor $script:CAP_DEBUGGING); Version = '3.1.0'; Category = 'Productivity'; Downloads = 341234; Rating = 4.9; Tags = @('python', 'lint', 'debug'); Source = 'RawrXD Official' }
-        @{ Id = 'js-debugger-plus'; Name = 'JavaScript Debugger+'; Description = 'Live JavaScript/Node debugging with console replay and breakpoints.'; Author = 'RawrXD'; Language = $script:LANG_JAVASCRIPT; Capabilities = ($script:CAP_DEBUGGING -bor $script:CAP_CODE_COMPLETION); Version = '2.5.3'; Category = 'Debugger'; Downloads = 217890; Rating = 4.7; Tags = @('javascript', 'debugger', 'node'); Source = 'RawrXD Official' }
-        @{ Id = 'rust-toolchain'; Name = 'Rust Toolchain Suite'; Description = 'Cargo workflows with linting, formatting, and documentation previews.'; Author = 'RawrXD'; Language = $script:LANG_RUST; Capabilities = ($script:CAP_BUILD_SYSTEM -bor $script:CAP_FORMATTING -bor $script:CAP_LINTING); Version = '1.2.4'; Category = 'Toolchain'; Downloads = 114502; Rating = 4.6; Tags = @('rust', 'cargo'); Source = 'RawrXD Official' }
-        @{ Id = 'gitops-visualizer'; Name = 'GitOps Visualizer'; Description = 'Visualize branches, commits, and automations with live dependency graphs.'; Author = 'RawrXD'; Language = $script:LANG_CUSTOM; Capabilities = $script:CAP_GIT_INTEGRATION; Version = '1.0.8'; Category = 'Git'; Downloads = 85301; Rating = 4.8; Tags = @('git', 'visual'); Source = 'Community Marketplace' }
-        @{ Id = 'ai-code-mentor'; Name = 'AI Code Mentor'; Description = 'Context-aware AI hints, refactors, and explanations powered by RawrXD models.'; Author = 'RawrXD'; Language = $script:LANG_CUSTOM; Capabilities = ($script:CAP_AI_ASSIST -bor $script:CAP_REFACTORING); Version = '0.9.7'; Category = 'AI'; Downloads = 68790; Rating = 4.9; Tags = @('ai', 'assistant', 'mentor'); Source = 'Community Marketplace' }
+        @{ Id = 'python-toolkit'; Name = 'Python Productivity Pack'; Description = 'Linting, formatting, and debugging helpers for Python developers.'; Author = 'RawrXD'; Language = ${script:LANG_PYTHON}; Capabilities = (${script:CAP_SYNTAX_HIGHLIGHT} -bor ${script:CAP_CODE_COMPLETION} -bor ${script:CAP_LINTING} -bor ${script:CAP_DEBUGGING}); Version = '3.1.0'; Category = 'Productivity'; Downloads = 341234; Rating = 4.9; Tags = @('python', 'lint', 'debug'); Source = 'RawrXD Official' }
+        @{ Id = 'js-debugger-plus'; Name = 'JavaScript Debugger+'; Description = 'Live JavaScript/Node debugging with console replay and breakpoints.'; Author = 'RawrXD'; Language = ${script:LANG_JAVASCRIPT}; Capabilities = (${script:CAP_DEBUGGING} -bor ${script:CAP_CODE_COMPLETION}); Version = '2.5.3'; Category = 'Debugger'; Downloads = 217890; Rating = 4.7; Tags = @('javascript', 'debugger', 'node'); Source = 'RawrXD Official' }
+        @{ Id = 'rust-toolchain'; Name = 'Rust Toolchain Suite'; Description = 'Cargo workflows with linting, formatting, and documentation previews.'; Author = 'RawrXD'; Language = ${script:LANG_RUST}; Capabilities = (${script:CAP_BUILD_SYSTEM} -bor ${script:CAP_FORMATTING} -bor ${script:CAP_LINTING}); Version = '1.2.4'; Category = 'Toolchain'; Downloads = 114502; Rating = 4.6; Tags = @('rust', 'cargo'); Source = 'RawrXD Official' }
+        @{ Id = 'gitops-visualizer'; Name = 'GitOps Visualizer'; Description = 'Visualize branches, commits, and automations with live dependency graphs.'; Author = 'RawrXD'; Language = ${script:LANG_CUSTOM}; Capabilities = ${script:CAP_GIT_INTEGRATION}; Version = '1.0.8'; Category = 'Git'; Downloads = 85301; Rating = 4.8; Tags = @('git', 'visual'); Source = 'Community Marketplace' }
+        @{ Id = 'ai-code-mentor'; Name = 'AI Code Mentor'; Description = 'Context-aware AI hints, refactors, and explanations powered by RawrXD models.'; Author = 'RawrXD'; Language = ${script:LANG_CUSTOM}; Capabilities = (${script:CAP_AI_ASSIST} -bor ${script:CAP_REFACTORING}); Version = '0.9.7'; Category = 'AI'; Downloads = 68790; Rating = 4.9; Tags = @('ai', 'assistant', 'mentor'); Source = 'Community Marketplace' }
     )
 
     return $seeds | ForEach-Object { Normalize-MarketplaceEntry -Entry $_ }
@@ -18677,14 +18668,14 @@ function Get-MarketplaceSeedData {
 function Load-MarketplaceCatalog {
     param([switch]$Force)
 
-    if (-not $Force -and $script:marketplaceCache.Count -gt 0) {
-        return $script:marketplaceCache
+    if (-not $Force -and ${script:marketplaceCache}.Count -gt 0) {
+        return ${script:marketplaceCache}
     }
 
     $cursorToken = Enter-CursorWaitState -Reason "Marketplace:Sync" -Style "Wait"
     try {
         $catalog = Get-MarketplaceSeedData
-        foreach ($source in $script:marketplaceSources) {
+        foreach ($source in ${script:marketplaceSources}) {
             try {
                 $sourceEntries = @()
                 if ($source.ApiUrl -or ($source.Url -and $source.Url -match 'marketplace\.visualstudio\.com')) {
@@ -18737,9 +18728,9 @@ function Load-MarketplaceCatalog {
             }
         }
 
-        $script:marketplaceCache = $unique.Values | Sort-Object -Property Downloads -Descending
-        $script:marketplaceLastRefresh = Get-Date
-        return $script:marketplaceCache
+        ${script:marketplaceCache} = $unique.Values | Sort-Object -Property Downloads -Descending
+        ${script:marketplaceLastRefresh} = Get-Date
+        return ${script:marketplaceCache}
     }
     finally {
         if ($cursorToken) {
@@ -18790,7 +18781,7 @@ function Register-Extension {
         Hooks         = @{}
     }
 
-    $script:extensionRegistry += $extension
+    ${script:extensionRegistry} += $extension
     return $extension
 }
 
@@ -18798,32 +18789,32 @@ function Initialize-ExtensionSystem {
     # Register built-in extensions
     Register-Extension -Id "python-lang" -Name "Python Language Support" `
         -Description "Full Python IDE features with syntax highlighting, debugging, and linting" `
-        -Author "RawrXD" -Language $script:LANG_PYTHON `
-        -Capabilities ($script:CAP_SYNTAX_HIGHLIGHT -bor $script:CAP_CODE_COMPLETION -bor $script:CAP_DEBUGGING -bor $script:CAP_LINTING) `
+        -Author "RawrXD" -Language ${script:LANG_PYTHON} `
+        -Capabilities (${script:CAP_SYNTAX_HIGHLIGHT} -bor ${script:CAP_CODE_COMPLETION} -bor ${script:CAP_DEBUGGING} -bor ${script:CAP_LINTING}) `
         -Category "Language" -Source "RawrXD Core" -BuiltIn
 
     Register-Extension -Id "c-lang" -Name "C/C++ Development" `
         -Description "C and C++ support with GCC/Clang integration" `
-        -Author "RawrXD" -Language $script:LANG_C `
-        -Capabilities ($script:CAP_SYNTAX_HIGHLIGHT -bor $script:CAP_CODE_COMPLETION -bor $script:CAP_DEBUGGING -bor $script:CAP_BUILD_SYSTEM) `
+        -Author "RawrXD" -Language ${script:LANG_C} `
+        -Capabilities (${script:CAP_SYNTAX_HIGHLIGHT} -bor ${script:CAP_CODE_COMPLETION} -bor ${script:CAP_DEBUGGING} -bor ${script:CAP_BUILD_SYSTEM}) `
         -Category "Language" -Source "RawrXD Core" -BuiltIn
 
     Register-Extension -Id "rust-lang" -Name "Rust Language Support" `
         -Description "Rust development with Cargo integration" `
-        -Author "RawrXD" -Language $script:LANG_RUST `
-        -Capabilities ($script:CAP_SYNTAX_HIGHLIGHT -bor $script:CAP_CODE_COMPLETION -bor $script:CAP_BUILD_SYSTEM) `
+        -Author "RawrXD" -Language ${script:LANG_RUST} `
+        -Capabilities (${script:CAP_SYNTAX_HIGHLIGHT} -bor ${script:CAP_CODE_COMPLETION} -bor ${script:CAP_BUILD_SYSTEM}) `
         -Category "Language" -Source "RawrXD Core" -BuiltIn
 
     Register-Extension -Id "model-dampener" -Name "Model Dampener" `
         -Description "On-the-fly AI model behavior modification without retraining" `
-        -Author "RawrXD" -Language $script:LANG_ASM `
-        -Capabilities ($script:CAP_MODEL_DAMPENING -bor $script:CAP_AI_ASSIST) `
+        -Author "RawrXD" -Language ${script:LANG_ASM} `
+        -Capabilities (${script:CAP_MODEL_DAMPENING} -bor ${script:CAP_AI_ASSIST}) `
         -Category "AI" -Source "RawrXD Core" -BuiltIn
 
     Register-Extension -Id "git-enhanced" -Name "Enhanced Git Integration" `
         -Description "Advanced Git features with visual diff and merge tools" `
-        -Author "RawrXD" -Language $script:LANG_ASM `
-        -Capabilities $script:CAP_GIT_INTEGRATION `
+        -Author "RawrXD" -Language ${script:LANG_ASM} `
+        -Capabilities ${script:CAP_GIT_INTEGRATION} `
         -Category "Git" -Source "RawrXD Core" -BuiltIn
 
     # Load user-installed extensions
@@ -18831,7 +18822,7 @@ function Initialize-ExtensionSystem {
 }
 
 function Import-UserExtensions {
-    $extensionsFile = Join-Path $script:extensionsDir "extensions.json"
+    $extensionsFile = Join-Path ${script:extensionsDir} "extensions.json"
     if (Test-Path $extensionsFile) {
         try {
             $userExtensions = Get-Content $extensionsFile | ConvertFrom-Json
@@ -18855,13 +18846,13 @@ function Import-UserExtensions {
 
 function Save-InstalledExtensions {
     try {
-        if (-not (Test-Path $script:extensionsDir)) {
-            New-Item -ItemType Directory -Path $script:extensionsDir -Force | Out-Null
+        if (-not (Test-Path ${script:extensionsDir})) {
+            New-Item -ItemType Directory -Path ${script:extensionsDir} -Force | Out-Null
         }
 
-        $extensionsFile = Join-Path $script:extensionsDir "extensions.json"
-        $userExtensions = $script:extensionRegistry | Where-Object { -not $_.BuiltIn }
-        $json = if ($userExtensions) { $userExtensions | ConvertTo-Json -Depth 5 } else { '[]' }
+        $extensionsFile = Join-Path ${script:extensionsDir} "extensions.json"
+        $userExtensions = ${script:extensionRegistry} | Where-Object { -not $_.BuiltIn }
+        $json = $(if ($userExtensions) { $userExtensions | ConvertTo-Json -Depth 5 } else { '[]' }
         Set-Content -Path $extensionsFile -Value $json -Encoding UTF8
         Write-DevConsole "Saved $($userExtensions.Count) marketplace extension(s)" "DEBUG"
     }
@@ -18902,7 +18893,7 @@ function Search-Marketplace {
             $entry.Source = $defaultSource
         }
 
-        $idKey = if ($entry.Id) { $entry.Id } elseif ($entry.MarketplaceId) { $entry.MarketplaceId } else { '' }
+        $idKey = $(if ($entry.Id) { $entry.Id } elseif ($entry.MarketplaceId) { $entry.MarketplaceId } else { '' }
         if ($idKey) {
             $idKey = $idKey.ToString().ToLower()
             if ($seenIds.ContainsKey($idKey)) {
@@ -18930,7 +18921,7 @@ function Search-Marketplace {
 
     $installedCount = 0
     if ($includeInstalled) {
-        foreach ($ext in $script:extensionRegistry) {
+        foreach ($ext in ${script:extensionRegistry}) {
             & $evaluateEntry $ext "Installed"
             $installedCount++
         }
@@ -18941,7 +18932,7 @@ function Search-Marketplace {
         $catalog = Load-MarketplaceCatalog
         $remoteCount = @($catalog).Count
         foreach ($entry in $catalog) {
-            $entrySource = if ($entry.Source) { $entry.Source } else { 'Marketplace' }
+            $entrySource = $(if ($entry.Source) { $entry.Source } else { 'Marketplace' }
             & $evaluateEntry $entry $entrySource
         }
     }
@@ -18962,7 +18953,7 @@ function Install-MarketplaceExtension {
     }
 
     $id = $Extension.Id
-    $existing = $script:extensionRegistry | Where-Object { $_.Id -eq $id } | Select-Object -First 1
+    $existing = ${script:extensionRegistry} | Where-Object { $_.Id -eq $id } | Select-Object -First 1
 
     if ($existing) {
         $existing.Name = $Extension.Name
@@ -19004,7 +18995,7 @@ function Show-Marketplace {
     $marketplaceForm.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
     $marketplaceForm.ForeColor = [System.Drawing.Color]::White
 
-    $marketplaceUrl = ($script:marketplaceSources | Select-Object -First 1).Url
+    $marketplaceUrl = (${script:marketplaceSources} | Select-Object -First 1).Url
     if (-not $marketplaceUrl) {
         $marketplaceUrl = 'https://marketplace.visualstudio.com/VSCode'
     }
@@ -19159,9 +19150,9 @@ function Show-Marketplace {
             return
         }
         $ext = $resultsList.SelectedItems[0].Tag
-        $statusText = if ($ext.Installed) { "Installed" } else { "Not installed" }
+        $statusText = $(if ($ext.Installed) { "Installed" } else { "Not installed" }
         $detailsStatus.Text = "$statusText • Source: $($ext.Source)"
-        $installBtn.Text = if ($ext.Installed) { "Reinstall / Enable" } else { "Install Extension" }
+        $installBtn.Text = $(if ($ext.Installed) { "Reinstall / Enable" } else { "Install Extension" }
         $installBtn.Enabled = $true
         $detailsBox.Text = "Name       : $($ext.Name)`r`nVersion    : $($ext.Version)`r`nAuthor     : $($ext.Author)`r`nCategory   : $($ext.Category)`r`nRating     : $([string]::Format('{0:N1}', (if ($ext.Rating) { $ext.Rating } else { 0 }))) / 5`r`nDownloads  : $([string]::Format('{0:N0}', (if ($ext.Downloads) { $ext.Downloads } else { 0 })))`r`nTags       : $(([string]::Join(', ', $ext.Tags)) -replace '^$', 'None')`r`n`r`n$($ext.Description)"
     }
@@ -19218,8 +19209,8 @@ function Show-InstalledExtensions {
     $listBox.Font = New-Object System.Drawing.Font("Consolas", 9)
     $installedForm.Controls.Add($listBox) | Out-Null
 
-    foreach ($ext in $script:extensionRegistry) {
-        $status = if ($ext.Enabled) { "[ENABLED]" } else { "[DISABLED]" }
+    foreach ($ext in ${script:extensionRegistry}) {
+        $status = $(if ($ext.Enabled) { "[ENABLED]" } else { "[DISABLED]" }
         $listBox.Items.Add("$status $($ext.Name) - $($ext.Description)") | Out-Null
     }
 
@@ -19230,18 +19221,18 @@ function Show-InstalledExtensions {
 # Settings Functions
 # ============================================
 function Get-Settings {
-    if (Test-Path $script:settingsPath) {
+    if (Test-Path ${script:settingsPath}) {
         try {
-            $loadedSettings = Get-Content $script:settingsPath | ConvertFrom-Json
+            $loadedSettings = Get-Content ${script:settingsPath} | ConvertFrom-Json
             foreach ($key in $loadedSettings.PSObject.Properties.Name) {
-                if ($global:settings.ContainsKey($key)) {
-                    $global:settings[$key] = $loadedSettings.$key
+                if (${global:settings}.ContainsKey($key)) {
+                    ${global:settings}[$key] = $loadedSettings.$key
                 }
             }
-            Write-DevConsole "Settings loaded from: $script:settingsPath" "INFO"
+            Write-DevConsole "Settings loaded from: ${script:settingsPath}" "INFO"
 
             # Apply loaded settings
-            $script:currentModel = $global:settings.OllamaModel
+            ${script:currentModel} = ${global:settings}.OllamaModel
             Set-EditorSettings
         }
         catch {
@@ -19252,13 +19243,13 @@ function Get-Settings {
 
 function Save-Settings {
     try {
-        $settingsDir = Split-Path $script:settingsPath
+        $settingsDir = Split-Path ${script:settingsPath}
         if (-not (Test-Path $settingsDir)) {
             New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null
         }
 
-        $global:settings | ConvertTo-Json -Depth 3 | Out-File $script:settingsPath -Encoding UTF8
-        Write-DevConsole "Settings saved to: $script:settingsPath" "SUCCESS"
+        ${global:settings} | ConvertTo-Json -Depth 3 | Out-File ${script:settingsPath} -Encoding UTF8
+        Write-DevConsole "Settings saved to: ${script:settingsPath}" "SUCCESS"
     }
     catch {
         Write-DevConsole "Error saving settings: $_" "ERROR"
@@ -19267,7 +19258,7 @@ function Save-Settings {
 
 function Apply-EditorSettings {
     try {
-        $font = New-Object System.Drawing.Font($global:settings.EditorFontFamily, $global:settings.EditorFontSize)
+        $font = New-Object System.Drawing.Font(${global:settings}.EditorFontFamily, ${global:settings}.EditorFontSize)
         $targets = @()
 
         $activeEditor = Get-ActiveEditorControl
@@ -19275,8 +19266,8 @@ function Apply-EditorSettings {
             $targets += $activeEditor
         }
 
-        if ($script:editorPopOutForms) {
-            foreach ($form in $script:editorPopOutForms.Values) {
+        if (${script:editorPopOutForms}) {
+            foreach ($form in ${script:editorPopOutForms}.Values) {
                 if (-not $form -or $form.IsDisposed) { continue }
                 if ($form.Tag -and $form.Tag.ContainsKey('EditorControl')) {
                     $candidate = $form.Tag.EditorControl
@@ -19291,8 +19282,8 @@ function Apply-EditorSettings {
             $editorControl.Font = $font
         }
 
-        if ($targets.Count -eq 0 -and $script:editor -and -not $script:editor.IsDisposed) {
-            $script:editor.Font = $font
+        if ($targets.Count -eq 0 -and ${script:editor} -and -not ${script:editor}.IsDisposed) {
+            ${script:editor}.Font = $font
         }
 
         Write-DevConsole "Applied editor settings to $($targets.Count) pop-out editor(s)" "DEBUG"
@@ -19307,8 +19298,8 @@ function Set-EditorSettings {
         [hashtable]$SettingsOverride = @{}
     )
 
-    if (-not $global:settings) {
-        $global:settings = @{}
+    if (-not ${global:settings}) {
+        ${global:settings} = @{}
     }
 
     $defaults = @{
@@ -19324,14 +19315,14 @@ function Set-EditorSettings {
     }
 
     foreach ($key in $defaults.Keys) {
-        if (-not $global:settings.ContainsKey($key) -or $null -eq $global:settings[$key]) {
-            $global:settings[$key] = $defaults[$key]
+        if (-not ${global:settings}.ContainsKey($key) -or $null -eq ${global:settings}[$key]) {
+            ${global:settings}[$key] = $defaults[$key]
         }
     }
 
     if ($SettingsOverride -and $SettingsOverride.Count -gt 0) {
         foreach ($entry in $SettingsOverride.GetEnumerator()) {
-            $global:settings[$entry.Key] = $entry.Value
+            ${global:settings}[$entry.Key] = $entry.Value
         }
     }
 
@@ -19380,7 +19371,7 @@ function Show-ModelSettings {
     } else {
         $null = $modelCombo.Items.Add("No models found - check Ollama")
     }
-    $modelCombo.Text = $global:settings.OllamaModel
+    $modelCombo.Text = ${global:settings}.OllamaModel
     $settingsForm.Controls.Add($modelCombo)
 
     # Refresh models button
@@ -19409,7 +19400,7 @@ function Show-ModelSettings {
     $tabsNumeric.Size = New-Object System.Drawing.Size(80, 25)
     $tabsNumeric.Minimum = 1
     $tabsNumeric.Maximum = 100
-    $tabsNumeric.Value = $global:settings.MaxTabs
+    $tabsNumeric.Value = ${global:settings}.MaxTabs
     $settingsForm.Controls.Add($tabsNumeric)
 
     # Auto-save checkbox
@@ -19417,7 +19408,7 @@ function Show-ModelSettings {
     $autoSaveCheck.Text = "Enable Auto-Save"
     $autoSaveCheck.Location = New-Object System.Drawing.Point(20, 110)
     $autoSaveCheck.Size = New-Object System.Drawing.Size(150, 23)
-    $autoSaveCheck.Checked = $global:settings.AutoSaveEnabled
+    $autoSaveCheck.Checked = ${global:settings}.AutoSaveEnabled
     $settingsForm.Controls.Add($autoSaveCheck)
 
     # Auto-save interval
@@ -19432,7 +19423,7 @@ function Show-ModelSettings {
     $intervalNumeric.Size = New-Object System.Drawing.Size(80, 25)
     $intervalNumeric.Minimum = 5
     $intervalNumeric.Maximum = 300
-    $intervalNumeric.Value = $global:settings.AutoSaveInterval
+    $intervalNumeric.Value = ${global:settings}.AutoSaveInterval
     $settingsForm.Controls.Add($intervalNumeric)
 
     # Debug mode checkbox
@@ -19440,7 +19431,7 @@ function Show-ModelSettings {
     $debugCheck.Text = "Enable Debug Mode"
     $debugCheck.Location = New-Object System.Drawing.Point(20, 190)
     $debugCheck.Size = New-Object System.Drawing.Size(150, 23)
-    $debugCheck.Checked = $global:settings.DebugMode
+    $debugCheck.Checked = ${global:settings}.DebugMode
     $settingsForm.Controls.Add($debugCheck)
 
     # Buttons panel
@@ -19466,13 +19457,13 @@ function Show-ModelSettings {
 
     if ($settingsForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         # Apply settings
-        $global:settings.OllamaModel = $modelCombo.Text
-        $global:settings.MaxTabs = $tabsNumeric.Value
+        ${global:settings}.OllamaModel = $modelCombo.Text
+        ${global:settings}.MaxTabs = $tabsNumeric.Value
         # Don't automatically sync MaxChatTabs with MaxTabs - they are separate settings
-        # $global:settings.MaxChatTabs should only be changed through the chat settings dialog
-        $global:settings.AutoSaveEnabled = $autoSaveCheck.Checked
-        $global:settings.AutoSaveInterval = $intervalNumeric.Value
-        $global:settings.DebugMode = $debugCheck.Checked
+        # ${global:settings}.MaxChatTabs should only be changed through the chat settings dialog
+        ${global:settings}.AutoSaveEnabled = $autoSaveCheck.Checked
+        ${global:settings}.AutoSaveInterval = $intervalNumeric.Value
+        ${global:settings}.DebugMode = $debugCheck.Checked
 
         Save-Settings
         Write-DevConsole "Settings updated and saved" "SUCCESS"
@@ -19503,7 +19494,7 @@ function Show-EditorSettings {
     $fontCombo.Location = New-Object System.Drawing.Point(130, 27)
     $fontCombo.Size = New-Object System.Drawing.Size(150, 25)
     $fontCombo.Items.AddRange(@("Segoe UI", "Consolas", "Courier New", "Monaco", "Lucida Console", "Source Code Pro"))
-    $fontCombo.Text = $global:settings.EditorFontFamily
+    $fontCombo.Text = ${global:settings}.EditorFontFamily
     $editorForm.Controls.Add($fontCombo)
 
     # Font size
@@ -19518,7 +19509,7 @@ function Show-EditorSettings {
     $sizeNumeric.Size = New-Object System.Drawing.Size(50, 25)
     $sizeNumeric.Minimum = 8
     $sizeNumeric.Maximum = 72
-    $sizeNumeric.Value = $global:settings.EditorFontSize
+    $sizeNumeric.Value = ${global:settings}.EditorFontSize
     $editorForm.Controls.Add($sizeNumeric)
 
     # Tab size
@@ -19533,7 +19524,7 @@ function Show-EditorSettings {
     $tabNumeric.Size = New-Object System.Drawing.Size(50, 25)
     $tabNumeric.Minimum = 1
     $tabNumeric.Maximum = 8
-    $tabNumeric.Value = $global:settings.TabSize
+    $tabNumeric.Value = ${global:settings}.TabSize
     $editorForm.Controls.Add($tabNumeric)
 
     # Checkboxes
@@ -19541,28 +19532,28 @@ function Show-EditorSettings {
     $lineNumbersCheck.Text = "Show Line Numbers"
     $lineNumbersCheck.Location = New-Object System.Drawing.Point(20, 110)
     $lineNumbersCheck.Size = New-Object System.Drawing.Size(150, 23)
-    $lineNumbersCheck.Checked = $global:settings.ShowLineNumbers
+    $lineNumbersCheck.Checked = ${global:settings}.ShowLineNumbers
     $editorForm.Controls.Add($lineNumbersCheck)
 
     $wrapCheck = New-Object System.Windows.Forms.CheckBox
     $wrapCheck.Text = "Word Wrap"
     $wrapCheck.Location = New-Object System.Drawing.Point(200, 110)
     $wrapCheck.Size = New-Object System.Drawing.Size(150, 23)
-    $wrapCheck.Checked = $global:settings.WrapText
+    $wrapCheck.Checked = ${global:settings}.WrapText
     $editorForm.Controls.Add($wrapCheck)
 
     $autoIndentCheck = New-Object System.Windows.Forms.CheckBox
     $autoIndentCheck.Text = "Auto Indent"
     $autoIndentCheck.Location = New-Object System.Drawing.Point(20, 150)
     $autoIndentCheck.Size = New-Object System.Drawing.Size(150, 23)
-    $autoIndentCheck.Checked = $global:settings.AutoIndent
+    $autoIndentCheck.Checked = ${global:settings}.AutoIndent
     $editorForm.Controls.Add($autoIndentCheck)
 
     $highlightCheck = New-Object System.Windows.Forms.CheckBox
     $highlightCheck.Text = "Syntax Highlighting"
     $highlightCheck.Location = New-Object System.Drawing.Point(200, 150)
     $highlightCheck.Size = New-Object System.Drawing.Size(150, 23)
-    $highlightCheck.Checked = $global:settings.CodeHighlighting
+    $highlightCheck.Checked = ${global:settings}.CodeHighlighting
     $editorForm.Controls.Add($highlightCheck)
 
     # Buttons
@@ -19588,13 +19579,13 @@ function Show-EditorSettings {
 
     if ($editorForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         # Apply settings
-        $global:settings.EditorFontFamily = $fontCombo.Text
-        $global:settings.EditorFontSize = $sizeNumeric.Value
-        $global:settings.TabSize = $tabNumeric.Value
-        $global:settings.ShowLineNumbers = $lineNumbersCheck.Checked
-        $global:settings.WrapText = $wrapCheck.Checked
-        $global:settings.AutoIndent = $autoIndentCheck.Checked
-        $global:settings.CodeHighlighting = $highlightCheck.Checked
+        ${global:settings}.EditorFontFamily = $fontCombo.Text
+        ${global:settings}.EditorFontSize = $sizeNumeric.Value
+        ${global:settings}.TabSize = $tabNumeric.Value
+        ${global:settings}.ShowLineNumbers = $lineNumbersCheck.Checked
+        ${global:settings}.WrapText = $wrapCheck.Checked
+        ${global:settings}.AutoIndent = $autoIndentCheck.Checked
+        ${global:settings}.CodeHighlighting = $highlightCheck.Checked
 
         Apply-EditorSettings
         Save-Settings
@@ -19614,15 +19605,15 @@ function New-ChatTab {
     )
 
     # Check max chat tabs limit
-    $currentTabCount = if ($script:chatTabs) { @($script:chatTabs).Count } else { 0 }
-    if ($currentTabCount -ge $global:settings.MaxChatTabs) {
-        Write-DevConsole "⚠ Maximum chat tabs ($($global:settings.MaxChatTabs)) reached" "WARNING"
+    $currentTabCount = $(if (${script:chatTabs}) { @(${script:chatTabs}).Count } else { 0 }
+    if ($currentTabCount -ge ${global:settings}.MaxChatTabs) {
+        Write-DevConsole "⚠ Maximum chat tabs ($(${global:settings}.MaxChatTabs)) reached" "WARNING"
         return $null
     }
 
-    $script:chatTabCounter++
-    $tabId = "chat_$($script:chatTabCounter)"
-    $finalTabName = if ($TabName -eq "Chat") { "Chat $($script:chatTabCounter)" } else { $TabName }
+    ${script:chatTabCounter}++
+    $tabId = "chat_$(${script:chatTabCounter})"
+    $finalTabName = $(if ($TabName -eq "Chat") { "Chat $(${script:chatTabCounter})" } else { $TabName }
 
     # Create new tab page
     $newChatTabPage = New-Object System.Windows.Forms.TabPage
@@ -19769,7 +19760,7 @@ function New-ChatTab {
         param($sender, $e)
         $parentMenu = $sender.Owner.Owner
         $sourceBox = $parentMenu.SourceControl
-        $prompt = if ($sourceBox -and $sourceBox.SelectedText) { $sourceBox.SelectedText } else { "" }
+        $prompt = $(if ($sourceBox -and $sourceBox.SelectedText) { $sourceBox.SelectedText } else { "" }
         $activeChat = Get-ActiveChatTab
         if ($activeChat -and $activeChat.InputBox) {
             if ($prompt) {
@@ -19865,7 +19856,7 @@ function New-ChatTab {
         $modelCombo.Items.Add("No models found")
     }
     
-    $defaultModel = if ($Model) { $Model } elseif ($global:settings.OllamaModel) { $global:settings.OllamaModel } else { $null }
+    $defaultModel = $(if ($Model) { $Model } elseif (${global:settings}.OllamaModel) { ${global:settings}.OllamaModel } else { $null }
     if ($defaultModel -and $availableModels -contains $defaultModel) {
         $modelCombo.SelectedItem = $defaultModel
     }
@@ -19904,7 +19895,7 @@ function New-ChatTab {
     $modeCombo.Font = New-Object System.Drawing.Font("Segoe UI", 8)
     $modeCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
     $modeCombo.Items.AddRange(@("Auto", "Agent", "Plan", "Ask", "Max"))
-    $modeCombo.SelectedItem = if ($global:settings.AgentModeLevel) { $global:settings.AgentModeLevel } else { "Auto" }
+    $modeCombo.SelectedItem = $(if (${global:settings}.AgentModeLevel) { ${global:settings}.AgentModeLevel } else { "Auto" }
     $modePanel.Controls.Add($modeCombo)
 
     # Send button - Added for click-to-send functionality
@@ -19923,11 +19914,11 @@ function New-ChatTab {
     # Send button click handler
     $sendBtn.Add_Click({
         $selectedTab = $chatTabControl.SelectedTab
-        if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
+        if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
             Send-ChatMessage -TabId $selectedTab.Name
         }
-        elseif ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
-            Send-ChatMessage -TabId $script:activeChatTabId
+        elseif (${script:activeChatTabId} -and ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
+            Send-ChatMessage -TabId ${script:activeChatTabId}
         }
     })
 
@@ -19982,7 +19973,7 @@ function New-ChatTab {
     })
 
     # Input box - Use Monaco if WebView2 is available, otherwise fallback to TextBox
-    $fontSize = if ($global:settings -and $global:settings.EditorFontSize) { $global:settings.EditorFontSize } else { 12 }
+    $fontSize = $(if (${global:settings} -and ${global:settings}.EditorFontSize) { ${global:settings}.EditorFontSize } else { 12 }
     $inputBox = New-MonacoChatInput -ParentContainer $inputContainer -FontSize $fontSize
 
     # Chat session data
@@ -20002,7 +19993,7 @@ function New-ChatTab {
     }
 
     # Store chat tab
-    $script:chatTabs[$tabId] = $chatSession
+    ${script:chatTabs}[$tabId] = $chatSession
 
     # Add to tab control
     $chatTabControl.TabPages.Add($newChatTabPage)
@@ -20019,11 +20010,11 @@ function New-ChatTab {
                     $message = $args.WebMessageAsJson | ConvertFrom-Json
                     if ($message.type -eq 'sendMessage') {
                         $selectedTab = $chatTabControl.SelectedTab
-                        if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
+                        if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
                             Send-ChatMessage -TabId $selectedTab.Name
                         }
-                        elseif ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
-                            Send-ChatMessage -TabId $script:activeChatTabId
+                        elseif (${script:activeChatTabId} -and ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
+                            Send-ChatMessage -TabId ${script:activeChatTabId}
                         }
                     }
                 }
@@ -20037,11 +20028,11 @@ function New-ChatTab {
                 if ($e.Control -and $e.KeyCode -eq "Enter") {
                     # Find the active chat tab based on selected tab
                     $selectedTab = $chatTabControl.SelectedTab
-                    if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
+                    if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
                         Send-ChatMessage -TabId $selectedTab.Name
                     }
-                    elseif ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
-                        Send-ChatMessage -TabId $script:activeChatTabId
+                    elseif (${script:activeChatTabId} -and ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
+                        Send-ChatMessage -TabId ${script:activeChatTabId}
                     }
                 }
             } catch { }
@@ -20052,24 +20043,24 @@ function New-ChatTab {
             param($comboSender, $e)
             # Find the active chat tab based on selected tab
             $selectedTab = $chatTabControl.SelectedTab
-            if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
+            if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
                 Update-ChatModel -TabId $selectedTab.Name -Model $comboSender.SelectedItem
             }
-            elseif ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
-                Update-ChatModel -TabId $script:activeChatTabId -Model $comboSender.SelectedItem
+            elseif (${script:activeChatTabId} -and ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
+                Update-ChatModel -TabId ${script:activeChatTabId} -Model $comboSender.SelectedItem
             }
         })
 
     $modeCombo.add_SelectedIndexChanged({
             param($comboSender, $e)
             $selectedTab = $chatTabControl.SelectedTab
-            if ($selectedTab -and $script:chatTabs.ContainsKey($selectedTab.Name)) {
-                $chatSession = $script:chatTabs[$selectedTab.Name]
+            if ($selectedTab -and ${script:chatTabs}.ContainsKey($selectedTab.Name)) {
+                $chatSession = ${script:chatTabs}[$selectedTab.Name]
                 $chatSession.Mode = $comboSender.SelectedItem
                 Write-DevConsole "Chat mode set to: $($comboSender.SelectedItem)" "INFO"
             }
-            elseif ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
-                $chatSession = $script:chatTabs[$script:activeChatTabId]
+            elseif (${script:activeChatTabId} -and ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
+                $chatSession = ${script:chatTabs}[${script:activeChatTabId}]
                 $chatSession.Mode = $comboSender.SelectedItem
                 Write-DevConsole "Chat mode set to: $($comboSender.SelectedItem)" "INFO"
             }
@@ -20119,7 +20110,7 @@ function New-ChatTab {
 
     # Select the new tab
     $chatTabControl.SelectedTab = $newChatTabPage
-    $script:activeChatTabId = $tabId
+    ${script:activeChatTabId} = $tabId
 
     Update-ChatStatus
     Write-DevConsole "✅ Created new chat tab: $finalTabName" "SUCCESS"
@@ -20130,12 +20121,12 @@ function New-ChatTab {
 function Remove-ChatTab {
     param([string]$TabId)
 
-    if (-not $script:chatTabs.ContainsKey($TabId)) {
+    if (-not ${script:chatTabs}.ContainsKey($TabId)) {
         Write-DevConsole "❌ Chat tab $TabId not found" "ERROR"
         return
     }
 
-    $chatSession = $script:chatTabs[$TabId]
+    $chatSession = ${script:chatTabs}[$TabId]
 
     # Remove from tab control
     $chatTabControl.TabPages.Remove($chatSession.TabPage)
@@ -20144,16 +20135,16 @@ function Remove-ChatTab {
     $chatSession.TabPage.Dispose()
 
     # Remove from collection
-    $script:chatTabs.Remove($TabId)
+    ${script:chatTabs}.Remove($TabId)
 
     # Update active tab if this was active
-    if ($script:activeChatTabId -eq $TabId) {
+    if (${script:activeChatTabId} -eq $TabId) {
         $tabPageCount = $chatTabControl.TabPages.Count
         if ($tabPageCount -gt 0) {
-            $script:activeChatTabId = $chatTabControl.SelectedTab.Name
+            ${script:activeChatTabId} = $chatTabControl.SelectedTab.Name
         }
         else {
-            $script:activeChatTabId = $null
+            ${script:activeChatTabId} = $null
         }
     }
 
@@ -20172,10 +20163,10 @@ function Send-ChatMessage {
         $UseMultithreading = $true
     }
 
-    if (-not $script:chatTabs.ContainsKey($TabId)) { return }
+    if (-not ${script:chatTabs}.ContainsKey($TabId)) { return }
 
-    $chatSession = $script:chatTabs[$TabId]
-    $message = if ($chatSession.MonacoInput.IsMonaco) { $chatSession.MonacoInput.GetText().Trim() } else { $chatSession.InputBox.Text.Trim() }
+    $chatSession = ${script:chatTabs}[$TabId]
+    $message = $(if ($chatSession.MonacoInput.IsMonaco) { $chatSession.MonacoInput.GetText().Trim() } else { $chatSession.InputBox.Text.Trim() }
 
     if ([string]::IsNullOrWhiteSpace($message)) { return }
 
@@ -20201,7 +20192,7 @@ function Send-ChatMessage {
 
         # Check for theme status request
         if ($message -match "^/(theme|current-theme)$" -or $message -match "what theme" -or $message -match "current theme") {
-            $responseMessage = "🎨 Current theme: $script:CurrentTheme`n📋 Available themes: stealth-cheetah (default), dark, light, custom"
+            $responseMessage = "🎨 Current theme: ${script:CurrentTheme}`n📋 Available themes: stealth-cheetah (default), dark, light, custom"
         }
         else {
             $themeRequest = $matches[1] -or $matches[2]
@@ -20262,9 +20253,9 @@ function Send-ChatMessage {
 
         if ($themeChanged) {
             # Update current theme and save settings
-            $script:CurrentTheme = $themeRequest -replace "stealth.?cheetah", "Stealth-Cheetah" -replace "dark", "Dark" -replace "light", "Light"
+            ${script:CurrentTheme} = $themeRequest -replace "stealth.?cheetah", "Stealth-Cheetah" -replace "dark", "Dark" -replace "light", "Light"
             Save-CustomizationSettings
-            Write-StartupLog "🎨 Theme changed via chat command: $script:CurrentTheme" "SUCCESS"
+            Write-StartupLog "🎨 Theme changed via chat command: ${script:CurrentTheme}" "SUCCESS"
         }
 
         return
@@ -20309,8 +20300,8 @@ function Send-ChatMessage {
 
         # Check for "current file" references
         if ($message -match "(?:check|analyze|fix|review|read)\s+(?:this|current|active)\s+file") {
-            if ($script:activeEditorContext -and $script:activeEditorContext.FilePath) {
-                $currentPath = $script:activeEditorContext.FilePath
+            if (${script:activeEditorContext} -and ${script:activeEditorContext}.FilePath) {
+                $currentPath = ${script:activeEditorContext}.FilePath
                 if (Test-Path $currentPath) {
                     $fileContent = Get-Content -Path $currentPath -Raw -ErrorAction SilentlyContinue
                     if ($fileContent) {
@@ -20342,7 +20333,7 @@ function Send-ChatMessage {
                 Write-DevConsole "🔧 [AUTO-TOOL] Analyzing message for tool invocations..." "INFO"
                 
                 # Get the current working directory
-                $cwd = if ($global:currentWorkingDir) { $global:currentWorkingDir } else { $PWD.Path }
+                $cwd = $(if (${global:currentWorkingDir}) { ${global:currentWorkingDir} } else { $PWD.Path }
                 
                 # Invoke auto-tool detection and execution
                 $autoToolResults = Invoke-AutoToolCalling -UserMessage $message -CurrentWorkingDir $cwd -ConfidenceThreshold 0.80
@@ -20351,7 +20342,7 @@ function Send-ChatMessage {
                     # Display tool execution results in chat
                     $toolSummary = @()
                     foreach ($result in $autoToolResults.results) {
-                        $statusIcon = if ($result.success) { "✅" } else { "❌" }
+                        $statusIcon = $(if ($result.success) { "✅" } else { "❌" }
                         $toolSummary += "$statusIcon $($result.tool)"
                         
                         # Log tool execution
@@ -20419,7 +20410,7 @@ function Send-ChatMessage {
     # Check if multithreading is available and enabled
     # Force single-threaded for agentic models to use the new pipeline
     $isAgentic = $chatSession.ModelCombo.SelectedItem -match "agent|cheetah"
-    if ($UseMultithreading -and $script:threadSafeContext.RunspacePool -and -not $isAgentic) {
+    if ($UseMultithreading -and ${script:threadSafeContext}.RunspacePool -and -not $isAgentic) {
         # Use the new multithreaded system
         $messageHistory = @($chatSession.Messages)
         $historyCount = $messageHistory.Count
@@ -20427,7 +20418,7 @@ function Send-ChatMessage {
             TabId       = $TabId
             Message     = $message
             Model       = $chatSession.ModelCombo.SelectedItem
-            ChatHistory = if ($historyCount -gt 1) { $messageHistory[0..($historyCount - 2)] } else { @() }
+            ChatHistory = $(if ($historyCount -gt 1) { $messageHistory[0..($historyCount - 2)] } else { @() }
         }
 
         Start-ParallelChatProcessing -ChatRequests @($chatRequest)
@@ -20488,7 +20479,7 @@ function Send-ChatMessage {
         
         $messageHistory = @($chatSession.Messages)
         $historyCount = $messageHistory.Count
-        $chatHistoryParam = if ($historyCount -gt 1) { $messageHistory[0..($historyCount - 2)] } else { @() }
+        $chatHistoryParam = $(if ($historyCount -gt 1) { $messageHistory[0..($historyCount - 2)] } else { @() }
         $null = $powershell.AddParameter("chatHistory", $chatHistoryParam)
 
         $job = $powershell.BeginInvoke()
@@ -20622,29 +20613,29 @@ function Send-ChatMessage {
 function Update-ChatModel {
     param([string]$TabId, [string]$Model)
 
-    if (-not $script:chatTabs.ContainsKey($TabId)) { return }
+    if (-not ${script:chatTabs}.ContainsKey($TabId)) { return }
 
-    $chatSession = $script:chatTabs[$TabId]
+    $chatSession = ${script:chatTabs}[$TabId]
     Write-DevConsole "🔄 Changed model for $($chatSession.TabPage.Text) to $Model" "INFO"
 }
 
 function Update-ChatStatus {
-    $activeCount = if ($script:chatTabs) { @($script:chatTabs).Count } else { 0 }
+    $activeCount = $(if (${script:chatTabs}) { @(${script:chatTabs}).Count } else { 0 }
 
     # Find the chat status label from the form controls
-    if ($script:chatStatusLabel) {
+    if (${script:chatStatusLabel}) {
         if ($activeCount -eq 0) {
-            $script:chatStatusLabel.Text = "No active chats"
+            ${script:chatStatusLabel}.Text = "No active chats"
         }
         else {
-            $script:chatStatusLabel.Text = "$activeCount/$($global:settings.MaxChatTabs) chats active"
+            ${script:chatStatusLabel}.Text = "$activeCount/$(${global:settings}.MaxChatTabs) chats active"
         }
     }
 }
 
 function Get-ActiveChatTab {
-    if ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
-        return $script:chatTabs[$script:activeChatTabId]
+    if (${script:activeChatTabId} -and ${script:chatTabs}.ContainsKey(${script:activeChatTabId})) {
+        return ${script:chatTabs}[${script:activeChatTabId}]
     }
     return $null
 }
@@ -20703,7 +20694,7 @@ function Show-ChatSettings {
     $maxTabsNumeric.Size = New-Object System.Drawing.Size(60, 20)
     $maxTabsNumeric.Minimum = 1
     $maxTabsNumeric.Maximum = 100  # Match the main MaxTabs maximum to avoid value conflicts
-    $maxTabsNumeric.Value = $global:settings.MaxChatTabs
+    $maxTabsNumeric.Value = ${global:settings}.MaxChatTabs
     $chatSettingsForm.Controls.Add($maxTabsNumeric)
 
     # Auto Close Tabs
@@ -20711,7 +20702,7 @@ function Show-ChatSettings {
     $autoCloseCheck.Text = "Auto-close inactive tabs"
     $autoCloseCheck.Location = New-Object System.Drawing.Point(20, 60)
     $autoCloseCheck.Size = New-Object System.Drawing.Size(200, 20)
-    $autoCloseCheck.Checked = $global:settings.ChatTabAutoClose
+    $autoCloseCheck.Checked = ${global:settings}.ChatTabAutoClose
     $chatSettingsForm.Controls.Add($autoCloseCheck)
 
     # Chat Position
@@ -20726,7 +20717,7 @@ function Show-ChatSettings {
     $positionCombo.Size = New-Object System.Drawing.Size(120, 20)
     $positionCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
     $positionCombo.Items.AddRange(@("Right", "Bottom", "Popup"))
-    $positionCombo.SelectedItem = $global:settings.ChatTabPosition
+    $positionCombo.SelectedItem = ${global:settings}.ChatTabPosition
     $chatSettingsForm.Controls.Add($positionCombo)
 
     # Default Model
@@ -20741,7 +20732,7 @@ function Show-ChatSettings {
     $defaultModelCombo.Size = New-Object System.Drawing.Size(200, 20)
     $defaultModelCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
     $defaultModelCombo.Items.AddRange(@(Get-AvailableOllamaModels))
-    $defaultModelCombo.SelectedItem = $global:settings.OllamaModel
+    $defaultModelCombo.SelectedItem = ${global:settings}.OllamaModel
     $chatSettingsForm.Controls.Add($defaultModelCombo)
 
     # Monaco Editor for Chat Input
@@ -20749,7 +20740,7 @@ function Show-ChatSettings {
     $monacoChatCheck.Text = "Use Monaco Editor for chat input (requires WebView2)"
     $monacoChatCheck.Location = New-Object System.Drawing.Point(20, 200)
     $monacoChatCheck.Size = New-Object System.Drawing.Size(350, 20)
-    $monacoChatCheck.Checked = $global:settings.UseMonacoForChat
+    $monacoChatCheck.Checked = ${global:settings}.UseMonacoForChat
     $chatSettingsForm.Controls.Add($monacoChatCheck)
 
     # Current Chat Status
@@ -20763,8 +20754,8 @@ function Show-ChatSettings {
     $statusListBox.Location = New-Object System.Drawing.Point(20, 255)
     $statusListBox.Size = New-Object System.Drawing.Size(380, 80)
 
-    foreach ($chatId in $script:chatTabs.Keys) {
-        $chat = $script:chatTabs[$chatId]
+    foreach ($chatId in ${script:chatTabs}.Keys) {
+        $chat = ${script:chatTabs}[$chatId]
         $msgCount = @($chat.Messages).Count
         $status = "$($chat.TabPage.Text) - Model: $($chat.ModelCombo.SelectedItem) - Messages: $msgCount"
         $statusListBox.Items.Add($status)
@@ -20788,12 +20779,12 @@ function Show-ChatSettings {
 
     # OK button click handler
     $okBtn.add_Click({
-            $global:settings.MaxChatTabs = $maxTabsNumeric.Value
-            $global:settings.ChatTabAutoClose = $autoCloseCheck.Checked
-            $global:settings.ChatTabPosition = $positionCombo.SelectedItem
-            $global:settings.OllamaModel = $defaultModelCombo.SelectedItem
-            $global:settings.UseMonacoForChat = $monacoChatCheck.Checked
-            $script:maxChatTabs = $global:settings.MaxChatTabs
+            ${global:settings}.MaxChatTabs = $maxTabsNumeric.Value
+            ${global:settings}.ChatTabAutoClose = $autoCloseCheck.Checked
+            ${global:settings}.ChatTabPosition = $positionCombo.SelectedItem
+            ${global:settings}.OllamaModel = $defaultModelCombo.SelectedItem
+            ${global:settings}.UseMonacoForChat = $monacoChatCheck.Checked
+            ${script:maxChatTabs} = ${global:settings}.MaxChatTabs
 
             Save-Settings
             Update-ChatStatus
@@ -20924,51 +20915,51 @@ function Show-IDESettings {
     $generalTab.Controls.Add($startupGroup)
 
     $startupGroup.Controls.Add((& $createLabel "Startup Behavior:" 15 25))
-    $script:startupBehaviorCombo = & $createCombo 200 22 @("LastSession", "NewFile", "Empty") $global:settings.StartupBehavior
-    $startupGroup.Controls.Add($script:startupBehaviorCombo)
+    ${script:startupBehaviorCombo} = & $createCombo 200 22 @("LastSession", "NewFile", "Empty") ${global:settings}.StartupBehavior
+    $startupGroup.Controls.Add(${script:startupBehaviorCombo})
 
-    $script:checkUpdatesCheck = & $createCheckbox "Check for updates on startup" 15 55 $global:settings.CheckForUpdates
-    $startupGroup.Controls.Add($script:checkUpdatesCheck)
+    ${script:checkUpdatesCheck} = & $createCheckbox "Check for updates on startup" 15 55 ${global:settings}.CheckForUpdates
+    $startupGroup.Controls.Add(${script:checkUpdatesCheck})
 
-    $script:rememberWindowCheck = & $createCheckbox "Remember window position and size" 15 85 $global:settings.RememberWindowState
-    $startupGroup.Controls.Add($script:rememberWindowCheck)
+    ${script:rememberWindowCheck} = & $createCheckbox "Remember window position and size" 15 85 ${global:settings}.RememberWindowState
+    $startupGroup.Controls.Add(${script:rememberWindowCheck})
 
     # Exit Group
     $exitGroup = & $createGroup "Exit Behavior" 15 155 350 100
     $generalTab.Controls.Add($exitGroup)
 
-    $script:confirmExitCheck = & $createCheckbox "Confirm before exit" 15 25 $global:settings.ConfirmOnExit
-    $exitGroup.Controls.Add($script:confirmExitCheck)
+    ${script:confirmExitCheck} = & $createCheckbox "Confirm before exit" 15 25 ${global:settings}.ConfirmOnExit
+    $exitGroup.Controls.Add(${script:confirmExitCheck})
 
     $exitGroup.Controls.Add((& $createLabel "Max Recent Files:" 15 60))
-    $script:maxRecentNumeric = & $createNumeric 200 57 5 50 $global:settings.MaxRecentFiles
-    $exitGroup.Controls.Add($script:maxRecentNumeric)
+    ${script:maxRecentNumeric} = & $createNumeric 200 57 5 50 ${global:settings}.MaxRecentFiles
+    $exitGroup.Controls.Add(${script:maxRecentNumeric})
 
     # Auto-Save Group
     $autoSaveGroup = & $createGroup "Auto-Save" 380 15 355 130
     $generalTab.Controls.Add($autoSaveGroup)
 
-    $script:autoSaveCheck = & $createCheckbox "Enable Auto-Save" 15 25 $global:settings.AutoSaveEnabled
-    $autoSaveGroup.Controls.Add($script:autoSaveCheck)
+    ${script:autoSaveCheck} = & $createCheckbox "Enable Auto-Save" 15 25 ${global:settings}.AutoSaveEnabled
+    $autoSaveGroup.Controls.Add(${script:autoSaveCheck})
 
     $autoSaveGroup.Controls.Add((& $createLabel "Interval (seconds):" 15 60))
-    $script:autoSaveIntervalNumeric = & $createNumeric 180 57 5 300 $global:settings.AutoSaveInterval
-    $autoSaveGroup.Controls.Add($script:autoSaveIntervalNumeric)
+    ${script:autoSaveIntervalNumeric} = & $createNumeric 180 57 5 300 ${global:settings}.AutoSaveInterval
+    $autoSaveGroup.Controls.Add(${script:autoSaveIntervalNumeric})
 
-    $script:createBackupsCheck = & $createCheckbox "Create backup files" 15 95 $global:settings.CreateBackups
-    $autoSaveGroup.Controls.Add($script:createBackupsCheck)
+    ${script:createBackupsCheck} = & $createCheckbox "Create backup files" 15 95 ${global:settings}.CreateBackups
+    $autoSaveGroup.Controls.Add(${script:createBackupsCheck})
 
     # Tabs Group
     $tabsGroup = & $createGroup "Tabs" 380 155 355 100
     $generalTab.Controls.Add($tabsGroup)
 
     $tabsGroup.Controls.Add((& $createLabel "Max Editor Tabs:" 15 30))
-    $script:maxTabsNumeric = & $createNumeric 180 27 1 100 $global:settings.MaxTabs
-    $tabsGroup.Controls.Add($script:maxTabsNumeric)
+    ${script:maxTabsNumeric} = & $createNumeric 180 27 1 100 ${global:settings}.MaxTabs
+    $tabsGroup.Controls.Add(${script:maxTabsNumeric})
 
     $tabsGroup.Controls.Add((& $createLabel "Max Chat Tabs:" 15 65))
-    $script:maxChatTabsNumeric = & $createNumeric 180 62 1 50 $global:settings.MaxChatTabs
-    $tabsGroup.Controls.Add($script:maxChatTabsNumeric)
+    ${script:maxChatTabsNumeric} = & $createNumeric 180 62 1 50 ${global:settings}.MaxChatTabs
+    $tabsGroup.Controls.Add(${script:maxChatTabsNumeric})
 
     # =====================
     # TAB 2: EDITOR
@@ -20983,59 +20974,59 @@ function Show-IDESettings {
     $editorTab.Controls.Add($fontGroup)
 
     $fontGroup.Controls.Add((& $createLabel "Font Family:" 15 30))
-    $script:editorFontCombo = & $createCombo 150 27 @("Consolas", "Cascadia Code", "Fira Code", "JetBrains Mono", "Source Code Pro", "Courier New", "Monaco", "Menlo") $global:settings.EditorFontFamily
-    $fontGroup.Controls.Add($script:editorFontCombo)
+    ${script:editorFontCombo} = & $createCombo 150 27 @("Consolas", "Cascadia Code", "Fira Code", "JetBrains Mono", "Source Code Pro", "Courier New", "Monaco", "Menlo") ${global:settings}.EditorFontFamily
+    $fontGroup.Controls.Add(${script:editorFontCombo})
 
     $fontGroup.Controls.Add((& $createLabel "Size:" 15 65))
-    $script:editorFontSizeNumeric = & $createNumeric 150 62 8 72 $global:settings.EditorFontSize 60
-    $fontGroup.Controls.Add($script:editorFontSizeNumeric)
+    ${script:editorFontSizeNumeric} = & $createNumeric 150 62 8 72 ${global:settings}.EditorFontSize 60
+    $fontGroup.Controls.Add(${script:editorFontSizeNumeric})
 
     # Indentation Group
     $indentGroup = & $createGroup "Indentation" 380 15 355 100
     $editorTab.Controls.Add($indentGroup)
 
     $indentGroup.Controls.Add((& $createLabel "Tab Size:" 15 30))
-    $script:tabSizeNumeric = & $createNumeric 150 27 1 8 $global:settings.TabSize 60
-    $indentGroup.Controls.Add($script:tabSizeNumeric)
+    ${script:tabSizeNumeric} = & $createNumeric 150 27 1 8 ${global:settings}.TabSize 60
+    $indentGroup.Controls.Add(${script:tabSizeNumeric})
 
-    $script:autoIndentCheck = & $createCheckbox "Auto Indent" 15 65 $global:settings.AutoIndent
-    $indentGroup.Controls.Add($script:autoIndentCheck)
+    ${script:autoIndentCheck} = & $createCheckbox "Auto Indent" 15 65 ${global:settings}.AutoIndent
+    $indentGroup.Controls.Add(${script:autoIndentCheck})
 
     # Display Group
     $displayGroup = & $createGroup "Display Options" 15 125 350 180
     $editorTab.Controls.Add($displayGroup)
 
-    $script:lineNumbersCheck = & $createCheckbox "Show Line Numbers" 15 25 $global:settings.ShowLineNumbers
-    $displayGroup.Controls.Add($script:lineNumbersCheck)
+    ${script:lineNumbersCheck} = & $createCheckbox "Show Line Numbers" 15 25 ${global:settings}.ShowLineNumbers
+    $displayGroup.Controls.Add(${script:lineNumbersCheck})
 
-    $script:wordWrapCheck = & $createCheckbox "Word Wrap" 15 55 $global:settings.WrapText
-    $displayGroup.Controls.Add($script:wordWrapCheck)
+    ${script:wordWrapCheck} = & $createCheckbox "Word Wrap" 15 55 ${global:settings}.WrapText
+    $displayGroup.Controls.Add(${script:wordWrapCheck})
 
-    $script:whitespaceCheck = & $createCheckbox "Show Whitespace Characters" 15 85 $global:settings.ShowWhitespace
-    $displayGroup.Controls.Add($script:whitespaceCheck)
+    ${script:whitespaceCheck} = & $createCheckbox "Show Whitespace Characters" 15 85 ${global:settings}.ShowWhitespace
+    $displayGroup.Controls.Add(${script:whitespaceCheck})
 
-    $script:highlightLineCheck = & $createCheckbox "Highlight Current Line" 15 115 $global:settings.HighlightCurrentLine
-    $displayGroup.Controls.Add($script:highlightLineCheck)
+    ${script:highlightLineCheck} = & $createCheckbox "Highlight Current Line" 15 115 ${global:settings}.HighlightCurrentLine
+    $displayGroup.Controls.Add(${script:highlightLineCheck})
 
-    $script:miniMapCheck = & $createCheckbox "Show Mini Map" 15 145 $global:settings.MiniMap
-    $displayGroup.Controls.Add($script:miniMapCheck)
+    ${script:miniMapCheck} = & $createCheckbox "Show Mini Map" 15 145 ${global:settings}.MiniMap
+    $displayGroup.Controls.Add(${script:miniMapCheck})
 
     # Features Group
     $featuresGroup = & $createGroup "Features" 380 125 355 180
     $editorTab.Controls.Add($featuresGroup)
 
-    $script:syntaxHighlightCheck = & $createCheckbox "Syntax Highlighting" 15 25 $global:settings.CodeHighlighting
-    $featuresGroup.Controls.Add($script:syntaxHighlightCheck)
+    ${script:syntaxHighlightCheck} = & $createCheckbox "Syntax Highlighting" 15 25 ${global:settings}.CodeHighlighting
+    $featuresGroup.Controls.Add(${script:syntaxHighlightCheck})
 
-    $script:autoCompleteCheck = & $createCheckbox "Auto Complete" 15 55 $global:settings.AutoComplete
-    $featuresGroup.Controls.Add($script:autoCompleteCheck)
+    ${script:autoCompleteCheck} = & $createCheckbox "Auto Complete" 15 55 ${global:settings}.AutoComplete
+    $featuresGroup.Controls.Add(${script:autoCompleteCheck})
 
-    $script:bracketMatchCheck = & $createCheckbox "Bracket Matching" 15 85 $global:settings.BracketMatching
-    $featuresGroup.Controls.Add($script:bracketMatchCheck)
+    ${script:bracketMatchCheck} = & $createCheckbox "Bracket Matching" 15 85 ${global:settings}.BracketMatching
+    $featuresGroup.Controls.Add(${script:bracketMatchCheck})
 
     $featuresGroup.Controls.Add((& $createLabel "Max Undo History:" 15 120))
-    $script:maxUndoNumeric = & $createNumeric 180 117 10 1000 $global:settings.MaxUndoHistory
-    $featuresGroup.Controls.Add($script:maxUndoNumeric)
+    ${script:maxUndoNumeric} = & $createNumeric 180 117 10 1000 ${global:settings}.MaxUndoHistory
+    $featuresGroup.Controls.Add(${script:maxUndoNumeric})
 
     # =====================
     # TAB 3: APPEARANCE
@@ -21050,53 +21041,53 @@ function Show-IDESettings {
     $appearanceTab.Controls.Add($themeGroup)
 
     $themeGroup.Controls.Add((& $createLabel "UI Theme:" 15 30))
-    $script:themeCombo = & $createCombo 150 27 @("Dark", "Light", "High Contrast", "Monokai", "Solarized", "Nord") $global:settings.ThemeMode
-    $themeGroup.Controls.Add($script:themeCombo)
+    ${script:themeCombo} = & $createCombo 150 27 @("Dark", "Light", "High Contrast", "Monokai", "Solarized", "Nord") ${global:settings}.ThemeMode
+    $themeGroup.Controls.Add(${script:themeCombo})
 
     $themeGroup.Controls.Add((& $createLabel "Editor Theme:" 15 65))
-    $script:editorThemeCombo = & $createCombo 150 62 @("Monokai", "One Dark", "Dracula", "GitHub", "Solarized", "Tomorrow Night", "Material") $global:settings.EditorTheme
-    $themeGroup.Controls.Add($script:editorThemeCombo)
+    ${script:editorThemeCombo} = & $createCombo 150 62 @("Monokai", "One Dark", "Dracula", "GitHub", "Solarized", "Tomorrow Night", "Material") ${global:settings}.EditorTheme
+    $themeGroup.Controls.Add(${script:editorThemeCombo})
 
     $themeGroup.Controls.Add((& $createLabel "Accent Color:" 15 100))
-    $script:accentColorBtn = New-Object System.Windows.Forms.Button
-    $script:accentColorBtn.Location = New-Object System.Drawing.Point(150, 97)
-    $script:accentColorBtn.Size = New-Object System.Drawing.Size(100, 25)
-    $script:accentColorBtn.Text = $global:settings.AccentColor
-    $script:accentColorBtn.BackColor = [System.Drawing.ColorTranslator]::FromHtml($global:settings.AccentColor)
-    $script:accentColorBtn.FlatStyle = "Flat"
-    $script:accentColorBtn.Add_Click({
+    ${script:accentColorBtn} = New-Object System.Windows.Forms.Button
+    ${script:accentColorBtn}.Location = New-Object System.Drawing.Point(150, 97)
+    ${script:accentColorBtn}.Size = New-Object System.Drawing.Size(100, 25)
+    ${script:accentColorBtn}.Text = ${global:settings}.AccentColor
+    ${script:accentColorBtn}.BackColor = [System.Drawing.ColorTranslator]::FromHtml(${global:settings}.AccentColor)
+    ${script:accentColorBtn}.FlatStyle = "Flat"
+    ${script:accentColorBtn}.Add_Click({
         $colorDialog = New-Object System.Windows.Forms.ColorDialog
-        $colorDialog.Color = $script:accentColorBtn.BackColor
+        $colorDialog.Color = ${script:accentColorBtn}.BackColor
         if ($colorDialog.ShowDialog() -eq "OK") {
-            $script:accentColorBtn.BackColor = $colorDialog.Color
-            $script:accentColorBtn.Text = "#" + $colorDialog.Color.R.ToString("X2") + $colorDialog.Color.G.ToString("X2") + $colorDialog.Color.B.ToString("X2")
+            ${script:accentColorBtn}.BackColor = $colorDialog.Color
+            ${script:accentColorBtn}.Text = "#" + $colorDialog.Color.R.ToString("X2") + $colorDialog.Color.G.ToString("X2") + $colorDialog.Color.B.ToString("X2")
         }
     })
-    $themeGroup.Controls.Add($script:accentColorBtn)
+    $themeGroup.Controls.Add(${script:accentColorBtn})
 
     # UI Group
     $uiGroup = & $createGroup "User Interface" 380 15 355 140
     $appearanceTab.Controls.Add($uiGroup)
 
     $uiGroup.Controls.Add((& $createLabel "UI Scale (%):" 15 30))
-    $script:uiScaleNumeric = & $createNumeric 150 27 75 200 $global:settings.UIScale 60
-    $uiGroup.Controls.Add($script:uiScaleNumeric)
+    ${script:uiScaleNumeric} = & $createNumeric 150 27 75 200 ${global:settings}.UIScale 60
+    $uiGroup.Controls.Add(${script:uiScaleNumeric})
 
-    $script:showToolbarCheck = & $createCheckbox "Show Toolbar" 15 60 $global:settings.ShowToolbar
-    $uiGroup.Controls.Add($script:showToolbarCheck)
+    ${script:showToolbarCheck} = & $createCheckbox "Show Toolbar" 15 60 ${global:settings}.ShowToolbar
+    $uiGroup.Controls.Add(${script:showToolbarCheck})
 
-    $script:showStatusBarCheck = & $createCheckbox "Show Status Bar" 15 90 $global:settings.ShowStatusBar
-    $uiGroup.Controls.Add($script:showStatusBarCheck)
+    ${script:showStatusBarCheck} = & $createCheckbox "Show Status Bar" 15 90 ${global:settings}.ShowStatusBar
+    $uiGroup.Controls.Add(${script:showStatusBarCheck})
 
     # Animation Group
     $animGroup = & $createGroup "Effects" 15 165 350 100
     $appearanceTab.Controls.Add($animGroup)
 
-    $script:animationsCheck = & $createCheckbox "Enable Animations" 15 30 $global:settings.AnimationsEnabled
-    $animGroup.Controls.Add($script:animationsCheck)
+    ${script:animationsCheck} = & $createCheckbox "Enable Animations" 15 30 ${global:settings}.AnimationsEnabled
+    $animGroup.Controls.Add(${script:animationsCheck})
 
-    $script:compactModeCheck = & $createCheckbox "Compact Mode" 15 60 $global:settings.CompactMode
-    $animGroup.Controls.Add($script:compactModeCheck)
+    ${script:compactModeCheck} = & $createCheckbox "Compact Mode" 15 60 ${global:settings}.CompactMode
+    $animGroup.Controls.Add(${script:compactModeCheck})
 
     # =====================
     # TAB 4: KEYBOARD SHORTCUTS
@@ -21110,19 +21101,19 @@ function Show-IDESettings {
     $hotkeyLabel = & $createLabel "Configure keyboard shortcuts:" 15 15 300
     $hotkeyTab.Controls.Add($hotkeyLabel)
 
-    $script:hotkeyListView = New-Object System.Windows.Forms.ListView
-    $script:hotkeyListView.Location = New-Object System.Drawing.Point(15, 45)
-    $script:hotkeyListView.Size = New-Object System.Drawing.Size(720, 380)
-    $script:hotkeyListView.View = [System.Windows.Forms.View]::Details
-    $script:hotkeyListView.FullRowSelect = $true
-    $script:hotkeyListView.GridLines = $true
-    $script:hotkeyListView.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
-    $script:hotkeyListView.ForeColor = [System.Drawing.Color]::White
-    $script:hotkeyListView.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    ${script:hotkeyListView} = New-Object System.Windows.Forms.ListView
+    ${script:hotkeyListView}.Location = New-Object System.Drawing.Point(15, 45)
+    ${script:hotkeyListView}.Size = New-Object System.Drawing.Size(720, 380)
+    ${script:hotkeyListView}.View = [System.Windows.Forms.View]::Details
+    ${script:hotkeyListView}.FullRowSelect = $true
+    ${script:hotkeyListView}.GridLines = $true
+    ${script:hotkeyListView}.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+    ${script:hotkeyListView}.ForeColor = [System.Drawing.Color]::White
+    ${script:hotkeyListView}.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
-    $script:hotkeyListView.Columns.Add("Command", 200) | Out-Null
-    $script:hotkeyListView.Columns.Add("Shortcut", 150) | Out-Null
-    $script:hotkeyListView.Columns.Add("Category", 150) | Out-Null
+    ${script:hotkeyListView}.Columns.Add("Command", 200) | Out-Null
+    ${script:hotkeyListView}.Columns.Add("Shortcut", 150) | Out-Null
+    ${script:hotkeyListView}.Columns.Add("Category", 150) | Out-Null
 
     # Populate hotkeys
     $hotkeyCategories = @{
@@ -21135,14 +21126,14 @@ function Show-IDESettings {
         "Settings" = "General"; "ZoomIn" = "View"; "ZoomOut" = "View"; "ResetZoom" = "View"
     }
 
-    foreach ($key in $global:settings.Hotkeys.Keys | Sort-Object) {
+    foreach ($key in ${global:settings}.Hotkeys.Keys | Sort-Object) {
         $item = New-Object System.Windows.Forms.ListViewItem($key)
-        $item.SubItems.Add($global:settings.Hotkeys[$key]) | Out-Null
-        $category = if ($hotkeyCategories.ContainsKey($key)) { $hotkeyCategories[$key] } else { "Other" }
+        $item.SubItems.Add(${global:settings}.Hotkeys[$key]) | Out-Null
+        $category = $(if ($hotkeyCategories.ContainsKey($key)) { $hotkeyCategories[$key] } else { "Other" }
         $item.SubItems.Add($category) | Out-Null
-        $script:hotkeyListView.Items.Add($item) | Out-Null
+        ${script:hotkeyListView}.Items.Add($item) | Out-Null
     }
-    $hotkeyTab.Controls.Add($script:hotkeyListView)
+    $hotkeyTab.Controls.Add(${script:hotkeyListView})
 
     # Edit hotkey button
     $editHotkeyBtn = New-Object System.Windows.Forms.Button
@@ -21153,11 +21144,11 @@ function Show-IDESettings {
     $editHotkeyBtn.ForeColor = [System.Drawing.Color]::White
     $editHotkeyBtn.FlatStyle = "Flat"
     $editHotkeyBtn.Add_Click({
-        if ($script:hotkeyListView.SelectedItems.Count -eq 0) {
+        if (${script:hotkeyListView}.SelectedItems.Count -eq 0) {
             [System.Windows.Forms.MessageBox]::Show("Please select a command to edit.", "No Selection", "OK", "Information")
             return
         }
-        $selectedItem = $script:hotkeyListView.SelectedItems[0]
+        $selectedItem = ${script:hotkeyListView}.SelectedItems[0]
         $command = $selectedItem.Text
         $currentShortcut = $selectedItem.SubItems[1].Text
 
@@ -21207,8 +21198,8 @@ function Show-IDESettings {
                 }
 
                 if ($parts.Count -gt 0) {
-                    $script:capturedKey = $parts -join "+"
-                    $sender.Text = $script:capturedKey
+                    ${script:capturedKey} = $parts -join "+"
+                    $sender.Text = ${script:capturedKey}
                 }
             } catch { }
         })
@@ -21262,7 +21253,7 @@ function Show-IDESettings {
                 "CommandPalette" = "Ctrl+Shift+P"; "ToggleTerminal" = 'Ctrl+`'; "ToggleBrowser" = "Ctrl+B"; "ToggleChat" = "Ctrl+Shift+C"; "ToggleFullscreen" = "F11"
                 "SendMessage" = "Ctrl+Enter"; "NewChatTab" = "Ctrl+T"; "Settings" = "Ctrl+,"; "ZoomIn" = "Ctrl+Plus"; "ZoomOut" = "Ctrl+Minus"; "ResetZoom" = "Ctrl+0"
             }
-            foreach ($item in $script:hotkeyListView.Items) {
+            foreach ($item in ${script:hotkeyListView}.Items) {
                 if ($defaults.ContainsKey($item.Text)) {
                     $item.SubItems[1].Text = $defaults[$item.Text]
                 }
@@ -21284,65 +21275,65 @@ function Show-IDESettings {
     $aiTab.Controls.Add($modelGroup)
 
     $modelGroup.Controls.Add((& $createLabel "Default Model:" 15 30))
-    $script:aiModelCombo = & $createCombo 150 27 @(Get-AvailableOllamaModels) $global:settings.OllamaModel 180
-    $modelGroup.Controls.Add($script:aiModelCombo)
+    ${script:aiModelCombo} = & $createCombo 150 27 @(Get-AvailableOllamaModels) ${global:settings}.OllamaModel 180
+    $modelGroup.Controls.Add(${script:aiModelCombo})
 
     $modelGroup.Controls.Add((& $createLabel "Endpoint URL:" 15 65))
-    $script:endpointTextbox = & $createTextbox 150 62 $global:settings.OllamaEndpoint 180
-    $modelGroup.Controls.Add($script:endpointTextbox)
+    ${script:endpointTextbox} = & $createTextbox 150 62 ${global:settings}.OllamaEndpoint 180
+    $modelGroup.Controls.Add(${script:endpointTextbox})
 
     $modelGroup.Controls.Add((& $createLabel "Max Tokens:" 15 100))
-    $script:maxTokensNumeric = & $createNumeric 150 97 256 32768 $global:settings.MaxTokens 100
-    $modelGroup.Controls.Add($script:maxTokensNumeric)
+    ${script:maxTokensNumeric} = & $createNumeric 150 97 256 32768 ${global:settings}.MaxTokens 100
+    $modelGroup.Controls.Add(${script:maxTokensNumeric})
 
-    $script:streamResponsesCheck = & $createCheckbox "Stream Responses" 15 130 $global:settings.StreamResponses
-    $modelGroup.Controls.Add($script:streamResponsesCheck)
+    ${script:streamResponsesCheck} = & $createCheckbox "Stream Responses" 15 130 ${global:settings}.StreamResponses
+    $modelGroup.Controls.Add(${script:streamResponsesCheck})
 
     # Parameters Group
     $paramsGroup = & $createGroup "Generation Parameters" 380 15 355 160
     $aiTab.Controls.Add($paramsGroup)
 
     $paramsGroup.Controls.Add((& $createLabel "Temperature:" 15 30))
-    $script:temperatureTrack = New-Object System.Windows.Forms.TrackBar
-    $script:temperatureTrack.Location = New-Object System.Drawing.Point(130, 25)
-    $script:temperatureTrack.Size = New-Object System.Drawing.Size(150, 30)
-    $script:temperatureTrack.Minimum = 0
-    $script:temperatureTrack.Maximum = 20
-    $script:temperatureTrack.Value = [int]($global:settings.Temperature * 10)
-    $script:temperatureTrack.TickFrequency = 2
-    $paramsGroup.Controls.Add($script:temperatureTrack)
+    ${script:temperatureTrack} = New-Object System.Windows.Forms.TrackBar
+    ${script:temperatureTrack}.Location = New-Object System.Drawing.Point(130, 25)
+    ${script:temperatureTrack}.Size = New-Object System.Drawing.Size(150, 30)
+    ${script:temperatureTrack}.Minimum = 0
+    ${script:temperatureTrack}.Maximum = 20
+    ${script:temperatureTrack}.Value = [int](${global:settings}.Temperature * 10)
+    ${script:temperatureTrack}.TickFrequency = 2
+    $paramsGroup.Controls.Add(${script:temperatureTrack})
 
-    $script:tempValueLabel = & $createLabel $global:settings.Temperature.ToString("0.0") 290 30 50
-    $paramsGroup.Controls.Add($script:tempValueLabel)
-    $script:temperatureTrack.Add_ValueChanged({ $script:tempValueLabel.Text = ($script:temperatureTrack.Value / 10).ToString("0.0") })
+    ${script:tempValueLabel} = & $createLabel ${global:settings}.Temperature.ToString("0.0") 290 30 50
+    $paramsGroup.Controls.Add(${script:tempValueLabel})
+    ${script:temperatureTrack}.Add_ValueChanged({ ${script:tempValueLabel}.Text = (${script:temperatureTrack}.Value / 10).ToString("0.0") })
 
     $paramsGroup.Controls.Add((& $createLabel "Top P:" 15 70))
-    $script:topPTrack = New-Object System.Windows.Forms.TrackBar
-    $script:topPTrack.Location = New-Object System.Drawing.Point(130, 65)
-    $script:topPTrack.Size = New-Object System.Drawing.Size(150, 30)
-    $script:topPTrack.Minimum = 0
-    $script:topPTrack.Maximum = 10
-    $script:topPTrack.Value = [int]($global:settings.TopP * 10)
-    $script:topPTrack.TickFrequency = 1
-    $paramsGroup.Controls.Add($script:topPTrack)
+    ${script:topPTrack} = New-Object System.Windows.Forms.TrackBar
+    ${script:topPTrack}.Location = New-Object System.Drawing.Point(130, 65)
+    ${script:topPTrack}.Size = New-Object System.Drawing.Size(150, 30)
+    ${script:topPTrack}.Minimum = 0
+    ${script:topPTrack}.Maximum = 10
+    ${script:topPTrack}.Value = [int](${global:settings}.TopP * 10)
+    ${script:topPTrack}.TickFrequency = 1
+    $paramsGroup.Controls.Add(${script:topPTrack})
 
-    $script:topPValueLabel = & $createLabel $global:settings.TopP.ToString("0.0") 290 70 50
-    $paramsGroup.Controls.Add($script:topPValueLabel)
-    $script:topPTrack.Add_ValueChanged({ $script:topPValueLabel.Text = ($script:topPTrack.Value / 10).ToString("0.0") })
+    ${script:topPValueLabel} = & $createLabel ${global:settings}.TopP.ToString("0.0") 290 70 50
+    $paramsGroup.Controls.Add(${script:topPValueLabel})
+    ${script:topPTrack}.Add_ValueChanged({ ${script:topPValueLabel}.Text = (${script:topPTrack}.Value / 10).ToString("0.0") })
 
     # Chat Group
     $chatGroup = & $createGroup "Chat Display" 15 185 350 120
     $aiTab.Controls.Add($chatGroup)
 
     $chatGroup.Controls.Add((& $createLabel "Chat Font Size:" 15 30))
-    $script:chatFontSizeNumeric = & $createNumeric 150 27 8 24 $global:settings.ChatFontSize 60
-    $chatGroup.Controls.Add($script:chatFontSizeNumeric)
+    ${script:chatFontSizeNumeric} = & $createNumeric 150 27 8 24 ${global:settings}.ChatFontSize 60
+    $chatGroup.Controls.Add(${script:chatFontSizeNumeric})
 
-    $script:showTimestampsCheck = & $createCheckbox "Show Timestamps" 15 60 $global:settings.ShowTimestamps
-    $chatGroup.Controls.Add($script:showTimestampsCheck)
+    ${script:showTimestampsCheck} = & $createCheckbox "Show Timestamps" 15 60 ${global:settings}.ShowTimestamps
+    $chatGroup.Controls.Add(${script:showTimestampsCheck})
 
-    $script:autoScrollChatCheck = & $createCheckbox "Auto-scroll to New Messages" 15 90 $global:settings.AutoScrollChat
-    $chatGroup.Controls.Add($script:autoScrollChatCheck)
+    ${script:autoScrollChatCheck} = & $createCheckbox "Auto-scroll to New Messages" 15 90 ${global:settings}.AutoScrollChat
+    $chatGroup.Controls.Add(${script:autoScrollChatCheck})
 
     # =====================
     # TAB 6: BROWSER
@@ -21357,25 +21348,25 @@ function Show-IDESettings {
     $browserTab.Controls.Add($engineGroup)
 
     $engineGroup.Controls.Add((& $createLabel "Rendering Engine:" 15 30))
-    $script:browserEngineCombo = & $createCombo 150 27 @("WebView2", "PS51-Bridge", "Legacy") $global:settings.BrowserEngine
-    $engineGroup.Controls.Add($script:browserEngineCombo)
+    ${script:browserEngineCombo} = & $createCombo 150 27 @("WebView2", "PS51-Bridge", "Legacy") ${global:settings}.BrowserEngine
+    $engineGroup.Controls.Add(${script:browserEngineCombo})
 
     $engineGroup.Controls.Add((& $createLabel "Home Page:" 15 70))
-    $script:homePageTextbox = & $createTextbox 150 67 $global:settings.BrowserHomePage 180
-    $engineGroup.Controls.Add($script:homePageTextbox)
+    ${script:homePageTextbox} = & $createTextbox 150 67 ${global:settings}.BrowserHomePage 180
+    $engineGroup.Controls.Add(${script:homePageTextbox})
 
     # Features Group
     $browserFeaturesGroup = & $createGroup "Browser Features" 380 15 355 120
     $browserTab.Controls.Add($browserFeaturesGroup)
 
-    $script:enableJSCheck = & $createCheckbox "Enable JavaScript" 15 30 $global:settings.EnableJavaScript
-    $browserFeaturesGroup.Controls.Add($script:enableJSCheck)
+    ${script:enableJSCheck} = & $createCheckbox "Enable JavaScript" 15 30 ${global:settings}.EnableJavaScript
+    $browserFeaturesGroup.Controls.Add(${script:enableJSCheck})
 
-    $script:enableCookiesCheck = & $createCheckbox "Enable Cookies" 15 60 $global:settings.EnableCookies
-    $browserFeaturesGroup.Controls.Add($script:enableCookiesCheck)
+    ${script:enableCookiesCheck} = & $createCheckbox "Enable Cookies" 15 60 ${global:settings}.EnableCookies
+    $browserFeaturesGroup.Controls.Add(${script:enableCookiesCheck})
 
-    $script:clearCacheCheck = & $createCheckbox "Clear Cache on Exit" 15 90 $global:settings.ClearCacheOnExit
-    $browserFeaturesGroup.Controls.Add($script:clearCacheCheck)
+    ${script:clearCacheCheck} = & $createCheckbox "Clear Cache on Exit" 15 90 ${global:settings}.ClearCacheOnExit
+    $browserFeaturesGroup.Controls.Add(${script:clearCacheCheck})
 
     # =====================
     # TAB 7: TERMINAL
@@ -21390,20 +21381,20 @@ function Show-IDESettings {
     $terminalTab.Controls.Add($termFontGroup)
 
     $termFontGroup.Controls.Add((& $createLabel "Font Family:" 15 30))
-    $script:termFontCombo = & $createCombo 150 27 @("Cascadia Mono", "Consolas", "Courier New", "Lucida Console", "Source Code Pro") $global:settings.TerminalFontFamily
-    $termFontGroup.Controls.Add($script:termFontCombo)
+    ${script:termFontCombo} = & $createCombo 150 27 @("Cascadia Mono", "Consolas", "Courier New", "Lucida Console", "Source Code Pro") ${global:settings}.TerminalFontFamily
+    $termFontGroup.Controls.Add(${script:termFontCombo})
 
     $termFontGroup.Controls.Add((& $createLabel "Font Size:" 15 65))
-    $script:termFontSizeNumeric = & $createNumeric 150 62 8 24 $global:settings.TerminalFontSize 60
-    $termFontGroup.Controls.Add($script:termFontSizeNumeric)
+    ${script:termFontSizeNumeric} = & $createNumeric 150 62 8 24 ${global:settings}.TerminalFontSize 60
+    $termFontGroup.Controls.Add(${script:termFontSizeNumeric})
 
     # Terminal Buffer Group
     $termBufferGroup = & $createGroup "Buffer Settings" 380 15 355 100
     $terminalTab.Controls.Add($termBufferGroup)
 
     $termBufferGroup.Controls.Add((& $createLabel "Scrollback Lines:" 15 30))
-    $script:scrollbackNumeric = & $createNumeric 150 27 100 10000 $global:settings.TerminalScrollback 100
-    $termBufferGroup.Controls.Add($script:scrollbackNumeric)
+    ${script:scrollbackNumeric} = & $createNumeric 150 27 100 10000 ${global:settings}.TerminalScrollback 100
+    $termBufferGroup.Controls.Add(${script:scrollbackNumeric})
 
     # =====================
     # TAB 8: ADVANCED
@@ -21417,26 +21408,26 @@ function Show-IDESettings {
     $debugGroup = & $createGroup "Debugging" 15 15 350 130
     $advancedTab.Controls.Add($debugGroup)
 
-    $script:debugModeCheck = & $createCheckbox "Enable Debug Mode" 15 30 $global:settings.DebugMode
-    $debugGroup.Controls.Add($script:debugModeCheck)
+    ${script:debugModeCheck} = & $createCheckbox "Enable Debug Mode" 15 30 ${global:settings}.DebugMode
+    $debugGroup.Controls.Add(${script:debugModeCheck})
 
     $debugGroup.Controls.Add((& $createLabel "Log Level:" 15 65))
-    $script:logLevelCombo = & $createCombo 150 62 @("Debug", "Info", "Warning", "Error") $global:settings.LogLevel
-    $debugGroup.Controls.Add($script:logLevelCombo)
+    ${script:logLevelCombo} = & $createCombo 150 62 @("Debug", "Info", "Warning", "Error") ${global:settings}.LogLevel
+    $debugGroup.Controls.Add(${script:logLevelCombo})
 
-    $script:telemetryCheck = & $createCheckbox "Enable Telemetry" 15 100 $global:settings.EnableTelemetry
-    $debugGroup.Controls.Add($script:telemetryCheck)
+    ${script:telemetryCheck} = & $createCheckbox "Enable Telemetry" 15 100 ${global:settings}.EnableTelemetry
+    $debugGroup.Controls.Add(${script:telemetryCheck})
 
     # Performance Group
     $perfGroup = & $createGroup "Performance" 380 15 355 130
     $advancedTab.Controls.Add($perfGroup)
 
-    $script:lazyLoadCheck = & $createCheckbox "Lazy Load Tabs" 15 30 $global:settings.LazyLoadTabs
-    $perfGroup.Controls.Add($script:lazyLoadCheck)
+    ${script:lazyLoadCheck} = & $createCheckbox "Lazy Load Tabs" 15 30 ${global:settings}.LazyLoadTabs
+    $perfGroup.Controls.Add(${script:lazyLoadCheck})
 
     $perfGroup.Controls.Add((& $createLabel "Syntax Highlight Delay (ms):" 15 65))
-    $script:highlightDelayNumeric = & $createNumeric 220 62 0 500 $global:settings.SyntaxHighlightDelay 80
-    $perfGroup.Controls.Add($script:highlightDelayNumeric)
+    ${script:highlightDelayNumeric} = & $createNumeric 220 62 0 500 ${global:settings}.SyntaxHighlightDelay 80
+    $perfGroup.Controls.Add(${script:highlightDelayNumeric})
 
     # Data Management Group
     $dataGroup = & $createGroup "Data Management" 15 155 720 100
@@ -21453,7 +21444,7 @@ function Show-IDESettings {
         $result = [System.Windows.Forms.MessageBox]::Show("This will clear all cached data. Continue?", "Clear Cache", "YesNo", "Warning")
         if ($result -eq "Yes") {
             # Clear WebView2 cache
-            $cachePath = "$env:TEMP\RawrXD-WebView2-*"
+            $cachePath = "${env:TEMP}\RawrXD-WebView2-*"
             Get-ChildItem $cachePath -Directory -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
             [System.Windows.Forms.MessageBox]::Show("Cache cleared successfully.", "Done", "OK", "Information")
         }
@@ -21470,7 +21461,7 @@ function Show-IDESettings {
     $resetSettingsBtn.Add_Click({
         $result = [System.Windows.Forms.MessageBox]::Show("This will reset ALL settings to defaults. This cannot be undone. Continue?", "Reset Settings", "YesNo", "Warning")
         if ($result -eq "Yes") {
-            $settingsPath = Join-Path $env:APPDATA "RawrXD\settings.json"
+            $settingsPath = Join-Path ${env:APPDATA} "RawrXD\settings.json"
             if (Test-Path $settingsPath) {
                 Remove-Item $settingsPath -Force
             }
@@ -21491,7 +21482,7 @@ function Show-IDESettings {
         $saveDialog.Filter = "JSON Files (*.json)|*.json"
         $saveDialog.FileName = "RawrXD-Settings-Backup.json"
         if ($saveDialog.ShowDialog() -eq "OK") {
-            $global:settings | ConvertTo-Json -Depth 5 | Out-File $saveDialog.FileName -Encoding UTF8
+            ${global:settings} | ConvertTo-Json -Depth 5 | Out-File $saveDialog.FileName -Encoding UTF8
             [System.Windows.Forms.MessageBox]::Show("Settings exported successfully.", "Export Complete", "OK", "Information")
         }
     })
@@ -21511,8 +21502,8 @@ function Show-IDESettings {
             try {
                 $imported = Get-Content $openDialog.FileName | ConvertFrom-Json
                 foreach ($prop in $imported.PSObject.Properties) {
-                    if ($global:settings.ContainsKey($prop.Name)) {
-                        $global:settings[$prop.Name] = $prop.Value
+                    if (${global:settings}.ContainsKey($prop.Name)) {
+                        ${global:settings}[$prop.Name] = $prop.Value
                     }
                 }
                 Save-Settings
@@ -21567,77 +21558,77 @@ function Show-IDESettings {
     # Apply settings function
     $applySettings = {
         # General
-        $global:settings.StartupBehavior = $script:startupBehaviorCombo.SelectedItem
-        $global:settings.CheckForUpdates = $script:checkUpdatesCheck.Checked
-        $global:settings.RememberWindowState = $script:rememberWindowCheck.Checked
-        $global:settings.ConfirmOnExit = $script:confirmExitCheck.Checked
-        $global:settings.MaxRecentFiles = $script:maxRecentNumeric.Value
-        $global:settings.AutoSaveEnabled = $script:autoSaveCheck.Checked
-        $global:settings.AutoSaveInterval = $script:autoSaveIntervalNumeric.Value
-        $global:settings.CreateBackups = $script:createBackupsCheck.Checked
-        $global:settings.MaxTabs = $script:maxTabsNumeric.Value
-        $global:settings.MaxChatTabs = $script:maxChatTabsNumeric.Value
+        ${global:settings}.StartupBehavior = ${script:startupBehaviorCombo}.SelectedItem
+        ${global:settings}.CheckForUpdates = ${script:checkUpdatesCheck}.Checked
+        ${global:settings}.RememberWindowState = ${script:rememberWindowCheck}.Checked
+        ${global:settings}.ConfirmOnExit = ${script:confirmExitCheck}.Checked
+        ${global:settings}.MaxRecentFiles = ${script:maxRecentNumeric}.Value
+        ${global:settings}.AutoSaveEnabled = ${script:autoSaveCheck}.Checked
+        ${global:settings}.AutoSaveInterval = ${script:autoSaveIntervalNumeric}.Value
+        ${global:settings}.CreateBackups = ${script:createBackupsCheck}.Checked
+        ${global:settings}.MaxTabs = ${script:maxTabsNumeric}.Value
+        ${global:settings}.MaxChatTabs = ${script:maxChatTabsNumeric}.Value
 
         # Editor
-        $global:settings.EditorFontFamily = $script:editorFontCombo.SelectedItem
-        $global:settings.EditorFontSize = $script:editorFontSizeNumeric.Value
-        $global:settings.TabSize = $script:tabSizeNumeric.Value
-        $global:settings.AutoIndent = $script:autoIndentCheck.Checked
-        $global:settings.ShowLineNumbers = $script:lineNumbersCheck.Checked
-        $global:settings.WrapText = $script:wordWrapCheck.Checked
-        $global:settings.ShowWhitespace = $script:whitespaceCheck.Checked
-        $global:settings.HighlightCurrentLine = $script:highlightLineCheck.Checked
-        $global:settings.MiniMap = $script:miniMapCheck.Checked
-        $global:settings.CodeHighlighting = $script:syntaxHighlightCheck.Checked
-        $global:settings.AutoComplete = $script:autoCompleteCheck.Checked
-        $global:settings.BracketMatching = $script:bracketMatchCheck.Checked
-        $global:settings.MaxUndoHistory = $script:maxUndoNumeric.Value
+        ${global:settings}.EditorFontFamily = ${script:editorFontCombo}.SelectedItem
+        ${global:settings}.EditorFontSize = ${script:editorFontSizeNumeric}.Value
+        ${global:settings}.TabSize = ${script:tabSizeNumeric}.Value
+        ${global:settings}.AutoIndent = ${script:autoIndentCheck}.Checked
+        ${global:settings}.ShowLineNumbers = ${script:lineNumbersCheck}.Checked
+        ${global:settings}.WrapText = ${script:wordWrapCheck}.Checked
+        ${global:settings}.ShowWhitespace = ${script:whitespaceCheck}.Checked
+        ${global:settings}.HighlightCurrentLine = ${script:highlightLineCheck}.Checked
+        ${global:settings}.MiniMap = ${script:miniMapCheck}.Checked
+        ${global:settings}.CodeHighlighting = ${script:syntaxHighlightCheck}.Checked
+        ${global:settings}.AutoComplete = ${script:autoCompleteCheck}.Checked
+        ${global:settings}.BracketMatching = ${script:bracketMatchCheck}.Checked
+        ${global:settings}.MaxUndoHistory = ${script:maxUndoNumeric}.Value
 
         # Appearance
-        $global:settings.ThemeMode = $script:themeCombo.SelectedItem
-        $global:settings.EditorTheme = $script:editorThemeCombo.SelectedItem
-        $global:settings.AccentColor = $script:accentColorBtn.Text
-        $global:settings.UIScale = $script:uiScaleNumeric.Value
-        $global:settings.ShowToolbar = $script:showToolbarCheck.Checked
-        $global:settings.ShowStatusBar = $script:showStatusBarCheck.Checked
-        $global:settings.AnimationsEnabled = $script:animationsCheck.Checked
-        $global:settings.CompactMode = $script:compactModeCheck.Checked
+        ${global:settings}.ThemeMode = ${script:themeCombo}.SelectedItem
+        ${global:settings}.EditorTheme = ${script:editorThemeCombo}.SelectedItem
+        ${global:settings}.AccentColor = ${script:accentColorBtn}.Text
+        ${global:settings}.UIScale = ${script:uiScaleNumeric}.Value
+        ${global:settings}.ShowToolbar = ${script:showToolbarCheck}.Checked
+        ${global:settings}.ShowStatusBar = ${script:showStatusBarCheck}.Checked
+        ${global:settings}.AnimationsEnabled = ${script:animationsCheck}.Checked
+        ${global:settings}.CompactMode = ${script:compactModeCheck}.Checked
 
         # Hotkeys
-        $global:settings.Hotkeys = @{}
-        foreach ($item in $script:hotkeyListView.Items) {
-            $global:settings.Hotkeys[$item.Text] = $item.SubItems[1].Text
+        ${global:settings}.Hotkeys = @{}
+        foreach ($item in ${script:hotkeyListView}.Items) {
+            ${global:settings}.Hotkeys[$item.Text] = $item.SubItems[1].Text
         }
 
         # AI/Chat
-        $global:settings.OllamaModel = $script:aiModelCombo.SelectedItem
-        $global:settings.OllamaEndpoint = $script:endpointTextbox.Text
-        $global:settings.MaxTokens = $script:maxTokensNumeric.Value
-        $global:settings.StreamResponses = $script:streamResponsesCheck.Checked
-        $global:settings.Temperature = $script:temperatureTrack.Value / 10
-        $global:settings.TopP = $script:topPTrack.Value / 10
-        $global:settings.ChatFontSize = $script:chatFontSizeNumeric.Value
-        $global:settings.ShowTimestamps = $script:showTimestampsCheck.Checked
-        $global:settings.AutoScrollChat = $script:autoScrollChatCheck.Checked
+        ${global:settings}.OllamaModel = ${script:aiModelCombo}.SelectedItem
+        ${global:settings}.OllamaEndpoint = ${script:endpointTextbox}.Text
+        ${global:settings}.MaxTokens = ${script:maxTokensNumeric}.Value
+        ${global:settings}.StreamResponses = ${script:streamResponsesCheck}.Checked
+        ${global:settings}.Temperature = ${script:temperatureTrack}.Value / 10
+        ${global:settings}.TopP = ${script:topPTrack}.Value / 10
+        ${global:settings}.ChatFontSize = ${script:chatFontSizeNumeric}.Value
+        ${global:settings}.ShowTimestamps = ${script:showTimestampsCheck}.Checked
+        ${global:settings}.AutoScrollChat = ${script:autoScrollChatCheck}.Checked
 
         # Browser
-        $global:settings.BrowserEngine = $script:browserEngineCombo.SelectedItem
-        $global:settings.BrowserHomePage = $script:homePageTextbox.Text
-        $global:settings.EnableJavaScript = $script:enableJSCheck.Checked
-        $global:settings.EnableCookies = $script:enableCookiesCheck.Checked
-        $global:settings.ClearCacheOnExit = $script:clearCacheCheck.Checked
+        ${global:settings}.BrowserEngine = ${script:browserEngineCombo}.SelectedItem
+        ${global:settings}.BrowserHomePage = ${script:homePageTextbox}.Text
+        ${global:settings}.EnableJavaScript = ${script:enableJSCheck}.Checked
+        ${global:settings}.EnableCookies = ${script:enableCookiesCheck}.Checked
+        ${global:settings}.ClearCacheOnExit = ${script:clearCacheCheck}.Checked
 
         # Terminal
-        $global:settings.TerminalFontFamily = $script:termFontCombo.SelectedItem
-        $global:settings.TerminalFontSize = $script:termFontSizeNumeric.Value
-        $global:settings.TerminalScrollback = $script:scrollbackNumeric.Value
+        ${global:settings}.TerminalFontFamily = ${script:termFontCombo}.SelectedItem
+        ${global:settings}.TerminalFontSize = ${script:termFontSizeNumeric}.Value
+        ${global:settings}.TerminalScrollback = ${script:scrollbackNumeric}.Value
 
         # Advanced
-        $global:settings.DebugMode = $script:debugModeCheck.Checked
-        $global:settings.LogLevel = $script:logLevelCombo.SelectedItem
-        $global:settings.EnableTelemetry = $script:telemetryCheck.Checked
-        $global:settings.LazyLoadTabs = $script:lazyLoadCheck.Checked
-        $global:settings.SyntaxHighlightDelay = $script:highlightDelayNumeric.Value
+        ${global:settings}.DebugMode = ${script:debugModeCheck}.Checked
+        ${global:settings}.LogLevel = ${script:logLevelCombo}.SelectedItem
+        ${global:settings}.EnableTelemetry = ${script:telemetryCheck}.Checked
+        ${global:settings}.LazyLoadTabs = ${script:lazyLoadCheck}.Checked
+        ${global:settings}.SyntaxHighlightDelay = ${script:highlightDelayNumeric}.Value
 
         # Save and apply
         Save-Settings
@@ -21669,7 +21660,7 @@ function Show-PopOutEditor {
         [string]$InitialContent
     )
 
-    $resolvedPath = if ($PSBoundParameters.ContainsKey('FilePath')) { $FilePath } else { $global:currentFile }
+    $resolvedPath = $(if ($PSBoundParameters.ContainsKey('FilePath')) { $FilePath } else { ${global:currentFile} }
 
     if ($ForceNew -or [string]::IsNullOrWhiteSpace($resolvedPath)) {
         if (-not $InitialContent) {
@@ -21702,13 +21693,13 @@ function Show-MonacoEditor {
     
     # Get current editor content
     $content = ""
-    if ($script:editor) {
-        $content = $script:editor.Text
+    if (${script:editor}) {
+        $content = ${script:editor}.Text
     }
     
     # Detect language from current file extension if not specified
-    if ([string]::IsNullOrEmpty($Language) -and -not [string]::IsNullOrEmpty($global:currentFile)) {
-        $ext = [System.IO.Path]::GetExtension($global:currentFile).ToLower()
+    if ([string]::IsNullOrEmpty($Language) -and -not [string]::IsNullOrEmpty(${global:currentFile})) {
+        $ext = [System.IO.Path]::GetExtension(${global:currentFile}).ToLower()
         $Language = switch ($ext) {
             '.ps1' { 'powershell' }
             '.psm1' { 'powershell' }
@@ -21754,7 +21745,7 @@ function Show-MonacoEditor {
     }
     
     # Save content to temp file for passing to Monaco
-    $tempFile = Join-Path $env:TEMP "rawrxd_monaco_temp_$([guid]::NewGuid().ToString().Substring(0,8)).txt"
+    $tempFile = Join-Path ${env:TEMP} "rawrxd_monaco_temp_$([guid]::NewGuid().ToString().Substring(0,8)).txt"
     try {
         [System.IO.File]::WriteAllText($tempFile, $content, [System.Text.Encoding]::UTF8)
     } catch {
@@ -21763,7 +21754,7 @@ function Show-MonacoEditor {
     }
     
     # Launch Monaco in a new PowerShell process
-    $fontSize = if ($global:settings -and $global:settings.EditorFontSize) { $global:settings.EditorFontSize } else { 14 }
+    $fontSize = $(if (${global:settings} -and ${global:settings}.EditorFontSize) { ${global:settings}.EditorFontSize } else { 14 }
     
     Write-DevConsole "📝 Opening Monaco with language: $Language" "INFO"
     
@@ -21809,7 +21800,7 @@ function Show-MonacoEditor {
                     }
                 }
                 Unregister-Event -SourceIdentifier $EventSubscriber.Name
-            } -MessageData @{ TempFile = $tempFile; Editor = $script:editor }
+            } -MessageData @{ TempFile = $tempFile; Editor = ${script:editor} }
         }
     } catch {
         Write-DevConsole "❌ Failed to launch Monaco: $_" "ERROR"
@@ -21836,17 +21827,17 @@ function Show-MonacoEditorEmbedded {
     Write-DevConsole "🚀 Opening embedded Monaco Editor..." "INFO"
     
     # Check WebView2 availability
-    if (-not $script:useWebView2) {
+    if (-not ${script:useWebView2}) {
         Write-DevConsole "⚠️ WebView2 not available - falling back to pop-out editor" "WARNING"
         Show-PopOutEditor
         return
     }
     
     # Get current content and detect language
-    $content = if ($script:editor) { $script:editor.Text } else { "" }
+    $content = $(if (${script:editor}) { ${script:editor}.Text } else { "" }
     
-    if ([string]::IsNullOrEmpty($Language) -and -not [string]::IsNullOrEmpty($global:currentFile)) {
-        $ext = [System.IO.Path]::GetExtension($global:currentFile).ToLower()
+    if ([string]::IsNullOrEmpty($Language) -and -not [string]::IsNullOrEmpty(${global:currentFile})) {
+        $ext = [System.IO.Path]::GetExtension(${global:currentFile}).ToLower()
         $Language = switch ($ext) {
             '.ps1' { 'powershell' }
             '.py' { 'python' }
@@ -21894,11 +21885,11 @@ function Show-MonacoEditorEmbedded {
     $webView.Dock = [System.Windows.Forms.DockStyle]::Fill
     $monacoForm.Controls.Add($webView)
     
-    $fontSize = if ($global:settings -and $global:settings.EditorFontSize) { $global:settings.EditorFontSize } else { 14 }
+    $fontSize = $(if (${global:settings} -and ${global:settings}.EditorFontSize) { ${global:settings}.EditorFontSize } else { 14 }
     
     # Get GGUF path from settings or use default
-    $GGUFPath = if ($global:settings -and $global:settings.GGUFModelPath) { 
-        $global:settings.GGUFModelPath 
+    $GGUFPath = $(if (${global:settings} -and ${global:settings}.GGUFModelPath) { 
+        ${global:settings}.GGUFModelPath 
     } else { 
         'D:\OllamaModels\BigDaddyG-NO-REFUSE-Q4_K_M.gguf' 
     }
@@ -22059,7 +22050,7 @@ function Show-MonacoEditorEmbedded {
                 $requestId = $json.requestId
                 
                 try {
-                    $completion = Invoke-LlamaCPPCompletion -Prompt $prompt -MaxTokens $script:AIBackend.InlineCompletionsMaxTokens
+                    $completion = Invoke-LlamaCPPCompletion -Prompt $prompt -MaxTokens ${script:AIBackend}.InlineCompletionsMaxTokens
                     $escaped = $completion -replace "'", "''" -replace "`n", '\n'
                     
                     $sender.CoreWebView2.ExecuteScriptAsync("
@@ -22102,7 +22093,7 @@ function Show-MonacoEditorEmbedded {
             try {
                 $result = $webView.CoreWebView2.ExecuteScriptAsync("window.getValue()").GetAwaiter().GetResult()
                 $newContent = $result.Trim('"') -replace '\\n', "`n" -replace '\\r', "`r" -replace '\\"', '"' -replace '\\\\', '\'
-                if ($script:editor) {
+                if (${script:editor}) {
                     Set-EditorTextWithVisibility -Content $newContent
                     Write-DevConsole "✅ Content synced to main editor" "SUCCESS"
                     [System.Windows.Forms.MessageBox]::Show("Content synced to main editor!", "Sync Complete", "OK", "Information") | Out-Null
@@ -22264,7 +22255,7 @@ function Launch-HtmlIde {
     $refreshBtn.Add_Click({
         try {
             # Save to temp file and read back
-            $tempFile = Join-Path $env:TEMP "rawr_preview_$([guid]::NewGuid().ToString()).html"
+            $tempFile = Join-Path ${env:TEMP} "rawr_preview_$([guid]::NewGuid().ToString()).html"
             [System.IO.File]::WriteAllText($tempFile, $htmlEditor.Text)
             
             $htmlContent = [System.IO.File]::ReadAllText($tempFile)
@@ -22350,7 +22341,7 @@ function Show-SecuritySettings {
     $encryptCheckbox.Text = "Enable data encryption for sensitive files"
     $encryptCheckbox.Location = New-Object System.Drawing.Point(20, 30)
     $encryptCheckbox.Size = New-Object System.Drawing.Size(400, 25)
-    $encryptCheckbox.Checked = $script:SecurityConfig.EncryptSensitiveData
+    $encryptCheckbox.Checked = ${script:SecurityConfig}.EncryptSensitiveData
     $encryptCheckbox.ForeColor = [System.Drawing.Color]::White
     $encryptTab.Controls.Add($encryptCheckbox)
 
@@ -22372,7 +22363,7 @@ function Show-SecuritySettings {
     $authCheckbox.Text = "Require authentication for session access"
     $authCheckbox.Location = New-Object System.Drawing.Point(20, 30)
     $authCheckbox.Size = New-Object System.Drawing.Size(400, 25)
-    $authCheckbox.Checked = $script:SecurityConfig.AuthenticationRequired
+    $authCheckbox.Checked = ${script:SecurityConfig}.AuthenticationRequired
     $authCheckbox.ForeColor = [System.Drawing.Color]::White
     $sessionTab.Controls.Add($authCheckbox)
 
@@ -22388,7 +22379,7 @@ function Show-SecuritySettings {
     $timeoutNumeric.Size = New-Object System.Drawing.Size(100, 25)
     $timeoutNumeric.Minimum = 5
     $timeoutNumeric.Maximum = 480
-    $timeoutNumeric.Value = [Math]::Round($script:SecurityConfig.SessionTimeout / 60)
+    $timeoutNumeric.Value = [Math]::Round(${script:SecurityConfig}.SessionTimeout / 60)
     $timeoutNumeric.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
     $timeoutNumeric.ForeColor = [System.Drawing.Color]::White
     $sessionTab.Controls.Add($timeoutNumeric)
@@ -22403,7 +22394,7 @@ function Show-SecuritySettings {
     $auditCheckbox.Text = "Enable comprehensive audit trail"
     $auditCheckbox.Location = New-Object System.Drawing.Point(20, 30)
     $auditCheckbox.Size = New-Object System.Drawing.Size(400, 25)
-    $auditCheckbox.Checked = $script:SecurityConfig.EnableAuditTrail
+    $auditCheckbox.Checked = ${script:SecurityConfig}.EnableAuditTrail
     $auditCheckbox.ForeColor = [System.Drawing.Color]::White
     $auditTab.Controls.Add($auditCheckbox)
 
@@ -22411,7 +22402,7 @@ function Show-SecuritySettings {
     $eventLogCheckbox.Text = "Log to Windows Event Log"
     $eventLogCheckbox.Location = New-Object System.Drawing.Point(20, 70)
     $eventLogCheckbox.Size = New-Object System.Drawing.Size(400, 25)
-    $eventLogCheckbox.Checked = $script:SecurityConfig.LogToEventLog
+    $eventLogCheckbox.Checked = ${script:SecurityConfig}.LogToEventLog
     $eventLogCheckbox.ForeColor = [System.Drawing.Color]::White
     $auditTab.Controls.Add($eventLogCheckbox)
 
@@ -22435,11 +22426,11 @@ function Show-SecuritySettings {
     $securityForm.Controls.Add($cancelBtn)
 
     $okBtn.Add_Click({
-        $script:SecurityConfig.EncryptSensitiveData = $encryptCheckbox.Checked
-        $script:SecurityConfig.AuthenticationRequired = $authCheckbox.Checked
-        $script:SecurityConfig.SessionTimeout = $timeoutNumeric.Value * 60
-        $script:SecurityConfig.EnableAuditTrail = $auditCheckbox.Checked
-        $script:SecurityConfig.LogToEventLog = $eventLogCheckbox.Checked
+        ${script:SecurityConfig}.EncryptSensitiveData = $encryptCheckbox.Checked
+        ${script:SecurityConfig}.AuthenticationRequired = $authCheckbox.Checked
+        ${script:SecurityConfig}.SessionTimeout = $timeoutNumeric.Value * 60
+        ${script:SecurityConfig}.EnableAuditTrail = $auditCheckbox.Checked
+        ${script:SecurityConfig}.LogToEventLog = $eventLogCheckbox.Checked
         
         Write-DevConsole "✅ Security settings saved" "SUCCESS"
         Write-SecurityLog "Security settings updated by user" "SUCCESS"
@@ -22464,16 +22455,16 @@ function Show-SessionInfo {
             SESSION INFORMATION
 ═══════════════════════════════════════════════════════
 
-SESSION ID:              $($script:CurrentSession.SessionId)
-START TIME:             $($script:CurrentSession.StartTime)
-DURATION:               $((Get-Date) - $script:CurrentSession.StartTime)
-LAST ACTIVITY:          $($script:CurrentSession.LastActivity)
+SESSION ID:              $(${script:CurrentSession}.SessionId)
+START TIME:             $(${script:CurrentSession}.StartTime)
+DURATION:               $((Get-Date) - ${script:CurrentSession}.StartTime)
+LAST ACTIVITY:          $(${script:CurrentSession}.LastActivity)
 
 SECURITY STATUS:
-  Encryption:           $(if ($script:SecurityConfig.EncryptSensitiveData) { "🔐 ENABLED" } else { "🔓 DISABLED" })
-  Authentication:       $(if ($script:SecurityConfig.AuthenticationRequired) { "✅ REQUIRED" } else { "⚠️ OPTIONAL" })
-  Stealth Mode:         $(if ($script:SecurityConfig.StealthMode) { "🔒 ACTIVE" } else { "🔓 INACTIVE" })
-  Audit Trail:          $(if ($script:SecurityConfig.EnableAuditTrail) { "✅ ENABLED" } else { "⚠️ DISABLED" })
+  Encryption:           $(if (${script:SecurityConfig}.EncryptSensitiveData) { "🔐 ENABLED" } else { "🔓 DISABLED" })
+  Authentication:       $(if (${script:SecurityConfig}.AuthenticationRequired) { "✅ REQUIRED" } else { "⚠️ OPTIONAL" })
+  Stealth Mode:         $(if (${script:SecurityConfig}.StealthMode) { "🔒 ACTIVE" } else { "🔓 INACTIVE" })
+  Audit Trail:          $(if (${script:SecurityConfig}.EnableAuditTrail) { "✅ ENABLED" } else { "⚠️ DISABLED" })
 
 SESSION SECURITY TEST:   $(if (Test-SessionSecurity) { "✅ PASS" } else { "❌ FAIL" })
 
@@ -22535,8 +22526,8 @@ function Show-SecurityLog {
 
     # Try to load security log entries
     $logEntries = @()
-    if (Test-Path $script:SecurityLogPath -ErrorAction SilentlyContinue) {
-        $logEntries = @(Get-Content $script:SecurityLogPath -Tail 100 -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue)
+    if (Test-Path ${script:SecurityLogPath} -ErrorAction SilentlyContinue) {
+        $logEntries = @(Get-Content ${script:SecurityLogPath} -Tail 100 -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue)
     }
 
     foreach ($entry in $logEntries) {
@@ -22596,7 +22587,7 @@ function Show-EncryptionTest {
         
         # Test 1: Encryption enabled check
         $resultsText.AppendText("TEST 1: Encryption Status`r`n")
-        $resultsText.AppendText("  Encryption Enabled: $(if ($script:SecurityConfig.EncryptSensitiveData) { '✅ YES' } else { '❌ NO' })`r`n`r`n")
+        $resultsText.AppendText("  Encryption Enabled: $(if (${script:SecurityConfig}.EncryptSensitiveData) { '✅ YES' } else { '❌ NO' })`r`n`r`n")
         
         # Test 2: Encrypt/Decrypt cycle
         $resultsText.AppendText("TEST 2: Encrypt/Decrypt Cycle`r`n")
@@ -22714,7 +22705,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
     $parallelMsgBtn.add_Click({
             $cursorToken = Enter-CursorWaitState -Reason "Bulk:ParallelChats" -Style "Wait"
             try {
-                $activeChatIds = @($script:chatTabs.Keys | Select-Object -First 3)
+                $activeChatIds = @(${script:chatTabs}.Keys | Select-Object -First 3)
                 if ($activeChatIds.Count -eq 0) {
                     Write-DevConsole "⚠ No active chats to test" "WARNING"
                     return
@@ -22732,7 +22723,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
                 $testMsgCount = $testMessages.Count
                 for ($i = 0; $i -lt [Math]::Min($activeChatIds.Count, $testMsgCount); $i++) {
                     $chatId = $activeChatIds[$i]
-                    $chatSession = $script:chatTabs[$chatId]
+                    $chatSession = ${script:chatTabs}[$chatId]
 
                     # Add test message to input
                     $chatSession.InputBox.Text = $testMessages[$i]
@@ -22773,7 +22764,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
 
                 # Task 1: File analysis
                 $task1Id = New-AgentTask -Name "File Analysis" -Description "Analyze current file structure"
-                $task1 = $global:agentContext.Tasks | Where-Object { $_.Id -eq $task1Id } | Select-Object -First 1
+                $task1 = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $task1Id } | Select-Object -First 1
                 $task1.Steps = @(
                     @{ Type = "tool"; Description = "List directory"; Tool = "list_directory"; Arguments = @{} }
                     @{ Type = "ai_query"; Description = "Analyze structure"; Query = "Analyze the file structure" }
@@ -22782,7 +22773,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
 
                 # Task 2: Environment check
                 $task2Id = New-AgentTask -Name "Environment Check" -Description "Check system environment"
-                $task2 = $global:agentContext.Tasks | Where-Object { $_.Id -eq $task2Id } | Select-Object -First 1
+                $task2 = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $task2Id } | Select-Object -First 1
                 $task2.Steps = @(
                     @{ Type = "command"; Description = "Get PowerShell version"; Command = '$PSVersionTable.PSVersion' }
                     @{ Type = "tool"; Description = "Get environment"; Tool = "get_environment"; Arguments = @{} }
@@ -22791,7 +22782,7 @@ Max Concurrent: $($threadingStatus.MaxConcurrentTasks)
 
                 # Task 3: Code generation
                 $task3Id = New-AgentTask -Name "Code Generation" -Description "Generate sample code"
-                $task3 = $global:agentContext.Tasks | Where-Object { $_.Id -eq $task3Id } | Select-Object -First 1
+                $task3 = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $task3Id } | Select-Object -First 1
                 $task3.Steps = @(
                     @{ Type = "ai_query"; Description = "Generate PowerShell function"; Query = "Create a simple PowerShell function" }
                     @{ Type = "edit"; Description = "Save generated code"; File = "generated_code.ps1"; Content = "# Generated code" }
@@ -23236,7 +23227,7 @@ function Show-RealTimeMonitor {
             
             # Get CPU usage (approximate)
             $cpuCounter = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction SilentlyContinue
-            $cpuUsage = if ($cpuCounter) { [Math]::Round($cpuCounter.CounterSamples[0].CookedValue, 1) } else { "N/A" }
+            $cpuUsage = $(if ($cpuCounter) { [Math]::Round($cpuCounter.CounterSamples[0].CookedValue, 1) } else { "N/A" }
             
             # Get memory info
             $computerMemory = Get-WmiObject -Class Win32_ComputerSystem -ErrorAction SilentlyContinue
@@ -23258,7 +23249,7 @@ function Show-RealTimeMonitor {
             
             # Uptime calculation
             $systemUptime = (Get-Date) - (Get-WmiObject Win32_OperatingSystem -ErrorAction SilentlyContinue).ConvertToDateTime((Get-WmiObject Win32_OperatingSystem -ErrorAction SilentlyContinue).LastBootUpTime)
-            $uptimeStr = if ($systemUptime) { "{0:D2}h {1:D2}m {2:D2}s" -f $systemUptime.Hours, $systemUptime.Minutes, $systemUptime.Seconds } else { "N/A" }
+            $uptimeStr = $(if ($systemUptime) { "{0:D2}h {1:D2}m {2:D2}s" -f $systemUptime.Hours, $systemUptime.Minutes, $systemUptime.Seconds } else { "N/A" }
             
             # Assemble display
             $display = @"
@@ -23494,13 +23485,13 @@ function Invoke-AgentTool {
     }
     
     # Ensure agentTools is initialized
-    if (-not $script:agentTools) {
-        $script:agentTools = @{}
+    if (-not ${script:agentTools}) {
+        ${script:agentTools} = @{}
     }
     
     # Check individual tool preferences first (from Tool Preferences dialog)
-    if ($global:settings -and $global:settings.EnabledAgentTools -and $global:settings.EnabledAgentTools.ContainsKey($ToolName)) {
-        if (-not $global:settings.EnabledAgentTools[$ToolName]) {
+    if (${global:settings} -and ${global:settings}.EnabledAgentTools -and ${global:settings}.EnabledAgentTools.ContainsKey($ToolName)) {
+        if (-not ${global:settings}.EnabledAgentTools[$ToolName]) {
             Write-DevConsole "Tool '$ToolName' disabled by user preference" "WARNING"
             return @{ 
                 success = $false
@@ -23511,8 +23502,8 @@ function Invoke-AgentTool {
     }
 
     # Preference gating mapping (legacy/category-based gating)
-    if (-not $script:AgentToolPreferenceMap) {
-        $script:AgentToolPreferenceMap = @{
+    if (-not ${script:AgentToolPreferenceMap}) {
+        ${script:AgentToolPreferenceMap} = @{
             read_file              = 'ReadFiles'
             list_directory         = 'ReadFiles'
             write_file             = 'EditFiles'
@@ -23537,8 +23528,8 @@ function Invoke-AgentTool {
     }
 
     $prefKey = $null
-    if ($script:AgentToolPreferenceMap.ContainsKey($ToolName)) {
-        $prefKey = $script:AgentToolPreferenceMap[$ToolName]
+    if (${script:AgentToolPreferenceMap}.ContainsKey($ToolName)) {
+        $prefKey = ${script:AgentToolPreferenceMap}[$ToolName]
         if (Get-Command Is-AgentToolAllowed -ErrorAction SilentlyContinue) {
             if (-not (Is-AgentToolAllowed $prefKey)) {
                 Write-DevConsole "Tool '$ToolName' blocked by preference '$prefKey'" "WARNING"
@@ -23547,12 +23538,12 @@ function Invoke-AgentTool {
         }
     }
 
-    if (-not $script:agentTools.ContainsKey($ToolName)) {
-        Write-DevConsole "Tool not found: $ToolName (Available: $($script:agentTools.Keys -join ', '))" "ERROR"
+    if (-not ${script:agentTools}.ContainsKey($ToolName)) {
+        Write-DevConsole "Tool not found: $ToolName (Available: $(${script:agentTools}.Keys -join ', '))" "ERROR"
         return @{ success = $false; error = "Tool not found: $ToolName" }
     }
     
-    $tool = $script:agentTools[$ToolName]
+    $tool = ${script:agentTools}[$ToolName]
     
     if (-not ($tool.Handler -is [scriptblock])) {
         Write-DevConsole "Handler for tool '$ToolName' is not callable" "ERROR"
@@ -23618,11 +23609,11 @@ function Invoke-AgentTool {
         }
         
         # Track command in agent context if available
-        if ($global:agentContext) {
-            if (-not $global:agentContext.Commands) {
-                $global:agentContext.Commands = @()
+        if (${global:agentContext}) {
+            if (-not ${global:agentContext}.Commands) {
+                ${global:agentContext}.Commands = @()
             }
-            $global:agentContext.Commands += @{
+            ${global:agentContext}.Commands += @{
                 Tool      = $ToolName
                 Arguments = $normalizedParams
                 Result    = $result
@@ -23651,21 +23642,21 @@ function Get-AgentToolsSchema {
     [CmdletBinding()]
     param()
 
-    if (-not $script:agentTools -or $script:agentTools.Count -eq 0) {
+    if (-not ${script:agentTools} -or ${script:agentTools}.Count -eq 0) {
         Write-DevConsole "No agent tools registered" "WARNING"
         return @()
     }
 
     $tools = @()
-    foreach ($tool in $script:agentTools.Values) {
-        $prefKey = if ($script:AgentToolPreferenceMap -and $script:AgentToolPreferenceMap.ContainsKey($tool.Name)) { $script:AgentToolPreferenceMap[$tool.Name] } else { $null }
+    foreach ($tool in ${script:agentTools}.Values) {
+        $prefKey = $(if (${script:AgentToolPreferenceMap} -and ${script:AgentToolPreferenceMap}.ContainsKey($tool.Name)) { ${script:AgentToolPreferenceMap}[$tool.Name] } else { $null }
         if ($prefKey -and (Get-Command Is-AgentToolAllowed -ErrorAction SilentlyContinue) -and -not (Is-AgentToolAllowed $prefKey)) { continue }
         $tools += @{
             name        = $tool.Name
             description = $tool.Description
             parameters  = $tool.Parameters
-            category    = if ($tool.Category) { $tool.Category } else { "General" }
-            version     = if ($tool.Version) { $tool.Version } else { "1.0" }
+            category    = $(if ($tool.Category) { $tool.Category } else { "General" }
+            version     = $(if ($tool.Version) { $tool.Version } else { "1.0" }
         }
     }
     return $tools
@@ -23712,7 +23703,7 @@ function Test-AgentTools {
         [string[]]$ToolNames = @()
     )
     
-    if (-not $script:agentTools -or $script:agentTools.Count -eq 0) {
+    if (-not ${script:agentTools} -or ${script:agentTools}.Count -eq 0) {
         Write-DevConsole "No agent tools registered to test" "WARNING"
         return @{
             success = $false
@@ -23721,10 +23712,10 @@ function Test-AgentTools {
         }
     }
     
-    $toolsToTest = if ($ToolNames.Count -gt 0) {
-        $ToolNames | Where-Object { $script:agentTools.ContainsKey($_) }
+    $toolsToTest = $(if ($ToolNames.Count -gt 0) {
+        $ToolNames | Where-Object { ${script:agentTools}.ContainsKey($_) }
     } else {
-        $script:agentTools.Keys
+        ${script:agentTools}.Keys
     }
     
     $results = @()
@@ -23732,7 +23723,7 @@ function Test-AgentTools {
     $failed = 0
     
     foreach ($toolName in $toolsToTest) {
-        $tool = $script:agentTools[$toolName]
+        $tool = ${script:agentTools}[$toolName]
         $testResult = @{
             tool = $toolName
             callable = $false
@@ -23770,19 +23761,18 @@ function Test-AgentTools {
 
 # ============================================
 # AGENT TODO INSPECTION
-# ============================================
-if (-not $script:agentTodoExcludePaths) {
-    $script:agentTodoExcludePaths = @('.git', 'node_modules', '.vs', 'bin', 'obj', 'dist', 'packages', '__pycache__', 'vendor')
+# ============================================ $(if (-not ${script:agentTodoExcludePaths}) {
+    ${script:agentTodoExcludePaths} = @('.git', 'node_modules', '.vs', 'bin', 'obj', 'dist', 'packages', '__pycache__', 'vendor')
 }
 
 function Get-AgentTodoList {
     param(
-        [string]$RootPath = $global:currentWorkingDir,
+        [string]$RootPath = ${global:currentWorkingDir},
         [switch]$IncludeAllFiles
     )
 
     if (-not $RootPath) {
-        $RootPath = $global:currentWorkingDir
+        $RootPath = ${global:currentWorkingDir}
     }
 
     if (-not (Test-Path $RootPath)) {
@@ -23799,7 +23789,7 @@ function Get-AgentTodoList {
 
     $files = $files | Where-Object {
         $full = $_.FullName.ToLower()
-        -not ($script:agentTodoExcludePaths | Where-Object { $full -like "*$_*" } | Select-Object -First 1)
+        -not (${script:agentTodoExcludePaths} | Where-Object { $full -like "*$_*" } | Select-Object -First 1)
     }
 
     if (-not $IncludeAllFiles) {
@@ -23861,7 +23851,7 @@ Register-AgentTool -Name "list_todos" -Description "List TODO/FIXME comments for
 } `
     -Handler {
     param([string]$root_path = $null, [bool]$include_all_files = $false)
-    $path = if ($root_path) { $root_path } else { $global:currentWorkingDir }
+    $path = $(if ($root_path) { $root_path } else { ${global:currentWorkingDir} }
     if ($include_all_files) {
         return Get-AgentTodoList -RootPath $path -IncludeAllFiles
     }
@@ -23892,22 +23882,22 @@ function Resolve-AgentFilePath {
     }
 
     if ($expanded -and -not [System.IO.Path]::IsPathRooted($expanded)) {
-        if ($global:currentWorkingDir) {
+        if (${global:currentWorkingDir}) {
             try {
-                $candidates += (Join-Path $global:currentWorkingDir $expanded)
+                $candidates += (Join-Path ${global:currentWorkingDir} $expanded)
             } catch {}
         }
 
-        if ($script:editorStatusLabel -and $script:editorStatusLabel.Tag) {
+        if (${script:editorStatusLabel} -and ${script:editorStatusLabel}.Tag) {
             try {
-                $editorDir = Split-Path $script:editorStatusLabel.Tag -Parent
+                $editorDir = Split-Path ${script:editorStatusLabel}.Tag -Parent
                 if ($editorDir) {
                     $candidates += (Join-Path $editorDir $expanded)
                 }
             } catch {}
         }
 
-        if ($script:explorerPathLabel -and $script:explorerPathLabel.Text -match '^Path:\s+(.*)$') {
+        if (${script:explorerPathLabel} -and ${script:explorerPathLabel}.Text -match '^Path:\s+(.*)$') {
             $explorerPath = $Matches[1]
             if ($explorerPath) {
                 try {
@@ -24019,7 +24009,7 @@ Register-AgentTool -Name "write_file" -Description "Write or create a file with 
             success    = $true
             path       = $path
             size_bytes = $fileInfo.Length
-            operation  = if ($append) { "appended" } else { "written" }
+            operation  = $(if ($append) { "appended" } else { "written" }
         }
     }
     catch {
@@ -24207,7 +24197,7 @@ Register-AgentTool -Name "git_status" -Description "Get Git repository status" `
     -Handler {
     param([string]$repository_path = $null)
     try {
-        $repoPath = if ($repository_path) { $repository_path } else { $global:currentWorkingDir }
+        $repoPath = $(if ($repository_path) { $repository_path } else { ${global:currentWorkingDir} }
         $originalLocation = Get-Location
         Set-Location $repoPath
 
@@ -24249,7 +24239,7 @@ Register-AgentTool -Name "git_commit" -Description "Commit changes to Git reposi
     param([string]$message, [string]$repository_path = $null)
     try {
         # Use provided path or fall back to current working directory
-        $repoPath = if ($repository_path) { $repository_path } else { $global:currentWorkingDir }
+        $repoPath = $(if ($repository_path) { $repository_path } else { ${global:currentWorkingDir} }
         $result = Invoke-GitCommand -Command "commit" -Arguments @("-m", $message) -WorkingDirectory $repoPath
         return @{success = $true; message = $message; output = $result }
     }
@@ -24351,9 +24341,9 @@ Register-AgentTool -Name "get_environment" -Description "Get development environ
             success            = $true
             os                 = [System.Environment]::OSVersion.ToString()
             powershell_version = $PSVersionTable.PSVersion.ToString()
-            current_dir        = $global:currentWorkingDir
-            user               = $env:USERNAME
-            computer           = $env:COMPUTERNAME
+            current_dir        = ${global:currentWorkingDir}
+            user               = ${env:USERNAME}
+            computer           = ${env:COMPUTERNAME}
             dotnet_installed   = (Get-Command dotnet -ErrorAction SilentlyContinue) -ne $null
             git_installed      = (Get-Command git -ErrorAction SilentlyContinue) -ne $null
             node_installed     = (Get-Command node -ErrorAction SilentlyContinue) -ne $null
@@ -24396,11 +24386,11 @@ Register-AgentTool -Name "browser_search_dependency" -Description "Search for mi
         $searchUrl = "https://www.google.com/search?q=$encodedQuery"
 
         # Navigate browser to search results
-        if ($script:useWebView2 -and $global:webView2) {
-            $global:webView2.CoreWebView2.Navigate($searchUrl)
+        if (${script:useWebView2} -and ${global:webView2}) {
+            ${global:webView2}.CoreWebView2.Navigate($searchUrl)
         }
-        elseif ($global:browser) {
-            $global:browser.Navigate($searchUrl)
+        elseif (${global:browser}) {
+            ${global:browser}.Navigate($searchUrl)
         }
 
         # Return suggested package managers based on language
@@ -24410,18 +24400,18 @@ Register-AgentTool -Name "browser_search_dependency" -Description "Search for mi
                 $suggestions += "pip install $dependency_name"
                 $suggestions += "conda install $dependency_name"
                 $pypiUrl = "https://pypi.org/search/?q=$dependency_name"
-                if ($script:useWebView2 -and $global:webView2) {
+                if (${script:useWebView2} -and ${global:webView2}) {
                     # Navigate to PyPI search (async, no delay needed)
-                    $global:webView2.CoreWebView2.Navigate($pypiUrl)
+                    ${global:webView2}.CoreWebView2.Navigate($pypiUrl)
                 }
             }
             "javascript" {
                 $suggestions += "npm install $dependency_name"
                 $suggestions += "yarn add $dependency_name"
                 $npmUrl = "https://www.npmjs.com/search?q=$dependency_name"
-                if ($script:useWebView2 -and $global:webView2) {
+                if (${script:useWebView2} -and ${global:webView2}) {
                     # Navigate to NPM search (async, no delay needed)
-                    $global:webView2.CoreWebView2.Navigate($npmUrl)
+                    ${global:webView2}.CoreWebView2.Navigate($npmUrl)
                 }
             }
             "cpp" {
@@ -24431,9 +24421,9 @@ Register-AgentTool -Name "browser_search_dependency" -Description "Search for mi
             "rust" {
                 $suggestions += "cargo add $dependency_name"
                 $cratesUrl = "https://crates.io/search?q=$dependency_name"
-                if ($script:useWebView2 -and $global:webView2) {
+                if (${script:useWebView2} -and ${global:webView2}) {
                     # Navigate to Crates.io search (async, no delay needed)
-                    $global:webView2.CoreWebView2.Navigate($cratesUrl)
+                    ${global:webView2}.CoreWebView2.Navigate($cratesUrl)
                 }
             }
             "go" {
@@ -24442,9 +24432,9 @@ Register-AgentTool -Name "browser_search_dependency" -Description "Search for mi
             "dotnet" {
                 $suggestions += "dotnet add package $dependency_name"
                 $nugetUrl = "https://www.nuget.org/packages?q=$dependency_name"
-                if ($script:useWebView2 -and $global:webView2) {
+                if (${script:useWebView2} -and ${global:webView2}) {
                     # Navigate to NuGet search (async, no delay needed)
-                    $global:webView2.CoreWebView2.Navigate($nugetUrl)
+                    ${global:webView2}.CoreWebView2.Navigate($nugetUrl)
                 }
             }
         }
@@ -24483,13 +24473,13 @@ Register-AgentTool -Name "extract_webpage_content" -Description "Extract text co
             url   = ""
         }
 
-        if ($script:useWebView2 -and $global:webView2 -and $global:webView2.CoreWebView2) {
-            $content.url = $global:webView2.CoreWebView2.Source
-            $content.title = $global:webView2.CoreWebView2.DocumentTitle
+        if (${script:useWebView2} -and ${global:webView2} -and ${global:webView2}.CoreWebView2) {
+            $content.url = ${global:webView2}.CoreWebView2.Source
+            $content.title = ${global:webView2}.CoreWebView2.DocumentTitle
 
             # Extract page text content
             $textScript = "document.body.innerText || document.body.textContent || ''"
-            $textResult = $global:webView2.CoreWebView2.ExecuteScriptAsync($textScript).GetAwaiter().GetResult()
+            $textResult = ${global:webView2}.CoreWebView2.ExecuteScriptAsync($textScript).GetAwaiter().GetResult()
             if ($textResult) {
                 $content.text = ($textResult | ConvertFrom-Json -ErrorAction SilentlyContinue) -replace '\\n', "`n"
             }
@@ -24510,7 +24500,7 @@ Register-AgentTool -Name "extract_webpage_content" -Description "Extract text co
     return JSON.stringify(links.slice(0, 50));
 })()
 "@
-                $linkResult = $global:webView2.CoreWebView2.ExecuteScriptAsync($linkScript).GetAwaiter().GetResult()
+                $linkResult = ${global:webView2}.CoreWebView2.ExecuteScriptAsync($linkScript).GetAwaiter().GetResult()
                 if ($linkResult) {
                     $parsedLinks = $linkResult | ConvertFrom-Json -ErrorAction SilentlyContinue
                     if ($parsedLinks) {
@@ -24664,7 +24654,7 @@ Register-AgentTool -Name "auto_install_dependency" -Description "Automatically i
                         language = $language
                         command  = $installCommand
                         output   = $output -join "`n"
-                        message  = if ($success) { "Successfully installed $package_name" } else { "Installation failed" }
+                        message  = $(if ($success) { "Successfully installed $package_name" } else { "Installation failed" }
                     }
                 }
                 catch {
@@ -24807,7 +24797,7 @@ Register-AgentTool -Name "generate_project_template" -Description "Generate a ne
     param([string]$project_name, [string]$language, [string]$template_type = "console")
 
     try {
-        $projectPath = Join-Path $global:currentWorkingDir $project_name
+        $projectPath = Join-Path ${global:currentWorkingDir} $project_name
 
         if (Test-Path $projectPath) {
             return @{success = $false; error = "Project directory already exists: $projectPath" }
@@ -24912,7 +24902,7 @@ function Get-AgentToolsList {
 
     $categories = @{}
 
-    foreach ($tool in $script:agentTools.Values) {
+    foreach ($tool in ${script:agentTools}.Values) {
         $category = $tool.Category
         if (-not $categories.ContainsKey($category)) {
             $categories[$category] = @()
@@ -24995,7 +24985,7 @@ function Set-StructuredEdit {
 
     # Store pending edit for approval
     $editId = [guid]::NewGuid().ToString()
-    $global:agentContext.PendingEdits += @{
+    ${global:agentContext}.PendingEdits += @{
         Id              = $editId
         File            = $File
         OriginalContent = $originalContent
@@ -25014,7 +25004,7 @@ function Set-StructuredEdit {
 function Show-EditPreview {
     param([string]$EditId)
 
-    $edit = $global:agentContext.PendingEdits | Where-Object { $_.Id -eq $EditId } | Select-Object -First 1
+    $edit = ${global:agentContext}.PendingEdits | Where-Object { $_.Id -eq $EditId } | Select-Object -First 1
     if (-not $edit) {
         return $null
     }
@@ -25066,7 +25056,7 @@ function Show-EditPreview {
     $rejectBtn.Dock = [System.Windows.Forms.DockStyle]::Right
     $rejectBtn.Width = 100
     $rejectBtn.Add_Click({
-            $global:agentContext.PendingEdits = $global:agentContext.PendingEdits | Where-Object { $_.Id -ne $editId }
+            ${global:agentContext}.PendingEdits = ${global:agentContext}.PendingEdits | Where-Object { $_.Id -ne $editId }
             $previewForm.Close()
         })
     $buttonPanel.Controls.Add($rejectBtn) | Out-Null
@@ -25077,15 +25067,15 @@ function Show-EditPreview {
 function Set-ApprovedEdit {
     param([string]$EditId)
 
-    $edit = $global:agentContext.PendingEdits | Where-Object { $_.Id -eq $EditId } | Select-Object -First 1
+    $edit = ${global:agentContext}.PendingEdits | Where-Object { $_.Id -eq $EditId } | Select-Object -First 1
     if ($edit) {
         try {
             [System.IO.File]::WriteAllText($edit.File, $edit.NewContent)
-            $global:agentContext.Edits += $edit
-            $global:agentContext.PendingEdits = $global:agentContext.PendingEdits | Where-Object { $_.Id -ne $EditId }
+            ${global:agentContext}.Edits += $edit
+            ${global:agentContext}.PendingEdits = ${global:agentContext}.PendingEdits | Where-Object { $_.Id -ne $EditId }
 
             # Update editor if file is open
-            if ($global:currentFile -eq $edit.File) {
+            if (${global:currentFile} -eq $edit.File) {
                 Set-EditorTextWithVisibility -Content $edit.NewContent
             }
 
@@ -25137,7 +25127,7 @@ function Get-ProjectDependencies {
         # Parse csproj would go here
     }
 
-    $global:agentContext.DependencyGraph[$Path] = $dependencies
+    ${global:agentContext}.DependencyGraph[$Path] = $dependencies
     return $dependencies
 }
 
@@ -25146,8 +25136,8 @@ function Get-ProjectDependencies {
 # ============================================
 function Get-EnvironmentInfo {
     $env = @{
-        OS                = if ($PSVersionTable.PSObject.Properties["OS"]) { $PSVersionTable.OS } else { [System.Environment]::OSVersion.VersionString }
-        Platform          = if ($PSVersionTable.PSObject.Properties["Platform"]) { $PSVersionTable.Platform } else { "Win32NT" }
+        OS                = $(if ($PSVersionTable.PSObject.Properties["OS"]) { $PSVersionTable.OS } else { [System.Environment]::OSVersion.VersionString }
+        Platform          = $(if ($PSVersionTable.PSObject.Properties["Platform"]) { $PSVersionTable.Platform } else { "Win32NT" }
         PowerShellVersion = $PSVersionTable.PSVersion
         Shell             = "PowerShell"
         Python            = $null
@@ -25184,7 +25174,7 @@ function Get-EnvironmentInfo {
     }
     catch {}
 
-    $global:agentContext.Environment = $env
+    ${global:agentContext}.Environment = $env
     return $env
 }
 
@@ -25203,14 +25193,14 @@ function Write-AgentLog {
         Level     = $Level
         Message   = $Message
         Data      = $Data
-        SessionId = $global:agentContext.SessionId
+        SessionId = ${global:agentContext}.SessionId
     }
 
     # Store in context
-    if (-not $global:agentContext.Logs) {
-        $global:agentContext.Logs = @()
+    if (-not ${global:agentContext}.Logs) {
+        ${global:agentContext}.Logs = @()
     }
-    $global:agentContext.Logs += $logEntry
+    ${global:agentContext}.Logs += $logEntry
 
     # Write to console if verbose
     $color = switch ($Level) {
@@ -25244,7 +25234,7 @@ function New-AgentTask {
         CurrentStep = 0
     }
 
-    $global:agentContext.Tasks += $task
+    ${global:agentContext}.Tasks += $task
     Update-AgentTasksList
     return $task
 }
@@ -25256,12 +25246,12 @@ function Start-AgentTask {
     )
 
     # If async is requested and multithreading is available, delegate to async version
-    if ($UseAsync -and $script:threadSafeContext.RunspacePool) {
+    if ($UseAsync -and ${script:threadSafeContext}.RunspacePool) {
         Start-AgentTaskAsync -TaskId $TaskId -Priority "Normal"
         return
     }
 
-    $task = $global:agentContext.Tasks | Where-Object { $_.Id -eq $TaskId } | Select-Object -First 1
+    $task = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $TaskId } | Select-Object -First 1
     if ($task) {
         $cursorToken = Enter-CursorWaitState -Reason "AgentTask:$($task.Name)" -Style "Wait"
         try {
@@ -25322,7 +25312,7 @@ function Start-AgentTask {
 
 function Update-AgentTasksList {
     $agentTasksList.Items.Clear()
-    foreach ($task in $global:agentContext.Tasks) {
+    foreach ($task in ${global:agentContext}.Tasks) {
         $item = New-Object System.Windows.Forms.ListViewItem($task.Name)
         $item.SubItems.Add($task.Status) | Out-Null
         $item.SubItems.Add("$($task.Progress)%") | Out-Null
@@ -25358,7 +25348,7 @@ function Invoke-AgenticWorkflow {
             Type        = "tool"
             Description = "Check project structure"
             Tool        = "list_directory"
-            Arguments   = @{path = $global:currentWorkingDir }
+            Arguments   = @{path = ${global:currentWorkingDir} }
         }
     }
 
@@ -25367,7 +25357,7 @@ function Invoke-AgenticWorkflow {
             Type        = "tool"
             Description = "Read error files"
             Tool        = "read_file"
-            Arguments   = @{path = $global:currentFile }
+            Arguments   = @{path = ${global:currentFile} }
         }
         $steps += @{
             Type        = "command"
@@ -25381,12 +25371,12 @@ function Invoke-AgenticWorkflow {
             Type        = "tool"
             Description = "Read source files"
             Tool        = "read_file"
-            Arguments   = @{path = $global:currentFile }
+            Arguments   = @{path = ${global:currentFile} }
         }
         $steps += @{
             Type        = "edit"
             Description = "Apply refactoring"
-            File        = $global:currentFile
+            File        = ${global:currentFile}
             Edits       = @() # Would be generated by AI
         }
     }
@@ -25413,29 +25403,29 @@ function Initialize-MultithreadedAgents {
 
     try {
         # Create runspace pool for parallel execution
-        $script:threadSafeContext.RunspacePool = [runspacefactory]::CreateRunspacePool(
+        ${script:threadSafeContext}.RunspacePool = [runspacefactory]::CreateRunspacePool(
             1,
-            $script:threadSafeContext.WorkerCount,
-            $script:sessionState,
+            ${script:threadSafeContext}.WorkerCount,
+            ${script:sessionState},
             $Host
         )
 
         # Add shared variables to session state
-        $script:sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('agentContext', $global:agentContext, $null)))
-        $script:sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('currentWorkingDir', $global:currentWorkingDir, $null)))
-        $script:sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('settings', $global:settings, $null)))
+        ${script:sessionState}.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('agentContext', ${global:agentContext}, $null)))
+        ${script:sessionState}.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('currentWorkingDir', ${global:currentWorkingDir}, $null)))
+        ${script:sessionState}.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('settings', ${global:settings}, $null)))
 
-        $script:threadSafeContext.RunspacePool.Open()
+        ${script:threadSafeContext}.RunspacePool.Open()
 
         # Initialize log processing timer
-        $script:logProcessingTimer = New-Object System.Windows.Forms.Timer
-        $script:logProcessingTimer.Interval = 100  # Process logs every 100ms
-        $script:logProcessingTimer.add_Tick({
+        ${script:logProcessingTimer} = New-Object System.Windows.Forms.Timer
+        ${script:logProcessingTimer}.Interval = 100  # Process logs every 100ms
+        ${script:logProcessingTimer}.add_Tick({
                 Process-ThreadSafeLogs
             })
-        $script:logProcessingTimer.Start()
+        ${script:logProcessingTimer}.Start()
 
-        Write-DevConsole "✅ Multithreaded agent system initialized with $($script:threadSafeContext.WorkerCount) workers" "SUCCESS"
+        Write-DevConsole "✅ Multithreaded agent system initialized with $(${script:threadSafeContext}.WorkerCount) workers" "SUCCESS"
         return $true
     }
     catch {
@@ -25459,19 +25449,19 @@ function Start-AgentTaskAsync {
         [string]$Priority = "Normal"
     )
 
-    if (-not $script:threadSafeContext.RunspacePool) {
+    if (-not ${script:threadSafeContext}.RunspacePool) {
         Write-DevConsole "⚠ Multithreaded system not initialized, falling back to synchronous execution" "WARNING"
         Start-AgentTask -TaskId $TaskId
         return
     }
 
     # Check if we're at max capacity
-    $activeJobCount = if ($script:threadSafeContext.ActiveJobs) { $script:threadSafeContext.ActiveJobs.Count } else { 0 }
-    if ($activeJobCount -ge $script:threadSafeContext.MaxConcurrentTasks) {
+    $activeJobCount = $(if (${script:threadSafeContext}.ActiveJobs) { ${script:threadSafeContext}.ActiveJobs.Count } else { 0 }
+    if ($activeJobCount -ge ${script:threadSafeContext}.MaxConcurrentTasks) {
         Write-DevConsole "⚠ Maximum concurrent tasks reached, queueing task $TaskId" "WARNING"
 
-        lock ($script:threadSafeContext.SyncRoot) {
-            $script:threadSafeContext.TaskQueue.Enqueue(@{
+        lock (${script:threadSafeContext}.SyncRoot) {
+            ${script:threadSafeContext}.TaskQueue.Enqueue(@{
                     TaskId     = $TaskId
                     Priority   = $Priority
                     QueuedTime = Get-Date
@@ -25480,7 +25470,7 @@ function Start-AgentTaskAsync {
         return
     }
 
-    $task = $global:agentContext.Tasks | Where-Object { $_.Id -eq $TaskId } | Select-Object -First 1
+    $task = ${global:agentContext}.Tasks | Where-Object { $_.Id -eq $TaskId } | Select-Object -First 1
     if (-not $task) {
         Write-DevConsole "❌ Task $TaskId not found" "ERROR"
         return
@@ -25490,7 +25480,7 @@ function Start-AgentTaskAsync {
 
     # Create PowerShell instance
     $powershell = [powershell]::Create()
-    $powershell.RunspacePool = $script:threadSafeContext.RunspacePool
+    $powershell.RunspacePool = ${script:threadSafeContext}.RunspacePool
 
     # Add the task execution script
     $null = $powershell.AddScript({
@@ -25533,7 +25523,7 @@ function Start-AgentTaskAsync {
                             # Execute agent tool via the shared helper so handler invocation is validated
                             try {
                                 $toolName = $step.Tool
-                                $toolArgs = if ($step.Arguments -and ($step.Arguments -is [hashtable])) { $step.Arguments } else { @{} }
+                                $toolArgs = $(if ($step.Arguments -and ($step.Arguments -is [hashtable])) { $step.Arguments } else { @{} }
 
                                 if (-not $toolName) {
                                     throw "Missing tool name for step"
@@ -25629,8 +25619,8 @@ function Start-AgentTaskAsync {
                             try {
                                 if ($step.Query) {
                                     # Send to Ollama for actual processing
-                                    if ($global:ollamaServerStatus -eq "Running" -and (Get-Command Send-OllamaMessage -ErrorAction SilentlyContinue)) {
-                                        $model = if ($global:settings.OllamaModel) { $global:settings.OllamaModel } else { "llama3.2" }
+                                    if (${global:ollamaServerStatus} -eq "Running" -and (Get-Command Send-OllamaMessage -ErrorAction SilentlyContinue)) {
+                                        $model = $(if (${global:settings}.OllamaModel) { ${global:settings}.OllamaModel } else { "llama3.2" }
                                         $step.Result = Send-OllamaMessage -Prompt $step.Query -Model $model -ErrorAction Stop
                                     } else {
                                         $step.Result = "AI query received: $($step.Query) [Ollama not available]"
@@ -25685,9 +25675,9 @@ function Start-AgentTaskAsync {
 
     # Add parameters
     $null = $powershell.AddParameter("TaskData", $task)
-    $null = $powershell.AddParameter("LogQueue", $script:logQueue)
-    $null = $powershell.AddParameter("CompletedTasks", $script:threadSafeContext.CompletedTasks)
-    $null = $powershell.AddParameter("WorkerStates", $script:agentWorkers)
+    $null = $powershell.AddParameter("LogQueue", ${script:logQueue})
+    $null = $powershell.AddParameter("CompletedTasks", ${script:threadSafeContext}.CompletedTasks)
+    $null = $powershell.AddParameter("WorkerStates", ${script:agentWorkers})
 
     # Start async execution
     $job = $powershell.BeginInvoke()
@@ -25702,16 +25692,16 @@ function Start-AgentTaskAsync {
         Task       = $task
     }
 
-    lock ($script:threadSafeContext.SyncRoot) {
-        $script:threadSafeContext.ActiveJobs[$TaskId] = $jobInfo
+    lock (${script:threadSafeContext}.SyncRoot) {
+        ${script:threadSafeContext}.ActiveJobs[$TaskId] = $jobInfo
     }
 
     # Update worker status
     $workerName = Get-AvailableWorker
     if ($workerName) {
-        $script:agentWorkers[$workerName].Status = "Running"
-        $script:agentWorkers[$workerName].CurrentTask = $TaskId
-        $script:agentWorkers[$workerName].LastActivity = Get-Date
+        ${script:agentWorkers}[$workerName].Status = "Running"
+        ${script:agentWorkers}[$workerName].CurrentTask = $TaskId
+        ${script:agentWorkers}[$workerName].LastActivity = Get-Date
     }
 
     Update-AgentTasksList
@@ -25726,7 +25716,7 @@ function Start-ParallelChatProcessing {
     #>
     param([array]$ChatRequests)
 
-    if (-not $script:threadSafeContext.RunspacePool) {
+    if (-not ${script:threadSafeContext}.RunspacePool) {
         Write-DevConsole "⚠ Multithreading not available, processing chats sequentially" "WARNING"
         foreach ($request in $ChatRequests) {
             Send-ChatMessage -TabId $request.TabId
@@ -25740,7 +25730,7 @@ function Start-ParallelChatProcessing {
 
     foreach ($request in $ChatRequests) {
         $powershell = [powershell]::Create()
-        $powershell.RunspacePool = $script:threadSafeContext.RunspacePool
+        $powershell.RunspacePool = ${script:threadSafeContext}.RunspacePool
 
         $null = $powershell.AddScript({
                 param($TabId, $Message, $Model, $ChatHistory)
@@ -25800,19 +25790,19 @@ function Start-ChatJobMonitor {
     param([array]$ChatJobsToAdd)
 
     # Add new jobs to the script-level collection
-    $script:chatJobs += $ChatJobsToAdd
+    ${script:chatJobs} += $ChatJobsToAdd
 
     # Only create timer if we don't already have one running
-    if (-not $script:chatJobMonitorTimer) {
-        $script:chatJobMonitorTimer = New-Object System.Windows.Forms.Timer
-        $script:chatJobMonitorTimer.Interval = 250
+    if (-not ${script:chatJobMonitorTimer}) {
+        ${script:chatJobMonitorTimer} = New-Object System.Windows.Forms.Timer
+        ${script:chatJobMonitorTimer}.Interval = 250
 
-        $script:chatJobMonitorTimer.add_Tick({
+        ${script:chatJobMonitorTimer}.add_Tick({
             try {
-                if (-not $script:chatJobs) { return }
+                if (-not ${script:chatJobs}) { return }
                 $completedJobs = @()
 
-                foreach ($chatJob in $script:chatJobs) {
+                foreach ($chatJob in ${script:chatJobs}) {
                     if ($chatJob.Job.IsCompleted) {
                         try {
                             $result = $chatJob.PowerShell.EndInvoke($chatJob.Job)
@@ -25820,8 +25810,8 @@ function Start-ChatJobMonitor {
                             # Update UI on main thread
                             [System.Windows.Forms.Control]::CheckForIllegalCrossThreadCalls = $false
 
-                            if ($script:chatTabs.ContainsKey($result.TabId)) {
-                                $chatSession = $script:chatTabs[$result.TabId]
+                            if (${script:chatTabs}.ContainsKey($result.TabId)) {
+                                $chatSession = ${script:chatTabs}[$result.TabId]
 
                                 if ($result.Success) {
                                     # Find and replace the processing indicator
@@ -25869,14 +25859,14 @@ function Start-ChatJobMonitor {
 
                 # Remove completed jobs
                 foreach ($completed in $completedJobs) {
-                    $script:chatJobs = @($script:chatJobs | Where-Object { $_.TabId -ne $completed.TabId })
+                    ${script:chatJobs} = @(${script:chatJobs} | Where-Object { $_.TabId -ne $completed.TabId })
                 }
 
                 # Stop timer if all jobs completed
-                if (@($script:chatJobs).Count -eq 0) {
-                    $script:chatJobMonitorTimer.Stop()
-                    $script:chatJobMonitorTimer.Dispose()
-                    $script:chatJobMonitorTimer = $null
+                if (@(${script:chatJobs}).Count -eq 0) {
+                    ${script:chatJobMonitorTimer}.Stop()
+                    ${script:chatJobMonitorTimer}.Dispose()
+                    ${script:chatJobMonitorTimer} = $null
                     Write-DevConsole "✅ All parallel chat jobs completed" "SUCCESS"
                 }
             }
@@ -25885,7 +25875,7 @@ function Start-ChatJobMonitor {
             }
             })
 
-        $script:chatJobMonitorTimer.Start()
+        ${script:chatJobMonitorTimer}.Start()
     }
 }
 
@@ -25895,17 +25885,17 @@ function Process-ThreadSafeLogs {
         Processes logs from background threads and displays them in the UI
     #>
     try {
-        if (-not $script:logQueue -or $script:logQueue.Count -eq 0) { return }
+        if (-not ${script:logQueue} -or ${script:logQueue}.Count -eq 0) { return }
 
         $processedCount = 0
         $maxProcessPerTick = 10
 
-        while ($script:logQueue.Count -gt 0 -and $processedCount -lt $maxProcessPerTick) {
+        while (${script:logQueue}.Count -gt 0 -and $processedCount -lt $maxProcessPerTick) {
             $logEntry = $null
 
-            lock ($script:logQueue.SyncRoot) {
-                if ($script:logQueue.Count -gt 0) {
-                    $logEntry = $script:logQueue.Dequeue()
+            lock (${script:logQueue}.SyncRoot) {
+                if (${script:logQueue}.Count -gt 0) {
+                    $logEntry = ${script:logQueue}.Dequeue()
                 }
             }
 
@@ -25934,35 +25924,35 @@ function Monitor-AgentJobs {
         Monitors async agent jobs and updates UI when they complete
     #>
     try {
-        if (-not $script:threadSafeContext -or -not $script:threadSafeContext.ActiveJobs) { return }
+        if (-not ${script:threadSafeContext} -or -not ${script:threadSafeContext}.ActiveJobs) { return }
 
         $completedJobs = @()
 
-        foreach ($jobId in $script:threadSafeContext.ActiveJobs.Keys) {
-            $jobInfo = $script:threadSafeContext.ActiveJobs[$jobId]
+        foreach ($jobId in ${script:threadSafeContext}.ActiveJobs.Keys) {
+            $jobInfo = ${script:threadSafeContext}.ActiveJobs[$jobId]
 
             if ($jobInfo.Job.IsCompleted) {
                 try {
                     $result = $jobInfo.PowerShell.EndInvoke($jobInfo.Job)
 
                     # Update the task in the global context
-                    $taskIndex = $global:agentContext.Tasks.FindIndex({ $_.Id -eq $jobId })
+                    $taskIndex = ${global:agentContext}.Tasks.FindIndex({ $_.Id -eq $jobId })
                     if ($taskIndex -ge 0) {
-                        $global:agentContext.Tasks[$taskIndex] = $result
+                        ${global:agentContext}.Tasks[$taskIndex] = $result
                     }
 
                     # Update UI
                     Update-AgentTasksList
 
                     # Update worker status
-                    $workerName = ($script:agentWorkers.Keys | Where-Object {
-                            $script:agentWorkers[$_].CurrentTask -eq $jobId
+                    $workerName = (${script:agentWorkers}.Keys | Where-Object {
+                            ${script:agentWorkers}[$_].CurrentTask -eq $jobId
                         }) | Select-Object -First 1
 
                     if ($workerName) {
-                        $script:agentWorkers[$workerName].Status = "Idle"
-                        $script:agentWorkers[$workerName].CurrentTask = $null
-                        $script:agentWorkers[$workerName].LastActivity = Get-Date
+                        ${script:agentWorkers}[$workerName].Status = "Idle"
+                        ${script:agentWorkers}[$workerName].CurrentTask = $null
+                        ${script:agentWorkers}[$workerName].LastActivity = Get-Date
                     }
 
                     Write-DevConsole "✅ Async task completed: $($result.Name)" "SUCCESS"
@@ -25983,8 +25973,8 @@ function Monitor-AgentJobs {
 
     # Remove completed jobs
     foreach ($jobId in $completedJobs) {
-        lock ($script:threadSafeContext.SyncRoot) {
-            $script:threadSafeContext.ActiveJobs.Remove($jobId)
+        lock (${script:threadSafeContext}.SyncRoot) {
+            ${script:threadSafeContext}.ActiveJobs.Remove($jobId)
         }
     }
     }
@@ -25999,14 +25989,14 @@ function Process-TaskQueue {
         Processes queued tasks when workers become available
     #>
 
-    if ($script:threadSafeContext.TaskQueue.Count -eq 0) { return }
-    if ($script:threadSafeContext.ActiveJobs.Count -ge $script:threadSafeContext.MaxConcurrentTasks) { return }
+    if (${script:threadSafeContext}.TaskQueue.Count -eq 0) { return }
+    if (${script:threadSafeContext}.ActiveJobs.Count -ge ${script:threadSafeContext}.MaxConcurrentTasks) { return }
 
     $queuedTask = $null
 
-    lock ($script:threadSafeContext.SyncRoot) {
-        if ($script:threadSafeContext.TaskQueue.Count -gt 0) {
-            $queuedTask = $script:threadSafeContext.TaskQueue.Dequeue()
+    lock (${script:threadSafeContext}.SyncRoot) {
+        if (${script:threadSafeContext}.TaskQueue.Count -gt 0) {
+            $queuedTask = ${script:threadSafeContext}.TaskQueue.Dequeue()
         }
     }
 
@@ -26022,8 +26012,8 @@ function Get-AvailableWorker {
         Gets the name of an available worker thread
     #>
 
-    $availableWorker = $script:agentWorkers.Keys | Where-Object {
-        $script:agentWorkers[$_].Status -eq "Idle"
+    $availableWorker = ${script:agentWorkers}.Keys | Where-Object {
+        ${script:agentWorkers}[$_].Status -eq "Idle"
     } | Select-Object -First 1
 
     return $availableWorker
@@ -26039,13 +26029,13 @@ function Stop-MultithreadedAgents {
 
     try {
         # Stop log processing timer
-        if ($script:logProcessingTimer) {
-            $script:logProcessingTimer.Stop()
-            $script:logProcessingTimer.Dispose()
+        if (${script:logProcessingTimer}) {
+            ${script:logProcessingTimer}.Stop()
+            ${script:logProcessingTimer}.Dispose()
         }
 
         # Cancel all active jobs
-        foreach ($jobInfo in $script:threadSafeContext.ActiveJobs.Values) {
+        foreach ($jobInfo in ${script:threadSafeContext}.ActiveJobs.Values) {
             try {
                 $jobInfo.PowerShell.Stop()
                 $jobInfo.PowerShell.Dispose()
@@ -26056,15 +26046,15 @@ function Stop-MultithreadedAgents {
         }
 
         # Close runspace pool
-        if ($script:threadSafeContext.RunspacePool) {
-            $script:threadSafeContext.RunspacePool.Close()
-            $script:threadSafeContext.RunspacePool.Dispose()
+        if (${script:threadSafeContext}.RunspacePool) {
+            ${script:threadSafeContext}.RunspacePool.Close()
+            ${script:threadSafeContext}.RunspacePool.Dispose()
         }
 
         # Clear collections
-        $script:threadSafeContext.ActiveJobs.Clear()
-        $script:threadSafeContext.TaskQueue.Clear()
-        $script:threadSafeContext.CompletedTasks.Clear()
+        ${script:threadSafeContext}.ActiveJobs.Clear()
+        ${script:threadSafeContext}.TaskQueue.Clear()
+        ${script:threadSafeContext}.CompletedTasks.Clear()
 
         Write-DevConsole "✅ Multithreaded agent system stopped" "SUCCESS"
     }
@@ -26080,13 +26070,13 @@ function Get-ThreadingStatus {
     #>
 
     return @{
-        IsInitialized      = ($null -ne $script:threadSafeContext.RunspacePool)
-        ActiveJobs         = $script:threadSafeContext.ActiveJobs.Count
-        QueuedTasks        = $script:threadSafeContext.TaskQueue.Count
-        CompletedTasks     = $script:threadSafeContext.CompletedTasks.Count
-        WorkerStates       = $script:agentWorkers
-        MaxConcurrentTasks = $script:threadSafeContext.MaxConcurrentTasks
-        WorkerCount        = $script:threadSafeContext.WorkerCount
+        IsInitialized      = ($null -ne ${script:threadSafeContext}.RunspacePool)
+        ActiveJobs         = ${script:threadSafeContext}.ActiveJobs.Count
+        QueuedTasks        = ${script:threadSafeContext}.TaskQueue.Count
+        CompletedTasks     = ${script:threadSafeContext}.CompletedTasks.Count
+        WorkerStates       = ${script:agentWorkers}
+        MaxConcurrentTasks = ${script:threadSafeContext}.MaxConcurrentTasks
+        WorkerCount        = ${script:threadSafeContext}.WorkerCount
     }
 }
 
@@ -26206,21 +26196,21 @@ $terminalInput.Add_KeyDown({
             Invoke-TerminalCommand $command
         }
         elseif ($_.KeyCode -eq "Up") {
-            if ($global:terminalHistoryIndex -gt 0) {
-                $global:terminalHistoryIndex--
-                $terminalInput.Text = $global:terminalHistory[$global:terminalHistoryIndex]
+            if (${global:terminalHistoryIndex} -gt 0) {
+                ${global:terminalHistoryIndex}--
+                $terminalInput.Text = ${global:terminalHistory}[${global:terminalHistoryIndex}]
             }
             $_.Handled = $true
         }
         elseif ($_.KeyCode -eq "Down") {
-            $histCount = @($global:terminalHistory).Count
-            if ($global:terminalHistoryIndex -lt ($histCount - 1)) {
-                $global:terminalHistoryIndex++
-                $terminalInput.Text = $global:terminalHistory[$global:terminalHistoryIndex]
+            $histCount = @(${global:terminalHistory}).Count
+            if (${global:terminalHistoryIndex} -lt ($histCount - 1)) {
+                ${global:terminalHistoryIndex}++
+                $terminalInput.Text = ${global:terminalHistory}[${global:terminalHistoryIndex}]
             }
             else {
                 $terminalInput.Text = ""
-                $global:terminalHistoryIndex = $histCount
+                ${global:terminalHistoryIndex} = $histCount
             }
             $_.Handled = $true
         }
@@ -26277,17 +26267,17 @@ function Send-AgentCommand {
         }
         elseif ($command -eq "/status") {
             $agentTaskDetails.AppendText("Agent Status: Online`r`n")
-            $agentTaskDetails.AppendText("Model: $($global:settings.OllamaModel)`r`n")
-            $agentTaskDetails.AppendText("Tasks: $($global:agentContext.Tasks.Count)`r`n")
-            $agentTaskDetails.AppendText("Session: $($global:agentContext.SessionId)`r`n`r`n")
+            $agentTaskDetails.AppendText("Model: $(${global:settings}.OllamaModel)`r`n")
+            $agentTaskDetails.AppendText("Tasks: $(${global:agentContext}.Tasks.Count)`r`n")
+            $agentTaskDetails.AppendText("Session: $(${global:agentContext}.SessionId)`r`n`r`n")
         }
         elseif ($command -eq "/tasks") {
             $agentTaskDetails.AppendText("Current Tasks:`r`n")
-            if ($global:agentContext.Tasks.Count -eq 0) {
+            if (${global:agentContext}.Tasks.Count -eq 0) {
                 $agentTaskDetails.AppendText("  No active tasks`r`n")
             }
             else {
-                foreach ($task in $global:agentContext.Tasks) {
+                foreach ($task in ${global:agentContext}.Tasks) {
                     $agentTaskDetails.AppendText("  - $($task.Name) [$($task.Status)]`r`n")
                 }
             }
@@ -26306,7 +26296,7 @@ function Send-AgentCommand {
         }
         elseif ($command -match "^/execute_tool\s+(\w+)(?:\s+(.+))?$") {
             $toolName = $Matches[1]
-            $paramsJson = if ($Matches[2]) { $Matches[2] } else { "{}" }
+            $paramsJson = $(if ($Matches[2]) { $Matches[2] } else { "{}" }
 
             try {
                 $params = ConvertFrom-Json $paramsJson -AsHashtable
@@ -26331,7 +26321,7 @@ function Send-AgentCommand {
             $agentTaskDetails.AppendText("Processing with agentic AI (tool-calling enabled)...`r`n")
             
             try {
-                $result = Invoke-AgenticChat -UserMessage $command -Model $global:settings.OllamaModel
+                $result = Invoke-AgenticChat -UserMessage $command -Model ${global:settings}.OllamaModel
                 
                 if ($result -is [hashtable]) {
                     # Show tools used
@@ -26382,8 +26372,8 @@ Initialize-EditorDiagnosticsModule
 
 # Load user settings
 try {
-    $script:settingsLoader = { Get-Settings }  # Fixed verb name
-    Invoke-Command $script:settingsLoader
+    ${script:settingsLoader} = { Get-Settings }  # Fixed verb name
+    Invoke-Command ${script:settingsLoader}
     Write-DevConsole "User settings loaded successfully" "SUCCESS"
 }
 catch {
@@ -26392,7 +26382,7 @@ catch {
 
 # Initialize Agentic System
 Get-EnvironmentInfo | Out-Null
-Write-AgentLog -Level "Info" -Message "Agentic system initialized" -Data @{SessionId = $global:agentContext.SessionId }
+Write-AgentLog -Level "Info" -Message "Agentic system initialized" -Data @{SessionId = ${global:agentContext}.SessionId }
 
 # Agent tools are initialized earlier in the script via Initialize-AgentTools
 # This ensures tools are available before any agentic operations
@@ -26415,7 +26405,7 @@ $form.Add_Load({
             Get-ChatHistory
 
             # Create initial chat tab if none exist - with timeout protection
-            if (@($script:chatTabs).Count -eq 0) {
+            if (@(${script:chatTabs}).Count -eq 0) {
                 $job = Start-Job -ScriptBlock { New-ChatTab -TabName "Welcome" } -ErrorAction SilentlyContinue
                 if ($job) {
                     $result = Wait-Job -Job $job -Timeout 10 -ErrorAction SilentlyContinue
@@ -26436,14 +26426,14 @@ $form.Add_Load({
         # Get the first available chat tab for welcome message
         $welcomeChat = Get-ActiveChatTab
         if (-not $welcomeChat) {
-            $welcomeChat = $script:chatTabs.Values | Select-Object -First 1
+            $welcomeChat = ${script:chatTabs}.Values | Select-Object -First 1
         }
 
         if ($welcomeChat) {
             $chatBox = $welcomeChat.ChatBox
 
             # Show agent mode status on startup
-            if ($global:AgentMode) {
+            if (${global:AgentMode}) {
                 $chatBox.AppendText("═══════════════════════════════════════════════════════════════`r`n")
                 $chatBox.AppendText("     🤖 RawrXD AI Editor - Agent Mode ACTIVE 🤖     `r`n")
                 $chatBox.AppendText("═══════════════════════════════════════════════════════════════`r`n")
@@ -26523,35 +26513,35 @@ function Show-SessionInfo {
     $infoText.ForeColor = [System.Drawing.Color]::White
     $infoText.Font = New-Object System.Drawing.Font("Consolas", 10)
 
-    $sessionDuration = ((Get-Date) - $script:CurrentSession.StartTime)
-    $lastActivityAgo = ((Get-Date) - $script:CurrentSession.LastActivity)
+    $sessionDuration = ((Get-Date) - ${script:CurrentSession}.StartTime)
+    $lastActivityAgo = ((Get-Date) - ${script:CurrentSession}.LastActivity)
 
     $sessionInfo = @"
 SESSION INFORMATION
 ═══════════════════════════════════════
-Session ID: $($script:CurrentSession.SessionId)
-User ID: $(if ($script:CurrentSession.UserId) { $script:CurrentSession.UserId } else { "Anonymous" })
-Authenticated: $($script:CurrentSession.IsAuthenticated)
-Security Level: $($script:CurrentSession.SecurityLevel)
-Login Attempts: $($script:CurrentSession.LoginAttempts)
+Session ID: $(${script:CurrentSession}.SessionId)
+User ID: $(if (${script:CurrentSession}.UserId) { ${script:CurrentSession}.UserId } else { "Anonymous" })
+Authenticated: $(${script:CurrentSession}.IsAuthenticated)
+Security Level: $(${script:CurrentSession}.SecurityLevel)
+Login Attempts: $(${script:CurrentSession}.LoginAttempts)
 
 TIMING
 ═══════════════════════════════════════
-Start Time: $($script:CurrentSession.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
+Start Time: $(${script:CurrentSession}.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
 Duration: $($sessionDuration.Hours)h $($sessionDuration.Minutes)m $($sessionDuration.Seconds)s
 Last Activity: $([math]::Round($lastActivityAgo.TotalMinutes, 2)) minutes ago
 
 SECURITY CONFIGURATION
 ═══════════════════════════════════════
-Stealth Mode: $($script:SecurityConfig.StealthMode)
-Encrypt Sensitive Data: $($script:SecurityConfig.EncryptSensitiveData)
-Validate Inputs: $($script:SecurityConfig.ValidateAllInputs)
-Secure Connections: $($script:UseHTTPS)
-Session Timeout: $($script:SecurityConfig.SessionTimeout)s
-Max Login Attempts: $($script:SecurityConfig.MaxLoginAttempts)
-Log Security Events: $($script:SecurityConfig.LogSecurityEvents)
-Anti-Forensics: $($script:SecurityConfig.AntiForensics)
-Process Hiding: $($script:SecurityConfig.ProcessHiding)
+Stealth Mode: $(${script:SecurityConfig}.StealthMode)
+Encrypt Sensitive Data: $(${script:SecurityConfig}.EncryptSensitiveData)
+Validate Inputs: $(${script:SecurityConfig}.ValidateAllInputs)
+Secure Connections: $(${script:UseHTTPS})
+Session Timeout: $(${script:SecurityConfig}.SessionTimeout)s
+Max Login Attempts: $(${script:SecurityConfig}.MaxLoginAttempts)
+Log Security Events: $(${script:SecurityConfig}.LogSecurityEvents)
+Anti-Forensics: $(${script:SecurityConfig}.AntiForensics)
+Process Hiding: $(${script:SecurityConfig}.ProcessHiding)
 
 SYSTEM INFORMATION
 ═══════════════════════════════════════
@@ -26560,13 +26550,13 @@ User Context: $([Environment]::UserName)
 Machine Name: $([Environment]::MachineName)
 OS Version: $([Environment]::OSVersion.VersionString)
 PowerShell Version: $($PSVersionTable.PSVersion)
-Security Events Logged: $(@($script:SecurityLog).Count)
+Security Events Logged: $(@(${script:SecurityLog}).Count)
 
 OLLAMA CONNECTION
 ═══════════════════════════════════════
 Endpoint: $OllamaAPIEndpoint
-HTTPS Enabled: $script:UseHTTPS
-API Key Configured: $($null -ne $script:OllamaAPIKey)
+HTTPS Enabled: ${script:UseHTTPS}
+API Key Configured: $($null -ne ${script:OllamaAPIKey})
 Model: $OllamaModel
 "@
 
@@ -26576,7 +26566,7 @@ Model: $OllamaModel
 }
 
 function Show-SecurityLog {
-    $secLogCount = @($script:SecurityLog).Count
+    $secLogCount = @(${script:SecurityLog}).Count
     $logForm = New-Object System.Windows.Forms.Form
     $logForm.Text = "Security Event Log ($secLogCount events)"
     $logForm.Size = New-Object System.Drawing.Size(800, 600)
@@ -26601,7 +26591,7 @@ function Show-SecurityLog {
     $logGrid.Columns.Add("Details", "Details") | Out-Null
 
     # Add data
-    foreach ($entry in $script:SecurityLog) {
+    foreach ($entry in ${script:SecurityLog}) {
         $row = @($entry.Timestamp, $entry.Level, $entry.Event, $entry.Details)
         $logGrid.Rows.Add($row) | Out-Null
 
@@ -26717,7 +26707,7 @@ function Show-EncryptionTest {
     $encryptBtn.Add_Click({
             try {
                 $plainText = $inputBox.Text
-                $encrypted = [StealthCrypto]::Encrypt($plainText, $script:CurrentSession.EncryptionKey)
+                $encrypted = [StealthCrypto]::Encrypt($plainText, ${script:CurrentSession}.EncryptionKey)
                 $encryptedBox.Text = $encrypted
                 $hash = [StealthCrypto]::Hash($plainText)
                 $infoBox.Text = "Encryption successful!`r`nOriginal length: $($plainText.Length) chars`r`nEncrypted length: $($encrypted.Length) chars`r`nSHA256 Hash: $hash"
@@ -26730,7 +26720,7 @@ function Show-EncryptionTest {
     $decryptBtn.Add_Click({
             try {
                 if ($encryptedBox.Text) {
-                    $decrypted = [StealthCrypto]::Decrypt($encryptedBox.Text, $script:CurrentSession.EncryptionKey)
+                    $decrypted = [StealthCrypto]::Decrypt($encryptedBox.Text, ${script:CurrentSession}.EncryptionKey)
                     $decryptedBox.Text = $decrypted
                     $match = $decrypted -eq $inputBox.Text
                     $infoBox.AppendText("`r`nDecryption successful!`r`nMatches original: $match")
@@ -26781,7 +26771,7 @@ Hash Value: $($hash1.Substring(0, 16))...
 
 SECURITY STATUS:
 Algorithm: AES-256-CBC
-Key Size: $($script:CurrentSession.EncryptionKey.Length * 8) bits
+Key Size: $(${script:CurrentSession}.EncryptionKey.Length * 8) bits
 Session Key: Yes (unique per session)
 "@
 
@@ -26874,8 +26864,8 @@ function Optimize-UIPerformance {
         Enable-ControlDoubleBuffering -Control $form
 
         # Optimize text rendering
-        if ($script:editor) {
-            Enable-ControlDoubleBuffering -Control $script:editor
+        if (${script:editor}) {
+            Enable-ControlDoubleBuffering -Control ${script:editor}
         }
 
         Write-DevConsole "🎨 UI performance optimized" "SUCCESS"
@@ -27018,32 +27008,32 @@ HANDLE COUNT:
 
 OLLAMA STATUS:
   Connection Status: $(if (Test-OllamaConnection) { "✅ Connected" } else { "❌ Disconnected" })
-  Active Servers: $(@($script:OllamaServers).Count)
+  Active Servers: $(@(${script:OllamaServers}).Count)
 
 REAL-TIME MONITORING:
-  Status Updates: $(if ($script:RealTimeMonitoring.StatusTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
-  Performance Tracking: $(if ($script:RealTimeMonitoring.PerformanceTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
-  Network Monitoring: $(if ($script:RealTimeMonitoring.NetworkTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
+  Status Updates: $(if (${script:RealTimeMonitoring}.StatusTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
+  Performance Tracking: $(if (${script:RealTimeMonitoring}.PerformanceTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
+  Network Monitoring: $(if (${script:RealTimeMonitoring}.NetworkTimer.Enabled) { "✅ Active" } else { "❌ Inactive" })
 
 ERROR HANDLING:
-  Total Errors Handled: $($script:ErrorStats.TotalErrors)
-  Critical Errors: $($script:ErrorStats.CriticalErrors)
-  Security Events: $($script:ErrorStats.SecurityErrors)
-  Auto-Recovery Actions: $($script:ErrorStats.AutoRecoveryCount)
+  Total Errors Handled: $(${script:ErrorStats}.TotalErrors)
+  Critical Errors: $(${script:ErrorStats}.CriticalErrors)
+  Security Events: $(${script:ErrorStats}.SecurityErrors)
+  Auto-Recovery Actions: $(${script:ErrorStats}.AutoRecoveryCount)
 
 SECURITY STATUS:
-  Authentication: $(if ($script:CurrentSession) { "✅ Authenticated" } else { "❌ Not Authenticated" })
-  Session Active: $(if ($script:CurrentSession) { "✅ Active (ID: $($script:CurrentSession.SessionId.Substring(0,8))...)" } else { "❌ No Session" })
-  Encryption: $(if ($script:CurrentSession -and $script:CurrentSession.EncryptionKey) { "✅ AES-256-CBC" } else { "❌ Not Available" })
-  Stealth Mode: $(if ($script:StealthModeActive) { "✅ Active" } else { "❌ Inactive" })
+  Authentication: $(if (${script:CurrentSession}) { "✅ Authenticated" } else { "❌ Not Authenticated" })
+  Session Active: $(if (${script:CurrentSession}) { "✅ Active (ID: $(${script:CurrentSession}.SessionId.Substring(0,8))...)" } else { "❌ No Session" })
+  Encryption: $(if (${script:CurrentSession} -and ${script:CurrentSession}.EncryptionKey) { "✅ AES-256-CBC" } else { "❌ Not Available" })
+  Stealth Mode: $(if (${script:StealthModeActive}) { "✅ Active" } else { "❌ Inactive" })
 
 CUSTOMIZATION:
-  Current Theme: $($script:CurrentTheme)
-  Font Size: $($script:CurrentFontSize)pt
-  UI Scale: $($script:CurrentUIScale * 100)%
+  Current Theme: $(${script:CurrentTheme})
+  Font Size: $(${script:CurrentFontSize})pt
+  UI Scale: $(${script:CurrentUIScale} * 100)%
 
 RECOMMENDATIONS:
-$(if ($process.WorkingSet64 -gt 500MB) { "⚠️ High memory usage detected - consider restarting`n" })$(if (@($process.Threads).Count -gt 50) { "⚠️ High thread count - check for resource leaks`n" })$(if (-not (Test-OllamaConnection)) { "⚠️ Ollama connection lost - check server status`n" })$(if ($script:ErrorStats.CriticalErrors -gt 0) { "🚨 Critical errors detected - review error logs`n" })
+$(if ($process.WorkingSet64 -gt 500MB) { "⚠️ High memory usage detected - consider restarting`n" })$(if (@($process.Threads).Count -gt 50) { "⚠️ High thread count - check for resource leaks`n" })$(if (-not (Test-OllamaConnection)) { "⚠️ Ollama connection lost - check server status`n" })$(if (${script:ErrorStats}.CriticalErrors -gt 0) { "🚨 Critical errors detected - review error logs`n" })
 "@
 
         $TextBox.Text = $perfInfo
@@ -27063,7 +27053,7 @@ function Start-PerformanceProfiler {
 
     Write-DevConsole "🔍 Starting performance profiler for $DurationSeconds seconds..." "INFO"
 
-    $script:ProfilerData = @{
+    ${script:ProfilerData} = @{
         StartTime = Get-Date
         Samples   = @()
         IsRunning = $true
@@ -27077,7 +27067,7 @@ function Start-PerformanceProfiler {
     $profilerTimer.Add_Tick({
             if ($sampleCount -ge $maxSamples) {
                 $profilerTimer.Stop()
-                $script:ProfilerData.IsRunning = $false
+                ${script:ProfilerData}.IsRunning = $false
                 Show-ProfilerResults
                 return
             }
@@ -27092,7 +27082,7 @@ function Start-PerformanceProfiler {
                     HandleCount   = $process.HandleCount
                 }
 
-                $script:ProfilerData.Samples += $sample
+                ${script:ProfilerData}.Samples += $sample
                 $sampleCount++
 
                 Write-DevConsole "📊 Profiler sample $sampleCount/$maxSamples collected" "INFO"
@@ -27106,7 +27096,7 @@ function Start-PerformanceProfiler {
 }
 
 function Show-ProfilerResults {
-    if (-not $script:ProfilerData -or $script:ProfilerData.Samples.Count -eq 0) {
+    if (-not ${script:ProfilerData} -or ${script:ProfilerData}.Samples.Count -eq 0) {
         Write-DevConsole "⚠️ No profiler data available" "WARNING"
         return
     }
@@ -27125,7 +27115,7 @@ function Show-ProfilerResults {
     $resultsForm.Controls.Add($resultsTextBox)
 
     # Calculate statistics
-    $samples = @($script:ProfilerData.Samples)
+    $samples = @(${script:ProfilerData}.Samples)
     $sampleCount = $samples.Count
     $duration = ($samples[-1].Timestamp - $samples[0].Timestamp).TotalSeconds
 
@@ -27142,7 +27132,7 @@ PERFORMANCE PROFILER RESULTS
 ═══════════════════════════════════════════════════════
 
 PROFILING SESSION:
-  Start Time: $($script:ProfilerData.StartTime)
+  Start Time: $(${script:ProfilerData}.StartTime)
   Duration: $([math]::Round($duration, 2)) seconds
   Sample Count: $sampleCount
   Sample Rate: $([math]::Round($sampleCount / $duration, 2)) samples/second
@@ -27239,8 +27229,8 @@ function Apply-Theme {
 
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.BackColor = $bgColor
                         $session.ChatBox.ForeColor = $textColor
@@ -27258,18 +27248,18 @@ function Apply-Theme {
 
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.BackColor = $bgColor
-                $script:editor.ForeColor = $textColor
+            if (${script:editor}) {
+                ${script:editor}.BackColor = $bgColor
+                ${script:editor}.ForeColor = $textColor
                 
                 # Re-color existing text to match new theme
-                $cursorPos = $script:editor.SelectionStart
-                $script:editor.SelectAll()
-                $script:editor.SelectionColor = $textColor
-                $script:editor.SelectionBackColor = $bgColor
-                $script:editor.SelectionStart = $cursorPos
-                $script:editor.SelectionLength = 0
-                $script:editor.SelectionColor = $textColor  # For future typing
+                $cursorPos = ${script:editor}.SelectionStart
+                ${script:editor}.SelectAll()
+                ${script:editor}.SelectionColor = $textColor
+                ${script:editor}.SelectionBackColor = $bgColor
+                ${script:editor}.SelectionStart = $cursorPos
+                ${script:editor}.SelectionLength = 0
+                ${script:editor}.SelectionColor = $textColor  # For future typing
             }
         }
         catch {
@@ -27277,7 +27267,7 @@ function Apply-Theme {
         }
 
         # Save theme preference
-        $script:CurrentTheme = $ThemeName
+        ${script:CurrentTheme} = $ThemeName
         Save-CustomizationSettings
 
         Write-DevConsole "✅ $ThemeName theme applied successfully" "SUCCESS"
@@ -27302,8 +27292,8 @@ function Apply-FontSize {
 
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.Font = New-Object System.Drawing.Font("Consolas", $Size)
                     }
@@ -27319,8 +27309,8 @@ function Apply-FontSize {
 
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.Font = New-Object System.Drawing.Font("Segoe UI", $Size)
+            if (${script:editor}) {
+                ${script:editor}.Font = New-Object System.Drawing.Font("Segoe UI", $Size)
             }
         }
         catch {
@@ -27328,7 +27318,7 @@ function Apply-FontSize {
         }
 
         # Save font preference
-        $script:CurrentFontSize = $Size
+        ${script:CurrentFontSize} = $Size
         Save-CustomizationSettings
 
         Write-DevConsole "✅ Font size set to ${Size}pt successfully" "SUCCESS"
@@ -27365,7 +27355,7 @@ function Apply-UIScaling {
         }
 
         # Save scaling preference
-        $script:CurrentUIScale = $Scale
+        ${script:CurrentUIScale} = $Scale
         Save-CustomizationSettings
 
         Write-DevConsole "✅ UI scaling set to $($Scale * 100)% successfully" "SUCCESS"
@@ -27445,7 +27435,7 @@ function Show-CustomThemeBuilder {
             $colorDialog = New-Object System.Windows.Forms.ColorDialog
             if ($colorDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
                 $textButton.BackColor = $colorDialog.Color
-                $textButton.ForeColor = if ($colorDialog.Color.GetBrightness() -gt 0.5) { [System.Drawing.Color]::Black } else { [System.Drawing.Color]::White }
+                $textButton.ForeColor = $(if ($colorDialog.Color.GetBrightness() -gt 0.5) { [System.Drawing.Color]::Black } else { [System.Drawing.Color]::White }
             }
         })
 
@@ -27531,8 +27521,8 @@ function Apply-CustomTheme {
 
         # Apply to chat boxes
         try {
-            if ($script:chatTabs) {
-                foreach ($session in $script:chatTabs.Values) {
+            if (${script:chatTabs}) {
+                foreach ($session in ${script:chatTabs}.Values) {
                     if ($session.ChatBox) {
                         $session.ChatBox.BackColor = $BackColor
                         $session.ChatBox.ForeColor = $TextColor
@@ -27550,9 +27540,9 @@ function Apply-CustomTheme {
 
         # Apply to text editor
         try {
-            if ($script:editor) {
-                $script:editor.BackColor = $BackColor
-                $script:editor.ForeColor = $TextColor
+            if (${script:editor}) {
+                ${script:editor}.BackColor = $BackColor
+                ${script:editor}.ForeColor = $TextColor
             }
         }
         catch {
@@ -27560,12 +27550,12 @@ function Apply-CustomTheme {
         }
 
         # Save custom theme
-        $script:CustomTheme = @{
+        ${script:CustomTheme} = @{
             BackColor  = $BackColor
             TextColor  = $TextColor
             PanelColor = $PanelColor
         }
-        $script:CurrentTheme = "Custom"
+        ${script:CurrentTheme} = "Custom"
         Save-CustomizationSettings
 
         Write-DevConsole "✅ Custom theme applied successfully" "SUCCESS"
@@ -27622,15 +27612,15 @@ function Save-UILayout {
                 X = $form.Location.X
                 Y = $form.Location.Y
             }
-            LeftPanelWidth    = if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
+            LeftPanelWidth    = $(if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
             StatusPanelHeight = 30  # Default value as status panel doesn't exist
-            SplitterDistance  = if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
-            Theme             = $script:CurrentTheme
-            FontSize          = $script:CurrentFontSize
-            UIScale           = $script:CurrentUIScale
+            SplitterDistance  = $(if ($mainSplitter) { $mainSplitter.SplitterDistance } else { 300 }
+            Theme             = ${script:CurrentTheme}
+            FontSize          = ${script:CurrentFontSize}
+            UIScale           = ${script:CurrentUIScale}
         }
 
-        $layoutPath = Join-Path $env:USERPROFILE "RawrXD_Layout.json"
+        $layoutPath = Join-Path ${env:USERPROFILE} "RawrXD_Layout.json"
         $layoutData | ConvertTo-Json -Depth 3 | Set-Content -Path $layoutPath
 
         Write-DevConsole "✅ UI layout saved to: $layoutPath" "SUCCESS"
@@ -27642,7 +27632,7 @@ function Save-UILayout {
 
 function Load-UILayout {
     try {
-        $layoutPath = Join-Path $env:USERPROFILE "RawrXD_Layout.json"
+        $layoutPath = Join-Path ${env:USERPROFILE} "RawrXD_Layout.json"
 
         if (Test-Path $layoutPath) {
             $layoutData = Get-Content -Path $layoutPath | ConvertFrom-Json
@@ -27680,13 +27670,13 @@ function Load-UILayout {
 function Save-CustomizationSettings {
     try {
         $settings = @{
-            Theme       = $script:CurrentTheme
-            FontSize    = $script:CurrentFontSize
-            UIScale     = $script:CurrentUIScale
-            CustomTheme = $script:CustomTheme
+            Theme       = ${script:CurrentTheme}
+            FontSize    = ${script:CurrentFontSize}
+            UIScale     = ${script:CurrentUIScale}
+            CustomTheme = ${script:CustomTheme}
         }
 
-        $settingsPath = Join-Path $env:USERPROFILE "RawrXD_Customization.json"
+        $settingsPath = Join-Path ${env:USERPROFILE} "RawrXD_Customization.json"
         $settings | ConvertTo-Json -Depth 3 | Set-Content -Path $settingsPath
     }
     catch {
@@ -27696,29 +27686,29 @@ function Save-CustomizationSettings {
 
 function Load-CustomizationSettings {
     try {
-        $settingsPath = Join-Path $env:USERPROFILE "RawrXD_Customization.json"
+        $settingsPath = Join-Path ${env:USERPROFILE} "RawrXD_Customization.json"
 
         if (Test-Path $settingsPath) {
             $settings = Get-Content -Path $settingsPath | ConvertFrom-Json
 
-            $script:CurrentTheme = if ($settings.Theme) { $settings.Theme } else { "Stealth-Cheetah" }
-            $script:CurrentFontSize = if ($settings.FontSize) { $settings.FontSize } else { 14 }
-            $script:CurrentUIScale = if ($settings.UIScale) { $settings.UIScale } else { 1.0 }
-            $script:CustomTheme = $settings.CustomTheme
+            ${script:CurrentTheme} = $(if ($settings.Theme) { $settings.Theme } else { "Stealth-Cheetah" }
+            ${script:CurrentFontSize} = $(if ($settings.FontSize) { $settings.FontSize } else { 14 }
+            ${script:CurrentUIScale} = $(if ($settings.UIScale) { $settings.UIScale } else { 1.0 }
+            ${script:CustomTheme} = $settings.CustomTheme
 
             # Apply loaded settings
-            if ($script:CurrentTheme -ne "Stealth-Cheetah") {
-                Apply-Theme $script:CurrentTheme
+            if (${script:CurrentTheme} -ne "Stealth-Cheetah") {
+                Apply-Theme ${script:CurrentTheme}
             }
             else {
                 # Apply default Stealth-Cheetah theme
                 Apply-Theme "Stealth-Cheetah"
             }
-            if ($script:CurrentFontSize -ne 14) {
-                Apply-FontSize $script:CurrentFontSize
+            if (${script:CurrentFontSize} -ne 14) {
+                Apply-FontSize ${script:CurrentFontSize}
             }
-            if ($script:CurrentUIScale -ne 1.0) {
-                Apply-UIScaling $script:CurrentUIScale
+            if (${script:CurrentUIScale} -ne 1.0) {
+                Apply-UIScaling ${script:CurrentUIScale}
             }
         }
         else {
@@ -27746,8 +27736,8 @@ function Get-AIErrorDashboard {
 
     try {
         # Load AI error statistics
-        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
-        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+        $statsFile = Join-Path ${script:EmergencyLogPath} "ai_error_stats.json"
+        $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
 
         $dashboard = @"
 ═══════════════════════════════════════════════════════════
@@ -27846,10 +27836,10 @@ function Get-AIErrorDashboard {
         $dashboard += @"
 
 🏥 SYSTEM HEALTH:
-   Current Session: $($script:CurrentSession.SessionId)
-   Session Start: $($script:CurrentSession.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
-   Last Activity: $($script:CurrentSession.LastActivity.ToString("yyyy-MM-dd HH:mm:ss"))
-   Agent Mode: $(if ($global:AgentMode) { "🟢 ACTIVE" } else { "🔴 INACTIVE" })
+   Current Session: $(${script:CurrentSession}.SessionId)
+   Session Start: $(${script:CurrentSession}.StartTime.ToString("yyyy-MM-dd HH:mm:ss"))
+   Last Activity: $(${script:CurrentSession}.LastActivity.ToString("yyyy-MM-dd HH:mm:ss"))
+   Agent Mode: $(if (${global:AgentMode}) { "🟢 ACTIVE" } else { "🔴 INACTIVE" })
    Ollama Connection: $(if (Test-NetConnection -ComputerName localhost -Port 11434 -InformationLevel Quiet) { "🟢 ONLINE" } else { "🔴 OFFLINE" })
 
 💡 QUICK ACTIONS:
@@ -27868,8 +27858,8 @@ function Get-AIErrorDashboard {
 ❌ Error generating AI Error Dashboard: $($_.Exception.Message)
 
 Basic Info:
-- Emergency Log Path: $script:EmergencyLogPath
-- Current Session: $($script:CurrentSession.SessionId)
+- Emergency Log Path: ${script:EmergencyLogPath}
+- Current Session: $(${script:CurrentSession}.SessionId)
 - Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 "@
     }
@@ -27877,8 +27867,8 @@ Basic Info:
 
 function Clear-AIErrorStatistics {
     try {
-        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
-        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"
+        $statsFile = Join-Path ${script:EmergencyLogPath} "ai_error_stats.json"
+        $aiLogPath = Join-Path ${script:EmergencyLogPath} "AI_Errors"
 
         # Reset statistics file
         if (Test-Path $statsFile) {
@@ -27907,13 +27897,13 @@ function Clear-AIErrorStatistics {
 # ============================================
 
 # Initialize customization variables
-$script:CurrentTheme = "Stealth-Cheetah"  # Default to stealth-cheetah theme
-$script:CurrentFontSize = 14
-$script:CurrentUIScale = 1.0
-$script:CustomTheme = $null
+${script:CurrentTheme} = "Stealth-Cheetah"  # Default to stealth-cheetah theme
+${script:CurrentFontSize} = 14
+${script:CurrentUIScale} = 1.0
+${script:CustomTheme} = $null
 
 # Initialize error statistics
-$script:ErrorStats = @{
+${script:ErrorStats} = @{
     TotalErrors       = 0
     CriticalErrors    = 0
     SecurityErrors    = 0
@@ -27937,8 +27927,8 @@ $form.Controls.Add($menu)           # Dock=Top - added second, claims top edge f
 # Global error handler
 $form.Add_Shown({
         Write-DevConsole "RawrXD Form Loaded Successfully" "SUCCESS"
-        Write-DevConsole "Agent Mode: $(if ($global:AgentMode) { 'ON' } else { 'OFF' })" "INFO"
-        Write-DevConsole "Current Directory: $global:currentWorkingDir" "INFO"
+        Write-DevConsole "Agent Mode: $(if (${global:AgentMode}) { 'ON' } else { 'OFF' })" "INFO"
+        Write-DevConsole "Current Directory: ${global:currentWorkingDir}" "INFO"
 
         # Load customization settings
         Load-CustomizationSettings
@@ -27947,17 +27937,17 @@ $form.Add_Shown({
         Start-PerformanceOptimization
 
         # Start Ollama server automatically
-        if (-not $global:ollamaStartupAttempted) {
-            $global:ollamaStartupAttempted = $true
+        if (-not ${global:ollamaStartupAttempted}) {
+            ${global:ollamaStartupAttempted} = $true
             Write-DevConsole "Auto-starting Ollama server..." "INFO"
             Start-OllamaServer | Out-Null
         }
 
         # Set up a timer to update status periodically (only if not already created)
-        if (-not $script:ollamaTimer) {
-            $script:ollamaTimer = New-Object System.Windows.Forms.Timer
-            $script:ollamaTimer.Interval = 2000  # Check every 2 seconds
-            $script:ollamaTimer.Add_Tick({
+        if (-not ${script:ollamaTimer}) {
+            ${script:ollamaTimer} = New-Object System.Windows.Forms.Timer
+            ${script:ollamaTimer}.Interval = 2000  # Check every 2 seconds
+            ${script:ollamaTimer}.Add_Tick({
                     try {
                         Update-OllamaStatusDisplay
                     }
@@ -27968,7 +27958,7 @@ $form.Add_Shown({
                         Write-DevConsole "Error in Ollama timer: $_" "WARNING"
                     }
                 })
-            $script:ollamaTimer.Start()
+            ${script:ollamaTimer}.Start()
         }
 
         # Update initial status
@@ -27986,7 +27976,7 @@ try {
     Write-StartupLog "Application startup completed successfully!" "SUCCESS"
     Write-StartupLog "═══════════════════════════════════════════════" "SUCCESS"
     Write-StartupLog "SESSION LOG: Check Dev Tools tab for runtime logs" "INFO"
-    Write-StartupLog "STARTUP LOG: $script:StartupLogFile" "INFO"
+    Write-StartupLog "STARTUP LOG: ${script:StartupLogFile}" "INFO"
     Write-StartupLog "═══════════════════════════════════════════════" "INFO"
 
     # Add form closing event to cleanup Ollama server
@@ -27996,10 +27986,10 @@ try {
                 Write-DevConsole "Application closing - cleaning up Ollama server..." "INFO"
 
                 # Safely cleanup the Ollama timer if it exists
-                if ((Get-Variable -Name "ollamaTimer" -Scope Script -ErrorAction SilentlyContinue) -and $script:ollamaTimer) {
+                if ((Get-Variable -Name "ollamaTimer" -Scope Script -ErrorAction SilentlyContinue) -and ${script:ollamaTimer}) {
                     try {
-                        $script:ollamaTimer.Stop()
-                        $script:ollamaTimer.Dispose()
+                        ${script:ollamaTimer}.Stop()
+                        ${script:ollamaTimer}.Dispose()
                         Write-DevConsole "Ollama timer stopped and disposed" "INFO"
                     }
                     catch {
@@ -28008,10 +27998,10 @@ try {
                 }
 
                 # Safely cleanup the agent monitor timer
-                if ((Get-Variable -Name "agentMonitorTimer" -Scope Script -ErrorAction SilentlyContinue) -and $script:agentMonitorTimer) {
+                if ((Get-Variable -Name "agentMonitorTimer" -Scope Script -ErrorAction SilentlyContinue) -and ${script:agentMonitorTimer}) {
                     try {
-                        $script:agentMonitorTimer.Stop()
-                        $script:agentMonitorTimer.Dispose()
+                        ${script:agentMonitorTimer}.Stop()
+                        ${script:agentMonitorTimer}.Dispose()
                         Write-DevConsole "Agent monitor timer stopped" "INFO"
                     }
                     catch {
@@ -28055,13 +28045,13 @@ try {
         Write-StartupLog "✅ Multithreaded agents initialized successfully" "INFO"
 
         # Start monitoring timer for agent jobs
-        $script:agentMonitorTimer = New-Object System.Windows.Forms.Timer
-        $script:agentMonitorTimer.Interval = 500  # Check every 500ms
-        $script:agentMonitorTimer.add_Tick({
+        ${script:agentMonitorTimer} = New-Object System.Windows.Forms.Timer
+        ${script:agentMonitorTimer}.Interval = 500  # Check every 500ms
+        ${script:agentMonitorTimer}.add_Tick({
                 Monitor-AgentJobs
                 Update-ThreadingStatusLabel
             })
-        $script:agentMonitorTimer.Start()
+        ${script:agentMonitorTimer}.Start()
         Write-StartupLog "✅ Agent monitoring system started" "INFO"
 
         # Set initial threading status
@@ -28075,23 +28065,23 @@ try {
     # SECURITY INITIALIZATION
     # ============================================
 
-    Write-SecurityLog "Application initialization completed" "SUCCESS" "Features: Encryption=$($script:SecurityConfig.EncryptSensitiveData), HTTPS=$script:UseHTTPS, Stealth=$($script:SecurityConfig.StealthMode)"
+    Write-SecurityLog "Application initialization completed" "SUCCESS" "Features: Encryption=$(${script:SecurityConfig}.EncryptSensitiveData), HTTPS=${script:UseHTTPS}, Stealth=$(${script:SecurityConfig}.StealthMode)"
 
     # Apply stealth mode if enabled
-    if ($script:SecurityConfig.StealthMode) {
+    if (${script:SecurityConfig}.StealthMode) {
         Enable-StealthMode -Enable $true
         Write-StartupLog "✅ Stealth mode activated" "INFO"
     }
 
     # Set up periodic security checks
-    if ($script:SecurityConfig.LogSecurityEvents) {
-        $script:securityTimer = New-Object System.Windows.Forms.Timer
-        $script:securityTimer.Interval = 60000  # Check every minute
-        $script:securityTimer.add_Tick({
+    if (${script:SecurityConfig}.LogSecurityEvents) {
+        ${script:securityTimer} = New-Object System.Windows.Forms.Timer
+        ${script:securityTimer}.Interval = 60000  # Check every minute
+        ${script:securityTimer}.add_Tick({
             try {
                 if (-not (Test-SessionSecurity)) {
                     Write-SecurityLog "Session security check failed during runtime" "ERROR"
-                    if ($script:SecurityConfig.AuthenticationRequired) {
+                    if (${script:SecurityConfig}.AuthenticationRequired) {
                         $result = "Yes"; Write-DevConsole "Session security check failed - auto-attempting re-authentication" "WARNING"
                         if ($result -eq "Yes") {
                             $authResult = Show-AuthenticationDialog
@@ -28113,7 +28103,7 @@ try {
                 # Silently ignore timer errors to prevent app crash
             }
             })
-        $script:securityTimer.Start()
+        ${script:securityTimer}.Start()
         Write-StartupLog "✅ Security monitoring timer started" "INFO"
     }
 
@@ -28121,9 +28111,7 @@ try {
 
     # ============================================
     # LAUNCH APPLICATION (GUI OR CONSOLE FALLBACK)
-    # ============================================
-
-    if ($script:WindowsFormsAvailable) {
+    # ============================================ $(if (${script:WindowsFormsAvailable}) {
         Write-StartupLog "Launching RawrXD GUI..." "INFO"
         try {
             $form.ShowDialog() | Out-Null
@@ -28146,9 +28134,9 @@ try {
     Write-SecurityLog "Application shutting down" "INFO"
 
     # Stop security timer
-    if ($script:securityTimer) {
-        $script:securityTimer.Stop()
-        $script:securityTimer.Dispose()
+    if (${script:securityTimer}) {
+        ${script:securityTimer}.Stop()
+        ${script:securityTimer}.Dispose()
     }
 
     # Perform final security cleanup
@@ -28161,7 +28149,7 @@ catch {
     Write-StartupLog "CRITICAL ERROR during application startup: $errorMsg" "ERROR"
     Write-StartupLog "Stack trace: $($_.ScriptStackTrace)" "ERROR"
     Write-DevConsole "FATAL ERROR: $errorMsg" "ERROR"
-    Write-DevConsole "❌ Critical startup failure - Check startup log: $script:StartupLogFile" "ERROR"
+    Write-DevConsole "❌ Critical startup failure - Check startup log: ${script:StartupLogFile}" "ERROR"
     exit 1
 }
 

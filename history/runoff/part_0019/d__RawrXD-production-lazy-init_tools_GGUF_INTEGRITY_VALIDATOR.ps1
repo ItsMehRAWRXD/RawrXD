@@ -87,7 +87,7 @@ function Test-GGUFCorruption {
                         if ($arrCount -gt 10MB) {
                             Write-Host "    [WARN] Large array ($arrCount elements)"
                         }
-                        $elemSize = if ($arrType -eq 8) { 8 } else { 4 }
+                        $elemSize = $(if ($arrType -eq 8) { 8 } else { 4 }
                         $stream.Position += $arrCount * $elemSize
                     }
                     default {

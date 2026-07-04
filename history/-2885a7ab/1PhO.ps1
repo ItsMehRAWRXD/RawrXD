@@ -47,7 +47,7 @@ param (
 # ═══════════════════════════════════════════════════════════════════════════════
 
 $ErrorActionPreference = "Stop"
-$Script:Version = "2.0.0"
+${Script:Version} = "2.0.0"
 
 # Color output helpers
 function Write-Success { param($Message) Write-Host "✅ $Message" -ForegroundColor Green }
@@ -62,7 +62,7 @@ function Write-Debug2 { param($Message) if ($Verbose) { Write-Host "🔍 $Messag
 
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║  🔧 RawrXD IDE - Enhanced Hardware Setup v$Script:Version                    ║" -ForegroundColor Cyan
+Write-Host "║  🔧 RawrXD IDE - Enhanced Hardware Setup v${Script:Version}                    ║" -ForegroundColor Cyan
 Write-Host "║  Dynamic Hardware Detection and Configuration                         ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""

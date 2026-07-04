@@ -16,8 +16,8 @@ function Write-TestHeader {
 
 function Write-TestResult {
     param([string]$TestName, [bool]$Success, [string]$Details = "")
-    $status = if ($Success) { "✓ PASS" } else { "✗ FAIL" }
-    $color = if ($Success) { "Green" } else { "Red" }
+    $status = $(if ($Success) { "✓ PASS" } else { "✗ FAIL" }
+    $color = $(if ($Success) { "Green" } else { "Red" }
     Write-Host "  $status $TestName" -ForegroundColor $color
     if ($Details) { Write-Host "    $Details" -ForegroundColor Gray }
 }
@@ -282,8 +282,8 @@ $total = $testResults.Count
 Write-Host "Tests Passed: $passed/$total" -ForegroundColor $(if($passed -eq $total){"Green"}else{"Yellow"})
 
 foreach ($test in $testResults.GetEnumerator()) {
-    $status = if ($test.Value) { "PASS" } else { "FAIL" }
-    $color = if ($test.Value) { "Green" } else { "Red" }
+    $status = $(if ($test.Value) { "PASS" } else { "FAIL" }
+    $color = $(if ($test.Value) { "Green" } else { "Red" }
     Write-Host "  $($test.Key): $status" -ForegroundColor $color
 }
 

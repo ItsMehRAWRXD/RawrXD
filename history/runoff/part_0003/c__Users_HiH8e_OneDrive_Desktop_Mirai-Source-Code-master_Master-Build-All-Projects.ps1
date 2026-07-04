@@ -17,7 +17,7 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$Global:BuildResults = @()
+${Global:BuildResults} = @()
 
 function Write-Section {
   param([string]$Title)
@@ -28,7 +28,7 @@ function Write-Section {
 
 function Add-BuildResult {
   param([string]$Project, [string]$Status, [string]$Output, [string]$ErrorMessage)
-  $Global:BuildResults += [PSCustomObject]@{
+  ${Global:BuildResults} += [PSCustomObject]@{
     Project = $Project
     Status  = $Status
     Output  = $Output
@@ -335,17 +335,17 @@ function Build-Star5IDE {
 function Show-BuildReport {
   Write-Section "BUILD REPORT"
     
-  $SuccessCount = ($Global:BuildResults | Where-Object { $_.Status -eq "SUCCESS" }).Count
-  $FailedCount = ($Global:BuildResults | Where-Object { $_.Status -eq "FAILED" }).Count
-  $SkippedCount = ($Global:BuildResults | Where-Object { $_.Status -eq "SKIPPED" }).Count
+  $SuccessCount = (${Global:BuildResults} | Where-Object { $_.Status -eq "SUCCESS" }).Count
+  $FailedCount = (${Global:BuildResults} | Where-Object { $_.Status -eq "FAILED" }).Count
+  $SkippedCount = (${Global:BuildResults} | Where-Object { $_.Status -eq "SKIPPED" }).Count
     
-  Write-Host "Total Projects: $($Global:BuildResults.Count)" -ForegroundColor Cyan
+  Write-Host "Total Projects: $(${Global:BuildResults}.Count)" -ForegroundColor Cyan
   Write-Host "Success: $SuccessCount" -ForegroundColor Green
   Write-Host "Failed: $FailedCount" -ForegroundColor Red
   Write-Host "Skipped: $SkippedCount" -ForegroundColor Yellow
   Write-Host ""
     
-  foreach ($Result in $Global:BuildResults) {
+  foreach ($Result in ${Global:BuildResults}) {
     $Color = switch ($Result.Status) {
       "SUCCESS" { "Green" }
       "FAILED" { "Red" }
@@ -365,7 +365,7 @@ function Show-BuildReport {
     
   # Export to JSON
   $ReportFile = "build-report-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
-  $Global:BuildResults | ConvertTo-Json -Depth 5 | Out-File $ReportFile
+  ${Global:BuildResults} | ConvertTo-Json -Depth 5 | Out-File $ReportFile
   Write-Host "`nBuild report saved to: $ReportFile" -ForegroundColor Cyan
 }
 

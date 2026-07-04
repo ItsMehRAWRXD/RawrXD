@@ -170,6 +170,6 @@ Write-Host "5. Open Dashboard (Tools → Performance Dashboard)" -ForegroundColo
 Write-Host "6. View logs (Tools → Console Panel)" -ForegroundColor Gray
 
 Write-Host "`n📝 For cloud models, set environment variables:" -ForegroundColor Yellow
-Write-Host "`$env:OPENAI_API_KEY='sk-...'" -ForegroundColor Gray
-Write-Host "`$env:ANTHROPIC_API_KEY='sk-ant-...'" -ForegroundColor Gray
-Write-Host "`$env:GOOGLE_API_KEY='AIza...'" -ForegroundColor Gray
+Write-Host "`${env:OPENAI_API_KEY}='sk-...'" -ForegroundColor Gray
+Write-Host "`${env:ANTHROPIC_API_KEY}='sk-ant-...'" -ForegroundColor Gray
+Write-Host "`${env:GOOGLE_API_KEY}='AIza...'" -ForegroundColor Gray

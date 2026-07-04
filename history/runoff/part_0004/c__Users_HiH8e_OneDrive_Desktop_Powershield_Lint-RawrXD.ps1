@@ -19,14 +19,14 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$script:ErrorCount = 0
-$script:WarningCount = 0
-$script:FixCount = 0
+${script:ErrorCount} = 0
+${script:WarningCount} = 0
+${script:FixCount} = 0
 
 function Write-LintError {
     param([string]$Message, [int]$Line = 0, [string]$Code = "")
-    $script:ErrorCount++
-    $lineInfo = if ($Line -gt 0) { " [Line $Line]" } else { "" }
+    ${script:ErrorCount}++
+    $lineInfo = $(if ($Line -gt 0) { " [Line $Line]" } else { "" }
     Write-Host "❌ ERROR$lineInfo`: $Message" -ForegroundColor Red
     if ($Code) {
         Write-Host "   Code: $Code" -ForegroundColor DarkGray
@@ -35,8 +35,8 @@ function Write-LintError {
 
 function Write-LintWarning {
     param([string]$Message, [int]$Line = 0)
-    $script:WarningCount++
-    $lineInfo = if ($Line -gt 0) { " [Line $Line]" } else { "" }
+    ${script:WarningCount}++
+    $lineInfo = $(if ($Line -gt 0) { " [Line $Line]" } else { "" }
     Write-Host "⚠️  WARNING$lineInfo`: $Message" -ForegroundColor Yellow
 }
 
@@ -210,7 +210,7 @@ foreach ($pattern in $orphanedPatterns) {
     }
 }
 
-# Test 9: Check for $script:variable usage without initialization
+# Test 9: Check for ${script:variable} usage without initialization
 Write-LintInfo "Checking script-scope variables..."
 $scriptVarPattern = '\$script:([A-Za-z0-9_]+)'
 $scriptVarMatches = [regex]::Matches($scriptContent, $scriptVarPattern)
@@ -353,7 +353,7 @@ if ($scriptContent -match 'Initialize-DefaultEditor') {
 }
 
 # Check for editor panel initialization
-if ($scriptContent -match '\$script:editorPanel\s*=') {
+if ($scriptContent -match '\${script:editorPanel}\s*=') {
     Write-LintSuccess "editorPanel is initialized"
 } else {
     Write-LintWarning "editorPanel may not be properly initialized"
@@ -364,10 +364,10 @@ Write-Host "  Linting Complete" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 Write-Host "Summary:" -ForegroundColor White
-Write-Host "  ❌ Errors: $script:ErrorCount" -ForegroundColor $(if ($script:ErrorCount -gt 0) { 'Red' } else { 'Green' })
-Write-Host "  ⚠️  Warnings: $script:WarningCount" -ForegroundColor $(if ($script:WarningCount -gt 0) { 'Yellow' } else { 'Green' })
+Write-Host "  ❌ Errors: ${script:ErrorCount}" -ForegroundColor $(if (${script:ErrorCount} -gt 0) { 'Red' } else { 'Green' })
+Write-Host "  ⚠️  Warnings: ${script:WarningCount}" -ForegroundColor $(if (${script:WarningCount} -gt 0) { 'Yellow' } else { 'Green' })
 
-if ($script:ErrorCount -eq 0 -and $script:WarningCount -eq 0) {
+if (${script:ErrorCount} -eq 0 -and ${script:WarningCount} -eq 0) {
     Write-Host "`n✅ No critical issues found!" -ForegroundColor Green
 } else {
     Write-Host "`n⚠️  Please review the issues above" -ForegroundColor Yellow
@@ -376,4 +376,4 @@ if ($script:ErrorCount -eq 0 -and $script:WarningCount -eq 0) {
 Write-Host ""
 
 # Return exit code based on errors
-exit $(if ($script:ErrorCount -gt 0) { 1 } else { 0 })
+exit $(if (${script:ErrorCount} -gt 0) { 1 } else { 0 })

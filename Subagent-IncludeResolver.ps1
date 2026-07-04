@@ -55,7 +55,7 @@ if (-not (Test-Path $ScanPath)) {
 }
 
 # ── Symbol → Header Map ──────────────────────────────────────────────────────
-$script:IncludeMap = [ordered]@{
+${script:IncludeMap} = [ordered]@{
     # Win32 core
     'HWND|HINSTANCE|WPARAM|LPARAM|MSG|WNDCLASS|WNDPROC|LRESULT|HBRUSH|HICON|HMENU|HDC|HFONT|PAINTSTRUCT|RECT|POINT|SIZE' = 'windows.h'
     'CreateFile[AW]?|ReadFile|WriteFile|CloseHandle|GetLastError|VirtualAlloc|VirtualFree|HeapAlloc|HeapFree|GetProcessHeap' = 'windows.h'
@@ -137,7 +137,7 @@ function Get-MissingIncludes {
 
     $missing = [System.Collections.Generic.List[string]]::new()
 
-    foreach ($entry in $script:IncludeMap.GetEnumerator()) {
+    foreach ($entry in ${script:IncludeMap}.GetEnumerator()) {
         $pattern = $entry.Key
         $header  = $entry.Value
 
@@ -175,7 +175,7 @@ function Add-IncludeDirective {
 
     # Determine bracket style
     $isSystem = $Header -notmatch '\.(h|hpp|hxx)$' -or $Header -match '^(windows|winhttp|winsock|objbase|shlobj)'
-    $directive = if ($isSystem -and $Header -notmatch '\.') {
+    $directive = $(if ($isSystem -and $Header -notmatch '\.') {
         "#include <$Header>"
     } elseif ($isSystem) {
         "#include <$Header>"
@@ -194,8 +194,8 @@ function Add-IncludeDirective {
                 $top = $i + 1
             }
         }
-        $before = if ($top -gt 0) { $lines[0..($top - 1)] } else { @() }
-        $after  = if ($top -lt $lines.Count) { $lines[$top..($lines.Count - 1)] } else { @() }
+        $before = $(if ($top -gt 0) { $lines[0..($top - 1)] } else { @() }
+        $after  = $(if ($top -lt $lines.Count) { $lines[$top..($lines.Count - 1)] } else { @() }
         $newLines = $before + '' + $directive + $after
     }
 

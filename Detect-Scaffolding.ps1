@@ -136,7 +136,7 @@ function Test-IsScaffolding {
         Score = $score
         Issues = $issues
         IsScaffolding = $score -gt 20
-        Category = if ($score -gt 30) { "Scaffolding" } elseif ($score -gt 15) { "Mixed" } else { "Real Functionality" }
+        Category = $(if ($score -gt 30) { "Scaffolding" } elseif ($score -gt 15) { "Mixed" } else { "Real Functionality" }
     }
 }
 

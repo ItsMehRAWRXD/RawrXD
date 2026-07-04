@@ -38,15 +38,15 @@ $tags2 = Invoke-RestMethod -UseBasicParsing -Uri "http://127.0.0.1:$port2/api/ta
 Write-Host ("CLI2 OK: tags={0}" -f (($tags2.models | Measure-Object).Count))
 
 # Test shell execution (ps)
-$outFile = Join-Path $env:TEMP 'rawrxd_cli_ps_test.txt'
+$outFile = Join-Path ${env:TEMP} 'rawrxd_cli_ps_test.txt'
 $errFile = $outFile + '.err'
 if (Test-Path $outFile) { Remove-Item $outFile -Force }
 if (Test-Path $errFile) { Remove-Item $errFile -Force }
 $psProc = Start-Process -FilePath $CLIPath -ArgumentList 'ps','Write-Output hello-from-ps' -RedirectStandardOutput $outFile -RedirectStandardError $errFile -PassThru
 Start-Sleep -Seconds 5
 try { Stop-Process -Id $psProc.Id -Force -ErrorAction SilentlyContinue } catch {}
-$psOut = if (Test-Path $outFile){ Get-Content $outFile -ErrorAction SilentlyContinue } else { '' }
-$psErr = if (Test-Path $errFile){ Get-Content $errFile -ErrorAction SilentlyContinue } else { '' }
+$psOut = $(if (Test-Path $outFile){ Get-Content $outFile -ErrorAction SilentlyContinue } else { '' }
+$psErr = $(if (Test-Path $errFile){ Get-Content $errFile -ErrorAction SilentlyContinue } else { '' }
 $combined = ($psOut + ' ' + $psErr) -join ' '
 $psOk = ($combined -match 'hello-from-ps')
 Write-Host "Shell(ps) OK: $psOk"

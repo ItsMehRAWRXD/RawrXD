@@ -69,8 +69,8 @@ export class TerminalIntegration extends EventEmitter {
                 reject(new Error('Command timeout'));
             }, 120000); // 2 minute timeout
 
-            // Listen for terminal output
-            const disposable = vscode.window.onDidWriteTerminalData((e) => {
+            // Listen for terminal output (using proposed API)
+            const disposable = (vscode.window as any).onDidWriteTerminalData((e: {terminal: vscode.Terminal, data: string}) => {
                 if (e.terminal === this._terminal) {
                     this._processOutput(e.data, marker, endMarker, timeout, resolve);
                 }
@@ -107,8 +107,8 @@ export class TerminalIntegration extends EventEmitter {
 
             terminal.show();
 
-            // Capture output
-            const disposable = vscode.window.onDidWriteTerminalData((e) => {
+            // Capture output (using proposed API)
+            const disposable = (vscode.window as any).onDidWriteTerminalData((e: {terminal: vscode.Terminal, data: string}) => {
                 if (e.terminal === terminal) {
                     const data = e.data;
                     output.stdout += data;

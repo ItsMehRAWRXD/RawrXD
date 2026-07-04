@@ -27,50 +27,50 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 # ─── Discovery (workspace-agnostic) ─────────────────────────────────────────
-$script:RepoRoot = $null
+${script:RepoRoot} = $null
 if ($PSScriptRoot) {
-    $script:RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    ${script:RepoRoot} = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 } else {
-    $script:RepoRoot = (Get-Location).Path
+    ${script:RepoRoot} = (Get-Location).Path
 }
-if ($WorkDir) { $script:TestWorkDir = $WorkDir } else { $script:TestWorkDir = $script:RepoRoot }
+if ($WorkDir) { ${script:TestWorkDir} = $WorkDir } else { ${script:TestWorkDir} = ${script:RepoRoot} }
 
-$script:BuildDir = $BuildDir
-if (-not $script:BuildDir) {
-    if ($env:RAWRXD_BUILD_DIR) { $script:BuildDir = $env:RAWRXD_BUILD_DIR }
-    else { $script:BuildDir = Join-Path $script:RepoRoot "build" }
+${script:BuildDir} = $BuildDir
+if (-not ${script:BuildDir}) {
+    if (${env:RAWRXD_BUILD_DIR}) { ${script:BuildDir} = ${env:RAWRXD_BUILD_DIR} }
+    else { ${script:BuildDir} = Join-Path ${script:RepoRoot} "build" }
 }
 
 function Find-Binary {
     param([string[]]$Names)
     foreach ($name in $Names) {
-        $exe = Get-ChildItem -Path $script:BuildDir -Recurse -Filter "$name.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+        $exe = Get-ChildItem -Path ${script:BuildDir} -Recurse -Filter "$name.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($exe) { return $exe.FullName }
     }
     return $null
 }
 
 # Prefer contract binary name, then CMake output name
-$script:CLIBinary = Find-Binary @("RawrXD_IDE_unified", "RawrXD-Win32IDE")
-$script:IDEBinary = Find-Binary @("RawrXD-Win32IDE", "RawrXD_IDE_unified")
-$script:RawrEngineBinary = Find-Binary @("RawrEngine")
+${script:CLIBinary} = Find-Binary @("RawrXD_IDE_unified", "RawrXD-Win32IDE")
+${script:IDEBinary} = Find-Binary @("RawrXD-Win32IDE", "RawrXD_IDE_unified")
+${script:RawrEngineBinary} = Find-Binary @("RawrEngine")
 
 # Counters and results
-$script:TotalTests = 0
-$script:PassedTests = 0
-$script:FailedTests = 0
-$script:Results = @()
+${script:TotalTests} = 0
+${script:PassedTests} = 0
+${script:FailedTests} = 0
+${script:Results} = @()
 
 function Write-Step($num, $total, $msg) { Write-Host "[$num/$total] $msg" -ForegroundColor Yellow }
 function Write-Pass($msg) { Write-Host "  [PASS] $msg" -ForegroundColor Green }
-function Write-Fail($msg) { Write-Host "  [FAIL] $msg" -ForegroundColor Red; $script:FailedTests++ }
+function Write-Fail($msg) { Write-Host "  [FAIL] $msg" -ForegroundColor Red; ${script:FailedTests}++ }
 function Record-Pass($name, $detail) {
-    $script:TotalTests++; $script:PassedTests++
-    $script:Results += [PSCustomObject]@{ Name = $name; Status = "PASS"; Detail = $detail }
+    ${script:TotalTests}++; ${script:PassedTests}++
+    ${script:Results} += [PSCustomObject]@{ Name = $name; Status = "PASS"; Detail = $detail }
 }
 function Record-Fail($name, $detail) {
-    $script:TotalTests++; $script:FailedTests++
-    $script:Results += [PSCustomObject]@{ Name = $name; Status = "FAIL"; Detail = $detail }
+    ${script:TotalTests}++; ${script:FailedTests}++
+    ${script:Results} += [PSCustomObject]@{ Name = $name; Status = "FAIL"; Detail = $detail }
 }
 
 # ─── CLI test helper: run one mode, assert exit + artifacts (no sim) ──────────
@@ -86,13 +86,13 @@ function Invoke-CLIMode {
         [string]$SkipReason = "",
         [int]$LatencyOverrideMs = 0
     )
-    if (-not $script:CLIBinary) {
+    if (-not ${script:CLIBinary}) {
         Write-Host "  [SKIP] $Name — CLI binary not found" -ForegroundColor DarkYellow
         return
     }
     if ($Skip) {
-        $script:TotalTests++
-        $script:Results += [PSCustomObject]@{ Name = "cli-$Name"; Status = "SKIPPED"; Detail = $SkipReason }
+        ${script:TotalTests}++
+        ${script:Results} += [PSCustomObject]@{ Name = "cli-$Name"; Status = "SKIPPED"; Detail = $SkipReason }
         Write-Host "  [SKIP] $Name — $SkipReason" -ForegroundColor DarkYellow
         return
     }
@@ -100,17 +100,17 @@ function Invoke-CLIMode {
     foreach ($a in $ExpectedArtifacts) { if (Test-Path $a) { Remove-Item $a -Force -ErrorAction SilentlyContinue } }
     $allArgs = @($Switch) + $ExtraArgs
     $argString = $allArgs -join " "
-    $stdoutPath = Join-Path $env:TEMP "rawrxd_manifest_stdout.txt"
-    $stderrPath = Join-Path $env:TEMP "rawrxd_manifest_stderr.txt"
+    $stdoutPath = Join-Path ${env:TEMP} "rawrxd_manifest_stdout.txt"
+    $stderrPath = Join-Path ${env:TEMP} "rawrxd_manifest_stderr.txt"
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     try {
-        $proc = Start-Process -FilePath $script:CLIBinary -ArgumentList $argString -WorkingDirectory $script:TestWorkDir `
+        $proc = Start-Process -FilePath ${script:CLIBinary} -ArgumentList $argString -WorkingDirectory ${script:TestWorkDir} `
             -NoNewWindow -Wait -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
         $sw.Stop()
         $exitCode = $proc.ExitCode
         $stdout = ""
         if (Test-Path $stdoutPath) { $stdout = Get-Content $stdoutPath -Raw -ErrorAction SilentlyContinue }
-        $maxMs = if ($LatencyOverrideMs -gt 0) { $LatencyOverrideMs } else { $LatencyThresholdMs }
+        $maxMs = $(if ($LatencyOverrideMs -gt 0) { $LatencyOverrideMs } else { $LatencyThresholdMs }
         if ($sw.Elapsed.TotalMilliseconds -gt $maxMs) {
             Record-Fail "cli-$Name" "Latency $([int]$sw.Elapsed.TotalMilliseconds)ms > $maxMs ms"
             Write-Host "  [FAIL] $Name — Latency exceeded" -ForegroundColor Red
@@ -144,26 +144,26 @@ function Invoke-CLIMode {
 }
 
 # ─── Main ───────────────────────────────────────────────────────────────────
-$script:PartTotal = 2
-$script:PartNum = 0
+${script:PartTotal} = 2
+${script:PartNum} = 0
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host "  Full CLI + Win32 IDE Manifestation Tests (no simulation)" -ForegroundColor Cyan
-Write-Host "  BuildDir: $script:BuildDir" -ForegroundColor Cyan
-Write-Host "  WorkDir:  $script:TestWorkDir" -ForegroundColor Cyan
-Write-Host "  CLI exe:  $(if($script:CLIBinary){$script:CLIBinary}else{'NOT FOUND'})" -ForegroundColor Cyan
-Write-Host "  IDE exe:  $(if($script:IDEBinary){$script:IDEBinary}else{'NOT FOUND'})" -ForegroundColor Cyan
+Write-Host "  BuildDir: ${script:BuildDir}" -ForegroundColor Cyan
+Write-Host "  WorkDir:  ${script:TestWorkDir}" -ForegroundColor Cyan
+Write-Host "  CLI exe:  $(if(${script:CLIBinary}){${script:CLIBinary}}else{'NOT FOUND'})" -ForegroundColor Cyan
+Write-Host "  IDE exe:  $(if(${script:IDEBinary}){${script:IDEBinary}}else{'NOT FOUND'})" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 
-Push-Location $script:TestWorkDir
+Push-Location ${script:TestWorkDir}
 
 # ─── Part 1: Full CLI manifestation (every mode, real execution) ─────────────
 if (-not $IDEOnly) {
-    $script:PartNum++; Write-Step $script:PartNum $script:PartTotal "Part 1: CLI contract modes (real execution)"
+    ${script:PartNum}++; Write-Step ${script:PartNum} ${script:PartTotal} "Part 1: CLI contract modes (real execution)"
     Write-Host "─── Part 1: CLI contract modes (real execution) ───" -ForegroundColor White
-    if (-not $script:CLIBinary) {
-        Record-Fail "cli-binary-present" "No CLI binary found under $script:BuildDir"
+    if (-not ${script:CLIBinary}) {
+        Record-Fail "cli-binary-present" "No CLI binary found under ${script:BuildDir}"
         Write-Host "  [FAIL] No RawrXD_IDE_unified.exe or RawrXD-Win32IDE.exe in build" -ForegroundColor Red
     } else {
         Invoke-CLIMode -Name "help" -Switch "--help" -OutputContains @("help")
@@ -190,7 +190,7 @@ if (-not $IDEOnly) {
         Invoke-CLIMode -Name "uac" -Switch "-uac" -Skip:$SkipElevated -SkipReason "Elevation (use -SkipElevated:`$false to run)"
 
         # Log file
-        $script:TotalTests++
+        ${script:TotalTests}++
         try {
             if (-not (Test-Path "rawrxd_ide.log")) { throw "rawrxd_ide.log not found" }
             $logContent = Get-Content "rawrxd_ide.log" -Raw
@@ -203,7 +203,7 @@ if (-not $IDEOnly) {
         }
 
         # Artifact integrity
-        $script:TotalTests++
+        ${script:TotalTests}++
         try {
             if (-not (Test-Path "trace_map.json")) { throw "trace_map.json not found" }
             $c = Get-Content "trace_map.json" -Raw
@@ -215,7 +215,7 @@ if (-not $IDEOnly) {
             Write-Host "  [FAIL] trace-map-integrity — $($_.Exception.Message)" -ForegroundColor Red
         }
 
-        $script:TotalTests++
+        ${script:TotalTests}++
         try {
             if (-not (Test-Path "bbcov_report.json")) { throw "bbcov_report.json not found" }
             $c = Get-Content "bbcov_report.json" -Raw
@@ -227,7 +227,7 @@ if (-not $IDEOnly) {
             Write-Host "  [FAIL] bbcov-integrity — $($_.Exception.Message)" -ForegroundColor Red
         }
 
-        $script:TotalTests++
+        ${script:TotalTests}++
         try {
             if (-not (Test-Path "covfusion_report.json")) { throw "covfusion_report.json not found" }
             $c = Get-Content "covfusion_report.json" -Raw
@@ -240,7 +240,7 @@ if (-not $IDEOnly) {
         }
 
         # schema_version must be 1 in both reports (contract)
-        $script:TotalTests++
+        ${script:TotalTests}++
         try {
             $schemaFiles = @("bbcov_report.json", "covfusion_report.json")
             foreach ($sf in $schemaFiles) {
@@ -257,7 +257,7 @@ if (-not $IDEOnly) {
         }
 
         # RVA-only: no absolute VAs in reports (ASLR safety)
-        $script:TotalTests++
+        ${script:TotalTests}++
         try {
             foreach ($reportFile in @("bbcov_report.json", "covfusion_report.json")) {
                 if (Test-Path $reportFile) {
@@ -273,10 +273,10 @@ if (-not $IDEOnly) {
         }
 
         # RawrEngine --help (headless binary) — real execution, no sim
-        if ($script:RawrEngineBinary) {
-            $script:TotalTests++
+        if (${script:RawrEngineBinary}) {
+            ${script:TotalTests}++
             try {
-                $out = & $script:RawrEngineBinary --help 2>&1 | Out-String
+                $out = & ${script:RawrEngineBinary} --help 2>&1 | Out-String
                 if ($out -notmatch "RawrXD|help|Engine") { throw "Help output missing expected text" }
                 Record-Pass "rawrengine-help" "RawrEngine --help OK"
                 Write-Pass "RawrEngine --help"
@@ -291,15 +291,15 @@ if (-not $IDEOnly) {
 
 # ─── Part 2: Win32 IDE manifestation (real process, real window) ───────────────
 if (-not $CLIOnly) {
-    $script:PartNum++; Write-Step $script:PartNum $script:PartTotal "Part 2: Win32 IDE manifestation (real launch + window)"
+    ${script:PartNum}++; Write-Step ${script:PartNum} ${script:PartTotal} "Part 2: Win32 IDE manifestation (real launch + window)"
     Write-Host "─── Part 2: Win32 IDE manifestation (real launch + window) ───" -ForegroundColor White
-    if (-not $script:IDEBinary) {
-        Record-Fail "ide-binary-present" "No IDE binary found under $script:BuildDir"
+    if (-not ${script:IDEBinary}) {
+        Record-Fail "ide-binary-present" "No IDE binary found under ${script:BuildDir}"
         Write-Host "  [FAIL] RawrXD-Win32IDE.exe not found" -ForegroundColor Red
     } else {
-        $script:TotalTests++
+        ${script:TotalTests}++
         try {
-            $proc = Start-Process -FilePath $script:IDEBinary -WorkingDirectory (Split-Path $script:IDEBinary) -PassThru
+            $proc = Start-Process -FilePath ${script:IDEBinary} -WorkingDirectory (Split-Path ${script:IDEBinary}) -PassThru
             $deadline = [DateTime]::UtcNow.AddSeconds($IDELaunchTimeoutSec)
             $windowFound = $false
             while ([DateTime]::UtcNow -lt $deadline) {
@@ -338,9 +338,9 @@ Pop-Location
 # ─── Summary ─────────────────────────────────────────────────────────────────
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host "  RESULTS" -ForegroundColor Cyan
-Write-Host "  Total: $($script:TotalTests)  Passed: $($script:PassedTests)  Failed: $($script:FailedTests)" -ForegroundColor $(if ($script:FailedTests -eq 0) { "Green" } else { "Red" })
+Write-Host "  Total: $(${script:TotalTests})  Passed: $(${script:PassedTests})  Failed: $(${script:FailedTests})" -ForegroundColor $(if (${script:FailedTests} -eq 0) { "Green" } else { "Red" })
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-$script:Results | Format-Table -Property Name, Status, Detail -AutoSize
+${script:Results} | Format-Table -Property Name, Status, Detail -AutoSize
 
-if ($script:FailedTests -gt 0) { exit 1 }
+if (${script:FailedTests} -gt 0) { exit 1 }
 exit 0

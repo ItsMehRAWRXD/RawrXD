@@ -9,7 +9,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$OutputFile,
     
-    [string]$TempDir = "$env:TEMP\model_temp"
+    [string]$TempDir = "${env:TEMP}\model_temp"
 )
 
 # Check if compressed directory exists

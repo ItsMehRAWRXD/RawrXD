@@ -141,18 +141,18 @@ public:
         }
 
         if (symbol) {
-            std::string info = "Definition of " + symbol->name + ":\n\n";
-            info += "File: " + symbol->definition.filePath + "\n";
+            std::string info = "Definition of " + std::string(symbol->name) + ":\n\n";
+            info += "File: " + std::string(symbol->definition.filePath) + "\n";
             info += "Line: " + std::to_string(symbol->definition.line) + "\n";
             info += "Column: " + std::to_string(symbol->definition.column) + "\n";
-            info += "Type: " + getSymbolKindName(symbol->kind) + "\n";
+            info += "Type: " + std::string(getSymbolKindName(symbol->kind)) + "\n";
 
             if (!symbol->signature.empty()) {
-                info += "\nSignature:\n" + symbol->signature + "\n";
+                info += "\nSignature:\n" + std::string(symbol->signature) + "\n";
             }
 
             if (!symbol->documentation.empty()) {
-                info += "\nDocumentation:\n" + symbol->documentation + "\n";
+                info += "\nDocumentation:\n" + std::string(symbol->documentation) + "\n";
             }
 
             SetWindowTextA(hwndResults_, info.c_str());
@@ -493,11 +493,16 @@ void Win32IDE::initSemanticIndex() {
 
     // Set up callbacks for indexing progress
     sci.setProgressCallback([](const char* filePath, uint32_t pct, void* userData) {
-        LOG_INFO("Indexing " << filePath << ": " << pct << "% complete");
+        char buf[256];
+        snprintf(buf, sizeof(buf), "Indexing %s: %u%% complete", filePath, pct);
+        LOG_INFO(buf);
     }, nullptr);
 
     sci.setCompleteCallback([](uint64_t symbolCount, uint64_t refCount, void* userData) {
-        LOG_INFO("Indexing complete: " << symbolCount << " symbols, " << refCount << " references");
+        char buf[256];
+        snprintf(buf, sizeof(buf), "Indexing complete: %llu symbols, %llu references", 
+                 (unsigned long long)symbolCount, (unsigned long long)refCount);
+        LOG_INFO(buf);
     }, nullptr);
 
     LOG_INFO("Semantic Code Intelligence initialized");
@@ -509,5 +514,4 @@ void Win32IDE::shutdownSemanticIndex() {
     }
 
     // Note: SemanticCodeIntelligence is a singleton, so we don't explicitly shut it down
-}</content>
-<parameter name="filePath">d:\rawrxd\src\win32app\Win32IDE_SemanticIndex.cpp
+}

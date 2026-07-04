@@ -195,7 +195,7 @@ foreach ($phase in $phases) {
         }
         $frequency[$actualE0] = [int]$frequency[$actualE0] + 1
 
-        $result = if ($timedOut) { "TIMEOUT" } elseif ($actualE0 -eq "0x00000000") { "PASS" } else { "FAIL" }
+        $result = $(if ($timedOut) { "TIMEOUT" } elseif ($actualE0 -eq "0x00000000") { "PASS" } else { "FAIL" }
         if ($result -ne "PASS") {
             $failures++
             if ($phase.Mode -eq "warm") {
@@ -212,7 +212,7 @@ foreach ($phase in $phases) {
             Result = $result
             E0_Delta = $delta
             Failure_Bucket = $bucket
-            ExitCode = if ($timedOut) { -999999 } else { $p.ExitCode }
+            ExitCode = $(if ($timedOut) { -999999 } else { $p.ExitCode }
             TraceLine = $line
             StdoutPath = $stdoutPath
             StderrPath = $stderrPath

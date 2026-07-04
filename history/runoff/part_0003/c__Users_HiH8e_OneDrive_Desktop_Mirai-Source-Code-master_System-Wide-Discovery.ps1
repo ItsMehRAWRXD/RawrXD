@@ -21,11 +21,11 @@ $SearchLocations = @(
     'D:\',
     'D:\BIGDADDYG-RECOVERY',
     'D:\13-Recovery-Files',
-    "$env:USERPROFILE\dev",
-    "$env:USERPROFILE\Development",
-    "$env:USERPROFILE\Projects",
-    "$env:USERPROFILE\source",
-    "$env:USERPROFILE\OneDrive\Desktop",
+    "${env:USERPROFILE}\dev",
+    "${env:USERPROFILE}\Development",
+    "${env:USERPROFILE}\Projects",
+    "${env:USERPROFILE}\source",
+    "${env:USERPROFILE}\OneDrive\Desktop",
     'C:\Users\HiH8e\OneDrive\Desktop'
 )
 
@@ -134,7 +134,7 @@ foreach ($location in $SearchLocations) {
                             FileCount = $fileCount
                             Size_GB = $size_GB
                             LastModified = $dir.LastWriteTime
-                            Priority = if ($projectInfo.Types -contains 'Mirai-Bot' -or $projectInfo.Types -contains 'FUD-Security') { "High" } else { "Medium" }
+                            Priority = $(if ($projectInfo.Types -contains 'Mirai-Bot' -or $projectInfo.Types -contains 'FUD-Security') { "High" } else { "Medium" }
                             Action = "To Be Organized"
                         }
                         
@@ -169,7 +169,7 @@ if (Test-Path $currentWorkspace) {
     
     Write-Host "📊 Current Workspace File Analysis:" -ForegroundColor Yellow
     foreach ($group in $workspaceFiles) {
-        $ext = if ($group.Name) { $group.Name } else { "No Extension" }
+        $ext = $(if ($group.Name) { $group.Name } else { "No Extension" }
         Write-Host "  $ext : $($group.Count) files" -ForegroundColor White
     }
     

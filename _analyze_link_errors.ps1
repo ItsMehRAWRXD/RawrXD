@@ -1,11 +1,11 @@
-$content = Get-Content "d:\rawrxd\link_output.txt"
+$Script:content = Get-Content "d:\rawrxd\link_output.txt"
 Write-Host "Total lines: $($content.Count)"
 
-$lnk2019 = $content | Where-Object { $_ -match 'LNK2019|LNK2001' }
+$Script:lnk2019 = $content | Where-Object { $_ -match 'LNK2019|LNK2001' }
 Write-Host "Unresolved externals: $($lnk2019.Count)"
 
 # Extract unique symbol names
-$symbols = @()
+$Script:symbols = @()
 foreach ($line in $lnk2019) {
     # Match C++ mangled or unmangled symbol names
     if ($line -match 'unresolved external symbol "([^"]+)"') {
@@ -15,11 +15,11 @@ foreach ($line in $lnk2019) {
     }
 }
 
-$unique = $symbols | Sort-Object -Unique
+$Script:unique = $symbols | Sort-Object -Unique
 Write-Host "Unique symbols: $($unique.Count)"
 
 # Categorize
-$cats = @{}
+$Script:cats = @{}
 foreach ($s in $unique) {
     if ($s -match 'handle[A-Z]') { $cat = 'CommandHandler' }
     elseif ($s -match 'WebView2|webview2') { $cat = 'WebView2' }
@@ -44,15 +44,15 @@ foreach ($key in ($cats.Keys | Sort-Object)) {
 }
 
 # Other link errors
-$otherErrors = $content | Where-Object { $_ -match 'error LNK' -and $_ -notmatch 'LNK2019|LNK2001|LNK1120' }
+$Script:otherErrors = $content | Where-Object { $_ -match 'error LNK' -and $_ -notmatch 'LNK2019|LNK2001|LNK1120' }
 Write-Host "`n=== OTHER LINK ERRORS ($($otherErrors.Count)) ==="
 $otherErrors | ForEach-Object { Write-Host "  $_" }
 
 # Which obj files reference unresolved symbols?
-$refObjs = @{}
+$Script:refObjs = @{}
 foreach ($line in $lnk2019) {
     if ($line -match 'referenced in function .+ \((.+\.obj)\)') {
-        $obj = $Matches[1]
+$Script:obj = $Matches[1]
         if (-not $refObjs.ContainsKey($obj)) { $refObjs[$obj] = 0 }
         $refObjs[$obj]++
     }

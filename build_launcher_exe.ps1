@@ -9,7 +9,7 @@ function Resolve-FullPath([string]$Path) {
   return (Resolve-Path -LiteralPath $Path).Path
 }
 
-$outDirFull = if (Test-Path -LiteralPath $OutDir) { Resolve-FullPath $OutDir } else { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null; Resolve-FullPath $OutDir }
+$outDirFull = $(if (Test-Path -LiteralPath $OutDir) { Resolve-FullPath $OutDir } else { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null; Resolve-FullPath $OutDir }
 $outExe = Join-Path $outDirFull $OutName
 
 $bridgeExe = Resolve-FullPath (Join-Path $PSScriptRoot 'build_ninja\bin\RawrXD-Standalone-WebBridge.exe')

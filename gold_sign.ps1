@@ -59,28 +59,28 @@ $ErrorActionPreference = "Stop"
 # ============================================================================
 # Counters
 # ============================================================================
-$script:Signed  = 0
-$script:Failed  = 0
-$script:Skipped = 0
-$script:Verified = 0
+${script:Signed}  = 0
+${script:Failed}  = 0
+${script:Skipped} = 0
+${script:Verified} = 0
 
 # ============================================================================
 # Resolve configuration from params → env → defaults
 # ============================================================================
 function Resolve-Config {
-    $script:cfg = @{
-        Thumbprint     = if ($Thumbprint)      { $Thumbprint }      elseif ($env:GOLD_SIGN_THUMBPRINT)  { $env:GOLD_SIGN_THUMBPRINT }  else { "" }
-        SubjectName    = if ($SubjectName)      { $SubjectName }     elseif ($env:GOLD_SIGN_SUBJECT)     { $env:GOLD_SIGN_SUBJECT }     else { "" }
-        CSP            = if ($CSP)              { $CSP }             elseif ($env:GOLD_SIGN_CSP)         { $env:GOLD_SIGN_CSP }         else { "" }
-        KeyContainer   = if ($KeyContainer)     { $KeyContainer }    elseif ($env:GOLD_SIGN_KC)          { $env:GOLD_SIGN_KC }          else { "" }
-        TokenPin       = if ($TokenPin)         { $TokenPin }        elseif ($env:GOLD_SIGN_TOKEN_PIN)   { $env:GOLD_SIGN_TOKEN_PIN }   else { "" }
-        Timestamp      = if ($TimestampServer)  { $TimestampServer } elseif ($env:GOLD_SIGN_TIMESTAMP)   { $env:GOLD_SIGN_TIMESTAMP }   else { "http://timestamp.digicert.com" }
-        Store          = if ($CertStore)        { $CertStore }       elseif ($env:GOLD_SIGN_STORE)       { $env:GOLD_SIGN_STORE }       else { "My" }
-        Digest         = if ($DigestAlg)        { $DigestAlg }       elseif ($env:GOLD_SIGN_DIGEST)      { $env:GOLD_SIGN_DIGEST }      else { "SHA256" }
-        CrossCert      = if ($CrossCert)        { $CrossCert }       elseif ($env:GOLD_SIGN_CROSS_CERT)  { $env:GOLD_SIGN_CROSS_CERT }  else { "" }
-        AzureTenant    = if ($env:GOLD_SIGN_AZURE_TENANT)   { $env:GOLD_SIGN_AZURE_TENANT }   else { "" }
-        AzureEndpoint  = if ($env:GOLD_SIGN_AZURE_ENDPOINT) { $env:GOLD_SIGN_AZURE_ENDPOINT } else { "" }
-        AzureProfile   = if ($env:GOLD_SIGN_AZURE_PROFILE)  { $env:GOLD_SIGN_AZURE_PROFILE }  else { "" }
+    ${script:cfg} = @{
+        Thumbprint     = $(if ($Thumbprint)      { $Thumbprint }      elseif (${env:GOLD_SIGN_THUMBPRINT})  { ${env:GOLD_SIGN_THUMBPRINT} }  else { "" }
+        SubjectName    = $(if ($SubjectName)      { $SubjectName }     elseif (${env:GOLD_SIGN_SUBJECT})     { ${env:GOLD_SIGN_SUBJECT} }     else { "" }
+        CSP            = $(if ($CSP)              { $CSP }             elseif (${env:GOLD_SIGN_CSP})         { ${env:GOLD_SIGN_CSP} }         else { "" }
+        KeyContainer   = $(if ($KeyContainer)     { $KeyContainer }    elseif (${env:GOLD_SIGN_KC})          { ${env:GOLD_SIGN_KC} }          else { "" }
+        TokenPin       = $(if ($TokenPin)         { $TokenPin }        elseif (${env:GOLD_SIGN_TOKEN_PIN})   { ${env:GOLD_SIGN_TOKEN_PIN} }   else { "" }
+        Timestamp      = $(if ($TimestampServer)  { $TimestampServer } elseif (${env:GOLD_SIGN_TIMESTAMP})   { ${env:GOLD_SIGN_TIMESTAMP} }   else { "http://timestamp.digicert.com" }
+        Store          = $(if ($CertStore)        { $CertStore }       elseif (${env:GOLD_SIGN_STORE})       { ${env:GOLD_SIGN_STORE} }       else { "My" }
+        Digest         = $(if ($DigestAlg)        { $DigestAlg }       elseif (${env:GOLD_SIGN_DIGEST})      { ${env:GOLD_SIGN_DIGEST} }      else { "SHA256" }
+        CrossCert      = $(if ($CrossCert)        { $CrossCert }       elseif (${env:GOLD_SIGN_CROSS_CERT})  { ${env:GOLD_SIGN_CROSS_CERT} }  else { "" }
+        AzureTenant    = $(if (${env:GOLD_SIGN_AZURE_TENANT})   { ${env:GOLD_SIGN_AZURE_TENANT} }   else { "" }
+        AzureEndpoint  = $(if (${env:GOLD_SIGN_AZURE_ENDPOINT}) { ${env:GOLD_SIGN_AZURE_ENDPOINT} } else { "" }
+        AzureProfile   = $(if (${env:GOLD_SIGN_AZURE_PROFILE})  { ${env:GOLD_SIGN_AZURE_PROFILE} }  else { "" }
     }
 }
 
@@ -89,8 +89,8 @@ function Resolve-Config {
 # ============================================================================
 function Find-SignTool {
     # Explicit override
-    if ($env:SIGNTOOL_PATH -and (Test-Path $env:SIGNTOOL_PATH)) {
-        return $env:SIGNTOOL_PATH
+    if (${env:SIGNTOOL_PATH} -and (Test-Path ${env:SIGNTOOL_PATH})) {
+        return ${env:SIGNTOOL_PATH}
     }
 
     # PATH
@@ -142,7 +142,7 @@ function Find-AzureSignTool {
     if ($dotnetTool) {
         $toolList = & dotnet tool list -g 2>$null
         if ($toolList -match "azuresigntool") {
-            $home = if ($env:USERPROFILE) { $env:USERPROFILE } else { $env:HOME }
+            $home = $(if (${env:USERPROFILE}) { ${env:USERPROFILE} } else { ${env:HOME} }
             $azTool = Join-Path $home ".dotnet\tools\AzureSignTool.exe"
             if (Test-Path $azTool) { return $azTool }
         }
@@ -157,7 +157,7 @@ function Find-AzureSignTool {
 function Find-EVCertificate {
     Write-Host "[GOLD_SIGN] Scanning certificate store for EV code-signing certificates..." -ForegroundColor Gray
 
-    $store = $script:cfg.Store
+    $store = ${script:cfg}.Store
     $certs = Get-ChildItem "Cert:\CurrentUser\$store" -CodeSigningCert -ErrorAction SilentlyContinue
     $certs += Get-ChildItem "Cert:\LocalMachine\$store" -CodeSigningCert -ErrorAction SilentlyContinue
 
@@ -216,45 +216,45 @@ function Build-SignArgs {
     $args += $Algo
 
     # Certificate selection — priority: thumbprint > subject > CSP > auto
-    if ($script:cfg.Thumbprint) {
+    if (${script:cfg}.Thumbprint) {
         $args += "/sha1"
-        $args += $script:cfg.Thumbprint
+        $args += ${script:cfg}.Thumbprint
         $args += "/s"
-        $args += $script:cfg.Store
+        $args += ${script:cfg}.Store
     }
-    elseif ($script:cfg.SubjectName) {
+    elseif (${script:cfg}.SubjectName) {
         $args += "/n"
-        $args += $script:cfg.SubjectName
+        $args += ${script:cfg}.SubjectName
         $args += "/s"
-        $args += $script:cfg.Store
+        $args += ${script:cfg}.Store
     }
-    elseif ($script:cfg.CSP -and $script:cfg.KeyContainer) {
+    elseif (${script:cfg}.CSP -and ${script:cfg}.KeyContainer) {
         # Hardware token (SafeNet eToken, YubiKey, etc.)
         $args += "/csp"
-        $args += $script:cfg.CSP
+        $args += ${script:cfg}.CSP
         $args += "/kc"
-        $args += $script:cfg.KeyContainer
-        if ($script:cfg.Thumbprint) {
+        $args += ${script:cfg}.KeyContainer
+        if (${script:cfg}.Thumbprint) {
             $args += "/sha1"
-            $args += $script:cfg.Thumbprint
+            $args += ${script:cfg}.Thumbprint
         }
     }
     else {
         # Auto-select best cert
         $args += "/a"
         $args += "/s"
-        $args += $script:cfg.Store
+        $args += ${script:cfg}.Store
     }
 
     # Cross-certificate (for kernel-mode drivers or legacy chains)
-    if ($script:cfg.CrossCert -and (Test-Path $script:cfg.CrossCert)) {
+    if (${script:cfg}.CrossCert -and (Test-Path ${script:cfg}.CrossCert)) {
         $args += "/ac"
-        $args += $script:cfg.CrossCert
+        $args += ${script:cfg}.CrossCert
     }
 
     # RFC 3161 Timestamp
     $args += "/tr"
-    $args += $script:cfg.Timestamp
+    $args += ${script:cfg}.Timestamp
     $args += "/td"
     $args += $Algo
 
@@ -281,12 +281,12 @@ function Invoke-AzureTrustedSign {
 
     $azArgs = @(
         "sign",
-        "-kvu", $script:cfg.AzureEndpoint,
-        "-kvt", $script:cfg.AzureTenant,
-        "-kvc", $script:cfg.AzureProfile,
-        "-fd", $script:cfg.Digest,
-        "-tr", $script:cfg.Timestamp,
-        "-td", $script:cfg.Digest,
+        "-kvu", ${script:cfg}.AzureEndpoint,
+        "-kvt", ${script:cfg}.AzureTenant,
+        "-kvc", ${script:cfg}.AzureProfile,
+        "-fd", ${script:cfg}.Digest,
+        "-tr", ${script:cfg}.Timestamp,
+        "-td", ${script:cfg}.Digest,
         "-v",
         $TargetFile
     )
@@ -318,7 +318,7 @@ function Invoke-GoldSign {
             if ($LASTEXITCODE -ne 0) {
                 Write-Host " FAIL" -ForegroundColor Red
                 Write-Host "       $out1" -ForegroundColor DarkRed
-                $script:Failed++
+                ${script:Failed}++
                 return $false
             }
             Write-Host " OK" -ForegroundColor Green
@@ -337,7 +337,7 @@ function Invoke-GoldSign {
             if ($LASTEXITCODE -ne 0) {
                 Write-Host " FAIL" -ForegroundColor Red
                 Write-Host "       $out2" -ForegroundColor DarkRed
-                $script:Failed++
+                ${script:Failed}++
                 return $false
             }
             Write-Host " OK" -ForegroundColor Green
@@ -347,28 +347,28 @@ function Invoke-GoldSign {
     }
     else {
         # Single SHA-256 signature (standard modern signing)
-        $signArgs = Build-SignArgs -TargetFile $TargetFile -Algo $script:cfg.Digest
+        $signArgs = Build-SignArgs -TargetFile $TargetFile -Algo ${script:cfg}.Digest
 
         if ($DryRun) {
             Write-Host "  [DRY-RUN] $fileName → $SignToolPath $($signArgs -join ' ')" -ForegroundColor DarkGray
-            $script:Signed++
+            ${script:Signed}++
             return $true
         }
 
         $output = & $SignToolPath @signArgs 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  [GOLD] $fileName" -ForegroundColor Green
-            $script:Signed++
+            ${script:Signed}++
             return $true
         } else {
             Write-Host "  [FAIL] $fileName" -ForegroundColor Red
             Write-Host "         $output" -ForegroundColor DarkRed
-            $script:Failed++
+            ${script:Failed}++
             return $false
         }
     }
 
-    $script:Signed++
+    ${script:Signed}++
     return $true
 }
 
@@ -399,12 +399,12 @@ function Test-Signature {
         Write-Host "     Issuer:      $issuer" -ForegroundColor Gray
         Write-Host "     Expires:     $expiry" -ForegroundColor Gray
         Write-Host "     Timestamped: $isTimestamped" -ForegroundColor $(if ($isTimestamped) { "Green" } else { "Yellow" })
-        $script:Verified++
+        ${script:Verified}++
         return $true
     } else {
-        $status = if ($sig) { $sig.Status } else { "NoSignature" }
+        $status = $(if ($sig) { $sig.Status } else { "NoSignature" }
         Write-Host "  [INVALID] $fileName → Status: $status" -ForegroundColor Red
-        $script:Failed++
+        ${script:Failed}++
         return $false
     }
 }
@@ -462,7 +462,7 @@ function Get-SignTargets {
             $sig = Get-AuthenticodeSignature -FilePath $t.FullName -ErrorAction SilentlyContinue
             if ($sig -and $sig.Status -eq "Valid") {
                 Write-Host "  [SKIP] $($t.Name) — already signed" -ForegroundColor DarkGray
-                $script:Skipped++
+                ${script:Skipped}++
             } else {
                 $unsigned += $t
             }
@@ -482,12 +482,12 @@ function Write-SigningAttestation {
     $attestation = @{
         schema    = "gold_sign_attestation_v1"
         timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
-        hostname  = $env:COMPUTERNAME
-        user      = $env:USERNAME
-        digest    = $script:cfg.Digest
-        thumbprint = $script:cfg.Thumbprint
-        subject    = $script:cfg.SubjectName
-        timestamp_server = $script:cfg.Timestamp
+        hostname  = ${env:COMPUTERNAME}
+        user      = ${env:USERNAME}
+        digest    = ${script:cfg}.Digest
+        thumbprint = ${script:cfg}.Thumbprint
+        subject    = ${script:cfg}.SubjectName
+        timestamp_server = ${script:cfg}.Timestamp
         dual_sign  = $DualSign.IsPresent
         files     = @()
     }
@@ -501,8 +501,8 @@ function Write-SigningAttestation {
             path       = $resolvedPath
             sha256     = $hash
             size_bytes = (Get-Item $f).Length
-            signer     = if ($sig -and $sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { "unknown" }
-            status     = if ($sig) { $sig.Status.ToString() } else { "Unknown" }
+            signer     = $(if ($sig -and $sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { "unknown" }
+            status     = $(if ($sig) { $sig.Status.ToString() } else { "Unknown" }
         }
     }
 
@@ -535,11 +535,11 @@ if (-not $signtool) {
 Write-Host "[GOLD_SIGN] signtool: $signtool" -ForegroundColor Gray
 
 # --- Auto-detect EV certificate if no explicit thumbprint/subject ---
-if (-not $script:cfg.Thumbprint -and -not $script:cfg.SubjectName -and
-    -not $script:cfg.CSP -and -not $AzureTrustedSigning) {
+if (-not ${script:cfg}.Thumbprint -and -not ${script:cfg}.SubjectName -and
+    -not ${script:cfg}.CSP -and -not $AzureTrustedSigning) {
     $detected = Find-EVCertificate
     if ($detected) {
-        $script:cfg.Thumbprint = $detected
+        ${script:cfg}.Thumbprint = $detected
     } else {
         Write-Host "[GOLD_SIGN] FATAL: No EV certificate available." -ForegroundColor Red
         Write-Host "  Set GOLD_SIGN_THUMBPRINT, GOLD_SIGN_SUBJECT, or provide -Thumbprint." -ForegroundColor Yellow
@@ -551,23 +551,23 @@ if (-not $script:cfg.Thumbprint -and -not $script:cfg.SubjectName -and
 # --- Display signing mode ---
 if ($AzureTrustedSigning) {
     Write-Host "[GOLD_SIGN] Mode: Azure Trusted Signing (cloud HSM)" -ForegroundColor Cyan
-    Write-Host "  Endpoint: $($script:cfg.AzureEndpoint)" -ForegroundColor Gray
-    Write-Host "  Profile:  $($script:cfg.AzureProfile)" -ForegroundColor Gray
-} elseif ($script:cfg.CSP) {
+    Write-Host "  Endpoint: $(${script:cfg}.AzureEndpoint)" -ForegroundColor Gray
+    Write-Host "  Profile:  $(${script:cfg}.AzureProfile)" -ForegroundColor Gray
+} elseif (${script:cfg}.CSP) {
     Write-Host "[GOLD_SIGN] Mode: Hardware Token (CSP)" -ForegroundColor Cyan
-    Write-Host "  CSP:      $($script:cfg.CSP)" -ForegroundColor Gray
-    Write-Host "  KC:       $($script:cfg.KeyContainer)" -ForegroundColor Gray
-} elseif ($script:cfg.Thumbprint) {
+    Write-Host "  CSP:      $(${script:cfg}.CSP)" -ForegroundColor Gray
+    Write-Host "  KC:       $(${script:cfg}.KeyContainer)" -ForegroundColor Gray
+} elseif (${script:cfg}.Thumbprint) {
     Write-Host "[GOLD_SIGN] Mode: Certificate Store (Thumbprint)" -ForegroundColor Cyan
-    Write-Host "  Store:    $($script:cfg.Store)" -ForegroundColor Gray
-    Write-Host "  SHA1:     $($script:cfg.Thumbprint)" -ForegroundColor Gray
+    Write-Host "  Store:    $(${script:cfg}.Store)" -ForegroundColor Gray
+    Write-Host "  SHA1:     $(${script:cfg}.Thumbprint)" -ForegroundColor Gray
 } else {
     Write-Host "[GOLD_SIGN] Mode: Subject Name" -ForegroundColor Cyan
-    Write-Host "  Subject:  $($script:cfg.SubjectName)" -ForegroundColor Gray
+    Write-Host "  Subject:  $(${script:cfg}.SubjectName)" -ForegroundColor Gray
 }
 
-Write-Host "[GOLD_SIGN] Digest:    $($script:cfg.Digest)" -ForegroundColor Gray
-Write-Host "[GOLD_SIGN] Timestamp: $($script:cfg.Timestamp)" -ForegroundColor Gray
+Write-Host "[GOLD_SIGN] Digest:    $(${script:cfg}.Digest)" -ForegroundColor Gray
+Write-Host "[GOLD_SIGN] Timestamp: $(${script:cfg}.Timestamp)" -ForegroundColor Gray
 if ($DualSign) { Write-Host "[GOLD_SIGN] Dual-sign: SHA1 + SHA256" -ForegroundColor Cyan }
 if ($DryRun)   { Write-Host "[GOLD_SIGN] *** DRY RUN — no files will be modified ***" -ForegroundColor Magenta }
 Write-Host ""
@@ -626,11 +626,11 @@ Write-Host ""
 Write-Host "================================================================" -ForegroundColor Yellow
 Write-Host "  GOLD_SIGN Summary" -ForegroundColor Yellow
 Write-Host "================================================================" -ForegroundColor Yellow
-Write-Host "  Signed:   $($script:Signed)" -ForegroundColor Green
-Write-Host "  Verified: $($script:Verified)" -ForegroundColor Green
-Write-Host "  Skipped:  $($script:Skipped)" -ForegroundColor DarkGray
-Write-Host "  Failed:   $($script:Failed)" -ForegroundColor $(if ($script:Failed -gt 0) { "Red" } else { "Green" })
+Write-Host "  Signed:   $(${script:Signed})" -ForegroundColor Green
+Write-Host "  Verified: $(${script:Verified})" -ForegroundColor Green
+Write-Host "  Skipped:  $(${script:Skipped})" -ForegroundColor DarkGray
+Write-Host "  Failed:   $(${script:Failed})" -ForegroundColor $(if (${script:Failed} -gt 0) { "Red" } else { "Green" })
 Write-Host "================================================================" -ForegroundColor Yellow
 
-if ($script:Failed -gt 0) { exit 1 }
+if (${script:Failed} -gt 0) { exit 1 }
 exit 0

@@ -239,8 +239,8 @@ function Invoke-OllamaBenchmark {
         Model = $Model
         Timestamp = Get-Date
         TPS = $tps
-        LatencyP50Ms = if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.5)] } else { 0 }
-        LatencyP99Ms = if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.99)] } else { 0 }
+        LatencyP50Ms = $(if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.5)] } else { 0 }
+        LatencyP99Ms = $(if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.99)] } else { 0 }
         PeakMemoryMB = 0
         AvgMemoryMB = 0
         TokensGenerated = $tokens
@@ -352,8 +352,8 @@ function Invoke-VLLMBenchmark {
         Model = $Model
         Timestamp = Get-Date
         TPS = $tps
-        LatencyP50Ms = if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.5)] } else { 0 }
-        LatencyP99Ms = if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.99)] } else { 0 }
+        LatencyP50Ms = $(if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.5)] } else { 0 }
+        LatencyP99Ms = $(if ($latencies.Count -gt 0) { ($latencies | Sort-Object)[($latencies.Count * 0.99)] } else { 0 }
         PeakMemoryMB = 0
         AvgMemoryMB = 0
         TokensGenerated = $tokens

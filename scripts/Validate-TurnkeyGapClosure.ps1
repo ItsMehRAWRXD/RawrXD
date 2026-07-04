@@ -47,19 +47,19 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:ValidationResults = [ordered]@{}
-$script:Warnings = @()
-$script:StartTime = Get-Date
+${script:ValidationResults} = [ordered]@{}
+${script:Warnings} = @()
+${script:StartTime} = Get-Date
 
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
-$script:Config = @{
+${script:Config} = @{
     MinDiskSpaceGB = 5
     MinMemoryGB = 4
     RequiredPorts = @(8080, 11434, 3000)
     TimeoutSeconds = 300
-    BackupLocation = "$env:TEMP\rawrxd_turnkey_backup"
+    BackupLocation = "${env:TEMP}\rawrxd_turnkey_backup"
 }
 
 # ============================================================================
@@ -83,7 +83,7 @@ function Add-ValidationResult {
     )
     
     $key = "$Phase`:$Test"
-    $script:ValidationResults[$key] = @{
+    ${script:ValidationResults}[$key] = @{
         Phase = $Phase
         Test = $Test
         Passed = $Passed
@@ -92,14 +92,14 @@ function Add-ValidationResult {
         Timestamp = (Get-Date).ToString("o")
     }
     
-    $color = if ($Passed) { "Green" } elseif ($Severity -eq "Warning" ) { "Yellow" } else { "Red" }
-    $status = if ($Passed) { "PASS" } else { "FAIL" }
+    $color = $(if ($Passed) { "Green" } elseif ($Severity -eq "Warning" ) { "Yellow" } else { "Red" }
+    $status = $(if ($Passed) { "PASS" } else { "FAIL" }
     Write-Host "  [$status] $Test" -ForegroundColor $color -NoNewline
     if ($Message) { Write-Host " - $Message" -ForegroundColor Gray }
     else { Write-Host "" }
     
     if (-not $Passed -and $Severity -eq "Warning") {
-        $script:Warnings += $key
+        ${script:Warnings} += $key
     }
 }
 
@@ -130,11 +130,11 @@ function Invoke-PreFlightValidation {
     # System Requirements
     $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$($repoRoot.ToString().Substring(0,2))'"
     $freeSpaceGB = [math]::Round($disk.FreeSpace / 1GB, 2)
-    Add-ValidationResult -Phase "PreFlight" -Test "DiskSpace" -Passed ($freeSpaceGB -ge $script:Config.MinDiskSpaceGB) -Message "${freeSpaceGB}GB free (min: $($script:Config.MinDiskSpaceGB)GB)"
+    Add-ValidationResult -Phase "PreFlight" -Test "DiskSpace" -Passed ($freeSpaceGB -ge ${script:Config}.MinDiskSpaceGB) -Message "${freeSpaceGB}GB free (min: $(${script:Config}.MinDiskSpaceGB)GB)"
     
     $memory = Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum
     $totalMemoryGB = [math]::Round($memory.Sum / 1GB, 2)
-    Add-ValidationResult -Phase "PreFlight" -Test "Memory" -Passed ($totalMemoryGB -ge $script:Config.MinMemoryGB) -Message "${totalMemoryGB}GB RAM (min: $($script:Config.MinMemoryGB)GB)"
+    Add-ValidationResult -Phase "PreFlight" -Test "Memory" -Passed ($totalMemoryGB -ge ${script:Config}.MinMemoryGB) -Message "${totalMemoryGB}GB RAM (min: $(${script:Config}.MinMemoryGB)GB)"
     
     # PowerShell Version
     $psVersion = $PSVersionTable.PSVersion
@@ -153,14 +153,14 @@ function Invoke-PreFlightValidation {
     Add-ValidationResult -Phase "PreFlight" -Test "CMakeAvailable" -Passed ($null -ne $cmake) -Message $(if ($cmake) { $cmake.Source } else { "Not in PATH" })
     
     $msbuild = Get-Command msbuild -ErrorAction SilentlyContinue
-    $vsDir = Join-Path $env:ProgramFiles "Microsoft Visual Studio"
+    $vsDir = Join-Path ${env:ProgramFiles} "Microsoft Visual Studio"
     $hasVS = (Test-Path $vsDir) -and ($null -ne (Get-ChildItem -Path $vsDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1))
     $ml64 = Test-Path "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
     $hasCompiler = ($null -ne $msbuild) -or $hasVS -or $ml64
     Add-ValidationResult -Phase "PreFlight" -Test "CompilerAvailable" -Passed $hasCompiler -Message $(if ($hasCompiler) { "MSVC/MSBuild found" } else { "No compiler detected" })
     
     # Port Availability Check
-    foreach ($port in $script:Config.RequiredPorts) {
+    foreach ($port in ${script:Config}.RequiredPorts) {
         $listener = $null
         try {
             $listener = New-Object System.Net.Sockets.TcpListener ([System.Net.IPAddress]::Loopback, $port)
@@ -207,7 +207,7 @@ function Invoke-DeployValidation {
     $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
     
     # Determine build directory
-    $buildDir = if ($BuildDir) { $BuildDir } else {
+    $buildDir = $(if ($BuildDir) { $BuildDir } else {
         $candidates = @("build-win32", "build-ninja", "build")
         $found = $candidates | Where-Object { Test-Path (Join-Path (Join-Path $repoRoot $_) "CMakeCache.txt") } | Select-Object -First 1
         if ($found) { Join-Path $repoRoot $found } else { $null }
@@ -312,11 +312,11 @@ function Invoke-RuntimeValidation {
     
     # Validate memory system — check VS Code Copilot memory paths or local memories dir
     $memoriesDir = Join-Path $repoRoot "memories"
-    $copilotMemDir = "$env:APPDATA\GitHub Copilot\memories"
+    $copilotMemDir = "${env:APPDATA}\GitHub Copilot\memories"
     $hasLocalMemories = Test-Path $memoriesDir
     $hasCopilotMemories = Test-Path $copilotMemDir
     $hasMemories = $hasLocalMemories -or $hasCopilotMemories
-    $memoryMsg = if ($hasLocalMemories) { "Local memories dir: $memoriesDir" } elseif ($hasCopilotMemories) { "Copilot memories: $copilotMemDir" } else { "Memory system not initialized" }
+    $memoryMsg = $(if ($hasLocalMemories) { "Local memories dir: $memoriesDir" } elseif ($hasCopilotMemories) { "Copilot memories: $copilotMemDir" } else { "Memory system not initialized" }
     Add-ValidationResult -Phase "Runtime" -Test "MemorySystem" -Passed $hasMemories -Message $memoryMsg
     
     if ($hasLocalMemories) {
@@ -401,7 +401,7 @@ function Invoke-UnTurnKeyValidation {
     }
     
     # Validate backup/restore capability
-    $backupDir = $script:Config.BackupLocation
+    $backupDir = ${script:Config}.BackupLocation
     try {
         New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
         $testFile = Join-Path $backupDir "test_backup.txt"
@@ -455,29 +455,29 @@ function Export-ValidationReport {
     New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
     
     $endTime = Get-Date
-    $duration = $endTime - $script:StartTime
+    $duration = $endTime - ${script:StartTime}
     
-    $passed = ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $true }).Count
-    $failed = ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Error" }).Count
-    $warnings = ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Warning" }).Count
+    $passed = (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $true }).Count
+    $failed = (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Error" }).Count
+    $warnings = (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Warning" }).Count
     
     $report = [ordered]@{
         metadata = [ordered]@{
             timestamp = $endTime.ToString("o")
             duration_seconds = [math]::Round($duration.TotalSeconds, 2)
             mode = $Mode
-            computer = $env:COMPUTERNAME
-            user = $env:USERNAME
+            computer = ${env:COMPUTERNAME}
+            user = ${env:USERNAME}
         }
         summary = [ordered]@{
-            total_tests = $script:ValidationResults.Count
+            total_tests = ${script:ValidationResults}.Count
             passed = $passed
             failed = $failed
             warnings = $warnings
-            success_rate = if ($script:ValidationResults.Count -gt 0) { [math]::Round(($passed / $script:ValidationResults.Count) * 100, 2) } else { 0 }
-            overall_status = if ($failed -eq 0 -and ($warnings -eq 0 -or -not $Strict)) { "PASS" } else { "FAIL" }
+            success_rate = $(if (${script:ValidationResults}.Count -gt 0) { [math]::Round(($passed / ${script:ValidationResults}.Count) * 100, 2) } else { 0 }
+            overall_status = $(if ($failed -eq 0 -and ($warnings -eq 0 -or -not $Strict)) { "PASS" } else { "FAIL" }
         }
-        results = $script:ValidationResults
+        results = ${script:ValidationResults}
     }
     
     $reportPath = Join-Path $reportDir "turnkey_gap_closure_report_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
@@ -543,21 +543,21 @@ if ($GenerateReport) {
 }
 else {
     # Print summary even without report
-    $passed = ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $true }).Count
-    $failed = ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Error" }).Count
-    $warnings = ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Warning" }).Count
+    $passed = (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $true }).Count
+    $failed = (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Error" }).Count
+    $warnings = (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Warning" }).Count
     
     Write-Host "`n========================================" -ForegroundColor Cyan
     Write-Host "  VALIDATION SUMMARY" -ForegroundColor Cyan
     Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "  Total: $($script:ValidationResults.Count) | Passed: $passed | Failed: $failed | Warnings: $warnings" -ForegroundColor White
-    $overall = if ($failed -eq 0 -and ($warnings -eq 0 -or -not $Strict)) { "PASS" } else { "FAIL" }
+    Write-Host "  Total: $(${script:ValidationResults}.Count) | Passed: $passed | Failed: $failed | Warnings: $warnings" -ForegroundColor White
+    $overall = $(if ($failed -eq 0 -and ($warnings -eq 0 -or -not $Strict)) { "PASS" } else { "FAIL" }
     Write-Host "  Overall: $overall" -ForegroundColor $(if ($overall -eq "PASS") { "Green" } else { "Red" })
     Write-Host "========================================" -ForegroundColor Cyan
 }
 
 # Exit with appropriate code
-$exitFailed = ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Error" }).Count
-$exitWarnings = if ($Strict) { ($script:ValidationResults.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Warning" }).Count } else { 0 }
+$exitFailed = (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Error" }).Count
+$exitWarnings = $(if ($Strict) { (${script:ValidationResults}.Values | Where-Object { $_.Passed -eq $false -and $_.Severity -eq "Warning" }).Count } else { 0 }
 
 exit [int]($exitFailed -gt 0 -or $exitWarnings -gt 0)

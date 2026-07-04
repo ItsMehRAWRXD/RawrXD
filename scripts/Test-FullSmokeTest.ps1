@@ -525,7 +525,7 @@ Write-Host "  Duration:    $($TestResults.Duration.TotalSeconds.ToString('F2')) 
 Write-Host "`nResults by Category:" -ForegroundColor Cyan
 foreach ($cat in $TestResults.Categories.Keys) {
     $stats = $TestResults.Categories[$cat]
-    $color = if ($stats.Failed -gt 0) { "Red" } elseif ($stats.Passed -gt 0) { "Green" } else { "Yellow" }
+    $color = $(if ($stats.Failed -gt 0) { "Red" } elseif ($stats.Passed -gt 0) { "Green" } else { "Yellow" }
     Write-Host "  $cat`: $($stats.Passed) passed, $($stats.Failed) failed, $($stats.Skipped) skipped" -ForegroundColor $color
 }
 

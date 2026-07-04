@@ -53,7 +53,7 @@ if (-not ($StartPage -like 'http*')) {
 }
 
 # Enable SAB + File System Access for the embedded engine
-$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--enable-features=SharedArrayBuffer,FileSystemAccessAPI'
+${env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS} = '--enable-features=SharedArrayBuffer,FileSystemAccessAPI'
 
 # Create main window
 $window = New-Object System.Windows.Window
@@ -130,7 +130,7 @@ $wv.CoreWebView2InitializationCompleted.Add({
         return
     }
 
-    $global:core = $wv.CoreWebView2
+    ${global:core} = $wv.CoreWebView2
     $initialized  = $true
 
     $core.Settings.AreDevToolsEnabled   = $true
@@ -235,7 +235,7 @@ $injectButton.Add_Click({
 $safeButton.Add_Click({
     if ($initialized -and $wv.CoreWebView2) {
         $safeModeEnabled = -not $safeModeEnabled
-        $state = if ($safeModeEnabled) { 'ON' } else { 'OFF' }
+        $state = $(if ($safeModeEnabled) { 'ON' } else { 'OFF' }
         $safeButton.Content = "Safe Mode: $state"
         $payload = @{ cmd = 'SAFE_MODE'; enabled = $safeModeEnabled } | ConvertTo-Json -Compress
         $wv.CoreWebView2.PostWebMessageAsJson($payload)

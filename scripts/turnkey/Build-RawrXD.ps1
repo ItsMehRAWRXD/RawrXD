@@ -12,23 +12,23 @@ param(
     [int]$ParallelJobs = 0,  # 0 = auto-detect
     [switch]$SkipTests,
     [string]$OutputPath = "",
-    [string]$LogPath = "$env:TEMP\rawrxd-build.log"
+    [string]$LogPath = "${env:TEMP}\rawrxd-build.log"
 )
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "Continue"
 
 # Configuration
-$script:ProjectRoot = Resolve-Path "$PSScriptRoot\..\.."
-$script:BuildDir = Join-Path $script:ProjectRoot "build-turnkey"
-$script:LogFile = $LogPath
-$script:StartTime = Get-Date
+${script:ProjectRoot} = Resolve-Path "$PSScriptRoot\..\.."
+${script:BuildDir} = Join-Path ${script:ProjectRoot} "build-turnkey"
+${script:LogFile} = $LogPath
+${script:StartTime} = Get-Date
 
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logEntry = "[$timestamp] [$Level] $Message"
-    Add-Content -Path $script:LogFile -Value $logEntry -ErrorAction SilentlyContinue
+    Add-Content -Path ${script:LogFile} -Value $logEntry -ErrorAction SilentlyContinue
     switch ($Level) {
         "ERROR" { Write-Host $logEntry -ForegroundColor Red }
         "WARN"  { Write-Host $logEntry -ForegroundColor Yellow }
@@ -66,7 +66,7 @@ function Test-BuildEnvironment {
     }
     
     # Check if we're in VS dev shell
-    $checks.VSDevShell = [bool]$env:LIB -and [bool]$env:INCLUDE
+    $checks.VSDevShell = [bool]${env:LIB} -and [bool]${env:INCLUDE}
     if ($checks.VSDevShell) {
         Write-Log "  ✓ Visual Studio environment loaded" "SUCCESS"
     } else {
@@ -80,7 +80,7 @@ function Initialize-BuildEnvironment {
     Write-Log "Initializing build environment..."
     
     # Try to find and load VS environment if not already loaded
-    if (-not ($env:LIB -and $env:INCLUDE)) {
+    if (-not (${env:LIB} -and ${env:INCLUDE})) {
         $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
         if (Test-Path $vsWhere) {
             $vsPath = & $vsWhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
@@ -114,13 +114,13 @@ function Initialize-BuildEnvironment {
 function Clear-BuildDirectory {
     Write-Log "Cleaning build directory..."
     
-    if (Test-Path $script:BuildDir) {
-        Remove-Item $script:BuildDir -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path ${script:BuildDir}) {
+        Remove-Item ${script:BuildDir} -Recurse -Force -ErrorAction SilentlyContinue
         Write-Log "  ✓ Removed old build directory" "SUCCESS"
     }
     
-    New-Item -ItemType Directory -Path $script:BuildDir -Force | Out-Null
-    Write-Log "  ✓ Created fresh build directory: $script:BuildDir" "SUCCESS"
+    New-Item -ItemType Directory -Path ${script:BuildDir} -Force | Out-Null
+    Write-Log "  ✓ Created fresh build directory: ${script:BuildDir}" "SUCCESS"
 }
 
 function Invoke-CMakeConfigure {
@@ -135,9 +135,9 @@ function Invoke-CMakeConfigure {
         "-DCMAKE_ASM_MASM_COMPILER=ml64"
     )
     
-    Push-Location $script:BuildDir
+    Push-Location ${script:BuildDir}
     try {
-        & cmake @cmakeArgs 2>&1 | Tee-Object -FilePath $script:LogFile -Append
+        & cmake @cmakeArgs 2>&1 | Tee-Object -FilePath ${script:LogFile} -Append
         
         if ($LASTEXITCODE -ne 0) {
             throw "CMake configuration failed with exit code $LASTEXITCODE"
@@ -154,7 +154,7 @@ function Invoke-CMakeBuild {
     Write-Log "Building RawrXD..." "BUILD"
     
     $buildArgs = @(
-        "--build", $script:BuildDir,
+        "--build", ${script:BuildDir},
         "--config", $Configuration
     )
     
@@ -167,7 +167,7 @@ function Invoke-CMakeBuild {
         Write-Log "  Using $ParallelJobs parallel jobs"
     }
     
-    & cmake @buildArgs 2>&1 | Tee-Object -FilePath $script:LogFile -Append
+    & cmake @buildArgs 2>&1 | Tee-Object -FilePath ${script:LogFile} -Append
     
     if ($LASTEXITCODE -ne 0) {
         throw "Build failed with exit code $LASTEXITCODE"
@@ -185,12 +185,12 @@ function Test-BuildOutput {
         @{ Name = "RawrXD.exe"; Required = $false }
     )
     
-    $binDir = Join-Path $script:BuildDir "bin"
+    $binDir = Join-Path ${script:BuildDir} "bin"
     if (-not (Test-Path $binDir)) {
-        $binDir = Join-Path $script:BuildDir "$Configuration"
+        $binDir = Join-Path ${script:BuildDir} "$Configuration"
     }
     if (-not (Test-Path $binDir)) {
-        $binDir = $script:BuildDir
+        $binDir = ${script:BuildDir}
     }
     
     $foundOutputs = @()
@@ -209,8 +209,8 @@ function Test-BuildOutput {
             Write-Log "  ✓ Found: $($output.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" "SUCCESS"
         } else {
             $missingOutputs += $output
-            $level = if ($output.Required) { "WARN" } else { "INFO" }
-            $prefix = if ($output.Required) { "✗" } else { "•" }
+            $level = $(if ($output.Required) { "WARN" } else { "INFO" }
+            $prefix = $(if ($output.Required) { "✗" } else { "•" }
             Write-Log "  $prefix Missing: $($output.Name)" $level
         }
     }
@@ -229,7 +229,7 @@ function Copy-BuildArtifacts {
     param([array]$Artifacts)
     
     if (-not $OutputPath) {
-        $OutputPath = Join-Path $script:ProjectRoot "bin-turnkey"
+        $OutputPath = Join-Path ${script:ProjectRoot} "bin-turnkey"
     }
     
     Write-Log "Copying artifacts to $OutputPath..."
@@ -307,7 +307,7 @@ function New-BuildReport {
         DurationSeconds = [math]::Round($Duration.TotalSeconds, 2)
         Artifacts = $Artifacts
         OutputDirectory = $OutputPath
-        LogFile = $script:LogFile
+        LogFile = ${script:LogFile}
         Status = "SUCCESS"
     }
     
@@ -321,7 +321,7 @@ function New-BuildReport {
 # Main execution
 Write-Log "=== RawrXD Turnkey Build ==="
 Write-Log "Configuration: $Configuration"
-Write-Log "Project Root: $script:ProjectRoot"
+Write-Log "Project Root: ${script:ProjectRoot}"
 Write-Log "Log file: $LogFile"
 Write-Log ""
 
@@ -345,8 +345,8 @@ try {
     if ($Clean) {
         Clear-BuildDirectory
     } else {
-        if (-not (Test-Path $script:BuildDir)) {
-            New-Item -ItemType Directory -Path $script:BuildDir -Force | Out-Null
+        if (-not (Test-Path ${script:BuildDir})) {
+            New-Item -ItemType Directory -Path ${script:BuildDir} -Force | Out-Null
         }
     }
     
@@ -376,7 +376,7 @@ try {
     }
     
     # Step 8: Generate report
-    $duration = (Get-Date) - $script:StartTime
+    $duration = (Get-Date) - ${script:StartTime}
     $report = New-BuildReport -Artifacts $artifacts -OutputPath $outputDir -Duration $duration
     
     # Summary

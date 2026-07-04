@@ -308,7 +308,9 @@ void HotpatchModelManager::FreeModelResources(ModelDescriptor* desc) {
 // - Uses VulkanCompute::createBuffer for device memory allocation
 // ============================================================================
 
-#ifndef RAWRXD_NO_VULKAN
+// GPU upload is disabled when Vulkan SDK is not available
+// Define RAWRXD_ENABLE_GPU_UPLOAD when Vulkan headers are in include path
+#ifdef RAWRXD_ENABLE_GPU_UPLOAD
 #include "../backend/vulkan_compute.h"
 #endif
 
@@ -341,8 +343,8 @@ bool HotpatchModelManager::UploadTensorsToGPU(ModelDescriptor* desc) {
 }
 
 bool HotpatchModelManager::UploadTensorUnified(ModelDescriptor* desc) {
-    #ifdef RAWRXD_NO_VULKAN
-    printf("[WARN] Vulkan disabled, skipping GPU upload\n");
+    #ifndef RAWRXD_ENABLE_GPU_UPLOAD
+    printf("[INFO] GPU upload disabled (RAWRXD_ENABLE_GPU_UPLOAD not defined)\n");
     return false;
     #else
     
@@ -384,8 +386,8 @@ bool HotpatchModelManager::UploadTensorUnified(ModelDescriptor* desc) {
 }
 
 bool HotpatchModelManager::UploadTensorPerTensor(ModelDescriptor* desc) {
-    #ifdef RAWRXD_NO_VULKAN
-    printf("[WARN] Vulkan disabled, skipping GPU upload\n");
+    #ifndef RAWRXD_ENABLE_GPU_UPLOAD
+    printf("[INFO] GPU upload disabled (RAWRXD_ENABLE_GPU_UPLOAD not defined)\n");
     return false;
     #else
     
@@ -467,6 +469,13 @@ void RawrXD_HotpatchShutdownManager() {
     HotpatchModelManager::Instance().Shutdown();
 }
 
+// Phase 3: GPU Upload C API
+bool RawrXD_UploadTensorsToGPU(void* modelDesc) {
+    if (!modelDesc) return false;
+    ModelDescriptor* desc = reinterpret_cast<ModelDescriptor*>(modelDesc);
+    return HotpatchModelManager::Instance().UploadTensorsToGPU(desc);
+}
+
 } // extern "C"
 
 // Explicit exports for MASM64 linkage
@@ -475,3 +484,4 @@ void RawrXD_HotpatchShutdownManager() {
 #pragma comment(linker, "/EXPORT:RawrXD_HotpatchInitManager")
 #pragma comment(linker, "/EXPORT:RawrXD_HotpatchShutdownManager")
 #pragma comment(linker, "/EXPORT:RawrXD_HotpatchModelCleanup")
+#pragma comment(linker, "/EXPORT:RawrXD_UploadTensorsToGPU")

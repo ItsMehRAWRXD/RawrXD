@@ -19,8 +19,8 @@ $overallPass = $true
 
 function Write-TestResult {
     param($Name, $Passed, $Duration, $Details)
-    $status = if ($Passed) { "PASS" } else { "FAIL" }
-    $color = if ($Passed) { "Green" } else { "Red" }
+    $status = $(if ($Passed) { "PASS" } else { "FAIL" }
+    $color = $(if ($Passed) { "Green" } else { "Red" }
     Write-Host "[$status] $Name (${Duration}ms)" -ForegroundColor $color
     if ($Verbose -and $Details) {
         Write-Host "  $Details" -ForegroundColor Gray

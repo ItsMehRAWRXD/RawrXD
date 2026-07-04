@@ -21,7 +21,7 @@ $acquired = $false
 while (((Get-Date) - $lockStart).TotalSeconds -lt $LockTimeoutSec) {
     try {
         New-Item -ItemType Directory -Path $lockDir -ErrorAction Stop | Out-Null
-        $owner = "pid=$PID time=$((Get-Date).ToString('o')) host=$env:COMPUTERNAME"
+        $owner = "pid=$PID time=$((Get-Date).ToString('o')) host=${env:COMPUTERNAME}"
         Set-Content -Path $lockMeta -Value $owner -Encoding UTF8
         $acquired = $true
         break

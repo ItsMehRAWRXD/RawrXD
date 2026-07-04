@@ -27,14 +27,14 @@ function Write-TestResult {
         [string]$Details = ""
     )
     
-    $color = if ($Result -eq "PASS") { "Green" } elseif ($Result -eq "FAIL") { "Red" } else { "Yellow" }
+    $color = $(if ($Result -eq "PASS") { "Green" } elseif ($Result -eq "FAIL") { "Red" } else { "Yellow" }
     Write-Host "  [$Result]" -ForegroundColor $color -NoNewline
     Write-Host " $Test"
     if ($Details) {
         Write-Host "        → $Details" -ForegroundColor Gray
     }
     
-    $script:TestResults += [PSCustomObject]@{
+    ${script:TestResults} += [PSCustomObject]@{
         Test = $Test
         Result = $Result
         Details = $Details

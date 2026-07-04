@@ -36,7 +36,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$VerbosePreference = if ($ShowVerbose) { "Continue" } else { "SilentlyContinue" }
+$VerbosePreference = $(if ($ShowVerbose) { "Continue" } else { "SilentlyContinue" }
 
 # ============================================================================
 # CONFIGURATION

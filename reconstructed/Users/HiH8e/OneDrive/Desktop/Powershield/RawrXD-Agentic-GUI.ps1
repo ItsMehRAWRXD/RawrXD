@@ -41,9 +41,9 @@ try {
 }
 
 # Get script directory
-$script:RawrXDPath = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
-$script:ModulePath = Join-Path $script:RawrXDPath 'RawrXD-Agentic-Module.psm1'
-$script:IDEPath = Join-Path $script:RawrXDPath 'RawrXD.ps1'
+${script:RawrXDPath} = $(if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+${script:ModulePath} = Join-Path ${script:RawrXDPath} 'RawrXD-Agentic-Module.psm1'
+${script:IDEPath} = Join-Path ${script:RawrXDPath} 'RawrXD.ps1'
 
 Write-Host "`n" -ForegroundColor White
 Write-Host "╔════════════════════════════════════════════════════╗" -ForegroundColor Magenta
@@ -55,7 +55,7 @@ Write-Host "⚙️  Initializing agentic mode..." -ForegroundColor Cyan
 
 try {
     # Import agentic module
-    Import-Module $script:ModulePath -Force -ErrorAction Stop
+    Import-Module ${script:ModulePath} -Force -ErrorAction Stop
     Write-Host "✅ Module imported" -ForegroundColor Green
     
     # Enable agentic mode
@@ -78,10 +78,10 @@ Write-Host "`n"
 
 try {
     # Change to IDE directory for relative paths
-    Push-Location $script:RawrXDPath
+    Push-Location ${script:RawrXDPath}
     
     # Execute IDE with full error handling
-    & $script:IDEPath
+    & ${script:IDEPath}
     
     Pop-Location
 } catch {

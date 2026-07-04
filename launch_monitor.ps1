@@ -80,7 +80,7 @@ function Write-NodeStatus {
             default   { "Gray" }
         }
         
-        $latencyStr = if ($node.LastSeen) { 
+        $latencyStr = $(if ($node.LastSeen) { 
             "$($node.LastSeen)ms" 
         } else { 
             "N/A" 

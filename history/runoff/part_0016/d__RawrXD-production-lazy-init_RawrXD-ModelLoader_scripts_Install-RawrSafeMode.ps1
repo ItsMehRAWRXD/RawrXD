@@ -21,7 +21,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Configuration
-$InstallDir = "$env:LOCALAPPDATA\RawrXD"
+$InstallDir = "${env:LOCALAPPDATA}\RawrXD"
 $ScriptDir = $PSScriptRoot
 $SourceScript = Join-Path $ScriptDir "rawr.ps1"
 $TargetScript = Join-Path $InstallDir "rawr.ps1"
@@ -66,7 +66,7 @@ function Add-ToPath {
     $currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if (-not (Test-InPath $Dir)) {
         [Environment]::SetEnvironmentVariable("Path", "$currentPath;$Dir", "User")
-        $env:Path = "$env:Path;$Dir"
+        ${env:Path} = "${env:Path};$Dir"
         return $true
     }
     return $false
@@ -77,7 +77,7 @@ function Remove-FromPath {
     $currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
     $newPath = ($currentPath -split ";" | Where-Object { $_ -ne $Dir }) -join ";"
     [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
-    $env:Path = ($env:Path -split ";" | Where-Object { $_ -ne $Dir }) -join ";"
+    ${env:Path} = (${env:Path} -split ";" | Where-Object { $_ -ne $Dir }) -join ";"
 }
 
 function Install-RawrSafeMode {
@@ -134,7 +134,7 @@ Write-Host "`e[32m[RawrXD]`e[0m SafeMode CLI loaded. Use 'rawr help' or 'rx help
     
     # Check for PowerShell profile
     $profilePath = $PROFILE.CurrentUserAllHosts
-    $profileContent = if (Test-Path $profilePath) { Get-Content $profilePath -Raw } else { "" }
+    $profileContent = $(if (Test-Path $profilePath) { Get-Content $profilePath -Raw } else { "" }
     
     if ($profileContent -notmatch "rawr-loader\.ps1") {
         $importLine = ". `"$ShimPs1`""
@@ -166,7 +166,7 @@ Write-Host "`e[32m[RawrXD]`e[0m SafeMode CLI loaded. Use 'rawr help' or 'rx help
     Write-Host "  $($Colors.Green)rawr tools$($Colors.Reset)         - List available tools"
     Write-Host "  $($Colors.Green)rawr repl$($Colors.Reset)          - Enter REPL mode"
     Write-Host ""
-    Write-Info "Restart your terminal or run: `$env:Path = [Environment]::GetEnvironmentVariable('Path', 'User')"
+    Write-Info "Restart your terminal or run: `${env:Path} = [Environment]::GetEnvironmentVariable('Path', 'User')"
 }
 
 function Uninstall-RawrSafeMode {

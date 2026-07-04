@@ -35,7 +35,7 @@ function Get-SSMSessionInfo {
             exit 1
         }
 
-        $script:SSM_SESSION_JSON = $response.Content
+        ${script:SSM_SESSION_JSON} = $response.Content
         Write-Host "Session JSON successfully retrieved"
     } catch {
         Write-Error "Exception in Get-SSMSessionInfo: $_"
@@ -64,7 +64,7 @@ function Get-SSMSessionInfoAsync {
             Write-Host "Attempt ${attempt}: HTTP ${statusCode}"
 
             if ($statusCode -eq 200) {
-                $script:SSM_SESSION_JSON = $response.Content
+                ${script:SSM_SESSION_JSON} = $response.Content
                 Write-Host "Session JSON successfully retrieved"
                 return
             } elseif ($statusCode -eq 202 -or $statusCode -eq 204) {
@@ -108,18 +108,18 @@ if ($CREDS_TYPE -ne "lc" -and $CREDS_TYPE -ne "dl") {
 }
 
 # Read port from local info JSON
-Write-Host "`nReading SAGEMAKER_LOCAL_SERVER_FILE_PATH: $env:SAGEMAKER_LOCAL_SERVER_FILE_PATH"
+Write-Host "`nReading SAGEMAKER_LOCAL_SERVER_FILE_PATH: ${env:SAGEMAKER_LOCAL_SERVER_FILE_PATH}"
 try {
-    $jsonContent = Get-Content $env:SAGEMAKER_LOCAL_SERVER_FILE_PATH -Raw | ConvertFrom-Json
+    $jsonContent = Get-Content ${env:SAGEMAKER_LOCAL_SERVER_FILE_PATH} -Raw | ConvertFrom-Json
     $LOCAL_ENDPOINT_PORT = $jsonContent.port
     Write-Host "Extracted port: $LOCAL_ENDPOINT_PORT"
 } catch {
-    Write-Error "Failed to read or parse JSON file at $env:SAGEMAKER_LOCAL_SERVER_FILE_PATH"
+    Write-Error "Failed to read or parse JSON file at ${env:SAGEMAKER_LOCAL_SERVER_FILE_PATH}"
     exit 1
 }
 
 if (-not $LOCAL_ENDPOINT_PORT -or $LOCAL_ENDPOINT_PORT -eq "null") {
-    Write-Error "'port' field is missing or invalid in $env:SAGEMAKER_LOCAL_SERVER_FILE_PATH"
+    Write-Error "'port' field is missing or invalid in ${env:SAGEMAKER_LOCAL_SERVER_FILE_PATH}"
     exit 1
 }
 
@@ -133,9 +133,9 @@ if ($CREDS_TYPE -eq "lc") {
 
 # Execute the session
 Write-Host "`nLaunching session-manager-plugin..."
-$sessionPlugin = if ($env:AWS_SSM_CLI) { $env:AWS_SSM_CLI } else { "session-manager-plugin" }
+$sessionPlugin = $(if (${env:AWS_SSM_CLI}) { ${env:AWS_SSM_CLI} } else { "session-manager-plugin" }
 
-$jsonObj = $script:SSM_SESSION_JSON | ConvertFrom-Json
+$jsonObj = ${script:SSM_SESSION_JSON} | ConvertFrom-Json
 $streamUrl = $jsonObj.StreamUrl
 $tokenValue = $jsonObj.TokenValue
 $sessionId = $jsonObj.SessionId

@@ -75,7 +75,7 @@ function Find-SidecarBinary {
         "$PSScriptRoot\..\build\nvme_thermal_sidecar_clean.exe",
         "D:\rawrxd\build\nvme_thermal_sidecar_clean.exe",
         "C:\Sovereign\nvme_thermal_sidecar_clean.exe",
-        "$env:ProgramFiles\RawrXD\nvme_thermal_sidecar_clean.exe"
+        "${env:ProgramFiles}\RawrXD\nvme_thermal_sidecar_clean.exe"
     )
     
     foreach ($path in $searchPaths) {
@@ -332,8 +332,8 @@ function Show-ServiceStatus {
         
         $data = Read-MMFData
         if ($data.Success) {
-            $sigStatus = if ($data.SignatureValid) { "VALID" } else { "INVALID" }
-            $sigColor = if ($data.SignatureValid) { "Green" } else { "Red" }
+            $sigStatus = $(if ($data.SignatureValid) { "VALID" } else { "INVALID" }
+            $sigColor = $(if ($data.SignatureValid) { "Green" } else { "Red" }
             
             Write-Host "  Signature:     0x$($data.Signature.ToString('X8')) ($sigStatus)" -ForegroundColor $sigColor
             Write-Host "  Version:       $($data.Version)" -ForegroundColor White
@@ -343,8 +343,8 @@ function Show-ServiceStatus {
             Write-Host "  Temperatures:" -ForegroundColor Cyan
             for ($i = 0; $i -lt $data.Temps.Count; $i++) {
                 $temp = $data.Temps[$i]
-                $tempColor = if ($temp -eq -1) { "Gray" } elseif ($temp -gt 60) { "Red" } elseif ($temp -gt 45) { "Yellow" } else { "Green" }
-                $tempStr = if ($temp -eq -1) { "N/A" } else { "$temp°C" }
+                $tempColor = $(if ($temp -eq -1) { "Gray" } elseif ($temp -gt 60) { "Red" } elseif ($temp -gt 45) { "Yellow" } else { "Green" }
+                $tempStr = $(if ($temp -eq -1) { "N/A" } else { "$temp°C" }
                 Write-Host "    Drive ${i}: $tempStr" -ForegroundColor $tempColor
             }
         } else {
@@ -423,7 +423,7 @@ function Test-ThermalSystem {
         if ($validTemps.Count -gt 0) {
             Write-Host "  [PASS] $($validTemps.Count)/$($data.Temps.Count) drives reporting valid temperatures" -ForegroundColor Green
             foreach ($temp in $validTemps) {
-                $status = if ($temp -gt 60) { "HOT" } elseif ($temp -gt 45) { "WARM" } else { "OK" }
+                $status = $(if ($temp -gt 60) { "HOT" } elseif ($temp -gt 45) { "WARM" } else { "OK" }
                 Write-Host "         $temp°C ($status)" -ForegroundColor Gray
             }
         } else {

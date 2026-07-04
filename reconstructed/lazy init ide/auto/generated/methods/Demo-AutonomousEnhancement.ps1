@@ -39,7 +39,7 @@ param(
     [switch]$ShowCode = $false,
     
     [Parameter(Mandatory=$false)]
-    [switch]$FullDemo = $true
+    [switch]$FullDemo
 )
 
 # Import modules
@@ -158,7 +158,7 @@ if ($FullDemo) {
     Write-Host "  Implementation Status:" -ForegroundColor White
     
     $enhancementResults.ImplementationStatus | ForEach-Object {
-        $statusColor = if ($_.Status -eq 'Success') { 'Green' } else { 'Red' }
+        $statusColor = $(if ($_.Status -eq 'Success') { 'Green' } else { 'Red' }
         Write-Host "    - $($_.Feature): $($_.Status)" -ForegroundColor $statusColor
         if ($_.ModulePath) {
             Write-Host "      Module: $($_.ModulePath)" -ForegroundColor Gray

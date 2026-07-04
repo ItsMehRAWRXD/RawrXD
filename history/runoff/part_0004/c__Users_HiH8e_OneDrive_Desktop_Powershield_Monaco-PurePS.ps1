@@ -34,7 +34,7 @@ $webView2Loaded = $false
 
 # First, try loading from local WebView2Libs folder (has correct netcoreapp3.0 DLLs)
 $localWvDir = Join-Path $PSScriptRoot "WebView2Libs"
-$tempWvDir = "$env:TEMP\WVLibs"
+$tempWvDir = "${env:TEMP}\WVLibs"
 
 # Determine which directory has the DLLs
 $wvDir = $null
@@ -229,8 +229,8 @@ require(['vs/editor/editor.main'], function () {
 "@
 
 # ----------  Store reference for external access ----------
-$script:WebView = $wv
-$script:EditorReady = $false
+${script:WebView} = $wv
+${script:EditorReady} = $false
 
 # ----------  load HTML ----------
 $form.Add_Shown({
@@ -244,7 +244,7 @@ $form.Add_Shown({
                     $msg = $e.WebMessageAsJson | ConvertFrom-Json
                     switch ($msg.type) {
                         'ready' { 
-                            $script:EditorReady = $true
+                            ${script:EditorReady} = $true
                             $statusLabel.Text = "Monaco Editor v$($msg.version) | Language: $Language | Theme: $Theme | Ready"
                             Write-Host "✅ Monaco Editor ready (v$($msg.version))" -ForegroundColor Green
                         }
@@ -263,7 +263,7 @@ $form.Add_Shown({
     }
     
     # Create a user data folder in TEMP to avoid access denied errors (especially on OneDrive paths)
-    $monacoUserDataFolder = Join-Path $env:TEMP "RawrXD_Monaco_WebView2"
+    $monacoUserDataFolder = Join-Path ${env:TEMP} "RawrXD_Monaco_WebView2"
     if (-not (Test-Path $monacoUserDataFolder)) {
         New-Item -ItemType Directory -Path $monacoUserDataFolder -Force | Out-Null
     }
@@ -287,9 +287,9 @@ function global:Get-MonacoContent {
     .SYNOPSIS
       Retrieves the current content from Monaco Editor
     #>
-    if ($script:WebView -and $script:WebView.CoreWebView2 -and $script:EditorReady) {
+    if (${script:WebView} -and ${script:WebView}.CoreWebView2 -and ${script:EditorReady}) {
         try {
-            $result = $script:WebView.CoreWebView2.ExecuteScriptAsync("window.getValue()").GetAwaiter().GetResult()
+            $result = ${script:WebView}.CoreWebView2.ExecuteScriptAsync("window.getValue()").GetAwaiter().GetResult()
             # Remove surrounding quotes and unescape
             $content = $result.Trim('"') -replace '\\n', "`n" -replace '\\r', "`r" -replace '\\"', '"' -replace '\\\\', '\'
             return $content
@@ -318,11 +318,11 @@ function global:Set-MonacoContent {
         [string]$Lang = ''
     )
     
-    if ($script:WebView -and $script:WebView.CoreWebView2 -and $script:EditorReady) {
+    if (${script:WebView} -and ${script:WebView}.CoreWebView2 -and ${script:EditorReady}) {
         try {
             $escapedText = $Text -replace '\\', '\\\\' -replace '"', '\"' -replace "`n", '\n' -replace "`r", '\r'
-            $langParam = if ($Lang) { "'$Lang'" } else { "null" }
-            $script:WebView.CoreWebView2.ExecuteScriptAsync("window.setValue(`"$escapedText`", $langParam)").GetAwaiter().GetResult() | Out-Null
+            $langParam = $(if ($Lang) { "'$Lang'" } else { "null" }
+            ${script:WebView}.CoreWebView2.ExecuteScriptAsync("window.setValue(`"$escapedText`", $langParam)").GetAwaiter().GetResult() | Out-Null
         } catch {
             Write-Warning "Failed to set Monaco content: $_"
         }
@@ -340,8 +340,8 @@ function global:Set-MonacoTheme {
     #>
     param([ValidateSet('vs-dark', 'vs', 'hc-black')][string]$Theme)
     
-    if ($script:WebView -and $script:WebView.CoreWebView2 -and $script:EditorReady) {
-        $script:WebView.CoreWebView2.ExecuteScriptAsync("window.setTheme('$Theme')").GetAwaiter().GetResult() | Out-Null
+    if (${script:WebView} -and ${script:WebView}.CoreWebView2 -and ${script:EditorReady}) {
+        ${script:WebView}.CoreWebView2.ExecuteScriptAsync("window.setTheme('$Theme')").GetAwaiter().GetResult() | Out-Null
     }
 }
 
@@ -354,8 +354,8 @@ function global:Set-MonacoLanguage {
     #>
     param([string]$Language)
     
-    if ($script:WebView -and $script:WebView.CoreWebView2 -and $script:EditorReady) {
-        $script:WebView.CoreWebView2.ExecuteScriptAsync("window.setLanguage('$Language')").GetAwaiter().GetResult() | Out-Null
+    if (${script:WebView} -and ${script:WebView}.CoreWebView2 -and ${script:EditorReady}) {
+        ${script:WebView}.CoreWebView2.ExecuteScriptAsync("window.setLanguage('$Language')").GetAwaiter().GetResult() | Out-Null
     }
 }
 
@@ -364,9 +364,9 @@ function global:Get-MonacoSelection {
     .SYNOPSIS
       Gets the currently selected text in Monaco Editor
     #>
-    if ($script:WebView -and $script:WebView.CoreWebView2 -and $script:EditorReady) {
+    if (${script:WebView} -and ${script:WebView}.CoreWebView2 -and ${script:EditorReady}) {
         try {
-            $result = $script:WebView.CoreWebView2.ExecuteScriptAsync("window.getSelection()").GetAwaiter().GetResult()
+            $result = ${script:WebView}.CoreWebView2.ExecuteScriptAsync("window.getSelection()").GetAwaiter().GetResult()
             return $result.Trim('"') -replace '\\n', "`n" -replace '\\"', '"'
         } catch {
             return $null
@@ -384,9 +384,9 @@ function global:Insert-MonacoText {
     #>
     param([string]$Text)
     
-    if ($script:WebView -and $script:WebView.CoreWebView2 -and $script:EditorReady) {
+    if (${script:WebView} -and ${script:WebView}.CoreWebView2 -and ${script:EditorReady}) {
         $escapedText = $Text -replace '\\', '\\\\' -replace '"', '\"' -replace "`n", '\n'
-        $script:WebView.CoreWebView2.ExecuteScriptAsync("window.insertText(`"$escapedText`")").GetAwaiter().GetResult() | Out-Null
+        ${script:WebView}.CoreWebView2.ExecuteScriptAsync("window.insertText(`"$escapedText`")").GetAwaiter().GetResult() | Out-Null
     }
 }
 
@@ -424,8 +424,8 @@ Monaco Pure PS Commands:
 $form.Add_FormClosing({
     param($sender, $e)
     try {
-        if ($script:WebView) {
-            $script:WebView.Dispose()
+        if (${script:WebView}) {
+            ${script:WebView}.Dispose()
         }
     } catch {
         # Ignore cleanup errors

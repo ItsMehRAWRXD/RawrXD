@@ -136,7 +136,7 @@ $output += @"
 
 $counter = 1
 foreach($kingdom in ($sorted | Select-Object -First 20)) {
-    $medal = if($counter -eq 1) { "🥇" } elseif($counter -eq 2) { "🥈" } elseif($counter -eq 3) { "🥉" } else { "  " }
+    $medal = $(if ($counter -eq 1) { "🥇" } elseif($counter -eq 2) { "🥈" } elseif($counter -eq 3) { "🥉" } else { "  " }
     $output += "`n$medal **#$counter - $($kingdom.Name)**`n"
     $output += "   - Category: $($kingdom.Category)`n"
     $output += "   - Files: $($kingdom.Files)`n"

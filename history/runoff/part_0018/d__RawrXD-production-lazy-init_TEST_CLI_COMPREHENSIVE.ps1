@@ -283,7 +283,7 @@ function Test-DocumentationFiles {
     foreach ($file in $docFiles) {
         $exists = Test-Path $file
         $name = [System.IO.Path]::GetFileName($file)
-        $size = if ($exists) { (Get-Item $file).Length / 1024 } else { 0 }
+        $size = $(if ($exists) { (Get-Item $file).Length / 1024 } else { 0 }
         
         Write-TestResult "$name" $exists "$(if ($exists) { "$([math]::Round($size))KB" } else { "Not found" })"
     }

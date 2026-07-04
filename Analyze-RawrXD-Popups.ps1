@@ -255,11 +255,11 @@ $summary = @{
   "MessageBox Calls"    = ($popupResults | Where-Object { $_.Name -eq "MessageBox::Show Calls" }).Count
   "Error Notifications" = ($popupResults | Where-Object { $_.Name -eq "Show-ErrorNotification Calls" }).Count
   "Bypassing Config"    = $bypassingPopups
-  "Config Status"       = if ($content -match "EnablePopupNotifications\s*=\s*\`$false") { "✅ Properly Disabled" } else { "❌ Needs Fix" }
+  "Config Status"       = $(if ($content -match "EnablePopupNotifications\s*=\s*\`$false") { "✅ Properly Disabled" } else { "❌ Needs Fix" }
 }
 
 foreach ($item in $summary.GetEnumerator()) {
-  $color = if ($item.Key -contains "Issue" -or $item.Key -contains "Bypassing") { "Red" } else { "White" }
+  $color = $(if ($item.Key -contains "Issue" -or $item.Key -contains "Bypassing") { "Red" } else { "White" }
   Write-Host "$($item.Key): $($item.Value)" -ForegroundColor $color
 }
 

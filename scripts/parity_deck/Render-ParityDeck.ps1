@@ -51,12 +51,12 @@ $deckText = Get-Content -LiteralPath $InputJson -Raw -Encoding UTF8
 $metricsBlock = "null"
 if ($MergeMetricsFromRawrxd -or $MetricsJsonPath) {
     $repoRoot = (Resolve-Path (Join-Path $scriptRoot "..\..")).Path
-    $mp = if ($MetricsJsonPath) {
+    $mp = $(if ($MetricsJsonPath) {
         $MetricsJsonPath
     } elseif (Test-Path (Join-Path (Get-Location) ".rawrxd\metrics.json")) {
         (Join-Path (Get-Location) ".rawrxd\metrics.json")
-    } elseif ($env:RAWRXD_REPO_ROOT -and (Test-Path -LiteralPath (Join-Path $env:RAWRXD_REPO_ROOT ".rawrxd\metrics.json"))) {
-        Join-Path $env:RAWRXD_REPO_ROOT ".rawrxd\metrics.json"
+    } elseif (${env:RAWRXD_REPO_ROOT} -and (Test-Path -LiteralPath (Join-Path ${env:RAWRXD_REPO_ROOT} ".rawrxd\metrics.json"))) {
+        Join-Path ${env:RAWRXD_REPO_ROOT} ".rawrxd\metrics.json"
     } else {
         Join-Path $repoRoot ".rawrxd\metrics.json"
     }

@@ -1,5 +1,5 @@
 # RawrXD IDE Build Script
-# Production-ready build automation
+# Production-ready build automation with vs_link_exe failure detection
 
 param(
     [ValidateSet("Debug", "Release", "RelWithDebInfo")]
@@ -7,7 +7,10 @@ param(
     
     [switch]$Clean,
     [switch]$Test,
-    [switch]$Package
+    [switch]$Package,
+    
+    # Target to build (default: rawrxd)
+    [string]$Target = "rawrxd"
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,6 +20,17 @@ $InstallDir = Join-Path $ProjectRoot "install"
 
 Write-Host "RawrXD IDE Build System" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration" -ForegroundColor Gray
+
+# Set LIB environment variable to avoid vs_link_exe /LIBPATH: mangling
+# This must be set at build time, not configure time
+${env:LIB} = @(
+    "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\lib\x64"
+    "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\lib\onecore\x64"
+    "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
+    "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64"
+) -join ';'
+
+Write-Host "LIB environment set for library discovery" -ForegroundColor Gray
 
 # Clean if requested
 if ($Clean -and (Test-Path $BuildDir)) {
@@ -29,20 +43,30 @@ New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null
 
 # Configure
 Write-Host "Configuring CMake..." -ForegroundColor Green
-cmake -B $BuildDir -S $ProjectRoot `
+cmake -B $BuildDir -S $ProjectRoot -G Ninja `
     -DCMAKE_BUILD_TYPE=$Configuration `
-    -DCMAKE_INSTALL_PREFIX=$InstallDir `
-    -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+    -DCMAKE_INSTALL_PREFIX=$InstallDir
 
 if ($LASTEXITCODE -ne 0) {
     throw "CMake configuration failed"
 }
 
-# Build
-Write-Host "Building..." -ForegroundColor Green
-cmake --build $BuildDir --config $Configuration --parallel
+# Build with ninja directly (LIB env var is already set)
+Write-Host "Building target: $Target" -ForegroundColor Green
+ninja -C $BuildDir $Target
+$exitCode = $LASTEXITCODE
 
-if ($LASTEXITCODE -ne 0) {
+# Catch vs_link_exe silent failures
+if ($exitCode -eq 0 -and ($Target -eq 'rawrxd' -or $Target -eq 'all')) {
+    $exePath = Join-Path $BuildDir "bin\rawrxd-cli.exe"
+    if (-not (Test-Path $exePath)) {
+        Write-Host "[FATAL] ninja reported success but EXE missing — vs_link_exe swallowed link failure" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "[OK] EXE verified: $exePath" -ForegroundColor Green
+}
+
+if ($exitCode -ne 0) {
     throw "Build failed"
 }
 
@@ -168,13 +192,13 @@ Write-Host "Target:    $Target  Config: $Config" -ForegroundColor Cyan
 # ============================================================================
 # Environment (INCLUDE / LIB)
 # ============================================================================
-$env:INCLUDE = [string]::Join(";", @(
+${env:INCLUDE} = [string]::Join(";", @(
     "$MSVCRoot\include",
     "$SDKRoot\Include\$SDKVer\ucrt",
     "$SDKRoot\Include\$SDKVer\shared",
     "$SDKRoot\Include\$SDKVer\um"
 ))
-$env:LIB = [string]::Join(";", @(
+${env:LIB} = [string]::Join(";", @(
     "$MSVCRoot\lib\x64",
     "$MSVCRoot\lib\onecore\x64",
     "$SDKRoot\Lib\$SDKVer\ucrt\x64",
@@ -240,8 +264,7 @@ function Link-Exe {
 
 # ============================================================================
 # Clean
-# ============================================================================
-if ($Target -eq "clean") {
+# ============================================================================ $(if ($Target -eq "clean") {
     Write-Host "Cleaning build artifacts..." -ForegroundColor Magenta
     if (Test-Path $ObjDir) { Remove-Item -Recurse -Force $ObjDir }
     if (Test-Path $BinDir) { Remove-Item -Recurse -Force $BinDir }
@@ -276,8 +299,7 @@ $EngineObjs = @($ObjGPU, $ObjTitan)
 
 # ============================================================================
 # Build IDE Shell
-# ============================================================================
-if ($Target -in @("all","ide")) {
+# ============================================================================ $(if ($Target -in @("all","ide")) {
     Write-Host "`n=== IDE Shell ===" -ForegroundColor Cyan
     $ObjIDEShell  = Assemble (Join-Path $SrcDir "RawrXD_IDE_Shell.asm")    "IDE_Shell.obj"
     $ObjIDEWrap   = Compile  (Join-Path $SrcDir "RawrXD_IDE_Wrapper.cpp")  "IDE_Wrapper.obj"
@@ -290,8 +312,7 @@ if ($Target -in @("all","ide")) {
 
 # ============================================================================
 # Build Widget Server
-# ============================================================================
-if ($Target -in @("all","widget")) {
+# ============================================================================ $(if ($Target -in @("all","widget")) {
     Write-Host "`n=== Widget Server ===" -ForegroundColor Cyan
     $WidgetOut = Join-Path $BinDir "RawrXD_Widget.exe"
     Link-Exe $WidgetOut $CoreObjs @("/SUBSYSTEM:CONSOLE", "/ENTRY:Widget_Main")

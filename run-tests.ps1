@@ -58,7 +58,7 @@ cd $buildPath
 
 # Set Qt environment
 Write-Host "Setting Qt environment..." -ForegroundColor $info
-$env:PATH = "$QtPath;$env:PATH"
+${env:PATH} = "$QtPath;${env:PATH}"
 Write-Success "Qt 6.7.3 added to PATH"
 
 # Build tests if requested

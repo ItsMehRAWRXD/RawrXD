@@ -1,5 +1,5 @@
 param(
-    [string]$Root = "$env:USERPROFILE\OneDrive\Desktop\RawrXD-IDE"
+    [string]$Root = "${env:USERPROFILE}\OneDrive\Desktop\RawrXD-IDE"
 )
 
 $exeDir = Join-Path $Root 'bin\Executables'

@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+$Script:ErrorActionPreference = "Stop"
 
 Write-Host "`n=== GGUF Integration Summary ===" -ForegroundColor Cyan
 Write-Host ""

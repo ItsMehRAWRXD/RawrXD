@@ -60,7 +60,7 @@ try {
 $qtPath = "C:\Qt\6.7.3\msvc2022_64"
 if (Test-Path $qtPath) {
     Write-Host "✅ Qt 6.7.3 found: $qtPath" -ForegroundColor Green
-    $env:CMAKE_PREFIX_PATH = $qtPath
+    ${env:CMAKE_PREFIX_PATH} = $qtPath
 } else {
     Write-Host "⚠️  Qt not found at expected location" -ForegroundColor Yellow
     Write-Host "   If installed elsewhere, set CMAKE_PREFIX_PATH manually" -ForegroundColor Yellow
@@ -96,7 +96,7 @@ if (!$cpuOnly -and !$SkipCUDADownload) {
     
     if ($useNVIDIA -and !$AMD) {
         # Check if CUDA is already installed
-        $cudaPath = $env:CUDA_PATH
+        $cudaPath = ${env:CUDA_PATH}
         if ($cudaPath -and (Test-Path $cudaPath)) {
             Write-Host "✅ CUDA already installed: $cudaPath" -ForegroundColor Green
         } else {
@@ -187,8 +187,8 @@ if (!$cpuOnly) {
 }
 
 # Add Qt path if found
-if ($env:CMAKE_PREFIX_PATH) {
-    $cmakeArgs += "-DCMAKE_PREFIX_PATH=$($env:CMAKE_PREFIX_PATH)"
+if (${env:CMAKE_PREFIX_PATH}) {
+    $cmakeArgs += "-DCMAKE_PREFIX_PATH=$(${env:CMAKE_PREFIX_PATH})"
 }
 
 Write-Host ""

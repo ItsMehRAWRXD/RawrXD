@@ -1,6 +1,6 @@
-$isEmpty = (Get-ChildItem -Path D:\rawrxd\src -Recurse -Include "*.cpp" | Select-String -Pattern "\.isEmpty\(\)" | Measure-Object).Count
-$qint = (Get-ChildItem -Path D:\rawrxd\src -Recurse -Include "*.cpp" | Select-String -Pattern "qint64|qint32" | Measure-Object).Count
-$qinc = (Get-ChildItem -Path D:\rawrxd\src -Recurse -Include "*.cpp" | Select-String -Pattern "#include.*<Q|#include.*\"Q" | Measure-Object).Count
+$Script:isEmpty = (Get-ChildItem -Path D:\rawrxd\src -Recurse -Include "*.cpp" | Select-String -Pattern "\.isEmpty\(\)" | Measure-Object).Count
+$Script:qint = (Get-ChildItem -Path D:\rawrxd\src -Recurse -Include "*.cpp" | Select-String -Pattern "qint64|qint32" | Measure-Object).Count
+$Script:qinc = (Get-ChildItem -Path D:\rawrxd\src -Recurse -Include "*.cpp" | Select-String -Pattern "#include.*<Q|#include.*\"Q" | Measure-Object).Count
 
 Write-Host ""
 Write-Host "Qt Dependency Cleanup - Final Verification" -ForegroundColor Green

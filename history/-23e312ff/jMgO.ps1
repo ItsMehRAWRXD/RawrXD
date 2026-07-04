@@ -61,7 +61,7 @@ function Get-ShipIDEDefinitions {
                 }
                 if ($inPhase -and $line -match '@\("([^"]+)"\s*,\s*"([^"]*)"') {
                     $source = $matches[1]
-                    $dll = if ($matches[2]) { $matches[2] } else { "Unknown" }
+                    $dll = $(if ($matches[2]) { $matches[2] } else { "Unknown" }
                     $fullPath = Join-Path $shipDir $source
                     
                     # Avoid dupes
@@ -179,7 +179,7 @@ function Get-PowerBuildRules {
             $content = Get-Content $pbScript -Raw
             
             # Extract MasmExcludeList
-            $pattern = '\$script:MasmExcludeList\s*=\s*@\((.*?)\)'
+            $pattern = '\${script:MasmExcludeList}\s*=\s*@\((.*?)\)'
             if ($content -match $pattern) {
                 $listBlock = $matches[1]
                 $listBlock -split ',' | ForEach-Object {

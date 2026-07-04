@@ -170,8 +170,8 @@ class LanguageSwarmIntegration {
             $binPath = Join-Path $dir.FullName "bin"
             $configPath = Join-Path $dir.FullName "config.json"
             
-            $status = if (Test-Path $binPath) { "✅" } else { "⚠️" }
-            $configStatus = if (Test-Path $configPath) { "✅" } else { "📝" }
+            $status = $(if (Test-Path $binPath) { "✅" } else { "⚠️" }
+            $configStatus = $(if (Test-Path $configPath) { "✅" } else { "📝" }
             
             Write-Host "   $status $langName" -ForegroundColor Cyan
             Write-Host "      Bin: $(if (Test-Path $binPath) { 'Present' } else { 'Missing' })" -ForegroundColor Gray
@@ -252,7 +252,7 @@ class LanguageSwarmIntegration {
                 Name = $lang.Name
                 Category = $lang.Category
                 Version = $lang.Version
-                Compiler = if ($this.CompilerCache.ContainsKey($lang.Name)) { $true } else { $false }
+                Compiler = $(if ($this.CompilerCache.ContainsKey($lang.Name)) { $true } else { $false }
             }
         }
         
@@ -296,8 +296,8 @@ class LanguageSwarmIntegration {
             Write-Host "─────────────────────────────────────" -ForegroundColor Gray
             
             foreach ($lang in ($group.Group | Sort-Object Name)) {
-                $hasCompiler = if ($this.CompilerCache.ContainsKey($lang.Name)) { "✅" } else { "⚪" }
-                $version = if ($lang.Version) { " (v$($lang.Version))" } else { "" }
+                $hasCompiler = $(if ($this.CompilerCache.ContainsKey($lang.Name)) { "✅" } else { "⚪" }
+                $version = $(if ($lang.Version) { " (v$($lang.Version))" } else { "" }
                 Write-Host "   $hasCompiler $($lang.Name)$version" -ForegroundColor Cyan
             }
         }
@@ -363,7 +363,7 @@ class LanguageSwarmIntegration {
                 Name = $lang.Name
                 Category = $lang.Category
                 CompilerAvailable = $hasCompiler
-                CompilerPath = if ($hasCompiler) { $this.CompilerCache[$lang.Name].Path } else { $null }
+                CompilerPath = $(if ($hasCompiler) { $this.CompilerCache[$lang.Name].Path } else { $null }
             }
         }
         
@@ -410,7 +410,7 @@ Beacon Storage:            $($this.BeaconPath)
         
         foreach ($compName in ($this.CompilerCache.Keys | Sort-Object)) {
             $comp = $this.CompilerCache[$compName]
-            $status = if ($comp.Available) { "✅ READY" } else { "⚠️ PENDING" }
+            $status = $(if ($comp.Available) { "✅ READY" } else { "⚠️ PENDING" }
             $report += "`n$status  $compName`n       Path: $($comp.Path)"
         }
         

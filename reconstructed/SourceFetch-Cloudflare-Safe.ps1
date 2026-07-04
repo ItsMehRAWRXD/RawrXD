@@ -82,8 +82,7 @@ function global:Fetch-Source {
         
         # ==========================================
         # 3. Validate content (detect Cloudflare)
-        # ==========================================
-        if (-not $content -or $content.Length -eq 0) {
+        # ========================================== $(if (-not $content -or $content.Length -eq 0) {
             Write-Host "[ERROR] Empty response from $Url" -ForegroundColor Red
             return $null
         }
@@ -122,8 +121,7 @@ function global:Fetch-Source {
         
         # ==========================================
         # 4. Convert to bytes for hashing
-        # ==========================================
-        if ($content -is [string]) {
+        # ========================================== $(if ($content -is [string]) {
             $bytes = [System.Text.Encoding]::UTF8.GetBytes($content)
         } elseif ($content -is [byte[]]) {
             $bytes = $content
@@ -143,8 +141,7 @@ function global:Fetch-Source {
         
         # ==========================================
         # 6. Check for duplicates
-        # ==========================================
-        if ($hashTable.ContainsKey($contentHash)) {
+        # ========================================== $(if ($hashTable.ContainsKey($contentHash)) {
             Write-Host "[DUPLICATE] Already captured as: $($hashTable[$contentHash])" -ForegroundColor Yellow
             Write-Host "[HASH] $contentHash" -ForegroundColor DarkGray
             return $hashTable[$contentHash]
@@ -153,7 +150,7 @@ function global:Fetch-Source {
         # ==========================================
         # 7. Detect category from URL and content
         # ==========================================
-        $category = if ($Cat -ne 'auto') {
+        $category = $(if ($Cat -ne 'auto') {
             $Cat
         } elseif ($Url -match '\.(asm|inc)$') {
             'masm'
@@ -180,7 +177,7 @@ function global:Fetch-Source {
         # ==========================================
         # 8. Determine base name
         # ==========================================
-        $baseName = if ($Name) {
+        $baseName = $(if ($Name) {
             $Name
         } else {
             try {
@@ -223,7 +220,7 @@ function global:Fetch-Source {
         # ==========================================
         # 10. Determine file extension
         # ==========================================
-        $extension = if ($baseName -match '\.(\w+)$') {
+        $extension = $(if ($baseName -match '\.(\w+)$') {
             ".$($Matches[1])"
         } else {
             switch ($category) {
@@ -257,7 +254,7 @@ function global:Fetch-Source {
         $finalName = $null
         
         do {
-            $suffix = if ($sequence -gt 0) {
+            $suffix = $(if ($sequence -gt 0) {
                 "_{0:D3}" -f $sequence
             } else {
                 ''
@@ -299,7 +296,7 @@ function global:Fetch-Source {
             timestamp = (Get-Date -Format 'o')
             cloudflare_detected = $isCloudflare
             http_status = $statusCode
-            content_preview = if ($content.Length -gt 200) {
+            content_preview = $(if ($content.Length -gt 200) {
                 $content.Substring(0, 200).Trim() + '...'
             } else {
                 $content.Trim()
@@ -403,14 +400,14 @@ function global:Fetch-Batch {
         Write-Host ""
         Write-Host "[$current/$total] Processing: $url" -ForegroundColor Magenta
         
-        $customName = if ($NameMap.ContainsKey($url)) { $NameMap[$url] } else { '' }
+        $customName = $(if ($NameMap.ContainsKey($url)) { $NameMap[$url] } else { '' }
         
         try {
             $result = Fetch-Source -Url $url -Name $customName -Out $Out
             $results += @{
                 url = $url
                 path = $result
-                status = if ($result) { 'success' } else { 'failed' }
+                status = $(if ($result) { 'success' } else { 'failed' }
             }
         } catch {
             $results += @{
@@ -463,7 +460,7 @@ function global:Bew {
             return 'FAIL:Empty response'
         }
 
-        $c = if ($raw -is [string]) {
+        $c = $(if ($raw -is [string]) {
             [System.Text.Encoding]::UTF8.GetBytes($raw)
         } elseif ($raw -is [byte[]]) {
             $raw
@@ -513,8 +510,7 @@ Set-Alias -Name fb -Value Fetch-Batch -Scope Global -Force
 
 # ==========================================
 # Export
-# ==========================================
-if ($ExecutionContext.SessionState.Module) {
+# ========================================== $(if ($ExecutionContext.SessionState.Module) {
     Export-ModuleMember -Function Fetch-Source, Fetch-Batch, Bew, B -Alias fs, fb
 }
 

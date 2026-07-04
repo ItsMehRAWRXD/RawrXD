@@ -48,7 +48,7 @@ function Test-AgenticToolExecutor {
         & "$WorkspaceDir/build_test/Release/TestAgenticTools.exe"
         $testResults.Tests += @{
             Name = "AgenticToolExecutor"
-            Status = if ($LASTEXITCODE -eq 0) { "PASSED" } else { "FAILED" }
+            Status = $(if ($LASTEXITCODE -eq 0) { "PASSED" } else { "FAILED" }
             ExitCode = $LASTEXITCODE
         }
     } else {
@@ -370,7 +370,7 @@ function Show-TestReport {
     Write-Host "  Failed: $failed" -ForegroundColor $(if ($failed -gt 0) { "Red" } else { "Green" })
     Write-Host "  Skipped: $skipped" -ForegroundColor Yellow
     
-    $passRate = if ($testResults.Tests.Count -gt 0) { 
+    $passRate = $(if ($testResults.Tests.Count -gt 0) { 
         [Math]::Round(($passed / $testResults.Tests.Count) * 100, 2) 
     } else { 
         0 

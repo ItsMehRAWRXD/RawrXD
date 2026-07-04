@@ -5,7 +5,7 @@ param(
     [string]$InputFile = "",
     [string]$OutputFile = "",
     [switch]$Interactive = $false,
-    [switch]$DryRun = $true
+    [switch]$DryRun
 )
 
 # Mapping of Qt types to std C++ equivalents

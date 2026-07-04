@@ -14,7 +14,7 @@ param(
 )
 
 # Global variables
-$Script:DeploymentState = @{
+${Script:DeploymentState} = @{
     Version = "3.0.0"
     StartTime = Get-Date
     Phase = "Initialization"
@@ -46,8 +46,8 @@ function Write-DeploymentLog {
     Write-Host "[$timestamp][$Level] $Message" -ForegroundColor $color
     
     # Log to file if configured
-    if ($Script:DeploymentState.Config -and $Script:DeploymentState.Config.deployment.logPath) {
-        $logPath = $Script:DeploymentState.Config.deployment.logPath
+    if (${Script:DeploymentState}.Config -and ${Script:DeploymentState}.Config.deployment.logPath) {
+        $logPath = ${Script:DeploymentState}.Config.deployment.logPath
         $logDir = Split-Path $logPath -Parent
         if (-not (Test-Path $logDir)) {
             New-Item -Path $logDir -ItemType Directory -Force | Out-Null
@@ -74,7 +74,7 @@ function Load-Configuration {
     
     try {
         $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
-        $Script:DeploymentState.Config = $config
+        ${Script:DeploymentState}.Config = $config
         Write-DeploymentLog -Message "Configuration loaded successfully" -Level Success
         return $config
     } catch {
@@ -135,7 +135,7 @@ function Test-SystemPrerequisites {
     # Check disk space
     $drive = Get-PSDrive -Name "C"
     $freeSpaceGB = [Math]::Round($drive.Free / 1GB, 2)
-    $minSpaceGB = $Script:DeploymentState.Config.system.minimumDiskSpaceGB
+    $minSpaceGB = ${Script:DeploymentState}.Config.system.minimumDiskSpaceGB
     if ($freeSpaceGB -gt $minSpaceGB) {
         $prerequisites.DiskSpace = $true
         Write-DeploymentLog -Message "Disk Space: $freeSpaceGB GB free - ✓ PASS" -Level Success
@@ -146,7 +146,7 @@ function Test-SystemPrerequisites {
     # Check memory
     $memoryInfo = Get-CimInstance -ClassName Win32_OperatingSystem
     $freeMemoryGB = [Math]::Round($memoryInfo.FreePhysicalMemory / 1MB, 2)
-    $minMemoryGB = $Script:DeploymentState.Config.system.minimumMemoryGB
+    $minMemoryGB = ${Script:DeploymentState}.Config.system.minimumMemoryGB
     if ($freeMemoryGB -gt $minMemoryGB) {
         $prerequisites.Memory = $true
         Write-DeploymentLog -Message "Memory: $freeMemoryGB GB free - ✓ PASS" -Level Success
@@ -237,8 +237,8 @@ function Start-UltimateDeployment {
     
     try {
         # Update deployment state
-        $Script:DeploymentState.StartTime = Get-Date
-        $Script:DeploymentState.Status = "Running"
+        ${Script:DeploymentState}.StartTime = Get-Date
+        ${Script:DeploymentState}.Status = "Running"
         
         # Load configuration
         $config = Load-Configuration -ConfigPath $ConfigPath
@@ -273,8 +273,8 @@ function Start-UltimateDeployment {
         $deploymentResult = Invoke-DeploymentPipeline -Config $config
         
         # Update deployment state
-        $Script:DeploymentState.Status = "Completed"
-        $Script:DeploymentState.EndTime = Get-Date
+        ${Script:DeploymentState}.Status = "Completed"
+        ${Script:DeploymentState}.EndTime = Get-Date
         
         Write-Host ""
         Write-Host "==================================================" -ForegroundColor Green
@@ -285,9 +285,9 @@ function Start-UltimateDeployment {
         return $deploymentResult
         
     } catch {
-        $Script:DeploymentState.Status = "Failed"
-        $Script:DeploymentState.EndTime = Get-Date
-        $Script:DeploymentState.Errors.Add($_)
+        ${Script:DeploymentState}.Status = "Failed"
+        ${Script:DeploymentState}.EndTime = Get-Date
+        ${Script:DeploymentState}.Errors.Add($_)
         
         Write-Host ""
         Write-Host "==================================================" -ForegroundColor Red

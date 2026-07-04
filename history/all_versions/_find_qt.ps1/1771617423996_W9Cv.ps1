@@ -1,4 +1,4 @@
-$files = Get-ChildItem d:\rawrxd\src,d:\rawrxd\include -Recurse -Include '*.h','*.hpp','*.cpp' -ErrorAction SilentlyContinue
+$Script:files = Get-ChildItem d:\rawrxd\src,d:\rawrxd\include -Recurse -Include '*.h','*.hpp','*.cpp' -ErrorAction SilentlyContinue
 
 Write-Host "=== Qt Type Names (Q-prefixed) ==="
 $files | Select-String '\bQ[A-Z][a-zA-Z]+\b' | ForEach-Object {
@@ -13,7 +13,7 @@ $files | Select-String '\bQ_[A-Z_]+\b' | ForEach-Object {
 
 Write-Host ""
 Write-Host "=== signals:/slots:/emit usage count ==="
-$count = ($files | Select-String '\bsignals\s*:|public\s+slots\s*:|private\s+slots\s*:|protected\s+slots\s*:|\bemit\s+' -List | Measure-Object).Count
+$Script:count = ($files | Select-String '\bsignals\s*:|public\s+slots\s*:|private\s+slots\s*:|protected\s+slots\s*:|\bemit\s+' -List | Measure-Object).Count
 Write-Host "Files with signals/slots/emit: $count"
 
 Write-Host ""

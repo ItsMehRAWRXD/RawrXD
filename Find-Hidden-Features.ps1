@@ -48,7 +48,7 @@ function Find-HiddenFunctions {
     foreach ($match in $matches) {
       $functionName = $match.Value -replace 'function\s+', ''
       Write-Host "   🕵️ Found hidden function: $functionName" -ForegroundColor Cyan
-      $script:totalHiddenFound++
+      ${script:totalHiddenFound}++
       $hiddenFeatures.UndocumentedFunctions += @{
         Name    = $functionName
         Type    = "Hidden Function"
@@ -63,7 +63,7 @@ function Find-HiddenFunctions {
   foreach ($match in $underscoreFunctions) {
     $functionName = $match.Value -replace 'function\s+', ''
     Write-Host "   🔒 Found private function: $functionName" -ForegroundColor DarkCyan
-    $script:totalHiddenFound++
+    ${script:totalHiddenFound}++
     $hiddenFeatures.UndocumentedFunctions += @{
       Name    = $functionName
       Type    = "Private Function"
@@ -95,7 +95,7 @@ function Find-HiddenUIElements {
         
     if ($matches.Count -gt 0) {
       Write-Host "   👁️ Found $uiType`: $($matches.Count) instances" -ForegroundColor Cyan
-      $script:totalHiddenFound += $matches.Count
+      ${script:totalHiddenFound} += $matches.Count
             
       foreach ($match in $matches) {
         $hiddenFeatures.HiddenUIElements += @{
@@ -142,7 +142,7 @@ function Find-SecretKeyboardShortcuts {
       }
             
       Write-Host "   ⌨️ Found secret shortcut: $($match.Value)" -ForegroundColor Cyan
-      $script:totalHiddenFound++
+      ${script:totalHiddenFound}++
       $hiddenFeatures.SecretKeyboardShortcuts += @{
         Shortcut = $match.Value
         Context  = $context.Substring(0, [Math]::Min(100, $context.Length))
@@ -174,7 +174,7 @@ function Find-DebugFeatures {
         
     if ($matches.Count -gt 0) {
       Write-Host "   🐛 Found $debugType`: $($matches.Count) instances" -ForegroundColor Cyan
-      $script:totalHiddenFound += $matches.Count
+      ${script:totalHiddenFound} += $matches.Count
             
       # Show first few examples
       $examples = $matches | Select-Object -First 3
@@ -207,7 +207,7 @@ function Find-CommentedFeatures {
     $matches = [regex]::Matches($Content, $pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
     foreach ($match in $matches) {
       Write-Host "   💬 Found commented feature: $($match.Value.Substring(0, [Math]::Min(50, $match.Value.Length)))" -ForegroundColor Yellow
-      $script:totalHiddenFound++
+      ${script:totalHiddenFound}++
       $hiddenFeatures.CommentedFeatures += @{
         Type    = "Commented Code"
         Content = $match.Value
@@ -237,7 +237,7 @@ function Find-EasterEggs {
     $matches = [regex]::Matches($Content, $pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
     foreach ($match in $matches) {
       Write-Host "   🥚 Found potential easter egg: $($match.Value)" -ForegroundColor Magenta
-      $script:totalHiddenFound++
+      ${script:totalHiddenFound}++
       $hiddenFeatures.EasterEggs += @{
         Type    = "Easter Egg"
         Content = $match.Value
@@ -265,7 +265,7 @@ function Find-UnusedCode {
         
     if ($calls.Count -eq 0) {
       Write-Host "   🗑️ Found unused function: $func" -ForegroundColor DarkYellow
-      $script:totalHiddenFound++
+      ${script:totalHiddenFound}++
       $hiddenFeatures.UnusedCode += @{
         Type  = "Unused Function"
         Name  = $func
@@ -296,7 +296,7 @@ function Find-ExperimentalFeatures {
         
     if ($matches.Count -gt 0) {
       Write-Host "   🧪 Found $expType`: $($matches.Count) instances" -ForegroundColor Cyan
-      $script:totalHiddenFound += $matches.Count
+      ${script:totalHiddenFound} += $matches.Count
             
       foreach ($match in $matches) {
         $hiddenFeatures.ExperimentalFeatures += @{
@@ -341,7 +341,7 @@ Write-Host "`n📊 HIDDEN FEATURES DISCOVERY RESULTS" -ForegroundColor DarkCyan
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor DarkCyan
 
 Write-Host "`n🎯 Summary:" -ForegroundColor White
-Write-Host "   Total Hidden Features Found: $script:totalHiddenFound" -ForegroundColor Cyan
+Write-Host "   Total Hidden Features Found: ${script:totalHiddenFound}" -ForegroundColor Cyan
 Write-Host "   Undocumented Functions: $($hiddenFeatures.UndocumentedFunctions.Count)" -ForegroundColor Gray
 Write-Host "   Hidden UI Elements: $($hiddenFeatures.HiddenUIElements.Count)" -ForegroundColor Gray
 Write-Host "   Secret Shortcuts: $($hiddenFeatures.SecretKeyboardShortcuts.Count)" -ForegroundColor Gray
@@ -422,15 +422,15 @@ $discoveryDuration = [math]::Round(($discoveryEndTime - $discoveryStartTime).Tot
 Write-Host "`n📈 HIDDEN FEATURES DISCOVERY COMPLETE!" -ForegroundColor DarkCyan
 Write-Host "════════════════════════════════════════════════════════" -ForegroundColor DarkCyan
 Write-Host "Duration: $discoveryDuration seconds"
-Write-Host "Hidden Features Found: $script:totalHiddenFound"
+Write-Host "Hidden Features Found: ${script:totalHiddenFound}"
 
-if ($script:totalHiddenFound -eq 0) {
+if (${script:totalHiddenFound} -eq 0) {
   Write-Host "`n🎯 TRANSPARENT: No hidden features found! RawrXD is completely transparent." -ForegroundColor Green
 }
-elseif ($script:totalHiddenFound -le 10) {
+elseif (${script:totalHiddenFound} -le 10) {
   Write-Host "`n🔍 MINIMAL: Few hidden features found, mostly debug/development tools." -ForegroundColor Yellow
 }
-elseif ($script:totalHiddenFound -le 25) {
+elseif (${script:totalHiddenFound} -le 25) {
   Write-Host "`n👁️ MODERATE: Some hidden features discovered, typical for development software." -ForegroundColor Yellow
 }
 else {

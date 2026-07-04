@@ -5,12 +5,12 @@ function Get-RawrXDRoot {
     <#
       Returns the single canonical project root.
       Priority:
-        1) $env:LAZY_INIT_IDE_ROOT
+        1) ${env:LAZY_INIT_IDE_ROOT}
         2) repo root relative to scripts/ (..)
         3) current directory
     #>
-    if ($env:LAZY_INIT_IDE_ROOT -and $env:LAZY_INIT_IDE_ROOT.Trim()) {
-        return $env:LAZY_INIT_IDE_ROOT.Trim()
+    if (${env:LAZY_INIT_IDE_ROOT} -and ${env:LAZY_INIT_IDE_ROOT}.Trim()) {
+        return ${env:LAZY_INIT_IDE_ROOT}.Trim()
     }
     $root = (Resolve-Path (Join-Path $PSScriptRoot "..") -ErrorAction SilentlyContinue).Path
     if ($root) { return $root }

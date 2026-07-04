@@ -17,7 +17,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$script:DbgHelpTypeLoadError = $null
+${script:DbgHelpTypeLoadError} = $null
 $dbgHelpTypeName = 'RawrXD.Debugging.DbgHelpSession'
 if (-not ($dbgHelpTypeName -as [type])) {
     try {
@@ -207,7 +207,7 @@ namespace RawrXD.Debugging
 "@
     }
     catch {
-        $script:DbgHelpTypeLoadError = $_.Exception.Message
+        ${script:DbgHelpTypeLoadError} = $_.Exception.Message
     }
 }
 
@@ -228,11 +228,11 @@ function ConvertTo-UInt64 {
 function Get-DbgHelpLibraryPath {
     $candidates = @(
         (Join-Path $PSScriptRoot 'dbghelp.dll'),
-        (Join-Path $env:WINDIR 'System32\dbghelp.dll'),
+        (Join-Path ${env:WINDIR} 'System32\dbghelp.dll'),
         (Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\Debuggers\x64\dbghelp.dll'),
         (Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\Debuggers\x64\srcsrv\dbghelp.dll'),
-        (Join-Path $env:ProgramFiles 'Windows Kits\10\Debuggers\x64\dbghelp.dll'),
-        (Join-Path $env:ProgramFiles 'Windows Kits\10\Debuggers\x64\srcsrv\dbghelp.dll')
+        (Join-Path ${env:ProgramFiles} 'Windows Kits\10\Debuggers\x64\dbghelp.dll'),
+        (Join-Path ${env:ProgramFiles} 'Windows Kits\10\Debuggers\x64\srcsrv\dbghelp.dll')
     )
 
     foreach ($candidate in $candidates) {
@@ -341,7 +341,7 @@ function Get-DefaultSymbolPath {
 
     $baseCandidates = @($moduleDirectory, $workingDirectory, $SymbolPath)
     if ($IncludeNtPaths) {
-        $baseCandidates += @($env:_NT_SYMBOL_PATH, $env:_NT_ALT_SYMBOL_PATH)
+        $baseCandidates += @(${env:_NT_SYMBOL_PATH}, ${env:_NT_ALT_SYMBOL_PATH})
     }
 
     foreach ($candidate in $baseCandidates) {
@@ -484,7 +484,7 @@ try {
     $dbgHelpReady = $false
     $dbgHelpModuleLoaded = $false
 
-    if ($dbgHelpLibraryPath -and -not $SkipPdb -and -not $script:DbgHelpTypeLoadError) {
+    if ($dbgHelpLibraryPath -and -not $SkipPdb -and -not ${script:DbgHelpTypeLoadError}) {
         $dbgHelpSession = [RawrXD.Debugging.DbgHelpSession]::new($resolvedSymbolPath)
         $dbgHelpReady = $dbgHelpSession.IsInitialized
         if ($dbgHelpReady) {
@@ -510,8 +510,8 @@ try {
     if ($SkipPdb) {
         Emit-Line 'PDB Status  : skipped by request'
     }
-    elseif ($script:DbgHelpTypeLoadError) {
-        Emit-Line ("PDB Status  : unavailable (dbghelp wrapper type load failed: {0})" -f $script:DbgHelpTypeLoadError)
+    elseif (${script:DbgHelpTypeLoadError}) {
+        Emit-Line ("PDB Status  : unavailable (dbghelp wrapper type load failed: {0})" -f ${script:DbgHelpTypeLoadError})
     }
     elseif (-not $dbgHelpLibraryPath) {
         Emit-Line 'PDB Status  : unavailable (dbghelp.dll not found in script/system/SDK paths)'

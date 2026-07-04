@@ -25,25 +25,25 @@ $ErrorActionPreference = "SilentlyContinue"
 # ─── Source paths ─────────────────────────────────────────────────────────
 $Sources = @{
     cursor   = @(
-        "$env:APPDATA\Cursor"
-        "$env:LOCALAPPDATA\Cursor"
-        "$env:APPDATA\cursor"
-        "$env:LOCALAPPDATA\cursor"
+        "${env:APPDATA}\Cursor"
+        "${env:LOCALAPPDATA}\Cursor"
+        "${env:APPDATA}\cursor"
+        "${env:LOCALAPPDATA}\cursor"
     )
     vscode   = @(
-        "$env:APPDATA\Code"
-        "$env:LOCALAPPDATA\Code"
-        "$env:APPDATA\Code\User"
+        "${env:APPDATA}\Code"
+        "${env:LOCALAPPDATA}\Code"
+        "${env:APPDATA}\Code\User"
     )
     insiders = @(
-        "$env:APPDATA\Code - Insiders"
-        "$env:LOCALAPPDATA\Code - Insiders"
+        "${env:APPDATA}\Code - Insiders"
+        "${env:LOCALAPPDATA}\Code - Insiders"
     )
     github   = @(
-        "$env:LOCALAPPDATA\GitHub Desktop"
-        "$env:APPDATA\GitHub Copilot"
-        "$env:LOCALAPPDATA\github-copilot"
-        "$env:USERPROFILE\.config\github-copilot"
+        "${env:LOCALAPPDATA}\GitHub Desktop"
+        "${env:APPDATA}\GitHub Copilot"
+        "${env:LOCALAPPDATA}\github-copilot"
+        "${env:USERPROFILE}\.config\github-copilot"
     )
 }
 
@@ -71,7 +71,7 @@ $ChatPatterns = @("*.json", "*.sqlite", "*.sqlite3", "*.db", "*.ldb", "*.log",
                   "*.vscdb", "*.backup", "*.jsonl", "MANIFEST*", "CURRENT", "LOG*")
 
 # ─── Resolve targets ─────────────────────────────────────────────────────
-$targetList = if ($Targets -eq "all") {
+$targetList = $(if ($Targets -eq "all") {
     @("cursor", "vscode", "insiders", "github")
 } else {
     $Targets -split "," | ForEach-Object { $_.Trim().ToLower() }

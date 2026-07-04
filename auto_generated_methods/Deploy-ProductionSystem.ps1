@@ -55,7 +55,7 @@ param(
     [switch]$SkipTests = $false,
     
     [Parameter(Mandatory=$false)]
-    [switch]$CreateInstaller = $true
+    [switch]$CreateInstaller
 )
 
 $ErrorActionPreference = "Stop"
@@ -242,7 +242,7 @@ if (-not $deploymentConfig.SkipTests) {
                     Remove-Module -Name $module.Name -Force -ErrorAction SilentlyContinue
                 }
                 
-                $moduleTest.OverallResult = if ($moduleTest.Errors.Count -eq 0) { "Passed" } else { "Failed" }
+                $moduleTest.OverallResult = $(if ($moduleTest.Errors.Count -eq 0) { "Passed" } else { "Failed" }
                 
             } catch {
                 $moduleTest.ImportTest = "Failed"
@@ -751,7 +751,7 @@ try {
         
         $validationResults += @{
             Test = "Directory Structure"
-            Result = if ($allDirsExist) { "Passed" } else { "Failed" }
+            Result = $(if ($allDirsExist) { "Passed" } else { "Failed" }
             Details = "All required directories exist"
         }
     }
@@ -852,7 +852,7 @@ try {
     Write-Host ""
     
     foreach ($result in $validationResults) {
-        $color = if ($result.Result -eq "Passed") { "Green" } else { "Red" }
+        $color = $(if ($result.Result -eq "Passed") { "Green" } else { "Red" }
         Write-Host "  [$($result.Result)] $($result.Test)" -ForegroundColor $color
         Write-Host "        $($result.Details)" -ForegroundColor Gray
     }

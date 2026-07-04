@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = "Continue"
 # Prefer Ninja build output if available (newer), fallback to bin/
-$binPath = if (Test-Path "D:\rawrxd\build_ninja\bin\RawrXD-Win32IDE.exe") {
+$binPath = $(if (Test-Path "D:\rawrxd\build_ninja\bin\RawrXD-Win32IDE.exe") {
     "D:\rawrxd\build_ninja\bin\RawrXD-Win32IDE.exe"
 } else {
     "D:\rawrxd\bin\RawrXD-Win32IDE.exe"
@@ -174,7 +174,7 @@ if ($output3 -match 'PASS FAST_GENERATE tokens=(\d+) time=(\d+)ms') {
     if ($output3 -match '\[DETOK\] Text: "(.+)"') {
         $fullText = $matches[1]
         Write-Host "`n📝 Generated text (first 200 chars):" -ForegroundColor Cyan
-        $preview = if ($fullText.Length -gt 200) { $fullText.Substring(0, 200) + "..." } else { $fullText }
+        $preview = $(if ($fullText.Length -gt 200) { $fullText.Substring(0, 200) + "..." } else { $fullText }
         Write-Host "   '$preview'" -ForegroundColor White
     }
     

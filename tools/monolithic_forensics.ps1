@@ -30,7 +30,7 @@ foreach ($obj in $objs) {
     
     # Parse symbol count
     $symbolMatch = [regex]::Match($dump, "(\d+) symbols")
-    $symbolCount = if ($symbolMatch.Success) { [int]$symbolMatch.Groups[1].Value } else { 0 }
+    $symbolCount = $(if ($symbolMatch.Success) { [int]$symbolMatch.Groups[1].Value } else { 0 }
     
     # Check for BIGOBJ flag
     $isBigObj = $dump -match "BIGOBJ"

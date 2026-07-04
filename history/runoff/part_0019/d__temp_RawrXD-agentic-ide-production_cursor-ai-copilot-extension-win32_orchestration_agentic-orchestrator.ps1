@@ -24,7 +24,7 @@ param(
     [string]$Mode = "workflow",
 
     [string]$ConfigPath = "$PSScriptRoot\..\config\settings.json",
-    [string]$LogPath = "$env:APPDATA\RawrXD\Cursor-AI-Copilot\logs"
+    [string]$LogPath = "${env:APPDATA}\RawrXD\Cursor-AI-Copilot\logs"
 )
 
 # Setup environment
@@ -43,12 +43,12 @@ if (Test-Path $ConfigPath) {
 }
 
 # Set environment variables from config
-$env:OPENAI_API_KEY = $config."cursor-ai-copilot".apiKey
-$env:OPENAI_API_BASE = $config."cursor-ai-copilot".apiEndpoint
-$env:OPENAI_MODEL = $config."cursor-ai-copilot".model
+${env:OPENAI_API_KEY} = $config."cursor-ai-copilot".apiKey
+${env:OPENAI_API_BASE} = $config."cursor-ai-copilot".apiEndpoint
+${env:OPENAI_MODEL} = $config."cursor-ai-copilot".model
 
 Write-Host "🚀 RawrXD Agentic Orchestrator" -ForegroundColor Cyan
-Write-Host "Mode: $Mode | Language: $Language | Model: $env:OPENAI_MODEL" -ForegroundColor Gray
+Write-Host "Mode: $Mode | Language: $Language | Model: ${env:OPENAI_MODEL}" -ForegroundColor Gray
 
 # Load Node.js modules
 $nodeModules = @{

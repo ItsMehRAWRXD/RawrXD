@@ -14,4 +14,4 @@
 # cmake -S D:\rawrxd -B D:\rawrxd\build_prod -G Ninja -DRAWR_ARCH=x64; cmake --build D:\rawrxd\build_prod --config Release --target RawrXD-Agent
 
 # 5. IDE LAUNCH
-# Stop-Process RawrXD* -Force -EA 0; Start-Sleep 500; $env:OLLAMA_HOST="http://localhost:11434"; Start-Process "D:\rawrxd\build_prod\RawrXD-AgenticIDE.exe" -ArgumentList "--agent-mode" -WorkingDirectory D:\rawrxd; Write-Host "IDE started" -fg Green
+# Stop-Process RawrXD* -Force -EA 0; Start-Sleep 500; ${env:OLLAMA_HOST}="http://localhost:11434"; Start-Process "D:\rawrxd\build_prod\RawrXD-AgenticIDE.exe" -ArgumentList "--agent-mode" -WorkingDirectory D:\rawrxd; Write-Host "IDE started" -fg Green

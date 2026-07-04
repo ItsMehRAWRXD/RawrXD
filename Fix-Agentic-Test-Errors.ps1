@@ -8,9 +8,9 @@ $content = Get-Content ".\Full-Agentic-Test.ps1" -Raw
 # Fix 1: Date calculation syntax error
 Write-Host "1. Fixing Get-Date subtraction syntax..." -ForegroundColor Yellow
 
-# The issue is that Get-Date - $script:TestStartTime is being parsed incorrectly
+# The issue is that Get-Date - ${script:TestStartTime} is being parsed incorrectly
 # Need to wrap (Get-Date) in parentheses for proper calculation
-$content = $content -replace 'Get-Date - \$script:TestStartTime', '(Get-Date) - $script:TestStartTime'
+$content = $content -replace 'Get-Date - \${script:TestStartTime}', '(Get-Date) - ${script:TestStartTime}'
 
 # Fix 2: Ensure color variables are properly initialized
 Write-Host "2. Adding color validation in Write-TestResult..." -ForegroundColor Yellow
@@ -52,22 +52,22 @@ Write-Host "4. Adding error handling to report generation..." -ForegroundColor Y
 
 # Find the problematic report generation section
 $oldReportGen = @'
-**Test Duration**: $([math]::Round((Get-Date - $script:TestStartTime).TotalSeconds, 2)) seconds
+**Test Duration**: $([math]::Round((Get-Date - ${script:TestStartTime}).TotalSeconds, 2)) seconds
 '@
 
 $newReportGen = @'
-**Test Duration**: $([math]::Round(((Get-Date) - $script:TestStartTime).TotalSeconds, 2)) seconds
+**Test Duration**: $([math]::Round(((Get-Date) - ${script:TestStartTime}).TotalSeconds, 2)) seconds
 '@
 
 $content = $content.Replace($oldReportGen, $newReportGen)
 
 # Fix 5: Fix the final duration calculation
 $oldDurationCalc = @'
-  Write-Host "Duration: $([math]::Round((Get-Date - $script:TestStartTime).TotalSeconds, 2)) seconds" -ForegroundColor Gray
+  Write-Host "Duration: $([math]::Round((Get-Date - ${script:TestStartTime}).TotalSeconds, 2)) seconds" -ForegroundColor Gray
 '@
 
 $newDurationCalc = @'
-  Write-Host "Duration: $([math]::Round(((Get-Date) - $script:TestStartTime).TotalSeconds, 2)) seconds" -ForegroundColor Gray
+  Write-Host "Duration: $([math]::Round(((Get-Date) - ${script:TestStartTime}).TotalSeconds, 2)) seconds" -ForegroundColor Gray
 '@
 
 $content = $content.Replace($oldDurationCalc, $newDurationCalc)
@@ -77,23 +77,23 @@ Write-Host "5. Adding null checks for critical variables..." -ForegroundColor Ye
 
 # Add better initialization at the top
 $initSection = @'
-$script:TestStartTime = Get-Date
-$script:TotalTests = 0
-$script:PassedTests = 0
-$script:FailedTests = 0
-$script:WarningTests = 0
-$script:InfoTests = 0
+${script:TestStartTime} = Get-Date
+${script:TotalTests} = 0
+${script:PassedTests} = 0
+${script:FailedTests} = 0
+${script:WarningTests} = 0
+${script:InfoTests} = 0
 '@
 
 # Find where variables are initialized and enhance them
-$oldInit = '$script:TestStartTime = Get-Date'
+$oldInit = '${script:TestStartTime} = Get-Date'
 $newInit = @'
-$script:TestStartTime = Get-Date
-$script:TotalTests = 0
-$script:PassedTests = 0
-$script:FailedTests = 0
-$script:WarningTests = 0
-$script:InfoTests = 0
+${script:TestStartTime} = Get-Date
+${script:TotalTests} = 0
+${script:PassedTests} = 0
+${script:FailedTests} = 0
+${script:WarningTests} = 0
+${script:InfoTests} = 0
 
 # Function to safely format colors
 function Get-SafeColor {

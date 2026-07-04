@@ -205,7 +205,7 @@ function Print-Summary {
     
     foreach ($name in $Results.Keys | Sort-Object) {
         $result = $Results[$name]
-        $status = if ($result.Success) { "✅ PASS" } else { "❌ FAIL" }
+        $status = $(if ($result.Success) { "✅ PASS" } else { "❌ FAIL" }
         Write-Host ("{0,-45} {1,-10}" -f $name, $status)
     }
     

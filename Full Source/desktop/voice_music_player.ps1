@@ -34,7 +34,7 @@ param(
     [switch]$EnableSpotify,
     
     [Parameter(Mandatory=$false)]
-    [string]$LocalMusicPath = "$env:USERPROFILE\Music",
+    [string]$LocalMusicPath = "${env:USERPROFILE}\Music",
     
     [Parameter(Mandatory=$false)]
     [switch]$InteractiveMode,
@@ -197,7 +197,7 @@ class VoiceMusicPlayer {
     [void] PlayGenre([string]$genre) {
         Write-Host "`n▶️  PLAYING GENRE: $genre" -ForegroundColor Green
         
-        $searchTerm = if ($this.GenreMap.ContainsKey($genre.ToLower())) {
+        $searchTerm = $(if ($this.GenreMap.ContainsKey($genre.ToLower())) {
             $this.GenreMap[$genre.ToLower()][0]
         } else {
             $genre
@@ -211,7 +211,7 @@ class VoiceMusicPlayer {
     [void] PlaySong([string]$songName, [string]$artist) {
         Write-Host "`n▶️  PLAYING SONG: '$songName'" -ForegroundColor Green
         
-        $searchQuery = if ($artist) { "$songName by $artist" } else { $songName }
+        $searchQuery = $(if ($artist) { "$songName by $artist" } else { $songName }
         $this.Speak("Playing $searchQuery")
         $this.StreamFromYouTube($searchQuery)
         $this.IsPlaying = $true
@@ -343,7 +343,7 @@ class VoiceMusicPlayer {
     }
     
     [void] PreviousTrack() {
-        $this.CurrentTrackIndex = if ($this.CurrentTrackIndex -gt 0) { $this.CurrentTrackIndex - 1 } else { $this.Playlist.Count - 1 }
+        $this.CurrentTrackIndex = $(if ($this.CurrentTrackIndex -gt 0) { $this.CurrentTrackIndex - 1 } else { $this.Playlist.Count - 1 }
         $this.Speak("Previous track")
         Write-Host "⏮️  Skipped to previous track" -ForegroundColor Green
     }
@@ -367,7 +367,7 @@ class VoiceMusicPlayer {
     }
     
     [void] StatusUpdate() {
-        $status = if ($this.IsPlaying) { "▶️ Playing" } else { "⏸️ Paused" }
+        $status = $(if ($this.IsPlaying) { "▶️ Playing" } else { "⏸️ Paused" }
         $message = "Currently $status. Genre: Unknown"
         $this.Speak($message)
         Write-Host "`n📊 $message" -ForegroundColor Cyan
@@ -394,8 +394,8 @@ class VoiceMusicPlayer {
             
             # Status display
             $statusLabel = New-Object System.Windows.Forms.Label
-            $statusLabel.Text = if ($this.IsPlaying) { "▶️  PLAYING" } else { "⏸️ PAUSED" }
-            $statusLabel.ForeColor = if ($this.IsPlaying) { [System.Drawing.Color]::Lime } else { [System.Drawing.Color]::Yellow }
+            $statusLabel.Text = $(if ($this.IsPlaying) { "▶️  PLAYING" } else { "⏸️ PAUSED" }
+            $statusLabel.ForeColor = $(if ($this.IsPlaying) { [System.Drawing.Color]::Lime } else { [System.Drawing.Color]::Yellow }
             $statusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
             $statusLabel.Location = New-Object System.Drawing.Point(20, 70)
             $statusLabel.Size = New-Object System.Drawing.Size(460, 30)

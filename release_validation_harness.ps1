@@ -25,7 +25,7 @@ param(
     [int]$StressCycles = 10,
     [switch]$SkipBuild = $false,
     [switch]$SkipStress = $false,
-    [switch]$GenerateReport = $true
+    [switch]$GenerateReport
 )
 
 $ErrorActionPreference = "Stop"
@@ -62,7 +62,7 @@ function Add-TestResult($Name, $Status, $Duration, $Details = "") {
         Details = $Details
         Timestamp = Get-Date
     }
-    $color = if ($Status -eq "PASS") { "Success" } elseif ($Status -eq "FAIL") { "Error" } else { "Warning" }
+    $color = $(if ($Status -eq "PASS") { "Success" } elseif ($Status -eq "FAIL") { "Error" } else { "Warning" }
     Write-Status "$Name`: $Status ($([math]::Round($Duration, 2))s)" $color
 }
 
@@ -85,8 +85,7 @@ Add-TestResult "Git Tag Verification" "PASS" 0.5 "Tag $Tag exists"
 
 # ============================================================================
 # Phase 2: Build Validation
-# ============================================================================
-if (-not $SkipBuild) {
+# ============================================================================ $(if (-not $SkipBuild) {
     Write-Status "Phase 2: Build Validation"
     
     # Clean build
@@ -275,8 +274,7 @@ if ($lockFree -and $backgroundFlush) {
 
 # ============================================================================
 # Phase 7: Regression Tests
-# ============================================================================
-if (-not $SkipStress) {
+# ============================================================================ $(if (-not $SkipStress) {
     Write-Status "Phase 7: Regression Tests (Titan Soak)"
     
     $regressionStart = Get-Date
@@ -325,7 +323,7 @@ $passed = ($ValidationResults.Tests | Where-Object { $_.Status -eq "PASS" }).Cou
 $skipped = ($ValidationResults.Tests | Where-Object { $_.Status -eq "SKIP" }).Count
 
 if ($failures -eq 0) {
-    $ValidationResults.OverallStatus = if ($warnings -eq 0) { "PASS" } else { "PASS_WITH_WARNINGS" }
+    $ValidationResults.OverallStatus = $(if ($warnings -eq 0) { "PASS" } else { "PASS_WITH_WARNINGS" }
 } else {
     $ValidationResults.OverallStatus = "FAIL"
 }
@@ -365,7 +363,7 @@ $reportMd = @"
 "@
 
 foreach ($test in $ValidationResults.Tests) {
-    $icon = if ($test.Status -eq "PASS") { "✅" } elseif ($test.Status -eq "FAIL") { "❌" } elseif ($test.Status -eq "WARN") { "⚠️" } else { "⏭️" }
+    $icon = $(if ($test.Status -eq "PASS") { "✅" } elseif ($test.Status -eq "FAIL") { "❌" } elseif ($test.Status -eq "WARN") { "⚠️" } else { "⏭️" }
     $reportMd += "| $($test.Name) | $icon $($test.Status) | $([math]::Round($test.Duration, 2))s | $($test.Details) |`n"
 }
 

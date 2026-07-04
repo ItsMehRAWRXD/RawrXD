@@ -5,8 +5,8 @@ param(
     [switch]$FullSoakTest = $false
 )
 
-$testDuration = if ($FullSoakTest) { 24 } else { 0.5 }  # 30 minutes or 24 hours
-$testName = if ($FullSoakTest) { "24-Hour Soak Test" } else { "30-Minute Validation" }
+$testDuration = $(if ($FullSoakTest) { 24 } else { 0.5 }  # 30 minutes or 24 hours
+$testName = $(if ($FullSoakTest) { "24-Hour Soak Test" } else { "30-Minute Validation" }
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Phase 22: $testName" -ForegroundColor Cyan

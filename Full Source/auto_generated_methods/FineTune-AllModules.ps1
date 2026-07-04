@@ -8,10 +8,10 @@ param(
     [string]$ModulePath = $PSScriptRoot,
     
     [Parameter(Mandatory=$false)]
-    [switch]$ApplyCriticalFixes = $true,
+    [switch]$ApplyCriticalFixes,
     
     [Parameter(Mandatory=$false)]
-    [switch]$ApplyHighPriorityOptimizations = $true,
+    [switch]$ApplyHighPriorityOptimizations,
     
     [Parameter(Mandatory=$false)]
     [switch]$ApplyMediumPriorityOptimizations = $false,
@@ -20,7 +20,7 @@ param(
     [switch]$ApplyLowPriorityOptimizations = $false,
     
     [Parameter(Mandatory=$false)]
-    [switch]$CreateBackups = $true
+    [switch]$CreateBackups
 )
 
 Write-Host "=== RawrXD Module Fine-Tuning Script ===" -ForegroundColor Cyan
@@ -111,7 +111,7 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
             [hashtable]`$Data = `$null
         )
         `$timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-        `$caller = if (`$Function) { `$Function } else { (Get-PSCallStack)[1].FunctionName }
+        `$caller = $(if (`$Function) { `$Function } else { (Get-PSCallStack)[1].FunctionName }
         `$color = switch (`$Level) { 'Error' { 'Red' } 'Warning' { 'Yellow' } 'Debug' { 'DarkGray' } default { 'Cyan' } }
         Write-Host "[`$timestamp][`$caller][`$Level] `$Message" -ForegroundColor `$color
     }
@@ -252,19 +252,19 @@ if (-not (Get-Command Write-StructuredLog -ErrorAction SilentlyContinue)) {
             $cachePattern = @"
 
 # Cache for function results
-`$script:FunctionCache = `@`@{}
+`${script:FunctionCache} = `@`@{}
 
 function Get-FromCache {
     param([string]`$Key)
-    if (`$script:FunctionCache.ContainsKey(`$Key)) {
-        return `$script:FunctionCache[`$Key]
+    if (`${script:FunctionCache}.ContainsKey(`$Key)) {
+        return `${script:FunctionCache}[`$Key]
     }
     return `$null
 }
 
 function Set-Cache {
     param([string]`$Key, `$Value)
-    `$script:FunctionCache[`$Key] = `$Value
+    `${script:FunctionCache}[`$Key] = `$Value
 }
 "@
             

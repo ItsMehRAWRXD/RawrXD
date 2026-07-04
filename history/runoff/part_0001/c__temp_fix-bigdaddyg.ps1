@@ -5,8 +5,8 @@ Start-Sleep 2
 
 # Clear extension cache directories
 $paths = @(
-    "$env:APPDATA\..\Local\CursorProCache\vscode\extensions",
-    "$env:USERPROFILE\.cursor\extensions"
+    "${env:APPDATA}\..\Local\CursorProCache\vscode\extensions",
+    "${env:USERPROFILE}\.cursor\extensions"
 )
 
 foreach ($path in $paths) {

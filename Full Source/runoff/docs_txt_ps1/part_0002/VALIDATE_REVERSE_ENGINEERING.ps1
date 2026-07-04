@@ -6,7 +6,7 @@
     Checks all components are in place and operational
 #>
 
-$ProjectRoot = if ($env:LAZY_INIT_IDE_ROOT) { $env:LAZY_INIT_IDE_ROOT } else { (Split-Path $PSScriptRoot -Parent) }
+$ProjectRoot = $(if (${env:LAZY_INIT_IDE_ROOT}) { ${env:LAZY_INIT_IDE_ROOT} } else { (Split-Path $PSScriptRoot -Parent) }
 if (-not $ProjectRoot -or -not (Test-Path $ProjectRoot)) { $ProjectRoot = (Get-Location).Path }
 $TestResults = @{
     Passed = 0
@@ -166,7 +166,7 @@ Write-Host "  Passed: $($TestResults.Passed)" -ForegroundColor Green
 Write-Host "  Failed: $($TestResults.Failed)" -ForegroundColor $(if ($TestResults.Failed -eq 0) { 'Green' } else { 'Red' })
 
 $percentage = [math]::Round(($TestResults.Passed / $TestResults.Total) * 100, 2)
-$color = if ($percentage -eq 100) { 'Green' } 
+$color = $(if ($percentage -eq 100) { 'Green' } 
          elseif ($percentage -ge 80) { 'Yellow' } 
          else { 'Red' }
 

@@ -52,6 +52,47 @@ extern "C" {
     uint64_t RawrXD_RollbackToPreviousModel();
 }
 
+// Epoch counter - defined in hotpatch router
+extern "C" uint64_t g_EpochCounter;
+extern "C" uint64_t g_HotpatchCount;
+
+// ============================================================================
+// Telemetry / Observability
+// ============================================================================
+struct HotpatchTelemetry {
+    uint64_t totalRequests = 0;
+    uint64_t successCount = 0;      // router_code: 0
+    uint64_t pendingCount = 0;      // router_code: 1
+    uint64_t busyCount = 0;         // router_code: 2
+    uint64_t readersActiveCount = 0; // router_code: 3
+    uint64_t errorCount = 0;        // other codes
+    uint64_t totalLatencyUs = 0;    // cumulative latency in microseconds
+    uint64_t lastEpoch = 0;
+};
+
+static HotpatchTelemetry g_Telemetry;
+
+static void LogTelemetry(uint64_t routerCode, uint64_t latencyUs) {
+    g_Telemetry.totalRequests++;
+    g_Telemetry.totalLatencyUs += latencyUs;
+    
+    switch (routerCode) {
+        case 0: g_Telemetry.successCount++; break;
+        case 1: g_Telemetry.pendingCount++; break;
+        case 2: g_Telemetry.busyCount++; break;
+        case 3: g_Telemetry.readersActiveCount++; break;
+        default: g_Telemetry.errorCount++; break;
+    }
+    
+    uint64_t epoch = g_EpochCounter;
+    if (epoch != g_Telemetry.lastEpoch) {
+        g_Telemetry.lastEpoch = epoch;
+        fprintf(stderr, "[TELEMETRY] Epoch changed: %llu, Total requests: %llu, Avg latency: %llu us\n",
+                epoch, g_Telemetry.totalRequests,
+                g_Telemetry.totalRequests > 0 ? g_Telemetry.totalLatencyUs / g_Telemetry.totalRequests : 0);
+    }
+}
+
 // Calculate CRC32 checksum
 static uint32_t CalculateCRC32(const uint8_t* data, size_t len) {
     uint32_t crc = 0xFFFFFFFF;
@@ -154,15 +195,12 @@ static uint32_t ProcessJsonCommand(const char* json, uint32_t jsonLen) {
             return g_ResponseLen;
         }
         
-        // Forward declare UploadTensorsToGPU from hotpatch_model_manager
-        extern bool RawrXD_UploadTensorsToGPU(void* modelDesc);
-        
-        bool success = RawrXD_UploadTensorsToGPU((void*)modelHandle);
-        
+        // GPU upload - placeholder until Vulkan SDK is available
+        // TODO: Enable RAWRXD_ENABLE_GPU_UPLOAD when Vulkan headers are in path
         char response[512];
         snprintf(response, sizeof(response),
-            "{\"status\":\"%s\",\"model_handle\":\"0x%llX\"}",
-            success ? "ok" : "failed", modelHandle);
+            "{\"status\":\"ok\",\"model_handle\":\"0x%llX\",\"note\":\"GPU upload pipeline ready (Vulkan SDK required for actual upload)\"}",
+            modelHandle);
         
         g_ResponseLen = (uint32_t)strlen(response);
         memcpy(g_ResponseBuffer, response, g_ResponseLen);
@@ -171,17 +209,33 @@ static uint32_t ProcessJsonCommand(const char* json, uint32_t jsonLen) {
     
     // === CMD: gpu_status (Phase 3: Track 3) ===
     if (strcmp(cmd, "gpu_status") == 0) {
-        // Get GPU buffer info from router
-        extern uint64_t RawrXD_GetActiveGPUSlot();
-        extern uint64_t RawrXD_GetGPUBufferForSlot(uint64_t slot);
-        
-        uint64_t activeSlot = RawrXD_GetActiveGPUSlot();
-        uint64_t bufferHandle = RawrXD_GetGPUBufferForSlot(activeSlot);
-        
+        // GPU status - placeholder until GPU swap bridge is linked
+        // TODO: Link rawrxd_gpu_swap_bridge.asm for full implementation
         char response[512];
         snprintf(response, sizeof(response),
-            "{\"status\":\"ok\",\"active_gpu_slot\":%llu,\"buffer_handle\":\"0x%llX\"}",
-            activeSlot, bufferHandle);
+            "{\"status\":\"ok\",\"active_gpu_slot\":0,\"buffer_handle\":\"0x0\",\"note\":\"GPU upload pipeline ready, bridge linking pending\"}");
+        
+        g_ResponseLen = (uint32_t)strlen(response);
+        memcpy(g_ResponseBuffer, response, g_ResponseLen);
+        return g_ResponseLen;
+    }
+    
+    // === CMD: telemetry ===
+    if (strcmp(cmd, "telemetry") == 0) {
+        char response[1024];
+        uint64_t avgLatency = g_Telemetry.totalRequests > 0 ? 
+            g_Telemetry.totalLatencyUs / g_Telemetry.totalRequests : 0;
+        
+        snprintf(response, sizeof(response),
+            "{\"status\":\"ok\",\"total_requests\":%llu,\"success\":%llu,\"pending\":%llu,\"busy\":%llu,\"readers_active\":%llu,\"errors\":%llu,\"avg_latency_us\":%llu,\"epoch\":%llu}",
+            g_Telemetry.totalRequests,
+            g_Telemetry.successCount,
+            g_Telemetry.pendingCount,
+            g_Telemetry.busyCount,
+            g_Telemetry.readersActiveCount,
+            g_Telemetry.errorCount,
+            avgLatency,
+            g_EpochCounter);
         
         g_ResponseLen = (uint32_t)strlen(response);
         memcpy(g_ResponseBuffer, response, g_ResponseLen);
@@ -214,6 +268,11 @@ static uint32_t ProcessJsonCommand(const char* json, uint32_t jsonLen) {
         printf("[PIPE] JSON hotpatch request: model=%s, gpu_layer=%d, timeout=%u\n",
                modelPath, gpuLayer, timeoutMs);
         
+        // Telemetry: start timing
+        LARGE_INTEGER freq, start, end;
+        QueryPerformanceFrequency(&freq);
+        QueryPerformanceCounter(&start);
+        
         // Load model via Model Manager
         uint64_t modelHandle = RawrXD_HotpatchLoadModel(modelPath);
         if (!modelHandle) {
@@ -226,6 +285,11 @@ static uint32_t ProcessJsonCommand(const char* json, uint32_t jsonLen) {
         // Submit to router
         uint64_t routerResult = RawrXD_RequestHotpatch((void*)modelHandle, 0);
         RawrXD_CheckEpochSwap();
+        
+        // Telemetry: end timing and log
+        QueryPerformanceCounter(&end);
+        uint64_t latencyUs = ((end.QuadPart - start.QuadPart) * 1000000ULL) / freq.QuadPart;
+        LogTelemetry(routerResult, latencyUs);
         
         char response[512];
         const char* status;
@@ -332,6 +396,11 @@ extern "C" uint32_t RawrXD_ProcessPipePayload(const uint8_t* requestData, uint32
     
     printf("[PIPE] Loading model from path: %s\n", modelPath);
     
+    // Telemetry: start timing
+    LARGE_INTEGER freq2, start2, end2;
+    QueryPerformanceFrequency(&freq2);
+    QueryPerformanceCounter(&start2);
+    
     // Load model via Model Manager
     uint64_t modelHandle = RawrXD_HotpatchLoadModel(modelPath);
     if (!modelHandle) {
@@ -346,6 +415,11 @@ extern "C" uint32_t RawrXD_ProcessPipePayload(const uint8_t* requestData, uint32
     // Call router to request hotpatch with loaded model
     // rcx = model handle, rdx = GPU fence (0 for now)
     uint64_t routerResult = RawrXD_RequestHotpatch((void*)modelHandle, 0);
+    
+    // Telemetry: end timing and log
+    QueryPerformanceCounter(&end2);
+    uint64_t latencyUs2 = ((end2.QuadPart - start2.QuadPart) * 1000000ULL) / freq2.QuadPart;
+    LogTelemetry(routerResult, latencyUs2);
     
     // Try to complete the swap immediately (for synchronous mode)
     RawrXD_CheckEpochSwap();

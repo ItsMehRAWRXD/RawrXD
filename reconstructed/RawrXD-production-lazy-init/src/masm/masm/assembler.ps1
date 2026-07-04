@@ -38,9 +38,9 @@ class MacroDefinition {
     }
 }
 
-$script:MacroTable = @{}
-$script:MacroDepth = 0
-$script:MaxMacroDepth = 32
+${script:MacroTable} = @{}
+${script:MacroDepth} = 0
+${script:MaxMacroDepth} = 32
 
 # ============================================================================
 # MASM → NASM CONVERTER
@@ -72,18 +72,18 @@ function Convert-MAsmToNasm {
         if ($trimmed -match '^\s*(\w+)\s+MACRO\s*(.*)$') {
             $macroName = $matches[1]
             $params = $matches[2].Trim()
-            $macroParams = if ($params) { ($params -split ',').Count } else { 0 }
+            $macroParams = $(if ($params) { ($params -split ',').Count } else { 0 }
             $macroBody = @()
             $inMacro = $true
             
-            $script:MacroTable[$macroName] = [MacroDefinition]::new($macroName, $null, $macroParams, $lineNum)
+            ${script:MacroTable}[$macroName] = [MacroDefinition]::new($macroName, $null, $macroParams, $lineNum)
             continue
         }
         
         # Check for ENDM
         if ($trimmed -match '^\s*ENDM\s*$') {
             if ($inMacro) {
-                $script:MacroTable[$macroName].Body = $macroBody
+                ${script:MacroTable}[$macroName].Body = $macroBody
                 $inMacro = $false
                 $macroName = ""
                 $macroBody = @()
@@ -128,7 +128,7 @@ function Convert-MAsmToNasm {
         
         # Check for macro invocation
         $macroInvoke = $false
-        foreach ($macroName in $script:MacroTable.Keys) {
+        foreach ($macroName in ${script:MacroTable}.Keys) {
             if ($trimmed -match "^\s*$macroName\s*(.*)$") {
                 $args = $matches[1].Trim()
                 $expanded = Expand-Macro $macroName $args
@@ -159,11 +159,11 @@ function Convert-MAsmToNasm {
 function Expand-Macro {
     param([string]$Name, [string]$ArgsStr)
     
-    if ($script:MacroDepth -ge $script:MaxMacroDepth) {
+    if (${script:MacroDepth} -ge ${script:MaxMacroDepth}) {
         throw "Macro recursion depth exceeded: $Name"
     }
     
-    $macro = $script:MacroTable[$Name]
+    $macro = ${script:MacroTable}[$Name]
     if (-not $macro) {
         throw "Unknown macro: $Name"
     }
@@ -174,7 +174,7 @@ function Expand-Macro {
         $args = $ArgsStr -split ',' | ForEach-Object { $_.Trim() }
     }
     
-    $script:MacroDepth++
+    ${script:MacroDepth}++
     
     try {
         $expanded = @()
@@ -192,7 +192,7 @@ function Expand-Macro {
             $line = $line -replace "%0\b", $args.Count
             
             # Expand nested macros
-            foreach ($macroName in $script:MacroTable.Keys) {
+            foreach ($macroName in ${script:MacroTable}.Keys) {
                 if ($line -match "\b$macroName\b") {
                     $line = Expand-Macro $macroName $line
                 }
@@ -204,7 +204,7 @@ function Expand-Macro {
         return $expanded
     }
     finally {
-        $script:MacroDepth--
+        ${script:MacroDepth}--
     }
 }
 
@@ -332,7 +332,7 @@ try {
     # Phase 1: Macro Expansion
     Write-Host "📖 Macro Processing..." -ForegroundColor Yellow
     $converted = Convert-MAsmToNasm $source
-    Write-Host "   Macros defined: $($script:MacroTable.Count)" -ForegroundColor Green
+    Write-Host "   Macros defined: $(${script:MacroTable}.Count)" -ForegroundColor Green
     
     # Phase 2: NASM Assembly
     Write-Host "🔨 Assembling with NASM..." -ForegroundColor Yellow

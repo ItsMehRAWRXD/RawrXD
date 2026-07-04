@@ -229,7 +229,7 @@ Write-Host "VERIFICATION SUMMARY" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
 $totalVerifications = $verificationsPassed + $verificationsFailed
-$passPercentage = if ($totalVerifications -gt 0) { [math]::Round(($verificationsPassed / $totalVerifications) * 100) } else { 0 }
+$passPercentage = $(if ($totalVerifications -gt 0) { [math]::Round(($verificationsPassed / $totalVerifications) * 100) } else { 0 }
 
 Write-Host "Passed:  $verificationsPassed/$totalVerifications" -ForegroundColor Green
 Write-Host "Failed:  $verificationsFailed/$totalVerifications" -ForegroundColor Red

@@ -21,9 +21,9 @@
     swarm-memory
 #>
 
-$script:SwarmRoot = "D:\lazy init ide"
-$script:SwarmModesScript = Join-Path $SwarmRoot "scripts\swarm_modes.ps1"
-$script:SwarmBeaconScript = Join-Path $SwarmRoot "scripts\swarm_beacon_runner.ps1"
+${script:SwarmRoot} = "D:\lazy init ide"
+${script:SwarmModesScript} = Join-Path $SwarmRoot "scripts\swarm_modes.ps1"
+${script:SwarmBeaconScript} = Join-Path $SwarmRoot "scripts\swarm_beacon_runner.ps1"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # QUICK SWARM LAUNCHERS
@@ -32,48 +32,48 @@ $script:SwarmBeaconScript = Join-Path $SwarmRoot "scripts\swarm_beacon_runner.ps
 function global:swarm-plan {
     param([string]$Topic = "")
     Write-Host "🗺️  Launching PLANNING swarm..." -ForegroundColor Cyan
-    & $script:SwarmModesScript -Mode Planning -Topic $Topic -SkipPrompt
+    & ${script:SwarmModesScript} -Mode Planning -Topic $Topic -SkipPrompt
 }
 
 function global:swarm-think {
     param([string]$Topic = "")
     Write-Host "🧠 Launching THINKING swarm..." -ForegroundColor Magenta
-    & $script:SwarmModesScript -Mode Thinking -Topic $Topic -SkipPrompt
+    & ${script:SwarmModesScript} -Mode Thinking -Topic $Topic -SkipPrompt
 }
 
 function global:swarm-ask {
     param([string]$Topic = "")
     Write-Host "❓ Launching ASKING swarm..." -ForegroundColor Yellow
-    & $script:SwarmModesScript -Mode Asking -Topic $Topic -SkipPrompt
+    & ${script:SwarmModesScript} -Mode Asking -Topic $Topic -SkipPrompt
 }
 
 function global:swarm-research {
     param([string]$Topic = "")
     Write-Host "🔍 Launching RESEARCH swarm..." -ForegroundColor Green
-    & $script:SwarmModesScript -Mode Research -Topic $Topic -SkipPrompt
+    & ${script:SwarmModesScript} -Mode Research -Topic $Topic -SkipPrompt
 }
 
 function global:swarm-max {
     param([int]$Agents = 8)
     Write-Host "🚀 Launching MAX swarm ($Agents agents)..." -ForegroundColor Red
-    & $script:SwarmModesScript -Mode Max -Agents $Agents -SkipPrompt
+    & ${script:SwarmModesScript} -Mode Max -Agents $Agents -SkipPrompt
 }
 
 function global:swarm-deep {
     param([string]$Topic = "")
     Write-Host "🔬 Launching DEEP RESEARCH swarm..." -ForegroundColor Blue
-    & $script:SwarmModesScript -Mode DeepResearch -Topic $Topic -SkipPrompt
+    & ${script:SwarmModesScript} -Mode DeepResearch -Topic $Topic -SkipPrompt
 }
 
 function global:swarm-build {
     Write-Host "🔨 Launching BUILD swarm..." -ForegroundColor DarkYellow
-    & $script:SwarmModesScript -Mode Build -SkipPrompt
+    & ${script:SwarmModesScript} -Mode Build -SkipPrompt
 }
 
 function global:swarm-fix {
     param([string]$Topic = "")
     Write-Host "🔧 Launching FIX swarm..." -ForegroundColor DarkCyan
-    & $script:SwarmModesScript -Mode Fix -Topic $Topic -SkipPrompt
+    & ${script:SwarmModesScript} -Mode Fix -Topic $Topic -SkipPrompt
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -102,7 +102,7 @@ function global:swarm-status {
     Write-Host ""
     
     # Show beacon status if available
-    $beaconPath = Join-Path $script:SwarmRoot "logs/swarm_beacon"
+    $beaconPath = Join-Path ${script:SwarmRoot} "logs/swarm_beacon"
     $espFile = Join-Path $beaconPath "swarm_esp.json"
     if (Test-Path $espFile) {
         try {
@@ -116,7 +116,7 @@ function global:swarm-status {
                     'Failed' { '🔴' }
                     default { '⚫' }
                 }
-                $time = if ($agent.ActiveSeconds) { "$($agent.ActiveSeconds)s in code" } else { "" }
+                $time = $(if ($agent.ActiveSeconds) { "$($agent.ActiveSeconds)s in code" } else { "" }
                 Write-Host "  $icon Agent$($agent.AgentId): $($agent.State) | $($agent.CurrentFile) $time" -ForegroundColor DarkGray
             }
         } catch {}
@@ -166,7 +166,7 @@ function global:swarm-output {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 function global:swarm-memory {
-    $memFile = Join-Path $script:SwarmRoot "logs/swarm_memory/global_memory.json"
+    $memFile = Join-Path ${script:SwarmRoot} "logs/swarm_memory/global_memory.json"
     if (-not (Test-Path $memFile)) {
         Write-Host "No swarm memory found." -ForegroundColor Gray
         return
@@ -221,7 +221,7 @@ function global:swarm-remember {
         [ValidateSet('Finding','Decision','Question')][string]$Type = 'Finding'
     )
     
-    $memFile = Join-Path $script:SwarmRoot "logs/swarm_memory/global_memory.json"
+    $memFile = Join-Path ${script:SwarmRoot} "logs/swarm_memory/global_memory.json"
     $memDir = Split-Path $memFile -Parent
     if (-not (Test-Path $memDir)) {
         New-Item -Path $memDir -ItemType Directory -Force | Out-Null
@@ -259,7 +259,7 @@ function global:swarm-forget {
         Write-Host "Use: swarm-forget -Confirm to clear all memory" -ForegroundColor Yellow
         return
     }
-    $memFile = Join-Path $script:SwarmRoot "logs/swarm_memory/global_memory.json"
+    $memFile = Join-Path ${script:SwarmRoot} "logs/swarm_memory/global_memory.json"
     Remove-Item $memFile -Force -ErrorAction SilentlyContinue
     Write-Host "🗑️  Cleared all swarm memory." -ForegroundColor Red
 }
@@ -303,7 +303,7 @@ function global:swarm-help {
 
 function global:swarm-center {
     Write-Host "🐝 Launching Swarm Control Center..." -ForegroundColor Cyan
-    $centerScript = Join-Path $script:SwarmRoot "scripts\swarm_control_center.ps1"
+    $centerScript = Join-Path ${script:SwarmRoot} "scripts\swarm_control_center.ps1"
     & $centerScript
 }
 

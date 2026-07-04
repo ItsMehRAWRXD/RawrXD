@@ -69,9 +69,9 @@ foreach ($path in $webView2Paths) {
 if (-not $webView2Found) {
   # Check file system
   $wv2Locations = @(
-    "$env:ProgramFiles\Microsoft\EdgeWebView\Application",
-    "$env:ProgramFiles(x86)\Microsoft\EdgeWebView\Application",
-    "$env:LocalAppData\Microsoft\EdgeWebView\Application"
+    "${env:ProgramFiles}\Microsoft\EdgeWebView\Application",
+    "${env:ProgramFiles}(x86)\Microsoft\EdgeWebView\Application",
+    "${env:LocalAppData}\Microsoft\EdgeWebView\Application"
   )
     
   foreach ($loc in $wv2Locations) {
@@ -137,7 +137,7 @@ Write-Host "══════════════════════�
 Write-Host "   RECOMMENDATIONS" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$currentPsEdition = if ($PSVersionTable.PSEdition) { $PSVersionTable.PSEdition } else { "Desktop" }
+$currentPsEdition = $(if ($PSVersionTable.PSEdition) { $PSVersionTable.PSEdition } else { "Desktop" }
 
 if ($currentPsEdition -eq "Desktop") {
   Write-Host "✅ You're using Windows PowerShell 5.1" -ForegroundColor Green

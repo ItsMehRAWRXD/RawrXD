@@ -20,7 +20,7 @@
 # EDITOR DIAGNOSTICS & REPAIR SYSTEM
 # ============================================
 
-$script:EditorDiagnostics = @{
+${script:EditorDiagnostics} = @{
     LastCheckTime = $null
     HealthStatus = "Unknown"
     IssuesDetected = @()
@@ -33,15 +33,15 @@ $script:EditorDiagnostics = @{
 # Helper function to get current editor (supports tabbed and legacy editors)
 function Get-CurrentEditor {
     # Try tabbed editor system first
-    if ($script:editorTabControl -and $script:editorTabControl.SelectedTab) {
-        $selectedPath = $script:editorTabControl.SelectedTab.Tag
-        if ($selectedPath -and $script:editorBoxes -and $script:editorBoxes.ContainsKey($selectedPath)) {
-            return $script:editorBoxes[$selectedPath]
+    if (${script:editorTabControl} -and ${script:editorTabControl}.SelectedTab) {
+        $selectedPath = ${script:editorTabControl}.SelectedTab.Tag
+        if ($selectedPath -and ${script:editorBoxes} -and ${script:editorBoxes}.ContainsKey($selectedPath)) {
+            return ${script:editorBoxes}[$selectedPath]
         }
     }
     # Fallback to legacy single editor
-    if ($script:editor) {
-        return $script:editor
+    if (${script:editor}) {
+        return ${script:editor}
     }
     return $null
 }
@@ -168,7 +168,7 @@ function Test-EditorHealth {
     }
 
     # Determine overall status
-    $status = if ($healthScore -ge 80) { "HEALTHY" } elseif ($healthScore -ge 50) { "DEGRADED" } else { "CRITICAL" }
+    $status = $(if ($healthScore -ge 80) { "HEALTHY" } elseif ($healthScore -ge 50) { "DEGRADED" } else { "CRITICAL" }
 
     return @{
         Status = $status
@@ -213,8 +213,8 @@ function Repair-EditorColors {
         $Editor.Invalidate()
 
         Write-StartupLog "✅ Editor colors restored" "SUCCESS"
-        $script:EditorDiagnostics.LastRepairTime = Get-Date
-        $script:EditorDiagnostics.RepairAttempts += 1
+        ${script:EditorDiagnostics}.LastRepairTime = Get-Date
+        ${script:EditorDiagnostics}.RepairAttempts += 1
 
         return $true
     }
@@ -319,7 +319,7 @@ function Repair-EditorState {
         }
 
         Write-StartupLog "✅ Full editor repair completed" "SUCCESS"
-        $script:EditorDiagnostics.HealthStatus = "REPAIRED"
+        ${script:EditorDiagnostics}.HealthStatus = "REPAIRED"
 
         return $true
     }
@@ -345,11 +345,11 @@ function Start-EditorMonitoring {
         Write-StartupLog "🚀 Starting editor monitoring system..." "INFO"
 
         # Create monitor timer if it doesn't exist
-        if ($null -eq $script:editorMonitorTimer) {
-            $script:editorMonitorTimer = New-Object System.Windows.Forms.Timer
-            $script:editorMonitorTimer.Interval = $IntervalMs
+        if ($null -eq ${script:editorMonitorTimer}) {
+            ${script:editorMonitorTimer} = New-Object System.Windows.Forms.Timer
+            ${script:editorMonitorTimer}.Interval = $IntervalMs
 
-            $script:editorMonitorTimer.Add_Tick({
+            ${script:editorMonitorTimer}.Add_Tick({
                 try {
                     $currentEditor = Get-CurrentEditor
                     if ($null -eq $currentEditor) {
@@ -358,11 +358,11 @@ function Start-EditorMonitoring {
 
                     # Quick health check
                     $health = Test-EditorHealth -Editor $currentEditor
-                    $script:EditorDiagnostics.HealthStatus = $health.Status
-                    $script:EditorDiagnostics.IssuesDetected = $health.Issues
+                    ${script:EditorDiagnostics}.HealthStatus = $health.Status
+                    ${script:EditorDiagnostics}.IssuesDetected = $health.Issues
 
                     # Auto-repair if enabled and problems detected
-                    if ($script:EditorDiagnostics.AutoRepairEnabled -and $health.HealthScore -lt 80) {
+                    if (${script:EditorDiagnostics}.AutoRepairEnabled -and $health.HealthScore -lt 80) {
                         Write-DevConsole "🔧 Auto-repairing editor (score: $($health.HealthScore))" "WARNING"
                         Repair-EditorState -Editor $currentEditor | Out-Null
                     }
@@ -370,10 +370,10 @@ function Start-EditorMonitoring {
             })
         }
 
-        $script:editorMonitorTimer.Start()
-        $script:EditorDiagnostics.AutoRepairEnabled = if ($AutoRepair) { $true } else { $false }
+        ${script:editorMonitorTimer}.Start()
+        ${script:EditorDiagnostics}.AutoRepairEnabled = $(if ($AutoRepair) { $true } else { $false }
 
-        Write-StartupLog "✅ Editor monitoring started (interval: ${IntervalMs}ms, auto-repair: $($script:EditorDiagnostics.AutoRepairEnabled))" "SUCCESS"
+        Write-StartupLog "✅ Editor monitoring started (interval: ${IntervalMs}ms, auto-repair: $(${script:EditorDiagnostics}.AutoRepairEnabled))" "SUCCESS"
         return $true
     }
     catch {
@@ -388,10 +388,10 @@ function Stop-EditorMonitoring {
         Stop editor health monitoring
     #>
     try {
-        if ($null -ne $script:editorMonitorTimer) {
-            $script:editorMonitorTimer.Stop()
-            $script:editorMonitorTimer.Dispose()
-            $script:editorMonitorTimer = $null
+        if ($null -ne ${script:editorMonitorTimer}) {
+            ${script:editorMonitorTimer}.Stop()
+            ${script:editorMonitorTimer}.Dispose()
+            ${script:editorMonitorTimer} = $null
             Write-StartupLog "✅ Editor monitoring stopped" "SUCCESS"
             return $true
         }
@@ -414,10 +414,10 @@ function Get-EditorDiagnostics {
         HealthStatus = $health.Status
         HealthScore = $health.HealthScore
         Issues = $health.Issues
-        RepairAttempts = $script:EditorDiagnostics.RepairAttempts
-        LastRepairTime = $script:EditorDiagnostics.LastRepairTime
-        AutoRepairEnabled = $script:EditorDiagnostics.AutoRepairEnabled
-        MonitoringActive = $null -ne $script:editorMonitorTimer
+        RepairAttempts = ${script:EditorDiagnostics}.RepairAttempts
+        LastRepairTime = ${script:EditorDiagnostics}.LastRepairTime
+        AutoRepairEnabled = ${script:EditorDiagnostics}.AutoRepairEnabled
+        MonitoringActive = $null -ne ${script:editorMonitorTimer}
     }
 
     return $report
@@ -479,11 +479,11 @@ function Initialize-EditorDiagnosticsSystem {
         while (-not $editorFound -and $waitCount -lt 50) {
             [System.Windows.Forms.Application]::DoEvents()
             # Check for tabbed editor system
-            if ($script:editorTabControl -and $script:editorTabControl.TabCount -gt 0) {
+            if (${script:editorTabControl} -and ${script:editorTabControl}.TabCount -gt 0) {
                 $editorFound = $true
             }
             # Check for legacy editor
-            elseif ($script:editor) {
+            elseif (${script:editor}) {
                 $editorFound = $true
             }
             else {
@@ -564,11 +564,11 @@ function Add-EditorDiagnosticsMenu {
 
         # Toggle Auto-Repair
         $toggleItem = New-Object System.Windows.Forms.ToolStripMenuItem
-        $toggleItem.Text = "⚙️ Auto-Repair: $(if ($script:EditorDiagnostics.AutoRepairEnabled) { 'ON' } else { 'OFF' })"
+        $toggleItem.Text = "⚙️ Auto-Repair: $(if (${script:EditorDiagnostics}.AutoRepairEnabled) { 'ON' } else { 'OFF' })"
         $toggleItem.Add_Click({
-            $script:EditorDiagnostics.AutoRepairEnabled = -not $script:EditorDiagnostics.AutoRepairEnabled
+            ${script:EditorDiagnostics}.AutoRepairEnabled = -not ${script:EditorDiagnostics}.AutoRepairEnabled
             [System.Windows.Forms.MessageBox]::Show(
-                "Auto-Repair: $(if ($script:EditorDiagnostics.AutoRepairEnabled) { 'ENABLED' } else { 'DISABLED' })",
+                "Auto-Repair: $(if (${script:EditorDiagnostics}.AutoRepairEnabled) { 'ENABLED' } else { 'DISABLED' })",
                 "Auto-Repair Status",
                 "OK",
                 "Information"

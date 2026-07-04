@@ -65,7 +65,7 @@ switch ($Command.ToLower()) {
         $res
     }
     'list-files' {
-        $dir = if ($Directory) { $Directory } else { (Get-Location).Path }
+        $dir = $(if ($Directory) { $Directory } else { (Get-Location).Path }
         $res = Send-Command -Cmd 'list-files' -Params @{ directory = $dir }
         $res
     }

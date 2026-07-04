@@ -129,7 +129,7 @@ function Load-CursorDataIntoWin32Agent {
     if ($EnableWin32NativeAgentAPI) {
         Write-ColorOutput "→ Loading into Win32NativeAgentAPI..." "Detail"
         # Simulate loading into Win32 API
-        $Global:Win32AgentData = @{
+        ${Global:Win32AgentData} = @{
             TotalSize = $stats.TotalSizeMB
             JSFiles = $stats.JSFiles
             TSFiles = $stats.TSFiles
@@ -151,7 +151,7 @@ function Load-CursorDataIntoWin32Agent {
                 Dependencies = @("Core_System", "MCP_Protocol")
             }
         }
-        $Global:MissionQueue = $missions
+        ${Global:MissionQueue} = $missions
     }
     
     Write-ColorOutput "✓ Cursor data loaded into Win32 agent" "Success"
@@ -361,7 +361,7 @@ function Feed-Win32Agent-Core {
         . "D:\RawrXD-production-lazy-init\CodexUltimate.exe" $agentMain
         
         if ($EnableWin32NativeAgentAPI) {
-            $Global:Win32AgentData.AgentMain = $agentMain
+            ${Global:Win32AgentData}.AgentMain = $agentMain
         }
     }
     
@@ -377,7 +377,7 @@ function Feed-Win32Agent-Core {
                 Data = $mcpMain
                 Callback = "GenerateMCPImplementation"
             }
-            $Global:MissionQueue += $mission
+            ${Global:MissionQueue} += $mission
         }
     }
     
@@ -394,7 +394,7 @@ function Feed-Win32Agent-Core {
             Write-ColorOutput "  Exports: $exportCount" "Detail"
             Write-ColorOutput "  Functions: $functionCount" "Detail"
             
-            $Global:Win32AgentData.Bootstrap = @{
+            ${Global:Win32AgentData}.Bootstrap = @{
                 Path = $BootstrapForkPath
                 Exports = $exportCount
                 Functions = $functionCount
@@ -412,7 +412,7 @@ function Feed-Win32Agent-Core {
         Write-ColorOutput "  Name: $($pkg.name)" "Detail"
         
         if ($EnableWin32NativeAgentAPI) {
-            $Global:Win32AgentData.Metadata = $pkg
+            ${Global:Win32AgentData}.Metadata = $pkg
         }
     }
     
@@ -444,11 +444,11 @@ function Feed-Win32Agent-Extensions {
                     Data = $ext.FullName
                     Dependencies = @("Core_System", "MCP_Protocol")
                 }
-                $Global:MissionQueue += $mission
+                ${Global:MissionQueue} += $mission
             }
             
             # Alternate engines
-            $engineIndex = if ($engineIndex -eq 1) { 2 } else { 1 }
+            $engineIndex = $(if ($engineIndex -eq 1) { 2 } else { 1 }
         }
     }
     
@@ -473,9 +473,9 @@ function Feed-Win32Agent-APIs {
     
     # Update Win32 agent metrics
     if ($EnableWin32NativeAgentAPI) {
-        $Global:Win32AgentData.APIEndpoint = "https://api2.cursor.sh"
-        $Global:Win32AgentData.ProxyAddress = "http://127.0.0.1"
-        $Global:Win32AgentData.ClaudeSDK = "0.2.4"
+        ${Global:Win32AgentData}.APIEndpoint = "https://api2.cursor.sh"
+        ${Global:Win32AgentData}.ProxyAddress = "http://127.0.0.1"
+        ${Global:Win32AgentData}.ClaudeSDK = "0.2.4"
     }
     
     Write-ColorOutput "✓ API discovery fed to Win32 agent" "Success"
@@ -548,7 +548,7 @@ function Feed-Win32Agent-Bootstrap {
     Write-ColorOutput "  Classes: $classCount" "Detail"
     
     if ($EnableQtAgenticWin32Bridge) {
-        $Global:Win32AgentData.Bootstrap = @{
+        ${Global:Win32AgentData}.Bootstrap = @{
             Path = $BootstrapForkPath
             Exports = $exportCount
             Functions = $functionCount
@@ -607,8 +607,8 @@ Write-ColorOutput "════════════════════�
 Write-ColorOutput ""
 Write-ColorOutput "Output: $OutputDirectory" "Detail"
 if ($EnableWin32NativeAgentAPI) {
-    Write-ColorOutput "Win32 Agent Data: $($Global:Win32AgentData.Keys.Count) components loaded" "Detail"
+    Write-ColorOutput "Win32 Agent Data: $(${Global:Win32AgentData}.Keys.Count) components loaded" "Detail"
 }
 if ($UseAutonomousMissionScheduler) {
-    Write-ColorOutput "Mission Queue: $($Global:MissionQueue.Count) missions scheduled" "Detail"
+    Write-ColorOutput "Mission Queue: $(${Global:MissionQueue}.Count) missions scheduled" "Detail"
 }

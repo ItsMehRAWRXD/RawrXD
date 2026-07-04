@@ -122,7 +122,7 @@ class BrowserHelper {
             
             # Extract title
             $titleMatch = [regex]::Match($content, '<title[^>]*>([^<]+)</title>')
-            $title = if ($titleMatch.Success) { $titleMatch.Groups[1].Value } else { "Untitled" }
+            $title = $(if ($titleMatch.Success) { $titleMatch.Groups[1].Value } else { "Untitled" }
             $title = [System.Web.HttpUtility]::HtmlDecode($title)
             
             return @{

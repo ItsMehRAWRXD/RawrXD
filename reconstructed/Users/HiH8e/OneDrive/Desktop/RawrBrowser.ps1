@@ -2,7 +2,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # Create log file path
-$logPath = Join-Path $env:TEMP "RawrBrowser_Startup.log"
+$logPath = Join-Path ${env:TEMP} "RawrBrowser_Startup.log"
 $logDir = Split-Path $logPath
 if (-not (Test-Path $logDir)) {
   New-Item -ItemType Directory -Path $logDir -Force | Out-Null
@@ -42,7 +42,7 @@ Write-StartupLog "Operating System: $([System.Environment]::OSVersion)" "INFO"
 Write-StartupLog "Log Path: $logPath" "INFO"
 
 # WebView2 Setup - Only load managed assemblies, not native DLLs
-$wvDir = "$env:TEMP\WVLibs"
+$wvDir = "${env:TEMP}\WVLibs"
 $useWebView2 = $false
 
 Write-StartupLog "Checking WebView2 components..." "INFO"

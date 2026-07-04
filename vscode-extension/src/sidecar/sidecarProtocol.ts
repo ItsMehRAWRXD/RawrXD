@@ -353,4 +353,17 @@ export interface SearchResult {
     };
 }
 
+// Process handle for sidecar
+export interface SidecarProcess {
+    pid: number;
+    handle: ChildProcess;
+}
+
+// Streaming token from sidecar
+export interface StreamingToken {
+    token: string;
+    isComplete: boolean;
+    taskId: string;
+}
+
 export { SidecarClient as default };

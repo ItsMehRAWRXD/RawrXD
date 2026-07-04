@@ -4,7 +4,7 @@
 param(
     [int]$DurationMinutes = 60,
     [string]$OutputPath = "d:\RawrXD\performance-baseline.json",
-    [switch]$IncludeThermal = $true
+    [switch]$IncludeThermal
 )
 
 $ErrorActionPreference = "Stop"

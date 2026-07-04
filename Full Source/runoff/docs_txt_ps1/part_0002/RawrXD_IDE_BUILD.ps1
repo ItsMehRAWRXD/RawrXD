@@ -87,7 +87,7 @@ if ($sdkLib) {
     Write-Host "Found Windows SDK: $sdkLib" -ForegroundColor Green
 }
 
-$env:LIB = $libPaths -join ";"
+${env:LIB} = $libPaths -join ";"
 
 # Change to script directory
 Set-Location $PSScriptRoot

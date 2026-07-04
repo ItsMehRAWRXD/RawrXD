@@ -357,15 +357,15 @@ $moduleContent = @"
 # Generated: $(Get-Date -Format 'o')
 # Configuration: $Configuration
 
-`$script:ToolchainBackend = '$selectedToolchain'
+`${script:ToolchainBackend} = '$selectedToolchain'
 
 function Initialize-RawrXDPatternEngine {
     [CmdletBinding()]
     param()
     
-    Write-Verbose "[RawrXD] Initializing pattern engine (Backend: `$script:ToolchainBackend)"
+    Write-Verbose "[RawrXD] Initializing pattern engine (Backend: `${script:ToolchainBackend})"
     
-    switch (`$script:ToolchainBackend) {
+    switch (`${script:ToolchainBackend}) {
         'PowerShell' {
             # C# types already loaded via Add-Type
             `$null = [RawrXD.PatternBridge.PatternEngine]
@@ -395,7 +395,7 @@ function Invoke-RawrXDClassification {
         [string]`$Context = ""
     )
     
-    if (`$script:ToolchainBackend -eq 'PowerShell') {
+    if (`${script:ToolchainBackend} -eq 'PowerShell') {
         `$confidence = 0.0
         `$type = [RawrXD.PatternBridge.PatternEngine]::ClassifyPattern(`$Code, `$Context, [ref]`$confidence)
         
@@ -405,7 +405,7 @@ function Invoke-RawrXDClassification {
             Confidence = `$confidence
             IsPattern = (`$type -in @(1, 3))  # Template or Learned
             RequiresManualReview = (`$type -eq 2)  # NonPattern
-            Backend = `$script:ToolchainBackend
+            Backend = `${script:ToolchainBackend}
         }
     } else {
         # Call native DLL function
@@ -417,7 +417,7 @@ function Get-RawrXDPatternStats {
     [CmdletBinding()]
     param()
     
-    if (`$script:ToolchainBackend -eq 'PowerShell') {
+    if (`${script:ToolchainBackend} -eq 'PowerShell') {
         `$stats = [RawrXD.PatternBridge.PatternEngine]::GetStats()
         return [PSCustomObject]@{
             TotalClassifications = `$stats.TotalClassifications
@@ -425,7 +425,7 @@ function Get-RawrXDPatternStats {
             NonPatternMatches = `$stats.NonPatternMatches
             LearnedMatches = `$stats.LearnedMatches
             AvgConfidence = `$stats.AvgConfidence
-            Backend = `$script:ToolchainBackend
+            Backend = `${script:ToolchainBackend}
         }
     } else {
         throw "Native backend stats not yet implemented"
@@ -437,7 +437,7 @@ function Get-RawrXDToolchainInfo {
     param()
     
     return [PSCustomObject]@{
-        Backend = `$script:ToolchainBackend
+        Backend = `${script:ToolchainBackend}
         Configuration = '$Configuration'
         ModulePath = `$PSScriptRoot
         BuildDate = '$(Get-Date -Format 'o')'
@@ -464,12 +464,10 @@ Write-Host "[Build] Module created: $modulePath" -ForegroundColor Green
 
 # ============================================================================
 # INSTALLATION
-# ============================================================================
-
-if ($Install) {
+# ============================================================================ $(if ($Install) {
     Write-Host "[Install] Installing module..." -ForegroundColor Cyan
     
-    $installDir = "$env:USERPROFILE\Documents\PowerShell\Modules\$($config.Output.ModuleName)"
+    $installDir = "${env:USERPROFILE}\Documents\PowerShell\Modules\$($config.Output.ModuleName)"
     New-Item -ItemType Directory -Path $installDir -Force | Out-Null
     
     Copy-Item -Path $modulePath -Destination "$installDir\$($config.Output.ModuleName).psm1" -Force

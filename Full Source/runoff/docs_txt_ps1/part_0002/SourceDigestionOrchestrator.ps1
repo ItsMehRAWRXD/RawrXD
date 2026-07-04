@@ -56,7 +56,7 @@ param(
 )
 
 # Global configuration
-$global:OrchestratorConfig = @{
+${global:OrchestratorConfig} = @{
     Version = "1.0.0"
     EngineName = "SourceDigestionOrchestrator"
     OrchestrationMode = "Sequential"  # Sequential, Parallel, Hybrid
@@ -112,7 +112,7 @@ $global:OrchestratorConfig = @{
 }
 
 # Unified results storage
-$global:UnifiedResults = @{
+${global:UnifiedResults} = @{
     SourceDigestion = $null
     ReverseEngineering = $null
     DeploymentAudit = $null
@@ -147,16 +147,16 @@ function Initialize-Logging {
     param($LogPath)
     
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $global:LogFile = Join-Path $LogPath "orchestrator_$timestamp.log"
-    $global:EmergencyLog = Join-Path $LogPath "emergency_orchestrator.log"
+    ${global:LogFile} = Join-Path $LogPath "orchestrator_$timestamp.log"
+    ${global:EmergencyLog} = Join-Path $LogPath "emergency_orchestrator.log"
     
     # Create log directory
     if (!(Test-Path $LogPath)) {
         New-Item -ItemType Directory -Path $LogPath -Force | Out-Null
     }
     
-    Write-Log "INFO" "Source Digestion Orchestrator v$($global:OrchestratorConfig.Version) initialized"
-    Write-Log "INFO" "Log file: $global:LogFile"
+    Write-Log "INFO" "Source Digestion Orchestrator v$(${global:OrchestratorConfig}.Version) initialized"
+    Write-Log "INFO" "Log file: ${global:LogFile}"
 }
 
 # Enhanced logging function
@@ -184,8 +184,8 @@ function Write-Log {
     Write-Host $logEntry -ForegroundColor $color
     
     # File logging
-    if ($global:LogFile -and !$ConsoleOnly) {
-        Add-Content -Path $global:LogFile -Value $logEntry -Encoding UTF8
+    if (${global:LogFile} -and !$ConsoleOnly) {
+        Add-Content -Path ${global:LogFile} -Value $logEntry -Encoding UTF8
     }
 }
 
@@ -199,15 +199,15 @@ function Load-Configuration {
             
             # Merge configurations
             foreach ($key in $configContent.PSObject.Properties.Name) {
-                if ($global:OrchestratorConfig.ContainsKey($key)) {
+                if (${global:OrchestratorConfig}.ContainsKey($key)) {
                     $value = $configContent.$key
                     if ($value -is [System.Management.Automation.PSCustomObject]) {
                         foreach ($subKey in $value.PSObject.Properties.Name) {
-                            $global:OrchestratorConfig[$key][$subKey] = $value.$subKey
+                            ${global:OrchestratorConfig}[$key][$subKey] = $value.$subKey
                         }
                     }
                     else {
-                        $global:OrchestratorConfig[$key] = $value
+                        ${global:OrchestratorConfig}[$key] = $value
                     }
                 }
             }
@@ -225,7 +225,7 @@ function Save-Configuration {
     param($ConfigPath)
     
     try {
-        $global:OrchestratorConfig | ConvertTo-Json -Depth 10 | Out-File $ConfigPath -Encoding UTF8
+        ${global:OrchestratorConfig} | ConvertTo-Json -Depth 10 | Out-File $ConfigPath -Encoding UTF8
         Write-Log "INFO" "Configuration saved to $ConfigPath"
     }
     catch {
@@ -262,7 +262,7 @@ function Start-Orchestration {
     $startTime = Get-Date
     
     # Record start event
-    $global:UnifiedResults.Timeline.Add(@{
+    ${global:UnifiedResults}.Timeline.Add(@{
         Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
         Event = "OrchestrationStarted"
         SourcePath = $SourcePath
@@ -272,19 +272,19 @@ function Start-Orchestration {
     # Determine which engines to run
     $enginesToRun = @()
     
-    if ($EnableAllEngines -or $global:OrchestratorConfig.EnableAllEngines) {
-        $enginesToRun = @($global:OrchestratorConfig.EngineExecutionOrder)
+    if ($EnableAllEngines -or ${global:OrchestratorConfig}.EnableAllEngines) {
+        $enginesToRun = @(${global:OrchestratorConfig}.EngineExecutionOrder)
     }
     else {
         if ($EnableSourceDigestion) { $enginesToRun += "SourceDigestion" }
         if ($EnableReverseEngineering) { $enginesToRun += "ReverseEngineering" }
         if ($EnableDeploymentAudit) { $enginesToRun += "DeploymentAudit" }
-        if ($EnableManifestTracer -or $global:OrchestratorConfig.ManifestTracer.Enabled) { $enginesToRun += "ManifestTracer" }
-        if ($EnableArchitectureEnhancement -or $global:OrchestratorConfig.ArchitectureEnhancement.Enabled) { $enginesToRun += "ArchitectureEnhancement" }
+        if ($EnableManifestTracer -or ${global:OrchestratorConfig}.ManifestTracer.Enabled) { $enginesToRun += "ManifestTracer" }
+        if ($EnableArchitectureEnhancement -or ${global:OrchestratorConfig}.ArchitectureEnhancement.Enabled) { $enginesToRun += "ArchitectureEnhancement" }
     }
 
-    if ($global:OrchestratorConfig.EngineExecutionOrder) {
-        $enginesToRun = $global:OrchestratorConfig.EngineExecutionOrder | Where-Object { $_ -in $enginesToRun }
+    if (${global:OrchestratorConfig}.EngineExecutionOrder) {
+        $enginesToRun = ${global:OrchestratorConfig}.EngineExecutionOrder | Where-Object { $_ -in $enginesToRun }
     }
 
     $enginesToRun = $enginesToRun | Select-Object -Unique
@@ -297,7 +297,7 @@ function Start-Orchestration {
     Write-Log "INFO" "Engines to run: $($enginesToRun -join ', ')"
     
     # Execute engines based on orchestration mode
-    switch ($global:OrchestratorConfig.OrchestrationMode) {
+    switch (${global:OrchestratorConfig}.OrchestrationMode) {
         "Sequential" {
             $success = Start-SequentialExecution -Engines $enginesToRun -SourcePath $SourcePath -OutputPath $OutputPath
         }
@@ -318,20 +318,20 @@ function Start-Orchestration {
     }
     
     # Aggregate results
-    if ($global:OrchestratorConfig.ResultAggregation.Enabled) {
+    if (${global:OrchestratorConfig}.ResultAggregation.Enabled) {
         Write-Log "INFO" "Aggregating results from all engines"
         Aggregate-Results
     }
     
     # Generate comprehensive report
-    if ($GenerateComprehensiveReport -or $global:OrchestratorConfig.ResultAggregation.GenerateUnifiedReport) {
+    if ($GenerateComprehensiveReport -or ${global:OrchestratorConfig}.ResultAggregation.GenerateUnifiedReport) {
         Write-Log "INFO" "Generating comprehensive report"
         $reportPath = Generate-ComprehensiveReport -OutputPath $OutputPath -Format $ReportFormat
         Write-Log "SUCCESS" "Comprehensive report generated: $reportPath"
     }
     
     # Generate summary dashboard
-    if ($global:OrchestratorConfig.ResultAggregation.CreateSummaryDashboard) {
+    if (${global:OrchestratorConfig}.ResultAggregation.CreateSummaryDashboard) {
         Write-Log "INFO" "Creating summary dashboard"
         $dashboardPath = Generate-SummaryDashboard -OutputPath $OutputPath
         Write-Log "SUCCESS" "Summary dashboard created: $dashboardPath"
@@ -339,7 +339,7 @@ function Start-Orchestration {
     
     # Record completion event
     $endTime = Get-Date
-    $global:UnifiedResults.Timeline.Add(@{
+    ${global:UnifiedResults}.Timeline.Add(@{
         Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
         Event = "OrchestrationCompleted"
         Duration = ($endTime - $startTime).TotalSeconds
@@ -347,13 +347,13 @@ function Start-Orchestration {
     })
     
     # Update performance metrics
-    $global:UnifiedResults.PerformanceMetrics.TotalDuration = ($endTime - $startTime).TotalSeconds
+    ${global:UnifiedResults}.PerformanceMetrics.TotalDuration = ($endTime - $startTime).TotalSeconds
     
     Write-Log "SUCCESS" "Source digestion orchestration completed successfully"
-    Write-Log "INFO" "Total duration: $($global:UnifiedResults.PerformanceMetrics.TotalDuration) seconds"
-    Write-Log "INFO" "Files processed: $($global:UnifiedResults.AggregatedResults.TotalFiles)"
-    Write-Log "INFO" "Total issues found: $($global:UnifiedResults.AggregatedResults.TotalIssues)"
-    Write-Log "INFO" "Overall risk score: $($global:UnifiedResults.AggregatedResults.RiskScore)"
+    Write-Log "INFO" "Total duration: $(${global:UnifiedResults}.PerformanceMetrics.TotalDuration) seconds"
+    Write-Log "INFO" "Files processed: $(${global:UnifiedResults}.AggregatedResults.TotalFiles)"
+    Write-Log "INFO" "Total issues found: $(${global:UnifiedResults}.AggregatedResults.TotalIssues)"
+    Write-Log "INFO" "Overall risk score: $(${global:UnifiedResults}.AggregatedResults.RiskScore)"
     
     return $true
 }
@@ -374,7 +374,7 @@ function Start-SequentialExecution {
         Write-Log "INFO" "Starting $engine engine"
         
         # Record engine start event
-        $global:UnifiedResults.Timeline.Add(@{
+        ${global:UnifiedResults}.Timeline.Add(@{
             Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
             Event = "EngineStarted"
             Engine = $engine
@@ -401,7 +401,7 @@ function Start-SequentialExecution {
                     # Load results
                     $resultsFile = Join-Path $engineOutput "analysis_results.json"
                     if (Test-Path $resultsFile) {
-                        $global:UnifiedResults.SourceDigestion = Get-Content $resultsFile -Raw | ConvertFrom-Json
+                        ${global:UnifiedResults}.SourceDigestion = Get-Content $resultsFile -Raw | ConvertFrom-Json
                     }
                 }
                 
@@ -426,7 +426,7 @@ function Start-SequentialExecution {
                     # Load results
                     $resultsFile = Join-Path $engineOutput "reverse_engineering_results.json"
                     if (Test-Path $resultsFile) {
-                        $global:UnifiedResults.ReverseEngineering = Get-Content $resultsFile -Raw | ConvertFrom-Json
+                        ${global:UnifiedResults}.ReverseEngineering = Get-Content $resultsFile -Raw | ConvertFrom-Json
                     }
                 }
                 
@@ -450,7 +450,7 @@ function Start-SequentialExecution {
                     # Load results
                     $resultsFile = Join-Path $engineOutput "deployment_audit_results.json"
                     if (Test-Path $resultsFile) {
-                        $global:UnifiedResults.DeploymentAudit = Get-Content $resultsFile -Raw | ConvertFrom-Json
+                        ${global:UnifiedResults}.DeploymentAudit = Get-Content $resultsFile -Raw | ConvertFrom-Json
                     }
                 }
 
@@ -462,8 +462,8 @@ function Start-SequentialExecution {
                         throw "ManifestTracer module not found: $enginePath"
                     }
 
-                    $manifestConfig = $global:OrchestratorConfig.ManifestTracer
-                    $searchPath = if ($manifestConfig.SearchPath) { $manifestConfig.SearchPath } else { $SourcePath }
+                    $manifestConfig = ${global:OrchestratorConfig}.ManifestTracer
+                    $searchPath = $(if ($manifestConfig.SearchPath) { $manifestConfig.SearchPath } else { $SourcePath }
 
                     Import-Module $enginePath -Force
 
@@ -477,7 +477,7 @@ function Start-SequentialExecution {
                         $manifestModule = Get-Module -Name "ManifestTracer"
                         if ($manifestModule) {
                             $registry = $manifestModule.SessionState.PSVariable.GetValue("ManifestRegistry")
-                            $global:UnifiedResults.ManifestTracer = $registry
+                            ${global:UnifiedResults}.ManifestTracer = $registry
                         }
                     }
                 }
@@ -490,7 +490,7 @@ function Start-SequentialExecution {
                         throw "ArchitectureEnhancementEngine module not found: $enginePath"
                     }
 
-                    $archConfig = $global:OrchestratorConfig.ArchitectureEnhancement
+                    $archConfig = ${global:OrchestratorConfig}.ArchitectureEnhancement
                     $engineOutput = Join-Path $engineOutputRoot $archConfig.OutputSubdir
 
                     Import-Module $enginePath -Force
@@ -505,7 +505,7 @@ function Start-SequentialExecution {
                         $archModule = Get-Module -Name "ArchitectureEnhancementEngine"
                         if ($archModule) {
                             $registry = $archModule.SessionState.PSVariable.GetValue("EnhancementRegistry")
-                            $global:UnifiedResults.ArchitectureEnhancement = $registry
+                            ${global:UnifiedResults}.ArchitectureEnhancement = $registry
                         }
                     }
                 }
@@ -515,7 +515,7 @@ function Start-SequentialExecution {
             $engineDuration = ($engineEndTime - $engineStartTime).TotalSeconds
             
             # Record engine completion event
-            $global:UnifiedResults.Timeline.Add(@{
+            ${global:UnifiedResults}.Timeline.Add(@{
                 Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
                 Event = "EngineCompleted"
                 Engine = $engine
@@ -523,7 +523,7 @@ function Start-SequentialExecution {
                 Success = $true
             })
             
-            $global:UnifiedResults.PerformanceMetrics.EngineDurations[$engine] = $engineDuration
+            ${global:UnifiedResults}.PerformanceMetrics.EngineDurations[$engine] = $engineDuration
             
             Write-Log "SUCCESS" "$engine engine completed in $engineDuration seconds"
         }
@@ -532,7 +532,7 @@ function Start-SequentialExecution {
             $engineDuration = ($engineEndTime - $engineStartTime).TotalSeconds
             
             # Record engine failure event
-            $global:UnifiedResults.Timeline.Add(@{
+            ${global:UnifiedResults}.Timeline.Add(@{
                 Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
                 Event = "EngineFailed"
                 Engine = $engine
@@ -542,7 +542,7 @@ function Start-SequentialExecution {
             
             Write-Log "ERROR" "$engine engine failed: $_"
             
-            if (!$global:OrchestratorConfig.ErrorHandling.ContinueOnError) {
+            if (!${global:OrchestratorConfig}.ErrorHandling.ContinueOnError) {
                 return $false
             }
         }
@@ -567,7 +567,7 @@ function Start-ParallelExecution {
         Write-Log "INFO" "Starting $engine engine in parallel"
         
         # Record engine start event
-        $global:UnifiedResults.Timeline.Add(@{
+        ${global:UnifiedResults}.Timeline.Add(@{
             Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
             Event = "EngineStarted"
             Engine = $engine
@@ -669,7 +669,7 @@ function Start-ParallelExecution {
                         }
 
                         $manifestConfig = $orchestratorConfig.ManifestTracer
-                        $searchPath = if ($manifestConfig.SearchPath) { $manifestConfig.SearchPath } else { $sourcePath }
+                        $searchPath = $(if ($manifestConfig.SearchPath) { $manifestConfig.SearchPath } else { $sourcePath }
 
                         Import-Module $enginePath -Force
 
@@ -726,7 +726,7 @@ function Start-ParallelExecution {
             $result.Duration = ($engineEndTime - $engineStartTime).TotalSeconds
             
             return $result
-        } -ArgumentList $engine, $SourcePath, $OutputPath, $PSScriptRoot, $global:OrchestratorConfig
+        } -ArgumentList $engine, $SourcePath, $OutputPath, $PSScriptRoot, ${global:OrchestratorConfig}
         
         $jobs += $job
     }
@@ -737,33 +737,33 @@ function Start-ParallelExecution {
     # Process results
     foreach ($result in $results) {
         # Record engine completion event
-        $global:UnifiedResults.Timeline.Add(@{
+        ${global:UnifiedResults}.Timeline.Add(@{
             Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
-            Event = if ($result.Success) { "EngineCompleted" } else { "EngineFailed" }
+            Event = $(if ($result.Success) { "EngineCompleted" } else { "EngineFailed" }
             Engine = $result.Engine
             Duration = $result.Duration
             Mode = "Parallel"
             Error = $result.Error
         })
         
-        $global:UnifiedResults.PerformanceMetrics.EngineDurations[$result.Engine] = $result.Duration
+        ${global:UnifiedResults}.PerformanceMetrics.EngineDurations[$result.Engine] = $result.Duration
         
         if ($result.Success) {
             Write-Log "SUCCESS" "$($result.Engine) engine completed in $($result.Duration) seconds"
             
             # Store results
             switch ($result.Engine) {
-                "SourceDigestion" { $global:UnifiedResults.SourceDigestion = $result.Results }
-                "ReverseEngineering" { $global:UnifiedResults.ReverseEngineering = $result.Results }
-                "DeploymentAudit" { $global:UnifiedResults.DeploymentAudit = $result.Results }
-                "ManifestTracer" { $global:UnifiedResults.ManifestTracer = $result.Results }
-                "ArchitectureEnhancement" { $global:UnifiedResults.ArchitectureEnhancement = $result.Results }
+                "SourceDigestion" { ${global:UnifiedResults}.SourceDigestion = $result.Results }
+                "ReverseEngineering" { ${global:UnifiedResults}.ReverseEngineering = $result.Results }
+                "DeploymentAudit" { ${global:UnifiedResults}.DeploymentAudit = $result.Results }
+                "ManifestTracer" { ${global:UnifiedResults}.ManifestTracer = $result.Results }
+                "ArchitectureEnhancement" { ${global:UnifiedResults}.ArchitectureEnhancement = $result.Results }
             }
         }
         else {
             Write-Log "ERROR" "$($result.Engine) engine failed: $($result.Error)"
             
-            if (!$global:OrchestratorConfig.ErrorHandling.ContinueOnError) {
+            if (!${global:OrchestratorConfig}.ErrorHandling.ContinueOnError) {
                 Remove-Job $jobs -Force
                 return $false
             }
@@ -794,7 +794,7 @@ function Start-HybridExecution {
         Write-Log "INFO" "Phase 1: Running independent engines in parallel"
         $parallelSuccess = Start-ParallelExecution -Engines $enginesToRunParallel -SourcePath $SourcePath -OutputPath $OutputPath
         
-        if (!$parallelSuccess -and !$global:OrchestratorConfig.ErrorHandling.ContinueOnError) {
+        if (!$parallelSuccess -and !${global:OrchestratorConfig}.ErrorHandling.ContinueOnError) {
             return $false
         }
     }
@@ -819,11 +819,11 @@ function Start-HybridExecution {
 function Aggregate-Results {
     Write-Log "INFO" "Aggregating results from all engines"
     
-    $aggregated = $global:UnifiedResults.AggregatedResults
+    $aggregated = ${global:UnifiedResults}.AggregatedResults
     
     # Aggregate Source Digestion results
-    if ($global:UnifiedResults.SourceDigestion) {
-        $sd = $global:UnifiedResults.SourceDigestion
+    if (${global:UnifiedResults}.SourceDigestion) {
+        $sd = ${global:UnifiedResults}.SourceDigestion
         
         if ($sd.SourceFiles) {
             $aggregated.TotalFiles += $sd.SourceFiles.Count
@@ -850,8 +850,8 @@ function Aggregate-Results {
     }
     
     # Aggregate Reverse Engineering results
-    if ($global:UnifiedResults.ReverseEngineering) {
-        $re = $global:UnifiedResults.ReverseEngineering
+    if (${global:UnifiedResults}.ReverseEngineering) {
+        $re = ${global:UnifiedResults}.ReverseEngineering
         
         if ($re.Statistics) {
             $aggregated.TotalFiles += $re.Statistics.TotalFiles
@@ -873,8 +873,8 @@ function Aggregate-Results {
     }
     
     # Aggregate Deployment Audit results
-    if ($global:UnifiedResults.DeploymentAudit) {
-        $da = $global:UnifiedResults.DeploymentAudit
+    if (${global:UnifiedResults}.DeploymentAudit) {
+        $da = ${global:UnifiedResults}.DeploymentAudit
         
         if ($da.RiskAssessment) {
             $aggregated.RiskScore += $da.RiskAssessment.RiskScore
@@ -894,8 +894,8 @@ function Aggregate-Results {
     }
 
     # Aggregate Manifest Tracer results
-    if ($global:UnifiedResults.ManifestTracer) {
-        $mt = $global:UnifiedResults.ManifestTracer
+    if (${global:UnifiedResults}.ManifestTracer) {
+        $mt = ${global:UnifiedResults}.ManifestTracer
 
         if ($mt.DiscoveredManifests) {
             $aggregated.TotalManifests += $mt.DiscoveredManifests.Count
@@ -910,8 +910,8 @@ function Aggregate-Results {
     }
 
     # Aggregate Architecture Enhancement results
-    if ($global:UnifiedResults.ArchitectureEnhancement) {
-        $ae = $global:UnifiedResults.ArchitectureEnhancement
+    if (${global:UnifiedResults}.ArchitectureEnhancement) {
+        $ae = ${global:UnifiedResults}.ArchitectureEnhancement
 
         if ($ae.EnhancementPlan -and $ae.EnhancementPlan.Enhancements) {
             $aggregated.TotalEnhancements += $ae.EnhancementPlan.Enhancements.Count
@@ -935,10 +935,10 @@ function Aggregate-Results {
 
 # Generate recommendations
 function Generate-Recommendations {
-    $recommendations = $global:UnifiedResults.Recommendations
-    $actionItems = $global:UnifiedResults.ActionItems
+    $recommendations = ${global:UnifiedResults}.Recommendations
+    $actionItems = ${global:UnifiedResults}.ActionItems
     
-    $aggregated = $global:UnifiedResults.AggregatedResults
+    $aggregated = ${global:UnifiedResults}.AggregatedResults
     
     # High-priority recommendations
     if ($aggregated.TotalVulnerabilities -gt 0) {
@@ -1033,50 +1033,50 @@ function Generate-ComprehensiveReport {
         "JSON" {
             # Trim oversized fields to prevent freeze
             $trimmedResults = @{
-                AggregatedResults = $global:UnifiedResults.AggregatedResults
-                Timeline = $global:UnifiedResults.Timeline | Select-Object -First 100
-                PerformanceMetrics = $global:UnifiedResults.PerformanceMetrics
-                Recommendations = $global:UnifiedResults.Recommendations | Select-Object -First 50
-                ActionItems = $global:UnifiedResults.ActionItems | Select-Object -First 50
+                AggregatedResults = ${global:UnifiedResults}.AggregatedResults
+                Timeline = ${global:UnifiedResults}.Timeline | Select-Object -First 100
+                PerformanceMetrics = ${global:UnifiedResults}.PerformanceMetrics
+                Recommendations = ${global:UnifiedResults}.Recommendations | Select-Object -First 50
+                ActionItems = ${global:UnifiedResults}.ActionItems | Select-Object -First 50
             }
             
             # Write per-engine artifacts separately to avoid huge nested serialization
-            if ($global:UnifiedResults.SourceDigestion) {
+            if (${global:UnifiedResults}.SourceDigestion) {
                 try {
                     $enginePath = Join-Path $OutputPath "source_digestion_artifact.json"
-                    $global:UnifiedResults.SourceDigestion | ConvertTo-Json -Depth 5 -Compress | Out-File $enginePath -Encoding UTF8
+                    ${global:UnifiedResults}.SourceDigestion | ConvertTo-Json -Depth 5 -Compress | Out-File $enginePath -Encoding UTF8
                     $trimmedResults.SourceDigestion = "[See source_digestion_artifact.json]"
                 } catch {
                     $trimmedResults.SourceDigestion = "[Serialization error: $($_.Exception.Message)]"
                 }
             }
             
-            if ($global:UnifiedResults.ReverseEngineering) {
+            if (${global:UnifiedResults}.ReverseEngineering) {
                 try {
                     $enginePath = Join-Path $OutputPath "reverse_engineering_artifact.json"
-                    $global:UnifiedResults.ReverseEngineering | ConvertTo-Json -Depth 5 -Compress | Out-File $enginePath -Encoding UTF8
+                    ${global:UnifiedResults}.ReverseEngineering | ConvertTo-Json -Depth 5 -Compress | Out-File $enginePath -Encoding UTF8
                     $trimmedResults.ReverseEngineering = "[See reverse_engineering_artifact.json]"
                 } catch {
                     $trimmedResults.ReverseEngineering = "[Serialization error: $($_.Exception.Message)]"
                 }
             }
             
-            if ($global:UnifiedResults.DeploymentAudit) {
+            if (${global:UnifiedResults}.DeploymentAudit) {
                 try {
                     $enginePath = Join-Path $OutputPath "deployment_audit_artifact.json"
-                    $global:UnifiedResults.DeploymentAudit | ConvertTo-Json -Depth 5 -Compress | Out-File $enginePath -Encoding UTF8
+                    ${global:UnifiedResults}.DeploymentAudit | ConvertTo-Json -Depth 5 -Compress | Out-File $enginePath -Encoding UTF8
                     $trimmedResults.DeploymentAudit = "[See deployment_audit_artifact.json]"
                 } catch {
                     $trimmedResults.DeploymentAudit = "[Serialization error: $($_.Exception.Message)]"
                 }
             }
             
-            if ($global:UnifiedResults.ManifestTracer) {
+            if (${global:UnifiedResults}.ManifestTracer) {
                 try {
                     $enginePath = Join-Path $OutputPath "manifest_tracer_artifact.json"
                     $manifestSummary = @{
-                        TotalManifests = if ($global:UnifiedResults.ManifestTracer.TotalParsed) { $global:UnifiedResults.ManifestTracer.TotalParsed } else { 0 }
-                        ValidationErrors = if ($global:UnifiedResults.ManifestTracer.ValidationErrors) { $global:UnifiedResults.ManifestTracer.ValidationErrors.Count } else { 0 }
+                        TotalManifests = $(if (${global:UnifiedResults}.ManifestTracer.TotalParsed) { ${global:UnifiedResults}.ManifestTracer.TotalParsed } else { 0 }
+                        ValidationErrors = $(if (${global:UnifiedResults}.ManifestTracer.ValidationErrors) { ${global:UnifiedResults}.ManifestTracer.ValidationErrors.Count } else { 0 }
                     }
                     $manifestSummary | ConvertTo-Json -Compress | Out-File $enginePath -Encoding UTF8
                     $trimmedResults.ManifestTracer = "[See manifest_tracer_artifact.json]"
@@ -1085,11 +1085,11 @@ function Generate-ComprehensiveReport {
                 }
             }
             
-            if ($global:UnifiedResults.ArchitectureEnhancement) {
+            if (${global:UnifiedResults}.ArchitectureEnhancement) {
                 try {
                     $enginePath = Join-Path $OutputPath "architecture_enhancement_artifact.json"
                     $archSummary = @{
-                        TotalEnhancements = if ($global:UnifiedResults.ArchitectureEnhancement.TotalEnhancements) { $global:UnifiedResults.ArchitectureEnhancement.TotalEnhancements } else { 0 }
+                        TotalEnhancements = $(if (${global:UnifiedResults}.ArchitectureEnhancement.TotalEnhancements) { ${global:UnifiedResults}.ArchitectureEnhancement.TotalEnhancements } else { 0 }
                     }
                     $archSummary | ConvertTo-Json -Compress | Out-File $enginePath -Encoding UTF8
                     $trimmedResults.ArchitectureEnhancement = "[See architecture_enhancement_artifact.json]"
@@ -1107,7 +1107,7 @@ function Generate-ComprehensiveReport {
                 # Fallback: write minimal summary
                 @{
                     Error = "Report generation failed: $($_.Exception.Message)"
-                    AggregatedResults = $global:UnifiedResults.AggregatedResults
+                    AggregatedResults = ${global:UnifiedResults}.AggregatedResults
                 } | ConvertTo-Json -Compress | Out-File $reportPath -Encoding UTF8
             }
         }
@@ -1162,7 +1162,7 @@ function Generate-HTMLReport {
     <div class="header">
         <h1>Source Digestion Analysis Report</h1>
         <p>Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")</p>
-        <p>Version: $($global:OrchestratorConfig.Version)</p>
+        <p>Version: $(${global:OrchestratorConfig}.Version)</p>
     </div>
 
     <div class="summary">
@@ -1171,27 +1171,27 @@ function Generate-HTMLReport {
         
         <div class="metrics">
             <div class="metric">
-                <div class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalFiles)</div>
+                <div class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalFiles)</div>
                 <div class="metric-label">Files Analyzed</div>
             </div>
             <div class="metric">
-                <div class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalIssues)</div>
+                <div class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalIssues)</div>
                 <div class="metric-label">Total Issues</div>
             </div>
             <div class="metric">
-                <div class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalVulnerabilities)</div>
+                <div class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalVulnerabilities)</div>
                 <div class="metric-label">Vulnerabilities</div>
             </div>
             <div class="metric">
-                <div class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalBottlenecks)</div>
+                <div class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalBottlenecks)</div>
                 <div class="metric-label">Performance Bottlenecks</div>
             </div>
             <div class="metric">
-                <div class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalDependencies)</div>
+                <div class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalDependencies)</div>
                 <div class="metric-label">Dependencies</div>
             </div>
             <div class="metric">
-                <div class="metric-value class="risk-$(Get-RiskLevel -Score $global:UnifiedResults.AggregatedResults.RiskScore).ToLower()">$($global:UnifiedResults.AggregatedResults.RiskScore)</div>
+                <div class="metric-value class="risk-$(Get-RiskLevel -Score ${global:UnifiedResults}.AggregatedResults.RiskScore).ToLower()">$(${global:UnifiedResults}.AggregatedResults.RiskScore)</div>
                 <div class="metric-label">Overall Risk Score</div>
             </div>
         </div>
@@ -1201,7 +1201,7 @@ function Generate-HTMLReport {
         <h2 class="section-title">Recommendations</h2>
 "@
     
-    foreach ($recommendation in $global:UnifiedResults.Recommendations) {
+    foreach ($recommendation in ${global:UnifiedResults}.Recommendations) {
         $html += @"
         <div class="recommendation">$recommendation</div>
 "@
@@ -1214,7 +1214,7 @@ function Generate-HTMLReport {
         <h2 class="section-title">Action Items</h2>
 "@
     
-    foreach ($item in $global:UnifiedResults.ActionItems) {
+    foreach ($item in ${global:UnifiedResults}.ActionItems) {
         $html += @"
         <div class="action-item">
             <strong>[$($item.Priority)] $($item.Category)</strong>: $($item.Description)
@@ -1230,7 +1230,7 @@ function Generate-HTMLReport {
         <h2 class="section-title">Analysis Timeline</h2>
 "@
     
-    foreach ($event in $global:UnifiedResults.Timeline) {
+    foreach ($event in ${global:UnifiedResults}.Timeline) {
         $html += @"
         <div class="timeline-item">
             <div class="timeline-time">$($event.Timestamp)</div>
@@ -1255,8 +1255,8 @@ function Generate-HTMLReport {
     </div>
 
     <div class="footer">
-        <p>Generated by Source Digestion Orchestrator v$($global:OrchestratorConfig.Version)</p>
-        <p>Total Analysis Time: $($global:UnifiedResults.PerformanceMetrics.TotalDuration) seconds</p>
+        <p>Generated by Source Digestion Orchestrator v$(${global:OrchestratorConfig}.Version)</p>
+        <p>Total Analysis Time: $(${global:UnifiedResults}.PerformanceMetrics.TotalDuration) seconds</p>
     </div>
 </body>
 </html>
@@ -1298,15 +1298,15 @@ function Generate-SummaryDashboard {
             <div class="card-title">Project Overview</div>
             <div class="metric">
                 <span class="metric-label">Files Analyzed:</span>
-                <span class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalFiles)</span>
+                <span class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalFiles)</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Total Issues:</span>
-                <span class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalIssues)</span>
+                <span class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalIssues)</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Analysis Duration:</span>
-                <span class="metric-value">$([Math]::Round($global:UnifiedResults.PerformanceMetrics.TotalDuration, 2)) seconds</span>
+                <span class="metric-value">$([Math]::Round(${global:UnifiedResults}.PerformanceMetrics.TotalDuration, 2)) seconds</span>
             </div>
         </div>
 
@@ -1314,11 +1314,11 @@ function Generate-SummaryDashboard {
             <div class="card-title">Security Status</div>
             <div class="metric">
                 <span class="metric-label">Vulnerabilities:</span>
-                <span class="metric-value status-$(if($global:UnifiedResults.AggregatedResults.TotalVulnerabilities -gt 0){'critical'}else{'good'})">$($global:UnifiedResults.AggregatedResults.TotalVulnerabilities)</span>
+                <span class="metric-value status-$(if(${global:UnifiedResults}.AggregatedResults.TotalVulnerabilities -gt 0){'critical'}else{'good'})">$(${global:UnifiedResults}.AggregatedResults.TotalVulnerabilities)</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Risk Score:</span>
-                <span class="metric-value status-$(Get-RiskLevel -Score $global:UnifiedResults.AggregatedResults.RiskScore).ToLower()">$($global:UnifiedResults.AggregatedResults.RiskScore)</span>
+                <span class="metric-value status-$(Get-RiskLevel -Score ${global:UnifiedResults}.AggregatedResults.RiskScore).ToLower()">$(${global:UnifiedResults}.AggregatedResults.RiskScore)</span>
             </div>
         </div>
 
@@ -1326,11 +1326,11 @@ function Generate-SummaryDashboard {
             <div class="card-title">Performance</div>
             <div class="metric">
                 <span class="metric-label">Bottlenecks:</span>
-                <span class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalBottlenecks)</span>
+                <span class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalBottlenecks)</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Dependencies:</span>
-                <span class="metric-value">$($global:UnifiedResults.AggregatedResults.TotalDependencies)</span>
+                <span class="metric-value">$(${global:UnifiedResults}.AggregatedResults.TotalDependencies)</span>
             </div>
         </div>
     </div>
@@ -1348,7 +1348,7 @@ function Generate-SummaryDashboard {
 # Interactive mode
 function Start-InteractiveMode {
     Write-Host "`n=== Source Digestion Orchestrator - Interactive Mode ===" -ForegroundColor Cyan
-    Write-Host "Version: $($global:OrchestratorConfig.Version)" -ForegroundColor Gray
+    Write-Host "Version: $(${global:OrchestratorConfig}.Version)" -ForegroundColor Gray
     
     while ($true) {
         Write-Host "`nOptions:" -ForegroundColor Yellow
@@ -1446,7 +1446,7 @@ elseif ($SourcePath) {
     Start-Orchestration -SourcePath $SourcePath -OutputPath $OutputPath
 }
 else {
-    Write-Host "Source Digestion Orchestrator v$($global:OrchestratorConfig.Version)" -ForegroundColor Cyan
+    Write-Host "Source Digestion Orchestrator v$(${global:OrchestratorConfig}.Version)" -ForegroundColor Cyan
     Write-Host "Use -Interactive for interactive mode or specify -SourcePath" -ForegroundColor Yellow
     Write-Host "Example: .\SourceDigestionOrchestrator.ps1 -SourcePath 'C:\project' -EnableAllEngines -GenerateComprehensiveReport" -ForegroundColor Gray
 }

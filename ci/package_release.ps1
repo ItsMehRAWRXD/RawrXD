@@ -44,7 +44,7 @@ if (Test-Path $BuildDir) {
 }
 
 # Configure with reproducible settings
-$env:SOURCE_DATE_EPOCH = "1714608000"  # Fixed timestamp for reproducibility
+${env:SOURCE_DATE_EPOCH} = "1714608000"  # Fixed timestamp for reproducibility
 
 cmake -B $BuildDir -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
@@ -233,7 +233,7 @@ $manifest = @{
         name = "RawrXD-Win32IDE.exe"
         size = (Get-Item $binaryPath).Length
         sha256 = (Get-FileHash $binaryPath -Algorithm SHA256).Hash
-        signed = if ($CertificateThumbprint) { $true } else { $false }
+        signed = $(if ($CertificateThumbprint) { $true } else { $false }
     }
     archives = @(
         @{
@@ -290,7 +290,7 @@ Write-Host ""
 
 Write-Host "Output Files:" -ForegroundColor Cyan
 Get-ChildItem $OutputDir -Filter "*$Tag*" | ForEach-Object {
-    $size = if ($_.Length -gt 1MB) { 
+    $size = $(if ($_.Length -gt 1MB) { 
         "$([math]::Round($_.Length / 1MB, 2)) MB" 
     } else { 
         "$([math]::Round($_.Length / 1KB, 2)) KB" 

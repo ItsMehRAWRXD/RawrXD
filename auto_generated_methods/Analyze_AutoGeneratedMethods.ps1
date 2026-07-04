@@ -6,12 +6,12 @@ $results = @()
 foreach ($file in $methodFiles) {
     $lines = Get-Content $file.FullName -Raw
     $funcLine = ($lines -split "`n") | Where-Object { $_ -match '^function\s+' } | Select-Object -First 1
-    $funcName = if ($funcLine) { ($funcLine -split '\s+')[1] } else { '(unknown)' }
+    $funcName = $(if ($funcLine) { ($funcLine -split '\s+')[1] } else { '(unknown)' }
 
     $hasTryCatch = ($lines -match 'try\s*{') -and ($lines -match 'catch\s*{')
     $hasStructuredLog = $lines -match 'Write-StructuredLog'
 
-    $health = if ($hasTryCatch -and $hasStructuredLog) { 'healthy' } elseif ($hasTryCatch -or $hasStructuredLog) { 'partial' } else { 'needs-work' }
+    $health = $(if ($hasTryCatch -and $hasStructuredLog) { 'healthy' } elseif ($hasTryCatch -or $hasStructuredLog) { 'partial' } else { 'needs-work' }
 
     $results += [pscustomobject]@{
         Method = $funcName

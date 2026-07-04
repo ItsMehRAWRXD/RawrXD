@@ -1,9 +1,11 @@
 // ============================================================================
 // rawrxd_http_server_main.cpp - HTTP Server Entry Point
 // Minimal wrapper for RawrXD_HttpServer.cpp
+// Phase 7: Added /v1/decode endpoint for llama_decode_internal
 // ============================================================================
 
 #include "RawrXD_HttpServer.h"
+#include "rawrxd_http_decoder_endpoint.h"
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
@@ -74,6 +76,9 @@ void handle_request(SOCKET client) {
         handle_models(client);
     } else if (strcmp(path, "/v1/completions") == 0 && strcmp(method, "POST") == 0) {
         handle_completions(client, body);
+    } else if (strcmp(path, "/v1/decode") == 0 && strcmp(method, "POST") == 0) {
+        // Phase 7: Decode endpoint for splitter->decoder integration
+        HandleDecodeEndpoint(client, body);
     } else {
         send_response(client, 404, "text/plain", "Not Found");
     }
@@ -147,6 +152,7 @@ int main(int argc, char* argv[]) {
     printf("    GET  /health         - Health check\n");
     printf("    GET  /v1/models      - List models\n");
     printf("    POST /v1/completions - Generate text\n");
+    printf("    POST /v1/decode      - Decode tokens (Phase 7)\n");
     printf("=================================================================\n\n");
     
     // Accept connections

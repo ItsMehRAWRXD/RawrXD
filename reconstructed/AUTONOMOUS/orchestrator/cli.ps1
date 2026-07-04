@@ -135,7 +135,7 @@ function Build-Config {
             autoAdjust = $AutoAdjustTimeout.IsPresent
             randomize = $RandomizeTimeout.IsPresent
             randomVariancePercent = 10
-            strategy = if ($AutoAdjustTimeout) { 3 } else { 0 }  # Adaptive or Fixed
+            strategy = $(if ($AutoAdjustTimeout) { 3 } else { 0 }  # Adaptive or Fixed
         }
         maxConcurrentTasks = 4
         maxRetries = 3

@@ -36,9 +36,9 @@ try {
     # Match the entire param block including nested parentheses
     $scriptContent = $scriptContent -replace '(?s)param\s*\([^)]+Mandatory=\$false[^)]+\)\s*\n\s*\[int\]\$MaxIterations[^\n]+\n\s*\[Parameter[^\)]+\)\s*\n\s*\[int\]\$SleepIntervalMs[^\n]+\n\s*\[Parameter[^\)]+\)\s*\n\s*\[switch\]\$WhatIf[^\n]+\n\s*\)\s*', @"
 # Parse arguments from `$args
-`$MaxIterations = if (`$args.Count -gt 0) { `$args[0] } else { 5 }
-`$SleepIntervalMs = if (`$args.Count -gt 1) { `$args[1] } else { 3000 }
-`$WhatIf = if (`$args.Count -gt 2) { `$args[2] } else { `$false }
+`$MaxIterations = $(if (`$args.Count -gt 0) { `$args[0] } else { 5 }
+`$SleepIntervalMs = $(if (`$args.Count -gt 1) { `$args[1] } else { 3000 }
+`$WhatIf = $(if (`$args.Count -gt 2) { `$args[2] } else { `$false }
 
 "@
     
@@ -46,9 +46,9 @@ try {
     if ($scriptContent -notmatch 'Parse arguments from') {
         $argsParsing = @"
 # Parse arguments from `$args
-`$MaxIterations = if (`$args.Count -gt 0) { `$args[0] } else { 5 }
-`$SleepIntervalMs = if (`$args.Count -gt 1) { `$args[1] } else { 3000 }
-`$WhatIf = if (`$args.Count -gt 2) { `$args[2] } else { `$false }
+`$MaxIterations = $(if (`$args.Count -gt 0) { `$args[0] } else { 5 }
+`$SleepIntervalMs = $(if (`$args.Count -gt 1) { `$args[1] } else { 3000 }
+`$WhatIf = $(if (`$args.Count -gt 2) { `$args[2] } else { `$false }
 
 "@
         $scriptContent = $argsParsing + $scriptContent

@@ -12,7 +12,7 @@ function Show-ErrorNotification {
     
     try {
         # Don't show popup if form is not available or in stealth mode
-        if (-not $form -or $script:SecurityConfig.StealthMode) {
+        if (-not $form -or ${script:SecurityConfig}.StealthMode) {
             return
         }
         
@@ -108,7 +108,7 @@ if ($content -match 'EnablePopupNotifications\s*=\s*\$true') {
 }
 elseif ($content -notmatch 'EnablePopupNotifications') {
   # Add the setting if it doesn't exist
-  $content = $content -replace '(\$script:ErrorNotificationConfig = @{)', "`$1`n    EnablePopupNotifications = `$false"
+  $content = $content -replace '(\${script:ErrorNotificationConfig} = @{)', "`$1`n    EnablePopupNotifications = `$false"
   Write-Host "✅ Added EnablePopupNotifications setting" -ForegroundColor Green
 }
 

@@ -24,8 +24,8 @@ function Run-Variant([string]$Name, [string[]]$Flags) {
     Write-Host "exit=$($p.ExitCode) out=$outFile err=$errFile"
 }
 
-$env:RAWRXD_SMOKE_CRASH_TRIAGE_LOG = '1'
-$env:RAWRXD_SMOKE_CRASH_TRIAGE_BREAK = '0'
+${env:RAWRXD_SMOKE_CRASH_TRIAGE_LOG} = '1'
+${env:RAWRXD_SMOKE_CRASH_TRIAGE_BREAK} = '0'
 
 Run-Variant -Name 'baseline' -Flags @()
 Run-Variant -Name 'no_stream' -Flags @('--no-stream')

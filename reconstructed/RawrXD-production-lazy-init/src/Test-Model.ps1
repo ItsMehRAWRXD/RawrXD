@@ -15,7 +15,7 @@ function Resolve-ModelPath {
     # 1b) If provided but missing and Force is set, still return it
     if ($Path -and $Force) { return $Path }
     # 2) If env var set
-    if ($env:BIGDADDYG_PATH -and (Test-Path $env:BIGDADDYG_PATH)) { return (Get-Item $env:BIGDADDYG_PATH).FullName }
+    if (${env:BIGDADDYG_PATH} -and (Test-Path ${env:BIGDADDYG_PATH})) { return (Get-Item ${env:BIGDADDYG_PATH}).FullName }
     # 3) Search all drives (file system only) for *bigdaddy*.gguf (depth-unbounded, may take time)
     Write-Host "Searching for *bigdaddy*.gguf across drives..." -ForegroundColor Yellow
     $drives = Get-PSDrive -PSProvider FileSystem
@@ -34,7 +34,7 @@ if (-not $resolved) {
     exit 1
 }
 
-$env:BIGDADDYG_PATH = $resolved
+${env:BIGDADDYG_PATH} = $resolved
 Write-Host "Model resolved: $resolved" -ForegroundColor Green
 if (Test-Path $resolved) {
     Write-Host "Size: $([math]::Round((Get-Item $resolved).Length/1GB,2)) GB" -ForegroundColor Gray

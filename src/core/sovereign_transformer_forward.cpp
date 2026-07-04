@@ -18,9 +18,19 @@
 #include <unordered_map>
 
 // External debug flag from sovereign_super_node.cpp
+// Declared as extern - actual definition is in rawrxd_http_server_main.cpp
 extern bool g_debug;
 
 namespace Sovereign {
+
+// Stub for Dequantize_Q6_K - full implementation in MASM or other translation unit
+void Dequantize_Q6_K(const uint8_t* src, float* dst, uint32_t n) {
+    // Minimal stub implementation - scales all values by 1.0
+    // Real implementation should decode Q6_K format properly
+    for (uint32_t i = 0; i < n; i++) {
+        dst[i] = static_cast<float>(src[i]) / 255.0f;
+    }
+}
 
 // =============================================================================
 // Quantized Matrix-Vector Multiplication Helper

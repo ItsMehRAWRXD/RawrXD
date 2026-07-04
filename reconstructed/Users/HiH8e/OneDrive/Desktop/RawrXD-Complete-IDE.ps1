@@ -24,22 +24,22 @@
 # ============================================
 
 # Script-level variables
-$script:ProjectRoot = $PSScriptRoot
-$script:EmergencyLogPath = Join-Path $PSScriptRoot "logs"
-$script:ExtensionsPath = Join-Path $PSScriptRoot "extensions"
-$script:SettingsPath = Join-Path $PSScriptRoot "settings.json"
-$script:InstalledExtensions = @()
-$script:OpenTabs = @()
-$script:CurrentTabIndex = -1
-$script:FileExplorerNodes = @()
-$script:AgentChatHistory = @()
+${script:ProjectRoot} = $PSScriptRoot
+${script:EmergencyLogPath} = Join-Path $PSScriptRoot "logs"
+${script:ExtensionsPath} = Join-Path $PSScriptRoot "extensions"
+${script:SettingsPath} = Join-Path $PSScriptRoot "settings.json"
+${script:InstalledExtensions} = @()
+${script:OpenTabs} = @()
+${script:CurrentTabIndex} = -1
+${script:FileExplorerNodes} = @()
+${script:AgentChatHistory} = @()
 
 # Create directories if they don't exist
-if (-not (Test-Path $script:EmergencyLogPath)) {
-    New-Item -ItemType Directory -Path $script:EmergencyLogPath -Force | Out-Null
+if (-not (Test-Path ${script:EmergencyLogPath})) {
+    New-Item -ItemType Directory -Path ${script:EmergencyLogPath} -Force | Out-Null
 }
-if (-not (Test-Path $script:ExtensionsPath)) {
-    New-Item -ItemType Directory -Path $script:ExtensionsPath -Force | Out-Null
+if (-not (Test-Path ${script:ExtensionsPath})) {
+    New-Item -ItemType Directory -Path ${script:ExtensionsPath} -Force | Out-Null
 }
 
 # Load model loader
@@ -60,11 +60,11 @@ function Initialize-CompleteIDE {
     Add-Type -AssemblyName System.Drawing
     
     # Create main form
-    $script:MainForm = New-Object System.Windows.Forms.Form
-    $script:MainForm.Text = "RawrXD Complete IDE - Next-Generation Editor"
-    $script:MainForm.Size = New-Object System.Drawing.Size(1400, 900)
-    $script:MainForm.StartPosition = "CenterScreen"
-    $script:MainForm.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
+    ${script:MainForm} = New-Object System.Windows.Forms.Form
+    ${script:MainForm}.Text = "RawrXD Complete IDE - Next-Generation Editor"
+    ${script:MainForm}.Size = New-Object System.Drawing.Size(1400, 900)
+    ${script:MainForm}.StartPosition = "CenterScreen"
+    ${script:MainForm}.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
     
     # Create menu strip
     $menuStrip = New-Object System.Windows.Forms.MenuStrip
@@ -113,7 +113,7 @@ function Initialize-CompleteIDE {
     $extMenu.DropDownItems.AddRange(@($marketplaceItem, $installedItem))
     
     $menuStrip.Items.AddRange(@($fileMenu, $editMenu, $viewMenu, $extMenu))
-    $script:MainForm.Controls.Add($menuStrip)
+    ${script:MainForm}.Controls.Add($menuStrip)
     
     # Create main split container
     $mainSplit = New-Object System.Windows.Forms.SplitContainer
@@ -127,19 +127,19 @@ function Initialize-CompleteIDE {
     $leftPanel.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
     
     # File Explorer
-    $script:FileExplorer = New-Object System.Windows.Forms.TreeView
-    $script:FileExplorer.Dock = "Fill"
-    $script:FileExplorer.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
-    $script:FileExplorer.ForeColor = [System.Drawing.Color]::White
-    $script:FileExplorer.Add_NodeMouseDoubleClick({ Open-FileFromExplorer $_.Node })
+    ${script:FileExplorer} = New-Object System.Windows.Forms.TreeView
+    ${script:FileExplorer}.Dock = "Fill"
+    ${script:FileExplorer}.BackColor = [System.Drawing.Color]::FromArgb(37, 37, 38)
+    ${script:FileExplorer}.ForeColor = [System.Drawing.Color]::White
+    ${script:FileExplorer}.Add_NodeMouseDoubleClick({ Open-FileFromExplorer $_.Node })
     
     # Model Loader Panel
-    $script:ModelLoaderPanel = Initialize-ModelLoaderGUI
-    $script:ModelLoaderPanel.Dock = "Bottom"
-    $script:ModelLoaderPanel.Height = 200
+    ${script:ModelLoaderPanel} = Initialize-ModelLoaderGUI
+    ${script:ModelLoaderPanel}.Dock = "Bottom"
+    ${script:ModelLoaderPanel}.Height = 200
     
-    $leftPanel.Controls.Add($script:FileExplorer)
-    $leftPanel.Controls.Add($script:ModelLoaderPanel)
+    $leftPanel.Controls.Add(${script:FileExplorer})
+    $leftPanel.Controls.Add(${script:ModelLoaderPanel})
     $mainSplit.Panel1.Controls.Add($leftPanel)
     
     # Right panel - Editor and Bottom panels
@@ -154,14 +154,14 @@ function Initialize-CompleteIDE {
     $editorPanel.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
     
     # Tab control for editor
-    $script:EditorTabs = New-Object System.Windows.Forms.TabControl
-    $script:EditorTabs.Dock = "Fill"
-    $script:EditorTabs.Appearance = "FlatButtons"
-    $script:EditorTabs.SizeMode = "Fixed"
-    $script:EditorTabs.ItemSize = New-Object System.Drawing.Size(150, 25)
+    ${script:EditorTabs} = New-Object System.Windows.Forms.TabControl
+    ${script:EditorTabs}.Dock = "Fill"
+    ${script:EditorTabs}.Appearance = "FlatButtons"
+    ${script:EditorTabs}.SizeMode = "Fixed"
+    ${script:EditorTabs}.ItemSize = New-Object System.Drawing.Size(150, 25)
     
     # Add close button to tabs
-    $script:EditorTabs.Add_MouseUp({
+    ${script:EditorTabs}.Add_MouseUp({
         param($sender, $e)
         if ($e.Button -eq [System.Windows.Forms.MouseButtons]::Middle) {
             # Middle-click to close tab
@@ -175,7 +175,7 @@ function Initialize-CompleteIDE {
         }
     })
     
-    $editorPanel.Controls.Add($script:EditorTabs)
+    $editorPanel.Controls.Add(${script:EditorTabs})
     $rightSplit.Panel1.Controls.Add($editorPanel)
     
     # Bottom panel (Terminal/Browser/Agent Chat)
@@ -184,17 +184,17 @@ function Initialize-CompleteIDE {
     $bottomPanel.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 48)
     
     # Tab control for bottom panel
-    $script:BottomTabs = New-Object System.Windows.Forms.TabControl
-    $script:BottomTabs.Dock = "Fill"
+    ${script:BottomTabs} = New-Object System.Windows.Forms.TabControl
+    ${script:BottomTabs}.Dock = "Fill"
     
     # Terminal tab
     $terminalTab = New-Object System.Windows.Forms.TabPage("Terminal")
-    $script:Terminal = New-Object System.Windows.Forms.RichTextBox
-    $script:Terminal.Dock = "Fill"
-    $script:Terminal.BackColor = [System.Drawing.Color]::Black
-    $script:Terminal.ForeColor = [System.Drawing.Color]::White
-    $script:Terminal.Font = New-Object System.Drawing.Font("Consolas", 10)
-    $terminalTab.Controls.Add($script:Terminal)
+    ${script:Terminal} = New-Object System.Windows.Forms.RichTextBox
+    ${script:Terminal}.Dock = "Fill"
+    ${script:Terminal}.BackColor = [System.Drawing.Color]::Black
+    ${script:Terminal}.ForeColor = [System.Drawing.Color]::White
+    ${script:Terminal}.Font = New-Object System.Drawing.Font("Consolas", 10)
+    $terminalTab.Controls.Add(${script:Terminal})
     
     # Browser tab
     $browserTab = New-Object System.Windows.Forms.TabPage("Browser")
@@ -209,12 +209,12 @@ function Initialize-CompleteIDE {
     $agentTab = New-Object System.Windows.Forms.TabPage("Agent Chat")
     Initialize-AgentChatPanel -Parent $agentTab
     
-    $script:BottomTabs.TabPages.AddRange(@($terminalTab, $browserTab, $agentTab))
-    $bottomPanel.Controls.Add($script:BottomTabs)
+    ${script:BottomTabs}.TabPages.AddRange(@($terminalTab, $browserTab, $agentTab))
+    $bottomPanel.Controls.Add(${script:BottomTabs})
     $rightSplit.Panel2.Controls.Add($bottomPanel)
     
     $mainSplit.Panel2.Controls.Add($rightSplit)
-    $script:MainForm.Controls.Add($mainSplit)
+    ${script:MainForm}.Controls.Add($mainSplit)
     
     # Status strip (replacement for StatusBar)
     $statusStrip = New-Object System.Windows.Forms.StatusStrip
@@ -226,15 +226,15 @@ function Initialize-CompleteIDE {
     $statusLabel.ForeColor = [System.Drawing.Color]::White
     $statusStrip.Items.Add($statusLabel)
     
-    $script:MainForm.Controls.Add($statusStrip)
+    ${script:MainForm}.Controls.Add($statusStrip)
     
     # Initialize components
     Initialize-FileExplorer
     Load-InstalledExtensions
     
     # Show the form
-    $script:MainForm.Add_Shown({$script:MainForm.Activate()})
-    $script:MainForm.ShowDialog() | Out-Null
+    ${script:MainForm}.Add_Shown({${script:MainForm}.Activate()})
+    ${script:MainForm}.ShowDialog() | Out-Null
 }
 
 function Initialize-FileExplorer {
@@ -245,7 +245,7 @@ function Initialize-FileExplorer {
     
     Write-Host "📁 Initializing File Explorer..." -ForegroundColor Cyan
     
-    $script:FileExplorer.Nodes.Clear()
+    ${script:FileExplorer}.Nodes.Clear()
     
     # Add drives
     $drives = [System.IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -or $_.DriveType -eq 'Removable' }
@@ -259,11 +259,11 @@ function Initialize-FileExplorer {
         $dummyNode.Tag = "DUMMY"
         $driveNode.Nodes.Add($dummyNode) | Out-Null
         
-        $script:FileExplorer.Nodes.Add($driveNode) | Out-Null
+        ${script:FileExplorer}.Nodes.Add($driveNode) | Out-Null
     }
     
     # Add expand event to load directories
-    $script:FileExplorer.Add_BeforeExpand({
+    ${script:FileExplorer}.Add_BeforeExpand({
         param($sender, $e)
         
         $node = $e.Node
@@ -321,11 +321,11 @@ function Open-FileInTab {
     
     try {
         # Check if file is already open
-        $existingTab = $script:OpenTabs | Where-Object { $_.FilePath -eq $FilePath } | Select-Object -First 1
+        $existingTab = ${script:OpenTabs} | Where-Object { $_.FilePath -eq $FilePath } | Select-Object -First 1
         
         if ($existingTab) {
             # Switch to existing tab
-            $script:EditorTabs.SelectedIndex = $existingTab.TabIndex
+            ${script:EditorTabs}.SelectedIndex = $existingTab.TabIndex
             return
         }
         
@@ -353,13 +353,13 @@ function Open-FileInTab {
         $closeButton.Location = New-Object System.Drawing.Point($tabPage.Width - 25, 5)
         $closeButton.Anchor = "Top,Right"
         $closeButton.Add_Click({
-            Close-Tab -TabIndex $script:EditorTabs.SelectedIndex
+            Close-Tab -TabIndex ${script:EditorTabs}.SelectedIndex
         })
         $tabPage.Controls.Add($closeButton)
         
         # Add tab
-        $tabIndex = $script:EditorTabs.TabPages.Add($tabPage)
-        $script:EditorTabs.SelectedIndex = $tabIndex
+        $tabIndex = ${script:EditorTabs}.TabPages.Add($tabPage)
+        ${script:EditorTabs}.SelectedIndex = $tabIndex
         
         # Store tab info
         $tabInfo = @{
@@ -368,8 +368,8 @@ function Open-FileInTab {
             Editor = $editor
             TabPage = $tabPage
         }
-        $script:OpenTabs += $tabInfo
-        $script:CurrentTabIndex = $tabIndex
+        ${script:OpenTabs} += $tabInfo
+        ${script:CurrentTabIndex} = $tabIndex
         
         Write-Host "📂 Opened file in tab: $FilePath" -ForegroundColor Green
     }
@@ -381,20 +381,20 @@ function Open-FileInTab {
 function Close-Tab {
     param([int]$TabIndex)
     
-    if ($TabIndex -ge 0 -and $TabIndex -lt $script:EditorTabs.TabCount) {
-        $tabInfo = $script:OpenTabs | Where-Object { $_.TabIndex -eq $TabIndex } | Select-Object -First 1
+    if ($TabIndex -ge 0 -and $TabIndex -lt ${script:EditorTabs}.TabCount) {
+        $tabInfo = ${script:OpenTabs} | Where-Object { $_.TabIndex -eq $TabIndex } | Select-Object -First 1
         
         if ($tabInfo) {
             # Remove from open tabs list
-            $script:OpenTabs = $script:OpenTabs | Where-Object { $_.TabIndex -ne $TabIndex }
+            ${script:OpenTabs} = ${script:OpenTabs} | Where-Object { $_.TabIndex -ne $TabIndex }
             
             # Remove tab page
-            $script:EditorTabs.TabPages.RemoveAt($TabIndex)
+            ${script:EditorTabs}.TabPages.RemoveAt($TabIndex)
             
             # Update tab indices
-            for ($i = 0; $i -lt $script:OpenTabs.Count; $i++) {
-                if ($script:OpenTabs[$i].TabIndex -gt $TabIndex) {
-                    $script:OpenTabs[$i].TabIndex--
+            for ($i = 0; $i -lt ${script:OpenTabs}.Count; $i++) {
+                if (${script:OpenTabs}[$i].TabIndex -gt $TabIndex) {
+                    ${script:OpenTabs}[$i].TabIndex--
                 }
             }
             
@@ -411,12 +411,12 @@ function Initialize-AgentChatPanel {
     $chatPanel.BackColor = [System.Drawing.Color]::FromArgb(40, 40, 40)
     
     # Chat history
-    $script:ChatHistory = New-Object System.Windows.Forms.RichTextBox
-    $script:ChatHistory.Dock = "Top"
-    $script:ChatHistory.Height = 300
-    $script:ChatHistory.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
-    $script:ChatHistory.ForeColor = [System.Drawing.Color]::White
-    $script:ChatHistory.ReadOnly = $true
+    ${script:ChatHistory} = New-Object System.Windows.Forms.RichTextBox
+    ${script:ChatHistory}.Dock = "Top"
+    ${script:ChatHistory}.Height = 300
+    ${script:ChatHistory}.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+    ${script:ChatHistory}.ForeColor = [System.Drawing.Color]::White
+    ${script:ChatHistory}.ReadOnly = $true
     
     # Input area
     $inputPanel = New-Object System.Windows.Forms.Panel
@@ -444,7 +444,7 @@ function Initialize-AgentChatPanel {
     $inputPanel.Controls.Add($chatInput)
     $inputPanel.Controls.Add($sendButton)
     
-    $chatPanel.Controls.Add($script:ChatHistory)
+    $chatPanel.Controls.Add(${script:ChatHistory})
     $chatPanel.Controls.Add($inputPanel)
     
     $Parent.Controls.Add($chatPanel)
@@ -469,10 +469,10 @@ function Add-ChatMessage {
     $timestamp = Get-Date -Format "HH:mm:ss"
     $formattedMessage = "[$timestamp] $Sender`: $Message`n"
     
-    $script:ChatHistory.SelectionStart = $script:ChatHistory.TextLength
-    $script:ChatHistory.SelectionColor = [System.Drawing.Color]::FromName($Color)
-    $script:ChatHistory.AppendText($formattedMessage)
-    $script:ChatHistory.ScrollToCaret()
+    ${script:ChatHistory}.SelectionStart = ${script:ChatHistory}.TextLength
+    ${script:ChatHistory}.SelectionColor = [System.Drawing.Color]::FromName($Color)
+    ${script:ChatHistory}.AppendText($formattedMessage)
+    ${script:ChatHistory}.ScrollToCaret()
 }
 
 # ============================================
@@ -492,8 +492,8 @@ function Open-File {
 }
 
 function Save-File {
-    if ($script:CurrentTabIndex -ge 0) {
-        $tabInfo = $script:OpenTabs | Where-Object { $_.TabIndex -eq $script:CurrentTabIndex } | Select-Object -First 1
+    if (${script:CurrentTabIndex} -ge 0) {
+        $tabInfo = ${script:OpenTabs} | Where-Object { $_.TabIndex -eq ${script:CurrentTabIndex} } | Select-Object -First 1
         
         if ($tabInfo) {
             $content = $tabInfo.Editor.Text
@@ -519,7 +519,7 @@ function Save-File {
 }
 
 function Save-AllFiles {
-    foreach ($tabInfo in $script:OpenTabs) {
+    foreach ($tabInfo in ${script:OpenTabs}) {
         if ($tabInfo.FilePath -ne "Untitled.txt") {
             $content = $tabInfo.Editor.Text
             [System.IO.File]::WriteAllText($tabInfo.FilePath, $content, [System.Text.Encoding]::UTF8)
@@ -533,23 +533,23 @@ function Save-AllFiles {
 # ============================================
 
 function Toggle-FileExplorer {
-    $script:FileExplorer.Visible = !$script:FileExplorer.Visible
+    ${script:FileExplorer}.Visible = !${script:FileExplorer}.Visible
 }
 
 function Toggle-Terminal {
-    $script:BottomTabs.SelectedIndex = 0
+    ${script:BottomTabs}.SelectedIndex = 0
 }
 
 function Toggle-Browser {
-    $script:BottomTabs.SelectedIndex = 1
+    ${script:BottomTabs}.SelectedIndex = 1
 }
 
 function Toggle-AgentChat {
-    $script:BottomTabs.SelectedIndex = 2
+    ${script:BottomTabs}.SelectedIndex = 2
 }
 
 function Toggle-ModelLoader {
-    $script:ModelLoaderPanel.Visible = !$script:ModelLoaderPanel.Visible
+    ${script:ModelLoaderPanel}.Visible = !${script:ModelLoaderPanel}.Visible
 }
 
 # ============================================
@@ -568,9 +568,9 @@ function Show-InstalledExtensions {
 
 function Load-InstalledExtensions {
     # Load installed extensions
-    $installedPath = Join-Path $script:ExtensionsPath "installed.json"
+    $installedPath = Join-Path ${script:ExtensionsPath} "installed.json"
     if (Test-Path $installedPath) {
-        $script:InstalledExtensions = Get-Content $installedPath | ConvertFrom-Json
+        ${script:InstalledExtensions} = Get-Content $installedPath | ConvertFrom-Json
     }
 }
 

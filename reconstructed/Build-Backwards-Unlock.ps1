@@ -95,8 +95,8 @@ EXPORT void Camellia256_Decrypt(const uint8_t* in, uint8_t* out, const uint8_t* 
 # compile inline DLL
 $cl = (Get-Command cl.exe -ErrorAction SilentlyContinue).Source
 if (-not $cl) {
-    Invoke-WebRequest -Uri https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/LLVM-17.0.6-win64.exe -OutFile $env:TEMP\clang.exe
-    Start-Process -Wait $env:TEMP\clang.exe -ArgumentList "/S /D=$OutDir\clang"
+    Invoke-WebRequest -Uri https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/LLVM-17.0.6-win64.exe -OutFile ${env:TEMP}\clang.exe
+    Start-Process -Wait ${env:TEMP}\clang.exe -ArgumentList "/S /D=$OutDir\clang"
     $cl = "$OutDir\clang\bin\clang-cl.exe"
 }
 $camelliaC | Out-File "$OutDir\camellia.c" -Encoding utf8

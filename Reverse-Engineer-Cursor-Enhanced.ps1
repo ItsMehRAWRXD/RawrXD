@@ -122,8 +122,8 @@ function Convert-ToJsonSafeRecursive {
         }
     }
     
-    $indent = if ($Compress) { "" } else { "  " * $CurrentDepth }
-    $newline = if ($Compress) { "" } else { "`n" }
+    $indent = $(if ($Compress) { "" } else { "  " * $CurrentDepth }
+    $newline = $(if ($Compress) { "" } else { "`n" }
     
     if ($null -eq $Object) {
         return "null"
@@ -227,12 +227,12 @@ function Find-CursorInstallation {
     Write-ColorOutput "=== LOCATING CURSOR INSTALLATION ===" "Header"
     
     $possiblePaths = @(
-        "$env:LOCALAPPDATA\Programs\cursor",
-        "$env:APPDATA\Cursor",
-        "$env:ProgramFiles\Cursor",
-        "$env:ProgramFiles(x86)\Cursor",
-        "$env:USERPROFILE\AppData\Local\cursor",
-        "$env:USERPROFILE\AppData\Roaming\cursor"
+        "${env:LOCALAPPDATA}\Programs\cursor",
+        "${env:APPDATA}\Cursor",
+        "${env:ProgramFiles}\Cursor",
+        "${env:ProgramFiles}(x86)\Cursor",
+        "${env:USERPROFILE}\AppData\Local\cursor",
+        "${env:USERPROFILE}\AppData\Roaming\cursor"
     )
     
     $cursorExe = $null
@@ -430,9 +430,9 @@ function Extract-APIEndpoints {
     
     # Try to extract from configuration files
     $configFiles = @(
-        "$env:APPDATA\Cursor\config.json",
-        "$env:APPDATA\Cursor\settings.json",
-        "$env:USERPROFILE\.cursor\config.json"
+        "${env:APPDATA}\Cursor\config.json",
+        "${env:APPDATA}\Cursor\settings.json",
+        "${env:USERPROFILE}\.cursor\config.json"
     )
     
     $configCount = 0
@@ -498,10 +498,10 @@ function Analyze-CursorConfiguration {
     
     # Common Cursor configuration locations
     $configLocations = @(
-        "$env:APPDATA\Cursor",
-        "$env:USERPROFILE\.cursor",
-        "$env:USERPROFILE\.vscode",  # Cursor is VS Code based
-        "$env:APPDATA\Code"  # VS Code app data
+        "${env:APPDATA}\Cursor",
+        "${env:USERPROFILE}\.cursor",
+        "${env:USERPROFILE}\.vscode",  # Cursor is VS Code based
+        "${env:APPDATA}\Code"  # VS Code app data
     )
     
     $locationCount = 0
@@ -618,10 +618,10 @@ function Extract-PluginsAndExtensions {
     
     # Look for extensions in common locations
     $extensionLocations = @(
-        "$env:USERPROFILE\.cursor\extensions",
-        "$env:USERPROFILE\.vscode\extensions",
-        "$env:APPDATA\Cursor\extensions",
-        "$env:APPDATA\Code\extensions"
+        "${env:USERPROFILE}\.cursor\extensions",
+        "${env:USERPROFILE}\.vscode\extensions",
+        "${env:APPDATA}\Cursor\extensions",
+        "${env:APPDATA}\Code\extensions"
     )
     
     $locationCount = 0

@@ -3,8 +3,8 @@ $cl = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\M
 $inc = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include"
 $winsdk = "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0"
 
-$env:INCLUDE = "$inc;$winsdk\ucrt;$winsdk\um;$winsdk\shared"
-$env:LIB = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64"
+${env:INCLUDE} = "$inc;$winsdk\ucrt;$winsdk\um;$winsdk\shared"
+${env:LIB} = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64"
 
 Write-Host "Building scalar version..." -ForegroundColor Cyan
 & $cl /O2 /TC microbench.c /Fe:bench_scalar.exe /link 2>&1 | Out-Null

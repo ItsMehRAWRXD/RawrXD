@@ -63,15 +63,15 @@ function Initialize-Toolchain {
     Remove-Item $tempFile
 
     # Verify tools
-    $script:Ml64 = Get-Command ml64.exe -ErrorAction Stop
-    $script:Cl = Get-Command cl.exe -ErrorAction Stop
-    $script:Link = Get-Command link.exe -ErrorAction Stop
-    $script:Lib = Get-Command lib.exe -ErrorAction Stop
+    ${script:Ml64} = Get-Command ml64.exe -ErrorAction Stop
+    ${script:Cl} = Get-Command cl.exe -ErrorAction Stop
+    ${script:Link} = Get-Command link.exe -ErrorAction Stop
+    ${script:Lib} = Get-Command lib.exe -ErrorAction Stop
 
     # Ensure Windows SDK include/lib paths are complete
     # vcvars sometimes misses um/shared includes on BuildTools installs
-    $sdkDir = $env:WindowsSdkDir
-    $sdkVer = $env:WindowsSDKVersion
+    $sdkDir = ${env:WindowsSdkDir}
+    $sdkVer = ${env:WindowsSDKVersion}
     if (-not $sdkDir) {
         $sdkDir = "C:\Program Files (x86)\Windows Kits\10\"
     }
@@ -95,22 +95,22 @@ function Initialize-Toolchain {
         $sdkLibBase = "${sdkDir}lib\${sdkVer}"
         foreach ($sub in @("um", "shared", "ucrt", "winrt")) {
             $p = "${sdkIncBase}${sub}"
-            if ((Test-Path $p) -and ($env:INCLUDE -notmatch [regex]::Escape($sub))) {
-                $env:INCLUDE += ";$p"
+            if ((Test-Path $p) -and (${env:INCLUDE} -notmatch [regex]::Escape($sub))) {
+                ${env:INCLUDE} += ";$p"
                 Write-Verbose "[SDK] Added include: $p"
             }
         }
         $umLib = "${sdkLibBase}um\x64"
-        if ((Test-Path $umLib) -and ($env:LIB -notmatch "um\\x64")) {
-            $env:LIB += ";$umLib"
+        if ((Test-Path $umLib) -and (${env:LIB} -notmatch "um\\x64")) {
+            ${env:LIB} += ";$umLib"
             Write-Verbose "[SDK] Added lib: $umLib"
         }
     }
 
     Write-Host "[+] Toolchain ready:" -ForegroundColor Green
-    Write-Host "    ml64: $($script:Ml64.Source)"
-    Write-Host "    cl:   $($script:Cl.Source)"
-    Write-Host "    link: $($script:Link.Source)"
+    Write-Host "    ml64: $(${script:Ml64}.Source)"
+    Write-Host "    cl:   $(${script:Cl}.Source)"
+    Write-Host "    link: $(${script:Link}.Source)"
 }
 
 # =============================================================================
@@ -127,7 +127,7 @@ class SourceFile {
 
 # Legacy MASM files using MASM32 syntax (INVOKE, .386/.model, \masm32\include\)
 # These are incompatible with ml64.exe and must be excluded until ported
-$script:MasmExcludeList = @(
+${script:MasmExcludeList} = @(
     "omega_simple",
     "os_explorer_interceptor",
     "os_explorer_interceptor_simple",
@@ -207,7 +207,7 @@ function Get-SourceFiles {
         
         # MASM files (skip legacy exclusions + auto-detect incompatible syntax)
         Get-ChildItem -Path $dir -Recurse -Filter "*.asm" | ForEach-Object {
-            if ($script:MasmExcludeList -contains $_.BaseName) {
+            if (${script:MasmExcludeList} -contains $_.BaseName) {
                 Write-Verbose "[SKIP] Excluded: $($_.FullName)"
                 return
             }
@@ -216,7 +216,7 @@ function Get-SourceFiles {
                 return
             }
             $objName = Get-UniqueObjName -FilePath $_.FullName -BaseDir $resolvedDir
-            $obj = Join-Path $script:ObjDirAbs $objName
+            $obj = Join-Path ${script:ObjDirAbs} $objName
             $files += [SourceFile]@{
                 Path = $_.FullName
                 Type = "ASM"
@@ -229,7 +229,7 @@ function Get-SourceFiles {
         # C++ files
         Get-ChildItem -Path $dir -Recurse -Include "*.cpp","*.cxx" | ForEach-Object {
             $objName = Get-UniqueObjName -FilePath $_.FullName -BaseDir $resolvedDir
-            $obj = Join-Path $script:ObjDirAbs $objName
+            $obj = Join-Path ${script:ObjDirAbs} $objName
             $files += [SourceFile]@{
                 Path = $_.FullName
                 Type = "CPP"
@@ -289,8 +289,8 @@ function Test-IncrementalBuild {
 # 3. COMPILATION FUNCTIONS
 # =============================================================================
 
-$script:BuildLog = @()
-$script:ErrorCount = 0
+${script:BuildLog} = @()
+${script:ErrorCount} = 0
 
 function Invoke-MasmCompile {
     param([SourceFile]$File)
@@ -299,7 +299,7 @@ function Invoke-MasmCompile {
     Write-Host $log -ForegroundColor Yellow -NoNewline
     
     # Resolve obj path to absolute
-    $absObj = Join-Path $script:ObjDirAbs (Split-Path $File.ObjPath -Leaf)
+    $absObj = Join-Path ${script:ObjDirAbs} (Split-Path $File.ObjPath -Leaf)
     
     # MASM flags — NOTE: /Od /Zd /Zi are C++ flags only, NOT valid for ml64
     # ml64 does NOT support /Od, /Zd, or /Zi — debug info comes from linker /DEBUG
@@ -323,23 +323,23 @@ function Invoke-MasmCompile {
     $flags += "/Fo$absObj"
     
     try {
-        $output = & $script:Ml64.Source $flags $File.Path 2>&1
+        $output = & ${script:Ml64}.Source $flags $File.Path 2>&1
         $exitCode = $LASTEXITCODE
         
         if ($exitCode -eq 0) {
             Write-Host " [OK]" -ForegroundColor Green
-            $script:BuildLog += "[PASS] $log"
+            ${script:BuildLog} += "[PASS] $log"
         }
         else {
             Write-Host " [FAIL]" -ForegroundColor Red
-            $script:ErrorCount++
-            $script:BuildLog += "[FAIL] $log`n$output"
+            ${script:ErrorCount}++
+            ${script:BuildLog} += "[FAIL] $log`n$output"
             Write-Host $output -ForegroundColor Red
         }
     }
     catch {
         Write-Host " [ERROR] $_" -ForegroundColor Red
-        $script:ErrorCount++
+        ${script:ErrorCount}++
     }
 }
 
@@ -350,7 +350,7 @@ function Invoke-CppCompile {
     Write-Host $log -ForegroundColor Cyan -NoNewline
     
     # Resolve obj path to absolute
-    $absObj = Join-Path $script:ObjDirAbs (Split-Path $File.ObjPath -Leaf)
+    $absObj = Join-Path ${script:ObjDirAbs} (Split-Path $File.ObjPath -Leaf)
     
     # C++ flags
     $flags = @(
@@ -385,8 +385,8 @@ function Invoke-CppCompile {
     $flags += "/I`".\3rdparty`""
     
     # Windows SDK paths (hardened for partial vcvars)
-    $windowsSdkDir = $env:WindowsSdkDir
-    $windowsSdkVersion = $env:WindowsSDKVersion
+    $windowsSdkDir = ${env:WindowsSdkDir}
+    $windowsSdkVersion = ${env:WindowsSDKVersion}
 
     if (-not $windowsSdkDir) {
         # Probe registry for SDK installations
@@ -429,10 +429,10 @@ function Invoke-CppCompile {
         
         # Store lib paths for link phase
         $sdkLib = Join-Path $windowsSdkDir "Lib\$windowsSdkVersion"
-        $script:SdkLibPaths = @()
+        ${script:SdkLibPaths} = @()
         @("um\x64", "ucrt\x64", "ucrt_enclave\x64") | ForEach-Object {
             $p = Join-Path $sdkLib $_
-            if (Test-Path $p) { $script:SdkLibPaths += "/LIBPATH:`"$p`"" }
+            if (Test-Path $p) { ${script:SdkLibPaths} += "/LIBPATH:`"$p`"" }
         }
     }
     
@@ -444,23 +444,23 @@ function Invoke-CppCompile {
     $flags += "/DNOMINMAX"
     
     try {
-        $output = & $script:Cl.Source $flags $File.Path 2>&1
+        $output = & ${script:Cl}.Source $flags $File.Path 2>&1
         $exitCode = $LASTEXITCODE
         
         if ($exitCode -eq 0) {
             Write-Host " [OK]" -ForegroundColor Green
-            $script:BuildLog += "[PASS] $log"
+            ${script:BuildLog} += "[PASS] $log"
         }
         else {
             Write-Host " [FAIL]" -ForegroundColor Red
-            $script:ErrorCount++
-            $script:BuildLog += "[FAIL] $log`n$output"
+            ${script:ErrorCount}++
+            ${script:BuildLog} += "[FAIL] $log`n$output"
             Write-Host $output -ForegroundColor Red
         }
     }
     catch {
         Write-Host " [ERROR] $_" -ForegroundColor Red
-        $script:ErrorCount++
+        ${script:ErrorCount}++
     }
 }
 
@@ -479,7 +479,7 @@ function Invoke-Link {
     $outPath = Join-Path $OutputDir $Target
     
     # Auto-detect entry point
-    $entry = if ($EntryPoint) { $EntryPoint } 
+    $entry = $(if ($EntryPoint) { $EntryPoint } 
              elseif ($Subsystem -eq "CONSOLE") { "mainCRTStartup" }
              else { "WinMainCRTStartup" }
     
@@ -524,12 +524,12 @@ function Invoke-Link {
     )
     
     # Add VC CRT lib path (required for libcmt/msvcrt)
-    $vcLibDir = Split-Path $script:Cl.Source -Parent
+    $vcLibDir = Split-Path ${script:Cl}.Source -Parent
     $vcLibDir = (Split-Path $vcLibDir -Parent) -replace 'bin\\HostX64', 'lib'
     $vcLibDir = Join-Path $vcLibDir "x64" -ErrorAction SilentlyContinue
     if (-not $vcLibDir -or -not (Test-Path $vcLibDir)) {
         # Attempt direct construction from MSVC tools root
-        $msvcRoot = Split-Path (Split-Path (Split-Path $script:Cl.Source -Parent) -Parent) -Parent
+        $msvcRoot = Split-Path (Split-Path (Split-Path ${script:Cl}.Source -Parent) -Parent) -Parent
         $vcLibDir = Join-Path $msvcRoot "lib\x64"
     }
     $vcLibPaths = @()
@@ -537,10 +537,10 @@ function Invoke-Link {
         $vcLibPaths += "/LIBPATH:`"$vcLibDir`""
     }
 
-    $linkArgs = $flags + $vcLibPaths + $script:SdkLibPaths + $objFiles + $libs
+    $linkArgs = $flags + $vcLibPaths + ${script:SdkLibPaths} + $objFiles + $libs
     
     try {
-        $output = & $script:Link.Source $linkArgs 2>&1
+        $output = & ${script:Link}.Source $linkArgs 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Host "[+] Link successful: $outPath" -ForegroundColor Green
             $size = (Get-Item $outPath).Length / 1MB
@@ -549,12 +549,12 @@ function Invoke-Link {
         else {
             Write-Host "[-] Link failed:" -ForegroundColor Red
             Write-Host $output -ForegroundColor Red
-            $script:ErrorCount++
+            ${script:ErrorCount}++
         }
     }
     catch {
         Write-Host "[-] Link error: $_" -ForegroundColor Red
-        $script:ErrorCount++
+        ${script:ErrorCount}++
     }
 }
 
@@ -566,8 +566,8 @@ function Start-Build {
     # Setup directories (resolve to absolute paths)
     if (-not (Test-Path $ObjDir)) { New-Item -ItemType Directory -Path $ObjDir -Force | Out-Null }
     if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null }
-    $script:ObjDirAbs = (Resolve-Path $ObjDir).Path
-    $script:OutputDirAbs = (Resolve-Path $OutputDir).Path
+    ${script:ObjDirAbs} = (Resolve-Path $ObjDir).Path
+    ${script:OutputDirAbs} = (Resolve-Path $OutputDir).Path
     
     if ($Clean) {
         Write-Host "[*] Cleaning build artifacts..." -ForegroundColor Yellow
@@ -618,8 +618,8 @@ function Start-Build {
     # Collect obj files that actually exist on disk
     $linkableObjs = $sources | Where-Object { $_.Type -ne "HEADER" -and (Test-Path $_.ObjPath) }
     if ($linkableObjs.Count -gt 0) {
-        if ($script:ErrorCount -gt 0) {
-            Write-Host "`n[!] $($script:ErrorCount) compile error(s) — linking $($linkableObjs.Count) successful objects" -ForegroundColor Yellow
+        if (${script:ErrorCount} -gt 0) {
+            Write-Host "`n[!] $(${script:ErrorCount}) compile error(s) — linking $($linkableObjs.Count) successful objects" -ForegroundColor Yellow
         }
         Invoke-Link $linkableObjs
     }
@@ -631,12 +631,12 @@ function Start-Build {
     Write-Host "`nBuild completed in $($stopwatch.Elapsed.TotalSeconds.ToString('F2'))s" -ForegroundColor White
     
     # Summary
-    if ($script:ErrorCount -eq 0) {
+    if (${script:ErrorCount} -eq 0) {
         Write-Host "STATUS: SUCCESS" -ForegroundColor Green -BackgroundColor Black
         exit 0
     }
     else {
-        Write-Host "STATUS: FAILED ($($script:ErrorCount) errors)" -ForegroundColor Red -BackgroundColor Black
+        Write-Host "STATUS: FAILED ($(${script:ErrorCount}) errors)" -ForegroundColor Red -BackgroundColor Black
         exit 1
     }
 }

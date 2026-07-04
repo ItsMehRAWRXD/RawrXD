@@ -31,18 +31,18 @@ $ErrorActionPreference = "Stop"
 
 # Swarm root: use repo containing this script so swarm_modes.ps1 and scripts\ are always found.
 # (Script lives in ...\src\win32app\ → repo root is two levels up.)
-$script:SwarmRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+${script:SwarmRoot} = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 # Optional override: if env RAWRXD_SWARM_ROOT is set and contains scripts\swarm_modes.ps1, use it
-$envRoot = $env:RAWRXD_SWARM_ROOT
+$envRoot = ${env:RAWRXD_SWARM_ROOT}
 if ($envRoot -and (Test-Path (Join-Path $envRoot "scripts\swarm_modes.ps1"))) {
-    $script:SwarmRoot = $envRoot
+    ${script:SwarmRoot} = $envRoot
 }
-$script:ConfigDir = Join-Path $SwarmRoot "logs/swarm_config"
-$script:BeaconDir = Join-Path $SwarmRoot "logs/swarm_beacon"
-$script:MemoryDir = Join-Path $SwarmRoot "logs/swarm_memory"
-$script:ModelsConfigFile = Join-Path $ConfigDir "models.json"
-$script:AgentPresetsFile = Join-Path $ConfigDir "agent_presets.json"
-$script:SwarmStateFile = Join-Path $ConfigDir "swarm_state.json"
+${script:ConfigDir} = Join-Path $SwarmRoot "logs/swarm_config"
+${script:BeaconDir} = Join-Path $SwarmRoot "logs/swarm_beacon"
+${script:MemoryDir} = Join-Path $SwarmRoot "logs/swarm_memory"
+${script:ModelsConfigFile} = Join-Path $ConfigDir "models.json"
+${script:AgentPresetsFile} = Join-Path $ConfigDir "agent_presets.json"
+${script:SwarmStateFile} = Join-Path $ConfigDir "swarm_state.json"
 
 # Ensure directories exist
 @($ConfigDir, $BeaconDir, $MemoryDir) | ForEach-Object {
@@ -346,7 +346,7 @@ function Show-SwarmDashboard {
             "Titan"     { "🗿" }
             default     { "🤖" }
         }
-        $rec = if ($modelName -eq $caps.RecommendedModel) { "★" } else { " " }
+        $rec = $(if ($modelName -eq $caps.RecommendedModel) { "★" } else { " " }
         $modelLine = "    $rec $icon $($modelName.PadRight(12)) $($m.Speed.PadRight(12)) $($m.BestFor[0])"
         Write-Host "║$($modelLine.PadRight(79))║" -ForegroundColor Gray
     }
@@ -381,8 +381,8 @@ function Show-SwarmDashboard {
         
         foreach ($job in ($jobs | Where-Object { $_.State -eq 'Running' })) {
             $beacon = $beaconData[$job.Name]
-            $file = if ($beacon) { $beacon.CurrentFile } else { "(unknown)" }
-            $time = if ($beacon) { "$($beacon.ActiveSeconds)s" } else { "" }
+            $file = $(if ($beacon) { $beacon.CurrentFile } else { "(unknown)" }
+            $time = $(if ($beacon) { "$($beacon.ActiveSeconds)s" } else { "" }
             $agentLine = "    🟢 $($job.Name.PadRight(8)) | $($file.PadRight(30)) | $time"
             Write-Host "║$($agentLine.PadRight(79))║" -ForegroundColor Green
         }
@@ -472,7 +472,7 @@ function Show-CreatePreset {
     Write-Host "Select model [1-$($modelList.Count)]: " -NoNewline -ForegroundColor Cyan
     $modelChoice = Read-Host
     $modelIdx = [int]$modelChoice - 1
-    $selectedModel = if ($modelIdx -ge 0 -and $modelIdx -lt $modelList.Count) { $modelList[$modelIdx] } else { "Quantum" }
+    $selectedModel = $(if ($modelIdx -ge 0 -and $modelIdx -lt $modelList.Count) { $modelList[$modelIdx] } else { "Quantum" }
     
     Write-Host ""
     Write-Host "Role description (e.g., 'Code Review'): " -NoNewline -ForegroundColor Cyan
@@ -528,9 +528,9 @@ function Invoke-SwarmLaunch {
         [int]$AgentCount = 4
     )
     
-    $modesScript = Join-Path $script:SwarmRoot "scripts\swarm_modes.ps1"
+    $modesScript = Join-Path ${script:SwarmRoot} "scripts\swarm_modes.ps1"
     if (-not (Test-Path $modesScript)) {
-        Write-Error "Swarm modes script not found: $modesScript (SwarmRoot: $script:SwarmRoot)"
+        Write-Error "Swarm modes script not found: $modesScript (SwarmRoot: ${script:SwarmRoot})"
     }
     Write-Host ""
     Write-Host "🚀 Launching $Mode swarm with $AgentCount agents..." -ForegroundColor Green

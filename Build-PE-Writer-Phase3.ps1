@@ -171,8 +171,8 @@ function Generate-TelemetryReport {
     }
     
     # Determine promotion gate status
-    $promotionStatus = if ($allPassed -and $TestResult.passed) { "promoted" } else { "blocked" }
-    $promotionReason = if ($allPassed) {
+    $promotionStatus = $(if ($allPassed -and $TestResult.passed) { "promoted" } else { "blocked" }
+    $promotionReason = $(if ($allPassed) {
         "PE Writer Phase 3: All stages detected (PE_HEADERS, PE_SECTIONS, IMPORT_TABLE, RELOCATIONS, REPRODUCIBLE)"
     } else {
         "Missing stages: $($missingStages -join ', ')"
@@ -286,8 +286,8 @@ function Main {
     $stageChecks = Detect-Stages -TestOutput $testResult.output
     
     foreach ($stage in $stageChecks.Keys) {
-        $status = if ($stageChecks[$stage]) { "✓" } else { "✗" }
-        $color = if ($stageChecks[$stage]) { $SuccessColor } else { $ErrorColor }
+        $status = $(if ($stageChecks[$stage]) { "✓" } else { "✗" }
+        $color = $(if ($stageChecks[$stage]) { $SuccessColor } else { $ErrorColor }
         Write-Host "  $status $stage" -ForegroundColor $color
     }
     

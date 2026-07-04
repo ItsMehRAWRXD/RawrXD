@@ -12,7 +12,7 @@ param(
 )
 
 # Test Results Storage
-$Global:TestResults = @{
+${Global:TestResults} = @{
     startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     binaryPath = $BinaryPath
     totalTests = 0
@@ -33,12 +33,12 @@ function Log-TestResult {
         details = $Details
         timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     }
-    $Global:TestResults.testSuites += $result
-    $Global:TestResults.totalTests++
+    ${Global:TestResults}.testSuites += $result
+    ${Global:TestResults}.totalTests++
     switch ($Status) {
-        "PASS" { $Global:TestResults.passedTests++ }
-        "FAIL" { $Global:TestResults.failedTests++ }
-        "SKIP" { $Global:TestResults.skippedTests++ }
+        "PASS" { ${Global:TestResults}.passedTests++ }
+        "FAIL" { ${Global:TestResults}.failedTests++ }
+        "SKIP" { ${Global:TestResults}.skippedTests++ }
     }
     $color = switch ($Status) { "PASS" { "Green" } "FAIL" { "Red" } "SKIP" { "Yellow" } }
     Write-Host "  [$Status] $Test ($Duration ms)" -ForegroundColor $color
@@ -455,13 +455,13 @@ Write-Host "========================================" -ForegroundColor Cyan
 $phase10Start = Get-Date
 
 # Calculate final metrics
-$Global:TestResults.endTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$Global:TestResults.passRate = if ($Global:TestResults.totalTests -gt 0) { 
-    [math]::Round(($Global:TestResults.passedTests / $Global:TestResults.totalTests) * 100, 2) 
+${Global:TestResults}.endTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+${Global:TestResults}.passRate = $(if (${Global:TestResults}.totalTests -gt 0) { 
+    [math]::Round((${Global:TestResults}.passedTests / ${Global:TestResults}.totalTests) * 100, 2) 
 } else { 0 }
 
 # Export results
-$json = $Global:TestResults | ConvertTo-Json -Depth 10
+$json = ${Global:TestResults} | ConvertTo-Json -Depth 10
 $json | Out-File -FilePath $LogPath -Encoding UTF8
 
 Log-TestResult -Suite "Phase 10" -Test "Report Generation" -Status "PASS" -Duration ((Get-Date) - $phase10Start).TotalMilliseconds -Details "Report saved to $LogPath"
@@ -476,16 +476,16 @@ Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "SMOKE TEST FINAL SUMMARY" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Total Tests:    $($Global:TestResults.totalTests)" -ForegroundColor White
-Write-Host "Passed:         $($Global:TestResults.passedTests)" -ForegroundColor Green
-Write-Host "Failed:         $($Global:TestResults.failedTests)" -ForegroundColor Red
-Write-Host "Skipped:        $($Global:TestResults.skippedTests)" -ForegroundColor Yellow
-Write-Host "Pass Rate:      $($Global:TestResults.passRate)%" -ForegroundColor $(if ($Global:TestResults.passRate -ge 90) { "Green" } elseif ($Global:TestResults.passRate -ge 70) { "Yellow" } else { "Red" })
+Write-Host "Total Tests:    $(${Global:TestResults}.totalTests)" -ForegroundColor White
+Write-Host "Passed:         $(${Global:TestResults}.passedTests)" -ForegroundColor Green
+Write-Host "Failed:         $(${Global:TestResults}.failedTests)" -ForegroundColor Red
+Write-Host "Skipped:        $(${Global:TestResults}.skippedTests)" -ForegroundColor Yellow
+Write-Host "Pass Rate:      $(${Global:TestResults}.passRate)%" -ForegroundColor $(if (${Global:TestResults}.passRate -ge 90) { "Green" } elseif (${Global:TestResults}.passRate -ge 70) { "Yellow" } else { "Red" })
 Write-Host ""
 Write-Host "Report saved to: $LogPath" -ForegroundColor Gray
 Write-Host ""
 
-if ($Global:TestResults.failedTests -eq 0) {
+if (${Global:TestResults}.failedTests -eq 0) {
     Write-Host "✅ ALL TESTS PASSED - PRODUCTION READY" -ForegroundColor Green
     exit 0
 } else {

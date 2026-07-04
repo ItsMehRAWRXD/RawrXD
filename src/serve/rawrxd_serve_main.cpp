@@ -37,6 +37,7 @@
 #include "rawrxd_model_registry.h"
 #include "rawrxd_serve.h"
 #include "rawrxd_serve_inference_plugin.h"
+#include "rawrxd_pipe_server.h"
 #include "../core/inference_parity_trace.h"
 #include "../core/parity_cpu_fallback.h"
 
@@ -879,8 +880,15 @@ static int cmdServe(const CliArgs& args)
         return 1;
     }
 
+    // Initialize hotpatch IPC server
+    if (!RawrXD_PipeServer_Init()) {
+        fprintf(stderr, "[WARNING] Failed to initialize hotpatch IPC server\n");
+        // Continue anyway - HTTP server is still functional
+    }
+
     printf("\nRawrXD is ready.\n");
     printf("Compatible with: ollama client, Open WebUI, Continue.dev\n");
+    printf("Hotpatch IPC: \\\\.\\pipe\\rawrxd_hotpatch\n");
     printf("Press Ctrl+C to stop.\n\n");
 
     // Block on Ctrl+C
@@ -900,6 +908,9 @@ static int cmdServe(const CliArgs& args)
     // Wait forever (server runs on its own thread)
     WaitForSingleObject(hEvent, INFINITE);
     CloseHandle(hEvent);
+
+    // Shutdown hotpatch server before HTTP server
+    RawrXD_PipeServer_Shutdown();
 
     server.stop();
     return 0;

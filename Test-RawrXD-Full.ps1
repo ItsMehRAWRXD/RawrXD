@@ -21,28 +21,28 @@ function Test-Feature {
         [string]$Category = "General"
     )
     
-    $script:totalTests++
+    ${script:totalTests}++
     Write-Host "  Testing: $Name..." -ForegroundColor Yellow -NoNewline
     
     try {
         $result = & $Test
         if ($result) {
             Write-Host " ✅ PASS" -ForegroundColor Green
-            $script:passedTests++
-            $script:testResults["$Category::$Name"] = "PASS"
+            ${script:passedTests}++
+            ${script:testResults}["$Category::$Name"] = "PASS"
             return $true
         }
         else {
             Write-Host " ❌ FAIL" -ForegroundColor Red
-            $script:failedTests++
-            $script:testResults["$Category::$Name"] = "FAIL"
+            ${script:failedTests}++
+            ${script:testResults}["$Category::$Name"] = "FAIL"
             return $false
         }
     }
     catch {
         Write-Host " ❌ ERROR: $_" -ForegroundColor Red
-        $script:failedTests++
-        $script:testResults["$Category::$Name"] = "ERROR: $_"
+        ${script:failedTests}++
+        ${script:testResults}["$Category::$Name"] = "ERROR: $_"
         return $false
     }
 }
@@ -250,12 +250,12 @@ Write-Host "══════════════════════�
 
 $uiComponents = @(
     @{ Name = "Main Form"; Pattern = '\$form\s*=.*Windows\.Forms\.Form' },
-    @{ Name = "Editor (RichTextBox)"; Pattern = '\$script:editor\s*=.*RichTextBox' },
+    @{ Name = "Editor (RichTextBox)"; Pattern = '\${script:editor}\s*=.*RichTextBox' },
     @{ Name = "File Explorer (TreeView)"; Pattern = '\$explorer\s*=.*TreeView' },
     @{ Name = "Chat Tab Control"; Pattern = '\$chatTabControl\s*=.*TabControl' },
     @{ Name = "Terminal Output"; Pattern = '\$terminalOutput\s*=.*RichTextBox' },
     @{ Name = "Browser Container"; Pattern = '\$browserContainer\s*=' },
-    @{ Name = "Dev Console"; Pattern = '\$global:devConsole\s*=' },
+    @{ Name = "Dev Console"; Pattern = '\${global:devConsole}\s*=' },
     @{ Name = "Agent Tasks List"; Pattern = '\$agentTasksList\s*=.*ListView' },
     @{ Name = "Git Status Box"; Pattern = '\$gitStatusBox\s*=' }
 )
@@ -275,11 +275,11 @@ Write-Host "  TEST 8: Security Features" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
 Test-Feature -Name "Security Config Hashtable" -Category "Security" -Test {
-    $sourceCode -match '\$script:SecurityConfig\s*=\s*@\{'
+    $sourceCode -match '\${script:SecurityConfig}\s*=\s*@\{'
 }
 
 Test-Feature -Name "Session Management" -Category "Security" -Test {
-    $sourceCode -match '\$script:CurrentSession\s*=\s*@\{'
+    $sourceCode -match '\${script:CurrentSession}\s*=\s*@\{'
 }
 
 Test-Feature -Name "Input Validation Function" -Category "Security" -Test {
@@ -322,7 +322,7 @@ Test-Feature -Name "RawrXD.exe exists" -Category "Files" -Test {
 }
 
 Test-Feature -Name "AppData directory" -Category "Files" -Test {
-    $appDataDir = Join-Path $env:APPDATA "RawrXD"
+    $appDataDir = Join-Path ${env:APPDATA} "RawrXD"
     # It may not exist yet, that's ok - just check it would be valid
     $true
 }
@@ -363,7 +363,7 @@ foreach ($cat in $categories) {
     $catTests = $testResults.Keys | Where-Object { $_ -like "$cat::*" }
     $catPassed = ($catTests | Where-Object { $testResults[$_] -eq "PASS" }).Count
     $catTotal = $catTests.Count
-    $catIcon = if ($catPassed -eq $catTotal) { "✅" } elseif ($catPassed -gt 0) { "⚠️" } else { "❌" }
+    $catIcon = $(if ($catPassed -eq $catTotal) { "✅" } elseif ($catPassed -gt 0) { "⚠️" } else { "❌" }
     Write-Host "     $catIcon $cat : $catPassed/$catTotal" -ForegroundColor $(if ($catPassed -eq $catTotal) { "Green" } elseif ($catPassed -gt 0) { "Yellow" } else { "Red" })
 }
 

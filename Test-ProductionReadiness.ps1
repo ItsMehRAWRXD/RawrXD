@@ -22,7 +22,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$script:TestResults = @{
+${script:TestResults} = @{
     StartTime = Get-Date
     EndTime = $null
     TotalTests = 0
@@ -52,13 +52,13 @@ function Write-TestResult {
         [double]$Duration = 0
     )
     
-    $script:TestResults.TotalTests++
+    ${script:TestResults}.TotalTests++
     
     $color = switch ($Status) {
-        'PASS' { $script:TestResults.Passed++; 'Green' }
-        'FAIL' { $script:TestResults.Failed++; 'Red' }
-        'WARN' { $script:TestResults.Warnings++; 'Yellow' }
-        'SKIP' { $script:TestResults.Skipped++; 'DarkGray' }
+        'PASS' { ${script:TestResults}.Passed++; 'Green' }
+        'FAIL' { ${script:TestResults}.Failed++; 'Red' }
+        'WARN' { ${script:TestResults}.Warnings++; 'Yellow' }
+        'SKIP' { ${script:TestResults}.Skipped++; 'DarkGray' }
         default { 'White' }
     }
     
@@ -70,13 +70,13 @@ function Write-TestResult {
         default { '•' }
     }
     
-    $durationStr = if ($Duration -gt 0) { " (${Duration}ms)" } else { "" }
+    $durationStr = $(if ($Duration -gt 0) { " (${Duration}ms)" } else { "" }
     Write-Host "  $statusIcon [$Status] $TestName$durationStr" -ForegroundColor $color
     if ($Message) {
         Write-Host "      $Message" -ForegroundColor DarkGray
     }
     
-    $script:TestResults.Details += @{
+    ${script:TestResults}.Details += @{
         Test = $TestName
         Status = $Status
         Message = $Message
@@ -99,7 +99,7 @@ function Invoke-TestWithTiming {
             Write-TestResult -TestName $TestName -Status 'PASS' -Duration $sw.Elapsed.TotalMilliseconds
             return $true
         } else {
-            $msg = if ($result -is [hashtable] -and $result.Error) { $result.Error } else { "Test returned false" }
+            $msg = $(if ($result -is [hashtable] -and $result.Error) { $result.Error } else { "Test returned false" }
             Write-TestResult -TestName $TestName -Status 'FAIL' -Message $msg -Duration $sw.Elapsed.TotalMilliseconds
             return $false
         }
@@ -457,8 +457,8 @@ function Invoke-AllTests {
     Test-Integration
     
     # Finalize
-    $script:TestResults.EndTime = Get-Date
-    $duration = ($script:TestResults.EndTime - $script:TestResults.StartTime).TotalSeconds
+    ${script:TestResults}.EndTime = Get-Date
+    $duration = (${script:TestResults}.EndTime - ${script:TestResults}.StartTime).TotalSeconds
     
     # Summary
     Write-Host "`n" -NoNewline
@@ -466,21 +466,21 @@ function Invoke-AllTests {
     Write-Host "║                         TEST SUMMARY                                  ║" -ForegroundColor Cyan
     Write-Host "╚══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  Total Tests:   $($script:TestResults.TotalTests)" -ForegroundColor White
-    Write-Host "  ✅ Passed:     $($script:TestResults.Passed)" -ForegroundColor Green
-    Write-Host "  ❌ Failed:     $($script:TestResults.Failed)" -ForegroundColor $(if ($script:TestResults.Failed -gt 0) { 'Red' } else { 'Green' })
-    Write-Host "  ⚠️  Warnings:   $($script:TestResults.Warnings)" -ForegroundColor $(if ($script:TestResults.Warnings -gt 0) { 'Yellow' } else { 'Green' })
-    Write-Host "  ⏭️  Skipped:    $($script:TestResults.Skipped)" -ForegroundColor Gray
+    Write-Host "  Total Tests:   $(${script:TestResults}.TotalTests)" -ForegroundColor White
+    Write-Host "  ✅ Passed:     $(${script:TestResults}.Passed)" -ForegroundColor Green
+    Write-Host "  ❌ Failed:     $(${script:TestResults}.Failed)" -ForegroundColor $(if (${script:TestResults}.Failed -gt 0) { 'Red' } else { 'Green' })
+    Write-Host "  ⚠️  Warnings:   $(${script:TestResults}.Warnings)" -ForegroundColor $(if (${script:TestResults}.Warnings -gt 0) { 'Yellow' } else { 'Green' })
+    Write-Host "  ⏭️  Skipped:    $(${script:TestResults}.Skipped)" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  Duration:      $([math]::Round($duration, 2)) seconds" -ForegroundColor Gray
     Write-Host ""
     
     # Calculate pass rate
-    $passRate = if ($script:TestResults.TotalTests -gt 0) {
-        [math]::Round(($script:TestResults.Passed / $script:TestResults.TotalTests) * 100, 1)
+    $passRate = $(if (${script:TestResults}.TotalTests -gt 0) {
+        [math]::Round((${script:TestResults}.Passed / ${script:TestResults}.TotalTests) * 100, 1)
     } else { 0 }
     
-    $passRateColor = if ($passRate -ge 90) { 'Green' } 
+    $passRateColor = $(if ($passRate -ge 90) { 'Green' } 
                      elseif ($passRate -ge 70) { 'Yellow' } 
                      else { 'Red' }
     
@@ -488,7 +488,7 @@ function Invoke-AllTests {
     Write-Host ""
     
     # Production readiness verdict
-    $isProductionReady = ($script:TestResults.Failed -eq 0 -and $passRate -ge 80)
+    $isProductionReady = (${script:TestResults}.Failed -eq 0 -and $passRate -ge 80)
     
     if ($isProductionReady) {
         Write-Host "  ╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
@@ -506,16 +506,16 @@ function Invoke-AllTests {
         $report = @{
             GeneratedAt = Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ'
             Summary = @{
-                TotalTests = $script:TestResults.TotalTests
-                Passed = $script:TestResults.Passed
-                Failed = $script:TestResults.Failed
-                Warnings = $script:TestResults.Warnings
-                Skipped = $script:TestResults.Skipped
+                TotalTests = ${script:TestResults}.TotalTests
+                Passed = ${script:TestResults}.Passed
+                Failed = ${script:TestResults}.Failed
+                Warnings = ${script:TestResults}.Warnings
+                Skipped = ${script:TestResults}.Skipped
                 PassRate = $passRate
                 Duration = $duration
                 ProductionReady = $isProductionReady
             }
-            Details = $script:TestResults.Details
+            Details = ${script:TestResults}.Details
         }
         
         $report | ConvertTo-Json -Depth 10 | Set-Content $reportPath -Encoding UTF8
@@ -523,7 +523,7 @@ function Invoke-AllTests {
     }
     
     Write-Host ""
-    return $script:TestResults
+    return ${script:TestResults}
 }
 
 # Run tests

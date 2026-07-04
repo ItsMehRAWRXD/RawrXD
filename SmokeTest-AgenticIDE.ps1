@@ -25,14 +25,14 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:Passed = 0
-$script:Failed = 0
+${script:Passed} = 0
+${script:Failed} = 0
 
 function Write-Result { param([string]$Name, [bool]$Ok, [string]$Detail = "")
-    $script:Passed += [int]$Ok
-    if (-not $Ok) { $script:Failed += 1 }
-    $tag = if ($Ok) { "PASS" } else { "FAIL" }
-    $color = if ($Ok) { "Green" } else { "Red" }
+    ${script:Passed} += [int]$Ok
+    if (-not $Ok) { ${script:Failed} += 1 }
+    $tag = $(if ($Ok) { "PASS" } else { "FAIL" }
+    $color = $(if ($Ok) { "Green" } else { "Red" }
     Write-Host "  [$tag] $Name" -ForegroundColor $color
     if ($Detail) { Write-Host "         $Detail" -ForegroundColor Gray }
 }
@@ -142,9 +142,9 @@ if (-not $SkipChat) {
 # ----------------------------------------------------------------------------
 Write-Host ""
 Write-Host "=== Summary ===" -ForegroundColor Cyan
-Write-Host "  Passed: $script:Passed" -ForegroundColor Green
-if ($script:Failed -gt 0) {
-    Write-Host "  Failed: $script:Failed" -ForegroundColor Red
+Write-Host "  Passed: ${script:Passed}" -ForegroundColor Green
+if (${script:Failed} -gt 0) {
+    Write-Host "  Failed: ${script:Failed}" -ForegroundColor Red
     exit 1
 }
 Write-Host "  Agentic IDE integration smoke test passed." -ForegroundColor Green

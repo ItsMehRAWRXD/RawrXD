@@ -152,10 +152,10 @@ function Calculate-TPS {
         "FP16" = 0.3
     }
     
-    $quantFactor = if ($quantFactors.ContainsKey($quantization)) { $quantFactors[$quantization] } else { 1.0 }
+    $quantFactor = $(if ($quantFactors.ContainsKey($quantization)) { $quantFactors[$quantization] } else { 1.0 }
     
     # GPU boost (if available)
-    [double]$gpuBoost = if ($useGPU) { 8.0 } else { 1.0 }
+    [double]$gpuBoost = $(if ($useGPU) { 8.0 } else { 1.0 }
     
     # Calculate final TPS
     [double]$baseTps = $baseTPS[$modelClass]

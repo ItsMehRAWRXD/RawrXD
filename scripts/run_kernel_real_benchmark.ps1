@@ -19,8 +19,8 @@ foreach ($variant in $Variants) {
         Remove-Item Env:\RAWRXD_VULKAN_MATMUL_KERNEL -ErrorAction SilentlyContinue
         Remove-Item Env:\RAWRXD_VULKAN_MATMUL_SPV -ErrorAction SilentlyContinue
     } else {
-        $env:RAWRXD_VULKAN_MATMUL_KERNEL = $variant
-        $env:RAWRXD_VULKAN_MATMUL_SPV = $variant
+        ${env:RAWRXD_VULKAN_MATMUL_KERNEL} = $variant
+        ${env:RAWRXD_VULKAN_MATMUL_SPV} = $variant
     }
     
     # Warmup (4 tokens, discarded)
@@ -39,7 +39,7 @@ foreach ($variant in $Variants) {
     
     # Extract per-token latency from [PHASE] per_token lines
     $phaseMatches = [regex]::Matches($output, '\[PHASE\] per_token\s+([\d.]+) ms')
-    $perTokenMs = if ($phaseMatches.Count -gt 0) { 
+    $perTokenMs = $(if ($phaseMatches.Count -gt 0) { 
         # Average all per_token measurements
         $sum = 0
         foreach ($m in $phaseMatches) { $sum += [double]$m.Groups[1].Value }
@@ -52,7 +52,7 @@ foreach ($variant in $Variants) {
     
     # Extract first token latency
     $firstTokenMatch = [regex]::Match($output, '\[PHASE\] tokens=1 total_acc=([\d.]+) ms')
-    $firstTokenMs = if ($firstTokenMatch.Success) { [double]$firstTokenMatch.Groups[1].Value } else { 0 }
+    $firstTokenMs = $(if ($firstTokenMatch.Success) { [double]$firstTokenMatch.Groups[1].Value } else { 0 }
     
     $result = [PSCustomObject]@{
         Variant = $variant
@@ -67,7 +67,7 @@ foreach ($variant in $Variants) {
     
     $results += $result
     
-    $color = if ($tokPerSec -ge 10) { "Green" } elseif ($tokPerSec -ge 7) { "Yellow" } else { "Red" }
+    $color = $(if ($tokPerSec -ge 10) { "Green" } elseif ($tokPerSec -ge 7) { "Yellow" } else { "Red" }
     Write-Host "  Result: $perTokenMs ms/token = $tokPerSec tok/s (first: ${firstTokenMs}ms)" -ForegroundColor $color
     
     Start-Sleep -Milliseconds 500
@@ -94,7 +94,7 @@ $report = @"
 
 $rank = 1
 foreach ($r in $ranked) {
-    $bestMarker = if ($rank -eq 1) { " 🏆" } else { "" }
+    $bestMarker = $(if ($rank -eq 1) { " 🏆" } else { "" }
     $report += "| $rank | $($r.Variant) | $($r.PerTokenMs) | $($r.TokPerSec) | $($r.FirstTokenMs) | $($r.TotalMs) |$bestMarker`n"
     $rank++
 }

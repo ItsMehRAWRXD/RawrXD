@@ -51,9 +51,9 @@ function Test-IncludeHasFile {
 # "Tool exists on PATH" is not enough for CMake/NMake builds; we also need LIB *and* INCLUDE
 # populated (Windows.h + CRT headers) or cl.exe will fail even if linking works.
 if ((Test-Tool "nmake.exe") -and (Test-Tool "cl.exe") -and (Test-Tool "link.exe") -and (Test-Tool "rc.exe") -and (Test-Tool "mt.exe") -and
-    (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib") -and
-    (Test-IncludeHasFile -IncludeEnv $env:INCLUDE -FileName "Windows.h") -and
-    (Test-IncludeHasFile -IncludeEnv $env:INCLUDE -FileName "stdio.h")) {
+    (Test-LibHasFile -LibEnv ${env:LIB} -FileName "kernel32.lib") -and
+    (Test-IncludeHasFile -IncludeEnv ${env:INCLUDE} -FileName "Windows.h") -and
+    (Test-IncludeHasFile -IncludeEnv ${env:INCLUDE} -FileName "stdio.h")) {
     return
 }
 
@@ -154,7 +154,7 @@ if (-not $vsDevCmd) {
     }
 } else {
     # If vcvars64.bat didn't run (or didn't populate LIB), try VsDevCmd too.
-    if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
+    if (-not (Test-LibHasFile -LibEnv ${env:LIB} -FileName "kernel32.lib")) {
         [void](Import-EnvFromBatch -BatPath $vsDevCmd -Args "-arch=$Arch -host_arch=$Arch")
     }
 }
@@ -169,8 +169,8 @@ if (-not (Test-Tool "nmake.exe")) {
     }
     if ($nmake) {
         $bin = Split-Path $nmake.FullName -Parent
-        if (-not ($env:Path -split ";" | Where-Object { $_ -ieq $bin })) {
-            $env:Path = "$bin;$env:Path"
+        if (-not (${env:Path} -split ";" | Where-Object { $_ -ieq $bin })) {
+            ${env:Path} = "$bin;${env:Path}"
         }
     }
 }
@@ -180,7 +180,7 @@ if (-not (Test-Tool "nmake.exe")) {
 }
 
 # If LIB still can't resolve kernel32.lib, add Windows SDK lib paths manually (CMake compiler tests need this).
-if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
+if (-not (Test-LibHasFile -LibEnv ${env:LIB} -FileName "kernel32.lib")) {
     Write-Verbose "LIB missing kernel32.lib; attempting Windows SDK LIB injection..."
     $sdkLibUm = $null
     $sdkLibUcrt = $null
@@ -204,7 +204,7 @@ if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
         $add = @($sdkLibUm)
         if ($sdkLibUcrt) { $add += $sdkLibUcrt }
         $prefix = ($add -join ";")
-        if ([string]::IsNullOrWhiteSpace($env:LIB)) { $env:LIB = $prefix } else { $env:LIB = "$prefix;$env:LIB" }
+        if ([string]::IsNullOrWhiteSpace(${env:LIB})) { ${env:LIB} = $prefix } else { ${env:LIB} = "$prefix;${env:LIB}" }
         Write-Verbose "Added Windows SDK LIB paths: $prefix"
     } else {
         Write-Verbose "No suitable Windows SDK lib folder found containing both kernel32.lib and ucrt.lib"
@@ -247,8 +247,8 @@ if (-not (Test-Tool "rc.exe") -or -not (Test-Tool "mt.exe")) {
     }
 
     if ($kitBin) {
-        if (-not ($env:Path -split ";" | Where-Object { $_ -ieq $kitBin })) {
-            $env:Path = "$kitBin;$env:Path"
+        if (-not (${env:Path} -split ";" | Where-Object { $_ -ieq $kitBin })) {
+            ${env:Path} = "$kitBin;${env:Path}"
         }
     }
 }
@@ -308,15 +308,15 @@ function Get-WindowsKitsVersionDirs {
       if ($msvcRoot) {
           $msvcBin = Join-Path $msvcRoot "bin\\Hostx64\\x64"
           if (Test-Path $msvcBin) {
-              if (-not ($env:Path -split ";" | Where-Object { $_ -ieq $msvcBin })) {
-                  $env:Path = "$msvcBin;$env:Path"
+              if (-not (${env:Path} -split ";" | Where-Object { $_ -ieq $msvcBin })) {
+                  ${env:Path} = "$msvcBin;${env:Path}"
               }
           }
       }
   }
   if ($msvcRoot) {
       Write-Verbose "Detected MSVC tools root: $msvcRoot"
-      if (-not $env:VCToolsInstallDir) { $env:VCToolsInstallDir = ($msvcRoot.TrimEnd("\") + "\") }
+      if (-not ${env:VCToolsInstallDir}) { ${env:VCToolsInstallDir} = ($msvcRoot.TrimEnd("\") + "\") }
 
 $msvcLib = Join-Path $msvcRoot "lib\\x64".Replace("\\", "\")
 $msvcAtlLib = Join-Path $msvcRoot "atlmfc\\lib\\x64".Replace("\\", "\")
@@ -329,7 +329,7 @@ $msvcAtlLib = Join-Path $msvcRoot "atlmfc\\lib\\x64".Replace("\\", "\")
 
     if ($addLib.Count -gt 0) {
         $prefix = ($addLib -join ";")
-        if ([string]::IsNullOrWhiteSpace($env:LIB)) { $env:LIB = $prefix } else { $env:LIB = "$prefix;$env:LIB" }
+        if ([string]::IsNullOrWhiteSpace(${env:LIB})) { ${env:LIB} = $prefix } else { ${env:LIB} = "$prefix;${env:LIB}" }
         Write-Verbose "Added MSVC LIB paths: $prefix"
     }
 
@@ -339,17 +339,17 @@ $msvcAtlLib = Join-Path $msvcRoot "atlmfc\\lib\\x64".Replace("\\", "\")
 
     if ($addInc.Count -gt 0) {
         $prefix = ($addInc -join ";")
-        if ([string]::IsNullOrWhiteSpace($env:INCLUDE)) { $env:INCLUDE = $prefix } else { $env:INCLUDE = "$prefix;$env:INCLUDE" }
+        if ([string]::IsNullOrWhiteSpace(${env:INCLUDE})) { ${env:INCLUDE} = $prefix } else { ${env:INCLUDE} = "$prefix;${env:INCLUDE}" }
         Write-Verbose "Added MSVC INCLUDE paths: $prefix"
     }
 }
 
-if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
+if (-not (Test-LibHasFile -LibEnv ${env:LIB} -FileName "kernel32.lib")) {
     Write-Verbose "LIB still missing kernel32.lib after vcvars/VsDevCmd/SDK pass; applying manual SDK fallback..."
 }
 
 # Add Windows SDK LIB if still missing.
-if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
+if (-not (Test-LibHasFile -LibEnv ${env:LIB} -FileName "kernel32.lib")) {
     $libRoots = @("C:\\Program Files (x86)\\Windows Kits\\10\\Lib", "C:\\Program Files\\Windows Kits\\10\\Lib")
     $verDirs = Get-WindowsKitsVersionDirs -Roots $libRoots
     foreach ($vd in $verDirs) {
@@ -361,16 +361,16 @@ if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
         $add = @($um)
         if (Test-Path (Join-Path $ucrt "ucrt.lib")) { $add += $ucrt }
         $prefix = ($add -join ";")
-        if ([string]::IsNullOrWhiteSpace($env:LIB)) { $env:LIB = $prefix } else { $env:LIB = "$prefix;$env:LIB" }
+        if ([string]::IsNullOrWhiteSpace(${env:LIB})) { ${env:LIB} = $prefix } else { ${env:LIB} = "$prefix;${env:LIB}" }
         break
     }
 
     # If we still don't have ucrt.lib in LIB, try to find it in any kit version.
-    if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "ucrt.lib")) {
+    if (-not (Test-LibHasFile -LibEnv ${env:LIB} -FileName "ucrt.lib")) {
         foreach ($vd in $verDirs) {
             $ucrt = Join-Path $vd.FullName "ucrt\\x64".Replace("\\", "\")
             if (Test-Path (Join-Path $ucrt "ucrt.lib")) {
-                if ([string]::IsNullOrWhiteSpace($env:LIB)) { $env:LIB = $ucrt } else { $env:LIB = "$ucrt;$env:LIB" }
+                if ([string]::IsNullOrWhiteSpace(${env:LIB})) { ${env:LIB} = $ucrt } else { ${env:LIB} = "$ucrt;${env:LIB}" }
                 break
             }
         }
@@ -378,7 +378,7 @@ if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
 }
 
 # Add Windows SDK INCLUDE if still missing (common when vcvars/VsDevCmd set LIB but not INCLUDE).
-if (-not (Test-IncludeHasFile -IncludeEnv $env:INCLUDE -FileName "Windows.h") -or -not (Test-IncludeHasFile -IncludeEnv $env:INCLUDE -FileName "stdio.h")) {
+if (-not (Test-IncludeHasFile -IncludeEnv ${env:INCLUDE} -FileName "Windows.h") -or -not (Test-IncludeHasFile -IncludeEnv ${env:INCLUDE} -FileName "stdio.h")) {
     $incRoots = @("C:\\Program Files (x86)\\Windows Kits\\10\\Include", "C:\\Program Files\\Windows Kits\\10\\Include")
     $incVerDirs = Get-WindowsKitsVersionDirs -Roots $incRoots
     foreach ($vd in $incVerDirs) {
@@ -395,15 +395,15 @@ if (-not (Test-IncludeHasFile -IncludeEnv $env:INCLUDE -FileName "Windows.h") -o
         if (Test-Path $cppwinrt) { $add += $cppwinrt }
 
         $prefix = ($add -join ";")
-        if ([string]::IsNullOrWhiteSpace($env:INCLUDE)) { $env:INCLUDE = $prefix } else { $env:INCLUDE = "$prefix;$env:INCLUDE" }
+        if ([string]::IsNullOrWhiteSpace(${env:INCLUDE})) { ${env:INCLUDE} = $prefix } else { ${env:INCLUDE} = "$prefix;${env:INCLUDE}" }
         break
     }
 }
 
-if (-not (Test-LibHasFile -LibEnv $env:LIB -FileName "kernel32.lib")) {
+if (-not (Test-LibHasFile -LibEnv ${env:LIB} -FileName "kernel32.lib")) {
     Write-Host "⚠️  MSVC tools found, but LIB still cannot resolve kernel32.lib; build/link may fail. (VS env scripts likely incomplete on this machine.)" -ForegroundColor Yellow
 }
 
-if (-not (Test-IncludeHasFile -IncludeEnv $env:INCLUDE -FileName "Windows.h")) {
+if (-not (Test-IncludeHasFile -IncludeEnv ${env:INCLUDE} -FileName "Windows.h")) {
     Write-Host "⚠️  MSVC tools found, but INCLUDE still cannot resolve Windows.h; compile may fail. (Windows SDK include paths missing.)" -ForegroundColor Yellow
 }

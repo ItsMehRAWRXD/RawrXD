@@ -23,7 +23,7 @@ $job = Start-Job -ScriptBlock {
             $resp.ContentLength64 = $buffer.Length
             $resp.OutputStream.Write($buffer,0,$buffer.Length)
             $resp.Close()
-            Set-Content -Path "$env:TEMP\manifest_notifier_test_payload.json" -Value $body
+            Set-Content -Path "${env:TEMP}\manifest_notifier_test_payload.json" -Value $body
             return
         } catch {
             # swallow
@@ -32,7 +32,7 @@ $job = Start-Job -ScriptBlock {
 } -ArgumentList $listener
 
 # Create temp manifest file
-$manifest = Join-Path $env:TEMP 'test_manifest.json'
+$manifest = Join-Path ${env:TEMP} 'test_manifest.json'
 @{ test = 'initial' } | ConvertTo-Json | Set-Content -Path $manifest
 
 # Start notifier in a job
@@ -49,11 +49,11 @@ $updatedContent = @{ updated = (Get-Date -Format o) } | ConvertTo-Json
 Set-Content -Path $manifest -Value $updatedContent
 
 # Wait for payload file
-for ($i=0;$i -lt 30 -and -not (Test-Path "$env:TEMP\manifest_notifier_test_payload.json");$i++) { Start-Sleep -Seconds 1 }
+for ($i=0;$i -lt 30 -and -not (Test-Path "${env:TEMP}\manifest_notifier_test_payload.json");$i++) { Start-Sleep -Seconds 1 }
 
-if (Test-Path "$env:TEMP\manifest_notifier_test_payload.json") {
+if (Test-Path "${env:TEMP}\manifest_notifier_test_payload.json") {
     Write-Host "Notification received - test passed"
-    Get-Content "$env:TEMP\manifest_notifier_test_payload.json" | Write-Host
+    Get-Content "${env:TEMP}\manifest_notifier_test_payload.json" | Write-Host
 } else {
     Write-Host "Notification not received - test failed"
 }
@@ -62,5 +62,5 @@ if (Test-Path "$env:TEMP\manifest_notifier_test_payload.json") {
 try { Stop-Job -Job $notifierJob -Force } catch {}
 try { Stop-Job -Job $job -Force } catch {}
 try { $listener.Stop() } catch {}
-Remove-Item "$env:TEMP\manifest_notifier_test_payload.json" -ErrorAction SilentlyContinue
+Remove-Item "${env:TEMP}\manifest_notifier_test_payload.json" -ErrorAction SilentlyContinue
 Remove-Item $manifest -ErrorAction SilentlyContinue

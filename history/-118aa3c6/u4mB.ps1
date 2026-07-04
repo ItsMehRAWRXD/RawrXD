@@ -72,8 +72,8 @@ function Build-WindowsCnC {
     }
     
     # Build Go C&C server with Windows-specific settings
-    $env:GOOS = "windows"
-    $env:GOARCH = "amd64"
+    ${env:GOOS} = "windows"
+    ${env:GOARCH} = "amd64"
     
     try {
         Push-Location "cnc"

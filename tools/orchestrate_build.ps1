@@ -52,8 +52,7 @@ New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
 
 # =============================================================================
 # PHASE 1: FORENSIC ANALYSIS
-# =============================================================================
-if (-not $SkipForensics) {
+# ============================================================================= $(if (-not $SkipForensics) {
     Write-Host "`n" + ("=" * 80) -ForegroundColor Cyan
     Write-Host "PHASE 1: COFF FORENSICS & CONFLICT DETECTION" -ForegroundColor Cyan
     Write-Host ("=" * 80) -ForegroundColor Cyan
@@ -71,8 +70,7 @@ if (-not $SkipForensics) {
 
 # =============================================================================
 # PHASE 2: REBUILD MONOLITHIC OBJECTS (if sources exist)
-# =============================================================================
-if (-not $SkipRebuild) {
+# ============================================================================= $(if (-not $SkipRebuild) {
     Write-Host "`n" + ("=" * 80) -ForegroundColor Cyan
     Write-Host "PHASE 2: REBUILD MONOLITHIC ASM WITH /BIGOBJ" -ForegroundColor Cyan
     Write-Host ("=" * 80) -ForegroundColor Cyan

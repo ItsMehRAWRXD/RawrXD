@@ -66,20 +66,20 @@ public static class RawrXD_Direct {
 # ============================================================================
 
 # Pre-allocate buffers for hot path
-$script:MaxBufferSize = 8192
-$script:PreallocPtr = [System.Runtime.InteropServices.Marshal]::AllocHGlobal($script:MaxBufferSize)
-$script:CtxPtr = [System.Runtime.InteropServices.Marshal]::AllocHGlobal(64)
-$script:Initialized = $false
+${script:MaxBufferSize} = 8192
+${script:PreallocPtr} = [System.Runtime.InteropServices.Marshal]::AllocHGlobal(${script:MaxBufferSize})
+${script:CtxPtr} = [System.Runtime.InteropServices.Marshal]::AllocHGlobal(64)
+${script:Initialized} = $false
 
-$script:PatternNames = @("UNKNOWN", "TODO", "FIXME", "XXX", "HACK", "BUG", "NOTE", "IDEA", "REVIEW")
+${script:PatternNames} = @("UNKNOWN", "TODO", "FIXME", "XXX", "HACK", "BUG", "NOTE", "IDEA", "REVIEW")
 
 
 # ============================================================================
 # 800B OPTIMIZED LOADING
 # ============================================================================
 
-$script:FastLoadBuffer = New-Object byte[] 800
-$script:LoadOptimization = @{
+${script:FastLoadBuffer} = New-Object byte[] 800
+${script:LoadOptimization} = @{
     BufferSize = 800
     UseAsync = $true
     ParallelLoad = $true
@@ -98,8 +98,8 @@ function Invoke-FastLoad {
 }
 
 function Enable-OptimizedLoading {
-    $env:RAWRXD_OPTIMIZED_LOADING = "1"
-    $env:RAWRXD_LOAD_BUFFER_SIZE = "800"
+    ${env:RAWRXD_OPTIMIZED_LOADING} = "1"
+    ${env:RAWRXD_LOAD_BUFFER_SIZE} = "800"
 }
 
 Enable-OptimizedLoading
@@ -108,11 +108,11 @@ function Initialize-DirectEngine {
     .SYNOPSIS
     Initialize the pattern engine for direct calls
     #>
-    if ($script:Initialized) { return 0 }
+    if (${script:Initialized}) { return 0 }
     
     $result = [RawrXD_Direct]::InitializePatternEngine()
     if ($result -eq 0) {
-        $script:Initialized = $true
+        ${script:Initialized} = $true
         
         # Get engine info
         $infoPtr = [System.Runtime.InteropServices.Marshal]::AllocHGlobal(64)
@@ -120,7 +120,7 @@ function Initialize-DirectEngine {
         $mode = [System.Runtime.InteropServices.Marshal]::ReadInt32($infoPtr, 4)
         [System.Runtime.InteropServices.Marshal]::FreeHGlobal($infoPtr)
         
-        $modeStr = if ($mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
+        $modeStr = $(if ($mode -eq 2) { "AVX-512 SIMD" } else { "Scalar" }
         Write-Host "[RawrXD] Engine initialized: $modeStr" -ForegroundColor Green
     }
     return $result
@@ -143,21 +143,21 @@ function Invoke-DirectClassify {
     )
     
     process {
-        if (-not $script:Initialized) {
+        if (-not ${script:Initialized}) {
             Initialize-DirectEngine | Out-Null
         }
         
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
-        $len = [Math]::Min($bytes.Length, $script:MaxBufferSize)
+        $len = [Math]::Min($bytes.Length, ${script:MaxBufferSize})
         
-        [System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, $script:PreallocPtr, $len)
+        [System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, ${script:PreallocPtr}, $len)
         
         [double]$confidence = 0.0
-        $type = [RawrXD_Direct]::ClassifyPattern($script:PreallocPtr, $len, $script:CtxPtr, [ref]$confidence)
+        $type = [RawrXD_Direct]::ClassifyPattern(${script:PreallocPtr}, $len, ${script:CtxPtr}, [ref]$confidence)
         
         [PSCustomObject]@{
             Type = $type
-            TypeName = $script:PatternNames[$type]
+            TypeName = ${script:PatternNames}[$type]
             Confidence = $confidence
             Priority = switch ($type) { 5 { 3 } { $_ -in 2,3 } { 2 } { $_ -in 1,4,8 } { 1 } default { 0 } }
         }
@@ -180,7 +180,7 @@ function Invoke-BatchClassify {
         [string[]]$Texts
     )
     
-    if (-not $script:Initialized) {
+    if (-not ${script:Initialized}) {
         Initialize-DirectEngine | Out-Null
     }
     
@@ -188,17 +188,17 @@ function Invoke-BatchClassify {
     
     foreach ($text in $Texts) {
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($text)
-        $len = [Math]::Min($bytes.Length, $script:MaxBufferSize)
+        $len = [Math]::Min($bytes.Length, ${script:MaxBufferSize})
         
-        [System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, $script:PreallocPtr, $len)
+        [System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, ${script:PreallocPtr}, $len)
         
         [double]$confidence = 0.0
-        $type = [RawrXD_Direct]::ClassifyPattern($script:PreallocPtr, $len, $script:CtxPtr, [ref]$confidence)
+        $type = [RawrXD_Direct]::ClassifyPattern(${script:PreallocPtr}, $len, ${script:CtxPtr}, [ref]$confidence)
         
         $results.Add([PSCustomObject]@{
             Text = $text.Substring(0, [Math]::Min(50, $text.Length))
             Type = $type
-            TypeName = $script:PatternNames[$type]
+            TypeName = ${script:PatternNames}[$type]
             Confidence = [Math]::Round($confidence, 2)
         })
     }
@@ -430,13 +430,13 @@ function Compare-AllModes {
 
 # Register cleanup for when script ends
 Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
-    if ($script:PreallocPtr -ne [IntPtr]::Zero) {
-        [System.Runtime.InteropServices.Marshal]::FreeHGlobal($script:PreallocPtr)
+    if (${script:PreallocPtr} -ne [IntPtr]::Zero) {
+        [System.Runtime.InteropServices.Marshal]::FreeHGlobal(${script:PreallocPtr})
     }
-    if ($script:CtxPtr -ne [IntPtr]::Zero) {
-        [System.Runtime.InteropServices.Marshal]::FreeHGlobal($script:CtxPtr)
+    if (${script:CtxPtr} -ne [IntPtr]::Zero) {
+        [System.Runtime.InteropServices.Marshal]::FreeHGlobal(${script:CtxPtr})
     }
-    if ($script:Initialized) {
+    if (${script:Initialized}) {
         [RawrXD_Direct]::ShutdownPatternEngine() | Out-Null
     }
 } -SupportEvent | Out-Null

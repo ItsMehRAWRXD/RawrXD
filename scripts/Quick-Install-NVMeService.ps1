@@ -111,8 +111,8 @@ try {
     
     for ($i = 0; $i -lt $driveCount -and $i -lt 16; $i++) {
         $temp = $accessor.ReadInt32(16 + ($i * 4))
-        $color = if($temp -eq -1){'Gray'}elseif($temp -gt 70){'Red'}elseif($temp -gt 55){'Yellow'}else{'Green'}
-        $status = if($temp -eq -1){"(not NVMe)"}elseif($temp -eq 0){"(ERROR)"}else{""}
+        $color = $(if ($temp -eq -1){'Gray'}elseif($temp -gt 70){'Red'}elseif($temp -gt 55){'Yellow'}else{'Green'}
+        $status = $(if ($temp -eq -1){"(not NVMe)"}elseif($temp -eq 0){"(ERROR)"}else{""}
         Write-Host "  Drive ${i}: $temp °C $status" -ForegroundColor $color
     }
     

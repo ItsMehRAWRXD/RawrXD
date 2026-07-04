@@ -41,7 +41,7 @@ else {
 }
 
 # Track test results
-$script:TestResults = @{
+${script:TestResults} = @{
     Total = 0
     Passed = 0
     Failed = 0
@@ -55,19 +55,19 @@ function Record-TestResult {
         [string]$Message = ""
     )
     
-    $script:TestResults.Total++
+    ${script:TestResults}.Total++
     
     if ($Success) {
-        $script:TestResults.Passed++
+        ${script:TestResults}.Passed++
         Write-Host "   ✅ PASS: $TestName" -ForegroundColor Green
     }
     else {
-        $script:TestResults.Failed++
+        ${script:TestResults}.Failed++
         Write-Host "   ❌ FAIL: $TestName" -ForegroundColor Red
         if ($Message) { Write-Host "      Error: $Message" -ForegroundColor DarkRed }
     }
     
-    $script:TestResults.Details += @{
+    ${script:TestResults}.Details += @{
         Name = $TestName
         Success = $Success
         Message = $Message
@@ -191,7 +191,7 @@ Write-Host "─" * 60 -ForegroundColor DarkGray
 
 try {
     # Create test file
-    $testFile = Join-Path $env:TEMP "agentic-test-file.txt"
+    $testFile = Join-Path ${env:TEMP} "agentic-test-file.txt"
     $testContent = "BigDaddy-G Agentic Test Content"
     
     # Test 4a: Write operation
@@ -221,7 +221,7 @@ try {
     }
     
     # Test 4c: List operation
-    $result = Invoke-FileOperation -Operation List -FilePath $env:TEMP -ErrorAction SilentlyContinue
+    $result = Invoke-FileOperation -Operation List -FilePath ${env:TEMP} -ErrorAction SilentlyContinue
     
     if ($result) {
         Record-TestResult "File operation list" $true
@@ -563,11 +563,11 @@ Write-Host "║                    📊 TEST SUMMARY                            
 Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
 Write-Host "`n📈 Results:" -ForegroundColor Yellow
-Write-Host "   Total Tests:  $($script:TestResults.Total)" -ForegroundColor White
-Write-Host "   Passed:       $($script:TestResults.Passed)" -ForegroundColor Green
-Write-Host "   Failed:       $($script:TestResults.Failed)" -ForegroundColor $(if ($script:TestResults.Failed -eq 0) { 'Green' } else { 'Red' })
+Write-Host "   Total Tests:  $(${script:TestResults}.Total)" -ForegroundColor White
+Write-Host "   Passed:       $(${script:TestResults}.Passed)" -ForegroundColor Green
+Write-Host "   Failed:       $(${script:TestResults}.Failed)" -ForegroundColor $(if (${script:TestResults}.Failed -eq 0) { 'Green' } else { 'Red' })
 
-$passRate = if ($script:TestResults.Total -gt 0) { [math]::Round(($script:TestResults.Passed / $script:TestResults.Total) * 100, 1) } else { 0 }
+$passRate = $(if (${script:TestResults}.Total -gt 0) { [math]::Round((${script:TestResults}.Passed / ${script:TestResults}.Total) * 100, 1) } else { 0 }
 Write-Host "   Pass Rate:    $passRate%" -ForegroundColor $(if ($passRate -ge 95) { 'Green' } elseif ($passRate -ge 80) { 'Yellow' } else { 'Red' })
 
 Write-Host "`n🎯 BigDaddy-G Agentic Tools Status:" -ForegroundColor Cyan

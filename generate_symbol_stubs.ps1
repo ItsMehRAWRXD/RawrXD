@@ -4,7 +4,7 @@
 
 param(
     [string]$Root = "D:\rawrxd",
-    [string]$OutDir = "$env:LOCALAPPDATA\RawrXD\stubs",
+    [string]$OutDir = "${env:LOCALAPPDATA}\RawrXD\stubs",
     [switch]$Force
 )
 
@@ -267,6 +267,6 @@ Write-Host "============================================================" -Fore 
 @{
     StubDirectory = $OutDir
     CompiledStubs = $CompiledStubs
-    StubLibrary = if($Lib) { Join-Path $OutDir "rawrxd_stubs.lib" } else { $null }
+    StubLibrary = $(if ($Lib) { Join-Path $OutDir "rawrxd_stubs.lib" } else { $null }
     GeneratedFiles = $StubFiles + $CompiledStubs
 } | ConvertTo-Json | Out-File -FilePath (Join-Path $OutDir "stub_manifest.json") -Encoding UTF8

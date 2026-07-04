@@ -22,7 +22,7 @@ Write-Host ">>> Configuring CMake ..."
 # Disable Vulkan in CI if not available
 $cmakeArgs = @("-S", ".", "-B", "build", "-A", $A, "-DCMAKE_BUILD_TYPE=$Config")
 
-if ($env:CI -eq "true") {
+if (${env:CI} -eq "true") {
   Write-Host "CI environment detected - disabling Vulkan (not available in CI)"
   $cmakeArgs += "-DGGML_VULKAN=OFF"
   $cmakeArgs += "-DENABLE_VULKAN=OFF"
@@ -30,10 +30,10 @@ if ($env:CI -eq "true") {
 
 # Set OpenSSL path if available from environment or common install location
 $opensslPath = $null
-if ($env:OPENSSL_DIR) {
-  $opensslPath = $env:OPENSSL_DIR
-} elseif ($env:OPENSSL_ROOT_DIR) {
-  $opensslPath = $env:OPENSSL_ROOT_DIR
+if (${env:OPENSSL_DIR}) {
+  $opensslPath = ${env:OPENSSL_DIR}
+} elseif (${env:OPENSSL_ROOT_DIR}) {
+  $opensslPath = ${env:OPENSSL_ROOT_DIR}
 } elseif (Test-Path "C:\\Program Files\\OpenSSL-Win64") {
   # Fallback to standard install path used by choco 'openssl' (full SDK)
   $opensslPath = "C:\\Program Files\\OpenSSL-Win64"
@@ -55,8 +55,8 @@ if ($opensslPath) {
   $cmakeArgs += "-DOPENSSL_INCLUDE_DIR=$opensslInclude"
   $cmakeArgs += "-DOPENSSL_CRYPTO_LIBRARY=$cryptoLib"
   $cmakeArgs += "-DOPENSSL_SSL_LIBRARY=$sslLib"
-  if ($env:CMAKE_PREFIX_PATH) {
-    $cmakeArgs += "-DCMAKE_PREFIX_PATH=$opensslPath;$($env:CMAKE_PREFIX_PATH)"
+  if (${env:CMAKE_PREFIX_PATH}) {
+    $cmakeArgs += "-DCMAKE_PREFIX_PATH=$opensslPath;$(${env:CMAKE_PREFIX_PATH})"
   } else {
     $cmakeArgs += "-DCMAKE_PREFIX_PATH=$opensslPath"
   }

@@ -14,9 +14,9 @@ Write-Host "RawrXD Mock Cluster (Testing Mode)" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 # Node simulation using PowerShell HTTP listeners
-$script:Nodes = @()
-$script:Running = $true
-$script:Metrics = @{}
+${script:Nodes} = @()
+${script:Running} = $true
+${script:Metrics} = @{}
 
 function Start-MockNode {
     param($NodeId, $Port)
@@ -29,7 +29,7 @@ function Start-MockNode {
         Write-Host "Node $NodeId listening on http://127.0.0.1:$Port" -ForegroundColor Green
         
         # Initialize metrics
-        $script:Metrics[$NodeId] = @{
+        ${script:Metrics}[$NodeId] = @{
             tokens_processed = 0
             requests_served = 0
             start_time = Get-Date
@@ -140,7 +140,7 @@ sovereign_tps_current{node="$nodeId"} $($metrics[$nodeId].tps)
                     break
                 }
             }
-        }).AddArgument($listener).AddArgument($NodeId).AddArgument($script:Metrics)
+        }).AddArgument($listener).AddArgument($NodeId).AddArgument(${script:Metrics})
         
         $handle = $powershell.BeginInvoke()
         
@@ -164,24 +164,24 @@ for ($i = 0; $i -lt $NodeCount; $i++) {
     $port = $BasePort + $i
     $node = Start-MockNode -NodeId $i -Port $port
     if ($node) {
-        $script:Nodes += $node
+        ${script:Nodes} += $node
     }
     Start-Sleep -Milliseconds 100
 }
 
-if ($script:Nodes.Count -eq 0) {
+if (${script:Nodes}.Count -eq 0) {
     Write-Error "Failed to start any nodes"
     exit 1
 }
 
-Write-Host "`n✅ All $($script:Nodes.Count) nodes started!" -ForegroundColor Green
+Write-Host "`n✅ All $(${script:Nodes}.Count) nodes started!" -ForegroundColor Green
 
 # Display cluster info
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "Cluster Status" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-foreach ($node in $script:Nodes) {
+foreach ($node in ${script:Nodes}) {
     Write-Host "Node $($node.Id): http://127.0.0.1:$($node.Port)"
     Write-Host "  Health: http://127.0.0.1:$($node.Port)/health"
     Write-Host "  Metrics: http://127.0.0.1:$($node.Port)/metrics"
@@ -190,9 +190,9 @@ foreach ($node in $script:Nodes) {
 
 # Save cluster info
 $clusterInfo = @{
-    nodes = $script:Nodes | ForEach-Object { @{ id = $_.Id; port = $_.Port } }
+    nodes = ${script:Nodes} | ForEach-Object { @{ id = $_.Id; port = $_.Port } }
     basePort = $BasePort
-    nodeCount = $script:Nodes.Count
+    nodeCount = ${script:Nodes}.Count
     startedAt = Get-Date -Format "o"
     mode = "mock"
 }
@@ -210,28 +210,28 @@ Write-Host "========================================" -ForegroundColor Cyan
 $endTime = (Get-Date).AddMinutes($DurationMinutes)
 
 try {
-    while ((Get-Date) -lt $endTime -and $script:Running) {
+    while ((Get-Date) -lt $endTime -and ${script:Running}) {
         Start-Sleep -Seconds 5
         
         $totalTps = 0
         $totalRequests = 0
         
-        foreach ($node in $script:Nodes) {
-            if ($script:Metrics[$node.Id]) {
-                $totalTps += $script:Metrics[$node.Id].tps
-                $totalRequests += $script:Metrics[$node.Id].requests_served
+        foreach ($node in ${script:Nodes}) {
+            if (${script:Metrics}[$node.Id]) {
+                $totalTps += ${script:Metrics}[$node.Id].tps
+                $totalRequests += ${script:Metrics}[$node.Id].requests_served
             }
         }
         
-        Write-Host "$(Get-Date -Format 'HH:mm:ss') | Nodes: $($script:Nodes.Count) | TPS: $([math]::Round($totalTps, 0)) | Requests: $totalRequests | Running..." -NoNewline
+        Write-Host "$(Get-Date -Format 'HH:mm:ss') | Nodes: $(${script:Nodes}.Count) | TPS: $([math]::Round($totalTps, 0)) | Requests: $totalRequests | Running..." -NoNewline
         Write-Host "`r" -NoNewline
     }
 } finally {
     Write-Host "`n`nShutting down mock cluster..." -ForegroundColor Yellow
     
-    $script:Running = $false
+    ${script:Running} = $false
     
-    foreach ($node in $script:Nodes) {
+    foreach ($node in ${script:Nodes}) {
         try {
             $node.Listener.Stop()
             $node.Listener.Close()

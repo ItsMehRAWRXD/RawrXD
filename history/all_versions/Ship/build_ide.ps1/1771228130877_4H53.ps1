@@ -12,8 +12,8 @@ $ClPath = $CL.FullName
 $VCToolsPath = $CL.Directory.Parent.Parent.Parent.FullName
 $WinSDK = "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0"
 
-$env:INCLUDE = "$VCToolsPath\include;$WinSDK\ucrt;$WinSDK\um;$WinSDK\shared"
-$env:LIB = "$VCToolsPath\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
+${env:INCLUDE} = "$VCToolsPath\include;$WinSDK\ucrt;$WinSDK\um;$WinSDK\shared"
+${env:LIB} = "$VCToolsPath\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
 
 Push-Location $PSScriptRoot
 

@@ -65,7 +65,7 @@ try {
     # Build project
     Write-Host "`n🏗️  Building RawrXD-QtShell with zlib compression..." -ForegroundColor Yellow
     
-    $buildConfig = if ($Release) { "Release" } else { "Debug" }
+    $buildConfig = $(if ($Release) { "Release" } else { "Debug" }
     & cmake --build . --config $buildConfig --target RawrXD-QtShell --parallel 8
     
     if ($LASTEXITCODE -ne 0) {

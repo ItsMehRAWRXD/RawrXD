@@ -42,8 +42,8 @@ function Compile-MASM {
   $exe = Join-Path $outDir ([IO.Path]::GetFileNameWithoutExtension($src) + '.exe')
   $mlCmd = '"{0}" /c /nologo /Fo "{1}" "{2}"' -f $tools.ml64, $obj, $src
   cmd /c $mlCmd; if ($LASTEXITCODE -ne 0) { throw "ml64 compile failed" }
-  $entry = if ($Entry) { $Entry } else { 'WinMain' }
-  $sub = if ($SubSystem -eq 'windows') { 'windows' } else { 'console' }
+  $entry = $(if ($Entry) { $Entry } else { 'WinMain' }
+  $sub = $(if ($SubSystem -eq 'windows') { 'windows' } else { 'console' }
   
   # Build link command with optional runtime
   $linkObjs = @("`"$obj`"")
@@ -68,8 +68,8 @@ function Compile-NASM {
   $fmt = 'win64'
   $ncmd = '"{0}" -f {1} "{2}" -o "{3}"' -f $nasm, $fmt, $src, $obj
   cmd /c $ncmd; if ($LASTEXITCODE -ne 0) { throw "nasm assemble failed" }
-  $entry = if ($Entry) { $Entry } else { 'start' }
-  $sub = if ($SubSystem -eq 'windows') { 'windows' } else { 'console' }
+  $entry = $(if ($Entry) { $Entry } else { 'start' }
+  $sub = $(if ($SubSystem -eq 'windows') { 'windows' } else { 'console' }
   
   # Build link command with optional runtime
   $linkObjs = @("`"$obj`"")
@@ -88,7 +88,7 @@ $sw = [System.Diagnostics.Stopwatch]::StartNew()
 try {
   $fullSrc = (Resolve-Path $Source).Path
   Write-Host ("[Compiler] Tool={0} SubSystem={1} Source={2}" -f $Tool,$SubSystem,$fullSrc) -ForegroundColor Cyan
-  $result = if ($Tool -eq 'masm') { Compile-MASM $fullSrc $OutDir $Runtime } else { Compile-NASM $fullSrc $OutDir $Runtime }
+  $result = $(if ($Tool -eq 'masm') { Compile-MASM $fullSrc $OutDir $Runtime } else { Compile-NASM $fullSrc $OutDir $Runtime }
   $sw.Stop()
   Write-Host ("[OK] Built: {0} in {1} ms" -f $result, $sw.ElapsedMilliseconds) -ForegroundColor Green
 } catch {

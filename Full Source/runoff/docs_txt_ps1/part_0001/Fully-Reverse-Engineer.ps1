@@ -313,7 +313,7 @@ function Deobfuscate-JavaScript {
             
             # Check if file might be obfuscated
             $lines = $content -split "`n"
-            $avgLineLength = if ($lines.Count -gt 0) { $content.Length / $lines.Count } else { 0 }
+            $avgLineLength = $(if ($lines.Count -gt 0) { $content.Length / $lines.Count } else { 0 }
             
             # If average line length is very high, likely obfuscated or minified
             if ($avgLineLength -gt 500) {
@@ -630,7 +630,7 @@ if (`$DeobfuscateJavaScript -or `$RunAll) {
         try {
             `$content = Get-Content `$js.FullName -Raw
             `$lines = `$content -split "`n"
-            `$avgLineLength = if (`$lines.Count -gt 0) { `$content.Length / `$lines.Count } else { 0 }
+            `$avgLineLength = $(if (`$lines.Count -gt 0) { `$content.Length / `$lines.Count } else { 0 }
             
             if (`$avgLineLength -gt 500) {
                 Write-Status "Deobfuscating: `$relativePath" "Info"

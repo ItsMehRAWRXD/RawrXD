@@ -549,7 +549,7 @@ function Reconstruct-SourceTree {
         # Find all source files
         $sourceFiles = Get-ChildItem -Path $SourceDir -Recurse -File | Where-Object {
             $ext = $_.Extension.ToLower()
-            $included = if ($IncludeExtensions -contains "*") { $true } else { $IncludeExtensions -contains $ext }
+            $included = $(if ($IncludeExtensions -contains "*") { $true } else { $IncludeExtensions -contains $ext }
             $excluded = $ExcludeExtensions -contains $ext
             $included -and -not $excluded
         }

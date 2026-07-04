@@ -219,4 +219,4 @@ Parameter Validation:
 #>
 
 # Export registry for external use
-$script:CliHandlerRegistry = $HandlerRegistry
+${script:CliHandlerRegistry} = $HandlerRegistry

@@ -22,7 +22,7 @@ param(
     [string]$OutputPath = "D:\lazy init ide\bin",
 
     [Parameter(Mandatory=$false)]
-    [switch]$EnableAVX512 = $true
+    [switch]$EnableAVX512
 )
 
 $ErrorActionPreference = 'Stop'
@@ -145,10 +145,10 @@ function Invoke-MASMCompile {
 
     Write-Host "[MASM] Compiling $([System.IO.Path]::GetFileName($SourceFile))..." -ForegroundColor Yellow
 
-    $proc = Start-Process -FilePath $Tools.ML64 -ArgumentList $args -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$env:TEMP\masm_out.log" -RedirectStandardError "$env:TEMP\masm_err.log"
+    $proc = Start-Process -FilePath $Tools.ML64 -ArgumentList $args -NoNewWindow -Wait -PassThru -RedirectStandardOutput "${env:TEMP}\masm_out.log" -RedirectStandardError "${env:TEMP}\masm_err.log"
 
     if ($proc.ExitCode -ne 0) {
-        $errors = Get-Content "$env:TEMP\masm_err.log" -Raw
+        $errors = Get-Content "${env:TEMP}\masm_err.log" -Raw
         throw "MASM compilation failed:`n$errors"
     }
 
@@ -177,10 +177,10 @@ function Invoke-Link {
 
     Write-Host "[LINK] Linking $([System.IO.Path]::GetFileName($OutputFile))..." -ForegroundColor Yellow
 
-    $proc = Start-Process -FilePath $Tools.LINK -ArgumentList $args -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$env:TEMP\link_out.log" -RedirectStandardError "$env:TEMP\link_err.log"
+    $proc = Start-Process -FilePath $Tools.LINK -ArgumentList $args -NoNewWindow -Wait -PassThru -RedirectStandardOutput "${env:TEMP}\link_out.log" -RedirectStandardError "${env:TEMP}\link_err.log"
 
     if ($proc.ExitCode -ne 0) {
-        $errors = Get-Content "$env:TEMP\link_err.log" -Raw
+        $errors = Get-Content "${env:TEMP}\link_err.log" -Raw
         throw "Link failed:`n$errors"
     }
 

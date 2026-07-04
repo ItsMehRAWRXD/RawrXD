@@ -39,6 +39,22 @@
 #define WM_TELEMETRY_FLUSH (WM_USER + 0x602)  // Periodic telemetry buffer flush
 #endif
 
+// Codex menu command IDs (Phase 7)
+#ifndef IDM_CODEX_COMPLETE
+#define IDM_CODEX_COMPLETE          5000
+#define IDM_CODEX_EXPLAIN           5001
+#define IDM_CODEX_REFACTOR          5002
+#define IDM_CODEX_GENERATE_TESTS    5003
+#define IDM_CODEX_TEST              IDM_CODEX_GENERATE_TESTS  // Alias for compatibility
+#define IDM_CODEX_FIX               5004
+#define IDM_CODEX_OPTIMIZE          5005
+#define IDM_CODEX_DOC               IDM_CODEX_OPTIMIZE  // Alias for compatibility
+#define IDM_CODEX_CHAT              5006
+#define IDM_CODEX_SETTINGS          5007
+#define IDM_CODEX_TOGGLE_INLINE     5008
+#define IDM_CODEX_TOGGLE_CHAT       5009
+#endif
+
 #ifndef _Return_type_success_
 #define _Return_type_success_(expr)
 #endif
@@ -78,6 +94,13 @@ struct DownloadProgress;
 #include "../full_agentic_ide/FullAgenticIDE.h"
 #include "../gguf_loader.h"
 #include "../model_source_resolver.h"
+#include "../codex/CodexCommandHandlers.hpp"
+#include "../codex/CodexLSPBridge.hpp"
+#include "../codex/CodexChatBridge.hpp"
+#include "../codex/CodexAutocompleteProvider.hpp"
+#include "../codex/CodexSettings.hpp"
+#include "../codex/CodexMenuIntegration.hpp"
+#include "../codex/CodexSettingsDialog.hpp"
 #include "../modules/codex_ultimate.h"
 #include "../modules/copilot_gap_closer.h"
 #include "../modules/crucible_engine.h"
@@ -113,6 +136,10 @@ using json = nlohmann::json;
 
 class Win32IDE;
 void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide);
+
+// Forward declarations for command handlers (Win32IDE_CommandHandlers.cpp)
+#include "../core/shared_feature_dispatch.h"  // CommandContext, CommandResult
+CommandResult HandleCodexCommand(const CommandContext& ctx);  // Phase 1: /codex command router
 
 class OutlinePanel;
 
@@ -758,6 +785,14 @@ class Win32IDE
     CodexUltimate* m_codexUltimate = nullptr;
     std::shared_ptr<rawrxd::IDEFeatures> m_missingFeaturesCore;
 
+    // Codex CLI/GUI Integration
+    std::shared_ptr<RawrXD::Codex::CodexCLI> m_codexCLI;
+    std::unique_ptr<RawrXD::Codex::CodexCommandRouter> m_codexRouter;
+
+    // Initialize Codex integration
+    void initializeCodexIntegration();
+    void shutdownCodexIntegration();
+
     // Window procedure
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -1235,6 +1270,7 @@ class Win32IDE
     void handleFileCommand(int commandId);
     void handleEditCommand(int commandId);
     void handleViewCommand(int commandId);
+    void handleCodexCommand(int commandId);  // Phase 7: Codex menu commands (consolidated)
     void handleBuildCommand(int commandId);
     void handleTerminalCommand(int commandId);
     void handleToolsCommand(int commandId);
@@ -2969,6 +3005,51 @@ class Win32IDE
     std::shared_ptr<RawrXD::Backend::NativeClient> m_nativeClient;  // Ollama client for agentic chat
     std::unique_ptr<RawrXD::Agentic::AgenticChatSession> m_agenticChatSession;  // Function-calling chat interface
     bool m_ollamaBackendEnabled;                                                // Whether to use Ollama for chat
+
+    // Codex CLI accessor (defined in Win32IDE.cpp to avoid duplicate declaration)
+    std::shared_ptr<RawrXD::Codex::CodexCLI> GetCodexCLI();
+
+    // Codex Chat Bridge (Phase 4 Chat Panel Integration)
+    std::shared_ptr<RawrXD::Codex::CodexChatBridge> m_codexChatBridge;
+    std::shared_ptr<RawrXD::Codex::CodexChatBridge> GetCodexChatBridge();
+    
+    // Codex LSP Bridge (Phase 3 LSP Integration)
+    std::shared_ptr<RawrXD::Codex::CodexLSPBridge> m_codexLSPBridge;
+    std::shared_ptr<RawrXD::Codex::CodexLSPBridge> GetCodexLSPBridge();
+
+    // Codex Autocomplete Provider (Phase 5 Autocomplete Integration)
+    std::shared_ptr<RawrXD::Codex::CodexAutocompleteProvider> m_codexAutocompleteProvider;
+    std::shared_ptr<RawrXD::Codex::CodexAutocompleteProvider> GetCodexAutocompleteProvider();
+
+    // Codex Settings Manager (Phase 6 Settings Integration)
+    std::shared_ptr<RawrXD::Codex::CodexSettingsManager> m_codexSettingsManager;
+    std::shared_ptr<RawrXD::Codex::CodexSettingsManager> GetCodexSettingsManager() {
+        if (!m_codexSettingsManager) {
+            m_codexSettingsManager = std::make_shared<RawrXD::Codex::CodexSettingsManager>();
+            m_codexSettingsManager->Initialize();
+        }
+        return m_codexSettingsManager;
+    }
+
+    // Codex Menu Integration (Phase 7 Menu Integration)
+    std::shared_ptr<RawrXD::Codex::CodexMenuIntegration> m_codexMenuIntegration;
+    std::shared_ptr<RawrXD::Codex::CodexMenuIntegration> GetCodexMenuIntegration() {
+        if (!m_codexMenuIntegration) {
+            m_codexMenuIntegration = std::make_shared<RawrXD::Codex::CodexMenuIntegration>();
+            m_codexMenuIntegration->Initialize(GetCodexSettingsManager());
+        }
+        return m_codexMenuIntegration;
+    }
+
+    // Codex Settings Dialog
+    std::unique_ptr<RawrXD::Codex::CodexSettingsDialog> m_codexSettingsDialog;
+    void ShowCodexSettingsDialog() {
+        if (!m_codexSettingsDialog) {
+            m_codexSettingsDialog = std::make_unique<RawrXD::Codex::CodexSettingsDialog>();
+            m_codexSettingsDialog->Initialize(GetCodexSettingsManager());
+        }
+        m_codexSettingsDialog->Show(m_hwndMain);
+    }
     static const UINT WM_RAWR_STREAM_DATA = WM_APP + 1337;
     static const uint32_t RAWR_STREAM_WPARAM_TAG = 0x52415752;  // 'RAWR'
     HMODULE m_streamBridgeModule = nullptr;

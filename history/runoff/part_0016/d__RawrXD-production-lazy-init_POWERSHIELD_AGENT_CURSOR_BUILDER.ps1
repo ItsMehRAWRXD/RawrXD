@@ -79,8 +79,8 @@ function Initialize-PowerShieldEngine {
             # Enable dual engine if requested
             if ($UseDualEngine) {
                 Write-ColorOutput "→ Dual engine mode enabled" "PowerShield"
-                $Global:RawrXDEngine.DualEngines.Engine1.Status = 'Active'
-                $Global:RawrXDEngine.DualEngines.Engine2.Status = 'Active'
+                ${Global:RawrXDEngine}.DualEngines.Engine1.Status = 'Active'
+                ${Global:RawrXDEngine}.DualEngines.Engine2.Status = 'Active'
             }
             
             # Enable quantum crypto if requested
@@ -124,8 +124,8 @@ function Load-CursorDataIntoPowerShield {
     Write-ColorOutput "→ Loading into PowerShield memory..." "PowerShield"
     
     # Simulate loading into engine
-    $Global:RawrXDEngine.PerformanceMetrics.ModelsLoaded = $stats.JSFiles
-    $Global:RawrXDEngine.PerformanceMetrics.TensorsProcessed = $stats.TSFiles
+    ${Global:RawrXDEngine}.PerformanceMetrics.ModelsLoaded = $stats.JSFiles
+    ${Global:RawrXDEngine}.PerformanceMetrics.TensorsProcessed = $stats.TSFiles
     
     Write-ColorOutput "✓ Cursor data loaded into PowerShield" "Success"
     return $true
@@ -273,7 +273,7 @@ function Feed-PowerShield-Core {
     $agentMain = Join-Path $CursorExtractPath "resources\app\extensions\cursor-agent\dist\main.js"
     if (Test-Path $agentMain) {
         Write-ColorOutput "→ Feeding to Engine 1: cursor-agent/main.js (3.5MB)" "Detail"
-        $Global:RawrXDEngine.DualEngines.Engine1.TensorsLoaded = 3500
+        ${Global:RawrXDEngine}.DualEngines.Engine1.TensorsLoaded = 3500
         
         # Use PowerShield's analysis
         . "D:\lazy init ide\cursor_js_analyzer.ps1" -TargetFile $agentMain -OutputDir "$OutputDirectory\analysis\agent"
@@ -283,7 +283,7 @@ function Feed-PowerShield-Core {
     $mcpMain = Join-Path $CursorExtractPath "resources\app\extensions\cursor-mcp\dist\main.js"
     if (Test-Path $mcpMain) {
         Write-ColorOutput "→ Feeding to Engine 2: cursor-mcp/main.js (3.4MB)" "Detail"
-        $Global:RawrXDEngine.DualEngines.Engine2.TensorsLoaded = 3400
+        ${Global:RawrXDEngine}.DualEngines.Engine2.TensorsLoaded = 3400
         
         . "D:\lazy init ide\cursor_js_analyzer.ps1" -TargetFile $mcpMain -OutputDir "$OutputDirectory\analysis\mcp"
     }
@@ -319,13 +319,13 @@ function Feed-PowerShield-Extensions {
             
             # Update engine metrics
             if ($engineIndex -eq 1) {
-                $Global:RawrXDEngine.DualEngines.Engine1.TensorsLoaded += 100
+                ${Global:RawrXDEngine}.DualEngines.Engine1.TensorsLoaded += 100
             } else {
-                $Global:RawrXDEngine.DualEngines.Engine2.TensorsLoaded += 100
+                ${Global:RawrXDEngine}.DualEngines.Engine2.TensorsLoaded += 100
             }
             
             # Alternate engines
-            $engineIndex = if ($engineIndex -eq 1) { 2 } else { 1 }
+            $engineIndex = $(if ($engineIndex -eq 1) { 2 } else { 1 }
         }
     }
     
@@ -349,8 +349,8 @@ function Feed-PowerShield-APIs {
     Write-ColorOutput "→ Feeding tool calling mechanism" "Detail"
     
     # Update engine knowledge
-    $Global:RawrXDEngine.BeaconNetwork.ActiveConnections = 19  # 19 extensions
-    $Global:RawrXDEngine.BeaconNetwork.TrustedNodes = 75        # 75 Claude references
+    ${Global:RawrXDEngine}.BeaconNetwork.ActiveConnections = 19  # 19 extensions
+    ${Global:RawrXDEngine}.BeaconNetwork.TrustedNodes = 75        # 75 Claude references
     
     Write-ColorOutput "✓ API discovery fed to PowerShield" "Success"
 }
@@ -380,7 +380,7 @@ function Feed-PowerShield-IDE {
     Write-ColorOutput "→ Feeding Git version control" "Detail"
     
     # IDE features use sliding doors pattern
-    $Global:RawrXDEngine.SlidingDoors.ActiveDoors = 3  # 3-pane layout
+    ${Global:RawrXDEngine}.SlidingDoors.ActiveDoors = 3  # 3-pane layout
     
     Write-ColorOutput "✓ IDE integration fed to PowerShield" "Success"
 }
@@ -427,6 +427,6 @@ Write-ColorOutput "  POWERSHIELD BUILD COMPLETE" "Success"
 Write-ColorOutput "═══════════════════════════════════════════════════" "Header"
 Write-ColorOutput ""
 Write-ColorOutput "Output: $OutputDirectory" "Detail"
-Write-ColorOutput "PowerShield Engines: Engine1=$($Global:RawrXDEngine.DualEngines.Engine1.Status), Engine2=$($Global:RawrXDEngine.DualEngines.Engine2.Status)" "Detail"
-Write-ColorOutput "Beacon Network: $($Global:RawrXDEngine.BeaconNetwork.ActiveConnections) active connections" "Detail"
-Write-ColorOutput "Sliding Doors: $($Global:RawrXDEngine.SlidingDoors.ActiveDoors) active doors" "Detail"
+Write-ColorOutput "PowerShield Engines: Engine1=$(${Global:RawrXDEngine}.DualEngines.Engine1.Status), Engine2=$(${Global:RawrXDEngine}.DualEngines.Engine2.Status)" "Detail"
+Write-ColorOutput "Beacon Network: $(${Global:RawrXDEngine}.BeaconNetwork.ActiveConnections) active connections" "Detail"
+Write-ColorOutput "Sliding Doors: $(${Global:RawrXDEngine}.SlidingDoors.ActiveDoors) active doors" "Detail"

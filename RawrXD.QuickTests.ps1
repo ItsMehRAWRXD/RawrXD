@@ -106,7 +106,7 @@ $warnFeatures = ($featureResults | Where-Object { $_.Status -eq 'WARN' }).Count
 Write-Host "Modules:  $passedModules/$($modules.Count) passed" -ForegroundColor $(if($passedModules -eq $modules.Count){'Green'}else{'Yellow'})
 Write-Host "Features: $passedFeatures/$($features.Count) passed, $warnFeatures warnings" -ForegroundColor $(if($passedFeatures -eq $features.Count){'Green'}else{'Yellow'})
 
-$overallStatus = if ($passedModules -eq $modules.Count -and $passedFeatures -ge ($features.Count * 0.8)) { 'PASS' } else { 'PARTIAL' }
+$overallStatus = $(if ($passedModules -eq $modules.Count -and $passedFeatures -ge ($features.Count * 0.8)) { 'PASS' } else { 'PARTIAL' }
 Write-Host "Overall:  $overallStatus" -ForegroundColor $(if($overallStatus -eq 'PASS'){'Green'}else{'Yellow'})
 
 Write-Host "`nProduction modules ready for deployment!" -ForegroundColor Green

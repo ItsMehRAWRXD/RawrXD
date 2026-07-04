@@ -83,7 +83,7 @@ function Get-RealHealthMetrics {
                 @{
                     Name = $_.Name
                     DriverVersion = $_.DriverVersion
-                    VideoMemory = if ($_.AdapterRAM) { [math]::Round($_.AdapterRAM / 1GB, 2) } else { 0 }
+                    VideoMemory = $(if ($_.AdapterRAM) { [math]::Round($_.AdapterRAM / 1GB, 2) } else { 0 }
                     Status = $_.Status
                 }
             })
@@ -146,8 +146,8 @@ function Get-RealHealthMetrics {
     }
     
     $metrics['Timestamp'] = Get-Date
-    $metrics['ComputerName'] = $env:COMPUTERNAME
-    $metrics['UserName'] = $env:USERNAME
+    $metrics['ComputerName'] = ${env:COMPUTERNAME}
+    $metrics['UserName'] = ${env:USERNAME}
     
     return $metrics
 }
@@ -207,7 +207,7 @@ function Invoke-BackendAPI {
     
     try {
         # Construct full URI
-        $baseUrl = if ($script:BackendURL) { $script:BackendURL } else { "http://localhost:8000" }
+        $baseUrl = $(if (${script:BackendURL}) { ${script:BackendURL} } else { "http://localhost:8000" }
         $uri = "$baseUrl$Endpoint"
         
         # Build headers with auth
@@ -219,8 +219,8 @@ function Invoke-BackendAPI {
         }
         
         # Add API key if available
-        if ($script:ApiKey -and $script:ApiKey -ne "") {
-            $defaultHeaders["Authorization"] = "Bearer $($script:ApiKey)"
+        if (${script:ApiKey} -and ${script:ApiKey} -ne "") {
+            $defaultHeaders["Authorization"] = "Bearer $(${script:ApiKey})"
         }
         
         # Merge custom headers
@@ -237,7 +237,7 @@ function Invoke-BackendAPI {
             
             try {
                 if ($Method -in @("POST", "PUT", "PATCH") -and $Body) {
-                    $jsonBody = if ($Body -is [string]) { $Body } else { $Body | ConvertTo-Json -Depth 10 -Compress }
+                    $jsonBody = $(if ($Body -is [string]) { $Body } else { $Body | ConvertTo-Json -Depth 10 -Compress }
                     
                     if ($Stream) {
                         # REAL streaming response
@@ -394,7 +394,7 @@ Respond in JSON format:
                         }
                         
                         # Execute action
-                        $actionResult = Execute-BrowserAction -Action $action -BrowserControl $script:browser
+                        $actionResult = Execute-BrowserAction -Action $action -BrowserControl ${script:browser}
                         $agentResponse['Actions'] += @{
                             Action = $action
                             Result = $actionResult
@@ -527,7 +527,7 @@ function Send-AgenticMessage {
     
     try {
         # Build prompt with reasoning instructions if enabled
-        $prompt = if ($EnableReasoning) {
+        $prompt = $(if ($EnableReasoning) {
             @"
 You are an AI assistant with reasoning capabilities. For this query, show your step-by-step thinking process.
 
@@ -598,8 +598,8 @@ function New-EditorTabWithLimit {
     
     try {
         # Check limit
-        $maxTabs = if ($script:MaxEditorTabs) { $script:MaxEditorTabs } else { 1000 }
-        $currentCount = if ($script:EditorTabs) { $script:EditorTabs.Count } else { 0 }
+        $maxTabs = $(if (${script:MaxEditorTabs}) { ${script:MaxEditorTabs} } else { 1000 }
+        $currentCount = $(if (${script:EditorTabs}) { ${script:EditorTabs}.Count } else { 0 }
         
         if ($currentCount -ge $maxTabs) {
             [System.Windows.Forms.MessageBox]::Show(
@@ -636,8 +636,8 @@ function New-ChatTabWithLimit {
     )
     
     try {
-        $maxTabs = if ($script:MaxChatTabs) { $script:MaxChatTabs } else { 1000 }
-        $currentCount = if ($script:ChatTabs) { $script:ChatTabs.Count } else { 0 }
+        $maxTabs = $(if (${script:MaxChatTabs}) { ${script:MaxChatTabs} } else { 1000 }
+        $currentCount = $(if (${script:ChatTabs}) { ${script:ChatTabs}.Count } else { 0 }
         
         if ($currentCount -ge $maxTabs) {
             [System.Windows.Forms.MessageBox]::Show(

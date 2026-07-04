@@ -77,6 +77,8 @@
 #define ID_TOOLS_PLUGINS        8002
 #define ID_TOOLS_EXTENSIONS     8003
 #define ID_TOOLS_SETTINGS       8004
+#define ID_TOOLS_HOTPATCH       8050  // Phase 5: Live model hotpatch
+#define ID_TOOLS_HOTPATCH_STATUS 8051  // Phase 5: Hotpatch status dialog
 
 // --- Help menu (9001–9099) ---------------------------------------------------
 #define ID_HELP_CONTENTS        9001

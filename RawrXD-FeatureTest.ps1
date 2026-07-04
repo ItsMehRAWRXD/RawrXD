@@ -27,8 +27,8 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$script:TestResults = @()
-$script:FeatureManifest = @()
+${script:TestResults} = @()
+${script:FeatureManifest} = @()
 
 # ============================================================================
 # BANNER
@@ -43,7 +43,7 @@ Write-Host "╚═════════════════════�
 # SOURCE FILE PATHS
 # ============================================================================
 
-$script:Paths = @{
+${script:Paths} = @{
     # Win32 IDE
     Win32Root     = "D:\rawrxd\src\win32app"
     Win32Header   = "D:\rawrxd\src\win32app\Win32IDE.h"
@@ -114,7 +114,7 @@ function Test-FileExists {
     param([string]$Path, [string]$Label)
     if (Test-Path $Path) {
         $size = (Get-Item $Path).Length
-        $lines = if ($Path -match '\.(cpp|h|hpp|ps1|py|js|jsx|ts|tsx)$') {
+        $lines = $(if ($Path -match '\.(cpp|h|hpp|ps1|py|js|jsx|ts|tsx)$') {
             try { (Get-Content $Path).Count } catch { 0 }
         } else { 0 }
         return @{ Exists = $true; Size = $size; Lines = $lines; Label = $Label }
@@ -145,7 +145,7 @@ function Add-TestResult {
         [string]$Evidence,
         [string]$TestType     # FileExists, FunctionSearch, PatternMatch, BuildTest, RuntimeTest
     )
-    $script:TestResults += [PSCustomObject]@{
+    ${script:TestResults} += [PSCustomObject]@{
         Category  = $Category
         Feature   = $Feature
         Variant   = $IDEVariant
@@ -168,12 +168,12 @@ $totalLines = 0
 $totalFiles = 0
 
 # Win32 IDE Files
-$win32Files = Get-ChildItem -Path $script:Paths.Win32Root -Filter "Win32IDE*.cpp" -ErrorAction SilentlyContinue
-$win32Headers = Get-ChildItem -Path $script:Paths.Win32Root -Filter "*.h" -ErrorAction SilentlyContinue
+$win32Files = Get-ChildItem -Path ${script:Paths}.Win32Root -Filter "Win32IDE*.cpp" -ErrorAction SilentlyContinue
+$win32Headers = Get-ChildItem -Path ${script:Paths}.Win32Root -Filter "*.h" -ErrorAction SilentlyContinue
 $win32AllFiles = @($win32Files) + @($win32Headers) + @(
-    Get-ChildItem -Path $script:Paths.Win32Root -Filter "Win32TerminalManager.*" -ErrorAction SilentlyContinue
+    Get-ChildItem -Path ${script:Paths}.Win32Root -Filter "Win32TerminalManager.*" -ErrorAction SilentlyContinue
 ) + @(
-    Get-ChildItem -Path $script:Paths.Win32Root -Filter "TransparentRenderer.*" -ErrorAction SilentlyContinue
+    Get-ChildItem -Path ${script:Paths}.Win32Root -Filter "TransparentRenderer.*" -ErrorAction SilentlyContinue
 )
 
 $win32LineCount = 0
@@ -190,23 +190,23 @@ $totalLines += $win32LineCount
 $totalFiles += $win32FileCount
 
 # CLI Shell
-$cliInfo = Test-FileExists $script:Paths.CLIShell "CLI Shell"
-$cliCompInfo = Test-FileExists $script:Paths.CLICompiler "CLI Compiler"
+$cliInfo = Test-FileExists ${script:Paths}.CLIShell "CLI Shell"
+$cliCompInfo = Test-FileExists ${script:Paths}.CLICompiler "CLI Compiler"
 $cliLines = $cliInfo.Lines + $cliCompInfo.Lines
 Write-Host "  CLI Shell:    2 files, $($cliLines.ToString('N0')) lines" -ForegroundColor $(if ($cliInfo.Exists) { "Green" } else { "Red" })
 $totalLines += $cliLines
 $totalFiles += 2
 
 # React IDE Generator
-$reactInfo1 = Test-FileExists $script:Paths.ReactGen "React Generator"
-$reactInfo2 = Test-FileExists $script:Paths.ReactIDE "React IDE Components"
+$reactInfo1 = Test-FileExists ${script:Paths}.ReactGen "React Generator"
+$reactInfo2 = Test-FileExists ${script:Paths}.ReactIDE "React IDE Components"
 $reactLines = $reactInfo1.Lines + $reactInfo2.Lines
 Write-Host "  React IDE:    3 files, $($reactLines.ToString('N0')) lines" -ForegroundColor $(if ($reactInfo1.Exists) { "Green" } else { "Red" })
 $totalLines += $reactLines
 $totalFiles += 3
 
 # PowerShell IDE
-$psInfo = Test-FileExists $script:Paths.PSIDE "PowerShell IDE (RawrXD2.ps1)"
+$psInfo = Test-FileExists ${script:Paths}.PSIDE "PowerShell IDE (RawrXD2.ps1)"
 Write-Host "  PowerShell:   1 file,  $($psInfo.Lines.ToString('N0')) lines" -ForegroundColor $(if ($psInfo.Exists) { "Green" } else { "Red" })
 $totalLines += $psInfo.Lines
 $totalFiles += 1
@@ -263,12 +263,12 @@ function Introspect-CLIFeature {
         [string]$Pattern
     )
     
-    if (-not (Test-Path $script:Paths.CLIShell)) {
+    if (-not (Test-Path ${script:Paths}.CLIShell)) {
         Add-TestResult $Category $Feature "CLI" "MISSING" "cli_shell.cpp not found" "FileExists"
         return
     }
     
-    $matches = Select-String -Path $script:Paths.CLIShell -Pattern $Pattern -ErrorAction SilentlyContinue
+    $matches = Select-String -Path ${script:Paths}.CLIShell -Pattern $Pattern -ErrorAction SilentlyContinue
     if ($matches.Count -gt 0) {
         Add-TestResult $Category $Feature "CLI" "REAL" "$($matches.Count) matches in cli_shell.cpp" "PatternMatch"
     } else {
@@ -284,7 +284,7 @@ function Introspect-ReactFeature {
     )
     
     $found = $false
-    foreach ($f in @($script:Paths.ReactGen, $script:Paths.ReactIDE, $script:Paths.ReactGenH)) {
+    foreach ($f in @(${script:Paths}.ReactGen, ${script:Paths}.ReactIDE, ${script:Paths}.ReactGenH)) {
         if (Test-Path $f) {
             $m = Select-String -Path $f -Pattern $Pattern -ErrorAction SilentlyContinue
             if ($m.Count -gt 0) { $found = $true; break }
@@ -305,12 +305,12 @@ function Introspect-PSFeature {
         [string]$Pattern
     )
     
-    if (-not (Test-Path $script:Paths.PSIDE)) {
+    if (-not (Test-Path ${script:Paths}.PSIDE)) {
         Add-TestResult $Category $Feature "PS" "MISSING" "RawrXD2.ps1 not found" "FileExists"
         return
     }
     
-    $matches = Select-String -Path $script:Paths.PSIDE -Pattern $Pattern -ErrorAction SilentlyContinue
+    $matches = Select-String -Path ${script:Paths}.PSIDE -Pattern $Pattern -ErrorAction SilentlyContinue
     if ($matches.Count -gt 0) {
         Add-TestResult $Category $Feature "PS" "REAL" "$($matches.Count) matches in RawrXD2.ps1" "PatternMatch"
     } else {
@@ -341,89 +341,89 @@ function Introspect-Feature {
 # FILE OPERATIONS
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  📂 File Operations..." -ForegroundColor Gray
-Introspect-Feature "File Ops" "New File"     $script:Paths.Win32Cmds "IDM_FILE_NEW"     "cmd_new_file"      "NEVER_MATCH_REACT" "New-EditorFile"
-Introspect-Feature "File Ops" "Open File"    $script:Paths.Win32Cmds "IDM_FILE_OPEN"    "cmd_open_file"     "NEVER_MATCH_REACT" "Open-EditorFile"
-Introspect-Feature "File Ops" "Save File"    $script:Paths.Win32Cmds "IDM_FILE_SAVE"    "cmd_save_file"     "NEVER_MATCH_REACT" "Save-EditorFile"
-Introspect-Feature "File Ops" "Save As"      $script:Paths.Win32Cmds "IDM_FILE_SAVEAS"  "cmd_save_as"       "NEVER_MATCH_REACT" "Save-EditorFileAs"
-Introspect-Feature "File Ops" "Close File"   $script:Paths.Win32Cmds "IDM_FILE_CLOSE"   "cmd_close_file"    "NEVER_MATCH_REACT" "Close-EditorFile"
-Introspect-Feature "File Ops" "Load Model"   $script:Paths.Win32Cmds "IDM_FILE_LOAD_MODEL" "NEVER_MATCH" "engine.*load" "Open-GGUFModel"
-Introspect-Feature "File Ops" "Model HF"     $script:Paths.Win32Cmds "IDM_FILE_MODEL_FROM_HF" "NEVER_MATCH" "NEVER_MATCH" "HuggingFace"
-Introspect-Feature "File Ops" "Recent Files" $script:Paths.Win32Cmds "IDM_FILE_RECENT"  "NEVER_MATCH"       "NEVER_MATCH" "Add-FileToRecentList"
+Introspect-Feature "File Ops" "New File"     ${script:Paths}.Win32Cmds "IDM_FILE_NEW"     "cmd_new_file"      "NEVER_MATCH_REACT" "New-EditorFile"
+Introspect-Feature "File Ops" "Open File"    ${script:Paths}.Win32Cmds "IDM_FILE_OPEN"    "cmd_open_file"     "NEVER_MATCH_REACT" "Open-EditorFile"
+Introspect-Feature "File Ops" "Save File"    ${script:Paths}.Win32Cmds "IDM_FILE_SAVE"    "cmd_save_file"     "NEVER_MATCH_REACT" "Save-EditorFile"
+Introspect-Feature "File Ops" "Save As"      ${script:Paths}.Win32Cmds "IDM_FILE_SAVEAS"  "cmd_save_as"       "NEVER_MATCH_REACT" "Save-EditorFileAs"
+Introspect-Feature "File Ops" "Close File"   ${script:Paths}.Win32Cmds "IDM_FILE_CLOSE"   "cmd_close_file"    "NEVER_MATCH_REACT" "Close-EditorFile"
+Introspect-Feature "File Ops" "Load Model"   ${script:Paths}.Win32Cmds "IDM_FILE_LOAD_MODEL" "NEVER_MATCH" "engine.*load" "Open-GGUFModel"
+Introspect-Feature "File Ops" "Model HF"     ${script:Paths}.Win32Cmds "IDM_FILE_MODEL_FROM_HF" "NEVER_MATCH" "NEVER_MATCH" "HuggingFace"
+Introspect-Feature "File Ops" "Recent Files" ${script:Paths}.Win32Cmds "IDM_FILE_RECENT"  "NEVER_MATCH"       "NEVER_MATCH" "Add-FileToRecentList"
 
 # ──────────────────────────────────────────────────────────────────────────
 # EDITING
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  ✂️  Editing..." -ForegroundColor Gray
-Introspect-Feature "Editing" "Undo"         $script:Paths.Win32Cmds "IDM_EDIT_UNDO"    "cmd_undo"     "NEVER_MATCH" "Invoke-EditorCommand.*undo"
-Introspect-Feature "Editing" "Redo"         $script:Paths.Win32Cmds "IDM_EDIT_REDO"    "cmd_redo"     "NEVER_MATCH" "Invoke-EditorCommand.*redo"
-Introspect-Feature "Editing" "Cut"          $script:Paths.Win32Cmds "IDM_EDIT_CUT"     "cmd_cut"      "NEVER_MATCH" "Invoke-EditorCommand.*cut"
-Introspect-Feature "Editing" "Copy"         $script:Paths.Win32Cmds "IDM_EDIT_COPY"    "cmd_copy"     "NEVER_MATCH" "Invoke-EditorCommand.*copy"
-Introspect-Feature "Editing" "Paste"        $script:Paths.Win32Cmds "IDM_EDIT_PASTE"   "cmd_paste"    "NEVER_MATCH" "Invoke-EditorCommand.*paste"
-Introspect-Feature "Editing" "Find"         $script:Paths.Win32Cmds "IDM_EDIT_FIND"    "cmd_find"     "NEVER_MATCH" "Show-FindDialog"
-Introspect-Feature "Editing" "Replace"      $script:Paths.Win32Cmds "IDM_EDIT_REPLACE" "cmd_replace"  "NEVER_MATCH" "Show-ReplaceDialog"
+Introspect-Feature "Editing" "Undo"         ${script:Paths}.Win32Cmds "IDM_EDIT_UNDO"    "cmd_undo"     "NEVER_MATCH" "Invoke-EditorCommand.*undo"
+Introspect-Feature "Editing" "Redo"         ${script:Paths}.Win32Cmds "IDM_EDIT_REDO"    "cmd_redo"     "NEVER_MATCH" "Invoke-EditorCommand.*redo"
+Introspect-Feature "Editing" "Cut"          ${script:Paths}.Win32Cmds "IDM_EDIT_CUT"     "cmd_cut"      "NEVER_MATCH" "Invoke-EditorCommand.*cut"
+Introspect-Feature "Editing" "Copy"         ${script:Paths}.Win32Cmds "IDM_EDIT_COPY"    "cmd_copy"     "NEVER_MATCH" "Invoke-EditorCommand.*copy"
+Introspect-Feature "Editing" "Paste"        ${script:Paths}.Win32Cmds "IDM_EDIT_PASTE"   "cmd_paste"    "NEVER_MATCH" "Invoke-EditorCommand.*paste"
+Introspect-Feature "Editing" "Find"         ${script:Paths}.Win32Cmds "IDM_EDIT_FIND"    "cmd_find"     "NEVER_MATCH" "Show-FindDialog"
+Introspect-Feature "Editing" "Replace"      ${script:Paths}.Win32Cmds "IDM_EDIT_REPLACE" "cmd_replace"  "NEVER_MATCH" "Show-ReplaceDialog"
 
 # ──────────────────────────────────────────────────────────────────────────
 # AGENT / AI
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🤖 Agent / AI..." -ForegroundColor Gray
-Introspect-Feature "Agent" "Agent Loop"       $script:Paths.Win32Agent "IDM_AGENT_START_LOOP" "cmd_agent_loop"     "AgentMode"       "Invoke-AgenticChat"
-Introspect-Feature "Agent" "Agent Execute"    $script:Paths.Win32Agent "IDM_AGENT_EXECUTE"    "cmd_agent_execute"  "AgentMode"       "Invoke-AgenticShellCommand"
-Introspect-Feature "Agent" "Agent Goal"       $script:Paths.Win32Agent "agentGoal|setGoal"    "cmd_agent_goal"     "NEVER_MATCH"     "agentContext.*Goal"
-Introspect-Feature "Agent" "Agent Memory"     $script:Paths.Win32SubAgent "agentMemory|onAgentMemoryStore|IDM_AGENT_MEMORY" "cmd_agent_memory" "NEVER_MATCH" "agentContext.*Memory"
-Introspect-Feature "Agent" "Agent Stop"       $script:Paths.Win32Agent "IDM_AGENT_STOP"       "NEVER_MATCH"        "NEVER_MATCH"     "Stop-OllamaHost"
-Introspect-Feature "Agent" "Failure Detect"   $script:Paths.Win32FailDet "FailureType|refusal|hallucination" "NEVER_MATCH" "NEVER_MATCH" "Register-ErrorHandler"
-Introspect-Feature "Agent" "Plan Executor"    $script:Paths.Win32Plan  "PlanStep|executePlan"  "NEVER_MATCH"        "NEVER_MATCH"     "New-AgentTask|Start-AgentTask"
-Introspect-Feature "Agent" "Exec Governor"    $script:Paths.Win32ExecGov "rateLimit|governor"   "NEVER_MATCH"        "NEVER_MATCH"     "MaxActionsPerMinute"
+Introspect-Feature "Agent" "Agent Loop"       ${script:Paths}.Win32Agent "IDM_AGENT_START_LOOP" "cmd_agent_loop"     "AgentMode"       "Invoke-AgenticChat"
+Introspect-Feature "Agent" "Agent Execute"    ${script:Paths}.Win32Agent "IDM_AGENT_EXECUTE"    "cmd_agent_execute"  "AgentMode"       "Invoke-AgenticShellCommand"
+Introspect-Feature "Agent" "Agent Goal"       ${script:Paths}.Win32Agent "agentGoal|setGoal"    "cmd_agent_goal"     "NEVER_MATCH"     "agentContext.*Goal"
+Introspect-Feature "Agent" "Agent Memory"     ${script:Paths}.Win32SubAgent "agentMemory|onAgentMemoryStore|IDM_AGENT_MEMORY" "cmd_agent_memory" "NEVER_MATCH" "agentContext.*Memory"
+Introspect-Feature "Agent" "Agent Stop"       ${script:Paths}.Win32Agent "IDM_AGENT_STOP"       "NEVER_MATCH"        "NEVER_MATCH"     "Stop-OllamaHost"
+Introspect-Feature "Agent" "Failure Detect"   ${script:Paths}.Win32FailDet "FailureType|refusal|hallucination" "NEVER_MATCH" "NEVER_MATCH" "Register-ErrorHandler"
+Introspect-Feature "Agent" "Plan Executor"    ${script:Paths}.Win32Plan  "PlanStep|executePlan"  "NEVER_MATCH"        "NEVER_MATCH"     "New-AgentTask|Start-AgentTask"
+Introspect-Feature "Agent" "Exec Governor"    ${script:Paths}.Win32ExecGov "rateLimit|governor"   "NEVER_MATCH"        "NEVER_MATCH"     "MaxActionsPerMinute"
 
 # ──────────────────────────────────────────────────────────────────────────
 # AUTONOMY
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🔄 Autonomy..." -ForegroundColor Gray
-Introspect-Feature "Autonomy" "Toggle"     $script:Paths.Win32Cmds "IDM_AUTONOMY_TOGGLE"  "cmd_autonomy_start" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Autonomy" "Set Goal"   $script:Paths.Win32Cmds "IDM_AUTONOMY_SET_GOAL" "cmd_autonomy_goal"  "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Autonomy" "Rate Limit" $script:Paths.Win32Cmds "maxActionsPerMinute"   "cmd_autonomy_rate"  "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Autonomy" "Toggle"     ${script:Paths}.Win32Cmds "IDM_AUTONOMY_TOGGLE"  "cmd_autonomy_start" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Autonomy" "Set Goal"   ${script:Paths}.Win32Cmds "IDM_AUTONOMY_SET_GOAL" "cmd_autonomy_goal"  "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Autonomy" "Rate Limit" ${script:Paths}.Win32Cmds "maxActionsPerMinute"   "cmd_autonomy_rate"  "NEVER_MATCH" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # AI MODES
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🧠 AI Modes..." -ForegroundColor Gray
-Introspect-Feature "AI Mode" "Deep Thinking"  $script:Paths.Win32Agent "IDM_AI_MODE_DEEP_THINK"    "!deep"          "deepThinking"   "Deep.*Think"
-Introspect-Feature "AI Mode" "Deep Research"  $script:Paths.Win32Agent "IDM_AI_MODE_DEEP_RESEARCH" "!research"      "deepResearch"   "Deep.*Research"
-Introspect-Feature "AI Mode" "No Refusal"     $script:Paths.Win32Agent "IDM_AI_MODE_NO_REFUSAL"    "NEVER_MATCH"    "noRefusal"      "No.*Refusal|noRefusal"
-Introspect-Feature "AI Mode" "Context Window" $script:Paths.Win32Agent "IDM_AI_CONTEXT"            "!max"           "contextLimit"   "contextLimit|ContextLength"
+Introspect-Feature "AI Mode" "Deep Thinking"  ${script:Paths}.Win32Agent "IDM_AI_MODE_DEEP_THINK"    "!deep"          "deepThinking"   "Deep.*Think"
+Introspect-Feature "AI Mode" "Deep Research"  ${script:Paths}.Win32Agent "IDM_AI_MODE_DEEP_RESEARCH" "!research"      "deepResearch"   "Deep.*Research"
+Introspect-Feature "AI Mode" "No Refusal"     ${script:Paths}.Win32Agent "IDM_AI_MODE_NO_REFUSAL"    "NEVER_MATCH"    "noRefusal"      "No.*Refusal|noRefusal"
+Introspect-Feature "AI Mode" "Context Window" ${script:Paths}.Win32Agent "IDM_AI_CONTEXT"            "!max"           "contextLimit"   "contextLimit|ContextLength"
 
 # ──────────────────────────────────────────────────────────────────────────
 # DEBUGGING
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🐛 Debugging..." -ForegroundColor Gray
-Introspect-Feature "Debug" "Start Debug"  $script:Paths.Win32Debug "startDebug|debug_start"  "cmd_debug_start"   "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Debug" "Breakpoints"  $script:Paths.Win32Debug "breakpoint|toggleBreak"  "cmd_breakpoint"    "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Debug" "Step Over"    $script:Paths.Win32Debug "stepOver|stepInto"       "cmd_debug_step"    "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Debug" "Native DbgEng" $script:Paths.Win32NatDbg "NativeDebuggerEngine|IDM_DBG_LAUNCH|DbgEng"  "NEVER_MATCH"       "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Debug" "Start Debug"  ${script:Paths}.Win32Debug "startDebug|debug_start"  "cmd_debug_start"   "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Debug" "Breakpoints"  ${script:Paths}.Win32Debug "breakpoint|toggleBreak"  "cmd_breakpoint"    "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Debug" "Step Over"    ${script:Paths}.Win32Debug "stepOver|stepInto"       "cmd_debug_step"    "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Debug" "Native DbgEng" ${script:Paths}.Win32NatDbg "NativeDebuggerEngine|IDM_DBG_LAUNCH|DbgEng"  "NEVER_MATCH"       "NEVER_MATCH" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # REVERSE ENGINEERING
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🔬 Reverse Engineering..." -ForegroundColor Gray
-Introspect-Feature "RE" "PE Analysis"     $script:Paths.Win32RE  "IDM_REVENG_ANALYZE"   "NEVER_MATCH" "dumpbin" "NEVER_MATCH"
-Introspect-Feature "RE" "Disassembly"     $script:Paths.Win32RE  "IDM_REVENG_DISASM"    "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "RE" "DumpBin"         $script:Paths.Win32RE  "IDM_REVENG_DUMPBIN"   "NEVER_MATCH" "dumpbin" "NEVER_MATCH"
-Introspect-Feature "RE" "MASM Compile"    $script:Paths.Win32RE  "IDM_REVENG_COMPILE"   "NEVER_MATCH" "compile" "NEVER_MATCH"
-Introspect-Feature "RE" "SSA Lifting"     $script:Paths.Win32RE  "IDM_REVENG_SSA"       "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "RE" "Type Recovery"   $script:Paths.Win32RE  "IDM_REVENG_TYPE"      "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "RE" "Data Flow"       $script:Paths.Win32RE  "IDM_REVENG_DATA_FLOW" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "RE" "CFG Generation"  $script:Paths.Win32RE  "IDM_REVENG_CFG"       "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "RE" "Export IDA"      $script:Paths.Win32RE  "IDM_REVENG_EXPORT_IDA" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "RE" "Export Ghidra"   $script:Paths.Win32RE  "IDM_REVENG_EXPORT_GHIDRA" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "RE" "PE Analysis"     ${script:Paths}.Win32RE  "IDM_REVENG_ANALYZE"   "NEVER_MATCH" "dumpbin" "NEVER_MATCH"
+Introspect-Feature "RE" "Disassembly"     ${script:Paths}.Win32RE  "IDM_REVENG_DISASM"    "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "RE" "DumpBin"         ${script:Paths}.Win32RE  "IDM_REVENG_DUMPBIN"   "NEVER_MATCH" "dumpbin" "NEVER_MATCH"
+Introspect-Feature "RE" "MASM Compile"    ${script:Paths}.Win32RE  "IDM_REVENG_COMPILE"   "NEVER_MATCH" "compile" "NEVER_MATCH"
+Introspect-Feature "RE" "SSA Lifting"     ${script:Paths}.Win32RE  "IDM_REVENG_SSA"       "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "RE" "Type Recovery"   ${script:Paths}.Win32RE  "IDM_REVENG_TYPE"      "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "RE" "Data Flow"       ${script:Paths}.Win32RE  "IDM_REVENG_DATA_FLOW" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "RE" "CFG Generation"  ${script:Paths}.Win32RE  "IDM_REVENG_CFG"       "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "RE" "Export IDA"      ${script:Paths}.Win32RE  "IDM_REVENG_EXPORT_IDA" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "RE" "Export Ghidra"   ${script:Paths}.Win32RE  "IDM_REVENG_EXPORT_GHIDRA" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # DECOMPILER VIEW
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🔍 Decompiler View (D2D)..." -ForegroundColor Gray
-Introspect-Feature "Decompiler" "D2D Split View"    $script:Paths.Win32Decomp "DecompViewState|DECOMP_SPLIT"  "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Decompiler" "Syntax Coloring"   $script:Paths.Win32Decomp "tokenizeLine|getTokenColor"    "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Decompiler" "Sync Selection"    $script:Paths.Win32Decomp "SyncFromDecomp|SyncFromDisasm" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Decompiler" "SSA Var Rename"    $script:Paths.Win32Decomp "PropagateRename|varRenameMap"  "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Decompiler" "D2D Split View"    ${script:Paths}.Win32Decomp "DecompViewState|DECOMP_SPLIT"  "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Decompiler" "Syntax Coloring"   ${script:Paths}.Win32Decomp "tokenizeLine|getTokenColor"    "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Decompiler" "Sync Selection"    ${script:Paths}.Win32Decomp "SyncFromDecomp|SyncFromDisasm" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Decompiler" "SSA Var Rename"    ${script:Paths}.Win32Decomp "PropagateRename|varRenameMap"  "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # HOTPATCH (3-LAYER)
@@ -433,83 +433,83 @@ Introspect-Feature "Hotpatch" "Memory Patch"    "D:\rawrxd\src\core\model_memory
 Introspect-Feature "Hotpatch" "Byte-Level"      "D:\rawrxd\src\core\byte_level_hotpatcher.cpp" "patch_bytes|find_pattern_asm|search_and_patch" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH" 5
 Introspect-Feature "Hotpatch" "Server Patch"    "D:\rawrxd\src\server\gguf_server_hotpatch.cpp" "ServerHotpatch|transform" "NEVER_MATCH" "Hotpatch" "NEVER_MATCH" 5
 Introspect-Feature "Hotpatch" "Unified Manager" "D:\rawrxd\src\core\unified_hotpatch_manager.cpp" "UnifiedResult|apply_memory" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH" 5
-Introspect-Feature "Hotpatch" "Hotpatch Panel"  $script:Paths.Win32Hotpatch "HotpatchPanel|hotpatchList" "NEVER_MATCH" "HotpatchControls" "NEVER_MATCH"
+Introspect-Feature "Hotpatch" "Hotpatch Panel"  ${script:Paths}.Win32Hotpatch "HotpatchPanel|hotpatchList" "NEVER_MATCH" "HotpatchControls" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # THEMES
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🎨 Themes..." -ForegroundColor Gray
-Introspect-Feature "Themes" "16 Built-in"     $script:Paths.Win32Themes "IDM_THEME_|Monokai|Dracula|Nord" "NEVER_MATCH" "NEVER_MATCH" "Apply-Theme"
-Introspect-Feature "Themes" "Theme Editor"    $script:Paths.Win32Cmds "showThemeEditor"    "NEVER_MATCH" "NEVER_MATCH" "Show-CustomThemeBuilder"
-Introspect-Feature "Themes" "Transparency"    $script:Paths.Win32Themes "setWindowTransparency|WS_EX_LAYERED" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "Themes" "16 Built-in"     ${script:Paths}.Win32Themes "IDM_THEME_|Monokai|Dracula|Nord" "NEVER_MATCH" "NEVER_MATCH" "Apply-Theme"
+Introspect-Feature "Themes" "Theme Editor"    ${script:Paths}.Win32Cmds "showThemeEditor"    "NEVER_MATCH" "NEVER_MATCH" "Show-CustomThemeBuilder"
+Introspect-Feature "Themes" "Transparency"    ${script:Paths}.Win32Themes "setWindowTransparency|WS_EX_LAYERED" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # SYNTAX HIGHLIGHTING
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🖍️  Syntax Highlighting..." -ForegroundColor Gray
-Introspect-Feature "Syntax" "C++ Keywords"    $script:Paths.Win32Syntax "cppKeywords|isKeyword"  "NEVER_MATCH" "MonacoEditor" "Get-FileIcon"
+Introspect-Feature "Syntax" "C++ Keywords"    ${script:Paths}.Win32Syntax "cppKeywords|isKeyword"  "NEVER_MATCH" "MonacoEditor" "Get-FileIcon"
 Introspect-Feature "Syntax" "ASM Semantic"    "D:\rawrxd\src\win32app\Win32IDE_AsmSemantic.cpp" "AsmInstructionInfo|AsmRegisterInfo|lookupInstruction" "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "Syntax" "6 Languages"     $script:Paths.Win32Syntax "SyntaxLanguage|Python|Rust|GLSL" "NEVER_MATCH" "language" "NEVER_MATCH"
+Introspect-Feature "Syntax" "6 Languages"     ${script:Paths}.Win32Syntax "SyntaxLanguage|Python|Rust|GLSL" "NEVER_MATCH" "language" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # TERMINAL
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  💻 Terminal..." -ForegroundColor Gray
-Introspect-Feature "Terminal" "New Terminal"   $script:Paths.Win32Terminal "createTerminalPane|TerminalManager" "cmd_terminal_new"  "NEVER_MATCH" "New-Terminal"
-Introspect-Feature "Terminal" "Split Terminal" $script:Paths.Win32Cmds "splitTerminalHorizontal|splitTerminalVertical|IDM_TERMINAL_SPLIT" "cmd_terminal_split" "NEVER_MATCH" "Split-Terminal"
-Introspect-Feature "Terminal" "Kill Terminal"  $script:Paths.Win32SubAgent "killTerminal|killTerminalWithTimeout|IDM_TERMINAL_KILL" "cmd_terminal_kill" "NEVER_MATCH" "Kill-Terminal"
+Introspect-Feature "Terminal" "New Terminal"   ${script:Paths}.Win32Terminal "createTerminalPane|TerminalManager" "cmd_terminal_new"  "NEVER_MATCH" "New-Terminal"
+Introspect-Feature "Terminal" "Split Terminal" ${script:Paths}.Win32Cmds "splitTerminalHorizontal|splitTerminalVertical|IDM_TERMINAL_SPLIT" "cmd_terminal_split" "NEVER_MATCH" "Split-Terminal"
+Introspect-Feature "Terminal" "Kill Terminal"  ${script:Paths}.Win32SubAgent "killTerminal|killTerminalWithTimeout|IDM_TERMINAL_KILL" "cmd_terminal_kill" "NEVER_MATCH" "Kill-Terminal"
 
 # ──────────────────────────────────────────────────────────────────────────
 # STREAMING UX
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  📡 Streaming..." -ForegroundColor Gray
-Introspect-Feature "Streaming" "Token Stream"  $script:Paths.Win32SubAgent "appendStreamingToken|streamingOutput|clearStreamingOutput" "NEVER_MATCH" "NEVER_MATCH" "streaming|token.*by.*token"
-Introspect-Feature "Streaming" "Ghost Text"    $script:Paths.Win32Ghost  "ghostText|inlineSuggestion"          "NEVER_MATCH" "NEVER_MATCH" "Get-AIAutoCompleteSuggestions"
+Introspect-Feature "Streaming" "Token Stream"  ${script:Paths}.Win32SubAgent "appendStreamingToken|streamingOutput|clearStreamingOutput" "NEVER_MATCH" "NEVER_MATCH" "streaming|token.*by.*token"
+Introspect-Feature "Streaming" "Ghost Text"    ${script:Paths}.Win32Ghost  "ghostText|inlineSuggestion"          "NEVER_MATCH" "NEVER_MATCH" "Get-AIAutoCompleteSuggestions"
 
 # ──────────────────────────────────────────────────────────────────────────
 # SUBAGENT / SWARM
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🐝 SubAgent / Swarm..." -ForegroundColor Gray
-Introspect-Feature "SubAgent" "Spawn SubAgent" $script:Paths.Win32SubAgent "spawnSubAgent|SubAgentManager"  "cmd_subagent"  "NEVER_MATCH" "Send-AgentCommand"
-Introspect-Feature "SubAgent" "Prompt Chain"   $script:Paths.Win32SubAgent "executeChain"    "cmd_chain"     "NEVER_MATCH" "Invoke-AgenticWorkflow"
-Introspect-Feature "SubAgent" "HexMag Swarm"   $script:Paths.Win32SubAgent "executeSwarm"    "cmd_swarm"     "NEVER_MATCH" "Start-ParallelChatProcessing"
-Introspect-Feature "SubAgent" "Todo List"      $script:Paths.Win32SubAgent "todoList|TodoItem" "cmd_todo"    "NEVER_MATCH" "Get-AgentTodoList"
-Introspect-Feature "SubAgent" "Swarm Panel"    $script:Paths.Win32Swarm "SwarmPanel"       "NEVER_MATCH"   "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "SubAgent" "Spawn SubAgent" ${script:Paths}.Win32SubAgent "spawnSubAgent|SubAgentManager"  "cmd_subagent"  "NEVER_MATCH" "Send-AgentCommand"
+Introspect-Feature "SubAgent" "Prompt Chain"   ${script:Paths}.Win32SubAgent "executeChain"    "cmd_chain"     "NEVER_MATCH" "Invoke-AgenticWorkflow"
+Introspect-Feature "SubAgent" "HexMag Swarm"   ${script:Paths}.Win32SubAgent "executeSwarm"    "cmd_swarm"     "NEVER_MATCH" "Start-ParallelChatProcessing"
+Introspect-Feature "SubAgent" "Todo List"      ${script:Paths}.Win32SubAgent "todoList|TodoItem" "cmd_todo"    "NEVER_MATCH" "Get-AgentTodoList"
+Introspect-Feature "SubAgent" "Swarm Panel"    ${script:Paths}.Win32Swarm "SwarmPanel"       "NEVER_MATCH"   "NEVER_MATCH" "NEVER_MATCH"
 
 # ──────────────────────────────────────────────────────────────────────────
 # SESSION / SETTINGS / GIT
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  ⚙️  Session / Settings / Git..." -ForegroundColor Gray
-Introspect-Feature "Session" "Save Session"     $script:Paths.Win32Session  "saveSession"      "NEVER_MATCH" "NEVER_MATCH" "Save-Settings"
-Introspect-Feature "Session" "Restore Session"  $script:Paths.Win32Session  "restoreSession"   "NEVER_MATCH" "NEVER_MATCH" "Load-Settings"
-Introspect-Feature "Settings" "Editor Config"   $script:Paths.Win32Settings "fontFamily|tabSize|lineNumbers" "NEVER_MATCH" "NEVER_MATCH" "Show-EditorSettings"
-Introspect-Feature "Git" "Git Status"           $script:Paths.Win32Cmds "gitStatus|8001"    "NEVER_MATCH" "NEVER_MATCH" "Get-GitStatus"
-Introspect-Feature "Git" "Git Commit"           $script:Paths.Win32Cmds "gitCommit|8002"    "NEVER_MATCH" "NEVER_MATCH" "Invoke-GitCommand"
+Introspect-Feature "Session" "Save Session"     ${script:Paths}.Win32Session  "saveSession"      "NEVER_MATCH" "NEVER_MATCH" "Save-Settings"
+Introspect-Feature "Session" "Restore Session"  ${script:Paths}.Win32Session  "restoreSession"   "NEVER_MATCH" "NEVER_MATCH" "Load-Settings"
+Introspect-Feature "Settings" "Editor Config"   ${script:Paths}.Win32Settings "fontFamily|tabSize|lineNumbers" "NEVER_MATCH" "NEVER_MATCH" "Show-EditorSettings"
+Introspect-Feature "Git" "Git Status"           ${script:Paths}.Win32Cmds "gitStatus|8001"    "NEVER_MATCH" "NEVER_MATCH" "Get-GitStatus"
+Introspect-Feature "Git" "Git Commit"           ${script:Paths}.Win32Cmds "gitCommit|8002"    "NEVER_MATCH" "NEVER_MATCH" "Invoke-GitCommand"
 
 # ──────────────────────────────────────────────────────────────────────────
 # VIEW & LAYOUT
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🖥️  View & Layout..." -ForegroundColor Gray
-Introspect-Feature "View" "Sidebar"           $script:Paths.Win32Sidebar "toggleSidebar"    "NEVER_MATCH" "NEVER_MATCH" "Toggle-Sidebar"
-Introspect-Feature "View" "Output Panel"      $script:Paths.Win32Cmds  "toggleOutputPanel" "NEVER_MATCH" "NEVER_MATCH" "Toggle-OutputPanel"
-Introspect-Feature "View" "Minimap"           $script:Paths.Win32Cmds  "toggleMinimap"    "NEVER_MATCH" "minimap" "Set-EditorMinimap"
-Introspect-Feature "View" "Command Palette"   $script:Paths.Win32Cmds    "commandPalette|fuzzyMatch" "NEVER_MATCH" "NEVER_MATCH" "Show-CommandPalette"
+Introspect-Feature "View" "Sidebar"           ${script:Paths}.Win32Sidebar "toggleSidebar"    "NEVER_MATCH" "NEVER_MATCH" "Toggle-Sidebar"
+Introspect-Feature "View" "Output Panel"      ${script:Paths}.Win32Cmds  "toggleOutputPanel" "NEVER_MATCH" "NEVER_MATCH" "Toggle-OutputPanel"
+Introspect-Feature "View" "Minimap"           ${script:Paths}.Win32Cmds  "toggleMinimap"    "NEVER_MATCH" "minimap" "Set-EditorMinimap"
+Introspect-Feature "View" "Command Palette"   ${script:Paths}.Win32Cmds    "commandPalette|fuzzyMatch" "NEVER_MATCH" "NEVER_MATCH" "Show-CommandPalette"
 
 # ──────────────────────────────────────────────────────────────────────────
 # POWERSHELL INTEGRATION
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  📟 PowerShell Integration..." -ForegroundColor Gray
-Introspect-Feature "PowerShell" "PS Execute"  $script:Paths.Win32PS     "executePowerShellCommand"  "NEVER_MATCH" "NEVER_MATCH" "Invoke-TerminalCommand"
-Introspect-Feature "PowerShell" "PS Panel"    $script:Paths.Win32PSPanel "createPowerShellPanel"     "NEVER_MATCH" "NEVER_MATCH" "Toggle-TerminalPanel"
+Introspect-Feature "PowerShell" "PS Execute"  ${script:Paths}.Win32PS     "executePowerShellCommand"  "NEVER_MATCH" "NEVER_MATCH" "Invoke-TerminalCommand"
+Introspect-Feature "PowerShell" "PS Panel"    ${script:Paths}.Win32PSPanel "createPowerShellPanel"     "NEVER_MATCH" "NEVER_MATCH" "Toggle-TerminalPanel"
 
 # ──────────────────────────────────────────────────────────────────────────
 # LLM ROUTER / BACKEND / LSP
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🔀 LLM Router / Backend / LSP..." -ForegroundColor Gray
-Introspect-Feature "LLM" "Multi-Engine"     $script:Paths.Win32LLM     "routePrompt|LLMRouter"  "!engine"     "Engine" "Send-AIRequest"
-Introspect-Feature "LLM" "Backend Switch"   $script:Paths.Win32Backend "switchBackend|Backend"   "NEVER_MATCH" "Engine" "Switch-AIBackend"
-Introspect-Feature "LSP" "LSP Client"       $script:Paths.Win32LSP     "LSPClient|lsp_init"      "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
-Introspect-Feature "LLM" "Local Server"     $script:Paths.Win32Server  "localServer|startHTTP"   "!server"     "NEVER_MATCH" "Start-OllamaServer"
+Introspect-Feature "LLM" "Multi-Engine"     ${script:Paths}.Win32LLM     "routePrompt|LLMRouter"  "!engine"     "Engine" "Send-AIRequest"
+Introspect-Feature "LLM" "Backend Switch"   ${script:Paths}.Win32Backend "switchBackend|Backend"   "NEVER_MATCH" "Engine" "Switch-AIBackend"
+Introspect-Feature "LSP" "LSP Client"       ${script:Paths}.Win32LSP     "LSPClient|lsp_init"      "NEVER_MATCH" "NEVER_MATCH" "NEVER_MATCH"
+Introspect-Feature "LLM" "Local Server"     ${script:Paths}.Win32Server  "localServer|startHTTP"   "!server"     "NEVER_MATCH" "Start-OllamaServer"
 
 # ──────────────────────────────────────────────────────────────────────────
 # PS-ONLY FEATURES (things that exist in RawrXD2.ps1 but not Win32)
@@ -541,20 +541,20 @@ Introspect-PSFeature "PS-Only" "AI Debug Metrics"          "Get-AIDebugMetrics|M
 # HEADLESS IDE (Phase 19C) — Win32-only, no GUI dependency
 # ──────────────────────────────────────────────────────────────────────────
 Write-Host "  🖥️  Headless IDE (Phase 19C)..." -ForegroundColor Gray
-Introspect-CppFeature "Headless" "Headless Mode"        $script:Paths.HeadlessCpp "HeadlessIDE::initialize"  10
-Introspect-CppFeature "Headless" "Headless CLI Flag"    $script:Paths.Win32Main   "hasHeadlessFlag|--headless" 5
-Introspect-CppFeature "Headless" "Headless HTTP Server" $script:Paths.HeadlessCpp "startServer|serverLoop"  10
-Introspect-CppFeature "Headless" "Headless REPL"        $script:Paths.HeadlessCpp "runReplMode|processReplCommand" 10
-Introspect-CppFeature "Headless" "Single-Shot Inference" $script:Paths.HeadlessCpp "runSingleShotMode"       5
-Introspect-CppFeature "Headless" "Batch Inference"      $script:Paths.HeadlessCpp "runBatchMode"            5
-Introspect-CppFeature "Headless" "IOutputSink Interface" $script:Paths.OutputSinkH "class IOutputSink"      5
-Introspect-CppFeature "Headless" "ConsoleOutputSink"    $script:Paths.OutputSinkH "class ConsoleOutputSink" 5
-Introspect-CppFeature "Headless" "NullOutputSink"       $script:Paths.OutputSinkH "class NullOutputSink"    5
-Introspect-CppFeature "Headless" "JSON Output Mode"     $script:Paths.HeadlessCpp "m_jsonMode|--json"       5
-Introspect-CppFeature "Headless" "Signal Handler"       $script:Paths.HeadlessCpp "headlessSignalHandler|SIGINT" 5
-Introspect-CppFeature "Headless" "HeadlessConfig"       $script:Paths.HeadlessH   "struct HeadlessConfig"   5
-Introspect-CppFeature "Headless" "HeadlessResult"       $script:Paths.HeadlessH   "struct HeadlessResult"   5
-Introspect-CppFeature "Headless" "HeadlessRunMode"      $script:Paths.HeadlessH   "enum class HeadlessRunMode" 5
+Introspect-CppFeature "Headless" "Headless Mode"        ${script:Paths}.HeadlessCpp "HeadlessIDE::initialize"  10
+Introspect-CppFeature "Headless" "Headless CLI Flag"    ${script:Paths}.Win32Main   "hasHeadlessFlag|--headless" 5
+Introspect-CppFeature "Headless" "Headless HTTP Server" ${script:Paths}.HeadlessCpp "startServer|serverLoop"  10
+Introspect-CppFeature "Headless" "Headless REPL"        ${script:Paths}.HeadlessCpp "runReplMode|processReplCommand" 10
+Introspect-CppFeature "Headless" "Single-Shot Inference" ${script:Paths}.HeadlessCpp "runSingleShotMode"       5
+Introspect-CppFeature "Headless" "Batch Inference"      ${script:Paths}.HeadlessCpp "runBatchMode"            5
+Introspect-CppFeature "Headless" "IOutputSink Interface" ${script:Paths}.OutputSinkH "class IOutputSink"      5
+Introspect-CppFeature "Headless" "ConsoleOutputSink"    ${script:Paths}.OutputSinkH "class ConsoleOutputSink" 5
+Introspect-CppFeature "Headless" "NullOutputSink"       ${script:Paths}.OutputSinkH "class NullOutputSink"    5
+Introspect-CppFeature "Headless" "JSON Output Mode"     ${script:Paths}.HeadlessCpp "m_jsonMode|--json"       5
+Introspect-CppFeature "Headless" "Signal Handler"       ${script:Paths}.HeadlessCpp "headlessSignalHandler|SIGINT" 5
+Introspect-CppFeature "Headless" "HeadlessConfig"       ${script:Paths}.HeadlessH   "struct HeadlessConfig"   5
+Introspect-CppFeature "Headless" "HeadlessResult"       ${script:Paths}.HeadlessH   "struct HeadlessResult"   5
+Introspect-CppFeature "Headless" "HeadlessRunMode"      ${script:Paths}.HeadlessH   "enum class HeadlessRunMode" 5
 
 Write-Host ""
 
@@ -566,7 +566,7 @@ Write-Host "━━━ PHASE 3: Build Verification ━━━" -ForegroundColor Ye
 Write-Host ""
 
 # Check Win32 IDE binary
-$win32Exe = Join-Path $script:Paths.BuildDir "bin\RawrXD-Win32IDE.exe"
+$win32Exe = Join-Path ${script:Paths}.BuildDir "bin\RawrXD-Win32IDE.exe"
 if (Test-Path $win32Exe) {
     $exeInfo = Get-Item $win32Exe
     $sizeMB = [math]::Round($exeInfo.Length / 1MB, 1)
@@ -585,8 +585,8 @@ if (Test-Path $win32Exe) {
 }
 
 # Check RawrEngine CLI binary
-$cliExe = Join-Path $script:Paths.BuildDir "RawrEngine.exe"
-if (-not (Test-Path $cliExe)) { $cliExe = Join-Path $script:Paths.BuildDir "bin\RawrEngine.exe" }
+$cliExe = Join-Path ${script:Paths}.BuildDir "RawrEngine.exe"
+if (-not (Test-Path $cliExe)) { $cliExe = Join-Path ${script:Paths}.BuildDir "bin\RawrEngine.exe" }
 if (Test-Path $cliExe) {
     $exeInfo = Get-Item $cliExe
     Write-Host "  ✅ CLI Engine Binary: $([math]::Round($exeInfo.Length / 1MB, 1)) MB" -ForegroundColor Green
@@ -614,7 +614,7 @@ Write-Host "  │ IDE Variant   │ REAL  │ PARTIAL │ FACADE │ STUB │ MI
 Write-Host "  ├──────────────┼───────┼─────────┼────────┼──────┼─────────┼──────────┤" -ForegroundColor DarkGray
 
 foreach ($v in $variants) {
-    $variantResults = $script:TestResults | Where-Object { $_.Variant -eq $v }
+    $variantResults = ${script:TestResults} | Where-Object { $_.Variant -eq $v }
     $total = @($variantResults).Count
     if ($total -eq 0) { continue }
     
@@ -623,9 +623,9 @@ foreach ($v in $variants) {
     $facade  = @($variantResults | Where-Object { $_.Status -eq "FACADE" }).Count
     $stub    = @($variantResults | Where-Object { $_.Status -eq "STUB" }).Count
     $missing = @($variantResults | Where-Object { $_.Status -eq "MISSING" }).Count
-    $pct     = if ($total -gt 0) { [math]::Round($real * 100 / $total) } else { 0 }
+    $pct     = $(if ($total -gt 0) { [math]::Round($real * 100 / $total) } else { 0 }
     
-    $pctColor = if ($pct -ge 80) { "Green" } elseif ($pct -ge 50) { "Yellow" } else { "Red" }
+    $pctColor = $(if ($pct -ge 80) { "Green" } elseif ($pct -ge 50) { "Yellow" } else { "Red" }
     
     $label = switch ($v) {
         "Win32" { "Win32 (C++) " }
@@ -654,16 +654,14 @@ Write-Host ""
 
 # ============================================================================
 # PHASE 5: CATEGORY BREAKDOWN
-# ============================================================================
-
-if (-not $SummaryOnly) {
+# ============================================================================ $(if (-not $SummaryOnly) {
     Write-Host "━━━ PHASE 5: Category Breakdown ━━━" -ForegroundColor Yellow
     Write-Host ""
     
-    $categories = $script:TestResults | Select-Object -ExpandProperty Category -Unique | Sort-Object
+    $categories = ${script:TestResults} | Select-Object -ExpandProperty Category -Unique | Sort-Object
     
     foreach ($cat in $categories) {
-        $catResults = $script:TestResults | Where-Object { $_.Category -eq $cat }
+        $catResults = ${script:TestResults} | Where-Object { $_.Category -eq $cat }
         Write-Host "  [$cat]" -ForegroundColor Cyan
         
         $features = $catResults | Select-Object -ExpandProperty Feature -Unique | Sort-Object
@@ -696,9 +694,7 @@ if (-not $SummaryOnly) {
 
 # ============================================================================
 # PHASE 6: EXPORT
-# ============================================================================
-
-if ($ExportMarkdown -or $ExportJSON) {
+# ============================================================================ $(if ($ExportMarkdown -or $ExportJSON) {
     Write-Host "━━━ PHASE 6: Export ━━━" -ForegroundColor Yellow
     Write-Host ""
 }
@@ -717,12 +713,12 @@ if ($ExportMarkdown) {
     $md += "|------------|------|---------|---------|----------|"
     
     foreach ($v in $variants) {
-        $vr = $script:TestResults | Where-Object { $_.Variant -eq $v }
+        $vr = ${script:TestResults} | Where-Object { $_.Variant -eq $v }
         $total = @($vr).Count
         $real = @($vr | Where-Object { $_.Status -eq "REAL" }).Count
         $partial = @($vr | Where-Object { $_.Status -eq "PARTIAL" }).Count
         $missing = @($vr | Where-Object { $_.Status -eq "MISSING" }).Count
-        $pct = if ($total -gt 0) { [math]::Round($real * 100 / $total) } else { 0 }
+        $pct = $(if ($total -gt 0) { [math]::Round($real * 100 / $total) } else { 0 }
         $label = switch ($v) { "Win32" { "Win32 (C++)" } "CLI" { "CLI Shell" } "React" { "React IDE" } "PS" { "PowerShell" } }
         $md += "| $label | $real | $partial | $missing | $pct% |"
     }
@@ -733,14 +729,14 @@ if ($ExportMarkdown) {
     $md += "| Category | Feature | Win32 | CLI | React | PS |"
     $md += "|----------|---------|-------|-----|-------|----|"
     
-    $categories = $script:TestResults | Select-Object -ExpandProperty Category -Unique | Sort-Object
+    $categories = ${script:TestResults} | Select-Object -ExpandProperty Category -Unique | Sort-Object
     foreach ($cat in $categories) {
-        $features = $script:TestResults | Where-Object { $_.Category -eq $cat } | Select-Object -ExpandProperty Feature -Unique | Sort-Object
+        $features = ${script:TestResults} | Where-Object { $_.Category -eq $cat } | Select-Object -ExpandProperty Feature -Unique | Sort-Object
         foreach ($feat in $features) {
             $row = "| $cat | $feat"
             foreach ($v in $variants) {
-                $r = $script:TestResults | Where-Object { $_.Category -eq $cat -and $_.Feature -eq $feat -and $_.Variant -eq $v } | Select-Object -First 1
-                $icon = if ($r) { switch ($r.Status) { "REAL" { "✅" } "PARTIAL" { "🔶" } "MISSING" { "❌" } default { "❓" } } } else { "—" }
+                $r = ${script:TestResults} | Where-Object { $_.Category -eq $cat -and $_.Feature -eq $feat -and $_.Variant -eq $v } | Select-Object -First 1
+                $icon = $(if ($r) { switch ($r.Status) { "REAL" { "✅" } "PARTIAL" { "🔶" } "MISSING" { "❌" } default { "❓" } } } else { "—" }
                 $row += " | $icon"
             }
             $row += " |"
@@ -762,8 +758,8 @@ if ($ExportJSON) {
     $jsonPath = Join-Path $OutputDir "feature_manifest.json"
     $export = @{
         generated = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-        total_tests = $script:TestResults.Count
-        results = $script:TestResults | ForEach-Object {
+        total_tests = ${script:TestResults}.Count
+        results = ${script:TestResults} | ForEach-Object {
             @{
                 category = $_.Category
                 feature  = $_.Feature
@@ -788,10 +784,10 @@ Write-Host "║                           FINAL SUMMARY                         
 Write-Host "╚══════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-$totalTests = $script:TestResults.Count
-$totalReal = @($script:TestResults | Where-Object { $_.Status -eq "REAL" }).Count
-$totalPartial = @($script:TestResults | Where-Object { $_.Status -eq "PARTIAL" }).Count
-$totalMissing = @($script:TestResults | Where-Object { $_.Status -eq "MISSING" }).Count
+$totalTests = ${script:TestResults}.Count
+$totalReal = @(${script:TestResults} | Where-Object { $_.Status -eq "REAL" }).Count
+$totalPartial = @(${script:TestResults} | Where-Object { $_.Status -eq "PARTIAL" }).Count
+$totalMissing = @(${script:TestResults} | Where-Object { $_.Status -eq "MISSING" }).Count
 
 Write-Host "  Total Feature Tests:  $totalTests" -ForegroundColor White
 Write-Host "  REAL:                 $totalReal" -ForegroundColor Green
@@ -801,14 +797,14 @@ Write-Host ""
 
 # Alignment gaps
 Write-Host "  🎯 Alignment Gaps (features Win32 has that others don't):" -ForegroundColor Cyan
-$win32Real = $script:TestResults | Where-Object { $_.Variant -eq "Win32" -and $_.Status -eq "REAL" }
+$win32Real = ${script:TestResults} | Where-Object { $_.Variant -eq "Win32" -and $_.Status -eq "REAL" }
 foreach ($wr in $win32Real) {
     $feat = $wr.Feature
     $cat = $wr.Category
     
-    $cliR = $script:TestResults | Where-Object { $_.Variant -eq "CLI" -and $_.Feature -eq $feat -and $_.Category -eq $cat } | Select-Object -First 1
-    $reactR = $script:TestResults | Where-Object { $_.Variant -eq "React" -and $_.Feature -eq $feat -and $_.Category -eq $cat } | Select-Object -First 1
-    $psR = $script:TestResults | Where-Object { $_.Variant -eq "PS" -and $_.Feature -eq $feat -and $_.Category -eq $cat } | Select-Object -First 1
+    $cliR = ${script:TestResults} | Where-Object { $_.Variant -eq "CLI" -and $_.Feature -eq $feat -and $_.Category -eq $cat } | Select-Object -First 1
+    $reactR = ${script:TestResults} | Where-Object { $_.Variant -eq "React" -and $_.Feature -eq $feat -and $_.Category -eq $cat } | Select-Object -First 1
+    $psR = ${script:TestResults} | Where-Object { $_.Variant -eq "PS" -and $_.Feature -eq $feat -and $_.Category -eq $cat } | Select-Object -First 1
     
     $gaps = @()
     if ($cliR -and $cliR.Status -eq "MISSING") { $gaps += "CLI" }

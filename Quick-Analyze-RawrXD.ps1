@@ -95,7 +95,7 @@ Write-Host "🔸 3. Security & Encryption Features..." -ForegroundColor Yellow
 # Test security components
 $securityComponents = @{
   "AES Encryption Class"   = 'public\s+static\s+class\s+StealthCrypto|class\s+\w*[Cc]rypto'
-  "Security Configuration" = '\$script:SecurityConfig'
+  "Security Configuration" = '\${script:SecurityConfig}'
   "Input Validation"       = 'function\s+Test-InputSafety'
   "Session Security"       = 'function\s+Test-SessionSecurity'
   "Error Logging"          = 'function\s+Write-ErrorLog'
@@ -120,7 +120,7 @@ Write-Host "🔸 4. AI & Ollama Integration..." -ForegroundColor Yellow
 
 # Test AI components
 $aiComponents = @{
-  "Ollama Server Config" = '\$script:OllamaServers'
+  "Ollama Server Config" = '\${script:OllamaServers}'
   "Chat Management"      = 'function\s+.*Chat.*'
   "Model Management"     = 'function\s+.*Model.*'
   "Agent Processing"     = 'function\s+.*Agent.*'

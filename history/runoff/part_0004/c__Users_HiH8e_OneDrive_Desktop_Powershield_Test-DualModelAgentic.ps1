@@ -16,11 +16,11 @@ Write-Host "╚═════════════════════�
 # SETUP
 # ============================================
 
-$script:agentTools = @{}
+${script:agentTools} = @{}
 function Write-DevConsole { }
 function Register-AgentTool {
     param([string]$Name, [string]$Description, [string]$Category, [string]$Version, [hashtable]$Parameters, [scriptblock]$Handler)
-    $script:agentTools[$Name] = @{ Name=$Name; Handler=$Handler }
+    ${script:agentTools}[$Name] = @{ Name=$Name; Handler=$Handler }
 }
 
 . .\BuiltInTools.ps1
@@ -30,13 +30,13 @@ Initialize-BuiltInTools
 
 function Invoke-AgentTool {
     param([string]$ToolName, [hashtable]$Parameters = @{})
-    if ($script:agentTools.ContainsKey($ToolName)) {
-        & $script:agentTools[$ToolName].Handler @Parameters
+    if (${script:agentTools}.ContainsKey($ToolName)) {
+        & ${script:agentTools}[$ToolName].Handler @Parameters
     } else { @{ success = $false; error = "Tool not found" } }
 }
 
 Write-Host "📦 Setup Complete:" -ForegroundColor Green
-Write-Host "   - BuiltInTools: $($script:agentTools.Count) tools" -ForegroundColor Cyan
+Write-Host "   - BuiltInTools: $(${script:agentTools}.Count) tools" -ForegroundColor Cyan
 Write-Host "   - AutoToolInvocation: Ready" -ForegroundColor Cyan
 Write-Host "   - Model 1: $Model1" -ForegroundColor Yellow
 Write-Host "   - Model 2: $Model2" -ForegroundColor Magenta
@@ -85,7 +85,7 @@ for ($i = 1; $i -le $NumTestsPerModel; $i++) {
     
     try {
         $systemPrompt = @"
-You are an agentic AI assistant with access to these tools: $($script:agentTools.Keys -join ', ')
+You are an agentic AI assistant with access to these tools: $(${script:agentTools}.Keys -join ', ')
 When accessing files, respond with JSON: {"tool_calls":[{"name":"tool_name","parameters":{...}}]}
 "@
         
@@ -156,7 +156,7 @@ for ($i = 1; $i -le $NumTestsPerModel; $i++) {
     
     try {
         $systemPrompt = @"
-You are an agentic AI assistant with access to these tools: $($script:agentTools.Keys -join ', ')
+You are an agentic AI assistant with access to these tools: $(${script:agentTools}.Keys -join ', ')
 When accessing files, respond with JSON: {"tool_calls":[{"name":"tool_name","parameters":{...}}]}
 "@
         

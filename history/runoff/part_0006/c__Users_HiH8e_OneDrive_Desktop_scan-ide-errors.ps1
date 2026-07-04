@@ -46,7 +46,7 @@ if ($difference -ne 0) {
         OpenCount = $openBraces
         CloseCount = $closeBraces
         Difference = $difference
-        Severity = if ($difference -gt 0) { "CRITICAL - Missing closing braces" } else { "CRITICAL - Extra closing braces" }
+        Severity = $(if ($difference -gt 0) { "CRITICAL - Missing closing braces" } else { "CRITICAL - Extra closing braces" }
     }
     Write-Host "   ⚠️  Brace mismatch: $openBraces open vs $closeBraces close (diff: $difference)" -ForegroundColor Red
 }
@@ -231,8 +231,7 @@ Write-Host "══════════════════════�
 
 # ============================================================================
 # EXPORT RESULTS
-# ============================================================================
-if ($ExportJSON) {
+# ============================================================================ $(if ($ExportJSON) {
     $results | ConvertTo-Json | Set-Content $OutputFile
     Write-Host "`n📁 Results exported to: $OutputFile" -ForegroundColor Green
 }

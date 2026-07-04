@@ -70,8 +70,8 @@ Export JSON from your HUD / test harness:
 }
 
 $lookup = $m.Hits + $m.Misses
-$hitRate = if ($lookup -gt 0) { 100.0 * $m.Hits / $lookup } else { 0.0 }
-$fbPerK = if ($lookup -gt 0) { 1000.0 * $m.Fallbacks / $lookup } else { 0.0 }
+$hitRate = $(if ($lookup -gt 0) { 100.0 * $m.Hits / $lookup } else { 0.0 }
+$fbPerK = $(if ($lookup -gt 0) { 1000.0 * $m.Fallbacks / $lookup } else { 0.0 }
 
 Write-Host "=== MoE grouped shadow cache (dry-run path) ==="
 if ($m.PlanGeneration -ge 0) { Write-Host ("planGeneration: {0}" -f $m.PlanGeneration) }

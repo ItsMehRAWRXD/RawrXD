@@ -55,7 +55,7 @@ if ($Help) { Show-Help }
 # ============================================================================
 
 $ErrorActionPreference = "Stop"
-$WarningPreference = if ($Verbose) { "Continue" } else { "SilentlyContinue" }
+$WarningPreference = $(if ($Verbose) { "Continue" } else { "SilentlyContinue" }
 
 # Detect Visual Studio installation
 function Find-VSTools {
@@ -122,7 +122,7 @@ $libFile = Join-Path $libDir "Phase1_Foundation.lib"
 # BUILD CONFIGURATION
 # ============================================================================
 
-$config = if ($Release) { "Release" } else { "Debug" }
+$config = $(if ($Release) { "Release" } else { "Debug" }
 $mlFlags = @(
     "/c"                # Compile only
     "/O2"               # Optimization level 2

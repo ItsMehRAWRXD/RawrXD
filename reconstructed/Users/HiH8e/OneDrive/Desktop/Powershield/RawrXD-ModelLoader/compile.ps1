@@ -22,9 +22,9 @@ $msvc_latest = $msvc_versions[0].FullName
 Write-Host "Found MSVC: $msvc_latest" -ForegroundColor Green
 
 # Set environment variables for VS
-$env:PATH += ";$msvc_latest\bin\Hostx64\x64"
-$env:PATH += ";C:\Program Files\LLVM\bin"
-$env:PATH += ";$vs_path\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+${env:PATH} += ";$msvc_latest\bin\Hostx64\x64"
+${env:PATH} += ";C:\Program Files\LLVM\bin"
+${env:PATH} += ";$vs_path\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 
 # Windows Kit paths
 $winsdk = "C:\Program Files (x86)\Windows Kits\10"
@@ -36,8 +36,8 @@ if (Test-Path "$winsdk\Include\$winsdk_version") {
     $um_include = "$winsdk\Include\$winsdk_version\um"
     $shared_include = "$winsdk\Include\$winsdk_version\shared"
     
-    $env:INCLUDE = "$crt_include;$ucrt_include;$um_include;$shared_include"
-    $env:LIB = "$msvc_latest\lib\x64;$winsdk\Lib\$winsdk_version\ucrt\x64;$winsdk\Lib\$winsdk_version\um\x64"
+    ${env:INCLUDE} = "$crt_include;$ucrt_include;$um_include;$shared_include"
+    ${env:LIB} = "$msvc_latest\lib\x64;$winsdk\Lib\$winsdk_version\ucrt\x64;$winsdk\Lib\$winsdk_version\um\x64"
 }
 
 # Verify clang-cl is now available

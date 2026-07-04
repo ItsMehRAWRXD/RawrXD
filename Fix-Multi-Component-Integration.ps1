@@ -249,12 +249,12 @@ function Update-ChatDisplay {
 
 # Fix: Chat History Integration
 `$chatHistory.Text = ""  # Initialize empty
-`$global:ChatMessages = @()  # Store messages
+`${global:ChatMessages} = @()  # Store messages
 
 function Add-ChatMessage {
     param([string]`$Message, [string]`$Sender = "User")
     
-    `$global:ChatMessages += @{
+    `${global:ChatMessages} += @{
         Timestamp = Get-Date
         Sender = `$Sender
         Message = `$Message
@@ -277,7 +277,7 @@ function Add-ChatMessage {
             `$content = Get-Content `$openFileDialog.FileName -Raw
             `$textEditor.Text = `$content
             `$statusLabel.Text = "Opened: `$(`$openFileDialog.FileName)"
-            `$global:CurrentFilePath = `$openFileDialog.FileName
+            `${global:CurrentFilePath} = `$openFileDialog.FileName
         }
         catch {
             [System.Windows.Forms.MessageBox]::Show("Error opening file: `$(`$_.Exception.Message)", "File Error", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
@@ -287,10 +287,10 @@ function Add-ChatMessage {
 
 # Fix: File Save Integration  
 `$saveMenuItem.Add_Click({
-    if (`$global:CurrentFilePath) {
+    if (`${global:CurrentFilePath}) {
         try {
-            Set-Content -Path `$global:CurrentFilePath -Value `$textEditor.Text -Encoding UTF8
-            `$statusLabel.Text = "Saved: `$`$global:CurrentFilePath"
+            Set-Content -Path `${global:CurrentFilePath} -Value `$textEditor.Text -Encoding UTF8
+            `$statusLabel.Text = "Saved: `$`${global:CurrentFilePath}"
         }
         catch {
             [System.Windows.Forms.MessageBox]::Show("Error saving file: `$(`$_.Exception.Message)", "Save Error", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
@@ -310,7 +310,7 @@ function Add-ChatMessage {
         try {
             Set-Content -Path `$saveFileDialog.FileName -Value `$textEditor.Text -Encoding UTF8
             `$statusLabel.Text = "Saved: `$(`$saveFileDialog.FileName)"
-            `$global:CurrentFilePath = `$saveFileDialog.FileName
+            `${global:CurrentFilePath} = `$saveFileDialog.FileName
         }
         catch {
             [System.Windows.Forms.MessageBox]::Show("Error saving file: `$(`$_.Exception.Message)", "Save Error", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)

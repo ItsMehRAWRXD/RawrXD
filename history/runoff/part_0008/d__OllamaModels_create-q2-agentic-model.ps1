@@ -52,7 +52,7 @@ if (-not $skipQuantization) {
         "D:\OllamaModels\llama.cpp\quantize.exe",
         "D:\OllamaModels\llama.cpp\build\bin\Release\quantize.exe",
         "C:\Program Files\llama.cpp\quantize.exe",
-        "$env:USERPROFILE\llama.cpp\quantize.exe"
+        "${env:USERPROFILE}\llama.cpp\quantize.exe"
     )
     
     $quantizeExe = $null

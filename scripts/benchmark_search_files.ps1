@@ -140,12 +140,12 @@ try {
         warmup        = $Warmup
         iterations    = $Iterations
         failures      = $failures
-        client_avg_ms = if ($arr.Length) { ($arr | Measure-Object -Average).Average } else { 0 }
+        client_avg_ms = $(if ($arr.Length) { ($arr | Measure-Object -Average).Average } else { 0 }
         client_p50_ms = Get-Percentile -Values $arr -P 50
         client_p95_ms = Get-Percentile -Values $arr -P 95
-        server_avg_ms = if ($serverMs.Count) { ($serverMs | Measure-Object -Average).Average } else { $null }
-        server_p50_ms = if ($serverMs.Count) { Get-Percentile -Values ($serverMs.ToArray()) -P 50 } else { $null }
-        server_p95_ms = if ($serverMs.Count) { Get-Percentile -Values ($serverMs.ToArray()) -P 95 } else { $null }
+        server_avg_ms = $(if ($serverMs.Count) { ($serverMs | Measure-Object -Average).Average } else { $null }
+        server_p50_ms = $(if ($serverMs.Count) { Get-Percentile -Values ($serverMs.ToArray()) -P 50 } else { $null }
+        server_p95_ms = $(if ($serverMs.Count) { Get-Percentile -Values ($serverMs.ToArray()) -P 95 } else { $null }
         backend_sample = $backendSample
     }
 

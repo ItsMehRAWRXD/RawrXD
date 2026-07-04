@@ -22,9 +22,9 @@ param(
     [switch]$AutoFix,
     [switch]$AutoWarnings,
     [switch]$DryRun,
-    [switch]$FailOnWarnings = $true,
-    [switch]$RebuildOnDetect = $true,
-    [switch]$TreatWarningsAsErrors = $true
+    [switch]$FailOnWarnings,
+    [switch]$RebuildOnDetect,
+    [switch]$TreatWarningsAsErrors
 )
 
 Set-StrictMode -Version Latest

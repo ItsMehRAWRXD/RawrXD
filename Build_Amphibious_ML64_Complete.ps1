@@ -10,7 +10,7 @@ param(
     [switch]$GUI,
     [switch]$CLI,
     [switch]$Inference,
-    [switch]$Both = $true  # Default: build both
+    [switch]$Both  # Default: build both
 )
 
 $ErrorActionPreference = "Stop"

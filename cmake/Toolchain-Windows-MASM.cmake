@@ -13,29 +13,39 @@ endif()
 
 # Detect MSVC/MASM compiler paths only on first run
 if(NOT DEFINED CMAKE_C_COMPILER)
-    # Try Visual Studio 2022 Enterprise first
-    set(_vs_masm_path "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe")
+    # Try Visual Studio 2022 Enterprise (VS18) first - updated to 14.51.36231
+    set(_vs_masm_path "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/ml64.exe")
     
     if(EXISTS "${_vs_masm_path}")
         set(CMAKE_ASM_MASM_COMPILER "${_vs_masm_path}" CACHE FILEPATH "MASM64 assembler")
     else()
-        # Fallback to environment or system search
-        find_program(CMAKE_ASM_MASM_COMPILER ml64.exe)
-        if(CMAKE_ASM_MASM_COMPILER)
-            set(CMAKE_ASM_MASM_COMPILER "${CMAKE_ASM_MASM_COMPILER}" CACHE FILEPATH "MASM64 assembler" FORCE)
+        # Fallback to older VS2022 Enterprise path
+        set(_vs_masm_path "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe")
+        if(EXISTS "${_vs_masm_path}")
+            set(CMAKE_ASM_MASM_COMPILER "${_vs_masm_path}" CACHE FILEPATH "MASM64 assembler")
+        else()
+            # Fallback to environment or system search
+            find_program(CMAKE_ASM_MASM_COMPILER ml64.exe)
+            if(CMAKE_ASM_MASM_COMPILER)
+                set(CMAKE_ASM_MASM_COMPILER "${CMAKE_ASM_MASM_COMPILER}" CACHE FILEPATH "MASM64 assembler" FORCE)
+            endif()
         endif()
     endif()
     
     # Detect C/C++ compilers
     if(NOT CMAKE_C_COMPILER)
-        # Try MSVC from Visual Studio 2022 first
-        if(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe")
+        # Try MSVC from Visual Studio 2022 Enterprise (VS18) first
+        if(EXISTS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe")
+            set(CMAKE_C_COMPILER "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe")
+        elseif(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe")
             set(CMAKE_C_COMPILER "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe")
         endif()
     endif()
     
     if(NOT CMAKE_CXX_COMPILER)
-        if(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe")
+        if(EXISTS "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe")
+            set(CMAKE_CXX_COMPILER "C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe")
+        elseif(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe")
             set(CMAKE_CXX_COMPILER "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe")
         endif()
     endif()

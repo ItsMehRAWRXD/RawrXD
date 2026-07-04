@@ -2058,3 +2058,50 @@ std::string RawrXDLSPServer::getStatsString() const {
 
 } // namespace LSPServer
 } // namespace RawrXD
+
+// ============================================================================
+// ENTRY POINT
+// ============================================================================
+
+int main(int argc, char* argv[]) {
+    using namespace RawrXD::LSPServer;
+
+    // Configure server
+    ServerConfig config;
+    config.serverName = "RawrXD-Script LSP Server";
+    config.serverVersion = "1.0.0";
+    config.logLevel = LogLevel::Info;
+
+    // Parse command line args
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--verbose" || arg == "-v") {
+            config.logLevel = LogLevel::Debug;
+        } else if (arg == "--quiet" || arg == "-q") {
+            config.logLevel = LogLevel::Error;
+        } else if (arg == "--help" || arg == "-h") {
+            std::cerr << "RawrXD-Script LSP Server\n"
+                      << "Usage: " << argv[0] << " [options]\n"
+                      << "Options:\n"
+                      << "  -v, --verbose    Enable verbose logging\n"
+                      << "  -q, --quiet      Only log errors\n"
+                      << "  -h, --help       Show this help\n";
+            return 0;
+        }
+    }
+
+    // Create and run server
+    RawrXDLSPServer server;
+    server.configure(config);
+
+    if (!server.start()) {
+        std::cerr << "Failed to start LSP server\n";
+        return 1;
+    }
+
+    // Server runs until stdin closes or exit notification
+    // Blocks until shutdown received
+    server.runBlocking();
+
+    return 0;
+}

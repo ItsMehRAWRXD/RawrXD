@@ -170,7 +170,7 @@ foreach ($control in $numericControls) {
           ControlMin   = $control.Minimum
           ControlMax   = $control.Maximum
           IssueType    = $issueType.Trim()
-          Severity     = if ($issueType -like "*ABOVE_MAXIMUM*" -or $issueType -like "*BELOW_MINIMUM*") { "HIGH" } else { "MEDIUM" }
+          Severity     = $(if ($issueType -like "*ABOVE_MAXIMUM*" -or $issueType -like "*BELOW_MINIMUM*") { "HIGH" } else { "MEDIUM" }
         }
                 
         $issues += $issue

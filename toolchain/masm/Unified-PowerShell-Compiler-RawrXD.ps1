@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ScriptDir = $PSScriptRoot
-$RawrXD = if ($env:RAWRXD_ROOT) { $env:RAWRXD_ROOT } else { (Resolve-Path (Join-Path $ScriptDir "..\..")).Path }
+$RawrXD = $(if (${env:RAWRXD_ROOT}) { ${env:RAWRXD_ROOT} } else { (Resolve-Path (Join-Path $ScriptDir "..\..")).Path }
 if (-not $OutDir) { $OutDir = Join-Path $ScriptDir "bin\$Architecture" }
 
 function Resolve-NASM {
@@ -53,10 +53,10 @@ function Resolve-MSVC {
   $msvcVer = Get-ChildItem -Path $msvcRoot -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
   if (-not $msvcVer) { throw "No MSVC versions under $msvcRoot" }
 
-  $target = if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
+  $target = $(if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
   $bin = Join-Path $msvcVer.FullName "bin\Hostx64\$target"
   $lib = Join-Path $msvcVer.FullName "lib\$target"
-  $mlName = if ($Arch -eq 'x64') { 'ml64.exe' } else { 'ml.exe' }
+  $mlName = $(if ($Arch -eq 'x64') { 'ml64.exe' } else { 'ml.exe' }
   $ml = Join-Path $bin $mlName
   $link = Join-Path $bin 'link.exe'
 
@@ -77,7 +77,7 @@ function Resolve-Kits {
   }
   if (-not $root) { throw "Windows Kits lib root not found." }
 
-  $archLeaf = if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
+  $archLeaf = $(if ($Arch -eq 'x64') { 'x64' } else { 'x86' }
   $versions = Get-ChildItem -Path $root -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending
   foreach ($ver in $versions) {
     $ucrt = Join-Path $ver.FullName "ucrt\$archLeaf"
@@ -104,7 +104,7 @@ function Ensure-OutDir([string]$Dir) {
 
 function Get-OutputPath([string]$Src, [string]$Dir, [string]$Kind) {
   $base = [IO.Path]::GetFileNameWithoutExtension($Src)
-  $ext = if ($Kind -eq 'dll') { '.dll' } else { '.exe' }
+  $ext = $(if ($Kind -eq 'dll') { '.dll' } else { '.exe' }
   return (Join-Path $Dir ($base + $ext))
 }
 
@@ -140,7 +140,7 @@ function Compile-RawrXD {
   $null = & $rawrxdTools.asm @asmArgs
   if ($LASTEXITCODE -ne 0) { throw "RawrXD Assembler failed for $Src" }
 
-  $machine = if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
+  $machine = $(if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
   $entry = Normalize-Entry (Resolve-EntryDefault)
   
   $linkArgs = @('/nologo', $machine, "/subsystem:$SubSystem")
@@ -178,7 +178,7 @@ function Compile-MASM {
   $null = & $tools.ml @mlArgs
   if ($LASTEXITCODE -ne 0) { throw "MASM assemble failed for $Src" }
 
-  $machine = if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
+  $machine = $(if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
   $entry = Normalize-Entry (Resolve-EntryDefault)
   $linkArgs = @('/nologo', $machine, "/subsystem:$SubSystem")
   if ($OutputType -eq 'dll') {
@@ -209,11 +209,11 @@ function Compile-NASM {
 
   $obj = Join-Path $OutputDir ([IO.Path]::GetFileNameWithoutExtension($Src) + '.obj')
   $outFile = Get-OutputPath -Src $Src -Dir $OutputDir -Kind $OutputType
-  $fmt = if ($Architecture -eq 'x64') { 'win64' } else { 'win32' }
+  $fmt = $(if ($Architecture -eq 'x64') { 'win64' } else { 'win32' }
   $null = & $nasmExe '-f' $fmt $Src '-o' $obj
   if ($LASTEXITCODE -ne 0) { throw "NASM assemble failed for $Src" }
 
-  $machine = if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
+  $machine = $(if ($Architecture -eq 'x64') { '/MACHINE:X64' } else { '/MACHINE:X86' }
   $entry = Normalize-Entry (Resolve-EntryDefault)
   $linkArgs = @('/nologo', $machine, "/subsystem:$SubSystem")
   if ($OutputType -eq 'dll') {
@@ -237,10 +237,10 @@ function Compile-NASM {
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 try {
   $fullSrc = (Resolve-Path $Source).Path
-  $mode = if ($UseExternalToolchain) { "External ($Tool)" } else { "RawrXD Internal" }
+  $mode = $(if ($UseExternalToolchain) { "External ($Tool)" } else { "RawrXD Internal" }
   Write-Host ("[Compiler] Mode={0} Arch={1} Type={2} SubSystem={3} Source={4}" -f $mode, $Architecture, $OutputType, $SubSystem, $fullSrc) -ForegroundColor Cyan
   
-  $result = if (-not $UseExternalToolchain) {
+  $result = $(if (-not $UseExternalToolchain) {
     Compile-RawrXD -Src $fullSrc -OutputDir $OutDir
   } elseif ($Tool -eq 'masm') {
     Compile-MASM -Src $fullSrc -OutputDir $OutDir

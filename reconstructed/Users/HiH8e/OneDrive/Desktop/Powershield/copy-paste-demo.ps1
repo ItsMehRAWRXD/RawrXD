@@ -123,7 +123,7 @@ $sampleLogs = @(
 )
 
 foreach ($log in $sampleLogs) {
-    $level = if ($log -match "\[(\w+)\]") { $matches[1] } else { "INFO" }
+    $level = $(if ($log -match "\[(\w+)\]") { $matches[1] } else { "INFO" }
     $color = switch ($level) {
         "ERROR" { "Red" }
         "WARNING" { "Yellow" }

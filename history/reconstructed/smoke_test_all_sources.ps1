@@ -34,7 +34,7 @@ $allCppC = $cppFiles + $cFiles
 foreach ($file in $allCppC) {
     $compileCount++
     
-    if ($env:TERM) {
+    if (${env:TERM}) {
         Write-Progress -Activity "Compiling ($compileCount/$totalFiles)" -Status $file.Name -PercentComplete (($compileCount / $totalFiles) * 100)
     }
     
@@ -65,7 +65,7 @@ Write-Host "`n"
 foreach ($file in $asmFiles) {
     $compileCount++
     
-    if ($env:TERM) {
+    if (${env:TERM}) {
         Write-Progress -Activity "Assembling ($compileCount/$totalFiles)" -Status $file.Name -PercentComplete (($compileCount / $totalFiles) * 100)
     }
     

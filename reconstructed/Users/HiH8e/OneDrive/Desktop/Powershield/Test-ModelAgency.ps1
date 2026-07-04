@@ -256,7 +256,7 @@ foreach ($entry in $sortedResults) {
     $barLength = [Math]::Round($score / 5)
     $bar = "█" * $barLength + "░" * (20 - $barLength)
     
-    $color = if ($score -ge 80) { "Green" } elseif ($score -ge 60) { "Yellow" } else { "Red" }
+    $color = $(if ($score -ge 80) { "Green" } elseif ($score -ge 60) { "Yellow" } else { "Red" }
     
     Write-Host "`n$model" -ForegroundColor Cyan
     Write-Host "  Agentic Score: $bar $score/100" -ForegroundColor $color

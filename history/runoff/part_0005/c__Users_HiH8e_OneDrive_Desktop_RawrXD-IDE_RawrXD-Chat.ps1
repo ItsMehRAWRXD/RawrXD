@@ -12,12 +12,12 @@
 # MODULE VARIABLES
 # ============================================
 
-$script:ChatSessions = @{}
-$script:CurrentSession = $null
-$script:MessageHistory = @()
-$script:MaxHistoryPerSession = 1000
-$script:ModelEndpoint = "http://localhost:11434"
-$script:DefaultModel = "llama2"
+${script:ChatSessions} = @{}
+${script:CurrentSession} = $null
+${script:MessageHistory} = @()
+${script:MaxHistoryPerSession} = 1000
+${script:ModelEndpoint} = "http://localhost:11434"
+${script:DefaultModel} = "llama2"
 
 # ============================================
 # CHAT SESSION MANAGEMENT
@@ -30,7 +30,7 @@ function New-ChatSession {
     #>
     param(
         [Parameter(Mandatory = $true)][string]$SessionName,
-        [string]$Model = $script:DefaultModel,
+        [string]$Model = ${script:DefaultModel},
         [hashtable]$SystemPrompt = @{}
     )
     
@@ -48,8 +48,8 @@ function New-ChatSession {
             SystemPrompt = $SystemPrompt
         }
         
-        $script:ChatSessions[$sessionId] = $session
-        $script:CurrentSession = $sessionId
+        ${script:ChatSessions}[$sessionId] = $session
+        ${script:CurrentSession} = $sessionId
         
         Write-Host "[Chat] New session created: $SessionName (ID: $sessionId)" -ForegroundColor Cyan
         
@@ -74,11 +74,11 @@ function Get-ChatSession {
         Get chat session information
     #>
     param(
-        [string]$SessionId = $script:CurrentSession
+        [string]$SessionId = ${script:CurrentSession}
     )
     
-    if ($SessionId -and $script:ChatSessions.ContainsKey($SessionId)) {
-        return $script:ChatSessions[$SessionId]
+    if ($SessionId -and ${script:ChatSessions}.ContainsKey($SessionId)) {
+        return ${script:ChatSessions}[$SessionId]
     }
     
     return $null
@@ -94,13 +94,13 @@ function Close-ChatSession {
     )
     
     try {
-        if ($script:ChatSessions.ContainsKey($SessionId)) {
-            $session = $script:ChatSessions[$SessionId]
+        if (${script:ChatSessions}.ContainsKey($SessionId)) {
+            $session = ${script:ChatSessions}[$SessionId]
             $session.Status = "Closed"
             $session.ClosedAt = Get-Date
             
-            if ($script:CurrentSession -eq $SessionId) {
-                $script:CurrentSession = $null
+            if (${script:CurrentSession} -eq $SessionId) {
+                ${script:CurrentSession} = $null
             }
             
             return @{
@@ -129,9 +129,9 @@ function Get-AllChatSessions {
         Get all active chat sessions
     #>
     return @{
-        Count = $script:ChatSessions.Count
-        Sessions = $script:ChatSessions.Values
-        CurrentSession = $script:CurrentSession
+        Count = ${script:ChatSessions}.Count
+        Sessions = ${script:ChatSessions}.Values
+        CurrentSession = ${script:CurrentSession}
         Timestamp = Get-Date
     }
 }
@@ -147,19 +147,19 @@ function Send-ChatMessage {
     #>
     param(
         [Parameter(Mandatory = $true)][string]$Message,
-        [string]$SessionId = $script:CurrentSession,
+        [string]$SessionId = ${script:CurrentSession},
         [string]$Role = "user"
     )
     
     try {
-        if (-not $SessionId -or -not $script:ChatSessions.ContainsKey($SessionId)) {
+        if (-not $SessionId -or -not ${script:ChatSessions}.ContainsKey($SessionId)) {
             return @{
                 Success = $false
                 Error = "No active session"
             }
         }
         
-        $session = $script:ChatSessions[$SessionId]
+        $session = ${script:ChatSessions}[$SessionId]
         
         $messageEntry = @{
             Id = [guid]::NewGuid().ToString()
@@ -170,7 +170,7 @@ function Send-ChatMessage {
             TokenCount = Measure-Tokens -Text $Message
         }
         
-        $script:MessageHistory += $messageEntry
+        ${script:MessageHistory} += $messageEntry
         $session.MessageCount++
         $session.LastActivity = Get-Date
         
@@ -202,12 +202,12 @@ function Get-ChatHistory {
         Get chat history for a session
     #>
     param(
-        [string]$SessionId = $script:CurrentSession,
+        [string]$SessionId = ${script:CurrentSession},
         [int]$Last = 50
     )
     
     try {
-        $history = $script:MessageHistory | Where-Object { $_.SessionId -eq $SessionId } | Select-Object -Last $Last
+        $history = ${script:MessageHistory} | Where-Object { $_.SessionId -eq $SessionId } | Select-Object -Last $Last
         
         return @{
             Success = $true
@@ -231,14 +231,14 @@ function Clear-ChatHistory {
         Clear chat history for a session
     #>
     param(
-        [string]$SessionId = $script:CurrentSession
+        [string]$SessionId = ${script:CurrentSession}
     )
     
     try {
-        $script:MessageHistory = $script:MessageHistory | Where-Object { $_.SessionId -ne $SessionId }
+        ${script:MessageHistory} = ${script:MessageHistory} | Where-Object { $_.SessionId -ne $SessionId }
         
-        if ($script:ChatSessions.ContainsKey($SessionId)) {
-            $script:ChatSessions[$SessionId].MessageCount = 0
+        if (${script:ChatSessions}.ContainsKey($SessionId)) {
+            ${script:ChatSessions}[$SessionId].MessageCount = 0
         }
         
         return @{
@@ -265,24 +265,24 @@ function Invoke-ModelResponse {
     #>
     param(
         [Parameter(Mandatory = $true)][string]$Message,
-        [string]$SessionId = $script:CurrentSession
+        [string]$SessionId = ${script:CurrentSession}
     )
     
     try {
-        if (-not $SessionId -or -not $script:ChatSessions.ContainsKey($SessionId)) {
+        if (-not $SessionId -or -not ${script:ChatSessions}.ContainsKey($SessionId)) {
             return @{
                 Success = $false
                 Error = "No active session"
             }
         }
         
-        $session = $script:ChatSessions[$SessionId]
+        $session = ${script:ChatSessions}[$SessionId]
         
         Write-Host "[Chat] Generating response from model: $($session.Model)..." -ForegroundColor Yellow
         
         # In production, would call the actual model endpoint
         # For now, simulate response
-        $response = "This is a simulated response from $($session.Model). In production, this would connect to Ollama at $script:ModelEndpoint"
+        $response = "This is a simulated response from $($session.Model). In production, this would connect to Ollama at ${script:ModelEndpoint}"
         
         # Add assistant response to history
         $assistantMessage = @{
@@ -294,7 +294,7 @@ function Invoke-ModelResponse {
             TokenCount = Measure-Tokens -Text $response
         }
         
-        $script:MessageHistory += $assistantMessage
+        ${script:MessageHistory} += $assistantMessage
         $session.MessageCount++
         
         return @{
@@ -319,12 +319,12 @@ function Set-ChatModel {
     #>
     param(
         [Parameter(Mandatory = $true)][string]$Model,
-        [string]$SessionId = $script:CurrentSession
+        [string]$SessionId = ${script:CurrentSession}
     )
     
     try {
-        if ($SessionId -and $script:ChatSessions.ContainsKey($SessionId)) {
-            $script:ChatSessions[$SessionId].Model = $Model
+        if ($SessionId -and ${script:ChatSessions}.ContainsKey($SessionId)) {
+            ${script:ChatSessions}[$SessionId].Model = $Model
             
             return @{
                 Success = $true
@@ -332,7 +332,7 @@ function Set-ChatModel {
             }
         }
         else {
-            $script:DefaultModel = $Model
+            ${script:DefaultModel} = $Model
             
             return @{
                 Success = $true
@@ -371,13 +371,13 @@ function Test-ModelConnection {
         Test connection to model endpoint
     #>
     try {
-        $response = Invoke-RestMethod -Uri "$script:ModelEndpoint/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
+        $response = Invoke-RestMethod -Uri "${script:ModelEndpoint}/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
         
         return @{
             Success = $true
             Connected = $true
             Models = $response.models.name
-            Endpoint = $script:ModelEndpoint
+            Endpoint = ${script:ModelEndpoint}
         }
     }
     catch {
@@ -385,7 +385,7 @@ function Test-ModelConnection {
             Success = $false
             Connected = $false
             Error = $_
-            Endpoint = $script:ModelEndpoint
+            Endpoint = ${script:ModelEndpoint}
         }
     }
 }

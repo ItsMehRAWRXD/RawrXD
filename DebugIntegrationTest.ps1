@@ -11,8 +11,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:TestResults = @()
-$script:Verbose = $Verbose
+${script:TestResults} = @()
+${script:Verbose} = $Verbose
 
 function Write-TestLog {
     param([string]$Message, [string]$Level = "INFO")
@@ -42,7 +42,7 @@ function Run-Test {
         
         if ($result.Success) {
             Write-TestLog "  ✓ PASSED ($($duration.TotalMilliseconds)ms)" "PASS"
-            $script:TestResults += [PSCustomObject]@{
+            ${script:TestResults} += [PSCustomObject]@{
                 Name = $Name
                 Passed = $true
                 Duration = $duration
@@ -51,7 +51,7 @@ function Run-Test {
             return $true
         } else {
             Write-TestLog "  ✗ FAILED: $($result.Error)" "FAIL"
-            $script:TestResults += [PSCustomObject]@{
+            ${script:TestResults} += [PSCustomObject]@{
                 Name = $Name
                 Passed = $false
                 Duration = $duration
@@ -63,7 +63,7 @@ function Run-Test {
     catch {
         $duration = (Get-Date) - $startTime
         Write-TestLog "  ✗ EXCEPTION: $_" "FAIL"
-        $script:TestResults += [PSCustomObject]@{
+        ${script:TestResults} += [PSCustomObject]@{
             Name = $Name
             Passed = $false
             Duration = $duration
@@ -327,9 +327,9 @@ Write-Host "║  Test Summary                                              ║" 
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-$passed = ($script:TestResults | Where-Object { $_.Passed }).Count
-$failed = ($script:TestResults | Where-Object { -not $_.Passed }).Count
-$total = $script:TestResults.Count
+$passed = (${script:TestResults} | Where-Object { $_.Passed }).Count
+$failed = (${script:TestResults} | Where-Object { -not $_.Passed }).Count
+$total = ${script:TestResults}.Count
 
 Write-TestLog "Total: $total" "INFO"
 Write-TestLog "Passed: $passed" $(if ($passed -gt 0) { "PASS" } else { "INFO" })
@@ -338,7 +338,7 @@ Write-TestLog "Failed: $failed" $(if ($failed -gt 0) { "FAIL" } else { "INFO" })
 if ($failed -gt 0) {
     Write-Host ""
     Write-TestLog "Failed tests:" "FAIL"
-    $script:TestResults | Where-Object { -not $_.Passed } | ForEach-Object {
+    ${script:TestResults} | Where-Object { -not $_.Passed } | ForEach-Object {
         Write-TestLog "  - $($_.Name): $($_.Error)" "FAIL"
     }
 }

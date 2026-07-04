@@ -66,7 +66,7 @@ class GGUFHeader {
         $this.Version = [BitConverter]::ToUInt32($data, 4)
         $this.TensorCount = [BitConverter]::ToUInt64($data, 8)
         $this.MetadataCount = [BitConverter]::ToUInt64($data, 16)
-        $this.IsValid = ($this.Magic -eq $script:GGUF_MAGIC)
+        $this.IsValid = ($this.Magic -eq ${script:GGUF_MAGIC})
     }
 }
 
@@ -248,8 +248,8 @@ class GGUFReader {
     }
     
     [double]GetTypeSize([uint32]$type) {
-        if ($script:GGML_TYPE_SIZES.ContainsKey($type)) {
-            return $script:GGML_TYPE_SIZES[$type]
+        if (${script:GGML_TYPE_SIZES}.ContainsKey($type)) {
+            return ${script:GGML_TYPE_SIZES}[$type]
         }
         return 1.0
     }
@@ -272,7 +272,7 @@ class GGUFReader {
         if (-not $this.IsOpen) { return $null }
         
         try {
-            $readSize = if ($maxBytes -gt 0 -and $maxBytes -lt $tensor.SizeBytes) { 
+            $readSize = $(if ($maxBytes -gt 0 -and $maxBytes -lt $tensor.SizeBytes) { 
                 $maxBytes 
             } else { 
                 $tensor.SizeBytes 
@@ -318,7 +318,7 @@ class OllamaBlobParser {
             
             for ($i = 0; $i -lt ($buffer.Length - 4); $i++) {
                 $magic = [BitConverter]::ToUInt32($buffer, $i)
-                if ($magic -eq $script:GGUF_MAGIC) {
+                if ($magic -eq ${script:GGUF_MAGIC}) {
                     Write-Verbose "✓ Found GGUF magic at offset $i"
                     return [GGUFReader]::new($this.BlobPath)
                 }

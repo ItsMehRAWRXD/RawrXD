@@ -93,8 +93,8 @@ function Invoke-AgenticTest {
         Write-GinLog 200 $duration "POST" "/api/generate"
         
         $responseText = $response.response
-        $tokenCount = if ($response.eval_count) { $response.eval_count } else { "unknown" }
-        $tokensPerSec = if ($response.eval_count -and $response.eval_duration) { 
+        $tokenCount = $(if ($response.eval_count) { $response.eval_count } else { "unknown" }
+        $tokensPerSec = $(if ($response.eval_count -and $response.eval_duration) { 
             [math]::Round($response.eval_count / ($response.eval_duration / 1000000000), 2) 
         } else { 
             "unknown" 
@@ -409,7 +409,7 @@ Write-Log "INFO" "agentic-test.ps1:441" "overall_score=$totalPassed/$totalPossib
 # Detailed results
 Write-Host "`n" -NoNewline
 foreach ($result in $allResults) {
-    $status = if ($result.Percentage -ge 80) { "EXCELLENT" } 
+    $status = $(if ($result.Percentage -ge 80) { "EXCELLENT" } 
               elseif ($result.Percentage -ge 60) { "GOOD" } 
               elseif ($result.Percentage -ge 40) { "MODERATE" } 
               else { "POOR" }
@@ -428,7 +428,7 @@ if ($avgTokensPerSec) {
 }
 
 # Final rating
-$rating = if ($overallPercentage -ge 80) { "HIGHLY AGENTIC" }
+$rating = $(if ($overallPercentage -ge 80) { "HIGHLY AGENTIC" }
           elseif ($overallPercentage -ge 60) { "MODERATELY AGENTIC" }
           elseif ($overallPercentage -ge 40) { "SOMEWHAT AGENTIC" }
           else { "LOW AGENTIC CAPABILITY" }

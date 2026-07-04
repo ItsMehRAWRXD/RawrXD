@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 function Ensure-DevEnv {
   if ($NoEnv) { return }
   # Try to locate VS DevCmd via vswhere
-  $vswhere = "$Env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+  $vswhere = "${Env:ProgramFiles}(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
   if (Test-Path $vswhere) {
     $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
     if ($vs) {

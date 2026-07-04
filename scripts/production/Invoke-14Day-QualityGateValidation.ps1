@@ -145,11 +145,11 @@ if ($waiverAudit.waiverFilePresent) {
         $idx = 0
         foreach ($entry in $rawEntries) {
             $idx += 1
-            $entryDayRaw = if ($entry.PSObject.Properties.Name -contains "day") { [string]$entry.day } else { "" }
-            $entryCatRaw = if ($entry.PSObject.Properties.Name -contains "category") { [string]$entry.category } else { "*" }
-            $entryReason = if ($entry.PSObject.Properties.Name -contains "reason") { [string]$entry.reason } else { "" }
-            $entryApprovedBy = if ($entry.PSObject.Properties.Name -contains "approvedBy") { [string]$entry.approvedBy } else { "" }
-            $entryExpiresRaw = if ($entry.PSObject.Properties.Name -contains "expiresUtc") { [string]$entry.expiresUtc } else { "" }
+            $entryDayRaw = $(if ($entry.PSObject.Properties.Name -contains "day") { [string]$entry.day } else { "" }
+            $entryCatRaw = $(if ($entry.PSObject.Properties.Name -contains "category") { [string]$entry.category } else { "*" }
+            $entryReason = $(if ($entry.PSObject.Properties.Name -contains "reason") { [string]$entry.reason } else { "" }
+            $entryApprovedBy = $(if ($entry.PSObject.Properties.Name -contains "approvedBy") { [string]$entry.approvedBy } else { "" }
+            $entryExpiresRaw = $(if ($entry.PSObject.Properties.Name -contains "expiresUtc") { [string]$entry.expiresUtc } else { "" }
 
             $normalizedDay = -1
             if ($entryDayRaw -eq "*") {
@@ -158,7 +158,7 @@ if ($waiverAudit.waiverFilePresent) {
                 [void][int]::TryParse($entryDayRaw, [ref]$normalizedDay)
             }
 
-            $normalizedCategory = if ($entryCatRaw) { $entryCatRaw } else { "*" }
+            $normalizedCategory = $(if ($entryCatRaw) { $entryCatRaw } else { "*" }
             $categoryValid = ($normalizedCategory -eq "*") -or ($requiredEvidence -contains $normalizedCategory)
             $dayValid = (($normalizedDay -eq 0) -or (($normalizedDay -ge 1) -and ($normalizedDay -le 14)))
             $metaValid = ($entryReason.Trim().Length -gt 0) -and ($entryApprovedBy.Trim().Length -gt 0)
@@ -268,7 +268,7 @@ for ($day = 1; $day -le 14; $day++) {
         continue
     }
 
-    $report = if ($dayReportCache.Contains($day)) {
+    $report = $(if ($dayReportCache.Contains($day)) {
         $dayReportCache[$day]
     } else {
         Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
@@ -422,7 +422,7 @@ for ($day = 1; $day -le 14; $day++) {
         freshness = [ordered]@{
             withinWindow = [bool]$withinFreshnessWindow
             windowHours = $FreshnessWindowHours
-            reportEndUtc = if ($hasReportEndUtc) { $reportEndUtc.ToString("o") } else { "" }
+            reportEndUtc = $(if ($hasReportEndUtc) { $reportEndUtc.ToString("o") } else { "" }
             reportAgeHours = $reportAgeHours
             fileLastWriteUtc = $reportItem.LastWriteTimeUtc.ToUniversalTime().ToString("o")
             fileAgeHours = $fileAgeHours
@@ -528,7 +528,7 @@ for ($i = 0; $i -lt $phaseOrder.Count; $i++) {
 $blockerQueue = @()
 $queueIndex = 1
 foreach ($entry in ($ledger | Where-Object { $_.verdict -ne "Pass" } | Sort-Object -Property @{Expression={ $phaseOrderMap[[string]$_.phase] }}, @{Expression={ [int]$_.day }})) {
-    $priority = if ($entry.verdict -eq "Blocked") { "P1" } else { "P2" }
+    $priority = $(if ($entry.verdict -eq "Blocked") { "P1" } else { "P2" }
     $requiredForStrict = $entry.verdict -ne "Pass"
     $actions = @()
 
@@ -559,8 +559,8 @@ foreach ($entry in ($ledger | Where-Object { $_.verdict -ne "Pass" } | Sort-Obje
 
 $accountabilityEntries = @()
 foreach ($entry in ($ledger | Where-Object { $_.verdict -ne "Pass" } | Sort-Object -Property @{Expression={ $phaseOrderMap[[string]$_.phase] }}, @{Expression={ [int]$_.day }})) {
-    $priority = if ($entry.verdict -eq "Blocked") { "Immediate" } else { "Planned" }
-    $deadlineUtc = if ($entry.verdict -eq "Blocked") {
+    $priority = $(if ($entry.verdict -eq "Blocked") { "Immediate" } else { "Planned" }
+    $deadlineUtc = $(if ($entry.verdict -eq "Blocked") {
         $nowUtc.AddHours(12).ToString("o")
     } else {
         $nowUtc.AddHours(24).ToString("o")
@@ -576,7 +576,7 @@ foreach ($entry in ($ledger | Where-Object { $_.verdict -ne "Pass" } | Sort-Obje
         reason = [string]$entry.reason
         mitigationActionCount = @($entry.remediation).Count + 2
         waivedEvidenceCount = @($entry.waivedEvidence).Count
-        nextAction = if (@($entry.remediation).Count -gt 0) { [string]$entry.remediation[0] } else { "Investigate day evidence gaps and update checks/metrics." }
+        nextAction = $(if (@($entry.remediation).Count -gt 0) { [string]$entry.remediation[0] } else { "Investigate day evidence gaps and update checks/metrics." }
     }
 }
 
@@ -584,7 +584,7 @@ $accountabilitySummary = [ordered]@{
     entryCount = $accountabilityEntries.Count
     blockedOwners = @($accountabilityEntries | Where-Object { $_.verdict -eq "Blocked" } | ForEach-Object { [string]$_.owner } | Select-Object -Unique)
     riskOwners = @($accountabilityEntries | Where-Object { $_.verdict -eq "Proceed with risk" } | ForEach-Object { [string]$_.owner } | Select-Object -Unique)
-    earliestDeadlineUtc = if ($accountabilityEntries.Count -gt 0) {
+    earliestDeadlineUtc = $(if ($accountabilityEntries.Count -gt 0) {
         ((@($accountabilityEntries | Sort-Object mitigationDeadlineUtc)[0]).mitigationDeadlineUtc)
     } else {
         ""
@@ -626,9 +626,9 @@ $evidenceDebtSummary = [ordered]@{
     totalMissingEvidence = [int](($ledger | ForEach-Object { @($_.missingEvidence).Count } | Measure-Object -Sum).Sum)
     byCategory = $evidenceDebtByCategory
     byPhase = $evidenceDebtByPhase
-    topDebtDay = if ($null -ne $topDebtEntry) { [int]$topDebtEntry.day } else { 0 }
-    topDebtCount = if ($null -ne $topDebtEntry) { [int]@($topDebtEntry.missingEvidence).Count } else { 0 }
-    topDebtPhase = if ($null -ne $topDebtEntry) { [string]$topDebtEntry.phase } else { "" }
+    topDebtDay = $(if ($null -ne $topDebtEntry) { [int]$topDebtEntry.day } else { 0 }
+    topDebtCount = $(if ($null -ne $topDebtEntry) { [int]@($topDebtEntry.missingEvidence).Count } else { 0 }
+    topDebtPhase = $(if ($null -ne $topDebtEntry) { [string]$topDebtEntry.phase } else { "" }
 }
 
 $coverageByCategory = [ordered]@{}
@@ -698,7 +698,7 @@ $coverageSummary = [ordered]@{
 $blockedCount = ($ledger | Where-Object { $_.verdict -eq "Blocked" } | Measure-Object).Count
 $riskCount = ($ledger | Where-Object { $_.verdict -eq "Proceed with risk" } | Measure-Object).Count
 $passCount = ($ledger | Where-Object { $_.verdict -eq "Pass" } | Measure-Object).Count
-$completionPercent = if ($ledger.Count -gt 0) {
+$completionPercent = $(if ($ledger.Count -gt 0) {
     [Math]::Round((100.0 * $passCount) / $ledger.Count, 2)
 } else {
     0.0
@@ -792,7 +792,7 @@ foreach ($phase in $phaseSummary.Keys) {
 $md += ""
 $md += "## Day Verdicts"
 foreach ($entry in $ledger) {
-    $missing = if ($entry.missingEvidence.Count -gt 0) { $entry.missingEvidence -join ", " } else { "none" }
+    $missing = $(if ($entry.missingEvidence.Count -gt 0) { $entry.missingEvidence -join ", " } else { "none" }
     $md += "- Day $($entry.day): $($entry.verdict) | report_status=$($entry.reportStatus) | missing=$missing"
 }
 
@@ -1063,7 +1063,7 @@ $evidenceDebtMd -join "`r`n" | Set-Content -LiteralPath $evidenceDebtMdPath -Enc
     $expansionMd += "## Phase Completion"
     foreach ($phase in $phaseOrder) {
         $s = $phaseSummary[$phase]
-        $phasePct = if ($s.totalDays -gt 0) { [Math]::Round((100.0 * $s.pass) / $s.totalDays, 2) } else { 0.0 }
+        $phasePct = $(if ($s.totalDays -gt 0) { [Math]::Round((100.0 * $s.pass) / $s.totalDays, 2) } else { 0.0 }
         $expansionMd += "- ${phase}: pass=$($s.pass)/$($s.totalDays) completion=$phasePct%"
     }
 
@@ -1232,11 +1232,11 @@ if ($null -ne $previousRecord) {
 
 $payload.trend = [ordered]@{
     direction = $trendDirection
-    previousOverallVerdict = if ($null -ne $previousRecord) { [string]$previousRecord.overallVerdict } else { "none" }
+    previousOverallVerdict = $(if ($null -ne $previousRecord) { [string]$previousRecord.overallVerdict } else { "none" }
     currentOverallVerdict = [string]$currentRecord.overallVerdict
-    previousBlockedDays = if ($null -ne $previousRecord) { [int]$previousRecord.blockedDays } else { -1 }
+    previousBlockedDays = $(if ($null -ne $previousRecord) { [int]$previousRecord.blockedDays } else { -1 }
     currentBlockedDays = [int]$currentRecord.blockedDays
-    previousRiskDays = if ($null -ne $previousRecord) { [int]$previousRecord.riskDays } else { -1 }
+    previousRiskDays = $(if ($null -ne $previousRecord) { [int]$previousRecord.riskDays } else { -1 }
     currentRiskDays = [int]$currentRecord.riskDays
     historyPath = $historyJsonlPath
     trendReportPath = $trendMdPath

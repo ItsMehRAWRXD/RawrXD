@@ -39,8 +39,8 @@ $FLAGS = @(
 $INCLUDES = @(
     "/I.",
     "/I$MSVC_PATH\include",
-    "/I$env:WindowsSdkDir\Include\$env:WindowsSdkVersion\um",
-    "/I$env:WindowsSdkDir\Include\$env:WindowsSdkVersion\ucrt"
+    "/I${env:WindowsSdkDir}\Include\${env:WindowsSdkVersion}\um",
+    "/I${env:WindowsSdkDir}\Include\${env:WindowsSdkVersion}\ucrt"
 )
 
 # Add ZeroMQ if available

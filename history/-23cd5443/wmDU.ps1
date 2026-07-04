@@ -29,7 +29,7 @@ $testDirs = @(
     "D:\OllamaModels"
     "D:\OllamaModels\blobs"
     "D:\Franken\BackwardsUnlock"
-    "C:\Users\$env:USERNAME\.ollama\models"
+    "C:\Users\${env:USERNAME}\.ollama\models"
 )
 
 $dllPath = ".\LazyHotpatchWrapper.dll"
@@ -185,7 +185,7 @@ foreach ($model in $allModels) {
     $avgThroughput = ($runResults | Measure-Object -Property Throughput -Average).Average
     $minThroughput = ($runResults | Measure-Object -Property Throughput -Minimum).Minimum
     $maxThroughput = ($runResults | Measure-Object -Property Throughput -Maximum).Maximum
-    $stdDev = if ($runResults.Count -gt 1) {
+    $stdDev = $(if ($runResults.Count -gt 1) {
         [math]::Sqrt(($runResults | Measure-Object -Property Throughput | ForEach-Object {
             ($_.Throughput - $avgThroughput) * ($_.Throughput - $avgThroughput)
         } | Measure-Object -Sum).Sum / ($runResults.Count - 1))
@@ -194,7 +194,7 @@ foreach ($model in $allModels) {
     $avgLatency = ($runResults | Measure-Object -Property AvgLatency -Average).Average
     
     # Assessment
-    $assessment = if ($avgThroughput -ge 70) {
+    $assessment = $(if ($avgThroughput -ge 70) {
         "EXCELLENT"
     } elseif ($avgThroughput -ge 50) {
         "GOOD"
@@ -259,7 +259,7 @@ foreach ($result in $sortedResults) {
     }
     
     $assessment = $result.Assessment
-    $color = if ($assessment -eq "EXCELLENT") { "Green" } elseif ($assessment -eq "GOOD") { "Cyan" } else { "Yellow" }
+    $color = $(if ($assessment -eq "EXCELLENT") { "Green" } elseif ($assessment -eq "GOOD") { "Cyan" } else { "Yellow" }
     
     $line = $modelDisplay.PadRight(40) + "$($result.SizeGB)".PadRight(12) + "$([math]::Round($result.Throughput, 2))".PadRight(20) + "$([math]::Round($result.Latency, 2))".PadRight(15) + $assessment
     Write-Host $line

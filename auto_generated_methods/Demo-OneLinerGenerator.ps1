@@ -68,7 +68,7 @@ Write-Host "━━━━━━━━━━━━━━━━━━━━━━�
 
 $customTasks = @{
     "scan-ports" = "1..100 | ForEach-Object { Test-NetConnection -ComputerName localhost -Port `$_ -InformationLevel Quiet }"
-    "gather-env" = "`$env:USERNAME + '@' + `$env:COMPUTERNAME | Out-File 'D:\RawrXD\env.txt'"
+    "gather-env" = "`${env:USERNAME} + '@' + `${env:COMPUTERNAME} | Out-File 'D:\RawrXD\env.txt'"
 }
 
 $demo4 = Generate-OneLiner -Tasks @("create-dir","scan-ports","gather-env") -CustomTasks $customTasks -Verbose
@@ -114,7 +114,7 @@ Write-Host "━━━━━━━━━━━━━━━━━━━━━━�
 Write-Host "📊 Summary:" -ForegroundColor Cyan
 Write-Host "  ✓ 6 different generation modes demonstrated" -ForegroundColor Green
 Write-Host "  ✓ Basic, Advanced, Hardened, Custom, OmegaX, Interactive" -ForegroundColor Green
-Write-Host "  ✓ All one-liners saved to $env:TEMP\RawrXD_OneLiners\" -ForegroundColor Green
+Write-Host "  ✓ All one-liners saved to ${env:TEMP}\RawrXD_OneLiners\" -ForegroundColor Green
 Write-Host ""
 
 # Show available commands

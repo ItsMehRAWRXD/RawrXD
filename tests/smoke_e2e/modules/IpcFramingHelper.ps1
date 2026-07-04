@@ -3,26 +3,26 @@
 # Matches Win32IDE_ChatIpcProtocol.h (C++ IDE)
 # =============================================================================
 
-$script:IPC_MAGIC_LEGACY   = [uint32]0x52415752   # "RAWR" little-endian
-$script:IPC_MAGIC_SEGMENT  = [uint32]0x52415753   # segment continuation magic
-$script:LEGACY_HEADER_SIZE = 14
-$script:SEGMENT_HEADER_SIZE = 28
-$script:WIRE_PREFIX_SIZE   = 4
-$script:MAX_PIPE_FRAME     = 65536
-$script:MAX_SINGLE_PAYLOAD = $script:MAX_PIPE_FRAME - $script:LEGACY_HEADER_SIZE   # 65522
-$script:MAX_CHUNK_PAYLOAD  = $script:MAX_PIPE_FRAME - $script:SEGMENT_HEADER_SIZE # 65508
-$script:MAX_LOGICAL_BYTES  = 16MB
+${script:IPC_MAGIC_LEGACY}   = [uint32]0x52415752   # "RAWR" little-endian
+${script:IPC_MAGIC_SEGMENT}  = [uint32]0x52415753   # segment continuation magic
+${script:LEGACY_HEADER_SIZE} = 14
+${script:SEGMENT_HEADER_SIZE} = 28
+${script:WIRE_PREFIX_SIZE}   = 4
+${script:MAX_PIPE_FRAME}     = 65536
+${script:MAX_SINGLE_PAYLOAD} = ${script:MAX_PIPE_FRAME} - ${script:LEGACY_HEADER_SIZE}   # 65522
+${script:MAX_CHUNK_PAYLOAD}  = ${script:MAX_PIPE_FRAME} - ${script:SEGMENT_HEADER_SIZE} # 65508
+${script:MAX_LOGICAL_BYTES}  = 16MB
 
 function Get-IpcConstants {
     [PSCustomObject]@{
-        MagicLegacy       = $script:IPC_MAGIC_LEGACY
-        MagicSegment      = $script:IPC_MAGIC_SEGMENT
-        LegacyHeaderSize  = $script:LEGACY_HEADER_SIZE
-        SegmentHeaderSize = $script:SEGMENT_HEADER_SIZE
-        WirePrefixSize    = $script:WIRE_PREFIX_SIZE
-        MaxPipeFrame      = $script:MAX_PIPE_FRAME
-        MaxSinglePayload  = $script:MAX_SINGLE_PAYLOAD
-        MaxChunkPayload   = $script:MAX_CHUNK_PAYLOAD
+        MagicLegacy       = ${script:IPC_MAGIC_LEGACY}
+        MagicSegment      = ${script:IPC_MAGIC_SEGMENT}
+        LegacyHeaderSize  = ${script:LEGACY_HEADER_SIZE}
+        SegmentHeaderSize = ${script:SEGMENT_HEADER_SIZE}
+        WirePrefixSize    = ${script:WIRE_PREFIX_SIZE}
+        MaxPipeFrame      = ${script:MAX_PIPE_FRAME}
+        MaxSinglePayload  = ${script:MAX_SINGLE_PAYLOAD}
+        MaxChunkPayload   = ${script:MAX_CHUNK_PAYLOAD}
     }
 }
 
@@ -49,18 +49,18 @@ function New-LegacyFrame {
         [uint16]$MessageType = 1
     )
     $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($PayloadUtf8)
-    if ($payloadBytes.Length -gt $script:MAX_SINGLE_PAYLOAD) {
-        throw "Legacy frame payload exceeds MAX_SINGLE_PAYLOAD ($($script:MAX_SINGLE_PAYLOAD))"
+    if ($payloadBytes.Length -gt ${script:MAX_SINGLE_PAYLOAD}) {
+        throw "Legacy frame payload exceeds MAX_SINGLE_PAYLOAD ($(${script:MAX_SINGLE_PAYLOAD}))"
     }
 
-    $frame = New-Object byte[] ($script:LEGACY_HEADER_SIZE + $payloadBytes.Length)
-    [BitConverter]::GetBytes([uint32]$script:IPC_MAGIC_LEGACY).CopyTo($frame, 0)
+    $frame = New-Object byte[] (${script:LEGACY_HEADER_SIZE} + $payloadBytes.Length)
+    [BitConverter]::GetBytes([uint32]${script:IPC_MAGIC_LEGACY}).CopyTo($frame, 0)
     [BitConverter]::GetBytes([uint16]$MessageType).CopyTo($frame, 4)
     [BitConverter]::GetBytes([uint32]$payloadBytes.Length).CopyTo($frame, 6)
     $crc = Get-Crc32 -Data $payloadBytes
     [BitConverter]::GetBytes([uint32]$crc).CopyTo($frame, 10)
     if ($payloadBytes.Length -gt 0) {
-        [Array]::Copy($payloadBytes, 0, $frame, $script:LEGACY_HEADER_SIZE, $payloadBytes.Length)
+        [Array]::Copy($payloadBytes, 0, $frame, ${script:LEGACY_HEADER_SIZE}, $payloadBytes.Length)
     }
     return $frame
 }
@@ -75,12 +75,12 @@ function New-SegmentFrame {
         [uint16]$SegCount,
         [uint32]$LogicalCrc
     )
-    if ($ChunkBytes.Length -gt $script:MAX_CHUNK_PAYLOAD) {
+    if ($ChunkBytes.Length -gt ${script:MAX_CHUNK_PAYLOAD}) {
         throw "Chunk exceeds MAX_CHUNK_PAYLOAD"
     }
 
-    $frame = New-Object byte[] ($script:SEGMENT_HEADER_SIZE + $ChunkBytes.Length)
-    [BitConverter]::GetBytes([uint32]$script:IPC_MAGIC_SEGMENT).CopyTo($frame, 0)
+    $frame = New-Object byte[] (${script:SEGMENT_HEADER_SIZE} + $ChunkBytes.Length)
+    [BitConverter]::GetBytes([uint32]${script:IPC_MAGIC_SEGMENT}).CopyTo($frame, 0)
     [BitConverter]::GetBytes([uint16]$MessageType).CopyTo($frame, 4)
     [BitConverter]::GetBytes([uint16]$Flags).CopyTo($frame, 6)
     [BitConverter]::GetBytes([uint32]$TotalLen).CopyTo($frame, 8)
@@ -91,7 +91,7 @@ function New-SegmentFrame {
     [BitConverter]::GetBytes([uint32]$chunkCrc).CopyTo($frame, 20)
     [BitConverter]::GetBytes([uint32]$LogicalCrc).CopyTo($frame, 24)
     if ($ChunkBytes.Length -gt 0) {
-        [Array]::Copy($ChunkBytes, 0, $frame, $script:SEGMENT_HEADER_SIZE, $ChunkBytes.Length)
+        [Array]::Copy($ChunkBytes, 0, $frame, ${script:SEGMENT_HEADER_SIZE}, $ChunkBytes.Length)
     }
     return $frame
 }
@@ -102,24 +102,24 @@ function New-PhysicalFramesFromLogicalPayload {
         [uint16]$MessageType = 1
     )
     $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($PayloadUtf8)
-    if ($payloadBytes.Length -gt $script:MAX_LOGICAL_BYTES) {
+    if ($payloadBytes.Length -gt ${script:MAX_LOGICAL_BYTES}) {
         throw "Logical payload too large"
     }
 
     $frames = New-Object System.Collections.Generic.List[byte[]]
 
-    if ($payloadBytes.Length -le $script:MAX_SINGLE_PAYLOAD) {
+    if ($payloadBytes.Length -le ${script:MAX_SINGLE_PAYLOAD}) {
         $frames.Add((New-LegacyFrame -PayloadUtf8 $PayloadUtf8 -MessageType $MessageType))
         return $frames.ToArray()
     }
 
     $logicalCrc = Get-Crc32 -Data $payloadBytes
     $totalLen = [uint32]$payloadBytes.Length
-    $segCount = [uint16][Math]::Ceiling($payloadBytes.Length / $script:MAX_CHUNK_PAYLOAD)
+    $segCount = [uint16][Math]::Ceiling($payloadBytes.Length / ${script:MAX_CHUNK_PAYLOAD})
 
     for ($i = 0; $i -lt $segCount; $i++) {
-        $offset = $i * $script:MAX_CHUNK_PAYLOAD
-        $len = [Math]::Min($script:MAX_CHUNK_PAYLOAD, $payloadBytes.Length - $offset)
+        $offset = $i * ${script:MAX_CHUNK_PAYLOAD}
+        $len = [Math]::Min(${script:MAX_CHUNK_PAYLOAD}, $payloadBytes.Length - $offset)
         $chunk = New-Object byte[] $len
         [Array]::Copy($payloadBytes, $offset, $chunk, 0, $len)
 
@@ -136,12 +136,12 @@ function New-PhysicalFramesFromLogicalPayload {
 
 function Add-WirePrefix {
     param([byte[]]$PhysicalFrame)
-    if ($PhysicalFrame.Length -gt $script:MAX_PIPE_FRAME) {
+    if ($PhysicalFrame.Length -gt ${script:MAX_PIPE_FRAME}) {
         throw "Physical frame exceeds MAX_PIPE_FRAME"
     }
-    $wire = New-Object byte[] ($script:WIRE_PREFIX_SIZE + $PhysicalFrame.Length)
+    $wire = New-Object byte[] (${script:WIRE_PREFIX_SIZE} + $PhysicalFrame.Length)
     [BitConverter]::GetBytes([uint32]$PhysicalFrame.Length).CopyTo($wire, 0)
-    [Array]::Copy($PhysicalFrame, 0, $wire, $script:WIRE_PREFIX_SIZE, $PhysicalFrame.Length)
+    [Array]::Copy($PhysicalFrame, 0, $wire, ${script:WIRE_PREFIX_SIZE}, $PhysicalFrame.Length)
     return $wire
 }
 

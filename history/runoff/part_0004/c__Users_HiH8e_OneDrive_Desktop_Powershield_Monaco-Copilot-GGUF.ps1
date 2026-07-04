@@ -62,7 +62,7 @@ catch {
 }
 
 # Ensure Native Loader is found
-$env:Path += ";$LibsDir"
+${env:Path} += ";$LibsDir"
 
 # ---- helpers ----------------------------------------------------------
 function Invoke-Copilot {

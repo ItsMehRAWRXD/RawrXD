@@ -22,7 +22,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$script:RepoRoot = if ([System.IO.Path]::IsPathRooted($RepoRoot)) { $RepoRoot } else { (Resolve-Path $RepoRoot).Path }
+${script:RepoRoot} = $(if ([System.IO.Path]::IsPathRooted($RepoRoot)) { $RepoRoot } else { (Resolve-Path $RepoRoot).Path }
 
 function Write-Info([string]$m) { Write-Host "[INFO] $m" -ForegroundColor Cyan }
 function Write-Ok([string]$m)   { Write-Host "[OK]   $m" -ForegroundColor Green }
@@ -30,7 +30,7 @@ function Write-Warn([string]$m) { Write-Host "[WARN] $m" -ForegroundColor Yellow
 function Write-Fail([string]$m) { Write-Host "[FAIL] $m" -ForegroundColor Red }
 
 # Stub/placeholder patterns that MUST NOT exist in production MASM
-$script:StubPatterns = @(
+${script:StubPatterns} = @(
     'Stub exports',
     'full impl would',
     'in a production impl',
@@ -47,7 +47,7 @@ $script:StubPatterns = @(
 )
 
 # Required MASM modules and their C++/header origins
-$script:Modules = @(
+${script:Modules} = @(
     @{
         Name   = "UnifiedOverclockGovernor"
         Cpp    = "src/core/unified_overclock_governor.cpp"
@@ -89,7 +89,7 @@ $script:Modules = @(
 )
 
 function Get-RepoPath([string]$rel) {
-    $p = Join-Path $script:RepoRoot $rel
+    $p = Join-Path ${script:RepoRoot} $rel
     if (Test-Path -LiteralPath $p) { return (Microsoft.PowerShell.Management\Resolve-Path $p).Path }
     return $p
 }
@@ -102,7 +102,7 @@ function Get-AsmContent([string]$asmPath) {
 
 function Test-StubInContent([string]$content) {
     $hits = New-Object System.Collections.Generic.List[string]
-    foreach ($pat in $script:StubPatterns) {
+    foreach ($pat in ${script:StubPatterns}) {
         if ($content -match $pat) { $hits.Add($pat) }
     }
     return $hits
@@ -118,12 +118,12 @@ function Get-ExportPresent([string]$content, [string[]]$exports) {
 
 function Invoke-Validate {
     Write-Info "Validating pure MASM — no stubs allowed"
-    Set-Location $script:RepoRoot
+    Set-Location ${script:RepoRoot}
     $violations = New-Object System.Collections.Generic.List[object]
     $missing = New-Object System.Collections.Generic.List[string]
 
-    foreach ($mod in $script:Modules) {
-        $asms = if ($mod.Asm -is [array]) { $mod.Asm } else { @($mod.Asm) }
+    foreach ($mod in ${script:Modules}) {
+        $asms = $(if ($mod.Asm -is [array]) { $mod.Asm } else { @($mod.Asm) }
         foreach ($a in $asms) {
             $p = Get-RepoPath $a
             if (-not (Test-Path -LiteralPath $p)) {
@@ -155,11 +155,11 @@ function Invoke-Validate {
 
 function Invoke-Report {
     Write-Info "Reporting MASM completion status"
-    Set-Location $script:RepoRoot
-    foreach ($mod in $script:Modules) {
+    Set-Location ${script:RepoRoot}
+    foreach ($mod in ${script:Modules}) {
         Write-Host ""
         Write-Host "=== $($mod.Name) ===" -ForegroundColor Cyan
-        $asms = if ($mod.Asm -is [array]) { $mod.Asm } else { @($mod.Asm) }
+        $asms = $(if ($mod.Asm -is [array]) { $mod.Asm } else { @($mod.Asm) }
         foreach ($a in $asms) {
             $text = Get-AsmContent $a
             if (-not $text) {
@@ -178,7 +178,7 @@ function Invoke-Report {
 
 function Invoke-Convert {
     Write-Info "Applying CMake MASM migration"
-    $cmakePath = Join-Path $script:RepoRoot "CMakeLists.txt"
+    $cmakePath = Join-Path ${script:RepoRoot} "CMakeLists.txt"
     if (-not (Test-Path -LiteralPath $cmakePath)) {
         Write-Fail "CMakeLists.txt not found"
         return 1

@@ -129,7 +129,7 @@ if ($lockMemoryPriv -and $result.ToInt64() -eq 1) {
     Write-Host "8. Run this script again to verify" -ForegroundColor White
     Write-Host ""
     Write-Host "Alternative (PowerShell as Admin):" -ForegroundColor Cyan
-    Write-Host "   ntrights +r SeLockMemoryPrivilege -u `"`$env:USERNAME`"" -ForegroundColor Gray
+    Write-Host "   ntrights +r SeLockMemoryPrivilege -u `"`${env:USERNAME}`"" -ForegroundColor Gray
 }
 
 Write-Host ""

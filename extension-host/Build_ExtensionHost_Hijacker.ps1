@@ -6,7 +6,7 @@
 param([switch]$Deploy)
 
 $ErrorActionPreference = "Stop"
-$rootDir = if ($PSScriptRoot) { $PSScriptRoot } else { "D:\rawrxd\extension-host" }
+$rootDir = $(if ($PSScriptRoot) { $PSScriptRoot } else { "D:\rawrxd\extension-host" }
 $outDir = Join-Path $rootDir "build"
 $asmFile = Join-Path $rootDir "RawrXD_ExtensionHost_Hijacker.asm"
 $objFile = Join-Path $outDir "RawrXD_ExtensionHost_Hijacker.obj"

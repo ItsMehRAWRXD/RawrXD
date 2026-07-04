@@ -30,10 +30,10 @@ param(
     [string]$Operation = "digest",
     
     [Parameter(Mandatory=$false)]
-    [string]$RootPath = (if ($env:LAZY_INIT_IDE_ROOT) { $env:LAZY_INIT_IDE_ROOT } else { (Split-Path $PSScriptRoot -Parent) }),
+    [string]$RootPath = (if (${env:LAZY_INIT_IDE_ROOT}) { ${env:LAZY_INIT_IDE_ROOT} } else { (Split-Path $PSScriptRoot -Parent) }),
     
     [Parameter(Mandatory=$false)]
-    [string]$OutputPath = (Join-Path (if ($env:LAZY_INIT_IDE_ROOT) { $env:LAZY_INIT_IDE_ROOT } else { (Split-Path $PSScriptRoot -Parent) }) "data" "knowledge_base.json"),
+    [string]$OutputPath = (Join-Path (if (${env:LAZY_INIT_IDE_ROOT}) { ${env:LAZY_INIT_IDE_ROOT} } else { (Split-Path $PSScriptRoot -Parent) }) "data" "knowledge_base.json"),
     
     [Parameter(Mandatory=$false)]
     [string]$Query = ""
@@ -252,7 +252,7 @@ class SourceDigester {
             $headings += $match.Groups[1].Value
         }
         
-        $fileInfo.Synopsis = if ($headings.Count -gt 0) { $headings[0] } else { "" }
+        $fileInfo.Synopsis = $(if ($headings.Count -gt 0) { $headings[0] } else { "" }
         
         # Extract code blocks
         $codeBlockPattern = '```(\w+)\s+([\s\S]*?)```'

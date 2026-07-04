@@ -27,10 +27,10 @@ function Write-TestSection {
 }
 
 # Global test counters
-$script:totalTests = 0
-$script:passedTests = 0
-$script:failedTests = 0
-$script:skippedTests = 0
+${script:totalTests} = 0
+${script:passedTests} = 0
+${script:failedTests} = 0
+${script:skippedTests} = 0
 
 Write-TestHeader "Real Model Loader Communication Test" "Magenta"
 Write-Host "`nTesting: Actual model loading and inference (not simulated)" -ForegroundColor White
@@ -49,16 +49,16 @@ $components = @{
 
 foreach ($name in $components.Keys) {
     $path = $components[$name]
-    $script:totalTests++
+    ${script:totalTests}++
     
     if (Test-Path $path) {
         Write-Host "  ✅ $name exists" -ForegroundColor Green
         Write-Host "     Path: $path" -ForegroundColor Gray
-        $script:passedTests++
+        ${script:passedTests}++
     } else {
         Write-Host "  ❌ $name NOT FOUND" -ForegroundColor Red
         Write-Host "     Expected: $path" -ForegroundColor Gray
-        $script:failedTests++
+        ${script:failedTests}++
     }
 }
 
@@ -69,7 +69,7 @@ Write-TestSection "Model Loading Pipeline" "2"
 
 # Check for key functions in agentic_engine.cpp
 $ggufLoaderPath = "d:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\gguf_loader.hpp"
-$script:totalTests++
+${script:totalTests}++
 
 if (Test-Path $ggufLoaderPath) {
     $content = Get-Content $ggufLoaderPath -Raw
@@ -84,12 +84,12 @@ if (Test-Path $ggufLoaderPath) {
     foreach ($check in $checks.Keys) {
         if ($content -match $checks[$check]) {
             Write-Host "  ✅ $check found" -ForegroundColor Green
-            $script:passedTests++
+            ${script:passedTests}++
         } else {
             Write-Host "  ⚠️  $check not found" -ForegroundColor Yellow
-            $script:skippedTests++
+            ${script:skippedTests}++
         }
-        $script:totalTests++
+        ${script:totalTests}++
     }
 }
 
@@ -100,11 +100,11 @@ Write-TestSection "Model Path Resolution" "3"
 
 $modelDirs = @(
     "D:/OllamaModels",
-    "C:/Users/$env:USERNAME/.ollama/models",
+    "C:/Users/${env:USERNAME}/.ollama/models",
     "$HOME/.ollama/models"
 )
 
-$script:totalTests++
+${script:totalTests}++
 $modelsFound = $false
 
 foreach ($dir in $modelDirs) {
@@ -120,7 +120,7 @@ foreach ($dir in $modelDirs) {
                 $sizeMB = [math]::Round($_.Length / 1MB, 2)
                 Write-Host "       • $($_.Name) ($sizeMB MB)" -ForegroundColor White
             }
-            $script:passedTests++
+            ${script:passedTests}++
             break
         }
     }
@@ -129,7 +129,7 @@ foreach ($dir in $modelDirs) {
 if (-not $modelsFound) {
     Write-Host "  ⚠️  No model directories found" -ForegroundColor Yellow
     Write-Host "     Models not available for testing" -ForegroundColor Gray
-    $script:skippedTests++
+    ${script:skippedTests}++
 }
 
 # ============================================================================
@@ -138,7 +138,7 @@ if (-not $modelsFound) {
 Write-TestSection "Inference Engine Setup" "4"
 
 $inferenceEnginePath = "d:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\inference_engine.hpp"
-$script:totalTests++
+${script:totalTests}++
 
 if (Test-Path $inferenceEnginePath) {
     $content = Get-Content $inferenceEnginePath
@@ -154,12 +154,12 @@ if (Test-Path $inferenceEnginePath) {
     foreach ($check in $engineChecks.Keys) {
         if ($content -match $engineChecks[$check]) {
             Write-Host "  ✅ $check present" -ForegroundColor Green
-            $script:passedTests++
+            ${script:passedTests}++
         } else {
             Write-Host "  ⚠️  $check not found" -ForegroundColor Yellow
-            $script:skippedTests++
+            ${script:skippedTests}++
         }
-        $script:totalTests++
+        ${script:totalTests}++
     }
 }
 
@@ -169,21 +169,21 @@ if (Test-Path $inferenceEnginePath) {
 Write-TestSection "Tokenizer Support" "5"
 
 $tokenizerPath = "d:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\bpe_tokenizer.hpp"
-$script:totalTests++
+${script:totalTests}++
 
 if (Test-Path $tokenizerPath) {
     Write-Host "  ✅ BPE Tokenizer found" -ForegroundColor Green
-    $script:passedTests++
+    ${script:passedTests}++
     
     $content = Get-Content $tokenizerPath
     if ($content -match "tokenize|encode") {
         Write-Host "  ✅ Tokenization functions present" -ForegroundColor Green
-        $script:passedTests++
+        ${script:passedTests}++
     } else {
         Write-Host "  ⚠️  Tokenization functions not found" -ForegroundColor Yellow
-        $script:skippedTests++
+        ${script:skippedTests}++
     }
-    $script:totalTests++
+    ${script:totalTests}++
 }
 
 # ============================================================================
@@ -192,7 +192,7 @@ if (Test-Path $tokenizerPath) {
 Write-TestSection "Message Processing Pipeline" "6"
 
 $agenticEnginePath = "d:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_engine.cpp"
-$script:totalTests++
+${script:totalTests}++
 
 if (Test-Path $agenticEnginePath) {
     $content = Get-Content $agenticEnginePath
@@ -207,12 +207,12 @@ if (Test-Path $agenticEnginePath) {
     foreach ($check in $pipelineChecks.Keys) {
         if ($content -match $pipelineChecks[$check]) {
             Write-Host "  ✅ $check implemented" -ForegroundColor Green
-            $script:passedTests++
+            ${script:passedTests}++
         } else {
             Write-Host "  ❌ $check not found" -ForegroundColor Red
-            $script:failedTests++
+            ${script:failedTests}++
         }
-        $script:totalTests++
+        ${script:totalTests}++
     }
 }
 
@@ -221,7 +221,7 @@ if (Test-Path $agenticEnginePath) {
 # ============================================================================
 Write-TestSection "Error Handling" "7"
 
-$script:totalTests++
+${script:totalTests}++
 
 if (Test-Path $agenticEnginePath) {
     $content = Get-Content $agenticEnginePath
@@ -236,12 +236,12 @@ if (Test-Path $agenticEnginePath) {
     foreach ($check in $errorChecks.Keys) {
         if ($content -match $errorChecks[$check]) {
             Write-Host "  ✅ $check implemented" -ForegroundColor Green
-            $script:passedTests++
+            ${script:passedTests}++
         } else {
             Write-Host "  ⚠️  $check not verified" -ForegroundColor Yellow
-            $script:skippedTests++
+            ${script:skippedTests}++
         }
-        $script:totalTests++
+        ${script:totalTests}++
     }
 }
 
@@ -271,9 +271,9 @@ Write-Host "    7. Output tokens generated" -ForegroundColor White
 Write-Host "    8. Detokenization to text" -ForegroundColor White
 Write-Host "    9. Response emitted back to chat" -ForegroundColor White
 
-$script:totalTests++
+${script:totalTests}++
 Write-Host "  ✅ Communication flow structure verified" -ForegroundColor Green
-$script:passedTests++
+${script:passedTests}++
 
 # ============================================================================
 # TEST 9: Verify Actual Model Inference Capability
@@ -281,7 +281,7 @@ $script:passedTests++
 Write-TestSection "Inference Capability" "9"
 
 $inferenceCodePath = "d:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\transformer_inference.hpp"
-$script:totalTests++
+${script:totalTests}++
 
 if (Test-Path $inferenceCodePath) {
     Write-Host "  ✅ Transformer inference module found" -ForegroundColor Green
@@ -289,17 +289,17 @@ if (Test-Path $inferenceCodePath) {
     $content = Get-Content $inferenceCodePath
     if ($content -match "forward|compute|layer|attention") {
         Write-Host "  ✅ Inference operations implemented" -ForegroundColor Green
-        $script:passedTests++
+        ${script:passedTests}++
     } else {
         Write-Host "  ⚠️  Inference operations not verified" -ForegroundColor Yellow
-        $script:skippedTests++
+        ${script:skippedTests}++
     }
-    $script:totalTests++
-    $script:passedTests++
+    ${script:totalTests}++
+    ${script:passedTests}++
 } else {
     Write-Host "  ⚠️  Transformer inference module not found" -ForegroundColor Yellow
     Write-Host "     Path: $inferenceCodePath" -ForegroundColor Gray
-    $script:skippedTests++
+    ${script:skippedTests}++
 }
 
 # ============================================================================
@@ -308,7 +308,7 @@ if (Test-Path $inferenceCodePath) {
 Write-TestSection "Compression Support" "10"
 
 $compressionPath = "d:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\compression_wrappers.h"
-$script:totalTests++
+${script:totalTests}++
 
 if (Test-Path $compressionPath) {
     Write-Host "  ✅ Compression wrappers found" -ForegroundColor Green
@@ -323,16 +323,16 @@ if (Test-Path $compressionPath) {
     foreach ($check in $checks.Keys) {
         if ($content -match $checks[$check]) {
             Write-Host "  ✅ $check available" -ForegroundColor Green
-            $script:passedTests++
+            ${script:passedTests}++
         } else {
             Write-Host "  ⚠️  $check not found" -ForegroundColor Yellow
-            $script:skippedTests++
+            ${script:skippedTests}++
         }
-        $script:totalTests++
+        ${script:totalTests}++
     }
 } else {
     Write-Host "  ⚠️  Compression wrappers not found" -ForegroundColor Yellow
-    $script:skippedTests++
+    ${script:skippedTests}++
 }
 
 # ============================================================================
@@ -340,13 +340,13 @@ if (Test-Path $compressionPath) {
 # ============================================================================
 Write-TestHeader "Test Summary" "Cyan"
 
-Write-Host "`n  Total Tests:   $script:totalTests" -ForegroundColor White
-Write-Host "  Passed:        $script:passedTests" -ForegroundColor Green
-Write-Host "  Failed:        $script:failedTests" -ForegroundColor $(if ($script:failedTests -eq 0) { "Green" } else { "Red" })
-Write-Host "  Skipped:       $script:skippedTests" -ForegroundColor Yellow
+Write-Host "`n  Total Tests:   ${script:totalTests}" -ForegroundColor White
+Write-Host "  Passed:        ${script:passedTests}" -ForegroundColor Green
+Write-Host "  Failed:        ${script:failedTests}" -ForegroundColor $(if (${script:failedTests} -eq 0) { "Green" } else { "Red" })
+Write-Host "  Skipped:       ${script:skippedTests}" -ForegroundColor Yellow
 
-$passRate = if ($script:totalTests -gt 0) { 
-    [math]::Round(($script:passedTests / $script:totalTests) * 100, 1) 
+$passRate = $(if (${script:totalTests} -gt 0) { 
+    [math]::Round((${script:passedTests} / ${script:totalTests}) * 100, 1) 
 } else { 
     0 
 }

@@ -1,5 +1,5 @@
-$ErrorActionPreference = "Continue"
-$env:PATH = "C:\Qt\6.7.3\msvc2022_64\bin;$env:PATH"
+$Script:ErrorActionPreference = "Continue"
+${env:PATH} = "C:\Qt\6.7.3\msvc2022_64\bin;${env:PATH}"
 
 Write-Host "Starting GPU Benchmark..." -ForegroundColor Green
 Write-Host "Working Directory: $PWD"
@@ -7,7 +7,7 @@ Write-Host "Executable exists: $(Test-Path '.\gpu_inference_benchmark.exe')"
 Write-Host ""
 
 try {
-    $process = Start-Process -FilePath ".\gpu_inference_benchmark.exe" `
+$Script:process = Start-Process -FilePath ".\gpu_inference_benchmark.exe" `
         -ArgumentList '"D:\OllamaModels"', '64' `
         -Wait `
         -PassThru `

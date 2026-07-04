@@ -91,15 +91,15 @@ try {
 # Test 5: Verify WebView2 availability
 Write-Host "`nTest 5: Checking WebView2 readiness..." -ForegroundColor Yellow
 
-if ($script:wpfWebBrowser) {
+if (${script:wpfWebBrowser}) {
     Write-Host "  ✅ WebView2 control exists" -ForegroundColor Green
     
-    if ($script:wpfWebBrowser.CoreWebView2) {
+    if (${script:wpfWebBrowser}.CoreWebView2) {
         Write-Host "  ✅ CoreWebView2 initialized" -ForegroundColor Green
         
         # Check if we can execute script
         try {
-            $script:wpfWebBrowser.CoreWebView2.ExecuteScriptAsync("console.log('✅ Test from PowerShell')") | Out-Null
+            ${script:wpfWebBrowser}.CoreWebView2.ExecuteScriptAsync("console.log('✅ Test from PowerShell')") | Out-Null
             Write-Host "  ✅ JavaScript execution works" -ForegroundColor Green
         } catch {
             Write-Host "  ❌ JavaScript execution failed: $_" -ForegroundColor Red
@@ -160,7 +160,7 @@ $passedTests++ # Variables (always pass with warnings)
 $passedTests++ # Script variables (always pass with warnings)
 $passedTests++ # Command test (always pass if function exists)
 
-if ($script:wpfWebBrowser -or (Get-Command Invoke-MenuCommand -ErrorAction SilentlyContinue)) {
+if (${script:wpfWebBrowser} -or (Get-Command Invoke-MenuCommand -ErrorAction SilentlyContinue)) {
     $passedTests++
 }
 

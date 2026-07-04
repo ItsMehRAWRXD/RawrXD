@@ -106,7 +106,7 @@ Write-Host ""
 Write-Host "🔍 VERIFICATION 3: SecurityConfig Structure Validation" -ForegroundColor Yellow
 Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
 
-$securityConfigPattern = "(\\\$script:SecurityConfig\s*=\s*@{[^}]+})"
+$securityConfigPattern = "(\\\${script:SecurityConfig}\s*=\s*@{[^}]+})"
 $securityConfigMatch = [regex]::Match($content, $securityConfigPattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
 if ($securityConfigMatch.Success) {

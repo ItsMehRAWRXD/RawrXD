@@ -28,8 +28,8 @@ $timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $logFile = "$resultsDir\HOTPATCH_TEST_$timestamp.txt"
 
 # Test configuration
-$testTokens = if ($Quick) { 128 } else { 256 }
-$testReps = if ($Quick) { 1 } else { 3 }
+$testTokens = $(if ($Quick) { 128 } else { 256 }
+$testReps = $(if ($Quick) { 1 } else { 3 }
 
 # Storage for results
 $results = @{
@@ -226,7 +226,7 @@ function Test-Byte-Patch {
         [System.IO.File]::WriteAllBytes($tempPath, $bytes)
         
         $modifiedHash = (Get-FileHash $tempPath -Algorithm SHA256).Hash
-        $bytesChanged = if ($originalHash -ne $modifiedHash) { 2 } else { 0 }
+        $bytesChanged = $(if ($originalHash -ne $modifiedHash) { 2 } else { 0 }
         
         Log-Message "After patch: Hash: $($modifiedHash.Substring(0,16))... (Changed: $bytesChanged bytes)"
         

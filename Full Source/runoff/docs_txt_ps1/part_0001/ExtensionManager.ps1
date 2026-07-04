@@ -45,8 +45,8 @@ function Show-Menu {
             Write-Host "Extensions:" -ForegroundColor White
             foreach ($key in $Registry.Keys | Sort-Object) {
                 $ext = $Registry[$key]
-                $statusIcon = if ($ext.Enabled) { "🟢" } elseif ($ext.Installed) { "🟡" } else { "⚪" }
-                $statusText = if ($ext.Enabled) { "ON " } elseif ($ext.Installed) { "OFF" } else { "NEW" }
+                $statusIcon = $(if ($ext.Enabled) { "🟢" } elseif ($ext.Installed) { "🟡" } else { "⚪" }
+                $statusText = $(if ($ext.Enabled) { "ON " } elseif ($ext.Installed) { "OFF" } else { "NEW" }
                 Write-Host "  $statusIcon [$statusText] " -NoNewline
                 Write-Host "$key " -NoNewline -ForegroundColor Cyan
                 Write-Host "($($ext.Type))" -ForegroundColor Gray
@@ -120,8 +120,8 @@ Export-ModuleMember -Function 'Invoke-$name'
                 Write-Host "──────────────────── ──────── ────────── ────────" -ForegroundColor Gray
                 foreach ($key in $Registry.Keys | Sort-Object) {
                     $ext = $Registry[$key]
-                    $installed = if ($ext.Installed) { "Yes" } else { "No" }
-                    $enabled = if ($ext.Enabled) { "Yes" } else { "No" }
+                    $installed = $(if ($ext.Installed) { "Yes" } else { "No" }
+                    $enabled = $(if ($ext.Enabled) { "Yes" } else { "No" }
                     Write-Host ("{0,-20} {1,-8} {2,-10} {3}" -f $key, $ext.Type, $installed, $enabled)
                 }
                 Write-Host ""

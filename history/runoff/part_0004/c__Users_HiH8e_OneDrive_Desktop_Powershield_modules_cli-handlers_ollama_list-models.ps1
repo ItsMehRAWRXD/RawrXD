@@ -33,14 +33,14 @@ function Invoke-CliListModels {
             
             foreach ($model in $models) {
                 # Sanitize and validate model data before display
-                $modelName = if ($model.name) { $model.name } else { "Unknown" }
-                $sizeGB = if ($model.size -and $model.size -gt 0) { 
+                $modelName = $(if ($model.name) { $model.name } else { "Unknown" }
+                $sizeGB = $(if ($model.size -and $model.size -gt 0) { 
                     [Math]::Round($model.size / 1GB, 2) 
                 } else { 
                     0 
                 }
                 
-                $modified = if ($model.modified_at) { 
+                $modified = $(if ($model.modified_at) { 
                     try {
                         (Get-Date $model.modified_at -Format "yyyy-MM-dd HH:mm:ss") 
                     }

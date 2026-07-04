@@ -445,7 +445,7 @@ Write-Host "`n╔═════════════════════
 Write-Host "║                    TEST RESULTS SUMMARY                    ║" -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 
-$passRate = if ($testResults.Total -gt 0) { 
+$passRate = $(if ($testResults.Total -gt 0) { 
     [math]::Round(($testResults.Passed / $testResults.Total) * 100, 1) 
 } else { 
     0 

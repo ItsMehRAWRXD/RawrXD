@@ -167,7 +167,7 @@ try {
     Write-BuildLog "" "INFO"
         
     # Show log locations
-    $startupLogPath = Join-Path $env:APPDATA "RawrXD\startup.log"
+    $startupLogPath = Join-Path ${env:APPDATA} "RawrXD\startup.log"
     Write-BuildLog "📋 Log Files:" "INFO"
     Write-BuildLog "  • Startup Log: $startupLogPath" "INFO"
     Write-BuildLog "  • Runtime Log: Available in Dev Tools tab" "INFO"

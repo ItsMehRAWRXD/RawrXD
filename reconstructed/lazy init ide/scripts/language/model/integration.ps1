@@ -43,8 +43,8 @@ Import-Module $registryPath -Force -DisableNameChecking
 # CONFIGURATION
 # ============================================================================
 
-$script:CompilerPath = "D:\lazy init ide\compilers"
-$script:StationRoot = "D:\lazy init ide"
+${script:CompilerPath} = "D:\lazy init ide\compilers"
+${script:StationRoot} = "D:\lazy init ide"
 
 # ============================================================================
 # DISPLAY FUNCTIONS
@@ -273,7 +273,7 @@ function Initialize-LanguagesForModel {
     Write-Host "`n⏳ Initializing $($languagesToLoad.Count) languages for $model..." -ForegroundColor Yellow
     Write-Host ""
     
-    $result = Initialize-LanguageForModel -ModelName $model -Languages $languagesToLoad -CompilerPath $script:CompilerPath
+    $result = Initialize-LanguageForModel -ModelName $model -Languages $languagesToLoad -CompilerPath ${script:CompilerPath}
     
     Write-Host "✅ Initialization Complete" -ForegroundColor Green
     Write-Host "   Successfully initialized: $($result.InitializedCount)" -ForegroundColor Green
@@ -383,7 +383,7 @@ function Show-IntegrationHelp {
     Write-Host ""
     
     Write-Host "COMPILER PATHS" -ForegroundColor Yellow
-    Write-Host "  All compilers expected in: $script:CompilerPath" -ForegroundColor DarkCyan
+    Write-Host "  All compilers expected in: ${script:CompilerPath}" -ForegroundColor DarkCyan
     Write-Host "  Format: <Language>-Compiler-v<Version>" -ForegroundColor Gray
     Write-Host "  Example: Spanish-Compiler-v1.0, Japanese-Compiler-v2.1, etc." -ForegroundColor Gray
     Write-Host ""
@@ -413,7 +413,7 @@ function Invoke-LanguageModelIntegrationMenu {
                     Write-Host ""
                     $langs = Get-LanguagesForModel -ModelName $model
                     if ($langs) {
-                        $langs | ForEach-Object { Load-LanguageForModel -Language $_.Language -ModelName $model -CompilerPath $script:CompilerPath }
+                        $langs | ForEach-Object { Load-LanguageForModel -Language $_.Language -ModelName $model -CompilerPath ${script:CompilerPath} }
                     }
                 }
                 Read-Host "`nPress Enter to continue"
@@ -533,14 +533,14 @@ function Invoke-LanguageModelIntegrationMenu {
             }
             'LM15' {
                 Write-Host "`n✓ COMPILER PATH VALIDATION" -ForegroundColor Green
-                Write-Host "  Expected path: $script:CompilerPath" -ForegroundColor Cyan
-                if (Test-Path $script:CompilerPath) {
+                Write-Host "  Expected path: ${script:CompilerPath}" -ForegroundColor Cyan
+                if (Test-Path ${script:CompilerPath}) {
                     Write-Host "  Status: ✅ Path exists" -ForegroundColor Green
-                    $compilers = Get-ChildItem $script:CompilerPath -ErrorAction SilentlyContinue | Measure-Object
+                    $compilers = Get-ChildItem ${script:CompilerPath} -ErrorAction SilentlyContinue | Measure-Object
                     Write-Host "  Compilers found: $($compilers.Count)" -ForegroundColor White
                 } else {
                     Write-Host "  Status: ❌ Path does not exist" -ForegroundColor Red
-                    Write-Host "  Create it: New-Item -Path '$script:CompilerPath' -ItemType Directory" -ForegroundColor Yellow
+                    Write-Host "  Create it: New-Item -Path '${script:CompilerPath}' -ItemType Directory" -ForegroundColor Yellow
                 }
                 Read-Host "`nPress Enter to continue"
             }

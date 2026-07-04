@@ -74,7 +74,7 @@ function Find-Quantizer {
     $candidates += (Get-ChildItem -Path $Root -Recurse -Filter 'llama-quantize.exe' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)
   }
   # PATH lookup
-  foreach ($p in $env:Path.Split(';')) {
+  foreach ($p in ${env:Path}.Split(';')) {
     if (-not [string]::IsNullOrWhiteSpace($p) -and (Test-Path $p)) {
       $q1 = Join-Path $p 'quantize.exe'
       $q2 = Join-Path $p 'llama-quantize.exe'

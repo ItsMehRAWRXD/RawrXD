@@ -1,8 +1,8 @@
 # RawrXD Extension Host Wiring - Sanitize publishers, stub native DLLs, optional .asm hijack
 param([switch]$Install, [switch]$Native)
 
-$extDir = "$env:USERPROFILE\.vscode\extensions"
-$cursorExt = "$env:USERPROFILE\.cursor\extensions"
+$extDir = "${env:USERPROFILE}\.vscode\extensions"
+$cursorExt = "${env:USERPROFILE}\.cursor\extensions"
 $rawrDir = "D:\rawrxd\extensions"
 
 Write-Host "WIRING EXTENSIONS TO RAWRXD NATIVE HOST" -ForegroundColor Magenta

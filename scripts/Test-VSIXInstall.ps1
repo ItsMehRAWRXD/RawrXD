@@ -12,7 +12,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Ensure unsigned extensions allowed for Amazon Q / GitHub Copilot
-$env:RAWRXD_ALLOW_UNSIGNED_EXTENSIONS = "1"
+${env:RAWRXD_ALLOW_UNSIGNED_EXTENSIONS} = "1"
 
 # Marketplace extension IDs
 $Extensions = @{
@@ -21,7 +21,7 @@ $Extensions = @{
 }
 
 $BuildDir = Join-Path $PSScriptRoot "..\build_ide"
-$ExtensionsDir = Join-Path $env:APPDATA "RawrXD\extensions"
+$ExtensionsDir = Join-Path ${env:APPDATA} "RawrXD\extensions"
 $ideExe = Join-Path $BuildDir "bin\RawrXD-Win32IDE.exe"
 
 function Write-Step { param($Msg) Write-Host "`n[Test-VSIX] $Msg" -ForegroundColor Cyan }
@@ -38,7 +38,7 @@ function Get-MarketplaceVsix {
         $version = "latest"
         if ($item.versions -and $item.versions[0].version) { $version = $item.versions[0].version }
         $downloadUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/$Publisher/vsextensions/$Extension/$version/vspackage"
-        $baseName = if ($version -eq "latest") { "${Extension}-latest" } else { "$Extension-$version" }
+        $baseName = $(if ($version -eq "latest") { "${Extension}-latest" } else { "$Extension-$version" }
         $outFile = Join-Path $PSScriptRoot "..\${baseName}.vsix"
         Invoke-WebRequest -Uri $downloadUrl -OutFile $outFile -UseBasicParsing -ErrorAction Stop
         return $outFile
@@ -82,7 +82,7 @@ if ($DownloadCopilot -or $DownloadAmazonQ) {
 # ---- Create minimal test VSIX ----
 if ($CreateTestVsix) {
     Write-Step "Creating minimal test .vsix"
-    $testDir = Join-Path $env:TEMP "RawrXD_vsix_test"
+    $testDir = Join-Path ${env:TEMP} "RawrXD_vsix_test"
     New-Item -ItemType Directory -Force -Path $testDir | Out-Null
     $pkgPath = Join-Path $testDir "package.json"
     @{
@@ -93,7 +93,7 @@ if ($CreateTestVsix) {
         description = "Minimal test VSIX"
         engines = @{ vscode = "^1.60.0" }
     } | ConvertTo-Json | Set-Content -Path $pkgPath -Encoding utf8
-    $zipOut = Join-Path $env:TEMP "rawrxd-test.zip"
+    $zipOut = Join-Path ${env:TEMP} "rawrxd-test.zip"
     $vsixOut = Join-Path $PSScriptRoot "..\rawrxd-test-0.0.1.vsix"
     Compress-Archive -Path "$testDir\*" -DestinationPath $zipOut -Force
     Move-Item -Path $zipOut -Destination $vsixOut -Force
@@ -106,13 +106,13 @@ if ($CreateTestVsix) {
 # ---- Verify extraction with PowerShell ----
 Write-Step "Verifying PowerShell Expand-Archive (used by VSIX loader)"
 try {
-    $testZip = Join-Path $env:TEMP "vsix_test_$(Get-Random).zip"
-    "test" | Out-File (Join-Path $env:TEMP "vsix_test_content.txt")
-    Compress-Archive -Path "$env:TEMP\vsix_test_content.txt" -DestinationPath $testZip -Force
-    $extractDir = Join-Path $env:TEMP "vsix_test_extract"
+    $testZip = Join-Path ${env:TEMP} "vsix_test_$(Get-Random).zip"
+    "test" | Out-File (Join-Path ${env:TEMP} "vsix_test_content.txt")
+    Compress-Archive -Path "${env:TEMP}\vsix_test_content.txt" -DestinationPath $testZip -Force
+    $extractDir = Join-Path ${env:TEMP} "vsix_test_extract"
     Expand-Archive -LiteralPath $testZip -DestinationPath $extractDir -Force
     if (Test-Path "$extractDir\vsix_test_content.txt") { Write-Ok "PowerShell extraction works" }
-    Remove-Item $testZip, "$env:TEMP\vsix_test_content.txt" -Force -ErrorAction SilentlyContinue
+    Remove-Item $testZip, "${env:TEMP}\vsix_test_content.txt" -Force -ErrorAction SilentlyContinue
     Remove-Item -Recurse $extractDir -Force -ErrorAction SilentlyContinue
 } catch {
     Write-Err "PowerShell Expand-Archive failed: $_"

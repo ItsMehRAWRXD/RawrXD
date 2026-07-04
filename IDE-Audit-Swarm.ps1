@@ -20,10 +20,10 @@ Write-Host @"
 # STATE TRACKING
 # ==============================================================================
 
-$script:SubAgentCount = 0
-$script:TaskQueue = [System.Collections.Generic.Queue[object]]::new()
-$script:CompletedTasks = @()
-$script:ActiveSubAgents = @()
+${script:SubAgentCount} = 0
+${script:TaskQueue} = [System.Collections.Generic.Queue[object]]::new()
+${script:CompletedTasks} = @()
+${script:ActiveSubAgents} = @()
 
 class AuditTask {
     [string]$Category
@@ -86,7 +86,7 @@ Requirements:
             CreatedAt = Get-Date
             Status = "Pending"
         }
-        $script:TaskQueue.Enqueue($task)
+        ${script:TaskQueue}.Enqueue($task)
     }
 }
 
@@ -141,7 +141,7 @@ The C++ wrapper is at src/core/DiskRecoveryAgent.h
             CreatedAt = Get-Date
             Status = "Pending"
         }
-        $script:TaskQueue.Enqueue($task)
+        ${script:TaskQueue}.Enqueue($task)
     }
     
     if ($swarmSymbols) {
@@ -173,7 +173,7 @@ The C++ files are at:
             CreatedAt = Get-Date
             Status = "Pending"
         }
-        $script:TaskQueue.Enqueue($task)
+        ${script:TaskQueue}.Enqueue($task)
     }
 }
 
@@ -212,7 +212,7 @@ File location: $($file.FullName)
                 CreatedAt = Get-Date
                 Status = "Pending"
             }
-            $script:TaskQueue.Enqueue($task)
+            ${script:TaskQueue}.Enqueue($task)
         }
     }
 }
@@ -248,7 +248,7 @@ Tasks:
                 CreatedAt = Get-Date
                 Status = "Pending"
             }
-            $script:TaskQueue.Enqueue($task)
+            ${script:TaskQueue}.Enqueue($task)
         }
     }
 }
@@ -311,7 +311,7 @@ Tasks:
             CreatedAt = Get-Date
             Status = "Pending"
         }
-        $script:TaskQueue.Enqueue($task)
+        ${script:TaskQueue}.Enqueue($task)
     }
 }
 
@@ -322,7 +322,7 @@ Tasks:
 function Spawn-SubAgent {
     param([AuditTask]$Task)
     
-    if ($script:SubAgentCount -ge $MaxSubAgents) {
+    if (${script:SubAgentCount} -ge $MaxSubAgents) {
         Write-Host "  [SWARM] Max subagents reached ($MaxSubAgents), queuing task" -ForegroundColor Yellow
         return $false
     }
@@ -335,24 +335,24 @@ function Spawn-SubAgent {
         return $true
     }
     
-    $script:SubAgentCount++
+    ${script:SubAgentCount}++
     $Task.Status = "Running"
-    $script:ActiveSubAgents += $Task
+    ${script:ActiveSubAgents} += $Task
     
-    Write-Host "`n[SPAWN] Subagent #$script:SubAgentCount: $($Task.Description)" -ForegroundColor Green
+    Write-Host "`n[SPAWN] Subagent #${script:SubAgentCount}: $($Task.Description)" -ForegroundColor Green
     Write-Host "  Category: $($Task.Category) | Priority: $($Task.Priority)" -ForegroundColor Gray
     
     # In real implementation, this would call runSubagent tool
     # For now, we'll simulate by logging the task
     
     $logEntry = @{
-        SubAgentId = $script:SubAgentCount
+        SubAgentId = ${script:SubAgentCount}
         Task = $Task
         SpawnedAt = Get-Date
     }
     
     # Write task to file for later subagent execution
-    $taskFile = "audit_tasks\task_$script:SubAgentCount.json"
+    $taskFile = "audit_tasks\task_${script:SubAgentCount}.json"
     New-Item -ItemType Directory -Path "audit_tasks" -Force | Out-Null
     $logEntry | ConvertTo-Json -Depth 10 | Set-Content $taskFile
     
@@ -362,21 +362,21 @@ function Spawn-SubAgent {
 }
 
 function Process-TaskQueue {
-    Write-Host "`n[ORCHESTRATOR] Processing task queue ($($script:TaskQueue.Count) tasks pending)..." -ForegroundColor Cyan
+    Write-Host "`n[ORCHESTRATOR] Processing task queue ($(${script:TaskQueue}.Count) tasks pending)..." -ForegroundColor Cyan
     
     # Sort by priority (highest first)
-    $sortedTasks = $script:TaskQueue.ToArray() | Sort-Object -Property Priority -Descending
+    $sortedTasks = ${script:TaskQueue}.ToArray() | Sort-Object -Property Priority -Descending
     
     foreach ($task in $sortedTasks) {
-        if ($script:SubAgentCount -ge $MaxSubAgents) {
+        if (${script:SubAgentCount} -ge $MaxSubAgents) {
             Write-Host "`n[ORCHESTRATOR] Subagent capacity reached. Stopping spawn loop." -ForegroundColor Yellow
             break
         }
         
         $spawned = Spawn-SubAgent -Task $task
         if ($spawned) {
-            $script:CompletedTasks += $task
-            $null = $script:TaskQueue.Dequeue()
+            ${script:CompletedTasks} += $task
+            $null = ${script:TaskQueue}.Dequeue()
         }
     }
 }
@@ -388,7 +388,7 @@ function Process-TaskQueue {
 function Start-RecursiveAudit {
     $iteration = 1
     
-    while ($script:SubAgentCount -lt $MaxSubAgents) {
+    while (${script:SubAgentCount} -lt $MaxSubAgents) {
         Write-Host "`n╔═══════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
         Write-Host "║  AUDIT ITERATION #$iteration" -ForegroundColor Cyan
         Write-Host "╚═══════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
@@ -404,12 +404,12 @@ function Start-RecursiveAudit {
         Process-TaskQueue
         
         # Check if we have capacity for more
-        if ($script:TaskQueue.Count -eq 0) {
+        if (${script:TaskQueue}.Count -eq 0) {
             Write-Host "`n[AUDIT] No more tasks found. Audit complete." -ForegroundColor Green
             break
         }
         
-        if ($script:SubAgentCount -ge $MaxSubAgents) {
+        if (${script:SubAgentCount} -ge $MaxSubAgents) {
             Write-Host "`n[AUDIT] Subagent capacity filled. Remaining tasks queued for later." -ForegroundColor Yellow
             break
         }
@@ -433,19 +433,19 @@ function Show-AuditReport {
     Write-Host "║                  AUDIT SWARM REPORT                          ║" -ForegroundColor Green
     Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
     
-    Write-Host "`nSubagents Spawned: $script:SubAgentCount / $MaxSubAgents" -ForegroundColor Cyan
-    Write-Host "Tasks Completed:   $($script:CompletedTasks.Count)" -ForegroundColor Green
-    Write-Host "Tasks Queued:      $($script:TaskQueue.Count)" -ForegroundColor Yellow
+    Write-Host "`nSubagents Spawned: ${script:SubAgentCount} / $MaxSubAgents" -ForegroundColor Cyan
+    Write-Host "Tasks Completed:   $(${script:CompletedTasks}.Count)" -ForegroundColor Green
+    Write-Host "Tasks Queued:      $(${script:TaskQueue}.Count)" -ForegroundColor Yellow
     
     Write-Host "`nTasks by Category:" -ForegroundColor White
-    $categoryStats = $script:CompletedTasks | Group-Object -Property Category
+    $categoryStats = ${script:CompletedTasks} | Group-Object -Property Category
     foreach ($cat in $categoryStats) {
         Write-Host "  $($cat.Name): $($cat.Count)" -ForegroundColor Gray
     }
     
-    if ($script:TaskQueue.Count -gt 0) {
+    if (${script:TaskQueue}.Count -gt 0) {
         Write-Host "`nQueued Tasks (not processed due to capacity):" -ForegroundColor Yellow
-        foreach ($task in $script:TaskQueue) {
+        foreach ($task in ${script:TaskQueue}) {
             Write-Host "  [$($task.Category)] $($task.Description)" -ForegroundColor DarkYellow
         }
     }

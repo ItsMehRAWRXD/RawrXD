@@ -1,10 +1,10 @@
-$sourceDir = "C:\Users\Garre\Desktop\Desktop\RawrZApp"
-$backupDir = "$sourceDir\sources-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+$Script:sourceDir = "C:\Users\Garre\Desktop\Desktop\RawrZApp"
+$Script:backupDir = "$sourceDir\sources-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 
 Write-Host "Creating comprehensive source backup..." -ForegroundColor Green
 New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
 
-$fileTypes = @{
+$Script:fileTypes = @{
     "JavaScript" = "*.js"
     "JSON" = "*.json"
     "HTML" = "*.html"
@@ -20,10 +20,10 @@ $fileTypes = @{
 }
 
 foreach ($type in $fileTypes.Keys) {
-    $typeDir = "$backupDir\$type"
+$Script:typeDir = "$backupDir\$type"
     New-Item -ItemType Directory -Path $typeDir -Force | Out-Null
     
-    $patterns = $fileTypes[$type]
+$Script:patterns = $fileTypes[$type]
     if ($patterns -is [array]) {
         foreach ($pattern in $patterns) {
             Get-ChildItem -Path $sourceDir -Filter $pattern -Recurse | 
@@ -34,11 +34,11 @@ foreach ($type in $fileTypes.Keys) {
             Copy-Item -Destination $typeDir -Force
     }
     
-    $count = (Get-ChildItem -Path $typeDir).Count
+$Script:count = (Get-ChildItem -Path $typeDir).Count
     Write-Host "Saved $count $type files" -ForegroundColor Cyan
 }
 
-$zipPath = "$sourceDir\rawrz-complete-sources-$(Get-Date -Format 'yyyyMMdd-HHmmss').zip"
+$Script:zipPath = "$sourceDir\rawrz-complete-sources-$(Get-Date -Format 'yyyyMMdd-HHmmss').zip"
 Compress-Archive -Path "$backupDir\*" -DestinationPath $zipPath -Force
 
 Write-Host "Complete source backup created:" -ForegroundColor Green

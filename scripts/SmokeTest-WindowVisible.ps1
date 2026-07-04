@@ -12,9 +12,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Root = if ($PSScriptRoot) { (Resolve-Path (Join-Path $PSScriptRoot "..")).Path } else { (Get-Location).Path }
+$Root = $(if ($PSScriptRoot) { (Resolve-Path (Join-Path $PSScriptRoot "..")).Path } else { (Get-Location).Path }
 
-$Exe = if ($ExePath) { $ExePath } else {
+$Exe = $(if ($ExePath) { $ExePath } else {
     $candidates = @(
         (Join-Path $Root "build_real_lane\bin\RawrXD-Win32IDE.exe"),
         (Join-Path $Root "build\bin\RawrXD-Win32IDE.exe"),

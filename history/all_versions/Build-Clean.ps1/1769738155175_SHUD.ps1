@@ -43,7 +43,7 @@ $cmakePath = (Get-Command cmake -ErrorAction SilentlyContinue).Source
 if (-not $cmakePath) { $cmakePath = "cmake" }
 
 # Create a wrapper batch file that RESETS PATH to avoid "input line too long" error
-$wrapperBat = Join-Path $env:TEMP "run_with_msvc.bat"
+$wrapperBat = Join-Path ${env:TEMP} "run_with_msvc.bat"
 # Warning: Resetting PATH to minimal set to fix 'input line too long' issues with vcvars64.bat in bloated environments
 $batContent = "@echo off`r`nset PATH=C:\Windows\System32;C:\Windows;C:\Windows\System32\Wbem`r`ncall `"$vcvarsPath`"`r`n%*"
 Set-Content -Path $wrapperBat -Value $batContent

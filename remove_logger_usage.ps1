@@ -1,8 +1,8 @@
-$srcDir = "D:\rawrxd\src"
-$files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp
+$Script:srcDir = "D:\rawrxd\src"
+$Script:files = Get-ChildItem -Path $srcDir -Recurse -Include *.cpp, *.h, *.hpp
 
 # Patterns to remove or comment out
-$removalPatterns = @(
+$Script:removalPatterns = @(
     '(?m)^\s*\*\s*memory_logger.*?$',
     '(?m)^\s*\*\s*perf_logger.*?$',
     'device->memory_logger->.*?;',
@@ -18,18 +18,18 @@ $removalPatterns = @(
     '(?m)^\s*Logger\*\s+m_logger\s*=.*?\;'
 )
 
-$totalModified = 0
-$totalReplacements = 0
+$Script:totalModified = 0
+$Script:totalReplacements = 0
 
 foreach ($file in $files) {
-    $content = Get-Content -Path $file.FullName -Raw
-    $originalContent = $content
-    $fileReplacements = 0
+$Script:content = Get-Content -Path $file.FullName -Raw
+$Script:originalContent = $content
+$Script:fileReplacements = 0
 
     foreach ($pattern in $removalPatterns) {
-        $matches = [regex]::Matches($content, $pattern)
+$Script:matches = [regex]::Matches($content, $pattern)
         if ($matches.Count -gt 0) {
-            $content = $content -replace $pattern, ''
+$Script:content = $content -replace $pattern, ''
             $fileReplacements += $matches.Count
         }
     }

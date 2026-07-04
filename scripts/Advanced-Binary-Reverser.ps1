@@ -128,10 +128,10 @@ function Invoke-PEAnalysis {
     # Optional header
     $optHeaderOffset = $lfanew + 24
     $magic = [BitConverter]::ToUInt16($bytes, $optHeaderOffset)
-    $analysis.Format = if ($magic -eq 0x20B) { "PE32+" } else { "PE32" }
+    $analysis.Format = $(if ($magic -eq 0x20B) { "PE32+" } else { "PE32" }
     
     $entryPoint = [BitConverter]::ToUInt32($bytes, $optHeaderOffset + 16)
-    $imageBase = if ($magic -eq 0x20B) {
+    $imageBase = $(if ($magic -eq 0x20B) {
         [BitConverter]::ToUInt64($bytes, $optHeaderOffset + 24)
     } else {
         [BitConverter]::ToUInt32($bytes, $optHeaderOffset + 28)

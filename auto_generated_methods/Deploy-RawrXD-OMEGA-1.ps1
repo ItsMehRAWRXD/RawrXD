@@ -32,7 +32,7 @@ param(
 # =============================================================================
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$moduleDir = if (Test-Path "$scriptDir\auto_generated_methods") {
+$moduleDir = $(if (Test-Path "$scriptDir\auto_generated_methods") {
     "$scriptDir\auto_generated_methods"
 } else {
     $scriptDir
@@ -164,8 +164,8 @@ $checks = @{
 
 $allPassed = $true
 foreach ($check in $checks.GetEnumerator()) {
-    $status = if ($check.Value) { "✓ PASS" } else { "✗ FAIL"; $allPassed = $false }
-    $color = if ($check.Value) { "Green" } else { "Red" }
+    $status = $(if ($check.Value) { "✓ PASS" } else { "✗ FAIL"; $allPassed = $false }
+    $color = $(if ($check.Value) { "Green" } else { "Red" }
     Write-Host "  $status : $($check.Key)" -ForegroundColor $color
 }
 

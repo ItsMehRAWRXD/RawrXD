@@ -42,7 +42,7 @@ param(
     [switch]$ShowTaskExecution = $false,
     
     [Parameter(Mandatory=$false)]
-    [switch]$FullDemo = $true
+    [switch]$FullDemo
 )
 
 # Import modules
@@ -76,7 +76,7 @@ if ($FullDemo) {
     
     Write-Host "  Modules:" -ForegroundColor Yellow
     $status.Modules.GetEnumerator() | ForEach-Object {
-        $statusColor = if ($_.Value) { "Green" } else { "Red" }
+        $statusColor = $(if ($_.Value) { "Green" } else { "Red" }
         Write-Host "    ✓ $($_.Key): $($_.Value)" -ForegroundColor $statusColor
     }
     Write-Host ""

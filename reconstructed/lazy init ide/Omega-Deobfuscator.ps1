@@ -37,21 +37,21 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = "Continue"
 
 # TPS Rate Limiter for anti-detection
-$script:operationCount = 0
-$script:operationStartTime = Get-Date
-$script:lastOperationTime = Get-Date
+${script:operationCount} = 0
+${script:operationStartTime} = Get-Date
+${script:lastOperationTime} = Get-Date
 
 function Test-RateLimit {
     param([int]$maxTPS)
     
-    $script:operationCount++
-    $elapsed = (Get-Date) - $script:operationStartTime
-    $currentTPS = $script:operationCount / $elapsed.TotalSeconds
+    ${script:operationCount}++
+    $elapsed = (Get-Date) - ${script:operationStartTime}
+    $currentTPS = ${script:operationCount} / $elapsed.TotalSeconds
     
     if ($currentTPS -gt $maxTPS) {
         # Calculate required delay
         $targetInterval = 1.0 / $maxTPS
-        $actualInterval = (Get-Date) - $script:lastOperationTime
+        $actualInterval = (Get-Date) - ${script:lastOperationTime}
         $delayNeeded = $targetInterval - $actualInterval.TotalSeconds
         
         if ($delayNeeded -gt 0) {
@@ -59,7 +59,7 @@ function Test-RateLimit {
         }
     }
     
-    $script:lastOperationTime = Get-Date
+    ${script:lastOperationTime} = Get-Date
     return $true
 }
 
@@ -81,7 +81,7 @@ function Get-HumanLikeDelay {
     
     if ($SimulateHuman) {
         # Simulate human work patterns (slower at start, faster in middle, slower at end)
-        $progress = $script:operationCount % 100 / 100
+        $progress = ${script:operationCount} % 100 / 100
         if ($progress -lt 0.1 -or $progress -gt 0.9) {
             $delay *= 1.5  # Slower at beginning and end
         } elseif ($progress -gt 0.3 -and $progress -lt 0.7) {
@@ -89,7 +89,7 @@ function Get-HumanLikeDelay {
         }
         
         # Simulate fatigue (gradually slower over time)
-        $fatigueFactor = 1.0 + ($script:operationCount / 1000)
+        $fatigueFactor = 1.0 + (${script:operationCount} / 1000)
         $delay = [Math]::Min($delay * $fatigueFactor, $maxMs * 1.5)
     }
     
@@ -365,7 +365,7 @@ function Convert-WasmToWat {
         }
         
         $sectionNames = @("custom", "type", "import", "func", "table", "memory", "global", "export", "start", "elem", "code", "data")
-        $name = if ($sectionId -lt $sectionNames.Length) { $sectionNames[$sectionId] } else { "unknown_$sectionId" }
+        $name = $(if ($sectionId -lt $sectionNames.Length) { $sectionNames[$sectionId] } else { "unknown_$sectionId" }
         $watContent += "  ;; Section: $name ($sectionSize bytes)`n"
         
         $pos += $sectionSize
@@ -520,7 +520,7 @@ foreach ($bin in $binaries) {
     $info = @{
         Name = $bin.Name
         Size = $bin.Length
-        Type = if ($bin.Extension -eq '.node') { "Node Native Addon" } else { "PE Binary" }
+        Type = $(if ($bin.Extension -eq '.node') { "Node Native Addon" } else { "PE Binary" }
         Path = $bin.FullName
     }
     $info | ConvertTo-Json | Out-File -FilePath (Join-Path $binDir "$($bin.Name).json")

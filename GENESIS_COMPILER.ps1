@@ -6,7 +6,7 @@
 
 param([switch]$SelfCompile, [string]$Target = "RawrXD.exe", [string]$AsmFile = "")
 $ErrorActionPreference = "Stop"
-$rootDir = if ($PSScriptRoot) { $PSScriptRoot } else { "D:\rawrxd" }
+$rootDir = $(if ($PSScriptRoot) { $PSScriptRoot } else { "D:\rawrxd" }
 $genesisDir = Join-Path $rootDir "genesis"
 $buildDir = Join-Path $rootDir "build_prod"
 
@@ -73,7 +73,7 @@ if ($SelfCompile) {
 
 if ($AsmFile -ne "") {
     Write-Host "[Phase 3] Assembling external .asm..." -ForegroundColor Yellow
-    $fullPath = if ([System.IO.Path]::IsPathRooted($AsmFile)) { $AsmFile } else { Join-Path $rootDir $AsmFile }
+    $fullPath = $(if ([System.IO.Path]::IsPathRooted($AsmFile)) { $AsmFile } else { Join-Path $rootDir $AsmFile }
     if (Test-Path $fullPath) {
         Push-Location $genesisDir
         try { & ".\genesis.exe" $fullPath } finally { Pop-Location }

@@ -30,7 +30,7 @@ $cliTrace = Join-Path $OutDir 'cli.json'
 $uiTrace  = Join-Path $OutDir 'ui.json'
 Remove-Item -Force $cliTrace, $uiTrace -ErrorAction SilentlyContinue
 
-$env:RAWRXD_PARITY_CPU = '1'
+${env:RAWRXD_PARITY_CPU} = '1'
 
 function Invoke-NativeQuiet {
     param(
@@ -57,7 +57,7 @@ $code = Invoke-NativeQuiet -Exe $cli -InvocationArgs $cliArgs -Stem 'cli'
 if ($code -ne 0) { throw "CLI run failed with exit $code" }
 if (!(Test-Path $cliTrace)) { throw "CLI trace missing: $cliTrace" }
 
-$env:RAWRXD_PIPELINE_TRACE = $uiTrace
+${env:RAWRXD_PIPELINE_TRACE} = $uiTrace
 $uiArgs = @('--model', [string]$Model, '--prompt', [string]$Prompt, '--num-predict', [string]$NumPredict)
 $code = Invoke-NativeQuiet -Exe $ui -InvocationArgs $uiArgs -Stem 'ui'
 if ($code -ne 0) { throw "UI driver failed with exit $code" }

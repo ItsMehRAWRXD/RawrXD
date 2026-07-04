@@ -65,11 +65,11 @@ function Write-AutonomousAgentLog {
         [hashtable]$Data = $null
     )
     [Console]::Error.WriteLine("[$( Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff')][$Phase][$Level] $Message")
-    if ($null -ne $script:AutonomousAgentState) {
-        $script:AutonomousAgentState.CurrentOperation = $Message
-        if ($Level -in 'Error','Critical') { $script:AutonomousAgentState.Errors.Add($Message) }
-        elseif ($Level -eq 'Warning')      { $script:AutonomousAgentState.Warnings.Add($Message) }
-        $script:AutonomousAgentState.LearningHistory.Add(@{
+    if ($null -ne ${script:AutonomousAgentState}) {
+        ${script:AutonomousAgentState}.CurrentOperation = $Message
+        if ($Level -in 'Error','Critical') { ${script:AutonomousAgentState}.Errors.Add($Message) }
+        elseif ($Level -eq 'Warning')      { ${script:AutonomousAgentState}.Warnings.Add($Message) }
+        ${script:AutonomousAgentState}.LearningHistory.Add(@{
             Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
             Level     = $Level
             Message   = $Message
@@ -89,7 +89,7 @@ function Write-StartupLog {
 
 # Get-AutonomousAgentStatus is not defined in the module; provide it as a bridge shim
 function Get-AutonomousAgentStatus {
-    if ($null -ne $script:AutonomousAgentState) { return $script:AutonomousAgentState }
+    if ($null -ne ${script:AutonomousAgentState}) { return ${script:AutonomousAgentState} }
     return @{ status = 'not-initialized' }
 }
 
@@ -111,9 +111,9 @@ try {
     # 6>$null: suppress Write-Host/Info banners from Init; 2>$null: suppress stderr noise
     Initialize-AutonomousAgentState `
         -SourcePath $sourcePath `
-        -TargetPath (Join-Path $env:LOCALAPPDATA 'RawrXD\Autonomous') `
-        -LogPath    (Join-Path $env:LOCALAPPDATA 'RawrXD\Logs') `
-        -BackupPath (Join-Path $env:LOCALAPPDATA 'RawrXD\Backups') `
+        -TargetPath (Join-Path ${env:LOCALAPPDATA} 'RawrXD\Autonomous') `
+        -LogPath    (Join-Path ${env:LOCALAPPDATA} 'RawrXD\Logs') `
+        -BackupPath (Join-Path ${env:LOCALAPPDATA} 'RawrXD\Backups') `
         -ErrorAction Stop 6>$null 2>$null | Out-Null
 } catch {
     # Non-fatal — WinDeploy module load may fail under non-admin; continue
@@ -129,7 +129,7 @@ try {
             'Start-SelfAnalysis'              { Start-SelfAnalysis @callArgs }
             'Start-AutonomousTesting'         { Start-AutonomousTesting @callArgs }
             'Start-AutomaticFeatureGeneration' {
-                $analysis = if ($callArgs.ContainsKey('AnalysisResults')) {
+                $analysis = $(if ($callArgs.ContainsKey('AnalysisResults')) {
                     $callArgs['AnalysisResults']
                 } else {
                     Start-SelfAnalysis

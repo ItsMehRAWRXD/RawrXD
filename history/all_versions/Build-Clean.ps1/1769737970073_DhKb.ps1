@@ -39,7 +39,7 @@ if (-not $vcvarsPath) {
 }
 
 # Create a wrapper batch file to avoid command-line length limits in cmd.exe
-$wrapperBat = Join-Path $env:TEMP "run_with_msvc.bat"
+$wrapperBat = Join-Path ${env:TEMP} "run_with_msvc.bat"
 $batContent = "@echo off`r`ncall `"$vcvarsPath`"`r`n%*"
 Set-Content -Path $wrapperBat -Value $batContent
 
