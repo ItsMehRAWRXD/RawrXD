@@ -381,7 +381,14 @@ int main(int argc, char** argv)
         record.openMs = elapsedMs(openStart, std::chrono::high_resolution_clock::now());
 
         const RawrXD::GGUFMetadata metadata = loader.GetMetadata();
-        record.arch = !metadata.architecture.empty() ? metadata.architecture : metadata.architecture_type;
+        // Convert architecture_type enum to string
+        switch (metadata.architecture_type) {
+            case 1: record.arch = "llama"; break;
+            case 2: record.arch = "qwen2"; break;
+            case 3: record.arch = "phi3"; break;
+            case 4: record.arch = "gemma"; break;
+            default: record.arch = "unknown"; break;
+        }
         record.layers = metadata.layer_count;
         record.contextLength = metadata.context_length ? metadata.context_length : metadata.contextLength;
         record.embed = metadata.embedding_dim;

@@ -35,7 +35,16 @@ int main() {
                 std::cout << "  ✓ Metadata parsed\n";
                 
                 auto metadata = loader.GetMetadata();
-                std::cout << "    Architecture: " << metadata.architecture << "\n";
+                // Convert architecture_type enum to string for display
+                std::string archStr;
+                switch (metadata.architecture_type) {
+                    case 1: archStr = "llama"; break;
+                    case 2: archStr = "qwen2"; break;
+                    case 3: archStr = "phi3"; break;
+                    case 4: archStr = "gemma"; break;
+                    default: archStr = "unknown"; break;
+                }
+                std::cout << "    Architecture: " << archStr << "\n";
                 std::cout << "    Vocab size: " << metadata.vocabSize << "\n";
                 std::cout << "    Layers: " << metadata.layer_count << "\n";
                 

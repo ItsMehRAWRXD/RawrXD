@@ -30,7 +30,7 @@ HybridCloudManager::HybridCloudManager(void* /*parent*/) {
     CloudProvider ollama;
     ollama.providerId   = "native";
     ollama.name         = "Ollama Local";
-    ollama.endpoint     = "http://127.0.0.1:11435";
+    ollama.endpoint     = "http://127.0.0.1:11434";
     ollama.isEnabled    = true;
     ollama.isHealthy    = true;
     ollama.costPerRequest = 0.0;

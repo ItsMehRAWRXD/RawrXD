@@ -52,6 +52,7 @@
 #include "Win32IDE_AgenticBrowser.h"
 #include "WindowVisibilityHelpers.h"
 #include "../sovereign/sovereign_smoketests.h"
+#include "../streaming_gguf_loader.h"
 #include <commctrl.h>
 #include <dbghelp.h>
 #include <shellscalingapi.h>
@@ -3653,6 +3654,61 @@ static int getArgInt(int argc, char** argv, const char* key, int fallback)
     }
 }
 
+static bool hasModelInspectFlag(LPSTR lpCmdLine)
+{
+    return lpCmdLine &&
+           (std::strstr(lpCmdLine, "--model") != nullptr || std::strstr(lpCmdLine, "--inspect-model") != nullptr);
+}
+
+static int runModelInspectCLI(LPSTR lpCmdLine)
+{
+    int argc = 0;
+    char** argv = nullptr;
+    parseCmdLine(lpCmdLine, argc, argv);
+
+    std::string modelPath;
+    if (!getArgValue(argc, argv, "--model", modelPath) || modelPath.empty())
+    {
+        if (!getArgValue(argc, argv, "--inspect-model", modelPath) || modelPath.empty())
+        {
+            fprintf(stderr, "[model-inspect] FAIL: missing --model <path.gguf>\n");
+            return 2;
+        }
+    }
+
+    RawrXD::StreamingGGUFLoader loader;
+    if (!loader.Open(modelPath))
+    {
+        fprintf(stderr, "[model-inspect] FAIL: could not open model: %s\n", modelPath.c_str());
+        return 3;
+    }
+
+    const RawrXD::GGUFMetadata metadata = loader.GetMetadata();
+    // Convert architecture_type enum to string
+    std::string architecture;
+    switch (metadata.architecture_type) {
+        case 1: architecture = "llama"; break;
+        case 2: architecture = "qwen2"; break;
+        case 3: architecture = "phi3"; break;
+        case 4: architecture = "gemma"; break;
+        default: architecture = "unknown"; break;
+    }
+    const uint32_t context = metadata.context_length > 0 ? metadata.context_length : metadata.contextLength;
+
+    fprintf(stdout, "Architecture: %s\n", architecture.c_str());
+    fprintf(stdout, "Layers: %u\n", metadata.layer_count);
+    fprintf(stdout, "Context: %u\n", context);
+    fprintf(stdout, "Embedding: %u\n", metadata.embedding_dim);
+
+    const bool valid = (metadata.layer_count > 0 && context > 0 && metadata.embedding_dim > 0);
+    if (!valid)
+    {
+        fprintf(stderr, "[model-inspect] FAIL: incomplete metadata\n");
+        return 4;
+    }
+    return 0;
+}
+
 static int runFastInferenceCLI(LPSTR lpCmdLine)
 {
     int argc = 0;
@@ -4869,6 +4925,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         ensureConsoleAttached(true);
         int rc = runNonInteractiveChatUiSmoke(hInstance, lpCmdLine);
         exportCommandArtifacts("--chat-ui-smoke-noninteractive");
+        FreeConsole();
+        return rc;
+    }
+
+    if (hasModelInspectFlag(lpCmdLine))
+    {
+        ensureConsoleAttached(true);
+        const int rc = runModelInspectCLI(lpCmdLine);
+        std::fflush(stdout);
+        std::fflush(stderr);
         FreeConsole();
         return rc;
     }

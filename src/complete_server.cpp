@@ -165,12 +165,12 @@ std::string EscapeJson(const std::string& value) {
 // ----- Local API HTTP helpers (internal model streaming endpoint) -----
 void ParseModelHost(const char* envUrl, std::string& host, int& port) {
     host = "localhost";
-    port = 11435;
+    port = 11434;
     if (!envUrl || !envUrl[0]) return;
     std::string u = envUrl;
     size_t start = 0;
     if (u.find("http://") == 0) start = 7;
-    else if (u.find("https://") == 0) { start = 8; if (port == 11435) port = 443; }
+    else if (u.find("https://") == 0) { start = 8; if (port == 11434) port = 443; }
     size_t colon = u.find(':', start);
     size_t slash = u.find('/', start);
     if (colon != std::string::npos && (slash == std::string::npos || colon < slash)) {
@@ -183,7 +183,7 @@ void ParseModelHost(const char* envUrl, std::string& host, int& port) {
         host = u.substr(start);
     }
     if (host.empty()) host = "localhost";
-    if (port <= 0 || port > 65535) port = 11435;
+    if (port <= 0 || port > 65535) port = 11434;
 }
 
 bool TcpHttpGet(const std::string& host, int port, const std::string& path, std::string& outBody) {
@@ -3526,7 +3526,7 @@ std::string CompletionServer::HandleModelsListRequest() {
     // 2) Live internal models from GET /v1/models
     const char* modelHostEnv = std::getenv("RAWRXD_INTERNAL_API_URL");
     std::string modelHostStr;
-    int modelHostPort = 11435;
+    int modelHostPort = 11434;
     ParseModelHost(modelHostEnv, modelHostStr, modelHostPort);
     std::string tagsBody;
     if (TcpHttpGet(modelHostStr, modelHostPort, "/v1/models", tagsBody)) {
@@ -3738,7 +3738,7 @@ bool ModelHostListModelsSync(const std::string& host, int port, std::vector<std:
     outNames.push_back("localgguf");
 
     std::string body;
-    if (!TcpGet("127.0.0.1", 11435, "/v1/models", body)) return true;
+    if (!TcpGet("127.0.0.1", 11434, "/v1/models", body)) return true;
 
     std::vector<std::string> parsed;
     RawrXD::ParseModelHostModels(body, parsed);
@@ -3770,7 +3770,7 @@ bool ModelHostGenerateSync(const std::string& host, int port, const std::string&
 
     std::string body = "{\"model\":\"" + escModel + "\",\"prompt\":\"" + escPrompt + "\",\"stream\":false}";
     std::string out;
-    if (!TcpPost("127.0.0.1", 11435, "/api/generate", "application/json", body, out)) {
+    if (!TcpPost("127.0.0.1", 11434, "/api/generate", "application/json", body, out)) {
         outResponse = "local_internal_api_unreachable";
         return false;
     }

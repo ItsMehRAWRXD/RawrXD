@@ -7,12 +7,390 @@
 
 #include "ide_engine.hpp"
 #include "native_ai_integration.hpp"
+#include "streaming_gguf_loader.h"
+#include "cpu_inference_engine.h"
+#include "ollama_client.h"
 #include <iostream>
 #include <windows.h>
+#include <filesystem>
 #include <string>
 #include <vector>
+#include <iomanip>
+#include <fstream>
+#include <chrono>
+
+// Simple conversation history structure
+struct ConversationHistory {
+    std::vector<RawrXD::Backend::OllamaChatMessage> messages;
+    std::string conversationFile;
+    
+    void Load(const std::string& filePath) {
+        conversationFile = filePath;
+        std::ifstream file(filePath);
+        if (!file.is_open()) return;
+        
+        std::string line;
+        while (std::getline(file, line)) {
+            if (line.empty()) continue;
+            // Parse simple format: ROLE:CONTENT
+            size_t colonPos = line.find(':');
+            if (colonPos != std::string::npos) {
+                std::string role = line.substr(0, colonPos);
+                std::string content = line.substr(colonPos + 1);
+                messages.push_back({role, content});
+            }
+        }
+    }
+    
+    void Save() {
+        if (conversationFile.empty()) return;
+        std::ofstream file(conversationFile, std::ios::trunc);
+        if (!file.is_open()) return;
+        
+        for (const auto& msg : messages) {
+            file << msg.role << ":" << msg.content << "\n";
+        }
+    }
+    
+    void AddMessage(const std::string& role, const std::string& content) {
+        messages.push_back({role, content});
+    }
+    
+    void Clear() {
+        messages.clear();
+    }
+    
+    bool IsEmpty() const {
+        return messages.empty();
+    }
+};
 
 using namespace RawrXD;
+
+static std::string ToLowerAscii(std::string v)
+{
+    for (char& c : v)
+    {
+        if (c >= 'A' && c <= 'Z')
+            c = static_cast<char>(c - 'A' + 'a');
+    }
+    return v;
+}
+
+static bool LooksLikeGgufPath(const std::string& value)
+{
+    if (value.empty())
+        return false;
+    const std::string lower = ToLowerAscii(value);
+    if (lower.size() >= 5 && lower.substr(lower.size() - 5) == ".gguf")
+        return true;
+    std::error_code ec;
+    return std::filesystem::exists(std::filesystem::path(value), ec);
+}
+
+static int RunModelInspectMode(const std::string& modelPath)
+{
+    if (modelPath.empty())
+    {
+        std::cerr << "[model-inspect] FAIL: missing --model <path.gguf>" << std::endl;
+        return 2;
+    }
+
+    RawrXD::StreamingGGUFLoader loader;
+    if (!loader.Open(modelPath))
+    {
+        std::cerr << "[model-inspect] FAIL: could not open model: " << modelPath << std::endl;
+        return 3;
+    }
+
+    const RawrXD::GGUFMetadata metadata = loader.GetMetadata();
+    const std::string architecture = !metadata.architecture_type.empty()
+                                         ? metadata.architecture_type
+                                         : (!metadata.architecture.empty() ? metadata.architecture : std::string("unknown"));
+    const uint32_t context = metadata.context_length > 0 ? metadata.context_length : metadata.contextLength;
+
+    std::cout << "Architecture: " << architecture << std::endl;
+    std::cout << "Layers: " << metadata.layer_count << std::endl;
+    std::cout << "Context: " << context << std::endl;
+    std::cout << "Embedding: " << metadata.embedding_dim << std::endl;
+
+    if (metadata.layer_count == 0 || context == 0 || metadata.embedding_dim == 0)
+    {
+        std::cerr << "[model-inspect] FAIL: incomplete metadata" << std::endl;
+        return 4;
+    }
+    return 0;
+}
+
+// ============================================================================
+// Chat Template Detection for Models That Need Manual Formatting
+// ============================================================================
+enum class ChatTemplateType {
+    AUTO,           // Let Ollama handle it (default)
+    MISTRAL_LLAMA2, // [INST] ... [/INST] format
+    PHI3,           // <|user|>...<|assistant|> format
+    LLAMA3,       // <|begin_of_text|>... format
+    RAW             // No template, raw prompt
+};
+
+static ChatTemplateType DetectTemplateType(const std::string& modelName) {
+    std::string lower = ToLowerAscii(modelName);
+    
+    // DEBUG: Show what we're actually checking
+    std::cerr << "[template-detect] DEBUG: Input modelName='" << modelName << "', lower='" << lower << "'" << std::endl;
+    
+    // Models known to use Mistral/LLaMA-2 style templates
+    if (lower.find("bigdaddyg") != std::string::npos ||
+        lower.find("mistral") != std::string::npos ||
+        lower.find("llama2") != std::string::npos ||
+        lower.find("llama-2") != std::string::npos ||
+        lower.find("dolphin") != std::string::npos ||
+        lower.find("openhermes") != std::string::npos ||
+        lower.find("neural") != std::string::npos) {
+        std::cerr << "[template-detect] Model '" << modelName << "' -> MISTRAL_LLAMA2 template" << std::endl;
+        return ChatTemplateType::MISTRAL_LLAMA2;
+    }
+    
+    // Phi-3 models
+    if (lower.find("phi3") != std::string::npos ||
+        lower.find("phi-3") != std::string::npos) {
+        std::cerr << "[template-detect] Model '" << modelName << "' -> PHI3 template" << std::endl;
+        return ChatTemplateType::PHI3;
+    }
+    
+    // Llama-3 models (usually work with AUTO, but can be explicit)
+    if (lower.find("llama3") != std::string::npos ||
+        lower.find("llama-3") != std::string::npos) {
+        std::cerr << "[template-detect] Model '" << modelName << "' -> LLAMA3 template" << std::endl;
+        return ChatTemplateType::LLAMA3;
+    }
+    
+    std::cerr << "[template-detect] Model '" << modelName << "' -> AUTO (Ollama server-side)" << std::endl;
+    return ChatTemplateType::AUTO;
+}
+
+static std::string ApplyChatTemplate(ChatTemplateType type, const std::string& systemPrompt, const std::string& userPrompt) {
+    switch (type) {
+        case ChatTemplateType::MISTRAL_LLAMA2:
+            // Mistral/LLaMA-2 format: [INST] <<SYS>>...<</SYS>> prompt [/INST]
+            // NOTE: Do NOT add raw BOS token (\x01) - Ollama handles this internally
+            if (!systemPrompt.empty()) {
+                return "[INST] <<SYS>>\n" + systemPrompt + "\n<</SYS>>\n\n" + userPrompt + " [/INST]";
+            }
+            return "[INST] " + userPrompt + " [/INST]";
+            
+        case ChatTemplateType::PHI3:
+            // Phi-3 format: <|system|>...<|user|>...<|assistant|>
+            if (!systemPrompt.empty()) {
+                return "<|system|>\n" + systemPrompt + "<|end|>\n<|user|>\n" + userPrompt + "<|end|>\n<|assistant|>\n";
+            }
+            return "<|user|>\n" + userPrompt + "<|end|>\n<|assistant|>\n";
+            
+        case ChatTemplateType::LLAMA3:
+            // Llama-3 format with special tokens
+            if (!systemPrompt.empty()) {
+                return "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n" + systemPrompt + "<|eot_id|>" +
+                       "<|start_header_id|>user<|end_header_id|>\n\n" + userPrompt + "<|eot_id|>" +
+                       "<|start_header_id|>assistant<|end_header_id|>\n\n";
+            }
+            return "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n" + userPrompt + "<|eot_id|>" +
+                   "<|start_header_id|>assistant<|end_header_id|>\n\n";
+            
+        case ChatTemplateType::RAW:
+            return userPrompt;
+            
+        case ChatTemplateType::AUTO:
+        default:
+            // Return empty to signal "use messages array"
+            return "";
+    }
+}
+
+// ============================================================================
+// Ollama Inference Mode — routes to Ollama API instead of local SNMalloc
+// ============================================================================
+static int RunOllamaInferenceMode(const std::string& modelName, const std::string& prompt, int maxTokens, ConversationHistory* history = nullptr)
+{
+    std::cout << "[ollama-inference] Connecting to Ollama at 127.0.0.1:11434..." << std::endl;
+    
+    RawrXD::Backend::NativeClient client("http://localhost:11434");
+    
+    if (!client.testConnection()) {
+        std::cerr << "[ollama-inference] FAIL: Cannot connect to Ollama. Is it running on port 11434?" << std::endl;
+        return 7;
+    }
+    std::cout << "[ollama-inference] Connected. Generating with model: " << modelName << std::endl;
+    
+    // Detect if this model needs manual template formatting
+    ChatTemplateType templateType = DetectTemplateType(modelName);
+    std::string systemPrompt = "You are a helpful assistant.";
+    
+    RawrXD::Backend::NativeInferenceResponse response;
+    
+    if (templateType == ChatTemplateType::AUTO) {
+        // Use /api/chat with messages array - Ollama applies template server-side
+        std::cout << "[ollama-inference] Using /api/chat (server-side template)" << std::endl;
+        
+        RawrXD::Backend::OllamaChatRequest req;
+        req.model = modelName;
+        req.stream = false;
+        req.options["num_predict"] = maxTokens;
+        req.options["temperature"] = 0.7;
+        
+        // Build message list from history or start fresh
+        if (history && !history->IsEmpty()) {
+            req.messages = history->messages;
+            req.messages.push_back({"user", prompt});
+        } else {
+            req.messages.push_back({"system", systemPrompt});
+            req.messages.push_back({"user", prompt});
+        }
+        
+        response = client.chatSync(req);
+    } else {
+        // Use /api/generate with manually formatted prompt
+        std::cout << "[ollama-inference] Using /api/generate (manual template formatting)" << std::endl;
+        
+        std::string formattedPrompt = ApplyChatTemplate(templateType, systemPrompt, prompt);
+        
+        std::cout << "[ollama-inference] Formatted prompt length: " << formattedPrompt.length() << " chars" << std::endl;
+        std::cout << "[ollama-inference] Prompt preview: " << formattedPrompt.substr(0, std::min(size_t(100), formattedPrompt.length())) << "..." << std::endl;
+        
+        RawrXD::Backend::OllamaGenerateRequest req;
+        req.model = modelName;
+        req.prompt = formattedPrompt;
+        req.stream = false;
+        req.raw = true;  // CRITICAL: Tell Ollama not to apply template (we already did)
+        req.options["num_predict"] = maxTokens;
+        req.options["temperature"] = 0.7;
+        
+        response = client.generateSync(req);
+    }
+    
+    if (response.error) {
+        std::cerr << "[ollama-inference] FAIL: " << response.error_message << std::endl;
+        return 8;
+    }
+    
+    // Debug: Show raw response fields
+    std::cerr << "[ollama-inference] Debug - response.response length: " << response.response.length() << std::endl;
+    std::cerr << "[ollama-inference] Debug - response.message.content length: " << response.message.content.length() << std::endl;
+    std::cerr << "[ollama-inference] Debug - eval_count: " << response.eval_count << std::endl;
+    
+    // For chat API, content is in message.content; for generate API it's in response
+    std::string outputText = response.message.content.empty() ? response.response : response.message.content;
+    
+    // Check if output looks like garbage (high ratio of non-printable chars)
+    if (!outputText.empty()) {
+        size_t printableCount = 0;
+        size_t questionMarkCount = 0;
+        for (char c : outputText) {
+            if (std::isprint(static_cast<unsigned char>(c)) || std::isspace(static_cast<unsigned char>(c))) {
+                printableCount++;
+            }
+            if (c == '?' || c == '�') {
+                questionMarkCount++;
+            }
+        }
+        double printableRatio = static_cast<double>(printableCount) / outputText.length();
+        double questionMarkRatio = static_cast<double>(questionMarkCount) / outputText.length();
+        
+        std::cerr << "[ollama-inference] Debug - printable ratio: " << printableRatio << std::endl;
+        std::cerr << "[ollama-inference] Debug - '?' ratio: " << questionMarkRatio << std::endl;
+        
+        if (printableRatio < 0.5 || questionMarkRatio > 0.3) {
+            std::cerr << "[ollama-inference] WARNING: Output appears to be garbage (template mismatch?)" << std::endl;
+            std::cerr << "[ollama-inference] Raw output bytes: ";
+            for (size_t i = 0; i < std::min(outputText.length(), size_t(50)); i++) {
+                fprintf(stderr, "%02X ", static_cast<unsigned char>(outputText[i]));
+            }
+            std::cerr << std::endl;
+        }
+    }
+    
+    std::cout << "\n=== Generated Output ===\n" << outputText << "\n========================" << std::endl;
+    std::cout << "[ollama-inference] Tokens generated: " << response.eval_count << std::endl;
+    
+    // Save to history if enabled
+    if (history) {
+        history->AddMessage("user", prompt);
+        history->AddMessage("assistant", outputText);
+        history->Save();
+    }
+    
+    return 0;
+}
+
+// ============================================================================
+// Ollama Streaming Inference Mode — real-time token output
+// ============================================================================
+static int RunOllamaStreamingMode(const std::string& modelName, const std::string& prompt, int maxTokens, ConversationHistory* history = nullptr)
+{
+    std::cout << "[ollama-streaming] Connecting to Ollama at 127.0.0.1:11434..." << std::endl;
+    
+    RawrXD::Backend::NativeClient client("http://localhost:11434");
+    
+    if (!client.testConnection()) {
+        std::cerr << "[ollama-streaming] FAIL: Cannot connect to Ollama. Is it running on port 11434?" << std::endl;
+        return 7;
+    }
+    std::cout << "[ollama-streaming] Connected. Streaming with model: " << modelName << std::endl;
+    std::cout << "\n=== Generated Output ===" << std::endl;
+    
+    // Use chat mode with streaming
+    RawrXD::Backend::OllamaChatRequest req;
+    req.model = modelName;
+    req.stream = true;  // Enable streaming
+    req.options["num_predict"] = maxTokens;
+    req.options["temperature"] = 0.7;
+    
+    // Build message list from history or start fresh
+    if (history && !history->IsEmpty()) {
+        req.messages = history->messages;
+        req.messages.push_back({"user", prompt});
+    } else {
+        req.messages.push_back({"system", "You are a helpful assistant."});
+        req.messages.push_back({"user", prompt});
+    }
+    
+    std::string accumulated;
+    int tokenCount = 0;
+    auto startTime = std::chrono::high_resolution_clock::now();
+    
+    bool success = client.chat(req,
+        // on_chunk - called for each token
+        [&accumulated, &tokenCount](const std::string& chunk) {
+            accumulated += chunk;
+            tokenCount++;
+            std::cout << chunk << std::flush;  // Print token immediately
+        },
+        // on_error
+        [](const std::string& error) {
+            std::cerr << "\n[ollama-streaming] ERROR: " << error << std::endl;
+        },
+        // on_complete
+        [&startTime, &tokenCount, history, &prompt, &accumulated](const RawrXD::Backend::NativeInferenceResponse& response) {
+            auto endTime = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+            double tps = duration > 0 ? (tokenCount * 1000.0 / duration) : 0;
+            std::cout << "\n========================" << std::endl;
+            std::cout << "[ollama-streaming] Tokens: " << tokenCount << " | Time: " << duration << "ms | TPS: " << std::fixed << std::setprecision(2) << tps << std::endl;
+            // Save to history if enabled
+            if (history) {
+                history->AddMessage("user", prompt);
+                history->AddMessage("assistant", accumulated);
+                history->Save();
+            }
+        }
+    );
+    
+    if (!success) {
+        std::cerr << "[ollama-streaming] FAIL: Streaming failed" << std::endl;
+        return 8;
+    }
+    
+    return 0;
+}
 
 // ============================================================================
 // Enhanced Console Mode with Full AI Integration
@@ -166,32 +544,166 @@ int main(int argc, char* argv[])
     // Parse command line arguments
     bool consoleMode = false;
     bool startServer = false;
+    bool headlessMode = false;
+    bool useStreaming = false;
+    bool useConversation = false;
     int serverPort = 3001;
     std::string model;
+    std::string modelPath;
+    std::string conversationFile;
+    bool inspectModel = false;
+    ConversationHistory history;
     
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--console" || arg == "-c") {
+            consoleMode = true;
+        } else if (arg == "--headless") {
+            headlessMode = true;
             consoleMode = true;
         } else if (arg == "--server" || arg == "-s") {
             startServer = true;
         } else if (arg == "--port" && i + 1 < argc) {
             serverPort = std::stoi(argv[++i]);
         } else if (arg == "--model" && i + 1 < argc) {
-            model = argv[++i];
+            std::string value = argv[++i];
+            if (LooksLikeGgufPath(value)) {
+                modelPath = value;
+                inspectModel = true;  // FIX: Set flag to trigger model inspection
+            } else {
+                model = value;
+            }
+        } else if (arg == "--model-path" && i + 1 < argc) {
+            modelPath = argv[++i];
+            inspectModel = true;  // FIX: Set flag to trigger model inspection
+        } else if (arg == "--stream") {
+            useStreaming = true;
+        } else if (arg == "--conversation" && i + 1 < argc) {
+            useConversation = true;
+            conversationFile = argv[++i];
+        } else if (arg == "--list-models") {
+            RawrXD::Backend::NativeClient client("http://localhost:11434");
+            if (!client.testConnection()) {
+                std::cerr << "[list-models] FAIL: Cannot connect to Ollama on localhost:11434" << std::endl;
+                return 7;
+            }
+            auto models = client.listModels();
+            std::cout << "Available Ollama models (" << models.size() << " total):\n";
+            std::cout << "========================================\n";
+            for (const auto& m : models) {
+                std::cout << "  " << m.name;
+                if (!m.parameter_size.empty()) std::cout << " (" << m.parameter_size << ")";
+                if (!m.quantization_level.empty()) std::cout << " [" << m.quantization_level << "]";
+                std::cout << "\n";
+                if (!m.digest.empty()) {
+                    std::cout << "      Digest: " << m.digest.substr(0, 16) << "...\n";
+                }
+                if (m.size > 0) {
+                    double mb = m.size / (1024.0 * 1024.0);
+                    std::cout << "      Size: " << std::fixed << std::setprecision(1) << mb << " MB\n";
+                }
+            }
+            return 0;
         } else if (arg == "--help" || arg == "-h") {
             std::cout << "RawrXD IDE v1.0 - Native AI IDE\n\n";
             std::cout << "Usage: RawrXD [options]\n\n";
             std::cout << "Options:\n";
             std::cout << "  --console, -c      Run in console mode\n";
+            std::cout << "  --headless         Alias for console mode\n";
             std::cout << "  --server, -s       Start AI server only\n";
             std::cout << "  --port <n>         AI server port (default: 3001)\n";
             std::cout << "  --model <name>     Default LLM model\n";
+            std::cout << "  --model <path.gguf> or --model-path <path.gguf>\n";
+            std::cout << "                     Inspect GGUF metadata and exit\n";
+            std::cout << "  --prompt <text>, -p <text>\n";
+            std::cout << "                     Generate text (requires --model)\n";
+            std::cout << "  --max-tokens <n>   Max tokens to generate (default: 32)\n";
+            std::cout << "  --stream           Stream tokens in real-time (Ollama only)\n";
+            std::cout << "  --conversation <file>  Enable multi-turn chat with history persistence\n";
+            std::cout << "  --list-models      List available Ollama models and exit\n";
             std::cout << "  --help, -h         Show this help\n";
             return 0;
         }
     }
-    
+
+    // Inference mode: --model <path> --prompt <text> [--max-tokens <n>] [--stream]
+    std::string promptText;
+    int maxTokens = 32;
+    bool doInference = false;
+    for (int i = 1; i < argc; ++i) {
+        if ((argv[i] == std::string("--prompt") || argv[i] == std::string("-p")) && i + 1 < argc) {
+            promptText = argv[++i];
+            doInference = true;
+        } else if (argv[i] == std::string("--max-tokens") && i + 1 < argc) {
+            maxTokens = std::stoi(argv[++i]);
+        }
+    }
+    // FIX: Inference mode takes priority over inspection mode
+    if (doInference) {
+        // Check if we should use Ollama (model name like "llama3.2:3b") or local GGUF
+        bool useOllama = !model.empty() && !LooksLikeGgufPath(model);
+        
+        // Load conversation history if enabled
+        ConversationHistory* historyPtr = nullptr;
+        if (useConversation && !conversationFile.empty()) {
+            history.Load(conversationFile);
+            historyPtr = &history;
+        }
+        
+        if (useOllama && useStreaming) {
+            // Ollama streaming inference
+            AllocConsole();
+            FILE* dummy;
+            freopen_s(&dummy, "CONOUT$", "w", stdout);
+            freopen_s(&dummy, "CONOUT$", "w", stderr);
+            int result = RunOllamaStreamingMode(model, promptText, maxTokens, historyPtr);
+            FreeConsole();
+            return result;
+        }
+        else if (useOllama) {
+            // Ollama synchronous inference
+            AllocConsole();
+            FILE* dummy;
+            freopen_s(&dummy, "CONOUT$", "w", stdout);
+            freopen_s(&dummy, "CONOUT$", "w", stderr);
+            int result = RunOllamaInferenceMode(model, promptText, maxTokens, historyPtr);
+            FreeConsole();
+            return result;
+        }
+        else if (!modelPath.empty()) {
+            // Local GGUF inference
+            AllocConsole();
+            FILE* dummy;
+            freopen_s(&dummy, "CONOUT$", "w", stdout);
+            freopen_s(&dummy, "CONOUT$", "w", stderr);
+            RawrXD::CPUInferenceEngine engine;
+            engine.SetUseTitanAssembly(false);
+            std::cout << "[inference] Loading model: " << modelPath << std::endl;
+            if (!engine.LoadModel(modelPath)) {
+                std::cerr << "[inference] FAIL: could not load model" << std::endl;
+                FreeConsole();
+                return 5;
+            }
+            std::cout << "[inference] Model loaded. Tokenizing prompt..." << std::endl;
+            auto inputTokens = engine.Tokenize(promptText);
+            if (inputTokens.empty()) {
+                std::cerr << "[inference] FAIL: empty tokens" << std::endl;
+                FreeConsole();
+                return 6;
+            }
+            std::cout << "[inference] Input tokens: " << inputTokens.size() << ". Generating up to " << maxTokens << " tokens..." << std::endl;
+            auto outputTokens = engine.Generate(inputTokens, maxTokens);
+            std::cout << "[inference] Generated " << outputTokens.size() << " tokens. Detokenizing..." << std::endl;
+            std::string outputText = engine.Detokenize(outputTokens);
+            std::cout << "\n=== Generated Output ===\n" << outputText << "\n========================" << std::endl;
+            FreeConsole();
+            return 0;
+        }
+    }
+
+    if (inspectModel && !modelPath.empty())
+        return RunModelInspectMode(modelPath);
+
     // Server-only mode
     if (startServer) {
         rawrxd::AIConfig aiConfig;
@@ -246,7 +758,7 @@ int main(int argc, char* argv[])
     
     int result = 0;
     
-    if (consoleMode) {
+    if (consoleMode || headlessMode) {
         AllocConsole();
         FILE* dummy;
         freopen_s(&dummy, "CONOUT$", "w", stdout);
@@ -663,7 +1175,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
         nativeHost.id = "rawrxd-native";
         nativeHost.displayName = "RawrXD Native Host";
         nativeHost.type = AIBackendType::Custom;
-        nativeHost.endpoint = "http://localhost:11435";
+        nativeHost.endpoint = "http://localhost:11434";
         nativeHost.model = "headless-default";
         nativeHost.enabled = true;
         backendMgr.addBackend(nativeHost);

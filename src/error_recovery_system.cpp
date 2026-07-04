@@ -480,7 +480,7 @@ bool ErrorRecoverySystem::recoverFallbackLocal(ErrorRecord_ERS& error) {
     // No callback registered — attempt direct Ollama health check via HTTP
     // This verifies the local server is actually available before we claim success
 #ifdef _WIN32
-    // Quick TCP connect test to localhost:11435 (Ollama default)
+    // Quick TCP connect test to localhost:11434 (Ollama default)
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) == 0) {
         SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -505,7 +505,7 @@ bool ErrorRecoverySystem::recoverFallbackLocal(ErrorRecord_ERS& error) {
             WSACleanup();
 
             if (connected) {
-                std::cout << "[ErrorRecoverySystem] Ollama detected on localhost:11435" << std::endl;
+                std::cout << "[ErrorRecoverySystem] Ollama detected on localhost:11434" << std::endl;
                 return true;
             }
         } else {
@@ -722,7 +722,7 @@ bool ErrorRecoverySystem::recoverSwitchEndpoint(ErrorRecord_ERS& error) {
         std::cout << "[ErrorRecoverySystem] Inference endpoint switch — "
                      "ensure backup URLs are configured in settings" << std::endl;
         // Common fallback: localhost Ollama
-        error.context["switchedEndpoint"] = "http://localhost:11435";
+        error.context["switchedEndpoint"] = "http://localhost:11434";
         return true;
     } else if (error.component == "hf_downloader") {
         // HuggingFace mirror endpoints

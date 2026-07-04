@@ -241,7 +241,14 @@ struct ServerStats {
 // ============================================================================
 // SERVER CONFIGURATION
 // ============================================================================
+enum class LogLevel { Debug, Info, Warning, Error };
+
 struct ServerConfig {
+    // Server identity
+    std::string serverName          = "RawrXD-Script LSP Server";
+    std::string serverVersion       = "1.0.0";
+    LogLevel    logLevel            = LogLevel::Info;
+    
     // Transport
     bool        useStdio            = true;    // false → named pipe
     std::string pipeName            = "\\\\.\\pipe\\rawrxd-lsp";

@@ -1,0 +1,16 @@
+# Simple CMake for standalone GGUF test
+cmake_minimum_required(VERSION 3.20)
+project(GGUF_Test)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Create executable
+add_executable(gguf_test standalone_gguf_test.cpp)
+
+# Set subsystem to console
+if(MSVC)
+    set_target_properties(gguf_test PROPERTIES
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
+    )
+endif()

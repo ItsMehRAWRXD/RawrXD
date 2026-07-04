@@ -578,7 +578,7 @@ void HybridCloudManager::onNetworkReplyFinished(void** reply) {
 void HybridCloudManager::onHealthCheckTimerTimeout() { checkAllProvidersHealth(); }
 
 void HybridCloudManager::setupDefaultProviders() {
-    addProvider({"native", "native", "http://127.0.0.1:11435", "", "local", true, true});
+    addProvider({"native", "native", "http://127.0.0.1:11434", "", "local", true, true});
     addProvider({"huggingface", "HuggingFace", "https://api-inference.huggingface.co", "", "global", false, false});
     addProvider({"aws", "AWS Bedrock", "https://bedrock-runtime.amazonaws.com", "", "us-east-1", false, false});
     addProvider({"azure", "Azure OpenAI", "https://azure.microsoft.com", "", "eastus", false, false});

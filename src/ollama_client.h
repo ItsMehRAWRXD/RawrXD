@@ -28,6 +28,7 @@ struct OllamaGenerateRequest {
     std::string model;
     std::string prompt;
     bool stream = true;
+    bool raw = false;  // If true, Ollama won't apply the chat template
     std::map<std::string, double> options;
 };
 
@@ -137,7 +138,7 @@ using ToolExecutor = std::function<std::string(const std::string& tool_name, con
 
 class NativeClient {
 public:
-    explicit NativeClient(const std::string& base_url = "http://localhost:11435");
+    explicit NativeClient(const std::string& base_url = "http://localhost:11434");
     ~NativeClient();
 
     // --- Configuration ---

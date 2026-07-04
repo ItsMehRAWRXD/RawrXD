@@ -123,10 +123,30 @@ void AdaptiveTensorCodec::refine_tile(const TileMeta& tile, int level, TileBuffe
 
 bool AdaptiveTensorCodec::needs_refinement(const TileBuffer* output_buffer)
 {
-    // Implement a cheap error metric. For example, calculate the variance
-    // of the output tile. High variance might indicate instability requiring
-    // higher precision.
-    return false;  // Placeholder
+    if (!output_buffer || output_buffer->size == 0) return false;
+    
+    // Calculate variance of the output tile as error metric
+    const float* data = static_cast<const float*>(output_buffer->data);
+    if (!data) return false;
+    
+    // Compute mean
+    float sum = 0.0f;
+    for (size_t i = 0; i < output_buffer->size; ++i) {
+        sum += data[i];
+    }
+    float mean = sum / output_buffer->size;
+    
+    // Compute variance
+    float variance = 0.0f;
+    for (size_t i = 0; i < output_buffer->size; ++i) {
+        float diff = data[i] - mean;
+        variance += diff * diff;
+    }
+    variance /= output_buffer->size;
+    
+    // High variance indicates instability - needs refinement
+    const float kVarianceThreshold = 0.1f;
+    return variance > kVarianceThreshold;
 }
 
 void AdaptiveTensorCodec::compute_tile(const TileBuffer* input, const TileBuffer* weights, TileBuffer* output)

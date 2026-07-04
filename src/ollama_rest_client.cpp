@@ -7,7 +7,7 @@ size_t NativeRestClient::curlWriteCallback(void* contents, size_t size, size_t n
 }
 
 NativeRestClient::NativeRestClient()
-    : m_baseUrl("http://localhost:11435")
+    : m_baseUrl("http://localhost:11434")
     , m_curl(curl_easy_init())
     , m_timeout_ms(5000) {}
 

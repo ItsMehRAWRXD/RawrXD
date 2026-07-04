@@ -5,6 +5,7 @@
  */
 
 #include "ai/ai_code_generator.h"
+#include "ollama_client.h"
 #include <sstream>
 #include <algorithm>
 #include <regex>
@@ -361,46 +362,38 @@ std::string AICodeGenerator::buildPrompt(const GenerationRequest& request) {
 }
 
 std::string AICodeGenerator::generateCode(const std::string& prompt, const std::string& language) {
-    // This is a simplified implementation
-    // In reality, this would call an AI model
-    
-    std::stringstream code;
+    // Call Ollama for actual code generation
     std::string lang = language.empty() ? m_defaultLanguage : language;
     
-    if (lang == "cpp" || lang == "c++") {
-        code << "// Generated C++ code\n\n";
-        code << "#include <iostream>\n";
-        code << "#include <vector>\n";
-        code << "#include <string>\n\n";
-        code << "// TODO: Implement based on: " << prompt.substr(0, 50) << "...\n";
-        code << "void generatedFunction() {\n";
-        code << "    // Implementation here\n";
-        code << "}\n";
-    } else if (lang == "python") {
-        code << "# Generated Python code\n\n";
-        code << "def generated_function():\n";
-        code << "    \"\"\"\n";
-        code << "    Generated based on: " << prompt.substr(0, 50) << "...\n";
-        code << "    \"\"\"\n";
-        code << "    pass\n";
-    } else if (lang == "javascript" || lang == "js") {
-        code << "// Generated JavaScript code\n\n";
-        code << "function generatedFunction() {\n";
-        code << "    // Implementation based on: " << prompt.substr(0, 50) << "...\n";
-        code << "    console.log('Generated code');\n";
-        code << "}\n";
-    } else if (lang == "sql") {
-        code << "-- Generated SQL\n\n";
-        code << "SELECT * FROM table\n";
-        code << "WHERE condition = true;\n";
-    } else if (lang == "regex") {
-        code << "^pattern$";
-    } else {
-        code << "// Generated code for " << lang << "\n\n";
-        code << "// TODO: Implement\n";
+    // Build a code generation prompt
+    std::stringstream fullPrompt;
+    fullPrompt << "Generate " << lang << " code for the following request:\n\n";
+    fullPrompt << prompt << "\n\n";
+    fullPrompt << "Please provide only the code without explanations.";
+    
+    // Call Ollama
+    RawrXD::Backend::NativeClient ollamaClient("http://localhost:11434");
+    RawrXD::Backend::OllamaGenerateRequest req;
+    req.model = "codellama:latest";
+    req.prompt = fullPrompt.str();
+    req.stream = false;
+    req.options["num_predict"] = m_maxTokens;
+    req.options["temperature"] = m_temperature;
+    req.options["stop"] = std::vector<std::string>{"\n\n", "###"};
+    
+    auto response = ollamaClient.generateSync(req);
+    
+    if (response.error) {
+        // Fallback to template-based generation on error
+        std::stringstream code;
+        code << "// Generated " << lang << " code\n\n";
+        code << "// Request: " << prompt.substr(0, 50) << "...\n";
+        code << "// Error calling AI: " << response.error_message << "\n\n";
+        code << "// TODO: Implement manually\n";
+        return code.str();
     }
     
-    return code.str();
+    return response.response;
 }
 
 std::string AICodeGenerator::generateExplanation(const GenerationRequest& request) {

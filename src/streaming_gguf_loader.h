@@ -1,5 +1,6 @@
 #pragma once
 #include "gguf_loader.h"
+#include "RawrXD_Interfaces.h"
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -9,6 +10,9 @@
 
 namespace RawrXD
 {
+
+// Types are already in RawrXD namespace from RawrXD_Interfaces.h
+// No using declarations needed
 
 class MappedWindowStreamer {};  // Placeholder until a concrete mapped streamer is wired in
 
@@ -120,6 +124,9 @@ class StreamingGGUFLoader : public IGGUFLoader
 
     // Assign tensors to zones based on name patterns
     void AssignTensorsToZones();
+
+    // Infer missing metadata from tensor names (called after BuildTensorIndex)
+    void InferMetadataFromTensors();
 
     // Load zone data from disk
     bool StreamZoneFromDisk(const std::string& zone_name);

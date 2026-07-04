@@ -2060,9 +2060,10 @@ std::string RawrXDLSPServer::getStatsString() const {
 } // namespace RawrXD
 
 // ============================================================================
-// ENTRY POINT
+// ENTRY POINT (only for standalone LSP server build)
 // ============================================================================
 
+#ifdef RAWRXD_LSP_SERVER_STANDALONE
 int main(int argc, char* argv[]) {
     using namespace RawrXD::LSPServer;
 
@@ -2105,3 +2106,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+#endif // RAWRXD_LSP_SERVER_STANDALONE

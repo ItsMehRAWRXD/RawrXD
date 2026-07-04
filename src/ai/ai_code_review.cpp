@@ -138,8 +138,63 @@ std::vector<SecurityVulnerability> AICodeReview::securityReview(
     
     auto response = GetAIEngine().complete(req);
     
-    // Parse security vulnerabilities
-    // TODO: Implement proper CWE parsing
+    // Parse security vulnerabilities from response
+    std::stringstream ss(response.text);
+    std::string line;
+    SecurityVulnerability currentVuln;
+    bool inVuln = false;
+    
+    while (std::getline(ss, line)) {
+        // Look for CWE patterns: "CWE-XXX" or "CWE XXX" or "Vulnerability:"
+        if (line.find("CWE-") != std::string::npos || 
+            line.find("CWE ") != std::string::npos ||
+            line.find("Vulnerability:") != std::string::npos ||
+            line.find("Security Issue:") != std::string::npos) {
+            if (inVuln && !currentVuln.description.empty()) {
+                vulnerabilities.push_back(currentVuln);
+            }
+            currentVuln = SecurityVulnerability();
+            currentVuln.cweId = "CWE-Unknown";
+            currentVuln.severity = SecuritySeverity::Medium;
+            currentVuln.confidence = 0.7f;
+            inVuln = true;
+            
+            // Try to extract CWE ID
+            size_t cwePos = line.find("CWE-");
+            if (cwePos != std::string::npos) {
+                size_t endPos = line.find_first_not_of("0123456789", cwePos + 4);
+                if (endPos == std::string::npos) endPos = line.length();
+                currentVuln.cweId = line.substr(cwePos, endPos - cwePos);
+            }
+            
+            // Try to extract severity
+            if (line.find("Critical") != std::string::npos || line.find("CRITICAL") != std::string::npos) {
+                currentVuln.severity = SecuritySeverity::Critical;
+            } else if (line.find("High") != std::string::npos || line.find("HIGH") != std::string::npos) {
+                currentVuln.severity = SecuritySeverity::High;
+            } else if (line.find("Low") != std::string::npos || line.find("LOW") != std::string::npos) {
+                currentVuln.severity = SecuritySeverity::Low;
+            }
+            
+            currentVuln.description = line;
+        } else if (inVuln) {
+            if (line.find("Mitigation:") != std::string::npos || line.find("Fix:") != std::string::npos) {
+                currentVuln.mitigation = line.substr(line.find(":") + 1);
+            } else if (line.find("Line") != std::string::npos) {
+                // Try to extract line number
+                size_t numStart = line.find_first_of("0123456789");
+                if (numStart != std::string::npos) {
+                    currentVuln.line = std::stoi(line.substr(numStart));
+                }
+            } else {
+                currentVuln.description += " " + line;
+            }
+        }
+    }
+    
+    if (inVuln && !currentVuln.description.empty()) {
+        vulnerabilities.push_back(currentVuln);
+    }
     
     return vulnerabilities;
 }
@@ -160,8 +215,70 @@ std::vector<PerformanceIssue> AICodeReview::performanceReview(
     
     auto response = GetAIEngine().complete(req);
     
-    // Parse performance issues
-    // TODO: Implement proper parsing
+    // Parse performance issues from response
+    std::stringstream ss(response.text);
+    std::string line;
+    PerformanceIssue currentIssue;
+    bool inIssue = false;
+    
+    while (std::getline(ss, line)) {
+        // Look for performance issue patterns
+        if (line.find("Performance") != std::string::npos || 
+            line.find("Bottleneck") != std::string::npos ||
+            line.find("Optimization") != std::string::npos ||
+            line.find("Slow") != std::string::npos ||
+            line.find("Inefficient") != std::string::npos) {
+            if (inIssue && !currentIssue.description.empty()) {
+                issues.push_back(currentIssue);
+            }
+            currentIssue = PerformanceIssue();
+            currentIssue.severity = PerformanceSeverity::Medium;
+            currentIssue.impact = 0.5f;
+            currentIssue.confidence = 0.7f;
+            inIssue = true;
+            currentIssue.description = line;
+            
+            // Try to extract severity
+            if (line.find("Critical") != std::string::npos || line.find("Severe") != std::string::npos) {
+                currentIssue.severity = PerformanceSeverity::Critical;
+                currentIssue.impact = 0.9f;
+            } else if (line.find("High") != std::string::npos) {
+                currentIssue.severity = PerformanceSeverity::High;
+                currentIssue.impact = 0.7f;
+            } else if (line.find("Low") != std::string::npos) {
+                currentIssue.severity = PerformanceSeverity::Low;
+                currentIssue.impact = 0.3f;
+            }
+            
+            // Try to categorize
+            if (line.find("loop") != std::string::npos || line.find("iteration") != std::string::npos) {
+                currentIssue.category = PerformanceCategory::Algorithmic;
+            } else if (line.find("memory") != std::string::npos || line.find("allocation") != std::string::npos) {
+                currentIssue.category = PerformanceCategory::Memory;
+            } else if (line.find("cache") != std::string::npos || line.find("locality") != std::string::npos) {
+                currentIssue.category = PerformanceCategory::Cache;
+            } else if (line.find("thread") != std::string::npos || line.find("parallel") != std::string::npos) {
+                currentIssue.category = PerformanceCategory::Concurrency;
+            } else {
+                currentIssue.category = PerformanceCategory::General;
+            }
+        } else if (inIssue) {
+            if (line.find("Suggestion:") != std::string::npos || line.find("Fix:") != std::string::npos) {
+                currentIssue.suggestion = line.substr(line.find(":") + 1);
+            } else if (line.find("Line") != std::string::npos) {
+                size_t numStart = line.find_first_of("0123456789");
+                if (numStart != std::string::npos) {
+                    currentIssue.line = std::stoi(line.substr(numStart));
+                }
+            } else {
+                currentIssue.description += " " + line;
+            }
+        }
+    }
+    
+    if (inIssue && !currentIssue.description.empty()) {
+        issues.push_back(currentIssue);
+    }
     
     return issues;
 }

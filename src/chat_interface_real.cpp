@@ -241,7 +241,7 @@ void ChatSystem::startStreamingResponse(
             std::string authHeader;
 
             if (m_currentModel.source == ModelSource::Local) {
-                streamUrl = "http://localhost:11435/api/generate";
+                streamUrl = "http://localhost:11434/api/generate";
                 streamBody = "{\"model\":\"" + m_currentModel.modelId + "\",\"prompt\":\"";
                 for (char c : fullPrompt) {
                     if (c == '"') streamBody += "\\\"";
@@ -873,7 +873,7 @@ std::string ChatSystem::callLocalModel(const std::string& prompt) {
     body += ",\"num_predict\":" + std::to_string(m_currentModel.maxTokens);
     body += ",\"stream\":false}";
 
-    std::string response = makeHTTPRequest("http://localhost:11435/api/generate", "POST", body);
+    std::string response = makeHTTPRequest("http://localhost:11434/api/generate", "POST", body);
     if (response.empty()) return "Error: Could not connect to local Ollama instance. Is it running?";
 
     // Parse response JSON - extract "response" field

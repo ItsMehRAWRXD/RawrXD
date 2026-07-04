@@ -795,6 +795,7 @@ set(SOURCES
     src/rawrxd_sampler.cpp
     src/complete_server.cpp
     src/agentic_engine.cpp
+    src/agentic_model_streamer_bridge.cpp
     src/subagent_core.cpp
     src/agent_history.cpp
     src/agent_policy.cpp
@@ -2088,6 +2089,22 @@ if(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
 endif()
 
 target_link_libraries(RawrXD_Gold PRIVATE Threads::Threads)
+
+# GGUF Loader Test - Console app to verify architecture detection
+add_executable(Test-GGUF-Loader EXCLUDE_FROM_ALL
+    src/test_gguf_loader_main.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf_loader.cpp
+)
+set_target_properties(Test-GGUF-Loader PROPERTIES
+    OUTPUT_NAME test_gguf_loader
+    MSVC_RUNTIME_LIBRARY "MultiThreaded"
+)
+target_include_directories(Test-GGUF-Loader PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(Test-GGUF-Loader PRIVATE Threads::Threads)
 
 target_compile_definitions(RawrXD_Gold PRIVATE
     RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
@@ -4007,6 +4024,7 @@ if(WIN32)
         src/win32app/ASM_Bridge_Implementation.cpp
         src/win32app/Win32IDE_Commands.cpp
         src/win32app/Win32IDE_CodexCommands.cpp
+        src/win32app/Win32IDE_ChatWindow.cpp
         src/codex/CodexCLI.cpp
         src/codex/CodexSettings.cpp
         src/codex/CodexSettingsDialog.cpp

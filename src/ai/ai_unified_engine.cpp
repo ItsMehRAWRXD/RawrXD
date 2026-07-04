@@ -1,6 +1,7 @@
 // ai_unified_engine.cpp - Full implementation
 #include "ai_unified_engine.h"
 #include "inference_engine.h"
+#include "ollama_client.h"
 #include <windows.h>
 #include <queue>
 #include <unordered_map>
@@ -178,18 +179,33 @@ InferenceResponse UnifiedAIEngine::complete(const InferenceRequest& request) {
     // Truncate if too long
     fullPrompt = truncateContext(fullPrompt, request.maxTokens);
     
-    // Simulate inference (in real implementation, call Ollama/LLM)
+    // Call Ollama for actual inference
     auto startTime = std::chrono::steady_clock::now();
     
-    // TODO: Replace with actual LLM call
-    // For now, return a simulated response
+    RawrXD::Backend::NativeClient ollamaClient("http://localhost:11434");
+    RawrXD::Backend::OllamaGenerateRequest ollamaReq;
+    ollamaReq.model = request.model.empty() ? m_impl->m_defaultModel : request.model;
+    ollamaReq.prompt = fullPrompt;
+    ollamaReq.stream = false;
+    ollamaReq.options["num_predict"] = request.maxTokens;
+    ollamaReq.options["temperature"] = request.temperature;
+    
     InferenceResponse response;
-    response.text = "// AI-generated code\n// TODO: Implement actual LLM integration\n";
-    response.tokensGenerated = 20;
+    auto ollamaResponse = ollamaClient.generateSync(ollamaReq);
+    
+    if (ollamaResponse.error) {
+        response.text = "Error: " + ollamaResponse.error_message;
+        response.tokensGenerated = 0;
+        response.finishReason = "error";
+    } else {
+        response.text = ollamaResponse.response;
+        response.tokensGenerated = static_cast<int>(ollamaResponse.eval_count);
+        response.finishReason = ollamaResponse.done ? "stop" : "length";
+    }
+    
     response.tokensPrompt = static_cast<int>(fullPrompt.length() / 4);  // Rough estimate
     response.truncated = false;
-    response.finishReason = "stop";
-    response.modelUsed = request.model.empty() ? m_impl->m_defaultModel : request.model;
+    response.modelUsed = ollamaReq.model;
     
     auto endTime = std::chrono::steady_clock::now();
     response.generationTimeMs = std::chrono::duration<float, std::milli>(endTime - startTime).count();

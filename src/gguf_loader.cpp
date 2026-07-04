@@ -144,7 +144,13 @@ bool GGUFLoader::ParseMetadata() {
         // Extract known metadata fields
         if (key == "general.architecture") {
             metadata_.architecture = value_str;
-            metadata_.architecture_type = value_str;
+            // Convert architecture string to enum value
+            std::string arch = value_str;
+            if (arch == "qwen" || arch == "qwen2" || arch == "qwen2_moe" || arch == "qwen35" || arch == "qwen3") arch = "qwen2";
+            else if (arch == "phi" || arch == "phi3") arch = "phi3";
+            else if (arch == "gemma" || arch == "gemma2") arch = "gemma";
+            else if (arch != "llama") arch = "llama";
+            metadata_.architecture_type = (arch == "llama") ? 1u : (arch == "qwen2") ? 2u : (arch == "phi3") ? 3u : 4u;
         } else if (key == "general.name") {
             metadata_.name = value_str;
         } else if (key == "general.parameter_count") {

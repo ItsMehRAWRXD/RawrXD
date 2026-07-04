@@ -257,15 +257,36 @@ bool AgenticErrorHandler::backtrack(const std::string& targetStateId)
 {
     if (!m_state) return false;
 
-    // In production, would restore from checkpoint
-    return true;
+    // Try to restore from checkpoint
+    nlohmann::json snapshot = m_state->getLastSnapshot();
+    if (!snapshot.empty()) {
+        m_state->restoreFromSnapshot(snapshot);
+        if (m_observability) {
+            m_observability->logInfo("AgenticErrorHandler", 
+                "Backtracked to state: " + targetStateId);
+        }
+        return true;
+    }
+    
+    return false;
 }
 
 bool AgenticErrorHandler::fallback(const std::string& errorId, const std::string& fallbackPlan)
 {
     for (auto& errorContext : m_errorHistory) {
         if (errorContext.errorId == errorId) {
-            return true;
+            // Execute the fallback plan
+            if (m_observability) {
+                m_observability->logInfo("AgenticErrorHandler", 
+                    "Executing fallback plan for error: " + errorId);
+            }
+            
+            // Store the fallback plan in the error context
+            errorContext.context["fallback_plan"] = fallbackPlan;
+            errorContext.context["fallback_executed"] = true;
+            
+            // Execute the fallback strategy
+            return executeFallbackStrategy(errorContext);
         }
     }
     return false;

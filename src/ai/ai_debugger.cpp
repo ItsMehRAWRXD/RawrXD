@@ -256,8 +256,30 @@ std::vector<ExceptionPrediction> AIDebugger::predictExceptions(
     
     auto response = GetAIEngine().complete(req);
     
-    // Parse predictions from response
-    // TODO: Implement proper parsing
+    // Parse predictions from response - look for exception types and line numbers
+    std::stringstream ss(response.text);
+    std::string line;
+    while (std::getline(ss, line)) {
+        // Look for patterns like "Exception: Type at line X" or "- Type: ..."
+        if (line.find("Exception") != std::string::npos || 
+            line.find("exception") != std::string::npos) {
+            ExceptionPrediction pred;
+            pred.exceptionType = line;
+            pred.confidence = 0.7f; // Default confidence
+            
+            // Try to extract line number
+            size_t linePos = line.find("line");
+            if (linePos != std::string::npos) {
+                try {
+                    pred.lineNumber = std::stoi(line.substr(linePos + 4));
+                } catch (...) {
+                    pred.lineNumber = 0;
+                }
+            }
+            
+            predictions.push_back(pred);
+        }
+    }
     
     return predictions;
 }

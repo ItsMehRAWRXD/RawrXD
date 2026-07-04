@@ -10,6 +10,9 @@
 #include <memory>
 #include <mutex>
 #include <functional>
+#include <atomic>
+#include <thread>
+#include <filesystem>
 
 class AgenticEngine;
 class ChatInterface;
@@ -102,4 +105,16 @@ private:
     ErrorOccurredFn      m_onErrorOccurred;
     TrainingProgressFn   m_onTrainingProgress;
     TrainingCompletedFn  m_onTrainingCompleted;
+
+    // Training state
+    mutable std::atomic<bool> m_trainingActive{false};
+    mutable std::atomic<float> m_trainingProgress{0.0f};
+    std::string m_trainingDataset;
+    std::string m_trainingModel;
+    std::thread m_trainingThread;
+
+    // Callbacks for UI
+    CompletionReadyFn    m_completionReadyCb;
+    AgentResponseReadyFn m_agentResponseReadyCb;
+    TrainingCompletedFn  m_trainingCompleteCb;
 };

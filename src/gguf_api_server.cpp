@@ -218,7 +218,7 @@ private:
         // Avoid proxy loop: if we listen on the same port, use alternative
         if (ollamaPort == port_) {
             ollamaPort = 11434;
-            if (ollamaPort == port_) ollamaPort = 11435;
+            if (ollamaPort == port_) ollamaPort = 11434;
         }
 
         std::wstring wHost(ollamaHost.begin(), ollamaHost.end());

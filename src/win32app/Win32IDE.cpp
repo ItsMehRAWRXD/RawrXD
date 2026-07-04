@@ -8265,7 +8265,7 @@ std::string Win32IDE::getModelInfo() const
     info += "Context Length: " + std::to_string(m_currentModelMetadata.context_length) + "\n";
     info += "Embedding Dim: " + std::to_string(m_currentModelMetadata.embedding_dim) + "\n";
     info += "Vocab Size: " + std::to_string(m_currentModelMetadata.vocab_size) + "\n";
-    info += "Architecture: " + m_currentModelMetadata.architecture_type + "\n\n";
+    info += "Architecture: " + std::to_string(m_currentModelMetadata.architecture_type) + "\n\n";
 
     // Show zone status (memory efficiency indicator)
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();

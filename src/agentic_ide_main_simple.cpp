@@ -1,12 +1,14 @@
-// RawrXD Agentic IDE - Minimal Main
-// Entry point for GUI application
+// RawrXD Agentic IDE - Complete Implementation with Chat
+// Entry point for GUI application with Ollama chat integration
 // VSU Effects: Uses Adobe RGBa color space for professional color accuracy
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 #include <shellapi.h>
 #include <cstdio>
 #include <fstream>
+#include <string>
 #include "logger.h"
 #include "RawrXD_Window.h"
 #include "RawrXD_Foundation.h"
@@ -15,6 +17,7 @@
 #include "streaming/AdaptiveTensorCodec.hpp"
 #include "streaming/atc_benchmark.hpp"
 #include "quantization/braided_quantizer_fingerprint.hpp"
+#include "win32app/Win32IDE_ChatWindow.h"
 #include <iostream>
 #include "core/thread_lifecycle_registry.h"
 
@@ -32,8 +35,10 @@ inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
 class IDEWindow : public Window {
     UniversalModelRouter router;
     rawrxd::AdaptiveTensorCodec atc; // Add the Adaptive Tensor Codec
-    String status = "Ready. Press F5 to run Titan+Assembly inference.";
+    String status = "Ready. Press F5 to run Titan+Assembly inference. F8 for Chat.";
     String outputText;
+    RawrXDChatWindowHandle m_chatWindow = nullptr;
+    bool m_chatVisible = false;
     
 public:
     IDEWindow() {
@@ -43,9 +48,42 @@ public:
         // Attempt to open a model. Replace with your actual model path.
         // This should be a large GGUF model to test the streaming.
         if (atc.OpenModel(L"d:\\codestral22b.gguf")) {
-            status = "ATC Model Loaded. Ready for streaming inference.";
+            status = "ATC Model Loaded. Press F5 for inference, F8 for Chat.";
         } else {
-            status = "Error: Could not load model with ATC.";
+            status = "Error: Could not load model with ATC. Press F8 for Chat.";
+        }
+    }
+    
+    ~IDEWindow() {
+        if (m_chatWindow) {
+            RawrXDChatWindow_Destroy(m_chatWindow);
+            m_chatWindow = nullptr;
+        }
+    }
+    
+    void createChatWindow() {
+        if (!m_chatWindow) {
+            m_chatWindow = RawrXDChatWindow_Create(hwnd, GetModuleHandle(nullptr));
+            if (m_chatWindow) {
+                // Set default model
+                RawrXDChatWindow_SetModel(m_chatWindow, "llama3.2:3b");
+            }
+        }
+    }
+    
+    void toggleChatWindow() {
+        createChatWindow();
+        if (m_chatWindow) {
+            if (m_chatVisible) {
+                RawrXDChatWindow_Hide(m_chatWindow);
+                m_chatVisible = false;
+                status = "Chat hidden. Press F8 to show.";
+            } else {
+                RawrXDChatWindow_Show(m_chatWindow);
+                m_chatVisible = true;
+                status = "Chat visible. Press F8 to hide.";
+            }
+            update();
         }
     }
     
@@ -145,6 +183,9 @@ public:
                 status = "Fingerprint FAILED.";
             }
             update();
+        }
+        else if (key == VK_F8) { // Toggle chat window
+            toggleChatWindow();
         }
         else if (key == VK_ESCAPE) {
             PostQuitMessage(0);

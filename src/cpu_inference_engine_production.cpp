@@ -72,7 +72,14 @@ bool CPUInferenceEngine::loadModel(const std::string& path) {
     // Commit to Unified Metadata Bridge for GGUF
     RawrXD::Bridge::UnifiedModelMetadata unifiedMeta;
     unifiedMeta.source = "gguf";
-    unifiedMeta.family = metadata.architecture;
+    // Convert architecture_type enum to string
+    switch (metadata.architecture_type) {
+        case 1: unifiedMeta.family = "llama"; break;
+        case 2: unifiedMeta.family = "qwen2"; break;
+        case 3: unifiedMeta.family = "phi3"; break;
+        case 4: unifiedMeta.family = "gemma"; break;
+        default: unifiedMeta.family = "unknown"; break;
+    }
     unifiedMeta.quantization = metadata.quant_name;
     unifiedMeta.context_length = metadata.context_length;
     unifiedMeta.parameter_count = 0; // Populate if possible from metadata

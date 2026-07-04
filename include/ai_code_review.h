@@ -89,23 +89,54 @@ struct ReviewRequest {
 };
 
 // Security vulnerability
+enum class SecuritySeverity {
+    Low,
+    Medium,
+    High,
+    Critical
+};
+
 struct SecurityVulnerability {
     std::string cweId;           // CWE-XXX
-    std::string severity;        // Critical, High, Medium, Low
+    SecuritySeverity severity;
     std::string description;
     std::string vulnerableCode;
     std::string remediation;
     std::vector<std::string> affectedLines;
     bool isExploitable;
+    float confidence = 0.0f;
+    std::string mitigation;
+    int line = 0;
 };
 
 // Performance issue
+enum class PerformanceCategory {
+    General,
+    Algorithmic,
+    Memory,
+    Cache,
+    Concurrency
+};
+
+enum class PerformanceSeverity {
+    Low,
+    Medium,
+    High,
+    Critical
+};
+
 struct PerformanceIssue {
     std::string description;
     std::string problematicCode;
     std::string optimizedAlternative;
     float estimatedSpeedup;
     std::string complexity;      // O(n), O(n^2), etc.
+    PerformanceCategory category = PerformanceCategory::General;
+    PerformanceSeverity severity = PerformanceSeverity::Medium;
+    std::string suggestion;
+    int line = 0;
+    float impact = 0.0f;
+    float confidence = 0.0f;
 };
 
 class AICodeReview {

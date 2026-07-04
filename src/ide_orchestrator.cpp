@@ -158,7 +158,7 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::setupNetworking() {
     }
     
     // Test network connectivity
-    auto httpResult = netManager.getHttpClient().get("http://localhost:11435/api/tags");
+    auto httpResult = netManager.getHttpClient().get("http://localhost:11434/api/tags");
     if (!httpResult) {
         fprintf(stderr, "[IDEOrchestrator] Network test failed but continuing\n");
     }

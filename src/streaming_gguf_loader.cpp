@@ -2,7 +2,10 @@
 
 #include <algorithm>
 #include <cstring>
+#include <iostream>
 #include <limits>
+#include <regex>
+#include <set>
 
 namespace RawrXD {
 
@@ -29,6 +32,9 @@ bool StreamingGGUFLoader::Open(const std::string& filepath) {
 		Close();
 		return false;
 	}
+
+	// Post-process: infer missing metadata from tensor names
+	InferMetadataFromTensors();
 
 	AssignTensorsToZones();
 	return true;
@@ -227,8 +233,12 @@ bool StreamingGGUFLoader::ParseMetadata() {
 
 	tensor_info_offset_ = static_cast<uint64_t>(file_.tellg());
 
-	auto findUint = [this](const char* key) -> uint64_t {
-		const auto it = metadata_.kv_pairs.find(key);
+	// Lambda to find uint with optional fallback key
+	auto findUint = [this](const std::string& key, const std::string& fallback = "") -> uint64_t {
+		auto it = metadata_.kv_pairs.find(key);
+		if (it == metadata_.kv_pairs.end() && !fallback.empty()) {
+			it = metadata_.kv_pairs.find(fallback);
+		}
 		if (it == metadata_.kv_pairs.end()) {
 			return 0;
 		}
@@ -239,17 +249,99 @@ bool StreamingGGUFLoader::ParseMetadata() {
 		}
 	};
 
-	metadata_.architecture_type = metadata_.kv_pairs.count("general.architecture") ? 1u : 0u;
-	metadata_.layer_count = static_cast<uint32_t>(findUint("llama.block_count"));
-	metadata_.context_length = static_cast<uint32_t>(findUint("llama.context_length"));
-	metadata_.embedding_dim = static_cast<uint32_t>(findUint("llama.embedding_length"));
-	metadata_.vocab_size = static_cast<uint32_t>(findUint("llama.vocab_size"));
+	// Detect architecture from general.architecture key
+	std::string arch = "llama";
+	std::string archKey = "llama";  // The actual key prefix used in the GGUF file
+	auto archIt = metadata_.kv_pairs.find("general.architecture");
+	if (archIt != metadata_.kv_pairs.end()) {
+		archKey = archIt->second;  // Keep original for key lookup
+		arch = archKey;  // Start with original for normalization
+		std::cerr << "[GGUFLoader] Architecture detected: " << archKey << std::endl;
+		// Normalize architecture names for internal use
+		if (arch == "qwen" || arch == "qwen2" || arch == "qwen2_moe" || arch == "qwen35" || arch == "qwen3") arch = "qwen2";
+		else if (arch == "phi" || arch == "phi3") arch = "phi3";
+		else if (arch == "gemma" || arch == "gemma2") arch = "gemma";
+		// Default to llama for unknown architectures
+		else if (arch != "llama") arch = "llama";
+	} else {
+		std::cerr << "[GGUFLoader] No architecture key, defaulting to llama" << std::endl;
+	}
+	metadata_.architecture = archKey;
+	// FIX: architecture_type is std::string, not uint32_t. Store the normalized arch name.
+	metadata_.architecture_type = arch;
+	
+	// Debug: Print key lookups
+	std::string layerKey = archKey + ".block_count";
+	std::string layerFallback = "llama.block_count";
+	std::cerr << "[GGUFLoader] Looking for layer key: " << layerKey << " (fallback: " << layerFallback << ")" << std::endl;
+	auto layerIt = metadata_.kv_pairs.find(layerKey);
+	auto layerFbIt = metadata_.kv_pairs.find(layerFallback);
+	if (layerIt != metadata_.kv_pairs.end()) std::cerr << "[GGUFLoader] Found " << layerKey << " = " << layerIt->second << std::endl;
+	if (layerFbIt != metadata_.kv_pairs.end()) std::cerr << "[GGUFLoader] Found " << layerFallback << " = " << layerFbIt->second << std::endl;
+	
+	// Try architecture-specific keys first (using original archKey), then fall back to llama keys
+	metadata_.layer_count = static_cast<uint32_t>(findUint(archKey + ".block_count", "llama.block_count"));
+	metadata_.context_length = static_cast<uint32_t>(findUint(archKey + ".context_length", "llama.context_length"));
+	metadata_.embedding_dim = static_cast<uint32_t>(findUint(archKey + ".embedding_length", "llama.embedding_length"));
+	metadata_.vocab_size = static_cast<uint32_t>(findUint(archKey + ".vocab_size", "llama.vocab_size"));
+	std::cerr << "[GGUFLoader] After lookup - Layers: " << metadata_.layer_count << ", Context: " << metadata_.context_length << std::endl;
+	
+	// If still 0, try to infer from tensor names
+	if (metadata_.layer_count == 0) {
+		// Count unique blk.N layers from tensor names
+		std::set<uint32_t> layerIndices;
+		for (const auto& [name, ref] : tensor_index_) {
+			// Match patterns like blk.0, blk_0, layer.0, etc.
+			std::regex layerRegex(R"((blk|layer)[._](\d+))", std::regex::icase);
+			std::smatch match;
+			if (std::regex_search(name, match, layerRegex)) {
+				layerIndices.insert(static_cast<uint32_t>(std::stoul(match[2])));
+			}
+		}
+		if (!layerIndices.empty()) {
+			metadata_.layer_count = *layerIndices.rbegin() + 1; // Max index + 1
+		}
+	}
 
 	return true;
 }
 
 GGUFMetadata StreamingGGUFLoader::GetMetadata() const {
 	return metadata_;
+}
+
+void StreamingGGUFLoader::InferMetadataFromTensors() {
+	// Infer layer count from tensor names if still 0
+	if (metadata_.layer_count == 0) {
+		std::set<uint32_t> layerIndices;
+		for (const auto& [name, ref] : tensor_index_) {
+			// Match patterns like blk.0, blk_0, layer.0, etc.
+			std::regex layerRegex(R"((blk|layer)[._](\d+))", std::regex::icase);
+			std::smatch match;
+			if (std::regex_search(name, match, layerRegex)) {
+				layerIndices.insert(static_cast<uint32_t>(std::stoul(match[2])));
+			}
+		}
+		if (!layerIndices.empty()) {
+			metadata_.layer_count = *layerIndices.rbegin() + 1; // Max index + 1
+		}
+	}
+
+	// Infer vocab size from token embeddings tensor if still 0
+	if (metadata_.vocab_size == 0) {
+		auto it = tensor_index_.find("token_embd.weight");
+		if (it != tensor_index_.end() && it->second.shape.size() >= 2) {
+			metadata_.vocab_size = static_cast<uint32_t>(it->second.shape[1]);
+		}
+	}
+
+	// Infer embedding dim from token embeddings tensor if still 0
+	if (metadata_.embedding_dim == 0) {
+		auto it = tensor_index_.find("token_embd.weight");
+		if (it != tensor_index_.end() && !it->second.shape.empty()) {
+			metadata_.embedding_dim = static_cast<uint32_t>(it->second.shape[0]);
+		}
+	}
 }
 
 bool StreamingGGUFLoader::BuildTensorIndex() {

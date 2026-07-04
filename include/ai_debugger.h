@@ -89,6 +89,8 @@ struct ExceptionPrediction {
     std::string location;
     int line;
     float probability;
+    float confidence;
+    int lineNumber;
     std::string triggerCondition;
     std::string prevention;
 };

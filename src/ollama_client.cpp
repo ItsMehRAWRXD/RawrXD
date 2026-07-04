@@ -364,7 +364,8 @@ std::string NativeClient::createGenerateRequestJson(const OllamaGenerateRequest&
     json j = {
         {"model", req.model},
         {"prompt", req.prompt},
-        {"stream", req.stream}
+        {"stream", req.stream},
+        {"raw", req.raw}  // If true, Ollama won't apply the chat template
     };
 
     if (!req.options.empty()) {

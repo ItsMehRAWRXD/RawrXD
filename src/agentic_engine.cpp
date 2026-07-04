@@ -7,6 +7,7 @@
 #include "reverse_engineering/RawrCodex.hpp"
 #include "reverse_engineering/RawrCompiler.hpp"
 #include "lsp/lsp_client_wired.hpp"
+#include "agentic_model_streamer_bridge.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -356,6 +357,17 @@ AgenticEngine::~AgenticEngine() {}
 void AgenticEngine::initialize() {
     m_initialized = true;
     fprintf(stderr, "[AgenticEngine] Initialized\n");
+    
+    // Initialize the agentic model streamer bridge
+    auto* bridge = RawrXD::Agentic::GetGlobalAgenticModelStreamer();
+    if (!bridge) {
+        bridge = new RawrXD::Agentic::AgenticModelStreamerBridge();
+        if (bridge->Initialize(this)) {
+            fprintf(stderr, "[AgenticEngine] Model streamer bridge initialized\n");
+        } else {
+            fprintf(stderr, "[AgenticEngine] WARNING: Failed to initialize model streamer bridge\n");
+        }
+    }
 }
 
 std::string AgenticEngine::analyzeCode(const std::string& code) {
@@ -1182,6 +1194,51 @@ std::string AgenticEngine::executeCommand(const std::string& command, bool isPow
 }
 
 bool AgenticEngine::loadLocalModel(const std::string& modelPath) {
+    // Try the model streamer bridge first (for streaming GGUF support)
+    auto* bridge = RawrXD::Agentic::GetGlobalAgenticModelStreamer();
+    if (bridge) {
+        std::string resolvedPath = resolvePathForEngine(modelPath, m_workspaceRoot);
+        fprintf(stderr, "[AgenticEngine] Loading model via streamer bridge: %s\n", resolvedPath.c_str());
+        
+        RawrXD::Agentic::ModelLoadRequest request;
+        request.modelPath = resolvedPath;
+        request.maxMemoryMB = 8192; // 8GB default
+        request.enableStreaming = true;
+        request.preloadZones = true;
+        request.requiredZones = {"embedding", "output"}; // Essential zones
+        
+        std::atomic<bool> completed(false);
+        std::atomic<bool> success(false);
+        request.callback = [&completed, &success](bool s, const std::string&) {
+            success = s;
+            completed = true;
+        };
+        
+        bridge->QueueModelLoad(request);
+        
+        // Wait for completion (with timeout)
+        int timeoutMs = 300000; // 5 minutes for large models
+        int waitedMs = 0;
+        while (!completed && waitedMs < timeoutMs) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            waitedMs += 100;
+        }
+        
+        if (success) {
+            m_currentModelPath = resolvedPath;
+            // Update inference engine reference if bridge created one
+            auto streamingEngine = bridge->GetInferenceEngine();
+            if (streamingEngine && !m_inferenceEngine) {
+                setInferenceEngine(streamingEngine.get());
+            }
+            fprintf(stderr, "[AgenticEngine] Model loaded successfully via streamer\n");
+            return true;
+        } else {
+            fprintf(stderr, "[AgenticEngine] Streamer load failed, falling back to standard loader\n");
+        }
+    }
+    
+    // Fall back to standard inference engine loading
     if (!m_inferenceEngine) return false;
 
     std::string resolvedPath = resolvePathForEngine(modelPath, m_workspaceRoot);
@@ -1196,7 +1253,24 @@ std::string AgenticEngine::getModelStatus() const {
     std::ostringstream oss;
     oss << "model_loaded=" << (isModelLoaded() ? "true" : "false") << "\n";
     oss << "model_path=" << (m_currentModelPath.empty() ? "<none>" : m_currentModelPath) << "\n";
-    oss << "workspace_root=" << (m_workspaceRoot.empty() ? "<unset>" : m_workspaceRoot);
+    oss << "workspace_root=" << (m_workspaceRoot.empty() ? "<unset>" : m_workspaceRoot) << "\n";
+    
+    // Add streamer bridge status
+    auto* bridge = RawrXD::Agentic::GetGlobalAgenticModelStreamer();
+    if (bridge) {
+        auto status = bridge->GetStatus();
+        oss << "streamer_initialized=true\n";
+        oss << "streamer_loading=" << (status.isLoading ? "true" : "false") << "\n";
+        oss << "streamer_loaded=" << (status.isLoaded ? "true" : "false") << "\n";
+        oss << "streamer_operation=" << status.currentOperation << "\n";
+        oss << "streamer_progress=" << status.progressPercent << "%\n";
+        oss << "memory_used_mb=" << status.memoryUsedMB << "\n";
+        oss << "memory_budget_mb=" << status.memoryBudgetMB << "\n";
+        oss << "loaded_zones=" << status.loadedZones.size();
+    } else {
+        oss << "streamer_initialized=false";
+    }
+    
     return oss.str();
 }
 

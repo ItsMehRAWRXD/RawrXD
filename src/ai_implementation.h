@@ -33,7 +33,7 @@ class ModelTester;
 //=============================================================================
 struct LLMConfig {
     std::string backend = "native";         // "native", "openai", "anthropic", "local"
-    std::string endpoint = "http://localhost:11435";
+    std::string endpoint = "http://localhost:11434";
     std::string modelName = "llama2";
     std::string apiKey;
     // GPU inference is mandatory across IDE/CLI/Model. CPU-only and verified-fallback

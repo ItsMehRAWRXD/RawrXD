@@ -2,20 +2,21 @@
  * @file benchmark_harness.cpp
  * @brief RawrXD Performance Benchmark Harness Implementation
  * @version 1.0.0
- * 
+ *
  * Implements the benchmark harness for measuring MASM-accelerated
  * inference operations with T-P-O (Time-Per-Operation) metrics.
- * 
+ *
  * @copyright (c) 2025 RawrXD Project
  */
 
 #include "benchmark_harness.h"
+#include "ollama_client.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
-#include <math>
+#include <cmath>
 #include <string>
 
 #ifdef _WIN32
@@ -479,12 +480,25 @@ public:
         std::vector<double> latencies;
         HighResTimer timer;
         
-        // Simulate token generation
+        // Run actual token generation via Ollama
+        RawrXD::Backend::NativeClient ollamaClient("http://localhost:11434");
+        if (!ollamaClient.testConnection()) {
+            result.error = "Cannot connect to Ollama";
+            return result;
+        }
+
         for (uint64_t i = 0; i < config.benchmarkIterations; ++i) {
             timer.Start();
-            // Placeholder: actual inference would go here
-            // ModelBridge_Load(modelPath.c_str());
-            // ... run inference loop ...
+
+            // Actual inference via Ollama
+            RawrXD::Backend::OllamaGenerateRequest req;
+            req.model = "phi3:mini";
+            req.prompt = "Generate a creative story about AI:";
+            req.stream = false;
+            req.options["num_predict"] = tokenCount;
+
+            auto response = ollamaClient.generateSync(req);
+
             timer.Stop();
             
             double elapsed = timer.GetElapsedUs();
