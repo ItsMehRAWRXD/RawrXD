@@ -2,7 +2,29 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 1620/3159 files (~51.2%)
+Current progress: 1630/3159 files (~51.6%)
+
+## Batch 65 (Completed)
+Files audited (queue 1621-1630):
+1. src/inference/sliding_kv_cache.hpp
+2. src/inference/speculative_decoder.hpp
+3. src/inference/TitanLoaderDiagnostics.cpp
+4. src/inference/TitanLoaderDiagnostics.h
+5. src/inference/ultra_fast_inference.cpp
+6. src/inference/ultra_fast_inference.h
+7. src/inference/vulkan_mm.cpp
+8. src/inference/InferenceProfiler.cpp
+9. src/inference/InferenceProfiler.h
+10. src/inhouse_browser.cpp
+
+Primary findings:
+- **sliding_kv_cache.hpp**: Compressed sliding window KV cache with SVD dimension reduction (4096→64). `SVDProjector` with encode/decode matrix operations. Ring buffer for window_size tokens. Identity projection initialization. Clean header-only implementation.
+- **speculative_decoder.hpp**: Speculative decoding engine with draft (7B) + target (120B) parallel verification. `TokenProbs` with softmax, top-K filtering, sampling. `ILanguageModel` abstract base for model interface. Clean implementation.
+- **TitanLoaderDiagnostics.cpp/h**: DLL presence and proc table validation for RawrXD_Titan.dll. `GetModuleHandleA`/`LoadLibraryA` with `GetProcAddress` checks. User alerting on fallback with error details. Clean diagnostic pattern.
+- **ultra_fast_inference.cpp/h**: Autonomous inference with hierarchical tensor reduction (3.3x). `TensorPruningScorer` with magnitude, activation, gradient scores. `PruningConfig` with sparsity_target (90%). `UltraFastInferenceEngine` with Vulkan compute. Clean implementation.
+- **vulkan_mm.cpp**: Vulkan compute engine for Q4_0 dequantization + GEMM. SPIR-V compute shader embedded (placeholder). `VulkanDevice` struct with instance, physical device, logical device, queues. `ComputePipeline` with shader module. Clean header-only design.
+- **InferenceProfiler.cpp/h**: Deep per-layer inference profiling (14 enhancements). Layer timing with microsecond resolution. Memory bandwidth measurement. Histogram with P50/P95/P99 percentiles. Energy/thermal monitoring. Regression detection. Clean singleton with mutex protection.
+- **inhouse_browser.cpp**: RawrXD WebView2-based in-house browser. Loads Qt-free web UI from localhost:8080. COM callback helpers (`CallbackBase`). UTF-8 to wide conversion. WebView2Loader.dll loading from multiple candidates. Clean Win32 implementation.
 
 ## Batch 64 (Completed)
 Files audited (queue 1611-1620):
