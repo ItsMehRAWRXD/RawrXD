@@ -2,7 +2,38 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3000/3159 files (~95.0%)
+Current progress: 3010/3159 files (~95.3%)
+
+## Batch 301 (Completed)
+
+**Queue entries 3001-3010 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_Git.cpp - Git integration (status, branch, diff)
+2. src/win32app/Win32IDE_GitPanel.cpp - Production Git panel with staging
+3. src/win32app/Win32IDE_GUILayoutHotpatch.cpp - GUI layout auditor and hotpatch
+4. src/win32app/Win32IDE_HandleExtensionCommand.cpp - Extension command handler
+5. src/win32app/Win32IDE_HardwareSynthesizer.cpp - Hardware synthesizer integration
+6. src/win32app/Win32IDE_HotpatchCtrlPanel.cpp - Hotpatch control plane UI (Phase 14)
+7. src/win32app/Win32IDE_HotpatchPanel.cpp - Hotpatch UI integration (Phase 14.2)
+8. src/win32app/Win32IDE_HotpatchWiring.cpp - HeadlessIDE implementation
+9. src/win32app/Win32IDE_HotpatchWiring.h - Thin header for bridge includes
+10. src/win32app/Win32IDE_HoverTooltips.cpp - Hover documentation tooltips
+
+### Key Findings
+- Git: GitRepository class, status enum, branch detection, git.exe integration
+- GitPanel: Pipe-captured git execution, staging, diff view, branch picker
+- GUILayoutHotpatch: Screenshot capture, layout auditing, overlap detection
+- HandleExtensionCommand: VSIX install/uninstall, enable/disable, reload commands
+- HardwareSynthesizer: FPGA synthesis, ASIC design, hardware acceleration
+- HotpatchCtrlPanel: Patch lifecycle management, transaction control, rollback
+- HotpatchPanel: Three-layer hotpatch system, memory patches, proxy rewrites
+- HotpatchWiring: HeadlessIDE implementation, HTTP server, REPL/Batch modes
+- HoverTooltips: Markdown rendering, LSP hover info, debounced trigger
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3010/3159 files (~95.3%)**
+
 
 ## Batch 300 (Completed)
 
@@ -11326,4 +11357,47 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Sections: .text, .data, .rsrc with proper characteristics
 
 **Total Progress: 2300/3159 files (~72.8%)**
+
+
+
+## Batch 231 (Completed)
+
+**Queue entries 2372-2381 audited.**
+
+### Files Audited
+1. src/RawrXD_PieceTable.h - Piece Table
+2. src/RawrXD_PipeClient.cpp - Pipe Client
+3. src/RawrXD_PipeClient.h - Pipe Client Header
+4. src/RawrXD_PipeTest.cpp - Pipe Test
+5. src/rawrxd_preflight.hpp - Preflight
+6. src/RawrXD_Prometheus_Export.cpp - Prometheus Export
+7. src/RawrXD_RealWorld_Benchmark_228.cpp - RealWorld Benchmark
+8. src/RawrXD_Renderer_D2D.cpp - D2D Renderer
+9. src/RawrXD_Renderer_D2D.h - D2D Renderer Header
+10. src/rawrxd_sampler.cpp - Sampler
+
+### Key Findings
+- RawrXD_PieceTable.h: Production piece table text buffer (VS Code style)
+- Two buffers: original (immutable) and add (append-only)
+- Piece struct: buffer, offset, length, newlines
+- O(log n) edits via piece descriptors, lazy line cache rebuild
+- rawrxd_preflight.hpp: Stone MASM64 hardware preflight interface
+- rawrxd_has_avx512: CPUID leaf 7 + XGETBV OS-save check
+- rawrxd_has_vulkan: LoadLibraryA probe for vulkan-1.dll
+- rawrxd_preflight_lock: VirtualLock dry-run (64 KB arena)
+- StonePreflight struct: avx512_ok, vulkan_ok, lockable
+- RawrXD_Prometheus_Export: Metrics export for Grafana
+- Core_ExportPrometheusMetrics: inference_time_ms, io_bytes_total, memory_usage_mb
+- RawrXD_RealWorld_Benchmark_228: Actual reads on 120B model file
+- 4GB test window, 8MB read chunks, Direct-IO no buffering
+- AVX-512 VNNI compute pass simulation on read data
+- RawrXD_Renderer_D2D: Direct2D/DirectWrite renderer
+- Font class with bold/italic support, TextRun for styled text
+- Renderer2D: beginPaint, endPaint, drawRect, fillRect, drawText
+- D2D1CreateFactory, DWriteCreateFactory for resource management
+- rawrxd_sampler: Token sampling with temperature and softmax
+- SoftMax_AVX512 ASM kernel integration (with C++ fallback)
+- std::discrete_distribution for weighted random sampling
+
+**Total Progress: 2310/3159 files (~73.1%)**
 
