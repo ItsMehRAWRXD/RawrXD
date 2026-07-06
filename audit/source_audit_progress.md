@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3080/3159 files (~97.5%)
+Current progress: 3090/3159 files (~97.8%)
+
+## Batch 309 (Completed)
+
+**Queue entries 3081-3090 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_SecurityScans.cpp - Security scan menu handlers (Top-50 P0)
+2. src/win32app/Win32IDE_SelfHostEngine.cpp - Self-host engine handler
+3. src/win32app/Win32IDE_SemanticIndex.cpp - Semantic code intelligence integration
+4. src/win32app/Win32IDE_SemanticIndexShim.cpp - Semantic index shim (stub)
+5. src/win32app/Win32IDE_SemanticPanel.cpp - Semantic code intelligence UI (Phase 16)
+6. src/win32app/Win32IDE_Session.cpp - Session persistence (tabs, panels, annotations)
+7. src/win32app/Win32IDE_Settings.cpp - Sovereign persistence layer (C++23, AVX-512)
+8. src/win32app/Win32IDE_Settings.h - Settings header (ZMM-signed, WSSR recovery)
+9. src/win32app/Win32IDE_SettingsGUI.cpp - Visual settings editor (Tier 1 Cosmetic #5)
+10. src/win32app/Win32IDE_ShortcutEditor.cpp - Keyboard shortcut editor (Tier 5 Gap #47)
+
+### Key Findings
+- SecurityScans: Secrets, SAST, Dependency Audit integration, ProblemsAggregator
+- SelfHostEngine: Autonomous deployment, self-maintenance, adaptive scaling
+- SemanticIndex: Symbol browser, go-to-definition, type hierarchy, call graph
+- SemanticIndexShim: Minimal stub for semantic index UI
+- SemanticPanel: 14 semantic commands, cursor navigation, file indexing
+- Session: %APPDATA%\RawrXD\session.json, tab restore, model path persistence
+- Settings: ZMM-signed config, AVX-512 hardware attestation, WSSR recovery
+- Settings.h: SovereignConfig struct, EditorTheme enum, TabState struct
+- SettingsGUI: Category tree, property panel, search/filter, 5 categories
+- ShortcutEditor: Key capture UI, %APPDATA%\RawrXD\keybindings.json persistence
+- All files: C++20/23, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3090/3159 files (~97.8%)**
+
 
 ## Batch 308 (Completed)
 
@@ -12003,4 +12035,51 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - view/size: Accessor methods with mutex protection
 
 **Total Progress: 2390/3159 files (~75.7%)**
+
+
+
+## Batch 240 (Completed)
+
+**Queue entries 2462-2471 audited.**
+
+### Files Audited
+1. src/runtime_surface/SubprocessMmapBridge.cpp - Subprocess Mmap Bridge
+2. src/sampler.cpp - Sampler
+3. src/sandbox/sandbox.cpp - Sandbox
+4. src/scalar_server.cpp - Scalar Server
+5. src/scalar_server.h - Scalar Server Header
+6. src/script/debug/main_dap_server.cpp - Main DAP Server
+7. src/script/debug/minimal_dap_server.cpp - Minimal DAP Server
+8. src/script/debug/rawrxd_script_dap_adapter.cpp - DAP Adapter
+9. src/script/debug/rawrxd_script_dap_adapter.hpp - DAP Adapter Header
+10. src/security_manager.cpp - Security Manager
+
+### Key Findings
+- SubprocessMmapBridge: Anonymous memory mapping for subprocess communication
+- createReadWriteAnonymous: CreateFileMappingW with INVALID_HANDLE_VALUE
+- duplicateMappingToProcess: DuplicateHandle for cross-process sharing
+- sampler.cpp: Top-K and Top-P sampling implementations
+- sample_top_k: partial_sort for k largest, softmax, discrete_distribution
+- sample_top_p: sort by logit, cumulative probability cutoff
+- sandbox.cpp: Command execution sandbox with allow-list
+- executeCommandWindows/Linux: QProcess-based with 30s timeout
+- scalar_server.cpp: Lightweight inference server for scalar operations
+- TransformerBlockScalar for forward pass
+- JSON request handling: inference, chat, analyze methods
+- main_dap_server.cpp: RawrXD-Script DAP server entry point
+- stdin/stdout JSON-RPC 2.0 communication
+- Content-Length header parsing for DAP protocol
+- minimal_dap_server.cpp: Minimal DAP server for VS Code integration
+- Breakpoint management with ID assignment
+- rawrxd_script_dap_adapter: DAP adapter for MASM interpreter
+- VMDebugState: Running, Paused, Stepping, Breakpoint, Exception, Exited
+- ScriptBreakpoint: id, file, line, bytecodeOffset, verified
+- ScriptStackFrame: id, name, file, line, column, bytecodeOffset, variables
+- DAP handlers: Initialize, Launch, Attach, SetBreakpoints, Continue, StepIn/Out
+- security_manager.cpp: Security manager with crypto utilities
+- bytesToHex, base64Encode, base64Decode helpers
+- BCrypt (Windows CNG) for cryptographic operations
+- Key rotation with 90-day interval
+
+**Total Progress: 2400/3159 files (~76.0%)**
 
