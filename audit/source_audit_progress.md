@@ -2,7 +2,38 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 2810/3159 files (~88.9%)
+Current progress: 2820/3159 files (~89.3%)
+
+## Batch 282 (Completed)
+
+**Queue entries 2811-2820 audited.**
+
+### Files Audited
+1. src/vulkan_compute.h - Vulkan compute engine header
+2. src/win_http_client.cpp - WinHTTP-based HTTP client
+3. src/win32_agent_tools.h - Win32 API bridge for agentic operations
+4. src/win32app/agent_mode_handler.hpp - Agent mode system prompts
+5. src/win32app/AgentChatPane_Dump.hpp - Chat pane UI definitions
+6. src/win32app/agentic_bridge_headless.cpp - Headless AgenticBridge
+7. src/win32app/agentic_mode_switcher.hpp - 5-mode agentic UI (Ask/Plan/Agent/DeepThink/DeepResearch)
+8. src/win32app/AgenticBrowserLayer.cpp - WebView2 host for agentic browsing
+9. src/win32app/AgentModeController.hpp - Unified agent mode state machine
+10. src/win32app/ai_workers_queue.cpp - AI worker thread queue
+
+### Key Findings
+- VulkanCompute header: SPIR-V shader loading, async command buffers, KV cache
+- WinHTTPClient: UTF-8/wide conversion, URL parsing, streaming support
+- Win32AgentTools: ProcessManager, FileSystemTools, RegistryAccess, IPC
+- AgentModeHandler: System prompts for manage_todo_list and runSubagent
+- AgentChatPane: Control IDs, bubble rendering, message flow handlers
+- AgenticBridgeHeadless: _popen command execution for headless builds
+- AgenticModeSwitcher: 5-mode enum with transition validation
+- AgenticBrowserLayer: WebView2 integration with UTF-8/wide helpers
+- AgentModeController: CanTransition() matrix, switchTo(), revert()
+- AIWorkersQueue: std::deque with mutex for thread-safe task queue
+
+**Total Progress: 2820/3159 files (~89.3%)**
+
 
 ## Batch 281 (Completed)
 
@@ -9786,4 +9817,45 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Features: crash recovery, atomic writes (QSaveFile), concurrency control (semaphore)
 
 **Total Progress: 2090/3159 files (~66.2%)**
+
+
+
+## Batch 210 (Completed)
+
+**Queue entries 2102-2111 audited.**
+
+### Files Audited
+1. src/qtapp/file_browser.h - File Browser
+2. src/qtapp/file_manager.h - File Manager
+3. src/qtapp/flash_attention.h - Flash Attention
+4. src/qtapp/gguf_hotpatch_tester.cpp - GGUF Hotpatch Tester
+5. src/qtapp/gguf_loader_noqt.cpp - GGUF Loader (No Qt)
+6. src/qtapp/gguf_loader_noqt.hpp - GGUF Loader Header (No Qt)
+7. src/qtapp/gguf_loader.cpp - GGUF Loader
+8. src/qtapp/gguf_loader.h - GGUF Loader Header
+9. src/qtapp/gguf_loader.hpp - GGUF Loader Qt Wrapper
+10. src/qtapp/gguf_server_hotpatch.cpp - GGUF Server Hotpatch
+
+### Key Findings
+- FileBrowser: Qt tree widget with lazy loading, async directory loading
+- Methods: loadDirectory, loadDrives, ClearLazyLoadingIndicators, StartAsyncDirectoryLoad
+- FileManager: Static utility class for file I/O (thread-safe, stateless)
+- MultiFileSearchResult: file, line, column, lineText, matchedText with isValid() check
+- flash_attention.h: C API for flash attention - flash_attention() and attention_baseline()
+- Parameters: q, k, v tensors, batch_size, seq_len, head_size, num_heads, output
+- gguf_hotpatch_tester.cpp: CLI tool for REAL GPU inference testing (no simulation)
+- TestResult: success, tokens_per_sec, load_time_ms, gpu_enabled, gpu_backend
+- Command-line: --model, --tokens, --prompt with JSON output
+- GGUFLoader (no-Qt): Pure C++ GGUF file loader with std::ifstream
+- GGUF_MAGIC=0x46554747 ('GGUF'), GGUF_VERSION=3
+- TensorMetadata: name, ggmlType, shape, offset, size
+- GGUFLoaderQt: Qt wrapper with QString, QByteArray, QVariant support
+- Methods: inflateWeight, getTokenizerMetadata, tensorNames
+- Quantization detection: hasUnsupportedQuantizationTypes, getUnsupportedQuantizationInfo
+- GGUFServerHotpatch: Server-side request/response hotpatching
+- ServerHotpatch: name, enabled, applicationPoint, transformType
+- HotpatchPoint: PreRequest, PostRequest, PreResponse, PostResponse
+- TransformType: InjectSystemPrompt, ModifyParameters, CacheResponse, etc.
+
+**Total Progress: 2100/3159 files (~66.5%)**
 
