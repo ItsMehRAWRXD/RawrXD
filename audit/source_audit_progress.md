@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3100/3159 files (~98.1%)
+Current progress: 3110/3159 files (~98.4%)
+
+## Batch 311 (Completed)
+
+**Queue entries 3101-3110 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_SQLite3Core.cpp - SQLite3 database integration
+2. src/win32app/Win32IDE_StaticAnalysisPanel.cpp - Static analysis engine UI (Phase 15)
+3. src/win32app/Win32IDE_StreamingUX.cpp - Streaming/model UX (progress, cancellation)
+4. src/win32app/Win32IDE_SubAgent.cpp - SubAgent factory + command handlers (Phase 19B)
+5. src/win32app/Win32IDE_SubAgent.h - SubAgent wrapper header
+6. src/win32app/Win32IDE_SwarmModelSelector.cpp - Swarm model enumeration
+7. src/win32app/Win32IDE_SwarmModelSelector.h - Swarm model selector header
+8. src/win32app/Win32IDE_SwarmPanel.cpp - Swarm IDE integration (Phase 11)
+9. src/win32app/Win32IDE_SyntaxHighlight.cpp - Incremental syntax coloring engine
+10. src/win32app/Win32IDE_TabManager.cpp - Tab management with persistence
+
+### Key Findings
+- SQLite3Core: Persistent storage, WAL mode, prepared statements, settings/telemetry/agent state
+- StaticAnalysisPanel: CFG/SSA analysis, dominator trees, loop detection, DOT/JSON export
+- StreamingUX: Progress bar overlay, cancel button, timer-driven UI updates
+- SubAgent: Agent Memory system, token streaming, terminal kill, split code viewer
+- SubAgent.h: Factory wiring IDELogger + METRICS, subagent_core.h wrapper
+- SwarmModelSelector: RAWRXD_SWARM_MODEL_DIR or %USERPROFILE%\.ollama\models scan
+- SwarmModelSelector.h: enumerateSwarmModelCandidates() API
+- SwarmPanel: SwarmCoordinator/Worker, 24 commands, HTTP endpoints /api/swarm/*
+- SyntaxHighlight: Debounced EN_CHANGE, tokenize → EM_SETCHARFORMAT, 6 languages
+- TabManager: Sovereign tab management, GPU control, persistence, recovery
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3110/3159 files (~98.4%)**
+
 
 ## Batch 310 (Completed)
 
