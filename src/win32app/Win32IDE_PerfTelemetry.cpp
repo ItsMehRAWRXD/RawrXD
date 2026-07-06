@@ -3,7 +3,7 @@
 
 #include <sstream>
 
-void HandlePerfTelemetry(void* idePtr) {
+extern "C" void HandlePerfTelemetry(void* idePtr) {
     Win32IDE* ide = static_cast<Win32IDE*>(idePtr);
     if (!ide) {
         return;

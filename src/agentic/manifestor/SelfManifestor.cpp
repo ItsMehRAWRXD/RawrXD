@@ -44,7 +44,7 @@ bool SelfManifestor::generateWiringDiagram(const std::filesystem::path& outputPa
     wiring["version"] = "1.0";
     wiring["timestamp"] = std::chrono::system_clock::now().time_since_epoch().count();
     
-    json capabilitiesArray = json::array_type();
+    json capabilitiesArray = json::array();
     for (const auto& cap : capabilities_) {
         json capability;
         capability["name"] = cap.name;
@@ -52,13 +52,13 @@ bool SelfManifestor::generateWiringDiagram(const std::filesystem::path& outputPa
         capability["path"] = cap.path.string();
         capability["enabled"] = cap.enabled;
         
-        json dependenciesArray = json::array_type();
+        json dependenciesArray = json::array();
         for (const auto& dep : cap.dependencies) {
             dependenciesArray.push_back(dep);
         }
         capability["dependencies"] = dependenciesArray;
         
-        json metadata = json::object_type();
+        json metadata = json::object();
         for (const auto& item : cap.metadata) {
             metadata[item.first] = item.second;
         }

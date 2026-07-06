@@ -139,6 +139,8 @@ public:
     std::string formatContextForModel() const;
 
     // ----- Goal / Progress -----
+    void setGoal(const std::string& goal) { m_currentGoal = goal; }
+    std::string getGoal() const { return m_currentGoal; }
     void updateProgress(int current, int total);
     float getProgressPercentage() const;
     nlohmann::json getProgressInfo() const;
@@ -147,6 +149,7 @@ public:
     void addConstraint(const std::string& key, const std::string& constraint);
     void removeConstraint(const std::string& key);
     bool validateAgainstConstraints(const nlohmann::json& action) const;
+    nlohmann::json getAllConstraints() const { return m_constraints; }
 
     // ----- Strategy tracking -----
     void recordAppliedStrategy(const std::string& strategy);

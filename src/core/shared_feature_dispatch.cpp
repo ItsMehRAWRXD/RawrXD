@@ -11,72 +11,18 @@
 #include <cstring>
 
 // ============================================================================
-// EXTERN "C" BRIDGE IMPLEMENTATION — DISABLED
+// EXTERN "C" BRIDGE IMPLEMENTATION — FORWARD DECLARATIONS ONLY
 // Canonical definitions live in unified_command_dispatch.cpp.
-// These are kept as reference but guarded to prevent LNK2005 duplicates.
+// These declarations ensure the symbols are visible to other translation units.
 // ============================================================================
 
-#if 0  // Canonical versions in unified_command_dispatch.cpp
+// Forward declarations - implementations are in unified_command_dispatch.cpp
 extern "C" {
-
-int rawrxd_dispatch_feature(const char* featureId, const char* args, void* idePtr) {
-    if (!featureId) return -1;
-    
-    CommandContext ctx{};
-    ctx.rawInput = args ? args : "";
-    ctx.args = args ? args : "";
-    ctx.idePtr = idePtr;
-    ctx.cliStatePtr = nullptr;
-    ctx.commandId = 0;
-    ctx.isGui = (idePtr != nullptr);
-    ctx.isHeadless = false;
-    ctx.outputFn = nullptr;
-    ctx.outputUserData = nullptr;
-    
-    auto result = SharedFeatureRegistry::instance().dispatch(featureId, ctx);
-    return result.success ? 0 : result.errorCode;
-}
-
-int rawrxd_dispatch_command(uint32_t commandId, void* idePtr) {
-    CommandContext ctx{};
-    ctx.rawInput = "";
-    ctx.args = "";
-    ctx.idePtr = idePtr;
-    ctx.cliStatePtr = nullptr;
-    ctx.commandId = commandId;
-    ctx.isGui = true;
-    ctx.isHeadless = false;
-    ctx.outputFn = nullptr;
-    ctx.outputUserData = nullptr;
-    
-    auto result = SharedFeatureRegistry::instance().dispatchByCommandId(commandId, ctx);
-    return result.success ? 1 : 0;
-}
-
-int rawrxd_dispatch_cli(const char* cliCommand, const char* args, void* cliStatePtr) {
-    if (!cliCommand) return -1;
-    
-    CommandContext ctx{};
-    ctx.rawInput = cliCommand;
-    ctx.args = args ? args : "";
-    ctx.idePtr = nullptr;
-    ctx.cliStatePtr = cliStatePtr;
-    ctx.commandId = 0;
-    ctx.isGui = false;
-    ctx.isHeadless = false;
-    ctx.outputFn = nullptr;
-    ctx.outputUserData = nullptr;
-    
-    auto result = SharedFeatureRegistry::instance().dispatchByCli(cliCommand, ctx);
-    return result.success ? 0 : result.errorCode;
-}
-
-int rawrxd_get_feature_count(void) {
-    return static_cast<int>(SharedFeatureRegistry::instance().totalRegistered());
-}
-
+    int rawrxd_dispatch_feature(const char* featureId, const char* args, void* idePtr);
+    int rawrxd_dispatch_command(uint32_t commandId, void* idePtr);
+    int rawrxd_dispatch_cli(const char* cliCommand, const char* args, void* cliStatePtr);
+    int rawrxd_get_feature_count(void);
 } // extern "C"
-#endif  // Canonical versions in unified_command_dispatch.cpp
 
 // ============================================================================
 // STDOUT output callback (for CLI mode)

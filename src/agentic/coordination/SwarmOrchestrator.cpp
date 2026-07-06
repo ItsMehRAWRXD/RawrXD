@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <sstream>
+#include <cctype>
 
 namespace RawrXD {
 
@@ -369,12 +370,295 @@ void SwarmOrchestrator::updateAgentStats(SwarmAgent* agent, const SwarmResult& r
 
 // Stub for remaining interface methods required effectively
 std::expected<void, SwarmError> SwarmOrchestrator::submitTask(std::unique_ptr<SwarmTask> task) {
-    // Add to queue
+    if (!task) {
+        return std::unexpected(SwarmError::InvalidTask);
+    }
+
+    if (task->description.empty()) {
+        return std::unexpected(SwarmError::InvalidTask);
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+
+        if (task->id.empty()) {
+            task->id = generateTaskId();
+        }
+        task->createdAt = std::chrono::steady_clock::now();
+        task->isCompleted = false;
+        task->isCancelled = false;
+        task->progress = 0.0f;
+
+        // Keep an active snapshot for status APIs while queue owns execution payload.
+        auto activeCopy = std::make_unique<SwarmTask>();
+        activeCopy->id = task->id;
+        activeCopy->description = task->description;
+        activeCopy->subtasks = task->subtasks;
+        activeCopy->context = task->context;
+        activeCopy->createdAt = task->createdAt;
+        activeCopy->timeout = task->timeout;
+        activeCopy->requiredConfidence = task->requiredConfidence;
+        activeCopy->constraints = task->constraints;
+        activeCopy->dependencies = task->dependencies;
+        activeCopy->priority = task->priority;
+        m_activeTasks[activeCopy->id] = std::move(activeCopy);
+
+        m_taskQueue.push(std::move(task));
+    }
+
+    m_taskCondition.notify_one();
     return {};
 }
 
 std::expected<void, SwarmError> SwarmOrchestrator::removeAgent(const std::string& agentId) {
+    if (agentId.empty()) {
+        return std::unexpected(SwarmError::InvalidAgent);
+    }
+
+    std::lock_guard<std::mutex> lock(m_agentMutex);
+
+    auto it = std::find_if(
+        m_agents.begin(),
+        m_agents.end(),
+        [&agentId](const std::unique_ptr<SwarmAgent>& agent) {
+            return agent && agent->id == agentId;
+        });
+
+    if (it == m_agents.end()) {
+        return std::unexpected(SwarmError::InvalidAgent);
+    }
+
+    if ((*it)->isBusy.load()) {
+        return std::unexpected(SwarmError::ResourceExhausted);
+    }
+
+    m_agents.erase(it);
     return {};
+}
+
+std::expected<void, SwarmError> SwarmOrchestrator::updateAgentConfidence(
+    const std::string& agentId,
+    float confidence
+) {
+    if (agentId.empty()) {
+        return std::unexpected(SwarmError::InvalidAgent);
+    }
+    const float clamped = std::clamp(confidence, 0.0f, 1.0f);
+
+    std::lock_guard<std::mutex> lock(m_agentMutex);
+    for (const auto& agent : m_agents) {
+        if (agent && agent->id == agentId) {
+            agent->confidence.store(clamped);
+            return {};
+        }
+    }
+    return std::unexpected(SwarmError::InvalidAgent);
+}
+
+std::expected<void, SwarmError> SwarmOrchestrator::cancelTask(const std::string& taskId) {
+    if (taskId.empty()) {
+        return std::unexpected(SwarmError::InvalidTask);
+    }
+
+    std::lock_guard<std::mutex> lock(m_taskMutex);
+    auto it = m_activeTasks.find(taskId);
+    if (it == m_activeTasks.end()) {
+        return std::unexpected(SwarmError::InvalidTask);
+    }
+
+    it->second->isCancelled = true;
+    it->second->isCompleted = true;
+    it->second->progress = 1.0f;
+    m_completedTasks[taskId] = std::move(it->second);
+    m_activeTasks.erase(it);
+    return {};
+}
+
+std::expected<SwarmTask*, SwarmError> SwarmOrchestrator::getTask(const std::string& taskId) {
+    std::lock_guard<std::mutex> lock(m_taskMutex);
+    if (auto it = m_activeTasks.find(taskId); it != m_activeTasks.end()) {
+        return it->second.get();
+    }
+    if (auto it = m_completedTasks.find(taskId); it != m_completedTasks.end()) {
+        return it->second.get();
+    }
+    return std::unexpected(SwarmError::InvalidTask);
+}
+
+std::vector<SwarmTask*> SwarmOrchestrator::getActiveTasks() const {
+    std::lock_guard<std::mutex> lock(m_taskMutex);
+    std::vector<SwarmTask*> out;
+    out.reserve(m_activeTasks.size());
+    for (const auto& [_, task] : m_activeTasks) {
+        out.push_back(task.get());
+    }
+    return out;
+}
+
+std::vector<SwarmTask*> SwarmOrchestrator::getCompletedTasks() const {
+    std::lock_guard<std::mutex> lock(m_taskMutex);
+    std::vector<SwarmTask*> out;
+    out.reserve(m_completedTasks.size());
+    for (const auto& [_, task] : m_completedTasks) {
+        out.push_back(task.get());
+    }
+    return out;
+}
+
+std::expected<void, SwarmError> SwarmOrchestrator::broadcastMessage(
+    const std::string& message,
+    const std::vector<SwarmAgent*>& agents
+) {
+    if (message.empty()) {
+        return std::unexpected(SwarmError::CommunicationFailed);
+    }
+    if (agents.empty()) {
+        return std::unexpected(SwarmError::NoAvailableAgents);
+    }
+
+    const auto now = std::chrono::steady_clock::now();
+    for (SwarmAgent* agent : agents) {
+        if (!agent) {
+            continue;
+        }
+        agent->lastActive = now;
+    }
+    return {};
+}
+
+std::expected<std::string, SwarmError> SwarmOrchestrator::sendMessage(
+    SwarmAgent* from,
+    SwarmAgent* to,
+    const std::string& message
+) {
+    if (!from || !to || message.empty()) {
+        return std::unexpected(SwarmError::CommunicationFailed);
+    }
+
+    from->lastActive = std::chrono::steady_clock::now();
+    to->lastActive = from->lastActive;
+
+    std::ostringstream ack;
+    ack << "msg:" << from->id << "->" << to->id << " len=" << message.size();
+    return ack.str();
+}
+
+std::expected<float, SwarmError> SwarmOrchestrator::assessResultQuality(
+    const SwarmResult& result,
+    const SwarmTask& task
+) {
+    const float q = calculateResultQuality(result, task);
+    return std::clamp(q, 0.0f, 1.0f);
+}
+
+nlohmann::json SwarmOrchestrator::getStatus() const {
+    nlohmann::json j;
+    j["initialized"] = m_initialized.load();
+    j["running"] = m_running.load();
+    j["agent_count"] = getAgentCount();
+    j["active_task_count"] = getActiveTaskCount();
+    j["completed_task_count"] = getCompletedTaskCount();
+    j["avg_agent_confidence"] = getAverageAgentConfidence();
+    j["avg_success_rate"] = getAverageSuccessRate();
+    j["required_confidence"] = m_requiredConfidence;
+    return j;
+}
+
+size_t SwarmOrchestrator::getActiveTaskCount() const {
+    std::lock_guard<std::mutex> lock(m_taskMutex);
+    return m_activeTasks.size();
+}
+
+size_t SwarmOrchestrator::getCompletedTaskCount() const {
+    std::lock_guard<std::mutex> lock(m_taskMutex);
+    return m_completedTasks.size();
+}
+
+float SwarmOrchestrator::getAverageAgentConfidence() const {
+    std::lock_guard<std::mutex> lock(m_agentMutex);
+    if (m_agents.empty()) {
+        return 0.0f;
+    }
+    float sum = 0.0f;
+    for (const auto& agent : m_agents) {
+        sum += agent ? agent->confidence.load() : 0.0f;
+    }
+    return sum / static_cast<float>(m_agents.size());
+}
+
+float SwarmOrchestrator::getAverageSuccessRate() const {
+    std::lock_guard<std::mutex> lock(m_agentMutex);
+    if (m_agents.empty()) {
+        return 0.0f;
+    }
+    float sum = 0.0f;
+    for (const auto& agent : m_agents) {
+        sum += agent ? agent->successRate.load() : 0.0f;
+    }
+    return sum / static_cast<float>(m_agents.size());
+}
+
+float SwarmOrchestrator::calculateResultQuality(
+    const SwarmResult& result,
+    const SwarmTask& task
+) {
+    const float confidence = std::clamp(result.confidence, 0.0f, 1.0f);
+    const float required = std::clamp(task.requiredConfidence, 0.0f, 1.0f);
+    const float confidenceScore = required > 0.0f ? std::clamp(confidence / required, 0.0f, 1.0f) : confidence;
+    const float successScore = result.success ? 1.0f : 0.0f;
+    const float errorPenalty = result.errors.empty() ? 0.0f : 0.15f;
+    return std::clamp(0.6f * confidenceScore + 0.4f * successScore - errorPenalty, 0.0f, 1.0f);
+}
+
+float SwarmOrchestrator::calculateAgentConfidence(
+    const SwarmAgent* agent,
+    const SwarmTask&,
+    const SwarmResult& result
+) {
+    if (!agent) {
+        return 0.0f;
+    }
+    const float base = std::clamp(agent->confidence.load(), 0.0f, 1.0f);
+    const float resultConfidence = std::clamp(result.confidence, 0.0f, 1.0f);
+    return std::clamp((base * 0.7f) + (resultConfidence * 0.3f), 0.0f, 1.0f);
+}
+
+AgentSpecialization SwarmOrchestrator::stringToSpecialization(const std::string& str) {
+    std::string lower = str;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    if (lower == "coding") return AgentSpecialization::Coding;
+    if (lower == "debugging") return AgentSpecialization::Debugging;
+    if (lower == "optimization") return AgentSpecialization::Optimization;
+    if (lower == "analysis") return AgentSpecialization::Analysis;
+    if (lower == "testing") return AgentSpecialization::Testing;
+    if (lower == "documentation") return AgentSpecialization::Documentation;
+    if (lower == "security") return AgentSpecialization::Security;
+    if (lower == "performance") return AgentSpecialization::Performance;
+    if (lower == "refactoring") return AgentSpecialization::Refactoring;
+    if (lower == "architecture") return AgentSpecialization::Architecture;
+    return AgentSpecialization::Analysis;
+}
+
+std::string SwarmOrchestrator::specializationToString(AgentSpecialization spec) {
+    switch (spec) {
+        case AgentSpecialization::Coding: return "Coding";
+        case AgentSpecialization::Debugging: return "Debugging";
+        case AgentSpecialization::Optimization: return "Optimization";
+        case AgentSpecialization::Analysis: return "Analysis";
+        case AgentSpecialization::Testing: return "Testing";
+        case AgentSpecialization::Documentation: return "Documentation";
+        case AgentSpecialization::Security: return "Security";
+        case AgentSpecialization::Performance: return "Performance";
+        case AgentSpecialization::Refactoring: return "Refactoring";
+        case AgentSpecialization::Architecture: return "Architecture";
+        default: return "Unknown";
+    }
+}
+
+void SwarmOrchestrator::logSwarmOperation(const std::string& operation, const std::string& details) {
+    spdlog::info("[SwarmOrchestrator] {} {}", operation, details);
 }
 
 } // namespace RawrXD

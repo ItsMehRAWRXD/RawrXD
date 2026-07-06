@@ -28,8 +28,11 @@ std::vector<std::string> DependencyGraph::resolveOrder() const {
         if (visited[node]) return;
         visited[node] = true;
         
-        for (const auto& dep : graph_.at(node)) {
-            dfs(dep);
+        auto it = graph_.find(node);
+        if (it != graph_.end()) {
+            for (const auto& dep : it->second) {
+                dfs(dep);
+            }
         }
         
         order.push_back(node);
@@ -41,7 +44,6 @@ std::vector<std::string> DependencyGraph::resolveOrder() const {
         }
     }
     
-    std::reverse(order.begin(), order.end());
     return order;
 }
 
@@ -117,7 +119,7 @@ void FeatureFlags::loadFromFile(const std::string& configPath) {
 
 void FeatureFlags::saveToFile(const std::string& configPath) const {
     json config;
-    config["features"] = json::object_type();
+    config["features"] = json::object();
     
     for (const auto& [key, value] : flags_) {
         config["features"][key] = value;
@@ -170,6 +172,11 @@ ICapability* CapabilityRouter::getCapability(const std::string& name) {
 }
 
 bool CapabilityRouter::initializeAll() {
+    if (registrations_.empty()) {
+        initializedCount_ = 0;
+        return true;
+    }
+
     auto order = dependencyGraph_.resolveOrder();
     if (order.empty()) {
         return false; // Cycle detected or empty graph

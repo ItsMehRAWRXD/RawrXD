@@ -808,20 +808,21 @@ void Win32IDE::createExplorerView(HWND hwndParent)
         return;
     }
 
-    // Toolbar buttons
+    // Toolbar buttons - proper widths to display full text
     const struct
     {
         int id;
         const char* text;
         int x;
-    } buttons[] = {{IDC_EXPLORER_NEW_FILE, "New", 5},
-                   {IDC_EXPLORER_NEW_FOLDER, "Folder", 50},
-                   {IDC_EXPLORER_REFRESH, "Refresh", 105},
-                   {IDC_EXPLORER_COLLAPSE, "Collapse", 165}};
+        int width;
+    } buttons[] = {{IDC_EXPLORER_NEW_FILE, "New File", 5, 75},
+                   {IDC_EXPLORER_NEW_FOLDER, "New Folder", 85, 85},
+                   {IDC_EXPLORER_REFRESH, "Refresh", 175, 65},
+                   {IDC_EXPLORER_COLLAPSE, "Collapse", 245, 70}};
 
     for (const auto& btn : buttons)
     {
-        CreateWindowExA(0, "BUTTON", btn.text, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, btn.x, 3, 45, 24,
+        CreateWindowExA(0, "BUTTON", btn.text, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, btn.x, 3, btn.width, 24,
                         m_hwndExplorerToolbar, (HMENU)(INT_PTR)btn.id, m_hInstance, nullptr);
     }
 

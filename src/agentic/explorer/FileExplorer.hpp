@@ -4,6 +4,7 @@
 #include <shlwapi.h>
 #include <shellapi.h>
 #include <string>
+#include <cctype>
 #include <vector>
 #include <unordered_map>
 #include <functional>

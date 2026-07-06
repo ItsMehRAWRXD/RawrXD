@@ -1,5 +1,6 @@
 #include "RawrXD_AgentLoop.h"
 #include "../IDELogger.h"
+#include <nlohmann/json.hpp>
 
 #include <chrono>
 

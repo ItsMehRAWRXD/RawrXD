@@ -1,0 +1,46 @@
+smoke_core 3 0.00400297
+test_ai_completions 0 0
+test_llm_connectivity 0 0
+test_tool_registry 0 0
+test_voice_processor 0 0
+test_zero_retention_manager 0 0
+test_gui_components 0 0
+test_semantic_diff_analyzer 0 0
+test_ai_merge_resolver 0 0
+test_sandboxed_terminal 0 0
+test_agentic_file_operations 0 0
+model_registry_test 0 0
+test_gguf_integration 0 0
+test_swarm_scheduler_pin 0 0
+test_swarm_expert_heatmap_stress 0 0
+test_moe_mixture_reference 0 0
+test_moe_down_project_policy 0 0
+test_moe_plan_row_mixture_pack_cache 0 0
+test_basic_profiler 0 0
+test_batch3_profiler_smoke 0 0
+test_production_regression 0 0
+test_instructions_provider 0 0
+test_model_loader_streamer_smoke 0 0
+---
+test_ai_completions
+test_llm_connectivity
+test_tool_registry
+test_voice_processor
+test_zero_retention_manager
+test_gui_components
+test_semantic_diff_analyzer
+test_ai_merge_resolver
+test_sandboxed_terminal
+test_agentic_file_operations
+model_registry_test
+test_gguf_integration
+test_swarm_scheduler_pin
+test_swarm_expert_heatmap_stress
+test_moe_mixture_reference
+test_moe_down_project_policy
+test_moe_plan_row_mixture_pack_cache
+test_basic_profiler
+test_batch3_profiler_smoke
+test_instructions_provider
+test_model_loader_streamer_smoke
+test_production_regression

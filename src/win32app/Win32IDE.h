@@ -98,6 +98,9 @@ using json = nlohmann::json;
 
 #include "Win32IDE_Fwd.h"
 // Tier 3: File Watcher — full type needed for unique_ptr destructor
+
+// Global trace function for debugging (defined in Win32IDE_Core.cpp)
+void fileTrace(const char* msg);
 #include "IocpFileWatcher.h"
 
 #include "../../include/agentic/agentic_composer_ux.h"
@@ -2264,6 +2267,14 @@ class Win32IDE
     void HandleCopilotClear();
     void HandleCopilotStreamUpdate(const char* token, size_t length = 0);
     void populateModelSelector();
+    
+    // Ollama Chat Integration (Win32IDE_ChatPanel_Ollama.cpp)
+    void fetchOllamaModelsAsync();
+    void onOllamaModelsUpdated(std::vector<std::string>* models);
+    void sendChatMessageToOllama(const std::string& message, 
+                                   std::function<void(const std::string&, bool)> callback);
+    void HandleCopilotSend_Ollama();
+    void initializeChatPanelOllama();
     std::vector<std::string> getModelsFromDirectory(const std::string& directory);
     std::string makeHttpRequest(const std::string& url, const std::string& method, const std::string& body,
                                 const std::string& contentType);

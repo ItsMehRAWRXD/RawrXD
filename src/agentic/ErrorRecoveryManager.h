@@ -37,7 +37,7 @@ namespace RawrXD::Agentic {
 
         void recordFailure(const std::string& operation);
         void recordSuccess(const std::string& operation);
-        bool isCircuitOpen(const std::string& operation) const;
+        bool isCircuitOpen(const std::string& operation);
 
     private:
         struct CircuitState {

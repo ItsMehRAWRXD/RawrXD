@@ -10,6 +10,7 @@
 
 #include "ToolRegistry.h"
 #include <cstring>
+#include <cstdio>
 #include <unordered_map>
 
 namespace RawrXD::Agentic {

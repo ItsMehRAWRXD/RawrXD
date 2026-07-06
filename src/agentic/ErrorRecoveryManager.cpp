@@ -29,12 +29,12 @@ void ErrorRecoveryManager::recordSuccess(const std::string& operation) {
     state.open = false;
 }
 
-bool ErrorRecoveryManager::isCircuitOpen(const std::string& operation) const {
+bool ErrorRecoveryManager::isCircuitOpen(const std::string& operation) {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = circuitStates_.find(operation);
     if (it == circuitStates_.end()) return false;
 
-    const auto& state = it->second;
+    auto& state = it->second;
     if (!state.open) return false;
 
     // Check if circuit should reset
@@ -43,8 +43,8 @@ bool ErrorRecoveryManager::isCircuitOpen(const std::string& operation) const {
         now - state.lastFailure).count();
 
     if (elapsed > 60000) { // Default timeout
-        const_cast<CircuitState&>(state).open = false;
-        const_cast<CircuitState&>(state).failureCount = 0;
+        state.open = false;
+        state.failureCount = 0;
         return false;
     }
 

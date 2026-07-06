@@ -1,0 +1,14 @@
+╔══════════════════════════════════════════╗
+║  RawrXD OpenAI-Compatible Server          ║
+║  http://127.0.0.1:8080                            ║
+╚══════════════════════════════════════════╝
+[Server] Connected to RawrXD engine via shared memory ✓
+[Server] Listening on http://127.0.0.1:8080
+[Server] Endpoints:
+  GET  /v1/models           — List models
+  POST /v1/completions       — Text/FIM completion
+  POST /v1/chat/completions  — Chat completion
+  GET  /health               — Health check
+[Server] Ready! Connect your editor to this endpoint.
+
+^C

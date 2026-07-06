@@ -496,11 +496,23 @@ void AI_ShutdownEngine() {
 
 // Launch a mock AI server for testing (returns "hello world")
 HANDLE AI_StartMockServer() {
-    // This would start a local HTTP server on localhost:8000
-    // For production, use real llama.cpp server or cloud API
+    // Production implementation: Connect to Ollama server
+    // Ollama runs on localhost:11434 by default
     
-    // Mock implementation: would spawn a thread running simple HTTP server
-    // For now, this is a placeholder
+    // Test if Ollama is available
+    HINTERNET hInternet = InternetOpenA("RawrXD-AI/1.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    if (!hInternet) return NULL;
+    
+    HINTERNET hUrl = InternetOpenUrlA(hInternet, "http://localhost:11434/api/tags", NULL, 0,
+                                      INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+    if (hUrl) {
+        // Ollama is running - return a valid handle
+        InternetCloseHandle(hUrl);
+        InternetCloseHandle(hInternet);
+        return (HANDLE)1; // Return non-NULL to indicate success
+    }
+    
+    InternetCloseHandle(hInternet);
     return NULL;
 }
 

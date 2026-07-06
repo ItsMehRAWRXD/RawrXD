@@ -71,9 +71,12 @@ std::string ImpactReport::toSummary() const {
     static const std::array<const char*, 6> severity_names = {
         "None", "Trivial", "Minor", "Moderate", "Major", "Critical"
     };
+    const size_t severity_index = std::min(
+        static_cast<size_t>(std::max(0, static_cast<int>(overall_severity))),
+        severity_names.size() - 1);
     
     ss << "=== CHANGE IMPACT REPORT [" << report_id << "] ===\n";
-    ss << "Severity: " << severity_names[static_cast<int>(overall_severity)] << "\n";
+    ss << "Severity: " << severity_names[severity_index] << "\n";
     ss << "Risk Score: " << (risk_score * 100.0f) << "%\n";
     ss << "Changed Files: " << changed_files.size() << "\n";
     ss << "Total Affected: " << total_files_affected << "\n";

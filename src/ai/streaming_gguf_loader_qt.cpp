@@ -58,19 +58,19 @@ bool GGUFMetadataValue::AsBool() const {
 }
 
 // StreamingGGUFLoaderQt implementation
-StreamingGGUFLoader//StreamingGGUFLoaderQt() {
+StreamingGGUFLoader::StreamingGGUFLoaderQt() {
 }
 
-StreamingGGUFLoader//~StreamingGGUFLoaderQt() {
+StreamingGGUFLoader::~StreamingGGUFLoaderQt() {
     close();
 }
 
-void StreamingGGUFLoader//setError(const std::string& error) {
+void StreamingGGUFLoader::setError(const std::string& error) {
     lastError = error;
     
 }
 
-bool StreamingGGUFLoader//loadModel(const std::string& filePath) {
+bool StreamingGGUFLoader::loadModel(const std::string& filePath) {
 
 
     // Memory map the file
@@ -107,7 +107,7 @@ bool StreamingGGUFLoader//loadModel(const std::string& filePath) {
     return true;
 }
 
-void StreamingGGUFLoader//close() {
+void StreamingGGUFLoader::close() {
     mappedFile.Close();
     metadata.clear();
     tensors.clear();
@@ -116,7 +116,7 @@ void StreamingGGUFLoader//close() {
     currentFileOffset = 0;
 }
 
-bool StreamingGGUFLoader//parseHeader() {
+bool StreamingGGUFLoader::parseHeader() {
     // Read GGUF header (20 bytes total for v3)
     if (!readValue(header.magic, currentFileOffset)) {
         setError("Failed to read magic");
@@ -160,7 +160,7 @@ bool StreamingGGUFLoader//parseHeader() {
     return true;
 }
 
-bool StreamingGGUFLoader//readString(std::string& str, size_t offset, size_t& newOffset) {
+bool StreamingGGUFLoader::readString(std::string& str, size_t offset, size_t& newOffset) {
     // Read string length (uint64_t in GGUF v3)
     uint64_t length;
     if (!readValue(length, offset)) {
@@ -193,7 +193,7 @@ bool StreamingGGUFLoader//readString(std::string& str, size_t offset, size_t& ne
     return true;
 }
 
-bool StreamingGGUFLoader//parseMetadata() {
+bool StreamingGGUFLoader::parseMetadata() {
 
 
     for (uint64_t i = 0; i < header.metadata_count; ++i) {
@@ -407,7 +407,7 @@ bool StreamingGGUFLoader//parseMetadata() {
     return true;
 }
 
-bool StreamingGGUFLoader//parseTensorInfo() {
+bool StreamingGGUFLoader::parseTensorInfo() {
 
 
     tensors.reserve(header.tensor_count);
@@ -475,14 +475,14 @@ bool StreamingGGUFLoader//parseTensorInfo() {
     return true;
 }
 
-void StreamingGGUFLoader//buildTensorIndex() {
+void StreamingGGUFLoader::buildTensorIndex() {
     tensorNameMap.clear();
     for (size_t i = 0; i < tensors.size(); ++i) {
         tensorNameMap[tensors[i].name] = i;
     }
 }
 
-size_t StreamingGGUFLoader//getTensorDataSize(GGMLType type, const std::vector<uint64_t>& shape) const {
+size_t StreamingGGUFLoader::getTensorDataSize(GGMLType type, const std::vector<uint64_t>& shape) const {
     // Calculate total elements
     size_t elements = 1;
     for (uint64_t dim : shape) {
@@ -495,7 +495,7 @@ size_t StreamingGGUFLoader//getTensorDataSize(GGMLType type, const std::vector<u
     return elements * typeSize;
 }
 
-size_t StreamingGGUFLoader//getTypeSize(GGMLType type) const {
+size_t StreamingGGUFLoader::getTypeSize(GGMLType type) const {
     switch (type) {
         case GGMLType::F32: return 4;
         case GGMLType::F16: return 2;
@@ -514,7 +514,7 @@ size_t StreamingGGUFLoader//getTypeSize(GGMLType type) const {
     }
 }
 
-std::vector<uint8_t> StreamingGGUFLoader//getTensorData(const std::string& tensorName) {
+std::vector<uint8_t> StreamingGGUFLoader::getTensorData(const std::string& tensorName) {
     auto it = tensorNameMap.find(tensorName);
     if (it == tensorNameMap.end()) {
         setError("Tensor not found: " + tensorName);
@@ -523,7 +523,7 @@ std::vector<uint8_t> StreamingGGUFLoader//getTensorData(const std::string& tenso
     return getTensorData(it->second);
 }
 
-std::vector<uint8_t> StreamingGGUFLoader//getTensorData(size_t tensorIndex) {
+std::vector<uint8_t> StreamingGGUFLoader::getTensorData(size_t tensorIndex) {
     if (tensorIndex >= tensors.size()) {
         setError("Tensor index out of range: " + std::to_string(tensorIndex));
         return {};
@@ -545,7 +545,7 @@ std::vector<uint8_t> StreamingGGUFLoader//getTensorData(size_t tensorIndex) {
     return data;
 }
 
-std::vector<std::vector<uint8_t>> StreamingGGUFLoader//getMultipleTensors(
+std::vector<std::vector<uint8_t>> StreamingGGUFLoader::getMultipleTensors(
     const std::vector<std::string>& tensorNames) {
     std::vector<std::vector<uint8_t>> results;
     results.reserve(tensorNames.size());
@@ -557,11 +557,11 @@ std::vector<std::vector<uint8_t>> StreamingGGUFLoader//getMultipleTensors(
     return results;
 }
 
-bool StreamingGGUFLoader//hasMetadata(const std::string& key) const {
+bool StreamingGGUFLoader::hasMetadata(const std::string& key) const {
     return metadata.find(key) != metadata.end();
 }
 
-GGUFMetadataValue StreamingGGUFLoader//getMetadata(const std::string& key) const {
+GGUFMetadataValue StreamingGGUFLoader::getMetadata(const std::string& key) const {
     auto it = metadata.find(key);
     if (it != metadata.end()) {
         return it->second;
@@ -569,7 +569,7 @@ GGUFMetadataValue StreamingGGUFLoader//getMetadata(const std::string& key) const
     return GGUFMetadataValue();
 }
 
-std::vector<std::string> StreamingGGUFLoader//getAllMetadataKeys() const {
+std::vector<std::string> StreamingGGUFLoader::getAllMetadataKeys() const {
     std::vector<std::string> keys;
     keys.reserve(metadata.size());
     for (const auto& pair : metadata) {
@@ -578,21 +578,21 @@ std::vector<std::string> StreamingGGUFLoader//getAllMetadataKeys() const {
     return keys;
 }
 
-std::string StreamingGGUFLoader//getModelName() const {
+std::string StreamingGGUFLoader::getModelName() const {
     if (hasMetadata("general.name")) {
         return getMetadata("general.name").AsString();
     }
     return "Unknown";
 }
 
-std::string StreamingGGUFLoader//getModelArchitecture() const {
+std::string StreamingGGUFLoader::getModelArchitecture() const {
     if (hasMetadata("general.architecture")) {
         return getMetadata("general.architecture").AsString();
     }
     return "Unknown";
 }
 
-uint64_t StreamingGGUFLoader//getModelContextLength() const {
+uint64_t StreamingGGUFLoader::getModelContextLength() const {
     if (hasMetadata("llama.context_length")) {
         return getMetadata("llama.context_length").AsUInt64();
     }
@@ -602,7 +602,7 @@ uint64_t StreamingGGUFLoader//getModelContextLength() const {
     return 0;
 }
 
-StreamingGGUFLoader//MemoryStats StreamingGGUFLoader//getMemoryStats() const {
+StreamingGGUFLoader::MemoryStats StreamingGGUFLoader::getMemoryStats() const {
     MemoryStats stats;
     stats.totalFileSize = mappedFile.GetFileSize();
     stats.loadedTensorsCount = 0;

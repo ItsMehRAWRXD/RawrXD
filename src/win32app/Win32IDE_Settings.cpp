@@ -120,9 +120,13 @@ bool VerifyZMMSignature(const SovereignConfig& config)
 // WSSR Config Recovery (<50ms sovereign restoration)
 void WSSR_ConfigRecovery(SovereignConfig& config)
 {
+    OutputDebugStringA("[WSSR_ConfigRecovery] ENTER\n");
+    fileTrace("[WSSR_ConfigRecovery] ENTER");
     // Reset to sovereign defaults on corruption
     config = SovereignConfig();
     config.zmm_signature = GenerateZMMSignature(config);
+    OutputDebugStringA("[WSSR_ConfigRecovery] DONE\n");
+    fileTrace("[WSSR_ConfigRecovery] DONE");
     // Log recovery event (future: integrate with Vector 11 telemetry)
 }
 
@@ -221,6 +225,8 @@ void from_json(const nlohmann::json& j, SovereignConfig& config)
 // Persistence with Sovereign Integrity
 bool SaveSettingsSovereign(const SovereignConfig& config)
 {
+    OutputDebugStringA("[SaveSettingsSovereign] ENTER\n");
+    fileTrace("[SaveSettingsSovereign] ENTER");
     try
     {
         // Serialize to JSON
@@ -263,39 +269,91 @@ bool SaveSettingsSovereign(const SovereignConfig& config)
 
 bool LoadSettingsSovereign(SovereignConfig& config)
 {
+    OutputDebugStringA("[LoadSettingsSovereign] ENTER\n");
+    fileTrace("[LoadSettingsSovereign] ENTER");
     try
     {
-        if (!std::filesystem::exists(SETTINGS_FILE))
+        OutputDebugStringA("[LoadSettingsSovereign] Checking if settings file exists...\n");
+        fileTrace("[LoadSettingsSovereign] Checking if settings file exists...");
+        OutputDebugStringA("[LoadSettingsSovereign] About to call exists()...\n");
+        fileTrace("[LoadSettingsSovereign] About to call exists()...");
+        bool fileExists = std::filesystem::exists(SETTINGS_FILE);
+        OutputDebugStringA("[LoadSettingsSovereign] exists() returned\n");
+        fileTrace("[LoadSettingsSovereign] exists() returned");
+        OutputDebugStringA("[LoadSettingsSovereign] fileExists = ");
+        fileTrace(fileExists ? "[LoadSettingsSovereign] fileExists = true" : "[LoadSettingsSovereign] fileExists = false");
+        if (!fileExists)
         {
+            OutputDebugStringA("[LoadSettingsSovereign] Settings file not found, initializing defaults\n");
+            fileTrace("[LoadSettingsSovereign] Settings file not found, initializing defaults");
             // First run: initialize sovereign defaults
             WSSR_ConfigRecovery(config);
             return SaveSettingsSovereign(config);
         }
+        OutputDebugStringA("[LoadSettingsSovereign] Settings file exists, reading...\n");
+        fileTrace("[LoadSettingsSovereign] Settings file exists, reading...");
 
         // Read raw bytes
+        OutputDebugStringA("[LoadSettingsSovereign] Opening file...\n");
+        fileTrace("[LoadSettingsSovereign] Opening file...");
         std::ifstream file(SETTINGS_FILE, std::ios::binary);
+        OutputDebugStringA("[LoadSettingsSovereign] File opened\n");
+        fileTrace("[LoadSettingsSovereign] File opened");
         if (!file)
+        {
+            OutputDebugStringA("[LoadSettingsSovereign] File open failed\n");
+            fileTrace("[LoadSettingsSovereign] File open failed");
             return false;
+        }
 
-        std::vector<char> buffer(std::filesystem::file_size(SETTINGS_FILE));
+        OutputDebugStringA("[LoadSettingsSovereign] Getting file size...\n");
+        fileTrace("[LoadSettingsSovereign] Getting file size...");
+        auto fileSize = std::filesystem::file_size(SETTINGS_FILE);
+        OutputDebugStringA("[LoadSettingsSovereign] File size obtained\n");
+        fileTrace("[LoadSettingsSovereign] File size obtained");
+        std::vector<char> buffer(fileSize);
+        OutputDebugStringA("[LoadSettingsSovereign] Buffer allocated\n");
+        fileTrace("[LoadSettingsSovereign] Buffer allocated");
         file.read(buffer.data(), buffer.size());
+        OutputDebugStringA("[LoadSettingsSovereign] File read complete\n");
+        fileTrace("[LoadSettingsSovereign] File read complete");
 
         // Extract ZMM signature (first 64 bytes)
+        OutputDebugStringA("[LoadSettingsSovereign] Extracting ZMM signature...\n");
+        fileTrace("[LoadSettingsSovereign] Extracting ZMM signature...");
         memcpy(&config.zmm_signature, buffer.data(), 64);
+        OutputDebugStringA("[LoadSettingsSovereign] ZMM signature extracted\n");
+        fileTrace("[LoadSettingsSovereign] ZMM signature extracted");
 
         // Parse JSON payload
+        OutputDebugStringA("[LoadSettingsSovereign] Creating JSON string...\n");
+        fileTrace("[LoadSettingsSovereign] Creating JSON string...");
         std::string json_str(buffer.data() + 64, buffer.size() - 64);
+        OutputDebugStringA("[LoadSettingsSovereign] JSON string created, parsing...\n");
+        fileTrace("[LoadSettingsSovereign] JSON string created, parsing...");
         nlohmann::json j = nlohmann::json::parse(json_str);
+        OutputDebugStringA("[LoadSettingsSovereign] JSON parsed, calling from_json...\n");
+        fileTrace("[LoadSettingsSovereign] JSON parsed, calling from_json...");
         from_json(j, config);
+        OutputDebugStringA("[LoadSettingsSovereign] from_json complete\n");
+        fileTrace("[LoadSettingsSovereign] from_json complete");
 
         // Verify ZMM signature (Vector 4 attestation)
+        OutputDebugStringA("[LoadSettingsSovereign] Verifying ZMM signature...\n");
+        fileTrace("[LoadSettingsSovereign] Verifying ZMM signature...");
         if (!VerifyZMMSignature(config))
         {
+            OutputDebugStringA("[LoadSettingsSovereign] ZMM signature verification FAILED\n");
+            fileTrace("[LoadSettingsSovereign] ZMM signature verification FAILED");
             // Tamper detected: WSSR recovery
             WSSR_ConfigRecovery(config);
             return SaveSettingsSovereign(config);
         }
+        OutputDebugStringA("[LoadSettingsSovereign] ZMM signature verified OK\n");
+        fileTrace("[LoadSettingsSovereign] ZMM signature verified OK");
 
+        OutputDebugStringA("[LoadSettingsSovereign] Returning true\n");
+        fileTrace("[LoadSettingsSovereign] Returning true");
         return true;
     }
     catch (const std::exception&)

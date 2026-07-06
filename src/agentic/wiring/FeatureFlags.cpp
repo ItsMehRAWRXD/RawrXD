@@ -10,10 +10,18 @@ FeatureFlags& FeatureFlags::instance() {
 }
 
 void FeatureFlags::set(const std::string& name, bool value) {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    bool oldValue = m_boolFlags[name].load();
-    m_boolFlags[name].store(value);
-    notifyCallbacks(name, oldValue, value);
+    bool oldValue = false;
+    bool changed = false;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        oldValue = m_boolFlags[name].load();
+        m_boolFlags[name].store(value);
+        changed = (oldValue != value);
+    }
+
+    if (changed) {
+        notifyCallbacks(name, oldValue, value);
+    }
 }
 
 bool FeatureFlags::get(const std::string& name, bool defaultValue) const {
@@ -114,10 +122,14 @@ bool FeatureFlags::loadFromFile(const std::string& filePath) {
             while (!numStr.empty() && (numStr.back() == ' ' || numStr.back() == '\r')) {
                 numStr.pop_back();
             }
-            if (numStr.find('.') != std::string::npos) {
-                m_floatFlags[key].store(std::stof(numStr));
-            } else {
-                m_intFlags[key].store(std::stoi(numStr));
+            try {
+                if (numStr.find('.') != std::string::npos) {
+                    m_floatFlags[key].store(std::stof(numStr));
+                } else {
+                    m_intFlags[key].store(std::stoi(numStr));
+                }
+            } catch (...) {
+                // Ignore malformed numeric field and continue parsing.
             }
         }
     }
@@ -186,18 +198,36 @@ void FeatureFlags::clear() {
 std::vector<std::string> FeatureFlags::listFlags() const {
     std::lock_guard<std::mutex> lock(m_mutex);
     std::vector<std::string> flags;
+    flags.reserve(m_boolFlags.size() + m_intFlags.size() + m_floatFlags.size() + m_stringFlags.size());
     for (const auto& [name, _] : m_boolFlags) {
         flags.push_back(name);
     }
+    for (const auto& [name, _] : m_intFlags) {
+        flags.push_back(name);
+    }
+    for (const auto& [name, _] : m_floatFlags) {
+        flags.push_back(name);
+    }
+    for (const auto& [name, _] : m_stringFlags) {
+        flags.push_back(name);
+    }
+    std::sort(flags.begin(), flags.end());
+    flags.erase(std::unique(flags.begin(), flags.end()), flags.end());
     return flags;
 }
 
 void FeatureFlags::notifyCallbacks(const std::string& name, bool oldValue, bool newValue) {
-    auto it = m_callbacks.find(name);
-    if (it != m_callbacks.end()) {
-        for (const auto& callback : it->second) {
-            callback(name, oldValue, newValue);
+    std::vector<FlagCallback> callbacks;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = m_callbacks.find(name);
+        if (it != m_callbacks.end()) {
+            callbacks = it->second;
         }
+    }
+
+    for (const auto& callback : callbacks) {
+        callback(name, oldValue, newValue);
     }
 }
 

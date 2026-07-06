@@ -1,8 +1,10 @@
 #include <Windows.h>
 #include <dstorage.h>
+#include <cstring>
 #include <mutex>
 #include <atomic>
 #include <thread>
+#include <queue>
 
 //=============================================================================
 // DirectStorage Real Implementation (Issue #2, #35, #36, #41, #44)

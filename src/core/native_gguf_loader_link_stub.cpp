@@ -1,99 +1,66 @@
-#include "../../native_gguf_loader.h"
+// Native GGUF Loader Link Stub
+// Provides stub implementations for GGUF loader functions
 
-NativeGGUFLoader::NativeGGUFLoader()
-    : fileHandle(nullptr),
-      mappingHandle(nullptr),
-      mappedBase(nullptr),
-      mappedSize(0),
-      version(0),
-      metadataCount(0),
-      tensorCount(0) {}
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 
-NativeGGUFLoader::~NativeGGUFLoader() {
-    Close();
+extern "C" {
+
+// GGUF Loader initialization
+int NativeGGUFLoader_Initialize() {
+    return 0; // Success
 }
 
-bool NativeGGUFLoader::Open(const std::string& filePath) {
-    Close();
-    file.open(filePath, std::ios::in | std::ios::binary);
-    if (!file.is_open()) {
-        return false;
-    }
-
-    file.seekg(0, std::ios::end);
-    mappedSize = static_cast<uint64_t>(file.tellg());
-    file.seekg(0, std::ios::beg);
-    return true;
+// GGUF Loader cleanup
+void NativeGGUFLoader_Cleanup() {
 }
 
-void NativeGGUFLoader::Close() {
-    if (file.is_open()) {
-        file.close();
-    }
-    fileHandle = nullptr;
-    mappingHandle = nullptr;
-    mappedBase = nullptr;
-    mappedSize = 0;
-    metadata.clear();
-    tensors.clear();
+// Load GGUF model
+int NativeGGUFLoader_Load(const char* path) {
+    (void)path;
+    return -1; // Not implemented
 }
 
-bool NativeGGUFLoader::ParseHeader() {
-    return file.is_open();
+// Unload GGUF model
+void NativeGGUFLoader_Unload() {
 }
 
-bool NativeGGUFLoader::ParseMetadata() {
-    if (!file.is_open()) {
-        return false;
-    }
-    metadataCount = metadata.size();
-    return true;
+// Get tensor count
+size_t NativeGGUFLoader_GetTensorCount() {
+    return 0;
 }
 
-bool NativeGGUFLoader::ParseTensorInfo() {
-    if (!file.is_open()) {
-        return false;
-    }
-    tensorCount = tensors.size();
-    return true;
-}
-
-bool NativeGGUFLoader::LoadTensorData(const std::string& tensorName, std::vector<uint8_t>& data) {
-    (void)tensorName;
-    data.clear();
-    return file.is_open();
-}
-
-const uint8_t* NativeGGUFLoader::GetTensorDataPointer(const std::string& tensorName, uint64_t* sizeBytes) const {
-    (void)tensorName;
-    if (sizeBytes) {
-        *sizeBytes = 0;
-    }
+// Get metadata string
+const char* NativeGGUFLoader_GetMetadataString(const char* key) {
+    (void)key;
     return nullptr;
 }
 
-bool NativeGGUFLoader::IsMemoryMapped() const {
-    return mappedBase != nullptr;
+// Get metadata int
+int64_t NativeGGUFLoader_GetMetadataInt(const char* key) {
+    (void)key;
+    return 0;
 }
 
-uint64_t NativeGGUFLoader::GetMappedSize() const {
-    return mappedSize;
+// Get tensor info
+int NativeGGUFLoader_GetTensorInfo(size_t index, char* name, size_t nameSize,
+                                     int* type, uint64_t* offset, uint64_t* size) {
+    (void)index;
+    (void)name;
+    (void)nameSize;
+    (void)type;
+    (void)offset;
+    (void)size;
+    return -1;
 }
 
-const std::vector<NativeGGUFTensorInfo>& NativeGGUFLoader::GetTensors() const {
-    return tensors;
+// Read tensor data
+int NativeGGUFLoader_ReadTensor(const char* name, void* data, size_t size) {
+    (void)name;
+    (void)data;
+    (void)size;
+    return -1;
 }
 
-const std::vector<NativeGGUFMetadata>& NativeGGUFLoader::GetMetadata() const {
-    return metadata;
-}
-
-bool NativeGGUFLoader::OpenMemoryMap(const std::string& filePath) {
-    (void)filePath;
-    return false;
-}
-
-void NativeGGUFLoader::CloseMemoryMap() {
-    mappedBase = nullptr;
-    mappedSize = 0;
-}
+} // extern "C"

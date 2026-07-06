@@ -451,7 +451,7 @@ static int runStartupSelfTest()
 
     // 4) WebSocketHub bind/listen start/stop
     {
-        WebSocketHub hub;
+        RawrXD::WebSocketHub hub;
         if (!hub.startServer(51793))
         {
             fail("websocket-start", "port=51793");
@@ -903,6 +903,19 @@ static void ensureMainWindowVisible(HWND hMain)
 static EngineManager* s_engine_mgr = nullptr;
 static CodexUltimate* s_codex = nullptr;
 
+// SEH wrapper for createWindow - must be in separate function without C++ object unwinding
+static bool createWindowWithSEH(Win32IDE& ide)
+{
+    __try
+    {
+        return ide.createWindow();
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        return false;
+    }
+}
+
 // Run one startup phase by name. Sequence is from config/startup_phases.txt (dynamic).
 // Returns false to abort (e.g. createWindow failed).
 static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lpCmdLine)
@@ -978,7 +991,9 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     if (name == "createWindow")
     {
         startupTrace("createWindow_start");
-        if (!ide.createWindow())
+        bool created = createWindowWithSEH(ide);
+
+        if (!created)
         {
             startupTrace("createWindow_FAILED");
             return false;
@@ -1696,7 +1711,132 @@ static int runFeatureProbeCLI(HINSTANCE hInstance, LPSTR lpCmdLine)
     return assertsFailed == 0 ? 0 : 20 + assertsFailed;
 }
 
+// ============================================================================
+// SEH Exception Filter for C++ Exceptions (0xE06D7363)
+// ============================================================================
+static LONG WINAPI SehExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo)
+{
+    DWORD code = pExceptionInfo->ExceptionRecord->ExceptionCode;
+    
+    // Log exception details
+    char msg[512];
+    snprintf(msg, sizeof(msg), 
+        "[SEH] Exception 0x%08X at address %p\n"
+        "[SEH] Exception flags: 0x%08X\n"
+        "[SEH] Number of parameters: %lu\n",
+        code,
+        pExceptionInfo->ExceptionRecord->ExceptionAddress,
+        pExceptionInfo->ExceptionRecord->ExceptionFlags,
+        pExceptionInfo->ExceptionRecord->NumberParameters);
+    
+    OutputDebugStringA(msg);
+    
+    // Write to startup log if available
+    if (s_startupLog && s_startupLog->is_open())
+    {
+        *s_startupLog << msg;
+        s_startupLog->flush();
+    }
+    
+    // For C++ exceptions (0xE06D7363), try to extract more info
+    if (code == 0xE06D7363)
+    {
+        OutputDebugStringA("[SEH] C++ exception detected - possible uncaught throw\n");
+        
+        // Try to get exception message from parameters
+        if (pExceptionInfo->ExceptionRecord->NumberParameters >= 3)
+        {
+            // MSVC C++ exception parameters:
+            // [0] = magic number (0x19930520)
+            // [1] = pointer to exception object
+            // [2] = pointer to type info
+            ULONG_PTR* params = pExceptionInfo->ExceptionRecord->ExceptionInformation;
+            OutputDebugStringA("[SEH] C++ exception parameters available\n");
+        }
+    }
+    
+    // Generate mini dump
+    CreateDirectoryA("crash_dumps", nullptr);
+    char dumpPath[MAX_PATH];
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    snprintf(dumpPath, sizeof(dumpPath), 
+        "crash_dumps\\RawrXD_%04d%02d%02d_%02d%02d%02d_%08X.dmp",
+        st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, code);
+    
+    HANDLE hFile = CreateFileA(dumpPath, GENERIC_WRITE, 0, nullptr, 
+                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        MINIDUMP_EXCEPTION_INFORMATION mdei;
+        mdei.ThreadId = GetCurrentThreadId();
+        mdei.ExceptionPointers = pExceptionInfo;
+        mdei.ClientPointers = FALSE;
+        
+        MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+            MiniDumpNormal, &mdei, nullptr, nullptr);
+        CloseHandle(hFile);
+        
+        char dumpMsg[256];
+        snprintf(dumpMsg, sizeof(dumpMsg), "[SEH] Mini dump written to: %s\n", dumpPath);
+        OutputDebugStringA(dumpMsg);
+    }
+    
+    // Show error message to user
+    char userMsg[1024];
+    snprintf(userMsg, sizeof(userMsg),
+        "RawrXD encountered a fatal error (0x%08X).\n\n"
+        "A crash dump has been saved to:\n%s\n\n"
+        "Please report this issue with the crash dump attached.",
+        code, dumpPath);
+    
+    MessageBoxA(nullptr, userMsg, "RawrXD Fatal Error", MB_OK | MB_ICONERROR);
+    
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// Forward declaration
+static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow);
+
+// ============================================================================
+// Main Entry Point with SEH Exception Filter
+// ============================================================================
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow)
+{
+    // Install SEH exception filter immediately (before any C++ objects)
+    SetUnhandledExceptionFilter(SehExceptionFilter);
+    
+    // Use raw SEH without C++ objects in this function
+    int result = 0;
+    __try
+    {
+        result = WinMainImpl(hInstance, lpCmdLine, nCmdShow);
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DWORD code = GetExceptionCode();
+        char msg[256];
+        snprintf(msg, sizeof(msg), 
+            "[WinMain] FATAL: Unhandled SEH exception 0x%08X\n", code);
+        OutputDebugStringA(msg);
+        
+        // Write to log
+        if (s_startupLog && s_startupLog->is_open())
+        {
+            *s_startupLog << msg;
+            s_startupLog->flush();
+        }
+        
+        result = 1;
+    }
+    
+    return result;
+}
+
+// ============================================================================
+// Actual WinMain Implementation
+// ============================================================================
+static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     emitStartupHeapSnapshot("winmain.entry");
 
@@ -2198,7 +2338,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     exportCommandArtifacts("runtime-exit");
 
     return exitCode;
-}
+} // WinMainImpl
 
 // ============================================================================
 // Link-time fallbacks for stripped lanes

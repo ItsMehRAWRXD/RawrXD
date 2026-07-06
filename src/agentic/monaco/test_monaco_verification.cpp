@@ -1,5 +1,6 @@
 #include "../src/agentic/monaco/MonacoIntegration.hpp"
 #include <windows.h>
+#include <psapi.h>
 #include <iostream>
 #include <chrono>
 

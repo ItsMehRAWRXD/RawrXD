@@ -4,6 +4,8 @@
 #include "agentic_orchestrator_integration.hpp"
 #include "observability/Logger.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -13,6 +15,38 @@ namespace Agentic
 {
 
 namespace {
+
+std::string toLowerCopy(const std::string& s)
+{
+    std::string out = s;
+    std::transform(out.begin(), out.end(), out.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return out;
+}
+
+bool containsAny(const std::string& haystackLower, std::initializer_list<const char*> needles)
+{
+    for (const char* n : needles)
+    {
+        if (haystackLower.find(n) != std::string::npos)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string resolvePlannerModel()
+{
+    if (const char* env = std::getenv("RAWRXD_PLANNER_MODEL"))
+    {
+        if (*env != '\0')
+        {
+            return std::string(env);
+        }
+    }
+    return "rule_based_planner";
+}
 
 void tryLoadApprovalPolicyFromDisk(AgenticPlanningOrchestrator& orch)
 {
@@ -57,23 +91,27 @@ OrchestratorIntegration::~OrchestratorIntegration() {}
 
 void OrchestratorIntegration::initialize()
 {
+    std::lock_guard<std::mutex> lock(m_integrationMutex);
     if (!m_orchestrator || m_initialized)
     {
         return;
     }
 
-    // Wire planner: for now, use a stub that generates basic plans
+    // Wire planner: deterministic rule-based generation for baseline production behavior.
     m_orchestrator->setPlanGenerationFn(
         [this](const std::string& task) -> ExecutionPlan
         {
             ExecutionPlan plan;
             plan.description = task;
             plan.source_task = task;
-            plan.planner_model = "default_stub";
+            plan.planner_model = resolvePlannerModel();
             plan.confidence_score = 0.75f;
 
-            // Create a default multi-step plan
-            // In production, this would call an actual LLM planner
+            const std::string taskLower = toLowerCopy(task);
+            const bool hasBuild = containsAny(taskLower, {"build", "compile", "link", "cmake", "ninja"});
+            const bool hasTest = containsAny(taskLower, {"test", "validate", "verify", "smoke"});
+            const bool hasCodeChange = containsAny(taskLower, {"edit", "patch", "fix", "refactor", "audit"});
+
             PlanStep step1;
             step1.id = "step_1_analyze";
             step1.title = "Analyze task requirements";
@@ -82,33 +120,42 @@ void OrchestratorIntegration::initialize()
             step1.risk_level = StepRisk::VeryLow;
             plan.steps.push_back(step1);
 
-            PlanStep step2;
-            step2.id = "step_2_prepare";
-            step2.title = "Prepare workspace";
-            step2.description = "Set up build environment and dependencies";
-            step2.is_mutating = false;
-            step2.risk_level = StepRisk::Low;
-            step2.dependencies.push_back(step1.id);
-            plan.steps.push_back(step2);
+            if (hasBuild)
+            {
+                PlanStep stepPrepare;
+                stepPrepare.id = "step_2_prepare_build";
+                stepPrepare.title = "Prepare build workspace";
+                stepPrepare.description = "Resolve toolchain and build graph prerequisites";
+                stepPrepare.is_mutating = false;
+                stepPrepare.risk_level = StepRisk::Low;
+                stepPrepare.dependencies.push_back(step1.id);
+                plan.steps.push_back(stepPrepare);
+            }
 
             PlanStep step3;
             step3.id = "step_3_implement";
             step3.title = "Implement changes";
             step3.description = "Execute code modifications as planned";
-            step3.is_mutating = true;
-            step3.risk_level = StepRisk::Medium;  // Will be re-analyzed
-            step3.dependencies.push_back(step2.id);
-            step3.affected_files.push_back("src/implementation.cpp");
+            step3.is_mutating = hasCodeChange;
+            step3.risk_level = hasCodeChange ? StepRisk::Medium : StepRisk::Low;
+            if (!plan.steps.empty())
+            {
+                step3.dependencies.push_back(plan.steps.back().id);
+            }
+            step3.affected_files.push_back("workspace");
             plan.steps.push_back(step3);
 
-            PlanStep step4;
-            step4.id = "step_4_validate";
-            step4.title = "Validate and test";
-            step4.description = "Run tests to verify implementation";
-            step4.is_mutating = false;
-            step4.risk_level = StepRisk::VeryLow;
-            step4.dependencies.push_back(step3.id);
-            plan.steps.push_back(step4);
+            if (hasTest || hasBuild)
+            {
+                PlanStep step4;
+                step4.id = "step_4_validate";
+                step4.title = "Validate and test";
+                step4.description = "Run tests and checks to verify implementation";
+                step4.is_mutating = false;
+                step4.risk_level = StepRisk::VeryLow;
+                step4.dependencies.push_back(step3.id);
+                plan.steps.push_back(step4);
+            }
 
             return plan;
         });
@@ -124,9 +171,14 @@ void OrchestratorIntegration::initialize()
     m_orchestrator->setToolExecutorFn(
         [this](const std::string& tool_name, const std::string& args, std::string& output) -> bool
         {
-            if (m_toolExecutor)
+            ToolExecutorFn exec;
             {
-                return m_toolExecutor(tool_name, args, output);
+                std::lock_guard<std::mutex> cbLock(m_integrationMutex);
+                exec = m_toolExecutor;
+            }
+            if (exec)
+            {
+                return exec(tool_name, args, output);
             }
             output = "No tool executor configured";
             return false;
@@ -136,9 +188,14 @@ void OrchestratorIntegration::initialize()
     m_orchestrator->setRollbackExecutorFn(
         [this](const PlanStep& step)
         {
-            if (m_rollbackExecutor)
+            RollbackExecutorFn exec;
             {
-                m_rollbackExecutor(step);
+                std::lock_guard<std::mutex> cbLock(m_integrationMutex);
+                exec = m_rollbackExecutor;
+            }
+            if (exec)
+            {
+                exec(step);
             }
         });
 
@@ -150,13 +207,25 @@ void OrchestratorIntegration::initialize()
 
 ExecutionPlan* OrchestratorIntegration::planAndApproveTask(const std::string& task_description)
 {
-    if (!m_orchestrator)
+    AgenticPlanningOrchestrator* orchestrator = nullptr;
+    RiskAnalyzerFn riskAnalyzer;
+    {
+        std::lock_guard<std::mutex> lock(m_integrationMutex);
+        if (!m_orchestrator)
+        {
+            return nullptr;
+        }
+        orchestrator = m_orchestrator.get();
+        riskAnalyzer = m_riskAnalyzer;
+    }
+
+    if (!orchestrator)
     {
         return nullptr;
     }
 
     // Step 1: Generate the plan
-    auto* plan = m_orchestrator->generatePlanForTask(task_description);
+    auto* plan = orchestrator->generatePlanForTask(task_description);
     if (!plan)
         return nullptr;
 
@@ -166,13 +235,13 @@ ExecutionPlan* OrchestratorIntegration::planAndApproveTask(const std::string& ta
         auto& step = plan->steps[i];
 
         // Use custom analyzer if provided, otherwise use built-in
-        if (m_riskAnalyzer)
+        if (riskAnalyzer)
         {
-            step.risk_level = m_riskAnalyzer(step);
+            step.risk_level = riskAnalyzer(step);
         }
         else
         {
-            step.risk_level = m_orchestrator->analyzeStepRisk(step);
+            step.risk_level = orchestrator->analyzeStepRisk(step);
         }
     }
 
@@ -182,7 +251,7 @@ ExecutionPlan* OrchestratorIntegration::planAndApproveTask(const std::string& ta
         auto& step = plan->steps[i];
 
         // Determine eligibility for auto-approval based on policy and risk
-        auto policy = m_orchestrator->getApprovalPolicy();
+        auto policy = orchestrator->getApprovalPolicy();
 
         bool should_auto_approve = false;
         if (step.risk_level == StepRisk::VeryLow && policy.auto_approve_very_low_risk)
@@ -203,7 +272,7 @@ ExecutionPlan* OrchestratorIntegration::planAndApproveTask(const std::string& ta
         else
         {
             // Request human approval
-            m_orchestrator->requestApproval(plan, i);
+            m_orchestrator->requestApproval(plan, static_cast<int>(i));
         }
     }
 
@@ -232,8 +301,23 @@ void OrchestratorIntegration::onPlanGeneration(const std::string& task, Executio
 
 void OrchestratorIntegration::onStepExecution(ExecutionPlan* plan, int step_idx)
 {
-    if (!plan || !m_toolExecutor)
+    if (!plan)
         return;
+
+    if (step_idx < 0 || static_cast<size_t>(step_idx) >= plan->steps.size())
+    {
+        return;
+    }
+
+    ToolExecutorFn exec;
+    {
+        std::lock_guard<std::mutex> lock(m_integrationMutex);
+        exec = m_toolExecutor;
+    }
+    if (!exec)
+    {
+        return;
+    }
 
     auto& step = plan->steps[step_idx];
 
@@ -241,7 +325,7 @@ void OrchestratorIntegration::onStepExecution(ExecutionPlan* plan, int step_idx)
     for (const auto& action : step.actions)
     {
         std::string output;
-        if (m_toolExecutor(action, "", output))
+        if (exec(action, "", output))
         {
             step.execution_result += output + "\n";
         }
@@ -258,11 +342,26 @@ void OrchestratorIntegration::onStepExecution(ExecutionPlan* plan, int step_idx)
 
 void OrchestratorIntegration::onRollbackRequest(ExecutionPlan* plan, int step_idx)
 {
-    if (!plan || !m_rollbackExecutor)
+    if (!plan)
         return;
 
+    if (step_idx < 0 || static_cast<size_t>(step_idx) >= plan->steps.size())
+    {
+        return;
+    }
+
+    RollbackExecutorFn exec;
+    {
+        std::lock_guard<std::mutex> lock(m_integrationMutex);
+        exec = m_rollbackExecutor;
+    }
+    if (!exec)
+    {
+        return;
+    }
+
     auto& step = plan->steps[step_idx];
-    m_rollbackExecutor(step);
+    exec(step);
 }
 
 }  // namespace Agentic

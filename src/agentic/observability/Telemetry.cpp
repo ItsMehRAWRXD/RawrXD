@@ -1,5 +1,6 @@
 #include "Telemetry.hpp"
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <thread>

@@ -105,12 +105,13 @@ public:
         bool filterLowQuality = true;
         bool generateImprovementSuggestions = true;
         
-        InferenceParams() = default;
-    };
+        // Additional inference parameters
         int topK = 40;
         bool useBeamSearch = false;
         int beamWidth = 3;
         std::vector<int> stopTokens;
+        
+        InferenceParams() = default;
     };
 
     explicit AICompletionProvider();

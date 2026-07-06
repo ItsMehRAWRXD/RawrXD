@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include <mutex>
 
 namespace Agentic {
 
@@ -37,9 +38,21 @@ public:
     using RiskAnalyzerFn = std::function<StepRisk(const PlanStep&)>;
     using RollbackExecutorFn = std::function<void(const PlanStep&)>;
     
-    void setToolExecutor(ToolExecutorFn fn) { m_toolExecutor = fn; }
-    void setRiskAnalyzer(RiskAnalyzerFn fn) { m_riskAnalyzer = fn; }
-    void setRollbackExecutor(RollbackExecutorFn fn) { m_rollbackExecutor = fn; }
+    void setToolExecutor(ToolExecutorFn fn)
+    {
+        std::lock_guard<std::mutex> lock(m_integrationMutex);
+        m_toolExecutor = std::move(fn);
+    }
+    void setRiskAnalyzer(RiskAnalyzerFn fn)
+    {
+        std::lock_guard<std::mutex> lock(m_integrationMutex);
+        m_riskAnalyzer = std::move(fn);
+    }
+    void setRollbackExecutor(RollbackExecutorFn fn)
+    {
+        std::lock_guard<std::mutex> lock(m_integrationMutex);
+        m_rollbackExecutor = std::move(fn);
+    }
     
     // Status queries
     int getPendingApprovalCount() const;
@@ -57,6 +70,7 @@ private:
     ToolExecutorFn m_toolExecutor;
     RiskAnalyzerFn m_riskAnalyzer;
     RollbackExecutorFn m_rollbackExecutor;
+    mutable std::mutex m_integrationMutex;
     
     // Internal callbacks
     void onPlanGeneration(const std::string& task, ExecutionPlan& plan);

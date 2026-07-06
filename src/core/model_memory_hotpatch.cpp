@@ -75,6 +75,23 @@ struct ModelMemoryHotpatchState {
 
 static ModelMemoryHotpatchState g_modelState;
 
+#if defined(_MSC_VER)
+static bool safe_memcpy_seh(void* dst, const void* src, size_t size) {
+    __try {
+        std::memcpy(dst, src, size);
+        return true;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
+}
+#else
+static bool safe_memcpy_seh(void* dst, const void* src, size_t size) {
+    std::memcpy(dst, src, size);
+    return true;
+}
+#endif
+
 // ---------------------------------------------------------------------------
 // apply_memory_patch
 // ---------------------------------------------------------------------------
@@ -98,11 +115,20 @@ PatchResult apply_memory_patch(void* addr, size_t size, const void* data) {
     g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
 
     // Write patch data
-    std::memcpy(addr, data, size);
+    if (!safe_memcpy_seh(addr, data, size)) {
+        DWORD dummy = 0;
+        VirtualProtect(addr, size, oldProtect, &dummy);
+        g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
+        g_memPatchStats.totalFailed.fetch_add(1, std::memory_order_relaxed);
+        return PatchResult::error("SEH exception while writing patch bytes", 2);
+    }
 
     // Restore original protection
     DWORD dummy = 0;
-    VirtualProtect(addr, size, oldProtect, &dummy);
+    if (!VirtualProtect(addr, size, oldProtect, &dummy)) {
+        g_memPatchStats.totalFailed.fetch_add(1, std::memory_order_relaxed);
+        return PatchResult::error("VirtualProtect (restore protection) failed", static_cast<int>(GetLastError()));
+    }
     g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
 
     // Flush instruction cache (critical if patching code)
@@ -136,10 +162,20 @@ PatchResult revert_memory_patch(MemoryPatchEntry* entry) {
     }
     g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
 
-    std::memcpy(addr, entry->originalBytes, entry->originalSize);
+    if (!safe_memcpy_seh(addr, entry->originalBytes, entry->originalSize)) {
+        DWORD dummy = 0;
+        VirtualProtect(addr, entry->originalSize, oldProtect, &dummy);
+        g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
+        g_memPatchStats.totalFailed.fetch_add(1, std::memory_order_relaxed);
+        return PatchResult::error("SEH exception while restoring original bytes", 4);
+    }
 
     DWORD dummy = 0;
-    VirtualProtect(addr, entry->originalSize, oldProtect, &dummy);
+    if (!VirtualProtect(addr, entry->originalSize, oldProtect, &dummy)) {
+        g_memPatchStats.totalFailed.fetch_add(1, std::memory_order_relaxed);
+        return PatchResult::error("VirtualProtect (restore protection after revert) failed",
+                                  static_cast<int>(GetLastError()));
+    }
     g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
 
     FlushInstructionCache(GetCurrentProcess(), addr, entry->originalSize);
@@ -175,15 +211,31 @@ PatchResult apply_memory_patch_tracked(MemoryPatchEntry* entry) {
     }
     g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
 
-    std::memcpy(entry->originalBytes, addr, entry->patchSize);
+    if (!safe_memcpy_seh(entry->originalBytes, addr, entry->patchSize)) {
+        DWORD dummy = 0;
+        VirtualProtect(addr, entry->patchSize, oldProtect, &dummy);
+        g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
+        g_memPatchStats.totalFailed.fetch_add(1, std::memory_order_relaxed);
+        return PatchResult::error("SEH exception while backing up original bytes", 4);
+    }
     entry->originalSize = entry->patchSize;
 
     // Write new data
-    std::memcpy(addr, entry->patchData, entry->patchSize);
+    if (!safe_memcpy_seh(addr, entry->patchData, entry->patchSize)) {
+        DWORD dummy = 0;
+        VirtualProtect(addr, entry->patchSize, oldProtect, &dummy);
+        g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
+        g_memPatchStats.totalFailed.fetch_add(1, std::memory_order_relaxed);
+        return PatchResult::error("SEH exception while writing tracked patch bytes", 5);
+    }
 
     // Restore protection
     DWORD dummy = 0;
-    VirtualProtect(addr, entry->patchSize, oldProtect, &dummy);
+    if (!VirtualProtect(addr, entry->patchSize, oldProtect, &dummy)) {
+        g_memPatchStats.totalFailed.fetch_add(1, std::memory_order_relaxed);
+        return PatchResult::error("VirtualProtect (restore tracked protection) failed",
+                                  static_cast<int>(GetLastError()));
+    }
     g_memPatchStats.protectionChanges.fetch_add(1, std::memory_order_relaxed);
 
     FlushInstructionCache(GetCurrentProcess(), addr, entry->patchSize);

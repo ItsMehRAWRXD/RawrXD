@@ -581,7 +581,7 @@ void __fastcall MCP_WebSocketFrameHook(const uint8_t* frame, size_t length, uint
 } // extern "C"
 
 // Handler for MCP Hooks feature
-void HandleMCPHooks(void* idePtr) {
+extern "C" void HandleMCPHooks(void* idePtr) {
     if (!idePtr) return;
 
     // Initialize MCP hooks if not already done

@@ -73,10 +73,12 @@ void BoundedAgentLoop::SetLLMBackend(LLMChatFunction backend) {
 }
 
 void BoundedAgentLoop::SetProgressCallback(AgentProgressCallback callback) {
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_progressCallback = std::move(callback);
 }
 
 void BoundedAgentLoop::SetCompleteCallback(AgentCompleteCallback callback) {
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_completeCallback = std::move(callback);
 }
 
@@ -117,8 +119,13 @@ std::string BoundedAgentLoop::Execute(const std::string& userPrompt) {
 void BoundedAgentLoop::ExecuteAsync(const std::string& userPrompt) {
     std::thread([this, userPrompt]() {
         std::string result = Execute(userPrompt);
-        if (m_completeCallback) {
-            m_completeCallback(result, m_transcript);
+        AgentCompleteCallback completeCb;
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            completeCb = m_completeCallback;
+        }
+        if (completeCb) {
+            completeCb(result, m_transcript);
         }
     }).detach();
 }
@@ -130,9 +137,11 @@ void BoundedAgentLoop::ExecuteAsync(const std::string& userPrompt) {
 std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
     // Set up LLM backend (defaults to native client path)
     LLMChatFunction llm;
+    AgentProgressCallback progressCb;
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         llm = m_llmBackend;
+        progressCb = m_progressCallback;
     }
     if (!llm) {
         std::string baseUrl = m_config.ollamaBaseUrl;
@@ -161,8 +170,8 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
         m_currentStep.store(step + 1);
 
         // Notify progress
-        if (m_progressCallback) {
-            m_progressCallback(step + 1, m_config.maxSteps,
+        if (progressCb) {
+            progressCb(step + 1, m_config.maxSteps,
                 "Thinking...", "Waiting for model response");
         }
 
@@ -197,8 +206,8 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
         // ---- Step 2: Check if tool call or final answer ----
         if (response.hasToolCall) {
             // ---- Execute tool ----
-            if (m_progressCallback) {
-                m_progressCallback(step + 1, m_config.maxSteps,
+            if (progressCb) {
+                progressCb(step + 1, m_config.maxSteps,
                     "Executing: " + response.toolName,
                     response.toolArgs.dump());
             }
@@ -283,8 +292,8 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
             m_state.store(AgentLoopState::Complete);
             m_transcript.SetOutcome("completed");
 
-            if (m_progressCallback) {
-                m_progressCallback(step + 1, m_config.maxSteps,
+            if (progressCb) {
+                progressCb(step + 1, m_config.maxSteps,
                     "Complete", finalAnswer.substr(0, 200));
             }
 
@@ -298,8 +307,8 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
     m_state.store(AgentLoopState::StepLimitReached);
     m_transcript.SetOutcome("step_limit_reached");
 
-    if (m_progressCallback) {
-        m_progressCallback(m_config.maxSteps, m_config.maxSteps,
+    if (progressCb) {
+        progressCb(m_config.maxSteps, m_config.maxSteps,
             "Step limit reached", "Agent used all " + std::to_string(m_config.maxSteps) + " steps");
     }
 

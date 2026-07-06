@@ -4,6 +4,9 @@
 #include <commctrl.h>
 #include <algorithm>
 
+// External trace function
+extern void fileTrace(const char* msg);
+
 // TabManager implementation for RawrXD Win32IDE
 // Provides sovereign tab management with persistence and recovery
 
@@ -19,25 +22,56 @@ Win32IDE_TabManager::~Win32IDE_TabManager()
 
 bool Win32IDE_TabManager::initialize(HWND hwndParent)
 {
-    if (!hwndParent) return false;
+    OutputDebugStringA("[TabManager] initialize() ENTER\n");
+    fileTrace("[TabManager] initialize() ENTER");
+    if (!hwndParent) {
+        OutputDebugStringA("[TabManager] hwndParent is null, returning false\n");
+        fileTrace("[TabManager] hwndParent is null, returning false");
+        return false;
+    }
 
+    OutputDebugStringA("[TabManager] Creating tab control...\n");
+    fileTrace("[TabManager] Creating tab control...");
     // Create tab control with sovereign styling
+    // NOTE: Do NOT use WS_VISIBLE here - we're inside WM_CREATE processing
+    // and the message pump isn't running yet. Show the window after init.
     m_hwndTabBar = CreateWindowExW(0, WC_TABCONTROLW, L"",
-        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | TCS_TABS | TCS_FOCUSNEVER |
+        WS_CHILD | WS_CLIPSIBLINGS | TCS_TABS | TCS_FOCUSNEVER |
         TCS_OWNERDRAWFIXED | TCS_TOOLTIPS,
         0, 0, 800, 30, hwndParent, nullptr, GetModuleHandle(nullptr), nullptr);
 
-    if (!m_hwndTabBar) return false;
+    if (!m_hwndTabBar) {
+        OutputDebugStringA("[TabManager] FAILED to create tab control\n");
+        fileTrace("[TabManager] FAILED to create tab control");
+        return false;
+    }
+    OutputDebugStringA("[TabManager] Tab control created OK\n");
+    fileTrace("[TabManager] Tab control created OK");
+    
+    // Show the window now that we're past WM_CREATE
+    OutputDebugStringA("[TabManager] About to ShowWindow...\n");
+    fileTrace("[TabManager] About to ShowWindow...");
+    ShowWindow(m_hwndTabBar, SW_SHOW);
+    OutputDebugStringA("[TabManager] ShowWindow done\n");
+    fileTrace("[TabManager] ShowWindow done");
 
+    OutputDebugStringA("[TabManager] Applying sovereign theme...\n");
+    fileTrace("[TabManager] Applying sovereign theme...");
     // Apply sovereign theme
     applySovereignTheme();
+    OutputDebugStringA("[TabManager] Sovereign theme applied\n");
 
+    OutputDebugStringA("[TabManager] Loading persisted tabs...\n");
     // Load persisted tabs
     loadPersistedTabs();
+    OutputDebugStringA("[TabManager] Persisted tabs loaded\n");
 
+    OutputDebugStringA("[TabManager] Initializing GPU sovereign control...\n");
     // Initialize GPU sovereign control
     initializeGPUSovereignControl();
+    OutputDebugStringA("[TabManager] GPU sovereign control initialized\n");
 
+    OutputDebugStringA("[TabManager] initialize() returning true\n");
     return true;
 }
 
@@ -58,10 +92,20 @@ void Win32IDE_TabManager::cleanup()
 
 void Win32IDE_TabManager::applySovereignTheme()
 {
-    if (!m_hwndTabBar) return;
+    OutputDebugStringA("[TabManager] applySovereignTheme() ENTER\n");
+    fileTrace("[TabManager] applySovereignTheme() ENTER");
+    if (!m_hwndTabBar) {
+        OutputDebugStringA("[TabManager] applySovereignTheme: m_hwndTabBar is null, returning\n");
+        fileTrace("[TabManager] applySovereignTheme: m_hwndTabBar is null, returning");
+        return;
+    }
 
+    OutputDebugStringA("[TabManager] Getting sovereign config...\n");
+    fileTrace("[TabManager] Getting sovereign config...");
     // Get sovereign colors from settings
     auto config = GetSovereignConfig();
+    OutputDebugStringA("[TabManager] Got sovereign config\n");
+    fileTrace("[TabManager] Got sovereign config");
     COLORREF tabBg = RGB(30, 30, 30);
     COLORREF tabActiveBg = RGB(45, 45, 45);
     COLORREF tabText = RGB(200, 200, 200);
@@ -399,6 +443,14 @@ std::wstring Win32IDE_TabManager::utf8ToWide(const std::string& str) const
 
 void Win32IDE_TabManager::initializeGPUSovereignControl()
 {
+    // DISABLED: These "sovereign GPU" functions are fraudulent claims.
+    // The ASM implementations attempt dangerous operations like accessing
+    // \Device\PhysicalMemory and unmapped MMIO addresses, causing SEH exceptions.
+    // See CMakeLists.txt: "Sovereign GPU ASM disabled — fraudulent claims removed"
+    OutputDebugStringA("[Win32IDE_TabManager] initializeGPUSovereignControl: DISABLED (fraudulent claims)\n");
+    return;
+
+    /* ORIGINAL DANGEROUS CODE - DO NOT ENABLE:
     // Initialize KFD interface
     uint64_t version = KFD_Get_Driver_Version();
     if (version == 0) {
@@ -414,6 +466,7 @@ void Win32IDE_TabManager::initializeGPUSovereignControl()
 
     // Authenticate silicon integrity
     authenticateSiliconIntegrity();
+    */
 }
 
 void Win32IDE_TabManager::performGPUHealthCheck()

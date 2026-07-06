@@ -4,10 +4,75 @@
 #include <windows.h>
 #include <winhttp.h>
 #include <fstream>
+#include <algorithm>
 
 #pragma comment(lib, "winhttp.lib")
 
 namespace VSCodeMarketplace {
+
+namespace {
+
+static std::wstring utf8ToWide(const std::string& s) {
+    if (s.empty()) {
+        return std::wstring();
+    }
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+    if (wlen <= 0) {
+        return std::wstring();
+    }
+    std::wstring out;
+    out.resize(static_cast<size_t>(wlen - 1));
+    MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, out.data(), wlen);
+    return out;
+}
+
+static bool readAllResponse(HINTERNET hRequest, std::string& out) {
+    out.clear();
+    DWORD dwSize = 0;
+    do {
+        dwSize = 0;
+        if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
+            return false;
+        }
+        if (dwSize == 0) {
+            break;
+        }
+        std::vector<char> buffer(static_cast<size_t>(dwSize));
+        DWORD dwDownloaded = 0;
+        if (!WinHttpReadData(hRequest, buffer.data(), dwSize, &dwDownloaded)) {
+            return false;
+        }
+        out.append(buffer.data(), buffer.data() + dwDownloaded);
+    } while (dwSize > 0);
+    return true;
+}
+
+static bool getStatusCode(HINTERNET hRequest, DWORD& codeOut) {
+    codeOut = 0;
+    DWORD size = sizeof(codeOut);
+    return WinHttpQueryHeaders(
+        hRequest,
+        WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+        WINHTTP_HEADER_NAME_BY_INDEX,
+        &codeOut,
+        &size,
+        WINHTTP_NO_HEADER_INDEX) == TRUE;
+}
+
+static std::string extractJsonString(const std::string& json, const char* key) {
+    const std::string needle = std::string("\"") + key + "\"";
+    size_t keyPos = json.find(needle);
+    if (keyPos == std::string::npos) return std::string();
+    size_t colon = json.find(':', keyPos + needle.size());
+    if (colon == std::string::npos) return std::string();
+    size_t firstQuote = json.find('"', colon + 1);
+    if (firstQuote == std::string::npos) return std::string();
+    size_t secondQuote = json.find('"', firstQuote + 1);
+    if (secondQuote == std::string::npos) return std::string();
+    return json.substr(firstQuote + 1, secondQuote - firstQuote - 1);
+}
+
+} // namespace
 
 struct MarketplaceEntry {
     std::string name;
@@ -21,6 +86,7 @@ struct MarketplaceEntry {
 
 bool Query(const std::string& searchTerm, int page, int pageSize, 
            std::vector<MarketplaceEntry>& results) {
+    results.clear();
     
     HINTERNET hSession = WinHttpOpen(L"RawrXD-IDE/1.0", 
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
@@ -54,27 +120,41 @@ bool Query(const std::string& searchTerm, int page, int pageSize,
     std::wstring headers = L"Content-Type: application/json\r\nAccept: application/json;api-version=3.0-preview.1";
     BOOL bResults = WinHttpSendRequest(hRequest, headers.c_str(), -1, 
         (LPVOID)body.c_str(), (DWORD)body.length(), (DWORD)body.length(), 0);
-    
-    if (bResults) {
-        WinHttpReceiveResponse(hRequest, NULL);
-        
-        DWORD dwSize = 0;
-        WinHttpQueryDataAvailable(hRequest, &dwSize);
-        if (dwSize > 0) {
-            std::vector<char> buffer(dwSize + 1);
-            DWORD dwDownloaded = 0;
-            WinHttpReadData(hRequest, (LPVOID)buffer.data(), dwSize, &dwDownloaded);
-            
-            // Simplified - real implementation would parse JSON
-            MarketplaceEntry entry;
-            entry.name = "sample-extension";
-            entry.publisher = "publisher";
-            entry.version = "1.0.0";
-            entry.description = "Sample extension";
-            entry.installCount = 1000;
-            entry.rating = 4.5f;
-            results.push_back(entry);
-        }
+    if (!bResults || !WinHttpReceiveResponse(hRequest, NULL)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    DWORD statusCode = 0;
+    if (!getStatusCode(hRequest, statusCode) || statusCode < 200 || statusCode >= 300) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    std::string responseBody;
+    if (!readAllResponse(hRequest, responseBody) || responseBody.empty()) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    // Minimal fail-closed extraction without fabricating placeholder entries.
+    MarketplaceEntry entry;
+    entry.name = extractJsonString(responseBody, "extensionName");
+    entry.publisher = extractJsonString(responseBody, "publisherName");
+    entry.version = extractJsonString(responseBody, "version");
+    entry.description = extractJsonString(responseBody, "shortDescription");
+    entry.downloadUrl.clear();
+    entry.installCount = 0;
+    entry.rating = 0.0f;
+
+    if (!entry.name.empty() && !entry.publisher.empty()) {
+        results.push_back(entry);
     }
     
     WinHttpCloseHandle(hRequest);
@@ -85,10 +165,12 @@ bool Query(const std::string& searchTerm, int page, int pageSize,
 
 bool DownloadVsix(const std::string& publisher, const std::string& extName, 
                   const std::string& version, const std::string& destPath) {
-    
-    std::wstring wPublisher(publisher.begin(), publisher.end());
-    std::wstring wExtName(extName.begin(), extName.end());
-    std::wstring wVersion(version.begin(), version.end());
+    std::wstring wPublisher = utf8ToWide(publisher);
+    std::wstring wExtName = utf8ToWide(extName);
+    std::wstring wVersion = utf8ToWide(version);
+    if (wPublisher.empty() || wExtName.empty() || wVersion.empty()) {
+        return false;
+    }
     
     HINTERNET hSession = WinHttpOpen(L"RawrXD-IDE/1.0", 
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
@@ -114,20 +196,46 @@ bool DownloadVsix(const std::string& publisher, const std::string& extName,
         return false;
     }
     
-    WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, NULL, 0, 0, 0);
-    WinHttpReceiveResponse(hRequest, NULL);
+    if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, NULL, 0, 0, 0) ||
+        !WinHttpReceiveResponse(hRequest, NULL)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    DWORD statusCode = 0;
+    if (!getStatusCode(hRequest, statusCode) || statusCode < 200 || statusCode >= 300) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
     
     std::ofstream outFile(destPath, std::ios::binary);
+    if (!outFile) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    bool wroteAny = false;
     DWORD dwSize = 0;
     do {
         dwSize = 0;
-        WinHttpQueryDataAvailable(hRequest, &dwSize);
+        if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
+            break;
+        }
         if (dwSize == 0) break;
         
         std::vector<BYTE> buffer(dwSize);
         DWORD dwDownloaded = 0;
-        WinHttpReadData(hRequest, (LPVOID)buffer.data(), dwSize, &dwDownloaded);
+        if (!WinHttpReadData(hRequest, (LPVOID)buffer.data(), dwSize, &dwDownloaded)) {
+            break;
+        }
         outFile.write((char*)buffer.data(), dwDownloaded);
+        wroteAny = wroteAny || (dwDownloaded > 0);
     } while (dwSize > 0);
     
     outFile.close();
@@ -135,7 +243,7 @@ bool DownloadVsix(const std::string& publisher, const std::string& extName,
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
     
-    return true;
+    return wroteAny;
 }
 
 } // namespace VSCodeMarketplace

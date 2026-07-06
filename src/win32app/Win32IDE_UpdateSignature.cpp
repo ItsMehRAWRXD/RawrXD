@@ -3,7 +3,7 @@
 #include <windows.h>
 
 // Handler for Update Signature feature
-void HandleUpdateSignature(void* idePtr) {
+extern "C" void HandleUpdateSignature(void* idePtr) {
     Win32IDE* ide = static_cast<Win32IDE*>(idePtr);
     if (!ide) return;
 

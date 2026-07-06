@@ -204,7 +204,8 @@ bool GPUDispatchGate::MatVecQ4(const float* matrix, const float* vector, float* 
 bool GPUDispatchGate::Softmax(float* data, uint32_t size, bool enableParityCheck) {
     if (!gpuBridge_) {
         // Fallback to CPU only
-        return cpuEngine_.Softmax(data, size);
+        CPUOps::Softmax(data, size);
+        return true;
     }
 
     std::vector<float> originalData;
@@ -229,7 +230,8 @@ bool GPUDispatchGate::Softmax(float* data, uint32_t size, bool enableParityCheck
             std::lock_guard<std::mutex> lock(statsMutex_);
             stats_.cpuSoftmaxFallbacks++;
         }
-        return cpuEngine_.Softmax(data, size);
+        CPUOps::Softmax(data, size);
+        return true;
     }
 
     // Dispatch
@@ -239,7 +241,8 @@ bool GPUDispatchGate::Softmax(float* data, uint32_t size, bool enableParityCheck
             std::lock_guard<std::mutex> lock(statsMutex_);
             stats_.cpuSoftmaxFallbacks++;
         }
-        return cpuEngine_.Softmax(data, size);
+        CPUOps::Softmax(data, size);
+        return true;
     }
 
     // Readback
@@ -249,7 +252,8 @@ bool GPUDispatchGate::Softmax(float* data, uint32_t size, bool enableParityCheck
             std::lock_guard<std::mutex> lock(statsMutex_);
             stats_.cpuSoftmaxFallbacks++;
         }
-        return cpuEngine_.Softmax(data, size);
+        CPUOps::Softmax(data, size);
+        return true;
     }
 
     {
@@ -259,7 +263,8 @@ bool GPUDispatchGate::Softmax(float* data, uint32_t size, bool enableParityCheck
 
     if (enableParityCheck) {
         auto start = std::chrono::high_resolution_clock::now();
-        bool cpuSuccess = cpuEngine_.Softmax(originalData.data(), size);
+        CPUOps::Softmax(originalData.data(), size);
+        bool cpuSuccess = true;
         auto end = std::chrono::high_resolution_clock::now();
         double cpuTimeMs = std::chrono::duration<double, std::milli>(end - start).count();
 

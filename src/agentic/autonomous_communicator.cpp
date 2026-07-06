@@ -21,6 +21,43 @@
 namespace RawrXD {
 namespace Autonomy {
 
+namespace {
+
+std::string escapeJsonString(const char* input) {
+    if (!input) {
+        return std::string();
+    }
+
+    std::string out;
+    const std::string in(input);
+    out.reserve(in.size() + 16);
+
+    for (unsigned char c : in) {
+        switch (c) {
+            case '"': out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\b': out += "\\b"; break;
+            case '\f': out += "\\f"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (c < 0x20) {
+                    char hex[7];
+                    std::snprintf(hex, sizeof(hex), "\\u%04x", c);
+                    out += hex;
+                } else {
+                    out.push_back(static_cast<char>(c));
+                }
+                break;
+        }
+    }
+
+    return out;
+}
+
+} // namespace
+
 // =============================================================================
 // CommitMessage::render
 // =============================================================================
@@ -139,35 +176,45 @@ uint64_t AutonomousCommunicator::recordReasoning(const char* action,
                                                     const char* rationale,
                                                     const char* alternative,
                                                     float confidence) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    ReasoningStep callbackStep{};
+    ReasoningStepCallback callback = nullptr;
+    void* callbackUd = nullptr;
+    uint64_t resultStepId = 0;
 
-    ReasoningStep step;
-    memset(&step, 0, sizeof(step));
-    step.stepId = nextReasoningId();
-    step.confidence = confidence;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
 
-    auto now = std::chrono::system_clock::now();
-    step.timestamp = static_cast<uint64_t>(
-        std::chrono::system_clock::to_time_t(now));
+        ReasoningStep step;
+        memset(&step, 0, sizeof(step));
+        step.stepId = nextReasoningId();
+        step.confidence = confidence;
 
-    if (action)      strncpy(step.action, action, sizeof(step.action) - 1);
-    if (rationale)   strncpy(step.rationale, rationale, sizeof(step.rationale) - 1);
-    if (alternative) strncpy(step.alternative, alternative, sizeof(step.alternative) - 1);
+        auto now = std::chrono::system_clock::now();
+        step.timestamp = static_cast<uint64_t>(
+            std::chrono::system_clock::to_time_t(now));
 
-    // Enforce max history size
-    if ((int)m_reasoningHistory.size() >= m_config.maxReasoningHistory) {
-        m_reasoningHistory.erase(m_reasoningHistory.begin());
+        if (action)      strncpy(step.action, action, sizeof(step.action) - 1);
+        if (rationale)   strncpy(step.rationale, rationale, sizeof(step.rationale) - 1);
+        if (alternative) strncpy(step.alternative, alternative, sizeof(step.alternative) - 1);
+
+        // Enforce max history size
+        if ((int)m_reasoningHistory.size() >= m_config.maxReasoningHistory) {
+            m_reasoningHistory.erase(m_reasoningHistory.begin());
+        }
+
+        m_reasoningHistory.push_back(step);
+        m_stats.reasoningStepsRecorded++;
+        callbackStep = step;
+        callback = m_reasoningCb;
+        callbackUd = m_reasoningCbUD;
+        resultStepId = step.stepId;
     }
 
-    m_reasoningHistory.push_back(step);
-    m_stats.reasoningStepsRecorded++;
-
-    // Fire callback
-    if (m_reasoningCb) {
-        m_reasoningCb(&step, m_reasoningCbUD);
+    if (callback) {
+        callback(&callbackStep, callbackUd);
     }
 
-    return step.stepId;
+    return resultStepId;
 }
 
 void AutonomousCommunicator::updateReasoningOutcome(uint64_t stepId, const char* outcome) {
@@ -255,8 +302,8 @@ std::string AutonomousCommunicator::reasoningToJson(int maxSteps) const {
             "\"timestamp\":%llu"
             "}",
             (unsigned long long)s.stepId,
-            s.action,
-            s.rationale,
+            escapeJsonString(s.action).c_str(),
+            escapeJsonString(s.rationale).c_str(),
             s.confidence,
             (unsigned long long)s.timestamp);
         json += buf;
@@ -302,69 +349,74 @@ std::vector<ChangeEntry> AutonomousCommunicator::getChanges() const {
 // =============================================================================
 
 StatusReport AutonomousCommunicator::generateReport(ReportType type) const {
-    std::lock_guard<std::mutex> lock(m_mutex);
-
+    ReportGeneratedCallback callback = nullptr;
+    void* callbackUd = nullptr;
     StatusReport report;
-    memset(&report, 0, sizeof(report));
-    report.reportId = const_cast<AutonomousCommunicator*>(this)->nextReportId();
-    report.type     = type;
 
-    auto now = std::chrono::system_clock::now();
-    report.timestamp = static_cast<uint64_t>(
-        std::chrono::system_clock::to_time_t(now));
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        memset(&report, 0, sizeof(report));
+        report.reportId = const_cast<AutonomousCommunicator*>(this)->nextReportId();
+        report.type     = type;
 
-    strncpy(report.author, m_config.agentName, sizeof(report.author) - 1);
+        auto now = std::chrono::system_clock::now();
+        report.timestamp = static_cast<uint64_t>(
+            std::chrono::system_clock::to_time_t(now));
 
-    // Compute metrics from changes
-    report.filesChanged = (int)m_changes.size();
-    for (const auto& c : m_changes) {
-        report.totalAdded   += c.linesAdded;
-        report.totalRemoved += c.linesRemoved;
+        strncpy(report.author, m_config.agentName, sizeof(report.author) - 1);
+
+        // Compute metrics from changes
+        report.filesChanged = (int)m_changes.size();
+        for (const auto& c : m_changes) {
+            report.totalAdded   += c.linesAdded;
+            report.totalRemoved += c.linesRemoved;
+        }
+
+        // If LLM report generator is set, use it
+        if (m_reportGen) {
+            std::string body = m_reportGen(type,
+                                            m_changes.data(), (int)m_changes.size(),
+                                            m_reasoningHistory.data(), (int)m_reasoningHistory.size(),
+                                            m_reportGenUD);
+            strncpy(report.body, body.c_str(), sizeof(report.body) - 1);
+        } else {
+            // Heuristic report
+            std::string body = buildReportBody(type);
+            strncpy(report.body, body.c_str(), sizeof(report.body) - 1);
+        }
+
+        // Generate title
+        switch (type) {
+            case ReportType::Standup:
+                strncpy(report.title, "Daily Standup Report", sizeof(report.title) - 1);
+                break;
+            case ReportType::SprintSummary:
+                strncpy(report.title, "Sprint Summary", sizeof(report.title) - 1);
+                break;
+            case ReportType::ChangeImpact:
+                strncpy(report.title, "Change Impact Analysis", sizeof(report.title) - 1);
+                break;
+            case ReportType::SecurityAudit:
+                strncpy(report.title, "Security Audit Report", sizeof(report.title) - 1);
+                break;
+            case ReportType::PerformanceReport:
+                strncpy(report.title, "Performance Report", sizeof(report.title) - 1);
+                break;
+            case ReportType::CoverageReport:
+                strncpy(report.title, "Test Coverage Report", sizeof(report.title) - 1);
+                break;
+            case ReportType::CustomReport:
+                strncpy(report.title, "Custom Report", sizeof(report.title) - 1);
+                break;
+        }
+
+        const_cast<Stats&>(m_stats).reportsGenerated++;
+        callback = m_reportCb;
+        callbackUd = m_reportCbUD;
     }
 
-    // If LLM report generator is set, use it
-    if (m_reportGen) {
-        std::string body = m_reportGen(type,
-                                        m_changes.data(), (int)m_changes.size(),
-                                        m_reasoningHistory.data(), (int)m_reasoningHistory.size(),
-                                        m_reportGenUD);
-        strncpy(report.body, body.c_str(), sizeof(report.body) - 1);
-    } else {
-        // Heuristic report
-        std::string body = buildReportBody(type);
-        strncpy(report.body, body.c_str(), sizeof(report.body) - 1);
-    }
-
-    // Generate title
-    switch (type) {
-        case ReportType::Standup:
-            strncpy(report.title, "Daily Standup Report", sizeof(report.title) - 1);
-            break;
-        case ReportType::SprintSummary:
-            strncpy(report.title, "Sprint Summary", sizeof(report.title) - 1);
-            break;
-        case ReportType::ChangeImpact:
-            strncpy(report.title, "Change Impact Analysis", sizeof(report.title) - 1);
-            break;
-        case ReportType::SecurityAudit:
-            strncpy(report.title, "Security Audit Report", sizeof(report.title) - 1);
-            break;
-        case ReportType::PerformanceReport:
-            strncpy(report.title, "Performance Report", sizeof(report.title) - 1);
-            break;
-        case ReportType::CoverageReport:
-            strncpy(report.title, "Test Coverage Report", sizeof(report.title) - 1);
-            break;
-        case ReportType::CustomReport:
-            strncpy(report.title, "Custom Report", sizeof(report.title) - 1);
-            break;
-    }
-
-    const_cast<Stats&>(m_stats).reportsGenerated++;
-
-    // Fire callback
-    if (m_reportCb) {
-        m_reportCb(&report, m_reportCbUD);
+    if (callback) {
+        callback(&report, callbackUd);
     }
 
     return report;
@@ -466,6 +518,8 @@ std::string AutonomousCommunicator::reportToMarkdown(const StatusReport& report)
 
 std::string AutonomousCommunicator::reportToJson(const StatusReport& report) const {
     char buf[512];
+    const std::string escapedTitle = escapeJsonString(report.title);
+    const std::string escapedAuthor = escapeJsonString(report.author);
     snprintf(buf, sizeof(buf),
         "{"
         "\"reportId\":%llu,"
@@ -479,8 +533,8 @@ std::string AutonomousCommunicator::reportToJson(const StatusReport& report) con
         "}",
         (unsigned long long)report.reportId,
         (int)report.type,
-        report.title,
-        report.author,
+        escapedTitle.c_str(),
+        escapedAuthor.c_str(),
         report.filesChanged,
         report.totalAdded,
         report.totalRemoved,
@@ -716,75 +770,105 @@ CommResult AutonomousCommunicator::removeWebhook(WebhookTarget target) {
 }
 
 CommResult AutonomousCommunicator::sendToWebhook(WebhookTarget target, const char* message) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    WebhookConfig selected{};
+    bool found = false;
+    WebhookSentCallback callback = nullptr;
+    void* callbackUd = nullptr;
 
-    for (auto& wh : m_webhooks) {
-        if (wh.target == target && wh.enabled) {
-            // Rate limit check
-            if (wh.sentThisHour >= wh.rateLimit) {
-                return CommResult::error("Rate limit exceeded");
-            }
-
-            CommResult result = CommResult::ok("Sent");
-
-            switch (target) {
-                case WebhookTarget::Console:
-                    printf("[%s] %s\n", m_config.agentName, message);
-                    result = CommResult::ok("Printed to console");
-                    break;
-                case WebhookTarget::Slack:
-                    result = sendSlack(wh, message);
-                    break;
-                case WebhookTarget::Teams:
-                    result = sendTeams(wh, message);
-                    break;
-                case WebhookTarget::Discord:
-                    result = sendDiscord(wh, message);
-                    break;
-                case WebhookTarget::Generic:
-                    result = sendHttp(wh.url, wh.authToken, message, "application/json");
-                    break;
-                case WebhookTarget::File: {
-                    FILE* f = fopen(wh.url, "a");
-                    if (f) {
-                        fprintf(f, "%s\n", message);
-                        fclose(f);
-                        result = CommResult::ok("Written to file");
-                    } else {
-                        result = CommResult::error("Failed to open output file");
-                    }
-                    break;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (const auto& wh : m_webhooks) {
+            if (wh.target == target && wh.enabled) {
+                if (wh.sentThisHour >= wh.rateLimit) {
+                    return CommResult::error("Rate limit exceeded");
                 }
+                selected = wh;
+                callback = m_webhookCb;
+                callbackUd = m_webhookCbUD;
+                found = true;
+                break;
             }
-
-            if (result.success) {
-                wh.sentThisHour++;
-                m_stats.webhooksSent++;
-            } else {
-                m_stats.webhooksFailed++;
-            }
-
-            if (m_webhookCb) {
-                m_webhookCb(target, result.success, m_webhookCbUD);
-            }
-
-            return result;
         }
     }
 
-    return CommResult::error("No enabled webhook found for target");
+    if (!found) {
+        return CommResult::error("No enabled webhook found for target");
+    }
+
+    CommResult result = CommResult::ok("Sent");
+    switch (target) {
+        case WebhookTarget::Console:
+            printf("[%s] %s\n", m_config.agentName, message);
+            result = CommResult::ok("Printed to console");
+            break;
+        case WebhookTarget::Slack:
+            result = sendSlack(selected, message);
+            break;
+        case WebhookTarget::Teams:
+            result = sendTeams(selected, message);
+            break;
+        case WebhookTarget::Discord:
+            result = sendDiscord(selected, message);
+            break;
+        case WebhookTarget::Generic:
+            result = sendHttp(selected.url, selected.authToken, message, "application/json");
+            break;
+        case WebhookTarget::File: {
+            FILE* f = fopen(selected.url, "a");
+            if (f) {
+                fprintf(f, "%s\n", message);
+                fclose(f);
+                result = CommResult::ok("Written to file");
+            } else {
+                result = CommResult::error("Failed to open output file");
+            }
+            break;
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (auto& wh : m_webhooks) {
+            if (wh.target == selected.target && std::strcmp(wh.url, selected.url) == 0) {
+                if (result.success) {
+                    wh.sentThisHour++;
+                }
+                break;
+            }
+        }
+
+        if (result.success) {
+            m_stats.webhooksSent++;
+        } else {
+            m_stats.webhooksFailed++;
+        }
+    }
+
+    if (callback) {
+        callback(target, result.success, callbackUd);
+    }
+
+    return result;
 }
 
 CommResult AutonomousCommunicator::broadcastReport(const StatusReport& report) {
     std::string md = reportToMarkdown(report);
 
-    int sent = 0, failed = 0;
-    for (auto& wh : m_webhooks) {
-        if (wh.enabled) {
-            CommResult r = sendToWebhook(wh.target, md.c_str());
-            if (r.success) sent++;
-            else failed++;
+    std::vector<WebhookTarget> targets;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (const auto& wh : m_webhooks) {
+            if (wh.enabled) {
+                targets.push_back(wh.target);
+            }
         }
+    }
+
+    int sent = 0, failed = 0;
+    for (WebhookTarget t : targets) {
+        CommResult r = sendToWebhook(t, md.c_str());
+        if (r.success) sent++;
+        else failed++;
     }
 
     if (sent == 0 && failed > 0) {
@@ -961,22 +1045,25 @@ CommResult AutonomousCommunicator::sendHttp(const char* url, const char* authTok
 CommResult AutonomousCommunicator::sendSlack(const WebhookConfig& wh, const char* message) {
     // Slack webhook format: {"text": "message"}
     char payload[8192];
-    snprintf(payload, sizeof(payload), "{\"text\":\"%s\"}", message);
+    const std::string escaped = escapeJsonString(message);
+    snprintf(payload, sizeof(payload), "{\"text\":\"%s\"}", escaped.c_str());
     return sendHttp(wh.url, wh.authToken, payload, "application/json");
 }
 
 CommResult AutonomousCommunicator::sendTeams(const WebhookConfig& wh, const char* message) {
     // Teams webhook format: {"@type":"MessageCard","text":"message"}
     char payload[8192];
+    const std::string escaped = escapeJsonString(message);
     snprintf(payload, sizeof(payload),
-        "{\"@type\":\"MessageCard\",\"text\":\"%s\"}", message);
+        "{\"@type\":\"MessageCard\",\"text\":\"%s\"}", escaped.c_str());
     return sendHttp(wh.url, wh.authToken, payload, "application/json");
 }
 
 CommResult AutonomousCommunicator::sendDiscord(const WebhookConfig& wh, const char* message) {
     // Discord webhook format: {"content":"message"}
     char payload[8192];
-    snprintf(payload, sizeof(payload), "{\"content\":\"%s\"}", message);
+    const std::string escaped = escapeJsonString(message);
+    snprintf(payload, sizeof(payload), "{\"content\":\"%s\"}", escaped.c_str());
     return sendHttp(wh.url, wh.authToken, payload, "application/json");
 }
 

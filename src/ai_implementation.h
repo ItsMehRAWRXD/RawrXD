@@ -10,6 +10,7 @@
  * - Conversation history management
  */
 
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <memory>

@@ -47,7 +47,11 @@ struct ConflictAnalysis {
     uint32_t agentA = 0;
     uint32_t agentB = 0;
     std::string resourceInConflict;
+    std::vector<std::string> affectedResources;
     std::vector<FileDiff> fileDiffs;
+    std::string baseVersion;
+    std::string agentAVersion;
+    std::string agentBVersion;
     float severityScore = 0.0f;  // 0.0 (minor) to 1.0 (critical)
     bool isMergeable = false;    // Can automatic merge succeed?
     std::string recommendedResolution;
@@ -106,10 +110,40 @@ private:
         bool isActive = false;
     };
 
+    struct ConflictRecordInternal {
+        uint32_t agentA = 0;
+        uint32_t agentB = 0;
+        std::vector<std::string> affectedResources;
+        std::vector<std::string> modifiedRegionsA;
+        std::vector<std::string> modifiedRegionsB;
+    };
+
+    struct TaskCheckpointInternal {
+        std::map<std::string, std::string> savedStates;
+    };
+
+    struct DeferralRecord {
+        uint64_t conflictId = 0;
+        uint32_t deferredAgentId = 0;
+        std::chrono::steady_clock::time_point deferUntil;
+        bool isActive = false;
+    };
+
     std::map<std::string, ResourceLock> resourceLocks_;
     std::map<uint64_t, ConflictAnalysis> analysisCache_;
+    std::map<uint64_t, ConflictRecordInternal> conflictRecords_;
+    std::map<uint32_t, uint32_t> agentPriorities_;
+    std::map<uint64_t, TaskCheckpointInternal> taskCheckpoints_;
+    std::map<uint64_t, DeferralRecord> activeDeferrals_;
 
     uint64_t resolvedConflictCount_ = 0;
+    uint64_t resolvedByPriorityCount_ = 0;
+    uint64_t resolvedByMergeCount_ = 0;
+    uint64_t resolvedBySerializingCount_ = 0;
+    uint64_t resolvedByRollbackCount_ = 0;
+    uint64_t escalatedToHumanCount_ = 0;
+    uint64_t mergeAttempts_ = 0;
+    uint64_t mergeSuccesses_ = 0;
     float totalConflictSeverity_ = 0.0f;
 };
 

@@ -1,5 +1,6 @@
 #include "BackendEmissionService.h"
 #include <windows.h>
+#include <atomic>
 #include <fstream>
 #include <thread>
 #include <future>
@@ -25,7 +26,23 @@ extern "C" {
 
 using namespace RawrXD::Agentic;
 
+namespace {
+std::atomic<bool> g_emitterEnabled{false};
+}
+
+void BackendEmissionService::set_emitter_enabled(bool enabled) {
+    g_emitterEnabled.store(enabled);
+}
+
+bool BackendEmissionService::is_emitter_enabled() {
+    return g_emitterEnabled.load();
+}
+
 bool BackendEmissionService::is_emitter_available() {
+    if (!is_emitter_enabled()) {
+        return false;
+    }
+
     // Check if the symbol is available in the current process or RawrXD_Titan.dll
     HMODULE hMod = GetModuleHandleA(NULL); // Check main exe first
     if (GetProcAddress(hMod, "BmpeEmitExecutable")) return true;
@@ -38,6 +55,11 @@ bool BackendEmissionService::is_emitter_available() {
 
 BackendEmissionService::EmissionResult BackendEmissionService::emit_executable(const EmissionRequest& req) {
     EmissionResult result{};
+
+    if (!is_emitter_enabled()) {
+        result.error_message = "BareMetal_PE_Writer emission is disabled by policy";
+        return result;
+    }
     
     if (!is_emitter_available()) {
         result.error_message = "BareMetal_PE_Writer not available - RawrXD_Titan.dll missing or outdated";

@@ -21,6 +21,8 @@
 // ============================================================================
 
 #pragma once
+#ifndef RAWRXD_AGENTIC_COMPOSER_UX_H
+#define RAWRXD_AGENTIC_COMPOSER_UX_H
 
 #include <string>
 #include <vector>
@@ -293,3 +295,5 @@ private:
 
 } // namespace Agentic
 } // namespace RawrXD
+
+#endif // RAWRXD_AGENTIC_COMPOSER_UX_H

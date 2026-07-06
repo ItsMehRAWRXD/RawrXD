@@ -14,6 +14,9 @@ AgenticCopilotIntegration::~AgenticCopilotIntegration() {
 }
 
 void AgenticCopilotIntegration::handleCopilotSendWithNavigation() {
+    if (!m_navigator) {
+        return;
+    }
     // Update context before sending
     updateContextFromIDE();
     
@@ -31,6 +34,9 @@ void AgenticCopilotIntegration::handleCopilotSendWithNavigation() {
 }
 
 void AgenticCopilotIntegration::handleCopilotClearWithNavigation() {
+    if (!m_navigator) {
+        return;
+    }
     // Navigate to Copilot chat
     auto navResult = m_navigator->navigateToCopilotChat();
     if (navResult.success) {
@@ -42,6 +48,9 @@ void AgenticCopilotIntegration::handleCopilotClearWithNavigation() {
 }
 
 void AgenticCopilotIntegration::appendCopilotResponseWithContext(const std::string& response) {
+    if (!m_navigator) {
+        return;
+    }
     // Enhance response with navigation context
     std::string enhancedResponse = response;
     
@@ -61,6 +70,9 @@ void AgenticCopilotIntegration::appendCopilotResponseWithContext(const std::stri
 }
 
 void AgenticCopilotIntegration::handleCopilotStreamUpdateWithNavigation(const std::string& token) {
+    if (!m_navigator) {
+        return;
+    }
     // Ensure we're in the right context for streaming updates
     auto navResult = m_navigator->navigateToCopilotChat();
     if (navResult.success) {
@@ -73,6 +85,10 @@ void AgenticCopilotIntegration::handleCopilotStreamUpdateWithNavigation(const st
 
 NavigationResult AgenticCopilotIntegration::executeAutonomousTask(const std::string& taskDescription) {
     auto start = std::chrono::high_resolution_clock::now();
+
+    if (!m_navigator) {
+        return NavigationResult{false, "Navigator unavailable"};
+    }
     
     // Parse task description and determine appropriate action
     NavigationResult result;
@@ -106,6 +122,10 @@ NavigationResult AgenticCopilotIntegration::executeAutonomousTask(const std::str
 }
 
 NavigationResult AgenticCopilotIntegration::navigateAndExecute(const std::string& target, const std::string& action) {
+    if (!m_navigator) {
+        return NavigationResult{false, "Navigator unavailable"};
+    }
+
     // Validate target first
     if (!validateNavigationTarget(target)) {
         return NavigationResult{false, "Invalid navigation target: " + target};
@@ -191,6 +211,10 @@ void AgenticCopilotIntegration::logNavigationPerformance(const NavigationResult&
 }
 
 void AgenticCopilotIntegration::optimizeNavigationStrategy() {
+    if (!m_navigator) {
+        return;
+    }
+
     // Analyze performance and optimize strategy
     double directSuccessRate = m_navigator->getSuccessRate(NavigationStrategy::DirectAPI);
     double commandSuccessRate = m_navigator->getSuccessRate(NavigationStrategy::IDECommands);

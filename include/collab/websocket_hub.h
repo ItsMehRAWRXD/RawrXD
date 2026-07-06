@@ -10,6 +10,8 @@
 #include <atomic>
 #include <thread>
 
+namespace RawrXD {
+
 struct WebSocketClient;  // Opaque: wraps SOCKET + state
 
 class WebSocketHub
@@ -43,5 +45,7 @@ private:
     std::thread m_serverThread;
     uint16_t m_port = 0;
 };
+
+} // namespace RawrXD
 
 #endif // WEBSOCKET_HUB_H

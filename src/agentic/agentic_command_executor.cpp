@@ -58,24 +58,21 @@ CommandExecResult AgenticCommandExecutor::executeCommand(const std::string& comm
     sa.bInheritHandle = TRUE;
     sa.lpSecurityDescriptor = nullptr;
 
-    HANDLE hStdOutRead = nullptr, hStdOutWrite = nullptr;
-    HANDLE hStdErrRead = nullptr, hStdErrWrite = nullptr;
+    HANDLE hPipeRead = nullptr, hPipeWrite = nullptr;
 
-    if (!CreatePipe(&hStdOutRead, &hStdOutWrite, &sa, 0) ||
-        !CreatePipe(&hStdErrRead, &hStdErrWrite, &sa, 0)) {
-        res.stdErr = "Failed to create pipes";
+    if (!CreatePipe(&hPipeRead, &hPipeWrite, &sa, 0)) {
+        res.stdErr = "Failed to create output pipe";
         if (onFinished) onFinished(false, -1);
         return res;
     }
 
-    SetHandleInformation(hStdOutRead, HANDLE_FLAG_INHERIT, 0);
-    SetHandleInformation(hStdErrRead, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(hPipeRead, HANDLE_FLAG_INHERIT, 0);
 
     STARTUPINFOA si{};
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdOutput = hStdOutWrite;
-    si.hStdError  = hStdErrWrite;
+    si.hStdOutput = hPipeWrite;
+    si.hStdError  = hPipeWrite;
     si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
 
     PROCESS_INFORMATION pi{};
@@ -92,13 +89,11 @@ CommandExecResult AgenticCommandExecutor::executeCommand(const std::string& comm
         nullptr, nullptr,
         &si, &pi);
 
-    CloseHandle(hStdOutWrite);
-    CloseHandle(hStdErrWrite);
+    CloseHandle(hPipeWrite);
 
     if (!created) {
         res.stdErr = "CreateProcess failed, error " + std::to_string(GetLastError());
-        CloseHandle(hStdOutRead);
-        CloseHandle(hStdErrRead);
+        CloseHandle(hPipeRead);
         if (onFinished) onFinished(false, -1);
         return res;
     }
@@ -119,11 +114,10 @@ CommandExecResult AgenticCommandExecutor::executeCommand(const std::string& comm
         return result;
     };
 
-    res.stdOut = readPipe(hStdOutRead);
-    res.stdErr = readPipe(hStdErrRead);
+    res.stdOut = readPipe(hPipeRead);
+    res.stdErr.clear();
 
-    CloseHandle(hStdOutRead);
-    CloseHandle(hStdErrRead);
+    CloseHandle(hPipeRead);
 
     WaitForSingleObject(pi.hProcess, INFINITE);
 
@@ -141,7 +135,6 @@ CommandExecResult AgenticCommandExecutor::executeCommand(const std::string& comm
     }
 
     if (onOutput && !res.stdOut.empty()) onOutput(res.stdOut);
-    if (onOutput && !res.stdErr.empty()) onOutput(res.stdErr);
 
     {
         std::lock_guard<std::mutex> lk2(m_mutex);

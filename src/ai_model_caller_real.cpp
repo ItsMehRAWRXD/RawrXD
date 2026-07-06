@@ -14,10 +14,12 @@
 #include <cmath>
 #include <cstring>
 #include <cstdint>
+#include <cstdarg>
 #include <vector>
 #include <random>
 #include <algorithm>
 #include <cstdio>
+#include <windows.h>
 
 // Forward declarations for GGML types (include ggml.h in production)
 struct ggml_context;

@@ -1,6 +1,7 @@
 #include "Win32IDEBridge.hpp"
 #include "../manifestor/SelfManifestor.hpp"
 #include "../OrchestratorBridge.h"
+#include <chrono>
 #include <fstream>
 #include <nlohmann/json.hpp>
 
@@ -256,9 +257,6 @@ bool Win32IDEBridge::initializeCapabilities() {
         };
         
         router_->registerCapability(cap.name, cap.version, factory, cap.dependencies);
-        
-        });
-        }
     }
     
     // Initialize all capabilities

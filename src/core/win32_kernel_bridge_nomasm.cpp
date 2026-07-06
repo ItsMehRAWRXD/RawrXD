@@ -1,5 +1,3 @@
-#if !defined(_MSC_VER)
-
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
@@ -409,5 +407,3 @@ extern "C" void DiskRecovery_GetStats(
         *outTotal = total;
     }
 }
-
-#endif  // !defined(_MSC_VER)

@@ -1,0 +1,115 @@
+{
+  "checks": [
+    {
+      "Category": "counters",
+      "Status": "PASS",
+      "Name": "Error count within bounds",
+      "Detail": "OK"
+    },
+    {
+      "Category": "counters",
+      "Status": "PASS",
+      "Name": "SCSI failures within bounds",
+      "Detail": "OK"
+    },
+    {
+      "Category": "perf",
+      "Status": "SKIP",
+      "Name": "GEMM ops/sec regression check",
+      "Detail": "No baseline (0)"
+    },
+    {
+      "Category": "perf",
+      "Status": "SKIP",
+      "Name": "FlashAttn ops/sec regression check",
+      "Detail": "No baseline (0)"
+    },
+    {
+      "Category": "perf",
+      "Status": "SKIP",
+      "Name": "Token throughput regression check",
+      "Detail": "No baseline (0)"
+    },
+    {
+      "Category": "perf",
+      "Status": "SKIP",
+      "Name": "Inference latency regression check",
+      "Detail": "No baseline (0)"
+    },
+    {
+      "Category": "hotpatch",
+      "Status": "PASS",
+      "Name": "Hotpatch did not spike errors",
+      "Detail": "OK"
+    },
+    {
+      "Category": "structural",
+      "Status": "PASS",
+      "Name": "Telemetry kernel ASM exists",
+      "Detail": "OK"
+    },
+    {
+      "Category": "structural",
+      "Status": "PASS",
+      "Name": "Prometheus exporter ASM exists",
+      "Detail": "OK"
+    },
+    {
+      "Category": "structural",
+      "Status": "PASS",
+      "Name": "Telemetry bridge header exists",
+      "Detail": "OK"
+    },
+    {
+      "Category": "structural",
+      "Status": "PASS",
+      "Name": "Replay+Telemetry fusion header exists",
+      "Detail": "OK"
+    },
+    {
+      "Category": "structural",
+      "Status": "PASS",
+      "Name": "Hotpatch safety header exists",
+      "Detail": "OK"
+    }
+  ],
+  "gate": "THROUGHPUT_CI_GATE",
+  "current_counters": {
+    "server_patches": 0,
+    "scsi_fails": 0,
+    "byte_patches": 0,
+    "agent_loop_count": 0,
+    "errors": 0,
+    "mem_patches": 0,
+    "inference_count": 0,
+    "flush_ops": 0
+  },
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "powershell": "7.5.5"
+  },
+  "milestone": "T3-D",
+  "current_performance": {
+    "tokens_per_sec": 0.0,
+    "gemm_ops_per_sec": 0.0,
+    "avg_latency_ms": 0.0,
+    "flash_attn_ops_per_sec": 0.0
+  },
+  "badge": "THROUGHPUT_GATE_PASS",
+  "thresholds": {
+    "latency_increase_pct": 5.0,
+    "gemm_drop_pct": 3.0,
+    "patch_delta_pct": 50.0,
+    "token_drop_pct": 3.0,
+    "flash_attn_drop_pct": 5.0
+  },
+  "summary": {
+    "passed": 8,
+    "skipped": 4,
+    "failed": 0,
+    "total": 12
+  },
+  "timestamp": "2026-07-04 22:01:58",
+  "result": "PASS",
+  "version": "1.0.0"
+}

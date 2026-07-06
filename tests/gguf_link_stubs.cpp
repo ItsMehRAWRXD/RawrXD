@@ -1,38 +1,53 @@
+// GGUF Link Stubs - Minimal implementations for test linking
+// This file provides stub implementations for GGUF loader tests
+
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
-// These stubs exist so small, dependency-free smoke tests can link against
-// `src/gguf_loader.cpp` without pulling in optional compression backends.
-// The smoke test does not exercise compression paths.
-
-namespace codec
-{
-std::vector<uint8_t> deflate(const std::vector<uint8_t>& in, bool* ok)
-{
-    if (ok)
-        *ok = false;
-    return in;
+// Stub for GGUF loader initialization
+extern "C" int GGUFLoader_Initialize() {
+    return 0; // Success
 }
 
-std::vector<uint8_t> inflate(const std::vector<uint8_t>& in, bool* ok)
-{
-    if (ok)
-        *ok = false;
-    return in;
-}
-}  // namespace codec
-
-namespace brutal
-{
-std::vector<uint8_t> compress(const std::vector<uint8_t>& in)
-{
-    return in;
+// Stub for GGUF loader cleanup
+extern "C" void GGUFLoader_Cleanup() {
 }
 
-std::vector<uint8_t> compress(const void* data, std::size_t size)
-{
-    const auto* p = static_cast<const uint8_t*>(data);
-    return std::vector<uint8_t>(p, p + size);
+// Stub for model loading
+extern "C" int GGUFLoader_LoadModel(const char* path) {
+    (void)path;
+    return -1; // Not implemented in stubs
 }
-}  // namespace brutal
+
+// Stub for model unloading
+extern "C" void GGUFLoader_UnloadModel() {
+}
+
+// Stub for getting tensor count
+extern "C" size_t GGUFLoader_GetTensorCount() {
+    return 0;
+}
+
+// Stub for getting metadata string
+extern "C" const char* GGUFLoader_GetMetadataString(const char* key) {
+    (void)key;
+    return nullptr;
+}
+
+// Stub for getting metadata int
+extern "C" int64_t GGUFLoader_GetMetadataInt(const char* key) {
+    (void)key;
+    return 0;
+}
+
+// Stub for tensor info
+extern "C" int GGUFLoader_GetTensorInfo(size_t index, char* name, size_t nameSize,
+                                         int* type, uint64_t* offset, uint64_t* size) {
+    (void)index;
+    (void)name;
+    (void)nameSize;
+    (void)type;
+    (void)offset;
+    (void)size;
+    return -1;
+}

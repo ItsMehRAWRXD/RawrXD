@@ -298,14 +298,15 @@ BuildSystem WorkspaceAnalyzer::detectBuildSystem() const {
 }
 
 FileType WorkspaceAnalyzer::detectFileType(const std::string& path) const {
+    if (path.find("test") != std::string::npos &&
+        (hasExtension(path, ".cpp") || hasExtension(path, ".cc") || hasExtension(path, ".c"))) {
+        return FileType::Test;
+    }
     if (hasExtension(path, ".cpp") || hasExtension(path, ".cc") || hasExtension(path, ".c")) {
         return FileType::Source;
     }
     if (hasExtension(path, ".h") || hasExtension(path, ".hpp") || hasExtension(path, ".hxx")) {
         return FileType::Header;
-    }
-    if (path.find("test") != std::string::npos && hasExtension(path, ".cpp")) {
-        return FileType::Test;
     }
     if (hasExtension(path, "CMakeLists.txt")) {
         return FileType::CMakeFile;

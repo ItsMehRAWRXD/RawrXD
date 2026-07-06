@@ -1416,6 +1416,7 @@ private:
         return initialized_;
     }
     
+public:
     // Callbacks (to be set by IDE)
     std::function<void(const std::string&, const std::vector<Diagnostic>&)> on_diagnostics_updated;
     std::function<void(int, const std::string&)> on_show_message;

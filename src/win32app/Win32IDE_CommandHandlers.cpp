@@ -10,6 +10,7 @@
 #include "../core/shared_feature_dispatch.h"
 
 // Forward declarations of existing GUI handlers (void* idePtr signature)
+// These are defined in Win32IDE_CommandHandlers_Stubs.cpp
 void HandleTranscendenceCoordinator(void* idePtr);
 void HandleVulkanRenderer(void* idePtr);
 void HandleOSExplorerInterceptor(void* idePtr);

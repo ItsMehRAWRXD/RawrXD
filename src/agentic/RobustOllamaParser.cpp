@@ -76,9 +76,12 @@ std::vector<RobustOllamaParser::ModelEntry> RobustOllamaParser::parse_tags_respo
     while (true) {
         auto key = extract_string();
         if (!key) break;
+
+        tok = next_token();
+        if (tok.type != Token::Colon) break;
+        tok = next_token();
         
         if (key == "models") {
-            tok = next_token();
             if (tok.type != Token::ArrayStart) break;
             
             // Parse array of models
@@ -93,6 +96,7 @@ std::vector<RobustOllamaParser::ModelEntry> RobustOllamaParser::parse_tags_respo
                     if (!field) break;
                     
                     tok = next_token(); // colon
+                    if (tok.type != Token::Colon) break;
                     auto value = next_token();
                     
                     if (field == "name" && value.type == Token::String) {
@@ -157,7 +161,6 @@ std::vector<RobustOllamaParser::ModelEntry> RobustOllamaParser::parse_tags_respo
             break;
         } else {
             // Skip value
-            tok = next_token();
             if (tok.type == Token::ObjectStart || tok.type == Token::ArrayStart) {
                 int depth = 1;
                 while (depth > 0 && m_pos < m_input.size()) {
@@ -187,12 +190,15 @@ std::string RobustOllamaParser::extract_message_content() {
         if (!key) break;
         
         tok = next_token();
+        if (tok.type != Token::Colon) break;
+        tok = next_token();
         if (key == "message") {
             if (tok.type != Token::ObjectStart) break;
             while (true) {
                 auto msg_key = extract_string();
                 if (!msg_key) break;
                 tok = next_token();
+                if (tok.type != Token::Colon) break;
                 auto msg_val = next_token();
                 if (msg_key == "content" && msg_val.type == Token::String) {
                     content = std::string(msg_val.text);

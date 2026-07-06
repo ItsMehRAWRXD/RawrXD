@@ -142,13 +142,10 @@ bool DeterministicReplayEngine::LoadTranscriptFromJson(const nlohmann::json& j) 
 }
 
 bool DeterministicReplayEngine::LoadTranscriptFromObject(const AgentTranscript& transcript) {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    // Deep copy via JSON round-trip (safe, respects mutex)
+    // Avoid nested locking and undefined behavior by round-tripping without
+    // holding this engine's mutex; LoadTranscriptFromJson() manages locking.
     nlohmann::json j = transcript.toJson();
-    m_mutex.unlock();
-    bool result = LoadTranscriptFromJson(j);
-    m_mutex.lock();
-    return result;
+    return LoadTranscriptFromJson(j);
 }
 
 // ============================================================================

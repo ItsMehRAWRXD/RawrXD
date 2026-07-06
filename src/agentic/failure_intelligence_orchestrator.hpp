@@ -4,7 +4,7 @@
 
 #pragma once
 
-
+#include <ctime>
 #include <chrono>
 #include <cstdint>
 #include <functional>

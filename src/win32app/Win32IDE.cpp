@@ -58,6 +58,8 @@
 #include "Win32IDE_ComponentManagers.h"
 
 
+
+
 // Defined once here; declared as `extern` in Win32IDE.h.
 Win32IDE* g_pMainIDE = nullptr;
 
@@ -6121,6 +6123,8 @@ bool Win32IDE::initializeInference()
     METRICS.increment("inference.init_attempts");
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
+    OutputDebugStringA("[AUDIT] initializeInference() called\n");
+
     // Explicit Logic: Initialize Native CPU Engine if missing (Un-mocking)
     if (!m_nativeEngine)
     {
@@ -6131,11 +6135,13 @@ bool Win32IDE::initializeInference()
             auto memPlugin = std::make_shared<RawrXD::Modules::NativeMemoryModule>();
             m_nativeEngine->RegisterMemoryPlugin(memPlugin);
             m_nativeEngineLoaded = false;
-            appendToOutput("Initialized Native CPU Inference Engine.", "Output", OutputSeverity::Info);
+            appendToOutput("[AUDIT] Initialized Native CPU Inference Engine.", "Output", OutputSeverity::Info);
+            OutputDebugStringA("[AUDIT] Native CPU Engine created\n");
         }
         catch (const std::exception& e)
         {
-            appendToOutput(std::string("Failed to init native engine: ") + e.what(), "Errors", OutputSeverity::Error);
+            appendToOutput(std::string("[AUDIT] Failed to init native engine: ") + e.what(), "Errors", OutputSeverity::Error);
+            OutputDebugStringA("[AUDIT] Native engine init FAILED\n");
             return false;
         }
     }
@@ -6155,20 +6161,35 @@ bool Win32IDE::initializeInference()
     if (m_nativeEngine && !m_loadedModelPath.empty())
     {
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine.get());
+        OutputDebugStringA("[AUDIT] Checking if model needs loading into native engine\n");
         if (!engine->IsModelLoaded())
         {
-            appendToOutput("Loading model into Native Engine: " + m_loadedModelPath, "Output", OutputSeverity::Info);
+            appendToOutput("[AUDIT] Loading model into Native Engine: " + m_loadedModelPath, "Output", OutputSeverity::Info);
+            OutputDebugStringA("[AUDIT] Calling engine->LoadModel()\n");
             if (engine->LoadModel(m_loadedModelPath))
             {
                 m_nativeEngineLoaded = true;
-                appendToOutput("✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
+                appendToOutput("[AUDIT] ✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
+                OutputDebugStringA("[AUDIT] m_nativeEngineLoaded = TRUE\n");
             }
             else
             {
-                appendToOutput("❌ Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
+                appendToOutput("[AUDIT] ❌ Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
+                OutputDebugStringA("[AUDIT] Model load FAILED\n");
                 // Don't fail completely if we have Ollama fallback, but for "no simulation" we adhere to native.
             }
         }
+        else
+        {
+            OutputDebugStringA("[AUDIT] Model already loaded in native engine\n");
+        }
+    }
+    else
+    {
+        char buf[512];
+        snprintf(buf, sizeof(buf), "[AUDIT] Cannot connect model: m_nativeEngine=%s, m_loadedModelPath='%s'\n",
+            m_nativeEngine ? "yes" : "no", m_loadedModelPath.c_str());
+        OutputDebugStringA(buf);
     }
 
     // Set up inference config from model metadata
@@ -6404,9 +6425,12 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     METRICS.increment("inference.async_requests_total");
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
+    OutputDebugStringA("[AUDIT] generateResponseAsync() called\n");
+
     if (m_inferenceRunning)
     {
         METRICS.increment("inference.async_requests_rejected");
+        OutputDebugStringA("[AUDIT] Inference already running - rejecting request\n");
         if (callback)
             callback("Inference already in progress.", true);
         return;
@@ -6417,33 +6441,41 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     m_currentInferencePrompt = prompt;
     m_inferenceCallback = callback;
 
+    OutputDebugStringA("[AUDIT] Starting inference thread\n");
+
     // Launch dedicated inference thread using Native Agentic Bridge
     m_inferenceThread = std::thread(
         [this, prompt]()
         {
+            OutputDebugStringA("[AUDIT] Inference worker thread started\n");
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
             if (_guard.cancelled)
             {
+                OutputDebugStringA("[AUDIT] Inference thread cancelled (shutdown)\n");
                 m_inferenceRunning = false;
                 return;
             }
             if (!m_agenticBridge)
             {
+                OutputDebugStringA("[AUDIT] Agentic bridge missing - attempting to create\n");
                 if (!m_loadedModelPath.empty())
                     ensureAgenticBridgeHasModel(m_loadedModelPath);
                 if (!m_agenticBridge)
                 {
+                    OutputDebugStringA("[AUDIT] FAILED to create agentic bridge\n");
                     if (m_inferenceCallback)
                         m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
                     m_inferenceRunning = false;
                     return;
                 }
+                OutputDebugStringA("[AUDIT] Agentic bridge created successfully\n");
             }
             if (m_agenticBridge && !m_loadedModelPath.empty() &&
                 m_agenticBridge->GetCurrentModel() != m_loadedModelPath)
                 m_agenticBridge->LoadModel(m_loadedModelPath);
 
             // Set callback to route NativeAgent stream to the UI
+            OutputDebugStringA("[AUDIT] Setting up output callback for streaming\n");
             m_agenticBridge->SetOutputCallback(
                 [this](const std::string& type, const std::string& msg)
                 {
@@ -6451,11 +6483,23 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         return;
                     // "stream" type is what we send to chat UI
                     if (m_inferenceCallback)
+                    {
+                        static int tokenCount = 0;
+                        tokenCount++;
+                        if (tokenCount <= 5 || tokenCount % 50 == 0)
+                        {
+                            char buf[128];
+                            snprintf(buf, sizeof(buf), "[AUDIT] Streaming token %d (len=%zu)\n", tokenCount, msg.length());
+                            OutputDebugStringA(buf);
+                        }
                         m_inferenceCallback(msg, false);
+                    }
                 });
 
             // Execute via agent bridge (supports /edit, /think, etc.)
+            OutputDebugStringA("[AUDIT] Executing agent command\n");
             m_agenticBridge->ExecuteAgentCommand(prompt);
+            OutputDebugStringA("[AUDIT] Agent command completed\n");
 
             // Phase 4B: Choke Point 4 — hookPostGeneration after streaming inference
             // Note: For streaming responses, the full output was already sent via callback.
@@ -6482,10 +6526,13 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             }
 
             m_inferenceRunning = false;
+            OutputDebugStringA("[AUDIT] Inference thread completing\n");
             if (m_inferenceCallback && !isShuttingDown())
             {
+                OutputDebugStringA("[AUDIT] Calling final callback (complete=true)\n");
                 m_inferenceCallback("", true);  // Finalize
             }
+            OutputDebugStringA("[AUDIT] Inference thread finished\n");
         });
 
     m_inferenceThread.detach();
@@ -7162,57 +7209,8 @@ void Win32IDE::HandleCopilotSend()
     SCOPED_METRIC("chat.send_message");
     METRICS.increment("chat.messages_sent");
 
-    if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput)
-        return;
-
-    wchar_t inputBuffer[2048] = {0};
-    GetWindowTextW(m_hwndCopilotChatInput, inputBuffer, 2047);
-    std::string userMessage = wideToUtf8(inputBuffer);
-
-    if (userMessage.empty())
-    {
-        LOG_WARNING("Empty message - ignoring");
-        return;
-    }
-
-    // Get selected model
-    int modelIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    std::string selectedModel =
-        (modelIdx >= 0 && modelIdx < (int)m_availableModels.size()) ? m_availableModels[modelIdx] : "llama2";
-
-    // Display user message
-    std::string displayText = "\n> User: " + userMessage + "\n";
-
-    int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-    if (len > 0)
-    {
-        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-    }
-    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(displayText).c_str());
-
-    // Clear input
-    SetWindowTextW(m_hwndCopilotChatInput, L"");
-
-    // Generate response asynchronously
-    auto onResponse = [this](const std::string& response, bool complete)
-    {
-        if (!m_hwndCopilotChatOutput)
-            return;
-
-        std::string displayResp = "AI: " + response + (complete ? "\n" : "");
-        int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-        if (len > 0)
-        {
-            SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-        }
-        SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(displayResp).c_str());
-    };
-
-    // Set model override temporarily
-    m_ollamaModelOverride = selectedModel;
-
-    // Generate response
-    generateResponseAsync(userMessage, onResponse);
+    // Use Ollama direct implementation for chat
+    HandleCopilotSend_Ollama();
 }
 
 void Win32IDE::HandleCopilotClear()
@@ -7510,19 +7508,33 @@ LRESULT CALLBACK Win32IDE::TabBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 // --- Editor Tab Bar ---
 void Win32IDE::createTabBar(HWND hwndParent)
 {
+    OutputDebugStringA("[Win32IDE::createTabBar] START\n");
+    fileTrace("[Win32IDE::createTabBar] START");
     if (!hwndParent)
+    {
+        OutputDebugStringA("[Win32IDE::createTabBar] hwndParent is null, returning\n");
+        fileTrace("[Win32IDE::createTabBar] hwndParent is null, returning");
         return;
+    }
 
     // Initialize sovereign TabManager
     if (!m_tabManager)
     {
+        OutputDebugStringA("[Win32IDE::createTabBar] Creating new TabManager...\n");
+        fileTrace("[Win32IDE::createTabBar] Creating new TabManager...");
         m_tabManager = new Win32IDE_TabManager(this);
+        OutputDebugStringA("[Win32IDE::createTabBar] TabManager created, calling initialize...\n");
+        fileTrace("[Win32IDE::createTabBar] TabManager created, calling initialize...");
         if (!m_tabManager->initialize(hwndParent))
         {
+            OutputDebugStringA("[Win32IDE::createTabBar] TabManager::initialize FAILED\n");
+            fileTrace("[Win32IDE::createTabBar] TabManager::initialize FAILED");
             delete m_tabManager;
             m_tabManager = nullptr;
             return;
         }
+        OutputDebugStringA("[Win32IDE::createTabBar] TabManager::initialize succeeded\n");
+        fileTrace("[Win32IDE::createTabBar] TabManager::initialize succeeded");
     }
 
     // Get the tab bar handle from the manager
@@ -7533,6 +7545,8 @@ void Win32IDE::createTabBar(HWND hwndParent)
         SetWindowLongPtrW(m_hwndTabBar, GWLP_USERDATA, (LONG_PTR)this);
         m_oldTabBarProc = (WNDPROC)SetWindowLongPtrW(m_hwndTabBar, GWLP_WNDPROC, (LONG_PTR)TabBarProc);
     }
+    OutputDebugStringA("[Win32IDE::createTabBar] DONE\n");
+    fileTrace("[Win32IDE::createTabBar] DONE");
 }
 
 void Win32IDE::addTab(const std::string& filePath, const std::string& displayName)

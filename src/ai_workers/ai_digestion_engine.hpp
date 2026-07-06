@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ai_types.hpp"
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <map>

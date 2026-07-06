@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 #include <cstdint>
+#include <cstring>
 
 namespace {
 double Clamp01(double v) {

@@ -17,6 +17,7 @@ enum class ChainError {
     StepGenerationFailed,
     ValidationFailed,
     BacktrackingFailed,
+    ChainComplete,
     MaxDepthExceeded,
     Timeout
 };

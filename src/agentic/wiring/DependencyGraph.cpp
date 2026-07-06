@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <sstream>
 #include <functional>
+#include <queue>
+#include <unordered_set>
 
 
 namespace RawrXD::Agentic::Wiring {

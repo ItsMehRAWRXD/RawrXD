@@ -197,6 +197,11 @@ LeaseToken AgentCoordinator::acquireLease(uint32_t agentId, const std::string& r
                                          std::chrono::milliseconds leaseDuration) {
     std::lock_guard<std::mutex> lock(coordinatorMutex_);
 
+    auto agentIt = agents_.find(agentId);
+    if (agentIt == agents_.end() || agentIt->second.state == AgentState::DEAD) {
+        return LeaseToken{};
+    }
+
     LeaseToken token;
     token.leaseId = nextLeaseId_++;
     token.agentId = agentId;
@@ -215,8 +220,13 @@ bool AgentCoordinator::renewLease(const LeaseToken& token,
     std::lock_guard<std::mutex> lock(coordinatorMutex_);
 
     auto it = leases_.find(token.leaseId);
-    if (it != leases_.end() && it->second.agentId == token.agentId) {
-        it->second.expiresAt = std::chrono::steady_clock::now() + additionalDuration;
+    if (it != leases_.end() && it->second.agentId == token.agentId && it->second.isValid) {
+        auto now = std::chrono::steady_clock::now();
+        if (now > it->second.expiresAt) {
+            it->second.isValid = false;
+            return false;
+        }
+        it->second.expiresAt = now + additionalDuration;
         it->second.renewalCount++;
         return true;
     }
@@ -245,6 +255,11 @@ bool AgentCoordinator::validateLease(const LeaseToken& token) const {
     }
 
     if (std::chrono::steady_clock::now() > it->second.expiresAt) {
+        return false;
+    }
+
+    auto agentIt = agents_.find(token.agentId);
+    if (agentIt == agents_.end() || agentIt->second.state == AgentState::DEAD) {
         return false;
     }
 

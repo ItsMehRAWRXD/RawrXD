@@ -6,6 +6,7 @@
 #include <sstream>
 #include <regex>
 #include <ctime>
+#include <chrono>
 
 namespace Agentic {
 
@@ -124,27 +125,38 @@ FailureIntelligenceOrchestrator::~FailureIntelligenceOrchestrator() = default;
 // ============================================================================
 
 void FailureIntelligenceOrchestrator::reportFailure(const FailureSignal& signal) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    FailureSignal callbackSignal;
+    std::string logSignalId;
+    std::string logSource;
 
-    auto sig = std::make_unique<FailureSignal>(signal);
-    if (sig->signal_id.empty()) {
-        sig->signal_id = "failure_" + std::to_string(std::time(nullptr)) + 
-                         "_" + std::to_string(m_failureCounter++);
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        auto sig = std::make_unique<FailureSignal>(signal);
+        if (sig->signal_id.empty()) {
+            sig->signal_id = "failure_" + std::to_string(std::time(nullptr)) +
+                             "_" + std::to_string(m_failureCounter++);
+        }
+        sig->detected_at = std::chrono::system_clock::now();
+
+        // Classify and store
+        sig->category = classifyFailure(*sig);
+        callbackSignal = *sig;
+        logSignalId = sig->signal_id;
+        logSource = sig->source_component;
+
+        m_failureHistory[sig->signal_id] = std::move(sig);
+        m_stats.total_failures_seen++;
     }
-    sig->detected_at = std::chrono::system_clock::now();
 
-    // Classify and store
-    sig->category = classifyFailure(*sig);
-    m_failureHistory[sig->signal_id] = std::move(sig);
-    m_stats.total_failures_seen++;
-
+    // Callbacks/logging run outside lock to avoid reentrancy deadlocks.
     if (m_failureCallback) {
-        m_failureCallback(*m_failureHistory[signal.signal_id]);
+        m_failureCallback(callbackSignal);
     }
 
     if (m_analyzeLogFn) {
-        m_analyzeLogFn("Failure reported: " + signal.signal_id + 
-                      " from " + signal.source_component);
+        m_analyzeLogFn("Failure reported: " + logSignalId +
+                       " from " + logSource);
     }
 }
 
@@ -180,7 +192,8 @@ FailureIntelligenceOrchestrator::matchPatterns(const FailureSignal& signal) cons
                           signal.stdout_output;
     std::string combined_lower;
     std::transform(combined.begin(), combined.end(), 
-                  std::back_inserter(combined_lower), ::tolower);
+                  std::back_inserter(combined_lower),
+                  [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
     for (const auto& pattern : m_failurePatterns) {
         try {
@@ -285,8 +298,8 @@ RootCauseAnalysis* FailureIntelligenceOrchestrator::analyzeFailure(
 
     if (m_analyzeLogFn) {
         m_analyzeLogFn("Analysis complete: " + result->analysis_id +
-                      " → Category: " + std::to_string(static_cast<int>(analysis->primary_category)) +
-                      " Confidence: " + std::to_string(static_cast<int>(analysis->analysis_confidence * 100)) + "%");
+                      " → Category: " + std::to_string(static_cast<int>(result->primary_category)) +
+                      " Confidence: " + std::to_string(static_cast<int>(result->analysis_confidence * 100)) + "%");
     }
 
     return result;

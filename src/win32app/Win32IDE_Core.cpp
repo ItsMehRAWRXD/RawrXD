@@ -951,6 +951,13 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 sehCallDeferredInit(deferredInitTrampoline, this);
                 return 0;
             }
+            // Handle Ollama model list update from background thread
+            if (uMsg == WM_APP + 300)
+            {
+                std::vector<std::string>* models = reinterpret_cast<std::vector<std::string>*>(wParam);
+                onOllamaModelsUpdated(models);
+                return 0;
+            }
             // Handle background init completion — refresh UI (Tier 5 menus enabled here after initTier5Cosmetics)
             if (uMsg == WM_APP + 101)
             {
@@ -1096,16 +1103,33 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return DefWindowProcA(hwnd, uMsg, wParam, lParam);
 }
 
+// Simple file trace helper (non-static for external linkage)
+void fileTrace(const char* msg) {
+    FILE* f = nullptr;
+    fopen_s(&f, "win32ide_trace.log", "a");
+    if (f) {
+        fprintf(f, "%s\n", msg);
+        fclose(f);
+    }
+}
+
 // ============================================================================
 // createWindow - Register class and create main window
 // ============================================================================
 bool Win32IDE::createWindow()
 {
+    OutputDebugStringA("RawrXD: [Win32IDE_Core.cpp] createWindow() ENTER\n");
+    fileTrace("[Win32IDE_Core] createWindow() ENTER");
+    
     // ====================================================================
     // Enterprise: Load external configuration before window creation
     // ====================================================================
     {
+        OutputDebugStringA("RawrXD: About to call IDEConfig::getInstance()...\n");
+        fileTrace("[Win32IDE_Core] About to call IDEConfig::getInstance()");
         auto& config = IDEConfig::getInstance();
+        OutputDebugStringA("RawrXD: IDEConfig::getInstance() returned\n");
+        fileTrace("[Win32IDE_Core] IDEConfig::getInstance() returned");
         // Try workspace config, then user config, then defaults
         std::string configPath = "rawrxd.config.json";
         if (!config.loadFromFile(configPath))
@@ -1151,12 +1175,30 @@ bool Win32IDE::createWindow()
 
         LOG_INFO("Configuration loaded — " + std::to_string(config.getAllKeys().size()) + " keys");
         METRICS.increment("config.loads_total");
+        OutputDebugStringA("RawrXD: Configuration loading complete\n");
+        LOG_INFO("[createWindow] Configuration loading complete");
+        fileTrace("[Win32IDE_Core] Configuration loading complete");
     }
 
     // Load RichEdit libraries — need both for RICHEDIT_CLASSA and MSFTEDIT_CLASS
+    OutputDebugStringA("RawrXD: About to LoadLibraryA(riched20.dll)...\n");
+    LOG_INFO("[createWindow] About to LoadLibraryA(riched20.dll)");
+    fileTrace("[Win32IDE_Core] About to LoadLibraryA(riched20.dll)");
     LoadLibraryA("riched20.dll");
+    OutputDebugStringA("RawrXD: riched20.dll loaded\n");
+    LOG_INFO("[createWindow] riched20.dll loaded");
+    fileTrace("[Win32IDE_Core] riched20.dll loaded");
+    OutputDebugStringA("RawrXD: About to LoadLibraryA(msftedit.dll)...\n");
+    LOG_INFO("[createWindow] About to LoadLibraryA(msftedit.dll)");
+    fileTrace("[Win32IDE_Core] About to LoadLibraryA(msftedit.dll)");
     LoadLibraryA("msftedit.dll");
+    OutputDebugStringA("RawrXD: msftedit.dll loaded\n");
+    LOG_INFO("[createWindow] msftedit.dll loaded");
+    fileTrace("[Win32IDE_Core] msftedit.dll loaded");
 
+    OutputDebugStringA("RawrXD: Setting up WNDCLASSEXA...\n");
+    LOG_INFO("[createWindow] Setting up WNDCLASSEXA");
+    fileTrace("[Win32IDE_Core] Setting up WNDCLASSEXA");
     WNDCLASSEXA wc = {};
     wc.cbSize = sizeof(WNDCLASSEXA);
     wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -1167,23 +1209,51 @@ bool Win32IDE::createWindow()
     wc.lpszClassName = kWindowClassName;
     wc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
     wc.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
+    OutputDebugStringA("RawrXD: About to RegisterClassExA()...\n");
+    LOG_INFO("[createWindow] About to RegisterClassExA()");
+    fileTrace("[Win32IDE_Core] About to RegisterClassExA()");
 
-    if (!RegisterClassExA(&wc))
+    BOOL regResult = RegisterClassExA(&wc);
+    fileTrace("[Win32IDE_Core] RegisterClassExA() returned");
+
+    if (!regResult)
     {
         // Class might already be registered
         DWORD err = GetLastError();
+        fileTrace("[Win32IDE_Core] RegisterClassExA failed, checking error");
         if (err != ERROR_CLASS_ALREADY_EXISTS)
         {
-            LOG_ERROR("Failed to register window class");
+            char errBuf[192] = {};
+            std::snprintf(errBuf, sizeof(errBuf), "Failed to register window class (GetLastError=%lu)",
+                          static_cast<unsigned long>(err));
+            LOG_ERROR(errBuf);
+            OutputDebugStringA("RawrXD: RegisterClassExA FAILED\n");
+            LOG_ERROR("[createWindow] RegisterClassExA FAILED");
+            fileTrace("[Win32IDE_Core] RegisterClassExA FAILED");
             return false;
         }
+        OutputDebugStringA("RawrXD: RegisterClassExA - class already exists (OK)\n");
+        LOG_INFO("[createWindow] RegisterClassExA - class already exists (OK)");
+        fileTrace("[Win32IDE_Core] RegisterClassExA - class already exists (OK)");
+    }
+    else
+    {
+        OutputDebugStringA("RawrXD: RegisterClassExA succeeded\n");
+        LOG_INFO("[createWindow] RegisterClassExA succeeded");
+        fileTrace("[Win32IDE_Core] RegisterClassExA succeeded");
     }
 
+    OutputDebugStringA("RawrXD: About to CreateWindowExA()...\n");
+    LOG_INFO("[createWindow] About to CreateWindowExA()");
+    fileTrace("[Win32IDE_Core] About to CreateWindowExA()");
     // Create the main window on the primary monitor's work area so it is always visible
     int winW = 1600, winH = 1000;
     int winX = 50, winY = 50;
+    fileTrace("[Win32IDE_Core] Calling MonitorFromPoint");
     HMONITOR hMon = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY);
+    fileTrace("[Win32IDE_Core] MonitorFromPoint returned");
     MONITORINFO mi = {sizeof(mi)};
+    fileTrace("[Win32IDE_Core] Calling GetMonitorInfoA");
     if (hMon && GetMonitorInfoA(hMon, &mi))
     {
         const RECT& r = mi.rcWork;
@@ -1192,26 +1262,59 @@ bool Win32IDE::createWindow()
         winW = (std::min)((int)(r.right - r.left) - 100, 1600);
         winH = (std::min)((int)(r.bottom - r.top) - 100, 1000);
     }
+    fileTrace("[Win32IDE_Core] GetMonitorInfoA returned");
+    LOG_INFO("[createWindow] Calling CreateWindowExA...");
+    fileTrace("[Win32IDE_Core] Calling CreateWindowExA...");
     m_hwndMain =
         CreateWindowExA(WS_EX_APPWINDOW, kWindowClassName, "RawrXD IDE - Native Win32 AI Development Environment",
                         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_VISIBLE, winX, winY, winW, winH, nullptr, nullptr,
                         m_hInstance, this);
+    OutputDebugStringA("RawrXD: CreateWindowExA returned\n");
+    LOG_INFO("[createWindow] CreateWindowExA returned");
+    fileTrace("[Win32IDE_Core] CreateWindowExA returned");
 
     if (!m_hwndMain)
     {
-        LOG_ERROR("Failed to create main window");
+        DWORD err = GetLastError();
+        char errBuf[224] = {};
+        std::snprintf(errBuf, sizeof(errBuf),
+                      "Failed to create main window (GetLastError=%lu, class=%s)",
+                      static_cast<unsigned long>(err), kWindowClassName ? kWindowClassName : "<null>");
+        LOG_ERROR(errBuf);
+        OutputDebugStringA("RawrXD: CreateWindowExA FAILED\n");
+        LOG_ERROR("[createWindow] CreateWindowExA FAILED");
         return false;
     }
+    OutputDebugStringA("RawrXD: CreateWindowExA succeeded - window created\n");
+    LOG_INFO("[createWindow] CreateWindowExA succeeded - window created");
 
     ShowWindow(m_hwndMain, SW_SHOW);
+    OutputDebugStringA("RawrXD: ShowWindow(SW_SHOW) called\n");
+    LOG_INFO("[createWindow] ShowWindow(SW_SHOW) called");
     ShowWindow(m_hwndMain, SW_SHOWNORMAL);
+    OutputDebugStringA("RawrXD: ShowWindow(SW_SHOWNORMAL) called\n");
+    LOG_INFO("[createWindow] ShowWindow(SW_SHOWNORMAL) called");
     UpdateWindow(m_hwndMain);
+    OutputDebugStringA("RawrXD: UpdateWindow called\n");
+    LOG_INFO("[createWindow] UpdateWindow called");
     SetWindowPos(m_hwndMain, HWND_TOPMOST, winX, winY, winW, winH, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    OutputDebugStringA("RawrXD: SetWindowPos(TOPMOST) called\n");
+    LOG_INFO("[createWindow] SetWindowPos(TOPMOST) called");
     SetWindowPos(m_hwndMain, HWND_NOTOPMOST, winX, winY, winW, winH, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+    OutputDebugStringA("RawrXD: SetWindowPos(NOTOPMOST) called\n");
+    LOG_INFO("[createWindow] SetWindowPos(NOTOPMOST) called");
     BringWindowToTop(m_hwndMain);
+    OutputDebugStringA("RawrXD: BringWindowToTop called\n");
+    LOG_INFO("[createWindow] BringWindowToTop called");
     SetForegroundWindow(m_hwndMain);
+    OutputDebugStringA("RawrXD: SetForegroundWindow called\n");
+    LOG_INFO("[createWindow] SetForegroundWindow called");
     SetActiveWindow(m_hwndMain);
+    OutputDebugStringA("RawrXD: SetActiveWindow called\n");
+    LOG_INFO("[createWindow] SetActiveWindow called");
     RedrawWindow(m_hwndMain, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
+    OutputDebugStringA("RawrXD: RedrawWindow called\n");
+    LOG_INFO("[createWindow] RedrawWindow called");
 
     // Register GUI output callback so unified-command handler output goes to IDE output panel
     setIdeAppendOutput(
@@ -1222,6 +1325,7 @@ bool Win32IDE::createWindow()
         });
 
     LOG_INFO("Main window created successfully");
+    OutputDebugStringA("RawrXD: createWindow returning TRUE\n");
     return true;
 }
 
@@ -1810,6 +1914,7 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 void Win32IDE::onCreate(HWND hwnd)
 {
     m_hwndMain = hwnd;
+    fileTrace("[onCreate] START");
 
     // Initialize Common Controls
     INITCOMMONCONTROLSEX icex = {};
@@ -1817,6 +1922,7 @@ void Win32IDE::onCreate(HWND hwnd)
     icex.dwICC = ICC_BAR_CLASSES | ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_PROGRESS_CLASS |
                  ICC_STANDARD_CLASSES;
     InitCommonControlsEx(&icex);
+    fileTrace("[onCreate] InitCommonControlsEx done");
 
     // ================================================================
     // Create UI components — SEH-safe breadcrumb trail for diagnosis
@@ -1825,17 +1931,30 @@ void Win32IDE::onCreate(HWND hwnd)
 
     // Optional panels (keep them alive for the lifetime of the IDE; no extra stub layers).
     // These are lightweight wrappers; heavy init is still deferred.
+    fileTrace("[onCreate] Creating ModelRegistry...");
     if (!m_modelRegistry)
         m_modelRegistry = new ModelRegistry(hwnd);
+    fileTrace("[onCreate] ModelRegistry done");
+    
+    fileTrace("[onCreate] Creating InterpretabilityPanel...");
     if (!m_interpretabilityPanel)
     {
         m_interpretabilityPanel = new InterpretabilityPanel();
         m_interpretabilityPanel->setParent(hwnd);
     }
+    fileTrace("[onCreate] InterpretabilityPanel done");
+    
+    fileTrace("[onCreate] Creating CheckpointManager...");
     if (!m_checkpointManager)
         m_checkpointManager = new CheckpointManager(hwnd);
+    fileTrace("[onCreate] CheckpointManager done");
+    
+    fileTrace("[onCreate] Creating CICDSettings...");
     if (!m_ciCdSettings)
         m_ciCdSettings = new CICDSettings();
+    fileTrace("[onCreate] CICDSettings done");
+    
+    fileTrace("[onCreate] Creating MultiFileSearch...");
     if (!m_multiFileSearch)
     {
         m_multiFileSearch = new MultiFileSearchWidget();
@@ -1844,8 +1963,12 @@ void Win32IDE::onCreate(HWND hwnd)
         m_multiFileSearch->setProjectRoot(root);
         m_multiFileSearch->setShowCallback(&MultiFileSearchWidget_ShowDialog, m_multiFileSearch);
     }
+    fileTrace("[onCreate] MultiFileSearch done");
+    
+    fileTrace("[onCreate] Creating BenchmarkMenu...");
     if (!m_benchmarkMenu)
         m_benchmarkMenu = new BenchmarkMenu(hwnd);
+    fileTrace("[onCreate] BenchmarkMenu done");
 
     if (m_modelRegistry)
     {
@@ -1889,22 +2012,44 @@ void Win32IDE::onCreate(HWND hwnd)
             this);
     }
 
+    fileTrace("[onCreate] createMenuBar...");
     OutputDebugStringA("[onCreate] createMenuBar...\n");
     createMenuBar(hwnd);  // ESP:m_hMenu — menus/submenus wired end-to-end
+    fileTrace("[onCreate] createMenuBar done");
+    
+    fileTrace("[onCreate] createToolbar...");
     OutputDebugStringA("[onCreate] createToolbar...\n");
     createToolbar(hwnd);
+    fileTrace("[onCreate] createToolbar done");
 
+    fileTrace("[onCreate] createActivityBar...");
     OutputDebugStringA("[onCreate] createActivityBar...\n");
     createActivityBar(hwnd);
+    fileTrace("[onCreate] createActivityBar done");
+    
+    fileTrace("[onCreate] createPrimarySidebar...");
     OutputDebugStringA("[onCreate] createPrimarySidebar...\n");
     createPrimarySidebar(hwnd);
+    fileTrace("[onCreate] createPrimarySidebar done");
 
+    fileTrace("[onCreate] createTabBar...");
     OutputDebugStringA("[onCreate] createTabBar...\n");
+    fileTrace("[onCreate] About to call createTabBar(hwnd)...");
+    OutputDebugStringA("[onCreate] About to call createTabBar(hwnd)...\n");
     createTabBar(hwnd);
+    fileTrace("[onCreate] createTabBar returned");
+    OutputDebugStringA("[onCreate] createTabBar returned\n");
+    fileTrace("[onCreate] createTabBar done");
+    
+    fileTrace("[onCreate] createBreadcrumbBar...");
     OutputDebugStringA("[onCreate] createBreadcrumbBar...\n");
     createBreadcrumbBar(hwnd);  // ESP:IDC_BREADCRUMB_BAR — symbol path bar
+    fileTrace("[onCreate] createBreadcrumbBar done");
+    
+    fileTrace("[onCreate] createLineNumberGutter...");
     OutputDebugStringA("[onCreate] createLineNumberGutter...\n");
     createLineNumberGutter(hwnd);
+    fileTrace("[onCreate] createLineNumberGutter done");
     OutputDebugStringA("[onCreate] createEditor...\n");
     createEditor(hwnd);
     createAnnotationOverlay(hwnd);
@@ -1919,6 +2064,8 @@ void Win32IDE::onCreate(HWND hwnd)
     createPowerShellPanel();
     OutputDebugStringA("[onCreate] createChatPanel...\n");
     createChatPanel();
+    OutputDebugStringA("[onCreate] initializeChatPanelOllama...\n");
+    initializeChatPanelOllama();
 
     if (m_hwndMain)
     {

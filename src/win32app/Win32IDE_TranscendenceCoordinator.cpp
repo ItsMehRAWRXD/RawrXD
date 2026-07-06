@@ -3,7 +3,7 @@
 #include <windows.h>
 
 // Handler for Transcendence Coordinator feature
-void HandleTranscendenceCoordinator(void* idePtr) {
+extern "C" void HandleTranscendenceCoordinator(void* idePtr) {
     Win32IDE* ide = static_cast<Win32IDE*>(idePtr);
     if (!ide) return;
 

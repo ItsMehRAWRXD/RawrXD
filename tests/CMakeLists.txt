@@ -121,6 +121,15 @@ if(NOT TARGET test_zero_retention_manager AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR
     message(STATUS "  ✓ Added test_zero_retention_manager")
 endif()
 
+# GUI Components Test
+if(NOT TARGET test_gui_components AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_gui_components.cpp")
+    add_executable(test_gui_components test_gui_components.cpp)
+    target_include_directories(test_gui_components PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(test_gui_components PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
+    add_test(NAME test_gui_components COMMAND test_gui_components)
+    message(STATUS "  ✓ Added test_gui_components")
+endif()
+
 # Semantic Diff Analyzer Test
 if(NOT TARGET test_semantic_diff_analyzer AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_semantic_diff_analyzer.cpp")
     add_executable(test_semantic_diff_analyzer test_semantic_diff_analyzer.cpp)
@@ -265,10 +274,18 @@ endif()
 
 # Production Regression Test Suite (Qt-free, no external deps)
 if(NOT TARGET test_production_regression AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_production_regression.cpp")
-    add_executable(test_production_regression test_production_regression.cpp)
+    add_executable(test_production_regression 
+        test_production_regression.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic_observability.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic_error_handler.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic_loop_state.cpp
+        ${CMAKE_SOURCE_DIR}/src/centralized_exception_handler.cpp
+        ${CMAKE_SOURCE_DIR}/src/error_recovery_system.cpp
+        ${CMAKE_SOURCE_DIR}/src/production_config_manager.cpp
+    )
     target_include_directories(test_production_regression PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/3rdparty
     )
     # Link against the core library when RawrEngine is built as a library target.
@@ -334,4 +351,15 @@ if(NOT TARGET test_model_loader_streamer_smoke AND EXISTS "${CMAKE_CURRENT_SOURC
     )
     add_test(NAME test_model_loader_streamer_smoke COMMAND test_model_loader_streamer_smoke)
     message(STATUS "  ✓ Added test_model_loader_streamer_smoke")
+endif()
+
+# Core Smoke Test (minimal, no dependencies)
+if(NOT TARGET smoke_core AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke_core.cpp")
+    add_executable(smoke_core smoke_core.cpp)
+    set_target_properties(smoke_core PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME smoke_core COMMAND smoke_core)
+    message(STATUS "  ✓ Added smoke_core (minimal validation)")
 endif()

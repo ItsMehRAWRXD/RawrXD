@@ -514,3 +514,15 @@ void Win32IDE_VoiceAutomation_OnStreamComplete() {
         g_streamAccumulator.clear();
     }
 }
+
+// ============================================================================
+// C API Wrapper for Command Router Integration
+// ============================================================================
+#include "../core/command_context.hpp"
+
+extern "C" CommandResult handleVoiceAutoStop(const CommandContext& ctx) {
+    (void)ctx;
+    auto& va = getVoiceAutomation();
+    va.cancelAll();
+    return CommandResult::ok("Voice automation stopped");
+}

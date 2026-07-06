@@ -55,7 +55,19 @@ bool EnhancedModelLoader::isServerRunning() const {
 }
 
 String EnhancedModelLoader::getModelInfo() const {
-    return "Stub Model Info";
+    if (!m_modelLoaded || !m_inferenceEngine) {
+        return "No model loaded";
+    }
+    
+    std::ostringstream info;
+    info << "Model: " << m_currentModelName << "\n";
+    info << "Format: " << (m_currentFormat == ModelFormat::GGUF ? "GGUF" :
+                           m_currentFormat == ModelFormat::OLLAMA ? "Ollama" :
+                           m_currentFormat == ModelFormat::HUGGINGFACE ? "HuggingFace" : "Unknown") << "\n";
+    info << "Server Port: " << m_port << "\n";
+    info << "Server Running: " << (isServerRunning() ? "Yes" : "No") << "\n";
+    
+    return info.str();
 }
 
 uint16_t EnhancedModelLoader::getServerPort() const {

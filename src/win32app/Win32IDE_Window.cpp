@@ -3,6 +3,8 @@
 #include <cassert>
 #include <commctrl.h>
 #include <cstring>
+#include <ctime>       // time(), localtime_s() for panel error logging
+#include <functional>  // std::function for SEH panel wrappers
 #include <shellscalingapi.h>  // GetDpiForWindow
 #include <windowsx.h>
 
@@ -270,30 +272,151 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
+// Helper to log SEH exceptions to file with panel name context
+static void LogPanelException(const char* panelName, DWORD exceptionCode, const char* exceptionMsg)
+{
+    // Log to debug output
+    char debugMsg[512];
+    snprintf(debugMsg, sizeof(debugMsg), "[RawrXD] Panel '%s' failed: Exception 0x%08lX - %s\n", 
+             panelName, exceptionCode, exceptionMsg);
+    OutputDebugStringA(debugMsg);
+    
+    // Log to file (always accessible, even after startup)
+    FILE* f = fopen("rawrxd_panel_errors.log", "a");
+    if (f)
+    {
+        time_t now = time(nullptr);
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &now);
+        char timestamp[32];
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &timeinfo);
+        fprintf(f, "[%s] Panel '%s': Exception 0x%08lX - %s\n", timestamp, panelName, exceptionCode, exceptionMsg);
+        fclose(f);
+    }
+}
+
+// SEH wrapper for individual panel creation
+static bool CreatePanelWithSEH(const char* panelName, std::function<void()> createFn, HWND hwnd)
+{
+    bool success = false;
+    DWORD exceptionCode = 0;
+    
+#if defined(_MSC_VER)
+    __try
+    {
+        createFn();
+        success = true;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        exceptionCode = GetExceptionCode();
+        
+        // Get exception description
+        const char* exceptionDesc = "Unknown exception";
+        switch (exceptionCode)
+        {
+            case 0xE06D7363: exceptionDesc = "C++ exception (0xE06D7363)"; break;
+            case EXCEPTION_ACCESS_VIOLATION: exceptionDesc = "Access violation"; break;
+            case EXCEPTION_INT_DIVIDE_BY_ZERO: exceptionDesc = "Divide by zero"; break;
+            case EXCEPTION_STACK_OVERFLOW: exceptionDesc = "Stack overflow"; break;
+            case EXCEPTION_ILLEGAL_INSTRUCTION: exceptionDesc = "Illegal instruction"; break;
+            case EXCEPTION_PRIV_INSTRUCTION: exceptionDesc = "Privileged instruction"; break;
+            case EXCEPTION_IN_PAGE_ERROR: exceptionDesc = "In-page error"; break;
+            case EXCEPTION_NONCONTINUABLE_EXCEPTION: exceptionDesc = "Non-continuable exception"; break;
+            case EXCEPTION_INVALID_DISPOSITION: exceptionDesc = "Invalid disposition"; break;
+            case EXCEPTION_GUARD_PAGE: exceptionDesc = "Guard page violation"; break;
+            case EXCEPTION_INVALID_HANDLE: exceptionDesc = "Invalid handle"; break;
+        }
+        
+        LogPanelException(panelName, exceptionCode, exceptionDesc);
+        
+        // Show warning dialog with panel name
+        char msg[512];
+        snprintf(msg, sizeof(msg), 
+                 "Panel '%s' failed to initialize.\n\n"
+                 "Exception: 0x%08lX (%s)\n\n"
+                 "The IDE will continue but this panel may be missing or non-functional.\n\n"
+                 "Error logged to: rawrxd_panel_errors.log",
+                 panelName, exceptionCode, exceptionDesc);
+        MessageBoxA(hwnd, msg, "RawrXD IDE - Panel Initialization Warning", MB_OK | MB_ICONWARNING);
+    }
+#else
+    try
+    {
+        createFn();
+        success = true;
+    }
+    catch (const std::exception& e)
+    {
+        LogPanelException(panelName, 0, e.what());
+        
+        char msg[512];
+        snprintf(msg, sizeof(msg), 
+                 "Panel '%s' failed to initialize.\n\n"
+                 "Exception: %s\n\n"
+                 "The IDE will continue but this panel may be missing or non-functional.\n\n"
+                 "Error logged to: rawrxd_panel_errors.log",
+                 panelName, e.what());
+        MessageBoxA(hwnd, msg, "RawrXD IDE - Panel Initialization Warning", MB_OK | MB_ICONWARNING);
+    }
+    catch (...)
+    {
+        LogPanelException(panelName, 0, "Unknown C++ exception");
+        
+        char msg[512];
+        snprintf(msg, sizeof(msg), 
+                 "Panel '%s' failed to initialize.\n\n"
+                 "Exception: Unknown C++ exception\n\n"
+                 "The IDE will continue but this panel may be missing or non-functional.\n\n"
+                 "Error logged to: rawrxd_panel_errors.log",
+                 panelName);
+        MessageBoxA(hwnd, msg, "RawrXD IDE - Panel Initialization Warning", MB_OK | MB_ICONWARNING);
+    }
+#endif
+    
+    return success;
+}
+
 void Win32IDE::onCreate(HWND hwnd)
 {
     LOG_INFO("Main Window Created: Initializing UI Components");
+    
+    // Clear previous panel error log on fresh startup
+    {
+        FILE* f = fopen("rawrxd_panel_errors.log", "w");
+        if (f)
+        {
+            time_t now = time(nullptr);
+            struct tm timeinfo;
+            localtime_s(&timeinfo, &now);
+            char timestamp[32];
+            strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &timeinfo);
+            fprintf(f, "[%s] RawrXD IDE Panel Initialization Log\n", timestamp);
+            fprintf(f, "=====================================================\n");
+            fclose(f);
+        }
+    }
 
-    // 1. Create Layout Components
+    // 1. Create Layout Components with individual SEH protection
     // Activity Bar (Leftmost strip)
     // Note: Assuming createActivityBar or similar is available or handled by createSidebar
     // If not, we rely on createSidebar to handle the left panel.
 
     // Primary Sidebar (Left Explorer/Search)
-    createSidebar(hwnd);
+    CreatePanelWithSEH("Sidebar", [this, hwnd]() { createSidebar(hwnd); }, hwnd);
 
     // Editor Area (Center - RichEdit)
-    createEditor(hwnd);
+    CreatePanelWithSEH("Editor", [this, hwnd]() { createEditor(hwnd); }, hwnd);
 
     // Terminal/Panel Area (Bottom)
-    createTerminal(hwnd);
+    CreatePanelWithSEH("Terminal", [this, hwnd]() { createTerminal(hwnd); }, hwnd);
 
     // Secondary Sidebar (Right - Copilot) - Defined in Win32IDE_VSCodeUI.cpp
     // Ensure we utilize the VS Code UI features if available
-    createSecondarySidebar(hwnd);
+    CreatePanelWithSEH("SecondarySidebar", [this, hwnd]() { createSecondarySidebar(hwnd); }, hwnd);
 
     // Status Bar (Bottom strip)
-    createStatusBar(hwnd);
+    CreatePanelWithSEH("StatusBar", [this, hwnd]() { createStatusBar(hwnd); }, hwnd);
 
     // 3. Post-Creation Setup
     // Initialize default focus
@@ -303,7 +426,7 @@ void Win32IDE::onCreate(HWND hwnd)
     }
 
     // 4. Create keyboard accelerator table for Build shortcuts
-    createAcceleratorTable();
+    CreatePanelWithSEH("AcceleratorTable", [this]() { createAcceleratorTable(); }, hwnd);
 
     // Defer heavy runtime initialization until after the window is shown and
     // the message loop is running, so WM_CREATE does not block the launch path.

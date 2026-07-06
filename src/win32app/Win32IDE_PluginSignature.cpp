@@ -31,7 +31,7 @@ std::vector<std::wstring> collectPluginFiles(const std::filesystem::path& root) 
 
 }  // namespace
 
-void HandlePluginSignature(void* idePtr) {
+extern "C" void HandlePluginSignature(void* idePtr) {
     Win32IDE* ide = static_cast<Win32IDE*>(idePtr);
     if (!ide) {
         return;

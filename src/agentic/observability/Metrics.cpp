@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <chrono>
 #include <utility>
+#include <algorithm>
 
 namespace RawrXD::Agentic::Observability {
 
@@ -40,42 +41,63 @@ void Metrics::incrementCounter(const std::string& name, double value,
                                const std::unordered_map<std::string, std::string>& labels) {
     std::lock_guard<std::mutex> lock(m_mutex);
     std::string key = generateKey(name, labels);
-    
-    if (m_metrics.find(key) == m_metrics.end()) {
-        registerMetric(key, MetricType::COUNTER);
+
+    auto it = m_metrics.find(key);
+    if (it == m_metrics.end()) {
+        auto [insertedIt, _] = m_metrics.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(key),
+            std::forward_as_tuple());
+        insertedIt->second.type = MetricType::COUNTER;
+        insertedIt->second.lastUpdated = std::chrono::system_clock::now();
+        it = insertedIt;
     }
-    
-    auto& metric = m_metrics[key];
+
+    auto& metric = it->second;
     double current = metric.value.load();
     metric.value.store(current + value);
-    m_metrics[key].lastUpdated = std::chrono::system_clock::now();
+    metric.lastUpdated = std::chrono::system_clock::now();
 }
 
 void Metrics::setGauge(const std::string& name, double value,
                       const std::unordered_map<std::string, std::string>& labels) {
     std::lock_guard<std::mutex> lock(m_mutex);
     std::string key = generateKey(name, labels);
-    
-    if (m_metrics.find(key) == m_metrics.end()) {
-        registerMetric(key, MetricType::GAUGE);
+
+    auto it = m_metrics.find(key);
+    if (it == m_metrics.end()) {
+        auto [insertedIt, _] = m_metrics.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(key),
+            std::forward_as_tuple());
+        insertedIt->second.type = MetricType::GAUGE;
+        insertedIt->second.lastUpdated = std::chrono::system_clock::now();
+        it = insertedIt;
     }
-    
-    m_metrics[key].value.store(value);
-    m_metrics[key].lastUpdated = std::chrono::system_clock::now();
+
+    it->second.value.store(value);
+    it->second.lastUpdated = std::chrono::system_clock::now();
 }
 
 void Metrics::observeHistogram(const std::string& name, double value,
                               const std::unordered_map<std::string, std::string>& labels) {
     std::lock_guard<std::mutex> lock(m_mutex);
     std::string key = generateKey(name, labels);
-    
-    if (m_metrics.find(key) == m_metrics.end()) {
-        registerMetric(key, MetricType::HISTOGRAM);
+
+    auto it = m_metrics.find(key);
+    if (it == m_metrics.end()) {
+        auto [insertedIt, _] = m_metrics.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(key),
+            std::forward_as_tuple());
+        insertedIt->second.type = MetricType::HISTOGRAM;
+        insertedIt->second.lastUpdated = std::chrono::system_clock::now();
+        it = insertedIt;
     }
-    
+
     // TODO: Implement histogram buckets
-    m_metrics[key].value.store(value);
-    m_metrics[key].lastUpdated = std::chrono::system_clock::now();
+    it->second.value.store(value);
+    it->second.lastUpdated = std::chrono::system_clock::now();
 }
 
 double Metrics::getMetricValue(const std::string& name,
@@ -138,7 +160,7 @@ std::string Metrics::exportJson() const {
 bool Metrics::startMetricsServer(uint16_t port) {
     // TODO: Implement HTTP server for Prometheus scraping
     m_serverPort = port;
-    m_serverRunning.store(true);
+    m_serverRunning.store(false);
     return false;
 }
 
@@ -167,11 +189,15 @@ std::string Metrics::generateKey(const std::string& name,
     if (labels.empty()) {
         return name;
     }
-    
+
+    std::vector<std::pair<std::string, std::string>> ordered(labels.begin(), labels.end());
+    std::sort(ordered.begin(), ordered.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
+
     std::ostringstream key;
     key << name << "{";
     bool first = true;
-    for (const auto& [k, v] : labels) {
+    for (const auto& [k, v] : ordered) {
         if (!first) key << ",";
         first = false;
         key << k << "=\"" << v << "\"";

@@ -210,7 +210,7 @@ int asm_orchestrator_drain_queue(uint32_t maxItems) {
     const uint64_t cap = (maxItems == 0) ? 0ull : static_cast<uint64_t>(maxItems);
     uint64_t drained = 0;
     while (drained < cap) {
-        const uint64_t q = g_orch.asyncQueued.load(std::memory_order_relaxed);
+        uint64_t q = g_orch.asyncQueued.load(std::memory_order_relaxed);
         if (q == 0) {
             break;
         }

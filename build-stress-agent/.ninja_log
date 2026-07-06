@@ -1,0 +1,7 @@
+# ninja log v6
+1353	1475	8048377182236019	D:/rawrxd/src/agent/telemetry/stress_agent.exe	7378f18bb0dbed43
+5	1058	8048378240349898	CMakeFiles/stress_agent.dir/stress_test_agent.cpp.obj	956e11d66151090d
+2	127	8048378701952572	build.ninja	a54425f7c5b05849
+2	127	8048378701952572	D:/rawrxd-ci-bootstrap/build-stress-agent/cmake_install.cmake	a54425f7c5b05849
+4	711	8048378841599985	CMakeFiles/stress_agent.dir/AgentTelemetry_cpp_impl.cpp.obj	e73bc4ea4f82538a
+718	802	8048378848731259	D:/rawrxd/src/agent/telemetry/stress_agent.exe	ecf7ff0f14f59785

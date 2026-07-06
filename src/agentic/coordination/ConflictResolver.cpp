@@ -93,6 +93,7 @@ bool ConflictResolver::resolveByPriority(uint64_t conflictId, uint32_t& winner) 
 
     winner = (priorityA >= priorityB) ? analysis.agentA : analysis.agentB;
     resolvedConflictCount_++;
+    resolvedByPriorityCount_++;
 
     return true;
 }
@@ -124,6 +125,7 @@ bool ConflictResolver::resolveByRollback(uint64_t conflictId,
     }
 
     resolvedConflictCount_++;
+    resolvedByRollbackCount_++;
     return allReverted;
 }
 
@@ -141,11 +143,14 @@ bool ConflictResolver::resolveBySerializing(uint64_t conflictId,
     executionOrder.push_back(it->second.agentB);
 
     resolvedConflictCount_++;
+    resolvedBySerializingCount_++;
     return true;
 }
 
 bool ConflictResolver::resolveByMerge(uint64_t conflictId, std::string& mergedContent) {
     std::lock_guard<std::mutex> lock(resolverMutex_);
+
+    mergeAttempts_++;
 
     auto it = analysisCache_.find(conflictId);
     if (it == analysisCache_.end() || !it->second.isMergeable) {
@@ -168,6 +173,8 @@ bool ConflictResolver::resolveByMerge(uint64_t conflictId, std::string& mergedCo
     }
 
     resolvedConflictCount_++;
+    resolvedByMergeCount_++;
+    mergeSuccesses_++;
     return true;
 }
 
@@ -294,10 +301,18 @@ ConflictResolver::ConflictStats ConflictResolver::getStatistics() const {
 
     ConflictStats stats;
     stats.totalConflictsDetected = analysisCache_.size();
-    stats.resolvedByPriority = resolvedConflictCount_;
+    stats.resolvedByPriority = resolvedByPriorityCount_;
+    stats.resolvedByMerge = resolvedByMergeCount_;
+    stats.resolvedBySerializing = resolvedBySerializingCount_;
+    stats.resolvedByRollback = resolvedByRollbackCount_;
+    stats.escalatedToHuman = escalatedToHumanCount_;
 
     if (stats.totalConflictsDetected > 0) {
         stats.averageSeverity = totalConflictSeverity_ / stats.totalConflictsDetected;
+    }
+
+    if (mergeAttempts_ > 0) {
+        stats.mergeSuccessRate = static_cast<float>(mergeSuccesses_) / static_cast<float>(mergeAttempts_);
     }
 
     return stats;

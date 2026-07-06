@@ -1551,3 +1551,40 @@ std::string RawrXDLSPServer::getStatsString() const {
 
 } // namespace LSPServer
 } // namespace RawrXD
+
+// ============================================================================
+// ENTRY POINT
+// ============================================================================
+
+int main(int argc, char* argv[]) {
+    using namespace RawrXD::LSPServer;
+
+    // Configure server
+    ServerConfig config;
+
+    // Parse command line args
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            std::cerr << "RawrXD-Script LSP Server\n"
+                      << "Usage: " << argv[0] << " [options]\n"
+                      << "Options:\n"
+                      << "  -h, --help       Show this help\n";
+            return 0;
+        }
+    }
+
+    // Create and run server
+    RawrXDLSPServer server;
+    server.configure(config);
+
+    if (!server.start()) {
+        std::cerr << "Failed to start LSP server\n";
+        return 1;
+    }
+
+    // Blocks until shutdown
+    server.runBlocking();
+
+    return 0;
+}

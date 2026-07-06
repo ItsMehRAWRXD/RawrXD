@@ -5,6 +5,8 @@
 #include <sstream>
 #include <iostream>
 #include <regex>
+#include <chrono>
+#include <future>
 
 namespace RawrXD {
 

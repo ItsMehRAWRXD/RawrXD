@@ -126,7 +126,7 @@ void AgenticObservability::logInfo(
     const std::string& message,
     const nlohmann::json& context)
 {
-    log(LogLevel::ObsError, component, message, context);
+    log(LogLevel::ObsInfo, component, message, context);
 }
 
 void AgenticObservability::logError(
