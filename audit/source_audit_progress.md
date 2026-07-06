@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3070/3159 files (~97.2%)
+Current progress: 3080/3159 files (~97.5%)
+
+## Batch 308 (Completed)
+
+**Queue entries 3071-3080 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_QuickWins.cpp - Quick-win systems integration (Phase 33)
+2. src/win32app/Win32IDE_Refactor.cpp - Refactor engine (rename, extract function)
+3. src/win32app/Win32IDE_RefactoringPlugin.cpp - Refactoring plugin (organize includes)
+4. src/win32app/Win32IDE_ReferencesPanel.cpp - Find All References UI (Feature 16)
+5. src/win32app/Win32IDE_RenamePreview.cpp - Rename refactoring preview (Feature 17)
+6. src/win32app/Win32IDE_ResourceGenerator.cpp - Resource generator integration
+7. src/win32app/Win32IDE_ReverseEngineering.cpp - Reverse engineering UI (RawrCodex, DumpBin)
+8. src/win32app/Win32IDE_SearchPanel.cpp - Find-in-Files panel (Ctrl+Shift+F)
+9. src/win32app/Win32IDE_SecurityDashboard.cpp - Security dashboard UI
+10. src/win32app/Win32IDE_SecurityReport.cpp - Security report builder
+
+### Key Findings
+- QuickWins: ShortcutManager, BackupManager, AlertSystem, SLOTracker integration
+- Refactor: Workspace-wide rename, function extraction stub, LSP fallback
+- RefactoringPlugin: Whole identifier replacement, include organization
+- ReferencesPanel: Tree-structured panel, file grouping, context lines
+- RenamePreview: Diff preview, per-change checkboxes, apply/cancel workflow
+- ResourceGenerator: Template-based generation, parameter substitution
+- ReverseEngineering: PE analysis, RawrCodex, DumpBin, Compiler, RE Engine
+- SearchPanel: Regex search, glob filters, replace/replace-all, result grouping
+- SecurityDashboard: SAST/SCA/Secrets/DAST aggregation, SBOM export
+- SecurityReport: Unified security report, posture scoring (0-100)
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3080/3159 files (~97.5%)**
+
 
 ## Batch 307 (Completed)
 
@@ -11919,4 +11951,56 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - ingestFile: Digest validation before memory mapping
 
 **Total Progress: 2380/3159 files (~75.3%)**
+
+
+
+## Batch 239 (Completed)
+
+**Queue entries 2452-2461 audited.**
+
+### Files Audited
+1. src/runtime_surface/LlamaExllamaParityRegister.cpp - Llama/Exllama Parity Register
+2. src/runtime_surface/MicroservicePipeHost.cpp - Microservice Pipe Host
+3. src/runtime_surface/MmapRegion.cpp - Mmap Region
+4. src/runtime_surface/ModularModelLoader.cpp - Modular Model Loader
+5. src/runtime_surface/NvUsIoChannel.cpp - NVMe User-space I/O Channel
+6. src/runtime_surface/QuantSignedLayout.cpp - Quant Signed Layout
+7. src/runtime_surface/RocmDynamicLoader.cpp - ROCm Dynamic Loader
+8. src/runtime_surface/RuntimeSurfaceBootstrap.cpp - Runtime Surface Bootstrap
+9. src/runtime_surface/RuntimeSurfaceModule.cpp - Runtime Surface Module
+10. src/runtime_surface/ShardResourcePool.cpp - Shard Resource Pool
+
+### Key Findings
+- LlamaExllamaParityRegister: Tensor name mapping between formats
+- RoleEntry table: blk.attn_norm, blk.ffn_norm, blk.attn_q/k/v, blk.attn_output
+- Maps: canonicalId -> ggufPattern -> exllamaId
+- MicroservicePipeHost: Named pipe server for microservice communication
+- start/stop with mutex-protected state management
+- serverThreadMain: CreateNamedPipeW with PIPE_ACCESS_INBOUND
+- LineHandler callback for processing pipe messages
+- MmapRegion: Windows memory-mapped file wrapper
+- mapFileReadOnly: CreateFileW, CreateFileMappingW, MapViewOfFile
+- RAII with move semantics, reset() for cleanup
+- ModularModelLoader: Backend module registration for model loading
+- LayerLoadState tracking per layer ID
+- Resident layer budget management
+- NvUsIoChannel: User-space NVMe volume access
+- openVolumeReadOnly: CreateFileW on NT path (\\\\.\\PhysicalDriveN)
+- readAt: SetFilePointerEx + ReadFile for random access
+- QuantSignedLayout: Signed quantization format documentation
+- Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]
+- Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]
+- RocmDynamicLoader: AMD ROCm/HIP runtime loading
+- LoadLibraryW candidates: amdhip64.dll, hip.dll, hiprtc.dll
+- resolve(): GetProcAddress for function lookup
+- RuntimeSurfaceBootstrap: Initialization coordinator
+- bootstrapRuntimeSurface: Initializes all runtime surface components
+- Quant::LogQuantLayoutLegendOnce, RocmDynamicLoader::load, CompressedPoolBudget setup
+- RuntimeSurfaceModule: Unity build module including all runtime_surface .cpp files
+- ShardResourcePool: Reference-counted shard management
+- registerShard: Adds MmapRegion with refcount=1, returns handle
+- addRef/release: Reference counting with automatic cleanup
+- view/size: Accessor methods with mutex protection
+
+**Total Progress: 2390/3159 files (~75.7%)**
 
