@@ -2,7 +2,38 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 2860/3159 files (~90.5%)
+Current progress: 2870/3159 files (~90.9%)
+
+## Batch 287 (Completed)
+
+**Queue entries 2861-2870 audited.**
+
+### Files Audited
+1. src/win32app/MainWindowSimple.h - Main window header
+2. src/win32app/memory_modules/memory_module_template.cpp - Memory module template
+3. src/win32app/model_inference.hpp - Model inference types & metrics
+4. src/win32app/ModelConnection.h - HTTP model connection handler
+5. src/win32app/multi_file_search_stub.cpp - Multi-file search stub
+6. src/win32app/multi_response_engine.h - Multi-response chain engine
+7. src/win32app/OSExplorerInterceptor_nonmsvc.cpp - OS interceptor (non-MSVC)
+8. src/win32app/OSExplorerInterceptor.cpp - OS interceptor implementation
+9. src/win32app/OSExplorerInterceptor.h - OS interceptor header
+10. src/win32app/plan_mode_handler.cpp - Plan mode implementation
+
+### Key Findings
+- MainWindowSimple.h: AppState, Theme, Problem, Tab structs, UndoStack
+- MemoryModuleTemplate: DLL template for context-specific allocation
+- AllocateContextBuffer: VirtualAlloc for small, CreateFileMapping for large
+- ModelInference.hpp: SCOPED_METRIC, METRICS, CONFIG, FEATURE_ENABLED macros
+- ModelInferenceStatus: Success/NotLoaded/ContextExceeded/Timeout/Cancelled/Error
+- ModelConnection: WinHTTP-based Ollama endpoint communication
+- MultiResponseEngine: Up to 4 responses per prompt with different templates
+- ResponseTemplates: Concise, Detailed, Creative, Technical
+- OSExplorerInterceptor: Hook table for file/registry/process/network APIs
+- PlanModeHandler: MetaPlanner integration, research subagent, checklist format
+
+**Total Progress: 2870/3159 files (~90.9%)**
+
 
 ## Batch 286 (Completed)
 
@@ -10120,4 +10151,91 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - lsp_client.h: Wrapper redirecting to src/lsp_client.h
 
 **Total Progress: 2130/3159 files (~67.4%)**
+
+
+
+## Batch 214 (Completed)
+
+**Queue entries 2162-2171 audited.**
+
+### Files Audited
+1. src/qtapp/MainWindow_Widget_Integration.h - MainWindow Widget Integration
+2. src/qtapp/MainWindow.cpp - MainWindow Implementation
+3. src/qtapp/MainWindow.h - MainWindow Header
+4. src/qtapp/MainWindowMinimal.cpp - MainWindow Minimal
+5. src/qtapp/MainWindowMinimal.h - MainWindow Minimal Header
+6. src/qtapp/MainWindowSimple_Utils.cpp - MainWindow Simple Utils
+7. src/qtapp/MainWindowSimple.cpp - MainWindow Simple
+8. src/qtapp/MainWindowSimple.h - MainWindow Simple Header
+9. src/qtapp/memory_persistence_system.cpp - Memory Persistence System
+10. src/qtapp/memory_persistence_system.h - Memory Persistence System Header
+
+### Key Findings
+- MainWindow_Widget_Integration.h: WidgetFactory for production dock widgets
+- Factory methods: createRunDebugWidget, createProfilerWidget, createTestExplorerWidget
+- Development tools: DatabaseToolWidget, DockerToolWidget, CloudExplorerWidget, PackageManagerWidget
+- Documentation widgets: DocumentationWidget, UMLViewWidget, ImageToolWidget, DesignToCodeWidget
+- Collaboration: AudioCallWidget, ScreenShareWidget, WhiteboardWidget
+- MainWindow.cpp: 'One IDE to rule them all' - comprehensive development environment
+- Includes: TaskOrchestrator, OrchestrationUI, ActivityBar, MASMEditorWidget, HotpatchPanel
+- AI integration: InterpretabilityPanelEnhanced, InferenceEngine, GGUFServer, StreamingInference
+- Agent system: AutoBootstrap, HotReload, SelfTestGate, MetaPlanner, ActionExecutor, ModelInvoker
+- MainWindow.h: 40+ IDE subsystems as dock widgets (ProjectExplorer, BuildSystem, VersionControl, etc.)
+- MASM integration: MASMCompilerWidget, PEWriter, ELFWriter, MachOWriter
+- MainWindowMinimal: Stripped down for startup testing with basic Qt layout
+- MainWindowSimple: Win32 API implementation with RichEdit 5.0 (Msftedit.dll)
+- Menu IDs: File (100-199), Edit (200-299), Selection (300-399), View (400-499)
+- Run Menu (500-599), Terminal (600-699), Help (700-799)
+- MemoryPersistenceSystem: Context snapshots, session persistence, knowledge graph
+- Storage paths: snapshots, sessions, knowledge in AppData/RawrXD/Memory
+- Methods: saveContextSnapshot, loadContextSnapshot, saveSessionState, restoreLastSession
+- Knowledge graph: addCodeRelationship, findRelatedCode, buildKnowledgeGraph
+- Auto-snapshot: Configurable interval (default 5 minutes), optimization timer
+
+**Total Progress: 2140/3159 files (~67.7%)**
+
+
+
+## Batch 215 (Completed)
+
+**Queue entries 2182-2191 audited.**
+
+### Files Audited
+1. src/qtapp/MinimalWindow.h - Minimal Window Header
+2. src/qtapp/model_benchmark_console.cpp - Model Benchmark Console
+3. src/qtapp/model_loader_thread.cpp - Model Loader Thread
+4. src/qtapp/model_loader_thread.hpp - Model Loader Thread Header
+5. src/qtapp/model_memory_hotpatch.cpp - Model Memory Hotpatch
+6. src/qtapp/model_memory_hotpatch.hpp - Model Memory Hotpatch Header
+7. src/qtapp/model_monitor.cpp - Model Monitor
+8. src/qtapp/model_monitor.hpp - Model Monitor Header
+9. src/qtapp/model_queue.cpp - Model Queue
+10. src/qtapp/model_queue.hpp - Model Queue Header
+
+### Key Findings
+- MinimalWindow.h: Basic QMainWindow for Qt functionality testing
+- model_benchmark_console.cpp: Console benchmark harness for GGUF models
+- BenchResult struct: load_ms, tokenize_ms, prefill_ms, decode_ms, tokens_per_sec
+- Scenarios: Short Chat, Code Completion, Math Reasoning, Long Context Prefill
+- ModelBench class: init(), run_scenario() with timing and quality metrics
+- model_loader_thread: Pure C++ std::thread (no Qt threading) for reliable loading
+- Methods: start(), cancel(), wait(timeoutMs), isRunning(), isCanceled()
+- Callbacks: ProgressCallback, CompleteCallback for async operation
+- model_memory_hotpatch: Live RAM model patching with cross-platform memory protection
+- Windows: VirtualProtect with PAGE_READONLY/PAGE_READWRITE
+- POSIX: mprotect with PROT_READ/(PROT_READ|PROT_WRITE)
+- PatchResult struct: success, detail, errorCode, elapsedMs
+- MemoryPatchType enum: WeightModification, QuantizationChange, LayerBypass, AttentionScale, BiasAdjustment, GraphRedirection, VocabularyPatch, Custom
+- MemoryPatch struct: offset, size, patchBytes, originalBytes, transformType, checksum
+- TensorInfo struct: name, offset, size, nDims, shape, quantType
+- model_monitor: Real-time performance monitor widget
+- Displays: Memory usage (MB), Tokens/sec throughput, Temperature setting
+- Refresh timer: 1 second updates
+- model_queue: Multi-model queue system for concurrent model management
+- Priority enum: LOW=0, NORMAL=1, HIGH=2
+- Request struct: id, modelPath, prompt, maxTokens, temperature, priority, enqueueTime
+- Features: Priority-based scheduling, Concurrent model loading (default 2), Memory-aware management
+- Signals: requestStarted, requestCompleted, requestFailed, queueEmpty, modelLoaded, modelUnloaded
+
+**Total Progress: 2150/3159 files (~68.1%)**
 
