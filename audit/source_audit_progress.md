@@ -2,7 +2,31 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 1640/3159 files (~51.9%)
+Current progress: 1650/3159 files (~52.2%)
+
+## Batch 67 (Completed)
+Files audited (queue 1641-1650):
+1. src/io/io_factory.cpp
+2. src/iouring_zone_loader.h
+3. src/json_types.hpp
+4. src/kernel_dispatch/KernelDispatcher.cpp
+5. src/kernels/flash_attention_avx512.cpp
+6. src/kernels/flash_attention.cpp
+7. src/KeywordHashTable.cpp
+8. src/KeywordHashTable.h
+9. src/kv_cache_quant.cpp
+10. src/kv_cache/PagedKVCache.h
+
+Primary findings:
+- **io/io_factory.cpp**: Factory for creating I/O backends. Returns `DirectIORingWindows` for Windows, `nullptr` for unsupported platforms. Clean conditional compilation.
+- **iouring_zone_loader.h**: Windows IORing zone-based loader. `IORingConfig` with queueDepth, maxBatch, useRegisteredBuffers. `IORingZoneLoader` with SubmitZoneRead, SubmitZoneBatch, PollCompletions. Registered buffer pool for zero-copy. Stats tracking with atomic counters.
+- **json_types.hpp**: Qt-free JSON types replacement. `JsonValue` variant-based (Null, bool, int64_t, double, string, Object, Array). `JsonObject` as unordered_map. `JsonDoc` with toJson serialization. Manual serializer implementation.
+- **kernel_dispatch/KernelDispatcher.cpp**: Pure Win32 kernel dispatch. Loads `pocket_lab_turbo.dll` and `Phase3_Agent_Kernel.dll`. Resolves function pointers for PocketLab and Phase3 kernels. System info detection via Windows APIs. Clean DLL loading pattern.
+- **kernels/flash_attention_avx512.cpp**: AVX-512 FlashAttention kernel. Online softmax with running max and sum. `_mm512` intrinsics for vectorized operations. 512-bit vector processing. Scale factor `1/sqrt(head_size)`.
+- **kernels/flash_attention.cpp**: Memory-efficient tiled FlashAttention. 64x64 block tiling. `softmax_inplace` with numerical stability (max subtraction). Standard and baseline attention implementations for comparison.
+- **KeywordHashTable.cpp/h**: Language keyword sets for syntax highlighting. 10 languages: C, Cpp, Assembly, MASM, Python, Java, JavaScript, TypeScript, Go, Rust. Wide string (`wstring`) storage. `unordered_set` for O(1) lookup. Dynamic add/remove capability.
+- **kv_cache_quant.cpp**: Block-wise KV-cache quantization. FP16, Q8_0, Q4_0 formats. `fp32_to_fp16`/`fp16_to_fp32` bit manipulation (IEEE 754-2008). Block size 256. Scale-per-block quantization. `extern "C"` for MASM interop.
+- **kv_cache/PagedKVCache.h**: Paged KV cache management. `BLOCK_SIZE=16`, `HIDDEN_DIM=4096`, `NUM_HEADS=32`. `KVCacheBlock` with K/V data. `BlockManager` with free list allocation. `BlockTable` for logical-to-physical mapping. Throws on OOM.
 
 ## Batch 66 (Completed)
 Files audited (queue 1631-1640):
