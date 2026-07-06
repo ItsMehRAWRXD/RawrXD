@@ -2,7 +2,38 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 2820/3159 files (~89.3%)
+Current progress: 2830/3159 files (~89.6%)
+
+## Batch 283 (Completed)
+
+**Queue entries 2821-2830 audited.**
+
+### Files Audited
+1. src/win32app/ask_mode_handler.hpp - Ask mode Q&A with citations
+2. src/win32app/AutonomousAgent.cpp - Autonomous agent implementation
+3. src/win32app/AutonomousAgent.h - Autonomous agent header
+4. src/win32app/benchmark_menu_stub.cpp - Benchmark menu stub anchor
+5. src/win32app/benchmark_runner_stub.cpp - Benchmark runner stub anchor
+6. src/win32app/CircularBeaconManager.h - Panel beacon orchestrator
+7. src/win32app/CircularBeaconSystem.cpp - BeaconHub implementation
+8. src/win32app/CircularBeaconSystem.h - Legacy beacon compat shim
+9. src/win32app/cli_main_headless.cpp - Headless CLI entry point
+10. src/win32app/collab_cursor_fallbacks.cpp - Collaboration cursor fallbacks
+
+### Key Findings
+- AskModeHandler: Concise Q&A mode with source citation prompts
+- AutonomousAgent: 8-state agent (IDLE to SHUTDOWN), 15 beacon types
+- AgentConfig: Auto-diagnostics, beaconing, self-healing, reporting
+- BeaconManager: Logs to %APPDATA%\RawrXD\Agent\beacons.log
+- DiagnosticEngine: 8 registered tests (Engine Load to Window Messages)
+- SelfHealingEngine: 4 healing actions (restart loop to clear state)
+- CircularBeaconManager: 40+ panel beacon bridges via BeaconHub
+- BeaconHub: Singleton with mutex-guarded beacon registry
+- CLIHeadless: UTF-8 console, --repl default, HeadlessIDE wrapper
+- CollabFallbacks: CursorWidget, CRDTBuffer with INSERT/DELETE ops
+
+**Total Progress: 2830/3159 files (~89.6%)**
+
 
 ## Batch 282 (Completed)
 
@@ -9858,4 +9889,53 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - TransformType: InjectSystemPrompt, ModifyParameters, CacheResponse, etc.
 
 **Total Progress: 2100/3159 files (~66.5%)**
+
+
+
+## Batch 211 (Completed)
+
+**Queue entries 2112-2121 audited.**
+
+### Files Audited
+1. src/qtapp/gguf_server_hotpatch.hpp - GGUF Server Hotpatch Header
+2. src/qtapp/gguf_server.cpp - GGUF Server
+3. src/qtapp/gguf_server.hpp - GGUF Server Header
+4. src/qtapp/gguf.h - GGUF Format Header
+5. src/qtapp/ghost_text_renderer.h - Ghost Text Renderer
+6. src/qtapp/gitignore_parser.cpp - Gitignore Parser
+7. src/qtapp/gitignore_parser.h - Gitignore Parser Header
+8. src/qtapp/gitignore_parser.hpp - Gitignore Parser (HPP)
+9. src/qtapp/gpu_backend.cpp - GPU Backend
+10. src/qtapp/gpu_backend.hpp - GPU Backend Header
+
+### Key Findings
+- GGUFServerHotpatch: Server-side hotpatching for request/response pipeline
+- HotpatchPoint: PreRequest, PostRequest, PreResponse, PostResponse, StreamChunk
+- TransformType: InjectSystemPrompt, ModifyParameter, FilterResponse, TerminateStream, CacheResponse
+- ServerHotpatch: name, enabled, applicationPoint, transformType, systemPromptInjection
+- Methods: processRequest, processResponse, processStreamChunk, patchRequestBytes
+- Response caching: setCachingEnabled, clearCache, getCacheKey, hasCachedResponse
+- GGUFServer: HTTP server for GGUF model inference with Ollama-compatible API
+- Endpoints: /api/generate, /api/tags, /v1/chat/completions, /api/pull, /api/push
+- Features: Auto-start, port conflict detection, health monitoring, streaming support
+- ServerStats: totalRequests, successfulRequests, failedRequests, totalTokensGenerated, uptimeSeconds
+- gguf.h: C API for GGUF file format (GGML-based)
+- GGUF_MAGIC='GGUF', GGUF_VERSION=3, GGUF_DEFAULT_ALIGNMENT=32
+- gguf_type enum: UINT8, INT8, UINT16, INT16, UINT32, INT32, FLOAT32, BOOL, STRING, ARRAY
+- Functions: gguf_init_from_file, gguf_get_val_u8, gguf_get_val_i8, etc.
+- GhostTextRenderer: Cursor-style inline ghost text with diff preview
+- GhostTextDecoration: line, column, text, type, color, multiline, lines
+- DiffDecoration: startLine, endLine, oldText, newText, type (add/remove/modify)
+- Features: Tab to accept, Esc to dismiss, fade-in/fade-out animations
+- GitignoreParser: Parses .gitignore files with pattern matching
+- GitignoreRule: pattern, isNegation, isDirectory, matches()
+- Pattern support: *, **, /, !, prefix matching, directory-only patterns
+- globToRegex: Converts gitignore glob to Qt regex
+- GPUBackend: GPU abstraction for CUDA, HIP, Vulkan
+- BackendType: None, CUDA, HIP, Vulkan, CPU (fallback)
+- MemoryType: Device (VRAM), Host (RAM), Unified (shared)
+- Initialization order: CUDA > HIP > Vulkan > CPU fallback
+- Methods: initialize, shutdown, isAvailable, selectDevice, totalMemory, availableMemory
+
+**Total Progress: 2110/3159 files (~66.8%)**
 
