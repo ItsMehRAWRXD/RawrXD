@@ -2,7 +2,37 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 2930/3159 files (~92.8%)
+Current progress: 2940/3159 files (~93.1%)
+
+## Batch 294 (Completed)
+
+**Queue entries 2931-2940 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_AutonomousCommunicator.cpp - Autonomous communicator handler
+2. src/win32app/Win32IDE_AutonomousDebugger.cpp - Autonomous debugger integration
+3. src/win32app/Win32IDE_AutonomousLoop.h - Real autonomous multi-step agent loop
+4. src/win32app/Win32IDE_Autonomy.cpp - AutonomyManager implementation
+5. src/win32app/Win32IDE_Autonomy.h - AutonomyManager header
+6. src/win32app/Win32IDE_AutoSave.cpp - Auto-save system (VS Code parity)
+7. src/win32app/Win32IDE_BackendSwitcher.cpp - AI backend switcher
+8. src/win32app/Win32IDE_BeaconInit.h - Beacon system initialization
+9. src/win32app/Win32IDE_BeaconWiring.cpp - Beacon wiring implementation
+10. src/win32app/Win32IDE_BeaconWiring.h - Beacon wiring header
+
+### Key Findings
+- AutonomousCommunicator: Status report generation, reasoning step recording
+- AutonomousDebugger: AI-assisted debugging, statsToJson output
+- AutonomousLoop: Risk-tiered approval gates (AUTO/CONFIRM/BLOCK), 6 real tools
+- AutonomyManager: Goal maintenance, working memory (512 entry cap), rate limiting (30 actions/min)
+- AutoSave: 4 modes (off/afterDelay/onFocusChange/onWindowChange), 30s default interval
+- BackendSwitcher: 5 backends (LocalGGUF/Ollama/OpenAI/Claude/Gemini), no history mutation on switch
+- BeaconInit: WinHTTPBeaconClient + GUIPaneBeaconWiring, localhost:8099
+- BeaconWiring: MASM beacon client integration, SecureBeaconPacket types (0x0001-0x0005)
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 2940/3159 files (~93.1%)**
+
 
 ## Batch 293 (Completed)
 
@@ -10869,4 +10899,50 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Special tokens: Pad, Unknown, Begin, End, Mask
 
 **Total Progress: 2240/3159 files (~70.9%)**
+
+
+
+## Batch 225 (Completed)
+
+**Queue entries 2292-2301 audited.**
+
+### Files Audited
+1. src/qtapp/unified_backend.hpp - Unified Backend Header
+2. src/qtapp/unified_hotpatch_manager.cpp - Unified Hotpatch Manager
+3. src/qtapp/unified_hotpatch_manager.hpp - Unified Hotpatch Manager Header
+4. src/qtapp/utils/file_operations.cpp - File Operations
+5. src/qtapp/utils/file_operations.h - File Operations Header
+6. src/qtapp/utils/project_detector.cpp - Project Detector
+7. src/qtapp/utils/project_detector.h - Project Detector Header
+8. src/qtapp/utils/qt_directory_manager.cpp - Qt Directory Manager
+9. src/qtapp/utils/qt_directory_manager.h - Qt Directory Manager Header
+10. src/qtapp/utils/qt_file_reader.cpp - Qt File Reader
+
+### Key Findings
+- unified_backend.hpp: Multi-backend unified inference API
+- UnifiedRequest struct: prompt, reqId, backend (local/llama/openai/claude/gemini), apiKey
+- Backends: Local GGUF, llama.cpp HTTP, OpenAI API, Anthropic Claude, Google Gemini
+- Signals: streamToken(reqId, token), streamFinished(reqId), error(reqId, error)
+- unified_hotpatch_manager: Coordinates memory, byte-level, and server hotpatching
+- PatchLayer enum: System, Memory, Byte, Server
+- UnifiedResult struct: success, layer, operationName, errorDetail, timestamp, errorCode
+- Methods: initialize(), attachToModel(), applyMemoryPatch(), applyBytePatch()
+- UnifiedStats: memoryStats, totalPatchesApplied, totalBytesModified, sessionStarted
+- file_operations: Production-grade file operations with safety guarantees
+- Encoding enum: UTF8, UTF16_LE, UTF16_BE, ASCII, Unknown
+- FileOperationResult: success, errorMessage, backupPath
+- FileManager: readFile(), writeFile(), detectEncoding(), atomic writes with QSaveFile
+- project_detector: Automatic project type detection
+- ProjectType enum: Unknown, Git, CMake, QMake, NodeJS, Python, DotNet, Rust, Go, VisualStudio, MASM, Generic
+- ProjectMetadata: name, rootPath, type, buildDirectory, gitBranch, recentFiles, includePaths, sourcePaths
+- Methods: detectProject(), findProjectRoot(), saveProjectMetadata()
+- qt_directory_manager: Qt-based directory operations
+- IDirectoryManager interface: createDirectory(), deleteDirectory(), copyDirectory()
+- Features: Recursive operations, trash/recycle bin support (Windows SHFileOperation)
+- qt_file_reader: Qt-based file reading with encoding detection
+- Methods: readFile(), readFileRaw(), detectEncoding()
+- BOM detection: UTF-8 (EF BB BF), UTF-16 LE (FF FE), UTF-16 BE (FE FF)
+- Fallback: UTF-8 → Latin-1 for unknown encodings
+
+**Total Progress: 2250/3159 files (~71.2%)**
 
