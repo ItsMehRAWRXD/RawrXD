@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3060/3159 files (~96.9%)
+Current progress: 3070/3159 files (~97.2%)
+
+## Batch 307 (Completed)
+
+**Queue entries 3061-3070 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_PlanExecutor.cpp - Plan → Approve → Execute agent workflow
+2. src/win32app/Win32IDE_Plugins.cpp - Native Win32 plugin system (Phase 43)
+3. src/win32app/Win32IDE_PluginSignature.cpp - Plugin signature verification
+4. src/win32app/Win32IDE_PowerShell.cpp - Full PowerShell integration
+5. src/win32app/Win32IDE_PowerShellBeaconButtons.cpp - UI beacon triggers (Phase 16)
+6. src/win32app/Win32IDE_PowerShellPanel.cpp - Dedicated PowerShell panel
+7. src/win32app/Win32IDE_ProblemsPanel.cpp - Unified problems panel (P0)
+8. src/win32app/Win32IDE_PromptTemplates.cpp - Prompt template engine
+9. src/win32app/Win32IDE_ProvableAgent.cpp - Provable AI coding agent
+10. src/win32app/Win32IDE_Quantum.cpp - Quantum agent orchestrator (Phase 50)
+
+### Key Findings
+- PlanExecutor: Structured agent planning, user approval workflow, step-by-step execution, rollback on failure
+- Plugins: Plugin lifecycle, panel UI, hook dispatch, config-gated hot-loading
+- PluginSignature: DLL/VSIX/RAWRPKG verification, valid/unsigned/invalid classification
+- PowerShell: Script execution, cmdlet invocation, async/sync modes, configurable timeout
+- PowerShellBeaconButtons: 12 button handlers, progress callbacks, beacon phase execution
+- PowerShellPanel: RichEdit output, input area, toolbar, history navigation
+- ProblemsPanel: LSP/SAST/SCA/Secrets/Build aggregation, 2-second auto-refresh, hash-based change detection
+- PromptTemplates: Template engine, JSON storage, workspace-scoped templates
+- ProvableAgent: Cryptographic attestation, pre/post-condition checks, deterministic replay proof, custody chain
+- Quantum: Multi-model (1x-99x), adaptive timeouts, Balance/Max/Auto modes, learning thread
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3070/3159 files (~97.2%)**
+
 
 ## Batch 306 (Completed)
 
@@ -11838,4 +11870,53 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - BinaryDiff for comparing binaries
 
 **Total Progress: 2370/3159 files (~75.0%)**
+
+
+
+## Batch 238 (Completed)
+
+**Queue entries 2442-2451 audited.**
+
+### Files Audited
+1. src/ReverseEngineeringSuite.hpp - Reverse Engineering Suite
+2. src/rope_fused_impl.cpp - RoPE Fused Implementation
+3. src/runtime_core.cpp - Runtime Core
+4. src/runtime_core.h - Runtime Core Header
+5. src/runtime_patcher.cpp - Runtime Patcher
+6. src/runtime_surface/CanvasREBatch.cpp - Canvas RE Batch
+7. src/runtime_surface/CompressedPoolBudget.cpp - Compressed Pool Budget
+8. src/runtime_surface/FourLaneGate.cpp - Four Lane Gate
+9. src/runtime_surface/GenerationStopwatch.cpp - Generation Stopwatch
+10. src/runtime_surface/IngestReverseWall.cpp - Ingest Reverse Wall
+
+### Key Findings
+- ReverseEngineeringSuite.hpp: CodexAnalyzer wrapper for MASM-based analysis
+- AnalysisResult: success, summary, imports, exports, strings, architecture, format, isPacked, entropy
+- Analyze(): Runs CodexUltimate.exe with JSON output parsing
+- rope_fused_impl.cpp: D3D12 RoPE (Rotary Position Embedding) fused implementation
+- DispatchRoPEFused: Q/K buffer rotation with cossin lookup
+- RoPEConstants: seq_len, head_dim, num_heads, theta (10000.0f)
+- Command list recording with UAV barriers and descriptor setup
+- runtime_core.cpp: Runtime initialization and engine management
+- RuntimeState: active_engine, current_mode, context_limit, deep_thinking, deep_research, no_refusal
+- EngineRegistry: register_engine, get by name
+- AgentMode: ASK, PLAN, EDIT, BUGREPORT, CODESUGGEST
+- runtime_core.h: init_runtime, process_prompt, set_mode, set_engine, set_deep_thinking, etc.
+- runtime_patcher.cpp: Runtime masquerade patcher with IAT hooking
+- IAT slot indices for Win32IDE (0-47), AgenticBridge (48-63), LSP Client (64-75), Streaming (76-83)
+- InstallIATHook, GetIATHook, GetMasqueradeStats APIs
+- CanvasREBatch.cpp: Canvas rendering batch for quad primitives
+- appendQuad: Two triangles per quad (6 vertices, 4 floats each)
+- CompressedPoolBudget.cpp: Memory budget management with atomic operations
+- tryReserve: CAS loop for budget allocation, release with fetch_sub
+- FourLaneGate.cpp: Concurrent execution lane management
+- Lane enum with kMaxConcurrentLanes = 4 (plus optional 5th for explicit modules)
+- acquire/release with mutex protection and logging
+- GenerationStopwatch.cpp: Generation timing with RAII scope guard
+- StopwatchGenerationScope: beginGeneration in ctor, endGeneration in dtor
+- IngestReverseWall.cpp: File ingestion with FNV-1a 64-bit hash verification
+- fnv1a64HexOfFile: Streaming hash computation with 1MB buffer
+- ingestFile: Digest validation before memory mapping
+
+**Total Progress: 2380/3159 files (~75.3%)**
 
