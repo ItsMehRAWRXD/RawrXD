@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3120/3159 files (~98.8%)
+Current progress: 3130/3159 files (~99.1%)
+
+## Batch 313 (Completed)
+
+**Queue entries 3121-3130 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_TerminalTabs.cpp - Integrated Terminal Tabs (Feature 12)
+2. src/win32app/Win32IDE_TestExplorerTree.cpp - Test Explorer Tree (Tier 5 Gap #42)
+3. src/win32app/Win32IDE_Themes.cpp - Premium Theme Engine (16 themes)
+4. src/win32app/Win32IDE_Tier1Cosmetics.cpp - Tier 1 Critical Cosmetic (10 features)
+5. src/win32app/Win32IDE_Tier2Cosmetics.cpp - Tier 2 High Visibility (9 features)
+6. src/win32app/Win32IDE_Tier3Cosmetics.cpp - Tier 3 Cosmetic Gaps (#20-#30)
+7. src/win32app/Win32IDE_Tier3Polish.cpp - Tier 3 Polish (#31-#39)
+8. src/win32app/Win32IDE_Tier5Cosmetics.cpp - Tier 5 Lifecycle & Command Router
+9. src/win32app/Win32IDE_Tier5Cosmetics.h - Tier 5 header
+10. src/win32app/Win32IDE_ToolActionStatus.cpp - Tool Action Status handler
+
+### Key Findings
+- TerminalTabs: Multi-tab terminal, 4 profiles (PowerShell, CMD, Git Bash, WSL)
+- TestExplorerTree: TreeView with pass/fail/pending icons, parses [PASS]/[FAIL]/[SKIP]
+- Themes: 16 built-in themes, DWM transparency, full control surface theming
+- Tier1Cosmetics: Smooth scroll, minimap, breadcrumbs, command palette, settings GUI
+- Tier2Cosmetics: Git diff, terminal tabs, hover docs, parameter hints, outline
+- Tier3Cosmetics: Bracket colorization, indent guides, whitespace, Zen mode, folding
+- Tier3Polish: Smooth caret, font ligatures, High DPI, theme animation, file watcher
+- Tier5Cosmetics: Line ending selector, debug watch format, command routing
+- Tier5Cosmetics.h: Tier5Cosmetics class declaration
+- ToolActionStatus: Tool execution progress monitoring
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3130/3159 files (~99.1%)**
+
 
 ## Batch 312 (Completed)
 
