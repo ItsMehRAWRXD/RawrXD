@@ -2,7 +2,29 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 1630/3159 files (~51.6%)
+Current progress: 1640/3159 files (~51.9%)
+
+## Batch 66 (Completed)
+Files audited (queue 1631-1640):
+1. src/intelligent_codebase_engine.cpp
+2. src/intelligent_codebase_engine.h
+3. src/intelligent_refactorer.cpp
+4. src/interactive_shell_minimal.cpp
+5. src/interactive_shell.cpp
+6. src/interactive_shell.h
+7. src/interpretability_panel_enhanced.cpp
+8. src/interpretability_panel_enhanced.h
+9. src/io/backend_interface.hpp
+10. src/io/direct_io_ring_win.hpp
+
+Primary findings:
+- **intelligent_codebase_engine.cpp/h**: Symbol extraction with regex-based parsing. `SymbolInfo` with name, type, filePath, lineNumber, signature. `DependencyInfo`, `ArchitecturePattern`, `CodeComplexity`, `RefactoringOpportunity`, `BugReport`, `Optimization` structs. Clean nlohmann/json integration.
+- **intelligent_refactorer.cpp**: Automated refactoring engine with 13 refactoring types (ExtractMethod, RenameSymbol, InlineVariable, etc.). `RefactoringResult` with success flag, transformed code, affected lines. Parameter extraction and variable analysis via regex.
+- **interactive_shell_minimal.cpp**: Minimal shell implementation with basic /help, /exit commands. AgenticEngine, MemoryManager, VSIXLoader, ReactServerGenerator integration. Command echo and callback-based output.
+- **interactive_shell.cpp/h**: Full interactive shell with history management (LoadHistory, SaveHistory, AddToHistory). Slash command routing (/help, /exit, /clear, /history). Auto-completion support. Mutex-protected execution. ShellConfig with CLI mode, welcome message, history file settings.
+- **interpretability_panel_enhanced.cpp/h**: Model interpretability visualization. `AttentionPattern` with entropy and concentration metrics. `TokenAttribution` with importance scores and layer contributions. `LayerActivationProfile` with sparsity and top activated neurons. `InterpretabilityReport` with full analysis results.
+- **io/backend_interface.hpp**: Direct I/O backend interface for kernel bypass. `IORequest` with file_offset, zone_index, zone_offset. `IOCompletion` with request_id and result_code. `IDirectIOBackend` abstract class with Initialize, RegisterBuffers, SubmitRead, Flush, PollCompletions, Shutdown.
+- **io/direct_io_ring_win.hpp**: Windows IORing implementation (Windows 11 22H2+). `CreateIoRing` with IORING_VERSION_3/VERSION_2 fallback. `BuildIoRingRegisterBuffers` for zero-copy DMA. `BuildIoRingReadFile` for submission. `PopIoRingCompletion` for polling. Clean implementation of kernel bypass.
 
 ## Batch 65 (Completed)
 Files audited (queue 1621-1630):
@@ -9020,4 +9042,51 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - testCodeEmitter: emitMOV_R64_IMM64, emitCALL_REL32 validation
 
 **Total Progress: 1961/3159 files (~62.1%)**
+
+
+
+## Batch 198 (Completed)
+
+**Queue entries 1972-1981 audited.**
+
+### Files Audited
+1. src/planning_agent.cpp - Planning Agent
+2. src/planning_agent.h - Planning Agent Header
+3. src/plugin_system/plugin_loader.cpp - Plugin Loader
+4. src/plugin_system/win32_plugin_loader.cpp - Win32 Plugin Loader
+5. src/plugins/example_voice_plugin.cpp - Example Voice Plugin
+6. src/plugins/MemoryPlugin.hpp - Memory Plugin
+7. src/plugins/voice_provider_plugin.h - Voice Provider Plugin API
+8. src/plugins/VSIXLoader.hpp - VSIX Extension Loader
+9. src/powershell_compiler_manager.cpp - PowerShell Compiler Manager
+10. src/preflight/boot_preflight_latch.cpp - Boot Preflight Latch
+
+### Key Findings
+- PlanningAgent: AI-powered planning with heuristic fallback
+- PlanningTask: id, title, status, priority, associatedAction, dependsOn
+- Task statuses: pending, in-progress, completed, failed, skipped, rolled-back
+- ActionType: FileEdit, SearchFiles, RunBuild, ExecuteTests, InvokeCommand, Unknown
+- Plan generators: generateCodePlan, generateDebugPlan, generateGenericPlan
+- DAG support: dependency tracking with dependsOn vector
+- Retry logic: retryCount, maxRetries, lastError tracking
+- Rollback support: canRollback, rollbackFilePath, rollbackContent
+- PluginLoader: QLibrary-based plugin loading with symbol resolution
+- PluginInstance: library, plugin_init, plugin_onFileSave, plugin_onChatMessage
+- Win32PluginLoader: LoadLibrary/GetProcAddress with SEH-safe wrappers
+- PluginSignatureVerifier: signature policy enforcement before LoadLibrary
+- PluginState: Loaded, Active, Error, Unloaded
+- VoiceProviderPlugin: C-ABI interface for TTS providers
+- VoiceProviderInfo: name, version, description, maxConcurrent
+- SpeechRequest: text, voiceId, rate, volume, pitch, priority, flags
+- VoiceEventType: SpeechStarted, SpeechFinished, SpeechCancelled, SpeechError
+- MemoryPlugin: StandardMemoryPlugin (32k), LargeContextPlugin (1M max)
+- VSIXLoader: VS Code extension loading, package.json parsing
+- ExtensionManifest: id, name, version, commands, themes, languages
+- PowerShellCompilerManager: QProcess-based compilation with timeout
+- CompilerInfo: name, language, path, extensions, description
+- CompilationResult: success, outputPath, error, durationMs
+- BootPreflightLatch: GPU/AVX512 capability detection, Stone lock
+- EnvironmentSnapshot: gpu_capable_class, avx512_capable_class, pages_lockable
+
+**Total Progress: 1980/3159 files (~62.7%)**
 
