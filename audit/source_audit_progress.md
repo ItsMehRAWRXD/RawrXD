@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3030/3159 files (~95.9%)
+Current progress: 3040/3159 files (~96.2%)
+
+## Batch 304 (Completed)
+
+**Queue entries 3031-3040 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_LSP_AI_Bridge.cpp - LSP-AI Hybrid Integration Bridge
+2. src/win32app/Win32IDE_LSPClient.cpp - LSP Client Bridge (Phase 9A)
+3. src/win32app/Win32IDE_LSPServer.cpp - LSP Server Integration Bridge (Phase 27)
+4. src/win32app/Win32IDE_Main.cpp - Legacy entry point (NOT INCLUDED IN BUILD)
+5. src/win32app/Win32IDE_MarketplacePanel.cpp - Extension Marketplace Browser
+6. src/win32app/Win32IDE_MCP.cpp - MCP Integration Wiring (Phase 36)
+7. src/win32app/Win32IDE_MCPHooks.cpp - MCP Transport Hook Implementation
+8. src/win32app/Win32IDE_MCPHooks.h - MCP Hook Infrastructure
+9. src/win32app/Win32IDE_MemoryView.cpp - Memory/Hex viewer debugger panel
+10. src/win32app/Win32IDE_MeshBrain.cpp - Mesh Brain feature handler
+
+### Key Findings
+- LSP_AI_Bridge: 10 hybrid capabilities (completion, diagnostics, rename, streaming)
+- LSPClient: JSON-RPC over stdin/stdout, clangd/pyright/typescript-language-server
+- LSPServer: In-process and stdio modes, 9 IDM commands (9200+ range)
+- Main.cpp: LEGACY - guarded by RAWRXD_BUILD_LEGACY_MAIN, canonical entry in main_win32.cpp
+- MarketplacePanel: ListView with Name/Version/Author/Description/Status/Actions columns
+- MCP: Model Context Protocol server, filesystem/shell tools, IDE resources
+- MCPHooks: RVA-based hooking, message interception, WebSocket frame capture
+- MCPHooks.h: MCPHookRVA namespace, 10 hook points, MCPMessage struct
+- MemoryView: Hex dump, ASCII, disassembly modes, pointer chain navigation
+- MeshBrain: Distributed processing, neural network coordination handler
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3040/3159 files (~96.2%)**
+
 
 ## Batch 303 (Completed)
 
@@ -11602,4 +11634,46 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Event handlers: paintEvent, resizeEvent, mousePressEvent, mouseReleaseEvent, mouseMoveEvent, keyPressEvent, charEvent, closeEvent
 
 **Total Progress: 2340/3159 files (~74.1%)**
+
+
+
+## Batch 235 (Completed)
+
+**Queue entries 2412-2421 audited.**
+
+### Files Audited
+1. src/RawrXD_Zenith_Benchmark.cpp - Zenith Benchmark
+2. src/rawrz_polymorphic_gen.hpp - Polymorphic Generator
+3. src/re_tools.cpp - RE Tools
+4. src/re_tools.h - RE Tools Header
+5. src/react_server.cpp - React Server
+6. src/react_server.h - React Server Header
+7. src/ReactServerGenerator.h - React Server Generator
+8. src/real_time_completion_engine_v2.cpp - RT Completion Engine V2
+9. src/real_time_completion_engine.cpp - RT Completion Engine
+10. src/real_time_completion_engine.h - RT Completion Engine Header
+
+### Key Findings
+- RawrXD_Zenith_Benchmark: 100+ TPS breakthrough validation for 120B GPT
+- 6/16 Experts Pinned (95% Hit) + 8-token Medusa Cascade
+- Data per sweep: 0.296 GB (MoE 4/16 + 95% L1-Pin)
+- rawrz_polymorphic_gen.hpp: Random GGUF/HF stub generator
+- PolyConfig: model_type, num_hidden_layers, hidden_size, num_attention_heads
+- EmitSyntheticGguf: Generates synthetic GGUF with random tensors
+- re_tools.cpp: PE analysis and compiler tools
+- dump_pe: PE file analysis (MZ signature, sections, entry point)
+- run_compiler: MASM (ml64.exe) and NASM fallback compilation
+- react_server.cpp: HTTP server with JSON API handling
+- JSON utilities: json_escape, get_json_string, get_json_int, get_json_bool
+- http_response with CORS headers
+- ReactServerGenerator: Generates React project structure
+- Creates: package.json, server.js, index.html, directory structure
+- real_time_completion_engine: Synchronous and asynchronous completion APIs
+- CodeCompletion struct: text, detail, kind, confidence, insertTextLength, cursorOffset
+- PerformanceMetrics: avgLatencyMs, p95LatencyMs, p99LatencyMs, cacheHitRate
+- Methods: getCompletions, getInlineCompletions, getMultiLineCompletions, getContextualCompletions
+- Cache management: prewarmCache, clearCache, updateCache
+- Latency tracking with rolling history (1000 samples)
+
+**Total Progress: 2350/3159 files (~74.4%)**
 
