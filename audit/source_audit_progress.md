@@ -123,7 +123,32 @@ Primary findings:
 - **websocket_hub.cpp**: Win32 Winsock WebSocket implementation - proper SHA1 + base64 for WebSocket handshake
 - **CommonTypes.h**: Core type definitions with Result<T> pattern - includes spdlog header, defines SwarmTask struct
 
-Current progress: 1320/3159 files (~41.8%)
+## Batch 57 (Completed)
+Files audited (queue 561-570):
+1. src/compiler/agentic_toolchain_bridge.h
+2. src/compiler/compiler_asm_real.cpp
+3. src/compiler/compiler_cpp_real.cpp
+4. src/compiler/rawrxd_compiler_qt.cpp
+5. src/compiler/rawrxd_compiler_qt.hpp
+6. src/compiler/TitanJIT_PE.cpp
+7. src/compiler/toolchain_bridge_session.cpp
+8. src/compiler/toolchain_bridge.cpp
+9. src/compiler/toolchain_bridge.hpp
+10. src/CompilerAgentBridge.h
+
+Primary findings:
+- **agentic_toolchain_bridge.h**: Clean bridge between agentic executor and toolchain - uses lambda callback for compile integration
+- **compiler_asm_real.cpp**: Full MASM64 compiler integration with ML64.exe detection - proper SECURITY_ATTRIBUTES initialization
+- **compiler_cpp_real.cpp**: C++ compiler integration for MSVC/Clang/GCC - clean diagnostic parsing with regex
+- **rawrxd_compiler_qt.cpp**: Qt compiler integration - contains syntax errors (lines 17-21, 35-36) with malformed constructor and timer usage
+- **rawrxd_compiler_qt.hpp**: Clean header with compiler enums and forward declarations - well structured
+- **TitanJIT_PE.cpp**: Sovereign PE32+ writer with manual IAT construction - bare-metal executable generation without external linker
+- **toolchain_bridge_session.cpp**: C ABI session API implementation - uses malloc without null check (line 44), potential memory leak in intern pool
+- **toolchain_bridge.cpp**: Toolchain bridge with MSVC detection - clean filesystem::path usage, proper thread management
+- **toolchain_bridge.hpp**: Clean header with BuildTarget and BuildDiagnostic structs - well documented
+- **CompilerAgentBridge.h**: Compiler-Agent bridge via EventBus - clean C++20 implementation, no Qt
+
+Current progress: 1330/3159 files (~42.1%)
 - **brutal_gzip.h**: Clean header for brutal compression interface
 
 ## Batch 56 (Completed)
@@ -8040,4 +8065,46 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Qt Charts integration: QChart, QLineSeries, QDateTimeAxis
 
 **Total Progress: 1889/3159 files (~59.8%)**
+
+
+## Batch 189 (Completed)
+
+**Queue entries 1890-1899 audited.**
+
+### Files Audited
+1. src/oc_stress.cpp - OC Stress Test
+2. src/ollama_blob_parser.h - Ollama Blob Parser Header
+3. src/ollama_client.cpp - Ollama Client
+4. src/ollama_client.h - Ollama Client Header
+5. src/ollama_integration.cpp - Ollama Integration
+6. src/ollama_integration.h - Ollama Integration Header
+7. src/ollama_proxy.cpp - Ollama Proxy
+8. src/ollama_rest_client.cpp - Ollama REST Client
+9. src/ollama_rest_client.h - Ollama REST Client Header
+
+### Key Findings
+- OC Stress: CPU matmul and memory bandwidth stress harness with thermal monitoring
+- Args parsing: --cpu-max, --gpu-max, --seconds, --size parameters
+- MatMul: Simple triple-nested loop matrix multiplication
+- TelemetrySnapshot: cpuTempValid, cpuTempC, gpuTempValid, gpuTempC
+- OllamaBlobDetector: Detects Ollama blobs, finds GGUF offset (magic 0x46554747)
+- BlobInfo: blob_id (SHA256), blob_path, file_size_bytes, is_model_blob, contains_gguf
+- OllamaManifest: model_format, model_family, model_type, layers vector
+- OllamaModel: id, name, digest, size, modified_at, format, family, parameter_size
+- OllamaGenerateRequest: model, prompt, stream, options map
+- OllamaChatMessage: role, content
+- OllamaResponse: model, response, done, total_duration, eval_count, etc.
+- StreamCallback, ErrorCallback, CompletionCallback: std::function types
+- OllamaClient: setBaseUrl, testConnection, listModels, generateSync, chatSync
+- QueryCompletion: WinHTTP-based POST to /api/generate
+- CompletionRequest: model, prompt, temperature, top_p, num_predict, stream
+- IsOllamaAvailable: Tests connectivity to localhost:11434
+- OllamaProxy: setBaseUrl, setModel, isOllamaAvailable, isModelAvailable
+- ModelNameMatches: Exact match or implicit :latest suffix
+- OllamaRESTClient: CURL-based HTTP client for /api/tags
+- curlWriteCallback: Appends response data to string
+- getAvailableModels: Parses JSON response for model enumeration
+- filterModels/findModelById: Predicate-based model filtering
+
+**Total Progress: 1898/3159 files (~60.1%)**
 
