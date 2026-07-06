@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 2940/3159 files (~93.1%)
+Current progress: 2950/3159 files (~93.4%)
+
+## Batch 295 (Completed)
+
+**Queue entries 2941-2950 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_Breadcrumbs.cpp - Breadcrumbs navigation bar
+2. src/win32app/Win32IDE_Build.cpp - Build system integration
+3. src/win32app/Win32IDE_BuildRunner.cpp - Unified build pipeline
+4. src/win32app/Win32IDE_CallStackSymbols.cpp - Call stack symbols (PDB)
+5. src/win32app/Win32IDE_CaretAnimation.cpp - Caret animation
+6. src/win32app/Win32IDE_ChatMessageRenderer.cpp - Chat message renderer
+7. src/win32app/Win32IDE_ChatPanel_Ollama.cpp - Chat panel Ollama integration
+8. src/win32app/Win32IDE_ChatPanel.cpp - Chat panel handler
+9. src/win32app/Win32IDE_CircularBeaconIntegration.cpp - Circular beacon integration
+10. src/win32app/Win32IDE_CodeLens.cpp - CodeLens reference counts
+
+### Key Findings
+- Breadcrumbs: Clickable symbol path (File > Class > Method), VS Code dark theme colors
+- Build: AVX-512 probe emitters (vmovups, vfmadd231ps), CPU feature detection
+- BuildRunner: CMake/Ninja pipeline, MSVC/GCC/CMake error parsing, ProblemsAggregator integration
+- CallStackSymbols: DbgHelp integration, SymInitialize, SymFromAddr, line number resolution
+- CaretAnimation: 500ms default blink rate, smooth position transitions
+- ChatMessageRenderer: Syntax highlighting, code blocks, Markdown support
+- ChatPanel_Ollama: /api/tags, /api/generate, /api/chat endpoints, WinHTTP client
+- ChatPanel: Conversation management, message history, session persistence
+- CircularBeaconIntegration: MMF state sharing, 30s heartbeat timeout, cross-process sync
+- CodeLens: Phantom "N references" text, function/class declaration parsing
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 2950/3159 files (~93.4%)**
+
 
 ## Batch 294 (Completed)
 
@@ -10945,4 +10977,51 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Fallback: UTF-8 → Latin-1 for unknown encodings
 
 **Total Progress: 2250/3159 files (~71.2%)**
+
+
+
+## Batch 226 (Completed)
+
+**Queue entries 2302-2311 audited.**
+
+### Files Audited
+1. src/qtapp/utils/qt_file_reader.h - Qt File Reader Header
+2. src/qtapp/utils/qt_file_writer.cpp - Qt File Writer
+3. src/qtapp/utils/qt_file_writer.h - Qt File Writer Header
+4. src/qtapp/utils/settings_manager.cpp - Settings Manager (utils)
+5. src/qtapp/utils/settings_manager.h - Settings Manager Header (utils)
+6. src/qtapp/utils/shortcut_manager.cpp - Shortcut Manager
+7. src/qtapp/utils/shortcut_manager.h - Shortcut Manager Header
+8. src/qtapp/vocabulary_loader.cpp - Vocabulary Loader
+9. src/qtapp/vocabulary_loader.hpp - Vocabulary Loader Header
+10. src/qtapp/vulkan_compute.h - Vulkan Compute
+
+### Key Findings
+- qt_file_reader.h: Qt-based IFileReader implementation
+- Methods: readFile(), readFileRaw(), detectEncoding(), exists(), isFile(), isReadable(), fileSize()
+- qt_file_writer.cpp: Qt-based file writer with atomic operations using QSaveFile
+- Features: Automatic backup creation, directory creation, atomic writes (write to temp, then rename)
+- Methods: writeFile(), writeFileRaw(), createFile(), deleteFile(), renameFile(), copyFile()
+- settings_manager (utils): Centralized JSON settings with persistence
+- Storage: ~/.rawrxd/settings.json and .rawrxd/workspace.json
+- Default categories: general, appearance, editor, search, terminal, ai, build
+- Methods: value(), setValue(), contains(), save(), load()
+- shortcut_manager: Keyboard shortcut management with customization
+- Context enum: Global, Editor, ProjectExplorer, Terminal, FindWidget
+- ShortcutInfo: id, displayName, defaultKey, currentKey, context, description, action
+- Default shortcuts: file.new (Ctrl+N), file.save (Ctrl+S), edit.undo (Ctrl+Z), find.find (Ctrl+F), build.build (Ctrl+Shift+B), ai.chat (Ctrl+I)
+- vocabulary_loader: Universal vocabulary loader for GGUF models
+- TokenizerType enum: UNKNOWN, BPE, SENTENCEPIECE, WORDPIECE
+- Token struct: text, id, score, isSpecial
+- SpecialTokens: bos, eos, unk, pad, cls, sep, mask
+- Methods: loadFromGGUF(), loadFromJSON(), loadFromText(), getToken(), getTokenId()
+- vulkan_compute.h: Vulkan compute backend for GPU acceleration
+- VulkanDeviceInfo: device_name, properties, memory_props, vendor_id, device_id
+- ComputeShader: name, spirv_code, module, layout, pipeline
+- VulkanTensor: name, size_bytes, host_data, device_buffer, device_memory
+- Methods: Initialize(), LoadShader(), CreateComputePipeline(), DispatchMatMul(), DispatchMatMulAsync()
+- KV Cache: AllocateKVCache(), AppendToKVCache(), GetKVCacheSlice(), ClearKVCache()
+- Vendor detection: IsAMDDevice() (0x1002), IsNvidiaDevice() (0x10DE)
+
+**Total Progress: 2260/3159 files (~71.5%)**
 
