@@ -2,7 +2,37 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 2910/3159 files (~92.1%)
+Current progress: 2920/3159 files (~92.4%)
+
+## Batch 292 (Completed)
+
+**Queue entries 2911-2920 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_AgentEnhancements.h - Agent enhancements header
+2. src/win32app/Win32IDE_AgentHistory.cpp - Agent history persistence
+3. src/win32app/Win32IDE_AgenticBridge.cpp - Agentic framework bridge
+4. src/win32app/Win32IDE_AgenticBridge.h - Agentic bridge header
+5. src/win32app/Win32IDE_AgenticBrowser.cpp - Agentic browser pane
+6. src/win32app/Win32IDE_AgenticBrowser.h - Agentic browser header
+7. src/win32app/Win32IDE_AgenticComposerUX.cpp - Agentic composer UX
+8. src/win32app/Win32IDE_AgenticPlanningPanel.cpp - Agentic planning panel
+9. src/win32app/Win32IDE_AgenticPlanningPanel.hpp - Planning panel header
+10. src/win32app/Win32IDE_AgentOllamaClient.cpp - Agent Ollama client
+
+### Key Findings
+- AgentEnhancements.h: 7 enhancements (context budget, tool validation, plan DAG, scratchpad, streaming, token budget, model router)
+- AgentHistory: JSONL event log, 1000 event ring buffer, 30-day pruning
+- AgenticBridge: PowerShell-based framework integration, native inference stack
+- AgenticBrowser: WebView2 child window, bottom-third layout, C API
+- AgenticComposerUX: Session management, provenance tracking, streaming output
+- AgenticPlanningPanel: Execution plans, approval queue, step-by-step progress
+- AgentOllamaClient: Connection testing, status monitoring, endpoint management
+- All files follow PatchResult pattern, no exceptions, no Qt
+- Extensive scaffolding markers (SCAFFOLD_*) for future implementation
+
+**Total Progress: 2920/3159 files (~92.4%)**
+
 
 ## Batch 291 (Completed)
 
@@ -10716,4 +10746,49 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Features: Complete UI, signal/slot, QSettings persistence, error handling
 
 **Total Progress: 2220/3159 files (~70.3%)**
+
+
+
+## Batch 223 (Completed)
+
+**Queue entries 2262-2271 audited.**
+
+### Files Audited
+1. src/qtapp/Subsystems.h - Subsystems Stub Definitions
+2. src/qtapp/task_runner.cpp - Task Runner
+3. src/qtapp/task_runner.hpp - Task Runner Header
+4. src/qtapp/telemetry.h - Telemetry
+5. src/qtapp/TelemetryWindow.h - Telemetry Window
+6. src/qtapp/terminal_pool.h - Terminal Pool
+7. src/qtapp/TerminalManager.cpp - Terminal Manager
+8. src/qtapp/TerminalManager.h - Terminal Manager Header
+9. src/qtapp/TerminalWidget.cpp - Terminal Widget
+10. src/qtapp/TerminalWidget.h - Terminal Widget Header
+
+### Key Findings
+- Subsystems.h: Stub widget definitions using DEFINE_STUB_WIDGET macro
+- Stubs: RunDebugWidget, ProfilerWidget, TestExplorerWidget, DatabaseToolWidget, DockerToolWidget, CloudExplorerWidget, PackageManagerWidget, DocumentationWidget, UMLViewWidget, ImageToolWidget, TranslationWidget, DesignToCodeWidget, AIChatWidget, NotebookWidget, MarkdownViewer, SpreadsheetWidget, TerminalClusterWidget, SnippetManagerWidget, RegexTesterWidget, DiffViewerWidget, ColorPickerWidget, IconFontWidget, PluginManagerWidget, NotificationCenter, ShortcutsConfigurator, TelemetryWidget, UpdateCheckerWidget, WelcomeScreenWidget, ProgressManager, AIQuickFixWidget, CodeMinimap, BreadcrumbBar, StatusBarManager, TerminalEmulator, SearchResultWidget, BookmarkWidget, TodoWidget, MacroRecorderWidget, AICompletionCache, LanguageClientHost, InlineChatWidget, AIReviewWidget, CodeStreamWidget, AudioCallWidget, ScreenShareWidget, WhiteboardWidget, TimeTrackerWidget, TaskManagerWidget, PomodoroWidget, WallpaperWidget, AccessibilityWidget
+- Real implementations: ProjectExplorerWidget, BuildSystemWidget, VersionControlWidget, SettingsDialog, CommandPalette
+- task_runner: Abstract task runner for build systems and external tools
+- Status enum: Idle, Preparing, Running, Paused, Completed, Failed, Cancelled, Timeout
+- OutputLine struct: text, level, timestamp, isStderr
+- ParseResult struct: file, line, column, severity, code, message, source
+- Methods: start(workingDir, args), stop(), parseOutput()
+- telemetry.h: Hardware telemetry collection
+- TelemetrySnapshot: timeMs, cpuTempC, cpuUsagePercent, gpuTempC, gpuUsagePercent, gpuVendor
+- Functions: Initialize(), Poll(snapshot), Shutdown()
+- TelemetryWindow.h: Real-time telemetry log viewer
+- Features: Auto-refresh every 1200ms, log file tailing, RawrXD_ModelLoader_*.log pattern matching
+- terminal_pool.h: Multi-terminal pool management
+- TerminalInfo struct: output_widget, input_widget, process
+- Methods: createNewTerminal(), executeCommand(), closeTerminal()
+- TerminalManager: Process wrapper for PowerShell/CMD
+- ShellType enum: PowerShell, CommandPrompt
+- Methods: start(shell), stop(), writeInput(data)
+- Signals: outputReady, errorReady, started, finished
+- TerminalWidget: Terminal UI with two-phase initialization
+- Features: PowerShell/CMD selection, start/stop controls, command input
+- Methods: startShell(type), stopShell(), onUserCommand()
+
+**Total Progress: 2230/3159 files (~70.6%)**
 
