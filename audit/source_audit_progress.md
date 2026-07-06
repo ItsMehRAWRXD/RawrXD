@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3020/3159 files (~95.6%)
+Current progress: 3030/3159 files (~95.9%)
+
+## Batch 303 (Completed)
+
+**Queue entries 3021-3030 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_LayoutCanon.h - Layout Canon (Four Pane Rule)
+2. src/win32app/Win32IDE_LicenseCreator.cpp - Enterprise License Creator
+3. src/win32app/Win32IDE_LineEndingSelector.cpp - Line ending selector
+4. src/win32app/Win32IDE_LinkFixes.cpp - LNK2001 Resolver (Phase 15)
+5. src/win32app/Win32IDE_LLMRouter.cpp - LLM Router (Phase 8C)
+6. src/win32app/Win32IDE_LocalServer.cpp - Embedded GGUF HTTP Server
+7. src/win32app/Win32IDE_Logger.cpp - Comprehensive logging system
+8. src/win32app/Win32IDE_logMessage_stub.cpp - LogMessage stub shim
+9. src/win32app/Win32IDE_logMessage.cpp - LogMessage fallback implementation
+10. src/win32app/Win32IDE_LogpointBridge.cpp - Logpoint bridge for debugger
+
+### Key Findings
+- LayoutCanon: Four main panes (FileExplorer, TerminalDebug, Editor, AIChat), pop-ups only
+- LicenseCreator: 8 enterprise features, Dev Unlock, HWID binding, KeyGen integration
+- LineEndingSelector: CRLF/LF/CR detection, conversion dialog, status bar integration
+- LinkFixes: 861 missing externals, command handler wiring, resource definitions
+- LLMRouter: Task-based routing (chat/code-gen/planning/tool), 6 backend types
+- LocalServer: Ollama-compatible API, OpenAI-compatible, SSE streaming, port 11435
+- Logger: Timestamped logs, categorized output, file + debug output + panel
+- logMessage_stub: Build-compat shim for legacy references
+- logMessage: OutputDebugString, %APPDATA%\RawrXD\ide.log, mutex-protected
+- LogpointBridge: Conditional breakpoints, format strings, debugger integration
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3030/3159 files (~95.9%)**
+
 
 ## Batch 302 (Completed)
 
@@ -11523,4 +11555,51 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - makeMoeMixturePackCacheKey for cache key generation
 
 **Total Progress: 2330/3159 files (~73.8%)**
+
+
+
+## Batch 234 (Completed)
+
+**Queue entries 2402-2411 audited.**
+
+### Files Audited
+1. src/rawrxd_transformer.h - Transformer Header
+2. src/rawrxd_transformer.hpp - Transformer HPP
+3. src/RawrXD_TriggerTest.cpp - Trigger Test
+4. src/RawrXD_UndoStack.cpp - Undo Stack
+5. src/RawrXD_UndoStack.h - Undo Stack Header
+6. src/RawrXD_v23_Orchestrator.cpp - v23 Orchestrator
+7. src/RawrXD_v23_Residency.cpp - v23 Residency
+8. src/RawrXD_Win32_Foundation.h - Win32 Foundation
+9. src/RawrXD_Window.cpp - Window
+10. src/RawrXD_Window.h - Window Header
+
+### Key Findings
+- rawrxd_transformer.h: MoE transformer configuration with extensive tuning parameters
+- SwarmPinLayerParts enum: Full, StaticOnly, ExpertsOnly
+- Config: moe_pin_top_k, moe_weighted_mixture, moe_down_work_threshold
+- Heatmap-driven reuse: moe_down_reuse_from_heatmap, moe_down_reuse_snapshot_stride
+- Grouped pack cache: moe_down_grouped_pack_cache_max_entries (16), max_bytes (512MB)
+- rawrxd_transformer.hpp: Real transformer inference with Vulkan compute pipelines
+- MASM64 kernels: MatMul_F16F32_AVX512, RMSNorm_AVX512, SoftMax_AVX512, RoPE_Rotate_AVX512
+- KV Cache: [layer][batch, seq_len, n_kv_heads, head_dim] layout
+- RawrXD_TriggerTest.cpp: Minimal test file (BUG: Memory leak comment)
+- RawrXD_UndoStack: Command pattern undo/redo with merge support
+- Signals: canUndoChanged, canRedoChanged, cleanChanged
+- Methods: push, undo, redo, setClean, isClean, clear
+- RawrXD_v23_Orchestrator: Dynamic Quantization Hot-Patcher
+- SHARD_CONFIG: LayerID, Precision_Bits, Weight_Offset, VRAM_Slot
+- RawrXD_ShardOrchestrator: 16GB VRAM, 64GB RAM, 512GB NVMe Ring
+- Patcher_Scale_Layer: Atomic swap of weights with MapViewOfFileEx
+- RawrXD_v23_Residency: Deterministic Shard Residency Pipeline
+- RX_SHARD_STATE enum: UNMAPPED, FETCHING, STAGED, VALIDATING, READY, PINNED, EVICTING, STALE, FAILED
+- RX_V23_SHARD_DESC: shard_id, layer_lo, layer_hi, tier_pref, quant_mode, nvme_offset, byte_size, crc64
+- RX_V23_METRICS: atomic counters for shards_ready, shards_failed, prefetch_hits, prefetch_misses
+- RawrXD_Win32_Foundation.h: Compatibility shim with Variant type (QVariant replacement)
+- Variant types: Type_Null, Type_Bool, Type_Int, Type_LongLong, Type_Double, Type_String, Type_ByteArray, Type_Pointer
+- RawrXD_Window: Win32 window wrapper with SignalSlot integration
+- WndProc with GWLP_USERDATA for instance retrieval
+- Event handlers: paintEvent, resizeEvent, mousePressEvent, mouseReleaseEvent, mouseMoveEvent, keyPressEvent, charEvent, closeEvent
+
+**Total Progress: 2340/3159 files (~74.1%)**
 
