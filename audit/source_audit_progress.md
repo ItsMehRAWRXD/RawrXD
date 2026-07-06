@@ -2,7 +2,39 @@
 
 Total files in queue: 3159 (`audit/source_audit_queue.txt`)
 Status: In progress (10-file deterministic batches)
-Current progress: 3040/3159 files (~96.2%)
+Current progress: 3050/3159 files (~96.5%)
+
+## Batch 305 (Completed)
+
+**Queue entries 3041-3050 audited.**
+
+### Files Audited
+1. src/win32app/Win32IDE_Minimap.cpp - Code overview minimap (Tier 1 Cosmetic #2)
+2. src/win32app/Win32IDE_ModelAnatomy.cpp - GGUF tensor autopsy/diff
+3. src/win32app/Win32IDE_ModelDiscovery.cpp - Model discovery implementation
+4. src/win32app/Win32IDE_MonacoThemes.cpp - Monaco theme bridge (Phase 26)
+5. src/win32app/Win32IDE_MultiCursor.cpp - Multi-cursor editing engine
+6. src/win32app/Win32IDE_MultiResponse.cpp - Multi-response chain generation (Phase 9C)
+7. src/win32app/Win32IDE_NativeDebugPanel_fallback.cpp - Native debug fallback (MinGW)
+8. src/win32app/Win32IDE_NativeDebugPanel_nonmsvc.cpp - Native debug non-MSVC stub
+9. src/win32app/Win32IDE_NativeDebugPanel.cpp - Native debugger IDE integration (Phase 12)
+10. src/win32app/Win32IDE_NativePipeline.cpp - Native inference pipeline integration
+
+### Key Findings
+- Minimap: Right-side thumbnail, 2x2 pixel blocks, syntax-colored, click/drag navigation
+- ModelAnatomy: Conditional RAWR_HAS_MODEL_ANATOMY, tensor analysis, neurological diff
+- ModelDiscovery: File system scanning, 4 default paths, 4 model extensions (.gguf, .bin, .safetensors, .ckpt)
+- MonacoThemes: 16 theme mappings, COLORREF to hex conversion, WebView2 integration
+- MultiCursor: Alt+Click, Ctrl+D, Ctrl+Alt+Up/Down, synchronized typing across cursors
+- MultiResponse: Up to 4 distinct responses per prompt, template-based styles
+- NativeDebugPanel_fallback: MinGW stub with emitNativeDebugUnavailable
+- NativeDebugPanel_nonmsvc: Non-MSVC stub with HTTP JSON error responses
+- NativeDebugPanel: 28 commands, 14 HTTP endpoints, NativeDebuggerEngine integration
+- NativePipeline: Zero-dependency pipeline, GGUF loading, streaming inference
+- All files: C++20, Win32 native, no exceptions, PatchResult pattern, no Qt
+
+**Total Progress: 3050/3159 files (~96.5%)**
+
 
 ## Batch 304 (Completed)
 
@@ -11676,4 +11708,54 @@ Primary findings: riscv/quants.c implements RISC-V Vector Extension (RVV) quanti
 - Latency tracking with rolling history (1000 samples)
 
 **Total Progress: 2350/3159 files (~74.4%)**
+
+
+
+## Batch 236 (Completed)
+
+**Queue entries 2422-2431 audited.**
+
+### Files Audited
+1. src/realtime_analyzer.cpp - Realtime Analyzer
+2. src/registry_core/include/types.hpp - Registry Types
+3. src/renderer.h - Renderer
+4. src/response_parser.cpp - Response Parser
+5. src/response_parser.h - Response Parser Header
+6. src/reverse_engineering/binary_patcher.cpp - Binary Patcher
+7. src/reverse_engineering/binary_patcher.h - Binary Patcher Header
+8. src/reverse_engineering/decompiler.cpp - Decompiler
+9. src/reverse_engineering/decompiler.h - Decompiler Header
+10. src/reverse_engineering/deobfuscator/test_deobf.cpp - Deobfuscator Test
+
+### Key Findings
+- realtime_analyzer.cpp: Real-time code analysis engine
+- IssueSeverity: Info, Warning, Error, Critical
+- IssueCategory: Syntax, Security, Performance, Style, Memory, Logic, BestPractice
+- CodeIssue: line_number, column, message, severity, category, suggestion, code_snippet
+- AnalysisResult: issues, quality_score, category_counts, summary
+- Detects: syntax issues, security vulnerabilities, performance issues, memory leaks
+- registry_core/types.hpp: Extension registry types
+- ExtensionType: PowerShell, VSCode, NativePlugin
+- ExtensionInfo: id, name, version, type, description, author, localPath, isInstalled
+- InstallationResult, ProcessResult, HttpStatus enum
+- renderer.h: IRenderer interface for Win32 rendering
+- Methods: Initialize, Render, Resize, SetTransparency, DrawText, DrawRect, BeginFrame, EndFrame
+- response_parser.cpp: LLM response parsing with multiple strategies
+- ParsedCompletion: text, tokenCount, confidence, boundary, isComplete
+- Strategies: statement boundaries, line boundaries, token boundaries
+- Buffer management for streaming responses
+- binary_patcher.cpp: PE binary modification module
+- PatchType: BytePatch, StringPatch, NopPatch, JumpPatch, CallPatch, FunctionHook, ImportRedirect, DataPatch
+- PatchEntry: rva, fileOffset, type, originalBytes, patchedBytes, description, applied
+- VirtualAlloc for file data with 1MB extra space for modifications
+- decompiler.cpp: Pattern-based decompilation engine
+- Converts x86/x64 instructions to C/C++ pseudocode
+- InstructionPattern: zero_register, test_zero, compare_branch, array_index, function_prologue
+- DecompiledFunction: name, returnType, parameters, locals, body, signature
+- test_deobf.cpp: Omega Deobfuscator test harness
+- APIs: OmegaDeobf_Initialize, OmegaDeobf_AnalyzeTarget, OmegaDeobf_NeutralizeLayer
+- MetaReverse: Authenticity analysis, synthetic code detection
+- RawrXD_Deobfuscate_Full unified API
+
+**Total Progress: 2360/3159 files (~74.7%)**
 
