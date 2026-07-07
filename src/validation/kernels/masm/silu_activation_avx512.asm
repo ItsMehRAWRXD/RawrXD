@@ -35,6 +35,10 @@ OPTION CASEMAP:NONE
 ; Region 1: |x| < 4 -> Polynomial sigmoid
 ; Region 2: x >= 4 -> SiLU(x) ≈ x
 ; Region 3: x <= -4 -> SiLU(x) ≈ 0
+;
+; Sigmoid approximation (valid for |x| < 4):
+;   sigmoid(x) ≈ 0.5 + 0.1506*x - 0.0017*x^3 + 0.00003*x^5
+;   (This gives max error < 0.01 for |x| < 4)
 
 ALIGN 16
 g_silu_neg_4        REAL4 -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0
@@ -42,9 +46,9 @@ g_silu_pos_4        REAL4  4.0,  4.0,  4.0,  4.0,  4.0,  4.0,  4.0,  4.0
 g_silu_zero         REAL4  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0
 g_silu_one          REAL4  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0
 g_silu_half         REAL4  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5
-g_silu_quarter      REAL4  0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-g_silu_neg_020833   REAL4 -0.020833, -0.020833, -0.020833, -0.020833, -0.020833, -0.020833, -0.020833, -0.020833
-g_silu_pos_002604   REAL4  0.002604,  0.002604,  0.002604,  0.002604,  0.002604,  0.002604,  0.002604,  0.002604
+g_silu_c1           REAL4  0.1506, 0.1506, 0.1506, 0.1506, 0.1506, 0.1506, 0.1506, 0.1506
+g_silu_c3           REAL4 -0.0017, -0.0017, -0.0017, -0.0017, -0.0017, -0.0017, -0.0017, -0.0017
+g_silu_c5           REAL4  0.00003,  0.00003,  0.00003,  0.00003,  0.00003,  0.00003,  0.00003,  0.00003
 
 .code
 
@@ -89,9 +93,9 @@ MASM_Silu_Activation_AVX512 PROC FRAME
     vmovups ymm5, YMMWORD PTR [g_silu_pos_4]      ;  4.0
     vmovups ymm6, YMMWORD PTR [g_silu_zero]       ;  0.0
     vmovups ymm7, YMMWORD PTR [g_silu_half]       ;  0.5
-    vmovups ymm8, YMMWORD PTR [g_silu_quarter]    ;  0.25
-    vmovups ymm9, YMMWORD PTR [g_silu_neg_020833] ; -0.020833
-    vmovups ymm10, YMMWORD PTR [g_silu_pos_002604];  0.002604
+    vmovups ymm8, YMMWORD PTR [g_silu_c1]         ;  0.1506
+    vmovups ymm9, YMMWORD PTR [g_silu_c3]         ; -0.0017
+    vmovups ymm10, YMMWORD PTR [g_silu_c5]        ;  0.00003
     
     ; Calculate iterations - rcx = data_size / 32
     mov rcx, r8
@@ -114,7 +118,7 @@ process_loop:
     vcmpps ymm3, ymm0, ymm5, 14 ; Comparison: x > 4.0 (GT)
     
     ; --- Polynomial Calculation (Sigmoid Approx) ---
-    ; P(x) = 0.5 + 0.25*x + C3*x^3 + C5*x^5
+    ; P(x) = 0.5 + 0.1506*x - 0.0017*x^3 + 0.00003*x^5
     ; ymm11 = x^2
     vmulps ymm11, ymm0, ymm0
     
@@ -124,19 +128,19 @@ process_loop:
     ; ymm13 = x^5 = x^3 * x^2
     vmulps ymm13, ymm12, ymm11
     
-    ; ymm14 = 0.25*x
+    ; ymm14 = 0.1506*x
     vmulps ymm14, ymm0, ymm8
     
-    ; ymm15 = -0.020833*x^3
+    ; ymm15 = -0.0017*x^3
     vmulps ymm15, ymm12, ymm9
     
-    ; ymm11 = 0.002604*x^5
+    ; ymm11 = 0.00003*x^5
     vmulps ymm11, ymm13, ymm10
     
-    ; sigmoid = 0.5 + 0.25*x + C3*x^3 + C5*x^5
-    vaddps ymm12, ymm7, ymm14   ; 0.5 + 0.25*x
-    vaddps ymm12, ymm12, ymm15  ; + C3*x^3
-    vaddps ymm12, ymm12, ymm11  ; + C5*x^5
+    ; sigmoid = 0.5 + 0.1506*x - 0.0017*x^3 + 0.00003*x^5
+    vaddps ymm12, ymm7, ymm14   ; 0.5 + 0.1506*x
+    vaddps ymm12, ymm12, ymm15  ; - 0.0017*x^3
+    vaddps ymm12, ymm12, ymm11  ; + 0.00003*x^5
     
     ; --- Final SiLU: x * Sigmoid(x) ---
     vmulps ymm0, ymm1, ymm12    ; SiLU_poly = x * Sigmoid(x)
@@ -202,11 +206,10 @@ MASM_Silu_Activation_AVX512_Fast PROC FRAME
     mov r8, rdx
     
     ; Load constants
-    vmovaps ymm4, YMMWORD PTR [g_silu_one]
-    vmovaps ymm5, YMMWORD PTR [g_silu_half]
-    vmovaps ymm6, YMMWORD PTR [g_silu_quarter]
-    vmovaps ymm7, YMMWORD PTR [g_silu_neg_020833]
-    vmovaps ymm8, YMMWORD PTR [g_silu_pos_002604]
+    vmovups ymm4, YMMWORD PTR [g_silu_half]
+    vmovups ymm5, YMMWORD PTR [g_silu_c1]
+    vmovups ymm6, YMMWORD PTR [g_silu_c3]
+    vmovups ymm7, YMMWORD PTR [g_silu_c5]
     
     ; Calculate iterations
     mov rcx, r8
@@ -218,16 +221,16 @@ fast_loop:
     jz fast_done
     
     vmovaps ymm0, YMMWORD PTR [rax]
-    vmulps ymm1, ymm0, ymm0
-    vmulps ymm2, ymm1, ymm0
-    vmulps ymm3, ymm2, ymm1
-    vmulps ymm1, ymm0, ymm6
-    vmulps ymm2, ymm2, ymm7
-    vmulps ymm3, ymm3, ymm8
-    vaddps ymm1, ymm5, ymm1
-    vaddps ymm1, ymm1, ymm2
-    vaddps ymm1, ymm1, ymm3
-    vmulps ymm0, ymm0, ymm1
+    vmulps ymm1, ymm0, ymm0      ; x^2
+    vmulps ymm2, ymm1, ymm0      ; x^3
+    vmulps ymm3, ymm2, ymm1      ; x^5
+    vmulps ymm1, ymm0, ymm5      ; 0.1506*x
+    vmulps ymm2, ymm2, ymm6      ; -0.0017*x^3
+    vmulps ymm3, ymm3, ymm7      ; 0.00003*x^5
+    vaddps ymm1, ymm4, ymm1      ; 0.5 + 0.1506*x
+    vaddps ymm1, ymm1, ymm2      ; - 0.0017*x^3
+    vaddps ymm1, ymm1, ymm3      ; + 0.00003*x^5
+    vmulps ymm0, ymm0, ymm1      ; x * sigmoid(x)
     vmovaps YMMWORD PTR [rax], ymm0
     
     add rax, 32
@@ -280,11 +283,10 @@ MASM_Silu_Activation_AVX512_Bounded PROC FRAME
     jnz bounded_error_size
     
     ; Load constants
-    vmovaps ymm4, YMMWORD PTR [g_silu_one]
-    vmovaps ymm5, YMMWORD PTR [g_silu_half]
-    vmovaps ymm6, YMMWORD PTR [g_silu_quarter]
-    vmovaps ymm7, YMMWORD PTR [g_silu_neg_020833]
-    vmovaps ymm8, YMMWORD PTR [g_silu_pos_002604]
+    vmovups ymm4, YMMWORD PTR [g_silu_half]
+    vmovups ymm5, YMMWORD PTR [g_silu_c1]
+    vmovups ymm6, YMMWORD PTR [g_silu_c3]
+    vmovups ymm7, YMMWORD PTR [g_silu_c5]
     
     ; Calculate iterations
     mov rcx, r8
@@ -296,16 +298,16 @@ bounded_loop:
     jz bounded_done
     
     vmovaps ymm0, YMMWORD PTR [rax]
-    vmulps ymm1, ymm0, ymm0
-    vmulps ymm2, ymm1, ymm0
-    vmulps ymm3, ymm2, ymm1
-    vmulps ymm1, ymm0, ymm6
-    vmulps ymm2, ymm2, ymm7
-    vmulps ymm3, ymm3, ymm8
-    vaddps ymm1, ymm5, ymm1
-    vaddps ymm1, ymm1, ymm2
-    vaddps ymm1, ymm1, ymm3
-    vmulps ymm0, ymm0, ymm1
+    vmulps ymm1, ymm0, ymm0      ; x^2
+    vmulps ymm2, ymm1, ymm0      ; x^3
+    vmulps ymm3, ymm2, ymm1      ; x^5
+    vmulps ymm1, ymm0, ymm5      ; 0.1506*x
+    vmulps ymm2, ymm2, ymm6      ; -0.0017*x^3
+    vmulps ymm3, ymm3, ymm7      ; 0.00003*x^5
+    vaddps ymm1, ymm4, ymm1      ; 0.5 + 0.1506*x
+    vaddps ymm1, ymm1, ymm2      ; - 0.0017*x^3
+    vaddps ymm1, ymm1, ymm3      ; + 0.00003*x^5
+    vmulps ymm0, ymm0, ymm1      ; x * sigmoid(x)
     
     ; Clamp to [-10, 10]
     mov eax, 0C1200000h

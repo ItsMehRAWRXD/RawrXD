@@ -34,6 +34,7 @@ using RawrXD::AlignedVector;
 #endif
 #include <windows.h>
 #include <intrin.h>
+#include <immintrin.h>  // For _mm_lfence
 
 // AVX-512 detection
 #ifdef __AVX512F__
@@ -43,6 +44,33 @@ using RawrXD::AlignedVector;
 #endif
 
 using namespace RawrXD::Telemetry;
+
+// ============================================================================
+// Serialized Timing Wrapper
+// ============================================================================
+// Prevents out-of-order execution from skewing cycle counts.
+// Uses _mm_lfence() to serialize instruction execution before and after
+// the kernel call, ensuring accurate timing measurements.
+// ============================================================================
+
+inline uint64_t measure_kernel_cycles_serialized(void (*func)(void*, size_t), void* data, size_t size) {
+    // 1. Serialize: Ensure all previous instructions finished
+    _mm_lfence();
+    
+    // 2. Start clock
+    uint64_t start = __rdtsc();
+    
+    // 3. Execute kernel
+    func(data, size);
+    
+    // 4. Serialize: Ensure all instructions in kernel finished
+    _mm_lfence();
+    
+    // 5. Stop clock
+    uint64_t end = __rdtsc();
+    
+    return end - start;
+}
 
 // ============================================================================
 // Scalar Kernel Implementations (Baseline for Comparison)
@@ -663,7 +691,6 @@ int main(int argc, char* argv[]) {
         // Test SiLU Activation
         {
             std::cout << "    SiLU Activation:" << std::endl;
-            std::cout << "      Initializing test data..." << std::endl;
             
             // Initialize with test data
             for (size_t i = 0; i < size; ++i) {
@@ -672,34 +699,28 @@ int main(int argc, char* argv[]) {
                 buffer_masm[i] = val;
             }
             
-            std::cout << "      Running warmup (" << warmup_iterations << " iterations)..." << std::endl;
-            
             // Warmup
             for (int i = 0; i < warmup_iterations; ++i) {
-                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
-                Scalar_Silu_Activation(buffer_scalar.data(), size * sizeof(float));
-                std::cout << "        Warmup " << i << ": scalar done" << std::endl;
-                MASM_Silu_Activation_Wrapper(buffer_masm.data(), size * sizeof(float));
-                std::cout << "        Warmup " << i << ": MASM done" << std::endl;
-            }
-            
-            // Benchmark scalar
-            uint64_t scalar_start = __rdtsc();
-            for (int i = 0; i < benchmark_iterations; ++i) {
                 for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
                 Scalar_Silu_Activation(buffer_scalar.data(), size * sizeof(float));
-            }
-            uint64_t scalar_end = __rdtsc();
-            double scalar_cycles = static_cast<double>(scalar_end - scalar_start) / benchmark_iterations;
-            
-            // Benchmark MASM
-            uint64_t masm_start = __rdtsc();
-            for (int i = 0; i < benchmark_iterations; ++i) {
-                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
                 MASM_Silu_Activation_Wrapper(buffer_masm.data(), size * sizeof(float));
             }
-            uint64_t masm_end = __rdtsc();
-            double masm_cycles = static_cast<double>(masm_end - masm_start) / benchmark_iterations;
+            
+            // Benchmark scalar (serialized)
+            uint64_t scalar_total = 0;
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                scalar_total += measure_kernel_cycles_serialized(Scalar_Silu_Activation, buffer_scalar.data(), size * sizeof(float));
+            }
+            double scalar_cycles = static_cast<double>(scalar_total) / benchmark_iterations;
+            
+            // Benchmark MASM (serialized)
+            uint64_t masm_total = 0;
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                masm_total += measure_kernel_cycles_serialized(MASM_Silu_Activation_Wrapper, buffer_masm.data(), size * sizeof(float));
+            }
+            double masm_cycles = static_cast<double>(masm_total) / benchmark_iterations;
             
             // Calculate speedup
             double speedup = scalar_cycles / masm_cycles;
@@ -731,30 +752,35 @@ int main(int argc, char* argv[]) {
         {
             std::cout << "    RMS Normalization:" << std::endl;
             
+            // Initialize with test data
+            for (size_t i = 0; i < size; ++i) {
+                float val = static_cast<float>(i % 100) / 10.0f - 5.0f;
+                buffer_scalar[i] = val;
+                buffer_masm[i] = val;
+            }
+            
             // Warmup
             for (int i = 0; i < warmup_iterations; ++i) {
-                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
-                Scalar_RMSNorm_Forward(buffer_scalar.data(), size * sizeof(float));
-                MASM_RMSNorm_Forward_Wrapper(buffer_masm.data(), size * sizeof(float));
-            }
-            
-            // Benchmark scalar
-            uint64_t scalar_start = __rdtsc();
-            for (int i = 0; i < benchmark_iterations; ++i) {
                 for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
                 Scalar_RMSNorm_Forward(buffer_scalar.data(), size * sizeof(float));
-            }
-            uint64_t scalar_end = __rdtsc();
-            double scalar_cycles = static_cast<double>(scalar_end - scalar_start) / benchmark_iterations;
-            
-            // Benchmark MASM
-            uint64_t masm_start = __rdtsc();
-            for (int i = 0; i < benchmark_iterations; ++i) {
-                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
                 MASM_RMSNorm_Forward_Wrapper(buffer_masm.data(), size * sizeof(float));
             }
-            uint64_t masm_end = __rdtsc();
-            double masm_cycles = static_cast<double>(masm_end - masm_start) / benchmark_iterations;
+            
+            // Benchmark scalar (serialized)
+            uint64_t scalar_total = 0;
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                scalar_total += measure_kernel_cycles_serialized(Scalar_RMSNorm_Forward, buffer_scalar.data(), size * sizeof(float));
+            }
+            double scalar_cycles = static_cast<double>(scalar_total) / benchmark_iterations;
+            
+            // Benchmark MASM (serialized)
+            uint64_t masm_total = 0;
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                masm_total += measure_kernel_cycles_serialized(MASM_RMSNorm_Forward_Wrapper, buffer_masm.data(), size * sizeof(float));
+            }
+            double masm_cycles = static_cast<double>(masm_total) / benchmark_iterations;
             
             // Calculate speedup
             double speedup = scalar_cycles / masm_cycles;
@@ -786,33 +812,35 @@ int main(int argc, char* argv[]) {
         {
             std::cout << "    Softmax:" << std::endl;
             
-            // Scalar implementation
-            AlignedVector<float> buffer_scalar(size);
-            AlignedVector<float> buffer_masm(size);
-            
             // Initialize with test data
-            for (size_t j = 0; j < size; ++j) {
-                buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
-                buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+            for (size_t i = 0; i < size; ++i) {
+                float val = static_cast<float>(i % 100) / 10.0f - 5.0f;
+                buffer_scalar[i] = val;
+                buffer_masm[i] = val;
             }
             
-            // Benchmark scalar
-            uint64_t scalar_start = __rdtsc();
-            for (int i = 0; i < benchmark_iterations; ++i) {
+            // Warmup
+            for (int i = 0; i < warmup_iterations; ++i) {
                 for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
                 Scalar_Attention_Softmax(buffer_scalar.data(), size * sizeof(float));
-            }
-            uint64_t scalar_end = __rdtsc();
-            double scalar_cycles = static_cast<double>(scalar_end - scalar_start) / benchmark_iterations;
-            
-            // Benchmark MASM
-            uint64_t masm_start = __rdtsc();
-            for (int i = 0; i < benchmark_iterations; ++i) {
-                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
                 MASM_Softmax_Forward_Wrapper(buffer_masm.data(), size * sizeof(float));
             }
-            uint64_t masm_end = __rdtsc();
-            double masm_cycles = static_cast<double>(masm_end - masm_start) / benchmark_iterations;
+            
+            // Benchmark scalar (serialized)
+            uint64_t scalar_total = 0;
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                scalar_total += measure_kernel_cycles_serialized(Scalar_Attention_Softmax, buffer_scalar.data(), size * sizeof(float));
+            }
+            double scalar_cycles = static_cast<double>(scalar_total) / benchmark_iterations;
+            
+            // Benchmark MASM (serialized)
+            uint64_t masm_total = 0;
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                masm_total += measure_kernel_cycles_serialized(MASM_Softmax_Forward_Wrapper, buffer_masm.data(), size * sizeof(float));
+            }
+            double masm_cycles = static_cast<double>(masm_total) / benchmark_iterations;
             
             // Calculate speedup
             double speedup = scalar_cycles / masm_cycles;

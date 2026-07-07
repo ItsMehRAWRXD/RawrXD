@@ -306,11 +306,24 @@ target_include_directories(test_masm_linkage SYSTEM PRIVATE
     "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
 )
 
+target_link_directories(test_masm_linkage PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
 target_link_libraries(test_masm_linkage PRIVATE
     telemetry_masm_kernels
     kernel32
     user32
 )
+
+# Use static runtime
+if(MSVC)
+    set_property(TARGET test_masm_linkage PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
 
 # Use static runtime
 if(MSVC)
