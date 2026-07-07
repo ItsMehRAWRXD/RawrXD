@@ -3,6 +3,8 @@
 #include <cmath>
 #include <immintrin.h>
 #include <fstream>
+#include <cstdint>
+#include <cstring>
 
 // Manual implementation of FAST_EXP2 for debugging
 void debug_fast_exp2(float* input, float* output, size_t count) {
@@ -35,7 +37,7 @@ void debug_fast_exp2(float* input, float* output, size_t count) {
         // IEEE 754 exponent manipulation
         uint32_t exp_bits = static_cast<uint32_t>(I_int + 127) << 23;
         float two_pow_I;
-        std::memcpy(&two_pow_I, &exp_bits, sizeof(float));
+        memcpy(&two_pow_I, &exp_bits, sizeof(float));
         log << "  2^I = " << two_pow_I << std::endl;
         
         // Step 4: Combine

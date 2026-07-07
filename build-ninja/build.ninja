@@ -11803,6 +11803,49 @@ build bin\kernel_differential_benchmark.exe: CXX_EXECUTABLE_LINKER__kernel_diffe
   TARGET_PDB = bin\kernel_differential_benchmark.pdb
   TARGET_SUPPORT_DIR = src\validation\CMakeFiles\kernel_differential_benchmark.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target silu_accuracy_test
+
+
+#############################################
+# Order-only phony target for silu_accuracy_test
+
+build cmake_object_order_depends_target_silu_accuracy_test: phony || .
+
+build src\validation\CMakeFiles\silu_accuracy_test.dir\silu_accuracy_comparison_test.cpp.obj: CXX_COMPILER__silu_accuracy_test_unscanned_Release D$:\rawrxd-ci-bootstrap\src\validation\silu_accuracy_comparison_test.cpp || cmake_object_order_depends_target_silu_accuracy_test
+  CONFIG = Release
+  DEFINES = -DHAS_AVX512=1 -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd-ci-bootstrap\src\validation -ID:\rawrxd-ci-bootstrap\src\validation\kernels -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = src\validation\CMakeFiles\silu_accuracy_test.dir
+  OBJECT_FILE_DIR = src\validation\CMakeFiles\silu_accuracy_test.dir
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\silu_accuracy_test.dir\
+  TARGET_PDB = bin\silu_accuracy_test.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\silu_accuracy_test.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target silu_accuracy_test
+
+
+#############################################
+# Link the executable bin\silu_accuracy_test.exe
+
+build bin\silu_accuracy_test.exe: CXX_EXECUTABLE_LINKER__silu_accuracy_test_Release src\validation\CMakeFiles\silu_accuracy_test.dir\silu_accuracy_comparison_test.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = src\validation\CMakeFiles\silu_accuracy_test.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\silu_accuracy_test.dir\
+  TARGET_FILE = bin\silu_accuracy_test.exe
+  TARGET_IMPLIB = src\validation\silu_accuracy_test.lib
+  TARGET_PDB = bin\silu_accuracy_test.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\silu_accuracy_test.dir
+
 
 #############################################
 # Utility command for test
@@ -12276,6 +12319,10 @@ build real_multi_model_benchmark: phony bin\real_multi_model_benchmark.exe
 
 build real_multi_model_benchmark.exe: phony bin\real_multi_model_benchmark.exe
 
+build silu_accuracy_test: phony bin\silu_accuracy_test.exe
+
+build silu_accuracy_test.exe: phony bin\silu_accuracy_test.exe
+
 build simple_gpu_test: phony bin\simple_gpu_test.exe
 
 build simple_gpu_test.exe: phony bin\simple_gpu_test.exe
@@ -12417,7 +12464,7 @@ build src\tools\all: phony bin\RawrXD_KeyGen.exe bin\simple_gpu_test.exe bin\rea
 #############################################
 # Folder: D:/rawrxd-ci-bootstrap/build-ninja/src/validation
 
-build src\validation\all: phony bin\model_stack_validation.exe bin\telemetry_validation.exe bin\abi_integrity_test.exe bin\zero_assembly_test.exe src\validation\engine_factory.lib bin\model_stack_validation_real.exe bin\ab_test_runner.exe bin\test_masm_linkage.exe bin\kernel_differential_benchmark.exe src\validation\kernels\all
+build src\validation\all: phony bin\model_stack_validation.exe bin\telemetry_validation.exe bin\abi_integrity_test.exe bin\zero_assembly_test.exe src\validation\engine_factory.lib bin\model_stack_validation_real.exe bin\ab_test_runner.exe bin\test_masm_linkage.exe bin\kernel_differential_benchmark.exe bin\silu_accuracy_test.exe src\validation\kernels\all
 
 # =============================================================================
 

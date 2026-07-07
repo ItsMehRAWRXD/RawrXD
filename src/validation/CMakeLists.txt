@@ -458,6 +458,47 @@ endif()
 
 message(STATUS "Standalone kernel benchmark: kernel_differential_benchmark")
 
+# ============================================================================
+# SiLU ACCURACY COMPARISON TEST
+# Compares Taylor polynomial vs Exp2-based SiLU implementations
+# ============================================================================
+
+add_executable(silu_accuracy_test
+    silu_accuracy_comparison_test.cpp
+)
+
+target_include_directories(silu_accuracy_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
+target_include_directories(silu_accuracy_test SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+target_link_directories(silu_accuracy_test PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+target_link_libraries(silu_accuracy_test PRIVATE
+    kernel32
+    user32
+)
+
+if(MSVC)
+    set_property(TARGET silu_accuracy_test PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_compile_options(silu_accuracy_test PRIVATE /arch:AVX512)
+endif()
+
+message(STATUS "SiLU accuracy comparison test: silu_accuracy_test")
+
 # AVX-512 support
 if(ENABLE_AVX512)
     if(MSVC)

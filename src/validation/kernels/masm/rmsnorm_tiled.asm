@@ -91,7 +91,7 @@ MASM_RMSNorm_Tiled PROC FRAME
     ; Phase 1: Compute global sum of squares using tiles
     ; ============================================================================
 
-    vxorps zmm0, zmm0, zmm0    ; zmm0 = global sum accumulator
+    vxorps xmm0, xmm0, xmm0    ; xmm0 = global sum accumulator (scalar)
 
 phase1_tile_loop:
     cmp rbx, 0
@@ -113,55 +113,45 @@ tile_size_ok:
     vxorps xmm5, xmm5, xmm5    ; xmm5 = 4-element remainder accumulator
     vxorps xmm6, xmm6, xmm6    ; xmm6 = scalar remainder accumulator
 
-    ; Process tile in 64-float (256-byte) chunks using AVX-512
+    ; Process tile in 16-float (64-byte) chunks using AVX-512
     mov r9, r8                 ; r9 = remaining in tile
 
 tile_sum_loop:
-    cmp r9, 64
+    cmp r9, 16
     jl tile_sum_remainder
 
-    ; Load 64 floats (full AVX-512 register)
+    ; Load 16 floats (full AVX-512 register)
     vmovaps zmm2, ZMMWORD PTR [rsi]
 
     ; Compute x^2 and accumulate
     vmulps zmm3, zmm2, zmm2
     vaddps zmm1, zmm1, zmm3
 
-    add rsi, 256               ; 64 floats * 4 bytes
-    sub r9, 64
+    add rsi, 64                ; 16 floats * 4 bytes
+    sub r9, 16
     jmp tile_sum_loop
 
 tile_sum_remainder:
-    ; Handle remaining elements (less than 64)
+    ; Handle remaining elements (less than 16)
     cmp r9, 0
     jle tile_sum_done
 
-    ; Process 16 at a time using AVX
-    cmp r9, 16
-    jl tile_sum_remainder_8
-
-    vmovaps ymm2, YMMWORD PTR [rsi]
-    vmulps ymm3, ymm2, ymm2
-    vaddps ymm4, ymm4, ymm3    ; Use ymm4 for remainder accumulation
-
-    add rsi, 64
-    sub r9, 16
-    jmp tile_sum_remainder
-
-tile_sum_remainder_8:
-    ; Process remaining 8 or less
+    ; Process 8 at a time using AVX
     cmp r9, 8
     jl tile_sum_remainder_4
 
     vmovaps ymm2, YMMWORD PTR [rsi]
     vmulps ymm3, ymm2, ymm2
-    vaddps ymm4, ymm4, ymm3
+    vaddps ymm4, ymm4, ymm3    ; Use ymm4 for remainder accumulation
 
     add rsi, 32
     sub r9, 8
     jmp tile_sum_remainder
 
 tile_sum_remainder_4:
+    ; Process remaining 4 or less
+    cmp r9, 4
+    jl tile_sum_remainder_1
     ; Process remaining 4 or less
     cmp r9, 4
     jl tile_sum_remainder_1
@@ -197,23 +187,25 @@ tile_sum_done:
     vmovshdup xmm2, xmm1             ; xmm2 = duplicate high 64 bits
     vaddps xmm1, xmm1, xmm2          ; xmm1 = [x0+x1, x0+x1, x2+x3, x2+x3]
     vmovhlps xmm2, xmm1, xmm1        ; xmm2 = [x2+x3, x2+x3, x2+x3, x2+x3] (move high 64 bits to low)
-    vaddss xmm1, xmm1, xmm2          ; xmm1[0] = final sum
+    vaddss xmm1, xmm1, xmm2          ; xmm1[0] = sum of 64-element chunks
 
-    ; Reduce ymm4 (16/8-element remainder) to scalar and add
-    vextractf128 xmm2, ymm4, 1       ; xmm2 = upper 128 bits
+    ; Add remainders to zmm1[0]
+    ; First reduce ymm4 to scalar and add
+    vextractf128 xmm2, ymm4, 1       ; xmm2 = upper 128 bits of ymm4
     vaddps xmm4, xmm4, xmm2          ; xmm4 = sum of both 128-bit halves
     vmovshdup xmm2, xmm4             ; xmm2 = duplicate high 64 bits
     vaddps xmm4, xmm4, xmm2          ; xmm4 = [y0+y1, y0+y1, y2+y3, y2+y3]
-    vmovhlps xmm2, xmm4, xmm4        ; xmm2 = [y2+y3, y2+y3, y2+y3, y2+y3] (move high 64 bits to low)
-    vaddss xmm4, xmm4, xmm2          ; xmm4[0] = final sum
-    addss xmm1, xmm4                 ; Add 16/8-element remainder
+    vmovhlps xmm2, xmm4, xmm4        ; xmm2 = [y2+y3, y2+y3, y2+y3, y2+y3]
+    vaddss xmm4, xmm4, xmm2          ; xmm4[0] = sum of 16/8-element remainders
+    addss xmm1, xmm4                 ; Add to tile sum
 
-    ; Add 4-element and scalar remainders
-    addss xmm1, xmm5                 ; Add 4-element remainder
-    addss xmm1, xmm6                 ; Add scalar remainder
+    ; Add xmm5 (4-element remainder)
+    addss xmm1, xmm5
 
-    ; Add tile sum to global accumulator (only add to first lane)
-    ; zmm0 is used as a scalar accumulator, only zmm0[0] matters
+    ; Add xmm6 (scalar remainder)
+    addss xmm1, xmm6
+
+    ; Add complete tile sum to global accumulator
     vaddss xmm0, xmm0, xmm1
 
     ; Restore tile size and subtract from remaining
@@ -222,25 +214,8 @@ tile_sum_done:
     jmp phase1_tile_loop
 
 phase1_done:
-    ; zmm0 now contains partial sums in all lanes (16 floats)
-    ; Horizontal reduce to get total sum of squares in xmm0[0]
-    ; Step 1: Reduce 512-bit zmm0 to 256-bit ymm0
-    vextractf64x4 ymm1, zmm0, 1      ; ymm1 = upper 256 bits (8 floats)
-    vaddps ymm0, ymm0, ymm1          ; ymm0 = sum of both 256-bit halves
-    
-    ; Step 2: Reduce 256-bit ymm0 to 128-bit xmm0
-    vextractf128 xmm1, ymm0, 1       ; xmm1 = upper 128 bits (4 floats)
-    vaddps xmm0, xmm0, xmm1          ; xmm0 = sum of both 128-bit halves
-    
-    ; Step 3: Reduce 128-bit xmm0 to scalar
-    ; xmm0 = [x0, x1, x2, x3] where each is sum of 4 floats from previous step
-    vmovshdup xmm1, xmm0             ; xmm1 = [x1, x1, x3, x3]
-    vaddps xmm0, xmm0, xmm1          ; xmm0 = [x0+x1, x0+x1, x2+x3, x2+x3]
-    ; Now we need to add xmm0[0] and xmm0[2]
-    vmovhlps xmm1, xmm0, xmm0        ; xmm1 = [x2+x3, x2+x3, x2+x3, x2+x3] (move high 64 bits to low)
-    vaddss xmm0, xmm0, xmm1          ; xmm0[0] = (x0+x1) + (x2+x3) = final sum
-
-    ; xmm0[0] = total sum of squares
+    ; xmm0[0] already contains the total sum of squares (scalar accumulator)
+    ; No horizontal reduction needed
 
     ; Compute mean_sq = sum_sq / n
     ; Clear xmm15 before using it for integer conversion

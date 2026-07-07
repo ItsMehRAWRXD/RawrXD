@@ -138,6 +138,41 @@ int main() {
     std::cout << "  ✅ Data initialized" << std::endl;
 
     // ============================================================================
+    // Correctness Check: Single run comparison
+    // ============================================================================
+    std::cout << "\n[Correctness] Running single-iteration comparison..." << std::endl;
+    
+    // Clear output buffers before correctness check
+    std::memset(output_fixed.data(), 0, SIZE * sizeof(float));
+    std::memset(output_tiled.data(), 0, SIZE * sizeof(float));
+    
+    int ret_fixed = MASM_RMSNorm_Fixed(input.data(), output_fixed.data(), weights.data(), SIZE);
+    int ret_tiled = MASM_RMSNorm_Tiled(input.data(), output_tiled.data(), weights.data(), SIZE);
+
+    if (ret_fixed != 0 || ret_tiled != 0) {
+        std::cout << "  ❌ Kernel execution failed:" << std::endl;
+        std::cout << "     Fixed: " << ret_fixed << ", Tiled: " << ret_tiled << std::endl;
+        return 1;
+    }
+
+    // Verify outputs match
+    double max_diff = 0.0;
+    for (size_t i = 0; i < SIZE; ++i) {
+        double diff = std::abs(output_fixed[i] - output_tiled[i]);
+        max_diff = std::max(max_diff, diff);
+    }
+
+    if (max_diff > 1e-4) {
+        std::cout << "  ❌ Outputs differ significantly (max diff: " << max_diff << ")" << std::endl;
+        return 1;
+    }
+    std::cout << "  ✅ Outputs match (max diff: " << std::scientific << max_diff << ")" << std::endl;
+
+    // Reset outputs for benchmark runs
+    std::memset(output_fixed.data(), 0, SIZE * sizeof(float));
+    std::memset(output_tiled.data(), 0, SIZE * sizeof(float));
+
+    // ============================================================================
     // Benchmark 1: Fixed RMSNorm
     // ============================================================================
     std::cout << "\n----------------------------------------" << std::endl;
@@ -228,48 +263,12 @@ int main() {
         if (!result_tiled.success) {
             std::cout << "   - Tiled kernel failed with code: " << result_tiled.return_code << std::endl;
         }
+        return 1;
     }
 
     // ============================================================================
-    // Correctness Check
+    // Summary
     // ============================================================================
-    if (result_fixed.success && result_tiled.success) {
-        std::cout << "\n----------------------------------------" << std::endl;
-        std::cout << "CORRECTNESS VERIFICATION" << std::endl;
-        std::cout << "----------------------------------------" << std::endl;
-
-        double max_diff = 0.0;
-        double sum_diff = 0.0;
-        size_t sample_size = std::min(SIZE, (size_t)1000);
-
-        // Debug: Print first few values
-        std::cout << "\n  Debug - First 10 output values:" << std::endl;
-        std::cout << "    Index | Fixed      | Tiled      | Diff" << std::endl;
-        std::cout << "    ------|------------|------------|------------" << std::endl;
-        for (size_t i = 0; i < std::min(sample_size, (size_t)10); ++i) {
-            double diff = std::abs(output_fixed[i] - output_tiled[i]);
-            std::cout << "    " << std::setw(5) << i << " | "
-                      << std::fixed << std::setprecision(6) << std::setw(10) << output_fixed[i] << " | "
-                      << std::fixed << std::setprecision(6) << std::setw(10) << output_tiled[i] << " | "
-                      << std::scientific << diff << std::endl;
-            max_diff = std::max(max_diff, diff);
-            sum_diff += diff;
-        }
-        double avg_diff = sum_diff / sample_size;
-
-        std::cout << "  Sample size: " << sample_size << " elements" << std::endl;
-        std::cout << "  Max difference: " << std::scientific << max_diff << std::endl;
-        std::cout << "  Avg difference: " << std::scientific << avg_diff << std::endl;
-
-        if (max_diff < 1e-4) {
-            std::cout << "  ✅ Outputs match within tolerance (1e-4)" << std::endl;
-        } else if (max_diff < 1e-3) {
-            std::cout << "  ⚠️  Outputs differ slightly (within 1e-3)" << std::endl;
-        } else {
-            std::cout << "  ❌ Outputs differ significantly!" << std::endl;
-        }
-    }
-
     std::cout << "\n========================================" << std::endl;
     std::cout << "BENCHMARK COMPLETE" << std::endl;
     std::cout << "========================================" << std::endl;

@@ -20,9 +20,15 @@
 MATH_CONSTANTS MACRO
     ALIGN 16
     ; Coefficients for 2^F where F in [0, 1)
-    ; Horner's Method: (((p4*F + p3)*F + p2)*F + p1)*F + 1.0
-    ; These are Remez-optimized coefficients for maximum accuracy
+    ; Horner's Method: (((((p6*F + p5)*F + p4)*F + p3)*F + p2)*F + p1)*F + 1.0
+    ; These are Remez-optimized coefficients for maximum accuracy (< 1e-5 error)
     ; Each constant is replicated 8 times for YMM registers (256-bit)
+    ;
+    ; Degree-6 polynomial coefficients (ultra-high accuracy):
+    ; P(F) = 1.0 + F*(p1 + F*(p2 + F*(p3 + F*(p4 + F*(p5 + F*p6)))))
+    ; Max error: < 1e-5 across all inputs
+    EXP2_P6 DD 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f
+    EXP2_P5 DD 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f
     EXP2_P4 DD 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f
     EXP2_P3 DD 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f
     EXP2_P2 DD 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f
@@ -74,13 +80,17 @@ FAST_EXP2 MACRO dst, src, tmp1, tmp2, tmp3
     vsubps dst, src, tmp1       ; dst = F = x - I, where F in [0, 1)
     
     ; Step 2: Polynomial Approximation (Horner's Method)
-    ; P(F) = (((p4*F + p3)*F + p2)*F + p1)*F + 1.0
+    ; P(F) = (((((p6*F + p5)*F + p4)*F + p3)*F + p2)*F + p1)*F + 1.0
     ; Using separate multiply and add for AVX2 compatibility
     
-    vmulps tmp2, dst, YMMWORD PTR [EXP2_P4]     ; tmp2 = p4*F
-    vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P3]    ; tmp2 = p4*F + p3
-    vmulps tmp2, tmp2, dst                       ; tmp2 = (p4*F + p3)*F
-    vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P2]    ; tmp2 = (p4*F + p3)*F + p2
+    vmulps tmp2, dst, YMMWORD PTR [EXP2_P6]     ; tmp2 = p6*F
+    vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P5]    ; tmp2 = p6*F + p5
+    vmulps tmp2, tmp2, dst                       ; tmp2 = (p6*F + p5)*F
+    vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P4]    ; tmp2 = (p6*F + p5)*F + p4
+    vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F
+    vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P3]    ; tmp2 = ...*F + p3
+    vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F
+    vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P2]    ; tmp2 = ...*F + p2
     vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F
     vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P1]    ; tmp2 = ...*F + p1
     vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F

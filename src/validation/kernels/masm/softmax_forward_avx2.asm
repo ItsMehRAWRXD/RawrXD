@@ -175,7 +175,8 @@ exp_loop:
     ; Compute exp(x - max) using FAST_EXP macro
     ; This uses the stable 2^x approximation via Minimax polynomial
     ; e^(x - max) = 2^((x - max) * log2(e))
-    FAST_EXP ymm7, ymm1, ymm8, ymm9, ymm10
+    ; Use ymm3, ymm4, ymm5 as temporary registers (AVX2-compatible)
+    FAST_EXP ymm7, ymm1, ymm3, ymm4, ymm5
     
     ; Store exp values back to memory
     vmovaps YMMWORD PTR [rax], ymm7
