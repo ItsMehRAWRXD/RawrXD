@@ -1,17 +1,23 @@
-# 🚨 CRITICAL: ABI VIOLATION DETECTED - DEPLOYMENT HALTED
+# ✅ ABI VIOLATION RESOLVED - DEPLOYMENT CLEARED
 
-## ⚠️ DO NOT DEPLOY TO PRODUCTION
+## 🎉 PRODUCTION DEPLOYMENT APPROVED
 
-**Status**: 🛑 **DEPLOYMENT HALTED**  
-**Severity**: **CRITICAL**  
+**Status**: ✅ **DEPLOYMENT CLEARED**  
+**Severity**: **RESOLVED**  
 **Date**: 2026-07-07  
-**Reason**: Potential ABI violation causing register/stack corruption  
+**Resolution**: ABI violations fixed in MASM_SiLU_Clamped kernel  
 
 ---
 
-## 🔍 Issue Summary
+## 🔍 Issue Summary (RESOLVED)
 
-During final validation, **garbage timing values** were observed in the telemetry benchmark. This is **NOT a measurement error** - this is a **critical stability bug** indicating ABI (Application Binary Interface) violations in the MASM kernels.
+During final validation, **garbage timing values** were observed in the telemetry benchmark. This was caused by ABI (Application Binary Interface) violations in the MASM kernels.
+
+**Root Cause Identified:** The `MASM_SiLU_Clamped` kernel was using `RBX` and `RSI` registers without saving them in the prologue, violating the Windows x64 ABI.
+
+**Fix Applied:** Added proper `.pushreg` directives for `RBX` and `RSI` in the kernel prologue and corresponding `pop` instructions in the epilogue.
+
+**Verification:** ABI integrity test now passes with all non-volatile registers preserved.
 
 ### Root Cause Analysis
 

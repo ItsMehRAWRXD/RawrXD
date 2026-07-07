@@ -119,6 +119,8 @@ bool TestABICompliance_Silu(float* data, size_t count) {
     // Call the simplified ABI integrity test (using clamped kernel)
     int result = TestABIIntegrity_Simple(data, count * sizeof(float));
     
+    std::cout << "  ABI test result code: " << result << std::endl;
+    
     if (result == 0) {
         std::cout << "✅ PASS: ABI compliant (all non-volatile registers preserved)" << std::endl;
         return true;

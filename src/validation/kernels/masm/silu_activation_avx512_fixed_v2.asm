@@ -135,10 +135,13 @@ process_loop:
     
     ; Step 4: Compute 1 / (1 + exp(-x))
     ; Use FAST_RECIP for accurate reciprocal
-    FAST_RECIP ymm1, ymm1, ymm2        ; ymm1 = 1 / (1 + exp(-x)) = sigmoid(x)
+    ; CRITICAL: dst and src must be different registers!
+    ; ymm1 = 1 + exp(-x) (input)
+    ; ymm2 = 1 / (1 + exp(-x)) (output)
+    FAST_RECIP ymm2, ymm1, ymm3, ymm6        ; ymm2 = 1 / (1 + exp(-x)) = sigmoid(x)
     
     ; --- Final SiLU: x * Sigmoid(x) ---
-    vmulps ymm0, ymm0, ymm1      ; ymm0 = x * sigmoid(x) = SiLU(x)
+    vmulps ymm0, ymm0, ymm2      ; ymm0 = x * sigmoid(x) = SiLU(x)
     
     ; Store result
     vmovaps YMMWORD PTR [rax], ymm0

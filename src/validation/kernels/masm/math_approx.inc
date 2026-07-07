@@ -148,7 +148,25 @@ ENDM
 ; Accuracy: Max error < 1e-6
 ; Performance: ~5 cycles per 8 floats
 ; -----------------------------------------------------------------------------
-FAST_RECIP MACRO dst, src, tmp
+; -----------------------------------------------------------------------------
+; MACRO: FAST_RECIP
+; Computes 1/x for all x in ymm register using Newton-Raphson refinement
+;
+; Parameters:
+;   dst: Output register (will contain 1/x)
+;   src: Input register (will be destroyed)
+;   tmp1: Temporary register for Newton-Raphson refinement
+;   tmp2: Temporary register for 2.0 constant
+;
+; Algorithm:
+;   1. Use AVX2 reciprocal instruction: vrcpps (approximate reciprocal)
+;   2. One Newton-Raphson iteration for improved accuracy
+;      r1 = r0 * (2 - x * r0)
+;
+; Accuracy: Max error < 1e-6
+; Performance: ~5 cycles per 8 floats
+; -----------------------------------------------------------------------------
+FAST_RECIP MACRO dst, src, tmp1, tmp2
     ; Step 1: Compute initial approximation using hardware reciprocal
     vrcpps dst, src
     
@@ -156,22 +174,18 @@ FAST_RECIP MACRO dst, src, tmp
     ; r1 = r0 * (2 - x * r0)
     ; where r0 is the initial approximation from vrcpps
     
-    ; tmp = x * r0
-    vmulps tmp, src, dst
+    ; tmp1 = x * r0
+    vmulps tmp1, src, dst
     
-    ; tmp = 2 - x * r0
-    ; We need to compute 2.0 first
-    ; Use the ONE_CONST and add it to itself to get 2.0
-    ; But we can't overwrite src, so we need to use a different approach
-    ; We'll use: 2 - x*r0 = 1 + (1 - x*r0)
-    ; But that's not quite right either
+    ; tmp2 = 2.0
+    vmovaps tmp2, YMMWORD PTR [ONE_CONST]
+    vaddps tmp2, tmp2, YMMWORD PTR [ONE_CONST]  ; tmp2 = 2.0
     
-    ; Actually, the simplest approach is to just use the initial approximation
-    ; The vrcpps instruction already provides sufficient accuracy for sigmoid computation
-    ; The Newton-Raphson refinement is optional and can be skipped for performance
+    ; tmp2 = 2.0 - x * r0
+    vsubps tmp2, tmp2, tmp1                      ; tmp2 = 2.0 - x * r0
     
-    ; For now, we'll just use the initial approximation
-    ; This is accurate enough for our use case (sigmoid computation)
+    ; dst = r0 * (2 - x * r0)
+    vmulps dst, dst, tmp2                        ; dst = r0 * (2 - x * r0)
 ENDM
 
 ; ============================================================================

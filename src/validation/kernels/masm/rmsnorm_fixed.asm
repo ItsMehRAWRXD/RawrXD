@@ -30,21 +30,26 @@ epsilon_const REAL4 1.0e-5
 ; ============================================================================
 
 MASM_RMSNorm_Fixed PROC FRAME
-    ; Prologue
+    ; Prologue - CRITICAL: Save non-volatile registers BEFORE .endprolog
     push rbp
     .pushreg rbp
     mov rbp, rsp
     .setframe rbp, 0
+    push rbx
+    .pushreg rbx
+    push rsi
+    .pushreg rsi
+    push rdi
+    .pushreg rdi
+    push r12
+    .pushreg r12
+    push r13
+    .pushreg r13
+    push r14
+    .pushreg r14
     sub rsp, 32
     .allocstack 32
     .endprolog
-
-    push rbx
-    push rsi
-    push rdi
-    push r12
-    push r13
-    push r14
 
     ; Validate parameters
     test rcx, rcx

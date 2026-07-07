@@ -43,22 +43,28 @@ TILE_SIZE_BYTES   EQU 16384  ; 4096 * 4
 ; ============================================================================
 
 MASM_RMSNorm_Tiled PROC FRAME
-    ; Prologue
+    ; Prologue - CRITICAL: Save non-volatile registers BEFORE .endprolog
     push rbp
     .pushreg rbp
     mov rbp, rsp
     .setframe rbp, 0
+    push rbx
+    .pushreg rbx
+    push rsi
+    .pushreg rsi
+    push rdi
+    .pushreg rdi
+    push r12
+    .pushreg r12
+    push r13
+    .pushreg r13
+    push r14
+    .pushreg r14
+    push r15
+    .pushreg r15
     sub rsp, 64
     .allocstack 64
     .endprolog
-
-    push rbx
-    push rsi
-    push rdi
-    push r12
-    push r13
-    push r14
-    push r15
 
     ; Validate parameters
     test rcx, rcx
