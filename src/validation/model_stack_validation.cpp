@@ -10,6 +10,8 @@
 #include <vector>
 #include <chrono>
 #include <fstream>
+#include <map>
+#include <memory>
 
 // RawrXD Infrastructure
 #include "../gguf_loader.h"
@@ -50,29 +52,102 @@ struct ValidationResult {
 };
 
 // ============================================================================
-// Global Telemetry Aggregator
+// Global Telemetry Aggregator (High-Volume Optimized)
 // ============================================================================
 
 using namespace RawrXD::Telemetry;
 
 struct TelemetryAggregator {
+    // Circular buffer for high-volume kernel execution (prevents memory exhaustion)
+    static constexpr size_t MAX_SAMPLES = 10000;
     std::vector<KernelTelemetry> kernel_stats;
     uint64_t total_executions{0};
     uint64_t total_cycles{0};
     double total_time_ms{0.0};
     size_t total_bytes_processed{0};
     
+    // Differential tracking for A/B testing
+    bool is_warmup{false};
+    uint64_t warmup_executions{0};
+    
+    // CSV output for external analysis
+    std::ofstream csv_output;
+    bool csv_enabled{false};
+    
+    TelemetryAggregator() {
+        kernel_stats.reserve(MAX_SAMPLES);
+    }
+    
+    void EnableCSV(const std::string& filename) {
+        csv_output.open(filename, std::ios::out | std::ios::trunc);
+        if (csv_output.is_open()) {
+            csv_enabled = true;
+            // Write header
+            csv_output << "timestamp,kernel_type,execution_mode,cycle_count,execution_time_ms,"
+                      << "memory_bytes_processed,cycles_per_byte,memory_bandwidth_gbps,"
+                      << "alignment_verified,success,is_warmup\n";
+        }
+    }
+    
+    void SetWarmup(bool warmup) {
+        is_warmup = warmup;
+    }
+    
     void RecordExecution(const KernelTelemetry& stats) {
-        kernel_stats.push_back(stats);
+        // Track warmup separately
+        if (is_warmup) {
+            warmup_executions++;
+            return; // Don't count warmup in main metrics
+        }
+        
+        // Circular buffer: overwrite oldest if at capacity
+        if (kernel_stats.size() >= MAX_SAMPLES) {
+            // Remove oldest entry from totals
+            const auto& oldest = kernel_stats.front();
+            total_cycles -= oldest.cycle_count;
+            total_time_ms -= oldest.execution_time_ms;
+            total_bytes_processed -= oldest.memory_bytes_processed;
+            
+            // Shift and add new
+            std::rotate(kernel_stats.begin(), kernel_stats.begin() + 1, kernel_stats.end());
+            kernel_stats.back() = stats;
+        } else {
+            kernel_stats.push_back(stats);
+        }
+        
         total_executions++;
         total_cycles += stats.cycle_count;
         total_time_ms += stats.execution_time_ms;
         total_bytes_processed += stats.memory_bytes_processed;
+        
+        // Write to CSV if enabled
+        if (csv_enabled && csv_output.is_open()) {
+            csv_output << std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count() << ","
+                      << static_cast<int>(stats.kernel_type) << ","
+                      << static_cast<int>(stats.execution_mode) << ","
+                      << stats.cycle_count << ","
+                      << stats.execution_time_ms << ","
+                      << stats.memory_bytes_processed << ","
+                      << stats.cycles_per_byte << ","
+                      << stats.memory_bandwidth_gbps << ","
+                      << (stats.alignment_verified ? "1" : "0") << ","
+                      << (stats.success ? "1" : "0") << ","
+                      << (is_warmup ? "1" : "0") << "\n";
+            
+            // Flush periodically to prevent data loss
+            if (total_executions % 100 == 0) {
+                csv_output.flush();
+            }
+        }
     }
     
     void PrintSummary() const {
         std::cout << "\n=== Telemetry Summary ===" << std::endl;
-        std::cout << "Total executions: " << total_executions << std::endl;
+        std::cout << "Warmup executions: " << warmup_executions << std::endl;
+        std::cout << "Recorded executions: " << total_executions << std::endl;
+        std::cout << "Buffer utilization: " << kernel_stats.size() << "/" << MAX_SAMPLES << std::endl;
+        
         if (total_executions > 0) {
             std::cout << "Average cycles: " << (total_cycles / total_executions) << std::endl;
             std::cout << "Average time: " << (total_time_ms / total_executions) << " ms" << std::endl;
@@ -81,8 +156,38 @@ struct TelemetryAggregator {
                 double bandwidth_gbps = (total_bytes_processed / (1024.0 * 1024.0 * 1024.0)) / (total_time_ms / 1000.0);
                 std::cout << "Memory bandwidth: " << std::fixed << std::setprecision(2) << bandwidth_gbps << " GB/s" << std::endl;
             }
+            
+            // Execution mode breakdown
+            std::map<ExecutionMode, uint64_t> mode_counts;
+            for (const auto& stat : kernel_stats) {
+                mode_counts[stat.execution_mode]++;
+            }
+            std::cout << "\nExecution mode distribution:" << std::endl;
+            for (const auto& [mode, count] : mode_counts) {
+                std::cout << "  " << static_cast<int>(mode) << ": " << count << std::endl;
+            }
         } else {
-            std::cout << "No executions recorded" << std::endl;
+            std::cout << "No executions recorded (warmup only)" << std::endl;
+        }
+        
+        if (csv_enabled) {
+            std::cout << "\nCSV output: telemetry_results.csv" << std::endl;
+        }
+    }
+    
+    void Reset() {
+        kernel_stats.clear();
+        total_executions = 0;
+        total_cycles = 0;
+        total_time_ms = 0.0;
+        total_bytes_processed = 0;
+        warmup_executions = 0;
+        is_warmup = false;
+    }
+    
+    ~TelemetryAggregator() {
+        if (csv_output.is_open()) {
+            csv_output.close();
         }
     }
 };
@@ -379,13 +484,18 @@ ValidationResult ValidateIntegrityCheck(RawrXD::InferenceEngine* engine,
 }
 
 // ============================================================================
-// Main Validation Entry Point
+// Real Model Execution with Differential Telemetry
 // ============================================================================
 
+#include "../cpu_inference_engine.h"
+
 int RunModelStackValidation(const std::string& model_path) {
-    std::cout << "=== Model Stack Integration Validation ===" << std::endl;
+    std::cout << "=== Model Stack Integration Validation (Real Execution) ===" << std::endl;
     std::cout << "Model: " << model_path << std::endl;
     std::cout << "Date: " << __DATE__ << " " << __TIME__ << std::endl;
+    
+    // Enable CSV output for differential analysis
+    g_telemetry.EnableCSV("telemetry_results.csv");
     
     // Check AVX-512 support
     std::cout << "\n[Pre-check] AVX-512 Support" << std::endl;
@@ -402,52 +512,175 @@ int RunModelStackValidation(const std::string& model_path) {
         return 1;
     }
     
-    // Phase 2: Buffer Setup
-    // Note: In a real implementation, we'd get the engine from the loader
-    // For now, we'll create a placeholder
-    RawrXD::InferenceEngine* engine = nullptr; // TODO: Get from GGUFLoader
+    // Create REAL inference engine (not nullptr)
+    std::cout << "\n[Engine Initialization] Creating CPUInferenceEngine..." << std::endl;
+    auto engine = std::make_shared<RawrXD::CPUInferenceEngine>();
+    if (!engine) {
+        std::cerr << "❌ Failed to create inference engine" << std::endl;
+        return 1;
+    }
+    std::cout << "  ✅ Engine created" << std::endl;
+    
+    // Load the model
+    std::cout << "  Loading model: " << model_path << std::endl;
+    if (!engine->LoadModel(model_path)) {
+        std::cerr << "❌ Failed to load model: " << engine->GetLastLoadErrorMessage() << std::endl;
+        return 1;
+    }
+    std::cout << "  ✅ Model loaded successfully" << std::endl;
+    std::cout << "  Vocab size: " << engine->GetVocabSize() << std::endl;
+    std::cout << "  Embedding dim: " << engine->GetEmbeddingDim() << std::endl;
+    std::cout << "  Layers: " << engine->GetNumLayers() << std::endl;
+    std::cout << "  Heads: " << engine->GetNumHeads() << std::endl;
+    
     std::string test_prompt = "Hello, world!";
     
-    ValidationResult phase2 = ValidateBufferSetup(engine, test_prompt);
+    // Phase 2: Buffer Setup (with real engine)
+    ValidationResult phase2 = ValidateBufferSetup(engine.get(), test_prompt);
     if (!phase2.success) {
         std::cerr << "\n❌ Validation failed at Phase 2: " << phase2.message << std::endl;
         return 1;
     }
     
-    // Phase 3: Execution Trace
+    // Tokenize for Phase 3 and 4
     std::vector<int32_t> input_tokens = engine->Tokenize(test_prompt);
-    ValidationResult phase3 = ValidateExecutionTrace(engine, input_tokens, 10);
-    if (!phase3.success) {
-        std::cerr << "\n❌ Validation failed at Phase 3: " << phase3.message << std::endl;
+    std::cout << "\n[Tokenization] Input: \"" << test_prompt << "\" -> " << input_tokens.size() << " tokens" << std::endl;
+    
+    // ============================================================================
+    // DIFFERENTIAL A/B TESTING
+    // ============================================================================
+    
+    std::cout << "\n========================================" << std::endl;
+    std::cout << "RUN A: Scalar/Reference Implementation" << std::endl;
+    std::cout << "========================================" << std::endl;
+    
+    // Disable MASM kernels for Run A
+    engine->SetUseTitanAssembly(false);
+    std::cout << "MASM kernels: DISABLED (scalar mode)" << std::endl;
+    
+    // Warmup (3 iterations) - don't count in metrics
+    std::cout << "\n[Warmup] 3 iterations..." << std::endl;
+    g_telemetry.SetWarmup(true);
+    for (int i = 0; i < 3; i++) {
+        auto warmup_tokens = engine->Generate(input_tokens, 5);
+    }
+    g_telemetry.SetWarmup(false);
+    std::cout << "✅ Warmup complete" << std::endl;
+    
+    // Reset telemetry for actual Run A
+    g_telemetry.Reset();
+    
+    // Phase 3: Execution Trace (Scalar)
+    ValidationResult phase3_scalar = ValidateExecutionTrace(engine.get(), input_tokens, 10);
+    if (!phase3_scalar.success) {
+        std::cerr << "\n❌ Validation failed at Phase 3 (Scalar): " << phase3_scalar.message << std::endl;
         return 1;
     }
     
-    // Phase 4: Integrity Check
-    std::vector<int32_t> output_tokens = engine->Generate(input_tokens, 10);
-    ValidationResult phase4 = ValidateIntegrityCheck(engine, output_tokens, "Hello, world!");
-    if (!phase4.success) {
-        std::cerr << "\n❌ Validation failed at Phase 4: " << phase4.message << std::endl;
+    // Phase 4: Integrity Check (Scalar)
+    auto output_tokens_scalar = engine->Generate(input_tokens, 10);
+    ValidationResult phase4_scalar = ValidateIntegrityCheck(engine.get(), output_tokens_scalar, "Hello, world!");
+    if (!phase4_scalar.success) {
+        std::cerr << "\n❌ Validation failed at Phase 4 (Scalar): " << phase4_scalar.message << std::endl;
         return 1;
     }
     
-    // Summary
-    std::cout << "\n=== Validation Summary ===" << std::endl;
-    std::cout << "Phase 1 (Resource Injection): " << (phase1.success ? "✅ PASS" : "❌ FAIL") << std::endl;
-    std::cout << "Phase 2 (Buffer Setup):       " << (phase2.success ? "✅ PASS" : "❌ FAIL") << std::endl;
-    std::cout << "Phase 3 (Execution Trace):    " << (phase3.success ? "✅ PASS" : "❌ FAIL") << std::endl;
-    std::cout << "Phase 4 (Integrity Check):    " << (phase4.success ? "✅ PASS" : "❌ FAIL") << std::endl;
-    
-    std::cout << "\nTotal time: " << (phase1.duration_ms + phase2.duration_ms + phase3.duration_ms + phase4.duration_ms) << " ms" << std::endl;
-    std::cout << "Memory used: " << phase1.memory_used << " bytes" << std::endl;
-    std::cout << "AVX-512 aligned: " << (phase2.avx512_aligned ? "Yes" : "No") << std::endl;
-    std::cout << "Parity match: " << (phase4.parity_match ? "Yes" : "No") << std::endl;
-    std::cout << "Parity deviation: " << std::fixed << std::setprecision(2) 
-              << (phase4.parity_deviation * 100.0) << "%" << std::endl;
-    
-    // Print telemetry summary
+    // Print Run A telemetry
+    std::cout << "\n=== Run A (Scalar) Telemetry ===" << std::endl;
     g_telemetry.PrintSummary();
     
+    // Save Run A metrics
+    auto scalar_executions = g_telemetry.total_executions;
+    auto scalar_cycles = g_telemetry.total_cycles;
+    auto scalar_time = g_telemetry.total_time_ms;
+    
+    // ============================================================================
+    
+    std::cout << "\n========================================" << std::endl;
+    std::cout << "RUN B: Optimized/MASM Implementation" << std::endl;
+    std::cout << "========================================" << std::endl;
+    
+    // Enable MASM kernels for Run B
+    engine->SetUseTitanAssembly(true);
+    std::cout << "MASM kernels: ENABLED (optimized mode)" << std::endl;
+    
+    // Warmup for MASM
+    std::cout << "\n[Warmup] 3 iterations..." << std::endl;
+    g_telemetry.SetWarmup(true);
+    for (int i = 0; i < 3; i++) {
+        auto warmup_tokens = engine->Generate(input_tokens, 5);
+    }
+    g_telemetry.SetWarmup(false);
+    std::cout << "✅ Warmup complete" << std::endl;
+    
+    // Reset telemetry for actual Run B
+    g_telemetry.Reset();
+    
+    // Phase 3: Execution Trace (MASM)
+    ValidationResult phase3_masm = ValidateExecutionTrace(engine.get(), input_tokens, 10);
+    if (!phase3_masm.success) {
+        std::cerr << "\n❌ Validation failed at Phase 3 (MASM): " << phase3_masm.message << std::endl;
+        return 1;
+    }
+    
+    // Phase 4: Integrity Check (MASM)
+    auto output_tokens_masm = engine->Generate(input_tokens, 10);
+    ValidationResult phase4_masm = ValidateIntegrityCheck(engine.get(), output_tokens_masm, "Hello, world!");
+    if (!phase4_masm.success) {
+        std::cerr << "\n❌ Validation failed at Phase 4 (MASM): " << phase4_masm.message << std::endl;
+        return 1;
+    }
+    
+    // Print Run B telemetry
+    std::cout << "\n=== Run B (MASM) Telemetry ===" << std::endl;
+    g_telemetry.PrintSummary();
+    
+    // Save Run B metrics
+    auto masm_executions = g_telemetry.total_executions;
+    auto masm_cycles = g_telemetry.total_cycles;
+    auto masm_time = g_telemetry.total_time_ms;
+    
+    // ============================================================================
+    // DIFFERENTIAL ANALYSIS
+    // ============================================================================
+    
+    std::cout << "\n========================================" << std::endl;
+    std::cout << "DIFFERENTIAL ANALYSIS (MASM vs Scalar)" << std::endl;
+    std::cout << "========================================" << std::endl;
+    
+    if (scalar_time > 0 && masm_time > 0) {
+        double speedup = scalar_time / masm_time;
+        double cycle_reduction = (1.0 - (double)masm_cycles / scalar_cycles) * 100.0;
+        
+        std::cout << "Speedup factor: " << std::fixed << std::setprecision(2) << speedup << "x" << std::endl;
+        std::cout << "Cycle reduction: " << std::fixed << std::setprecision(2) << cycle_reduction << "%" << std::endl;
+        std::cout << "Scalar time: " << scalar_time << " ms" << std::endl;
+        std::cout << "MASM time: " << masm_time << " ms" << std::endl;
+        std::cout << "Scalar cycles: " << scalar_cycles << std::endl;
+        std::cout << "MASM cycles: " << masm_cycles << std::endl;
+        
+        if (speedup > 1.0) {
+            std::cout << "\n✅ MASM implementation is FASTER" << std::endl;
+        } else if (speedup < 1.0) {
+            std::cout << "\n⚠️  MASM implementation is SLOWER (investigate)" << std::endl;
+        } else {
+            std::cout << "\n⚠️  Performance is EQUIVALENT" << std::endl;
+        }
+    } else {
+        std::cout << "⚠️  Insufficient data for differential analysis" << std::endl;
+    }
+    
+    // Final Summary
+    std::cout << "\n=== Final Validation Summary ===" << std::endl;
+    std::cout << "Phase 1 (Resource Injection): " << (phase1.success ? "✅ PASS" : "❌ FAIL") << std::endl;
+    std::cout << "Phase 2 (Buffer Setup):       " << (phase2.success ? "✅ PASS" : "❌ FAIL") << std::endl;
+    std::cout << "Phase 3 (Scalar):             " << (phase3_scalar.success ? "✅ PASS" : "❌ FAIL") << std::endl;
+    std::cout << "Phase 3 (MASM):               " << (phase3_masm.success ? "✅ PASS" : "❌ FAIL") << std::endl;
+    std::cout << "Phase 4 (Scalar):           " << (phase4_scalar.success ? "✅ PASS" : "❌ FAIL") << std::endl;
+    std::cout << "Phase 4 (MASM):             " << (phase4_masm.success ? "✅ PASS" : "❌ FAIL") << std::endl;
+    
     std::cout << "\n✅ All validation phases passed successfully!" << std::endl;
+    std::cout << "📊 Telemetry data written to: telemetry_results.csv" << std::endl;
     
     return 0;
 }

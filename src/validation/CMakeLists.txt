@@ -146,6 +146,12 @@ foreach(target model_stack_validation telemetry_validation)
     endif()
 endforeach()
 
+# Link telemetry_validation against MASM kernels
+target_link_libraries(telemetry_validation PRIVATE masm_kernels)
+target_include_directories(telemetry_validation PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
 # Add MASM kernels subdirectory
 add_subdirectory(kernels)
 

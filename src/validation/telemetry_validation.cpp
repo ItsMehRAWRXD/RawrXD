@@ -22,6 +22,7 @@
 
 #include "telemetry_layer.hpp"
 #include "aligned_allocator.h"
+#include "kernels/masm_kernels.hpp"
 
 // Import AlignedVector from RawrXD namespace
 using RawrXD::AlignedVector;
@@ -124,43 +125,52 @@ void Scalar_Silu_Activation(void* data, size_t data_size) {
 }
 
 // ============================================================================
-// MASM Kernel Stubs (Placeholder for Assembly Implementation)
+// MASM Kernel Wrappers (AVX2 Implementation)
+// ============================================================================
+// Wrapper functions that match the signature expected by KernelDispatcher:
+// void(*)(void*, size_t)
+// These call the actual MASM implementations from masm_kernels.lib
 // ============================================================================
 
-extern "C" {
-    // These will be implemented in MASM assembly
-    void MASM_Q4_0_Dequantize_AVX512(void* data, size_t data_size);
-    void MASM_Q8_0_Dequantize_AVX512(void* data, size_t data_size);
-    void MASM_Attention_Softmax_AVX512(void* data, size_t data_size);
-    void MASM_RMSNorm_Forward_AVX512(void* data, size_t data_size);
-    void MASM_Silu_Activation_AVX512(void* data, size_t data_size);
-}
-
-// Fallback implementations if MASM kernels not available
-void MASM_Q4_0_Dequantize_AVX512(void* data, size_t data_size) {
-    // Fallback to scalar
+void MASM_Q4_0_Dequantize_Wrapper(void* data, size_t data_size) {
+    // Fallback to scalar (not yet implemented in MASM)
     Scalar_Q4_0_Dequantize(data, data_size);
 }
 
-void MASM_Q8_0_Dequantize_AVX512(void* data, size_t data_size) {
-    // Fallback to scalar
+void MASM_Q8_0_Dequantize_Wrapper(void* data, size_t data_size) {
+    // Fallback to scalar (not yet implemented in MASM)
     Scalar_Q8_0_Dequantize(data, data_size);
 }
 
-void MASM_Attention_Softmax_AVX512(void* data, size_t data_size) {
-    // Fallback to scalar
+void MASM_Attention_Softmax_Wrapper(void* data, size_t data_size) {
+    // Fallback to scalar (not yet implemented in MASM)
     Scalar_Attention_Softmax(data, data_size);
 }
 
-void MASM_RMSNorm_Forward_AVX512(void* data, size_t data_size) {
-    // Fallback to scalar
+void MASM_RMSNorm_Forward_Wrapper(void* data, size_t data_size) {
+    // Fallback to scalar (not yet implemented in MASM)
     Scalar_RMSNorm_Forward(data, data_size);
 }
 
-void MASM_Silu_Activation_AVX512(void* data, size_t data_size) {
-    // Fallback to scalar
-    Scalar_Silu_Activation(data, data_size);
+void MASM_Silu_Activation_Wrapper(void* data, size_t data_size) {
+    // Use actual MASM AVX2 implementation
+    // Note: MASM kernel expects size in bytes, we pass it directly
+    // The kernel processes 8 floats at a time (AVX2 YMM registers)
+    // For 32-byte alignment (AVX2), we need to ensure data_size is multiple of 32
+    if (data_size % 32 != 0) {
+        std::cerr << "MASM_Silu_Activation_Wrapper: size not multiple of 32, falling back to scalar" << std::endl;
+        Scalar_Silu_Activation(data, data_size);
+        return;
+    }
+    
+    int result = MASM_Silu_Activation_AVX512(data, data_size);
+    if (result != 0) {
+        std::cerr << "MASM_Silu_Activation_AVX512 failed with error: " << result << ", falling back to scalar" << std::endl;
+        Scalar_Silu_Activation(data, data_size);
+    }
 }
+
+// ============================================================================
 
 // ============================================================================
 // Validation Result Structure
@@ -358,7 +368,7 @@ ValidationResult ValidateExecutionTrace(KernelDispatcher& dispatcher) {
             output.data(),
             output.size() * sizeof(float),
             Scalar_Q4_0_Dequantize,
-            MASM_Q4_0_Dequantize_AVX512,
+            MASM_Q4_0_Dequantize_Wrapper,
             stats
         );
         
@@ -382,7 +392,7 @@ ValidationResult ValidateExecutionTrace(KernelDispatcher& dispatcher) {
             output.data(),
             output.size() * sizeof(float),
             Scalar_Q8_0_Dequantize,
-            MASM_Q8_0_Dequantize_AVX512,
+            MASM_Q8_0_Dequantize_Wrapper,
             stats
         );
         
@@ -401,7 +411,7 @@ ValidationResult ValidateExecutionTrace(KernelDispatcher& dispatcher) {
             output.data(),
             output.size() * sizeof(float),
             Scalar_Attention_Softmax,
-            MASM_Attention_Softmax_AVX512,
+            MASM_Attention_Softmax_Wrapper,
             stats
         );
         
@@ -420,7 +430,7 @@ ValidationResult ValidateExecutionTrace(KernelDispatcher& dispatcher) {
             output.data(),
             output.size() * sizeof(float),
             Scalar_RMSNorm_Forward,
-            MASM_RMSNorm_Forward_AVX512,
+            MASM_RMSNorm_Forward_Wrapper,
             stats
         );
         
@@ -439,7 +449,7 @@ ValidationResult ValidateExecutionTrace(KernelDispatcher& dispatcher) {
             output.data(),
             output.size() * sizeof(float),
             Scalar_Silu_Activation,
-            MASM_Silu_Activation_AVX512,
+            MASM_Silu_Activation_Wrapper,
             stats
         );
         

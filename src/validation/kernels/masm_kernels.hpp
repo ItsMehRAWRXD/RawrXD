@@ -113,11 +113,11 @@ int MASM_Silu_Activation_AVX512_Fast(void* data, size_t data_size);
 int MASM_Silu_Activation_AVX512_Bounded(void* data, size_t data_size);
 
 // ============================================================================
-// RMS Normalization Kernels (Placeholder)
+// RMS Normalization Kernels
 // ============================================================================
 
-int MASM_RMSNorm_Forward_AVX512(void* data, size_t data_size);
-int MASM_RMSNorm_Forward_AVX512_Fast(void* data, size_t data_size);
+int MASM_RMSNorm_Forward_AVX2(void* input, void* output, void* weights, size_t size);
+int MASM_RMSNorm_Forward_AVX2_Fast(void* input, void* output, void* weights, size_t size);
 
 // ============================================================================
 // Q4_0 Dequantization Kernels (Placeholder)
@@ -185,8 +185,9 @@ inline bool RMSNorm_Forward_AVX512(float* data, size_t count) {
     if (reinterpret_cast<uintptr_t>(data) % 64 != 0) return false;
     if (count % 16 != 0) return false;
     
-    int result = MASM_RMSNorm_Forward_AVX512(data, count * sizeof(float));
-    return result == 0;
+    // Note: MASM_RMSNorm_Forward_AVX2 is the actual implementation
+    // For now, return false as it's not yet implemented
+    return false;
 }
 
 // ============================================================================
