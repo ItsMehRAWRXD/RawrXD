@@ -39,7 +39,7 @@ OPTION CASEMAP:NONE
 ; Include math approximation macros
 INCLUDE math_approx.inc
 
-.const
+.data
 
 ALIGN 16
 ; Constants for exp approximation (now handled by math_approx.inc)

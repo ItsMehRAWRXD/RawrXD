@@ -13,6 +13,9 @@ extern "C" {
     // In silu_avx512.obj
     int MASM_Silu_Activation_AVX512(float* data, size_t data_size);
     
+    // In silu_activation_avx512_fixed.obj (FAST_EXP2-based, < 1e-5 error)
+    int MASM_Silu_Activation_AVX512_Fixed(float* data, size_t data_size);
+    
     // In softmax_avx2.obj  
     int MASM_Softmax_Forward_AVX2(float* data, size_t data_size);
 }

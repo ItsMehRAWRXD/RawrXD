@@ -966,3 +966,12 @@
 581	719	8051077068752753	bin/silu_accuracy_test.exe	4670c038342330e2
 13	578	8051077723276890	src/validation/CMakeFiles/silu_accuracy_test.dir/silu_accuracy_comparison_test.cpp.obj	8cb33f76bff6cce0
 579	716	8051077728937613	bin/silu_accuracy_test.exe	4670c038342330e2
+14	36	8051079288061187	src/validation/kernels/rmsnorm_tiled.obj	3d68cc18777df020
+14	36	8051079288061187	D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/rmsnorm_tiled.obj	3d68cc18777df020
+41	73	8051079288152876	src/validation/kernels/telemetry_masm_kernels.lib	38c9f8b2bc1df2a7
+36	1667	8051079288106667	src/validation/CMakeFiles/telemetry_validation.dir/telemetry_validation.cpp.obj	7aa34f60f0bd5eb7
+1668	1810	8051079304416885	bin/telemetry_validation.exe	f42acab09c953af3
+14	1697	8051080442750229	src/validation/CMakeFiles/telemetry_validation.dir/telemetry_validation.cpp.obj	7aa34f60f0bd5eb7
+1698	1839	8051080459585910	bin/telemetry_validation.exe	f42acab09c953af3
+21	1660	8051081956342161	src/validation/CMakeFiles/telemetry_validation.dir/telemetry_validation.cpp.obj	7aa34f60f0bd5eb7
+1661	1813	8051081972745923	bin/telemetry_validation.exe	f42acab09c953af3

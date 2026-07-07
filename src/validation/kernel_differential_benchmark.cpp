@@ -157,9 +157,13 @@ int main() {
 
     // Verify outputs match
     double max_diff = 0.0;
+    size_t max_diff_idx = 0;
     for (size_t i = 0; i < SIZE; ++i) {
         double diff = std::abs(output_fixed[i] - output_tiled[i]);
-        max_diff = std::max(max_diff, diff);
+        if (diff > max_diff) {
+            max_diff = diff;
+            max_diff_idx = i;
+        }
     }
 
     if (max_diff > 1e-4) {

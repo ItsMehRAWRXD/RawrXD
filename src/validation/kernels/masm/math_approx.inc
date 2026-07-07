@@ -130,6 +130,45 @@ FAST_EXP MACRO dst, src, tmp1, tmp2, tmp3
     FAST_EXP2 dst, dst, tmp1, tmp2, tmp3
 ENDM
 
+; -----------------------------------------------------------------------------
+; MACRO: FAST_RECIP
+; Computes 1/x for all x in ymm register using Newton-Raphson refinement
+;
+; Parameters:
+;   dst: Output register (will contain 1/x)
+;   src: Input register (will be destroyed)
+;   tmp: Temporary register for Newton-Raphson refinement
+;
+; Algorithm:
+;   1. Use AVX2 reciprocal instruction: vrcpps (approximate reciprocal)
+;   2. One Newton-Raphson iteration for improved accuracy
+;      r1 = r0 * (2 - x * r0)
+;
+; Accuracy: Max error < 1e-6
+; Performance: ~5 cycles per 8 floats
+; -----------------------------------------------------------------------------
+FAST_RECIP MACRO dst, src, tmp
+    ; Step 1: Compute initial approximation using hardware reciprocal
+    vrcpps dst, src
+    
+    ; Step 2: Newton-Raphson refinement
+    ; r1 = r0 * (2 - x * r0)
+    ; where r0 is the initial approximation from vrcpps
+    
+    ; tmp = x * r0
+    vmulps tmp, src, dst
+    
+    ; tmp = 2 - x * r0
+    ; We need to compute 2.0 first
+    ; Use the ONE_CONST and add it to itself to get 2.0
+    vmovaps src, YMMWORD PTR [ONE_CONST]
+    vaddps src, src, YMMWORD PTR [ONE_CONST]  ; src = 2.0
+    vsubps tmp, src, tmp      ; tmp = 2 - x * r0
+    
+    ; dst = r0 * (2 - x * r0)
+    vmulps dst, dst, tmp
+ENDM
+
 ; ============================================================================
 ; Usage Example:
 ; ============================================================================

@@ -256,11 +256,11 @@ tile_size_ok2:
 
     push r8
 
-    ; Process tile in 64-float chunks
+    ; Process tile in 16-float chunks (64 bytes per zmm register)
     mov r9, r8
 
 tile_normalize_loop:
-    cmp r9, 64
+    cmp r9, 16
     jl tile_norm_remainder
 
     ; Load input and weights
@@ -274,33 +274,19 @@ tile_normalize_loop:
     ; Store result
     vmovaps ZMMWORD PTR [rdi], zmm2
 
-    add rsi, 256
-    add rdi, 256
-    add r12, 256
-    sub r9, 64
-    jmp tile_normalize_loop
-
-tile_norm_remainder:
-    ; Handle remaining elements
-    cmp r9, 0
-    jle tile_norm_done
-
-    cmp r9, 16
-    jl tile_norm_remainder_8
-
-    vmovaps ymm0, YMMWORD PTR [rsi]
-    vmovaps ymm1, YMMWORD PTR [r12]
-    vdivps ymm2, ymm0, ymm7
-    vmulps ymm2, ymm2, ymm1
-    vmovaps YMMWORD PTR [rdi], ymm2
-
-    add rsi, 64
+    add rsi, 64                ; 16 floats * 4 bytes
     add rdi, 64
     add r12, 64
     sub r9, 16
-    jmp tile_norm_remainder
+    jmp tile_normalize_loop
 
-tile_norm_remainder_8:
+tile_norm_remainder:
+    ; Handle remaining elements (less than 16)
+    cmp r9, 0
+    jle tile_norm_done
+
+    cmp r9, 8
+    jl tile_norm_remainder_4
     cmp r9, 8
     jl tile_norm_remainder_4
 
