@@ -36,17 +36,18 @@ g_exp_c4    REAL4 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.
 ; ============================================================================
 
 MASM_SiLU_Clamped PROC FRAME
-    ; Prologue
+    ; Prologue - CRITICAL: Save non-volatile registers RBX and RSI
     push rbp
     .pushreg rbp
     mov rbp, rsp
     .setframe rbp, 0
+    push rbx
+    .pushreg rbx
+    push rsi
+    .pushreg rsi
     sub rsp, 32
     .allocstack 32
     .endprolog
-
-    push rbx
-    push rsi
 
     ; Save parameters
     mov rsi, rcx               ; rsi = data pointer
@@ -158,10 +159,12 @@ error_size:
 
 cleanup:
     vzeroupper
-    pop rsi
-    pop rbx
-    add rsp, 32
-    pop rbp
+    ; CRITICAL FIX: Restore stack in correct order
+    ; Stack layout: [RBP]=oldRBP, [RBP-8]=RBX, [RBP-16]=RSI, [RBP-48]=RSP
+    add rsp, 32              ; Deallocate shadow space first (RSP = RBP - 16)
+    pop rsi                  ; Restore RSI from [RBP-16]
+    pop rbx                  ; Restore RBX from [RBP-8]
+    pop rbp                  ; Restore RBP
     ret
 
 MASM_SiLU_Clamped ENDP

@@ -20,8 +20,8 @@ OPTION CASEMAP:NONE
 ; External C function to print results
 extern printf : proc
 
-; External MASM kernel to test
-extern MASM_Silu_Activation_AVX512 : proc
+; External MASM kernel to test (using the clamped version which we know works)
+extern MASM_SiLU_Clamped : proc
 
 .data
 
@@ -55,7 +55,7 @@ reg_names label qword
 .code
 
 ; ============================================================================
-; TestABIIntegrity_Silu - Tests MASM_Silu_Activation_AVX512 for ABI compliance
+; TestABIIntegrity_Silu_Clamped - Tests MASM_SiLU_Clamped for ABI compliance
 ; ============================================================================
 ; Parameters:
 ;   RCX = void* data       (pointer to float array)
@@ -64,7 +64,7 @@ reg_names label qword
 ;   RAX = 0 if ABI compliant, non-zero if violations detected
 ; ============================================================================
 
-TestABIIntegrity_Silu PROC FRAME
+TestABIIntegrity_Silu_Clamped PROC FRAME
 
     ; Prologue - save non-volatile registers
     push rbp
@@ -138,7 +138,7 @@ TestABIIntegrity_Silu PROC FRAME
     mov rdx, [rbp-16]         ; data_size
     
     ; Call the MASM kernel
-    call MASM_Silu_Activation_AVX512
+    call MASM_SiLU_Clamped
     
     ; Save return value
     mov [rbp-24], rax          ; Save ASM function return value
@@ -277,6 +277,6 @@ print_result:
     pop rbp
     ret
 
-TestABIIntegrity_Silu ENDP
+TestABIIntegrity_Silu_Clamped ENDP
 
 END

@@ -11936,7 +11936,7 @@ build src\validation\install\strip: phony src\validation\CMakeFiles\install\stri
 #############################################
 # Order-only phony target for telemetry_masm_kernels
 
-build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\abi_integrity_test.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512.obj src\validation\kernels\silu_activation_avx512_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
+build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\abi_integrity_test.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512_fixed.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
 
 build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj: CXX_COMPILER__telemetry_masm_kernels_unscanned_Release D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm_kernels_dummy.cpp || cmake_object_order_depends_target_telemetry_masm_kernels
   CONFIG = Release
@@ -11957,7 +11957,7 @@ build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_
 #############################################
 # Link the static library src\validation\kernels\telemetry_masm_kernels.lib
 
-build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512.obj src\validation\kernels\silu_activation_avx512_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
+build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512_fixed.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
   CONFIG = Release
   LANGUAGE_COMPILE_FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64
@@ -12092,20 +12092,20 @@ build src\validation\kernels\install\strip: phony src\validation\kernels\CMakeFi
 
 
 #############################################
-# Custom command for src\validation\kernels\silu_activation_avx512.obj
-
-build src\validation\kernels\silu_activation_avx512.obj | ${cmake_ninja_workdir}src\validation\kernels\silu_activation_avx512.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\silu_activation_avx512.asm
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd-ci-bootstrap\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512.obj D:/rawrxd-ci-bootstrap/src/validation/kernels/masm/silu_activation_avx512.asm"
-  DESC = [MASM] Assembling masm/silu_activation_avx512.asm -> D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512.obj
-  restat = 1
-
-
-#############################################
 # Custom command for src\validation\kernels\silu_activation_avx512_fixed.obj
 
 build src\validation\kernels\silu_activation_avx512_fixed.obj | ${cmake_ninja_workdir}src\validation\kernels\silu_activation_avx512_fixed.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\silu_activation_avx512_fixed.asm
   COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd-ci-bootstrap\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512_fixed.obj D:/rawrxd-ci-bootstrap/src/validation/kernels/masm/silu_activation_avx512_fixed.asm"
   DESC = [MASM] Assembling masm/silu_activation_avx512_fixed.asm -> D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512_fixed.obj
+  restat = 1
+
+
+#############################################
+# Custom command for src\validation\kernels\silu_activation_avx512_fixed_v2.obj
+
+build src\validation\kernels\silu_activation_avx512_fixed_v2.obj | ${cmake_ninja_workdir}src\validation\kernels\silu_activation_avx512_fixed_v2.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\silu_activation_avx512_fixed_v2.asm
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd-ci-bootstrap\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512_fixed_v2.obj D:/rawrxd-ci-bootstrap/src/validation/kernels/masm/silu_activation_avx512_fixed_v2.asm"
+  DESC = [MASM] Assembling masm/silu_activation_avx512_fixed_v2.asm -> D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512_fixed_v2.obj
   restat = 1
 
 

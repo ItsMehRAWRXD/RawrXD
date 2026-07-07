@@ -226,9 +226,9 @@ void MASM_Silu_Activation_Wrapper(void* data, size_t data_size) {
     }
     
     // CRITICAL: Use the FIXED kernel with proper YMM register preservation and FAST_EXP2
-    int result = MASM_Silu_Activation_AVX512(data, data_size);
+    int result = MASM_Silu_Activation_AVX512_Fixed(data, data_size);
     if (result != 0) {
-        std::cerr << "MASM_Silu_Activation_AVX512 failed with error: " << result << ", falling back to scalar" << std::endl;
+        std::cerr << "MASM_Silu_Activation_AVX512_Fixed failed with error: " << result << ", falling back to scalar" << std::endl;
         Scalar_Silu_Activation(data, data_size);
     }
 }

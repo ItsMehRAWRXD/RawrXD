@@ -82,8 +82,9 @@ add_library(telemetry_masm_kernels STATIC)
 target_sources(telemetry_masm_kernels PRIVATE masm_kernels_dummy.cpp)
 
 # Add MASM source files
-add_masm_source(telemetry_masm_kernels masm/silu_activation_avx512.asm)
+# add_masm_source(telemetry_masm_kernels masm/silu_activation_avx512.asm)  # Old kernel (has errors)
 add_masm_source(telemetry_masm_kernels masm/silu_activation_avx512_fixed.asm)
+add_masm_source(telemetry_masm_kernels masm/silu_activation_avx512_fixed_v2.asm)  # New kernel with FAST_EXP2
 add_masm_source(telemetry_masm_kernels masm/rmsnorm_forward_avx2.asm)
 # add_masm_source(telemetry_masm_kernels masm/softmax_forward_avx2.asm)  # Has undefined symbols
 add_masm_source(telemetry_masm_kernels masm/test_minimal.asm)

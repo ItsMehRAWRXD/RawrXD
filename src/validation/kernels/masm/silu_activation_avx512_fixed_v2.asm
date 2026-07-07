@@ -33,13 +33,13 @@ INCLUDE math_approx.inc
 
 .const
 
-; Define math constants for FAST_EXP2
-MATH_CONSTANTS
-
 ; Constants for sigmoid computation
-ALIGN 32
+ALIGN 16
 g_sigmoid_one      REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 g_sigmoid_neg_one  REAL4 -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0
+
+; Define math constants for FAST_EXP2
+MATH_CONSTANTS
 
 .code
 
@@ -128,14 +128,14 @@ process_loop:
     vmulps ymm1, ymm1, YMMWORD PTR [LOG2E]  ; ymm1 = -x * log2(e)
     
     ; Now compute 2^(-x * log2(e)) = exp(-x)
-    FAST_EXP2 ymm1, ymm1, ymm2, ymm3
+    FAST_EXP2 ymm1, ymm1, ymm2, ymm3, ymm6
     
     ; Step 3: Compute 1 + exp(-x)
     vaddps ymm1, ymm1, ymm4      ; ymm1 = 1 + exp(-x)
     
     ; Step 4: Compute 1 / (1 + exp(-x))
     ; Use FAST_RECIP for accurate reciprocal
-    FAST_RECIP ymm1, ymm2        ; ymm1 = 1 / (1 + exp(-x)) = sigmoid(x)
+    FAST_RECIP ymm1, ymm1, ymm2        ; ymm1 = 1 / (1 + exp(-x)) = sigmoid(x)
     
     ; --- Final SiLU: x * Sigmoid(x) ---
     vmulps ymm0, ymm0, ymm1      ; ymm0 = x * sigmoid(x) = SiLU(x)

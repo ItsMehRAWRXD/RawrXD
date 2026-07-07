@@ -129,6 +129,19 @@ int MASM_Silu_Activation_AVX512_Bounded(void* data, size_t data_size);
 int MASM_Silu_Activation_AVX512_Fixed(void* data, size_t data_size);
 
 // ============================================================================
+// MASM_SiLU_Clamped
+// ============================================================================
+// SiLU with input clamping to [-4, 4] for numerical stability.
+// Uses polynomial approximation for exp(-x).
+// Parameters:
+//   data      - Pointer to float array (must be 32-byte aligned)
+//   data_size - Number of bytes to process (must be multiple of 32)
+// Returns:
+//   0 on success, non-zero on error
+// ============================================================================
+int MASM_SiLU_Clamped(void* data, size_t data_size);
+
+// ============================================================================
 // RMS Normalization Kernels
 // ============================================================================
 
@@ -155,6 +168,14 @@ int MASM_Q8_0_Dequantize_AVX512_Fast(void* data, size_t data_size);
 
 int MASM_Softmax_Forward_AVX2(void* data, size_t data_size);
 int MASM_Softmax_Forward_AVX2_Fast(void* data, size_t data_size);
+
+// ============================================================================
+// ABI Integrity Test Functions
+// ============================================================================
+// These functions test MASM kernels for ABI compliance by checking register preservation.
+// They are for development/debugging only and should not be used in production.
+
+int TestABIIntegrity_Silu_Clamped(void* data, size_t data_size);
 
 } // extern "C"
 
