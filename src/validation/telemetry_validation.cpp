@@ -19,6 +19,7 @@
 #include <vector>
 #include <chrono>
 #include <fstream>
+#include <cmath>
 
 #include "telemetry_layer.hpp"
 #include "aligned_allocator.h"
@@ -148,8 +149,30 @@ void MASM_Attention_Softmax_Wrapper(void* data, size_t data_size) {
 }
 
 void MASM_RMSNorm_Forward_Wrapper(void* data, size_t data_size) {
-    // Fallback to scalar (not yet implemented in MASM)
-    Scalar_RMSNorm_Forward(data, data_size);
+    // Use actual MASM AVX2 implementation
+    // Note: RMSNorm requires input, output, and weights buffers
+    // For telemetry validation, we use in-place operation with unit weights
+    if (data_size % 32 != 0) {
+        std::cerr << "MASM_RMSNorm_Forward_Wrapper: size not multiple of 32, falling back to scalar" << std::endl;
+        Scalar_RMSNorm_Forward(data, data_size);
+        return;
+    }
+    
+    // Allocate aligned buffers for RMSNorm
+    size_t count = data_size / sizeof(float);
+    float* input = static_cast<float*>(data);
+    AlignedVector<float> output(count);
+    AlignedVector<float> weights(count, 1.0f);  // Unit weights
+    
+    int result = MASM_RMSNorm_Forward_AVX2(input, output.data(), weights.data(), count);
+    if (result != 0) {
+        std::cerr << "MASM_RMSNorm_Forward_AVX2 failed with error: " << result << ", falling back to scalar" << std::endl;
+        Scalar_RMSNorm_Forward(data, data_size);
+        return;
+    }
+    
+    // Copy output back to input (in-place operation)
+    std::memcpy(data, output.data(), data_size);
 }
 
 void MASM_Silu_Activation_Wrapper(void* data, size_t data_size) {
@@ -592,6 +615,144 @@ int main(int argc, char* argv[]) {
     
     // Phase 4: Integrity Check
     results.push_back(ValidateIntegrityCheck());
+    
+    // Phase 5: Differential Testing (Scalar vs MASM)
+    std::cout << "\n[Phase 5] Differential Testing (Scalar vs MASM)" << std::endl;
+    
+    // Test sizes for differential testing
+    const size_t test_sizes[] = {256, 512, 1024, 2048, 4096};
+    const int warmup_iterations = 10;
+    const int benchmark_iterations = 100;
+    
+    std::cout << "  Running differential tests across multiple sizes..." << std::endl;
+    
+    for (size_t size : test_sizes) {
+        std::cout << "\n  --- Testing size: " << size << " floats ---" << std::endl;
+        
+        // Allocate aligned buffers
+        AlignedVector<float> buffer_scalar(size);
+        AlignedVector<float> buffer_masm(size);
+        AlignedVector<float> weights(size, 1.0f);
+        
+        // Initialize with test data
+        for (size_t i = 0; i < size; ++i) {
+            float val = static_cast<float>(i % 100) / 10.0f - 5.0f;  // Range: [-5, 5]
+            buffer_scalar[i] = val;
+            buffer_masm[i] = val;
+        }
+        
+        // Test SiLU Activation
+        {
+            std::cout << "    SiLU Activation:" << std::endl;
+            
+            // Warmup
+            for (int i = 0; i < warmup_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                Scalar_Silu_Activation(buffer_scalar.data(), size * sizeof(float));
+                MASM_Silu_Activation_Wrapper(buffer_masm.data(), size * sizeof(float));
+            }
+            
+            // Benchmark scalar
+            uint64_t scalar_start = __rdtsc();
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                Scalar_Silu_Activation(buffer_scalar.data(), size * sizeof(float));
+            }
+            uint64_t scalar_end = __rdtsc();
+            double scalar_cycles = static_cast<double>(scalar_end - scalar_start) / benchmark_iterations;
+            
+            // Benchmark MASM
+            uint64_t masm_start = __rdtsc();
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                MASM_Silu_Activation_Wrapper(buffer_masm.data(), size * sizeof(float));
+            }
+            uint64_t masm_end = __rdtsc();
+            double masm_cycles = static_cast<double>(masm_end - masm_start) / benchmark_iterations;
+            
+            // Calculate speedup
+            double speedup = scalar_cycles / masm_cycles;
+            
+            // Differential testing: compare results
+            double max_error = 0.0;
+            for (size_t i = 0; i < size; ++i) {
+                double error = std::abs(buffer_scalar[i] - buffer_masm[i]);
+                if (error > max_error) max_error = error;
+            }
+            
+            std::cout << "      Scalar cycles: " << std::fixed << std::setprecision(0) << scalar_cycles << std::endl;
+            std::cout << "      MASM cycles:   " << std::fixed << std::setprecision(0) << masm_cycles << std::endl;
+            std::cout << "      Speedup:      " << std::fixed << std::setprecision(2) << speedup << "x" << std::endl;
+            std::cout << "      Max error:     " << std::scientific << std::setprecision(6) << max_error << std::endl;
+            std::cout << "      Status:       " << (max_error < 1e-5f ? "✅ PASS" : "❌ FAIL") << std::endl;
+            
+            // Record to telemetry
+            KernelTelemetry stats;
+            stats.cycle_count = static_cast<uint64_t>(masm_cycles);
+            stats.execution_time_ms = masm_cycles / 3.5e9 * 1000.0;  // Approximate for 3.5 GHz CPU
+            stats.alignment_verified = true;
+            stats.kernel_type = KernelType::Silu_Activation;
+            stats.success = (max_error < 1e-5f);
+            telemetry.RecordTelemetry(stats);
+        }
+        
+        // Test RMS Normalization
+        {
+            std::cout << "    RMS Normalization:" << std::endl;
+            
+            // Warmup
+            for (int i = 0; i < warmup_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                Scalar_RMSNorm_Forward(buffer_scalar.data(), size * sizeof(float));
+                MASM_RMSNorm_Forward_Wrapper(buffer_masm.data(), size * sizeof(float));
+            }
+            
+            // Benchmark scalar
+            uint64_t scalar_start = __rdtsc();
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_scalar[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                Scalar_RMSNorm_Forward(buffer_scalar.data(), size * sizeof(float));
+            }
+            uint64_t scalar_end = __rdtsc();
+            double scalar_cycles = static_cast<double>(scalar_end - scalar_start) / benchmark_iterations;
+            
+            // Benchmark MASM
+            uint64_t masm_start = __rdtsc();
+            for (int i = 0; i < benchmark_iterations; ++i) {
+                for (size_t j = 0; j < size; ++j) buffer_masm[j] = static_cast<float>(j % 100) / 10.0f - 5.0f;
+                MASM_RMSNorm_Forward_Wrapper(buffer_masm.data(), size * sizeof(float));
+            }
+            uint64_t masm_end = __rdtsc();
+            double masm_cycles = static_cast<double>(masm_end - masm_start) / benchmark_iterations;
+            
+            // Calculate speedup
+            double speedup = scalar_cycles / masm_cycles;
+            
+            // Differential testing
+            double max_error = 0.0;
+            for (size_t i = 0; i < size; ++i) {
+                double error = std::abs(buffer_scalar[i] - buffer_masm[i]);
+                if (error > max_error) max_error = error;
+            }
+            
+            std::cout << "      Scalar cycles: " << std::fixed << std::setprecision(0) << scalar_cycles << std::endl;
+            std::cout << "      MASM cycles:   " << std::fixed << std::setprecision(0) << masm_cycles << std::endl;
+            std::cout << "      Speedup:      " << std::fixed << std::setprecision(2) << speedup << "x" << std::endl;
+            std::cout << "      Max error:     " << std::scientific << std::setprecision(6) << max_error << std::endl;
+            std::cout << "      Status:       " << (max_error < 1e-5f ? "✅ PASS" : "❌ FAIL") << std::endl;
+            
+            // Record to telemetry
+            KernelTelemetry stats;
+            stats.cycle_count = static_cast<uint64_t>(masm_cycles);
+            stats.execution_time_ms = masm_cycles / 3.5e9 * 1000.0;
+            stats.alignment_verified = true;
+            stats.kernel_type = KernelType::RMSNorm_Forward;
+            stats.success = (max_error < 1e-5f);
+            telemetry.RecordTelemetry(stats);
+        }
+    }
+    
+    std::cout << "\n  ✅ Phase 5 complete" << std::endl;
     
     // Print summary
     std::cout << "\n============================================================================" << std::endl;

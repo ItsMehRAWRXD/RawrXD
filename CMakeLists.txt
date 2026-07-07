@@ -5158,6 +5158,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/tools/CMakeLists.txt")
 endif()
 
 # Validation Harness
-if(EXISTS "/src/validation/CMakeLists.txt")
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/validation/CMakeLists.txt")
     add_subdirectory(src/validation)
 endif()

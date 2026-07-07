@@ -75,25 +75,27 @@ endfunction()
 # MASM Kernels Library
 # ============================================================================
 
-add_library(masm_kernels STATIC)
+# Note: Using different name to avoid conflict with main project's masm_kernels target
+add_library(telemetry_masm_kernels STATIC)
 
 # Add dummy C++ file to force CMake to use C++ linker
-target_sources(masm_kernels PRIVATE masm_kernels_dummy.cpp)
+target_sources(telemetry_masm_kernels PRIVATE masm_kernels_dummy.cpp)
 
 # Add MASM source files
-add_masm_source(masm_kernels masm/silu_activation_avx512.asm)
+add_masm_source(telemetry_masm_kernels masm/silu_activation_avx512.asm)
+add_masm_source(telemetry_masm_kernels masm/rmsnorm_forward_avx2.asm)
 
 # Add C++ wrapper files (if any)
-# target_sources(masm_kernels PRIVATE kernels/masm_kernels_wrapper.cpp)
+# target_sources(telemetry_masm_kernels PRIVATE kernels/masm_kernels_wrapper.cpp)
 
 # Include directories
-target_include_directories(masm_kernels PUBLIC
+target_include_directories(telemetry_masm_kernels PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 # Link libraries (if needed)
-target_link_libraries(masm_kernels PRIVATE
+target_link_libraries(telemetry_masm_kernels PRIVATE
     kernel32
     user32
 )
@@ -107,7 +109,7 @@ add_executable(masm_kernels_test
 )
 
 target_link_libraries(masm_kernels_test PRIVATE
-    masm_kernels
+    telemetry_masm_kernels
 )
 
 target_include_directories(masm_kernels_test PRIVATE
@@ -142,9 +144,9 @@ endif()
 # Integration with Validation Harness
 # ============================================================================
 
-# If building as part of validation harness, link masm_kernels
+# If building as part of validation harness, link telemetry_masm_kernels
 if(TARGET telemetry_validation)
-    target_link_libraries(telemetry_validation PRIVATE masm_kernels)
+    target_link_libraries(telemetry_validation PRIVATE telemetry_masm_kernels)
     target_include_directories(telemetry_validation PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
@@ -154,7 +156,7 @@ endif()
 # Installation
 # ============================================================================
 
-install(TARGETS masm_kernels
+install(TARGETS telemetry_masm_kernels
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin

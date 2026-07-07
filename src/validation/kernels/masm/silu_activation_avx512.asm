@@ -120,6 +120,14 @@ process_loop:
     vaddps ymm1, ymm1, ymm2
     vaddps ymm1, ymm1, ymm3
     
+    ; Clamp sigmoid to [0, 1] for numerical stability
+    ; ymm9 = max(sigmoid, 0)
+    vxorps ymm9, ymm9, ymm9
+    vmaxps ymm1, ymm1, ymm9
+    
+    ; ymm9 = min(sigmoid, 1)
+    vminps ymm1, ymm1, ymm4
+    
     ; SiLU = x * sigmoid
     vmulps ymm0, ymm0, ymm1
     

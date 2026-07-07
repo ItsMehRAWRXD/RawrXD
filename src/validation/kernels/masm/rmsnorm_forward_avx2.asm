@@ -14,8 +14,11 @@
 
 _TEXT SEGMENT
 
+; Export the symbol
+PUBLIC MASM_RMSNorm_Forward_AVX2
+
 ; ============================================================================
-; RMSNorm_Forward_AVX2
+; MASM_RMSNorm_Forward_AVX2
 ; ============================================================================
 ; Computes RMS normalization with AVX2 SIMD optimization
 ;
@@ -36,23 +39,14 @@ _TEXT SEGMENT
 ; ============================================================================
 
 ALIGN 16
-RMSNorm_Forward_AVX2 PROC FRAME
+MASM_RMSNorm_Forward_AVX2 PROC
     ; Prologue - save non-volatile registers
     push rbx
     push rsi
     push rdi
     push r12
-    .pushreg rbx
-    .pushreg rsi
-    .pushreg rdi
-    .pushreg r12
-    
-    ; End prologue
-    .endprolog
-    
-    ; Allocate shadow space
+    push r13
     sub rsp, 40
-    .allocstack 40
     
     ; Validate parameters
     test rcx, rcx
@@ -176,6 +170,7 @@ normalize_done:
     
     ; Epilogue
     add rsp, 40
+    pop r13
     pop r12
     pop rdi
     pop rsi
@@ -200,6 +195,7 @@ invalid_size_error:
     
 epilogue:
     add rsp, 40
+    pop r13
     pop r12
     pop rdi
     pop rsi
@@ -209,7 +205,7 @@ epilogue:
 ALIGN 16
 epsilon DD 1.0e-5
 
-RMSNorm_Forward_AVX2 ENDP
+MASM_RMSNorm_Forward_AVX2 ENDP
 
 _TEXT ENDS
 

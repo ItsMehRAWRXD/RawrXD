@@ -147,10 +147,111 @@ foreach(target model_stack_validation telemetry_validation)
 endforeach()
 
 # Link telemetry_validation against MASM kernels
-target_link_libraries(telemetry_validation PRIVATE masm_kernels)
+target_link_libraries(telemetry_validation PRIVATE telemetry_masm_kernels)
 target_include_directories(telemetry_validation PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/kernels
 )
+
+# ============================================================================
+# REAL MODEL VALIDATION - Link against pre-built RawrXD libraries
+# ============================================================================
+
+# Define the path to pre-compiled libraries
+set(RAWRXD_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../build-ninja")
+
+# Check if libraries exist
+if(EXISTS "${RAWRXD_BUILD_DIR}/RawrXD_Gold.lib")
+    message(STATUS "Found RawrXD libraries at: ${RAWRXD_BUILD_DIR}")
+    
+    # Create factory exports library (provides C-compatible factory functions)
+    add_library(engine_factory STATIC
+        engine_factory_exports.cpp
+    )
+    
+    target_include_directories(engine_factory PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    )
+    
+    # Link factory against RawrXD libraries
+    target_link_directories(engine_factory PRIVATE
+        "${RAWRXD_BUILD_DIR}"
+    )
+    
+    # Note: RawrXD_Gold is an executable, not a library, so we cannot link against it
+    # We can only link against library targets
+    # target_link_libraries(engine_factory PRIVATE
+    #     RawrXD_Gold
+    #     RawrXD-ModelAnalysisLib
+    # )
+    
+    # Create real model validation executable
+    add_executable(model_stack_validation_real
+        model_validation_real.cpp
+    )
+    
+    # Add include directories for RawrXD headers
+    target_include_directories(model_stack_validation_real PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+        ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+    )
+    
+    # Add system includes
+    target_include_directories(model_stack_validation_real SYSTEM PRIVATE
+        "${_MSVC_ROOT}/include"
+        "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+        "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+        "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+    )
+    
+    # Add library directories
+    target_link_directories(model_stack_validation_real PRIVATE
+        "${_MSVC_ROOT}/lib/x64"
+        "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+        "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+        "${RAWRXD_BUILD_DIR}"
+    )
+    
+    # Link against RawrXD libraries and system libs
+    target_link_libraries(model_stack_validation_real PRIVATE
+        engine_factory
+        # Note: RawrXD_Gold is an executable, not a library, so we cannot link against it
+        # RawrXD_Gold
+        # RawrXD-ModelAnalysisLib
+        kernel32
+        user32
+        gdi32
+        winspool
+        comdlg32
+        advapi32
+        shell32
+        ole32
+        oleaut32
+        uuid
+        odbc32
+        odbccp32
+    )
+    
+    # Use static runtime
+    if(MSVC)
+        set_property(TARGET model_stack_validation_real PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
+    endif()
+    
+    # AVX-512 support
+    if(ENABLE_AVX512)
+        if(MSVC)
+            target_compile_options(model_stack_validation_real PRIVATE /arch:AVX512)
+        endif()
+    endif()
+    
+    message(STATUS "Real model validation target: model_stack_validation_real")
+else()
+    message(WARNING "RawrXD libraries not found at ${RAWRXD_BUILD_DIR}")
+    message(WARNING "Building only minimal validation (simulation mode)")
+endif()
 
 # Add MASM kernels subdirectory
 add_subdirectory(kernels)
