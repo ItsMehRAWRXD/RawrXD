@@ -72,22 +72,25 @@ TestABIIntegrity_Silu_Clamped PROC FRAME
     mov rbp, rsp
     .setframe rbp, 0
     
-    ; Allocate stack space for register states
-    ; We need space for:
+    ; Allocate stack space for:
     ;   - 16 general purpose registers (8 bytes each) = 128 bytes
     ;   - 16 YMM registers (32 bytes each) = 512 bytes
-    ;   - Total = 640 bytes + 32 bytes shadow space + alignment
-    sub rsp, 800
-    .allocstack 800
+    ;   - Shadow space for C calls (32 bytes)
+    ;   - Alignment padding
+    ; Total = 128 + 512 + 32 = 672, round up to 704 for 16-byte alignment
+    sub rsp, 704
+    .allocstack 704
     .endprolog
     
-    ; Save parameters
+    ; Save parameters (after prologue, RSP is at RBP-704)
     mov [rbp-8], rcx          ; Save data pointer
-    mov [rbp-16], rdx          ; Save data_size
+    mov [rbp-16], rdx         ; Save data_size
     
-    ; Print header
+    ; Print header (allocate shadow space first)
+    sub rsp, 32               ; Shadow space for printf
     lea rcx, fmt_header
     call printf
+    add rsp, 32               ; Deallocate shadow space
     
     ; ========================================
     ; STEP 1: Save ALL registers BEFORE call

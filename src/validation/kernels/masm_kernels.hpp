@@ -176,6 +176,7 @@ int MASM_Softmax_Forward_AVX2_Fast(void* data, size_t data_size);
 // They are for development/debugging only and should not be used in production.
 
 int TestABIIntegrity_Silu_Clamped(void* data, size_t data_size);
+int TestABIIntegrity_Simple(void* data, size_t data_size);
 
 } // extern "C"
 

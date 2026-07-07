@@ -94,6 +94,7 @@ add_masm_source(telemetry_masm_kernels masm/rmsnorm_tiled.asm)
 add_masm_source(telemetry_masm_kernels masm/softmax_fixed.asm)
 add_masm_source(telemetry_masm_kernels masm/silu_clamped.asm)
 add_masm_source(telemetry_masm_kernels masm/abi_integrity_test.asm)
+add_masm_source(telemetry_masm_kernels masm/abi_integrity_simple.asm)
 
 # Add C++ wrapper files (if any)
 # target_sources(telemetry_masm_kernels PRIVATE kernels/masm_kernels_wrapper.cpp)

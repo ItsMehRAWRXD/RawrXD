@@ -99,11 +99,13 @@ FAST_EXP2 MACRO dst, src, tmp1, tmp2, tmp3
     ; Convert I to integer
     vcvtps2dq tmp3, tmp1        ; tmp3 = (int)I
     
+    ; Add bias 127 to I
+    vpaddd tmp3, tmp3, YMMWORD PTR [EXP2_BIAS] ; tmp3 = I + 127
+    
     ; Shift I into exponent field (bits 23-30 of IEEE 754 float)
     ; IEEE 754: exponent is stored with bias 127
     ; 2^I = (I + 127) << 23
-    vpslld tmp3, tmp3, 23       ; tmp3 = I << 23
-    vpaddd tmp3, tmp3, YMMWORD PTR [EXP2_BIAS] ; tmp3 = (I + 127) << 23
+    vpslld tmp3, tmp3, 23       ; tmp3 = (I + 127) << 23
     
     ; Step 4: Combine: Result = P(F) * 2^I
     vmulps dst, dst, tmp3       ; dst = P(F) * 2^I = 2^x

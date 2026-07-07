@@ -116,14 +116,17 @@ bool TestFunctionalCorrectness_Silu(float* data, size_t count) {
 bool TestABICompliance_Silu(float* data, size_t count) {
     std::cout << "\n=== ABI Compliance Test (SiLU) ===" << std::endl;
     
-    // Call the ABI integrity test (using clamped kernel)
-    int result = TestABIIntegrity_Silu_Clamped(data, count * sizeof(float));
+    // Call the simplified ABI integrity test (using clamped kernel)
+    int result = TestABIIntegrity_Simple(data, count * sizeof(float));
     
     if (result == 0) {
         std::cout << "✅ PASS: ABI compliant (all non-volatile registers preserved)" << std::endl;
         return true;
+    } else if (result == 100) {
+        std::cout << "❌ FAIL: ABI violations detected (non-volatile registers corrupted)" << std::endl;
+        return false;
     } else {
-        std::cout << "❌ FAIL: ABI violations detected (see above for details)" << std::endl;
+        std::cout << "❌ FAIL: Kernel returned error code " << result << std::endl;
         return false;
     }
 }
