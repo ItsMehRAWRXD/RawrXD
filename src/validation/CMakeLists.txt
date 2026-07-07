@@ -253,6 +253,81 @@ else()
     message(WARNING "Building only minimal validation (simulation mode)")
 endif()
 
+# ============================================================================
+# A/B DIFFERENTIAL TEST RUNNER - Standalone kernel validation
+# ============================================================================
+
+add_executable(ab_test_runner
+    ab_test_runner.cpp
+)
+
+# Add include directories
+target_include_directories(ab_test_runner PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
+# Add system includes
+target_include_directories(ab_test_runner SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+# Add library directories
+target_link_directories(ab_test_runner PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+# Link MASM kernels and system libraries
+target_link_libraries(ab_test_runner PRIVATE
+    telemetry_masm_kernels
+    kernel32
+    user32
+)
+
+# Simple MASM linkage test
+add_executable(test_masm_linkage
+    test_masm_linkage.cpp
+)
+
+target_include_directories(test_masm_linkage PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
+target_include_directories(test_masm_linkage SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+target_link_libraries(test_masm_linkage PRIVATE
+    telemetry_masm_kernels
+    kernel32
+    user32
+)
+
+# Use static runtime
+if(MSVC)
+    set_property(TARGET ab_test_runner PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+# AVX-512 support
+if(ENABLE_AVX512)
+    if(MSVC)
+        target_compile_options(ab_test_runner PRIVATE /arch:AVX512)
+    endif()
+endif()
+
+message(STATUS "A/B test runner target: ab_test_runner")
+
 # Add MASM kernels subdirectory
 add_subdirectory(kernels)
 

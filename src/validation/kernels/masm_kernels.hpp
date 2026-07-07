@@ -134,11 +134,11 @@ int MASM_Q8_0_Dequantize_AVX512(void* data, size_t data_size);
 int MASM_Q8_0_Dequantize_AVX512_Fast(void* data, size_t data_size);
 
 // ============================================================================
-// Attention Softmax Kernels (Placeholder)
+// Attention Softmax Kernels
 // ============================================================================
 
-int MASM_Attention_Softmax_AVX512(void* data, size_t data_size);
-int MASM_Attention_Softmax_AVX512_Fast(void* data, size_t data_size);
+int MASM_Softmax_Forward_AVX2(void* data, size_t data_size);
+int MASM_Softmax_Forward_AVX2_Fast(void* data, size_t data_size);
 
 } // extern "C"
 
@@ -220,12 +220,17 @@ inline bool Q8_0_Dequantize_AVX512(float* data, size_t count) {
 // Attention Softmax
 // ============================================================================
 
-inline bool AttentionSoftmax_AVX512(float* data, size_t count) {
+inline bool Softmax_Forward_AVX2(float* data, size_t count) {
     if (!data || count == 0) return false;
-    if (reinterpret_cast<uintptr_t>(data) % 64 != 0) return false;
-    if (count % 16 != 0) return false;
+    if (reinterpret_cast<uintptr_t>(data) % 32 != 0) return false;  // 32-byte alignment for AVX2
+    if (count % 8 != 0) return false;  // Must be multiple of 8 floats
     
-    int result = MASM_Attention_Softmax_AVX512(data, count * sizeof(float));
+    int result = MASM_Softmax_Forward_AVX2(data, count * sizeof(float));
+    return result == 0;
+}
+
+inline bool Softmax_Forward_AVX2_Fast(float* data, size_t count) {
+    int result = MASM_Softmax_Forward_AVX2_Fast(data, count * sizeof(float));
     return result == 0;
 }
 

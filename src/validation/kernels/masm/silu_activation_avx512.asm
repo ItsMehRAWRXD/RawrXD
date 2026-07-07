@@ -31,12 +31,20 @@ OPTION CASEMAP:NONE
 
 .const
 
+; Constants for piecewise SiLU approximation
+; Region 1: |x| < 4 -> Polynomial sigmoid
+; Region 2: x >= 4 -> SiLU(x) ≈ x
+; Region 3: x <= -4 -> SiLU(x) ≈ 0
+
 ALIGN 16
-g_silu_one          REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
-g_silu_half         REAL4 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5
-g_silu_quarter      REAL4 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
+g_silu_neg_4        REAL4 -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0
+g_silu_pos_4        REAL4  4.0,  4.0,  4.0,  4.0,  4.0,  4.0,  4.0,  4.0
+g_silu_zero         REAL4  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0
+g_silu_one          REAL4  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0
+g_silu_half         REAL4  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5
+g_silu_quarter      REAL4  0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
 g_silu_neg_020833   REAL4 -0.020833, -0.020833, -0.020833, -0.020833, -0.020833, -0.020833, -0.020833, -0.020833
-g_silu_pos_002604   REAL4 0.002604, 0.002604, 0.002604, 0.002604, 0.002604, 0.002604, 0.002604, 0.002604
+g_silu_pos_002604   REAL4  0.002604,  0.002604,  0.002604,  0.002604,  0.002604,  0.002604,  0.002604,  0.002604
 
 .code
 
@@ -76,67 +84,76 @@ MASM_Silu_Activation_AVX512 PROC FRAME
     jnz error_size
     
     ; Load constants (using YMM registers for AVX2)
-    vmovaps ymm4, YMMWORD PTR [g_silu_one]
-    vmovaps ymm5, YMMWORD PTR [g_silu_half]
-    vmovaps ymm6, YMMWORD PTR [g_silu_quarter]
-    vmovaps ymm7, YMMWORD PTR [g_silu_neg_020833]
-    vmovaps ymm8, YMMWORD PTR [g_silu_pos_002604]
+    ; Note: Using vmovups for constants since they may not be 32-byte aligned
+    vmovups ymm4, YMMWORD PTR [g_silu_neg_4]      ; -4.0
+    vmovups ymm5, YMMWORD PTR [g_silu_pos_4]      ;  4.0
+    vmovups ymm6, YMMWORD PTR [g_silu_zero]       ;  0.0
+    vmovups ymm7, YMMWORD PTR [g_silu_half]       ;  0.5
+    vmovups ymm8, YMMWORD PTR [g_silu_quarter]    ;  0.25
+    vmovups ymm9, YMMWORD PTR [g_silu_neg_020833] ; -0.020833
+    vmovups ymm10, YMMWORD PTR [g_silu_pos_002604];  0.002604
     
-    ; Calculate iterations
+    ; Calculate iterations - rcx = data_size / 32
     mov rcx, r8
     shr rcx, 5                  ; Divide by 32 (8 floats * 4 bytes)
     
-    ; Process loop
-process_loop:
+    ; Early exit if no iterations
     test rcx, rcx
     jz done
     
+    ; Process loop
+process_loop:
     ; Load 8 floats
     vmovaps ymm0, YMMWORD PTR [rax]
+    vmovaps ymm1, ymm0          ; Save x for final multiplication
     
-    ; Compute SiLU(x) = x * sigmoid(x)
-    ; sigmoid(x) ≈ 0.5 + 0.25*x - 0.020833*x^3 + 0.002604*x^5
+    ; --- Masking for Piecewise Approximation ---
+    ; ymm2 = mask for x < -4 (result should be 0)
+    ; ymm3 = mask for x > 4 (result should be x)
+    vcmpps ymm2, ymm0, ymm4, 1  ; Comparison: x < -4.0 (LT)
+    vcmpps ymm3, ymm0, ymm5, 14 ; Comparison: x > 4.0 (GT)
     
-    ; ymm1 = x^2
-    vmulps ymm1, ymm0, ymm0
+    ; --- Polynomial Calculation (Sigmoid Approx) ---
+    ; P(x) = 0.5 + 0.25*x + C3*x^3 + C5*x^5
+    ; ymm11 = x^2
+    vmulps ymm11, ymm0, ymm0
     
-    ; ymm2 = x^3 = x^2 * x
-    vmulps ymm2, ymm1, ymm0
+    ; ymm12 = x^3 = x^2 * x
+    vmulps ymm12, ymm11, ymm0
     
-    ; ymm3 = x^5 = x^3 * x^2
-    vmulps ymm3, ymm2, ymm1
+    ; ymm13 = x^5 = x^3 * x^2
+    vmulps ymm13, ymm12, ymm11
     
-    ; ymm1 = 0.25*x
-    vmulps ymm1, ymm0, ymm6
+    ; ymm14 = 0.25*x
+    vmulps ymm14, ymm0, ymm8
     
-    ; ymm2 = -0.020833*x^3
-    vmulps ymm2, ymm2, ymm7
+    ; ymm15 = -0.020833*x^3
+    vmulps ymm15, ymm12, ymm9
     
-    ; ymm3 = 0.002604*x^5
-    vmulps ymm3, ymm3, ymm8
+    ; ymm11 = 0.002604*x^5
+    vmulps ymm11, ymm13, ymm10
     
-    ; sigmoid = 0.5 + ymm1 + ymm2 + ymm3
-    vaddps ymm1, ymm5, ymm1
-    vaddps ymm1, ymm1, ymm2
-    vaddps ymm1, ymm1, ymm3
+    ; sigmoid = 0.5 + 0.25*x + C3*x^3 + C5*x^5
+    vaddps ymm12, ymm7, ymm14   ; 0.5 + 0.25*x
+    vaddps ymm12, ymm12, ymm15  ; + C3*x^3
+    vaddps ymm12, ymm12, ymm11  ; + C5*x^5
     
-    ; Clamp sigmoid to [0, 1] for numerical stability
-    ; ymm9 = max(sigmoid, 0)
-    vxorps ymm9, ymm9, ymm9
-    vmaxps ymm1, ymm1, ymm9
+    ; --- Final SiLU: x * Sigmoid(x) ---
+    vmulps ymm0, ymm1, ymm12    ; SiLU_poly = x * Sigmoid(x)
     
-    ; ymm9 = min(sigmoid, 1)
-    vminps ymm1, ymm1, ymm4
+    ; --- Blend Regions ---
+    ; If x < -4, result = 0
+    vblendvps ymm0, ymm0, ymm6, ymm2
     
-    ; SiLU = x * sigmoid
-    vmulps ymm0, ymm0, ymm1
+    ; If x > 4, result = x
+    vblendvps ymm0, ymm0, ymm1, ymm3
     
     ; Store result
     vmovaps YMMWORD PTR [rax], ymm0
     
-    ; Advance pointer
+    ; Advance pointer and decrement counter
     add rax, 32
-    dec rcx
+    sub rcx, 1
     jnz process_loop
     
 done:
