@@ -113,6 +113,22 @@ int MASM_Silu_Activation_AVX512_Fast(void* data, size_t data_size);
 int MASM_Silu_Activation_AVX512_Bounded(void* data, size_t data_size);
 
 // ============================================================================
+// MASM_Silu_Activation_AVX512_Fixed
+// ============================================================================
+// ABI-compliant version that properly preserves non-volatile YMM registers.
+// 
+// CRITICAL FIX: This version saves/restores YMM6-YMM15 according to Windows x64 ABI.
+// 
+// Windows x64 ABI requires:
+//   - YMM0-YMM5: Volatile (caller-saved)
+//   - YMM6-YMM15: Non-volatile (callee-saved)
+// 
+// This version is safe for production use and will not corrupt caller's state.
+// ============================================================================
+
+int MASM_Silu_Activation_AVX512_Fixed(void* data, size_t data_size);
+
+// ============================================================================
 // RMS Normalization Kernels
 // ============================================================================
 

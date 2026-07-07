@@ -9,7 +9,7 @@
 OPTION CASEMAP:NONE
 
 .const
-ALIGN 32
+ALIGN 16
 ; Constants for exp approximation: exp(x) ≈ 1 + x + x^2/2 + x^3/6 + x^4/24
 g_exp_c0    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0      ; 1
 g_exp_c1    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0      ; 1 (coefficient of x)
@@ -133,8 +133,9 @@ error_null:
 
 error_zero:
     mov rax, 2
+    jmp epilogue
 
-eplogue:
+epilogue:
     ; Clear YMM state
     vzeroupper
     

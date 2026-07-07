@@ -7,3 +7,4 @@
 subdirs("src/reverse_engineering")
 subdirs("tests")
 subdirs("src/tools")
+subdirs("src/validation")

@@ -152,6 +152,89 @@ target_include_directories(telemetry_validation PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/kernels
 )
 
+# 3. ABI Integrity Test (checks MASM kernels for ABI compliance)
+add_executable(abi_integrity_test
+    abi_integrity_test.cpp
+)
+
+target_include_directories(abi_integrity_test SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+target_link_directories(abi_integrity_test PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+target_link_libraries(abi_integrity_test PRIVATE
+    telemetry_masm_kernels
+    kernel32
+    user32
+)
+
+target_include_directories(abi_integrity_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
+# Use static runtime
+if(MSVC)
+    set_property(TARGET abi_integrity_test PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+# AVX-512 support
+if(ENABLE_AVX512)
+    if(MSVC)
+        target_compile_options(abi_integrity_test PRIVATE /arch:AVX512)
+    endif()
+endif()
+
+# 4. Zero-Assembly Test (isolates timing wrapper from assembly kernels)
+add_executable(zero_assembly_test
+    zero_assembly_test.cpp
+)
+
+target_include_directories(zero_assembly_test SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+target_link_directories(zero_assembly_test PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+target_link_libraries(zero_assembly_test PRIVATE
+    kernel32
+    user32
+)
+
+target_include_directories(zero_assembly_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# Use static runtime
+if(MSVC)
+    set_property(TARGET zero_assembly_test PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+# AVX-512 support
+if(ENABLE_AVX512)
+    if(MSVC)
+        target_compile_options(zero_assembly_test PRIVATE /arch:AVX512)
+    endif()
+endif()
+
 # ============================================================================
 # REAL MODEL VALIDATION - Link against pre-built RawrXD libraries
 # ============================================================================
@@ -216,6 +299,7 @@ if(EXISTS "${RAWRXD_BUILD_DIR}/RawrXD_Gold.lib")
     # Link against RawrXD libraries and system libs
     target_link_libraries(model_stack_validation_real PRIVATE
         engine_factory
+        telemetry_masm_kernels
         # Note: RawrXD_Gold is an executable, not a library, so we cannot link against it
         # RawrXD_Gold
         # RawrXD-ModelAnalysisLib
@@ -331,6 +415,48 @@ if(MSVC)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
+
+# ============================================================================
+# STANDALONE KERNEL DIFFERENTIAL BENCHMARK
+# Tests RMSNorm Fixed vs Tiled without full validation pipeline
+# ============================================================================
+
+add_executable(kernel_differential_benchmark
+    kernel_differential_benchmark.cpp
+)
+
+target_include_directories(kernel_differential_benchmark PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
+target_include_directories(kernel_differential_benchmark SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+target_link_directories(kernel_differential_benchmark PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+target_link_libraries(kernel_differential_benchmark PRIVATE
+    telemetry_masm_kernels
+    kernel32
+    user32
+)
+
+if(MSVC)
+    set_property(TARGET kernel_differential_benchmark PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_compile_options(kernel_differential_benchmark PRIVATE /arch:AVX512)
+endif()
+
+message(STATUS "Standalone kernel benchmark: kernel_differential_benchmark")
 
 # AVX-512 support
 if(ENABLE_AVX512)

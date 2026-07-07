@@ -8,47 +8,21 @@
 #include <cstring>
 #include <cmath>
 
-// Assembly function declarations (defined in .asm files)
+// Assembly function declarations (defined in .obj files from .asm)
+// DO NOT provide implementations here - they are in the .obj files
 extern "C" {
-    // Real AVX-512 implementation
+    // Real AVX-512 implementation (in silu_avx512.obj)
     int MASM_Silu_Activation_AVX512(float* data, size_t data_size);
     
-    // Real AVX2 implementation  
+    // Real AVX2 implementation (in softmax_avx2.obj)
     int MASM_Softmax_Forward_AVX2(float* data, size_t data_size);
     
-    // Stub for RMSNorm (not yet implemented in assembly)
+    // Stub for RMSNorm (not yet implemented in assembly) - defined here
     int MASM_RMSNorm_Forward_AVX2(float* input, float* output, float* weights, size_t size);
 }
 
-// C-linkage wrapper implementations
-extern "C" {
-
-// SiLU Activation - AVX512
-// In real implementation: AVX-512 vmovaps, vmulps, vaddps, etc.
-int MASM_Silu_Activation_AVX512(float* data, size_t data_size) {
-    // Validate inputs (assembly would assume caller validated)
-    if (!data) return 1; // Null pointer
-    if (data_size == 0) return 2; // Zero size
-    if (data_size % 64 != 0) return 4; // Must be multiple of 64 bytes (16 floats for AVX-512)
-    
-    // Check alignment
-    if ((reinterpret_cast<uintptr_t>(data) % 64) != 0) return 3; // Misaligned
-    
-    // NOTE: Real AVX-512 implementation would be called here
-    // For now, use optimized scalar as placeholder
-    // To use real assembly: compile .asm files and link the .obj
-    
-    size_t num_elements = data_size / sizeof(float);
-    for (size_t i = 0; i < num_elements; ++i) {
-        // SiLU(x) = x * sigmoid(x) = x / (1 + exp(-x))
-        data[i] = data[i] / (1.0f + std::exp(-data[i]));
-    }
-    
-    return 0; // Success
-}
-
-// RMSNorm Forward - AVX2 stub
-int MASM_RMSNorm_Forward_AVX2(float* input, float* output, float* weights, size_t size) {
+// RMSNorm Forward - Stub implementation (not in assembly yet)
+extern "C" int MASM_RMSNorm_Forward_AVX2(float* input, float* output, float* weights, size_t size) {
     // Validate inputs
     if (!input || !output || !weights) return 1;
     if (size == 0) return 2;

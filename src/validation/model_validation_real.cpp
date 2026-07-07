@@ -103,6 +103,15 @@ extern "C" void DestroyCPUInferenceEngine(RawrXD::InferenceEngine* engine) {
 // Include telemetry layer
 #include "telemetry_layer.hpp"
 
+// Include MASM Kernel Bridge
+#include "kernels/kernel_bridge.hpp"
+
+// MASM kernel function declarations
+extern "C" int MASM_SiLU_Clamped(float* data, size_t data_size);
+extern "C" int MASM_RMSNorm_Fixed(float* input, float* output, float* weights, size_t size);
+extern "C" int MASM_RMSNorm_Tiled(float* input, float* output, float* weights, size_t size);
+extern "C" int MASM_Softmax_Fixed(float* data, size_t data_size);
+
 // ============================================================================
 // AlignedBuffer - 64-byte aligned memory for AVX-512
 // ============================================================================
@@ -209,9 +218,29 @@ struct TelemetryAggregator {
     uint64_t warmup_executions{0};
     std::ofstream csv_output;
     bool csv_enabled{false};
-    
+
+    // Kernel benchmark storage for differential testing
+    std::map<std::string, std::pair<double, double>> kernel_benchmarks;  // name -> (time_ms, throughput)
+
     TelemetryAggregator() {
         kernel_stats.reserve(MAX_SAMPLES);
+    }
+
+    // Record a kernel benchmark result for differential analysis
+    void RecordKernelBenchmark(const std::string& name, double time_ms, double throughput_melems) {
+        kernel_benchmarks[name] = {time_ms, throughput_melems};
+    }
+
+    // Retrieve benchmark time by name
+    double GetKernelBenchmarkTime(const std::string& name) const {
+        auto it = kernel_benchmarks.find(name);
+        return (it != kernel_benchmarks.end()) ? it->second.first : 0.0;
+    }
+
+    // Retrieve benchmark throughput by name
+    double GetKernelBenchmarkThroughput(const std::string& name) const {
+        auto it = kernel_benchmarks.find(name);
+        return (it != kernel_benchmarks.end()) ? it->second.second : 0.0;
     }
     
     void EnableCSV(const std::string& filename) {
@@ -706,35 +735,264 @@ int main(int argc, char* argv[]) {
         DestroyCPUInferenceEngine(engine);
         return 1;
     }
-    
+
     // Print Run B telemetry
     std::cout << "\n=== Run B (MASM) Telemetry ===" << std::endl;
     g_telemetry.PrintSummary();
-    
+
     // Save Run B metrics
     auto masm_executions = g_telemetry.total_executions;
     auto masm_cycles = g_telemetry.total_cycles;
     auto masm_time = g_telemetry.total_time_ms;
-    
+
+    // ============================================================================
+    // KERNEL MICROBENCHMARK (Direct MASM Kernel Testing)
+    // ============================================================================
+
+    std::cout << "\n========================================" << std::endl;
+    std::cout << "KERNEL MICROBENCHMARK (Direct MASM)" << std::endl;
+    std::cout << "========================================" << std::endl;
+
+    // Test SiLU kernel directly
+    std::cout << "\n[SiLU Kernel Test] 4096 elements" << std::endl;
+    {
+        AlignedBuffer<float> silu_input(4096);
+        AlignedBuffer<float> silu_output(4096);
+
+        // Initialize with test data
+        for (size_t i = 0; i < 4096; ++i) {
+            silu_input[i] = (float)(i % 10) - 5.0f;  // Range [-5, 5]
+        }
+
+        // Copy to output for in-place operation
+        std::memcpy(silu_output.data(), silu_input.data(), 4096 * sizeof(float));
+
+        // Warmup
+        for (int i = 0; i < 3; ++i) {
+            MASM_SiLU_Clamped(silu_output.data(), 4096 * sizeof(float));
+        }
+
+        // Benchmark
+        auto start = std::chrono::high_resolution_clock::now();
+        int result = MASM_SiLU_Clamped(silu_output.data(), 4096 * sizeof(float));
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double ms = std::chrono::duration<double, std::milli>(end - start).count();
+        std::cout << "  Result: " << (result == 0 ? "✅ PASS" : "❌ FAIL") << std::endl;
+        std::cout << "  Time: " << std::fixed << std::setprecision(4) << ms << " ms" << std::endl;
+        std::cout << "  Throughput: " << (4096 / (ms / 1000.0)) / 1e6 << " M elements/sec" << std::endl;
+    }
+
+    // Test RMSNorm kernel directly
+    std::cout << "\n[RMSNorm Kernel Test] 4096 elements" << std::endl;
+    {
+        AlignedBuffer<float> rms_input(4096);
+        AlignedBuffer<float> rms_output(4096);
+        AlignedBuffer<float> rms_weights(4096);
+
+        // Initialize
+        for (size_t i = 0; i < 4096; ++i) {
+            rms_input[i] = 1.0f;
+            rms_weights[i] = 1.0f;
+        }
+
+        // Warmup
+        for (int i = 0; i < 3; ++i) {
+            MASM_RMSNorm_Fixed(rms_input.data(), rms_output.data(), rms_weights.data(), 4096);
+        }
+
+        // Benchmark
+        auto start = std::chrono::high_resolution_clock::now();
+        int result = MASM_RMSNorm_Fixed(rms_input.data(), rms_output.data(), rms_weights.data(), 4096);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double ms = std::chrono::duration<double, std::milli>(end - start).count();
+        std::cout << "  Result: " << (result == 0 ? "✅ PASS" : "❌ FAIL") << std::endl;
+        std::cout << "  Time: " << std::fixed << std::setprecision(4) << ms << " ms" << std::endl;
+        std::cout << "  Throughput: " << (4096 / (ms / 1000.0)) / 1e6 << " M elements/sec" << std::endl;
+    }
+
+    // ============================================================================
+    // RMSNorm DIFFERENTIAL BENCHMARK: Fixed vs Tiled at 32K elements
+    // ============================================================================
+    std::cout << "\n========================================" << std::endl;
+    std::cout << "RMSNorm DIFFERENTIAL BENCHMARK (32K elements)" << std::endl;
+    std::cout << "========================================" << std::endl;
+    std::cout << "Comparing cache-optimized tiled vs baseline fixed implementation" << std::endl;
+    std::cout << "Expected: Tiled version should overcome memory bandwidth wall" << std::endl;
+
+    const size_t RMS_DIFF_SIZE = 32768;
+    AlignedBuffer<float> rms_diff_input(RMS_DIFF_SIZE);
+    AlignedBuffer<float> rms_diff_output_fixed(RMS_DIFF_SIZE);
+    AlignedBuffer<float> rms_diff_output_tiled(RMS_DIFF_SIZE);
+    AlignedBuffer<float> rms_diff_weights(RMS_DIFF_SIZE);
+
+    // Initialize with varied data
+    for (size_t i = 0; i < RMS_DIFF_SIZE; ++i) {
+        rms_diff_input[i] = 1.0f + (float)(i % 100) / 100.0f;
+        rms_diff_weights[i] = 1.0f + (float)(i % 10) / 50.0f;
+    }
+
+    // --- Test 1: Fixed RMSNorm (baseline) ---
+    std::cout << "\n[1/2] RMSNorm_Fixed (baseline, streaming)" << std::endl;
+    {
+        // Warmup
+        for (int i = 0; i < 3; ++i) {
+            MASM_RMSNorm_Fixed(rms_diff_input.data(), rms_diff_output_fixed.data(), rms_diff_weights.data(), RMS_DIFF_SIZE);
+        }
+
+        // Benchmark with multiple iterations for stability
+        const int fixed_iterations = 10;
+        auto start = std::chrono::high_resolution_clock::now();
+        int result = 0;
+        for (int i = 0; i < fixed_iterations; ++i) {
+            result = MASM_RMSNorm_Fixed(rms_diff_input.data(), rms_diff_output_fixed.data(), rms_diff_weights.data(), RMS_DIFF_SIZE);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double total_ms = std::chrono::duration<double, std::milli>(end - start).count();
+        double avg_ms = total_ms / fixed_iterations;
+        double throughput = (RMS_DIFF_SIZE / (avg_ms / 1000.0)) / 1e6;
+
+        std::cout << "  Result: " << (result == 0 ? "✅ PASS" : "❌ FAIL") << std::endl;
+        std::cout << "  Total time (" << fixed_iterations << " runs): " << std::fixed << std::setprecision(4) << total_ms << " ms" << std::endl;
+        std::cout << "  Avg time per run: " << std::fixed << std::setprecision(4) << avg_ms << " ms" << std::endl;
+        std::cout << "  Throughput: " << std::fixed << std::setprecision(2) << throughput << " M elements/sec" << std::endl;
+
+        // Store for comparison
+        g_telemetry.RecordKernelBenchmark("RMSNorm_Fixed_32K", avg_ms, throughput);
+    }
+
+    // --- Test 2: Tiled RMSNorm (cache-optimized) ---
+    std::cout << "\n[2/2] RMSNorm_Tiled (L1 cache optimized, 16KB tiles)" << std::endl;
+    {
+        // Warmup
+        for (int i = 0; i < 3; ++i) {
+            MASM_RMSNorm_Tiled(rms_diff_input.data(), rms_diff_output_tiled.data(), rms_diff_weights.data(), RMS_DIFF_SIZE);
+        }
+
+        // Benchmark with multiple iterations
+        const int tiled_iterations = 10;
+        auto start = std::chrono::high_resolution_clock::now();
+        int result = 0;
+        for (int i = 0; i < tiled_iterations; ++i) {
+            result = MASM_RMSNorm_Tiled(rms_diff_input.data(), rms_diff_output_tiled.data(), rms_diff_weights.data(), RMS_DIFF_SIZE);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double total_ms = std::chrono::duration<double, std::milli>(end - start).count();
+        double avg_ms = total_ms / tiled_iterations;
+        double throughput = (RMS_DIFF_SIZE / (avg_ms / 1000.0)) / 1e6;
+
+        std::cout << "  Result: " << (result == 0 ? "✅ PASS" : "❌ FAIL") << std::endl;
+        std::cout << "  Total time (" << tiled_iterations << " runs): " << std::fixed << std::setprecision(4) << total_ms << " ms" << std::endl;
+        std::cout << "  Avg time per run: " << std::fixed << std::setprecision(4) << avg_ms << " ms" << std::endl;
+        std::cout << "  Throughput: " << std::fixed << std::setprecision(2) << throughput << " M elements/sec" << std::endl;
+
+        // Store for comparison
+        g_telemetry.RecordKernelBenchmark("RMSNorm_Tiled_32K", avg_ms, throughput);
+    }
+
+    // --- Differential Analysis ---
+    std::cout << "\n----------------------------------------" << std::endl;
+    std::cout << "DIFFERENTIAL ANALYSIS (Tiled vs Fixed)" << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
+
+    // Retrieve stored results
+    double fixed_time = g_telemetry.GetKernelBenchmarkTime("RMSNorm_Fixed_32K");
+    double fixed_throughput = g_telemetry.GetKernelBenchmarkThroughput("RMSNorm_Fixed_32K");
+    double tiled_time = g_telemetry.GetKernelBenchmarkTime("RMSNorm_Tiled_32K");
+    double tiled_throughput = g_telemetry.GetKernelBenchmarkThroughput("RMSNorm_Tiled_32K");
+
+    if (fixed_time > 0 && tiled_time > 0) {
+        double speedup = fixed_time / tiled_time;
+        double throughput_ratio = tiled_throughput / fixed_throughput;
+
+        std::cout << "Fixed (baseline):   " << std::fixed << std::setprecision(4) << fixed_time << " ms, "
+                  << std::fixed << std::setprecision(2) << fixed_throughput << " M elems/sec" << std::endl;
+        std::cout << "Tiled (optimized):  " << std::fixed << std::setprecision(4) << tiled_time << " ms, "
+                  << std::fixed << std::setprecision(2) << tiled_throughput << " M elems/sec" << std::endl;
+        std::cout << "Speedup factor:     " << std::fixed << std::setprecision(2) << speedup << "x" << std::endl;
+        std::cout << "Throughput ratio:   " << std::fixed << std::setprecision(2) << throughput_ratio << "x" << std::endl;
+
+        if (speedup > 1.0) {
+            std::cout << "\n✅ TILING SUCCESS: Cache optimization provides measurable speedup" << std::endl;
+            std::cout << "   The tiled implementation overcomes the memory bandwidth wall." << std::endl;
+        } else if (speedup < 1.0) {
+            std::cout << "\n⚠️  TILING REGRESSION: Fixed version is faster" << std::endl;
+            std::cout << "   Possible causes: tile overhead, small array, or cache already hot" << std::endl;
+        } else {
+            std::cout << "\n⚠️  NO DIFFERENCE: Performance is equivalent" << std::endl;
+        }
+    } else {
+        std::cout << "⚠️  Could not retrieve benchmark data for comparison" << std::endl;
+    }
+
+    // Verify numerical correctness (outputs should match within epsilon)
+    std::cout << "\n[Correctness Check] Comparing outputs..." << std::endl;
+    {
+        double max_diff = 0.0;
+        double sum_diff = 0.0;
+        for (size_t i = 0; i < 1000; ++i) {  // Sample first 1000 elements
+            double diff = std::abs(rms_diff_output_fixed[i] - rms_diff_output_tiled[i]);
+            max_diff = std::max(max_diff, diff);
+            sum_diff += diff;
+        }
+        double avg_diff = sum_diff / 1000.0;
+        std::cout << "  Max difference: " << std::scientific << max_diff << std::endl;
+        std::cout << "  Avg difference: " << std::scientific << avg_diff << std::endl;
+        if (max_diff < 1e-4) {
+            std::cout << "  ✅ Outputs match within tolerance (1e-4)" << std::endl;
+        } else {
+            std::cout << "  ❌ Outputs differ significantly!" << std::endl;
+        }
+    }
+
+    // Test Softmax kernel directly
+    std::cout << "\n[Softmax Kernel Test] 4096 elements" << std::endl;
+    {
+        AlignedBuffer<float> softmax_data(4096);
+
+        // Initialize with sequential data
+        for (size_t i = 0; i < 4096; ++i) {
+            softmax_data[i] = (float)i / 100.0f;
+        }
+
+        // Warmup
+        for (int i = 0; i < 3; ++i) {
+            MASM_Softmax_Fixed(softmax_data.data(), 4096 * sizeof(float));
+        }
+
+        // Benchmark
+        auto start = std::chrono::high_resolution_clock::now();
+        int result = MASM_Softmax_Fixed(softmax_data.data(), 4096 * sizeof(float));
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double ms = std::chrono::duration<double, std::milli>(end - start).count();
+        std::cout << "  Result: " << (result == 0 ? "✅ PASS" : "❌ FAIL") << std::endl;
+        std::cout << "  Time: " << std::fixed << std::setprecision(4) << ms << " ms" << std::endl;
+        std::cout << "  Throughput: " << (4096 / (ms / 1000.0)) / 1e6 << " M elements/sec" << std::endl;
+    }
+
     // ============================================================================
     // DIFFERENTIAL ANALYSIS
     // ============================================================================
-    
+
     std::cout << "\n========================================" << std::endl;
     std::cout << "DIFFERENTIAL ANALYSIS (MASM vs Scalar)" << std::endl;
     std::cout << "========================================" << std::endl;
-    
+
     if (scalar_time > 0 && masm_time > 0) {
         double speedup = scalar_time / masm_time;
         double cycle_reduction = (1.0 - (double)masm_cycles / scalar_cycles) * 100.0;
-        
+
         std::cout << "Speedup factor: " << std::fixed << std::setprecision(2) << speedup << "x" << std::endl;
         std::cout << "Cycle reduction: " << std::fixed << std::setprecision(2) << cycle_reduction << "%" << std::endl;
         std::cout << "Scalar time: " << scalar_time << " ms" << std::endl;
         std::cout << "MASM time: " << masm_time << " ms" << std::endl;
         std::cout << "Scalar cycles: " << scalar_cycles << std::endl;
         std::cout << "MASM cycles: " << masm_cycles << std::endl;
-        
+
         if (speedup > 1.0) {
             std::cout << "\n✅ MASM implementation is FASTER" << std::endl;
         } else if (speedup < 1.0) {
@@ -745,7 +1003,7 @@ int main(int argc, char* argv[]) {
     } else {
         std::cout << "⚠️  Insufficient data for differential analysis" << std::endl;
     }
-    
+
     // Final Summary
     std::cout << "\n=== Final Validation Summary ===" << std::endl;
     std::cout << "Phase 1 (Resource Injection): " << (phase1.success ? "✅ PASS" : "❌ FAIL") << std::endl;
@@ -754,13 +1012,13 @@ int main(int argc, char* argv[]) {
     std::cout << "Phase 3 (MASM):               " << (phase3_masm.success ? "✅ PASS" : "❌ FAIL") << std::endl;
     std::cout << "Phase 4 (Scalar):           " << (phase4_scalar.success ? "✅ PASS" : "❌ FAIL") << std::endl;
     std::cout << "Phase 4 (MASM):             " << (phase4_masm.success ? "✅ PASS" : "❌ FAIL") << std::endl;
-    
+
     std::cout << "\n✅ All validation phases passed successfully!" << std::endl;
     std::cout << "📊 Telemetry data written to: telemetry_results.csv" << std::endl;
-    
+
     // Cleanup
     DestroyCPUInferenceEngine(engine);
-    
+
     return 0;
 }
 

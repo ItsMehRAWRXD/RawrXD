@@ -9,13 +9,13 @@
 ; Algorithm:
 ;   1. Find max value (horizontal reduction)
 ;   2. Subtract max from all elements (prevent overflow)
-;   3. Compute exp(x - max) using polynomial approximation
+;   3. Compute exp(x - max) using FAST_EXP macro (stable approximation)
 ;   4. Sum all exp values (horizontal reduction)
 ;   5. Divide each exp by sum (multiply by reciprocal)
 ;
 ; Performance Characteristics:
 ;   - Horizontal reduction for max and sum
-;   - Fast exp approximation (4th-order polynomial)
+;   - Fast exp approximation using Minimax polynomial
 ;   - Division replaced with reciprocal multiplication
 ;   - AVX2 allows processing 8 floats per iteration
 ;
@@ -36,18 +36,18 @@
 
 OPTION CASEMAP:NONE
 
+; Include math approximation macros
+INCLUDE math_approx.inc
+
 .const
 
 ALIGN 16
-; Constants for exp approximation
-; exp(x) ≈ 1 + x + x^2/2! + x^3/3! + x^4/4!
-; For better accuracy, we use: exp(x) ≈ 1 + x*(1 + x/2*(1 + x/3*(1 + x/4)))
-g_one           REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
-g_half          REAL4 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5
-g_third         REAL4 0.333333, 0.333333, 0.333333, 0.333333, 0.333333, 0.333333, 0.333333, 0.333333
-g_fourth        REAL4 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-; IEEE 754 representation of -infinity (0xFF800000)
+; Constants for exp approximation (now handled by math_approx.inc)
+; We only need the IEEE 754 representation of -infinity for max finding
 g_neg_inf       DWORD 0FF800000h, 0FF800000h, 0FF800000h, 0FF800000h, 0FF800000h, 0FF800000h, 0FF800000h, 0FF800000h
+
+; Math constants for FAST_EXP macro
+MATH_CONSTANTS
 
 .code
 
@@ -162,12 +162,6 @@ max_done:
     ; Initialize sum accumulator
     vxorps ymm2, ymm2, ymm2    ; sum = 0
     
-    ; Load constants for exp approximation
-    vmovaps ymm3, YMMWORD PTR [g_one]
-    vmovaps ymm4, YMMWORD PTR [g_half]
-    vmovaps ymm5, YMMWORD PTR [g_third]
-    vmovaps ymm6, YMMWORD PTR [g_fourth]
-    
 exp_loop:
     test rsi, rsi
     jz exp_done
@@ -178,32 +172,10 @@ exp_loop:
     ; Subtract max (prevent overflow)
     vsubps ymm1, ymm1, ymm0
     
-    ; Compute exp(x) using polynomial approximation
-    ; exp(x) ≈ 1 + x*(1 + x/2*(1 + x/3*(1 + x/4)))
-    
-    ; ymm7 = x/4
-    vmulps ymm7, ymm1, ymm6
-    
-    ; ymm7 = 1 + x/4
-    vaddps ymm7, ymm7, ymm3
-    
-    ; ymm7 = x/3 * (1 + x/4)
-    vmulps ymm7, ymm5, ymm7
-    
-    ; ymm7 = 1 + x/3*(1 + x/4)
-    vaddps ymm7, ymm7, ymm3
-    
-    ; ymm7 = x/2 * (1 + x/3*(1 + x/4))
-    vmulps ymm7, ymm4, ymm7
-    
-    ; ymm7 = 1 + x/2*(1 + x/3*(1 + x/4))
-    vaddps ymm7, ymm7, ymm3
-    
-    ; ymm7 = x * (1 + x/2*(1 + x/3*(1 + x/4)))
-    vmulps ymm7, ymm1, ymm7
-    
-    ; ymm7 = 1 + x*(1 + x/2*(1 + x/3*(1 + x/4)))
-    vaddps ymm7, ymm7, ymm3
+    ; Compute exp(x - max) using FAST_EXP macro
+    ; This uses the stable 2^x approximation via Minimax polynomial
+    ; e^(x - max) = 2^((x - max) * log2(e))
+    FAST_EXP ymm7, ymm1, ymm8, ymm9, ymm10
     
     ; Store exp values back to memory
     vmovaps YMMWORD PTR [rax], ymm7
@@ -228,6 +200,9 @@ exp_done:
     vhaddps xmm2, xmm2, xmm2
     
     ; xmm2[0] now contains the sum
+    
+    ; Ensure sum is positive (prevent division by zero or negative)
+    vmaxps xmm2, xmm2, xmm3    ; sum = max(sum, 1.0)
     
     ; ========================================================================
     ; Step 4: Compute Reciprocal and Normalize
@@ -293,143 +268,5 @@ epilogue:
     ret
 
 MASM_Softmax_Forward_AVX2 ENDP
-
-; ============================================================================
-; MASM_Softmax_Forward_AVX2_Fast - Optimized version without validation
-; ============================================================================
-
-MASM_Softmax_Forward_AVX2_Fast PROC FRAME
-
-    ; Prologue
-    push rbp
-    .pushreg rbp
-    mov rbp, rsp
-    .setframe rbp, 0
-    push rbx
-    .pushreg rbx
-    push rdi
-    .pushreg rdi
-    push rsi
-    .pushreg rsi
-    push r12
-    .pushreg r12
-    sub rsp, 32
-    .allocstack 32
-    .endprolog
-
-    ; Save parameters
-    mov rbx, rcx
-    mov rdi, rdx
-    
-    ; Initialize max to -infinity
-    vmovaps ymm0, YMMWORD PTR [g_neg_inf]
-    
-    ; Calculate iterations
-    mov rsi, rdi
-    shr rsi, 5
-    
-    ; Save pointer
-    mov rax, rbx
-    
-    ; Find max
-fast_max_loop:
-    test rsi, rsi
-    jz fast_max_done
-    
-    vmovaps ymm1, YMMWORD PTR [rax]
-    vmaxps ymm0, ymm0, ymm1
-    
-    add rax, 32
-    dec rsi
-    jnz fast_max_loop
-    
-fast_max_done:
-    ; Horizontal max reduction
-    vextractf128 xmm1, ymm0, 1
-    vmaxps xmm0, xmm0, xmm1
-    vmaxps xmm1, xmm0, xmm0
-    vshufps xmm2, xmm0, xmm0, 0EEh
-    vmaxps xmm0, xmm1, xmm2
-    vshufps xmm1, xmm0, xmm0, 01h
-    vmaxps xmm0, xmm0, xmm1
-    vbroadcastss ymm0, xmm0
-    
-    ; Subtract max and compute exp
-    mov rax, rbx
-    mov rsi, rdi
-    shr rsi, 5
-    vxorps ymm2, ymm2, ymm2
-    
-    ; Load constants
-    vmovaps ymm3, YMMWORD PTR [g_one]
-    vmovaps ymm4, YMMWORD PTR [g_half]
-    vmovaps ymm5, YMMWORD PTR [g_third]
-    vmovaps ymm6, YMMWORD PTR [g_fourth]
-    
-fast_exp_loop:
-    test rsi, rsi
-    jz fast_exp_done
-    
-    vmovaps ymm1, YMMWORD PTR [rax]
-    vsubps ymm1, ymm1, ymm0
-    
-    ; Fast exp approximation
-    vmulps ymm7, ymm1, ymm6
-    vaddps ymm7, ymm7, ymm3
-    vmulps ymm7, ymm5, ymm7
-    vaddps ymm7, ymm7, ymm3
-    vmulps ymm7, ymm4, ymm7
-    vaddps ymm7, ymm7, ymm3
-    vmulps ymm7, ymm1, ymm7
-    vaddps ymm7, ymm7, ymm3
-    
-    vmovaps YMMWORD PTR [rax], ymm7
-    vaddps ymm2, ymm2, ymm7
-    
-    add rax, 32
-    dec rsi
-    jnz fast_exp_loop
-    
-fast_exp_done:
-    ; Horizontal sum
-    vextractf128 xmm1, ymm2, 1
-    vaddps xmm2, xmm2, xmm1
-    vhaddps xmm2, xmm2, xmm2
-    vhaddps xmm2, xmm2, xmm2
-    
-    ; Compute reciprocal
-    vdivps xmm2, xmm3, xmm2
-    vbroadcastss ymm2, xmm2
-    
-    ; Normalize
-    mov rax, rbx
-    mov rsi, rdi
-    shr rsi, 5
-    
-fast_normalize_loop:
-    test rsi, rsi
-    jz fast_normalize_done
-    
-    vmovaps ymm1, YMMWORD PTR [rax]
-    vmulps ymm1, ymm1, ymm2
-    vmovaps YMMWORD PTR [rax], ymm1
-    
-    add rax, 32
-    dec rsi
-    jnz fast_normalize_loop
-    
-fast_normalize_done:
-    xor rax, rax
-    
-fast_epilogue:
-    add rsp, 32
-    pop r12
-    pop rsi
-    pop rdi
-    pop rbx
-    pop rbp
-    ret
-
-MASM_Softmax_Forward_AVX2_Fast ENDP
 
 END

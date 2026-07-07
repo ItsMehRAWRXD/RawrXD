@@ -210,12 +210,14 @@ Normalize_Done:
     xor rax, rax
     jmp Exit
     
+MASM_Softmax_Forward_AVX2 ENDP
+
 ; ============================================================================
 ; FastExp_Scalar - Fast exponential approximation
 ; Input: xmm1 = x (float)
 ; Output: xmm0 = exp(x) (float)
 ; ============================================================================
-FastExp_Scalar:
+FastExp_Scalar PROC
     ; exp(x) = 2^(x * log2(e))
     ; Use bit-hack: exp(x) ≈ (1 << 23) * (x * 1.442695 + 127.0 - 0.045)
     
@@ -252,6 +254,7 @@ FastExp_Scalar:
     mulss xmm0, xmm4
     
     ret
+FastExp_Scalar ENDP
     
 ; ============================================================================
 ; Error Handlers
@@ -293,7 +296,5 @@ Exit:
     ExpP1  REAL4 0.240153
     ExpP2  REAL4 0.055828
     ExpP3  REAL4 1.0
-
-MASM_Softmax_Forward_AVX2 ENDP
 
 END

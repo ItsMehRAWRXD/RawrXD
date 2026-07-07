@@ -46,6 +46,14 @@ if errorlevel 1 (
 )
 echo [BUILD] rmsnorm_forward_avx2.obj assembled
 
+REM Assemble Softmax kernel
+"%MSVC_ROOT%\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fo build\kernels\softmax_forward_avx2.obj src\validation\kernels\masm\softmax_forward_avx2.asm
+if errorlevel 1 (
+    echo [ERROR] Failed to assemble softmax_forward_avx2.asm
+    exit /b 1
+)
+echo [BUILD] softmax_forward_avx2.obj assembled
+
 echo.
 echo [BUILD] Compiling telemetry_validation...
 echo.
@@ -64,7 +72,7 @@ echo [BUILD] Linking...
 echo.
 
 REM Link
-"%MSVC_ROOT%\bin\Hostx64\x64\link.exe" build\telemetry_validation.obj build\kernels\silu_activation_avx512.obj build\kernels\rmsnorm_forward_avx2.obj ^
+"%MSVC_ROOT%\bin\Hostx64\x64\link.exe" build\telemetry_validation.obj build\kernels\silu_activation_avx512.obj build\kernels\rmsnorm_forward_avx2.obj build\kernels\softmax_forward_avx2.obj ^
     user32.lib kernel32.lib /OUT:"build\telemetry_validation.exe"
 if errorlevel 1 (
     echo [ERROR] Link failed

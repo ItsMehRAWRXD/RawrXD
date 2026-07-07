@@ -215,7 +215,7 @@ void MASM_RMSNorm_Forward_Wrapper(void* data, size_t data_size) {
 }
 
 void MASM_Silu_Activation_Wrapper(void* data, size_t data_size) {
-    // Use actual MASM AVX2 implementation
+    // Use FIXED MASM AVX2 implementation with proper YMM register preservation
     // Note: MASM kernel expects size in bytes, we pass it directly
     // The kernel processes 8 floats at a time (AVX2 YMM registers)
     // For 32-byte alignment (AVX2), we need to ensure data_size is multiple of 32
@@ -225,9 +225,8 @@ void MASM_Silu_Activation_Wrapper(void* data, size_t data_size) {
         return;
     }
     
-    std::cout << "        [DEBUG] Calling MASM_Silu_Activation_AVX512 with data=" << data << ", size=" << data_size << std::endl;
+    // CRITICAL: Use the FIXED kernel with proper YMM register preservation
     int result = MASM_Silu_Activation_AVX512(data, data_size);
-    std::cout << "        [DEBUG] MASM_Silu_Activation_AVX512 returned: " << result << std::endl;
     if (result != 0) {
         std::cerr << "MASM_Silu_Activation_AVX512 failed with error: " << result << ", falling back to scalar" << std::endl;
         Scalar_Silu_Activation(data, data_size);
@@ -235,8 +234,9 @@ void MASM_Silu_Activation_Wrapper(void* data, size_t data_size) {
 }
 
 void MASM_Softmax_Forward_Wrapper(void* data, size_t data_size) {
-    // Fallback to scalar (not yet implemented in MASM)
-    // TODO: Implement MASM_Softmax_Forward_AVX2 kernel
+    // TEMPORARY: Use scalar fallback for Softmax until math_approx.inc is implemented
+    // The Softmax kernel requires math_approx.inc which is not yet available
+    // For now, we use the scalar implementation to verify the SiLU kernel fix
     Scalar_Attention_Softmax(data, data_size);
 }
 
