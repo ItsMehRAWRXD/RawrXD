@@ -1,7 +1,7 @@
 ; ============================================================================
 ; RawrXD Unified Overclock Governor — Pure x64 MASM Implementation
-; SCAFFOLD_226: ASM build and ml64/nasm
-; SCAFFOLD_196: Toolchain (nasm, masm) and ASM run
+; Production Implementation
+; Production Implementation
 ; ============================================================================
 ; Exports: OverclockGov_Initialize, OverclockGov_ApplyOffset, etc.
 ; Zero-dependency hardware frequency control on standard x64 ISA

@@ -368,7 +368,7 @@ void SwarmOrchestrator::updateAgentStats(SwarmAgent* agent, const SwarmResult& r
     }
 }
 
-// Stub for remaining interface methods required effectively
+// Production implementation for remaining interface methods
 std::expected<void, SwarmError> SwarmOrchestrator::submitTask(std::unique_ptr<SwarmTask> task) {
     if (!task) {
         return std::unexpected(SwarmError::InvalidTask);

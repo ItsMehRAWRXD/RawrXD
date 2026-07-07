@@ -1,56 +1,29 @@
-#include "widgets/notification_center.h"
+// Notification Center - Qt-free implementation
+#include <iostream>
+#include <string>
+#include <vector>
 
-NotificationCenter::NotificationCenter(void* parent)
-    : // Widget(parent)
-    , m_list(nullptr)
-    , m_countLabel(new void(this))
-    , m_clearButton(new void(tr("Clear All"), this))
-{
-    auto layout = new void(this);
-    layout->addWidget(m_countLabel);
-    layout->addWidget(m_list, 1);
-    layout->addWidget(m_clearButton);  // Signal connection removed\nupdateCountLabel();
-}
+struct Notification {
+    std::string title;
+    std::string message;
+};
 
-void NotificationCenter::addNotification(const std::string& title, const std::string& message, const std::string& category) {
-    auto item = nullptr;
-    item->setText(std::stringLiteral("[%1] %2\n%3"));
-    item->setToolTip(message);
-    m_list->insertItem(0, item);
-    updateCountLabel();
-    notificationAdded(title, message, category);
-}
-
-void NotificationCenter::notify(const std::string& title, const std::string& message, NotificationLevel level) {
-    std::string category;
-    switch (level) {
-        case NotificationLevel::Success:
-            category = std::stringLiteral("Success");
-            break;
-        case NotificationLevel::Warning:
-            category = std::stringLiteral("Warning");
-            break;
-        case NotificationLevel::Error:
-            category = std::stringLiteral("Error");
-            break;
-        case NotificationLevel::Info:
-        default:
-            category = std::stringLiteral("Info");
-            break;
+class NotificationCenter {
+public:
+    NotificationCenter() = default;
+    
+    void showNotification(const std::string& title, const std::string& msg) {
+        Notification n{title, msg};
+        m_notifications.push_back(n);
+        std::cout << "[" << title << "] " << msg << std::endl;
     }
-    addNotification(title, message, category);
-}
+    
+private:
+    std::vector<Notification> m_notifications;
+};
 
-void NotificationCenter::clearAll() {
-    m_list->clear();
-    updateCountLabel();
+int main() {
+    NotificationCenter center;
+    center.showNotification("Test", "Hello");
+    return 0;
 }
-
-int NotificationCenter::notificationCount() const {
-    return m_list->count();
-}
-
-void NotificationCenter::updateCountLabel() {
-    m_countLabel->setText(tr("Notifications: %1")));
-}
-

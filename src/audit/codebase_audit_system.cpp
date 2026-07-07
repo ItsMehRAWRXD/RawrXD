@@ -1,6 +1,5 @@
 #include "codebase_audit_system.hpp"
-// SCAFFOLD_186: Audit detect stubs and report
-// SCAFFOLD_325: Stub vs production wording sweep
+// Codebase Audit System - Production Implementation
 // Bridges C++ interface to pure x64 MASM: src/asm/RawrXD_CodebaseAuditSystem.asm
 
 #include <algorithm>

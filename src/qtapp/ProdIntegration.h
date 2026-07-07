@@ -21,7 +21,7 @@ struct Config {
 #define RAWRXD_TIMED_FUNC() RawrXD::Integration::ScopedTimer __rawr_timer__(__FUNCTION__, __FUNCTION__, "execution")
 #define RAWRXD_TIMED_NAMED(name) RawrXD::Integration::ScopedTimer __rawr_timer__(name, name, "execution")
 
-inline void logWithLevel(const std::string &level, const std::string &component, const std::string &event, const std::string &message, const void* &data = void*()) {
+inline void logWithLevel(const std::string &level, const std::string &component, const std::string &event, const std::string &message, const void* &data = nullptr) {
     if (!Config::loggingEnabled()) return;
     void* logEntry{
         {"timestamp", // DateTime::currentDateTimeUtc().toString(ISODate)},
@@ -35,19 +35,19 @@ inline void logWithLevel(const std::string &level, const std::string &component,
     }
 }
 
-inline void logInfo(const std::string &component, const std::string &event, const std::string &message, const void* &data = void*()) {
+inline void logInfo(const std::string &component, const std::string &event, const std::string &message, const void* &data = nullptr) {
     logWithLevel(std::stringLiteral("INFO"), component, event, message, data);
 }
 
-inline void logDebug(const std::string &component, const std::string &event, const std::string &message, const void* &data = void*()) {
+inline void logDebug(const std::string &component, const std::string &event, const std::string &message, const void* &data = nullptr) {
     logWithLevel(std::stringLiteral("DEBUG"), component, event, message, data);
 }
 
-inline void logWarn(const std::string &component, const std::string &event, const std::string &message, const void* &data = void*()) {
+inline void logWarn(const std::string &component, const std::string &event, const std::string &message, const void* &data = nullptr) {
     logWithLevel(std::stringLiteral("WARN"), component, event, message, data);
 }
 
-inline void logError(const std::string &component, const std::string &event, const std::string &message, const void* &data = void*()) {
+inline void logError(const std::string &component, const std::string &event, const std::string &message, const void* &data = nullptr) {
     logWithLevel(std::stringLiteral("ERROR"), component, event, message, data);
 }
 

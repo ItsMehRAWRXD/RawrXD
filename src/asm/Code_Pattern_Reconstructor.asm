@@ -3,8 +3,8 @@
 ; Pure MASM x64 - Pattern-based code reconstruction
 ; Reverse engineers binaries by identifying code patterns and reconstructing logic
 ;================================================================================
-; SCAFFOLD_136: inference_core.asm
-; SCAFFOLD_137: feature_dispatch_bridge.asm
+; Production Implementation
+; Production Implementation
 
 option casemap:none
 

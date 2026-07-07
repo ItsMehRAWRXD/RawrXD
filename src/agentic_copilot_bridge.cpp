@@ -16,7 +16,6 @@
 #include <sstream>
 
 AgenticCopilotBridge::AgenticCopilotBridge(void* parent)
-    : void(parent)
 {
 }
 
@@ -25,7 +24,7 @@ AgenticCopilotBridge::~AgenticCopilotBridge()
     std::lock_guard<std::mutex> lock(m_mutex);
     
     // Clear sensitive data
-    m_conversationHistory = void*();
+    m_conversationHistory = nullptr;
     m_lastConversationContext.clear();
     
     // Release component pointers (not owned)
@@ -615,7 +614,7 @@ void AgenticCopilotBridge::updateModel(const std::string& newModelPath)
         }
         
         // Clear conversation history for new model
-        m_conversationHistory = void*();
+        m_conversationHistory = nullptr;
         m_lastConversationContext = std::string("Model updated to: %1");
         
         // Load new model via engine

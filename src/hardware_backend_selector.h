@@ -17,7 +17,7 @@
  * - Configure backend-specific options (precision, memory pool, etc.)
  * - Runtime backend switching
  */
-class HardwareBackendSelector : public void
+class HardwareBackendSelector
 {
 
 public:
@@ -56,13 +56,19 @@ public:
      * @param parent Parent widget
      */
     explicit HardwareBackendSelector(void* parent = nullptr);
-    ~HardwareBackendSelector() override = default;
     
     /**
      * Two-phase initialization - call after void is ready
      * Creates all Qt widgets, sets up connections, and detects backends
      */
     void initialize();
+    
+    void setWindowTitle(const std::string& title);
+    void setMinimumSize(int w, int h);
+    void setModal(bool modal);
+    void detectAvailableBackends();
+    std::vector<BackendInfo> getAvailableBackends() const;
+    void selectBackend(Backend backend);
 
     /**
      * @brief Get currently selected backend
@@ -172,6 +178,7 @@ private:
     void* m_resetBtn;
 
     // ===== Backend State =====
+    void* m_parent;
     std::vector<BackendInfo> m_backends;
     Backend m_selectedBackend = Backend::CPU;
     bool m_fp16Enabled = false;

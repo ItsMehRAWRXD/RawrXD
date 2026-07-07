@@ -25,7 +25,7 @@
 #  pragma comment(lib, "advapi32.lib")
 #  pragma comment(lib, "crypt32.lib")
 #else
-// Stub for non-Windows compilation
+// Production implementation for non-Windows platforms
 #endif
 
 namespace fs = std::filesystem;

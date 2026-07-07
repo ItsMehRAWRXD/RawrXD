@@ -131,3 +131,29 @@ private:
 #define LOG_WARNING(msg) IDELogger::getInstance().warning(__FUNCTION__, msg)
 #define LOG_ERROR(msg) IDELogger::getInstance().error(__FUNCTION__, msg)
 #define LOG_CRITICAL(msg) IDELogger::getInstance().critical(__FUNCTION__, msg)
+
+// Variadic logging macros for printf-style formatting
+#include <cstdio>
+#include <cstdarg>
+#include <memory>
+
+// Helper for variadic logging
+inline std::string formatLogMessage(const char* fmt, ...) {
+    char buffer[4096];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+    return std::string(buffer);
+}
+
+#define LOG_TRACE_FMT(fmt, ...) IDELogger::getInstance().trace(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__).c_str())
+#define LOG_DEBUG_FMT(fmt, ...) IDELogger::getInstance().debug(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__).c_str())
+#define LOG_INFO_FMT(fmt, ...) IDELogger::getInstance().info(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__).c_str())
+#define LOG_WARNING_FMT(fmt, ...) IDELogger::getInstance().warning(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__).c_str())
+#define LOG_ERROR_FMT(fmt, ...) IDELogger::getInstance().error(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__).c_str())
+#define LOG_CRITICAL_FMT(fmt, ...) IDELogger::getInstance().critical(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__).c_str())
+
+// Alias macros for backward compatibility (printf-style)
+#define LOG_WARN LOG_WARNING
+#define LOG_WARN_FMT LOG_WARNING_FMT

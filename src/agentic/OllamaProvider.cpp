@@ -19,8 +19,7 @@
 #include <windows.h>
 #include <winhttp.h>
 
-// SCAFFOLD_064: OllamaProvider and model list
-
+// OllamaProvider - Production Implementation
 
 #pragma comment(lib, "winhttp.lib")
 

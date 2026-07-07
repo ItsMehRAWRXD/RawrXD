@@ -1,6 +1,7 @@
 // Win32IDE sovereign GPU link stubs.
-// Purpose: keep RawrXD-Win32IDE linkable when RAWR_HAS_SOVEREIGN_ENGINES=0.
+// Purpose: Provide fallback symbols when RAWR_HAS_SOVEREIGN_ENGINES=0.
 // These symbols are referenced by Win32IDE_TabManager.cpp but implemented in optional GPU ASM.
+// When GPU engines are enabled, these stubs are replaced with actual implementations.
 
 #include <cstdint>
 

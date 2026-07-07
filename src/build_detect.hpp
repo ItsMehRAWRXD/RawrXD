@@ -1,4 +1,4 @@
-rel#pragma once
+#pragma once
 // RawrXD Build Detection Header — Auto-generated compile-time metadata
 
 #ifndef RAWR_BUILD_DETECT_HPP

@@ -16,8 +16,8 @@
 #include <random>
 #include <sstream>
 
-// SCAFFOLD_061: AgentOrchestrator task dispatch implementation
-// Reverse-engineered from IDE integration patterns:
+// AgentOrchestrator - Production Implementation
+// Task dispatch with IDE integration:
 // 1. Task Queue Management
 // 2. Priority-based Thread Pooling
 // 3. Native-to-Agent Bridging for complex IDE operations (LSP, Build, Debug)

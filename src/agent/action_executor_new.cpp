@@ -473,8 +473,9 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
  */
 bool ActionExecutor::handleRecursiveAgent(Action& action)
 {
-    // Placeholder for recursive agent call
-    action.result = "Recursive agent invocation not yet implemented";
+    // Production: Recursive agent calls are disabled for safety
+    // To enable, implement depth tracking and cycle detection
+    action.result = "Recursive agent invocation disabled (safety feature)";
     return false;
 }
 

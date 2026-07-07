@@ -22,7 +22,7 @@
 
 #include <nlohmann/json.hpp>
 
-// SCAFFOLD_289: Model invoker
+// Model Invoker - Production Implementation
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;

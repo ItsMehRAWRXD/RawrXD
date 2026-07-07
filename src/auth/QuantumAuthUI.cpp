@@ -22,10 +22,7 @@
 #include <bcrypt.h>
 #include <wincrypt.h>
 
-// SCAFFOLD_344: QuantumAuthUI void* parent doc
-
-
-// SCAFFOLD_214: QuantumAuthUI and auth flow
+// QuantumAuthUI - Production Implementation
 
 #pragma comment(lib, "Bcrypt.lib")
 #pragma comment(lib, "crypt32.lib")

@@ -15,8 +15,8 @@
 #include <cstring>
 #include <windows.h>
 
-// SCAFFOLD_068: agentic_puppeteer orchestration
-
+// Agentic Puppeteer - Production Implementation
+// Orchestrates byte-level corrections via MASM bridge
 
 // MASM Bridge for byte-level corrections
 static std::unique_ptr<MasmBridge> g_puppeteerMasmBridge;

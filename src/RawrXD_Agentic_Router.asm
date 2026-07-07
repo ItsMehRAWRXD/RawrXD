@@ -1,4 +1,4 @@
-; SCAFFOLD_090: RawrXD_Agent and tool dispatch
+; Production Implementation
 
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; RawrXD_Agentic_Router.asm

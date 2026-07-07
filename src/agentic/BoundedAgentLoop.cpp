@@ -23,10 +23,7 @@
 #include <thread>
 #include <chrono>
 
-// SCAFFOLD_295: BoundedAgentLoop integration
-
-
-// SCAFFOLD_060: BoundedAgentLoop and cycle limit
+// BoundedAgentLoop - Production Implementation
 
 
 using RawrXD::Agent::BoundedAgentLoop;

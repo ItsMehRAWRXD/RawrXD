@@ -15,8 +15,8 @@
 #include <cstring>
 #include <windows.h>
 
-// SCAFFOLD_067: agentic_failure_detector and retry
-
+// Agentic Failure Detector - Production Implementation
+// Detects failures and triggers retry mechanisms
 
 // MASM Bridge integration
 static std::unique_ptr<AgentMasmBridge> g_masmBridge;

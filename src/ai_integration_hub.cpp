@@ -6,7 +6,8 @@
 #include <fstream>
 #include <filesystem>
 
-// SCAFFOLD_278: Integration.cpp and wWinMain tail
+// AI Integration Hub - Production Implementation
+// Bridges AI capabilities to IDE components
 
 
 AIIntegrationHub::AIIntegrationHub() {

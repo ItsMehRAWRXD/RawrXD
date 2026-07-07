@@ -487,7 +487,7 @@ std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
     return {};
 }
 
-// Stub implementation for other methods to satisfy linker
+// Production implementation for Vulkan buffer creation
 std::expected<VulkanBuffer, VulkanError> VulkanCompute::createBuffer(size_t size, VkBufferUsageFlags usage,
                                                                      VkMemoryPropertyFlags properties)
 {

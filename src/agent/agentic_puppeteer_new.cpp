@@ -160,11 +160,32 @@ std::string AgenticPuppeteer::applyRefusalBypass(const std::string& response) {
 }
 
 std::string AgenticPuppeteer::correctHallucination(const std::string& response) {
-    return response; // Placeholder for real logic
+    // Production: Basic hallucination detection - check for repetitive patterns
+    // Full implementation would use model-based verification
+    if (response.length() > 1000) {
+        // Check for excessive repetition
+        size_t repeats = 0;
+        for (size_t i = 0; i < response.length() - 100; i += 100) {
+            if (response.substr(i, 50) == response.substr(i + 50, 50)) {
+                repeats++;
+            }
+        }
+        if (repeats > 5) {
+            return response.substr(0, response.length() / 2) + "\n[Output truncated due to repetition]";
+        }
+    }
+    return response;
 }
 
 std::string AgenticPuppeteer::enforceFormat(const std::string& response) {
-    return response; // Placeholder for real logic
+    // Production: Ensure response ends with proper formatting
+    // Full implementation would validate against expected schema
+    std::string result = response;
+    // Trim trailing whitespace
+    while (!result.empty() && (result.back() == ' ' || result.back() == '\t')) {
+        result.pop_back();
+    }
+    return result;
 }
 
 std::string AgenticPuppeteer::handleInfiniteLoop(const std::string& response) {
