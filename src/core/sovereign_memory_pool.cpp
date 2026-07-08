@@ -10,6 +10,8 @@
 #include <atomic>
 #include <vector>
 #include <cstring>
+#include <cstdio>
+#include <algorithm>
 #include <intrin.h>
 
 // =============================================================================
@@ -427,10 +429,10 @@ __declspec(dllexport) void Sovereign_Prefetch(void* ptr, int hint) {
 #ifdef _WIN32
     // _MM_HINT_T0=3 (L1), _MM_HINT_T1=2 (L2), _MM_HINT_T2=1 (L3)
     switch (hint) {
-        case 0: _mm_prefetch(reinterpret_cast<const char*>(ptr), 3); break;  // L1
-        case 1: _mm_prefetch(reinterpret_cast<const char*>(ptr), 2); break;  // L2
-        case 2: _mm_prefetch(reinterpret_cast<const char*>(ptr), 1); break;  // L3
-        default: _mm_prefetch(reinterpret_cast<const char*>(ptr), 3); break; // L1
+        case 0: _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0); break;  // L1
+        case 1: _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T1); break;  // L2
+        case 2: _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T2); break;  // L3
+        default: _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0); break; // L1
     }
 #else
     __builtin_prefetch(ptr, 0, hint);

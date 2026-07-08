@@ -10,7 +10,7 @@
 #include <chrono>
 #include <cmath>
 #include <thread>
-#include <assert>
+#include <cassert>
 
 using namespace RawrXD::Inference;
 

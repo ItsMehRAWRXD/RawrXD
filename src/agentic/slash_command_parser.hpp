@@ -31,6 +31,11 @@
  * /lang <id> [modifiers]              → alias for /language
  * /context <profile> [modifiers]       → full execution context switch (language + runtime + target)
  * /help [command]                      → show command help
+ *
+ * Native Toolchain Commands (Self-Hosting Bootstrap):
+ * /native-compile <file.json> [output.asm]  → Convert Codex JSON to MASM assembly
+ * /native-patch <binary.exe> <patch.json>     → Apply binary patch using native toolchain
+ * /native-disasm <binary.exe> [output.json]   → Disassemble binary to Codex JSON format
  */
 
 namespace RawrXD::Agentic {
@@ -97,6 +102,11 @@ private:
     static ParsedCommand ParseStreamingStatus(const std::vector<std::string>& args);
     static ParsedCommand ParseStreamingAutopatch(const std::vector<std::string>& args);
     static ParsedCommand ParseStreamingThrottle(const std::vector<std::string>& args);
+
+    // Native toolchain commands (Self-hosting bootstrap)
+    static ParsedCommand ParseNativeCompile(const std::vector<std::string>& args);
+    static ParsedCommand ParseNativePatch(const std::vector<std::string>& args);
+    static ParsedCommand ParseNativeDisasm(const std::vector<std::string>& args);
 
 public:
     // Build deterministic job/task framework text from slash-command arguments.

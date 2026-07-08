@@ -1,0 +1,9 @@
+Smoke Test Results
+===================
+[PASS] universal_compiler_runtime.exe
+[PASS] bash_compiler_from_scratch.exe
+[PASS] powershell_compiler_from_scratch.exe
+[PASS] eon_bootstrap_compiler.exe
+[PASS] universal_cross_platform_compiler.exe
+[PASS] omega_pro.exe
+[PASS] omega_pro_v3.exe

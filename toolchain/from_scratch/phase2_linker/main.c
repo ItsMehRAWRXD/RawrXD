@@ -2,12 +2,15 @@
  * Phase 2 linker CLI — rawrxd_link obj1.obj [obj2.obj ...] -o out.exe
  * Consumes Phase 1 COFF; emits PE32+ with entry stub and kernel32!ExitProcess.
  * Uses section_merge (layout) and reloc_resolver (fixups) as separate units.
+ * 
+ * Phase 3 integration: Multi-import support via import_builder.
  */
 #include "coff_reader.h"
 #include "entry_stub.h"
 #include "pe_writer.h"
 #include "reloc_resolver.h"
 #include "section_merge.h"
+#include "import_builder.h"  /* Phase 3 integration */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -81,8 +84,32 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (section_merge_patch_stub(img, main_rva, IAT_EXITPROCESS_RVA) != 0) {
+    /* Phase 3 integration: Use import builder for multi-import support */
+    import_builder_t* ib = import_builder_new();
+    uint32_t iat_rva = IAT_EXITPROCESS_RVA;  /* Default fallback */
+    
+    if (ib) {
+        int dll_idx = import_builder_add_dll(ib, "kernel32.dll");
+        import_builder_add_func(ib, dll_idx, "ExitProcess", 0);
+        import_builder_add_func(ib, dll_idx, "GetStdHandle", 0);
+        import_builder_add_func(ib, dll_idx, "WriteFile", 0);
+        
+        /* Build .idata section at RVA 0x2000 */
+        if (import_builder_build(ib, IDATA_RVA) == 0) {
+            /* Get the IAT RVA for ExitProcess (first function in first DLL) */
+            if (ib->dll_count > 0) {
+                iat_rva = ib->dlls[0].iat_rva;  /* IAT RVA for first DLL */
+                fprintf(stderr, "DEBUG: Import builder: dll_count=%d, iat_rva=0x%X, idata_size=%u\n", 
+                        ib->dll_count, iat_rva, ib->idata_size);
+                fprintf(stderr, "DEBUG: First DLL: ilt_rva=0x%X, iat_rva=0x%X, func_count=%d\n",
+                        ib->dlls[0].ilt_rva, ib->dlls[0].iat_rva, ib->dlls[0].func_count);
+            }
+        }
+    }
+
+    if (section_merge_patch_stub(img, main_rva, iat_rva) != 0) {
         fprintf(stderr, "Stub patch failed\n");
+        if (ib) import_builder_free(ib);
         section_merge_destroy(img);
         for (int i = 0; i < num_objs; i++) coff_free(objs[i]);
         free(objs);
@@ -90,8 +117,11 @@ int main(int argc, char** argv) {
     }
 
     uint32_t __main_rva = img->entry_point_rva + ENTRY_STUB_RET_OFFSET;
-    if (reloc_resolver_apply(img->text.data, img->text.rva, img->obj_text_offsets, objs, num_objs, main_rva, __main_rva) != 0) {
+    
+    /* Phase 3: Pass import builder to relocation resolver */
+    if (reloc_resolver_apply(img->text.data, img->text.rva, img->obj_text_offsets, objs, num_objs, main_rva, __main_rva, ib) != 0) {
         fprintf(stderr, "Relocation resolution failed (undefined symbol)\n");
+        if (ib) import_builder_free(ib);
         section_merge_destroy(img);
         for (int i = 0; i < num_objs; i++) coff_free(objs[i]);
         free(objs);
@@ -100,6 +130,7 @@ int main(int argc, char** argv) {
 
     PeWriter* pw = pe_writer_create();
     if (!pw) {
+        if (ib) import_builder_free(ib);
         section_merge_destroy(img);
         for (int i = 0; i < num_objs; i++) coff_free(objs[i]);
         free(objs);
@@ -107,7 +138,15 @@ int main(int argc, char** argv) {
     }
     pe_writer_set_entry(pw, 0);
     pe_writer_add_text(pw, img->text.data, (uint32_t)img->text.size);
-    pe_writer_set_import(pw, "kernel32.dll", "ExitProcess");
+    
+    /* Phase 3 integration: Add .idata section from import builder */
+    if (ib && ib->idata && ib->idata_size > 0) {
+        pe_writer_add_idata(pw, ib->idata, ib->idata_size);
+        /* Set IAT RVA for DataDirectory[12] */
+        if (ib->dll_count > 0) {
+            pe_writer_set_iat_rva(pw, ib->dlls[0].iat_rva, (uint32_t)(ib->dlls[0].func_count + 1) * 8);
+        }
+    }
 
     uint8_t* pe_buf = NULL;
     uint32_t pe_size = pe_writer_emit(pw, &pe_buf);

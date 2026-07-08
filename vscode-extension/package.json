@@ -197,6 +197,66 @@
         "title": "Restart Language Server",
         "category": "RawrXD-Script",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "rawrxd.build",
+        "title": "Build with Native Toolchain",
+        "category": "RawrXD",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "rawrxd.run",
+        "title": "Run Executable",
+        "category": "RawrXD",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rawrxd.debug",
+        "title": "Debug Executable",
+        "category": "RawrXD",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "rawrxd.clean",
+        "title": "Clean Build Output",
+        "category": "RawrXD",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "rawrxd.debug.continue",
+        "title": "Continue",
+        "category": "RawrXD Debug",
+        "icon": "$(debug-continue)"
+      },
+      {
+        "command": "rawrxd.debug.pause",
+        "title": "Pause",
+        "category": "RawrXD Debug",
+        "icon": "$(debug-pause)"
+      },
+      {
+        "command": "rawrxd.debug.stepIn",
+        "title": "Step In",
+        "category": "RawrXD Debug",
+        "icon": "$(debug-step-into)"
+      },
+      {
+        "command": "rawrxd.debug.stepOver",
+        "title": "Step Over",
+        "category": "RawrXD Debug",
+        "icon": "$(debug-step-over)"
+      },
+      {
+        "command": "rawrxd.debug.stepOut",
+        "title": "Step Out",
+        "category": "RawrXD Debug",
+        "icon": "$(debug-step-out)"
+      },
+      {
+        "command": "rawrxd.debug.stop",
+        "title": "Stop Debugging",
+        "category": "RawrXD Debug",
+        "icon": "$(debug-stop)"
       }
     ],
     "menus": {
@@ -360,6 +420,59 @@
             "program": "${workspaceFolder}/main.rxs",
             "stopOnEntry": true,
             "goldenMaster": true
+          }
+        ]
+      },
+      {
+        "type": "rawrxd",
+        "label": "RawrXD Native",
+        "program": "./out/debugAdapter.js",
+        "runtime": "node",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to the executable to debug",
+                "default": "${workspaceFolder}/main.exe"
+              },
+              "args": {
+                "type": "array",
+                "description": "Command line arguments passed to the program",
+                "default": [],
+                "items": {
+                  "type": "string"
+                }
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory for the program",
+                "default": "${workspaceFolder}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Automatically stop after launch",
+                "default": false
+              },
+              "trace": {
+                "type": "boolean",
+                "description": "Enable logging of the Debug Adapter Protocol",
+                "default": false
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "rawrxd",
+            "request": "launch",
+            "name": "Debug RawrXD Native",
+            "program": "${workspaceFolder}/main.exe",
+            "stopOnEntry": false,
+            "trace": false
           }
         ]
       }

@@ -262,8 +262,8 @@ bool ChatWindow::CreateControls(HINSTANCE hInstance) {
     );
     
     // Set RichEdit options
-    SendMessage(m_hEditHistory, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
-    SendMessage(m_hEditHistory, EM_SETEVENTMASK, 0, ENM_LINK);
+    ::SendMessage(m_hEditHistory, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
+    ::SendMessage(m_hEditHistory, EM_SETEVENTMASK, 0, ENM_LINK);
     
     // Create input edit
     m_hEditInput = CreateWindowW(L"EDIT", L"",
@@ -321,13 +321,13 @@ bool ChatWindow::CreateControls(HINSTANCE hInstance) {
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
     
-    SendMessage(m_hComboModel, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessage(m_hEditHistory, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessage(m_hEditInput, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessage(m_hBtnSend, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessage(m_hBtnClear, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessage(m_hBtnCancel, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessage(m_hBtnRefresh, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessage(m_hComboModel, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessage(m_hEditHistory, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessage(m_hEditInput, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessage(m_hBtnSend, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessage(m_hBtnClear, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessage(m_hBtnCancel, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessage(m_hBtnRefresh, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     return true;
 }
@@ -603,8 +603,9 @@ void ChatWindow::GenerateResponse(const std::string& userMessage) {
                 }
             };
         
-        // Send request
-        m_ollamaClient->chat(req, onChunk, onError, onComplete);
+            // Send request
+            m_ollamaClient->chat(req, onChunk, onError, onComplete);
+        }
     });
     
     m_generationThread.detach();
@@ -685,10 +686,10 @@ void ChatWindow::FormatAndDisplayMessages() {
     SETTEXTEX stex = {};
     stex.codepage = 1200; // Unicode
     stex.flags = ST_SELECTION;
-    SendMessage(m_hEditHistory, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)rtf.c_str());
+    ::SendMessage(m_hEditHistory, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)rtf.c_str());
     
     // Scroll to bottom
-    SendMessage(m_hEditHistory, EM_SCROLLCARET, 0, 0);
+    ::SendMessage(m_hEditHistory, EM_SCROLLCARET, 0, 0);
 }
 
 void ChatWindow::AppendMessageToDisplay(const ChatMessage& msg) {
@@ -699,14 +700,14 @@ void ChatWindow::AppendMessageToDisplay(const ChatMessage& msg) {
 std::string ChatWindow::GetSelectedModel() const {
     if (!m_hComboModel) return "";
     
-    int sel = (int)SendMessage(m_hComboModel, CB_GETCURSEL, 0, 0);
+    int sel = (int)::SendMessage(m_hComboModel, CB_GETCURSEL, 0, 0);
     if (sel == CB_ERR) return "";
     
-    int len = (int)SendMessage(m_hComboModel, CB_GETLBTEXTLEN, sel, 0);
+    int len = (int)::SendMessage(m_hComboModel, CB_GETLBTEXTLEN, sel, 0);
     if (len == CB_ERR) return "";
     
     std::wstring wtext(len + 1, L'\0');
-    SendMessage(m_hComboModel, CB_GETLBTEXT, sel, (LPARAM)&wtext[0]);
+    ::SendMessage(m_hComboModel, CB_GETLBTEXT, sel, (LPARAM)&wtext[0]);
     wtext.resize(len);
     
     // Convert to UTF-8
@@ -726,15 +727,15 @@ void ChatWindow::SetSelectedModel(const std::string& model) {
     MultiByteToWideChar(CP_UTF8, 0, model.c_str(), -1, &wmodel[0], wlen);
     
     // Find and select
-    int count = (int)SendMessage(m_hComboModel, CB_GETCOUNT, 0, 0);
+    int count = (int)::SendMessage(m_hComboModel, CB_GETCOUNT, 0, 0);
     for (int i = 0; i < count; i++) {
-        int len = (int)SendMessage(m_hComboModel, CB_GETLBTEXTLEN, i, 0);
+        int len = (int)::SendMessage(m_hComboModel, CB_GETLBTEXTLEN, i, 0);
         std::wstring item(len + 1, L'\0');
-        SendMessage(m_hComboModel, CB_GETLBTEXT, i, (LPARAM)&item[0]);
+        ::SendMessage(m_hComboModel, CB_GETLBTEXT, i, (LPARAM)&item[0]);
         item.resize(len);
         
         if (item == wmodel) {
-            SendMessage(m_hComboModel, CB_SETCURSEL, i, 0);
+            ::SendMessage(m_hComboModel, CB_SETCURSEL, i, 0);
             return;
         }
     }

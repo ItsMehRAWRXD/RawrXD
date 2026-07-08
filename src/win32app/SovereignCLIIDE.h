@@ -26,6 +26,7 @@
 #include <mutex>
 #include <deque>
 #include <atomic>
+#include <unordered_map>
 
 // Forward declarations
 class Win32TerminalManager;
@@ -62,6 +63,10 @@ public:
     // Command execution
     CommandResult executeCommand(const std::string& command);
     void executeCommandAsync(const std::string& command, CompletionCallback callback = nullptr);
+    
+    // Custom command registration
+    using CommandHandler = std::function<CommandResult(const std::string& args)>;
+    void RegisterCommand(const std::string& name, CommandHandler handler);
     
     // Agentic execution helpers
     CommandResult executeInference(const std::string& prompt);
@@ -129,6 +134,9 @@ private:
     // Callbacks
     OutputCallback m_outputCallback;
     ErrorCallback m_errorCallback;
+    
+    // Custom commands
+    std::unordered_map<std::string, CommandHandler> m_customCommands;
     
     mutable std::mutex m_mutex;
 };

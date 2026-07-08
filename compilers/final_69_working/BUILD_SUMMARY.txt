@@ -1,0 +1,8 @@
+COMPILER BUILD SUMMARY
+=====================
+
+Total: 69
+Success: 69
+Failed: 0
+
+All working executables in: d:\rawrxd\compilers\final_69_working

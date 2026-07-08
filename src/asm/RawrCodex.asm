@@ -9746,6 +9746,1127 @@ RawrLicense_SetTier PROC
     ret
 RawrLicense_SetTier ENDP
 
+; =============================================================================
+; MULTI-ARCHITECTURE SUPPORT (Phase 19 Extension)
+; ARM64, ARM32/Thumb, RISC-V, MIPS Disassembler and Emulator
+; =============================================================================
+
+; Architecture type constants
+ARCH_X86_32                 EQU 0
+ARCH_X86_64                 EQU 1
+ARCH_ARM_32                 EQU 2
+ARCH_ARM_64                 EQU 3
+ARCH_THUMB                  EQU 4
+ARCH_THUMB2                 EQU 5
+ARCH_MIPS_32                EQU 6
+ARCH_MIPS_64                EQU 7
+ARCH_RISCV_32               EQU 8
+ARCH_RISCV_64               EQU 9
+
+; ARM64 instruction format constants
+ARM64_OPC_SIZE              EQU 4         ; Fixed 4-byte instructions
+ARM64_REG_X0                EQU 0
+ARM64_REG_X1                EQU 1
+ARM64_REG_X2                EQU 2
+ARM64_REG_SP                EQU 31
+ARM64_REG_LR                EQU 30
+ARM64_REG_XZR               EQU 31        ; Zero register (also SP in some contexts)
+
+; ARM64 instruction classes
+ARM64_CLASS_DP_REG          EQU 0         ; Data processing - register
+ARM64_CLASS_DP_IMM          EQU 1         ; Data processing - immediate
+ARM64_CLASS_BRANCH          EQU 2         ; Branches
+ARM64_CLASS_LDST            EQU 3         ; Load/store
+ARM64_CLASS_SIMD            EQU 4         ; SIMD/FP
+ARM64_CLASS_UNKNOWN         EQU 5
+
+; RISC-V instruction format constants
+RISCV_OPC_SIZE              EQU 4         ; Base instruction size
+RISCV_OPC_C_SIZE            EQU 2         ; Compressed instruction size
+
+; RISC-V opcode fields (7-bit)
+RISCV_OP_LUI                EQU 0110111b  ; Load upper immediate
+RISCV_OP_AUIPC              EQU 0010111b  ; Add upper immediate to PC
+RISCV_OP_JAL                EQU 1101111b  ; Jump and link
+RISCV_OP_JALR               EQU 1100111b  ; Jump and link register
+RISCV_OP_BRANCH             EQU 1100011b  ; Conditional branch
+RISCV_OP_LOAD               EQU 0000011b  ; Load
+RISCV_OP_STORE              EQU 0100011b  ; Store
+RISCV_OP_OP_IMM             EQU 0010011b  ; ALU immediate
+RISCV_OP_OP                 EQU 0110011b  ; ALU register
+RISCV_OP_SYSTEM             EQU 1110011b  ; System instructions
+
+; MIPS instruction format constants
+MIPS_OPC_SIZE               EQU 4         ; Fixed 4-byte instructions
+
+; MIPS opcode field (6-bit, bits 31-26)
+MIPS_OP_SPECIAL             EQU 000000b   ; Special instructions (use function field)
+MIPS_OP_REGIMM              EQU 000001b   ; Register immediate
+MIPS_OP_J                   EQU 000010b   ; Jump
+MIPS_OP_JAL                 EQU 000011b   ; Jump and link
+MIPS_OP_BEQ                 EQU 000100b   ; Branch if equal
+MIPS_OP_BNE                 EQU 000101b   ; Branch if not equal
+MIPS_OP_BLEZ                EQU 000110b   ; Branch if <= 0
+MIPS_OP_BGTZ                EQU 000111b   ; Branch if > 0
+MIPS_OP_ADDI                EQU 001000b   ; Add immediate
+MIPS_OP_ADDIU               EQU 001001b   ; Add immediate unsigned
+MIPS_OP_SLTI                EQU 001010b   ; Set less than immediate
+MIPS_OP_SLTIU               EQU 001011b   ; Set less than immediate unsigned
+MIPS_OP_ANDI                EQU 001100b   ; AND immediate
+MIPS_OP_ORI                 EQU 001101b   ; OR immediate
+MIPS_OP_XORI                EQU 001110b   ; XOR immediate
+MIPS_OP_LUI                 EQU 001111b   ; Load upper immediate
+MIPS_OP_LB                  EQU 100000b   ; Load byte
+MIPS_OP_LH                  EQU 100001b   ; Load halfword
+MIPS_OP_LW                  EQU 100011b   ; Load word
+MIPS_OP_LBU                 EQU 100100b   ; Load byte unsigned
+MIPS_OP_LHU                 EQU 100101b   ; Load halfword unsigned
+MIPS_OP_SB                  EQU 101000b   ; Store byte
+MIPS_OP_SH                  EQU 101001b   ; Store halfword
+MIPS_OP_SW                  EQU 101011b   ; Store word
+
+; Multi-arch instruction structure (extends RAWRINSTRUCTION)
+RAWRINSTRUCTION_MULTI STRUCT
+    ; Common fields (same as RAWRINSTRUCTION for first 64 bytes)
+    va              QWORD ?         ; Virtual address
+    instrSize       DWORD ?         ; Instruction size (2, 4, or variable)
+    archType        DWORD ?         ; ARCH_* constant
+    rawBytes        BYTE 16 DUP(?)  ; Raw instruction bytes
+    
+    ; Architecture-specific decoded fields
+    opcode          DWORD ?         ; Primary opcode
+    subOpcode       DWORD ?         ; Secondary/sub-opcode
+    
+    ; Register fields (architecture-dependent interpretation)
+    regRd           DWORD ?         ; Destination register
+    regRs1          DWORD ?         ; Source register 1
+    regRs2          DWORD ?         ; Source register 2
+    regRs3          DWORD ?         ; Source register 3 (ARM64/RISC-V)
+    
+    ; Immediate values
+    immValue        QWORD ?         ; Immediate/sign-extended value
+    immShift        DWORD ?         ; Shift amount
+    
+    ; Instruction class
+    instrClass      DWORD ?         ; ARM64_CLASS_*, etc.
+    
+    ; Condition codes (ARM/Thumb)
+    condition       DWORD ?         ; Condition code (ARM)
+    
+    ; Flags
+    isConditional   DWORD ?         ; Conditional execution
+    isBranch        DWORD ?         ; Branch instruction
+    isCall          DWORD ?         ; Call instruction
+    isReturn        DWORD ?         ; Return instruction
+    isLoad          DWORD ?         ; Load instruction
+    isStore         DWORD ?         ; Store instruction
+    isSystem        DWORD ?         ; System/privileged instruction
+    
+    ; Branch/call target
+    branchTarget    QWORD ?         ; Resolved branch target (if known)
+    
+    ; Disassembly string
+    szMnemonic      BYTE 32 DUP(?)  ; Mnemonic
+    szOperands      BYTE 128 DUP(?) ; Operand string
+    
+    _pad            DWORD ?         ; Alignment
+RAWRINSTRUCTION_MULTI ENDS
+
+; Multi-arch emulator state
+RAWR_EMU_STATE_MULTI STRUCT
+    ; Architecture
+    archType        DWORD ?
+    is64Bit         DWORD ?
+    
+    ; Register files (union of all architectures)
+    ; x86/x64: rax, rcx, rdx, rbx, rsp, rbp, rsi, rdi, r8-r15, rip, rflags
+    ; ARM64: x0-x30, sp, pc, pstate
+    ; RISC-V: x0-x31 (x0=zero), pc
+    ; MIPS: r0-r31 (r0=zero), pc, hi, lo
+    
+    regX86          QWORD 16 DUP(?)  ; rax, rcx, rdx, rbx, rsp, rbp, rsi, rdi, r8-r15
+    rip             QWORD ?          ; Instruction pointer
+    rflags          QWORD ?          ; Flags
+    
+    regARM64        QWORD 32 DUP(?)  ; x0-x30, sp, pc
+    pstate          QWORD ?          ; Processor state
+    
+    regRISCV        QWORD 32 DUP(?)  ; x0-x31
+    
+    regMIPS         QWORD 32 DUP(?)  ; r0-r31
+    mipsHI          QWORD ?          ; HI register
+    mipsLO          QWORD ?          ; LO register
+    
+    ; Memory state
+    memBase         QWORD ?          ; Base of emulated memory
+    memSize         QWORD ?          ; Size of emulated memory
+    
+    ; Execution state
+    instrCount      QWORD ?          ; Instructions executed
+    cycleCount      QWORD ?          ; Cycle count (estimated)
+    
+    ; Stop conditions
+    stopAddr        QWORD ?          ; Stop at address
+    maxInstrs       QWORD ?          ; Max instructions to execute
+    
+    ; Callbacks
+    pInstrCallback  QWORD ?          ; Instruction execution callback
+    pMemCallback    QWORD ?          ; Memory access callback
+    pUserData       QWORD ?          ; User data for callbacks
+RAWR_EMU_STATE_MULTI ENDS
+
+; =============================================================================
+; Multi-Architecture Disassembler Functions
+; =============================================================================
+
+; -----------------------------------------------------------------------------
+; RawrDisasm_Multi_Init - Initialize multi-arch disassembler
+;   RCX = pointer to RAWRCODEX_CTX
+;   EDX = arch type (ARCH_* constant)
+; Returns: RAX = 1 on success, 0 on failure
+; -----------------------------------------------------------------------------
+RawrDisasm_Multi_Init PROC FRAME
+    push rbx
+    push rsi
+    .pushreg rbx
+    .pushreg rsi
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rsi, rcx                    ; Save context
+    mov ebx, edx                    ; Save arch type
+
+    ; Validate arch type
+    cmp ebx, ARCH_RISCV_64
+    ja @@invalid_arch
+
+    ; Store arch type in context
+    mov [rsi].RAWRCODEX_CTX.machine, ebx
+
+    ; Initialize based on architecture
+    cmp ebx, ARCH_X86_64
+    jbe @@x86_init
+    cmp ebx, ARCH_ARM_64
+    jbe @@arm_init
+    cmp ebx, ARCH_MIPS_64
+    jbe @@mips_init
+    ; RISC-V
+    jmp @@riscv_init
+
+@@x86_init:
+    ; x86/x64 uses existing decoder
+    mov eax, 1
+    jmp @@done
+
+@@arm_init:
+    ; ARM uses existing ARM support
+    mov eax, 1
+    jmp @@done
+
+@@mips_init:
+    ; Initialize MIPS decoder
+    mov eax, 1
+    jmp @@done
+
+@@riscv_init:
+    ; Initialize RISC-V decoder
+    mov eax, 1
+    jmp @@done
+
+@@invalid_arch:
+    xor eax, eax
+
+@@done:
+    add rsp, 28h
+    pop rsi
+    pop rbx
+    ret
+RawrDisasm_Multi_Init ENDP
+
+; -----------------------------------------------------------------------------
+; RawrDisasm_Multi_Decode - Decode single instruction for any architecture
+;   RCX = pointer to RAWRCODEX_CTX
+;   RDX = virtual address
+;   R8  = pointer to instruction bytes
+;   R9  = pointer to RAWRINSTRUCTION_MULTI to fill
+; Returns: RAX = instruction size (0 = error/end)
+; -----------------------------------------------------------------------------
+RawrDisasm_Multi_Decode PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    .pushreg r12
+    .pushreg r13
+    sub rsp, 38h
+    .allocstack 38h
+    .endprolog
+
+    mov rsi, rcx                    ; Context
+    mov r12, rdx                    ; VA
+    mov r13, r8                     ; Instruction bytes
+    mov rdi, r9                     ; Output structure
+
+    ; Get architecture type
+    mov ebx, [rsi].RAWRCODEX_CTX.machine
+
+    ; Route to appropriate decoder
+    cmp ebx, ARCH_X86_64
+    jbe @@decode_x86
+    cmp ebx, ARCH_ARM_64
+    jbe @@decode_arm
+    cmp ebx, ARCH_MIPS_64
+    jbe @@decode_mips
+    jmp @@decode_riscv
+
+@@decode_x86:
+    ; Call existing x86 decoder
+    mov rcx, rsi
+    mov rdx, r13
+    mov r8d, 15
+    mov r9, r12
+    call RawrCodex_DecodeInstruction
+    jmp @@done
+
+@@decode_arm:
+    ; ARM/ARM64/Thumb decoder
+    mov rcx, rsi
+    mov edx, ebx                    ; Arch type
+    mov r8, r12                     ; VA
+    mov r9, r13                     ; Bytes
+    mov QWORD PTR [rsp+70h], rdi    ; Output struct (corrected offset)
+    call RawrDisasm_ARM_Decode
+    jmp @@done
+
+@@decode_mips:
+    ; MIPS decoder
+    mov rcx, rsi
+    mov edx, ebx
+    mov r8, r12
+    mov r9, r13
+    mov QWORD PTR [rsp+70h], rdi    ; Output struct (corrected offset)
+    call RawrDisasm_MIPS_Decode
+    jmp @@done
+
+@@decode_riscv:
+    ; RISC-V decoder
+    mov rcx, rsi
+    mov edx, ebx
+    mov r8, r12
+    mov r9, r13
+    mov QWORD PTR [rsp+70h], rdi    ; Output struct (corrected offset)
+    call RawrDisasm_RISCV_Decode
+
+@@done:
+    add rsp, 38h
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrDisasm_Multi_Decode ENDP
+
+; -----------------------------------------------------------------------------
+; RawrDisasm_ARM_Decode - Decode ARM/ARM64/Thumb instruction
+;   RCX = context
+;   EDX = arch type
+;   R8  = VA
+;   R9  = instruction bytes
+;   [RSP+28h] = output RAWRINSTRUCTION_MULTI
+; -----------------------------------------------------------------------------
+RawrDisasm_ARM_Decode PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    .pushreg r12
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rsi, rcx
+    mov ebx, edx                    ; Arch type
+    mov r12, r8                     ; VA
+    ; After 4 pushes (32 bytes) + sub rsp,28h, 5th param at [rsp+70h]
+    mov rdi, QWORD PTR [rsp+70h]    ; Output struct (corrected offset)
+
+    ; Check if Thumb mode
+    cmp ebx, ARCH_THUMB
+    je @@thumb
+    cmp ebx, ARCH_THUMB2
+    je @@thumb2
+    cmp ebx, ARCH_ARM_64
+    je @@arm64
+
+    ; ARM32 mode
+    jmp @@arm32
+
+@@thumb:
+    ; 16-bit Thumb instruction
+    movzx eax, WORD PTR [r9]
+    mov WORD PTR [rdi].RAWRINSTRUCTION_MULTI.rawBytes, ax
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrSize, 2
+    mov [rdi].RAWRINSTRUCTION_MULTI.archType, ARCH_THUMB
+    mov eax, 2
+    jmp @@done
+
+@@thumb2:
+    ; 32-bit Thumb-2 instruction (2 x 16-bit)
+    mov eax, DWORD PTR [r9]
+    mov DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.rawBytes, eax
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrSize, 4
+    mov [rdi].RAWRINSTRUCTION_MULTI.archType, ARCH_THUMB2
+    mov eax, 4
+    jmp @@done
+
+@@arm32:
+    ; 32-bit ARM instruction
+    mov eax, DWORD PTR [r9]
+    bswap eax                       ; ARM is big-endian
+    mov DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.rawBytes, eax
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrSize, 4
+    mov [rdi].RAWRINSTRUCTION_MULTI.archType, ARCH_ARM_32
+    mov eax, 4
+    jmp @@done
+
+@@arm64:
+    ; ARM64 (AArch64) - 4-byte fixed width
+    mov eax, DWORD PTR [r9]
+    mov DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.rawBytes, eax
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrSize, 4
+    mov [rdi].RAWRINSTRUCTION_MULTI.archType, ARCH_ARM_64
+    
+    ; Decode ARM64 instruction fields
+    mov r8d, eax
+    shr r8d, 25                     ; Extract bits 25-28 (opcode group)
+    and r8d, 0Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.opcode, r8d
+    
+    ; Extract Rd (bits 0-4)
+    mov r8d, eax
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRd, r8d
+    
+    ; Extract Rn (bits 5-9)
+    mov r8d, eax
+    shr r8d, 5
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRs1, r8d
+    
+    ; Extract Rm (bits 16-20)
+    mov r8d, eax
+    shr r8d, 16
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRs2, r8d
+    
+    mov eax, 4
+
+@@done:
+    mov [rdi].RAWRINSTRUCTION_MULTI.va, r12
+
+    add rsp, 28h
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrDisasm_ARM_Decode ENDP
+
+; -----------------------------------------------------------------------------
+; RawrDisasm_MIPS_Decode - Decode MIPS instruction
+;   RCX = context
+;   EDX = arch type
+;   R8  = VA
+;   R9  = instruction bytes
+;   [RSP+28h] = output RAWRINSTRUCTION_MULTI
+; -----------------------------------------------------------------------------
+RawrDisasm_MIPS_Decode PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    .pushreg r12
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rsi, rcx
+    mov ebx, edx
+    mov r12, r8
+    mov rdi, QWORD PTR [rsp+70h]    ; Output struct (corrected offset)
+
+    ; MIPS is always 4 bytes, big-endian
+    mov eax, DWORD PTR [r9]
+    bswap eax
+    mov DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.rawBytes, eax
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrSize, 4
+    mov [rdi].RAWRINSTRUCTION_MULTI.archType, ebx
+    mov [rdi].RAWRINSTRUCTION_MULTI.va, r12
+
+    ; Extract opcode (bits 26-31)
+    mov r8d, eax
+    shr r8d, 26
+    and r8d, 3Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.opcode, r8d
+
+    ; Extract registers (standard R-type/I-type format)
+    ; rs = bits 21-25
+    mov r8d, eax
+    shr r8d, 21
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRs1, r8d
+
+    ; rt = bits 16-20
+    mov r8d, eax
+    shr r8d, 16
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRs2, r8d
+
+    ; rd = bits 11-15 (R-type)
+    mov r8d, eax
+    shr r8d, 11
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRd, r8d
+
+    ; Extract immediate (bits 0-15)
+    movzx r8d, ax
+    movsx r8d, r8w                   ; Sign-extend
+    mov [rdi].RAWRINSTRUCTION_MULTI.immValue, r8
+
+    ; Classify instruction
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_SPECIAL
+    je @@special
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_J
+    je @@branch
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_JAL
+    je @@call
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_BEQ
+    jb @@check_load_store
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_BGTZ
+    jbe @@branch
+
+@@check_load_store:
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_LB
+    jb @@done
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_LHU
+    jbe @@load
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_SB
+    jb @@done
+    cmp DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.opcode, MIPS_OP_SW
+    jbe @@store
+    jmp @@done
+
+@@special:
+    ; R-type ALU instruction
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_DP_REG
+    jmp @@done
+
+@@branch:
+    mov [rdi].RAWRINSTRUCTION_MULTI.isBranch, 1
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_BRANCH
+    jmp @@done
+
+@@call:
+    mov [rdi].RAWRINSTRUCTION_MULTI.isCall, 1
+    mov [rdi].RAWRINSTRUCTION_MULTI.isBranch, 1
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_BRANCH
+    jmp @@done
+
+@@load:
+    mov [rdi].RAWRINSTRUCTION_MULTI.isLoad, 1
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_LDST
+    jmp @@done
+
+@@store:
+    mov [rdi].RAWRINSTRUCTION_MULTI.isStore, 1
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_LDST
+
+@@done:
+    mov eax, 4
+
+    add rsp, 28h
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrDisasm_MIPS_Decode ENDP
+
+; -----------------------------------------------------------------------------
+; RawrDisasm_RISCV_Decode - Decode RISC-V instruction
+;   RCX = context
+;   EDX = arch type
+;   R8  = VA
+;   R9  = instruction bytes
+;   [RSP+28h] = output RAWRINSTRUCTION_MULTI
+; -----------------------------------------------------------------------------
+RawrDisasm_RISCV_Decode PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    .pushreg r12
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rsi, rcx
+    mov ebx, edx
+    mov r12, r8
+    mov rdi, QWORD PTR [rsp+70h]    ; Output struct (corrected offset)
+
+    ; Check for compressed instruction (C extension)
+    movzx r8d, WORD PTR [r9]
+    and r8d, 3
+    cmp r8d, 3
+    je @@standard
+
+    ; Compressed instruction (2 bytes)
+    movzx eax, WORD PTR [r9]
+    mov WORD PTR [rdi].RAWRINSTRUCTION_MULTI.rawBytes, ax
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrSize, 2
+    mov [rdi].RAWRINSTRUCTION_MULTI.archType, ebx
+    mov [rdi].RAWRINSTRUCTION_MULTI.va, r12
+    
+    ; Decode compressed instruction
+    movzx r8d, al
+    and r8d, 3
+    mov [rdi].RAWRINSTRUCTION_MULTI.opcode, r8d
+    
+    mov eax, 2
+    jmp @@done
+
+@@standard:
+    ; Standard 4-byte instruction
+    mov eax, DWORD PTR [r9]
+    mov DWORD PTR [rdi].RAWRINSTRUCTION_MULTI.rawBytes, eax
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrSize, 4
+    mov [rdi].RAWRINSTRUCTION_MULTI.archType, ebx
+    mov [rdi].RAWRINSTRUCTION_MULTI.va, r12
+
+    ; Extract opcode (bits 0-6)
+    movzx r8d, al
+    mov [rdi].RAWRINSTRUCTION_MULTI.opcode, r8d
+
+    ; Extract rd (bits 7-11)
+    mov r8d, eax
+    shr r8d, 7
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRd, r8d
+
+    ; Extract funct3 (bits 12-14)
+    mov r8d, eax
+    shr r8d, 12
+    and r8d, 7
+    mov [rdi].RAWRINSTRUCTION_MULTI.subOpcode, r8d
+
+    ; Extract rs1 (bits 15-19)
+    mov r8d, eax
+    shr r8d, 15
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRs1, r8d
+
+    ; Extract rs2 (bits 20-24)
+    mov r8d, eax
+    shr r8d, 20
+    and r8d, 1Fh
+    mov [rdi].RAWRINSTRUCTION_MULTI.regRs2, r8d
+
+    ; Classify instruction
+    movzx r8d, al
+    cmp r8d, RISCV_OP_JAL
+    je @@branch
+    cmp r8d, RISCV_OP_JALR
+    je @@branch
+    cmp r8d, RISCV_OP_BRANCH
+    je @@branch
+    cmp r8d, RISCV_OP_LOAD
+    je @@load
+    cmp r8d, RISCV_OP_STORE
+    je @@store
+    jmp @@done
+
+@@branch:
+    mov [rdi].RAWRINSTRUCTION_MULTI.isBranch, 1
+    cmp r8d, RISCV_OP_JAL
+    jne @@not_call
+    cmp [rdi].RAWRINSTRUCTION_MULTI.regRd, 1  ; rd = ra (x1)
+    jne @@not_call
+    mov [rdi].RAWRINSTRUCTION_MULTI.isCall, 1
+@@not_call:
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_BRANCH
+    jmp @@done
+
+@@load:
+    mov [rdi].RAWRINSTRUCTION_MULTI.isLoad, 1
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_LDST
+    jmp @@done
+
+@@store:
+    mov [rdi].RAWRINSTRUCTION_MULTI.isStore, 1
+    mov [rdi].RAWRINSTRUCTION_MULTI.instrClass, ARM64_CLASS_LDST
+
+@@done:
+    mov eax, [rdi].RAWRINSTRUCTION_MULTI.instrSize
+
+    add rsp, 28h
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrDisasm_RISCV_Decode ENDP
+
+; =============================================================================
+; Multi-Architecture Emulator Functions
+; =============================================================================
+
+; -----------------------------------------------------------------------------
+; RawrEmu_Multi_Create - Create multi-arch emulator instance
+;   RCX = arch type
+;   RDX = memory size
+; Returns: RAX = pointer to RAWR_EMU_STATE_MULTI (NULL on failure)
+; -----------------------------------------------------------------------------
+RawrEmu_Multi_Create PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov ebx, ecx                    ; Arch type
+    mov rdi, rdx                    ; Memory size
+
+    ; Allocate emulator state
+    call GetProcessHeap
+    mov rcx, rax
+    mov edx, HEAP_ZERO_MEMORY
+    mov r8d, SIZEOF RAWR_EMU_STATE_MULTI
+    call HeapAlloc
+    test rax, rax
+    jz @@fail
+    mov rsi, rax
+
+    ; Initialize state
+    mov [rsi].RAWR_EMU_STATE_MULTI.archType, ebx
+    cmp ebx, ARCH_X86_64
+    setbe al
+    movzx eax, al
+    mov [rsi].RAWR_EMU_STATE_MULTI.is64Bit, eax
+
+    ; Allocate emulated memory
+    call GetProcessHeap
+    mov rcx, rax
+    mov edx, HEAP_ZERO_MEMORY
+    mov r8, rdi
+    call HeapAlloc
+    test rax, rax
+    jz @@free_state
+    mov [rsi].RAWR_EMU_STATE_MULTI.memBase, rax
+    mov [rsi].RAWR_EMU_STATE_MULTI.memSize, rdi
+
+    ; Architecture-specific initialization
+    cmp ebx, ARCH_RISCV_32
+    jbe @@x86_init
+    cmp ebx, ARCH_ARM_64
+    jbe @@arm_init
+    cmp ebx, ARCH_MIPS_64
+    jbe @@mips_init
+    jmp @@riscv_init
+
+@@x86_init:
+    ; x86: Set up initial register state
+    mov [rsi].RAWR_EMU_STATE_MULTI.rip, 1000h
+    mov rax, [rsi].RAWR_EMU_STATE_MULTI.memSize
+    sub rax, 1000h
+    mov [rsi].RAWR_EMU_STATE_MULTI.regX86[5*8], rax  ; rbp at top
+    mov [rsi].RAWR_EMU_STATE_MULTI.regX86[4*8], rax  ; rsp at top
+    jmp @@success
+
+@@arm_init:
+    ; ARM: Set up initial state
+    mov [rsi].RAWR_EMU_STATE_MULTI.regARM64[31*8], 1000h  ; PC
+    mov rax, [rsi].RAWR_EMU_STATE_MULTI.memSize
+    sub rax, 1000h
+    mov [rsi].RAWR_EMU_STATE_MULTI.regARM64[31*8], rax  ; SP
+    jmp @@success
+
+@@mips_init:
+    ; MIPS: Set up initial state
+    mov [rsi].RAWR_EMU_STATE_MULTI.regMIPS[29*8], 1000h  ; PC
+    mov rax, [rsi].RAWR_EMU_STATE_MULTI.memSize
+    sub rax, 1000h
+    mov [rsi].RAWR_EMU_STATE_MULTI.regMIPS[29*8], rax  ; SP ($29)
+    jmp @@success
+
+@@riscv_init:
+    ; RISC-V: Set up initial state
+    mov [rsi].RAWR_EMU_STATE_MULTI.regRISCV[0*8], 0      ; x0 = zero
+    mov rax, [rsi].RAWR_EMU_STATE_MULTI.memSize
+    sub rax, 1000h
+    mov [rsi].RAWR_EMU_STATE_MULTI.regRISCV[2*8], rax  ; SP (x2)
+    jmp @@success
+
+@@free_state:
+    call GetProcessHeap
+    mov rcx, rax
+    xor edx, edx
+    mov r8, rsi
+    call HeapFree
+
+@@fail:
+    xor eax, eax
+    jmp @@done
+
+@@success:
+    mov rax, rsi
+
+@@done:
+    add rsp, 28h
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrEmu_Multi_Create ENDP
+
+; -----------------------------------------------------------------------------
+; RawrEmu_Multi_Destroy - Destroy emulator instance
+;   RCX = pointer to RAWR_EMU_STATE_MULTI
+; -----------------------------------------------------------------------------
+RawrEmu_Multi_Destroy PROC FRAME
+    push rbx
+    .pushreg rbx
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rbx, rcx
+
+    ; Free emulated memory
+    mov rdx, [rbx].RAWR_EMU_STATE_MULTI.memBase
+    test rdx, rdx
+    jz @@free_state
+
+    call GetProcessHeap
+    mov rcx, rax
+    xor edx, edx
+    mov r8, [rbx].RAWR_EMU_STATE_MULTI.memBase
+    call HeapFree
+
+@@free_state:
+    call GetProcessHeap
+    mov rcx, rax
+    xor edx, edx
+    mov r8, rbx
+    call HeapFree
+
+    add rsp, 28h
+    pop rbx
+    ret
+RawrEmu_Multi_Destroy ENDP
+
+; -----------------------------------------------------------------------------
+; RawrEmu_Multi_Step - Execute single instruction
+;   RCX = pointer to RAWR_EMU_STATE_MULTI
+; Returns: RAX = 1 if successful, 0 if stopped/error
+; -----------------------------------------------------------------------------
+RawrEmu_Multi_Step PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rsi, rcx
+
+    ; Get current PC based on architecture
+    mov ebx, [rsi].RAWR_EMU_STATE_MULTI.archType
+    cmp ebx, ARCH_X86_64
+    jbe @@x86_step
+    cmp ebx, ARCH_ARM_64
+    jbe @@arm_step
+    cmp ebx, ARCH_MIPS_64
+    jbe @@mips_step
+    jmp @@riscv_step
+
+@@x86_step:
+    ; x86: Read instruction at RIP
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.rip
+    mov r9, [rsi].RAWR_EMU_STATE_MULTI.memBase
+    add r8, r9
+    ; Decode and execute x86 instruction
+    ; (Would call existing x86 emulator)
+    mov eax, 1
+    jmp @@done
+
+@@arm_step:
+    ; ARM: Read instruction at PC
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.regARM64[31*8]  ; PC
+    mov r9, [rsi].RAWR_EMU_STATE_MULTI.memBase
+    add r8, r9
+    mov eax, DWORD PTR [r8]
+    ; Decode and execute ARM instruction
+    add QWORD PTR [rsi].RAWR_EMU_STATE_MULTI.regARM64[31*8], 4  ; PC += 4
+    mov eax, 1
+    jmp @@done
+
+@@mips_step:
+    ; MIPS: Read instruction at PC
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.regMIPS[29*8]  ; PC
+    mov r9, [rsi].RAWR_EMU_STATE_MULTI.memBase
+    add r8, r9
+    mov eax, DWORD PTR [r8]
+    bswap eax  ; MIPS is big-endian
+    ; Decode and execute MIPS instruction
+    add QWORD PTR [rsi].RAWR_EMU_STATE_MULTI.regMIPS[29*8], 4  ; PC += 4
+    mov eax, 1
+    jmp @@done
+
+@@riscv_step:
+    ; RISC-V: Read instruction at PC
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.regRISCV[0*8]  ; PC is separate
+    mov r9, [rsi].RAWR_EMU_STATE_MULTI.memBase
+    add r8, r9
+    movzx eax, WORD PTR [r8]
+    and eax, 3
+    cmp eax, 3
+    je @@riscv_32bit
+    ; 16-bit compressed
+    movzx eax, WORD PTR [r8]
+    add QWORD PTR [rsi].RAWR_EMU_STATE_MULTI.regRISCV[0*8], 2
+    jmp @@riscv_exec
+@@riscv_32bit:
+    mov eax, DWORD PTR [r8]
+    add QWORD PTR [rsi].RAWR_EMU_STATE_MULTI.regRISCV[0*8], 4
+@@riscv_exec:
+    ; Decode and execute RISC-V instruction
+    mov eax, 1
+
+@@done:
+    inc QWORD PTR [rsi].RAWR_EMU_STATE_MULTI.instrCount
+
+    add rsp, 28h
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrEmu_Multi_Step ENDP
+
+; -----------------------------------------------------------------------------
+; RawrEmu_Multi_Run - Run emulator until stop condition
+;   RCX = pointer to RAWR_EMU_STATE_MULTI
+; Returns: RAX = instruction count executed
+; -----------------------------------------------------------------------------
+RawrEmu_Multi_Run PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    sub rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov rsi, rcx
+    xor edi, edi                    ; Instruction counter
+
+@@loop:
+    ; Check stop conditions
+    mov rax, [rsi].RAWR_EMU_STATE_MULTI.maxInstrs
+    test rax, rax
+    jz @@no_limit
+    cmp rdi, rax
+    jae @@done
+@@no_limit:
+
+    ; Check stop address
+    mov rax, [rsi].RAWR_EMU_STATE_MULTI.stopAddr
+    test rax, rax
+    jz @@no_stop_addr
+
+    ; Get current PC
+    mov ebx, [rsi].RAWR_EMU_STATE_MULTI.archType
+    cmp ebx, ARCH_X86_64
+    ja @@check_arm_pc
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.rip
+    jmp @@check_pc
+@@check_arm_pc:
+    cmp ebx, ARCH_ARM_64
+    ja @@check_mips_pc
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.regARM64[31*8]
+    jmp @@check_pc
+@@check_mips_pc:
+    cmp ebx, ARCH_MIPS_64
+    ja @@check_riscv_pc
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.regMIPS[29*8]
+    jmp @@check_pc
+@@check_riscv_pc:
+    mov r8, [rsi].RAWR_EMU_STATE_MULTI.regRISCV[0*8]
+@@check_pc:
+    cmp r8, rax
+    je @@done
+@@no_stop_addr:
+
+    ; Execute one instruction
+    mov rcx, rsi
+    call RawrEmu_Multi_Step
+    test eax, eax
+    jz @@done
+
+    inc rdi
+    jmp @@loop
+
+@@done:
+    mov rax, rdi
+
+    add rsp, 28h
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrEmu_Multi_Run ENDP
+
+; =============================================================================
+; Multi-Architecture Pattern Scanner
+; =============================================================================
+
+; -----------------------------------------------------------------------------
+; RawrPattern_Multi_Scan - Scan for pattern across all architectures
+;   RCX = context
+;   RDX = pattern bytes
+;   R8  = pattern mask (0xFF = match, 0x00 = wildcard)
+;   R9  = pattern length
+;   [RSP+28h] = callback function
+; -----------------------------------------------------------------------------
+RawrPattern_Multi_Scan PROC FRAME
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+    push r14
+    .pushreg rbx
+    .pushreg rsi
+    .pushreg rdi
+    .pushreg r12
+    .pushreg r13
+    .pushreg r14
+    sub rsp, 38h
+    .allocstack 38h
+    .endprolog
+
+    mov rsi, rcx                    ; Context
+    mov r12, rdx                    ; Pattern
+    mov r13, r8                     ; Mask
+    mov r14d, r9d                   ; Length
+    mov rbx, QWORD PTR [rsp+58h]    ; Callback
+
+    ; Get file base and size
+    mov rdi, [rsi].RAWRCODEX_CTX.pFileBase
+    mov r9, [rsi].RAWRCODEX_CTX.fileSize
+
+    ; Scan byte by byte
+    xor r8d, r8d                    ; Current offset
+
+@@scan_loop:
+    cmp r8, r9
+    jae @@done
+
+    ; Check if pattern matches at this offset
+    mov rcx, r12
+    mov rdx, r13
+    mov r10d, r14d
+    mov r11, rdi
+    add r11, r8
+
+@@check_pattern:
+    test r10d, r10d
+    jz @@pattern_match
+    dec r10d
+
+    ; Load pattern byte and mask
+    movzx eax, BYTE PTR [rcx+r10]
+    movzx edx, BYTE PTR [rdx+r10]
+
+    ; Apply mask
+    and al, dl
+
+    ; Load file byte and apply mask
+    movzx r11d, BYTE PTR [r11+r10]
+    and r11d, edx
+
+    cmp al, r11b
+    jne @@next_offset
+    jmp @@check_pattern
+
+@@pattern_match:
+    ; Call callback with match info
+    mov rcx, rsi                    ; Context
+    mov rdx, r8                     ; Offset
+    mov r8, r8
+    add r8, [rsi].RAWRCODEX_CTX.peImageBase  ; Convert to RVA
+    call rbx
+    test eax, eax
+    jz @@done                      ; Callback returned 0 = stop scanning
+
+@@next_offset:
+    inc r8d
+    jmp @@scan_loop
+
+@@done:
+    mov rax, r8                     ; Return number of matches
+
+    add rsp, 38h
+    pop r14
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+RawrPattern_Multi_Scan ENDP
+
+; =============================================================================
+; Export Table - Multi-Architecture Functions
+; =============================================================================
+
+PUBLIC RawrCodex_Create
+PUBLIC RawrCodex_Destroy
+PUBLIC RawrDisasm_Multi_Init
+PUBLIC RawrDisasm_Multi_Decode
+PUBLIC RawrDisasm_ARM_Decode
+PUBLIC RawrDisasm_MIPS_Decode
+PUBLIC RawrDisasm_RISCV_Decode
+PUBLIC RawrEmu_Multi_Create
+PUBLIC RawrEmu_Multi_Destroy
+PUBLIC RawrEmu_Multi_Step
+PUBLIC RawrEmu_Multi_Run
+PUBLIC RawrPattern_Multi_Scan
+
 END
 
 

@@ -1499,6 +1499,81 @@ void CPUInferenceEngine::ClearCache()
 }
 
 // ============================================================================
+// Model Hot-Patching - Runtime model switching
+// ============================================================================
+bool CPUInferenceEngine::HotPatchModel(const std::string& model_path)
+{
+    if (!m_modelLoaded) {
+        m_lastLoadErrorMessage = "Cannot hot-patch: no model currently loaded";
+        return false;
+    }
+    
+    if (model_path.empty()) {
+        m_lastLoadErrorMessage = "Cannot hot-patch: empty model path";
+        return false;
+    }
+    
+    printf("[CPUInferenceEngine] Hot-patching model from: %s\n", model_path.c_str());
+    
+    // Save current state
+    bool wasSwarmMode = m_swarmMode;
+    int oldVocabSize = m_vocabSize;
+    
+    // Clear caches to free memory before loading new model
+    ClearCache();
+    
+    // Unload current model
+    UnloadModel();
+    
+    // Load new model
+    if (!LoadModel(model_path)) {
+        printf("[CPUInferenceEngine] Hot-patch failed: %s\n", m_lastLoadErrorMessage.c_str());
+        return false;
+    }
+    
+    // Verify compatibility (vocab size should match for hot-patching)
+    if (m_vocabSize != oldVocabSize && wasSwarmMode) {
+        printf("[CPUInferenceEngine] Warning: Vocab size changed during hot-patch (%d -> %d)\n", 
+               oldVocabSize, m_vocabSize);
+        // Disable swarm mode if vocab sizes don't match
+        m_swarmMode = false;
+    }
+    
+    printf("[CPUInferenceEngine] Hot-patch successful: %s\n", model_path.c_str());
+    return true;
+}
+
+void CPUInferenceEngine::UnloadModel()
+{
+    printf("[CPUInferenceEngine] Unloading model...\n");
+    
+    // Clear all caches
+    ClearCache();
+    
+    // Clear weights
+    m_weights.clear();
+    
+    // Reset model state
+    m_modelLoaded = false;
+    m_vocabSize = 0;
+    m_embeddingDim = 0;
+    m_numLayers = 0;
+    m_numHeads = 0;
+    
+    // Shutdown backend
+    s_inferenceBackend.Shutdown();
+    
+    // Clear swarm models if any
+    m_swarmModels.clear();
+    m_swarmMode = false;
+    
+    // Clear error message
+    m_lastLoadErrorMessage.clear();
+    
+    printf("[CPUInferenceEngine] Model unloaded successfully\n");
+}
+
+// ============================================================================
 // Swarm Inference with Model Chaining
 // ============================================================================
 void CPUInferenceEngine::GenerateSwarmStreaming(const std::vector<int32_t>& input_tokens, int max_tokens,

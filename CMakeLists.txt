@@ -229,7 +229,9 @@ if(RAWRXD_BUILD_CLI)
         src/cli/hotpatch_inference_integration.cpp
         src/cli/inference_worker_rcu.cpp
         src/cli/gguf_validator.cpp
+        src/cli/CLI_CompilerCommands.cpp
         src/gguf_loader.cpp
+        src/compiler/CompilerRegistry.cpp
         src/masm/cli_history.asm
         src/masm/RawrXD_PipeServer_v2.asm
         src/masm/rawrxd_hotpatch_router_simple.asm
@@ -2396,6 +2398,17 @@ if(MSVC)
         VERBATIM
     )
 
+    # Phase 45: RawrCodex Multi-Architecture Reference Decoder (ARM64, ARM32/Thumb, MIPS, RISC-V)
+    set(ASM_RAWRCODEX_MULTI_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex_Multi_Reference_v2.asm")
+    set(ASM_RAWRCODEX_MULTI_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrCodex_Multi_Reference_v2.obj")
+    add_custom_command(
+        OUTPUT ${ASM_RAWRCODEX_MULTI_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_RAWRCODEX_MULTI_OBJ} ${ASM_RAWRCODEX_MULTI_SRC}
+        DEPENDS ${ASM_RAWRCODEX_MULTI_SRC}
+        COMMENT "[MASM] Assembling RawrCodex_Multi_Reference_v2.asm (Multi-Arch Decoder: ARM64, ARM32, MIPS, RISC-V)"
+        VERBATIM
+    )
+
     # Phase 45: Debug Engine — Native Debugger Kernel (51KB, DynTrace symbolic resolution)
     set(ASM_DEBUG_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm")
     set(ASM_DEBUG_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Debug_Engine.obj")
@@ -2971,6 +2984,7 @@ if(MSVC)
         ${ASM_COT_PHASE39_OBJ}
         ${ASM_LSP_SYMINDEX_OBJ}
         ${ASM_RAWRCODEX_OBJ}
+        ${ASM_RAWRCODEX_MULTI_OBJ}
         ${ASM_DEBUG_ENGINE_OBJ}
         ${ASM_QUADBUFFER_OBJ}
         ${ASM_SWARM_NETWORK_OBJ}
@@ -4956,6 +4970,15 @@ if(WIN32)
         # Phase 3: Hot-path integration bridge (expert gating + selective commit)
         src/inference/inference_int4kv_bridge.cpp
         src/inference/flash_attention_vulkan_fp8.cpp
+
+        # Integration Wiring - connects native toolchain to IDE
+        src/Win32IDE/Integration_Wiring.cpp
+        src/Win32IDE/Win32IDE_MenuHandlers.cpp
+        src/Win32IDE/Win32IDE_Project.cpp
+        src/Win32IDE/DebugIntegration.cpp
+        src/Win32IDE/SettingsPersistence.cpp
+        src/Win32IDE/Win32IDE_Helpers.cpp
+        src/Win32IDE/Win32IDE_CommandRouter.cpp
     )
 
     if(RAWR_HAS_MASM)
@@ -5225,6 +5248,9 @@ if(WIN32)
         src/skill_system/SkillToggleUI.cpp
         src/skill_system/SkillSystemBuildIntegration.cpp
         src/skill_system/PromptWarmingEngine.cpp
+        # Compiler Registry — 69+ compiler management with auto-detection
+        src/compiler/CompilerRegistry.cpp
+        src/win32app/CompilerIntegration_Real.cpp
     )
 
     set(WIN32IDE_EXTRA_ASM "")
@@ -6455,6 +6481,53 @@ else()
     else()
         message(STATUS "RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)")
     endif()
+endif()
+
+# =============================================================================
+# RawrXD-GPUBackend Shared Library (Vulkan Compute)
+# =============================================================================
+# Complete GPU backend DLL for IDE integration with full Vulkan compute pipeline
+# Exports: InitializeGPU, ShutdownGPU, IsGPUAvailable, GetGPUDeviceName, ExecuteCompute
+if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/backend/gpu_backend.cpp")
+    find_package(Vulkan REQUIRED)
+    
+    add_library(RawrXD-GPUBackend SHARED
+        src/backend/gpu_backend.cpp
+    )
+    
+    target_include_directories(RawrXD-GPUBackend PRIVATE
+        ${Vulkan_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    
+    target_link_libraries(RawrXD-GPUBackend PRIVATE
+        ${Vulkan_LIBRARIES}
+        kernel32
+    )
+    
+    set_target_properties(RawrXD-GPUBackend PROPERTIES
+        LINKER_LANGUAGE CXX
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_NAME gpu_backend
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    
+    message(STATUS "RawrXD-GPUBackend target configured (Vulkan compute DLL)")
+    
+    # Test executable for GPU backend
+    add_executable(test_gpu_backend test_gpu_backend.cpp)
+    set_target_properties(test_gpu_backend PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_link_libraries(test_gpu_backend PRIVATE kernel32)
+    message(STATUS "test_gpu_backend target configured")
+else()
+    message(STATUS "RawrXD-GPUBackend skipped (requires WIN32 + MSVC + Vulkan SDK)")
 endif()
 
 # NOTE:

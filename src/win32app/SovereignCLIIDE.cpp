@@ -178,6 +178,26 @@ SovereignCLIIDE::CommandResult SovereignCLIIDE::executeCommand(const std::string
             // Agentic mode: use AI to execute commands
             result = executeAgenticCommand(command);
         } else {
+            // Check for custom commands first
+            std::string cmdName = command;
+            std::string args;
+            size_t spacePos = command.find(' ');
+            if (spacePos != std::string::npos) {
+                cmdName = command.substr(0, spacePos);
+                args = command.substr(spacePos + 1);
+            }
+            
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                auto it = m_customCommands.find(cmdName);
+                if (it != m_customCommands.end()) {
+                    result = it->second(args);
+                    auto endTime = std::chrono::high_resolution_clock::now();
+                    result.executionTime = std::chrono::duration<double>(endTime - startTime).count();
+                    return result;
+                }
+            }
+            
             // Normal command execution
             m_terminal->writeInput(command + "\r\n");
             
@@ -485,6 +505,12 @@ void SovereignCLIIDE::setErrorCallback(ErrorCallback callback)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_errorCallback = callback;
+}
+
+void SovereignCLIIDE::RegisterCommand(const std::string& name, CommandHandler handler)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_customCommands[name] = handler;
 }
 
 // ============================================================================

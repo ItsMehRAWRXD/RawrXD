@@ -7,6 +7,7 @@ import { SmartActionsProvider, SmartActionsController } from './smartActions';
 import { AgentMode } from './agent';
 import { TerminalIntegration } from './terminal';
 import { SidecarClient } from './sidecar';
+import { debugAdapter } from './debugAdapter';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 
@@ -223,6 +224,149 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.commands.registerCommand('rawrxd.terminalTest', async () => {
                 const result = await terminalIntegration?.test();
                 vscode.window.showInformationMessage(`Tests ${result?.exitCode === 0 ? 'passed' : 'failed'}`);
+            })
+        );
+
+        // =============================================================================
+        // RAWRXD NATIVE TOOLCHAIN COMMANDS (from extension_actual.ts)
+        // =============================================================================
+        
+        const outputChannel = vscode.window.createOutputChannel('RawrXD Build');
+        outputChannel.show();
+        
+        // Build command
+        context.subscriptions.push(
+            vscode.commands.registerCommand('rawrxd.build', async () => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) {
+                    vscode.window.showErrorMessage('❌ No active editor');
+                    return;
+                }
+                
+                const sourceFile = editor.document.fileName;
+                outputChannel.clear();
+                outputChannel.appendLine(`🔨 Building ${path.basename(sourceFile)}...`);
+                
+                // Use native toolchain
+                const { exec } = require('child_process');
+                const cmd = `d:\\rawrxd\\native_toolchain\\universal_compiler.exe "${sourceFile}"`;
+                
+                exec(cmd, (error: any, stdout: string, stderr: string) => {
+                    if (error) {
+                        outputChannel.appendLine(`❌ Build failed: ${error.message}`);
+                        vscode.window.showErrorMessage('❌ Build failed');
+                    } else {
+                        outputChannel.appendLine('✅ Build successful!');
+                        if (stdout) outputChannel.appendLine(stdout);
+                        vscode.window.showInformationMessage('✅ Build successful!');
+                    }
+                });
+            })
+        );
+        
+        // Run command
+        context.subscriptions.push(
+            vscode.commands.registerCommand('rawrxd.run', async () => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) {
+                    vscode.window.showErrorMessage('❌ No active editor');
+                    return;
+                }
+                
+                const sourceFile = editor.document.fileName;
+                const exeFile = sourceFile.replace(/\.[^.]+$/, '.exe');
+                
+                const fs = require('fs');
+                if (!fs.existsSync(exeFile)) {
+                    vscode.window.showErrorMessage('❌ Executable not found. Build first.');
+                    return;
+                }
+                
+                outputChannel.appendLine(`🏃 Running ${path.basename(exeFile)}...`);
+                
+                const { exec } = require('child_process');
+                exec(`"${exeFile}"`, (error: any, stdout: string, stderr: string) => {
+                    if (stdout) outputChannel.appendLine(stdout);
+                    if (stderr) outputChannel.appendLine(stderr);
+                    outputChannel.appendLine(`✅ Program completed`);
+                });
+            })
+        );
+        
+        // Debug command - WIRED to DebugIntegration.cpp DAP server
+        context.subscriptions.push(
+            vscode.commands.registerCommand('rawrxd.debug', async () => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) {
+                    vscode.window.showErrorMessage('❌ No active editor');
+                    return;
+                }
+                
+                const sourceFile = editor.document.fileName;
+                const exeFile = sourceFile.replace(/\.[^.]+$/, '.exe');
+                
+                // Check if executable exists
+                const fs = require('fs');
+                if (!fs.existsSync(exeFile)) {
+                    vscode.window.showErrorMessage('❌ Executable not found. Build first.');
+                    return;
+                }
+                
+                outputChannel.appendLine(`🐛 Starting debug session for ${path.basename(exeFile)}...`);
+                
+                // Start DAP debug session using DebugIntegration.cpp via debugAdapter
+                try {
+                    await debugAdapter.startDebugSession(
+                        exeFile,
+                        path.dirname(exeFile),
+                        false
+                    );
+                    outputChannel.appendLine('✅ Debug session started');
+                    vscode.window.showInformationMessage('🐛 Debug session started');
+                } catch (err: any) {
+                    outputChannel.appendLine(`❌ Debug failed: ${err.message}`);
+                    vscode.window.showErrorMessage(`Debug failed: ${err.message}`);
+                }
+            })
+        );
+        
+        // Debug control commands
+        context.subscriptions.push(
+            vscode.commands.registerCommand('rawrxd.debug.continue', async () => {
+                await debugAdapter.continue();
+            }),
+            vscode.commands.registerCommand('rawrxd.debug.pause', async () => {
+                await debugAdapter.pause();
+            }),
+            vscode.commands.registerCommand('rawrxd.debug.stepIn', async () => {
+                await debugAdapter.stepIn();
+            }),
+            vscode.commands.registerCommand('rawrxd.debug.stepOver', async () => {
+                await debugAdapter.stepOver();
+            }),
+            vscode.commands.registerCommand('rawrxd.debug.stepOut', async () => {
+                await debugAdapter.stepOut();
+            }),
+            vscode.commands.registerCommand('rawrxd.debug.stop', async () => {
+                await debugAdapter.stopDebugSession();
+                vscode.window.showInformationMessage('Debug session stopped');
+            })
+        );
+        
+        // Clean command
+        context.subscriptions.push(
+            vscode.commands.registerCommand('rawrxd.clean', async () => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) return;
+                
+                const sourceFile = editor.document.fileName;
+                const exeFile = sourceFile.replace(/\.[^.]+$/, '.exe');
+                
+                const fs = require('fs');
+                if (fs.existsSync(exeFile)) {
+                    fs.unlinkSync(exeFile);
+                    outputChannel.appendLine(`🧹 Cleaned ${path.basename(exeFile)}`);
+                }
             })
         );
 

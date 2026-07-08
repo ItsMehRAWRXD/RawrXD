@@ -80,10 +80,6 @@ EXTERN CreateIoCompletionPort:PROC
 EXTERN CreateMutexW:PROC
 EXTERN SetEvent:PROC
 
-; msvcrt string helpers
-EXTERN sprintf_s:PROC
-EXTERN strcpy_s:PROC
-
 ; ---------------------------------------------------------------------------
 ; invoke macro ? x64 calling convention (RCX, RDX, R8, R9, stack)
 ; ---------------------------------------------------------------------------

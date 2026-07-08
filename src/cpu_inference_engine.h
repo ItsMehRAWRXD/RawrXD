@@ -152,6 +152,10 @@ class CPUInferenceEngine : public InferenceEngine
     bool LoadWeights(const std::unordered_map<std::string, Tensor>& tensors);
     bool IsModelLoaded() const override { return m_modelLoaded; }
     const std::string& GetLastLoadErrorMessage() const { return m_lastLoadErrorMessage; }
+    
+    // Hot-patch model at runtime (switch models without restart)
+    bool HotPatchModel(const std::string& model_path);
+    void UnloadModel();
 
     // Inference
     // Explicit declarations for missing methods

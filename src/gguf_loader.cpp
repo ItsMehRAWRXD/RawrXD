@@ -439,7 +439,7 @@ bool GGUFLoader::LoadTensorRange(size_t start_idx, size_t count, std::vector<uin
         return false;
     }
     
-    count = std::min(count, tensors_.size() - start_idx);
+    count = (std::min)(count, tensors_.size() - start_idx);
     data.clear();
     
     for (size_t i = start_idx; i < start_idx + count; ++i) {

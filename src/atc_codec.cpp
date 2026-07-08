@@ -88,7 +88,7 @@ bool AdaptiveTensorCodec::generate_tokens(int* input_ids, int num_tokens)
 }
 
 
-// --- Private Methods ---
+// --- Public Methods (Test Interface) ---
 
 void AdaptiveTensorCodec::prefetch_tile(const TileMeta& tile)
 {

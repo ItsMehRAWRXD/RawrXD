@@ -267,8 +267,12 @@ bool StreamingGGUFLoader::ParseMetadata() {
 		std::cerr << "[GGUFLoader] No architecture key, defaulting to llama" << std::endl;
 	}
 	metadata_.architecture = archKey;
-	// FIX: architecture_type is std::string, not uint32_t. Store the normalized arch name.
-	metadata_.architecture_type = arch;
+	// Map architecture string to numeric type code
+	if (arch == "llama") metadata_.architecture_type = 1;
+	else if (arch == "qwen2") metadata_.architecture_type = 2;
+	else if (arch == "phi3") metadata_.architecture_type = 3;
+	else if (arch == "gemma") metadata_.architecture_type = 4;
+	else metadata_.architecture_type = 0; // unknown
 	
 	// Debug: Print key lookups
 	std::string layerKey = archKey + ".block_count";

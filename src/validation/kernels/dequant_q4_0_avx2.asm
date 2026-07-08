@@ -78,58 +78,69 @@ Dequant_Loop:
     ; Load qs[16] bytes (32 nibbles packed)
     vmovdqu xmm1, XMMWORD PTR [rbx + 4]     ; XMM1 = 16 bytes of nibbles
     
-    ; Unpack nibbles using shuffle approach
-    ; Each byte contains 2 nibbles: [high_nibble][low_nibble]
+    ; Unpack nibbles:
+    ; Each byte: [high_nibble][low_nibble]
+    ; We need to extract all 32 nibbles as separate bytes
     
-    ; Create low nibbles: AND with 0x0F
-    vpmovzxbw ymm2, xmm1                    ; Zero-extend bytes to words
-    vpand ymm3, ymm2, YMMWORD PTR [NibbleMask] ; YMM3 = low nibbles as words
+    ; Step 1: Create low nibbles (AND with 0x0F)
+    vpmovzxbw ymm2, xmm1                    ; Zero-extend bytes to words: [00|high][00|low]
+    vpand ymm3, ymm2, YMMWORD PTR [NibbleMask] ; YMM3 = low nibbles in low byte of each word
     
-    ; Create high nibbles: Shift right 4, then AND
-    vpsrlw ymm4, ymm2, 4                    ; Shift right by 4
-    vpand ymm4, ymm4, YMMWORD PTR [NibbleMask] ; YMM4 = high nibbles as words
+    ; Step 2: Create high nibbles (shift right 4, then AND)
+    vpsrlw ymm4, ymm2, 4                    ; Shift right by 4: high nibble moves to low position
+    vpand ymm4, ymm4, YMMWORD PTR [NibbleMask] ; YMM4 = high nibbles in low byte of each word
     
-    ; Now we have 16 low nibbles in ymm3 and 16 high nibbles in ymm4
-    ; Need to interleave them to get 32 sequential values
+    ; Step 3: Pack low and high nibbles into sequential order
+    ; We have 16 low nibbles in ymm3[0..15] and 16 high nibbles in ymm4[0..15]
+    ; Need to interleave: high[0], low[0], high[1], low[1], ...
+    ; Actually for Q4_0: qs[0] contains high=nibble[1], low=nibble[0]
+    ; So order should be: nibble[0], nibble[1], nibble[2], nibble[3]...
+    ; Which is: low[0], high[0], low[1], high[1]...
     
-    ; Pack pairs into dwords for conversion
-    ; First 8 values: interleave low and high from first 8 positions
-    vpunpcklwd ymm5, ymm3, ymm4             ; Interleave low and high
-    vpunpckhwd ymm6, ymm3, ymm4             ; Interleave high positions
+    ; Use vpackuswb to pack words back to bytes with saturation
+    ; This interleaves ymm3 and ymm4 properly
+    vpackuswb ymm5, ymm3, ymm4              ; Pack: low[0], high[0], low[1], high[1]...
+    vpermq ymm5, ymm5, 216                  ; Fix lane ordering (0xD8 = 216)
     
-    ; Convert first 8 values to FP32
-    vpmovzxwd ymm7, xmm5                    ; Zero-extend to dwords
-    vcvtdq2ps ymm7, ymm7                    ; Convert to FP32
+    ; Step 4: Zero-extend bytes to dwords and convert to FP32
+    ; Process first 8 values (64 bytes)
+    vpmovzxbd ymm7, xmm5                    ; Zero-extend first 4 bytes to dwords
+    vextracti128 xmm8, ymm5, 1              ; Get high 128 bits
+    vpmovzxbd ymm9, xmm8                    ; Zero-extend next 4 bytes
+    
+    ; Convert to FP32
+    vcvtdq2ps ymm7, ymm7                    ; First 8 values
+    vcvtdq2ps ymm9, ymm9                    ; Next 8 values
     
     ; Apply dequantization: (nibble - 8) * scale
-    vsubps ymm7, ymm7, ymm15                ; Subtract 8
-    vmulps ymm7, ymm7, ymm0                 ; Multiply by scale
+    vsubps ymm7, ymm7, ymm15
+    vsubps ymm9, ymm9, ymm15
+    vmulps ymm7, ymm7, ymm0
+    vmulps ymm9, ymm9, ymm0
     
-    ; Store first 8 results
+    ; Store first 16 results
     vmovaps YMMWORD PTR [r12], ymm7
+    vmovaps YMMWORD PTR [r12 + 32], ymm9
     
-    ; Process next 8 values
-    vextracti128 xmm5, ymm5, 1              ; Get high 128 bits
-    vpmovzxwd ymm7, xmm5
-    vcvtdq2ps ymm7, ymm7
-    vsubps ymm7, ymm7, ymm15
-    vmulps ymm7, ymm7, ymm0
-    vmovaps YMMWORD PTR [r12 + 32], ymm7
+    ; Process remaining 16 values from packed data
+    ; Need to extract bytes 8-15 and 24-31 from ymm5
+    vpsrldq xmm10, xmm5, 8                  ; Shift right by 8 bytes
+    vpmovzxbd ymm11, xmm10                  ; Bytes 8-11
     
-    ; Process next 8 values from ymm6
-    vpmovzxwd ymm7, xmm6
-    vcvtdq2ps ymm7, ymm7
-    vsubps ymm7, ymm7, ymm15
-    vmulps ymm7, ymm7, ymm0
-    vmovaps YMMWORD PTR [r12 + 64], ymm7
+    vpsrldq xmm12, xmm8, 8                  ; Shift high lane by 8 bytes
+    vpmovzxbd ymm13, xmm12                  ; Bytes 24-27
     
-    ; Process last 8 values
-    vextracti128 xmm6, ymm6, 1
-    vpmovzxwd ymm7, xmm6
-    vcvtdq2ps ymm7, ymm7
-    vsubps ymm7, ymm7, ymm15
-    vmulps ymm7, ymm7, ymm0
-    vmovaps YMMWORD PTR [r12 + 96], ymm7
+    ; Convert and dequantize
+    vcvtdq2ps ymm11, ymm11
+    vcvtdq2ps ymm13, ymm13
+    vsubps ymm11, ymm11, ymm15
+    vsubps ymm13, ymm13, ymm15
+    vmulps ymm11, ymm11, ymm0
+    vmulps ymm13, ymm13, ymm0
+    
+    ; Store
+    vmovaps YMMWORD PTR [r12 + 64], ymm11
+    vmovaps YMMWORD PTR [r12 + 96], ymm13
     
     ; Advance pointers
     add rbx, 20                             ; Next block (20 bytes)
@@ -172,10 +183,10 @@ MASM_Dequant_Q4_0_AVX2 ENDP
 ; ============================================================================
 
 .DATA
-    ALIGN 32
+    ALIGN 16
     
     ; Mask for extracting low nibble (0x0F)
-    NibbleMask DWORD 8 DUP(0x0F0F0F0F)
+    NibbleMask DWORD 8 DUP(0000F0Fh)
     
     ; Constant 8.0 for bias subtraction
     Bias8 REAL4 8.0

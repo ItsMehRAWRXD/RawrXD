@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stddef.h>
+#include <string>
 
 // External functions from cli_stream.cpp
 extern "C" int RawrXD_CliHeadlessEntry();
@@ -17,6 +18,14 @@ extern "C" {
 // External functions from cli_history.asm
 extern "C" void RawrXD_REPL_MainLoop();
 extern "C" void RawrXD_InitConsoleHandles();
+
+// Compiler commands entry point
+namespace RawrXD::CLI {
+    class CompilerCommands {
+    public:
+        static int Execute(int argc, char* argv[]);
+    };
+}
 
 // Command line parsing helper
 bool HasArgument(int argc, char* argv[], const char* arg) {
@@ -189,6 +198,14 @@ bool ProcessPipedInput(bool stressTest = false) {
 
 // Entry point - uses main() for standard console entry
 int main(int argc, char* argv[]) {
+    // Check for compiler commands first
+    if (argc >= 2 && argv[1]) {
+        std::string cmd = argv[1];
+        if (cmd == "compiler" || cmd == "compile" || cmd == "build" || cmd == "run") {
+            return RawrXD::CLI::CompilerCommands::Execute(argc - 1, argv + 1);
+        }
+    }
+    
     // Check for headless/pipe mode first
     bool isHeadless = false;
     for (int i = 1; i < argc; i++) {

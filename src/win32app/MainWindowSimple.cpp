@@ -248,6 +248,20 @@ void MainWindow::createMenuBar()
     AppendMenuA(modelMenu, MF_STRING, IDM_MODEL_SETTINGS, "Model Settings...");
     AppendMenuA(m_menuBar, MF_POPUP, (UINT_PTR)modelMenu, "&Model");
 
+    // ========== BUILD MENU (Native Toolchain Integration) ==========
+    HMENU buildMenu = CreatePopupMenu();
+    AppendMenuA(buildMenu, MF_STRING, IDM_BUILD_COMPILE, "&Compile\tF7");
+    AppendMenuA(buildMenu, MF_STRING, IDM_BUILD_RUN, "&Run\tF5");
+    AppendMenuA(buildMenu, MF_STRING, IDM_BUILD_DEBUG, "&Debug\tF9");
+    AppendMenuA(buildMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(buildMenu, MF_STRING, IDM_BUILD_CLEAN, "&Clean");
+    AppendMenuA(buildMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(buildMenu, MF_STRING, IDM_BUILD_ANALYZE_PE, "&Analyze PE");
+    AppendMenuA(buildMenu, MF_STRING, IDM_BUILD_PATCH_BINARY, "&Patch Binary");
+    AppendMenuA(buildMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(buildMenu, MF_STRING, IDM_BUILD_OPTIONS, "&Options...");
+    AppendMenuA(m_menuBar, MF_POPUP, (UINT_PTR)buildMenu, "&Build");
+
     // ========== HELP MENU ==========
     HMENU helpMenu = CreatePopupMenu();
     AppendMenuA(helpMenu, MF_STRING, IDM_HELP_WELCOME, "Welcome");
@@ -1222,6 +1236,99 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             MessageBoxA(m_hwnd, "Model Settings:\n\nConfigure inference parameters, GPU settings, and model paths.",
                         "Model Settings", MB_OK | MB_ICONINFORMATION);
             break;
+
+        // ========== BUILD COMMANDS (Native Toolchain Integration) ==========
+        case IDM_BUILD_COMPILE:
+        {
+            // Compile current file using native toolchain
+            if (!m_tabs.empty() && m_currentTab < m_tabs.size())
+            {
+                const std::string& filePath = m_tabs[m_currentTab].filename;
+                if (!filePath.empty())
+                {
+                    sendToTerminal(std::string("# Compiling: ") + filePath + "\n");
+                    // Call native compiler
+                    std::string cmd = "& 'd:\\rawrxd\\native_toolchain\\RawrXD_Compiler.exe' '" + filePath + "'\n";
+                    sendToTerminal(cmd);
+                }
+                else
+                {
+                    sendToTerminal("# Error: No file to compile\n");
+                }
+            }
+            break;
+        }
+        case IDM_BUILD_RUN:
+        {
+            // Run compiled executable
+            if (!m_tabs.empty() && m_currentTab < m_tabs.size())
+            {
+                const std::string& filePath = m_tabs[m_currentTab].filename;
+                if (!filePath.empty())
+                {
+                    // Extract base name for executable
+                    size_t lastDot = filePath.find_last_of('.');
+                    std::string exePath = (lastDot != std::string::npos) ? filePath.substr(0, lastDot) + ".exe" : filePath + ".exe";
+                    sendToTerminal(std::string("# Running: ") + exePath + "\n");
+                    std::string cmd = "& '" + exePath + "'\n";
+                    sendToTerminal(cmd);
+                }
+            }
+            break;
+        }
+        case IDM_BUILD_DEBUG:
+        {
+            // Debug compiled executable
+            sendToTerminal("# Starting native debugger...\n");
+            sendToTerminal("& 'd:\\rawrxd\\native_toolchain\\RawrXD_Debugger.exe'\n");
+            break;
+        }
+        case IDM_BUILD_CLEAN:
+        {
+            // Clean build artifacts
+            sendToTerminal("# Cleaning build artifacts...\n");
+            sendToTerminal("Remove-Item -Path '*.obj','*.exe','*.dll' -ErrorAction SilentlyContinue\n");
+            break;
+        }
+        case IDM_BUILD_ANALYZE_PE:
+        {
+            // Analyze PE binary
+            if (!m_tabs.empty() && m_currentTab < m_tabs.size())
+            {
+                const std::string& filePath = m_tabs[m_currentTab].filename;
+                if (!filePath.empty())
+                {
+                    size_t lastDot = filePath.find_last_of('.');
+                    std::string exePath = (lastDot != std::string::npos) ? filePath.substr(0, lastDot) + ".exe" : filePath;
+                    sendToTerminal(std::string("# Analyzing PE: ") + exePath + "\n");
+                    std::string cmd = "& 'd:\\rawrxd\\native_toolchain\\RawrXD_PEAnalyzer.exe' '" + exePath + "'\n";
+                    sendToTerminal(cmd);
+                }
+            }
+            break;
+        }
+        case IDM_BUILD_PATCH_BINARY:
+        {
+            // Patch binary
+            sendToTerminal("# Binary patching mode - select target and patch files\n");
+            MessageBoxA(m_hwnd, "Binary Patching:\n\nSelect target binary and patch file to apply.",
+                        "Patch Binary", MB_OK | MB_ICONINFORMATION);
+            break;
+        }
+        case IDM_BUILD_OPTIONS:
+        {
+            // Build options dialog
+            MessageBoxA(m_hwnd,
+                        "Build Options:\n\n"
+                        "Compiler: RawrXD_Compiler.exe\n"
+                        "Assembler: RawrXD_Assembler.exe\n"
+                        "Linker: RawrXD_Linker.exe\n"
+                        "Debugger: RawrXD_Debugger.exe\n"
+                        "PE Analyzer: RawrXD_PEAnalyzer.exe\n\n"
+                        "Toolchain Path: d:\\rawrxd\\native_toolchain\\",
+                        "Build Options", MB_OK | MB_ICONINFORMATION);
+            break;
+        }
 
         // ========== HELP COMMANDS ==========
         case IDM_HELP_WELCOME:

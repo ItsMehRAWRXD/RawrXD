@@ -104,9 +104,15 @@ static int RunModelInspectMode(const std::string& modelPath)
     }
 
     const RawrXD::GGUFMetadata metadata = loader.GetMetadata();
-    const std::string architecture = !metadata.architecture_type.empty()
-                                         ? metadata.architecture_type
-                                         : (!metadata.architecture.empty() ? metadata.architecture : std::string("unknown"));
+    // Convert numeric architecture_type to string
+    std::string architecture;
+    switch (metadata.architecture_type) {
+        case 1: architecture = "llama"; break;
+        case 2: architecture = "qwen2"; break;
+        case 3: architecture = "phi3"; break;
+        case 4: architecture = "gemma"; break;
+        default: architecture = !metadata.architecture.empty() ? metadata.architecture : std::string("unknown"); break;
+    }
     const uint32_t context = metadata.context_length > 0 ? metadata.context_length : metadata.contextLength;
 
     std::cout << "Architecture: " << architecture << std::endl;

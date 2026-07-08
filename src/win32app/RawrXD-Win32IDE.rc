@@ -73,3 +73,90 @@ BEGIN
     DEFPUSHBUTTON   "Generate", 6109, 162, 144, 72, 14
     PUSHBUTTON      "Close", IDCANCEL, 240, 144, 72, 14
 END
+
+// =============================================================================
+// RAWRXD IDE MENU DEFINITIONS - FULL POLISH IMPLEMENTATION
+// =============================================================================
+
+// Main Menu Bar
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Project\tCtrl+N",       40001
+        MENUITEM "&Open Project\tCtrl+O",        40002
+        MENUITEM "&Save Project\tCtrl+S",        40003
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",                40004
+    END
+    
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",                40301
+        MENUITEM "&Redo\tCtrl+Y",                40302
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                 40303
+        MENUITEM "&Copy\tCtrl+C",                40304
+        MENUITEM "&Paste\tCtrl+V",               40305
+    END
+    
+    POPUP "&Build"
+    BEGIN
+        MENUITEM "&Compile\tF7",                 40101
+        MENUITEM "&Run\tF5",                     40102
+        MENUITEM "&Debug\tF9",                   40103
+        MENUITEM SEPARATOR
+        MENUITEM "&Clean",                       40104
+    END
+    
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Analyze PE",                  40201
+        MENUITEM "&Patch Binary",                40202
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...",                  40203
+    END
+    
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Output Window",               40401
+        MENUITEM "&Project Panel",               40402
+    END
+END
+
+// Accelerator Table
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    "N",            40001,          VIRTKEY, CONTROL
+    "O",            40002,          VIRTKEY, CONTROL
+    "S",            40003,          VIRTKEY, CONTROL
+    "Z",            40301,          VIRTKEY, CONTROL
+    "Y",            40302,          VIRTKEY, CONTROL
+    "X",            40303,          VIRTKEY, CONTROL
+    "C",            40304,          VIRTKEY, CONTROL
+    "V",            40305,          VIRTKEY, CONTROL
+    VK_F7,          40101,          VIRTKEY
+    VK_F5,          40102,          VIRTKEY
+    VK_F9,          40103,          VIRTKEY
+END
+
+// New Project Dialog
+IDD_NEW_PROJECT DIALOGEX 0, 0, 300, 150
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New Project"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT           "Project Name:", -1, 10, 10, 80, 10
+    EDITTEXT        50002, 90, 8, 200, 14, ES_AUTOHSCROLL
+    
+    LTEXT           "Location:", -1, 10, 35, 80, 10
+    EDITTEXT        50003, 90, 33, 160, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...", 50004, 255, 32, 35, 14
+    
+    GROUPBOX        "Project Type", -1, 10, 60, 280, 50
+    AUTORADIOBUTTON "Console Application", 50005, 20, 75, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Windows Application", 50006, 20, 90, 120, 10
+    
+    DEFPUSHBUTTON   "&Create", IDOK, 140, 125, 60, 14
+    PUSHBUTTON      "&Cancel", IDCANCEL, 210, 125, 60, 14
+END

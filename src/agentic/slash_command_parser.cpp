@@ -45,7 +45,8 @@ std::vector<std::string> SlashCommandParser::AvailableCommands() {
         "edit", "terminal", "search", "read", "write", "memory", "refactor", "git",
         "explain", "fix", "test", "optimize", "taskframe", "framework", "harden", "audit",
         "language", "lang", "context", "help",
-        "streaming", "streaming status", "streaming autopatch", "streaming throttle"
+        "streaming", "streaming status", "streaming autopatch", "streaming throttle",
+        "native-compile", "native-patch", "native-disasm"
     };
 }
 
@@ -111,6 +112,12 @@ Streaming engine control commands:
         return "/streaming autopatch on|off\nToggle autopatch system and mmap fallback for large zones.";
     } else if (command == "streaming throttle") {
         return "/streaming throttle <tps>\nCap decode TPS to specified value (0=unlimited).";
+    } else if (command == "native-compile") {
+        return "/native-compile <file.json> [output.asm]\nConvert Codex JSON to MASM assembly using native bridge.\nExample: /native-compile bridge.json bridge.asm";
+    } else if (command == "native-patch") {
+        return "/native-patch <binary.exe> <patch.json>\nApply binary patch using native toolchain.\nExample: /native-patch app.exe patch.json";
+    } else if (command == "native-disasm") {
+        return "/native-disasm <binary.exe> [output.json]\nDisassemble binary to Codex JSON format.\nExample: /native-disasm app.exe app_disasm.json";
     }
     return "Unknown command: " + command;
 }
@@ -290,6 +297,9 @@ ParsedCommand SlashCommandParser::Parse(const std::string& input) {
     if (cmdName == "language" || cmdName == "lang") return ParseLanguage(args);
     if (cmdName == "context") return ParseContext(args);
     if (cmdName == "streaming") return ParseStreaming(args);
+    if (cmdName == "native-compile") return ParseNativeCompile(args);
+    if (cmdName == "native-patch") return ParseNativePatch(args);
+    if (cmdName == "native-disasm") return ParseNativeDisasm(args);
     if (cmdName == "help") {
         cmd.command = "help";
         cmd.args = args;
@@ -445,6 +455,36 @@ nlohmann::json ParsedCommand::ToToolCall() const {
         toolCall["args"] = json::object();
         if (!args.empty()) {
             toolCall["args"]["tps"] = args[0];  // numeric TPS cap
+        }
+    }
+    else if (command == "native_compile") {
+        toolCall["tool"] = "native_compile";
+        toolCall["args"] = json::object();
+        if (!args.empty()) {
+            toolCall["args"]["input"] = args[0];   // JSON input file
+        }
+        if (args.size() >= 2) {
+            toolCall["args"]["output"] = args[1];  // ASM output file
+        }
+    }
+    else if (command == "native_patch") {
+        toolCall["tool"] = "native_patch";
+        toolCall["args"] = json::object();
+        if (!args.empty()) {
+            toolCall["args"]["binary"] = args[0];  // Binary to patch
+        }
+        if (args.size() >= 2) {
+            toolCall["args"]["patch"] = args[1];   // Patch JSON file
+        }
+    }
+    else if (command == "native_disasm") {
+        toolCall["tool"] = "native_disasm";
+        toolCall["args"] = json::object();
+        if (!args.empty()) {
+            toolCall["args"]["binary"] = args[0];   // Binary to disassemble
+        }
+        if (args.size() >= 2) {
+            toolCall["args"]["output"] = args[1];   // JSON output file
         }
     }
 
@@ -952,6 +992,92 @@ ParsedCommand SlashCommandParser::ParseStreamingThrottle(const std::vector<std::
     }
     
     cmd.args = args;
+    cmd.valid = true;
+    return cmd;
+}
+
+// Parse /native-compile <file.json> [output.asm]
+// Self-hosting bootstrap: Convert Codex JSON to MASM assembly
+ParsedCommand SlashCommandParser::ParseNativeCompile(const std::vector<std::string>& args) {
+    ParsedCommand cmd;
+    cmd.command = "native_compile";
+    
+    if (args.empty()) {
+        cmd.error = "native-compile requires a JSON file. Example: /native-compile input.json [output.asm]";
+        return cmd;
+    }
+    
+    // First arg is input JSON file
+    cmd.args.push_back(args[0]);
+    
+    // Optional second arg is output ASM file
+    if (args.size() >= 2) {
+        cmd.args.push_back(args[1]);
+    } else {
+        // Default output name
+        std::string out = args[0];
+        size_t dot = out.find_last_of('.');
+        if (dot != std::string::npos) {
+            out = out.substr(0, dot) + ".asm";
+        } else {
+            out += ".asm";
+        }
+        cmd.args.push_back(out);
+    }
+    
+    cmd.valid = true;
+    return cmd;
+}
+
+// Parse /native-patch <binary.exe> <patch.json>
+// Binary patching via native toolchain
+ParsedCommand SlashCommandParser::ParseNativePatch(const std::vector<std::string>& args) {
+    ParsedCommand cmd;
+    cmd.command = "native_patch";
+    
+    if (args.size() < 2) {
+        cmd.error = "native-patch requires binary and patch file. Example: /native-patch app.exe patch.json";
+        return cmd;
+    }
+    
+    // First arg is binary to patch
+    cmd.args.push_back(args[0]);
+    // Second arg is patch JSON
+    cmd.args.push_back(args[1]);
+    
+    cmd.valid = true;
+    return cmd;
+}
+
+// Parse /native-disasm <binary.exe> [output.json]
+// Disassemble binary to Codex JSON format
+ParsedCommand SlashCommandParser::ParseNativeDisasm(const std::vector<std::string>& args) {
+    ParsedCommand cmd;
+    cmd.command = "native_disasm";
+    
+    if (args.empty()) {
+        cmd.error = "native-disasm requires a binary file. Example: /native-disasm app.exe [output.json]";
+        return cmd;
+    }
+    
+    // First arg is binary to disassemble
+    cmd.args.push_back(args[0]);
+    
+    // Optional second arg is output JSON file
+    if (args.size() >= 2) {
+        cmd.args.push_back(args[1]);
+    } else {
+        // Default output name
+        std::string out = args[0];
+        size_t dot = out.find_last_of('.');
+        if (dot != std::string::npos) {
+            out = out.substr(0, dot) + "_disasm.json";
+        } else {
+            out += "_disasm.json";
+        }
+        cmd.args.push_back(out);
+    }
+    
     cmd.valid = true;
     return cmd;
 }

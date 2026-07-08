@@ -8,10 +8,16 @@
 // Compatibility shim for legacy tool targets that include
 // src/inference/InferenceEngine.hpp and expect this simple API.
 class InferenceEngine {
+private:
+    // Member variables must be declared before methods that use them
+    std::string m_modelPath;
+    int m_vocabSize = 50257;      // GPT-2 default
+    int m_embeddingDim = 768;       // GPT-2 small default
+
 public:
     // Accepts a null or typed config pointer; ignored in this shim.
     explicit InferenceEngine(void* /*config*/) {}
-public:
+
     // Alias expected by test targets that call Initialize instead of loadModel.
     bool Initialize(const std::string& modelPath) { return loadModel(modelPath); }
     int GetVocabSize() const { return m_vocabSize; }
@@ -133,7 +139,6 @@ public:
         m_modelPath.clear();
     }
 
-public:
     std::string generate(const std::string& prompt, int maxTokens) {
         if (m_modelPath.empty() || maxTokens <= 0) {
             return {};
@@ -152,9 +157,4 @@ public:
         }
         return output;
     }
-
-private:
-    std::string m_modelPath;
-    int m_vocabSize = 50257;      // GPT-2 default
-    int m_embeddingDim = 768;     // GPT-2 small default
 };

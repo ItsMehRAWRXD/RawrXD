@@ -34,6 +34,12 @@ void pe_writer_set_entry(PeWriter* pw, uint32_t entry_rva);
 /* Add .text section (code). data copied; can be NULL if size 0. */
 void pe_writer_add_text(PeWriter* pw, const uint8_t* data, uint32_t size);
 
+/* Add .idata section (imports). data copied; can be NULL if size 0. */
+void pe_writer_add_idata(PeWriter* pw, const uint8_t* data, uint32_t size);
+
+/* Set IAT RVA for DataDirectory[12]. Must be called after pe_writer_add_idata. */
+void pe_writer_set_iat_rva(PeWriter* pw, uint32_t iat_rva, uint32_t iat_size);
+
 /* Set import: one DLL, one function. Builds IDT/IAT in .idata. */
 void pe_writer_set_import(PeWriter* pw, const char* dll_name, const char* func_name);
 

@@ -1,0 +1,2 @@
+mov rax, rcx
+ret

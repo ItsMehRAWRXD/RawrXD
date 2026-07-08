@@ -102,6 +102,15 @@ private:
 #define IDM_FILE_CLOSE_FOLDER 108
 #define IDM_FILE_EXIT 109
 
+// ========== BUILD MENU (Native Toolchain Integration) ==========
+#define IDM_BUILD_COMPILE 150
+#define IDM_BUILD_RUN 151
+#define IDM_BUILD_DEBUG 152
+#define IDM_BUILD_CLEAN 153
+#define IDM_BUILD_ANALYZE_PE 154
+#define IDM_BUILD_PATCH_BINARY 155
+#define IDM_BUILD_OPTIONS 156
+
 #define IDM_EDIT_UNDO 200
 #define IDM_EDIT_REDO 201
 #define IDM_EDIT_CUT 202

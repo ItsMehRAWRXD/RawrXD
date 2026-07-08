@@ -44,6 +44,8 @@ inline float UniformF32(uint64_t* s) noexcept {
 
 } // namespace
 
+FastSpecInferenceBridge::FastSpecInferenceBridge() : FastSpecInferenceBridge(Config{}) {}
+
 FastSpecInferenceBridge::FastSpecInferenceBridge(const Config& cfg)
     : m_cfg(cfg)
 {

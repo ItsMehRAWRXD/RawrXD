@@ -702,8 +702,15 @@ void ModelBruteForceEngine::ProbeWithCPU(ModelProbeResult& result,
 
     // Enrich metadata from GGUFLoader if our header parse missed anything
     GGUFMetadata meta = loader.GetMetadata();
-    if (result.architecture.empty() && !meta.architecture_type.empty()) {
-        result.architecture = meta.architecture_type;
+    if (result.architecture.empty() && meta.architecture_type != 0) {
+        // Convert numeric architecture type to string
+        switch (meta.architecture_type) {
+            case 1: result.architecture = "llama"; break;
+            case 2: result.architecture = "qwen2"; break;
+            case 3: result.architecture = "phi3"; break;
+            case 4: result.architecture = "gemma"; break;
+            default: result.architecture = "unknown"; break;
+        }
     }
     if (result.vocab_size == 0 && meta.vocab_size > 0)
         result.vocab_size = meta.vocab_size;

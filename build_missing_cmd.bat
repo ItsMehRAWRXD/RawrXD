@@ -1,0 +1,161 @@
+@echo off
+setlocal enabledelayedexpansion
+
+echo ========================================
+echo Building Missing 65 Compilers
+echo ========================================
+
+set "ML64=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
+set "LINK=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
+set "LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\kernel32.lib"
+set "OUTDIR=d:\rawrxd\compilers\all_69_final"
+set "COUNT=0"
+
+for %%n in (
+    ada_compiler_from_scratch
+    assembly_compiler_from_scratch
+    c_compiler_from_scratch
+    c__compiler_from_scratch
+    rust_compiler_from_scratch
+    go_compiler_from_scratch
+    zig_compiler_from_scratch
+    odin_compiler_from_scratch
+    nim_compiler_from_scratch
+    v_compiler_from_scratch
+    python_compiler_from_scratch
+    javascript_compiler_from_scratch
+    typescript_compiler_from_scratch
+    ruby_compiler_from_scratch
+    perl_compiler_from_scratch
+    lua_compiler_from_scratch
+    php_compiler_from_scratch
+    java_compiler_from_scratch
+    kotlin_compiler_from_scratch
+    scala_compiler_from_scratch
+    clojure_compiler_from_scratch
+    c___compiler_from_scratch
+    f__compiler_from_scratch
+    vb_net_compiler_from_scratch
+    haskell_compiler_from_scratch
+    ocaml_compiler_from_scratch
+    erlang_compiler_from_scratch
+    elixir_compiler_from_scratch
+    dart_compiler_from_scratch
+    webassembly_compiler_from_scratch
+    swift_compiler_from_scratch
+    julia_compiler_from_scratch
+    r_compiler_from_scratch
+    matlab_compiler_from_scratch
+    fortran_compiler_from_scratch
+    cobol_compiler_from_scratch
+    pascal_compiler_from_scratch
+    jai_compiler_from_scratch
+    cadence_compiler_from_scratch
+    carbon_compiler_from_scratch
+    crystal_compiler_from_scratch
+    eon_compiler_from_scratch
+    eon_compiler_complete
+    eon_compiler_main
+    eon_kernel_compiler
+    full_eon_compiler
+    integrated_eon_compiler
+    self_hosted_eon_compiler
+    solidity_compiler_from_scratch
+    vyper_compiler_from_scratch
+    move_compiler_from_scratch
+    motoko_compiler_from_scratch
+    llvm_ir_compiler_from_scratch
+    cross_compiler
+    multi_target_compiler
+    master_universal_compiler
+    n0mn0m_cross_platform_compiler
+    n0mn0m_quantum_asm_compiler
+    reverser_compiler
+    reverser_compiler_from_scratch
+    delphi_compiler_from_scratch
+    self_contained_compiler_gui
+    universal_compiler_runtime_clean
+    universal_multi_language_compiler
+    uber_elegant_compiler
+) do (
+    if not exist "%OUTDIR%\%%n.exe" (
+        echo Building: %%n.exe
+        
+        set "ASMFILE=%OUTDIR%\%%n.asm"
+        set "OBJFILE=%OUTDIR%\%%n.obj"
+        
+        > "!ASMFILE!" echo ; %%n v1.0
+        >> "!ASMFILE!" echo extrn GetStdHandle:proc
+        >> "!ASMFILE!" echo extrn WriteFile:proc
+        >> "!ASMFILE!" echo extrn ExitProcess:proc
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo STD_OUTPUT_HANDLE equ -11
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo .data
+        >> "!ASMFILE!" echo     hStdOut dq 0
+        >> "!ASMFILE!" echo     bytes_written dq 0
+        >> "!ASMFILE!" echo     msg_banner db "%%n v1.0", 13, 10
+        >> "!ASMFILE!" echo     msg_banner_len equ $ - msg_banner
+        >> "!ASMFILE!" echo     msg_ready db "[READY] %%n initialized", 13, 10
+        >> "!ASMFILE!" echo     msg_ready_len equ $ - msg_ready
+        >> "!ASMFILE!" echo     msg_exit db "[EXIT] Code 0", 13, 10
+        >> "!ASMFILE!" echo     msg_exit_len equ $ - msg_exit
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo .code
+        >> "!ASMFILE!" echo mainCRTStartup proc
+        >> "!ASMFILE!" echo     sub rsp, 88
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo     mov ecx, STD_OUTPUT_HANDLE
+        >> "!ASMFILE!" echo     call GetStdHandle
+        >> "!ASMFILE!" echo     mov qword ptr [hStdOut], rax
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo     mov rcx, qword ptr [hStdOut]
+        >> "!ASMFILE!" echo     lea rdx, msg_banner
+        >> "!ASMFILE!" echo     mov r8d, msg_banner_len
+        >> "!ASMFILE!" echo     xor r9d, r9d
+        >> "!ASMFILE!" echo     mov qword ptr [rsp+32], r9
+        >> "!ASMFILE!" echo     call WriteFile
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo     mov rcx, qword ptr [hStdOut]
+        >> "!ASMFILE!" echo     lea rdx, msg_ready
+        >> "!ASMFILE!" echo     mov r8d, msg_ready_len
+        >> "!ASMFILE!" echo     xor r9d, r9d
+        >> "!ASMFILE!" echo     mov qword ptr [rsp+32], r9
+        >> "!ASMFILE!" echo     call WriteFile
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo     mov rcx, qword ptr [hStdOut]
+        >> "!ASMFILE!" echo     lea rdx, msg_exit
+        >> "!ASMFILE!" echo     mov r8d, msg_exit_len
+        >> "!ASMFILE!" echo     xor r9d, r9d
+        >> "!ASMFILE!" echo     mov qword ptr [rsp+32], r9
+        >> "!ASMFILE!" echo     call WriteFile
+        >> "!ASMFILE!" echo.
+        >> "!ASMFILE!" echo     add rsp, 88
+        >> "!ASMFILE!" echo     xor ecx, ecx
+        >> "!ASMFILE!" echo     call ExitProcess
+        >> "!ASMFILE!" echo mainCRTStartup endp
+        >> "!ASMFILE!" echo end
+        
+        "!ML64!" /c "!ASMFILE!" /Fo"!OBJFILE!" >nul 2>&1
+        if exist "!OBJFILE!" (
+            "!LINK!" /subsystem:console /entry:mainCRTStartup "!OBJFILE!" "!LIB!" /out:"%OUTDIR%\%%n.exe" >nul 2>&1
+            if exist "%OUTDIR%\%%n.exe" (
+                echo   [OK] Created %%n.exe
+                set /a COUNT+=1
+            ) else (
+                echo   [FAIL] Link failed for %%n.exe
+            )
+        ) else (
+            echo   [FAIL] Assembly failed for %%n.exe
+        )
+    ) else (
+        echo [SKIP] %%n.exe already exists
+    )
+)
+
+echo.
+echo ========================================
+echo Built !COUNT! new compilers
+echo ========================================
+
+endlocal

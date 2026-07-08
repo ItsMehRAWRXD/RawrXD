@@ -75,6 +75,21 @@ void ChatInterface::addMessage(const std::string& role, const std::string& conte
     appendToHistory(role, content);
 }
 
+void ChatInterface::displayResponse(const std::string& response) {
+    // Display a response in the chat without adding to history
+    // This is used for streaming updates or temporary messages
+    // In a real UI, this would update the last assistant message
+    // For now, we just process it normally
+    processResponse(response);
+}
+
+void ChatInterface::focusInput() {
+    // Focus the input field in the chat interface
+    // This is a UI operation that would be implemented by the frontend
+    // For the backend, this is a no-op placeholder
+    // The actual implementation would signal the UI to focus the input
+}
+
 void ChatInterface::processResponse(const std::string& modelOutput) {
     appendToHistory("assistant", modelOutput);
     

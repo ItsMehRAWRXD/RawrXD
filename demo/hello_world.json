@@ -1,0 +1,10 @@
+{ 
+  "name": "hello_world", 
+  "instructions": [ 
+    {"op": "push", "operands": ["rbp"]}, 
+    {"op": "mov", "operands": ["rsp", "rbp"]}, 
+    {"op": "mov", "operands": ["42", "eax"]}, 
+    {"op": "pop", "operands": ["rbp"]}, 
+    {"op": "ret", "operands": []} 
+  ] 
+} 

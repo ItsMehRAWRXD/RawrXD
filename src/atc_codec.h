@@ -14,6 +14,7 @@ using TileMeta = BraidedTileMeta;
 // Sized for a common block size like 64x64.
 struct TileBuffer {
     float data[64 * 64];
+    size_t size = 64 * 64;  // Number of elements in the buffer
 };
 
 // The Adaptive Tensor Codec (ATC)

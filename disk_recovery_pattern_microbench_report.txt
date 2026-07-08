@@ -1,5 +1,5 @@
 RawrXD Pattern Scanner Microbenchmark
-high_entropy baseline_mb_s=372.31 accelerated_mb_s=379.38 speedup=1.02
-recovered_logs baseline_mb_s=21953.90 accelerated_mb_s=29336.27 speedup=1.34
-mixed_recovery baseline_mb_s=436.50 accelerated_mb_s=395.94 speedup=0.91
-average_speedup=1.09
+high_entropy baseline_mb_s=365.00 accelerated_mb_s=277.89 speedup=0.76
+recovered_logs baseline_mb_s=19323.67 accelerated_mb_s=28561.23 speedup=1.48
+mixed_recovery baseline_mb_s=409.44 accelerated_mb_s=348.46 speedup=0.85
+average_speedup=1.03

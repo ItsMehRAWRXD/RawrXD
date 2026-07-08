@@ -1,0 +1,5 @@
+(module
+    (func  (export "hello")
+        (nop)
+    )
+)

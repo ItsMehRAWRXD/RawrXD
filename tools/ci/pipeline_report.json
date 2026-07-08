@@ -1,0 +1,56 @@
+{
+  "pipeline": "RawrXD-CI",
+  "version": "1.0.0",
+  "branch": "main",
+  "commit": "",
+  "status": "✅ Success",
+  "duration": 0.00,
+  "summary": {
+    "total_jobs": 7,
+    "success": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "stages": [
+    {
+      "name": "checkout",
+      "status": "✅ Success",
+      "duration": 0.00,
+      "jobs": 1,
+      "success": 1,
+      "failed": 0
+    },
+    {
+      "name": "build",
+      "status": "✅ Success",
+      "duration": 0.00,
+      "jobs": 2,
+      "success": 2,
+      "failed": 0
+    },
+    {
+      "name": "test",
+      "status": "✅ Success",
+      "duration": 0.00,
+      "jobs": 2,
+      "success": 2,
+      "failed": 0
+    },
+    {
+      "name": "package",
+      "status": "✅ Success",
+      "duration": 0.00,
+      "jobs": 1,
+      "success": 1,
+      "failed": 0
+    },
+    {
+      "name": "deploy",
+      "status": "✅ Success",
+      "duration": 0.00,
+      "jobs": 1,
+      "success": 1,
+      "failed": 0
+    }
+  ]
+}

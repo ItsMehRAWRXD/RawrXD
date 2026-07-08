@@ -58,7 +58,8 @@ public:
                                       // under greedy validation)
     };
 
-    explicit FastSpecInferenceBridge(const Config& cfg = {});
+    explicit FastSpecInferenceBridge(const Config& cfg);
+    FastSpecInferenceBridge();
     ~FastSpecInferenceBridge() = default;
 
     FastSpecInferenceBridge(const FastSpecInferenceBridge&)            = delete;

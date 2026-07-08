@@ -43,7 +43,9 @@ void reloc_apply(uint8_t* section_data, uint32_t section_rva, uint32_t offset, u
 }
 
 int reloc_resolver_apply(uint8_t* text_data, uint32_t text_rva,
-    const uint32_t* obj_text_offsets, CoffFile** objs, int num_objs, uint32_t main_rva, uint32_t __main_rva) {
+    const uint32_t* obj_text_offsets, CoffFile** objs, int num_objs, 
+    uint32_t main_rva, uint32_t __main_rva,
+    import_builder_t* ib) {  /* Phase 3: Import symbol resolution */
     for (int i = 0; i < num_objs; i++) {
         CoffFile* cf = objs[i];
         uint32_t base = obj_text_offsets[i];
@@ -70,14 +72,27 @@ int reloc_resolver_apply(uint8_t* text_data, uint32_t text_rva,
                     else if (strcmp(name, "__main") == 0)
                         target_rva = __main_rva;  /* GCC CRT init; point to stub ret to avoid recursion */
                     else {
-                        fprintf(stderr, "undefined symbol: %s\n", name);
-                        return -1;
+                        /* Phase 3: Check if this is an import */
+                        int found = 0;
+                        if (ib) {
+                            for (int d = 0; d < ib->dll_count && !found; d++) {
+                                for (int f = 0; f < ib->dlls[d].func_count && !found; f++) {
+                                    if (strcmp(name, ib->dlls[d].functions[f].name) == 0) {
+                                        /* Calculate IAT entry RVA: DLL's IAT RVA + (function index * 8) */
+                                        target_rva = ib->dlls[d].iat_rva + (uint32_t)(f * 8);
+                                        found = 1;
+                                    }
+                                }
+                            }
+                        }
+                        if (!found) {
+                            fprintf(stderr, "undefined symbol: %s\n", name);
+                            return -1;
+                        }
                     }
                 }
-
-                reloc_apply(text_data, text_rva, base + rel->offset_in_section, rel->type, target_rva);
+                reloc_apply(sec->data, text_rva + base, rel->offset_in_section, rel->type, target_rva);
             }
-            break;
         }
     }
     return 0;

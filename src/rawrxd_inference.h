@@ -255,13 +255,25 @@ class RawrXDInference
     }
 
   public:
-        ~RawrXDInference() { ResetOwnedVulkanContext(); }
+    ~RawrXDInference() { ResetOwnedVulkanContext(); }
 
-        RawrXDInference() = default;
-        RawrXDInference(const RawrXDInference&) = delete;
-        RawrXDInference& operator=(const RawrXDInference&) = delete;
-        RawrXDInference(RawrXDInference&&) = delete;
-        RawrXDInference& operator=(RawrXDInference&&) = delete;
+    RawrXDInference() = default;
+    RawrXDInference(const RawrXDInference&) = delete;
+    RawrXDInference& operator=(const RawrXDInference&) = delete;
+    RawrXDInference(RawrXDInference&&) = delete;
+    RawrXDInference& operator=(RawrXDInference&&) = delete;
+
+    // Shutdown and cleanup
+    void Shutdown()
+    {
+        m_initialized = false;
+        m_contextLimit = 0;
+        m_lastLogits.clear();
+        m_swarmScheduler.reset();
+        // Note: loader, transformer, tokenizer, sampler cannot be reassigned
+        // due to deleted copy operators. They will be cleaned up by destructor.
+        ResetOwnedVulkanContext();
+    }
 
     const std::string& GetLastLoadErrorMessage() const { return m_lastLoadErrorMessage; }
 

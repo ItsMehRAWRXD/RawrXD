@@ -8,6 +8,7 @@ add_executable(rawrxd_link
   main.c
   coff_reader.c
   pe_writer.c
+  import_builder.c
   reloc_resolver.c
   entry_stub.c
   section_merge.c

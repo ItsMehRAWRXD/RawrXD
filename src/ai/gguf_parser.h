@@ -40,6 +40,13 @@ struct GGUFMetadata {
     std::string key;
     uint32_t type;
     std::vector<uint8_t> value;
+    
+    // Model architecture metadata (populated from GGUF file)
+    uint32_t architecture_type = 0;  // 1=llama, 2=qwen2, 3=phi3, 4=gemma
+    uint32_t context_length = 0;
+    uint32_t contextLength = 0;  // Alternative naming
+    uint32_t layer_count = 0;
+    uint32_t embedding_dim = 0;
 };
 
 struct GGUFModelData {

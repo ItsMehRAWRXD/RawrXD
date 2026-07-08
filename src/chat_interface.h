@@ -26,6 +26,8 @@ public:
     
     void sendMessage(const std::string& text);
     void addMessage(const std::string& role, const std::string& content);
+    void displayResponse(const std::string& response);
+    void focusInput();
     std::vector<Message> getHistory() const;
     void clearHistory();
     

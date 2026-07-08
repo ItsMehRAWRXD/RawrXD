@@ -98,6 +98,10 @@ struct PeWriter {
     uint8_t* text_data;
     uint32_t text_size;
     uint32_t text_cap;
+    uint8_t* idata_data;      /* Phase 3: .idata section */
+    uint32_t idata_size;      /* Phase 3: .idata size */
+    uint32_t iat_rva;         /* Phase 3: IAT RVA for DataDirectory[12] */
+    uint32_t iat_size;        /* Phase 3: IAT size for DataDirectory[12] */
     char*    import_dll;
     char*    import_func;
 };
@@ -114,6 +118,7 @@ PeWriter* pe_writer_create(void) {
 void pe_writer_destroy(PeWriter* pw) {
     if (!pw) return;
     free(pw->text_data);
+    free(pw->idata_data);
     free(pw->import_dll);
     free(pw->import_func);
     free(pw);
@@ -131,6 +136,21 @@ void pe_writer_add_text(PeWriter* pw, const uint8_t* data, uint32_t size) {
     }
     if (data) memcpy(pw->text_data + pw->text_size, data, size);
     pw->text_size += size;
+}
+
+/* Phase 3: Add .idata section (imports) */
+void pe_writer_add_idata(PeWriter* pw, const uint8_t* data, uint32_t size) {
+    if (size == 0 || !data) return;
+    pw->idata_data = (uint8_t*)malloc(size);
+    if (!pw->idata_data) return;
+    memcpy(pw->idata_data, data, size);
+    pw->idata_size = size;
+}
+
+/* Phase 3: Set IAT RVA for DataDirectory[12] */
+void pe_writer_set_iat_rva(PeWriter* pw, uint32_t iat_rva, uint32_t iat_size) {
+    pw->iat_rva = iat_rva;
+    pw->iat_size = iat_size;
 }
 
 void pe_writer_set_import(PeWriter* pw, const char* dll_name, const char* func_name) {
@@ -285,58 +305,72 @@ uint32_t pe_writer_emit(PeWriter* pw, uint8_t** out) {
     memcpy(buf + text_raw_off, pw->text_data, text_size);
     /* padding to file alignment is already zero from memset */
 
-    /* 7. .idata section: IDT, ILT, IAT, Hint/Name, DLL name */
-    uint32_t idat_off = idat_raw_off;
-
-    /* IDT entry 1 */
-    w32(buf + idat_off, ilt_rva);     idat_off += 4;  /* OriginalFirstThunk */
-    w32(buf + idat_off, 0);           idat_off += 4;  /* TimeDateStamp */
-    w32(buf + idat_off, 0);           idat_off += 4;  /* ForwarderChain */
-    w32(buf + idat_off, dll_name_rva); idat_off += 4; /* Name */
-    w32(buf + idat_off, iat_rva);    idat_off += 4;  /* FirstThunk */
-    /* IDT null entry */
-    w32(buf + idat_off, 0); idat_off += 4;
-    w32(buf + idat_off, 0); idat_off += 4;
-    w32(buf + idat_off, 0); idat_off += 4;
-    w32(buf + idat_off, 0); idat_off += 4;
-    w32(buf + idat_off, 0); idat_off += 4;
-
-    /* ILT: 64-bit RVA to Hint/Name (PE32+), then 64-bit null terminator */
-    w32(buf + idat_off, hint_name_rva); idat_off += 4;
-    w32(buf + idat_off, 0);             idat_off += 4;
-    idat_off += 8; /* null terminator */
-
-    /* IAT (PE32+): each slot is 64-bit. CRITICAL: slot must be pre-filled with Hint/Name RVA
-     * so the loader knows which function to resolve before overwriting with the address.
-     * IAT[0] = hint_name_rva (e.g. 0x2048); IAT[1] = 0 (null). If IAT[0]==0 the loader skips
-     * resolution and call [IAT] faults. Cross-ref: ige/qpl/dav/mea worktrees — verify with
-     *   python toolchain/from_scratch/phase2_linker/check_imports.py build\test.exe
-     * Expected: IAT[0]: 0x00000000002048 */
-    w32(buf + idat_off, hint_name_rva); idat_off += 4;
-    w32(buf + idat_off, 0);             idat_off += 4;
-    idat_off += 8; /* null terminator */
-
-    /* Hint/Name at hint_name_offset: 2-byte hint + "FuncName\0" */
-    idat_off = idat_raw_off + hint_name_offset;
-    w16(buf + idat_off, 0);
-    idat_off += 2;
-    if (pw->import_func) {
-        size_t flen = strlen(pw->import_func);
-        if (flen > 13) flen = 13;
-        memcpy(buf + idat_off, pw->import_func, flen);
-        buf[idat_off + flen] = 0;
-    }
-
-    /* DLL name at dll_name_offset (lowercase for loader compatibility) */
-    idat_off = idat_raw_off + dll_name_offset;
-    if (pw->import_dll) {
-        size_t dlen = strlen(pw->import_dll);
-        if (dlen > 15) dlen = 15;
-        for (size_t i = 0; i < dlen; i++) {
-            char c = pw->import_dll[i];
-            buf[idat_off + i] = (uint8_t)(c >= 'A' && c <= 'Z' ? c + 32 : c);
+    /* 7. .idata section: Use import builder data if available, otherwise fallback to hardcoded */
+    if (pw->idata_data && pw->idata_size > 0) {
+        /* Phase 3: Use import builder's .idata section */
+        memcpy(buf + idat_raw_off, pw->idata_data, pw->idata_size);
+        /* Update DataDirectory[1] (Import Directory) with correct RVA and size */
+        opt->DataDirectory[1].VirtualAddress = idat_rva;
+        opt->DataDirectory[1].Size = pw->idata_size;
+        /* Update IAT directory (12) with IAT RVA from import builder */
+        if (pw->iat_rva != 0) {
+            opt->DataDirectory[12].VirtualAddress = pw->iat_rva;
+            opt->DataDirectory[12].Size = pw->iat_size;
         }
-        buf[idat_off + dlen] = 0;
+    } else {
+        /* Fallback: hardcoded single import (ExitProcess) */
+        uint32_t idat_off = idat_raw_off;
+
+        /* IDT entry 1 */
+        w32(buf + idat_off, ilt_rva);     idat_off += 4;  /* OriginalFirstThunk */
+        w32(buf + idat_off, 0);           idat_off += 4;  /* TimeDateStamp */
+        w32(buf + idat_off, 0);           idat_off += 4;  /* ForwarderChain */
+        w32(buf + idat_off, dll_name_rva); idat_off += 4; /* Name */
+        w32(buf + idat_off, iat_rva);    idat_off += 4;  /* FirstThunk */
+        /* IDT null entry */
+        w32(buf + idat_off, 0); idat_off += 4;
+        w32(buf + idat_off, 0); idat_off += 4;
+        w32(buf + idat_off, 0); idat_off += 4;
+        w32(buf + idat_off, 0); idat_off += 4;
+        w32(buf + idat_off, 0); idat_off += 4;
+
+        /* ILT: 64-bit RVA to Hint/Name (PE32+), then 64-bit null terminator */
+        w32(buf + idat_off, hint_name_rva); idat_off += 4;
+        w32(buf + idat_off, 0);             idat_off += 4;
+        idat_off += 8; /* null terminator */
+
+        /* IAT (PE32+): each slot is 64-bit. CRITICAL: slot must be pre-filled with Hint/Name RVA
+         * so the loader knows which function to resolve before overwriting with the address.
+         * IAT[0] = hint_name_rva (e.g. 0x2048); IAT[1] = 0 (null). If IAT[0]==0 the loader skips
+         * resolution and call [IAT] faults. Cross-ref: ige/qpl/dav/mea worktrees — verify with
+         *   python toolchain/from_scratch/phase2_linker/check_imports.py build\test.exe
+         * Expected: IAT[0]: 0x00000000002048 */
+        w32(buf + idat_off, hint_name_rva); idat_off += 4;
+        w32(buf + idat_off, 0);             idat_off += 4;
+        idat_off += 8; /* null terminator */
+
+        /* Hint/Name at hint_name_offset: 2-byte hint + "FuncName\0" */
+        idat_off = idat_raw_off + hint_name_offset;
+        w16(buf + idat_off, 0);
+        idat_off += 2;
+        if (pw->import_func) {
+            size_t flen = strlen(pw->import_func);
+            if (flen > 13) flen = 13;
+            memcpy(buf + idat_off, pw->import_func, flen);
+            buf[idat_off + flen] = 0;
+        }
+
+        /* DLL name at dll_name_offset (lowercase for loader compatibility) */
+        idat_off = idat_raw_off + dll_name_offset;
+        if (pw->import_dll) {
+            size_t dlen = strlen(pw->import_dll);
+            if (dlen > 15) dlen = 15;
+            for (size_t i = 0; i < dlen; i++) {
+                char c = pw->import_dll[i];
+                buf[idat_off + i] = (uint8_t)(c >= 'A' && c <= 'Z' ? c + 32 : c);
+            }
+            buf[idat_off + dlen] = 0;
+        }
     }
 
     *out = buf;

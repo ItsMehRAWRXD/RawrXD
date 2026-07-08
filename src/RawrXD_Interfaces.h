@@ -168,7 +168,7 @@ namespace RawrXD {
     struct GGUFMetadata {
         std::string name;
         std::string architecture;
-        std::string architecture_type;
+        uint32_t architecture_type = 0;  // 1=llama, 2=qwen2, 3=phi3, 4=gemma
         uint64_t parameterCount = 0;
         uint32_t vocabSize = 0;
         uint32_t vocab_size = 0;

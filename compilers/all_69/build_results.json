@@ -1,0 +1,362 @@
+[
+    {
+        "Status":  "FAIL",
+        "Name":  "ada_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "assembly_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "bash_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "c_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "c__compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "c___compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "cadence_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "carbon_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "clojure_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "cobol_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "cross_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "crystal_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "dart_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "delphi_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "elixir_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "eon_compiler_complete",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "eon_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "eon_compiler_main",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "eon_kernel_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "erlang_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "fortran_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "f__compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "full_eon_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "go_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "haskell_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "integrated_eon_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "jai_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "java_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "javascript_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "julia_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "kotlin_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "llvm_ir_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "lua_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "master_universal_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "matlab_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "motoko_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "move_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "multi_target_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "n0mn0m_cross_platform_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "n0mn0m_quantum_asm_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "nim_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "ocaml_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "odin_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "pascal_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "perl_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "php_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "powershell_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "python_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "reverser_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "reverser_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "ruby_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "rust_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "r_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "scala_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "self_contained_compiler_gui",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "self_hosted_eon_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "solidity_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "swift_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "test_complete_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "test_full_eon_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "test_self_hosted_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "typescript_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "uber_elegant_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "universal_compiler_runtime",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "universal_compiler_runtime_clean",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "universal_cross_platform_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "universal_multi_language_compiler",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "vb_net_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "v_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "vyper_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "webassembly_compiler_from_scratch",
+        "Step":  "Assembly"
+    },
+    {
+        "Status":  "FAIL",
+        "Name":  "zig_compiler_from_scratch",
+        "Step":  "Assembly"
+    }
+]
