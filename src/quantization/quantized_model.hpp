@@ -82,9 +82,9 @@ public:
     QuantizedModel(const QuantizedModel&) = delete;
     QuantizedModel& operator=(const QuantizedModel&) = delete;
     
-    // Enable move
-    QuantizedModel(QuantizedModel&&) = default;
-    QuantizedModel& operator=(QuantizedModel&&) = default;
+    // Enable move (defined in .cpp)
+    QuantizedModel(QuantizedModel&&) noexcept;
+    QuantizedModel& operator=(QuantizedModel&&) noexcept;
     
     // Initialize with configuration
     bool Initialize(const QuantizedModelConfig& config);

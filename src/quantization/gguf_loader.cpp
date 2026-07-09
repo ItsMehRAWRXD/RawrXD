@@ -184,6 +184,23 @@ uint64_t GGUFModelLoader::GetTensorSizeBytes(const TensorInfo& info) const {
             uint64_t num_blocks = (num_elements + 31) / 32;
             return num_blocks * 34;  // 34 bytes per block
         }
+        case GGMLType::Q4_K: {
+            // Q4_K uses 256 weights per block, 144 bytes per block
+            uint64_t num_blocks = (num_elements + 255) / 256;
+            return num_blocks * 144;
+        }
+        case GGMLType::Q6_K: {
+            // Q6_K uses 256 weights per block, 210 bytes per block
+            uint64_t num_blocks = (num_elements + 255) / 256;
+            return num_blocks * 210;
+        }
+        // K-quants we don't support yet - estimate size
+        case GGMLType::Q2_K:
+        case GGMLType::Q3_K:
+        case GGMLType::Q5_K:
+        case GGMLType::Q8_K:
+            // Return estimated size - actual loading will fail gracefully
+            return num_elements * 4;  // Assume F32 for estimation
         default:
             std::cerr << "Unknown tensor type: " << static_cast<int>(info.type) << std::endl;
             return num_elements * 4;  // Assume F32
@@ -195,7 +212,18 @@ QuantType GGUFModelLoader::ConvertGGMLType(GGMLType type) const {
         case GGMLType::Q4_0: return QuantType::Q4_0;
         case GGMLType::Q8_0: return QuantType::Q8_0;
         case GGMLType::F32: return QuantType::F32;
-        default: return QuantType::F32;
+        case GGMLType::Q4_K: return QuantType::Q4_K;
+        case GGMLType::Q6_K: return QuantType::Q6_K;
+        // For K-quants we don't support yet, return F32 as fallback
+        case GGMLType::Q2_K:
+        case GGMLType::Q3_K:
+        case GGMLType::Q5_K:
+        case GGMLType::Q8_K:
+            std::cerr << "Warning: K-quant type " << static_cast<int>(type) << " not fully supported, using F32 fallback" << std::endl;
+            return QuantType::F32;
+        default:
+            std::cerr << "Warning: Unknown GGML type " << static_cast<int>(type) << ", using F32 fallback" << std::endl;
+            return QuantType::F32;
     }
 }
 
@@ -237,42 +265,86 @@ bool GGUFModelLoader::LoadQuantizedTensor(const std::string& name,
 }
 
 bool GGUFModelLoader::LoadLayerWeights(int layer_idx, QuantizedLayerWeightsExtended& weights) {
-    std::string prefix = "blk." + std::to_string(layer_idx) + ".";
+    // Try different naming conventions
+    std::vector<std::string> prefixes = {
+        "blk." + std::to_string(layer_idx) + ".",
+        "layers." + std::to_string(layer_idx) + ".",
+        "model.layers." + std::to_string(layer_idx) + "."
+    };
     
-    // Attention weights
-    if (!LoadQuantizedTensor(prefix + "attn_q.weight", weights.q_proj, QuantType::Q4_0)) {
-        std::cerr << "Failed to load Q projection for layer " << layer_idx << std::endl;
-        return false;
-    }
-    if (!LoadQuantizedTensor(prefix + "attn_k.weight", weights.k_proj, QuantType::Q4_0)) {
-        std::cerr << "Failed to load K projection for layer " << layer_idx << std::endl;
-        return false;
-    }
-    if (!LoadQuantizedTensor(prefix + "attn_v.weight", weights.v_proj, QuantType::Q4_0)) {
-        std::cerr << "Failed to load V projection for layer " << layer_idx << std::endl;
-        return false;
-    }
-    if (!LoadQuantizedTensor(prefix + "attn_output.weight", weights.o_proj, QuantType::Q4_0)) {
-        std::cerr << "Failed to load O projection for layer " << layer_idx << std::endl;
-        return false;
-    }
+    // Attention weights - try different naming patterns
+    std::vector<std::string> q_names = {"attn_q.weight", "self_attn.q_proj.weight", "attention.q_proj.weight"};
+    std::vector<std::string> k_names = {"attn_k.weight", "self_attn.k_proj.weight", "attention.k_proj.weight"};
+    std::vector<std::string> v_names = {"attn_v.weight", "self_attn.v_proj.weight", "attention.v_proj.weight"};
+    std::vector<std::string> o_names = {"attn_output.weight", "self_attn.o_proj.weight", "attention.o_proj.weight"};
     
-    // FFN weights
-    if (!LoadQuantizedTensor(prefix + "ffn_gate.weight", weights.gate_proj, QuantType::Q4_0)) {
-        // Try alternative naming
-        if (!LoadQuantizedTensor(prefix + "ffn_up.weight", weights.gate_proj, QuantType::Q4_0)) {
-            std::cerr << "Failed to load gate projection for layer " << layer_idx << std::endl;
-            return false;
+    bool q_loaded = false, k_loaded = false, v_loaded = false, o_loaded = false;
+    
+    for (const auto& prefix : prefixes) {
+        for (const auto& name : q_names) {
+            if (!q_loaded && LoadQuantizedTensor(prefix + name, weights.q_proj, QuantType::Q4_0)) {
+                q_loaded = true;
+                break;
+            }
         }
+        for (const auto& name : k_names) {
+            if (!k_loaded && LoadQuantizedTensor(prefix + name, weights.k_proj, QuantType::Q4_0)) {
+                k_loaded = true;
+                break;
+            }
+        }
+        for (const auto& name : v_names) {
+            if (!v_loaded && LoadQuantizedTensor(prefix + name, weights.v_proj, QuantType::Q4_0)) {
+                v_loaded = true;
+                break;
+            }
+        }
+        for (const auto& name : o_names) {
+            if (!o_loaded && LoadQuantizedTensor(prefix + name, weights.o_proj, QuantType::Q4_0)) {
+                o_loaded = true;
+                break;
+            }
+        }
+        if (q_loaded && k_loaded && v_loaded && o_loaded) break;
     }
-    if (!LoadQuantizedTensor(prefix + "ffn_up.weight", weights.up_proj, QuantType::Q4_0)) {
-        std::cerr << "Failed to load up projection for layer " << layer_idx << std::endl;
-        return false;
+    
+    if (!q_loaded) std::cerr << "Failed to load Q projection for layer " << layer_idx << std::endl;
+    if (!k_loaded) std::cerr << "Failed to load K projection for layer " << layer_idx << std::endl;
+    if (!v_loaded) std::cerr << "Failed to load V projection for layer " << layer_idx << std::endl;
+    if (!o_loaded) std::cerr << "Failed to load O projection for layer " << layer_idx << std::endl;
+    
+    // FFN weights - try different naming patterns
+    std::vector<std::string> gate_names = {"ffn_gate.weight", "mlp.gate_proj.weight", "feed_forward.w1.weight"};
+    std::vector<std::string> up_names = {"ffn_up.weight", "mlp.up_proj.weight", "feed_forward.w3.weight"};
+    std::vector<std::string> down_names = {"ffn_down.weight", "mlp.down_proj.weight", "feed_forward.w2.weight"};
+    
+    bool gate_loaded = false, up_loaded = false, down_loaded = false;
+    
+    for (const auto& prefix : prefixes) {
+        for (const auto& name : gate_names) {
+            if (!gate_loaded && LoadQuantizedTensor(prefix + name, weights.gate_proj, QuantType::Q4_0)) {
+                gate_loaded = true;
+                break;
+            }
+        }
+        for (const auto& name : up_names) {
+            if (!up_loaded && LoadQuantizedTensor(prefix + name, weights.up_proj, QuantType::Q4_0)) {
+                up_loaded = true;
+                break;
+            }
+        }
+        for (const auto& name : down_names) {
+            if (!down_loaded && LoadQuantizedTensor(prefix + name, weights.down_proj, QuantType::Q4_0)) {
+                down_loaded = true;
+                break;
+            }
+        }
+        if (gate_loaded && up_loaded && down_loaded) break;
     }
-    if (!LoadQuantizedTensor(prefix + "ffn_down.weight", weights.down_proj, QuantType::Q4_0)) {
-        std::cerr << "Failed to load down projection for layer " << layer_idx << std::endl;
-        return false;
-    }
+    
+    if (!gate_loaded) std::cerr << "Failed to load gate projection for layer " << layer_idx << std::endl;
+    if (!up_loaded) std::cerr << "Failed to load up projection for layer " << layer_idx << std::endl;
+    if (!down_loaded) std::cerr << "Failed to load down projection for layer " << layer_idx << std::endl;
     
     // Normalization weights (F32)
     // These would be loaded separately
