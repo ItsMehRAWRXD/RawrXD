@@ -95,7 +95,7 @@ public:
     // Get embeddings with telemetry
     EmbeddingMatrix GetEmbeddingsWithTelemetry(
         const std::vector<uint32_t>& token_ids,
-        EmbeddingTelemetry* telemetry) const;
+        EmbeddingTelemetry* telemetry);
     
     // Get embedding dimension
     uint32_t GetEmbeddingDim() const { return embedding_dim_; }
@@ -108,6 +108,9 @@ public:
     
     // Get telemetry from last operation
     const EmbeddingTelemetry& GetLastTelemetry() const { return last_telemetry_; }
+    
+    // Set telemetry (internal use)
+    void SetLastTelemetry(const EmbeddingTelemetry& telemetry) { last_telemetry_ = telemetry; }
     
 private:
     bool initialized_ = false;

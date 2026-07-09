@@ -51,6 +51,7 @@ enum class CommandType : uint8_t {
     BENCHMARK,               // Run benchmark suite
     INSPECT_MODEL,           // Inspect GGUF model
     TOKENIZER_VALIDATE,      // Step C2: Tokenizer validation
+    EMBEDDING_LOOKUP,        // Step C3: Embedding lookup
     TEST_SUITE               // Run test suite
 };
 
@@ -83,6 +84,9 @@ struct ExecutionRequest {
     bool verbose = false;
     bool quiet = false;
     bool dump_telemetry = false;     // Dump SEG/MASM telemetry after execution
+    
+    // Step C3: Token ID for embedding lookup
+    uint32_t token_id = 0;
     
     // Metadata
     std::string request_id;        // Unique identifier for tracing

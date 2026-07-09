@@ -11,6 +11,7 @@
 #include "../kernels/kernel_registry.h"
 #include "../model/model_context.h"
 #include "../runtime/tokenizer_runtime.h"
+#include "../inference/transformer_layer.h"
 
 #include <iostream>
 #include <fstream>
@@ -278,6 +279,9 @@ ExecutionResult RealExecutionGateway::Execute(const ExecutionRequest& request) {
         case CommandType::TOKENIZER_VALIDATE:
             result = HandleTokenizerValidate(request);
             break;
+        case CommandType::EMBEDDING_LOOKUP:
+            result = HandleEmbeddingLookup(request);
+            break;
         case CommandType::TEST_SUITE:
             result = HandleTestSuite(request);
             break;
@@ -525,6 +529,105 @@ ExecutionResult RealExecutionGateway::HandleTokenizerValidate(const ExecutionReq
     return result;
 }
 
+ExecutionResult RealExecutionGateway::HandleEmbeddingLookup(const ExecutionRequest& req) {
+    // Step C3: Embedding lookup from token_embd.weight
+    if (req.model_path.empty()) {
+        return ExecutionResult::UserError("Model path required for embedding lookup");
+    }
+    
+    // Load ModelContext
+    auto model_ctx = model::ModelContextFactory::FromGGUF(req.model_path);
+    if (!model_ctx) {
+        return ExecutionResult::UserError("Failed to load model: " + req.model_path);
+    }
+    
+    ExecutionResult result;
+    result.status = Status::SUCCESS;
+    result.status_message = "Embedding lookup complete";
+    
+    std::ostringstream oss;
+    oss << "=== Step C3: Embedding Lookup ===\n\n";
+    
+    // Gate C3.1: Check for embedding weights
+    oss << "Gate C3.1: Embedding Weights Available\n";
+    oss << "------------------------------------------\n";
+    if (model_ctx->HasEmbeddingWeights()) {
+        oss << "  PASS: token_embd.weight found\n";
+    } else {
+        oss << "  FAIL: token_embd.weight not found\n";
+        result.status = Status::VALIDATION_FAILURE;
+        result.text_output = oss.str();
+        return result;
+    }
+    
+    // Gate C3.2: Load embedding for token
+    oss << "\nGate C3.2: Token Embedding Lookup\n";
+    oss << "------------------------------------------\n";
+    uint32_t token_id = req.token_id;
+    oss << "  Token ID: " << token_id << "\n";
+    
+    auto start = std::chrono::steady_clock::now();
+    auto embedding = model_ctx->GetTokenEmbedding(token_id);
+    auto end = std::chrono::steady_clock::now();
+    
+    double lookup_ms = std::chrono::duration<double, std::milli>(end - start).count();
+    
+    if (!embedding.empty()) {
+        oss << "  PASS: Embedding loaded\n";
+        oss << "  Dimension: " << embedding.size() << "\n";
+        oss << "  Lookup time: " << std::fixed << std::setprecision(3) << lookup_ms << " ms\n";
+        
+        // Show first few values
+        oss << "  First 5 values: [";
+        for (size_t i = 0; i < std::min(size_t(5), embedding.size()); ++i) {
+            if (i > 0) oss << ", ";
+            oss << std::fixed << std::setprecision(4) << embedding[i];
+        }
+        if (embedding.size() > 5) oss << ", ...";
+        oss << "]\n";
+    } else {
+        oss << "  FAIL: Could not load embedding\n";
+        result.status = Status::VALIDATION_FAILURE;
+    }
+    
+    // Gate C3.3: Verify embedding statistics
+    oss << "\nGate C3.3: Embedding Statistics\n";
+    oss << "------------------------------------------\n";
+    if (!embedding.empty()) {
+        double sum = 0.0;
+        double sum_sq = 0.0;
+        float min_val = embedding[0];
+        float max_val = embedding[0];
+        
+        for (float v : embedding) {
+            sum += v;
+            sum_sq += v * v;
+            min_val = std::min(min_val, v);
+            max_val = std::max(max_val, v);
+        }
+        
+        double mean = sum / embedding.size();
+        double variance = (sum_sq / embedding.size()) - (mean * mean);
+        double stddev = std::sqrt(variance);
+        
+        oss << "  Mean: " << std::fixed << std::setprecision(6) << mean << "\n";
+        oss << "  StdDev: " << std::fixed << std::setprecision(6) << stddev << "\n";
+        oss << "  Min: " << std::fixed << std::setprecision(4) << min_val << "\n";
+        oss << "  Max: " << std::fixed << std::setprecision(4) << max_val << "\n";
+        oss << "  PASS: Statistics computed\n";
+        
+        // Add to metadata
+        result.metadata["embedding_dim"] = std::to_string(embedding.size());
+        result.metadata["embedding_mean"] = std::to_string(mean);
+        result.metadata["embedding_stddev"] = std::to_string(stddev);
+    } else {
+        oss << "  SKIP: No embedding data\n";
+    }
+    
+    result.text_output = oss.str();
+    return result;
+}
+
 ExecutionResult RealExecutionGateway::HandleTestSuite(const ExecutionRequest& req) {
     ExecutionResult result;
     result.status = Status::SUCCESS;
@@ -763,34 +866,120 @@ ExecutionResult RealExecutionGateway::ExecuteRealGEMMProfile(const ExecutionRequ
 // Real Inference Pipeline - SEG Integration
 // ============================================================================
 
-#include "../gateway/seg_gateway.hpp"
+// SEG integration stub - full implementation in separate build
+namespace seg_stub {
+    struct SegResult {
+        execution::Status status = execution::Status::SUCCESS;
+        std::string text_output;
+        std::string status_message;
+        std::string error_details;
+        struct {
+            double total_time_ms = 0.0;
+            uint64_t tokens_logged = 0;
+            double tokens_per_second = 0.0;
+            double time_to_first_token_ms = 0.0;
+            uint64_t peak_memory_bytes = 0;
+            std::string Summary() const { return "SEG telemetry stub"; }
+        } telemetry;
+        std::vector<int> tokens_generated;
+    };
+    
+    SegResult RunSegInference(const execution::ExecutionRequest& req) {
+        SegResult result;
+        result.status = execution::Status::RUNTIME_FAILURE;
+        result.status_message = "SEG not linked - use build with SEG integration";
+        result.text_output = "SEG inference requires separate build with libseg.a";
+        return result;
+    }
+}
 
 ExecutionResult RealExecutionGateway::ExecuteRealInference(const ExecutionRequest& req) {
-    // Use SEG (Streaming Execution Graph) for real inference
-    // Run through SEG gateway
-    auto seg_result = rawrxd::gateway::RunSegInference(req);
-    
-    // Convert SEG result to ExecutionResult
     ExecutionResult result;
-    result.status = seg_result.status;
-    result.text_output = seg_result.text_output;
-    result.status_message = seg_result.status_message;
-    result.error_details = seg_result.error_details;
     
-    // Map SEG telemetry to ExecutionResult telemetry
-    result.telemetry.total_ms = seg_result.telemetry.total_time_ms;
-    result.telemetry.tokens_generated = static_cast<int>(seg_result.tokens_generated.size());
-    result.telemetry.tokens_prompt = seg_result.telemetry.tokens_logged > 0 ? 
-        seg_result.telemetry.tokens_logged - seg_result.tokens_generated.size() : 10;
-    result.telemetry.tokens_per_second = seg_result.telemetry.tokens_per_second;
-    result.telemetry.time_to_first_token_ms = seg_result.telemetry.time_to_first_token_ms;
-    result.telemetry.peak_memory_bytes = seg_result.telemetry.peak_memory_bytes;
-    result.telemetry.kernel_implementation = "SEG+MASM";
+    // Step C4: Full transformer inference
+    auto start = std::chrono::steady_clock::now();
     
-    // Append SEG telemetry summary to output if requested
-    if (req.dump_telemetry || req.verbose) {
-        result.text_output += "\n\n" + seg_result.telemetry.Summary();
+    // Load model
+    inference::TransformerModel model;
+    if (!model.Load(req.model_path)) {
+        result.status = Status::RUNTIME_FAILURE;
+        result.status_message = "Failed to load model";
+        result.text_output = "Error: Could not load model from " + req.model_path;
+        return result;
     }
+    
+    // Tokenize prompt
+    auto model_ctx = model::ModelContextFactory::FromGGUF(req.model_path);
+    if (!model_ctx) {
+        result.status = Status::RUNTIME_FAILURE;
+        result.status_message = "Failed to load model context";
+        return result;
+    }
+    
+    auto tokenizer = runtime::TokenizerFactory::FromModel(*model_ctx);
+    if (!tokenizer) {
+        result.status = Status::RUNTIME_FAILURE;
+        result.status_message = "Failed to create tokenizer";
+        return result;
+    }
+    
+    auto tokens = tokenizer->Encode(req.prompt);
+    if (tokens.empty()) {
+        result.status = Status::RUNTIME_FAILURE;
+        result.status_message = "Failed to tokenize prompt";
+        return result;
+    }
+    
+    // Generate tokens
+    std::vector<uint32_t> generated_tokens;
+    std::vector<uint32_t> all_tokens;
+    all_tokens.reserve(tokens.size());
+    for (auto t : tokens) {
+        all_tokens.push_back(static_cast<uint32_t>(t));
+    }
+    
+    for (uint32_t i = 0; i < req.max_tokens; ++i) {
+        auto next_token = model.GenerateNextToken(all_tokens, req.temperature, 40);
+        if (next_token == 0) break; // EOS or error
+        
+        generated_tokens.push_back(next_token);
+        all_tokens.push_back(next_token);
+    }
+    
+    auto end = std::chrono::steady_clock::now();
+    auto total_ms = std::chrono::duration<double, std::milli>(end - start).count();
+    
+    // Decode generated tokens (convert uint32_t to TokenId/int)
+    std::vector<runtime::TokenId> generated_tokens_int(generated_tokens.begin(), generated_tokens.end());
+    std::string generated_text = tokenizer->Decode(generated_tokens_int);
+    
+    // Build result
+    result.status = Status::SUCCESS;
+    result.status_message = "Inference complete";
+    
+    std::ostringstream oss;
+    oss << "=== Step C4: Transformer Inference ===\n\n";
+    oss << "Input: \"" << req.prompt << "\"\n";
+    oss << "Tokens: " << tokens.size() << " prompt + " << generated_tokens.size() << " generated\n\n";
+    oss << "Generated text: \"" << generated_text << "\"\n\n";
+    oss << "Performance:\n";
+    oss << "  Total time: " << std::fixed << std::setprecision(2) << total_ms << " ms\n";
+    oss << "  Tokens/sec: " << std::fixed << std::setprecision(2) 
+        << (generated_tokens.size() * 1000.0 / total_ms) << "\n";
+    
+    result.text_output = oss.str();
+    
+    // Telemetry
+    result.telemetry.total_ms = total_ms;
+    result.telemetry.tokens_prompt = static_cast<uint32_t>(tokens.size());
+    result.telemetry.tokens_generated = static_cast<uint32_t>(generated_tokens.size());
+    result.telemetry.tokens_per_second = generated_tokens.size() * 1000.0 / total_ms;
+    result.telemetry.kernel_implementation = "Transformer";
+    
+    // Metadata
+    result.metadata["prompt_tokens"] = std::to_string(tokens.size());
+    result.metadata["generated_tokens"] = std::to_string(generated_tokens.size());
+    result.metadata["generated_text"] = generated_text;
     
     return result;
 }
