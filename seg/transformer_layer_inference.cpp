@@ -6,6 +6,7 @@
 
 #include "transformer_layer_inference.hpp"
 #include "avx512_kernels.hpp"
+#include "flash_attention_avx512.hpp"
 #include <iostream>
 
 namespace RawrXD {
@@ -93,7 +94,6 @@ void TransformerLayer::AttentionForward(const float* Q, const float* K, const fl
     uint32_t num_heads = config_.num_heads;
     uint32_t num_kv_heads = config_.num_kv_heads;
     uint32_t head_dim = config_.head_dim;
-    uint32_t hidden = config_.hidden_size;
     uint32_t kv_hidden = num_kv_heads * head_dim;
     
     // Store K and V in cache
@@ -103,41 +103,25 @@ void TransformerLayer::AttentionForward(const float* Q, const float* K, const fl
     }
     kv_cache.cache_len = position + 1;
     
-    // For each head, compute attention
+    // For each head, compute attention using Flash Attention
     for (uint32_t h = 0; h < num_heads; h++) {
         uint32_t kv_h = h / (num_heads / num_kv_heads);  // GQA mapping
         
         // Q for this head
         const float* q_head = Q + h * head_dim;
-        
-        // Compute attention scores for each position in cache
-        std::vector<float> scores(kv_cache.cache_len);
-        for (uint32_t pos = 0; pos < kv_cache.cache_len; pos++) {
-            const float* k_head = kv_cache.k_cache.data() + pos * kv_hidden + kv_h * head_dim;
-            
-            // Q * K^T / sqrt(head_dim)
-            float dot = 0.0f;
-            for (uint32_t d = 0; d < head_dim; d++) {
-                dot += q_head[d] * k_head[d];
-            }
-            scores[pos] = dot / std::sqrt(static_cast<float>(head_dim));
-        }
-        
-        // Softmax
-        Softmax(scores.data(), kv_cache.cache_len);
-        
-        // Compute weighted sum of V
         float* out_head = output + h * head_dim;
-        for (uint32_t d = 0; d < head_dim; d++) {
-            out_head[d] = 0.0f;
-        }
         
-        for (uint32_t pos = 0; pos < kv_cache.cache_len; pos++) {
-            const float* v_head = kv_cache.v_cache.data() + pos * kv_hidden + kv_h * head_dim;
-            for (uint32_t d = 0; d < head_dim; d++) {
-                out_head[d] += scores[pos] * v_head[d];
-            }
-        }
+        // Use Flash Attention for cached attention computation
+        // The KV cache is stored as [cache_len, kv_hidden] with heads interleaved
+        // We need to access the correct KV head's data
+        SEG::FlashAttentionCachedF32(
+            q_head,
+            kv_cache.k_cache.data(),  // Full K cache
+            kv_cache.v_cache.data(),  // Full V cache
+            out_head,
+            kv_cache.cache_len,
+            head_dim
+        );
     }
 }
 

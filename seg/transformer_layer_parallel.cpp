@@ -3,6 +3,7 @@
 // ============================================================================
 
 #include "transformer_layer_parallel.hpp"
+#include "avx512_kernels.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -157,41 +158,40 @@ void ParallelTransformerLayer::FFNForwardParallel(const float* input, float* out
     thread_pool_.ParallelFor(0, num_chunks, process_ffn_chunk);
 }
 
-// Parallel matrix multiplication - splits N dimension across threads
+// Parallel matrix multiplication - splits M dimension across threads
 void ParallelTransformerLayer::ParallelMatMul(const float* A, const float* B, float* C,
                                                uint32_t M, uint32_t K, uint32_t N) {
-    if (M != 1 || num_threads_ <= 1) {
-        // Fall back to sequential for non-vector inputs or single thread
+    if (num_threads_ <= 1 || M < num_threads_) {
+        // Fall back to sequential for small matrices or single thread
         MatMul(A, B, C, M, K, N);
         return;
     }
     
-    // For row-vector × matrix, parallelize over output columns (N dimension)
-    auto process_columns = [&](size_t thread_id) {
-        size_t cols_per_thread = N / num_threads_;
-        size_t remainder = N % num_threads_;
-        
-        size_t start_col = thread_id * cols_per_thread + std::min(thread_id, remainder);
-        size_t local_cols = cols_per_thread + (thread_id < remainder ? 1 : 0);
-        size_t end_col = start_col + local_cols;
-        
-        // Compute this thread's portion of output
-        for (size_t n = start_col; n < end_col; n++) {
-            float sum = 0.0f;
-            for (uint32_t k = 0; k < K; k++) {
-                sum += A[k] * B[k * N + n];
-            }
-            C[n] = sum;
-        }
-    };
+    // Split M dimension across threads
+    size_t rows_per_thread = M / num_threads_;
+    size_t remainder = M % num_threads_;
     
     // Launch parallel tasks
     std::vector<std::future<void>> futures;
     futures.reserve(num_threads_);
     
+    size_t current_row = 0;
     for (size_t t = 0; t < num_threads_; t++) {
-        futures.push_back(thread_pool_.Submit([t, &process_columns]() {
-            process_columns(t);
+        size_t local_rows = rows_per_thread + (t < remainder ? 1 : 0);
+        size_t start_row = current_row;
+        current_row += local_rows;
+        
+        futures.push_back(thread_pool_.Submit([this, start_row, local_rows, A, B, C, K, N]() {
+            // Use AVX-512 kernel for each thread's portion
+            for (size_t m = start_row; m < start_row + local_rows; m++) {
+                // Compute row m of output using AVX-512
+                SEG::KernelDispatch::MatMulF32(
+                    A + m * K, 
+                    B, 
+                    C + m * N, 
+                    1, N, K
+                );
+            }
         }));
     }
     

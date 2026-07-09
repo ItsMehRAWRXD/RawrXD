@@ -119,27 +119,78 @@ static void RMSNormF32_Scalar(const float* X, const float* weight, float eps,
 
 #ifdef __AVX512F__
 
-void MatMulF32_AVX512(const float* A, const float* B, float* C,
-                       size_t M, size_t N, size_t K) {
+// Tiled matrix multiplication for better cache utilization
+// Tile sizes chosen to fit in L1/L2 cache
+// Optimized for transformer dimensions (4096, 14336)
+static constexpr size_t TILE_M = 64;  // Rows of A/C per tile - larger for better reuse
+static constexpr size_t TILE_N = 128; // Columns of B/C per tile - matches AVX-512 width
+static constexpr size_t TILE_K = 64;  // Columns of A / Rows of B per tile
+
+void MatMulF32_AVX512_Tiled(const float* A, const float* B, float* C,
+                             size_t M, size_t N, size_t K) {
     std::memset(C, 0, M * N * sizeof(float));
     
-    for (size_t i = 0; i < M; ++i) {
-        for (size_t k = 0; k < K; ++k) {
-            float a_val = A[i * K + k];
-            __m512 a_vec = _mm512_set1_ps(a_val);
+    // Tiled loop structure for cache efficiency
+    for (size_t tile_i = 0; tile_i < M; tile_i += TILE_M) {
+        size_t max_i = std::min(tile_i + TILE_M, M);
+        
+        for (size_t tile_j = 0; tile_j < N; tile_j += TILE_N) {
+            size_t max_j = std::min(tile_j + TILE_N, N);
             
-            size_t j = 0;
-            // Process 16 elements at a time
-            for (; j + 16 <= N; j += 16) {
-                __m512 b_vec = _mm512_loadu_ps(&B[k * N + j]);
-                __m512 c_vec = _mm512_loadu_ps(&C[i * N + j]);
-                c_vec = _mm512_fmadd_ps(a_vec, b_vec, c_vec);
-                _mm512_storeu_ps(&C[i * N + j], c_vec);
+            for (size_t tile_k = 0; tile_k < K; tile_k += TILE_K) {
+                size_t max_k = std::min(tile_k + TILE_K, K);
+                
+                // Process this tile
+                for (size_t i = tile_i; i < max_i; ++i) {
+                    for (size_t k = tile_k; k < max_k; ++k) {
+                        float a_val = A[i * K + k];
+                        __m512 a_vec = _mm512_set1_ps(a_val);
+                        
+                        size_t j = tile_j;
+                        // Process 16 elements at a time
+                        for (; j + 16 <= max_j; j += 16) {
+                            __m512 b_vec = _mm512_loadu_ps(&B[k * N + j]);
+                            __m512 c_vec = _mm512_loadu_ps(&C[i * N + j]);
+                            c_vec = _mm512_fmadd_ps(a_vec, b_vec, c_vec);
+                            _mm512_storeu_ps(&C[i * N + j], c_vec);
+                        }
+                        
+                        // Scalar remainder
+                        for (; j < max_j; ++j) {
+                            C[i * N + j] += a_val * B[k * N + j];
+                        }
+                    }
+                }
             }
-            
-            // Scalar remainder
-            for (; j < N; ++j) {
-                C[i * N + j] += a_val * B[k * N + j];
+        }
+    }
+}
+
+void MatMulF32_AVX512(const float* A, const float* B, float* C,
+                       size_t M, size_t N, size_t K) {
+    // Use tiled version for large matrices, simple version for small
+    if (M >= 64 || N >= 128 || K >= 128) {
+        MatMulF32_AVX512_Tiled(A, B, C, M, N, K);
+    } else {
+        // Simple version for small matrices
+        std::memset(C, 0, M * N * sizeof(float));
+        
+        for (size_t i = 0; i < M; ++i) {
+            for (size_t k = 0; k < K; ++k) {
+                float a_val = A[i * K + k];
+                __m512 a_vec = _mm512_set1_ps(a_val);
+                
+                size_t j = 0;
+                for (; j + 16 <= N; j += 16) {
+                    __m512 b_vec = _mm512_loadu_ps(&B[k * N + j]);
+                    __m512 c_vec = _mm512_loadu_ps(&C[i * N + j]);
+                    c_vec = _mm512_fmadd_ps(a_vec, b_vec, c_vec);
+                    _mm512_storeu_ps(&C[i * N + j], c_vec);
+                }
+                
+                for (; j < N; ++j) {
+                    C[i * N + j] += a_val * B[k * N + j];
+                }
             }
         }
     }
