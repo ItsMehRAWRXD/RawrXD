@@ -78,6 +78,11 @@ public:
     std::string Decode(TokenId token) const;
     
     /**
+     * Convert token ID to token string.
+     */
+    std::string IdToToken(TokenId id) const;
+    
+    /**
      * Vocabulary size.
      */
     size_t VocabularySize() const;
