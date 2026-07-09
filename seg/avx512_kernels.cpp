@@ -122,9 +122,11 @@ static void RMSNormF32_Scalar(const float* X, const float* weight, float eps,
 // Tiled matrix multiplication for better cache utilization
 // Tile sizes chosen to fit in L1/L2 cache
 // Optimized for transformer dimensions (4096, 14336)
-static constexpr size_t TILE_M = 64;  // Rows of A/C per tile - larger for better reuse
+// Optimized tiles for transformer dimensions
+// Balance between L1 cache utilization and amortization overhead
+static constexpr size_t TILE_M = 64;  // Rows of A/C per tile
 static constexpr size_t TILE_N = 128; // Columns of B/C per tile - matches AVX-512 width
-static constexpr size_t TILE_K = 64;  // Columns of A / Rows of B per tile
+static constexpr size_t TILE_K = 64; // Columns of A / Rows of B per tile
 
 void MatMulF32_AVX512_Tiled(const float* A, const float* B, float* C,
                              size_t M, size_t N, size_t K) {

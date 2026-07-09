@@ -26,7 +26,10 @@ static inline void OnlineSoftmaxUpdate(float& max_val, float& sum_exp,
 void FlashAttentionCachedF32(const float* q,
                                 const float* k_cache, const float* v_cache,
                                 float* output,
-                                size_t cache_len, size_t head_dim) {
+                                size_t cache_len, size_t head_dim, size_t kv_stride) {
+    // Use head_dim as stride if not specified (for non-GQA)
+    if (kv_stride == 0) kv_stride = head_dim;
+    
     // Initialize output and running statistics
     float max_score = -INFINITY;
     float sum_exp = 0.0f;
@@ -46,7 +49,7 @@ void FlashAttentionCachedF32(const float* q,
         float block_max = -INFINITY;
         
         for (size_t pos = 0; pos < block_len; pos++) {
-            const float* k_vec = k_cache + (block_start + pos) * head_dim;
+            const float* k_vec = k_cache + (block_start + pos) * kv_stride;
             
             // Compute dot product Q @ K^T
             float dot = 0.0f;
@@ -87,7 +90,7 @@ void FlashAttentionCachedF32(const float* q,
         
         // Accumulate weighted values
         for (size_t pos = 0; pos < block_len; pos++) {
-            const float* v_vec = v_cache + (block_start + pos) * head_dim;
+            const float* v_vec = v_cache + (block_start + pos) * kv_stride;
             float weight = block_scores[pos];
             
             size_t d = 0;

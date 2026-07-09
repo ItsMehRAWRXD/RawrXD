@@ -7,6 +7,7 @@
 #include "transformer_layer_inference.hpp"
 #include "avx512_kernels.hpp"
 #include "flash_attention_avx512.hpp"
+#include "quantized_matmul_fast.hpp"
 #include <iostream>
 
 namespace RawrXD {
@@ -113,14 +114,15 @@ void TransformerLayer::AttentionForward(const float* Q, const float* K, const fl
         
         // Use Flash Attention for cached attention computation
         // The KV cache is stored as [cache_len, kv_hidden] with heads interleaved
-        // We need to access the correct KV head's data
+        // Pass kv_h * head_dim as offset to access correct KV head
         SEG::FlashAttentionCachedF32(
             q_head,
-            kv_cache.k_cache.data(),  // Full K cache
-            kv_cache.v_cache.data(),  // Full V cache
+            kv_cache.k_cache.data() + kv_h * head_dim,  // K cache for this KV head
+            kv_cache.v_cache.data() + kv_h * head_dim,  // V cache for this KV head
             out_head,
             kv_cache.cache_len,
-            head_dim
+            head_dim,
+            kv_hidden  // Stride between consecutive KV entries
         );
     }
 }
@@ -135,17 +137,17 @@ bool TransformerLayer::Forward(const float* input, float* output,
     // 1. RMSNorm
     RMSNorm(input, weights_.attn_norm.data(), normed_.data(), hidden);
     
-    // 2. QKV projections
-    MatMul(normed_.data(), weights_.q_weight.data(), q_proj_.data(), 1, hidden, hidden);
-    MatMul(normed_.data(), weights_.k_weight.data(), k_proj_.data(), 1, hidden, kv_hidden);
-    MatMul(normed_.data(), weights_.v_weight.data(), v_proj_.data(), 1, hidden, kv_hidden);
+    // 2. QKV projections - use fast MatMul
+    SEG::FastVecMatMul(normed_.data(), weights_.q_weight.data(), q_proj_.data(), hidden, hidden);
+    SEG::FastVecMatMul(normed_.data(), weights_.k_weight.data(), k_proj_.data(), kv_hidden, hidden);
+    SEG::FastVecMatMul(normed_.data(), weights_.v_weight.data(), v_proj_.data(), kv_hidden, hidden);
     
     // 3. Attention
     AttentionForward(q_proj_.data(), k_proj_.data(), v_proj_.data(),
                      attn_out_.data(), kv_cache, position);
     
-    // 4. Output projection
-    MatMul(attn_out_.data(), weights_.o_weight.data(), normed_.data(), 1, hidden, hidden);
+    // 4. Output projection - use fast MatMul
+    SEG::FastVecMatMul(attn_out_.data(), weights_.o_weight.data(), normed_.data(), hidden, hidden);
     
     // 5. Residual connection
     for (uint32_t i = 0; i < hidden; i++) {
@@ -156,9 +158,14 @@ bool TransformerLayer::Forward(const float* input, float* output,
     // 6. RMSNorm
     RMSNorm(normed_.data(), weights_.ffn_norm.data(), ffn_gate_.data(), hidden);
     
-    // 7. FFN projections
-    MatMul(ffn_gate_.data(), weights_.ffn_gate.data(), ffn_gate_.data(), 1, hidden, intermediate);
-    MatMul(normed_.data(), weights_.ffn_up.data(), ffn_up_.data(), 1, hidden, intermediate);
+    // 7. FFN projections - use fast MatMul for large matrices
+    // FFN Gate: [1, hidden] x [hidden, intermediate] -> [1, intermediate]
+    // Weights stored as [intermediate, hidden] in row-major
+    SEG::FastVecMatMul(ffn_gate_.data(), weights_.ffn_gate.data(), 
+                       ffn_gate_.data(), intermediate, hidden);
+    // FFN Up: [1, hidden] x [hidden, intermediate] -> [1, intermediate]
+    SEG::FastVecMatMul(normed_.data(), weights_.ffn_up.data(), 
+                       ffn_up_.data(), intermediate, hidden);
     
     // 8. SiLU activation on gate
     SiLU(ffn_gate_.data(), intermediate);
@@ -168,8 +175,9 @@ bool TransformerLayer::Forward(const float* input, float* output,
         ffn_act_[i] = ffn_gate_[i] * ffn_up_[i];
     }
     
-    // 10. Down projection
-    MatMul(ffn_act_.data(), weights_.ffn_down.data(), output, 1, intermediate, hidden);
+    // 10. Down projection - use fast MatMul
+    // FFN Down: [1, intermediate] x [intermediate, hidden] -> [1, hidden]
+    SEG::FastVecMatMul(ffn_act_.data(), weights_.ffn_down.data(), output, hidden, intermediate);
     
     // 11. Residual connection
     for (uint32_t i = 0; i < hidden; i++) {

@@ -30,14 +30,15 @@ void FlashAttentionForwardF32(const float* Q, const float* K, const float* V,
 // For incremental decoding where K/V come from cache
 //
 // q: [head_dim] - single query vector
-// k_cache: [cache_len, head_dim] - cached keys
-// v_cache: [cache_len, head_dim] - cached values
+// k_cache: [cache_len, kv_stride] - cached keys
+// v_cache: [cache_len, kv_stride] - cached values
 // output: [head_dim] - output
 // cache_len: current cache length
 // head_dim: dimension per head
+// kv_stride: stride between consecutive KV entries (for GQA)
 void FlashAttentionCachedF32(const float* q,
                               const float* k_cache, const float* v_cache,
                               float* output,
-                              size_t cache_len, size_t head_dim);
+                              size_t cache_len, size_t head_dim, size_t kv_stride = 0);
 
 } // namespace SEG
