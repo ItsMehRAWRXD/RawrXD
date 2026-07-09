@@ -5,7 +5,6 @@
 // Simplified, robust implementation using memory mapping
 // ============================================================================
 
-#include "tensor_view.hpp"
 #include <string>
 #include <cstdint>
 #include <cstddef>
@@ -59,27 +58,11 @@ public:
     // Get tensor info by name
     bool GetTensor(const std::string& name, TensorInfo& info) const;
     
-    // Legacy compatibility: SeekToTensor returns info by name
-    bool SeekToTensor(const std::string& name, TensorInfo& info) const {
-        return GetTensor(name, info);
-    }
-    
     // Get raw tensor data pointer (memory-mapped, zero-copy)
     const uint8_t* GetTensorData(const TensorInfo& info) const;
     
-    // Create TensorView from tensor info (returns Runtime::TensorView)
-    TensorView CreateTensorView(const TensorInfo& info) const;
-    
     // List all tensors
     std::vector<std::string> GetTensorNames() const;
-    
-    // Metadata access (legacy compatibility)
-    int64_t GetMetadataInt(const std::string& key, int64_t defaultValue = 0) const;
-    std::string GetMetadataString(const std::string& key, const std::string& defaultValue = "") const;
-    
-    // Store metadata for lookup
-    void StoreMetadata(const std::string& key, int64_t value);
-    void StoreMetadata(const std::string& key, const std::string& value);
 
 private:
     bool m_isOpen = false;

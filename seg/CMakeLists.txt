@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
-project(SEG VERSION 1.0.0 LANGUAGES CXX)
+project(SEG VERSION 1.0.0 LANGUAGES CXX ASM_MASM)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ============================================================================
 # Source files
+# ============================================================================
 set(SEG_SOURCES
     seg_node.cpp
     seg_graph.cpp
@@ -29,8 +31,50 @@ set(SEG_HEADERS
     seg_telemetry_view.hpp
 )
 
+# ============================================================================
+# Runtime Sources (shared with RawrXD)
+# ============================================================================
+set(RUNTIME_SOURCES
+    ../runtime/streaming_multi_layer_backend.cpp
+    ../runtime/streaming_gguf_loader.cpp
+    ../runtime/streaming_layer_registry.cpp
+    ../runtime/kv_cache.cpp
+    ../runtime/q4k_decoder.cpp
+    ../runtime/telemetry_stub.cpp
+)
+
+set(RUNTIME_HEADERS
+    ../runtime/streaming_multi_layer_backend.hpp
+    ../runtime/streaming_gguf_loader.hpp
+    ../runtime/streaming_layer_registry.hpp
+    ../runtime/kv_cache.hpp
+    ../runtime/q4k_decoder.hpp
+    ../runtime/telemetry_masm_bridge.hpp
+    ../runtime/telemetry_ids.hpp
+)
+
+# ============================================================================
+# MASM Telemetry Core (x64 only)
+# ============================================================================
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    enable_language(ASM_MASM)
+    set(TELEMETRY_SOURCES
+        ../runtime/telemetry_masm.asm
+    )
+else()
+    message(FATAL_ERROR "x86 build not supported. Use x64.")
+endif()
+
+# ============================================================================
 # Create library
-add_library(seg STATIC ${SEG_SOURCES} ${SEG_HEADERS})
+# ============================================================================
+add_library(seg STATIC
+    ${SEG_SOURCES}
+    ${SEG_HEADERS}
+    ${RUNTIME_SOURCES}
+    ${RUNTIME_HEADERS}
+    ${TELEMETRY_SOURCES}
+)
 
 # Platform-specific settings
 if(WIN32)

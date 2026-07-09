@@ -4,7 +4,7 @@
 // Based on forensics tool logic - memory-mapped, robust parsing
 // ============================================================================
 
-#include "streaming_gguf_loader.hpp"
+#include "streaming_gguf_loader_v2.hpp"
 #include <iostream>
 #include <cstring>
 
@@ -344,42 +344,6 @@ uint64_t TensorInfo::NumElements() const {
 
 uint64_t TensorInfo::ByteSize() const {
     return size;
-}
-
-// Create TensorView from tensor info
-TensorView StreamingGGUFLoader::CreateTensorView(const TensorInfo& info) const {
-    TensorView::MmapInfo mmapInfo;
-    mmapInfo.base = m_data;
-    mmapInfo.fileOffset = m_tensorDataOffset;
-    mmapInfo.tensorOffset = info.offset;
-    mmapInfo.dataSize = info.size;
-    mmapInfo.type = static_cast<GGMLType>(info.type);
-    mmapInfo.shape = info.shape;
-    return TensorView(mmapInfo);
-}
-
-// Metadata storage for lookup
-static std::unordered_map<std::string, int64_t> s_metadataInt;
-static std::unordered_map<std::string, std::string> s_metadataString;
-
-int64_t StreamingGGUFLoader::GetMetadataInt(const std::string& key, int64_t defaultValue) const {
-    auto it = s_metadataInt.find(key);
-    if (it != s_metadataInt.end()) return it->second;
-    return defaultValue;
-}
-
-std::string StreamingGGUFLoader::GetMetadataString(const std::string& key, const std::string& defaultValue) const {
-    auto it = s_metadataString.find(key);
-    if (it != s_metadataString.end()) return it->second;
-    return defaultValue;
-}
-
-void StreamingGGUFLoader::StoreMetadata(const std::string& key, int64_t value) {
-    s_metadataInt[key] = value;
-}
-
-void StreamingGGUFLoader::StoreMetadata(const std::string& key, const std::string& value) {
-    s_metadataString[key] = value;
 }
 
 } // namespace Runtime

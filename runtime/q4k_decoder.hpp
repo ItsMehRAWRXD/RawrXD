@@ -17,6 +17,16 @@ struct BlockQ4_K {
 
 static_assert(sizeof(BlockQ4_K) == 144, "BlockQ4_K must be 144 bytes");
 
+// Q8_K block structure (llama.cpp compatible)
+// 256 weights per block, 276 bytes
+// Note: llama.cpp uses float d, not F16
+struct BlockQ8_K {
+    float d;              // delta (float, not F16)
+    int8_t qs[256];       // 256 int8 weights
+    int16_t bsums[16];    // sum of quants in groups of 16
+};
+static_assert(sizeof(BlockQ8_K) == 4 + 256 + 32, "BlockQ8_K must be 292 bytes");
+
 class Q4KDecoder {
 public:
     // Dequantize a single block to 256 floats
