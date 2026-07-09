@@ -4,11 +4,7 @@
 #include "seg_memory.hpp"
 #include "seg_executor.hpp"
 #include "seg_agent.hpp"
-
-// Forward declaration - adjust path as needed
-namespace RawrXD { namespace Runtime {
-    class StreamingMultiLayerBackend;
-}}
+#include "../runtime/streaming_multi_layer_backend.hpp"
 
 namespace seg {
 
@@ -33,7 +29,7 @@ private:
     Scheduler m_scheduler;
     Memory m_memory;
     Agent m_agent;
-    // RawrXD::Runtime::StreamingMultiLayerBackend m_backend;
+    RawrXD::Runtime::StreamingMultiLayerBackend m_backend;
 };
 
 } // namespace seg

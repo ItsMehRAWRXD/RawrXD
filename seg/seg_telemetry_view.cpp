@@ -1,4 +1,5 @@
 #include "seg_telemetry_view.hpp"
+#include "../runtime/telemetry_wrapper.cpp"
 
 namespace seg {
 

@@ -273,23 +273,39 @@ bool SovereignTokenizer::ParseMerges(const std::string& json, size_t& pos) {
         if (pos >= json.size()) break;
         if (json[pos] == ']') { ++pos; break; }
         
-        // Parse merge pair ["token1", "token2"]
-        if (json[pos] != '[') return false;
-        ++pos;
-        
-        std::string token1 = ParseString(json, pos);
-        
-        SkipWhitespace(json, pos);
-        if (pos >= json.size() || json[pos] != ',') return false;
-        ++pos;
-        
-        std::string token2 = ParseString(json, pos);
-        
-        SkipWhitespace(json, pos);
-        if (pos >= json.size() || json[pos] != ']') return false;
-        ++pos;
-        
-        m_merges[{token1, token2}] = rank++;
+        // Parse merge pair - can be either ["token1", "token2"] or "token1 token2"
+        if (json[pos] == '[') {
+            // Array format: ["token1", "token2"]
+            ++pos;
+            
+            std::string token1 = ParseString(json, pos);
+            
+            SkipWhitespace(json, pos);
+            if (pos >= json.size() || json[pos] != ',') return false;
+            ++pos;
+            
+            std::string token2 = ParseString(json, pos);
+            
+            SkipWhitespace(json, pos);
+            if (pos >= json.size() || json[pos] != ']') return false;
+            ++pos;
+            
+            m_merges[{token1, token2}] = rank++;
+        } else if (json[pos] == '"') {
+            // String format: "token1 token2"
+            std::string merge_str = ParseString(json, pos);
+            
+            // Split on space
+            size_t space_pos = merge_str.find(' ');
+            if (space_pos != std::string::npos) {
+                std::string token1 = merge_str.substr(0, space_pos);
+                std::string token2 = merge_str.substr(space_pos + 1);
+                m_merges[{token1, token2}] = rank++;
+            }
+        } else {
+            // Unknown format, skip
+            return false;
+        }
         
         SkipWhitespace(json, pos);
         if (pos < json.size() && json[pos] == ',') ++pos;
@@ -379,6 +395,13 @@ std::vector<uint32_t> SovereignTokenizer::Encode(const std::string& text, bool a
     
     // Apply BPE to each word
     for (const auto& word : words) {
+        // First check if the whole word exists in vocab (for test vocab compatibility)
+        auto whole_it = m_token_to_id.find(word);
+        if (whole_it != m_token_to_id.end()) {
+            tokens.push_back(whole_it->second);
+            continue;
+        }
+        
         // Byte-encode the word
         std::string byte_encoded = ByteEncode(word);
         
@@ -542,6 +565,7 @@ std::string SovereignTokenizer::Decode(const std::vector<uint32_t>& tokens) cons
 
 std::string SovereignTokenizer::Decode(const uint32_t* tokens, size_t count) const {
     std::string result;
+    bool prev_was_word = false;
     
     for (size_t i = 0; i < count; ++i) {
         uint32_t token_id = tokens[i];
@@ -554,15 +578,25 @@ std::string SovereignTokenizer::Decode(const uint32_t* tokens, size_t count) con
         if (token_id < m_id_to_token.size()) {
             std::string token = m_id_to_token[token_id];
             
-            // Remove </w> marker
+            // Check for end-of-word marker
+            bool is_word_end = false;
             size_t pos = token.find("</w>");
             if (pos != std::string::npos) {
                 token = token.substr(0, pos);
-                if (!result.empty() && !result.empty()) result += ' ';
+                is_word_end = true;
+            }
+            
+            // Add space between words (heuristic: multi-char tokens that look like words)
+            if (prev_was_word && token.length() > 1) {
+                result += ' ';
             }
             
             // Byte decode
-            result += ByteDecode(token);
+            std::string decoded = ByteDecode(token);
+            result += decoded;
+            
+            // Track if this was a word (multi-char or had </w> marker)
+            prev_was_word = (is_word_end || token.length() > 1);
         }
     }
     
