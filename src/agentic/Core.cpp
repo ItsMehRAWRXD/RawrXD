@@ -197,12 +197,14 @@ private:
         Task task;
         TaskStatus status = TaskStatus::Pending;
         std::promise<TaskResult> promise;
-        std::shared_future<TaskResult> future;
+        // Note: future is returned to caller, not stored here
         std::chrono::steady_clock::time_point submitTime;
         std::chrono::steady_clock::time_point startTime;
         std::thread worker;
         TaskProgressCallback onProgress;
         TaskOutputCallback onOutput;
+        // Store result after completion for GetTaskResult
+        std::optional<TaskResult> completedResult;
     };
     
     std::unordered_map<std::string, std::shared_ptr<TaskEntry>> m_tasks;
@@ -364,9 +366,8 @@ std::future<TaskResult> CoreImpl::SubmitTask(const Task& task,
     entry->onProgress = onProgress;
     entry->onOutput = onOutput;
     
-    // Create future before moving promise
+    // Store the promise in entry, return the future to caller
     std::future<TaskResult> future = entry->promise.get_future();
-    entry->future = future.share();
     
     m_tasks[entry->task.id] = entry;
     m_pendingQueue.push(entry);
@@ -374,9 +375,7 @@ std::future<TaskResult> CoreImpl::SubmitTask(const Task& task,
     
     m_taskAvailable.notify_one();
     
-    // Return future (promise is stored in entry)
-    // Need to return the future from the promise
-    return std::move(future);
+    return future;
 }
 
 std::vector<std::future<TaskResult>> CoreImpl::SubmitBatch(
@@ -434,6 +433,7 @@ bool CoreImpl::CancelTask(const std::string& taskId) {
         result.errorMessage = "Task cancelled";
         result.status = TaskStatus::Cancelled;
         result.taskId = taskId;
+        entry->completedResult = result;  // Store for GetTaskResult
         entry->promise.set_value(result);
         m_tasksCancelled++;
         return true;
@@ -470,16 +470,8 @@ std::optional<TaskResult> CoreImpl::GetTaskResult(const std::string& taskId) {
         return std::nullopt;
     }
     
-    // Get result from future
-    if (entry->future.valid()) {
-        try {
-            return entry->future.get();
-        } catch (...) {
-            return std::nullopt;
-        }
-    }
-    
-    return std::nullopt;
+    // Return completed result if available
+    return entry->completedResult;
 }
 
 bool CoreImpl::WaitForTask(const std::string& taskId, std::chrono::milliseconds timeout) {
@@ -745,6 +737,7 @@ void CoreImpl::WorkerLoop() {
         if (entry) {
             NotifyTaskStart(entry->task);
             auto result = ExecuteTaskInternal(entry);
+            entry->completedResult = result;  // Store for GetTaskResult
             entry->promise.set_value(result);
             NotifyTaskComplete(entry->task, result);
         }
