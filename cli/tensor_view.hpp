@@ -3,11 +3,12 @@
 // TensorView — Minimal tensor access abstraction for runtime kernels
 // ============================================================================
 // Purpose: Decouple kernels from GGUF file layout and quantization details
-// Supports: F32, F16 (initially)
-// Rejects: Q2_K, Q4_K, Q6_K, etc. with explicit error status
+// Supports: F32, F16, Q2_K (C3.2)
+// Rejects: Q4_K, Q6_K, Q8_K, etc. with explicit error status
 // ============================================================================
 
 #include "model_context.hpp"
+#include "quantization_decoder.hpp"
 #include <vector>
 #include <cstdint>
 #include <string>
@@ -42,12 +43,13 @@ struct TensorView {
     bool Valid() const { return data != nullptr && byte_size > 0 && !shape.empty(); }
     TensorViewStatus GetStatus() const;
 
-    // Element access (for F32/F16)
-    // Returns false for quantized types
+    // Element access (for F32/F16/Q2_K)
+    // Returns false for unsupported quantized types
     bool ReadElement(size_t index, float& out) const;
 
     // Row extraction (for 2D tensors like embeddings)
     // Reads contiguous row into destination buffer
+    // Supports F32, F16, Q2_K
     bool ReadRow(size_t row, float* dst, size_t count) const;
 
     // Get number of rows (dimension 0)
@@ -65,7 +67,7 @@ struct TensorView {
     // Check if type is directly readable (F32/F16)
     bool IsDirectlyReadable() const;
 
-    // Check if type is supported for runtime execution
+    // Check if type is supported for runtime execution (F32/F16/Q2_K)
     bool IsSupported() const;
 
     // Get unsupported reason string
@@ -76,6 +78,10 @@ struct TensorView {
 
     // Get human-readable type name for telemetry
     std::string TypeName() const;
+
+private:
+    // Read row for Q2_K quantized data
+    bool ReadRowQ2_K(size_t row, float* dst, size_t count) const;
 };
 
 // Tensor execution provenance for telemetry

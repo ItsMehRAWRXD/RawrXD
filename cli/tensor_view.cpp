@@ -3,6 +3,7 @@
 // ============================================================================
 
 #include "tensor_view.hpp"
+#include "quantization_decoder.hpp"
 #include <cstring>
 #include <cmath>
 
@@ -29,18 +30,18 @@ TensorView::TensorView(const TensorEntry* entry, const void* tensorData) {
 TensorViewStatus TensorView::GetStatus() const {
     if (data == nullptr) return TensorViewStatus::NULL_DATA;
     if (shape.empty()) return TensorViewStatus::INVALID_SHAPE;
-    if (!IsDirectlyReadable()) return TensorViewStatus::UNSUPPORTED_TYPE;
+    if (!IsSupported()) return TensorViewStatus::UNSUPPORTED_TYPE;
     return TensorViewStatus::OK;
 }
 
 bool TensorView::IsSupported() const {
-    return IsDirectlyReadable();
+    return IsDirectlyReadable() || type == TensorType::Q2_K;
 }
 
 std::string TensorView::GetUnsupportedReason() const {
     if (data == nullptr) return "Null data pointer";
     if (shape.empty()) return "Empty shape";
-    if (!IsDirectlyReadable()) {
+    if (!IsSupported()) {
         return "Quantized type " + TypeName() + " not yet supported (requires dequantization)";
     }
     return "";
@@ -136,12 +137,19 @@ bool TensorView::ReadElement(size_t index, float& out) const {
 }
 
 bool TensorView::ReadRow(size_t row, float* dst, size_t count) const {
-    if (!IsDirectlyReadable()) return false;
     if (shape.empty()) return false;
     if (row >= shape[0]) return false;
     
     uint64_t row_width = RowWidth();
     if (count > row_width) return false;
+    
+    // Handle Q2_K quantized data
+    if (type == TensorType::Q2_K) {
+        return ReadRowQ2_K(row, dst, count);
+    }
+    
+    // Handle directly readable types (F32/F16)
+    if (!IsDirectlyReadable()) return false;
     
     size_t row_offset = row * row_width;
     
@@ -163,6 +171,45 @@ bool TensorView::ReadRow(size_t row, float* dst, size_t count) const {
     }
     
     return false;
+}
+
+bool TensorView::ReadRowQ2_K(size_t row, float* dst, size_t count) const {
+    if (!data || type != TensorType::Q2_K) return false;
+    
+    uint64_t row_width = RowWidth();
+    if (count > row_width) return false;
+    
+    // Calculate offset to the row in Q2_K blocks
+    size_t row_start_element = row * row_width;
+    size_t start_block = row_start_element / Q2_KDecoder::ElementsPerBlock();
+    size_t block_offset = row_start_element % Q2_KDecoder::ElementsPerBlock();
+    
+    const uint8_t* block_data = static_cast<const uint8_t*>(data) + 
+                                  start_block * Q2_KDecoder::BlockSize();
+    
+    // Decode blocks until we have all elements
+    size_t elements_needed = count;
+    size_t dst_offset = 0;
+    
+    while (elements_needed > 0) {
+        // Decode this block
+        float block_data_decoded[256];
+        const Q2_KBlock* block = reinterpret_cast<const Q2_KBlock*>(block_data);
+        Q2_KDecoder::DecodeBlock(block, block_data_decoded);
+        
+        // Copy needed elements from this block
+        size_t to_copy = std::min(elements_needed, 
+                                  static_cast<size_t>(256 - block_offset));
+        memcpy(dst + dst_offset, block_data_decoded + block_offset, 
+               to_copy * sizeof(float));
+        
+        dst_offset += to_copy;
+        elements_needed -= to_copy;
+        block_offset = 0;  // After first block, always start at beginning
+        block_data += Q2_KDecoder::BlockSize();
+    }
+    
+    return true;
 }
 
 // ============================================================================
