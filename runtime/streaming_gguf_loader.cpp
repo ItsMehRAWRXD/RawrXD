@@ -480,7 +480,7 @@ std::string StreamingGGUFLoader::GetMetadataString(const std::string& key, const
 // ============================================================================
 // TensorView Creation
 // ============================================================================
-TensorView StreamingGGUFLoader::CreateTensorView(const TensorInfo& info) const {
+TensorView StreamingGGUFLoader::CreateTensorView(const TensorInfo& info) {
     if (!m_isOpen) return TensorView();
     
     // Create mmap-backed TensorView

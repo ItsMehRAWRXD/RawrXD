@@ -116,7 +116,7 @@ public:
     std::string GetMetadataString(const std::string& key, const std::string& defaultValue = "") const;
     
     // Create a TensorView from tensor info (mmap-backed)
-    TensorView CreateTensorView(const TensorInfo& info) const;
+    TensorView CreateTensorView(const TensorInfo& info);
 
 private:
     bool m_isOpen = false;
