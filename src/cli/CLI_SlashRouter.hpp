@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace RawrXD {
     class CPUInferenceEngine;
@@ -20,6 +21,18 @@ class AgenticEngine;
 
 namespace RawrXD {
 namespace CLI {
+
+// ============================================================================
+// Command Result Structure
+// ============================================================================
+
+struct SlashCommandResult {
+    bool success = false;
+    std::string output;
+    std::string error;
+};
+
+using SlashCommandHandler = std::function<SlashCommandResult(const std::vector<std::string>&, void*)>;
 
 // ============================================================================
 // CLI Context - Provides IDE-like interface for commands
@@ -70,6 +83,34 @@ public:
     // Current File Context Toggle
     bool isCurrentFileContextEnabled() const { return m_currentFileContextEnabled; }
     void setCurrentFileContextEnabled(bool enabled) { m_currentFileContextEnabled = enabled; }
+    
+    // Feedback tracking
+    int markHelpful() { return ++m_helpfulCount; }
+    int markUnhelpful() { return ++m_unhelpfulCount; }
+    int helpfulCount() const { return m_helpfulCount; }
+    int unhelpfulCount() const { return m_unhelpfulCount; }
+    const std::string& modelBadge() const { return m_modelBadge; }
+    void setModelBadge(const std::string& badge) { m_modelBadge = badge; }
+    const std::string& getLastUserPrompt() const { return m_lastUserPrompt; }
+    const std::string& getLastAssistantResponse() const { return m_lastAssistantResponse; }
+    void setLastUserPrompt(const std::string& prompt) { m_lastUserPrompt = prompt; }
+    void setLastAssistantResponse(const std::string& response) { m_lastAssistantResponse = response; }
+    
+private:
+    std::string m_currentFile;
+    std::string m_editorSelection;
+    std::string m_loadedModelPath;
+    std::vector<std::string> m_availableModels;
+    std::shared_ptr<CPUInferenceEngine> m_inferenceEngine;
+    std::shared_ptr<AgenticEngine> m_agenticEngine;
+    bool m_ollamaConnected = false;
+    uint64_t m_kvCacheSeqLen = 0;
+    bool m_currentFileContextEnabled = true;
+    std::string m_lastUserPrompt;
+    std::string m_lastAssistantResponse;
+    int m_helpfulCount = 0;
+    int m_unhelpfulCount = 0;
+    std::string m_modelBadge = "GPT-5.3-Codex • 0.9x";
 };
 
 // ============================================================================

@@ -817,12 +817,11 @@ AgenticEngine* LegacyCoreAdapter::GetLegacyEngine() const {
     return m_impl->m_legacyEngine;
 }
 
-} // namespace Agentic
-
 // Factory function for Core::CreateLegacyAdapter
 // This allows Core.cpp to create adapters without including LegacyCoreAdapter.h
-std::unique_ptr<RawrXD::Agentic::Core> CreateLegacyCoreAdapter(void* engine, const RawrXD::Agentic::CoreConfig& cfg) {
-    return RawrXD::Agentic::LegacyCoreAdapter::Create(static_cast<AgenticEngine*>(engine), cfg);
+std::unique_ptr<Core> CreateLegacyCoreAdapter(void* engine, const CoreConfig& cfg) {
+    return LegacyCoreAdapter::Create(static_cast<AgenticEngine*>(engine), cfg);
 }
 
+} // namespace Agentic
 } // namespace RawrXD

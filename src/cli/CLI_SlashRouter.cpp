@@ -157,15 +157,8 @@ public:
 };
 
 // ============================================================================
-// Command Result
+// Command Result - Now defined in CLI_SlashRouter.hpp
 // ============================================================================
-
-struct SlashCommandResult
-{
-    bool success = false;
-    std::string output;
-    std::string error;
-};
 
 using SlashCommandHandler = std::function<SlashCommandResult(const std::vector<std::string>& args, CLIContext* ctx)>;
 
