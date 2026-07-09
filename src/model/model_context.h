@@ -102,6 +102,17 @@ public:
     const std::vector<std::string>& GetMerges() const { return merges_; }
     bool HasVocabulary() const { return !vocabulary_.empty(); }
     
+    // Step C3: Tensor data access for embedding lookup
+    // Load tensor data from GGUF file
+    std::vector<uint8_t> LoadTensorData(const TensorInfo& info) const;
+    
+    // Get embedding for a specific token (token_embd.weight lookup)
+    // Returns empty vector if tensor not found or cannot be loaded
+    std::vector<float> GetTokenEmbedding(uint32_t token_id) const;
+    
+    // Check if model has embedding weights
+    bool HasEmbeddingWeights() const;
+    
     // Serialization for inspect command
     std::string ToJson() const;
     std::string ToHumanReadable() const;

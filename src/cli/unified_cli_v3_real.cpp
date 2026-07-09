@@ -188,6 +188,8 @@ int HandleHelp(const ArgParser& args) {
     PrintLn("  benchmark                             Run benchmark suite");
     PrintLn("  inspect <model.gguf>                  Inspect model file");
     PrintLn("  tokenizer --model <path> [--text]    Validate tokenizer (Step C2)");
+    PrintLn("  embedding --model <path> --token <n> Test embedding lookup (Step C3)");
+    PrintLn("  inference --model <path> --prompt   Run transformer inference (Step C4)");
     PrintLn("  test --all                           Run all tests");
     PrintLn("  config --show                        Show configuration");
     PrintLn("  help                                 Show this help");
@@ -432,6 +434,59 @@ int HandleTokenizer(const ArgParser& args) {
     return result.ExitCode();
 }
 
+int HandleEmbedding(const ArgParser& args) {
+    if (!args.RequireFlag("model", "path to GGUF model")) {
+        return ExitCode::USER_ERROR;
+    }
+    if (!args.RequireFlag("token", "token ID to look up")) {
+        return ExitCode::USER_ERROR;
+    }
+    
+    ExecutionRequest req;
+    req.command = CommandType::EMBEDDING_LOOKUP;
+    req.command_name = "embedding";
+    req.model_path = args.GetFlagValue("model");
+    req.token_id = args.GetFlagInt("token", 0);
+    req.json_output = g_state.jsonOutput;
+    req.quiet = g_state.quiet;
+    req.request_id = g_state.requestId;
+    
+    PrintVerbose("Looking up embedding for token: " + std::to_string(req.token_id));
+    
+    ExecutionResult result = g_gateway->Execute(req);
+    OutputResult(result);
+    
+    return result.ExitCode();
+}
+
+int HandleInference(const ArgParser& args) {
+    if (!args.RequireFlag("model", "path to GGUF model")) {
+        return ExitCode::USER_ERROR;
+    }
+    if (!args.RequireFlag("prompt", "input prompt text")) {
+        return ExitCode::USER_ERROR;
+    }
+    
+    ExecutionRequest req;
+    req.command = CommandType::RUN_INFERENCE;
+    req.command_name = "inference";
+    req.model_path = args.GetFlagValue("model");
+    req.prompt = args.GetFlagValue("prompt");
+    req.max_tokens = args.GetFlagInt("max-tokens", 5);
+    req.temperature = args.GetFlagFloat("temperature", 0.8f);
+    req.json_output = g_state.jsonOutput;
+    req.quiet = g_state.quiet;
+    req.request_id = g_state.requestId;
+    
+    PrintVerbose("Running inference with model: " + req.model_path);
+    PrintVerbose("Prompt: " + req.prompt);
+    
+    ExecutionResult result = g_gateway->Execute(req);
+    OutputResult(result);
+    
+    return result.ExitCode();
+}
+
 int HandleConfig(const ArgParser& args) {
     if (args.HasFlag("show")) {
         PrintLn("RawrXD Configuration:");
@@ -508,6 +563,10 @@ int main(int argc, char* argv[]) {
         exitCode = HandleTest(args);
     } else if (command == "tokenizer") {
         exitCode = HandleTokenizer(args);
+    } else if (command == "embedding") {
+        exitCode = HandleEmbedding(args);
+    } else if (command == "inference") {
+        exitCode = HandleInference(args);
     } else if (command == "config") {
         exitCode = HandleConfig(args);
     } else {

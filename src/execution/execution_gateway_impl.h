@@ -58,6 +58,7 @@ private:
     ExecutionResult HandleBenchmark(const ExecutionRequest& req);
     ExecutionResult HandleInspectModel(const ExecutionRequest& req);
     ExecutionResult HandleTokenizerValidate(const ExecutionRequest& req);  // Step C2
+    ExecutionResult HandleEmbeddingLookup(const ExecutionRequest& req);    // Step C3
     ExecutionResult HandleTestSuite(const ExecutionRequest& req);
     
     // Real kernel operations

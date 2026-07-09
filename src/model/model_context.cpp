@@ -516,6 +516,93 @@ std::string ModelContext::ToHumanReadable() const {
 }
 
 // ============================================================================
+// Step C3: Tensor Data Access for Embedding Lookup
+// ============================================================================
+
+std::vector<uint8_t> ModelContext::LoadTensorData(const TensorInfo& info) const {
+    if (!loaded_ || path_.empty()) {
+        return {};
+    }
+    
+    std::ifstream file(path_, std::ios::binary);
+    if (!file) {
+        return {};
+    }
+    
+    // Seek to tensor data offset
+    file.seekg(static_cast<std::streamoff>(info.offset), std::ios::beg);
+    if (!file) {
+        return {};
+    }
+    
+    // Read tensor data
+    std::vector<uint8_t> data(info.size);
+    file.read(reinterpret_cast<char*>(data.data()), info.size);
+    
+    if (!file) {
+        return {};
+    }
+    
+    return data;
+}
+
+std::vector<float> ModelContext::GetTokenEmbedding(uint32_t token_id) const {
+    // Find token_embd.weight tensor
+    const TensorInfo* embed_tensor = nullptr;
+    for (const auto& t : tensors_) {
+        if (t.name == "token_embd.weight" || 
+            t.name == "token_embd" ||
+            t.name == "embed_tokens.weight") {
+            embed_tensor = &t;
+            break;
+        }
+    }
+    
+    if (!embed_tensor) {
+        return {};
+    }
+    
+    // Check token_id bounds
+    if (token_id >= embed_tensor->shape[0]) {
+        return {};
+    }
+    
+    uint32_t embedding_dim = static_cast<uint32_t>(embed_tensor->shape[1]);
+    
+    // Load tensor data
+    auto data = LoadTensorData(*embed_tensor);
+    if (data.empty()) {
+        return {};
+    }
+    
+    // For now, assume F32 (float32) - most common for embeddings
+    // TODO: Add dequantization for Q4_K, Q8_0, etc.
+    if (embed_tensor->type == 0) { // F32
+        std::vector<float> embedding(embedding_dim);
+        size_t offset = token_id * embedding_dim * sizeof(float);
+        
+        if (offset + embedding_dim * sizeof(float) <= data.size()) {
+            std::memcpy(embedding.data(), data.data() + offset, embedding_dim * sizeof(float));
+            return embedding;
+        }
+    }
+    
+    // Fallback: return zeros (placeholder for quantized types)
+    return std::vector<float>(embedding_dim, 0.0f);
+}
+
+bool ModelContext::HasEmbeddingWeights() const {
+    for (const auto& t : tensors_) {
+        if (t.name == "token_embd.weight" || 
+            t.name == "token_embd" ||
+            t.name == "embed_tokens.weight") {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ============================================================================
 // ModelContextFactory
 // ============================================================================
 
