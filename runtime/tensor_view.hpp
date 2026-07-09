@@ -86,35 +86,84 @@ public:
     explicit TensorView(const TensorData* data) : m_data(data) {}
     
     // ------------------------------------------------------------------------
+    // Mmap-backed constructor (zero-copy)
+    // ------------------------------------------------------------------------
+    // Creates a TensorView pointing directly into memory-mapped file data
+    // No copies, no allocations - just a view into the mmap region
+    // ------------------------------------------------------------------------
+    struct MmapInfo {
+        const void* base;           // Base of mmap region
+        uint64_t fileOffset;        // Offset within file
+        uint64_t tensorOffset;      // Tensor's offset in GGUF data section
+        uint64_t dataSize;          // Size of tensor data in bytes
+        GGMLType type;              // Tensor data type
+        std::vector<size_t> shape;  // Tensor dimensions
+    };
+    
+    TensorView(const MmapInfo& mmapInfo) 
+        : m_mmapBase(mmapInfo.base)
+        , m_mmapOffset(mmapInfo.tensorOffset)
+        , m_mmapDataSize(mmapInfo.dataSize)
+        , m_mmapType(mmapInfo.type)
+        , m_mmapShape(mmapInfo.shape)
+        , m_isMmap(true) 
+    {}
+    
+    // ------------------------------------------------------------------------
     // Core Accessors (Frozen ABI)
     // ------------------------------------------------------------------------
-    bool IsValid() const { return m_data != nullptr; }
-    bool IsEmpty() const { return !m_data || m_data->f32Data.empty(); }
+    bool IsValid() const { return m_data != nullptr || m_isMmap; }
+    bool IsEmpty() const { 
+        if (m_isMmap) return m_mmapDataSize == 0;
+        return !m_data || m_data->f32Data.empty(); 
+    }
     
     uint32_t Rows() const {
+        if (m_isMmap) {
+            return m_mmapShape.empty() ? 0 : static_cast<uint32_t>(m_mmapShape[0]);
+        }
         if (!m_data || m_data->shape.empty()) return 0;
         return static_cast<uint32_t>(m_data->shape[0]);
     }
     
     uint32_t Cols() const {
+        if (m_isMmap) {
+            return m_mmapShape.size() < 2 ? 1 : static_cast<uint32_t>(m_mmapShape[1]);
+        }
         if (!m_data || m_data->shape.size() < 2) return 0;
         return static_cast<uint32_t>(m_data->shape[1]);
     }
     
     GGMLType Type() const {
+        if (m_isMmap) return m_mmapType;
         return m_data ? m_data->type : GGMLType::F32;
     }
     
     bool IsQuantized() const {
+        if (m_isMmap) {
+            return m_mmapType >= GGMLType::Q4_0 && m_mmapType <= GGMLType::Q8_K;
+        }
         return m_data && m_data->provenance.quantized;
     }
     
     bool IsSynthetic() const {
+        if (m_isMmap) return false;
         return m_data && m_data->provenance.IsSynthetic();
     }
     
+    bool IsMmap() const { return m_isMmap; }
+    
     const TensorProvenance* GetProvenance() const {
+        if (m_isMmap) return nullptr;
         return m_data ? &m_data->provenance : nullptr;
+    }
+    
+    // Get raw data pointer (for mmap-backed views)
+    const void* GetRawData() const {
+        if (m_isMmap && m_mmapBase) {
+            return static_cast<const uint8_t*>(m_mmapBase) + m_mmapOffset;
+        }
+        return nullptr;
     }
     
     // ------------------------------------------------------------------------
@@ -123,11 +172,17 @@ public:
     // Dequantize a single row to float array
     // Returns number of elements written
     size_t DequantizeRow(size_t row, float* output, size_t outputCapacity) const {
-        if (!m_data || !output || outputCapacity == 0) return 0;
+        if (!output || outputCapacity == 0) return 0;
+        if (!m_data && !m_isMmap) return 0;
         
         uint32_t cols = Cols();
         if (cols == 0) cols = Rows();  // 1D tensor
         if (outputCapacity < cols) return 0;
+        
+        // Handle mmap-backed views
+        if (m_isMmap) {
+            return DequantizeMmapRow(row, output, cols);
+        }
         
         // For F32 data, just copy
         if (m_data->type == GGMLType::F32 || !m_data->f32Data.empty()) {
@@ -151,6 +206,48 @@ public:
         // For other quantized types, return zeros (not yet implemented)
         std::memset(output, 0, cols * sizeof(float));
         return cols;
+    }
+    
+    // ------------------------------------------------------------------------
+    // Mmap-specific dequantization
+    // ------------------------------------------------------------------------
+    size_t DequantizeMmapRow(size_t row, float* output, uint32_t cols) const {
+        if (!m_mmapBase) return 0;
+        
+        // Calculate row offset within tensor data
+        size_t elements_per_block = 256;
+        size_t bytes_per_block = 0;
+        
+        switch (m_mmapType) {
+            case GGMLType::Q4_K: bytes_per_block = 144; break;
+            case GGMLType::Q2_K: bytes_per_block = 96; break;
+            case GGMLType::Q6_K: bytes_per_block = 210; break;
+            case GGMLType::Q8_K: bytes_per_block = 256; break;
+            default: bytes_per_block = 4; break;
+        }
+        
+        size_t blocks_per_row = (cols + elements_per_block - 1) / elements_per_block;
+        size_t row_offset_in_tensor = row * blocks_per_row * bytes_per_block;
+        size_t absolute_offset = m_mmapOffset + row_offset_in_tensor;
+        
+        if (absolute_offset + blocks_per_row * bytes_per_block > m_mmapOffset + m_mmapDataSize) {
+            return 0;
+        }
+        
+        const uint8_t* row_data = static_cast<const uint8_t*>(m_mmapBase) + absolute_offset;
+        
+        // Dispatch to appropriate dequantizer
+        switch (m_mmapType) {
+            case GGMLType::Q4_K:
+                DequantizeQ4KBlocks(row_data, cols, output);
+                return cols;
+            case GGMLType::Q2_K:
+                DequantizeQ2KBlocks(row_data, cols, output);
+                return cols;
+            default:
+                std::memset(output, 0, cols * sizeof(float));
+                return cols;
+        }
     }
     
 private:
@@ -330,6 +427,14 @@ public:
     
 private:
     const TensorData* m_data = nullptr;
+    
+    // Mmap-backed view state
+    const void* m_mmapBase = nullptr;
+    uint64_t m_mmapOffset = 0;
+    uint64_t m_mmapDataSize = 0;
+    GGMLType m_mmapType = GGMLType::F32;
+    std::vector<size_t> m_mmapShape;
+    bool m_isMmap = false;
 };
 
 // ============================================================================
