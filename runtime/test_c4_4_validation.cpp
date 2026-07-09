@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
     std::vector<uint32_t> prompt_tokens = SimpleTokenize(prompt);
     std::cout << "      ✓ Tokenized to " << prompt_tokens.size() << " tokens\n";
     std::cout << "      Tokens: [";
-    for (size_t i = 0; i < prompt_tokens.size(); ++i {
+    for (size_t i = 0; i < prompt_tokens.size(); ++i) {
         if (i > 0) std::cout << ", ";
         std::cout << prompt_tokens[i];
     }

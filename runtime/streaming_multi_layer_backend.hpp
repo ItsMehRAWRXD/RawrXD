@@ -77,6 +77,7 @@ public:
     uint32_t GetVocabSize() const { return m_vocab_size; }
     uint32_t GetNumLayers() const { return m_num_layers; }
     uint32_t GetHiddenSize() const { return m_hidden_size; }
+    uint32_t GetNumHeads() const { return m_num_heads; }
     uint32_t GetMaxSeqLen() const { return m_max_seq_len; }
 
     // Check if initialized

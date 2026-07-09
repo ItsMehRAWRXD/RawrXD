@@ -127,6 +127,7 @@ private:
     
     // JSON parsing helpers
     bool ParseTokenizerJson(const std::string& json);
+    bool ParseModel(const std::string& json, size_t& pos);
     bool ParseVocab(const std::string& json, size_t& pos);
     bool ParseMerges(const std::string& json, size_t& pos);
     bool ParseSpecialTokens(const std::string& json, size_t& pos);

@@ -10,6 +10,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 namespace RawrXD {
 namespace Runtime {
@@ -33,14 +34,14 @@ public:
         std::fill(m_v_cache.begin(), m_v_cache.end(), 0.0f);
     }
     
-    float* GetK(uint32_t pos, uint32_t head) {
+    float* GetK(uint32_t pos, uint32_t head) const {
         size_t offset = static_cast<size_t>(pos) * m_num_heads * m_head_dim + head * m_head_dim;
-        return m_k_cache.data() + offset;
+        return const_cast<float*>(m_k_cache.data() + offset);
     }
     
-    float* GetV(uint32_t pos, uint32_t head) {
+    float* GetV(uint32_t pos, uint32_t head) const {
         size_t offset = static_cast<size_t>(pos) * m_num_heads * m_head_dim + head * m_head_dim;
-        return m_v_cache.data() + offset;
+        return const_cast<float*>(m_v_cache.data() + offset);
     }
     
 private:
@@ -559,7 +560,7 @@ bool StreamingMultiLayerBackend::Generate(
     
     // Generate new tokens
     for (size_t i = 0; i < max_new_tokens; ++i) {
-        Telemetry::Telemetry_Log(Telemetry::TELEMETRY_GENERATION_TOKEN, i, pos, 0);
+        Telemetry::Telemetry_Log(Telemetry::TELEMETRY_GENERATION_TOKEN, i, pos);
         
         // Execute model
         if (!ExecuteToken(last_token, pos, m_logits)) {

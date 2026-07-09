@@ -110,7 +110,7 @@ bool SovereignTokenizer::ParseTokenizerJson(const std::string& json) {
         // Parse value based on key
         if (key == "model") {
             // Parse model section containing vocab and merges
-            if (!ParseVocab(json, pos)) return false;
+            if (!ParseModel(json, pos)) return false;
         } else if (key == "added_tokens") {
             // Skip for now
             SkipWhitespace(json, pos);
@@ -154,6 +154,64 @@ bool SovereignTokenizer::ParseTokenizerJson(const std::string& json) {
     }
     
     return !m_token_to_id.empty();
+}
+
+bool SovereignTokenizer::ParseModel(const std::string& json, size_t& pos) {
+    SkipWhitespace(json, pos);
+    if (pos >= json.size() || json[pos] != '{') return false;
+    ++pos;
+    
+    while (pos < json.size()) {
+        SkipWhitespace(json, pos);
+        if (pos >= json.size()) break;
+        if (json[pos] == '}') { ++pos; break; }
+        
+        // Parse key
+        std::string key = ParseString(json, pos);
+        if (key.empty()) break;
+        
+        SkipWhitespace(json, pos);
+        if (pos >= json.size() || json[pos] != ':') return false;
+        ++pos;
+        
+        SkipWhitespace(json, pos);
+        
+        // Parse value based on key
+        if (key == "vocab") {
+            if (!ParseVocab(json, pos)) return false;
+        } else if (key == "merges") {
+            if (!ParseMerges(json, pos)) return false;
+        } else {
+            // Skip unknown values in model section
+            SkipWhitespace(json, pos);
+            if (json[pos] == '{') {
+                int depth = 1;
+                ++pos;
+                while (pos < json.size() && depth > 0) {
+                    if (json[pos] == '{') ++depth;
+                    else if (json[pos] == '}') --depth;
+                    ++pos;
+                }
+            } else if (json[pos] == '[') {
+                int depth = 1;
+                ++pos;
+                while (pos < json.size() && depth > 0) {
+                    if (json[pos] == '[') ++depth;
+                    else if (json[pos] == ']') --depth;
+                    ++pos;
+                }
+            } else if (json[pos] == '"') {
+                ParseString(json, pos);
+            } else {
+                while (pos < json.size() && json[pos] != ',' && json[pos] != '}') ++pos;
+            }
+        }
+        
+        SkipWhitespace(json, pos);
+        if (pos < json.size() && json[pos] == ',') ++pos;
+    }
+    
+    return true;
 }
 
 bool SovereignTokenizer::ParseVocab(const std::string& json, size_t& pos) {
