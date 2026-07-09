@@ -16,7 +16,7 @@
 #include "model_loader.h"
 #include <fstream>
 #include <filesystem>
-#include <math>
+#include <cmath>
 #include <string>
 
 namespace RawrXD::Inference {

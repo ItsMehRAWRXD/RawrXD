@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../model/model_context.h"
+#include "quantized_tensor.hpp"
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -35,29 +36,29 @@ struct TransformerConfig {
 };
 
 // ============================================================================
-// Attention Weights
+// Attention Weights (Quantized)
 // ============================================================================
 
 struct AttentionWeights {
-    std::vector<float> q_proj;  // [hidden_size, hidden_size]
-    std::vector<float> k_proj;  // [hidden_size, num_kv_heads * head_dim]
-    std::vector<float> v_proj;  // [hidden_size, num_kv_heads * head_dim]
-    std::vector<float> o_proj;  // [hidden_size, hidden_size]
+    QuantizedTensor q_proj;  // [hidden_size, hidden_size] - quantized
+    QuantizedTensor k_proj;  // [hidden_size, num_kv_heads * head_dim] - quantized
+    QuantizedTensor v_proj;  // [hidden_size, num_kv_heads * head_dim] - quantized
+    QuantizedTensor o_proj;  // [hidden_size, hidden_size] - quantized
     
-    // RMSNorm weights
+    // RMSNorm weights (keep as FP32 - small)
     std::vector<float> attn_norm; // [hidden_size]
 };
 
 // ============================================================================
-// FFN Weights
+// FFN Weights (Quantized)
 // ============================================================================
 
 struct FFNWeights {
-    std::vector<float> gate_proj; // [hidden_size, intermediate_size]
-    std::vector<float> up_proj;   // [hidden_size, intermediate_size]
-    std::vector<float> down_proj; // [intermediate_size, hidden_size]
+    QuantizedTensor gate_proj; // [hidden_size, intermediate_size] - quantized
+    QuantizedTensor up_proj;   // [hidden_size, intermediate_size] - quantized
+    QuantizedTensor down_proj; // [intermediate_size, hidden_size] - quantized
     
-    // RMSNorm weights
+    // RMSNorm weights (keep as FP32 - small)
     std::vector<float> ffn_norm;  // [hidden_size]
 };
 
@@ -103,10 +104,10 @@ private:
     std::vector<float> SiLU(const std::vector<float>& x);
     std::vector<float> Softmax(const std::vector<float>& x, uint32_t rows, uint32_t cols);
     
-    // Matrix operations
+    // Matrix operations (now with quantized weights)
     std::vector<float> MatMul(
         const std::vector<float>& a, uint32_t a_rows, uint32_t a_cols,
-        const std::vector<float>& b, uint32_t b_rows, uint32_t b_cols
+        const QuantizedTensor& b, uint32_t b_rows, uint32_t b_cols
     );
     
     std::vector<float> Transpose(const std::vector<float>& x, uint32_t rows, uint32_t cols);
@@ -139,10 +140,10 @@ private:
     std::vector<std::unique_ptr<TransformerLayer>> layers_;
     TransformerConfig config_;
     
-    // Embedding and output weights
-    std::vector<float> token_embeddings_;  // [vocab_size, hidden_size]
-    std::vector<float> output_norm_;       // [hidden_size]
-    std::vector<float> lm_head_;           // [hidden_size, vocab_size]
+    // Embedding and output weights (quantized)
+    QuantizedTensor token_embeddings_;     // [vocab_size, hidden_size] - quantized
+    std::vector<float> output_norm_;      // [hidden_size] - FP32
+    QuantizedTensor lm_head_;              // [hidden_size, vocab_size] - quantized
     
     // KV cache for generation
     std::vector<std::vector<float>> k_cache_;
