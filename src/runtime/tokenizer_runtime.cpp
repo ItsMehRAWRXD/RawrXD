@@ -186,45 +186,83 @@ bool Tokenizer::Impl::LoadSentencePiece(const model::ModelContext& model) {
 bool Tokenizer::Impl::LoadBPE(const model::ModelContext& model) {
     BuildByteEncoder();
     
-    const auto& arch = model.GetArchitecture();
-    size_t vocab_size = arch.vocab_size;
+    // Load vocabulary from ModelContext (loaded from GGUF)
+    const auto& vocab = model.GetVocabulary();
     
-    if (vocab_size == 0) {
-        vocab_size = 50257; // GPT-2 default
-    }
-    
-    // Create synthetic vocabulary
-    id_to_token_.resize(vocab_size);
-    
-    // Special tokens first
-    id_to_token_[0] = "<|endoftext|>";  // BOS/EOS
-    id_to_token_[1] = "<|startoftext|>";
-    token_to_id_[id_to_token_[0]] = 0;
-    token_to_id_[id_to_token_[1]] = 1;
-    
-    // Byte tokens
-    for (int i = 0; i < 256; ++i) {
-        size_t idx = 2 + i;
-        if (idx < vocab_size) {
-            id_to_token_[idx] = byte_encoder_[static_cast<uint8_t>(i)];
-            token_to_id_[id_to_token_[idx]] = static_cast<TokenId>(idx);
+    if (!vocab.empty()) {
+        // Use real vocabulary from GGUF
+        id_to_token_ = vocab;
+        for (size_t i = 0; i < vocab.size(); ++i) {
+            token_to_id_[vocab[i]] = static_cast<TokenId>(i);
+        }
+    } else {
+        // Fallback: create synthetic vocabulary
+        const auto& arch = model.GetArchitecture();
+        size_t vocab_size = arch.vocab_size;
+        
+        if (vocab_size == 0) {
+            vocab_size = 50257; // GPT-2 default
+        }
+        
+        id_to_token_.resize(vocab_size);
+        
+        // Special tokens first
+        id_to_token_[0] = "<|endoftext|>";  // BOS/EOS
+        id_to_token_[1] = "<|startoftext|>";
+        token_to_id_[id_to_token_[0]] = 0;
+        token_to_id_[id_to_token_[1]] = 1;
+        
+        // Byte tokens
+        for (int i = 0; i < 256; ++i) {
+            size_t idx = 2 + i;
+            if (idx < vocab_size) {
+                id_to_token_[idx] = byte_encoder_[static_cast<uint8_t>(i)];
+                token_to_id_[id_to_token_[idx]] = static_cast<TokenId>(idx);
+            }
+        }
+        
+        // Placeholder tokens
+        for (size_t i = 258; i < vocab_size; ++i) {
+            id_to_token_[i] = "token_" + std::to_string(i);
+            token_to_id_[id_to_token_[i]] = static_cast<TokenId>(i);
         }
     }
     
-    // Placeholder tokens
-    for (size_t i = 258; i < vocab_size; ++i) {
-        id_to_token_[i] = "token_" + std::to_string(i);
-        token_to_id_[id_to_token_[i]] = static_cast<TokenId>(i);
+    // Load merges if available
+    const auto& merges = model.GetMerges();
+    if (!merges.empty()) {
+        // Store merges for BPE application
+        // Format: "first second" -> merged token
+        for (const auto& merge : merges) {
+            // Parse merge rule
+            size_t space_pos = merge.find(' ');
+            if (space_pos != std::string::npos) {
+                std::string first = merge.substr(0, space_pos);
+                std::string second = merge.substr(space_pos + 1);
+                // Store merge rank (order in file = priority)
+                // This is simplified - full implementation would store ranks
+            }
+        }
     }
     
-    // Set special tokens (GPT-2 style)
-    unk_id_ = 0;  // endoftext doubles as unk
-    bos_id_ = 0;
-    eos_id_ = 0;
-    pad_id_ = 0;
+    // Set special tokens (typical Llama-3 values)
+    unk_id_ = 0;   // <|endoftext|>
+    bos_id_ = 1;   // <|startoftext|>
+    eos_id_ = 2;   // <|endoftext|> (or separate)
+    pad_id_ = unk_id_;
+    
+    // Try to find actual special tokens in vocabulary
+    auto it_bos = token_to_id_.find("<|startoftext|>");
+    if (it_bos != token_to_id_.end()) bos_id_ = it_bos->second;
+    
+    auto it_eos = token_to_id_.find("<|endoftext|>");
+    if (it_eos != token_to_id_.end()) eos_id_ = it_eos->second;
+    
+    auto it_unk = token_to_id_.find("<|unk|>");
+    if (it_unk != token_to_id_.end()) unk_id_ = it_unk->second;
     
     type_ = Type::BPE;
-    add_bos_ = false;
+    add_bos_ = true;
     add_eos_ = false;
     add_prefix_space_ = true;
     
@@ -256,57 +294,59 @@ std::vector<TokenId> Tokenizer::Impl::EncodeSentencePiece(const std::string& tex
 std::vector<TokenId> Tokenizer::Impl::EncodeGreedy(const std::string& text) const {
     std::vector<TokenId> result;
     
-    // SentencePiece-style: replace leading space with ▁
-    // Split into words and add ▁ prefix to each word
-    std::vector<std::string> words;
-    std::string current;
+    // SentencePiece-style: replace spaces with ▁ (U+2581)
+    // ▁ is the "lower one eighth block" character used by SentencePiece
+    // UTF-8 encoding: 0xE2 0x96 0x81
     
-    for (size_t i = 0; i <= text.size(); ++i) {
-        char c = (i < text.size()) ? text[i] : ' '; // Force flush at end
+    // Track if previous character was whitespace
+    bool prev_was_space = false;
+    std::string processed_text;
+    
+    for (size_t i = 0; i < text.size(); ++i) {
+        char c = text[i];
         
-        if (std::isspace(c) || i == text.size()) {
-            if (!current.empty()) {
-                words.push_back(current);
-                current.clear();
-            }
+        if (std::isspace(static_cast<unsigned char>(c))) {
+            prev_was_space = true;
+            // Don't add space to processed text - we'll add ▁ before next word
         } else {
-            current += c;
+            if (prev_was_space || (processed_text.empty() && add_prefix_space_)) {
+                // Add ▁ prefix (SentencePiece style)
+                // Only add ▁ if:
+                // 1. Previous char was space (word boundary)
+                // 2. OR this is the first char and we want prefix space
+                processed_text += "\xE2\x96\x81";  // UTF-8 for ▁
+            }
+            processed_text += c;
+            prev_was_space = false;
         }
     }
     
-    // Tokenize each word with ▁ prefix (except first if text doesn't start with space)
-    bool first_word = true;
-    for (const auto& word : words) {
-        // Try with ▁ prefix first (SentencePiece style)
-        std::string sp_word = "▁" + word;
+    // Now tokenize the processed text
+    size_t i = 0;
+    while (i < processed_text.size()) {
+        // Try longest match
+        size_t longest_len = 0;
+        TokenId longest_id = unk_id_;
         
-        size_t i = 0;
-        while (i < sp_word.size()) {
-            // Try longest match
-            size_t longest_len = 0;
-            TokenId longest_id = unk_id_;
-            
-            for (size_t len = std::min(size_t(32), sp_word.size() - i); len > 0; --len) {
-                std::string substr = sp_word.substr(i, len);
-                auto it = token_to_id_.find(substr);
-                if (it != token_to_id_.end()) {
-                    longest_len = len;
-                    longest_id = it->second;
-                    break;
-                }
-            }
-            
-            if (longest_len > 0) {
-                result.push_back(longest_id);
-                i += longest_len;
-            } else {
-                // Unknown character
-                result.push_back(unk_id_);
-                i++;
+        // Try up to 32 bytes (max reasonable token length)
+        for (size_t len = std::min(size_t(32), processed_text.size() - i); len > 0; --len) {
+            std::string substr = processed_text.substr(i, len);
+            auto it = token_to_id_.find(substr);
+            if (it != token_to_id_.end()) {
+                longest_len = len;
+                longest_id = it->second;
+                break;
             }
         }
         
-        first_word = false;
+        if (longest_len > 0) {
+            result.push_back(longest_id);
+            i += longest_len;
+        } else {
+            // Unknown character - skip it
+            result.push_back(unk_id_);
+            i++;
+        }
     }
     
     return result;
@@ -383,6 +423,7 @@ std::vector<std::string> Tokenizer::Impl::ApplyBPE(const std::string& word) cons
 
 std::string Tokenizer::Impl::DecodeSentencePiece(const std::vector<TokenId>& tokens) const {
     std::string result;
+    bool first_token = true;
     
     for (TokenId id : tokens) {
         if (id < 0 || static_cast<size_t>(id) >= id_to_token_.size()) {
@@ -392,7 +433,8 @@ std::string Tokenizer::Impl::DecodeSentencePiece(const std::vector<TokenId>& tok
         const std::string& token = id_to_token_[id];
         
         // Skip special tokens
-        if (token == "<s>" || token == "</s>" || token == "<unk>") {
+        if (token == "<s>" || token == "</s>" || token == "<unk>" ||
+            token == "<pad>" || token == "[PAD]") {
             continue;
         }
         
@@ -402,11 +444,18 @@ std::string Tokenizer::Impl::DecodeSentencePiece(const std::vector<TokenId>& tok
             static_cast<unsigned char>(token[0]) == 0xE2 &&
             static_cast<unsigned char>(token[1]) == 0x96 &&
             static_cast<unsigned char>(token[2]) == 0x81) {
-            if (!result.empty()) result += " ";
+            // This token starts with ▁, which means it should be preceded by a space
+            // (unless it's the first token)
+            if (!first_token && !result.empty()) {
+                result += " ";
+            }
             result += token.substr(3);
         } else {
+            // Regular token - just append
             result += token;
         }
+        
+        first_token = false;
     }
 
     return result;
@@ -427,10 +476,12 @@ std::string Tokenizer::Impl::DecodeBPE(const std::vector<TokenId>& tokens) const
             continue;
         }
         
-        // Handle prefix space marker
-        if (token.size() >= 3 && token.substr(0, 3) == "Ġ") {
+        // Handle prefix space marker (Ġ = U+0120, UTF-8: 0xC4 0xA0)
+        if (token.size() >= 2 &&
+            static_cast<unsigned char>(token[0]) == 0xC4 &&
+            static_cast<unsigned char>(token[1]) == 0xA0) {
             if (!result.empty()) result += " ";
-            result += token.substr(3);
+            result += token.substr(2);
         } else {
             result += token;
         }
@@ -467,20 +518,24 @@ bool Tokenizer::Load(const model::ModelContext& model) {
     
     const auto& arch = model.GetArchitecture();
     
-    // Determine tokenizer type from architecture
+    // Determine tokenizer type from architecture and vocabulary
     std::string arch_type = arch.type;
-    if (arch_type == "llama" || arch_type == "mistral" || arch_type == "mixtral") {
-        // Llama family uses SentencePiece
-        if (!pImpl_->LoadSentencePiece(model)) {
-            return false;
-        }
-        model_type_ = "sentencepiece";
-    } else if (arch_type == "gpt2" || arch_type == "phi3") {
-        // GPT-2/Phi use BPE
+    
+    // Check if model has BPE merges - if so, use BPE tokenizer
+    bool has_merges = !model.GetMerges().empty();
+    
+    if (has_merges || arch_type == "gpt2" || arch_type == "phi3") {
+        // BPE tokenizer (GPT-2 style or Llama-3)
         if (!pImpl_->LoadBPE(model)) {
             return false;
         }
         model_type_ = "bpe";
+    } else if (arch_type == "llama" || arch_type == "mistral" || arch_type == "mixtral") {
+        // Llama family uses SentencePiece (Llama-2 and earlier)
+        if (!pImpl_->LoadSentencePiece(model)) {
+            return false;
+        }
+        model_type_ = "sentencepiece";
     } else {
         // Default to SentencePiece
         if (!pImpl_->LoadSentencePiece(model)) {
@@ -558,6 +613,13 @@ std::string Tokenizer::Decode(const std::vector<TokenId>& tokens) const {
 
 std::string Tokenizer::Decode(TokenId token) const {
     return Decode(std::vector<TokenId>{token});
+}
+
+std::string Tokenizer::IdToToken(TokenId id) const {
+    if (!pImpl_ || id < 0 || static_cast<size_t>(id) >= pImpl_->id_to_token_.size()) {
+        return "";
+    }
+    return pImpl_->id_to_token_[id];
 }
 
 size_t Tokenizer::VocabularySize() const {
