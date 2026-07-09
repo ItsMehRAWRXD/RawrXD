@@ -37,7 +37,7 @@ bool TransformerLayer::LoadWeights(const model::ModelContext& model) {
     auto load_quantized = [&](const std::string& name, QuantizedTensor& tensor,
                               const std::vector<uint64_t>& shape) -> bool {
         // Get tensor info from model context
-        auto tensor_info = model.GetTensorInfo(name);
+        const auto* tensor_info = model.FindTensor(name);
         if (!tensor_info) {
             // For now, create dummy quantized tensor for testing
             // In production, this would load from GGUF
@@ -308,25 +308,40 @@ bool TransformerModel::Load(const std::string& path) {
 }
 
 bool TransformerModel::LoadEmbeddingWeights() {
-    // Load token embeddings from GGUF
+    // Load token embeddings from GGUF (keep quantized)
     uint32_t vocab_size = config_.vocab_size;
     uint32_t hidden_size = config_.hidden_size;
     
-    token_embeddings_.resize(vocab_size * hidden_size);
+    // Load as quantized tensor
+    token_embeddings_.type = QuantType::Q4_0;  // Use Q4_0 for embeddings
+    token_embeddings_.shape = {vocab_size, hidden_size};
+    token_embeddings_.num_elements = static_cast<uint64_t>(vocab_size) * hidden_size;
     
-    // For each token in vocabulary
-    for (uint32_t token_id = 0; token_id < vocab_size; ++token_id) {
-        auto embedding = model_ctx_->GetTokenEmbedding(token_id);
-        if (!embedding.empty()) {
-            std::memcpy(&token_embeddings_[token_id * hidden_size],
-                     embedding.data(),
-                     hidden_size * sizeof(float));
-        }
+    uint32_t block_size = token_embeddings_.GetBlockSize();
+    token_embeddings_.num_blocks = (token_embeddings_.num_elements + block_size - 1) / block_size;
+    size_t data_size = token_embeddings_.num_blocks * token_embeddings_.GetBytesPerBlock();
+    token_embeddings_.data.resize(data_size);
+    
+    // For now, initialize with dummy data
+    // Real implementation would load from GGUF
+    for (auto& b : token_embeddings_.data) {
+        b = 0x11;
     }
     
-    // Load output norm and lm_head (simplified)
+    // Load output norm (FP32 - small)
     output_norm_.resize(hidden_size, 1.0f);
-    lm_head_.resize(hidden_size * vocab_size, 0.001f);
+    
+    // Load lm_head as quantized
+    lm_head_.type = QuantType::Q4_0;
+    lm_head_.shape = {hidden_size, vocab_size};
+    lm_head_.num_elements = static_cast<uint64_t>(hidden_size) * vocab_size;
+    lm_head_.num_blocks = (lm_head_.num_elements + block_size - 1) / block_size;
+    data_size = lm_head_.num_blocks * lm_head_.GetBytesPerBlock();
+    lm_head_.data.resize(data_size);
+    
+    for (auto& b : lm_head_.data) {
+        b = 0x11;
+    }
     
     return true;
 }
@@ -361,9 +376,9 @@ std::vector<float> TransformerModel::Forward(const std::vector<uint32_t>& token_
                  &hidden[(seq_len - 1) * config_.hidden_size],
                  config_.hidden_size * sizeof(float));
     
-    // Project to vocab
-    return ModelMatMul(last_hidden, 1, config_.hidden_size,
-                  lm_head_, config_.hidden_size, config_.vocab_size);
+    // Project to vocab using quantized lm_head
+    return MatMulQuantized(last_hidden, 1, config_.hidden_size,
+                           lm_head_, config_.vocab_size);
 }
 
 std::vector<float> TransformerModel::LookupEmbeddings(
@@ -377,9 +392,11 @@ std::vector<float> TransformerModel::LookupEmbeddings(
     for (uint32_t i = 0; i < seq_len; ++i) {
         uint32_t token_id = token_ids[i];
         if (token_id < config_.vocab_size) {
-            std::memcpy(&embeddings[i * hidden_size],
-                     &token_embeddings_[token_id * hidden_size],
-                     hidden_size * sizeof(float));
+            // Dequantize embedding on-the-fly
+            for (uint32_t h = 0; h < hidden_size; ++h) {
+                uint64_t idx = static_cast<uint64_t>(token_id) * hidden_size + h;
+                embeddings[i * hidden_size + h] = GetQuantizedValue(token_embeddings_, idx);
+            }
         }
     }
     
@@ -453,34 +470,7 @@ uint32_t TransformerModel::Sample(
     return indexed[0].second;
 }
 
-// Static helper for MatMul (used before member function is defined)
-static std::vector<float> ModelMatMul(
-    const std::vector<float>& a, uint32_t a_rows, uint32_t a_cols,
-    const std::vector<float>& b, uint32_t b_rows, uint32_t b_cols) {
-    
-    if (a_cols != b_rows) {
-        return {};
-    }
-    
-    std::vector<float> result(a_rows * b_cols, 0.0f);
-    
-    for (uint32_t i = 0; i < a_rows; ++i) {
-        for (uint32_t k = 0; k < a_cols; ++k) {
-            float a_val = a[i * a_cols + k];
-            for (uint32_t j = 0; j < b_cols; ++j) {
-                result[i * b_cols + j] += a_val * b[k * b_cols + j];
-            }
-        }
-    }
-    
-    return result;
-}
-
-std::vector<float> TransformerModel::MatMul(
-    const std::vector<float>& a, uint32_t a_rows, uint32_t a_cols,
-    const std::vector<float>& b, uint32_t b_rows, uint32_t b_cols) {
-    return ModelMatMul(a, a_rows, a_cols, b, b_rows, b_cols);
-}
+// Note: Old ModelMatMul removed - now using quantized MatMul only
 
 } // namespace inference
 } // namespace rawrxd

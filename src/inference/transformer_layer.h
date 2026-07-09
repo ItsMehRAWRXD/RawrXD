@@ -153,11 +153,7 @@ private:
     std::vector<float> LookupEmbeddings(const std::vector<uint32_t>& token_ids);
     uint32_t Sample(const std::vector<float>& logits, float temperature, uint32_t top_k);
     
-    // Matrix multiplication helper
-    std::vector<float> MatMul(
-        const std::vector<float>& a, uint32_t a_rows, uint32_t a_cols,
-        const std::vector<float>& b, uint32_t b_rows, uint32_t b_cols
-    );
+
 };
 
 } // namespace inference

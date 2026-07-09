@@ -9,6 +9,7 @@
 #include <cstring>
 #include <chrono>
 #include <iomanip>
+#include <fstream>
 #include "src/quantization/quantized_model.hpp"
 
 using namespace rawrxd::quantization;
