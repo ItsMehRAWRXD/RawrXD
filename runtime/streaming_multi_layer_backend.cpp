@@ -6,6 +6,7 @@
 #include "streaming_gguf_loader.hpp"
 #include "streaming_layer_registry.hpp"
 #include "telemetry_ids.hpp"
+#include "telemetry_masm_bridge.hpp"
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -61,7 +62,16 @@ StreamingMultiLayerBackend::~StreamingMultiLayerBackend() = default;
 // ============================================================================
 bool StreamingMultiLayerBackend::Initialize(StreamingGGUFLoader& loader) {
     using namespace Telemetry;
-    TELEMETRY_SCOPE(TELEMETRY_BRIDGE_INIT, TELEMETRY_BRIDGE_INIT + 1);
+    
+    // Initialize MASM telemetry core
+    if (!InitializeMasmTelemetry(1024 * 1024)) {  // 1MB buffer
+        std::cerr << "[Backend] Failed to initialize MASM telemetry\n";
+        // Continue without telemetry - not fatal
+    } else {
+        std::cout << "[Backend] MASM telemetry initialized\n";
+    }
+    
+    MASM_TELEMETRY_SCOPE(TELEMETRY_PHASE_INIT, TELEMETRY_PHASE_INIT + 1);
     
     // Initialize layer registry
     if (!m_registry.Initialize(loader)) {
@@ -162,15 +172,27 @@ bool StreamingMultiLayerBackend::OutputProjection(const float* hidden, float* lo
 }
 
 // ============================================================================
-// Execute Layer - Full Transformer Forward Pass
+// Execute Layer - Full Transformer Forward Pass (with Telemetry)
 // ============================================================================
 bool StreamingMultiLayerBackend::ExecuteLayer(uint32_t layer_idx, uint32_t position) {
     using namespace Telemetry;
-    TELEMETRY_SCOPE(TELEMETRY_LAYER_START + layer_idx, TELEMETRY_LAYER_END + layer_idx);
     
-    // Load layer weights
-    if (!m_registry.LoadLayer(layer_idx)) {
-        return false;
+    // Layer-level telemetry scope
+    MASM_TELEMETRY_SCOPE_VALUES(
+        TELEMETRY_LAYER_EXEC_START,
+        TELEMETRY_LAYER_EXEC_END,
+        layer_idx,  // value0 = layer index
+        0           // value1 = duration (set at end)
+    );
+    
+    // ------------------------------------------------------------------------
+    // 1. Load Layer Weights
+    // ------------------------------------------------------------------------
+    {
+        MASM_TELEMETRY_SCOPE(TELEMETRY_LAYER_LOAD_START, TELEMETRY_LAYER_LOAD_END);
+        if (!m_registry.LoadLayer(layer_idx)) {
+            return false;
+        }
     }
     
     const LayerWeights& weights = m_registry.GetCurrentWeights();
@@ -179,22 +201,37 @@ bool StreamingMultiLayerBackend::ExecuteLayer(uint32_t layer_idx, uint32_t posit
     }
     
     // ------------------------------------------------------------------------
-    // 1. Pre-Attention RMSNorm
+    // 2. Pre-Attention RMSNorm
     // ------------------------------------------------------------------------
-    RMSNorm(m_hidden, weights.attn_norm, m_normed, m_hidden_size);
+    {
+        MASM_TELEMETRY_SCOPE_VALUES(
+            TELEMETRY_OP_RMSNORM_START,
+            TELEMETRY_OP_RMSNORM_END,
+            m_hidden_size,  // value0 = size
+            0               // value1 = duration
+        );
+        RMSNorm(m_hidden, weights.attn_norm, m_normed, m_hidden_size);
+    }
     
     // ------------------------------------------------------------------------
-    // 2. QKV Projection
+    // 3. QKV Projection
     // ------------------------------------------------------------------------
-    // m_normed [hidden] -> m_qkv [3 * hidden]
     float* q_out = m_qkv;
     float* k_out = m_qkv + m_hidden_size;
     float* v_out = m_qkv + 2 * m_hidden_size;
     
-    ProjectQKV(m_normed, weights, q_out, k_out, v_out);
+    {
+        MASM_TELEMETRY_SCOPE_VALUES(
+            TELEMETRY_OP_MATMUL_START,
+            TELEMETRY_OP_MATMUL_END,
+            m_hidden_size,  // value0 = dimensions
+            3               // value1 = 3 projections (Q,K,V)
+        );
+        ProjectQKV(m_normed, weights, q_out, k_out, v_out);
+    }
     
     // ------------------------------------------------------------------------
-    // 3. Store K, V in cache
+    // 4. Store K, V in cache
     // ------------------------------------------------------------------------
     for (uint32_t h = 0; h < m_num_heads; ++h) {
         float* k_head = k_out + h * m_head_dim;
@@ -205,34 +242,65 @@ bool StreamingMultiLayerBackend::ExecuteLayer(uint32_t layer_idx, uint32_t posit
     }
     
     // ------------------------------------------------------------------------
-    // 4. Multi-Head Attention
+    // 5. Multi-Head Attention
     // ------------------------------------------------------------------------
-    AttentionMultiHead(q_out, *m_kv_cache, position, m_attn_out);
-    
-    // ------------------------------------------------------------------------
-    // 5. Output projection + residual
-    // ------------------------------------------------------------------------
-    // attn_out [hidden] -> output [hidden]
-    float attn_proj[8192];
-    MatMulRow(weights.attn_output, m_attn_out, attn_proj, m_hidden_size, m_hidden_size);
-    
-    // Residual: hidden = hidden + attn_proj
-    for (uint32_t i = 0; i < m_hidden_size; ++i) {
-        m_next_hidden[i] = m_hidden[i] + attn_proj[i];
+    {
+        MASM_TELEMETRY_SCOPE_VALUES(
+            TELEMETRY_OP_ATTN_START,
+            TELEMETRY_OP_ATTN_END,
+            position + 1,   // value0 = sequence length
+            m_num_heads     // value1 = number of heads
+        );
+        AttentionMultiHead(q_out, *m_kv_cache, position, m_attn_out);
     }
     
     // ------------------------------------------------------------------------
-    // 6. Pre-FFN RMSNorm
+    // 6. Attention Output Projection + Residual
     // ------------------------------------------------------------------------
-    RMSNorm(m_next_hidden, weights.ffn_norm, m_normed, m_hidden_size);
+    {
+        MASM_TELEMETRY_SCOPE_VALUES(
+            TELEMETRY_OP_MATMUL_START,
+            TELEMETRY_OP_MATMUL_END,
+            m_hidden_size,
+            1  // Single projection
+        );
+        float attn_proj[8192];
+        MatMulRow(weights.attn_output, m_attn_out, attn_proj, m_hidden_size, m_hidden_size);
+        
+        // Residual
+        for (uint32_t i = 0; i < m_hidden_size; ++i) {
+            m_next_hidden[i] = m_hidden[i] + attn_proj[i];
+        }
+    }
     
     // ------------------------------------------------------------------------
-    // 7. MLP Forward
+    // 7. Pre-FFN RMSNorm
     // ------------------------------------------------------------------------
-    MLPForward(m_normed, weights, m_mlp_out);
+    {
+        MASM_TELEMETRY_SCOPE_VALUES(
+            TELEMETRY_OP_RMSNORM_START,
+            TELEMETRY_OP_RMSNORM_END,
+            m_hidden_size,
+            0
+        );
+        RMSNorm(m_next_hidden, weights.ffn_norm, m_normed, m_hidden_size);
+    }
     
     // ------------------------------------------------------------------------
-    // 8. Residual: next_hidden = next_hidden + mlp_out
+    // 8. MLP Forward
+    // ------------------------------------------------------------------------
+    {
+        MASM_TELEMETRY_SCOPE_VALUES(
+            TELEMETRY_OP_MLP_START,
+            TELEMETRY_OP_MLP_END,
+            m_hidden_size,
+            m_intermediate_size
+        );
+        MLPForward(m_normed, weights, m_mlp_out);
+    }
+    
+    // ------------------------------------------------------------------------
+    // 9. Residual + Unload
     // ------------------------------------------------------------------------
     for (uint32_t i = 0; i < m_hidden_size; ++i) {
         m_next_hidden[i] = m_next_hidden[i] + m_mlp_out[i];
@@ -240,6 +308,12 @@ bool StreamingMultiLayerBackend::ExecuteLayer(uint32_t layer_idx, uint32_t posit
     
     // Copy result to m_hidden for next layer
     std::memcpy(m_hidden, m_next_hidden, m_hidden_size * sizeof(float));
+    
+    // Unload layer weights
+    {
+        MASM_TELEMETRY_SCOPE(TELEMETRY_LAYER_UNLOAD_START, TELEMETRY_LAYER_UNLOAD_END);
+        m_registry.UnloadLayer();
+    }
     
     return true;
 }
@@ -373,7 +447,7 @@ void StreamingMultiLayerBackend::MLPForward(const float* input, const LayerWeigh
 }
 
 // ============================================================================
-// MatMul with Quantized Weights
+// MatMul with Quantized Weights (with Dequantization Telemetry)
 // ============================================================================
 void StreamingMultiLayerBackend::MatMulRow(
     const TensorView& weight,
@@ -382,14 +456,25 @@ void StreamingMultiLayerBackend::MatMulRow(
     uint32_t out_dim,
     uint32_t in_dim
 ) {
+    using namespace Telemetry;
+    
     // weight shape: [out_dim, in_dim]
     // input shape: [in_dim]
     // output shape: [out_dim]
     
     for (uint32_t row = 0; row < out_dim; ++row) {
-        // Dequantize weight row
+        // Dequantize weight row with telemetry
         float weight_row[8192];  // Max hidden size
-        weight.DequantizeRow(row, weight_row, in_dim);
+        
+        {
+            MASM_TELEMETRY_SCOPE_VALUES(
+                TELEMETRY_OP_DEQUANT_START,
+                TELEMETRY_OP_DEQUANT_END,
+                in_dim,                          // value0 = elements
+                static_cast<uint64_t>(weight.Type())  // value1 = type
+            );
+            weight.DequantizeRow(row, weight_row, in_dim);
+        }
         
         // Dot product
         float sum = 0.0f;
@@ -409,11 +494,21 @@ bool StreamingMultiLayerBackend::ExecuteToken(
     float* logits_out
 ) {
     using namespace Telemetry;
-    TELEMETRY_SCOPE(TELEMETRY_TRANSFORMER_FORWARD, TELEMETRY_TRANSFORMER_FORWARD + 1);
+    
+    // Token-level telemetry with position tracking
+    MASM_TELEMETRY_SCOPE_VALUES(
+        TELEMETRY_TRANSFORMER_FORWARD,
+        TELEMETRY_TRANSFORMER_FORWARD + 1,
+        token_id,      // value0 = token ID
+        position_id    // value1 = position
+    );
     
     // 1. Embedding lookup
-    if (!EmbeddingLookup(token_id, m_hidden)) {
-        return false;
+    {
+        MASM_TELEMETRY_SCOPE(TELEMETRY_TOKEN_EMBED, TELEMETRY_TOKEN_EMBED + 1);
+        if (!EmbeddingLookup(token_id, m_hidden)) {
+            return false;
+        }
     }
     
     // 2. Execute each layer
@@ -421,14 +516,14 @@ bool StreamingMultiLayerBackend::ExecuteToken(
         if (!ExecuteLayer(layer, position_id)) {
             return false;
         }
-        
-        // Swap hidden buffers
-        std::memcpy(m_hidden, m_next_hidden, m_hidden_size * sizeof(float));
     }
     
     // 3. Output projection
-    if (!OutputProjection(m_hidden, logits_out)) {
-        return false;
+    {
+        MASM_TELEMETRY_SCOPE(TELEMETRY_LOGITS_PROJECTION, TELEMETRY_LOGITS_PROJECTION + 1);
+        if (!OutputProjection(m_hidden, logits_out)) {
+            return false;
+        }
     }
     
     return true;
