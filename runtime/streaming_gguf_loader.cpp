@@ -203,12 +203,19 @@ bool StreamingGGUFLoader::Open(const std::string& path) {
     SkipMetadata();
     m_currentTensor = 0;
     
+    // Verify alignment (forensics insight: must be 64-byte aligned)
+    if (m_tensorDataOffset % 64 != 0) {
+        std::cerr << "[StreamingGGUF] WARNING: Tensor data offset " << m_tensorDataOffset 
+                  << " is not 64-byte aligned" << std::endl;
+        // Continue anyway - some files may have different alignment
+    }
+    
     m_isOpen = true;
     std::cout << "[StreamingGGUF] Opened: " << path << std::endl;
     std::cout << "  Version: " << m_version << std::endl;
     std::cout << "  Tensors: " << m_tensorCount << std::endl;
     std::cout << "  Metadata: " << m_metadataCount << std::endl;
-    std::cout << "  Tensor data offset: " << m_tensorDataOffset << std::endl;
+    std::cout << "  Tensor data offset: " << m_tensorDataOffset << " (0x" << std::hex << m_tensorDataOffset << std::dec << ")" << std::endl;
     
     return true;
 }
@@ -306,6 +313,13 @@ MmappedTensor StreamingGGUFLoader::MapTensor(const TensorInfo& info) {
     if (!m_isOpen) return result;
     
     uint64_t fileOffset = m_tensorDataOffset + info.offset;
+    
+    // Forensics insight: Verify 64-byte alignment for SIMD efficiency
+    if (fileOffset % 64 != 0) {
+        std::cerr << "[StreamingGGUF] WARNING: Tensor '" << info.name 
+                  << "' at offset " << fileOffset << " is not 64-byte aligned" << std::endl;
+        // Continue anyway - will work but may be slower
+    }
     
 #ifdef _WIN32
     // Windows memory mapping

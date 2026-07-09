@@ -127,11 +127,11 @@ int main(int argc, char* argv[]) {
     // ------------------------------------------------------------------------
     std::cout << "[1/6] Initializing MASM telemetry...\n";
     
-    if (!InitializeMasmTelemetry(10 * 1024 * 1024)) {  // 10MB buffer for long runs
+    if (!InitializeMasmTelemetry(8 * 1024 * 1024)) {  // 8MB buffer (power of 2)
         std::cerr << "FAILED: Could not initialize telemetry\n";
         return 1;
     }
-    std::cout << "      ✓ Telemetry initialized (10MB buffer)\n\n";
+    std::cout << "      ✓ Telemetry initialized (8MB buffer)\n\n";
     
     // ------------------------------------------------------------------------
     // Step 2: Load model

@@ -219,10 +219,11 @@ public:
         size_t bytes_per_block = 0;
         
         switch (m_mmapType) {
-            case GGMLType::Q4_K: bytes_per_block = 144; break;
-            case GGMLType::Q2_K: bytes_per_block = 96; break;
-            case GGMLType::Q6_K: bytes_per_block = 210; break;
-            case GGMLType::Q8_K: bytes_per_block = 256; break;
+            case GGMLType::Q4_0: elements_per_block = 32; bytes_per_block = 18; break;
+            case GGMLType::Q4_K: elements_per_block = 256; bytes_per_block = 144; break;
+            case GGMLType::Q2_K: elements_per_block = 256; bytes_per_block = 96; break;
+            case GGMLType::Q6_K: elements_per_block = 256; bytes_per_block = 210; break;
+            case GGMLType::Q8_K: elements_per_block = 256; bytes_per_block = 256; break;
             default: bytes_per_block = 4; break;
         }
         
@@ -238,11 +239,17 @@ public:
         
         // Dispatch to appropriate dequantizer
         switch (m_mmapType) {
+            case GGMLType::Q4_0:
+                DequantizeQ4_0Blocks(row_data, cols, output);
+                return cols;
             case GGMLType::Q4_K:
                 DequantizeQ4KBlocks(row_data, cols, output);
                 return cols;
             case GGMLType::Q2_K:
                 DequantizeQ2KBlocks(row_data, cols, output);
+                return cols;
+            case GGMLType::Q6_K:
+                DequantizeQ6_KBlocks(row_data, cols, output);
                 return cols;
             default:
                 std::memset(output, 0, cols * sizeof(float));
@@ -379,6 +386,71 @@ private:
                     int shift = (q_idx % 4) * 2;
                     uint8_t q = (block.qs[byte_idx] >> shift) & 0x3;
                     output[out_idx++] = scales[scale_idx] * q + mins[scale_idx];
+                }
+            }
+        }
+    }
+    
+    // Q4_0 block dequantization (18 bytes per 32 weights)
+    // Required for ministral3 and other Q4_0 models
+    void DequantizeQ4_0Blocks(const uint8_t* data, size_t num_elements, float* output) const {
+        struct BlockQ4_0 {
+            uint16_t d;      // F16 scale
+            uint8_t qs[16];  // 4-bit weights (32 nibbles packed)
+        };
+        
+        const BlockQ4_0* blocks = reinterpret_cast<const BlockQ4_0*>(data);
+        size_t num_blocks = (num_elements + 31) / 32;
+        
+        size_t out_idx = 0;
+        for (size_t b = 0; b < num_blocks && out_idx < num_elements; b++) {
+            const BlockQ4_0& block = blocks[b];
+            
+            float d = F16ToF32(block.d);
+            
+            // Dequantize 32 values
+            for (int j = 0; j < 32 && out_idx < num_elements; j++) {
+                int byte_idx = j / 2;
+                int nibble = j % 2;
+                uint8_t q = (nibble == 0) ? (block.qs[byte_idx] & 0x0F) : (block.qs[byte_idx] >> 4);
+                output[out_idx++] = d * (q - 8);  // Center around 0: -8 to +7
+            }
+        }
+    }
+    
+    // Q6_K block dequantization (210 bytes per 256 weights)
+    // Higher precision for output layers
+    void DequantizeQ6_KBlocks(const uint8_t* data, size_t num_elements, float* output) const {
+        struct BlockQ6_K {
+            uint8_t ql[128];   // Low 4 bits of each weight
+            uint8_t qh[64];    // High 2 bits of each weight  
+            uint8_t scales[64]; // 8-bit scales for each of 16 groups
+            uint16_t d;         // F16 super-scale
+        };
+        
+        const BlockQ6_K* blocks = reinterpret_cast<const BlockQ6_K*>(data);
+        size_t num_blocks = (num_elements + 255) / 256;
+        
+        size_t out_idx = 0;
+        for (size_t b = 0; b < num_blocks && out_idx < num_elements; b++) {
+            const BlockQ6_K& block = blocks[b];
+            
+            float d = F16ToF32(block.d);
+            
+            // Dequantize 256 values (16 groups of 16)
+            for (int g = 0; g < 16 && out_idx < num_elements; g++) {
+                float scale = d * block.scales[g];
+                for (int j = 0; j < 16 && out_idx < num_elements; j++) {
+                    int idx = g * 16 + j;
+                    int byte_idx = idx / 4;
+                    int shift = (idx % 4) * 2;
+                    
+                    // Combine high and low bits
+                    uint8_t qh = (block.qh[byte_idx] >> shift) & 0x3;
+                    uint8_t ql = (block.ql[idx] & 0x0F);
+                    uint8_t q = (qh << 4) | ql;
+                    
+                    output[out_idx++] = scale * (q - 32);  // Center around 0
                 }
             }
         }

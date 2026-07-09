@@ -83,6 +83,10 @@ public:
     // Check if initialized
     bool IsInitialized() const { return m_initialized; }
 
+    // Buffer access for SEG integration
+    float* GetLogitsBuffer() { return m_logits; }
+    size_t GetLogitsBytes() const { return sizeof(m_logits); }
+
 private:
     // Components
     StreamingLayerRegistry m_registry;
