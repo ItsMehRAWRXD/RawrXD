@@ -1,6 +1,6 @@
 /*
- * REAL Java Compiler - Week 1, Day 2
- * Honest wrapper that compiles Java to EXE via javac + launcher
+ * REAL Java Compiler - Fixed version with proper path handling
+ * Compiles Java to EXE via javac + launcher
  */
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -14,7 +14,6 @@
 
 /* Find javac.exe in PATH or common locations */
 int find_javac(char* javac_path, size_t path_size) {
-    // Try common locations
     const char* locations[] = {
         "C:\\Program Files\\Java\\jdk-21\\bin\\javac.exe",
         "C:\\Program Files\\Java\\jdk-17\\bin\\javac.exe",
@@ -22,7 +21,7 @@ int find_javac(char* javac_path, size_t path_size) {
         "C:\\Program Files\\Java\\jdk-1.8\\bin\\javac.exe",
         "C:\\Program Files\\Eclipse Adoptium\\jdk-21\\bin\\javac.exe",
         "C:\\Program Files\\Eclipse Adoptium\\jdk-17\\bin\\javac.exe",
-        "javac.exe"  // Try PATH last
+        "javac.exe"
     };
     
     for (int i = 0; i < sizeof(locations)/sizeof(locations[0]); i++) {
@@ -59,7 +58,7 @@ int find_java(char* java_path, size_t path_size) {
     return -1;
 }
 
-/* Compile Java source to class file */
+/* Compile Java source to class file using CreateProcessA */
 int compile_java(const char* input_file, const char* class_name) {
     char javac_path[MAX_PATH_LEN];
     
@@ -70,22 +69,32 @@ int compile_java(const char* input_file, const char* class_name) {
     }
     
     printf("Using javac: %s\n", javac_path);
-    
-    // Build compile command - use quotes properly for paths with spaces
-    char cmd[MAX_CMD_LEN];
-    snprintf(cmd, sizeof(cmd), "\"%s\" \"%s\"", javac_path, input_file);
-    
     printf("Compiling: %s\n", input_file);
-    printf("Command: %s\n", cmd);
     
-    // Execute javac
-    int result = system(cmd);
-    if (result != 0) {
-        fprintf(stderr, "Error: Java compilation failed\n");
+    char cmdline[MAX_CMD_LEN];
+    snprintf(cmdline, sizeof(cmdline), "\"%s\" \"%s\"", javac_path, input_file);
+    
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+    
+    if (!CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        fprintf(stderr, "Error: Failed to launch javac (error %lu)\n", GetLastError());
         return 1;
     }
     
-    // Check if .class file was created
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    
+    DWORD exit_code = 0;
+    GetExitCodeProcess(pi.hProcess, &exit_code);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    
+    if (exit_code != 0) {
+        fprintf(stderr, "Error: Java compilation failed (exit code %lu)\n", exit_code);
+        return 1;
+    }
+    
     char class_file[MAX_PATH_LEN];
     snprintf(class_file, sizeof(class_file), "%s.class", class_name);
     
@@ -107,7 +116,16 @@ int create_wrapper(const char* class_name, const char* output_file) {
         return 1;
     }
     
-    // Create C wrapper source
+    // Write java path to a temp file that wrapper will read
+    FILE* pathf = fopen("__java_path.txt", "w");
+    if (!pathf) {
+        fprintf(stderr, "Error: Cannot create path file\n");
+        return 1;
+    }
+    fprintf(pathf, "%s", java_path);
+    fclose(pathf);
+    
+    // Create C wrapper source - reads path from file to avoid escape issues
     FILE* f = fopen("__java_wrapper.c", "w");
     if (!f) {
         fprintf(stderr, "Error: Cannot create wrapper file\n");
@@ -119,15 +137,30 @@ int create_wrapper(const char* class_name, const char* output_file) {
     fprintf(f, "#include <stdlib.h>\n");
     fprintf(f, "\n");
     fprintf(f, "int main(int argc, char* argv[]) {\n");
+    fprintf(f, "    // Read Java path from file\n");
+    fprintf(f, "    FILE* pf = fopen(\"__java_path.txt\", \"r\");\n");
+    fprintf(f, "    if (!pf) { printf(\"Error: Cannot read Java path\\n\"); return 1; }\n");
+    fprintf(f, "    char java_path[4096];\n");
+    fprintf(f, "    if (!fgets(java_path, sizeof(java_path), pf)) {\n");
+    fprintf(f, "        printf(\"Error: Cannot read Java path\\n\");\n");
+    fprintf(f, "        fclose(pf);\n");
+    fprintf(f, "        return 1;\n");
+    fprintf(f, "    }\n");
+    fprintf(f, "    fclose(pf);\n");
+    fprintf(f, "    \n");
+    fprintf(f, "    // Remove trailing newline\n");
+    fprintf(f, "    size_t len = strlen(java_path);\n");
+    fprintf(f, "    if (len > 0 && java_path[len-1] == '\\n') java_path[len-1] = '\\0';\n");
+    fprintf(f, "    \n");
     fprintf(f, "    STARTUPINFOA si = {0};\n");
     fprintf(f, "    si.cb = sizeof(si);\n");
     fprintf(f, "    PROCESS_INFORMATION pi = {0};\n");
     fprintf(f, "    \n");
-    fprintf(f, "    char cmd[4096];\n");
-    fprintf(f, "    snprintf(cmd, sizeof(cmd), \"\\\"%s\\\" %s\");\n", java_path, class_name);
+    fprintf(f, "    char cmd[8192];\n");
+    fprintf(f, "    snprintf(cmd, sizeof(cmd), \"\\\"%%s\\\" %s\", java_path);\n", class_name);
     fprintf(f, "    \n");
     fprintf(f, "    if (!CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {\n");
-    fprintf(f, "        printf(\"Error: Failed to launch Java\\n\");\n");
+    fprintf(f, "        printf(\"Error: Failed to launch Java (%%lu)\\n\", GetLastError());\n");
     fprintf(f, "        return 1;\n");
     fprintf(f, "    }\n");
     fprintf(f, "    \n");
@@ -135,10 +168,8 @@ int create_wrapper(const char* class_name, const char* output_file) {
     fprintf(f, "    \n");
     fprintf(f, "    DWORD exit_code = 0;\n");
     fprintf(f, "    GetExitCodeProcess(pi.hProcess, &exit_code);\n");
-    fprintf(f, "    \n");
     fprintf(f, "    CloseHandle(pi.hProcess);\n");
     fprintf(f, "    CloseHandle(pi.hThread);\n");
-    fprintf(f, "    \n");
     fprintf(f, "    return (int)exit_code;\n");
     fprintf(f, "}\n");
     
@@ -153,11 +184,12 @@ int create_wrapper(const char* class_name, const char* output_file) {
     printf("Creating launcher: %s\n", output_file);
     int result = system(compile_cmd);
     
-    // Cleanup
+    // Cleanup temp files
     remove("__java_wrapper.c");
     
     if (result != 0) {
         fprintf(stderr, "Error: Failed to create launcher\n");
+        remove("__java_path.txt");
         return 1;
     }
     
@@ -185,16 +217,13 @@ int main(int argc, char* argv[]) {
     const char* input_file = argv[1];
     const char* output_file = (argc > 2) ? argv[2] : "program.exe";
     
-    // Extract class name from input file
     char class_name[MAX_PATH_LEN];
     strncpy(class_name, input_file, sizeof(class_name));
     class_name[sizeof(class_name)-1] = '\0';
     
-    // Remove .java extension if present
     char* ext = strstr(class_name, ".java");
     if (ext) *ext = '\0';
     
-    // Remove path
     char* basename = strrchr(class_name, '\\');
     if (basename) {
         memmove(class_name, basename + 1, strlen(basename));
@@ -210,18 +239,15 @@ int main(int argc, char* argv[]) {
     printf("Class:  %s\n", class_name);
     printf("\n");
     
-    // Check if input exists
     if (GetFileAttributesA(input_file) == INVALID_FILE_ATTRIBUTES) {
         fprintf(stderr, "Error: Input file not found: %s\n", input_file);
         return 1;
     }
     
-    // Step 1: Compile Java to .class
     if (compile_java(input_file, class_name) != 0) {
         return 1;
     }
     
-    // Step 2: Create C wrapper
     if (create_wrapper(class_name, output_file) != 0) {
         return 1;
     }
@@ -232,7 +258,7 @@ int main(int argc, char* argv[]) {
     printf("========================================\n");
     printf("\n");
     printf("Note: Requires Java Runtime to execute\n");
-    printf("The .class file must be in the same directory as the .exe\n");
+    printf("The .class file and __java_path.txt must be with the .exe\n");
     
     return 0;
 }

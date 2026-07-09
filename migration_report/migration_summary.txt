@@ -1,0 +1,36 @@
+================================================================================
+MIGRATION CANDIDATE SUMMARY
+================================================================================
+
+Files Scanned: 5257
+Files with Legacy Code: 327
+Total Legacy Occurrences: 1570
+
+By Category:
+  AgenticEngine: 469
+  CPUInferenceEngine: 979
+  LegacyIncludes: 122
+
+Files Requiring Migration (Top 20):
+  src\cpu_inference_engine.cpp: 87 occurrences
+  src\agentic_engine.cpp: 58 occurrences
+  src\test\smoke_test_orchestrator.cpp: 48 occurrences
+  src\win32app\MainWindowSimple.h: 48 occurrences
+  src\modules\memory_manager.cpp: 43 occurrences
+  src\win32app\Win32IDE.cpp: 33 occurrences
+  src\agentic\LegacyCoreAdapter.cpp: 32 occurrences
+  src\cpu_inference_engine_real.cpp: 31 occurrences
+  src\cpu_inference_engine_fixed.cpp: 27 occurrences
+  src\win32app\Win32IDE_AgenticBridge.cpp: 23 occurrences
+  src\core\auto_feature_real_impl.cpp: 21 occurrences
+  src\win32app\HeadlessIDE.cpp: 19 occurrences
+  src\cli\CLI_SlashRouter.cpp: 18 occurrences
+  src\cpu_inference_engine_clean.cpp: 18 occurrences
+  src\ide_integration.cpp: 17 occurrences
+  src\completion\smart_completion_test.cpp: 17 occurrences
+  src\composer\crazy_mode.cpp: 16 occurrences
+  src\win32app\Win32IDE_Core.cpp: 15 occurrences
+  src\win32app\Win32IDE_LocalServer.cpp: 14 occurrences
+  src\cpu_inference_engine_production.cpp: 13 occurrences
+
+================================================================================

@@ -48,6 +48,11 @@
 #include <functional>
 #include <map>
 #include <memory>
+
+// Forward declarations for CLI integration (Win32IDE_CLI_Integration.cpp)
+extern void Win32IDE_CompileCurrentFileWithCLI_Impl(Win32IDE* ide);
+extern void Win32IDE_BuildProjectWithCLI_Impl(Win32IDE* ide);
+extern void Win32IDE_RunCIPipeline_Impl(Win32IDE* ide);
 #include <nlohmann/json.hpp>
 #include <richedit.h>
 #include <set>
@@ -11560,8 +11565,13 @@ void Win32IDE::handleToolsCommand(int commandId)
 }
 
 // ============================================================================
-// BUILD COMMAND HANDLERS
+// BUILD COMMAND HANDLERS - WIRED TO CLI INTEGRATION
 // ============================================================================
+
+// Forward declarations from Win32IDE_CLI_Integration.cpp
+extern void Win32IDE_CompileCurrentFileWithCLI_Impl(Win32IDE* ide);
+extern void Win32IDE_BuildProjectWithCLI_Impl(Win32IDE* ide);
+extern void Win32IDE_RunCIPipeline_Impl(Win32IDE* ide);
 
 void Win32IDE::handleBuildCommand(int commandId)
 {
@@ -11569,11 +11579,14 @@ void Win32IDE::handleBuildCommand(int commandId)
     {
         case IDM_BUILD_SOLUTION:
         {
-            std::string workingDir = m_projectRoot.empty() ? std::filesystem::current_path().string() : m_projectRoot;
-            std::string buildCmd = "cmake --build . --config Release";
-            runBuildInBackground(workingDir, buildCmd);
-            if (m_hwndStatusBar)
-                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Building solution...");
+            // Use CLI integration for build
+            Win32IDE_BuildProjectWithCLI_Impl(this);
+            break;
+        }
+        case IDM_BUILD_COMPILE:
+        {
+            // Use CLI integration for single file compile
+            Win32IDE_CompileCurrentFileWithCLI_Impl(this);
             break;
         }
         case IDM_BUILD_CLEAN:
@@ -11587,12 +11600,17 @@ void Win32IDE::handleBuildCommand(int commandId)
         }
         case IDM_BUILD_REBUILD:
         {
+            // Clean then build using CLI
             std::string workingDir = m_projectRoot.empty() ? std::filesystem::current_path().string() : m_projectRoot;
-            std::string rebuildCmd =
-                "cmake --build . --config Release --target clean && cmake --build . --config Release";
-            runBuildInBackground(workingDir, rebuildCmd);
-            if (m_hwndStatusBar)
-                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Rebuilding solution...");
+            std::string cleanCmd = "cmake --build . --config Release --target clean";
+            runBuildInBackground(workingDir, cleanCmd);
+            Win32IDE_BuildProjectWithCLI_Impl(this);
+            break;
+        }
+        case IDM_BUILD_RUN:
+        {
+            // Run CI pipeline
+            Win32IDE_RunCIPipeline_Impl(this);
             break;
         }
         default:

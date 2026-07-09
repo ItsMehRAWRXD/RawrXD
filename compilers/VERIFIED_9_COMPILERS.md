@@ -21,7 +21,7 @@
 | 5 | **Bash** | `bash_compiler_real.exe` | ✅ REAL | Creates Unix-compatible scripts |
 | 6 | **PowerShell** | `powershell_compiler_real.exe` | ✅ REAL | Embeds PS in C wrapper |
 | 7 | **C#** | `csharp_compiler_real.exe` | ✅ REAL | Embeds C# in C wrapper |
-| 8 | **Java** | `java_compiler_real.exe` | ✅ REAL | Embeds Java in C wrapper |
+| 8 | **Java** | `java_compiler_real.exe` | ✅ REAL | Embeds Java in C wrapper (FIXED: path escaping) |
 | 9 | **EON** | `eon_compiler_real.exe` | ✅ REAL | Generates C from EON |
 
 ---

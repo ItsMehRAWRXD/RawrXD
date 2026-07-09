@@ -5251,6 +5251,8 @@ if(WIN32)
         # Compiler Registry — 69+ compiler management with auto-detection
         src/compiler/CompilerRegistry.cpp
         src/win32app/CompilerIntegration_Real.cpp
+        # CLI Integration — wires all CLI tools to GUI
+        src/win32app/Win32IDE_CLI_Integration.cpp
     )
 
     set(WIN32IDE_EXTRA_ASM "")

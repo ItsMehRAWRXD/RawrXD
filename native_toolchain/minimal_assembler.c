@@ -339,12 +339,24 @@ int assemble_instruction(char *line, uint8_t *code, int *code_size) {
     return 0;
 }
 
-// Write COFF object file - FIXED VERSION
-int write_coff_object(const char *filename, uint8_t *code, int code_size) {
+// Write COFF object file with symbol table support
+int write_coff_object(const char *filename, uint8_t *code, int code_size, 
+                      const char *public_symbol, const char **extern_symbols, int num_externs) {
     FILE *f = fopen(filename, "wb");
     if (!f) {
         printf("[ERROR] Cannot create: %s\n", filename);
         return 0;
+    }
+    
+    // Calculate string table size
+    int string_table_size = 4; // Initial 4-byte size field
+    if (public_symbol && strlen(public_symbol) > 8) {
+        string_table_size += strlen(public_symbol) + 1;
+    }
+    for (int i = 0; i < num_externs; i++) {
+        if (extern_symbols[i] && strlen(extern_symbols[i]) > 8) {
+            string_table_size += strlen(extern_symbols[i]) + 1;
+        }
     }
     
     // Calculate offsets
@@ -352,6 +364,10 @@ int write_coff_object(const char *filename, uint8_t *code, int code_size) {
     int sect_header_size = sizeof(SECTION_HEADER);
     int data_offset = coff_header_size + sect_header_size;
     int symtab_offset = data_offset + code_size;
+    int num_symbols = 2; // .text + @feat.00
+    if (public_symbol) num_symbols++;
+    num_symbols += num_externs;
+    int string_table_offset = symtab_offset + num_symbols * sizeof(SYMBOL_TABLE_ENTRY);
     
     // COFF Header
     COFF_HEADER coff = {0};
@@ -359,7 +375,7 @@ int write_coff_object(const char *filename, uint8_t *code, int code_size) {
     coff.NumberOfSections = 1;
     coff.TimeDateStamp = (uint32_t)time(NULL);
     coff.PointerToSymbolTable = symtab_offset;
-    coff.NumberOfSymbols = 2; // .text section + @feat.00
+    coff.NumberOfSymbols = num_symbols;
     coff.SizeOfOptionalHeader = 0;
     coff.Characteristics = 0;
     fwrite(&coff, sizeof(coff), 1, f);
@@ -382,6 +398,9 @@ int write_coff_object(const char *filename, uint8_t *code, int code_size) {
     fwrite(code, code_size, 1, f);
     
     // Symbol Table
+    int current_string_offset = 0; // Offset relative to start of string data (after 4-byte size field)
+    
+    // Symbol 1: .text section
     SYMBOL_TABLE_ENTRY sym1 = {0};
     memcpy(sym1.Name, ".text", 5);
     sym1.Value = 0;
@@ -391,6 +410,7 @@ int write_coff_object(const char *filename, uint8_t *code, int code_size) {
     sym1.NumberOfAuxSymbols = 0;
     fwrite(&sym1, sizeof(sym1), 1, f);
     
+    // Symbol 2: @feat.00
     SYMBOL_TABLE_ENTRY sym2 = {0};
     memcpy(sym2.Name, "@feat.00", 8);
     sym2.Value = 0;
@@ -400,13 +420,69 @@ int write_coff_object(const char *filename, uint8_t *code, int code_size) {
     sym2.NumberOfAuxSymbols = 0;
     fwrite(&sym2, sizeof(sym2), 1, f);
     
-    // String Table (size + empty string)
-    uint32_t strtab_size = 4;
+    // Symbol 3: public symbol (e.g., main)
+    if (public_symbol) {
+        SYMBOL_TABLE_ENTRY sym3 = {0};
+        size_t name_len = strlen(public_symbol);
+        if (name_len <= 8) {
+            memcpy(sym3.Name, public_symbol, name_len);
+        } else {
+            // Use string table
+            sym3.Name[0] = 0;
+            sym3.Name[1] = 0;
+            sym3.Name[2] = 0;
+            sym3.Name[3] = 0;
+            *(uint32_t*)&sym3.Name[4] = current_string_offset;
+            current_string_offset += name_len + 1;
+        }
+        sym3.Value = 0; // Entry point at start of .text
+        sym3.SectionNumber = 1;
+        sym3.Type = 0x20; // Function
+        sym3.StorageClass = 2; // EXTERNAL (public)
+        sym3.NumberOfAuxSymbols = 0;
+        fwrite(&sym3, sizeof(sym3), 1, f);
+    }
+    
+    // Symbols 4+: external symbols (e.g., ExitProcess)
+    for (int i = 0; i < num_externs; i++) {
+        if (!extern_symbols[i]) continue;
+        SYMBOL_TABLE_ENTRY sym = {0};
+        size_t name_len = strlen(extern_symbols[i]);
+        if (name_len <= 8) {
+            memcpy(sym.Name, extern_symbols[i], name_len);
+        } else {
+            sym.Name[0] = 0;
+            sym.Name[1] = 0;
+            sym.Name[2] = 0;
+            sym.Name[3] = 0;
+            *(uint32_t*)&sym.Name[4] = current_string_offset;
+            current_string_offset += name_len + 1;
+        }
+        sym.Value = 0;
+        sym.SectionNumber = 0; // Undefined (external)
+        sym.Type = 0x20; // Function
+        sym.StorageClass = 2; // EXTERNAL
+        sym.NumberOfAuxSymbols = 0;
+        fwrite(&sym, sizeof(sym), 1, f);
+    }
+    
+    // String Table
+    uint32_t strtab_size = string_table_size;
     fwrite(&strtab_size, 4, 1, f);
+    
+    // Write long symbol names to string table
+    if (public_symbol && strlen(public_symbol) > 8) {
+        fwrite(public_symbol, strlen(public_symbol) + 1, 1, f);
+    }
+    for (int i = 0; i < num_externs; i++) {
+        if (extern_symbols[i] && strlen(extern_symbols[i]) > 8) {
+            fwrite(extern_symbols[i], strlen(extern_symbols[i]) + 1, 1, f);
+        }
+    }
     
     fclose(f);
     
-    int total_size = symtab_offset + sizeof(SYMBOL_TABLE_ENTRY) * 2 + 4;
+    int total_size = string_table_offset + strtab_size;
     printf("[SUCCESS] Created: %s (%d bytes)\n", filename, total_size);
     printf("  COFF Machine: 0x%04X (AMD64)\n", coff.Machine);
     printf("  Sections: %d\n", coff.NumberOfSections);
@@ -447,6 +523,11 @@ int main(int argc, char *argv[]) {
     int line_num = 0;
     int instructions_assembled = 0;
     
+    // Symbol tracking
+    const char *public_symbol = NULL;
+    const char *extern_symbols[16] = {0};
+    int num_externs = 0;
+    
     while (fgets(line, sizeof(line), input)) {
         line_num++;
         
@@ -466,8 +547,33 @@ int main(int argc, char *argv[]) {
         char *comment = strchr(p, ';');
         if (comment) *comment = '\0';
         
-        // Skip directives (.code, .data, etc.)
-        if (*p == '.') continue;
+        // Skip directives (.code, .data, bits, default, section, etc.)
+        if (*p == '.' || strncmp(p, "bits ", 5) == 0 || strncmp(p, "default ", 8) == 0 || 
+            strncmp(p, "section ", 8) == 0 || strncmp(p, "SECTION ", 8) == 0) continue;
+        
+        // Handle global directive
+        if (strncmp(p, "global ", 7) == 0 || strncmp(p, "GLOBAL ", 7) == 0) {
+            p += 7;
+            while (*p == ' ' || *p == '\t') p++;
+            end = p + strlen(p) - 1;
+            while (end > p && (*end == ' ' || *end == '\t')) *end-- = '\0';
+            public_symbol = strdup(p);
+            printf("  [SYMBOL] Public: %s\n", public_symbol);
+            continue;
+        }
+        
+        // Handle extern directive
+        if (strncmp(p, "extern ", 7) == 0 || strncmp(p, "EXTERN ", 7) == 0) {
+            p += 7;
+            while (*p == ' ' || *p == '\t') p++;
+            end = p + strlen(p) - 1;
+            while (end > p && (*end == ' ' || *end == '\t')) *end-- = '\0';
+            if (num_externs < 16) {
+                extern_symbols[num_externs++] = strdup(p);
+                printf("  [SYMBOL] External: %s\n", extern_symbols[num_externs-1]);
+            }
+            continue;
+        }
         
         // Skip labels (lines ending with :)
         end = p + strlen(p) - 1;
@@ -509,7 +615,7 @@ int main(int argc, char *argv[]) {
     
     // Write output
     const char *output = (argc > 2) ? argv[2] : "output.obj";
-    if (write_coff_object(output, code, code_size)) {
+    if (write_coff_object(output, code, code_size, public_symbol, (const char**)extern_symbols, num_externs)) {
         printf("[SUCCESS] Created: %s (%d bytes)\n", output, 
                (int)(sizeof(COFF_HEADER) + sizeof(SECTION_HEADER) + code_size + 
                      sizeof(SYMBOL_TABLE_ENTRY)*2 + 4));
