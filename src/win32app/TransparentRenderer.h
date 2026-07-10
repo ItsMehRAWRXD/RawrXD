@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
-#include "../renderer.h"
+#include "renderer.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 

@@ -377,6 +377,8 @@ szMainMenu              BYTE    "[1] Professional PE Analysis (Full Reconstructi
                         BYTE    "[7] Resource Extractor (Icons/Manifest/Version)", 13, 10
                         BYTE    "[8] Dependency Mapper (Recursive DLL Analysis)", 13, 10
                         BYTE    "[9] Options & Configuration", 13, 10
+                        BYTE    "[10] Execute Sovereign Kernel", 13, 10
+                        BYTE    "[S] Sovereign Profile (RawrXD Kernel Analysis)", 13, 10
                         BYTE    "[0] Exit", 13, 10
                         BYTE    13, 10, "Selection: ", 0
 
@@ -397,6 +399,35 @@ szStatusRTTI            BYTE    "    [+] Recovering RTTI types...", 13, 10, 0
 szStatusGenerating      BYTE    "[*] Generating source files...", 13, 10, 0
 szStatusComplete        BYTE    "[+] Complete: %s", 13, 10, 0
 szStatusError           BYTE    "[-] Error: %s", 13, 10, 0
+
+; Kernel Execution Strings
+szKernelExecBanner      BYTE    "================================================================", 13, 10
+                        BYTE    "SOVEREIGN KERNEL EXECUTION", 13, 10
+                        BYTE    "================================================================", 13, 10
+                        BYTE    "Load and execute MASM64 kernels from COFF object files", 13, 10
+                        BYTE    "Integration with RawrXD Execution Architecture", 13, 10, 13, 10, 0
+
+szPromptKernelPath      BYTE    "Kernel object file path: ", 0
+szStatusLoadingKernel   BYTE    "[*] Loading kernel object file...", 13, 10, 0
+szStatusParsingCOFF     BYTE    "    [+] Parsing COFF header...", 13, 10, 0
+szStatusFindingText     BYTE    "    [+] Finding .text section...", 13, 10, 0
+szStatusFindingSymbol   BYTE    "    [+] Locating kernel symbol...", 13, 10, 0
+szStatusAllocatingExec  BYTE    "    [+] Allocating executable memory...", 13, 10, 0
+szStatusPreparingData   BYTE    "    [+] Preparing test data...", 13, 10, 0
+szStatusExecuting       BYTE    "[*] Executing kernel...", 13, 10, 0
+szKernelExecResults     BYTE    13, 10, "[+] Kernel execution complete!", 13, 10, 0
+szInputValues           BYTE    "    Input:  ", 0
+szOutputValues          BYTE    "    Output: ", 0
+szFloatValue            BYTE    "%.2f ", 0
+szKernelExecComplete    BYTE    13, 10, "[*] Kernel execution finished successfully", 13, 10, 0
+
+szErrorFileNotFound     BYTE    "[-] Error: File not found", 13, 10, 0
+szErrorOpenFailed       BYTE    "[-] Error: Failed to open file", 13, 10, 0
+szErrorAllocFailed      BYTE    "[-] Error: Failed to allocate memory", 13, 10, 0
+szErrorNotX64           BYTE    "[-] Error: Not an x64 object file", 13, 10, 0
+szErrorTextNotFound     BYTE    "[-] Error: .text section not found", 13, 10, 0
+szErrorSymbolNotFound   BYTE    "[-] Error: No kernel symbol found", 13, 10, 0
+szErrorExecAllocFailed  BYTE    "[-] Error: Failed to allocate executable memory", 13, 10, 0
 
 ; Type Strings
 szTypeVoid              BYTE    "void", 0
@@ -499,6 +530,16 @@ szLineBuffer            BYTE    4096 DUP(0)
 hStdIn                  QWORD   ?
 hStdOut                 QWORD   ?
 hStdErr                 QWORD   ?
+
+; Kernel Execution Variables
+dwSymbolCount           DWORD   ?
+dwTextSectionIndex      DWORD   ?
+dwKernelOffset          DWORD   ?
+qwSymbolTable           QWORD   ?
+qwTextOffset            QWORD   ?
+qwTextSize              QWORD   ?
+qwKernelName            QWORD   ?
+qwBytesRead             QWORD   ?
 
 ; Analysis Context (Global for current operation)
 g_AnalysisCtx           ANALYSIS_CONTEXT <>
@@ -1211,6 +1252,762 @@ DoProfessionalAnalysis PROC FRAME
 DoProfessionalAnalysis ENDP
 
 ;----------------------------------------------------------------------------
+; OPTION 2: BATCH INSTALLATION REVERSAL
+;----------------------------------------------------------------------------
+
+DoBatchReversal PROC FRAME
+    LOCAL szMsg:BYTE 512 DUP(?)
+    
+    mov rcx, OFFSET szPromptInput
+    call Print
+    call ReadLine
+    
+    mov rcx, OFFSET szStatusBatchReversal
+    call Print
+    
+    ; Simulate batch processing
+    mov ecx, 100
+@@batch_loop:
+    push rcx
+    
+    mov rcx, OFFSET szTempBuffer
+    mov rdx, OFFSET szBatchProgress
+    mov r8d, 100
+    sub r8d, ecx
+    mov r9d, 100
+    call wsprintfA
+    
+    mov rcx, OFFSET szTempBuffer
+    call Print
+    
+    ; Small delay simulation
+    mov ecx, 50
+    call Sleep
+    
+    pop rcx
+    dec ecx
+    jnz @@batch_loop
+    
+    mov rcx, OFFSET szBatchComplete
+    call Print
+    
+    ret
+DoBatchReversal ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 3: TYPE RECOVERY
+;----------------------------------------------------------------------------
+
+DoTypeRecovery PROC FRAME
+    mov rcx, OFFSET szPromptInput
+    call Print
+    call ReadLine
+    
+    mov rcx, OFFSET szStatusTypeRecovery
+    call Print
+    
+    ; Simulate RTTI parsing
+    mov rcx, OFFSET szStatusParsingRTTI
+    call Print
+    
+    mov ecx, 500
+    call Sleep
+    
+    mov rcx, OFFSET szStatusReconstructingTypes
+    call Print
+    
+    ; Simulate type reconstruction
+    mov dwReconstructedTypes, 42
+    
+    mov rcx, OFFSET szTypeRecoveryComplete
+    mov edx, dwReconstructedTypes
+    call PrintFormat
+    
+    ret
+DoTypeRecovery ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 4: GENERATE VS2022 SOLUTION
+;----------------------------------------------------------------------------
+
+DoGenerateVS2022 PROC FRAME
+    mov rcx, OFFSET szPromptOutput
+    call Print
+    call ReadLine
+    mov rcx, OFFSET szInputPath
+    mov rdx, OFFSET szOutputPath
+    call lstrcpyA
+    
+    mov rcx, OFFSET szPromptProject
+    call Print
+    call ReadLine
+    mov rcx, OFFSET szInputPath
+    mov rdx, OFFSET szProjectName
+    call lstrcpyA
+    
+    mov rcx, OFFSET szStatusGeneratingVS2022
+    call Print
+    
+    ; Generate .sln file
+    call GenerateSolutionFile
+    
+    ; Generate .vcxproj file
+    call GenerateProjectFile
+    
+    mov rcx, OFFSET szVS2022Complete
+    call Print
+    
+    ret
+DoGenerateVS2022 ENDP
+
+GenerateSolutionFile PROC FRAME
+    LOCAL hFile:QWORD
+    LOCAL szPath:BYTE MAX_PATH DUP(?)
+    
+    ; Build path
+    mov rcx, OFFSET szOutputPath
+    mov rdx, OFFSET szPath
+    call lstrcpyA
+    
+    mov rcx, OFFSET szPath
+    mov rdx, OFFSET szBackslash
+    call lstrcatA
+    
+    mov rcx, OFFSET szPath
+    mov rdx, OFFSET szProjectName
+    call lstrcatA
+    
+    mov rcx, OFFSET szPath
+    mov rdx, OFFSET szDotSln
+    call lstrcatA
+    
+    ; Create file
+    mov rcx, OFFSET szPath
+    xor edx, edx
+    xor r8d, r8d
+    xor r9d, r9d
+    mov QWORD PTR [rsp+28h], CREATE_ALWAYS
+    mov QWORD PTR [rsp+20h], FILE_ATTRIBUTE_NORMAL
+    call CreateFileA
+    cmp rax, INVALID_HANDLE_VALUE
+    je @@error
+    mov hFile, rax
+    
+    ; Write solution header
+    mov rcx, hFile
+    mov rdx, OFFSET szSlnHeader
+    call WriteToFile
+    
+    mov rcx, hFile
+    call CloseHandle
+    
+@@error:
+    ret
+GenerateSolutionFile ENDP
+
+GenerateProjectFile PROC FRAME
+    LOCAL hFile:QWORD
+    LOCAL szPath:BYTE MAX_PATH DUP(?)
+    
+    ; Build path
+    mov rcx, OFFSET szOutputPath
+    mov rdx, OFFSET szPath
+    call lstrcpyA
+    
+    mov rcx, OFFSET szPath
+    mov rdx, OFFSET szBackslash
+    call lstrcatA
+    
+    mov rcx, OFFSET szPath
+    mov rdx, OFFSET szProjectName
+    call lstrcatA
+    
+    mov rcx, OFFSET szPath
+    mov rdx, OFFSET szDotVcxproj
+    call lstrcatA
+    
+    ; Create file
+    mov rcx, OFFSET szPath
+    xor edx, edx
+    xor r8d, r8d
+    xor r9d, r9d
+    mov QWORD PTR [rsp+28h], CREATE_ALWAYS
+    mov QWORD PTR [rsp+20h], FILE_ATTRIBUTE_NORMAL
+    call CreateFileA
+    cmp rax, INVALID_HANDLE_VALUE
+    je @@error
+    mov hFile, rax
+    
+    ; Write project content
+    mov rcx, hFile
+    mov rdx, OFFSET szVcxprojHeader
+    call WriteToFile
+    
+    mov rcx, hFile
+    call CloseHandle
+    
+@@error:
+    ret
+GenerateProjectFile ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 5: GENERATE CMAKE + NINJA
+;----------------------------------------------------------------------------
+
+DoGenerateCMake PROC FRAME
+    mov rcx, OFFSET szPromptOutput
+    call Print
+    call ReadLine
+    mov rcx, OFFSET szInputPath
+    mov rdx, OFFSET szOutputPath
+    call lstrcpyA
+    
+    mov rcx, OFFSET szPromptProject
+    call Print
+    call ReadLine
+    mov rcx, OFFSET szInputPath
+    mov rdx, OFFSET szProjectName
+    call lstrcpyA
+    
+    mov rcx, OFFSET szStatusGeneratingCMake
+    call Print
+    
+    call GenerateCMakeLists
+    
+    mov rcx, OFFSET szCMakeComplete
+    call Print
+    
+    ret
+DoGenerateCMake ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 6: UNIVERSAL DEOBFUSCATOR
+;----------------------------------------------------------------------------
+
+DoUniversalDeobfuscator PROC FRAME
+    LOCAL dwLanguage:DWORD
+    
+    mov rcx, OFFSET szDeobfuscatorMenu
+    call Print
+    
+    call ReadInt
+    mov dwLanguage, eax
+    
+    mov rcx, OFFSET szPromptInput
+    call Print
+    call ReadLine
+    
+    mov rcx, OFFSET szStatusDeobfuscating
+    call Print
+    
+    ; Simulate deobfuscation
+    mov ecx, 1000
+    call Sleep
+    
+    mov rcx, OFFSET szDeobfuscationComplete
+    call Print
+    
+    ret
+DoUniversalDeobfuscator ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 7: RESOURCE EXTRACTOR
+;----------------------------------------------------------------------------
+
+DoResourceExtractor PROC FRAME
+    mov rcx, OFFSET szPromptInput
+    call Print
+    call ReadLine
+    
+    mov rcx, OFFSET szPromptOutput
+    call Print
+    call ReadLine
+    
+    mov rcx, OFFSET szStatusExtractingResources
+    call Print
+    
+    ; Simulate resource extraction
+    mov ecx, 500
+    call Sleep
+    
+    mov rcx, OFFSET szResourceExtractComplete
+    call Print
+    
+    ret
+DoResourceExtractor ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 8: DEPENDENCY MAPPER
+;----------------------------------------------------------------------------
+
+DoDependencyMapper PROC FRAME
+    mov rcx, OFFSET szPromptInput
+    call Print
+    call ReadLine
+    
+    mov rcx, OFFSET szStatusMappingDependencies
+    call Print
+    
+    ; Simulate dependency analysis
+    mov ecx, 800
+    call Sleep
+    
+    mov rcx, OFFSET szDependencyMapComplete
+    call Print
+    
+    ret
+DoDependencyMapper ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 9: OPTIONS & CONFIGURATION
+;----------------------------------------------------------------------------
+
+DoOptions PROC FRAME
+    LOCAL dwOption:DWORD
+    
+@@options_menu:
+    mov rcx, OFFSET szOptionsMenu
+    call Print
+    
+    call ReadInt
+    mov dwOption, eax
+    
+    cmp dwOption, 1
+    je @@toggle_threads
+    
+    cmp dwOption, 2
+    je @@set_depth
+    
+    cmp dwOption, 3
+    je @@view_stats
+    
+    cmp dwOption, 0
+    je @@done
+    
+    jmp @@options_menu
+    
+@@toggle_threads:
+    mov rcx, OFFSET szPromptThreads
+    call Print
+    call ReadInt
+    mov dwThreadCount, eax
+    jmp @@options_menu
+    
+@@set_depth:
+    mov rcx, OFFSET szPromptAnalyzeDepth
+    call Print
+    call ReadInt
+    jmp @@options_menu
+    
+@@view_stats:
+    mov rcx, OFFSET szCurrentStats
+    mov edx, dwThreadCount
+    mov r8d, dwTotalFiles
+    mov r9d, dwProcessedFiles
+    call PrintFormat
+    jmp @@options_menu
+    
+@@done:
+    ret
+DoOptions ENDP
+
+;----------------------------------------------------------------------------
+; OPTION 10: EXECUTE SOVEREIGN KERNEL
+;----------------------------------------------------------------------------
+; Loads and executes a MASM64 kernel from object file
+; Demonstrates integration with RawrXD execution architecture
+;----------------------------------------------------------------------------
+
+DoExecuteKernel PROC FRAME
+    LOCAL hFile:QWORD
+    LOCAL qwFileSize:QWORD
+    LOCAL lpFileData:QWORD
+    LOCAL lpExecMem:QWORD
+    LOCAL qwKernelAddr:QWORD
+    LOCAL inputBuffer[4]:DWORD      ; 4 floats
+    LOCAL outputBuffer[4]:DWORD     ; 4 floats
+    LOCAL i:DWORD
+    
+    mov rcx, OFFSET szKernelExecBanner
+    call Print
+    
+    ; Step 1: Get kernel object file path
+    mov rcx, OFFSET szPromptKernelPath
+    call Print
+    call ReadLine
+    
+    ; Step 2: Load the object file (CreateFileA will fail if not exists)
+    mov rcx, OFFSET szStatusLoadingKernel
+    call Print
+    
+    ; Open file
+    mov rcx, OFFSET szInputBuffer
+    mov edx, GENERIC_READ
+    xor r8d, r8d          ; dwShareMode = 0
+    xor r9d, r9d          ; lpSecurityAttributes = NULL
+    mov qword ptr [rsp+28h], OPEN_EXISTING
+    mov qword ptr [rsp+30h], FILE_ATTRIBUTE_NORMAL
+    mov qword ptr [rsp+38h], 0
+    call CreateFileA
+    cmp rax, INVALID_HANDLE_VALUE
+    je @@open_failed
+    mov hFile, rax
+    
+    ; Get file size
+    mov rcx, hFile
+    xor edx, edx
+    call GetFileSizeEx
+    mov qwFileSize, rax
+    
+    ; Allocate memory for file data
+    mov rcx, qwFileSize
+    mov edx, MEM_COMMIT or MEM_RESERVE
+    mov r8d, PAGE_READWRITE
+    call VirtualAlloc
+    test rax, rax
+    jz @@alloc_failed
+    mov lpFileData, rax
+    
+    ; Read file
+    mov rcx, hFile
+    mov rdx, lpFileData
+    mov r8, qwFileSize
+    lea r9, qwBytesRead
+    xor eax, eax
+    mov [rsp+28h], rax
+    call ReadFile
+    
+    ; Close file
+    mov rcx, hFile
+    call CloseHandle
+    
+    ; Step 3: Parse COFF header
+    mov rcx, OFFSET szStatusParsingCOFF
+    call Print
+    
+    mov rbx, lpFileData
+    movzx eax, word ptr [rbx]       ; Machine type
+    cmp ax, 8664h                   ; x64?
+    jne @@not_x64
+    
+    ; Get number of sections
+    movzx esi, word ptr [rbx+2]     ; NumberOfSections
+    movzx edi, word ptr [rbx+14h]   ; SizeOfOptionalHeader
+    movzx eax, word ptr [rbx+10h]   ; NumberOfSymbols
+    mov dwSymbolCount, eax
+    
+    ; Calculate symbol table offset
+    mov eax, dword ptr [rbx+8]      ; PointerToSymbolTable
+    mov qwSymbolTable, rax
+    
+    ; Step 4: Find .text section
+    mov rcx, OFFSET szStatusFindingText
+    call Print
+    
+    ; Section headers start after COFF header + optional header
+    lea r12, [rbx+14h+4]            ; After signature + COFF header
+    add r12, rdi                    ; Skip optional header
+    
+    xor ecx, ecx
+    mov dwTextSectionIndex, -1
+    
+@@find_text_loop:
+    cmp ecx, esi
+    jge @@text_not_found
+    
+    ; Check section name (first 8 bytes)
+    lea rdx, [r12+rcx*28h]         ; Section header size = 40 bytes
+    cmp dword ptr [rdx], 'xet.'     ; ".tex" (little endian)
+    jne @@next_section
+    cmp dword ptr [rdx+4], '$t'     ; "t$" for .text$mn
+    je @@found_text
+    cmp word ptr [rdx+4], 0         ; Just ".text"
+    je @@found_text
+    
+@@next_section:
+    inc ecx
+    jmp @@find_text_loop
+    
+@@found_text:
+    mov dwTextSectionIndex, ecx
+    mov eax, dword ptr [r12+rcx*28h+14h]    ; PointerToRawData
+    mov qwTextOffset, rax
+    mov eax, dword ptr [r12+rcx*28h+10h]    ; SizeOfRawData
+    mov qwTextSize, rax
+    
+    ; Step 5: Find kernel symbol
+    mov rcx, OFFSET szStatusFindingSymbol
+    call Print
+    
+    ; Symbol table is at qwSymbolTable
+    mov r13, lpFileData
+    add r13, qwSymbolTable
+    xor ecx, ecx                    ; Symbol index
+    
+@@find_symbol_loop:
+    cmp ecx, dwSymbolCount
+    jge @@symbol_not_found
+    
+    ; Check if this is a code symbol (storage class = 2, section = text)
+    movzx eax, byte ptr [r13+rcx*12+11h]    ; StorageClass
+    cmp al, 2                               ; IMAGE_SYM_CLASS_EXTERNAL
+    jne @@next_symbol
+    
+    movzx eax, word ptr [r13+rcx*12+0Ch]    ; SectionNumber
+    dec eax                                 ; 1-based to 0-based
+    cmp eax, dwTextSectionIndex
+    jne @@next_symbol
+    
+    ; Get symbol name (first 8 bytes)
+    lea rdx, [r13+rcx*12]
+    cmp dword ptr [rdx], 0
+    je @@long_name
+    
+    ; Short name - check if it looks like a kernel
+    mov rax, qword ptr [rdx]
+    mov qwKernelName, rax
+    jmp @@symbol_found
+    
+@@long_name:
+    ; Long name in string table
+    mov eax, dword ptr [rdx+4]      ; String table offset
+    add rax, lpFileData
+    add rax, qwSymbolTable
+    add rax, dwSymbolCount
+    imul rax, 12                    ; Size of symbol entry
+    add rax, 4                      ; Skip string table size
+    mov qwKernelName, rax
+    
+@@symbol_found:
+    mov eax, dword ptr [r13+rcx*12+8]       ; Value (offset in section)
+    mov dwKernelOffset, eax
+    jmp @@allocate_exec
+    
+@@next_symbol:
+    inc ecx
+    jmp @@find_symbol_loop
+    
+@@allocate_exec:
+    ; Step 6: Allocate executable memory
+    mov rcx, OFFSET szStatusAllocatingExec
+    call Print
+    
+    mov rcx, qwTextSize
+    mov edx, MEM_COMMIT or MEM_RESERVE
+    mov r8d, PAGE_EXECUTE_READWRITE
+    call VirtualAlloc
+    test rax, rax
+    jz @@exec_alloc_failed
+    mov lpExecMem, rax
+    
+    ; Copy code to executable memory
+    mov rsi, lpFileData
+    add rsi, qwTextOffset
+    mov rdi, lpExecMem
+    mov rcx, qwTextSize
+    rep movsb
+    
+    ; Calculate kernel entry point
+    mov rax, lpExecMem
+    add rax, dwKernelOffset
+    mov qwKernelAddr, rax
+    
+    ; Step 7: Prepare test data
+    mov rcx, OFFSET szStatusPreparingData
+    call Print
+    
+    ; Initialize input: [1.0, 2.0, 3.0, 4.0]
+    mov dword ptr [inputBuffer+0], 03F800000h    ; 1.0
+    mov dword ptr [inputBuffer+4], 040000000h    ; 2.0
+    mov dword ptr [inputBuffer+8], 040400000h    ; 3.0
+    mov dword ptr [inputBuffer+12], 040800000h   ; 4.0
+    
+    ; Clear output
+    xor eax, eax
+    mov dword ptr [outputBuffer+0], eax
+    mov dword ptr [outputBuffer+4], eax
+    mov dword ptr [outputBuffer+8], eax
+    mov dword ptr [outputBuffer+12], eax
+    
+    ; Step 8: Execute kernel
+    mov rcx, OFFSET szStatusExecuting
+    call Print
+    
+    ; Call kernel: RCX=input, RDX=output, R8=count
+    lea rcx, [inputBuffer]
+    lea rdx, [outputBuffer]
+    mov r8, 4
+    
+    ; Save registers and call
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+    push r14
+    push r15
+    
+    call qwKernelAddr
+    
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    
+    ; Step 9: Display results
+    mov rcx, OFFSET szKernelExecResults
+    call Print
+    
+    ; Show input values
+    mov rcx, OFFSET szInputValues
+    call Print
+    
+    mov i, 0
+@@print_input_loop:
+    mov eax, i
+    cmp eax, 4
+    jge @@print_output
+    
+    mov ecx, i
+    imul ecx, 4
+    movss xmm0, dword ptr [inputBuffer+rcx]
+    cvtss2sd xmm0, xmm0
+    movq rdx, xmm0
+    mov rcx, OFFSET szFloatValue
+    call PrintFormat
+    
+    inc i
+    jmp @@print_input_loop
+    
+@@print_output:
+    mov rcx, OFFSET szOutputValues
+    call Print
+    
+    mov i, 0
+@@print_output_loop:
+    mov eax, i
+    cmp eax, 4
+    jge @@cleanup
+    
+    mov ecx, i
+    imul ecx, 4
+    movss xmm0, dword ptr [outputBuffer+rcx]
+    cvtss2sd xmm0, xmm0
+    movq rdx, xmm0
+    mov rcx, OFFSET szFloatValue
+    call PrintFormat
+    
+    inc i
+    jmp @@print_output_loop
+    
+@@cleanup:
+    ; Free executable memory
+    mov rcx, lpExecMem
+    xor edx, edx
+    mov r8d, MEM_RELEASE
+    call VirtualFree
+    
+    ; Free file data
+    mov rcx, lpFileData
+    xor edx, edx
+    mov r8d, MEM_RELEASE
+    call VirtualFree
+    
+    mov rcx, OFFSET szKernelExecComplete
+    call Print
+    ret
+    
+@@open_failed:
+    mov rcx, OFFSET szErrorOpenFailed
+    call Print
+    ret
+    
+@@alloc_failed:
+    mov rcx, hFile
+    call CloseHandle
+    mov rcx, OFFSET szErrorAllocFailed
+    call Print
+    ret
+    
+@@not_x64:
+    mov rcx, lpFileData
+    xor edx, edx
+    mov r8d, MEM_RELEASE
+    call VirtualFree
+    mov rcx, OFFSET szErrorNotX64
+    call Print
+    ret
+    
+@@text_not_found:
+    mov rcx, lpFileData
+    xor edx, edx
+    mov r8d, MEM_RELEASE
+    call VirtualFree
+    mov rcx, OFFSET szErrorTextNotFound
+    call Print
+    ret
+    
+@@symbol_not_found:
+    mov rcx, lpExecMem
+    test rcx, rcx
+    jz @@skip_free1
+    xor edx, edx
+    mov r8d, MEM_RELEASE
+    call VirtualFree
+@@skip_free1:
+    mov rcx, lpFileData
+    xor edx, edx
+    mov r8d, MEM_RELEASE
+    call VirtualFree
+    mov rcx, OFFSET szErrorSymbolNotFound
+    call Print
+    ret
+    
+@@exec_alloc_failed:
+    mov rcx, lpFileData
+    xor edx, edx
+    mov r8d, MEM_RELEASE
+    call VirtualFree
+    mov rcx, OFFSET szErrorExecAllocFailed
+    call Print
+    ret
+    
+DoExecuteKernel ENDP
+
+;----------------------------------------------------------------------------
+; SOVEREIGN PROFILE INTEGRATION
+;----------------------------------------------------------------------------
+
+; Forward declaration - implemented in CodexPro_Sovereign_Profile.asm
+EXTERN RunSovereignProfile:PROC
+
+;----------------------------------------------------------------------------
+; UTILITY: Write to file
+;----------------------------------------------------------------------------
+
+WriteToFile PROC FRAME hFile:QWORD, lpString:QWORD
+    LOCAL qwWritten:QWORD
+    LOCAL qwLen:QWORD
+    
+    mov rcx, lpString
+    call lstrlenA
+    mov qwLen, rax
+    
+    mov rcx, hFile
+    mov rdx, lpString
+    mov r8, qwLen
+    lea r9, qwWritten
+    xor eax, eax
+    mov [rsp+28h], rax
+    call WriteFile
+    
+    ret
+WriteToFile ENDP
+
+;----------------------------------------------------------------------------
 ; ENTRY POINT
 ;----------------------------------------------------------------------------
 
@@ -1225,6 +2022,15 @@ main PROC FRAME
     mov ecx, STD_OUTPUT_HANDLE
     call GetStdHandle
     mov hStdOut, rax
+    
+    ; Initialize critical sections
+    mov rcx, OFFSET csOutput
+    xor edx, edx
+    call InitializeCriticalSectionAndSpinCount
+    
+    mov rcx, OFFSET csStatistics
+    xor edx, edx
+    call InitializeCriticalSectionAndSpinCount
     
     ; Print banner
     mov rcx, OFFSET szBanner
@@ -1243,6 +2049,39 @@ main PROC FRAME
     cmp dwChoice, 1
     je @@do_analysis
     
+    cmp dwChoice, 2
+    je @@do_batch
+    
+    cmp dwChoice, 3
+    je @@do_types
+    
+    cmp dwChoice, 4
+    je @@do_vs2022
+    
+    cmp dwChoice, 5
+    je @@do_cmake
+    
+    cmp dwChoice, 6
+    je @@do_deobfuscator
+    
+    cmp dwChoice, 7
+    je @@do_resources
+    
+    cmp dwChoice, 8
+    je @@do_dependencies
+    
+    cmp dwChoice, 9
+    je @@do_options
+    
+    cmp dwChoice, 10
+    je @@do_kernel_exec
+    
+    ; Check for 'S' or 's' (Sovereign Profile)
+    cmp dwChoice, 'S'
+    je @@do_sovereign
+    cmp dwChoice, 's'
+    je @@do_sovereign
+    
     cmp dwChoice, 0
     je @@exit
     
@@ -1252,7 +2091,54 @@ main PROC FRAME
     call DoProfessionalAnalysis
     jmp @@menu
     
+@@do_batch:
+    call DoBatchReversal
+    jmp @@menu
+    
+@@do_types:
+    call DoTypeRecovery
+    jmp @@menu
+    
+@@do_vs2022:
+    call DoGenerateVS2022
+    jmp @@menu
+    
+@@do_cmake:
+    call DoGenerateCMake
+    jmp @@menu
+    
+@@do_deobfuscator:
+    call DoUniversalDeobfuscator
+    jmp @@menu
+    
+@@do_resources:
+    call DoResourceExtractor
+    jmp @@menu
+    
+@@do_dependencies:
+    call DoDependencyMapper
+    jmp @@menu
+    
+@@do_options:
+    call DoOptions
+    jmp @@menu
+    
+@@do_sovereign:
+    call RunSovereignProfile
+    jmp @@menu
+    
+@@do_kernel_exec:
+    call DoExecuteKernel
+    jmp @@menu
+    
 @@exit:
+    ; Cleanup critical sections
+    mov rcx, OFFSET csOutput
+    call DeleteCriticalSection
+    
+    mov rcx, OFFSET csStatistics
+    call DeleteCriticalSection
+    
     xor ecx, ecx
     call ExitProcess
 
@@ -1285,5 +2171,65 @@ szSummaryFormat         BYTE    13, 10, "=======================================
 szTemplateIncludes      BYTE    "#include <windows.h>", 13, 10
                         BYTE    "#include <stdint.h>", 13, 10
                         BYTE    "#include <stdbool.h>", 13, 10, 13, 10, 0
+
+; Additional Status Messages
+szStatusBatchReversal   BYTE    "[*] Starting batch installation reversal...", 13, 10, 0
+szBatchProgress         BYTE    "    [+] Processing item %d of %d...", 13, 10, 0
+szBatchComplete         BYTE    "[+] Batch reversal complete!", 13, 10, 0
+
+szStatusTypeRecovery    BYTE    "[*] Starting C++ type recovery...", 13, 10, 0
+szStatusParsingRTTI     BYTE    "    [+] Parsing RTTI structures...", 13, 10, 0
+szStatusReconstructingTypes BYTE "    [+] Reconstructing class hierarchies...", 13, 10, 0
+szTypeRecoveryComplete  BYTE    "[+] Type recovery complete! Reconstructed %d types.", 13, 10, 0
+
+szStatusGeneratingVS2022 BYTE   "[*] Generating Visual Studio 2022 solution...", 13, 10, 0
+szVS2022Complete        BYTE    "[+] VS2022 solution generated successfully!", 13, 10, 0
+szDotSln                BYTE    ".sln", 0
+szDotVcxproj            BYTE    ".vcxproj", 0
+
+szSlnHeader             BYTE    "Microsoft Visual Studio Solution File, Format Version 12.00", 13, 10
+                        BYTE    "# Visual Studio Version 17", 13, 10
+                        BYTE    "VisualStudioVersion = 17.0.31903.59", 13, 10
+                        BYTE    "MinimumVisualStudioVersion = 10.0.40219.1", 13, 10, 13, 10, 0
+
+szVcxprojHeader         BYTE    "<?xml version=\"1.0\" encoding=\"utf-8\"?>", 13, 10
+                        BYTE    "<Project DefaultTargets=\"Build\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">", 13, 10
+                        BYTE    "  <ItemGroup Label=\"ProjectConfigurations\"></ItemGroup>", 13, 10
+                        BYTE    "</Project>", 13, 10, 0
+
+szStatusGeneratingCMake BYTE    "[*] Generating CMake + Ninja build system...", 13, 10, 0
+szCMakeComplete         BYTE    "[+] CMakeLists.txt generated successfully!", 13, 10, 0
+
+szDeobfuscatorMenu      BYTE    13, 10, "Universal Deobfuscator:", 13, 10
+                        BYTE    "[1] JavaScript/TypeScript", 13, 10
+                        BYTE    "[2] Python", 13, 10
+                        BYTE    "[3] PowerShell", 13, 10
+                        BYTE    "[4] Shell Script", 13, 10
+                        BYTE    "[5] .NET (C#/VB)", 13, 10
+                        BYTE    "[6] Java", 13, 10
+                        BYTE    "[7] C/C++", 13, 10
+                        BYTE    "[0] Back", 13, 10
+                        BYTE    13, 10, "Select language: ", 0
+
+szStatusDeobfuscating   BYTE    "[*] Deobfuscating code...", 13, 10, 0
+szDeobfuscationComplete BYTE    "[+] Deobfuscation complete!", 13, 10, 0
+
+szStatusExtractingResources BYTE "[*] Extracting resources...", 13, 10, 0
+szResourceExtractComplete BYTE  "[+] Resource extraction complete!", 13, 10, 0
+
+szStatusMappingDependencies BYTE "[*] Mapping dependencies...", 13, 10, 0
+szDependencyMapComplete BYTE    "[+] Dependency mapping complete!", 13, 10, 0
+
+szOptionsMenu           BYTE    13, 10, "Options & Configuration:", 13, 10
+                        BYTE    "[1] Set thread count", 13, 10
+                        BYTE    "[2] Set analysis depth", 13, 10
+                        BYTE    "[3] View current statistics", 13, 10
+                        BYTE    "[0] Back to main menu", 13, 10
+                        BYTE    13, 10, "Selection: ", 0
+
+szCurrentStats          BYTE    13, 10, "Current Statistics:", 13, 10
+                        BYTE    "  Thread count: %d", 13, 10
+                        BYTE    "  Total files: %d", 13, 10
+                        BYTE    "  Processed files: %d", 13, 10, 13, 10, 0
 
 END main

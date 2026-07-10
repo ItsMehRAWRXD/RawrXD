@@ -124,6 +124,9 @@ struct InferenceContext {
     // State
     int n_past = 0;
     bool initialized = false;
+    
+    // Backend selection
+    bool use_medusa = false;  // Flag for Medusa GPU custom execution path
 };
 
 static InferenceContext g_ctx;
@@ -351,9 +354,49 @@ bool AIModelCaller_Initialize(const ModelConfig& config) {
         return false;
     }
     
-    // Initialize backend (CPU for now, GPU via Vulkan later)
-    g_ctx.backend = ggml_rxd_backend_cpu_init();
-    if (!g_ctx.backend) {
+    // Initialize backend with smart selection (replaces hardcoded CPU)
+    // Probes hardware and selects: CPU -> Vulkan -> Medusa GPU
+    {
+        // Include backend selector
+        #include "inference/backend_selector_real.hpp"
+        
+        // Get configuration from environment
+        RawrXD::Inference::BackendConfig backendConfig = 
+            RawrXD::Inference::GetBackendConfigFromEnvironment();
+        
+        // Probe system capabilities
+        RawrXD::Inference::BackendCapabilities caps = 
+            RawrXD::Inference::ProbeSystemCapabilities();
+        
+        // Select optimal backend
+        RawrXD::Inference::BackendType selected = 
+            RawrXD::Inference::SelectOptimalBackend(backendConfig, caps);
+        
+        // Initialize based on selection
+        switch (selected) {
+            case RawrXD::Inference::BackendType::MEDUSA_GPU:
+                // Medusa has custom execution path, not standard GGML backend
+                LogMessage(LOG_INFO, "Using Medusa GPU speculative decoding (32K context)");
+                g_ctx.use_medusa = true;
+                g_ctx.backend = nullptr;  // Signal custom path
+                break;
+                
+            case RawrXD::Inference::BackendType::VULKAN:
+                LogMessage(LOG_INFO, "Using Vulkan GPU backend");
+                // TODO: g_ctx.backend = ggml_rxd_backend_vulkan_init();
+                // Fall back to CPU until Vulkan backend is ready
+                g_ctx.backend = ggml_rxd_backend_cpu_init();
+                break;
+                
+            case RawrXD::Inference::BackendType::CPU:
+            default:
+                LogMessage(LOG_INFO, "Using CPU backend");
+                g_ctx.backend = ggml_rxd_backend_cpu_init();
+                break;
+        }
+    }
+    
+    if (!g_ctx.backend && !g_ctx.use_medusa) {
         // Failed to initialize backend
         ggml_rxd_free(g_ctx.ctx);
         g_ctx.ctx = nullptr;

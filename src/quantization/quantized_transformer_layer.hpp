@@ -9,6 +9,7 @@
 #include "quantized_inference.hpp"
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace rawrxd {
 namespace quantization {

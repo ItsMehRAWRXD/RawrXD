@@ -23,7 +23,9 @@ enum class QuantType {
     F32,      // Full precision (reference)
     Q8_0,     // 8-bit quantization
     Q4_0,     // 4-bit quantization
+    Q4_1,     // 4-bit quantization with bias
     Q4_K,     // 4-bit with K-quants
+    Q2_K,     // 2-bit with K-quants
     Q6_K      // 6-bit with K-quants
 };
 
@@ -31,6 +33,7 @@ enum class QuantType {
 constexpr size_t Q4_0_BLOCK_SIZE = 32;
 constexpr size_t Q8_0_BLOCK_SIZE = 32;
 constexpr size_t Q4_K_BLOCK_SIZE = 256;
+constexpr size_t Q2_K_BLOCK_SIZE = 256;
 
 // ============================================================================
 // Q4_0 Block Structure
@@ -58,6 +61,62 @@ struct Q8_0Block {
     
     static constexpr size_t NUM_WEIGHTS = 32;
     static constexpr size_t BYTES = 34;
+};
+
+// ============================================================================
+// Q4_K Block Structure
+// ============================================================================
+// 144 bytes per 256 weights (super-block structure):
+// - 2 bytes: d (F16 scale)
+// - 2 bytes: dmin (F16 min scale)
+// - 12 bytes: scales (6-bit packed, 8 groups of 32 weights)
+// - 128 bytes: quants (4-bit, 256 nibbles packed)
+struct Q4_KBlock {
+    uint16_t d;                   // Scale (F16)
+    uint16_t dmin;                // Min scale (F16)
+    uint8_t scales[12];           // 6-bit scales packed (8 groups)
+    uint8_t quants[128];          // 4-bit weights (256 nibbles)
+    
+    static constexpr size_t NUM_WEIGHTS = 256;
+    static constexpr size_t BYTES = 144;
+};
+
+// ============================================================================
+// Q2_K Block Structure
+// ============================================================================
+// 256 bytes per 256 weights (super-block structure):
+// - 2 bytes: d (F16 scale)
+// - 2 bytes: dmin (F16 min scale)
+// - 32 bytes: scales (4-bit packed, 16 groups of 16 weights)
+// - 128 bytes: quants (2-bit, 256 values packed)
+// - 92 bytes: extra (padding/complex layout)
+struct Q2_KBlock {
+    uint16_t d;                   // Scale (F16)
+    uint16_t dmin;                // Min scale (F16)
+    uint8_t scales[32];           // 4-bit scales packed (16 groups)
+    uint8_t quants[128];          // 2-bit weights (256 values packed 4 per byte)
+    uint8_t extra[92];            // Padding/extra data
+    
+    static constexpr size_t NUM_WEIGHTS = 256;
+    static constexpr size_t BYTES = 256;
+};
+
+// ============================================================================
+// Q6_K Block Structure
+// ============================================================================
+// 210 bytes per 256 weights (super-block structure):
+// - 2 bytes: d (F16 scale)
+// - 2 bytes: dmin (F16 min scale) 
+// - 16 bytes: scales (8-bit, 16 groups of 16 weights)
+// - 192 bytes: quants (6-bit, 256 values packed)
+struct Q6_KBlock {
+    uint16_t d;                   // Scale (F16)
+    uint16_t dmin;                // Min scale (F16)
+    uint8_t scales[16];           // 8-bit scales (16 groups)
+    uint8_t quants[192];          // 6-bit weights packed
+    
+    static constexpr size_t NUM_WEIGHTS = 256;
+    static constexpr size_t BYTES = 210;
 };
 
 // ============================================================================
@@ -97,6 +156,26 @@ public:
     size_t GetMemoryUsageBytes() const;
     size_t GetMemorySavingsBytes() const;  // vs F32
     
+    // Embedding lookup: Get embedding vector for a specific token
+    // token_id: The token index to look up
+    // output: Pre-allocated buffer of size hidden_size
+    // Returns true if successful
+    bool GetEmbedding(int32_t token_id, float* output) const;
+    
+    // Dequantize a specific row (for embedding lookup)
+    bool DequantizeRow(size_t row_idx, float* output) const;
+    
+    // Dequantize a specific column (for transposed embedding lookup)
+    bool DequantizeColumn(size_t col_idx, float* output) const;
+    
+    // Get shape as vector
+    std::vector<size_t> GetShape() const { return {rows_, cols_}; }
+    
+    // Split this tensor by columns into multiple output tensors
+    // For fused QKV: splits [rows, cols*n] into n tensors of [rows, cols]
+    bool SplitByColumns(QuantizedTensor& out1, QuantizedTensor& out2, QuantizedTensor& out3, 
+                        size_t num_splits) const;
+    
 private:
     QuantType type_;
     size_t rows_;
@@ -108,12 +187,21 @@ private:
     // Helper functions
     bool DequantizeQ4_0Scalar(std::vector<float>& output) const;
     bool DequantizeQ8_0Scalar(std::vector<float>& output) const;
+    bool DequantizeQ4_KScalar(std::vector<float>& output) const;
+    bool DequantizeQ2_KScalar(std::vector<float>& output) const;
+    bool DequantizeQ6_KScalar(std::vector<float>& output) const;
     bool DequantizeQ4_0AVX512(std::vector<float>& output) const;
     bool DequantizeQ8_0AVX512(std::vector<float>& output) const;
     
     bool MatMulQ4_0(const float* input, float* output,
                      size_t batch_size, size_t input_dim, size_t output_dim) const;
     bool MatMulQ8_0(const float* input, float* output,
+                     size_t batch_size, size_t input_dim, size_t output_dim) const;
+    bool MatMulQ4_K(const float* input, float* output,
+                     size_t batch_size, size_t input_dim, size_t output_dim) const;
+    bool MatMulQ2_K(const float* input, float* output,
+                     size_t batch_size, size_t input_dim, size_t output_dim) const;
+    bool MatMulQ6_K(const float* input, float* output,
                      size_t batch_size, size_t input_dim, size_t output_dim) const;
 };
 
