@@ -12,20 +12,89 @@
 #include "IKernelBackend.hpp"
 #include <cstring>
 #include <chrono>
+#include <vector>
+#include <cmath>
 
 // External declarations from d:\src\asm intrinsics kernels
+// Stub implementations until actual kernels are linked
 extern "C" {
-    // From Sovereign_Q4Q8_MatMul_Intrinsics.cpp
+    // Stub for Q4Q8 MatMul
     int Sovereign_Q4Q8_MatMul_Intrinsics(
         const void* A, const void* B, float* C,
-        size_t m, size_t n, size_t k);
-    const char* Sovereign_GetQ4Q8Version();
+        size_t m, size_t n, size_t k) {
+        // Simple reference implementation for now
+        const float* a = static_cast<const float*>(A);
+        const float* b = static_cast<const float*>(B);
+        for (size_t i = 0; i < m; ++i) {
+            for (size_t j = 0; j < n; ++j) {
+                float sum = 0.0f;
+                for (size_t l = 0; l < k; ++l) {
+                    sum += a[i * k + l] * b[l * n + j];
+                }
+                C[i * n + j] = sum;
+            }
+        }
+        return 0;
+    }
     
-    // From Sovereign_FlashAttention_Intrinsics.cpp
+    const char* Sovereign_GetQ4Q8Version() {
+        return "Intrinsics-Stub-1.0";
+    }
+    
+    // Stub for FlashAttention
     int Sovereign_FlashAttentionV2_Intrinsics(
         float* Q, float* K, float* V, float* output,
-        size_t seq_len, size_t head_dim);
-    const char* Sovereign_GetFlashAttentionVersion();
+        size_t seq_len, size_t head_dim) {
+        // Simple reference attention for now
+        std::vector<float> scores(seq_len * seq_len);
+        std::vector<float> softmax_out(seq_len * seq_len);
+        
+        float scale = 1.0f / std::sqrt(static_cast<float>(head_dim));
+        
+        // Q × K^T
+        for (size_t i = 0; i < seq_len; ++i) {
+            for (size_t j = 0; j < seq_len; ++j) {
+                float dot = 0.0f;
+                for (size_t d = 0; d < head_dim; ++d) {
+                    dot += Q[i * head_dim + d] * K[j * head_dim + d];
+                }
+                scores[i * seq_len + j] = dot * scale;
+            }
+        }
+        
+        // Softmax per row
+        for (size_t i = 0; i < seq_len; ++i) {
+            float max_val = scores[i * seq_len];
+            for (size_t j = 1; j < seq_len; ++j) {
+                max_val = std::max(max_val, scores[i * seq_len + j]);
+            }
+            float sum = 0.0f;
+            for (size_t j = 0; j < seq_len; ++j) {
+                softmax_out[i * seq_len + j] = std::exp(scores[i * seq_len + j] - max_val);
+                sum += softmax_out[i * seq_len + j];
+            }
+            for (size_t j = 0; j < seq_len; ++j) {
+                softmax_out[i * seq_len + j] /= sum;
+            }
+        }
+        
+        // Softmax × V
+        for (size_t i = 0; i < seq_len; ++i) {
+            for (size_t d = 0; d < head_dim; ++d) {
+                float sum = 0.0f;
+                for (size_t j = 0; j < seq_len; ++j) {
+                    sum += softmax_out[i * seq_len + j] * V[j * head_dim + d];
+                }
+                output[i * head_dim + d] = sum;
+            }
+        }
+        
+        return 0;
+    }
+    
+    const char* Sovereign_GetFlashAttentionVersion() {
+        return "FlashAttention-Stub-1.0";
+    }
 }
 
 namespace sovereign {
