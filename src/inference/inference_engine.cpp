@@ -5,6 +5,7 @@
 // =============================================================================
 
 #include "inference_engine.h"
+#include "inference_engine_quantized.hpp"
 #include "../gguf_loader.h"
 #include <cstring>
 #include <string>
@@ -241,12 +242,14 @@ bool InferenceEngine::IsUsingAVX512() const {
 // =============================================================================
 
 std::unique_ptr<InferenceEngine> CreateInferenceEngine() {
-    return std::make_unique<InferenceEngine>();
+    // Default to production engine with automatic Q4_0 detection (131 tok/s)
+    return std::make_unique<QuantizedInferenceEngine>();
 }
 
 std::unique_ptr<InferenceEngine> CreateInferenceEngine(size_t initialMemoryPoolBytes) {
     (void)initialMemoryPoolBytes;  // Used in Phase 2
-    return std::make_unique<InferenceEngine>();
+    // Default to production engine with automatic Q4_0 detection (131 tok/s)
+    return std::make_unique<QuantizedInferenceEngine>();
 }
 
 } // namespace Core

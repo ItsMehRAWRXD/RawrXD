@@ -183,6 +183,7 @@ private:
     bool ParseMetadata();
     bool ParseTensors();
     bool ParseConfigFromMetadata();
+    void InferVocabSizeFromEmbeddings();  // Infer vocab_size from token_embd.weight
     
     std::string ReadString();
     uint32_t ReadU32();

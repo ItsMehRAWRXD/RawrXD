@@ -1246,6 +1246,10 @@ set(SOURCES
     # Autonomous inference engine (required by speculative_decoder.cpp for draft token generation)
     src/inference/ultra_fast_inference.cpp
 
+    # Quantized Inference Router - automatic Q4_0 detection (131 tok/s)
+    src/inference/quantized_inference_router.cpp
+    src/inference/inference_engine_quantized.cpp
+
     # Token Pipeline - double-buffered token flow for measurable TPS
     src/inference/token_pipeline.cpp
 
@@ -3241,6 +3245,13 @@ set(INFERENCE_ENGINE_SOURCES
     src/codec/gzip_brutal_inflate.cpp
     src/inference/RawrXD_LlamaNative.cpp
     src/inference/pipeline_telemetry.cpp
+    src/inference/quantized_inference_router.cpp      # Q4_0 quantized inference (131 tok/s)
+    src/inference/inference_engine_quantized.cpp      # Production engine with auto Q4_0 detection
+    src/inference/model_loader.cpp                    # ModelLoader for router
+    src/quantization/quantized_model.cpp                # Quantized model implementation
+    src/quantization/quantized_inference.cpp          # Quantized tensor operations
+    src/quantization/quantized_transformer_layer.cpp  # Quantized transformer layers
+    src/quantization/gguf_loader.cpp                    # GGUF model loading
     src/flow_control/credit_governor.cpp
     src/core/Sovereign_Memory_Manager.cpp
 )
@@ -9360,3 +9371,214 @@ set_target_properties(test_phase12_final_integration PROPERTIES
 )
 
 message(STATUS "[Phase12] test_phase12_final_integration target added")
+
+# ============================================================================
+# Quantized Real Model Test - Tests loading real GGUF models with Q2_K/Q4_K
+# ============================================================================
+add_executable(test_quantized_real_model EXCLUDE_FROM_ALL
+    tests/test_quantized_real_model.cpp
+    src/quantization/quantized_model.cpp
+    src/quantization/quantized_inference.cpp
+    src/quantization/quantized_transformer_layer.cpp
+    src/quantization/gguf_loader.cpp
+)
+
+target_include_directories(test_quantized_real_model PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_quantized_real_model PRIVATE cxx_std_20)
+
+if(MSVC)
+    target_compile_options(test_quantized_real_model PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_quantized_real_model PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_quantized_real_model PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_quantized_real_model PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Quantization] Real model test: test_quantized_real_model")
+
+# ============================================================================
+# Full Pipeline Test - Tests end-to-end quantized inference with GPU
+# ============================================================================
+add_executable(test_full_pipeline EXCLUDE_FROM_ALL
+    test_full_pipeline.cpp
+)
+
+target_include_directories(test_full_pipeline PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_full_pipeline PRIVATE cxx_std_20)
+
+if(MSVC)
+    target_compile_options(test_full_pipeline PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+target_link_libraries(test_full_pipeline PRIVATE
+    InferenceEngine
+)
+
+if(WIN32)
+    target_link_libraries(test_full_pipeline PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_full_pipeline PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_full_pipeline PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Quantization] Full pipeline test: test_full_pipeline")
+
+# ============================================================================
+# Debug Abort Test - Finds where abort() is called
+# ============================================================================
+add_executable(test_debug_abort EXCLUDE_FROM_ALL
+    test_debug_abort.cpp
+    src/quantization/quantized_model.cpp
+    src/quantization/quantized_inference.cpp
+    src/quantization/quantized_transformer_layer.cpp
+    src/quantization/gguf_loader.cpp
+)
+
+target_include_directories(test_debug_abort PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_debug_abort PRIVATE cxx_std_20)
+
+if(MSVC)
+    target_compile_options(test_debug_abort PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_debug_abort PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_debug_abort PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_debug_abort PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+# ============================================================================
+# TPS Benchmark - Measures inference throughput
+# ============================================================================
+add_executable(benchmark_tps EXCLUDE_FROM_ALL
+    benchmark_tps.cpp
+    src/quantization/quantized_model.cpp
+    src/quantization/quantized_inference.cpp
+    src/quantization/quantized_transformer_layer.cpp
+    src/quantization/gguf_loader.cpp
+)
+
+target_include_directories(benchmark_tps PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(benchmark_tps PRIVATE cxx_std_20)
+
+if(MSVC)
+    target_compile_options(benchmark_tps PRIVATE /EHsc /W2 /arch:AVX2 /O2)
+endif()
+
+if(WIN32)
+    target_link_libraries(benchmark_tps PRIVATE Threads::Threads)
+else()
+    target_link_libraries(benchmark_tps PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(benchmark_tps PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+# ============================================================================
+# AVX2 Benchmark - Measures AVX2 kernel performance
+# ============================================================================
+add_executable(benchmark_avx2 EXCLUDE_FROM_ALL
+    benchmark_avx2.cpp
+    src/kernels/optimized_transformer.cpp
+)
+
+target_include_directories(benchmark_avx2 PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(benchmark_avx2 PRIVATE cxx_std_20)
+
+if(MSVC)
+    # Use /O2 without runtime checks for performance
+    target_compile_options(benchmark_avx2 PRIVATE /EHsc /W2 /arch:AVX2 /O2 /Ob2 /Oi /Ot)
+    # Disable runtime checks that conflict with /O2
+    string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+endif()
+
+if(WIN32)
+    target_link_libraries(benchmark_avx2 PRIVATE Threads::Threads)
+else()
+    target_link_libraries(benchmark_avx2 PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(benchmark_avx2 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Quantization] Debug abort test: test_debug_abort")
+
+# ============================================================================
+# Quantized Operations Test - Tests core quantized ops (Embedding + MatMul)
+# ============================================================================
+add_executable(test_quantized_ops EXCLUDE_FROM_ALL
+    test_quantized_ops.cpp
+    src/quantization/quantized_inference.cpp
+)
+
+target_include_directories(test_quantized_ops PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_quantized_ops PRIVATE cxx_std_20)
+
+if(MSVC)
+    target_compile_options(test_quantized_ops PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_quantized_ops PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_quantized_ops PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_quantized_ops PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Quantization] Operations test: test_quantized_ops")

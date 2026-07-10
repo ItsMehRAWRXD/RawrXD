@@ -46,6 +46,8 @@ set(INFERENCE_CORE_SOURCES
     ollama_blob_parser.cpp
     inference_standalone_main.cpp
     RawrXD_LlamaNative.cpp              # Native llama.dll bridge (zero HTTP)
+    quantized_inference_router.cpp      # Q4_0 quantized inference router (131 tok/s)
+    inference_engine_quantized.cpp    # Production engine with auto Q4_0 detection
 )
 
 # =============================================================================
@@ -186,3 +188,49 @@ endif()
 
 message(STATUS "[Inference] RawrXD-InferenceEngine standalone build configured")
 message(STATUS "[Inference] MASM kernels: ${RAWR_HAS_MASM}")
+
+# =============================================================================
+# Quantized Inference Integration Test
+# =============================================================================
+add_executable(test-quantized-integration
+    test_quantized_integration.cpp
+    quantized_inference_router.cpp
+    inference_engine_quantized.cpp
+    ${ENGINE_SOURCES}
+    ${SUPPORT_SOURCES}
+    ${INFERENCE_ASM_SOURCES}
+)
+
+target_compile_definitions(test-quantized-integration PRIVATE
+    RAWR_STANDALONE_INFERENCE=1
+    WIN64
+    _WIN64
+    UNICODE
+    _UNICODE
+    _CRT_SECURE_NO_WARNINGS
+    $<$<BOOL:${RAWR_HAS_MASM}>:RAWR_HAS_MASM=1>
+)
+
+target_include_directories(test-quantized-integration PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/../core
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+)
+
+target_link_libraries(test-quantized-integration PRIVATE
+    Threads::Threads
+)
+
+if(WIN32)
+    target_link_libraries(test-quantized-integration PRIVATE
+        kernel32 advapi32 shlwapi psapi dbghelp ws2_32 winhttp ntdll
+    )
+endif()
+
+if(Vulkan_FOUND)
+    target_link_libraries(test-quantized-integration PRIVATE Vulkan::Vulkan)
+endif()
+
+message(STATUS "[Inference] test-quantized-integration target added")

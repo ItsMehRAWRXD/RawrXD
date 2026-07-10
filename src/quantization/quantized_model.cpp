@@ -255,11 +255,14 @@ bool QuantizedModel::LoadFromGGUF(const std::string& path) {
     };
     for (const auto& name : norm_names) {
         if (loader->LoadQuantizedTensor(name, norm_tensor, QuantType::F32)) {
-            auto norm_data = norm_tensor.DequantizeScalar();
-            output_norm_ = norm_data;
-            norm_loaded = true;
-            std::cout << "  Loaded output norm from: " << name << std::endl;
-            break;
+            // Check if tensor has data before dequantizing
+            if (norm_tensor.GetNumElements() > 0) {
+                auto norm_data = norm_tensor.DequantizeScalar();
+                output_norm_ = norm_data;
+                norm_loaded = true;
+                std::cout << "  Loaded output norm from: " << name << std::endl;
+                break;
+            }
         }
     }
     if (!norm_loaded) {
@@ -375,10 +378,16 @@ bool QuantizedModel::Forward(const std::vector<int32_t>& input_tokens,
             size_t hidden_offset = (b * seq_len + s) * config_.hidden_size;
             
             if (has_real_embeddings && token_id >= 0 && token_id < static_cast<int32_t>(config_.vocab_size)) {
-                // TODO: Real embedding lookup from token_embeddings_ tensor
-                // For now, use synthetic embedding based on token_id
-                for (size_t h = 0; h < config_.hidden_size; h++) {
-                    hidden[hidden_offset + h] = 0.01f * ((token_id + h) % 100);
+                // Real embedding lookup from token_embeddings_ tensor
+                if (!token_embeddings_.GetEmbedding(token_id, hidden.data() + hidden_offset)) {
+                    std::cerr << "[QuantizedModel] Failed to get embedding for token " << token_id 
+                              << " (vocab_size=" << config_.vocab_size 
+                              << ", embedding_rows=" << token_embeddings_.GetRows() 
+                              << ", embedding_cols=" << token_embeddings_.GetCols() << ")" << std::endl;
+                    // Fallback to synthetic
+                    for (size_t h = 0; h < config_.hidden_size; h++) {
+                        hidden[hidden_offset + h] = 0.01f * ((token_id + h) % 100);
+                    }
                 }
             } else {
                 // Synthetic embedding

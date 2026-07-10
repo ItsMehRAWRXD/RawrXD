@@ -24,7 +24,9 @@ enum class QuantizationMode {
     AUTO,       // Automatically select based on available memory
     F32,        // Full precision (reference)
     Q8_0,       // 8-bit quantization (4x compression)
-    Q4_0        // 4-bit quantization (8x compression, default)
+    Q4_0,       // 4-bit quantization (8x compression)
+    Q4_K,       // 4-bit K-quants
+    Q2_K        // 2-bit K-quants (highest compression)
 };
 
 // ============================================================================
@@ -55,7 +57,9 @@ struct QuantizedModelConfig {
         switch (mode) {
             case QuantizationMode::F32: return QuantType::F32;
             case QuantizationMode::Q8_0: return QuantType::Q8_0;
-            case QuantizationMode::Q4_0:
+            case QuantizationMode::Q4_0: return QuantType::Q4_0;
+            case QuantizationMode::Q4_K: return QuantType::Q4_K;
+            case QuantizationMode::Q2_K: return QuantType::Q2_K;
             case QuantizationMode::AUTO:
             default: return QuantType::Q4_0;
         }

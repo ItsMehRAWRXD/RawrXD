@@ -1,0 +1,101 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+
+// Fused QKV Projection Kernel
+// Computes Q, K, V projections in a single kernel
+// Input: hidden_states [batch, seq_len, hidden_size]
+// Output: q, k, v projections [batch, seq_len, hidden_size * 3]
+// Target: 2.5x speedup by fusing 3 matmuls into 1
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer InputBuffer {
+    float16_t data[];
+} input_buffer;
+
+layout(set = 0, binding = 1) readonly buffer WeightQ {
+    float16_t data[];
+} weight_q;
+
+layout(set = 0, binding = 2) readonly buffer WeightK {
+    float16_t data[];
+} weight_k;
+
+layout(set = 0, binding = 3) readonly buffer WeightV {
+    float16_t data[];
+} weight_v;
+
+layout(set = 0, binding = 4) writeonly buffer OutputQ {
+    float16_t data[];
+} output_q;
+
+layout(set = 0, binding = 5) writeonly buffer OutputK {
+    float16_t data[];
+} output_k;
+
+layout(set = 0, binding = 6) writeonly buffer OutputV {
+    float16_t data[];
+} output_v;
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint seq_len;
+    uint hidden_size;
+    uint head_dim;
+    uint num_heads;
+} params;
+
+// Shared memory for input tile
+shared float16_t shared_input[256];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id = gl_LocalInvocationID.x;
+    
+    // Each thread computes one output element for Q, K, and V
+    uint total_elements = params.batch_size * params.seq_len * params.hidden_size;
+    if (global_id >= total_elements) return;
+    
+    // Calculate indices
+    uint elem_idx = global_id;
+    uint batch_idx = elem_idx / (params.seq_len * params.hidden_size);
+    uint seq_idx = (elem_idx / params.hidden_size) % params.seq_len;
+    uint hidden_idx = elem_idx % params.hidden_size;
+    
+    // Load input into shared memory (coalesced access)
+    uint input_offset = batch_idx * params.seq_len * params.hidden_size + 
+                       seq_idx * params.hidden_size;
+    
+    // Each thread loads part of the input row
+    for (uint i = local_id; i < params.hidden_size; i += 256) {
+        if (i < params.hidden_size) {
+            shared_input[i] = input_buffer.data[input_offset + i];
+        }
+    }
+    
+    barrier();
+    
+    // Compute Q projection
+    float16_t q_acc = float16_t(0.0);
+    for (uint i = 0; i < params.hidden_size; i++) {
+        float16_t w = weight_q.data[hidden_idx * params.hidden_size + i];
+        q_acc += shared_input[i] * w;
+    }
+    output_q.data[elem_idx] = q_acc;
+    
+    // Compute K projection
+    float16_t k_acc = float16_t(0.0);
+    for (uint i = 0; i < params.hidden_size; i++) {
+        float16_t w = weight_k.data[hidden_idx * params.hidden_size + i];
+        k_acc += shared_input[i] * w;
+    }
+    output_k.data[elem_idx] = k_acc;
+    
+    // Compute V projection
+    float16_t v_acc = float16_t(0.0);
+    for (uint i = 0; i < params.hidden_size; i++) {
+        float16_t w = weight_v.data[hidden_idx * params.hidden_size + i];
+        v_acc += shared_input[i] * w;
+    }
+    output_v.data[elem_idx] = v_acc;
+}

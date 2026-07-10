@@ -101,6 +101,7 @@ public:
     bool IsUsingQuantizedBackend() const;
     const char* GetLastError() const;
     const char* GetActiveBackendName() const;
+    const char* GetQuantizationType() const;
     
     // Performance metrics
     float GetLastTokensPerSecond() const;
@@ -119,8 +120,11 @@ private:
 // Convenience Functions
 // ============================================================================
 
-// Quick check if model is Q4_0 quantized
-bool IsQ4_0Model(const char* ggufPath);
+// Quick check if model is quantized (supports Q2_K, Q3_K, Q4_0, Q4_K, Q5_K, Q6_K, Q8_0)
+bool IsQuantizedModel(const char* ggufPath);
+
+// Get quantization type from filename
+const char* GetQuantizationType(const char* ggufPath);
 
 // Get recommended backend for model
 const char* GetRecommendedBackend(const char* ggufPath);
