@@ -65,6 +65,10 @@ struct ExecutionContext {
     // RoPE tables
     const float* ropeSin{nullptr};
     const float* ropeCos{nullptr};
+    
+    // Activation buffers (ping-pong)
+    void* activation_a{nullptr};
+    void* activation_b{nullptr};
 };
 
 //==============================================================================
@@ -218,6 +222,9 @@ private:
     // Buffer management
     bool AllocateBuffers();
     void FreeBuffers();
+    
+    // Backend initialization
+    bool InitializeDefaultBackends();
     
     // RoPE cache
     bool InitializeRoPECache();

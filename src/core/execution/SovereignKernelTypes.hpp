@@ -168,4 +168,46 @@ struct MatMulParams {
     float beta{0.0f};            // Accumulation scale
 };
 
+//==============================================================================
+// Kernel ID Enumeration
+// Used for backend selection and capability queries
+//==============================================================================
+enum class KernelId : uint32_t {
+    // Matrix operations
+    MatMul_F32_F32 = 0,
+    MatMul_F16_F16,
+    MatMul_Q4_Q8,
+    MatMul_Q8_Q8,
+    
+    // Attention operations
+    Attention_Standard,
+    FlashAttentionV2,
+    FlashAttentionV2_Paged,
+    
+    // Normalization
+    RMSNorm,
+    LayerNorm,
+    
+    // Activations
+    SiLU,
+    GELU,
+    
+    // Other ops
+    Softmax,
+    ResidualAdd,
+    RoPE,           // Rotary Position Embedding
+    
+    // Quantization
+    Quantize_Q4,
+    Quantize_Q8,
+    Dequantize_Q4,
+    Dequantize_Q8,
+    
+    // Memory
+    Copy,
+    Zero,
+    
+    Count  // Total number of kernels
+};
+
 } // namespace sovereign

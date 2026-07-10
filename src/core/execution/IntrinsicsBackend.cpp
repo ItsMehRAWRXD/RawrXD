@@ -292,7 +292,7 @@ private:
     bool hasAVX512_ = false;
     
     // CPU feature detection
-    bool HasAVX2() {
+    bool HasAVX2() const {
         // Simplified - would use CPUID in production
         #ifdef __AVX2__
         return true;
@@ -301,7 +301,7 @@ private:
         #endif
     }
     
-    bool HasAVX512() {
+    bool HasAVX512() const {
         #ifdef __AVX512F__
         return true;
         #else
