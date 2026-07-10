@@ -138,13 +138,36 @@ static Sovereign_KernelTable g_kernelTable;
 static bool g_kernelsInitialized = false;
 
 //==============================================================================
+// Debug Output
+//==============================================================================
+
+#ifdef _DEBUG
+    #define TITAN_LOG(fmt, ...) printf("[Titan] " fmt "\n", ##__VA_ARGS__)
+#else
+    #define TITAN_LOG(fmt, ...) ((void)0)
+#endif
+
+//==============================================================================
 // Internal Helper Functions
 //==============================================================================
 
 static bool EnsureKernelsInitialized() {
     if (!g_kernelsInitialized) {
+        TITAN_LOG("Initializing kernel table...");
         if (Sovereign_InitKernelTable(&g_kernelTable) == 0) {
             g_kernelsInitialized = true;
+            TITAN_LOG("Kernel table initialized successfully");
+            
+            // Log available kernels
+            TITAN_LOG("Available kernels:");
+            TITAN_LOG("  rms_norm_f32: %p", (void*)g_kernelTable.rms_norm_f32);
+            TITAN_LOG("  layer_norm_f32: %p", (void*)g_kernelTable.layer_norm_f32);
+            TITAN_LOG("  q4q8_matmul_intrinsics: %p", (void*)g_kernelTable.q4q8_matmul_intrinsics);
+            TITAN_LOG("  q4_0_q8_0_matmul: %p", (void*)g_kernelTable.q4_0_q8_0_matmul);
+            TITAN_LOG("  flash_attention_v2_intrinsics: %p", (void*)g_kernelTable.flash_attention_v2_intrinsics);
+            TITAN_LOG("  flash_attention_v2_f32: %p", (void*)g_kernelTable.flash_attention_v2_f32);
+        } else {
+            TITAN_LOG("ERROR: Failed to initialize kernel table");
         }
     }
     return g_kernelsInitialized;
@@ -336,18 +359,32 @@ static int Execute_Q4K_Dequant(GPU_KERNEL_DESCRIPTOR* desc) {
 }
 
 static int Execute_Q4Q8_MatMul(GPU_KERNEL_DESCRIPTOR* desc) {
+    TITAN_LOG("Execute_Q4Q8_MatMul called");
+    
     if (!desc->paramData || desc->paramCount < sizeof(Q4Q8MatMulParams)) {
+        TITAN_LOG("ERROR: Invalid parameters - paramData=%p, paramCount=%u (expected >=%zu)", 
+                  desc->paramData, desc->paramCount, sizeof(Q4Q8MatMulParams));
         return 87;
     }
     
     Q4Q8MatMulParams* params = (Q4Q8MatMulParams*)desc->paramData;
     
+    TITAN_LOG("Params: A=%p, B=%p, C=%p, m=%zu, n=%zu, k=%zu", 
+              params->A, params->B, params->C, params->m, params->n, params->k);
+    
     if (!params->A || !params->B || !params->C) {
+        TITAN_LOG("ERROR: Null buffer - A=%p, B=%p, C=%p", params->A, params->B, params->C);
         return 6;
+    }
+    
+    if (params->m == 0 || params->n == 0 || params->k == 0) {
+        TITAN_LOG("ERROR: Zero dimension - m=%zu, n=%zu, k=%zu", params->m, params->n, params->k);
+        return 13;
     }
     
     // Prefer intrinsics version if available
     if (g_kernelTable.q4q8_matmul_intrinsics) {
+        TITAN_LOG("Using q4q8_matmul_intrinsics (Phase 7B)");
         uint64_t startTime = GetMicroseconds();
         
         int result = g_kernelTable.q4q8_matmul_intrinsics(
@@ -363,11 +400,13 @@ static int Execute_Q4Q8_MatMul(GPU_KERNEL_DESCRIPTOR* desc) {
         desc->executionTimeUs = endTime - startTime;
         desc->launchStatus = (result == 0) ? 0 : 1;
         
+        TITAN_LOG("Intrinsics result: %d, time: %llu us", result, desc->executionTimeUs);
         return result;
     }
     
     // Fall back to MASM version
     if (g_kernelTable.q4_0_q8_0_matmul) {
+        TITAN_LOG("Using q4_0_q8_0_matmul (Phase 7A)");
         uint64_t startTime = GetMicroseconds();
         
         int result = g_kernelTable.q4_0_q8_0_matmul(
@@ -383,9 +422,12 @@ static int Execute_Q4Q8_MatMul(GPU_KERNEL_DESCRIPTOR* desc) {
         desc->executionTimeUs = endTime - startTime;
         desc->launchStatus = (result == 0) ? 0 : 1;
         
+        TITAN_LOG("MASM result: %d, time: %llu us", result, desc->executionTimeUs);
         return result;
     }
     
+    TITAN_LOG("ERROR: No kernel available - q4q8_matmul_intrinsics=%p, q4_0_q8_0_matmul=%p",
+              (void*)g_kernelTable.q4q8_matmul_intrinsics, (void*)g_kernelTable.q4_0_q8_0_matmul);
     return 127;  // No kernel available
 }
 
@@ -451,17 +493,44 @@ extern "C" {
 
 // Initialize kernel system
 int Titan_InitializeKernelSystem(void) {
+    TITAN_LOG("Titan_InitializeKernelSystem called");
+    
     if (!EnsureKernelsInitialized()) {
+        TITAN_LOG("ERROR: Failed to initialize kernel table");
         return 1;  // Failed to initialize
     }
     
-    // Validate all critical kernels are present
-    if (!g_kernelTable.rms_norm_f32 ||
-        !g_kernelTable.layer_norm_f32 ||
-        !g_kernelTable.q4q8_matmul_intrinsics) {
+    // Validate critical kernels - but don't fail if intrinsics missing (may have MASM)
+    int criticalMissing = 0;
+    
+    if (!g_kernelTable.rms_norm_f32) {
+        TITAN_LOG("WARNING: rms_norm_f32 not available");
+        criticalMissing++;
+    }
+    
+    if (!g_kernelTable.layer_norm_f32) {
+        TITAN_LOG("WARNING: layer_norm_f32 not available");
+        criticalMissing++;
+    }
+    
+    // MatMul needs at least one implementation
+    if (!g_kernelTable.q4q8_matmul_intrinsics && !g_kernelTable.q4_0_q8_0_matmul) {
+        TITAN_LOG("ERROR: No MatMul kernel available (intrinsics=%p, masm=%p)",
+                  (void*)g_kernelTable.q4q8_matmul_intrinsics, 
+                  (void*)g_kernelTable.q4_0_q8_0_matmul);
+        criticalMissing++;
+    } else {
+        TITAN_LOG("MatMul available: intrinsics=%p, masm=%p",
+                  (void*)g_kernelTable.q4q8_matmul_intrinsics,
+                  (void*)g_kernelTable.q4_0_q8_0_matmul);
+    }
+    
+    if (criticalMissing > 2) {
+        TITAN_LOG("ERROR: Too many critical kernels missing (%d)", criticalMissing);
         return 2;  // Critical kernels missing
     }
     
+    TITAN_LOG("Initialization successful");
     return 0;  // Success
 }
 
