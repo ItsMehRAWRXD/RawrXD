@@ -1,18 +1,13 @@
 //==============================================================================
 // diagnose_kernel_loading.cpp
 // Phase 7 Diagnostic - Kernel Loading Verification
-//
-// Checks:
-// 1. Kernel library files exist
-// 2. Function exports are available
-// 3. Direct kernel calls work
-// 4. Memory alignment requirements
 //==============================================================================
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <cmath>
 
 // Include the kernel dispatch header
 extern "C" {
@@ -28,17 +23,16 @@ struct TestResult {
     const char* details;
 };
 
-#define TEST(name, condition, msg) \
-    do { \
-        results[numResults].name = name; \
-        results[numResults].passed = (condition); \
-        results[numResults].details = msg; \
-        numResults++; \
-        printf("  [%s] %s: %s\n", (condition) ? "PASS" : "FAIL", name, msg); \
-    } while(0)
-
 static TestResult results[50];
 static int numResults = 0;
+
+void addResult(const char* name, bool passed, const char* details) {
+    results[numResults].name = name;
+    results[numResults].passed = passed;
+    results[numResults].details = details;
+    numResults++;
+    printf("  [%s] %s: %s\n", passed ? "PASS" : "FAIL", name, details);
+}
 
 //==============================================================================
 // Section 1: File Existence Checks
@@ -59,10 +53,9 @@ void checkLibraryFiles() {
     };
     
     int found = 0;
-    for (int i = 0; i < sizeof(libraries)/sizeof(libraries[0]); i++) {
+    for (size_t i = 0; i < sizeof(libraries)/sizeof(libraries[0]); i++) {
         bool exists = checkFileExists(libraries[i]);
-        const char* libName = libraries[i];
-        TEST(libName, exists, exists ? "Found" : "NOT FOUND");
+        addResult(libraries[i], exists, exists ? "Found" : "NOT FOUND");
         if (exists) found++;
     }
     
@@ -79,7 +72,7 @@ void checkKernelTableInit() {
     memset(&table, 0, sizeof(table));
     
     int result = Sovereign_InitKernelTable(&table);
-    TEST("Sovereign_InitKernelTable", result == 0, 
+    addResult("Sovereign_InitKernelTable", result == 0, 
          result == 0 ? "Success" : "Failed");
     
     if (result != 0) {
@@ -111,14 +104,14 @@ void checkKernelTableInit() {
     printf("    flash_attention_v2_f32:    %s\n", table.flash_attention_v2_f32 ? "✓" : "✗");
     printf("\n  Total: %d/9 kernels available\n", available);
     
-    TEST("Kernel Count", available > 0, available > 0 ? "Kernels found" : "No kernels loaded");
+    addResult("Kernel Count", available > 0, available > 0 ? "Kernels found" : "No kernels loaded");
 }
 
 //==============================================================================
 // Section 3: Direct Kernel Execution Tests
 //==============================================================================
 bool approxEqual(float a, float b, float epsilon) {
-    return (a > b ? a - b : b - a) < epsilon;
+    return fabsf(a - b) < epsilon;
 }
 
 void checkDirectKernelExecution() {
@@ -149,10 +142,10 @@ void checkDirectKernelExecution() {
         float rms = sum_sq / 8.0f;
         
         bool pass = (result == 0) && approxEqual(rms, 1.0f, 0.1f);
-        TEST("RMSNorm_F32", pass, 
+        addResult("RMSNorm_F32", pass, 
              pass ? "Normalized correctly" : "Failed normalization");
     } else {
-        TEST("RMSNorm_F32", false, "Kernel not available");
+        addResult("RMSNorm_F32", false, "Kernel not available");
     }
     
     // Test 2: Residual Add
@@ -170,20 +163,18 @@ void checkDirectKernelExecution() {
                 pass = false;
             }
         }
-        TEST("ResidualAdd_F32", pass,
+        addResult("ResidualAdd_F32", pass,
              pass ? "Addition correct" : "Output mismatch");
     } else {
-        TEST("ResidualAdd_F32", false, "Kernel not available");
+        addResult("ResidualAdd_F32", false, "Kernel not available");
     }
     
     // Test 3: MatMul (if available)
     if (table.q4q8_matmul_intrinsics || table.q4_0_q8_0_matmul) {
         printf("  Testing Q4Q8_MatMul...\n");
-        // Simplified test - just check if function doesn't crash
-        // Real test would need proper Q4_0/Q8_0 formatted data
-        TEST("Q4Q8_MatMul", true, "Kernel available (detailed test needs Q4/Q8 data)");
+        addResult("Q4Q8_MatMul", true, "Kernel available (detailed test needs Q4/Q8 data)");
     } else {
-        TEST("Q4Q8_MatMul", false, "Kernel not available");
+        addResult("Q4Q8_MatMul", false, "Kernel not available");
     }
 }
 
@@ -197,7 +188,7 @@ void checkMemoryAlignment() {
     void* ptr = _aligned_malloc(1024, 64);
     bool aligned = ((uintptr_t)ptr % 64) == 0;
     
-    TEST("64-byte alignment", aligned, 
+    addResult("64-byte alignment", aligned, 
          aligned ? "Aligned memory works" : "Alignment failed");
     
     _aligned_free(ptr);
@@ -206,8 +197,8 @@ void checkMemoryAlignment() {
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
     printf("  System Info:\n");
-    printf("    Page size: %zu bytes\n", sysInfo.dwPageSize);
-    printf("    Allocation granularity: %zu bytes\n", sysInfo.dwAllocationGranularity);
+    printf("    Page size: %zu bytes\n", (size_t)sysInfo.dwPageSize);
+    printf("    Allocation granularity: %zu bytes\n", (size_t)sysInfo.dwAllocationGranularity);
 }
 
 //==============================================================================
