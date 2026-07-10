@@ -15,6 +15,12 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+
+// Prevent Windows.h from defining min/max macros
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <windows.h>
 
 extern "C" {
