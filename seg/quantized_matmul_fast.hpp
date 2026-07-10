@@ -40,4 +40,14 @@ void PrecomputeQ8_K_Dequantized(const Q8_K_Block* quantized,
 void FastVecMatMul(const float* input, const float* weights,
                     float* output, size_t N, size_t K);
 
+// Fast MatMul with SiLU activation applied to output
+// Fuses activation into the matrix multiplication to reduce memory passes
+void FastVecMatMulSiLU(const float* input, const float* weights,
+                        float* output, size_t N, size_t K);
+
+// Fast MatMul with streaming stores for output
+// Reduces cache pollution when output won't be reused soon
+void FastVecMatMulStreaming(const float* input, const float* weights,
+                               float* output, size_t N, size_t K);
+
 } // namespace SEG

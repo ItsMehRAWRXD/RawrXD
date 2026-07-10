@@ -51,6 +51,24 @@ typedef size_t (*pfn_q4k_dequant_block)(const void* src, float* dst,
 typedef int (*pfn_q4k_dequant_tensor)(const void* tensor_data, float* output,
                                       size_t num_elements, const void* tensor_info);
 
+// Resurrected Kernels (Phase 7A)
+typedef int (*pfn_flash_attention_v2_f32)(float* Q, float* K, float* V, float* output,
+                                           size_t seq_len, size_t head_dim);
+typedef size_t (*pfn_fast_token_scan)(const char* buffer, size_t length,
+                                        const void* token_table, int* output);
+typedef int (*pfn_svd_compress_f32)(float* input, size_t rank, float* output,
+                                     size_t original_dim);
+typedef size_t (*pfn_token_merge_avx512)(int* token_ids, size_t count,
+                                          const void* merge_rules, size_t* output_count);
+typedef int (*pfn_q4_0_q8_0_matmul)(const void* A, const void* B, float* C,
+                                     size_t m, size_t n, size_t k);
+
+// Phase 7B Intrinsics Optimized Kernels
+typedef int (*pfn_q4q8_matmul_intrinsics)(const void* A, const void* B, float* C,
+                                           size_t m, size_t n, size_t k);
+typedef int (*pfn_flash_attention_v2_intrinsics)(float* Q, float* K, float* V, float* output,
+                                                  size_t seq_len, size_t head_dim);
+
 // ----------------------------------------------------------------------------
 // Kernel Dispatch Table
 // ----------------------------------------------------------------------------
@@ -74,6 +92,17 @@ typedef struct {
     // Quantization
     pfn_q4k_dequant_block         q4k_dequant_block;
     pfn_q4k_dequant_tensor        q4k_dequant_tensor;
+    
+    // Resurrected Kernels (Phase 7A)
+    pfn_flash_attention_v2_f32    flash_attention_v2_f32;
+    pfn_fast_token_scan           fast_token_scan;
+    pfn_svd_compress_f32          svd_compress_f32;
+    pfn_token_merge_avx512        token_merge_avx512;
+    pfn_q4_0_q8_0_matmul          q4_0_q8_0_matmul;
+    
+    // Phase 7B Intrinsics Optimized
+    pfn_q4q8_matmul_intrinsics    q4q8_matmul_intrinsics;
+    pfn_flash_attention_v2_intrinsics flash_attention_v2_intrinsics;
     
 } Sovereign_KernelTable;
 
@@ -139,6 +168,26 @@ public:
                          size_t block_size, const void* scales);
     bool Q4KDequantTensor(const void* tensor_data, float* output,
                           size_t num_elements, const void* tensor_info);
+    
+    // Resurrected Kernels (Phase 7A)
+    bool FlashAttentionV2(float* Q, float* K, float* V, float* output,
+                            size_t seq_len, size_t head_dim);
+    size_t FastTokenScan(const char* buffer, size_t length,
+                         const void* token_table, int* output);
+    bool SVDCompress(float* input, size_t rank, float* output, size_t original_dim);
+    size_t TokenMergeAVX512(int* token_ids, size_t count,
+                            const void* merge_rules, size_t* output_count);
+    bool Q4Q8MatMul(const void* A, const void* B, float* C,
+                    size_t m, size_t n, size_t k);
+    
+    // Phase 7B Intrinsics Optimized
+    bool Q4Q8MatMulIntrinsics(const void* A, const void* B, float* C,
+                               size_t m, size_t n, size_t k);
+    bool FlashAttentionV2Intrinsics(float* Q, float* K, float* V, float* output,
+                                     size_t seq_len, size_t head_dim);
+
+private:
+                    size_t m, size_t n, size_t k);
 
 private:
     Sovereign_KernelTable table_;

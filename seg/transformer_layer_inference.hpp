@@ -11,6 +11,9 @@
 #include <cstring>
 #include <algorithm>
 #include <cstdint>
+#include <memory>
+#include "int8_gemm.hpp"
+#include "parallel_gemm.hpp"
 
 namespace RawrXD {
 namespace Inference {
@@ -28,18 +31,28 @@ struct TransformerConfig {
 
 // Weight tensors for one layer
 struct LayerWeights {
-    // Attention
+    // Attention (FP32 fallback)
     std::vector<float> q_weight;  // [hidden_size, hidden_size]
     std::vector<float> k_weight;  // [hidden_size, kv_hidden_size]
     std::vector<float> v_weight;  // [hidden_size, kv_hidden_size]
     std::vector<float> o_weight;  // [hidden_size, hidden_size]
     std::vector<float> attn_norm; // [hidden_size]
     
-    // FFN
+    // FFN (FP32 fallback)
     std::vector<float> ffn_gate;  // [hidden_size, intermediate_size]
     std::vector<float> ffn_up;    // [hidden_size, intermediate_size]
     std::vector<float> ffn_down;  // [intermediate_size, hidden_size]
     std::vector<float> ffn_norm;  // [hidden_size]
+    
+    // INT8 quantized weights for speed
+    SEG::Q8Matrix q_weight_q8;    // [hidden_size, hidden_size]
+    SEG::Q8Matrix k_weight_q8;    // [hidden_size, kv_hidden_size]
+    SEG::Q8Matrix v_weight_q8;    // [hidden_size, kv_hidden_size]
+    SEG::Q8Matrix o_weight_q8;    // [hidden_size, hidden_size]
+    SEG::Q8Matrix ffn_gate_q8;    // [intermediate, hidden_size]
+    SEG::Q8Matrix ffn_up_q8;      // [intermediate, hidden_size]
+    SEG::Q8Matrix ffn_down_q8;    // [hidden_size, intermediate]
+    bool use_int8 = false;
 };
 
 // KV cache entry
@@ -66,6 +79,11 @@ public:
     // output: [hidden_size]
     bool Forward(const float* input, float* output, 
                  KVCache& kv_cache, uint32_t position);
+    
+    // Fused forward pass with kernel fusion
+    // Reduces memory round-trips for better performance
+    bool ForwardFused(const float* input, float* output,
+                      KVCache& kv_cache, uint32_t position);
 
 protected:
     TransformerConfig config_;
@@ -80,6 +98,10 @@ protected:
     std::vector<float> ffn_gate_;   // FFN gate projection
     std::vector<float> ffn_up_;      // FFN up projection
     std::vector<float> ffn_act_;     // FFN activation
+    
+    // Thread pool for parallel operations
+    std::unique_ptr<SEG::ThreadPool> thread_pool_;
+    bool use_parallel_ = false;
     
     // Helper functions - protected for derived classes
     void RMSNorm(const float* input, const float* weight, float* output, uint32_t size);

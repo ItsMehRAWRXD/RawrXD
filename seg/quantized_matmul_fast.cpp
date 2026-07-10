@@ -6,7 +6,9 @@
 
 #include "quantized_matmul_fast.hpp"
 #include <immintrin.h>
+#include <xmmintrin.h>
 #include <cstring>
+#include <cmath>
 
 namespace SEG {
 
@@ -81,28 +83,60 @@ void PrecomputeQ8_K_Dequantized(const Q8_K_Block* quantized,
 // Standard fast MatMul (no quantization overhead)
 // Computes: output[n] = sum_k(input[k] * weights[n*K + k])
 // Weights are stored as [N, K] in row-major order
+// Maximum optimization: 4x unroll + prefetching + streaming stores
 void FastVecMatMul(const float* input, const float* weights,
                     float* output, size_t N, size_t K) {
     // Process each output element with AVX-512
-    // Unroll by 2 for better instruction-level parallelism
+    // Unroll by 4 for maximum instruction-level parallelism
     for (size_t n = 0; n < N; n++) {
         __m512 sum_vec0 = _mm512_setzero_ps();
         __m512 sum_vec1 = _mm512_setzero_ps();
+        __m512 sum_vec2 = _mm512_setzero_ps();
+        __m512 sum_vec3 = _mm512_setzero_ps();
         const float* weight_row = weights + n * K;
         
         size_t k = 0;
-        // Process 32 elements at a time (2x unroll)
-        for (; k + 32 <= K; k += 32) {
+        // Process 64 elements at a time (4x unroll) with prefetching
+        for (; k + 128 <= K; k += 64) {
+            // Prefetch next iteration data
+            _mm_prefetch(reinterpret_cast<const char*>(&input[k + 64]), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(&weight_row[k + 64]), _MM_HINT_T0);
+            
             __m512 input_vec0 = _mm512_loadu_ps(&input[k]);
             __m512 input_vec1 = _mm512_loadu_ps(&input[k + 16]);
+            __m512 input_vec2 = _mm512_loadu_ps(&input[k + 32]);
+            __m512 input_vec3 = _mm512_loadu_ps(&input[k + 48]);
             __m512 weight_vec0 = _mm512_loadu_ps(&weight_row[k]);
             __m512 weight_vec1 = _mm512_loadu_ps(&weight_row[k + 16]);
+            __m512 weight_vec2 = _mm512_loadu_ps(&weight_row[k + 32]);
+            __m512 weight_vec3 = _mm512_loadu_ps(&weight_row[k + 48]);
+            
             sum_vec0 = _mm512_fmadd_ps(input_vec0, weight_vec0, sum_vec0);
             sum_vec1 = _mm512_fmadd_ps(input_vec1, weight_vec1, sum_vec1);
+            sum_vec2 = _mm512_fmadd_ps(input_vec2, weight_vec2, sum_vec2);
+            sum_vec3 = _mm512_fmadd_ps(input_vec3, weight_vec3, sum_vec3);
+        }
+        
+        // Process remaining 64-element chunks without prefetch
+        for (; k + 64 <= K; k += 64) {
+            __m512 input_vec0 = _mm512_loadu_ps(&input[k]);
+            __m512 input_vec1 = _mm512_loadu_ps(&input[k + 16]);
+            __m512 input_vec2 = _mm512_loadu_ps(&input[k + 32]);
+            __m512 input_vec3 = _mm512_loadu_ps(&input[k + 48]);
+            __m512 weight_vec0 = _mm512_loadu_ps(&weight_row[k]);
+            __m512 weight_vec1 = _mm512_loadu_ps(&weight_row[k + 16]);
+            __m512 weight_vec2 = _mm512_loadu_ps(&weight_row[k + 32]);
+            __m512 weight_vec3 = _mm512_loadu_ps(&weight_row[k + 48]);
+            
+            sum_vec0 = _mm512_fmadd_ps(input_vec0, weight_vec0, sum_vec0);
+            sum_vec1 = _mm512_fmadd_ps(input_vec1, weight_vec1, sum_vec1);
+            sum_vec2 = _mm512_fmadd_ps(input_vec2, weight_vec2, sum_vec2);
+            sum_vec3 = _mm512_fmadd_ps(input_vec3, weight_vec3, sum_vec3);
         }
         
         // Combine partial sums
-        __m512 sum_vec = _mm512_add_ps(sum_vec0, sum_vec1);
+        __m512 sum_vec = _mm512_add_ps(_mm512_add_ps(sum_vec0, sum_vec1),
+                                       _mm512_add_ps(sum_vec2, sum_vec3));
         
         // Process remaining 16 elements
         for (; k + 16 <= K; k += 16) {
@@ -119,6 +153,148 @@ void FastVecMatMul(const float* input, const float* weights,
         }
         
         output[n] = sum;
+    }
+}
+
+// Fast MatMul with streaming stores for output
+// Reduces cache pollution when output won't be reused soon
+void FastVecMatMulStreaming(const float* input, const float* weights,
+                               float* output, size_t N, size_t K) {
+    for (size_t n = 0; n < N; n++) {
+        __m512 sum_vec0 = _mm512_setzero_ps();
+        __m512 sum_vec1 = _mm512_setzero_ps();
+        __m512 sum_vec2 = _mm512_setzero_ps();
+        __m512 sum_vec3 = _mm512_setzero_ps();
+        const float* weight_row = weights + n * K;
+        
+        size_t k = 0;
+        for (; k + 128 <= K; k += 64) {
+            _mm_prefetch(reinterpret_cast<const char*>(&input[k + 64]), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(&weight_row[k + 64]), _MM_HINT_T0);
+            
+            __m512 input_vec0 = _mm512_loadu_ps(&input[k]);
+            __m512 input_vec1 = _mm512_loadu_ps(&input[k + 16]);
+            __m512 input_vec2 = _mm512_loadu_ps(&input[k + 32]);
+            __m512 input_vec3 = _mm512_loadu_ps(&input[k + 48]);
+            __m512 weight_vec0 = _mm512_loadu_ps(&weight_row[k]);
+            __m512 weight_vec1 = _mm512_loadu_ps(&weight_row[k + 16]);
+            __m512 weight_vec2 = _mm512_loadu_ps(&weight_row[k + 32]);
+            __m512 weight_vec3 = _mm512_loadu_ps(&weight_row[k + 48]);
+            
+            sum_vec0 = _mm512_fmadd_ps(input_vec0, weight_vec0, sum_vec0);
+            sum_vec1 = _mm512_fmadd_ps(input_vec1, weight_vec1, sum_vec1);
+            sum_vec2 = _mm512_fmadd_ps(input_vec2, weight_vec2, sum_vec2);
+            sum_vec3 = _mm512_fmadd_ps(input_vec3, weight_vec3, sum_vec3);
+        }
+        
+        for (; k + 64 <= K; k += 64) {
+            __m512 input_vec0 = _mm512_loadu_ps(&input[k]);
+            __m512 input_vec1 = _mm512_loadu_ps(&input[k + 16]);
+            __m512 input_vec2 = _mm512_loadu_ps(&input[k + 32]);
+            __m512 input_vec3 = _mm512_loadu_ps(&input[k + 48]);
+            __m512 weight_vec0 = _mm512_loadu_ps(&weight_row[k]);
+            __m512 weight_vec1 = _mm512_loadu_ps(&weight_row[k + 16]);
+            __m512 weight_vec2 = _mm512_loadu_ps(&weight_row[k + 32]);
+            __m512 weight_vec3 = _mm512_loadu_ps(&weight_row[k + 48]);
+            
+            sum_vec0 = _mm512_fmadd_ps(input_vec0, weight_vec0, sum_vec0);
+            sum_vec1 = _mm512_fmadd_ps(input_vec1, weight_vec1, sum_vec1);
+            sum_vec2 = _mm512_fmadd_ps(input_vec2, weight_vec2, sum_vec2);
+            sum_vec3 = _mm512_fmadd_ps(input_vec3, weight_vec3, sum_vec3);
+        }
+        
+        __m512 sum_vec = _mm512_add_ps(_mm512_add_ps(sum_vec0, sum_vec1),
+                                       _mm512_add_ps(sum_vec2, sum_vec3));
+        
+        for (; k + 16 <= K; k += 16) {
+            __m512 input_vec = _mm512_loadu_ps(&input[k]);
+            __m512 weight_vec = _mm512_loadu_ps(&weight_row[k]);
+            sum_vec = _mm512_fmadd_ps(input_vec, weight_vec, sum_vec);
+        }
+        
+        float sum = _mm512_reduce_add_ps(sum_vec);
+        
+        for (; k < K; k++) {
+            sum += input[k] * weight_row[k];
+        }
+        
+        output[n] = sum;
+    }
+}
+
+// Fast MatMul with SiLU activation applied to output
+// Computes: output[n] = SiLU(sum_k(input[k] * weights[n*K + k]))
+// Fuses activation into the matrix multiplication to reduce memory passes
+void FastVecMatMulSiLU(const float* input, const float* weights,
+                        float* output, size_t N, size_t K) {
+    // Process each output element with AVX-512
+    for (size_t n = 0; n < N; n++) {
+        __m512 sum_vec0 = _mm512_setzero_ps();
+        __m512 sum_vec1 = _mm512_setzero_ps();
+        __m512 sum_vec2 = _mm512_setzero_ps();
+        __m512 sum_vec3 = _mm512_setzero_ps();
+        const float* weight_row = weights + n * K;
+        
+        size_t k = 0;
+        // Process 64 elements at a time (4x unroll) with prefetching
+        for (; k + 128 <= K; k += 64) {
+            _mm_prefetch(reinterpret_cast<const char*>(&input[k + 64]), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(&weight_row[k + 64]), _MM_HINT_T0);
+            
+            __m512 input_vec0 = _mm512_loadu_ps(&input[k]);
+            __m512 input_vec1 = _mm512_loadu_ps(&input[k + 16]);
+            __m512 input_vec2 = _mm512_loadu_ps(&input[k + 32]);
+            __m512 input_vec3 = _mm512_loadu_ps(&input[k + 48]);
+            __m512 weight_vec0 = _mm512_loadu_ps(&weight_row[k]);
+            __m512 weight_vec1 = _mm512_loadu_ps(&weight_row[k + 16]);
+            __m512 weight_vec2 = _mm512_loadu_ps(&weight_row[k + 32]);
+            __m512 weight_vec3 = _mm512_loadu_ps(&weight_row[k + 48]);
+            
+            sum_vec0 = _mm512_fmadd_ps(input_vec0, weight_vec0, sum_vec0);
+            sum_vec1 = _mm512_fmadd_ps(input_vec1, weight_vec1, sum_vec1);
+            sum_vec2 = _mm512_fmadd_ps(input_vec2, weight_vec2, sum_vec2);
+            sum_vec3 = _mm512_fmadd_ps(input_vec3, weight_vec3, sum_vec3);
+        }
+        
+        // Process remaining 64-element chunks without prefetch
+        for (; k + 64 <= K; k += 64) {
+            __m512 input_vec0 = _mm512_loadu_ps(&input[k]);
+            __m512 input_vec1 = _mm512_loadu_ps(&input[k + 16]);
+            __m512 input_vec2 = _mm512_loadu_ps(&input[k + 32]);
+            __m512 input_vec3 = _mm512_loadu_ps(&input[k + 48]);
+            __m512 weight_vec0 = _mm512_loadu_ps(&weight_row[k]);
+            __m512 weight_vec1 = _mm512_loadu_ps(&weight_row[k + 16]);
+            __m512 weight_vec2 = _mm512_loadu_ps(&weight_row[k + 32]);
+            __m512 weight_vec3 = _mm512_loadu_ps(&weight_row[k + 48]);
+            
+            sum_vec0 = _mm512_fmadd_ps(input_vec0, weight_vec0, sum_vec0);
+            sum_vec1 = _mm512_fmadd_ps(input_vec1, weight_vec1, sum_vec1);
+            sum_vec2 = _mm512_fmadd_ps(input_vec2, weight_vec2, sum_vec2);
+            sum_vec3 = _mm512_fmadd_ps(input_vec3, weight_vec3, sum_vec3);
+        }
+        
+        // Combine partial sums
+        __m512 sum_vec = _mm512_add_ps(_mm512_add_ps(sum_vec0, sum_vec1),
+                                       _mm512_add_ps(sum_vec2, sum_vec3));
+        
+        // Process remaining 16 elements
+        for (; k + 16 <= K; k += 16) {
+            __m512 input_vec = _mm512_loadu_ps(&input[k]);
+            __m512 weight_vec = _mm512_loadu_ps(&weight_row[k]);
+            sum_vec = _mm512_fmadd_ps(input_vec, weight_vec, sum_vec);
+        }
+        
+        float sum = _mm512_reduce_add_ps(sum_vec);
+        
+        // Scalar remainder
+        for (; k < K; k++) {
+            sum += input[k] * weight_row[k];
+        }
+        
+        // Apply SiLU: x * sigmoid(x)
+        // sigmoid(x) = 1 / (1 + exp(-x))
+        float sigmoid = 1.0f / (1.0f + std::exp(-sum));
+        output[n] = sum * sigmoid;
     }
 }
 
