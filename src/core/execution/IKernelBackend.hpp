@@ -205,4 +205,10 @@ public:
     virtual bool Synchronize() = 0;
 };
 
+//==============================================================================
+// Backend Factory Functions
+//==============================================================================
+IKernelBackend* CreateReferenceBackend();
+IKernelBackend* CreateIntrinsicsBackend();
+
 } // namespace sovereign

@@ -10,9 +10,12 @@
 //==============================================================================
 
 #include "SovereignGraphRunner_v2.hpp"
+#include "IKernelBackend.hpp"
 #include <cstring>
 #include <cmath>
 #include <chrono>
+#include <iostream>
+#include <memory>
 
 namespace sovereign {
 
@@ -201,7 +204,7 @@ GraphExecutionResult SovereignGraphRunner::RunQKVProjection() {
     ctx.matmulParams.N = config_.hiddenSize * 3; // Q, K, V
     ctx.matmulParams.K = config_.hiddenSize;
     
-    return DispatchKernel(KernelId::MatMul_F32, ctx);
+    return DispatchKernel(KernelId::MatMul_F32_F32, ctx);
 }
 
 GraphExecutionResult SovereignGraphRunner::RunRoPE(uint32_t position) {
@@ -233,7 +236,7 @@ GraphExecutionResult SovereignGraphRunner::RunAttentionOutput() {
     ctx.matmulParams.N = config_.hiddenSize;
     ctx.matmulParams.K = config_.hiddenSize;
     
-    return DispatchKernel(KernelId::MatMul_F32, ctx);
+    return DispatchKernel(KernelId::MatMul_F32_F32, ctx);
 }
 
 GraphExecutionResult SovereignGraphRunner::RunPostAttentionResidual() {
@@ -246,7 +249,7 @@ GraphExecutionResult SovereignGraphRunner::RunFFN() {
     ExecutionContext ctx;
     
     // First MatMul
-    auto result1 = DispatchKernel(KernelId::MatMul_F32, ctx);
+    auto result1 = DispatchKernel(KernelId::MatMul_F32_F32, ctx);
     if (!result1.success) return result1;
     
     // SiLU activation
@@ -254,7 +257,7 @@ GraphExecutionResult SovereignGraphRunner::RunFFN() {
     if (!result2.success) return result2;
     
     // Second MatMul
-    return DispatchKernel(KernelId::MatMul_F32, ctx);
+    return DispatchKernel(KernelId::MatMul_F32_F32, ctx);
 }
 
 GraphExecutionResult SovereignGraphRunner::RunPostFFNResidual() {
@@ -275,7 +278,7 @@ GraphExecutionResult SovereignGraphRunner::RunLMHead() {
     ctx.matmulParams.N = 32000; // Vocab size (example)
     ctx.matmulParams.K = config_.hiddenSize;
     
-    return DispatchKernel(KernelId::MatMul_F32, ctx);
+    return DispatchKernel(KernelId::MatMul_F32_F32, ctx);
 }
 
 //==============================================================================
@@ -323,7 +326,7 @@ GraphExecutionResult SovereignGraphRunner::DispatchWithValidation(
     bool refSuccess = false;
     
     switch (id) {
-        case KernelId::MatMul_F32:
+        case KernelId::MatMul_F32_F32:
         case KernelId::MatMul_Q4_Q8:
             refSuccess = refBackend->MatMul(ctx.inputTensor, ctx.weightTensor, 
                                             ctx.outputTensor, ctx.matmulParams, &refStats);
@@ -373,7 +376,7 @@ GraphExecutionResult SovereignGraphRunner::DispatchWithValidation(
         
         // Execute with auto-selected backend
         switch (id) {
-            case KernelId::MatMul_F32:
+            case KernelId::MatMul_F32_F32:
             case KernelId::MatMul_Q4_Q8:
                 autoSuccess = autoBackend->MatMul(ctx.inputTensor, ctx.weightTensor, 
                                                   ctx.outputTensor, ctx.matmulParams, &autoStats);
@@ -523,7 +526,7 @@ bool SovereignGraphRunner::RunValidationSuite() {
         {KernelId::RoPE, "RoPE"},
         {KernelId::SiLU, "SiLU"},
         {KernelId::ResidualAdd, "ResidualAdd"},
-        {KernelId::MatMul_F32, "MatMul"},
+        {KernelId::MatMul_F32_F32, "MatMul"},
         {KernelId::FlashAttentionV2, "FlashAttention"},
     };
     
@@ -558,7 +561,7 @@ void SovereignGraphRunner::RunBenchmarkSuite() {
     DispatchKernel(KernelId::RMSNorm, ctx);
     DispatchKernel(KernelId::RoPE, ctx);
     DispatchKernel(KernelId::SiLU, ctx);
-    DispatchKernel(KernelId::MatMul_F32, ctx);
+    DispatchKernel(KernelId::MatMul_F32_F32, ctx);
     DispatchKernel(KernelId::FlashAttentionV2, ctx);
     
     validationMode_ = savedMode;
@@ -631,6 +634,30 @@ bool SovereignGraphRunner::InitializeRoPECache() {
             ropeSin_[pos * config_.headDim + i + 1] = std::sin(angle);
         }
     }
+    
+    return true;
+}
+
+//==============================================================================
+// Default Backend Initialization
+//==============================================================================
+
+bool SovereignGraphRunner::InitializeDefaultBackends() {
+    auto& registry = KernelRegistry::Instance();
+    
+    // Register Reference backend (always available)
+    auto refBackend = std::unique_ptr<IKernelBackend>(CreateReferenceBackend());
+    if (!refBackend->Initialize()) {
+        return false;
+    }
+    registry.RegisterBackend(std::move(refBackend));
+    
+    // Register Intrinsics backend (if available)
+    auto intrinsicsBackend = std::unique_ptr<IKernelBackend>(CreateIntrinsicsBackend());
+    if (intrinsicsBackend->Initialize()) {
+        registry.RegisterBackend(std::move(intrinsicsBackend));
+    }
+    // Intrinsics failure is not fatal - we have Reference
     
     return true;
 }

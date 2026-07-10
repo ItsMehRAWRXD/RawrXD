@@ -20,6 +20,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <mutex>
 
 namespace sovereign {
 

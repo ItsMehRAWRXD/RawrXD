@@ -9,6 +9,7 @@
 #include "KernelRegistry.hpp"
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 
 namespace sovereign {
 
