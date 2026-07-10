@@ -187,9 +187,6 @@ public:
                                      size_t seq_len, size_t head_dim);
 
 private:
-                    size_t m, size_t n, size_t k);
-
-private:
     Sovereign_KernelTable table_;
     bool initialized_;
 };
