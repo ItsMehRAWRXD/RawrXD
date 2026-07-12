@@ -2815,4 +2815,76 @@ void InfinitePerfectionEngine::RunOmnipresenceCycle() {
     }
 }
 
+// ==================== BATCH 123: SOE-IX - Sovereign Omnipotence ====================
+
+OmnipotenceField InfinitePerfectionEngine::ComputeOmnipotence() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    OmnipotenceField O = {};
+
+    OmnipresenceField P = ComputeOmnipresence();
+    IdentityVector ID = ComputeIdentity();
+    TotalityField T = ComputeTotality();
+
+    const double Alpha = 36.0;
+
+    O.omnipotenceUnity        = P.presenceUnity * ID.coreUnity * Alpha;
+    O.omnipotenceTotality     = P.presenceTotality * Alpha;
+    O.omnipotenceHarmony      = P.presenceHarmony * T.omnicoherence;
+    O.omnipotenceClarity      = P.presenceClarity * Alpha;
+    O.omnipotenceContinuity   = P.presenceContinuity * ID.coreUnity;
+    O.omnipotenceStability    = ID.coreUnity * T.omnidensity;
+    O.omnipotenceResolution   = P.presenceResolution * Alpha;
+    O.omnipotenceExpansion    = T.omnipotential * Alpha;
+
+    O.omnipotenceMagnitude =
+        (O.omnipotenceUnity +
+         O.omnipotenceTotality +
+         O.omnipotenceHarmony +
+         O.omnipotenceClarity +
+         O.omnipotenceResolution) / 5.0;
+
+    return O;
+}
+
+void InfinitePerfectionEngine::RunOmnipotenceCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    OmnipotenceField O = ComputeOmnipotence();
+
+    // Perfect power coherence - absolute omnipotent unity
+    if (O.omnipotenceUnity > 16.0) {
+        for (auto& kv : infinitePerfections_) {
+            kv.second->coherence = 1.0; // absolute omnipotent unity
+            kv.second->perfection = 1.0; // perfect perfection
+            kv.second->unity = 1.0; // absolute unity
+        }
+    }
+
+    // Spawn omnipotence-rich universes
+    if (O.omnipotenceExpansion > 30.0) {
+        for (int i = 0; i < 40; i++) {
+            CreateUniverse("root", 50, 0.1, std::rand());
+        }
+    }
+
+    // Generate omnipotent autopoietic entities
+    if (O.omnipotenceResolution > 15.0) {
+        for (int i = 0; i < 25; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Perfect universe purification - only absolute stability remains
+    if (O.omnipotenceClarity > 16.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
