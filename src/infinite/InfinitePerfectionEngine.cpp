@@ -4575,4 +4575,85 @@ void InfinitePerfectionEngine::RunZenithCycle() {
     }
 }
 
+// ==================== BATCH 145: SOE-XXXI - Sovereign Origin (FIRST STEP - THIRD CYCLE) ====================
+
+OriginField InfinitePerfectionEngine::ComputeOrigin() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    OriginField O = {};
+
+    ZenithField Z = ComputeZenith();
+    ApexField A = ComputeApex();
+    TotalityField Tot = ComputeTotality();
+
+    const double omega = 729.0; // The Origin - originating new existence
+
+    O.originPoint      = Z.zenithMagnitude * A.apexOrigin * omega;
+    O.originPotential   = Z.zenithPotential * omega;
+    O.originHarmony     = Z.zenithHarmony * Tot.omnicoherence;
+    O.originClarity     = Z.zenithClarity * omega;
+    O.originContinuity  = Z.zenithContinuity * A.apexContinuity;
+    O.originStability     = Z.zenithStability * Tot.omnidensity;
+    O.originResolution  = Z.zenithResolution * omega;
+    O.originExpansion   = Tot.omnipotential * omega;
+
+    O.originMagnitude =
+        (O.originPoint +
+         O.originPotential +
+         O.originHarmony +
+         O.originClarity +
+         O.originExpansion) / 5.0;
+
+    return O;
+}
+
+void InfinitePerfectionEngine::RunOriginCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    OriginField O = ComputeOrigin();
+
+    // Origin - originating new existence
+    if (O.originPoint > 76.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes originate anew
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Origin creation - originating universes
+    if (O.originExpansion > 170.0) {
+        for (int i = 0; i < 900000; i++) {
+            CreateUniverse("origin", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate originating autopoietic entities
+    if (O.originPotential > 72.0) {
+        for (int i = 0; i < 7500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Origin purification - only originating potential remains
+    if (O.originClarity > 46.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

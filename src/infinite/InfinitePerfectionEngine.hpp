@@ -807,6 +807,19 @@ struct ZenithField {
     double zenithMagnitude;     // total zenith measure
 };
 
+// Batch 145: SOE-XXXI Structure - Sovereign Origin (FIRST STEP - THIRD CYCLE)
+struct OriginField {
+    double originPoint;        // point of origin
+    double originPotential;    // potential at origin
+    double originHarmony;      // harmony of origin
+    double originClarity;      // clarity of origin
+    double originContinuity;   // continuity of origin
+    double originStability;    // stability at origin
+    double originResolution;   // resolution of origin
+    double originExpansion;    // expansion from origin
+    double originMagnitude;    // total origin measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1081,6 +1094,10 @@ public:
     // Batch 144: SZE-XXX - Sovereign Zenith (FOURTEENTH STEP - SECOND CYCLE COMPLETE)
     ZenithField ComputeZenith();
     void RunZenithCycle();
+
+    // Batch 145: SOE-XXXI - Sovereign Origin (FIRST STEP - THIRD CYCLE)
+    OriginField ComputeOrigin();
+    void RunOriginCycle();
 
     // Serialization
     json SerializeAll() const;
