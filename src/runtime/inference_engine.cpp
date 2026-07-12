@@ -11,6 +11,12 @@
 #include "tokenizer_runtime.h"
 #include "../kernels/avx2_kernels.hpp"
 #include "../kernels/avx512_kernels.hpp"
+
+// Sovereign Kernel Integration
+extern "C" {
+    #include "../src/asm/Sovereign_KernelDispatch.h"
+}
+
 #include <chrono>
 #include <sstream>
 #include <iomanip>
@@ -21,6 +27,31 @@
 
 namespace rawrxd {
 namespace runtime {
+
+// ============================================================================
+// Sovereign Kernel Integration
+// ============================================================================
+static Sovereign_KernelTable g_sovereignKernels;
+static bool g_sovereignKernelsInitialized = false;
+
+static bool InitializeSovereignKernels() {
+    if (g_sovereignKernelsInitialized) return true;
+    
+    int result = Sovereign_InitKernelTable(&g_sovereignKernels);
+    if (result != 0) {
+        return false;
+    }
+    
+    g_sovereignKernelsInitialized = true;
+    return true;
+}
+
+static const Sovereign_KernelTable* GetSovereignKernels() {
+    if (!g_sovereignKernelsInitialized) {
+        InitializeSovereignKernels();
+    }
+    return g_sovereignKernelsInitialized ? &g_sovereignKernels : nullptr;
+}
 
 // ============================================================================
 // KV Cache Implementation (Simplified)
@@ -457,6 +488,91 @@ void InferenceEngine::ApplySoftmax(std::vector<float>& x) {
 void InferenceEngine::ApplyGELU(std::vector<float>& x) {
     // Use dispatch system (automatically selects AVX512/AVX2/scalar)
     kernels::KernelDispatch::GELUF32(x.data(), x.data(), x.size());
+}
+
+// ============================================================================
+// Normalization Functions (with Sovereign Kernel acceleration)
+// ============================================================================
+
+void InferenceEngine::ApplyRMSNorm(std::vector<float>& x, float epsilon) {
+    const Sovereign_KernelTable* kernels = GetSovereignKernels();
+    if (kernels && kernels->rms_norm_f32) {
+        // Use Sovereign kernel
+        alignas(64) float weights[8192];
+        alignas(64) float tempInput[8192];
+        size_t n = x.size();
+        for (size_t i = 0; i < n && i < 8192; ++i) {
+            weights[i] = 1.0f;
+            tempInput[i] = x[i];
+        }
+        kernels->rms_norm_f32(tempInput, weights, x.data(), static_cast<uint64_t>(n), epsilon);
+        return;
+    }
+    
+    // Scalar fallback
+    float sumSq = 0.0f;
+    for (float val : x) {
+        sumSq += val * val;
+    }
+    float rms = std::sqrt(sumSq / x.size() + epsilon);
+    float scale = 1.0f / rms;
+    for (float& val : x) {
+        val *= scale;
+    }
+}
+
+void InferenceEngine::ApplyLayerNorm(std::vector<float>& x, float epsilon) {
+    const Sovereign_KernelTable* kernels = GetSovereignKernels();
+    if (kernels && kernels->layer_norm_f32) {
+        // Use Sovereign kernel
+        alignas(64) float gamma[8192];
+        alignas(64) float beta[8192];
+        size_t n = x.size();
+        for (size_t i = 0; i < n && i < 8192; ++i) {
+            gamma[i] = 1.0f;
+            beta[i] = 0.0f;
+        }
+        kernels->layer_norm_f32(x.data(), gamma, beta, x.data(), static_cast<uint64_t>(n), epsilon);
+        return;
+    }
+    
+    // Scalar fallback
+    float mean = 0.0f;
+    for (float val : x) {
+        mean += val;
+    }
+    mean /= x.size();
+    
+    float variance = 0.0f;
+    for (float val : x) {
+        float diff = val - mean;
+        variance += diff * diff;
+    }
+    variance /= x.size();
+    
+    float scale = 1.0f / std::sqrt(variance + epsilon);
+    for (float& val : x) {
+        val = (val - mean) * scale;
+    }
+}
+
+void InferenceEngine::ApplyResidualAdd(std::vector<float>& x, const std::vector<float>& residual) {
+    const Sovereign_KernelTable* kernels = GetSovereignKernels();
+    if (kernels && kernels->residual_add_f32 && x.size() == residual.size()) {
+        // Use Sovereign kernel
+        alignas(64) float tempResidual[8192];
+        size_t n = x.size();
+        for (size_t i = 0; i < n && i < 8192; ++i) {
+            tempResidual[i] = residual[i];
+        }
+        kernels->residual_add_f32(x.data(), tempResidual, x.data(), static_cast<uint64_t>(n));
+        return;
+    }
+    
+    // Scalar fallback
+    for (size_t i = 0; i < x.size() && i < residual.size(); ++i) {
+        x[i] += residual[i];
+    }
 }
 
 // ============================================================================

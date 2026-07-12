@@ -229,6 +229,11 @@ private:
     void ApplySoftmax(std::vector<float>& x);
     void ApplyGELU(std::vector<float>& x);
     
+    // Normalization functions (with Sovereign kernel acceleration)
+    void ApplyRMSNorm(std::vector<float>& x, float epsilon = 1e-6f);
+    void ApplyLayerNorm(std::vector<float>& x, float epsilon = 1e-6f);
+    void ApplyResidualAdd(std::vector<float>& x, const std::vector<float>& residual);
+    
     // Sampling helpers
     uint32_t ArgMax(const std::vector<float>& logits);
     uint32_t TopKSampling(const std::vector<float>& logits, uint32_t k, float temperature);

@@ -1,0 +1,34 @@
+{
+  "workflow": "build_and_test",
+  "description": "Compile Rust code, run it, then verify with audit",
+  "version": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "language",
+      "name": "Compile Rust",
+      "subsystem": "rust",
+      "command": "compile",
+      "args": "main.rs",
+      "depends_on": []
+    },
+    {
+      "id": 2,
+      "type": "language",
+      "name": "Run Rust",
+      "subsystem": "rust",
+      "command": "run",
+      "args": "main",
+      "depends_on": [1]
+    },
+    {
+      "id": 3,
+      "type": "audit",
+      "name": "Verify Health",
+      "subsystem": "audit",
+      "command": "verify",
+      "args": "",
+      "depends_on": [2]
+    }
+  ]
+}

@@ -316,6 +316,89 @@ if(RAWRXD_BUILD_CLI)
         kernel32 user32 advapi32
     )
 
+    # ============================================================================
+    # RawrXD-Infer CLI — Sovereign LLM Inference with MASM Kernel Acceleration
+    # ============================================================================
+    # Standalone inference CLI that:
+    #   - Loads GGUF models directly (zero-copy streaming)
+    #   - Uses Sovereign MASM kernels for transformer operations
+    #   - Supports RMSNorm, LayerNorm, RoPE, ResidualAdd, Q4K dequant, MatMul
+    #   - Multi-threaded layer scheduling (C7)
+    #   - KV-cache management with FlashAttention
+    # ============================================================================
+    add_executable(RawrXD-Infer
+        cli/rawrxd_infer.cpp
+        cli/transformer_bridge.cpp
+        cli/model_context.cpp
+        cli/kv_cache.cpp
+        cli/tensor_view.cpp
+        cli/q2k_decoder.cpp
+        cli/quantization_decoder.cpp
+        runtime/transformer_layer_runtime.cpp
+        runtime/kv_cache.cpp
+        src/asm/Sovereign_KernelDispatch.cpp
+    )
+    
+    target_include_directories(RawrXD-Infer PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/cli
+        ${CMAKE_SOURCE_DIR}/src/asm
+    )
+    
+    target_compile_features(RawrXD-Infer PRIVATE cxx_std_17)
+    
+    if(MSVC)
+        target_compile_options(RawrXD-Infer PRIVATE
+            /EHsc /W3 /O2 /arch:AVX2
+            /D_CRT_SECURE_NO_WARNINGS
+            /DWIN32_LEAN_AND_MEAN
+            /DENABLE_SOVEREIGN_KERNELS=1
+        )
+        # Mark ASM files for MASM compilation
+        set_source_files_properties(${ASM_KERNEL_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+    endif()
+    
+    # Link against the Sovereign kernel library if it exists
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/asm/Sovereign_Kernels.lib")
+        target_link_libraries(RawrXD-Infer PRIVATE
+            ${CMAKE_SOURCE_DIR}/src/asm/Sovereign_Kernels.lib
+        )
+        message(STATUS "[RawrXD-Infer] Linked against Sovereign_Kernels.lib")
+    endif()
+    
+    # Set library paths for Windows SDK and MSVC
+    if(MSVC)
+        set(_RAWRXD_INFER_LIBPATHS "")
+        if(DEFINED _MSVC_ROOT AND EXISTS "${_MSVC_ROOT}/lib/x64")
+            list(APPEND _RAWRXD_INFER_LIBPATHS "${_MSVC_ROOT}/lib/x64")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER AND EXISTS "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64")
+            list(APPEND _RAWRXD_INFER_LIBPATHS "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER AND EXISTS "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64")
+            list(APPEND _RAWRXD_INFER_LIBPATHS "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64")
+        endif()
+        if(_RAWRXD_INFER_LIBPATHS)
+            target_link_directories(RawrXD-Infer PRIVATE ${_RAWRXD_INFER_LIBPATHS})
+        endif()
+    endif()
+    
+    target_link_libraries(RawrXD-Infer PRIVATE
+        kernel32
+        user32
+        advapi32
+    )
+    
+    set_target_properties(RawrXD-Infer PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rawrxd-infer
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    
+    message(STATUS "[RawrXD-Infer] Sovereign LLM Inference CLI target added")
+
     # RawrXD-Script JavaScript Runtime Executable
     # Full orchestrator: JS → Lexer → Parser → Compiler → MASM → Output
     add_executable(RawrXD_Script

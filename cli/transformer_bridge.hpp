@@ -13,6 +13,11 @@
 #include <memory>
 #include <vector>
 
+// Sovereign Kernel Integration
+extern "C" {
+    #include "../src/asm/Sovereign_KernelDispatch.h"
+}
+
 namespace RawrXD {
 namespace CLI {
 
@@ -79,6 +84,10 @@ private:
     // Telemetry
     Telemetry m_telemetry;
 
+    // Sovereign Kernel acceleration (using ::Sovereign_KernelTable from C header)
+    ::Sovereign_KernelTable* m_kernelTable = nullptr;
+    bool m_kernelsAvailable = false;
+
     // Helper: Create TensorView from ModelContext tensor
     Runtime::TensorView CreateTensorView(
         const ModelContext& ctx,
@@ -87,6 +96,15 @@ private:
 
     // Helper: Bind all layers from ModelContext
     bool BindAllLayers(const ModelContext& ctx);
+
+    // Helper: Initialize Sovereign kernels
+    bool InitializeKernels();
+
+    // Kernel-accelerated operations
+    bool ApplyRMSNorm(float* input, float* output, size_t n_elements, float epsilon = 1e-6f);
+    bool ApplyLayerNorm(float* input, float* output, size_t n_elements, float epsilon = 1e-6f);
+    bool ApplyResidualAdd(float* input, float* residual, float* output, size_t n_elements);
+    bool ApplyRoPE(float* tensor, size_t seq_len, size_t head_dim, size_t num_heads);
 };
 
 } // namespace CLI

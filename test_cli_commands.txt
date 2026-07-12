@@ -1,0 +1,5 @@
+kernel list
+backend list
+kernel test
+memory status
+quit

@@ -12,11 +12,14 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <sstream>
 #include <windows.h>
+
+#include "Titan_KernelIntegration.hpp"
 
 // Include Sovereign kernel dispatch
 extern "C" {
-    #include "../../../../src/asm/Sovereign_KernelDispatch.h"
+    #include "../../src/asm/Sovereign_KernelDispatch.h"
 }
 
 // Titan descriptor structures (must match ASM layout)
@@ -643,3 +646,378 @@ bool Titan_GetKernelStats(uint64_t kernelName, uint64_t* avgTimeUs, uint64_t* to
 }
 
 } // extern "C"
+
+namespace Titan {
+
+//==============================================================================
+// C++ Class Implementation
+//==============================================================================
+
+//==============================================================================
+// Constructor / Destructor
+//==============================================================================
+TitanKernelIntegration::TitanKernelIntegration() : initialized_(false) {
+    for (int i = 0; i < static_cast<int>(KernelType::COUNT); i++) {
+        kernelAvailable_[i] = false;
+    }
+}
+
+TitanKernelIntegration::~TitanKernelIntegration() {
+    // Cleanup handled by member destructors
+}
+
+//==============================================================================
+// Initialization
+//==============================================================================
+bool TitanKernelIntegration::Initialize() {
+    if (initialized_) return true;
+    
+    // Initialize memory bridge first
+    if (!memoryBridge_.Initialize(512 * 1024 * 1024)) { // 512MB pool
+        return false;
+    }
+    
+    // Initialize kernel interface
+    if (!kernelInterface_.Initialize()) {
+        return false;
+    }
+    
+    // Update availability cache
+    UpdateKernelAvailability();
+    
+    initialized_ = true;
+    return true;
+}
+
+void TitanKernelIntegration::UpdateKernelAvailability() {
+    kernelAvailable_[static_cast<int>(KernelType::RMS_NORM)] = kernelInterface_.HasRMSNorm();
+    kernelAvailable_[static_cast<int>(KernelType::LAYER_NORM)] = kernelInterface_.HasLayerNorm();
+    kernelAvailable_[static_cast<int>(KernelType::ROPE)] = kernelInterface_.HasRoPE();
+    kernelAvailable_[static_cast<int>(KernelType::RESIDUAL_ADD)] = kernelInterface_.HasResidualAdd();
+    kernelAvailable_[static_cast<int>(KernelType::Q4K_DEQUANT)] = kernelInterface_.HasQ4KDequant();
+    kernelAvailable_[static_cast<int>(KernelType::Q4Q8_MATMUL)] = kernelInterface_.HasQ4Q8MatMul();
+    kernelAvailable_[static_cast<int>(KernelType::FLASH_ATTENTION_V2)] = kernelInterface_.HasFlashAttention();
+}
+
+//==============================================================================
+// Kernel Availability
+//==============================================================================
+bool TitanKernelIntegration::IsKernelAvailable(KernelType type) const {
+    int idx = static_cast<int>(type);
+    if (idx < 0 || idx >= static_cast<int>(KernelType::COUNT)) return false;
+    return kernelAvailable_[idx];
+}
+
+int TitanKernelIntegration::GetAvailableKernelCount() const {
+    int count = 0;
+    for (int i = 0; i < static_cast<int>(KernelType::COUNT); i++) {
+        if (kernelAvailable_[i]) count++;
+    }
+    return count;
+}
+
+const char* TitanKernelIntegration::GetKernelName(KernelType type) const {
+    switch (type) {
+        case KernelType::RMS_NORM: return "RMS_Norm";
+        case KernelType::LAYER_NORM: return "Layer_Norm";
+        case KernelType::ROPE: return "RoPE";
+        case KernelType::RESIDUAL_ADD: return "Residual_Add";
+        case KernelType::Q4K_DEQUANT: return "Q4K_Dequant";
+        case KernelType::Q4Q8_MATMUL: return "Q4Q8_MatMul";
+        case KernelType::FLASH_ATTENTION_V2: return "FlashAttentionV2";
+        default: return "Unknown";
+    }
+}
+
+//==============================================================================
+// Kernel Execution
+//==============================================================================
+KernelResult TitanKernelIntegration::ExecuteRMSNorm(KernelContext& ctx) {
+    KernelResult result;
+    
+    if (!IsKernelAvailable(KernelType::RMS_NORM)) {
+        result.errorMessage = "RMS_Norm kernel not available";
+        return result;
+    }
+    
+    LARGE_INTEGER freq, start, end;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+    
+    bool ok = kernelInterface_.RMSNorm(
+        static_cast<float*>(ctx.input),
+        static_cast<float*>(ctx.output),
+        static_cast<float*>(ctx.weights),
+        ctx.embedDim,
+        ctx.epsilon
+    );
+    
+    QueryPerformanceCounter(&end);
+    result.executionTimeMs = static_cast<float>(
+        (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart);
+    result.success = ok;
+    
+    if (!ok) {
+        result.errorMessage = "RMS_Norm kernel execution failed";
+    }
+    
+    return result;
+}
+
+KernelResult TitanKernelIntegration::ExecuteLayerNorm(KernelContext& ctx) {
+    KernelResult result;
+    
+    if (!IsKernelAvailable(KernelType::LAYER_NORM)) {
+        result.errorMessage = "Layer_Norm kernel not available";
+        return result;
+    }
+    
+    LARGE_INTEGER freq, start, end;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+    
+    bool ok = kernelInterface_.LayerNorm(
+        static_cast<float*>(ctx.input),
+        static_cast<float*>(ctx.output),
+        static_cast<float*>(ctx.weights), // gamma
+        static_cast<float*>(ctx.bias),     // beta
+        ctx.embedDim,
+        ctx.epsilon
+    );
+    
+    QueryPerformanceCounter(&end);
+    result.executionTimeMs = static_cast<float>(
+        (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart);
+    result.success = ok;
+    
+    if (!ok) {
+        result.errorMessage = "Layer_Norm kernel execution failed";
+    }
+    
+    return result;
+}
+
+KernelResult TitanKernelIntegration::ExecuteRoPE(KernelContext& ctx) {
+    KernelResult result;
+    
+    if (!IsKernelAvailable(KernelType::ROPE)) {
+        result.errorMessage = "RoPE kernel not available";
+        return result;
+    }
+    
+    float* freqCache = static_cast<float*>(ctx.weights);
+    if (!freqCache) {
+        result.errorMessage = "RoPE requires frequency cache";
+        return result;
+    }
+    
+    LARGE_INTEGER freq, start, end;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+    
+    bool ok = kernelInterface_.RoPE(
+        static_cast<float*>(ctx.input),
+        freqCache,
+        ctx.seqLen,
+        ctx.headDim,
+        ctx.numHeads
+    );
+    
+    QueryPerformanceCounter(&end);
+    result.executionTimeMs = static_cast<float>(
+        (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart);
+    result.success = ok;
+    
+    if (!ok) {
+        result.errorMessage = "RoPE kernel execution failed";
+    }
+    
+    return result;
+}
+
+KernelResult TitanKernelIntegration::ExecuteResidualAdd(KernelContext& ctx) {
+    KernelResult result;
+    
+    if (!IsKernelAvailable(KernelType::RESIDUAL_ADD)) {
+        result.errorMessage = "Residual_Add kernel not available";
+        return result;
+    }
+    
+    LARGE_INTEGER freq, start, end;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+    
+    bool ok = kernelInterface_.ResidualAdd(
+        static_cast<float*>(ctx.input),
+        static_cast<float*>(ctx.weights), // residual
+        static_cast<float*>(ctx.output),
+        ctx.embedDim
+    );
+    
+    QueryPerformanceCounter(&end);
+    result.executionTimeMs = static_cast<float>(
+        (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart);
+    result.success = ok;
+    
+    if (!ok) {
+        result.errorMessage = "Residual_Add kernel execution failed";
+    }
+    
+    return result;
+}
+
+KernelResult TitanKernelIntegration::ExecuteQ4KDequant(KernelContext& ctx) {
+    KernelResult result;
+    
+    if (!IsKernelAvailable(KernelType::Q4K_DEQUANT)) {
+        result.errorMessage = "Q4K_Dequant kernel not available";
+        return result;
+    }
+    
+    LARGE_INTEGER freq, start, end;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+    
+    bool ok = kernelInterface_.Q4KDequant(
+        ctx.input,      // tensor_data
+        static_cast<float*>(ctx.output),
+        ctx.embedDim,
+        ctx.weights     // tensor_info
+    );
+    
+    QueryPerformanceCounter(&end);
+    result.executionTimeMs = static_cast<float>(
+        (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart);
+    result.success = ok;
+    
+    if (!ok) {
+        result.errorMessage = "Q4K_Dequant kernel execution failed";
+    }
+    
+    return result;
+}
+
+KernelResult TitanKernelIntegration::ExecuteQ4Q8MatMul(KernelContext& ctx) {
+    KernelResult result;
+    
+    if (!IsKernelAvailable(KernelType::Q4Q8_MATMUL)) {
+        result.errorMessage = "Q4Q8_MatMul kernel not available";
+        return result;
+    }
+    
+    LARGE_INTEGER freq, start, end;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+    
+    bool ok = kernelInterface_.Q4Q8MatMul(
+        ctx.input,   // A (Q4)
+        ctx.weights, // B (Q8)
+        static_cast<float*>(ctx.output), // C
+        ctx.batchSize,
+        ctx.embedDim,
+        ctx.seqLen
+    );
+    
+    QueryPerformanceCounter(&end);
+    result.executionTimeMs = static_cast<float>(
+        (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart);
+    result.success = ok;
+    
+    if (!ok) {
+        result.errorMessage = "Q4Q8_MatMul kernel execution failed";
+    }
+    
+    return result;
+}
+
+KernelResult TitanKernelIntegration::ExecuteFlashAttentionV2(KernelContext& ctx) {
+    KernelResult result;
+    
+    if (!IsKernelAvailable(KernelType::FLASH_ATTENTION_V2)) {
+        result.errorMessage = "FlashAttentionV2 kernel not available";
+        return result;
+    }
+    
+    float* Q = static_cast<float*>(ctx.input);
+    float* K = static_cast<float*>(ctx.weights);
+    float* V = static_cast<float*>(ctx.bias);
+    
+    if (!Q || !K || !V) {
+        result.errorMessage = "FlashAttentionV2 requires Q, K, V inputs";
+        return result;
+    }
+    
+    LARGE_INTEGER freq, start, end;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&start);
+    
+    bool ok = kernelInterface_.FlashAttentionV2(
+        Q, K, V,
+        static_cast<float*>(ctx.output),
+        ctx.seqLen,
+        ctx.headDim
+    );
+    
+    QueryPerformanceCounter(&end);
+    result.executionTimeMs = static_cast<float>(
+        (end.QuadPart - start.QuadPart) * 1000.0 / freq.QuadPart);
+    result.success = ok;
+    
+    if (!ok) {
+        result.errorMessage = "FlashAttentionV2 kernel execution failed";
+    }
+    
+    return result;
+}
+
+KernelResult TitanKernelIntegration::Execute(KernelType type, KernelContext& ctx) {
+    switch (type) {
+        case KernelType::RMS_NORM: return ExecuteRMSNorm(ctx);
+        case KernelType::LAYER_NORM: return ExecuteLayerNorm(ctx);
+        case KernelType::ROPE: return ExecuteRoPE(ctx);
+        case KernelType::RESIDUAL_ADD: return ExecuteResidualAdd(ctx);
+        case KernelType::Q4K_DEQUANT: return ExecuteQ4KDequant(ctx);
+        case KernelType::Q4Q8_MATMUL: return ExecuteQ4Q8MatMul(ctx);
+        case KernelType::FLASH_ATTENTION_V2: return ExecuteFlashAttentionV2(ctx);
+        default:
+            KernelResult result;
+            result.errorMessage = "Unknown kernel type";
+            return result;
+    }
+}
+
+//==============================================================================
+// Status Report
+//==============================================================================
+std::string TitanKernelIntegration::GetStatusReport() const {
+    std::stringstream ss;
+    ss << "╔══════════════════════════════════════════════════════════════╗\n";
+    ss << "║     TITAN KERNEL INTEGRATION STATUS REPORT                   ║\n";
+    ss << "╚══════════════════════════════════════════════════════════════╝\n\n";
+    
+    ss << "Initialization: " << (initialized_ ? "✓ READY" : "✗ NOT READY") << "\n";
+    ss << "Available Kernels: " << GetAvailableKernelCount() << "/7\n\n";
+    
+    ss << "Kernel Status:\n";
+    ss << "  [" << (IsKernelAvailable(KernelType::RMS_NORM) ? "✓" : " ") << "] RMS_Norm\n";
+    ss << "  [" << (IsKernelAvailable(KernelType::LAYER_NORM) ? "✓" : " ") << "] Layer_Norm\n";
+    ss << "  [" << (IsKernelAvailable(KernelType::ROPE) ? "✓" : " ") << "] RoPE\n";
+    ss << "  [" << (IsKernelAvailable(KernelType::RESIDUAL_ADD) ? "✓" : " ") << "] Residual_Add\n";
+    ss << "  [" << (IsKernelAvailable(KernelType::Q4K_DEQUANT) ? "✓" : " ") << "] Q4K_Dequant\n";
+    ss << "  [" << (IsKernelAvailable(KernelType::Q4Q8_MATMUL) ? "✓" : " ") << "] Q4Q8_MatMul\n";
+    ss << "  [" << (IsKernelAvailable(KernelType::FLASH_ATTENTION_V2) ? "✓" : " ") << "] FlashAttentionV2\n";
+    
+    ss << "\n" << kernelInterface_.GetStatus();
+    
+    return ss.str();
+}
+
+//==============================================================================
+// Singleton
+//==============================================================================
+TitanKernelIntegration& TitanKernelIntegration::GetInstance() {
+    static TitanKernelIntegration instance;
+    return instance;
+}
+
+} // namespace Titan

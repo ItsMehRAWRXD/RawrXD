@@ -9,6 +9,10 @@
 #include <cstring>
 #include <algorithm>
 
+#ifdef _WIN32
+#include <intrin.h>
+#endif
+
 namespace RawrXD {
 namespace Runtime {
 
@@ -36,6 +40,12 @@ CPUFeatures CPUFeatures::Detect() {
         features.has_avx2 = (cpu_info[1] & (1 << 5)) != 0;
         features.has_avx512f = (cpu_info[1] & (1 << 16)) != 0;
     }
+    #else
+    // Non-x86 platforms - disable AVX
+    features.has_avx = false;
+    features.has_avx2 = false;
+    features.has_avx512f = false;
+    features.has_fma = false;
     #endif
     
     return features;

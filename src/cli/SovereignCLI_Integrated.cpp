@@ -14,11 +14,10 @@
 #include <memory>
 
 // Core headers
-#include "../core/execution/KernelRegistry.hpp"
+#include "../core/execution/IKernelBackend.hpp"
 #include "../core/execution/MASMBackend.hpp"
-#include "../core/execution/ReferenceBackend.hpp"
-#include "../core/execution/IntrinsicsBackend.hpp"
-#include "../core/execution/SovereignMemoryBridge.hpp"
+#include "../../../../src/asm/SovereignMemoryBridge.hpp"
+#include "../core/execution/SovereignKernelTypes.hpp"
 
 using namespace sovereign;
 
