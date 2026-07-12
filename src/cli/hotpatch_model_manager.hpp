@@ -20,6 +20,11 @@
 // Include TensorInfo from interfaces
 #include "../RawrXD_Interfaces.h"
 
+// Sovereign Kernel Integration
+extern "C" {
+    #include "../asm/Sovereign_KernelDispatch.h"
+}
+
 // Forward declaration for llama.cpp (if available)
 struct llama_model;
 struct llama_context;
@@ -134,6 +139,10 @@ private:
     
     // Statistics
     Stats m_stats;
+    
+    // Sovereign Kernel acceleration
+    ::Sovereign_KernelTable* m_kernelTable = nullptr;
+    bool m_kernelsAvailable = false;
 };
 
 // ============================================================================

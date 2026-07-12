@@ -9,8 +9,49 @@
 #include <algorithm>
 #include <cstring>
 
+// Sovereign Kernel Integration
+extern "C" {
+    #include "../src/asm/Sovereign_KernelDispatch.h"
+}
+
 namespace RawrXD {
 namespace Runtime {
+
+// ============================================================================
+// Global Kernel Table (initialized once, shared across all layers)
+// ============================================================================
+static Sovereign_KernelTable g_kernelTable;
+static bool g_kernelsInitialized = false;
+static bool g_kernelsAvailable = false;
+
+bool InitializeSovereignKernels() {
+    if (g_kernelsInitialized) return g_kernelsAvailable;
+    
+    int result = Sovereign_InitKernelTable(&g_kernelTable);
+    if (result != 0) {
+        g_kernelsAvailable = false;
+        g_kernelsInitialized = true;
+        return false;
+    }
+    
+    g_kernelsAvailable = true;
+    g_kernelsInitialized = true;
+    return true;
+}
+
+bool AreSovereignKernelsAvailable() {
+    if (!g_kernelsInitialized) {
+        InitializeSovereignKernels();
+    }
+    return g_kernelsAvailable;
+}
+
+const Sovereign_KernelTable* GetSovereignKernelTable() {
+    if (!g_kernelsInitialized) {
+        InitializeSovereignKernels();
+    }
+    return g_kernelsAvailable ? &g_kernelTable : nullptr;
+}
 
 // ============================================================================
 // Utility Functions
@@ -297,13 +338,27 @@ bool TransformerLayerRuntime::Forward(const float* input,
 }
 
 // ============================================================================
-// Internal Compute Kernels
+// Internal Compute Kernels (with Sovereign acceleration)
 // ============================================================================
 void TransformerLayerRuntime::ComputeRMSNorm(const float* input,
                                               float* output,
                                               uint32_t size,
                                               float eps) const {
-    // Compute RMS
+    // Try Sovereign kernel first
+    const Sovereign_KernelTable* kernels = GetSovereignKernelTable();
+    if (kernels && kernels->rms_norm_f32) {
+        // Use identity weights (1.0) for base RMSNorm
+        alignas(64) float weights[8192];
+        alignas(64) float tempInput[8192];
+        for (uint32_t i = 0; i < size && i < 8192; ++i) {
+            weights[i] = 1.0f;
+            tempInput[i] = input[i];
+        }
+        kernels->rms_norm_f32(tempInput, weights, output, static_cast<uint64_t>(size), eps);
+        return;
+    }
+    
+    // Scalar fallback
     float sumSq = 0.0f;
     for (uint32_t i = 0; i < size; ++i) {
         sumSq += input[i] * input[i];
@@ -350,7 +405,18 @@ void TransformerLayerRuntime::ApplyRoPE(float* query,
                                          uint32_t headDim,
                                          uint32_t position,
                                          float theta) const {
-    // Rotary Position Embedding
+    // Try Sovereign kernel first
+    const Sovereign_KernelTable* kernels = GetSovereignKernelTable();
+    if (kernels && kernels->rope_apply_f32) {
+        // Apply RoPE to query using Sovereign kernel
+        alignas(64) float freqCache[8192];
+        kernels->rope_apply_f32(query, freqCache, position + 1, headDim, numHeads);
+        // Apply RoPE to key using Sovereign kernel
+        kernels->rope_apply_f32(key, freqCache, position + 1, headDim, numKVHeads);
+        return;
+    }
+    
+    // Scalar fallback - Rotary Position Embedding
     // For each head and each pair of dimensions (2i, 2i+1)
     
     float invFreq[64];  // Max head dim / 2
@@ -416,6 +482,19 @@ void TransformerLayerRuntime::ComputeSoftmax(float* data, uint32_t size) const {
 }
 
 void TransformerLayerRuntime::AccumulateResidual(const float* residual, float* output, uint32_t size) const {
+    // Try Sovereign kernel first
+    const Sovereign_KernelTable* kernels = GetSovereignKernelTable();
+    if (kernels && kernels->residual_add_f32) {
+        // Copy residual to temp buffer since kernel expects non-const
+        alignas(64) float tempResidual[8192];
+        for (uint32_t i = 0; i < size && i < 8192; ++i) {
+            tempResidual[i] = residual[i];
+        }
+        kernels->residual_add_f32(output, tempResidual, output, static_cast<uint64_t>(size));
+        return;
+    }
+    
+    // Scalar fallback
     for (uint32_t i = 0; i < size; ++i) {
         output[i] += residual[i];
     }

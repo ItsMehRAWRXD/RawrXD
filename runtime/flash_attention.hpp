@@ -21,6 +21,8 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cmath>
+#include <limits>
 #include <immintrin.h>
 
 namespace RawrXD {
@@ -75,7 +77,7 @@ struct FlashAttentionConfig {
 // Online Softmax State (for numerical stability)
 // ============================================================================
 struct OnlineSoftmaxState {
-    float max_val = -INFINITY;        // Running max
+    float max_val = -std::numeric_limits<float>::infinity();  // Running max
     float sum_exp = 0.0f;             // Running sum of exp(x - max)
     float scale = 1.0f;               // Normalization factor
     

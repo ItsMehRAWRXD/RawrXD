@@ -40,11 +40,23 @@ HotpatchModelManager& HotpatchModelManager::Instance() {
 bool HotpatchModelManager::Initialize() {
     std::lock_guard<std::mutex> lock(m_mutex);
     
-    printf("[HotpatchModelManager] Initialized\n");
+    printf("[HotpatchModelManager] Initializing...\n");
     
-    // TODO: Initialize llama.cpp backend
-    // TODO: Initialize GPU context (Vulkan/HIP)
+    // Initialize Sovereign kernel table for CPU inference
+    m_kernelTable = new ::Sovereign_KernelTable();
+    if (::Sovereign_InitKernelTable(m_kernelTable) != 0) {
+        printf("[HotpatchModelManager] Warning: Failed to initialize Sovereign kernels\n");
+        delete m_kernelTable;
+        m_kernelTable = nullptr;
+    } else {
+        printf("[HotpatchModelManager] Sovereign kernels initialized\n");
+        m_kernelsAvailable = true;
+    }
     
+    // TODO: Initialize llama.cpp backend (when linked)
+    // TODO: Initialize GPU context (Vulkan/HIP) (when enabled)
+    
+    printf("[HotpatchModelManager] Initialization complete\n");
     return true;
 }
 

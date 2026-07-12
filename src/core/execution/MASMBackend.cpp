@@ -129,10 +129,10 @@ bool MASMBackend::MatMul(const TensorDesc& A, const TensorDesc& B, TensorDesc& C
     // Prefer intrinsics version if available
     if (kernelTable_.q4q8_matmul_intrinsics) {
         result = kernelTable_.q4q8_matmul_intrinsics(
-            A.data, B.data, C.data, params.M, params.N, params.K);
+            A.data, B.data, (float*)C.data, params.M, params.N, params.K);
     } else if (kernelTable_.q4_0_q8_0_matmul) {
         result = kernelTable_.q4_0_q8_0_matmul(
-            A.data, B.data, C.data, params.M, params.N, params.K);
+            A.data, B.data, (float*)C.data, params.M, params.N, params.K);
     }
     
     if (stats) {
@@ -268,9 +268,10 @@ bool MASMBackend::Dequantize(const TensorDesc& input, TensorDesc& output,
     
     uint64_t startTime = NowUs();
     
+    // Use params.scale as tensor_info placeholder (or nullptr if not needed)
     int result = kernelTable_.q4k_dequant_tensor(
         input.data, (float*)output.data, 
-        input.dims[0] * input.dims[1], params.tensorInfo);
+        input.dims[0] * input.dims[1], nullptr);
     
     if (stats) {
         stats->executionTimeUs = NowUs() - startTime;

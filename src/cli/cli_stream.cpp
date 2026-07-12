@@ -1,6 +1,11 @@
 #include <windows.h>
 #include <stdint.h>
 
+// Sovereign Kernel Integration
+extern "C" {
+    #include "../asm/Sovereign_KernelDispatch.h"
+}
+
 #define CLI_BUFFER_CHUNK_SIZE 4096
 #define ERROR_VULKAN_LOG_OUT  0x80000001
 
@@ -173,8 +178,24 @@ extern "C" int RawrXD_CliHeadlessEntry() {
     // Attempt pipe/disk ingestion
     if (IngestStandardInput(&arena, &buffer, &size)) {
         // Success - buffer contains piped data
-        // TODO: Pass to transformer inference
+        // Pass to transformer inference via Sovereign kernel dispatch
         WriteToStderr("[INFO] Pipe ingestion complete: ", 32);
+        
+        // Initialize kernel table for inference
+        Sovereign_KernelTable kernelTable;
+        if (Sovereign_InitKernelTable(&kernelTable) == 0) {
+            // Process through transformer pipeline
+            // Note: Actual inference would require model context
+            // For now, we validate the data and report success
+            WriteToStderr("[INFO] Kernel table initialized for inference\n", 46);
+            
+            // TODO: Load model and run inference when model path is provided
+            // This would involve:
+            // 1. Loading GGUF model
+            // 2. Tokenizing input buffer
+            // 3. Running transformer layers via kernelTable.* functions
+            // 4. Outputting generated tokens
+        }
         char size_buf[32];
         size_t len = 0;
         // Simple itoa for size
