@@ -1821,6 +1821,19 @@ struct UnsurpassedField {
     double unsurpassedMagnitude;     // total unsurpassed measure
 };
 
+// Batch 222: SFE-CVIII Structure - Sovereign Unparalleled (EIGHTH STEP - EIGHTH CYCLE)
+struct UnparalleledField {
+    double unparalleledOrigin;        // origin of unparalleled
+    double unparalleledPotential;     // potential for unparalleled
+    double unparalleledHarmony;       // harmony in unparalleled
+    double unparalleledClarity;       // clarity of unparalleled
+    double unparalleledContinuity;    // continuity of unparalleled
+    double unparalleledStability;     // stability through unparalleled
+    double unparalleledResolution;    // resolution of unparalleled
+    double unparalleledExpansion;     // expansion through unparalleled
+    double unparalleledMagnitude;     // total unparalleled measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2403,6 +2416,10 @@ public:
     // Batch 221: SFE-CVII - Sovereign Unsurpassed (SEVENTH STEP - EIGHTH CYCLE)
     UnsurpassedField ComputeUnsurpassed();
     void RunUnsurpassedCycle();
+
+    // Batch 222: SFE-CVIII - Sovereign Unparalleled (EIGHTH STEP - EIGHTH CYCLE)
+    UnparalleledField ComputeUnparalleled();
+    void RunUnparalleledCycle();
 
     // Serialization
     json SerializeAll() const;
