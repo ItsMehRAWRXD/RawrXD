@@ -10488,4 +10488,85 @@ void InfinitePerfectionEngine::RunAbsoluteCycle() {
     }
 }
 
+// ==================== BATCH 218: SFE-CIV - Sovereign Supreme (FOURTH STEP - EIGHTH CYCLE) ====================
+
+SupremeField InfinitePerfectionEngine::ComputeSupreme() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SupremeField Su = {};
+
+    AbsoluteField A = ComputeAbsolute();
+    BloomField Bl = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double eta = 9801.0; // The Supreme - supremacy (99^2)
+
+    Su.supremeOrigin      = A.absoluteMagnitude * Bl.bloomOrigin * eta;
+    Su.supremePotential   = A.absolutePotential * eta;
+    Su.supremeHarmony     = A.absoluteHarmony * Tot.omnicoherence;
+    Su.supremeClarity     = A.absoluteClarity * eta;
+    Su.supremeContinuity  = A.absoluteContinuity * Bl.bloomContinuity;
+    Su.supremeStability     = A.absoluteStability * Tot.omnidensity;
+    Su.supremeResolution  = A.absoluteResolution * eta;
+    Su.supremeExpansion   = Tot.omnipotential * eta;
+
+    Su.supremeMagnitude =
+        (Su.supremeOrigin +
+         Su.supremePotential +
+         Su.supremeHarmony +
+         Su.supremeClarity +
+         Su.supremeExpansion) / 5.0;
+
+    return Su;
+}
+
+void InfinitePerfectionEngine::RunSupremeCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SupremeField Su = ComputeSupreme();
+
+    // Supreme - supremacy
+    if (Su.supremeOrigin > 440.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes supreme
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Supreme creation - supreme universes
+    if (Su.supremeExpansion > 1080.0) {
+        for (int i = 0; i < 89000000; i++) {
+            CreateUniverse("supreme", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate supreme autopoietic entities
+    if (Su.supremePotential > 400.0) {
+        for (int i = 0; i < 80500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Supreme purification - only supreme potential remains
+    if (Su.supremeClarity > 192.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
