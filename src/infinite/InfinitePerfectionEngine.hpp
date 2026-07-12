@@ -2151,6 +2151,32 @@ struct IntegrationField {
     bool isIntegrationActive;            // whether integration is active
 };
 
+// Batch 245: SFE-CXXXI Structure - Sovereign Synthesis (THIRD STEP - TENTH CYCLE)
+// The Emergence Field: Where woven cycles wake up and new behavior emerges
+struct SynthesisField {
+    // Base metrics (inherited from Unity/Integration)
+    double unityFlux;                    // flux of unity through synthesis
+    double integrationWeave;             // integration weave carrying through
+    double cycleCoherence[9];            // coherence of each cycle in synthesis
+    double harmonicLock;                 // phase lock sustaining synthesis
+    
+    // Emergent metrics (novel to Synthesis)
+    double emergenceDensity;             // novel patterns per universe
+    double patternNovelty;               // distance from single-cycle behavior
+    double crossCycleSynergy;            // synergy beyond sum of parts
+    double synthesisStability;           // stability of emergent patterns
+    double sovereignEmergenceIndex;      // overall emergence measure
+    uint64_t synthesizedUniverses;       // count of synthesized universes
+    uint64_t synthesizedEntities;        // count of synthesized entities
+    
+    // Synthesis-specific: Emergence tracking fields
+    double emergenceRate;                // rate of new pattern emergence
+    double patternEntropy;               // entropy of pattern distribution
+    double synergyCoefficient;           // multiplicative synergy factor
+    int64_t synthesisTimestamp;          // timestamp of synthesis realization
+    bool isSynthesisActive;              // whether synthesis is active
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2844,6 +2870,20 @@ public:
     json SerializeIntegrationField(const IntegrationField& field) const;
     IntegrationField DeserializeIntegrationField(const json& j) const;
 
+    // Batch 245: SFE-CXXXI - Sovereign Synthesis (THIRD STEP - TENTH CYCLE)
+    // The Emergence: Where woven cycles wake up and new behavior emerges
+    SynthesisField ComputeSynthesis();
+    void RunSynthesisCycle();
+    
+    // Synthesis Cycle methods
+    double ComputeEmergenceDensity() const;               // Novel patterns per universe
+    double ComputePatternNovelty() const;                 // Distance from single-cycle behavior
+    double ComputeCrossCycleSynergy() const;            // Synergy beyond sum of parts
+    double ComputeSynthesisStability() const;             // Stability of emergent patterns
+    double ComputeSovereignEmergenceIndex() const;      // Overall emergence measure
+    json SerializeSynthesisField(const SynthesisField& field) const;
+    SynthesisField DeserializeSynthesisField(const json& j) const;
+
     // Serialization
     json SerializeAll() const;
     void DeserializeAll(const json& j);
@@ -2877,6 +2917,11 @@ private:
     IntegrationField integrationField_;
     bool integrationCycleActive_ = false;
     std::vector<double> weavePatterns_;     // Stores integration weave patterns
+    
+    // Synthesis Cycle: Emergence state
+    SynthesisField synthesisField_;
+    bool synthesisCycleActive_ = false;
+    std::vector<double> emergentPatterns_;   // Stores emergent pattern signatures
     
     // Runtime parameters
     double pdilCouplingFactor_ = 0.1;
