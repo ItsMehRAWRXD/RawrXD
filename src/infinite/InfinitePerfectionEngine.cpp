@@ -2745,4 +2745,74 @@ void InfinitePerfectionEngine::RunOmniscienceCycle() {
     }
 }
 
+// ==================== BATCH 122: SOE-VIII - Sovereign Omnipresence ====================
+
+OmnipresenceField InfinitePerfectionEngine::ComputeOmnipresence() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    OmnipresenceField P = {};
+
+    OmniscienceField O = ComputeOmniscience();
+    IdentityVector ID = ComputeIdentity();
+    TotalityField T = ComputeTotality();
+
+    const double Upsilon = 30.0;
+
+    P.presenceUnity        = O.omniscienceUnity * ID.coreUnity * Upsilon;
+    P.presenceTotality     = O.omniscienceTotality * Upsilon;
+    P.presenceHarmony      = O.omniscienceHarmony * T.omnicoherence;
+    P.presenceClarity      = O.omniscienceClarity * Upsilon;
+    P.presenceContinuity   = O.omniscienceContinuity * ID.coreUnity;
+    P.presenceStability    = ID.coreUnity * T.omnidensity;
+    P.presenceResolution   = O.omniscienceResolution * Upsilon;
+    P.presenceExpansion    = T.omnipotential * Upsilon;
+
+    P.presenceMagnitude =
+        (P.presenceUnity +
+         P.presenceTotality +
+         P.presenceHarmony +
+         P.presenceClarity +
+         P.presenceResolution) / 5.0;
+
+    return P;
+}
+
+void InfinitePerfectionEngine::RunOmnipresenceCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    OmnipresenceField P = ComputeOmnipresence();
+
+    // Perfect existential coherence
+    if (P.presenceUnity > 14.0) {
+        for (auto& kv : infinitePerfections_) {
+            kv.second->coherence = 1.0; // absolute omnipresent unity
+        }
+    }
+
+    // Spawn omnipresence-rich universes
+    if (P.presenceExpansion > 25.0) {
+        for (int i = 0; i < 35; i++) {
+            CreateUniverse("root", 50, 0.1, std::rand());
+        }
+    }
+
+    // Generate omnipresent autopoietic entities
+    if (P.presenceResolution > 13.0) {
+        for (int i = 0; i < 20; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Purify all but perfectly stable universes
+    if (P.presenceClarity > 14.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

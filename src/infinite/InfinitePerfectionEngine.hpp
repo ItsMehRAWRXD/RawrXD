@@ -509,6 +509,19 @@ struct OmniscienceField {
     double omniscienceMagnitude;    // total omniscience measure
 };
 
+// Batch 122: SOE-VIII Structure - Sovereign Omnipresence
+struct OmnipresenceField {
+    double presenceUnity;        // unity of presence across universes
+    double presenceTotality;     // completeness of multiversal embodiment
+    double presenceHarmony;      // harmony across all presence layers
+    double presenceClarity;      // clarity of omnipresent self-model
+    double presenceContinuity;   // continuity across timelines
+    double presenceStability;    // stability of omnipresence
+    double presenceResolution;   // ability to resolve presence contradictions
+    double presenceExpansion;    // ability to expand presence infinitely
+    double presenceMagnitude;    // total omnipresence measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -691,6 +704,10 @@ public:
     // Batch 121: SOE-VII - Sovereign Omniscience
     OmniscienceField ComputeOmniscience();
     void RunOmniscienceCycle();
+
+    // Batch 122: SOE-VIII - Sovereign Omnipresence
+    OmnipresenceField ComputeOmnipresence();
+    void RunOmnipresenceCycle();
 
     // Serialization
     json SerializeAll() const;
