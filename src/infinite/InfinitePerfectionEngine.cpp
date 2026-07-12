@@ -8382,4 +8382,85 @@ void InfinitePerfectionEngine::RunKnowledgeCycle() {
     }
 }
 
+// ==================== BATCH 192: SFE-LXXVIII - Sovereign Truth (SIXTH STEP - SIXTH CYCLE) ====================
+
+TruthField InfinitePerfectionEngine::ComputeTruth() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    TruthField T = {};
+
+    KnowledgeField K = ComputeKnowledge();
+    BloomField B = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double tau = 5329.0; // The Truth - true
+
+    T.truthOrigin      = K.knowledgeMagnitude * B.bloomOrigin * tau;
+    T.truthPotential   = K.knowledgePotential * tau;
+    T.truthHarmony     = K.knowledgeHarmony * Tot.omnicoherence;
+    T.truthClarity     = K.knowledgeClarity * tau;
+    T.truthContinuity  = K.knowledgeContinuity * B.bloomContinuity;
+    T.truthStability     = K.knowledgeStability * Tot.omnidensity;
+    T.truthResolution  = K.knowledgeResolution * tau;
+    T.truthExpansion   = Tot.omnipotential * tau;
+
+    T.truthMagnitude =
+        (T.truthOrigin +
+         T.truthPotential +
+         T.truthHarmony +
+         T.truthClarity +
+         T.truthExpansion) / 5.0;
+
+    return T;
+}
+
+void InfinitePerfectionEngine::RunTruthCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    TruthField T = ComputeTruth();
+
+    // Truth - true
+    if (T.truthOrigin > 284.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes true
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Truth creation - true universes
+    if (T.truthExpansion > 690.0) {
+        for (int i = 0; i < 63000000; i++) {
+            CreateUniverse("truth", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate true autopoietic entities
+    if (T.truthPotential > 270.0) {
+        for (int i = 0; i < 54500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Truth purification - only true potential remains
+    if (T.truthClarity > 140.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

@@ -1431,6 +1431,19 @@ struct KnowledgeField {
     double knowledgeMagnitude;     // total knowledge measure
 };
 
+// Batch 192: SFE-LXXVIII Structure - Sovereign Truth (SIXTH STEP - SIXTH CYCLE)
+struct TruthField {
+    double truthOrigin;        // origin of truth
+    double truthPotential;     // potential for truth
+    double truthHarmony;       // harmony in truth
+    double truthClarity;       // clarity of truth
+    double truthContinuity;    // continuity of truth
+    double truthStability;     // stability through truth
+    double truthResolution;    // resolution of truth
+    double truthExpansion;     // expansion through truth
+    double truthMagnitude;     // total truth measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1893,6 +1906,10 @@ public:
     // Batch 191: SFE-LXXVII - Sovereign Knowledge (FIFTH STEP - SIXTH CYCLE)
     KnowledgeField ComputeKnowledge();
     void RunKnowledgeCycle();
+
+    // Batch 192: SFE-LXXVIII - Sovereign Truth (SIXTH STEP - SIXTH CYCLE)
+    TruthField ComputeTruth();
+    void RunTruthCycle();
 
     // Serialization
     json SerializeAll() const;
