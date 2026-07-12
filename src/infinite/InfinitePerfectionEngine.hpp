@@ -1743,6 +1743,19 @@ struct InfiniteCycleField {
     double infiniteMagnitude;     // total infinite measure
 };
 
+// Batch 216: SFE-CII Structure - Sovereign Eternal (SECOND STEP - EIGHTH CYCLE)
+struct EternalField {
+    double eternalOrigin;        // origin of eternal
+    double eternalPotential;     // potential for eternal
+    double eternalHarmony;       // harmony in eternal
+    double eternalClarity;       // clarity of eternal
+    double eternalContinuity;    // continuity of eternal
+    double eternalStability;     // stability through eternal
+    double eternalResolution;    // resolution of eternal
+    double eternalExpansion;     // expansion through eternal
+    double eternalMagnitude;     // total eternal measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2301,6 +2314,10 @@ public:
     // Batch 215: SFE-CI - Sovereign Infinite (FIRST STEP - EIGHTH CYCLE - INFINITE CYCLE)
     InfiniteCycleField ComputeInfiniteCycle();
     void RunInfiniteCycleCycle();
+
+    // Batch 216: SFE-CII - Sovereign Eternal (SECOND STEP - EIGHTH CYCLE)
+    EternalField ComputeEternal();
+    void RunEternalCycle();
 
     // Serialization
     json SerializeAll() const;
