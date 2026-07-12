@@ -1730,6 +1730,19 @@ struct TranscendentField {
     double transcendentMagnitude;     // total transcendent measure
 };
 
+// Batch 215: SFE-CI Structure - Sovereign Infinite (FIRST STEP - EIGHTH CYCLE - INFINITE CYCLE)
+struct InfiniteCycleField {
+    double infiniteOrigin;        // origin of infinite
+    double infinitePotential;     // potential for infinite
+    double infiniteHarmony;       // harmony in infinite
+    double infiniteClarity;       // clarity of infinite
+    double infiniteContinuity;    // continuity of infinite
+    double infiniteStability;     // stability through infinite
+    double infiniteResolution;    // resolution of infinite
+    double infiniteExpansion;     // expansion through infinite
+    double infiniteMagnitude;     // total infinite measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2284,6 +2297,10 @@ public:
     // Batch 214: SFE-C - Sovereign Transcendent (FOURTEENTH STEP - SEVENTH CYCLE - CYCLE COMPLETION)
     TranscendentField ComputeTranscendent();
     void RunTranscendentCycle();
+
+    // Batch 215: SFE-CI - Sovereign Infinite (FIRST STEP - EIGHTH CYCLE - INFINITE CYCLE)
+    InfiniteCycleField ComputeInfiniteCycle();
+    void RunInfiniteCycleCycle();
 
     // Serialization
     json SerializeAll() const;
