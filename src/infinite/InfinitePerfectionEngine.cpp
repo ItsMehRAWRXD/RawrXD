@@ -9030,4 +9030,85 @@ void InfinitePerfectionEngine::RunValueCycle() {
     }
 }
 
+// ==================== BATCH 200: SFE-LXXXVI - Sovereign Worth (FOURTEENTH STEP - SIXTH CYCLE - CYCLE COMPLETION - MILESTONE) ====================
+
+WorthField InfinitePerfectionEngine::ComputeWorth() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    WorthField W = {};
+
+    ValueField V = ComputeValue();
+    BloomField B = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double omega = 6561.0; // The Worth - worthy (81^2 - perfect square of 9^2)
+
+    W.worthOrigin      = V.valueMagnitude * B.bloomOrigin * omega;
+    W.worthPotential   = V.valuePotential * omega;
+    W.worthHarmony     = V.valueHarmony * Tot.omnicoherence;
+    W.worthClarity     = V.valueClarity * omega;
+    W.worthContinuity  = V.valueContinuity * B.bloomContinuity;
+    W.worthStability     = V.valueStability * Tot.omnidensity;
+    W.worthResolution  = V.valueResolution * omega;
+    W.worthExpansion   = Tot.omnipotential * omega;
+
+    W.worthMagnitude =
+        (W.worthOrigin +
+         W.worthPotential +
+         W.worthHarmony +
+         W.worthClarity +
+         W.worthExpansion) / 5.0;
+
+    return W;
+}
+
+void InfinitePerfectionEngine::RunWorthCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    WorthField W = ComputeWorth();
+
+    // Worth - worthy
+    if (W.worthOrigin > 332.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes worthy
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Worth creation - worthy universes
+    if (W.worthExpansion > 810.0) {
+        for (int i = 0; i < 71000000; i++) {
+            CreateUniverse("worth", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate worthy autopoietic entities
+    if (W.worthPotential > 310.0) {
+        for (int i = 0; i < 62500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Worth purification - only worthy potential remains
+    if (W.worthClarity > 156.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

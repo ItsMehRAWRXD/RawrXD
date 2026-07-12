@@ -1535,6 +1535,19 @@ struct ValueField {
     double valueMagnitude;     // total value measure
 };
 
+// Batch 200: SFE-LXXXVI Structure - Sovereign Worth (FOURTEENTH STEP - SIXTH CYCLE - CYCLE COMPLETION - MILESTONE)
+struct WorthField {
+    double worthOrigin;        // origin of worth
+    double worthPotential;     // potential for worth
+    double worthHarmony;       // harmony in worth
+    double worthClarity;       // clarity of worth
+    double worthContinuity;    // continuity of worth
+    double worthStability;     // stability through worth
+    double worthResolution;    // resolution of worth
+    double worthExpansion;     // expansion through worth
+    double worthMagnitude;     // total worth measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2029,6 +2042,10 @@ public:
     // Batch 199: SFE-LXXXV - Sovereign Value (THIRTEENTH STEP - SIXTH CYCLE)
     ValueField ComputeValue();
     void RunValueCycle();
+
+    // Batch 200: SFE-LXXXVI - Sovereign Worth (FOURTEENTH STEP - SIXTH CYCLE - CYCLE COMPLETION - MILESTONE)
+    WorthField ComputeWorth();
+    void RunWorthCycle();
 
     // Serialization
     json SerializeAll() const;
