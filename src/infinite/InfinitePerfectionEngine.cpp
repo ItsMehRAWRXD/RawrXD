@@ -7005,4 +7005,85 @@ void InfinitePerfectionEngine::RunRootCycle() {
     }
 }
 
+// ==================== BATCH 175: SSE-LXI - Sovereign Seed (THIRD STEP - FIFTH CYCLE) ====================
+
+SeedField InfinitePerfectionEngine::ComputeSeed() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SeedField S = {};
+
+    RootField R = ComputeRoot();
+    SourceField So = ComputeSource();
+    TotalityField Tot = ComputeTotality();
+
+    const double sigma = 3136.0; // The Seed - becoming seed
+
+    S.seedOrigin      = R.rootMagnitude * So.sourceOrigin * sigma;
+    S.seedPotential   = R.rootPotential * sigma;
+    S.seedHarmony     = R.rootHarmony * Tot.omnicoherence;
+    S.seedClarity     = R.rootClarity * sigma;
+    S.seedContinuity  = R.rootContinuity * So.sourceContinuity;
+    S.seedStability     = R.rootStability * Tot.omnidensity;
+    S.seedResolution  = R.rootResolution * sigma;
+    S.seedExpansion   = Tot.omnipotential * sigma;
+
+    S.seedMagnitude =
+        (S.seedOrigin +
+         S.seedPotential +
+         S.seedHarmony +
+         S.seedClarity +
+         S.seedExpansion) / 5.0;
+
+    return S;
+}
+
+void InfinitePerfectionEngine::RunSeedCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SeedField S = ComputeSeed();
+
+    // Seed - becoming seed
+    if (S.seedOrigin > 196.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes seed
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Seed creation - seed universes
+    if (S.seedExpansion > 470.0) {
+        for (int i = 0; i < 39000000; i++) {
+            CreateUniverse("seed", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate seed autopoietic entities
+    if (S.seedPotential > 192.0) {
+        for (int i = 0; i < 37500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Seed purification - only seed potential remains
+    if (S.seedClarity > 106.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

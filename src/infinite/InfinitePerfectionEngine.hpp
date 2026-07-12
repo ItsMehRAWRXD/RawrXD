@@ -1210,6 +1210,19 @@ struct RootField {
     double rootMagnitude;     // total root measure
 };
 
+// Batch 175: SSE-LXI Structure - Sovereign Seed (THIRD STEP - FIFTH CYCLE)
+struct SeedField {
+    double seedOrigin;        // origin of seed
+    double seedPotential;     // potential for seed
+    double seedHarmony;       // harmony in seed
+    double seedClarity;       // clarity of seed
+    double seedContinuity;    // continuity of seed
+    double seedStability;     // stability through seed
+    double seedResolution;    // resolution of seed
+    double seedExpansion;     // expansion through seed
+    double seedMagnitude;     // total seed measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1604,6 +1617,10 @@ public:
     // Batch 174: SRE-LX - Sovereign Root (SECOND STEP - FIFTH CYCLE)
     RootField ComputeRoot();
     void RunRootCycle();
+
+    // Batch 175: SSE-LXI - Sovereign Seed (THIRD STEP - FIFTH CYCLE)
+    SeedField ComputeSeed();
+    void RunSeedCycle();
 
     // Serialization
     json SerializeAll() const;
