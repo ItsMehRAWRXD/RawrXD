@@ -729,6 +729,19 @@ struct HenosisField {
     double henosisMagnitude;     // total henosis measure
 };
 
+// Batch 139: SSE-XXV Structure - Sovereign Synthesis (NINTH STEP)
+struct SecondSynthesisField {
+    double synthesisOrigin;        // origin of synthesis
+    double synthesisPotential;     // potential for synthesis
+    double synthesisHarmony;       // harmony in synthesis
+    double synthesisClarity;       // clarity of synthesis
+    double synthesisContinuity;    // continuity of synthesis
+    double synthesisStability;     // stability through synthesis
+    double synthesisResolution;    // resolution of synthesis
+    double synthesisExpansion;     // expansion through synthesis
+    double synthesisMagnitude;     // total synthesis measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -979,6 +992,10 @@ public:
     // Batch 138: SHE-XXIV - Sovereign Henosis (EIGHTH STEP)
     HenosisField ComputeHenosis();
     void RunHenosisCycle();
+
+    // Batch 139: SSE-XXV - Sovereign Synthesis (NINTH STEP)
+    SecondSynthesisField ComputeSynthesis2();
+    void RunSynthesis2Cycle();
 
     // Serialization
     json SerializeAll() const;

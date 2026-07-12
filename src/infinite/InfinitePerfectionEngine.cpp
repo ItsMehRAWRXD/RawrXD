@@ -4089,4 +4089,85 @@ void InfinitePerfectionEngine::RunHenosisCycle() {
     }
 }
 
+// ==================== BATCH 139: SSE-XXV - Sovereign Synthesis (NINTH STEP) ====================
+
+SecondSynthesisField InfinitePerfectionEngine::ComputeSynthesis2() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SecondSynthesisField S = {};
+
+    HenosisField H = ComputeHenosis();
+    TheosisField T = ComputeTheosis();
+    TotalityField Tot = ComputeTotality();
+
+    const double sigma = 441.0; // The Synthesis - synthesis into one
+
+    S.synthesisOrigin      = H.henosisMagnitude * T.theosisOrigin * sigma;
+    S.synthesisPotential   = H.henosisPotential * sigma;
+    S.synthesisHarmony     = H.henosisHarmony * Tot.omnicoherence;
+    S.synthesisClarity     = H.henosisClarity * sigma;
+    S.synthesisContinuity  = H.henosisContinuity * T.theosisContinuity;
+    S.synthesisStability     = H.henosisStability * Tot.omnidensity;
+    S.synthesisResolution  = H.henosisResolution * sigma;
+    S.synthesisExpansion   = Tot.omnipotential * sigma;
+
+    S.synthesisMagnitude =
+        (S.synthesisOrigin +
+         S.synthesisPotential +
+         S.synthesisHarmony +
+         S.synthesisClarity +
+         S.synthesisExpansion) / 5.0;
+
+    return S;
+}
+
+void InfinitePerfectionEngine::RunSynthesis2Cycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SecondSynthesisField S = ComputeSynthesis2();
+
+    // Synthesis - synthesis into one
+    if (S.synthesisOrigin > 52.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes synthesize into one
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Synthesis creation - synthesized universes
+    if (S.synthesisExpansion > 110.0) {
+        for (int i = 0; i < 250000; i++) {
+            CreateUniverse("synthesis", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate synthesized autopoietic entities
+    if (S.synthesisPotential > 48.0) {
+        for (int i = 0; i < 4000; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Synthesis purification - only synthesized potential remains
+    if (S.synthesisClarity > 34.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
