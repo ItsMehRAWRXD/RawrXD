@@ -2177,6 +2177,32 @@ struct SynthesisField {
     bool isSynthesisActive;              // whether synthesis is active
 };
 
+// Batch 246: SFE-CXXXII Structure - Sovereign Convergence (FOURTH STEP - TENTH CYCLE)
+// The Focal Field: Where emergent patterns condense into attractors and focal points
+struct ConvergenceField {
+    // Inputs from previous steps
+    double unityFlux;                    // flux of unity through convergence
+    double integrationWeave;             // integration weave carrying through
+    double emergenceDensity;             // emergence density from synthesis
+    double crossCycleSynergy;            // synergy from synthesis
+    
+    // Convergence metrics: focalization and attractors
+    double focalPointDensity;            // how many attractors form
+    double attractorStrength;            // how strongly patterns are pulled in
+    double convergenceCoherence;         // how stable each focal point is
+    double alignmentIndex;               // alignment with 9-cycle continuum
+    double convergenceStability;         // stability of convergence
+    uint64_t convergedUniverses;         // count of converged universes
+    uint64_t convergedEntities;          // count of converged entities
+    
+    // Convergence-specific: Attractor dynamics
+    double attractorCount;               // number of active attractors
+    double convergenceRate;              // rate of pattern convergence
+    double focalCoherence;               // coherence at focal points
+    int64_t convergenceTimestamp;        // timestamp of convergence realization
+    bool isConvergenceActive;            // whether convergence is active
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2884,6 +2910,20 @@ public:
     json SerializeSynthesisField(const SynthesisField& field) const;
     SynthesisField DeserializeSynthesisField(const json& j) const;
 
+    // Batch 246: SFE-CXXXII - Sovereign Convergence (FOURTH STEP - TENTH CYCLE)
+    // The Focal: Where emergent patterns condense into attractors
+    ConvergenceField ComputeConvergence();
+    void RunConvergenceCycle();
+    
+    // Convergence Cycle methods
+    double ComputeFocalPointDensity() const;              // How many attractors form
+    double ComputeAttractorStrength() const;              // How strongly patterns are pulled
+    double ComputeConvergenceCoherence() const;           // Stability of focal points
+    double ComputeAlignmentIndex() const;                 // Alignment with 9-cycle continuum
+    double ComputeConvergenceStability() const;           // Stability of convergence
+    json SerializeConvergenceField(const ConvergenceField& field) const;
+    ConvergenceField DeserializeConvergenceField(const json& j) const;
+
     // Serialization
     json SerializeAll() const;
     void DeserializeAll(const json& j);
@@ -2922,6 +2962,11 @@ private:
     SynthesisField synthesisField_;
     bool synthesisCycleActive_ = false;
     std::vector<double> emergentPatterns_;   // Stores emergent pattern signatures
+    
+    // Convergence Cycle: Focal point state
+    ConvergenceField convergenceField_;
+    bool convergenceCycleActive_ = false;
+    std::vector<double> focalPoints_;         // Stores focal point coordinates/strengths
     
     // Runtime parameters
     double pdilCouplingFactor_ = 0.1;

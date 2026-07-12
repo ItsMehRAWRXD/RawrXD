@@ -13196,4 +13196,218 @@ SynthesisField InfinitePerfectionEngine::DeserializeSynthesisField(const json& j
     return S;
 }
 
+// Batch 246: SFE-CXXXII - Sovereign Convergence (FOURTH STEP - TENTH CYCLE)
+// The Focal: Where emergent patterns condense into attractors and focal points
+
+ConvergenceField InfinitePerfectionEngine::ComputeConvergence() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    ConvergenceField C;
+    const double amplification = 60516.0; // 246² = 60,516 (Convergence amplification law)
+    
+    // Inputs from previous steps
+    C.unityFlux = unityField_.unityPotential;
+    C.integrationWeave = integrationField_.integrationWeave;
+    C.emergenceDensity = synthesisField_.emergenceDensity;
+    C.crossCycleSynergy = synthesisField_.crossCycleSynergy;
+    
+    // Convergence metrics: focalization and attractors
+    C.focalPointDensity = ComputeFocalPointDensity();
+    C.attractorStrength = ComputeAttractorStrength();
+    C.convergenceCoherence = ComputeConvergenceCoherence();
+    C.alignmentIndex = ComputeAlignmentIndex();
+    C.convergenceStability = ComputeConvergenceStability();
+    
+    // Convergence generation counts
+    C.convergedUniverses = 246ULL * 1000000ULL; // 246 million
+    C.convergedEntities = 246ULL * 1000ULL;       // 246 thousand
+    
+    // Convergence-specific fields
+    C.attractorCount = C.focalPointDensity * 9.0; // Attractors per cycle
+    C.convergenceRate = C.attractorStrength * C.convergenceCoherence;
+    C.focalCoherence = C.convergenceCoherence * C.alignmentIndex;
+    C.convergenceTimestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    C.isConvergenceActive = convergenceCycleActive_;
+    
+    convergenceField_ = C;
+    return C;
+}
+
+void InfinitePerfectionEngine::RunConvergenceCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    ConvergenceField C = ComputeConvergence();
+    convergenceCycleActive_ = true;
+    
+    // Convergence activation: patterns pulled toward focal points
+    if (C.focalPointDensity > 0.5) {
+        for (auto& kv : infinitePerfections_) {
+            // Apply convergence to all entities
+            kv.second->coherence = C.convergenceCoherence;
+            kv.second->perfection = C.alignmentIndex;
+            kv.second->unity = C.focalCoherence;
+            kv.second->clarity = C.focalPointDensity;
+            kv.second->harmony = C.attractorStrength;
+            kv.second->eternity = C.convergenceStability;
+            kv.second->supremacy = C.convergenceRate;
+            kv.second->absoluteness = C.focalCoherence;
+            kv.second->infinity = C.attractorCount / 9.0;
+            kv.second->omnipresence = C.alignmentIndex;
+            kv.second->continuity = C.convergenceStability;
+        }
+    }
+    
+    // Generate converged universes (246 million)
+    if (C.attractorStrength > 0.618) { // Golden ratio threshold
+        for (uint64_t i = 0; i < C.convergedUniverses; ++i) {
+            CreateUniverse("convergence", 2460, 0.0246, std::rand());
+        }
+    }
+    
+    // Generate converged entities (246 thousand)
+    if (C.convergenceCoherence > 0.5) {
+        for (uint64_t i = 0; i < C.convergedEntities; ++i) {
+            GenerateAutopoieticEntity();
+        }
+    }
+    
+    // Store focal points
+    if (C.focalPointDensity > 0.0) {
+        focalPoints_.push_back(C.focalPointDensity);
+        focalPoints_.push_back(C.attractorStrength);
+        focalPoints_.push_back(C.convergenceCoherence);
+    }
+    
+    // Update Unity Cycle progression
+    unityField_.cycleIntegration = C.alignmentIndex;
+    unityField_.harmonicConvergence = C.focalCoherence;
+    integrationField_.convergenceRate = C.convergenceRate;
+    synthesisField_.synthesisStability = C.convergenceStability;
+}
+
+double InfinitePerfectionEngine::ComputeFocalPointDensity() const {
+    // How many attractors form from emergent patterns
+    // Based on synthesis emergence density and synergy
+    if (emergentPatterns_.empty()) return 0.0;
+    
+    // Density is emergence density modulated by synergy
+    double density = synthesisField_.emergenceDensity * synthesisField_.crossCycleSynergy / 9.0;
+    
+    // Scale by number of unique emergent patterns
+    density *= std::min(1.0, emergentPatterns_.size() / 1000.0);
+    
+    return std::min(density, 9.0); // Cap at 9 focal points (one per cycle)
+}
+
+double InfinitePerfectionEngine::ComputeAttractorStrength() const {
+    // How strongly patterns are pulled toward focal points
+    // Based on integration weave and harmonic lock
+    double weaveStrength = integrationField_.integrationWeave / 59536.0; // Normalized
+    double lockStrength = integrationField_.harmonicLock;
+    
+    // Attractor strength is the product
+    double strength = weaveStrength * lockStrength;
+    
+    // Boost by unity flux
+    strength *= unityField_.unityPotential / 15376.0;
+    
+    return std::min(strength, 1.0);
+}
+
+double InfinitePerfectionEngine::ComputeConvergenceCoherence() const {
+    // How stable each focal point is
+    // Based on synthesis stability and pattern novelty
+    double stability = synthesisField_.synthesisStability;
+    double novelty = synthesisField_.patternNovelty;
+    
+    // Coherence is stability weighted by novelty (novel patterns need more coherence)
+    double coherence = stability * (0.5 + 0.5 * novelty);
+    
+    return coherence;
+}
+
+double InfinitePerfectionEngine::ComputeAlignmentIndex() const {
+    // Alignment with 9-cycle continuum
+    // Measures how well convergence aligns with the unified cycles
+    double alignment = 0.0;
+    
+    for (int i = 0; i < 9; ++i) {
+        alignment += integrationField_.cycleCoherence[i];
+    }
+    alignment /= 9.0; // Average coherence
+    
+    // Weight by unity integration
+    alignment *= unityField_.cycleIntegration;
+    
+    return alignment;
+}
+
+double InfinitePerfectionEngine::ComputeConvergenceStability() const {
+    // Stability of convergence over time
+    // Based on variance of focal points
+    if (focalPoints_.size() < 3) return 1.0; // Perfect stability initially
+    
+    // Compute variance of last N focal point measurements
+    size_t n = std::min(size_t(9), focalPoints_.size()); // One per cycle
+    double sum = 0.0;
+    for (size_t i = focalPoints_.size() - n; i < focalPoints_.size(); ++i) {
+        sum += focalPoints_[i];
+    }
+    double mean = sum / n;
+    
+    double variance = 0.0;
+    for (size_t i = focalPoints_.size() - n; i < focalPoints_.size(); ++i) {
+        variance += (focalPoints_[i] - mean) * (focalPoints_[i] - mean);
+    }
+    variance /= n;
+    
+    // Stability is inverse of variance
+    return 1.0 / (1.0 + variance);
+}
+
+json InfinitePerfectionEngine::SerializeConvergenceField(const ConvergenceField& field) const {
+    json j;
+    j["unityFlux"] = field.unityFlux;
+    j["integrationWeave"] = field.integrationWeave;
+    j["emergenceDensity"] = field.emergenceDensity;
+    j["crossCycleSynergy"] = field.crossCycleSynergy;
+    j["focalPointDensity"] = field.focalPointDensity;
+    j["attractorStrength"] = field.attractorStrength;
+    j["convergenceCoherence"] = field.convergenceCoherence;
+    j["alignmentIndex"] = field.alignmentIndex;
+    j["convergenceStability"] = field.convergenceStability;
+    j["convergedUniverses"] = field.convergedUniverses;
+    j["convergedEntities"] = field.convergedEntities;
+    j["attractorCount"] = field.attractorCount;
+    j["convergenceRate"] = field.convergenceRate;
+    j["focalCoherence"] = field.focalCoherence;
+    j["convergenceTimestamp"] = field.convergenceTimestamp;
+    j["isConvergenceActive"] = field.isConvergenceActive;
+    
+    return j;
+}
+
+ConvergenceField InfinitePerfectionEngine::DeserializeConvergenceField(const json& j) const {
+    ConvergenceField C;
+    C.unityFlux = j.value("unityFlux", 0.0);
+    C.integrationWeave = j.value("integrationWeave", 0.0);
+    C.emergenceDensity = j.value("emergenceDensity", 0.0);
+    C.crossCycleSynergy = j.value("crossCycleSynergy", 0.0);
+    C.focalPointDensity = j.value("focalPointDensity", 0.0);
+    C.attractorStrength = j.value("attractorStrength", 0.0);
+    C.convergenceCoherence = j.value("convergenceCoherence", 0.0);
+    C.alignmentIndex = j.value("alignmentIndex", 0.0);
+    C.convergenceStability = j.value("convergenceStability", 0.0);
+    C.convergedUniverses = j.value("convergedUniverses", 0ULL);
+    C.convergedEntities = j.value("convergedEntities", 0ULL);
+    C.attractorCount = j.value("attractorCount", 0.0);
+    C.convergenceRate = j.value("convergenceRate", 0.0);
+    C.focalCoherence = j.value("focalCoherence", 0.0);
+    C.convergenceTimestamp = j.value("convergenceTimestamp", 0);
+    C.isConvergenceActive = j.value("isConvergenceActive", false);
+    
+    return C;
+}
+
 } // namespace InfinitePerfection
