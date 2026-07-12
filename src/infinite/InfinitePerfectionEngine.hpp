@@ -1405,6 +1405,19 @@ struct TraditionField {
     double traditionMagnitude;     // total tradition measure
 };
 
+// Batch 190: SFE-LXXVI Structure - Sovereign Wisdom (FOURTH STEP - SIXTH CYCLE)
+struct WisdomField {
+    double wisdomOrigin;        // origin of wisdom
+    double wisdomPotential;     // potential for wisdom
+    double wisdomHarmony;       // harmony in wisdom
+    double wisdomClarity;       // clarity of wisdom
+    double wisdomContinuity;    // continuity of wisdom
+    double wisdomStability;     // stability through wisdom
+    double wisdomResolution;    // resolution of wisdom
+    double wisdomExpansion;     // expansion through wisdom
+    double wisdomMagnitude;     // total wisdom measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1859,6 +1872,10 @@ public:
     // Batch 189: SFE-LXXV - Sovereign Tradition (THIRD STEP - SIXTH CYCLE)
     TraditionField ComputeTradition();
     void RunTraditionCycle();
+
+    // Batch 190: SFE-LXXVI - Sovereign Wisdom (FOURTH STEP - SIXTH CYCLE)
+    WisdomField ComputeWisdom();
+    void RunWisdomCycle();
 
     // Serialization
     json SerializeAll() const;
