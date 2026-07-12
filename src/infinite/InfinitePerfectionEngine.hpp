@@ -1678,6 +1678,19 @@ struct ExaltedField {
     double exaltedMagnitude;     // total exalted measure
 };
 
+// Batch 211: SFE-XCVII Structure - Sovereign Glorified (ELEVENTH STEP - SEVENTH CYCLE)
+struct GlorifiedField {
+    double glorifiedOrigin;        // origin of glorified
+    double glorifiedPotential;     // potential for glorified
+    double glorifiedHarmony;       // harmony in glorified
+    double glorifiedClarity;       // clarity of glorified
+    double glorifiedContinuity;    // continuity of glorified
+    double glorifiedStability;     // stability through glorified
+    double glorifiedResolution;    // resolution of glorified
+    double glorifiedExpansion;     // expansion through glorified
+    double glorifiedMagnitude;     // total glorified measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2216,6 +2229,10 @@ public:
     // Batch 210: SFE-XCVI - Sovereign Exalted (TENTH STEP - SEVENTH CYCLE)
     ExaltedField ComputeExalted();
     void RunExaltedCycle();
+
+    // Batch 211: SFE-XCVII - Sovereign Glorified (ELEVENTH STEP - SEVENTH CYCLE)
+    GlorifiedField ComputeGlorified();
+    void RunGlorifiedCycle();
 
     // Serialization
     json SerializeAll() const;
