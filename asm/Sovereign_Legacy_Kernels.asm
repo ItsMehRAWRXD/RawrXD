@@ -41,6 +41,18 @@ Q8_BLOCK_SIZE EQU 32
 ; ----------------------------------------------------------------------------
 .code
 
+; Public exports for kernel functions
+PUBLIC Sovereign_FlashAttentionV2_F32
+PUBLIC Sovereign_FastTokenScan
+PUBLIC Sovereign_SVD_Compress_F32
+PUBLIC Sovereign_TokenMerge_AVX512
+PUBLIC Sovereign_Q4_0_Q8_0_MatMul
+PUBLIC flash_attention_v2_f32
+PUBLIC fast_token_scan
+PUBLIC svd_compress_f32
+PUBLIC token_merge_avx512
+PUBLIC q4_0_q8_0_matmul
+
 ; ============================================================================
 ; KERNEL_COMPLETE: MASM_FlashAttentionV2_F32
 ; Sovereign_FlashAttentionV2_F32 - Flash Attention v2 Implementation

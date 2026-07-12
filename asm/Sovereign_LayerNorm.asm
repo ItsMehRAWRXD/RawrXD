@@ -34,6 +34,10 @@ one_ln            REAL4 1.0, 1.0, 1.0, 1.0
 ; ----------------------------------------------------------------------------
 .code
 
+; Public exports for kernel functions
+PUBLIC Sovereign_LayerNorm_F32_AVX2
+PUBLIC layer_norm_f32
+
 ; ============================================================================
 ; KERNEL_COMPLETE: MASM_LayerNorm_F32_AVX2
 ; Sovereign_LayerNorm_F32_AVX2 - Layer Normalization for F32 tensors

@@ -17,6 +17,10 @@ low_nibble_mask BYTE 32 DUP(00Fh)
 .code
 ALIGN 16
 
+; Public exports for kernel functions
+PUBLIC Sovereign_Q4Q8_MatMul_AVX512
+PUBLIC q4q8_matmul_avx512
+
 ; ============================================================================
 ; Sovereign_Q4Q8_MatMul_AVX512 - Optimized quantized matmul
 ; ============================================================================

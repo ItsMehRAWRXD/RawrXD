@@ -11,6 +11,10 @@ ln_one     REAL4 1.0, 1.0, 1.0, 1.0
 
 .code
 
+; Public exports for kernel functions
+PUBLIC Sovereign_LayerNorm_F32_AVX2
+PUBLIC layer_norm_f32
+
 ; ============================================================================
 ; layer_norm_f32 - C API
 ; RCX=input, RDX=output, R8=gamma, R9=beta, [RSP+40]=n_elements, [RSP+48]=epsilon

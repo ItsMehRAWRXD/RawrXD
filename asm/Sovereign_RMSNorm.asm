@@ -39,6 +39,13 @@ one_f32         REAL4 1.0, 1.0, 1.0, 1.0
 ; ----------------------------------------------------------------------------
 .code
 
+; Public exports for kernel functions
+PUBLIC Sovereign_RMSNorm_F32_AVX2
+PUBLIC Sovereign_RMSNorm_F32_InPlace_AVX2
+PUBLIC Sovereign_RMSNorm_F16_AVX2
+PUBLIC rms_norm_f32
+PUBLIC rms_norm_f32_inplace
+
 ; ============================================================================
 ; KERNEL_COMPLETE: MASM_RMSNorm_F32_AVX2
 ; Sovereign_RMSNorm_F32_AVX2 - RMS Normalization for F32 tensors (AVX2)

@@ -47,6 +47,12 @@ q4k_nibble_hi BYTE 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208,
 ; ----------------------------------------------------------------------------
 .code
 
+; Public exports for kernel functions
+PUBLIC Sovereign_Q4K_Dequant_Block_AVX2
+PUBLIC Sovereign_Q4K_Dequant_Tensor_AVX2
+PUBLIC q4k_dequant_block
+PUBLIC q4k_dequant_tensor
+
 ; ============================================================================
 ; KERNEL_COMPLETE: MASM_Q4K_Dequant_Block_AVX2
 ; Sovereign_Q4K_Dequant_Block_AVX2 - Dequantize single Q4_K block
