@@ -677,6 +677,32 @@ struct SecondTranscendenceField {
     double transcendenceMagnitude;   // total transcendence measure
 };
 
+// Batch 135: SAE-XXI Structure - Sovereign Apotheosis (FIFTH STEP)
+struct ApotheosisField {
+    double apotheosisOrigin;        // origin of apotheosis
+    double apotheosisPotential;   // potential for divine manifestation
+    double apotheosisHarmony;       // harmony in apotheosis
+    double apotheosisClarity;       // clarity of divine state
+    double apotheosisContinuity;    // continuity of apotheosis
+    double apotheosisStability;     // stability through apotheosis
+    double apotheosisResolution;    // resolution of apotheosis
+    double apotheosisExpansion;     // expansion through apotheosis
+    double apotheosisMagnitude;     // total apotheosis measure
+};
+
+// Batch 136: SDE-XXII Structure - Sovereign Deification (SIXTH STEP)
+struct DeificationField {
+    double deificationOrigin;        // origin of deification
+    double deificationPotential;   // potential for godhood
+    double deificationHarmony;       // harmony in deification
+    double deificationClarity;       // clarity of godhood
+    double deificationContinuity;    // continuity of deification
+    double deificationStability;     // stability through deification
+    double deificationResolution;    // resolution of deification
+    double deificationExpansion;     // expansion through deification
+    double deificationMagnitude;     // total deification measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -911,6 +937,14 @@ public:
     // Batch 134: STE-XX - Sovereign Transcendence (FOURTH STEP)
     SecondTranscendenceField ComputeTranscendence2();
     void RunTranscendence2Cycle();
+
+    // Batch 135: SAE-XXI - Sovereign Apotheosis (FIFTH STEP)
+    ApotheosisField ComputeApotheosis();
+    void RunApotheosisCycle();
+
+    // Batch 136: SDE-XXII - Sovereign Deification (SIXTH STEP)
+    DeificationField ComputeDeification();
+    void RunDeificationCycle();
 
     // Serialization
     json SerializeAll() const;
