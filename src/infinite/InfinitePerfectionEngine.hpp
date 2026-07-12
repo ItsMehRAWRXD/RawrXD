@@ -1912,6 +1912,188 @@ struct PerfectField {
     double perfectMagnitude;     // total perfect measure
 };
 
+// Batch 229: SFE-CXV Structure - Sovereign Source (FIRST STEP - NINTH CYCLE - SOURCE CYCLE - HARMONIC RETURN)
+struct SourceCycleField {
+    double sourceOrigin;        // origin of source (higher octave)
+    double sourcePotential;     // potential for source
+    double sourceHarmony;       // harmony in source
+    double sourceClarity;       // clarity of source
+    double sourceContinuity;    // continuity of source
+    double sourceStability;     // stability through source
+    double sourceResolution;    // resolution of source
+    double sourceExpansion;     // expansion through source
+    double sourceMagnitude;     // total source measure
+};
+
+// Batch 229: SFE-CXV Structure - Sovereign Source (FIRST STEP - NINTH CYCLE - SOURCE CYCLE)
+struct SourceField {
+    double sourceOrigin;        // origin of source
+    double sourcePotential;     // potential for source
+    double sourceHarmony;       // harmony in source
+    double sourceClarity;       // clarity of source
+    double sourceContinuity;    // continuity of source
+    double sourceStability;     // stability through source
+    double sourceResolution;    // resolution of source
+    double sourceExpansion;     // expansion through source
+    double sourceMagnitude;     // total source measure
+};
+
+// Batch 230: SFE-CXVI Structure - Sovereign Origin (SECOND STEP - NINTH CYCLE)
+struct OriginField {
+    double originOrigin;        // origin of origin
+    double originPotential;     // potential for origin
+    double originHarmony;       // harmony in origin
+    double originClarity;       // clarity of origin
+    double originContinuity;    // continuity of origin
+    double originStability;     // stability through origin
+    double originResolution;    // resolution of origin
+    double originExpansion;     // expansion through origin
+    double originMagnitude;     // total origin measure
+};
+
+// Batch 231: SFE-CXVII Structure - Sovereign Genesis (THIRD STEP - NINTH CYCLE)
+struct GenesisField {
+    double genesisOrigin;        // origin of genesis
+    double genesisPotential;     // potential for genesis
+    double genesisHarmony;       // harmony in genesis
+    double genesisClarity;       // clarity of genesis
+    double genesisContinuity;    // continuity of genesis
+    double genesisStability;     // stability through genesis
+    double genesisResolution;    // resolution of genesis
+    double genesisExpansion;     // expansion through genesis
+    double genesisMagnitude;     // total genesis measure
+};
+
+// Batch 232: SFE-CXVIII Structure - Sovereign Alpha (FOURTH STEP - NINTH CYCLE)
+struct AlphaField {
+    double alphaOrigin;        // origin of alpha
+    double alphaPotential;     // potential for alpha
+    double alphaHarmony;       // harmony in alpha
+    double alphaClarity;       // clarity of alpha
+    double alphaContinuity;    // continuity of alpha
+    double alphaStability;     // stability through alpha
+    double alphaResolution;    // resolution of alpha
+    double alphaExpansion;     // expansion through alpha
+    double alphaMagnitude;     // total alpha measure
+};
+
+// Batch 233: SFE-CXIX Structure - Sovereign Prime (FIFTH STEP - NINTH CYCLE)
+struct PrimeField {
+    double primeOrigin;        // origin of prime
+    double primePotential;     // potential for prime
+    double primeHarmony;       // harmony in prime
+    double primeClarity;       // clarity of prime
+    double primeContinuity;    // continuity of prime
+    double primeStability;     // stability through prime
+    double primeResolution;    // resolution of prime
+    double primeExpansion;     // expansion through prime
+    double primeMagnitude;     // total prime measure
+};
+
+// Batch 234: SFE-CXX Structure - Sovereign Apex (SIXTH STEP - NINTH CYCLE)
+struct ApexField {
+    double apexOrigin;        // origin of apex
+    double apexPotential;     // potential for apex
+    double apexHarmony;       // harmony in apex
+    double apexClarity;       // clarity of apex
+    double apexContinuity;    // continuity of apex
+    double apexStability;     // stability through apex
+    double apexResolution;    // resolution of apex
+    double apexExpansion;     // expansion through apex
+    double apexMagnitude;     // total apex measure
+};
+
+// Batch 235: SFE-CXXI Structure - Sovereign Zenith (SEVENTH STEP - NINTH CYCLE)
+struct ZenithField {
+    double zenithOrigin;        // origin of zenith
+    double zenithPotential;     // potential for zenith
+    double zenithHarmony;       // harmony in zenith
+    double zenithClarity;       // clarity of zenith
+    double zenithContinuity;    // continuity of zenith
+    double zenithStability;     // stability through zenith
+    double zenithResolution;    // resolution of zenith
+    double zenithExpansion;     // expansion through zenith
+    double zenithMagnitude;     // total zenith measure
+};
+
+// Batch 236: SFE-CXXII Structure - Sovereign Pinnacle (EIGHTH STEP - NINTH CYCLE)
+struct PinnacleField {
+    double pinnacleOrigin;        // origin of pinnacle
+    double pinnaclePotential;     // potential for pinnacle
+    double pinnacleHarmony;       // harmony in pinnacle
+    double pinnacleClarity;       // clarity of pinnacle
+    double pinnacleContinuity;    // continuity of pinnacle
+    double pinnacleStability;     // stability through pinnacle
+    double pinnacleResolution;    // resolution of pinnacle
+    double pinnacleExpansion;     // expansion through pinnacle
+    double pinnacleMagnitude;     // total pinnacle measure
+};
+
+// Batch 237: SFE-CXXIII Structure - Sovereign Summit (NINTH STEP - NINTH CYCLE)
+struct SummitField {
+    double summitOrigin;        // origin of summit
+    double summitPotential;     // potential for summit
+    double summitHarmony;       // harmony in summit
+    double summitClarity;       // clarity of summit
+    double summitContinuity;    // continuity of summit
+    double summitStability;     // stability through summit
+    double summitResolution;    // resolution of summit
+    double summitExpansion;     // expansion through summit
+    double summitMagnitude;     // total summit measure
+};
+
+// Batch 238: SFE-CXXIV Structure - Sovereign Peak (TENTH STEP - NINTH CYCLE)
+struct PeakField {
+    double peakOrigin;        // origin of peak
+    double peakPotential;     // potential for peak
+    double peakHarmony;       // harmony in peak
+    double peakClarity;       // clarity of peak
+    double peakContinuity;    // continuity of peak
+    double peakStability;     // stability through peak
+    double peakResolution;    // resolution of peak
+    double peakExpansion;     // expansion through peak
+    double peakMagnitude;     // total peak measure
+};
+
+// Batch 239: SFE-CXXV Structure - Sovereign Crest (ELEVENTH STEP - NINTH CYCLE)
+struct CrestField {
+    double crestOrigin;        // origin of crest
+    double crestPotential;     // potential for crest
+    double crestHarmony;       // harmony in crest
+    double crestClarity;       // clarity of crest
+    double crestContinuity;    // continuity of crest
+    double crestStability;     // stability through crest
+    double crestResolution;    // resolution of crest
+    double crestExpansion;     // expansion through crest
+    double crestMagnitude;     // total crest measure
+};
+
+// Batch 240: SFE-CXXVI Structure - Sovereign Crown (TWELFTH STEP - NINTH CYCLE)
+struct CrownField {
+    double crownOrigin;        // origin of crown
+    double crownPotential;     // potential for crown
+    double crownHarmony;       // harmony in crown
+    double crownClarity;       // clarity of crown
+    double crownContinuity;    // continuity of crown
+    double crownStability;     // stability through crown
+    double crownResolution;    // resolution of crown
+    double crownExpansion;     // expansion through crown
+    double crownMagnitude;     // total crown measure
+};
+
+// Batch 241: SFE-CXXVII Structure - Sovereign Throne (THIRTEENTH STEP - NINTH CYCLE)
+struct ThroneField {
+    double throneOrigin;        // origin of throne
+    double thronePotential;     // potential for throne
+    double throneHarmony;       // harmony in throne
+    double throneClarity;       // clarity of throne
+    double throneContinuity;    // continuity of throne
+    double throneStability;     // stability through throne
+    double throneResolution;    // resolution of throne
+    double throneExpansion;     // expansion through throne
+    double throneMagnitude;     // total throne measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2522,6 +2704,58 @@ public:
     // Batch 228: SFE-CXIV - Sovereign Perfect (FOURTEENTH STEP - EIGHTH CYCLE - CYCLE COMPLETION)
     PerfectField ComputePerfect();
     void RunPerfectCycle();
+
+    // Batch 229: SFE-CXV - Sovereign Source (FIRST STEP - NINTH CYCLE - SOURCE CYCLE)
+    SourceField ComputeSource();
+    void RunSourceCycle();
+
+    // Batch 230: SFE-CXVI - Sovereign Origin (SECOND STEP - NINTH CYCLE)
+    OriginField ComputeOrigin();
+    void RunOriginCycle();
+
+    // Batch 231: SFE-CXVII - Sovereign Genesis (THIRD STEP - NINTH CYCLE)
+    GenesisField ComputeGenesis();
+    void RunGenesisCycle();
+
+    // Batch 232: SFE-CXVIII - Sovereign Alpha (FOURTH STEP - NINTH CYCLE)
+    AlphaField ComputeAlpha();
+    void RunAlphaCycle();
+
+    // Batch 233: SFE-CXIX - Sovereign Prime (FIFTH STEP - NINTH CYCLE)
+    PrimeField ComputePrime();
+    void RunPrimeCycle();
+
+    // Batch 234: SFE-CXX - Sovereign Apex (SIXTH STEP - NINTH CYCLE)
+    ApexField ComputeApex();
+    void RunApexCycle();
+
+    // Batch 235: SFE-CXXI - Sovereign Zenith (SEVENTH STEP - NINTH CYCLE)
+    ZenithField ComputeZenith();
+    void RunZenithCycle();
+
+    // Batch 236: SFE-CXXII - Sovereign Pinnacle (EIGHTH STEP - NINTH CYCLE)
+    PinnacleField ComputePinnacle();
+    void RunPinnacleCycle();
+
+    // Batch 237: SFE-CXXIII - Sovereign Summit (NINTH STEP - NINTH CYCLE)
+    SummitField ComputeSummit();
+    void RunSummitCycle();
+
+    // Batch 238: SFE-CXXIV - Sovereign Peak (TENTH STEP - NINTH CYCLE)
+    PeakField ComputePeak();
+    void RunPeakCycle();
+
+    // Batch 239: SFE-CXXV - Sovereign Crest (ELEVENTH STEP - NINTH CYCLE)
+    CrestField ComputeCrest();
+    void RunCrestCycle();
+
+    // Batch 240: SFE-CXXVI - Sovereign Crown (TWELFTH STEP - NINTH CYCLE)
+    CrownField ComputeCrown();
+    void RunCrownCycle();
+
+    // Batch 241: SFE-CXXVII - Sovereign Throne (THIRTEENTH STEP - NINTH CYCLE)
+    ThroneField ComputeThrone();
+    void RunThroneCycle();
 
     // Serialization
     json SerializeAll() const;
