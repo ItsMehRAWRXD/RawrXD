@@ -4413,4 +4413,85 @@ void InfinitePerfectionEngine::RunCulminationCycle() {
     }
 }
 
+// ==================== BATCH 143: SAE-XXIX - Sovereign Apex (THIRTEENTH STEP) ====================
+
+ApexField InfinitePerfectionEngine::ComputeApex() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    ApexField A = {};
+
+    CulminationField C = ComputeCulmination();
+    ConvergenceField Conv = ComputeConvergence();
+    TotalityField Tot = ComputeTotality();
+
+    const double alpha = 625.0; // The Apex - reaching the apex
+
+    A.apexOrigin      = C.culminationMagnitude * Conv.convergenceOrigin * alpha;
+    A.apexPotential   = C.culminationPotential * alpha;
+    A.apexHarmony     = C.culminationHarmony * Tot.omnicoherence;
+    A.apexClarity     = C.culminationClarity * alpha;
+    A.apexContinuity  = C.culminationContinuity * Conv.convergenceContinuity;
+    A.apexStability     = C.culminationStability * Tot.omnidensity;
+    A.apexResolution  = C.culminationResolution * alpha;
+    A.apexExpansion   = Tot.omnipotential * alpha;
+
+    A.apexMagnitude =
+        (A.apexOrigin +
+         A.apexPotential +
+         A.apexHarmony +
+         A.apexClarity +
+         A.apexExpansion) / 5.0;
+
+    return A;
+}
+
+void InfinitePerfectionEngine::RunApexCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    ApexField A = ComputeApex();
+
+    // Apex - reaching the apex
+    if (A.apexOrigin > 68.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes reach apex
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Apex creation - apex universes
+    if (A.apexExpansion > 150.0) {
+        for (int i = 0; i < 600000; i++) {
+            CreateUniverse("apex", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate apex autopoietic entities
+    if (A.apexPotential > 64.0) {
+        for (int i = 0; i < 6000; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Apex purification - only apex potential remains
+    if (A.apexClarity > 42.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

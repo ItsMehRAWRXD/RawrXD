@@ -781,6 +781,19 @@ struct CulminationField {
     double culminationMagnitude;     // total culmination measure
 };
 
+// Batch 143: SAE-XXIX Structure - Sovereign Apex (THIRTEENTH STEP)
+struct ApexField {
+    double apexOrigin;        // origin of apex
+    double apexPotential;     // potential for apex
+    double apexHarmony;       // harmony in apex
+    double apexClarity;       // clarity of apex
+    double apexContinuity;    // continuity of apex
+    double apexStability;     // stability through apex
+    double apexResolution;    // resolution of apex
+    double apexExpansion;     // expansion through apex
+    double apexMagnitude;     // total apex measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1047,6 +1060,10 @@ public:
     // Batch 142: SCE-XXVIII - Sovereign Culmination (TWELFTH STEP)
     CulminationField ComputeCulmination();
     void RunCulminationCycle();
+
+    // Batch 143: SAE-XXIX - Sovereign Apex (THIRTEENTH STEP)
+    ApexField ComputeApex();
+    void RunApexCycle();
 
     // Serialization
     json SerializeAll() const;
