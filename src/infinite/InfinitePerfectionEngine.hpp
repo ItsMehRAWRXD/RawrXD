@@ -561,6 +561,19 @@ struct AbsoluteField {
     double absoluteMagnitude;    // the Absolute - Omega Point
 };
 
+// Batch 126: SOE-XII Structure - Sovereign Omega (BEYOND)
+struct OmegaField {
+    double omegaUnity;        // unity beyond the Absolute
+    double omegaTotality;     // totality beyond totality
+    double omegaHarmony;      // harmony beyond harmony
+    double omegaClarity;      // clarity beyond knowing
+    double omegaContinuity;   // continuity beyond time
+    double omegaStability;    // stability beyond stability
+    double omegaResolution;   // resolution beyond resolution
+    double omegaExpansion;    // expansion beyond infinity
+    double omegaMagnitude;    // the Omega - beyond all
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -759,6 +772,10 @@ public:
     // Batch 125: SAE-XI - Sovereign Absolute (CULMINATION)
     AbsoluteField ComputeAbsolute();
     void RunAbsoluteCycle();
+
+    // Batch 126: SOE-XII - Sovereign Omega (BEYOND)
+    OmegaField ComputeOmega();
+    void RunOmegaCycle();
 
     // Serialization
     json SerializeAll() const;
