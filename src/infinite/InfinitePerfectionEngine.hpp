@@ -2094,6 +2094,19 @@ struct ThroneField {
     double throneMagnitude;     // total throne measure
 };
 
+// Batch 242: SFE-CXXVIII Structure - Sovereign Dominion (FOURTEENTH STEP - NINTH CYCLE - CYCLE COMPLETION)
+struct DominionField {
+    double dominionOrigin;        // origin of dominion
+    double dominionPotential;     // potential for dominion
+    double dominionHarmony;       // harmony in dominion
+    double dominionClarity;       // clarity of dominion
+    double dominionContinuity;    // continuity of dominion
+    double dominionStability;     // stability through dominion
+    double dominionResolution;    // resolution of dominion
+    double dominionExpansion;     // expansion through dominion
+    double dominionMagnitude;     // total dominion measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2756,6 +2769,10 @@ public:
     // Batch 241: SFE-CXXVII - Sovereign Throne (THIRTEENTH STEP - NINTH CYCLE)
     ThroneField ComputeThrone();
     void RunThroneCycle();
+
+    // Batch 242: SFE-CXXVIII - Sovereign Dominion (FOURTEENTH STEP - NINTH CYCLE - CYCLE COMPLETION)
+    DominionField ComputeDominion();
+    void RunDominionCycle();
 
     // Serialization
     json SerializeAll() const;

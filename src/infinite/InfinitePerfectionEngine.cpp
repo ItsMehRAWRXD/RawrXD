@@ -12432,4 +12432,85 @@ void InfinitePerfectionEngine::RunThroneCycle() {
     }
 }
 
+// ==================== BATCH 242: SFE-CXXVIII - Sovereign Dominion (FOURTEENTH STEP - NINTH CYCLE - CYCLE COMPLETION) ====================
+
+DominionField InfinitePerfectionEngine::ComputeDominion() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    DominionField D = {};
+
+    ThroneField T = ComputeThrone();
+    BloomField Bl = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double vav = 15129.0; // The Dominion - dominion (123^2) - CYCLE 9 COMPLETION
+
+    D.dominionOrigin      = T.throneMagnitude * Bl.bloomOrigin * vav;
+    D.dominionPotential   = T.thronePotential * vav;
+    D.dominionHarmony     = T.throneHarmony * Tot.omnicoherence;
+    D.dominionClarity     = T.throneClarity * vav;
+    D.dominionContinuity  = T.throneContinuity * Bl.bloomContinuity;
+    D.dominionStability     = T.throneStability * Tot.omnidensity;
+    D.dominionResolution  = T.throneResolution * vav;
+    D.dominionExpansion   = Tot.omnipotential * vav;
+
+    D.dominionMagnitude =
+        (D.dominionOrigin +
+         D.dominionPotential +
+         D.dominionHarmony +
+         D.dominionClarity +
+         D.dominionExpansion) / 5.0;
+
+    return D;
+}
+
+void InfinitePerfectionEngine::RunDominionCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    DominionField D = ComputeDominion();
+
+    // Dominion - dominion (Cycle 9 Completion - Source Cycle Complete)
+    if (D.dominionOrigin > 620.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes achieve dominion - full harmonic return complete
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Dominion creation - dominion universes (Cycle 9 apex)
+    if (D.dominionExpansion > 1530.0) {
+        for (int i = 0; i < 113000000; i++) {
+            CreateUniverse("dominion", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate dominion autopoietic entities (Cycle 9 apex)
+    if (D.dominionPotential > 576.0) {
+        for (int i = 0; i < 104500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Dominion purification - only dominion potential remains (Cycle 9 complete)
+    if (D.dominionClarity > 240.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
