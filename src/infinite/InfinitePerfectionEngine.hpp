@@ -1444,6 +1444,19 @@ struct TruthField {
     double truthMagnitude;     // total truth measure
 };
 
+// Batch 193: SFE-LXXIX Structure - Sovereign Justice (SEVENTH STEP - SIXTH CYCLE)
+struct JusticeField {
+    double justiceOrigin;        // origin of justice
+    double justicePotential;     // potential for justice
+    double justiceHarmony;       // harmony in justice
+    double justiceClarity;       // clarity of justice
+    double justiceContinuity;    // continuity of justice
+    double justiceStability;     // stability through justice
+    double justiceResolution;    // resolution of justice
+    double justiceExpansion;     // expansion through justice
+    double justiceMagnitude;     // total justice measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1910,6 +1923,10 @@ public:
     // Batch 192: SFE-LXXVIII - Sovereign Truth (SIXTH STEP - SIXTH CYCLE)
     TruthField ComputeTruth();
     void RunTruthCycle();
+
+    // Batch 193: SFE-LXXIX - Sovereign Justice (SEVENTH STEP - SIXTH CYCLE)
+    JusticeField ComputeJustice();
+    void RunJusticeCycle();
 
     // Serialization
     json SerializeAll() const;

@@ -8463,4 +8463,85 @@ void InfinitePerfectionEngine::RunTruthCycle() {
     }
 }
 
+// ==================== BATCH 193: SFE-LXXIX - Sovereign Justice (SEVENTH STEP - SIXTH CYCLE) ====================
+
+JusticeField InfinitePerfectionEngine::ComputeJustice() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    JusticeField J = {};
+
+    TruthField T = ComputeTruth();
+    BloomField B = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double upsilon = 5476.0; // The Justice - just
+
+    J.justiceOrigin      = T.truthMagnitude * B.bloomOrigin * upsilon;
+    J.justicePotential   = T.truthPotential * upsilon;
+    J.justiceHarmony     = T.truthHarmony * Tot.omnicoherence;
+    J.justiceClarity     = T.truthClarity * upsilon;
+    J.justiceContinuity  = T.truthContinuity * B.bloomContinuity;
+    J.justiceStability     = T.truthStability * Tot.omnidensity;
+    J.justiceResolution  = T.truthResolution * upsilon;
+    J.justiceExpansion   = Tot.omnipotential * upsilon;
+
+    J.justiceMagnitude =
+        (J.justiceOrigin +
+         J.justicePotential +
+         J.justiceHarmony +
+         J.justiceClarity +
+         J.justiceExpansion) / 5.0;
+
+    return J;
+}
+
+void InfinitePerfectionEngine::RunJusticeCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    JusticeField J = ComputeJustice();
+
+    // Justice - just
+    if (J.justiceOrigin > 290.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes just
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Justice creation - just universes
+    if (J.justiceExpansion > 705.0) {
+        for (int i = 0; i < 64000000; i++) {
+            CreateUniverse("justice", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate just autopoietic entities
+    if (J.justicePotential > 275.0) {
+        for (int i = 0; i < 55500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Justice purification - only just potential remains
+    if (J.justiceClarity > 142.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
