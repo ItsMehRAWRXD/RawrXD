@@ -2203,6 +2203,31 @@ struct ConvergenceField {
     bool isConvergenceActive;            // whether convergence is active
 };
 
+// Batch 247: SFE-CXXXIII Structure - Sovereign Coherence (FIFTH STEP - TENTH CYCLE)
+// The Phase-Lock Field: Where focal points stabilize into unified behavior
+struct CoherenceField {
+    // Inherited metrics from Convergence
+    double focalPointDensity;            // focal points from convergence
+    double attractorStrength;            // attractor strength from convergence
+    double convergenceCoherence;         // convergence coherence inherited
+    double alignmentIndex;               // alignment index from convergence
+    
+    // Coherence metrics: phase-lock and stability
+    double phaseLockStrength;            // stability of attractor phase alignment
+    double coherenceStability;           // persistence of unified behavior
+    double unifiedPatternIndex;          // degree of pattern unification
+    double harmonicConsistency;          // alignment with 9-cycle harmonic baseline
+    uint64_t coherentUniverses;          // count of coherent universes
+    uint64_t coherentEntities;           // count of coherent entities
+    
+    // Coherence-specific: Phase-lock dynamics
+    double phaseAlignment;               // phase alignment across attractors
+    double lockPersistence;              // how long phase-lock persists
+    double coherenceRate;                // rate of coherence establishment
+    int64_t coherenceTimestamp;          // timestamp of coherence realization
+    bool isCoherenceActive;              // whether coherence is active
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2924,6 +2949,19 @@ public:
     json SerializeConvergenceField(const ConvergenceField& field) const;
     ConvergenceField DeserializeConvergenceField(const json& j) const;
 
+    // Batch 247: SFE-CXXXIII - Sovereign Coherence (FIFTH STEP - TENTH CYCLE)
+    // The Phase-Lock: Where focal points stabilize into unified behavior
+    CoherenceField ComputeCoherence();
+    void RunCoherenceCycle();
+    
+    // Coherence Cycle methods
+    double ComputePhaseLockStrength() const;              // Stability of attractor phase alignment
+    double ComputeCoherenceStability() const;             // Persistence of unified behavior
+    double ComputeUnifiedPatternIndex() const;            // Degree of pattern unification
+    double ComputeHarmonicConsistency() const;            // Alignment with 9-cycle harmonic baseline
+    json SerializeCoherenceField(const CoherenceField& field) const;
+    CoherenceField DeserializeCoherenceField(const json& j) const;
+
     // Serialization
     json SerializeAll() const;
     void DeserializeAll(const json& j);
@@ -2967,6 +3005,11 @@ private:
     ConvergenceField convergenceField_;
     bool convergenceCycleActive_ = false;
     std::vector<double> focalPoints_;         // Stores focal point coordinates/strengths
+    
+    // Coherence Cycle: Phase-lock state
+    CoherenceField coherenceField_;
+    bool coherenceCycleActive_ = false;
+    std::vector<double> phaseLocks_;          // Stores phase-lock signatures
     
     // Runtime parameters
     double pdilCouplingFactor_ = 0.1;
