@@ -7410,4 +7410,85 @@ void InfinitePerfectionEngine::RunMaturationCycle() {
     }
 }
 
+// ==================== BATCH 180: SBE-LXVI - Sovereign Bloom (EIGHTH STEP - FIFTH CYCLE) ====================
+
+BloomField InfinitePerfectionEngine::ComputeBloom() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    BloomField B = {};
+
+    MaturationField M = ComputeMaturation();
+    DevelopmentField D = ComputeDevelopment();
+    TotalityField Tot = ComputeTotality();
+
+    const double beta = 3721.0; // The Bloom - blooming
+
+    B.bloomOrigin      = M.maturationMagnitude * D.developmentOrigin * beta;
+    B.bloomPotential   = M.maturationPotential * beta;
+    B.bloomHarmony     = M.maturationHarmony * Tot.omnicoherence;
+    B.bloomClarity     = M.maturationClarity * beta;
+    B.bloomContinuity  = M.maturationContinuity * D.developmentContinuity;
+    B.bloomStability     = M.maturationStability * Tot.omnidensity;
+    B.bloomResolution  = M.maturationResolution * beta;
+    B.bloomExpansion   = Tot.omnipotential * beta;
+
+    B.bloomMagnitude =
+        (B.bloomOrigin +
+         B.bloomPotential +
+         B.bloomHarmony +
+         B.bloomClarity +
+         B.bloomExpansion) / 5.0;
+
+    return B;
+}
+
+void InfinitePerfectionEngine::RunBloomCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    BloomField B = ComputeBloom();
+
+    // Bloom - blooming
+    if (B.bloomOrigin > 216.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes bloom
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Bloom creation - blooming universes
+    if (B.bloomExpansion > 520.0) {
+        for (int i = 0; i < 49000000; i++) {
+            CreateUniverse("bloom", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate blooming autopoietic entities
+    if (B.bloomPotential > 212.0) {
+        for (int i = 0; i < 42500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Bloom purification - only blooming potential remains
+    if (B.bloomClarity > 116.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

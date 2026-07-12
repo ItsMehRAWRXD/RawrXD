@@ -1275,6 +1275,19 @@ struct MaturationField {
     double maturationMagnitude;     // total maturation measure
 };
 
+// Batch 180: SBE-LXVI Structure - Sovereign Bloom (EIGHTH STEP - FIFTH CYCLE)
+struct BloomField {
+    double bloomOrigin;        // origin of bloom
+    double bloomPotential;     // potential for bloom
+    double bloomHarmony;       // harmony in bloom
+    double bloomClarity;       // clarity of bloom
+    double bloomContinuity;    // continuity of bloom
+    double bloomStability;     // stability through bloom
+    double bloomResolution;    // resolution of bloom
+    double bloomExpansion;     // expansion through bloom
+    double bloomMagnitude;     // total bloom measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1689,6 +1702,10 @@ public:
     // Batch 179: SME-LXV - Sovereign Maturation (SEVENTH STEP - FIFTH CYCLE)
     MaturationField ComputeMaturation();
     void RunMaturationCycle();
+
+    // Batch 180: SBE-LXVI - Sovereign Bloom (EIGHTH STEP - FIFTH CYCLE)
+    BloomField ComputeBloom();
+    void RunBloomCycle();
 
     // Serialization
     json SerializeAll() const;
