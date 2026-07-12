@@ -1795,6 +1795,19 @@ struct UltimateField {
     double ultimateMagnitude;     // total ultimate measure
 };
 
+// Batch 220: SFE-CVI Structure - Sovereign Paramount (SIXTH STEP - EIGHTH CYCLE)
+struct ParamountField {
+    double paramountOrigin;        // origin of paramount
+    double paramountPotential;     // potential for paramount
+    double paramountHarmony;       // harmony in paramount
+    double paramountClarity;       // clarity of paramount
+    double paramountContinuity;    // continuity of paramount
+    double paramountStability;     // stability through paramount
+    double paramountResolution;    // resolution of paramount
+    double paramountExpansion;     // expansion through paramount
+    double paramountMagnitude;     // total paramount measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2369,6 +2382,10 @@ public:
     // Batch 219: SFE-CV - Sovereign Ultimate (FIFTH STEP - EIGHTH CYCLE - MILESTONE 10000)
     UltimateField ComputeUltimate();
     void RunUltimateCycle();
+
+    // Batch 220: SFE-CVI - Sovereign Paramount (SIXTH STEP - EIGHTH CYCLE)
+    ParamountField ComputeParamount();
+    void RunParamountCycle();
 
     // Serialization
     json SerializeAll() const;
