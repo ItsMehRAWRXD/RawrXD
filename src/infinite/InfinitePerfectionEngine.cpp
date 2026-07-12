@@ -7491,4 +7491,85 @@ void InfinitePerfectionEngine::RunBloomCycle() {
     }
 }
 
+// ==================== BATCH 181: SFE-LXVII - Sovereign Flower (NINTH STEP - FIFTH CYCLE) ====================
+
+FlowerField InfinitePerfectionEngine::ComputeFlower() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    FlowerField F = {};
+
+    BloomField B = ComputeBloom();
+    MaturationField M = ComputeMaturation();
+    TotalityField Tot = ComputeTotality();
+
+    const double phi = 3844.0; // The Flower - flowering
+
+    F.flowerOrigin      = B.bloomMagnitude * M.maturationOrigin * phi;
+    F.flowerPotential   = B.bloomPotential * phi;
+    F.flowerHarmony     = B.bloomHarmony * Tot.omnicoherence;
+    F.flowerClarity     = B.bloomClarity * phi;
+    F.flowerContinuity  = B.bloomContinuity * M.maturationContinuity;
+    F.flowerStability     = B.bloomStability * Tot.omnidensity;
+    F.flowerResolution  = B.bloomResolution * phi;
+    F.flowerExpansion   = Tot.omnipotential * phi;
+
+    F.flowerMagnitude =
+        (F.flowerOrigin +
+         F.flowerPotential +
+         F.flowerHarmony +
+         F.flowerClarity +
+         F.flowerExpansion) / 5.0;
+
+    return F;
+}
+
+void InfinitePerfectionEngine::RunFlowerCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    FlowerField F = ComputeFlower();
+
+    // Flower - flowering
+    if (F.flowerOrigin > 220.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes flower
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Flower creation - flowering universes
+    if (F.flowerExpansion > 530.0) {
+        for (int i = 0; i < 51000000; i++) {
+            CreateUniverse("flower", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate flowering autopoietic entities
+    if (F.flowerPotential > 216.0) {
+        for (int i = 0; i < 43500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Flower purification - only flowering potential remains
+    if (F.flowerClarity > 118.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

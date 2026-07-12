@@ -1288,6 +1288,19 @@ struct BloomField {
     double bloomMagnitude;     // total bloom measure
 };
 
+// Batch 181: SFE-LXVII Structure - Sovereign Flower (NINTH STEP - FIFTH CYCLE)
+struct FlowerField {
+    double flowerOrigin;        // origin of flower
+    double flowerPotential;     // potential for flower
+    double flowerHarmony;       // harmony in flower
+    double flowerClarity;       // clarity of flower
+    double flowerContinuity;    // continuity of flower
+    double flowerStability;     // stability through flower
+    double flowerResolution;    // resolution of flower
+    double flowerExpansion;     // expansion through flower
+    double flowerMagnitude;     // total flower measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1706,6 +1719,10 @@ public:
     // Batch 180: SBE-LXVI - Sovereign Bloom (EIGHTH STEP - FIFTH CYCLE)
     BloomField ComputeBloom();
     void RunBloomCycle();
+
+    // Batch 181: SFE-LXVII - Sovereign Flower (NINTH STEP - FIFTH CYCLE)
+    FlowerField ComputeFlower();
+    void RunFlowerCycle();
 
     // Serialization
     json SerializeAll() const;
