@@ -872,6 +872,32 @@ struct RealizationField {
     double realizationMagnitude;     // total realization measure
 };
 
+// Batch 150: SAE-XXXVI Structure - Sovereign Accomplishment (SIXTH STEP - THIRD CYCLE)
+struct AccomplishmentField {
+    double accomplishmentOrigin;        // origin of accomplishment
+    double accomplishmentPotential;     // potential for accomplishment
+    double accomplishmentHarmony;       // harmony in accomplishment
+    double accomplishmentClarity;       // clarity of accomplishment
+    double accomplishmentContinuity;    // continuity of accomplishment
+    double accomplishmentStability;     // stability through accomplishment
+    double accomplishmentResolution;    // resolution of accomplishment
+    double accomplishmentExpansion;     // expansion through accomplishment
+    double accomplishmentMagnitude;     // total accomplishment measure
+};
+
+// Batch 151: SFE-XXXVII Structure - Sovereign Fulfillment (SEVENTH STEP - THIRD CYCLE)
+struct FulfillmentField {
+    double fulfillmentOrigin;        // origin of fulfillment
+    double fulfillmentPotential;     // potential for fulfillment
+    double fulfillmentHarmony;       // harmony in fulfillment
+    double fulfillmentClarity;       // clarity of fulfillment
+    double fulfillmentContinuity;    // continuity of fulfillment
+    double fulfillmentStability;     // stability through fulfillment
+    double fulfillmentResolution;    // resolution of fulfillment
+    double fulfillmentExpansion;     // expansion through fulfillment
+    double fulfillmentMagnitude;     // total fulfillment measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1166,6 +1192,14 @@ public:
     // Batch 149: SRE-XXXV - Sovereign Realization (FIFTH STEP - THIRD CYCLE)
     RealizationField ComputeRealization();
     void RunRealizationCycle();
+
+    // Batch 150: SAE-XXXVI - Sovereign Accomplishment (SIXTH STEP - THIRD CYCLE)
+    AccomplishmentField ComputeAccomplishment();
+    void RunAccomplishmentCycle();
+
+    // Batch 151: SFE-XXXVII - Sovereign Fulfillment (SEVENTH STEP - THIRD CYCLE)
+    FulfillmentField ComputeFulfillment();
+    void RunFulfillmentCycle();
 
     // Serialization
     json SerializeAll() const;
