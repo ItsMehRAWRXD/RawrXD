@@ -1782,6 +1782,19 @@ struct SupremeField {
     double supremeMagnitude;     // total supreme measure
 };
 
+// Batch 219: SFE-CV Structure - Sovereign Ultimate (FIFTH STEP - EIGHTH CYCLE - MILESTONE 10000)
+struct UltimateField {
+    double ultimateOrigin;        // origin of ultimate
+    double ultimatePotential;     // potential for ultimate
+    double ultimateHarmony;       // harmony in ultimate
+    double ultimateClarity;       // clarity of ultimate
+    double ultimateContinuity;    // continuity of ultimate
+    double ultimateStability;     // stability through ultimate
+    double ultimateResolution;    // resolution of ultimate
+    double ultimateExpansion;     // expansion through ultimate
+    double ultimateMagnitude;     // total ultimate measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2352,6 +2365,10 @@ public:
     // Batch 218: SFE-CIV - Sovereign Supreme (FOURTH STEP - EIGHTH CYCLE)
     SupremeField ComputeSupreme();
     void RunSupremeCycle();
+
+    // Batch 219: SFE-CV - Sovereign Ultimate (FIFTH STEP - EIGHTH CYCLE - MILESTONE 10000)
+    UltimateField ComputeUltimate();
+    void RunUltimateCycle();
 
     // Serialization
     json SerializeAll() const;
