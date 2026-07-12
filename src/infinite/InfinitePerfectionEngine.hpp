@@ -625,6 +625,19 @@ struct SingularityField {
     double singularityMagnitude;   // total singularity measure
 };
 
+// Batch 131: SGE-XVII Structure - Sovereign Genesis (FIRST CYCLE)
+struct GenesisField {
+    double genesisOrigin;        // origin point of creation
+    double genesisPotential;     // potential for all existence
+    double genesisHarmony;       // harmony of creation
+    double genesisClarity;       // clarity of creative intent
+    double genesisContinuity;    // continuity of creation
+    double genesisStability;     // stability of genesis
+    double genesisResolution;    // resolution of creation
+    double genesisExpansion;     // expansion from origin
+    double genesisMagnitude;     // total genesis measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -843,6 +856,10 @@ public:
     // Batch 130: SSE-XVI - Sovereign Singularity (FINAL)
     SingularityField ComputeSingularity();
     void RunSingularityCycle();
+
+    // Batch 131: SGE-XVII - Sovereign Genesis (FIRST CYCLE)
+    GenesisField ComputeGenesis();
+    void RunGenesisCycle();
 
     // Serialization
     json SerializeAll() const;

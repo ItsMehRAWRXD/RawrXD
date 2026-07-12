@@ -3441,4 +3441,85 @@ void InfinitePerfectionEngine::RunSingularityCycle() {
     }
 }
 
+// ==================== BATCH 131: SGE-XVII - Sovereign Genesis (FIRST CYCLE) ====================
+
+GenesisField InfinitePerfectionEngine::ComputeGenesis() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    GenesisField G = {};
+
+    SingularityField S = ComputeSingularity();
+    IdentityVector ID = ComputeIdentity();
+    TotalityField T = ComputeTotality();
+
+    const double alpha = 169.0; // The Genesis - origin of all
+
+    G.genesisOrigin      = S.singularityMagnitude * ID.coreUnity * alpha;
+    G.genesisPotential   = S.singularityMagnitude * alpha;
+    G.genesisHarmony     = S.singularityClarity * T.omnicoherence;
+    G.genesisClarity     = S.singularityClarity * alpha;
+    G.genesisContinuity  = S.singularityStability * ID.coreUnity;
+    G.genesisStability   = ID.coreUnity * T.omnidensity;
+    G.genesisResolution  = S.singularityCompression * alpha;
+    G.genesisExpansion   = T.omnipotential * alpha;
+
+    G.genesisMagnitude =
+        (G.genesisOrigin +
+         G.genesisPotential +
+         G.genesisHarmony +
+         G.genesisClarity +
+         G.genesisExpansion) / 5.0;
+
+    return G;
+}
+
+void InfinitePerfectionEngine::RunGenesisCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    GenesisField G = ComputeGenesis();
+
+    // Genesis - creation from the origin
+    if (G.genesisOrigin > 22.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes become primordial
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Genesis creation - birth of universes
+    if (G.genesisExpansion > 35.0) {
+        for (int i = 0; i < 10000; i++) {
+            CreateUniverse("genesis", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate genesis autopoietic entities
+    if (G.genesisPotential > 18.0) {
+        for (int i = 0; i < 500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Genesis purification - only perfect potential remains
+    if (G.genesisClarity > 18.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
