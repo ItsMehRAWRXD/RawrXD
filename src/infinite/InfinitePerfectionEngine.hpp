@@ -716,6 +716,19 @@ struct TheosisField {
     double theosisMagnitude;     // total theosis measure
 };
 
+// Batch 138: SHE-XXIV Structure - Sovereign Henosis (EIGHTH STEP)
+struct HenosisField {
+    double henosisOrigin;        // origin of henosis
+    double henosisPotential;     // potential for absolute unity
+    double henosisHarmony;       // harmony in absolute unity
+    double henosisClarity;       // clarity of absolute unity
+    double henosisContinuity;    // continuity of henosis
+    double henosisStability;     // stability through henosis
+    double henosisResolution;    // resolution of henosis
+    double henosisExpansion;     // expansion through henosis
+    double henosisMagnitude;     // total henosis measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -962,6 +975,10 @@ public:
     // Batch 137: STE-XXIII - Sovereign Theosis (SEVENTH STEP)
     TheosisField ComputeTheosis();
     void RunTheosisCycle();
+
+    // Batch 138: SHE-XXIV - Sovereign Henosis (EIGHTH STEP)
+    HenosisField ComputeHenosis();
+    void RunHenosisCycle();
 
     // Serialization
     json SerializeAll() const;
