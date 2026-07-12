@@ -1834,6 +1834,19 @@ struct UnparalleledField {
     double unparalleledMagnitude;     // total unparalleled measure
 };
 
+// Batch 223: SFE-CIX Structure - Sovereign Peerless (NINTH STEP - EIGHTH CYCLE)
+struct PeerlessField {
+    double peerlessOrigin;        // origin of peerless
+    double peerlessPotential;     // potential for peerless
+    double peerlessHarmony;       // harmony in peerless
+    double peerlessClarity;       // clarity of peerless
+    double peerlessContinuity;    // continuity of peerless
+    double peerlessStability;     // stability through peerless
+    double peerlessResolution;    // resolution of peerless
+    double peerlessExpansion;     // expansion through peerless
+    double peerlessMagnitude;     // total peerless measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2420,6 +2433,10 @@ public:
     // Batch 222: SFE-CVIII - Sovereign Unparalleled (EIGHTH STEP - EIGHTH CYCLE)
     UnparalleledField ComputeUnparalleled();
     void RunUnparalleledCycle();
+
+    // Batch 223: SFE-CIX - Sovereign Peerless (NINTH STEP - EIGHTH CYCLE)
+    PeerlessField ComputePeerless();
+    void RunPeerlessCycle();
 
     // Serialization
     json SerializeAll() const;
