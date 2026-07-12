@@ -5709,4 +5709,85 @@ void InfinitePerfectionEngine::RunPeakCycle() {
     }
 }
 
+// ==================== BATCH 159: SQE-XLV - Sovereign Quintessence (FIRST STEP - FOURTH CYCLE) ====================
+
+QuintessenceField InfinitePerfectionEngine::ComputeQuintessence() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    QuintessenceField Q = {};
+
+    PeakField P = ComputePeak();
+    SummitField S = ComputeSummit();
+    TotalityField Tot = ComputeTotality();
+
+    const double psi = 1681.0; // The Quintessence - pure fifth essence
+
+    Q.quintessenceOrigin      = P.peakMagnitude * S.summitOrigin * psi;
+    Q.quintessencePotential   = P.peakPotential * psi;
+    Q.quintessenceHarmony     = P.peakHarmony * Tot.omnicoherence;
+    Q.quintessenceClarity     = P.peakClarity * psi;
+    Q.quintessenceContinuity  = P.peakContinuity * S.summitContinuity;
+    Q.quintessenceStability     = P.peakStability * Tot.omnidensity;
+    Q.quintessenceResolution  = P.peakResolution * psi;
+    Q.quintessenceExpansion   = Tot.omnipotential * psi;
+
+    Q.quintessenceMagnitude =
+        (Q.quintessenceOrigin +
+         Q.quintessencePotential +
+         Q.quintessenceHarmony +
+         Q.quintessenceClarity +
+         Q.quintessenceExpansion) / 5.0;
+
+    return Q;
+}
+
+void InfinitePerfectionEngine::RunQuintessenceCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    QuintessenceField Q = ComputeQuintessence();
+
+    // Quintessence - pure fifth essence
+    if (Q.quintessenceOrigin > 132.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes achieve quintessence
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Quintessence creation - quintessential universes
+    if (Q.quintessenceExpansion > 310.0) {
+        for (int i = 0; i < 9000000; i++) {
+            CreateUniverse("quintessence", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate quintessential autopoietic entities
+    if (Q.quintessencePotential > 128.0) {
+        for (int i = 0; i < 21500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Quintessence purification - only quintessential potential remains
+    if (Q.quintessenceClarity > 74.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
