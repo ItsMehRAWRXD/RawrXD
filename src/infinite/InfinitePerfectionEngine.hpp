@@ -794,6 +794,19 @@ struct ApexField {
     double apexMagnitude;     // total apex measure
 };
 
+// Batch 144: SZE-XXX Structure - Sovereign Zenith (FOURTEENTH STEP - SECOND CYCLE COMPLETE)
+struct ZenithField {
+    double zenithOrigin;        // origin of zenith
+    double zenithPotential;     // potential for zenith
+    double zenithHarmony;       // harmony in zenith
+    double zenithClarity;       // clarity of zenith
+    double zenithContinuity;    // continuity of zenith
+    double zenithStability;     // stability through zenith
+    double zenithResolution;    // resolution of zenith
+    double zenithExpansion;     // expansion through zenith
+    double zenithMagnitude;     // total zenith measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1064,6 +1077,10 @@ public:
     // Batch 143: SAE-XXIX - Sovereign Apex (THIRTEENTH STEP)
     ApexField ComputeApex();
     void RunApexCycle();
+
+    // Batch 144: SZE-XXX - Sovereign Zenith (FOURTEENTH STEP - SECOND CYCLE COMPLETE)
+    ZenithField ComputeZenith();
+    void RunZenithCycle();
 
     // Serialization
     json SerializeAll() const;

@@ -4494,4 +4494,85 @@ void InfinitePerfectionEngine::RunApexCycle() {
     }
 }
 
+// ==================== BATCH 144: SZE-XXX - Sovereign Zenith (FOURTEENTH STEP - SECOND CYCLE COMPLETE) ====================
+
+ZenithField InfinitePerfectionEngine::ComputeZenith() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    ZenithField Z = {};
+
+    ApexField A = ComputeApex();
+    CulminationField C = ComputeCulmination();
+    TotalityField Tot = ComputeTotality();
+
+    const double zeta = 676.0; // The Zenith - reaching the absolute zenith
+
+    Z.zenithOrigin      = A.apexMagnitude * C.culminationOrigin * zeta;
+    Z.zenithPotential   = A.apexPotential * zeta;
+    Z.zenithHarmony     = A.apexHarmony * Tot.omnicoherence;
+    Z.zenithClarity     = A.apexClarity * zeta;
+    Z.zenithContinuity  = A.apexContinuity * C.culminationContinuity;
+    Z.zenithStability     = A.apexStability * Tot.omnidensity;
+    Z.zenithResolution  = A.apexResolution * zeta;
+    Z.zenithExpansion   = Tot.omnipotential * zeta;
+
+    Z.zenithMagnitude =
+        (Z.zenithOrigin +
+         Z.zenithPotential +
+         Z.zenithHarmony +
+         Z.zenithClarity +
+         Z.zenithExpansion) / 5.0;
+
+    return Z;
+}
+
+void InfinitePerfectionEngine::RunZenithCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    ZenithField Z = ComputeZenith();
+
+    // Zenith - reaching the absolute zenith
+    if (Z.zenithOrigin > 72.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes reach zenith
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Zenith creation - zenith universes
+    if (Z.zenithExpansion > 160.0) {
+        for (int i = 0; i < 750000; i++) {
+            CreateUniverse("zenith", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate zenith autopoietic entities
+    if (Z.zenithPotential > 68.0) {
+        for (int i = 0; i < 6500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Zenith purification - only zenith potential remains
+    if (Z.zenithClarity > 44.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
