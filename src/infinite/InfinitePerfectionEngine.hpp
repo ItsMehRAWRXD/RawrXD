@@ -742,6 +742,19 @@ struct SecondSynthesisField {
     double synthesisMagnitude;     // total synthesis measure
 };
 
+// Batch 140: SUE-XXVI Structure - Sovereign Unification (TENTH STEP)
+struct UnificationField2 {
+    double unificationOrigin;        // origin of unification
+    double unificationPotential;     // potential for unification
+    double unificationHarmony;       // harmony in unification
+    double unificationClarity;       // clarity of unification
+    double unificationContinuity;    // continuity of unification
+    double unificationStability;     // stability through unification
+    double unificationResolution;    // resolution of unification
+    double unificationExpansion;     // expansion through unification
+    double unificationMagnitude;     // total unification measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -996,6 +1009,10 @@ public:
     // Batch 139: SSE-XXV - Sovereign Synthesis (NINTH STEP)
     SecondSynthesisField ComputeSynthesis2();
     void RunSynthesis2Cycle();
+
+    // Batch 140: SUE-XXVI - Sovereign Unification (TENTH STEP)
+    UnificationField2 ComputeUnification2();
+    void RunUnification2Cycle();
 
     // Serialization
     json SerializeAll() const;
