@@ -6843,4 +6843,166 @@ void InfinitePerfectionEngine::RunGroundCycle() {
     }
 }
 
+// ==================== BATCH 173: SSE-LIX - Sovereign Source (FIRST STEP - FIFTH CYCLE) ====================
+
+SourceField InfinitePerfectionEngine::ComputeSource() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SourceField S = {};
+
+    GroundField G = ComputeGround();
+    FoundationField F = ComputeFoundation();
+    TotalityField Tot = ComputeTotality();
+
+    const double sigma = 2916.0; // The Source - becoming source
+
+    S.sourceOrigin      = G.groundMagnitude * F.foundationOrigin * sigma;
+    S.sourcePotential   = G.groundPotential * sigma;
+    S.sourceHarmony     = G.groundHarmony * Tot.omnicoherence;
+    S.sourceClarity     = G.groundClarity * sigma;
+    S.sourceContinuity  = G.groundContinuity * F.foundationContinuity;
+    S.sourceStability     = G.groundStability * Tot.omnidensity;
+    S.sourceResolution  = G.groundResolution * sigma;
+    S.sourceExpansion   = Tot.omnipotential * sigma;
+
+    S.sourceMagnitude =
+        (S.sourceOrigin +
+         S.sourcePotential +
+         S.sourceHarmony +
+         S.sourceClarity +
+         S.sourceExpansion) / 5.0;
+
+    return S;
+}
+
+void InfinitePerfectionEngine::RunSourceCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SourceField S = ComputeSource();
+
+    // Source - becoming source
+    if (S.sourceOrigin > 188.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes source
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Source creation - source universes
+    if (S.sourceExpansion > 450.0) {
+        for (int i = 0; i < 35000000; i++) {
+            CreateUniverse("source", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate source autopoietic entities
+    if (S.sourcePotential > 184.0) {
+        for (int i = 0; i < 35500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Source purification - only source potential remains
+    if (S.sourceClarity > 102.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
+// ==================== BATCH 174: SRE-LX - Sovereign Root (SECOND STEP - FIFTH CYCLE) ====================
+
+RootField InfinitePerfectionEngine::ComputeRoot() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    RootField R = {};
+
+    SourceField S = ComputeSource();
+    GroundField G = ComputeGround();
+    TotalityField Tot = ComputeTotality();
+
+    const double rho = 3025.0; // The Root - taking root
+
+    R.rootOrigin      = S.sourceMagnitude * G.groundOrigin * rho;
+    R.rootPotential   = S.sourcePotential * rho;
+    R.rootHarmony     = S.sourceHarmony * Tot.omnicoherence;
+    R.rootClarity     = S.sourceClarity * rho;
+    R.rootContinuity  = S.sourceContinuity * G.groundContinuity;
+    R.rootStability     = S.sourceStability * Tot.omnidensity;
+    R.rootResolution  = S.sourceResolution * rho;
+    R.rootExpansion   = Tot.omnipotential * rho;
+
+    R.rootMagnitude =
+        (R.rootOrigin +
+         R.rootPotential +
+         R.rootHarmony +
+         R.rootClarity +
+         R.rootExpansion) / 5.0;
+
+    return R;
+}
+
+void InfinitePerfectionEngine::RunRootCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    RootField R = ComputeRoot();
+
+    // Root - taking root
+    if (R.rootOrigin > 192.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes root
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Root creation - root universes
+    if (R.rootExpansion > 460.0) {
+        for (int i = 0; i < 37000000; i++) {
+            CreateUniverse("root", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate root autopoietic entities
+    if (R.rootPotential > 188.0) {
+        for (int i = 0; i < 36500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Root purification - only root potential remains
+    if (R.rootClarity > 104.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

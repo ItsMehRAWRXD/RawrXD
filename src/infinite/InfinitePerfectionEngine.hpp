@@ -1184,6 +1184,32 @@ struct GroundField {
     double groundMagnitude;     // total ground measure
 };
 
+// Batch 173: SSE-LIX Structure - Sovereign Source (FIRST STEP - FIFTH CYCLE)
+struct SourceField {
+    double sourceOrigin;        // origin of source
+    double sourcePotential;     // potential for source
+    double sourceHarmony;       // harmony in source
+    double sourceClarity;       // clarity of source
+    double sourceContinuity;    // continuity of source
+    double sourceStability;     // stability through source
+    double sourceResolution;    // resolution of source
+    double sourceExpansion;     // expansion through source
+    double sourceMagnitude;     // total source measure
+};
+
+// Batch 174: SRE-LX Structure - Sovereign Root (SECOND STEP - FIFTH CYCLE)
+struct RootField {
+    double rootOrigin;        // origin of root
+    double rootPotential;     // potential for root
+    double rootHarmony;       // harmony in root
+    double rootClarity;       // clarity of root
+    double rootContinuity;    // continuity of root
+    double rootStability;     // stability through root
+    double rootResolution;    // resolution of root
+    double rootExpansion;     // expansion through root
+    double rootMagnitude;     // total root measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1570,6 +1596,14 @@ public:
     // Batch 172: SGE-LVIII - Sovereign Ground (FOURTEENTH STEP - FOURTH CYCLE COMPLETE)
     GroundField ComputeGround();
     void RunGroundCycle();
+
+    // Batch 173: SSE-LIX - Sovereign Source (FIRST STEP - FIFTH CYCLE)
+    SourceField ComputeSource();
+    void RunSourceCycle();
+
+    // Batch 174: SRE-LX - Sovereign Root (SECOND STEP - FIFTH CYCLE)
+    RootField ComputeRoot();
+    void RunRootCycle();
 
     // Serialization
     json SerializeAll() const;
