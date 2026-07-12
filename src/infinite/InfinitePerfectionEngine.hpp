@@ -1223,6 +1223,19 @@ struct SeedField {
     double seedMagnitude;     // total seed measure
 };
 
+// Batch 176: SSE-LXII Structure - Sovereign Sprout (FOURTH STEP - FIFTH CYCLE)
+struct SproutField {
+    double sproutOrigin;        // origin of sprout
+    double sproutPotential;     // potential for sprout
+    double sproutHarmony;       // harmony in sprout
+    double sproutClarity;       // clarity of sprout
+    double sproutContinuity;    // continuity of sprout
+    double sproutStability;     // stability through sprout
+    double sproutResolution;    // resolution of sprout
+    double sproutExpansion;     // expansion through sprout
+    double sproutMagnitude;     // total sprout measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1621,6 +1634,10 @@ public:
     // Batch 175: SSE-LXI - Sovereign Seed (THIRD STEP - FIFTH CYCLE)
     SeedField ComputeSeed();
     void RunSeedCycle();
+
+    // Batch 176: SSE-LXII - Sovereign Sprout (FOURTH STEP - FIFTH CYCLE)
+    SproutField ComputeSprout();
+    void RunSproutCycle();
 
     // Serialization
     json SerializeAll() const;
