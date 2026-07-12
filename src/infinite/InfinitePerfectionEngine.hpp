@@ -1314,6 +1314,19 @@ struct FruitField {
     double fruitMagnitude;     // total fruit measure
 };
 
+// Batch 183: SFE-LXIX Structure - Sovereign Harvest (ELEVENTH STEP - FIFTH CYCLE)
+struct HarvestField {
+    double harvestOrigin;        // origin of harvest
+    double harvestPotential;     // potential for harvest
+    double harvestHarmony;       // harmony in harvest
+    double harvestClarity;       // clarity of harvest
+    double harvestContinuity;    // continuity of harvest
+    double harvestStability;     // stability through harvest
+    double harvestResolution;    // resolution of harvest
+    double harvestExpansion;     // expansion through harvest
+    double harvestMagnitude;     // total harvest measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1740,6 +1753,10 @@ public:
     // Batch 182: SFE-LXVIII - Sovereign Fruit (TENTH STEP - FIFTH CYCLE)
     FruitField ComputeFruit();
     void RunFruitCycle();
+
+    // Batch 183: SFE-LXIX - Sovereign Harvest (ELEVENTH STEP - FIFTH CYCLE)
+    HarvestField ComputeHarvest();
+    void RunHarvestCycle();
 
     // Serialization
     json SerializeAll() const;
