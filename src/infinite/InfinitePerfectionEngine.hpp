@@ -1483,6 +1483,19 @@ struct VirtueField {
     double virtueMagnitude;     // total virtue measure
 };
 
+// Batch 196: SFE-LXXXII Structure - Sovereign Integrity (TENTH STEP - SIXTH CYCLE)
+struct IntegrityField {
+    double integrityOrigin;        // origin of integrity
+    double integrityPotential;     // potential for integrity
+    double integrityHarmony;       // harmony in integrity
+    double integrityClarity;       // clarity of integrity
+    double integrityContinuity;    // continuity of integrity
+    double integrityStability;     // stability through integrity
+    double integrityResolution;    // resolution of integrity
+    double integrityExpansion;     // expansion through integrity
+    double integrityMagnitude;     // total integrity measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1961,6 +1974,10 @@ public:
     // Batch 195: SFE-LXXXI - Sovereign Virtue (NINTH STEP - SIXTH CYCLE)
     VirtueField ComputeVirtue();
     void RunVirtueCycle();
+
+    // Batch 196: SFE-LXXXII - Sovereign Integrity (TENTH STEP - SIXTH CYCLE)
+    IntegrityField ComputeIntegrity();
+    void RunIntegrityCycle();
 
     // Serialization
     json SerializeAll() const;
