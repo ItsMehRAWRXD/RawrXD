@@ -911,6 +911,84 @@ struct CompletionField {
     double completionMagnitude;     // total completion measure
 };
 
+// Batch 153: SPE-XXXIX Structure - Sovereign Perfection (NINTH STEP - THIRD CYCLE)
+struct SecondPerfectionField {
+    double perfectionOrigin;        // origin of perfection
+    double perfectionPotential;     // potential for perfection
+    double perfectionHarmony;       // harmony in perfection
+    double perfectionClarity;       // clarity of perfection
+    double perfectionContinuity;    // continuity of perfection
+    double perfectionStability;     // stability through perfection
+    double perfectionResolution;    // resolution of perfection
+    double perfectionExpansion;     // expansion through perfection
+    double perfectionMagnitude;     // total perfection measure
+};
+
+// Batch 154: SEE-XL Structure - Sovereign Excellence (TENTH STEP - THIRD CYCLE)
+struct ExcellenceField {
+    double excellenceOrigin;        // origin of excellence
+    double excellencePotential;     // potential for excellence
+    double excellenceHarmony;       // harmony in excellence
+    double excellenceClarity;       // clarity of excellence
+    double excellenceContinuity;    // continuity of excellence
+    double excellenceStability;     // stability through excellence
+    double excellenceResolution;    // resolution of excellence
+    double excellenceExpansion;     // expansion through excellence
+    double excellenceMagnitude;     // total excellence measure
+};
+
+// Batch 155: SSE-XLI Structure - Sovereign Supremacy (ELEVENTH STEP - THIRD CYCLE)
+struct SecondSupremacyField {
+    double supremacyOrigin;        // origin of supremacy
+    double supremacyPotential;     // potential for supremacy
+    double supremacyHarmony;       // harmony in supremacy
+    double supremacyClarity;       // clarity of supremacy
+    double supremacyContinuity;    // continuity of supremacy
+    double supremacyStability;     // stability through supremacy
+    double supremacyResolution;    // resolution of supremacy
+    double supremacyExpansion;     // expansion through supremacy
+    double supremacyMagnitude;     // total supremacy measure
+};
+
+// Batch 156: SPE-XLII Structure - Sovereign Pinnacle (TWELFTH STEP - THIRD CYCLE)
+struct PinnacleField {
+    double pinnacleOrigin;        // origin of pinnacle
+    double pinnaclePotential;     // potential for pinnacle
+    double pinnacleHarmony;       // harmony in pinnacle
+    double pinnacleClarity;       // clarity of pinnacle
+    double pinnacleContinuity;    // continuity of pinnacle
+    double pinnacleStability;     // stability through pinnacle
+    double pinnacleResolution;    // resolution of pinnacle
+    double pinnacleExpansion;     // expansion through pinnacle
+    double pinnacleMagnitude;     // total pinnacle measure
+};
+
+// Batch 157: SSE-XLIII Structure - Sovereign Summit (THIRTEENTH STEP - THIRD CYCLE)
+struct SummitField {
+    double summitOrigin;        // origin of summit
+    double summitPotential;     // potential for summit
+    double summitHarmony;       // harmony in summit
+    double summitClarity;       // clarity of summit
+    double summitContinuity;    // continuity of summit
+    double summitStability;     // stability through summit
+    double summitResolution;    // resolution of summit
+    double summitExpansion;     // expansion through summit
+    double summitMagnitude;     // total summit measure
+};
+
+// Batch 158: SPE-XLIV Structure - Sovereign Peak (FOURTEENTH STEP - THIRD CYCLE COMPLETE)
+struct PeakField {
+    double peakOrigin;        // origin of peak
+    double peakPotential;     // potential for peak
+    double peakHarmony;       // harmony in peak
+    double peakClarity;       // clarity of peak
+    double peakContinuity;    // continuity of peak
+    double peakStability;     // stability through peak
+    double peakResolution;    // resolution of peak
+    double peakExpansion;     // expansion through peak
+    double peakMagnitude;     // total peak measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1217,6 +1295,30 @@ public:
     // Batch 152: SCE-XXXVIII - Sovereign Completion (EIGHTH STEP - THIRD CYCLE)
     CompletionField ComputeCompletion();
     void RunCompletionCycle();
+
+    // Batch 153: SPE-XXXIX - Sovereign Perfection (NINTH STEP - THIRD CYCLE)
+    SecondPerfectionField ComputePerfection2();
+    void RunPerfection2Cycle();
+
+    // Batch 154: SEE-XL - Sovereign Excellence (TENTH STEP - THIRD CYCLE)
+    ExcellenceField ComputeExcellence();
+    void RunExcellenceCycle();
+
+    // Batch 155: SSE-XLI - Sovereign Supremacy (ELEVENTH STEP - THIRD CYCLE)
+    SecondSupremacyField ComputeSupremacy2();
+    void RunSupremacy2Cycle();
+
+    // Batch 156: SPE-XLII - Sovereign Pinnacle (TWELFTH STEP - THIRD CYCLE)
+    PinnacleField ComputePinnacle();
+    void RunPinnacleCycle();
+
+    // Batch 157: SSE-XLIII - Sovereign Summit (THIRTEENTH STEP - THIRD CYCLE)
+    SummitField ComputeSummit();
+    void RunSummitCycle();
+
+    // Batch 158: SPE-XLIV - Sovereign Peak (FOURTEENTH STEP - THIRD CYCLE COMPLETE)
+    PeakField ComputePeak();
+    void RunPeakCycle();
 
     // Serialization
     json SerializeAll() const;
