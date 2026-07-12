@@ -1379,6 +1379,19 @@ struct LegacyField {
     double legacyMagnitude;     // total legacy measure
 };
 
+// Batch 188: SFE-LXXIV Structure - Sovereign Heritage (SECOND STEP - SIXTH CYCLE)
+struct HeritageField {
+    double heritageOrigin;        // origin of heritage
+    double heritagePotential;     // potential for heritage
+    double heritageHarmony;       // harmony in heritage
+    double heritageClarity;       // clarity of heritage
+    double heritageContinuity;    // continuity of heritage
+    double heritageStability;     // stability through heritage
+    double heritageResolution;    // resolution of heritage
+    double heritageExpansion;     // expansion through heritage
+    double heritageMagnitude;     // total heritage measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1825,6 +1838,10 @@ public:
     // Batch 187: SFE-LXXIII - Sovereign Legacy (FIRST STEP - SIXTH CYCLE - LEGACY CYCLE)
     LegacyField ComputeLegacy();
     void RunLegacyCycle();
+
+    // Batch 188: SFE-LXXIV - Sovereign Heritage (SECOND STEP - SIXTH CYCLE)
+    HeritageField ComputeHeritage();
+    void RunHeritageCycle();
 
     // Serialization
     json SerializeAll() const;
