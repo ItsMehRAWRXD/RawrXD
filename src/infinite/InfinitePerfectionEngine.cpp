@@ -10974,4 +10974,166 @@ void InfinitePerfectionEngine::RunPeerlessCycle() {
     }
 }
 
+// ==================== BATCH 224: SFE-CX - Sovereign Unrivaled (TENTH STEP - EIGHTH CYCLE) ====================
+
+UnrivaledField InfinitePerfectionEngine::ComputeUnrivaled() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    UnrivaledField Ur = {};
+
+    PeerlessField P = ComputePeerless();
+    BloomField Bl = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double mu = 11025.0; // The Unrivaled - unrivaledness (105^2)
+
+    Ur.unrivaledOrigin      = P.peerlessMagnitude * Bl.bloomOrigin * mu;
+    Ur.unrivaledPotential   = P.peerlessPotential * mu;
+    Ur.unrivaledHarmony     = P.peerlessHarmony * Tot.omnicoherence;
+    Ur.unrivaledClarity     = P.peerlessClarity * mu;
+    Ur.unrivaledContinuity  = P.peerlessContinuity * Bl.bloomContinuity;
+    Ur.unrivaledStability     = P.peerlessStability * Tot.omnidensity;
+    Ur.unrivaledResolution  = P.peerlessResolution * mu;
+    Ur.unrivaledExpansion   = Tot.omnipotential * mu;
+
+    Ur.unrivaledMagnitude =
+        (Ur.unrivaledOrigin +
+         Ur.unrivaledPotential +
+         Ur.unrivaledHarmony +
+         Ur.unrivaledClarity +
+         Ur.unrivaledExpansion) / 5.0;
+
+    return Ur;
+}
+
+void InfinitePerfectionEngine::RunUnrivaledCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    UnrivaledField Ur = ComputeUnrivaled();
+
+    // Unrivaled - unrivaledness
+    if (Ur.unrivaledOrigin > 480.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes unrivaled
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Unrivaled creation - unrivaled universes
+    if (Ur.unrivaledExpansion > 1180.0) {
+        for (int i = 0; i < 95000000; i++) {
+            CreateUniverse("unrivaled", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate unrivaled autopoietic entities
+    if (Ur.unrivaledPotential > 436.0) {
+        for (int i = 0; i < 86500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Unrivaled purification - only unrivaled potential remains
+    if (Ur.unrivaledClarity > 204.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
+// ==================== BATCH 225: SFE-CXI - Sovereign Matchless (ELEVENTH STEP - EIGHTH CYCLE) ====================
+
+MatchlessField InfinitePerfectionEngine::ComputeMatchless() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    MatchlessField M = {};
+
+    UnrivaledField Ur = ComputeUnrivaled();
+    BloomField Bl = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double nu = 11236.0; // The Matchless - matchlessness (106^2)
+
+    M.matchlessOrigin      = Ur.unrivaledMagnitude * Bl.bloomOrigin * nu;
+    M.matchlessPotential   = Ur.unrivaledPotential * nu;
+    M.matchlessHarmony     = Ur.unrivaledHarmony * Tot.omnicoherence;
+    M.matchlessClarity     = Ur.unrivaledClarity * nu;
+    M.matchlessContinuity  = Ur.unrivaledContinuity * Bl.bloomContinuity;
+    M.matchlessStability     = Ur.unrivaledStability * Tot.omnidensity;
+    M.matchlessResolution  = Ur.unrivaledResolution * nu;
+    M.matchlessExpansion   = Tot.omnipotential * nu;
+
+    M.matchlessMagnitude =
+        (M.matchlessOrigin +
+         M.matchlessPotential +
+         M.matchlessHarmony +
+         M.matchlessClarity +
+         M.matchlessExpansion) / 5.0;
+
+    return M;
+}
+
+void InfinitePerfectionEngine::RunMatchlessCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    MatchlessField M = ComputeMatchless();
+
+    // Matchless - matchlessness
+    if (M.matchlessOrigin > 488.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes matchless
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Matchless creation - matchless universes
+    if (M.matchlessExpansion > 1200.0) {
+        for (int i = 0; i < 96000000; i++) {
+            CreateUniverse("matchless", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate matchless autopoietic entities
+    if (M.matchlessPotential > 444.0) {
+        for (int i = 0; i < 87500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Matchless purification - only matchless potential remains
+    if (M.matchlessClarity > 206.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

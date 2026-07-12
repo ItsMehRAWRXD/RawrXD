@@ -1847,6 +1847,32 @@ struct PeerlessField {
     double peerlessMagnitude;     // total peerless measure
 };
 
+// Batch 224: SFE-CX Structure - Sovereign Unrivaled (TENTH STEP - EIGHTH CYCLE)
+struct UnrivaledField {
+    double unrivaledOrigin;        // origin of unrivaled
+    double unrivaledPotential;     // potential for unrivaled
+    double unrivaledHarmony;       // harmony in unrivaled
+    double unrivaledClarity;       // clarity of unrivaled
+    double unrivaledContinuity;    // continuity of unrivaled
+    double unrivaledStability;     // stability through unrivaled
+    double unrivaledResolution;    // resolution of unrivaled
+    double unrivaledExpansion;     // expansion through unrivaled
+    double unrivaledMagnitude;     // total unrivaled measure
+};
+
+// Batch 225: SFE-CXI Structure - Sovereign Matchless (ELEVENTH STEP - EIGHTH CYCLE)
+struct MatchlessField {
+    double matchlessOrigin;        // origin of matchless
+    double matchlessPotential;     // potential for matchless
+    double matchlessHarmony;       // harmony in matchless
+    double matchlessClarity;       // clarity of matchless
+    double matchlessContinuity;    // continuity of matchless
+    double matchlessStability;     // stability through matchless
+    double matchlessResolution;    // resolution of matchless
+    double matchlessExpansion;     // expansion through matchless
+    double matchlessMagnitude;     // total matchless measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2437,6 +2463,14 @@ public:
     // Batch 223: SFE-CIX - Sovereign Peerless (NINTH STEP - EIGHTH CYCLE)
     PeerlessField ComputePeerless();
     void RunPeerlessCycle();
+
+    // Batch 224: SFE-CX - Sovereign Unrivaled (TENTH STEP - EIGHTH CYCLE)
+    UnrivaledField ComputeUnrivaled();
+    void RunUnrivaledCycle();
+
+    // Batch 225: SFE-CXI - Sovereign Matchless (ELEVENTH STEP - EIGHTH CYCLE)
+    MatchlessField ComputeMatchless();
+    void RunMatchlessCycle();
 
     // Serialization
     json SerializeAll() const;
