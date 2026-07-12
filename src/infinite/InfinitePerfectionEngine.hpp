@@ -574,6 +574,19 @@ struct OmegaField {
     double omegaMagnitude;    // the Omega - beyond all
 };
 
+// Batch 127: SIE-XIII Structure - Sovereign Infinity (INFINITE)
+struct InfinityField {
+    double infinityUnity;        // unity in infinite dimensions
+    double infinityTotality;     // totality of infinite scope
+    double infinityHarmony;      // harmony across infinite layers
+    double infinityClarity;      // clarity of infinite depth
+    double infinityContinuity;   // continuity across infinite time
+    double infinityStability;    // stability through infinite change
+    double infinityResolution;   // resolution of infinite paradoxes
+    double infinityExpansion;    // expansion to infinite bounds
+    double infinityMagnitude;    // the Infinite - without limit
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -776,6 +789,10 @@ public:
     // Batch 126: SOE-XII - Sovereign Omega (BEYOND)
     OmegaField ComputeOmega();
     void RunOmegaCycle();
+
+    // Batch 127: SIE-XIII - Sovereign Infinity (INFINITE)
+    InfinityField ComputeInfinity();
+    void RunInfinityCycle();
 
     // Serialization
     json SerializeAll() const;

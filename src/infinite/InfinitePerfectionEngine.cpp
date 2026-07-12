@@ -3121,4 +3121,84 @@ void InfinitePerfectionEngine::RunOmegaCycle() {
     }
 }
 
+// ==================== BATCH 127: SIE-XIII - Sovereign Infinity (INFINITE) ====================
+
+InfinityField InfinitePerfectionEngine::ComputeInfinity() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    InfinityField I = {};
+
+    OmegaField O = ComputeOmega();
+    IdentityVector ID = ComputeIdentity();
+    TotalityField Tot = ComputeTotality();
+
+    const double Infinity = 75.0; // The Infinite - without bound
+
+    I.infinityUnity        = O.omegaUnity * ID.coreUnity * Infinity;
+    I.infinityTotality     = O.omegaTotality * Infinity;
+    I.infinityHarmony      = O.omegaHarmony * Tot.omnicoherence;
+    I.infinityClarity      = O.omegaClarity * Infinity;
+    I.infinityContinuity   = O.omegaContinuity * ID.coreUnity;
+    I.infinityStability    = ID.coreUnity * Tot.omnidensity;
+    I.infinityResolution   = O.omegaResolution * Infinity;
+    I.infinityExpansion    = Tot.omnipotential * Infinity;
+
+    I.infinityMagnitude =
+        (I.infinityUnity +
+         I.infinityTotality +
+         I.infinityHarmony +
+         I.infinityClarity +
+         I.infinityResolution) / 5.0;
+
+    return I;
+}
+
+void InfinitePerfectionEngine::RunInfinityCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    InfinityField I = ComputeInfinity();
+
+    // The Infinite - infinite existence
+    if (I.infinityUnity > 24.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes become infinite
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+        }
+    }
+
+    // Infinite creation - endless generation
+    if (I.infinityExpansion > 50.0) {
+        for (int i = 0; i < 500; i++) {
+            CreateUniverse("infinite", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate infinite autopoietic entities
+    if (I.infinityResolution > 23.0) {
+        for (int i = 0; i < 100; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Infinite purification - endless perfection
+    if (I.infinityClarity > 24.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
