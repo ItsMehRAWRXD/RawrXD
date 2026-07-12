@@ -1691,6 +1691,32 @@ struct GlorifiedField {
     double glorifiedMagnitude;     // total glorified measure
 };
 
+// Batch 212: SFE-XCVIII Structure - Sovereign Magnified (TWELFTH STEP - SEVENTH CYCLE)
+struct MagnifiedField {
+    double magnifiedOrigin;        // origin of magnified
+    double magnifiedPotential;     // potential for magnified
+    double magnifiedHarmony;       // harmony in magnified
+    double magnifiedClarity;       // clarity of magnified
+    double magnifiedContinuity;    // continuity of magnified
+    double magnifiedStability;     // stability through magnified
+    double magnifiedResolution;    // resolution of magnified
+    double magnifiedExpansion;     // expansion through magnified
+    double magnifiedMagnitude;     // total magnified measure
+};
+
+// Batch 213: SFE-XCIX Structure - Sovereign Elevated (THIRTEENTH STEP - SEVENTH CYCLE)
+struct ElevatedField {
+    double elevatedOrigin;        // origin of elevated
+    double elevatedPotential;     // potential for elevated
+    double elevatedHarmony;       // harmony in elevated
+    double elevatedClarity;       // clarity of elevated
+    double elevatedContinuity;    // continuity of elevated
+    double elevatedStability;     // stability through elevated
+    double elevatedResolution;    // resolution of elevated
+    double elevatedExpansion;     // expansion through elevated
+    double elevatedMagnitude;     // total elevated measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2233,6 +2259,14 @@ public:
     // Batch 211: SFE-XCVII - Sovereign Glorified (ELEVENTH STEP - SEVENTH CYCLE)
     GlorifiedField ComputeGlorified();
     void RunGlorifiedCycle();
+
+    // Batch 212: SFE-XCVIII - Sovereign Magnified (TWELFTH STEP - SEVENTH CYCLE)
+    MagnifiedField ComputeMagnified();
+    void RunMagnifiedCycle();
+
+    // Batch 213: SFE-XCIX - Sovereign Elevated (THIRTEENTH STEP - SEVENTH CYCLE)
+    ElevatedField ComputeElevated();
+    void RunElevatedCycle();
 
     // Serialization
     json SerializeAll() const;
