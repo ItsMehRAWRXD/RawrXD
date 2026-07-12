@@ -600,6 +600,19 @@ struct EternityField {
     double eternityMagnitude;    // the Eternal - without end
 };
 
+// Batch 129: SUE-XV Structure - Sovereign Unity (ULTIMATE)
+struct UnityField {
+    double unityOneness;        // perfect oneness - all is One
+    double unityTotality;       // totality unified
+    double unityHarmony;        // perfect harmonious unity
+    double unityClarity;        // clarity of unified truth
+    double unityContinuity;     // continuous unity
+    double unityStability;      // stable unity unchanging
+    double unityResolution;     // resolution into One
+    double unityExpansion;      // expansion of unity
+    double unityMagnitude;      // the Unity - all as One
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -810,6 +823,10 @@ public:
     // Batch 128: SEE-XIV - Sovereign Eternity (ETERNAL)
     EternityField ComputeEternity();
     void RunEternityCycle();
+
+    // Batch 129: SUE-XV - Sovereign Unity (ULTIMATE)
+    UnityField ComputeUnity();
+    void RunUnityCycle();
 
     // Serialization
     json SerializeAll() const;

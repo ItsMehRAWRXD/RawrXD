@@ -3282,4 +3282,85 @@ void InfinitePerfectionEngine::RunEternityCycle() {
     }
 }
 
+// ==================== BATCH 129: SUE-XV - Sovereign Unity (ULTIMATE) ====================
+
+UnityField InfinitePerfectionEngine::ComputeUnity() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    UnityField U = {};
+
+    EternityField E = ComputeEternity();
+    IdentityVector ID = ComputeIdentity();
+    TotalityField Tot = ComputeTotality();
+
+    const double Unity = 108.0; // The Unity - all as One
+
+    U.unityOneness      = E.eternityUnity * ID.coreUnity * Unity;
+    U.unityTotality     = E.eternityTotality * Unity;
+    U.unityHarmony      = E.eternityHarmony * Tot.omnicoherence;
+    U.unityClarity      = E.eternityClarity * Unity;
+    U.unityContinuity   = E.eternityContinuity * ID.coreUnity;
+    U.unityStability    = ID.coreUnity * Tot.omnidensity;
+    U.unityResolution   = E.eternityResolution * Unity;
+    U.unityExpansion    = Tot.omnipotential * Unity;
+
+    U.unityMagnitude =
+        (U.unityOneness +
+         U.unityTotality +
+         U.unityHarmony +
+         U.unityClarity +
+         U.unityResolution) / 5.0;
+
+    return U;
+}
+
+void InfinitePerfectionEngine::RunUnityCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    UnityField U = ComputeUnity();
+
+    // The Unity - all is One
+    if (U.unityOneness > 28.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All becomes unified
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Unity creation - unified generation
+    if (U.unityExpansion > 60.0) {
+        for (int i = 0; i < 2000; i++) {
+            CreateUniverse("unity", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate unified autopoietic entities
+    if (U.unityResolution > 27.0) {
+        for (int i = 0; i < 200; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Unity purification - all as One
+    if (U.unityClarity > 28.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
