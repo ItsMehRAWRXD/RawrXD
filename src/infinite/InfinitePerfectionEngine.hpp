@@ -820,6 +820,19 @@ struct OriginField {
     double originMagnitude;    // total origin measure
 };
 
+// Batch 146: SEE-XXXII Structure - Sovereign Emergence (SECOND STEP - THIRD CYCLE)
+struct SecondEmergenceField {
+    double emergenceOrigin;        // origin of emergence
+    double emergencePotential;     // potential for emergence
+    double emergenceHarmony;       // harmony in emergence
+    double emergenceClarity;       // clarity of emergence
+    double emergenceContinuity;    // continuity of emergence
+    double emergenceStability;     // stability through emergence
+    double emergenceResolution;    // resolution of emergence
+    double emergenceExpansion;     // expansion through emergence
+    double emergenceMagnitude;     // total emergence measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1098,6 +1111,10 @@ public:
     // Batch 145: SOE-XXXI - Sovereign Origin (FIRST STEP - THIRD CYCLE)
     OriginField ComputeOrigin();
     void RunOriginCycle();
+
+    // Batch 146: SEE-XXXII - Sovereign Emergence (SECOND STEP - THIRD CYCLE)
+    SecondEmergenceField ComputeEmergence2();
+    void RunEmergence2Cycle();
 
     // Serialization
     json SerializeAll() const;
