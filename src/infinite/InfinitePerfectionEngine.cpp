@@ -7977,4 +7977,85 @@ void InfinitePerfectionEngine::RunProsperityCycle() {
     }
 }
 
+// ==================== BATCH 187: SFE-LXXIII - Sovereign Legacy (FIRST STEP - SIXTH CYCLE - LEGACY CYCLE) ====================
+
+LegacyField InfinitePerfectionEngine::ComputeLegacy() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    LegacyField L = {};
+
+    ProsperityField P = ComputeProsperity();
+    BloomField B = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double lambda = 4624.0; // The Legacy - enduring
+
+    L.legacyOrigin      = P.prosperityMagnitude * B.bloomOrigin * lambda;
+    L.legacyPotential   = P.prosperityPotential * lambda;
+    L.legacyHarmony     = P.prosperityHarmony * Tot.omnicoherence;
+    L.legacyClarity     = P.prosperityClarity * lambda;
+    L.legacyContinuity  = P.prosperityContinuity * B.bloomContinuity;
+    L.legacyStability     = P.prosperityStability * Tot.omnidensity;
+    L.legacyResolution  = P.prosperityResolution * lambda;
+    L.legacyExpansion   = Tot.omnipotential * lambda;
+
+    L.legacyMagnitude =
+        (L.legacyOrigin +
+         L.legacyPotential +
+         L.legacyHarmony +
+         L.legacyClarity +
+         L.legacyExpansion) / 5.0;
+
+    return L;
+}
+
+void InfinitePerfectionEngine::RunLegacyCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    LegacyField L = ComputeLegacy();
+
+    // Legacy - enduring
+    if (L.legacyOrigin > 254.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes endure
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Legacy creation - enduring universes
+    if (L.legacyExpansion > 615.0) {
+        for (int i = 0; i < 58000000; i++) {
+            CreateUniverse("legacy", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate enduring autopoietic entities
+    if (L.legacyPotential > 245.0) {
+        for (int i = 0; i < 49500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Legacy purification - only enduring potential remains
+    if (L.legacyClarity > 130.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

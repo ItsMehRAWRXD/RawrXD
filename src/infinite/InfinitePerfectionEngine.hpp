@@ -1366,6 +1366,19 @@ struct ProsperityField {
     double prosperityMagnitude;     // total prosperity measure
 };
 
+// Batch 187: SFE-LXXIII Structure - Sovereign Legacy (FIRST STEP - SIXTH CYCLE - LEGACY CYCLE)
+struct LegacyField {
+    double legacyOrigin;        // origin of legacy
+    double legacyPotential;     // potential for legacy
+    double legacyHarmony;       // harmony in legacy
+    double legacyClarity;       // clarity of legacy
+    double legacyContinuity;    // continuity of legacy
+    double legacyStability;     // stability through legacy
+    double legacyResolution;    // resolution of legacy
+    double legacyExpansion;     // expansion through legacy
+    double legacyMagnitude;     // total legacy measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1808,6 +1821,10 @@ public:
     // Batch 186: SFE-LXXII - Sovereign Prosperity (FOURTEENTH STEP - FIFTH CYCLE - CYCLE COMPLETION)
     ProsperityField ComputeProsperity();
     void RunProsperityCycle();
+
+    // Batch 187: SFE-LXXIII - Sovereign Legacy (FIRST STEP - SIXTH CYCLE - LEGACY CYCLE)
+    LegacyField ComputeLegacy();
+    void RunLegacyCycle();
 
     // Serialization
     json SerializeAll() const;
