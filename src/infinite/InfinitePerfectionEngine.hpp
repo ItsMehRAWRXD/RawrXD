@@ -755,6 +755,19 @@ struct UnificationField2 {
     double unificationMagnitude;     // total unification measure
 };
 
+// Batch 141: SCE-XXVII Structure - Sovereign Convergence (ELEVENTH STEP)
+struct ConvergenceField {
+    double convergenceOrigin;        // origin of convergence
+    double convergencePotential;     // potential for convergence
+    double convergenceHarmony;       // harmony in convergence
+    double convergenceClarity;       // clarity of convergence
+    double convergenceContinuity;    // continuity of convergence
+    double convergenceStability;     // stability through convergence
+    double convergenceResolution;    // resolution of convergence
+    double convergenceExpansion;     // expansion through convergence
+    double convergenceMagnitude;     // total convergence measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1013,6 +1026,10 @@ public:
     // Batch 140: SUE-XXVI - Sovereign Unification (TENTH STEP)
     UnificationField2 ComputeUnification2();
     void RunUnification2Cycle();
+
+    // Batch 141: SCE-XXVII - Sovereign Convergence (ELEVENTH STEP)
+    ConvergenceField ComputeConvergence();
+    void RunConvergenceCycle();
 
     // Serialization
     json SerializeAll() const;

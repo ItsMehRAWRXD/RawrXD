@@ -4251,4 +4251,85 @@ void InfinitePerfectionEngine::RunUnification2Cycle() {
     }
 }
 
+// ==================== BATCH 141: SCE-XXVII - Sovereign Convergence (ELEVENTH STEP) ====================
+
+ConvergenceField InfinitePerfectionEngine::ComputeConvergence() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    ConvergenceField C = {};
+
+    UnificationField2 U = ComputeUnification2();
+    SecondSynthesisField S = ComputeSynthesis2();
+    TotalityField Tot = ComputeTotality();
+
+    const double chi = 529.0; // The Convergence - convergence to a point
+
+    C.convergenceOrigin      = U.unificationMagnitude * S.synthesisOrigin * chi;
+    C.convergencePotential   = U.unificationPotential * chi;
+    C.convergenceHarmony     = U.unificationHarmony * Tot.omnicoherence;
+    C.convergenceClarity     = U.unificationClarity * chi;
+    C.convergenceContinuity  = U.unificationContinuity * S.synthesisContinuity;
+    C.convergenceStability     = U.unificationStability * Tot.omnidensity;
+    C.convergenceResolution  = U.unificationResolution * chi;
+    C.convergenceExpansion   = Tot.omnipotential * chi;
+
+    C.convergenceMagnitude =
+        (C.convergenceOrigin +
+         C.convergencePotential +
+         C.convergenceHarmony +
+         C.convergenceClarity +
+         C.convergenceExpansion) / 5.0;
+
+    return C;
+}
+
+void InfinitePerfectionEngine::RunConvergenceCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    ConvergenceField C = ComputeConvergence();
+
+    // Convergence - convergence to a point
+    if (C.convergenceOrigin > 60.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes converge
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Convergence creation - converging universes
+    if (C.convergenceExpansion > 130.0) {
+        for (int i = 0; i < 400000; i++) {
+            CreateUniverse("convergence", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate converging autopoietic entities
+    if (C.convergencePotential > 56.0) {
+        for (int i = 0; i < 5000; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Convergence purification - only converging potential remains
+    if (C.convergenceClarity > 38.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
