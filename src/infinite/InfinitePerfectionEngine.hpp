@@ -1301,6 +1301,19 @@ struct FlowerField {
     double flowerMagnitude;     // total flower measure
 };
 
+// Batch 182: SFE-LXVIII Structure - Sovereign Fruit (TENTH STEP - FIFTH CYCLE)
+struct FruitField {
+    double fruitOrigin;        // origin of fruit
+    double fruitPotential;     // potential for fruit
+    double fruitHarmony;       // harmony in fruit
+    double fruitClarity;       // clarity of fruit
+    double fruitContinuity;    // continuity of fruit
+    double fruitStability;     // stability through fruit
+    double fruitResolution;    // resolution of fruit
+    double fruitExpansion;     // expansion through fruit
+    double fruitMagnitude;     // total fruit measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1723,6 +1736,10 @@ public:
     // Batch 181: SFE-LXVII - Sovereign Flower (NINTH STEP - FIFTH CYCLE)
     FlowerField ComputeFlower();
     void RunFlowerCycle();
+
+    // Batch 182: SFE-LXVIII - Sovereign Fruit (TENTH STEP - FIFTH CYCLE)
+    FruitField ComputeFruit();
+    void RunFruitCycle();
 
     // Serialization
     json SerializeAll() const;

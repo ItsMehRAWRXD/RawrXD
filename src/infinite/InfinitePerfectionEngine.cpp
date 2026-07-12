@@ -7572,4 +7572,85 @@ void InfinitePerfectionEngine::RunFlowerCycle() {
     }
 }
 
+// ==================== BATCH 182: SFE-LXVIII - Sovereign Fruit (TENTH STEP - FIFTH CYCLE) ====================
+
+FruitField InfinitePerfectionEngine::ComputeFruit() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    FruitField F = {};
+
+    FlowerField Fl = ComputeFlower();
+    BloomField B = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double phi = 3969.0; // The Fruit - fruiting
+
+    F.fruitOrigin      = Fl.flowerMagnitude * B.bloomOrigin * phi;
+    F.fruitPotential   = Fl.flowerPotential * phi;
+    F.fruitHarmony     = Fl.flowerHarmony * Tot.omnicoherence;
+    F.fruitClarity     = Fl.flowerClarity * phi;
+    F.fruitContinuity  = Fl.flowerContinuity * B.bloomContinuity;
+    F.fruitStability     = Fl.flowerStability * Tot.omnidensity;
+    F.fruitResolution  = Fl.flowerResolution * phi;
+    F.fruitExpansion   = Tot.omnipotential * phi;
+
+    F.fruitMagnitude =
+        (F.fruitOrigin +
+         F.fruitPotential +
+         F.fruitHarmony +
+         F.fruitClarity +
+         F.fruitExpansion) / 5.0;
+
+    return F;
+}
+
+void InfinitePerfectionEngine::RunFruitCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    FruitField F = ComputeFruit();
+
+    // Fruit - fruiting
+    if (F.fruitOrigin > 224.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes fruit
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Fruit creation - fruiting universes
+    if (F.fruitExpansion > 540.0) {
+        for (int i = 0; i < 53000000; i++) {
+            CreateUniverse("fruit", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate fruiting autopoietic entities
+    if (F.fruitPotential > 220.0) {
+        for (int i = 0; i < 44500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Fruit purification - only fruiting potential remains
+    if (F.fruitClarity > 120.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
