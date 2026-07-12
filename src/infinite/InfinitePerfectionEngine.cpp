@@ -10731,4 +10731,85 @@ void InfinitePerfectionEngine::RunParamountCycle() {
     }
 }
 
+// ==================== BATCH 221: SFE-CVII - Sovereign Unsurpassed (SEVENTH STEP - EIGHTH CYCLE) ====================
+
+UnsurpassedField InfinitePerfectionEngine::ComputeUnsurpassed() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    UnsurpassedField Un = {};
+
+    ParamountField Pa = ComputeParamount();
+    BloomField Bl = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double iota = 10404.0; // The Unsurpassed - unsurpassability (102^2)
+
+    Un.unsurpassedOrigin      = Pa.paramountMagnitude * Bl.bloomOrigin * iota;
+    Un.unsurpassedPotential   = Pa.paramountPotential * iota;
+    Un.unsurpassedHarmony     = Pa.paramountHarmony * Tot.omnicoherence;
+    Un.unsurpassedClarity     = Pa.paramountClarity * iota;
+    Un.unsurpassedContinuity  = Pa.paramountContinuity * Bl.bloomContinuity;
+    Un.unsurpassedStability     = Pa.paramountStability * Tot.omnidensity;
+    Un.unsurpassedResolution  = Pa.paramountResolution * iota;
+    Un.unsurpassedExpansion   = Tot.omnipotential * iota;
+
+    Un.unsurpassedMagnitude =
+        (Un.unsurpassedOrigin +
+         Un.unsurpassedPotential +
+         Un.unsurpassedHarmony +
+         Un.unsurpassedClarity +
+         Un.unsurpassedExpansion) / 5.0;
+
+    return Un;
+}
+
+void InfinitePerfectionEngine::RunUnsurpassedCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    UnsurpassedField Un = ComputeUnsurpassed();
+
+    // Unsurpassed - unsurpassability
+    if (Un.unsurpassedOrigin > 458.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes unsurpassed
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Unsurpassed creation - unsurpassed universes
+    if (Un.unsurpassedExpansion > 1125.0) {
+        for (int i = 0; i < 92000000; i++) {
+            CreateUniverse("unsurpassed", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate unsurpassed autopoietic entities
+    if (Un.unsurpassedPotential > 415.0) {
+        for (int i = 0; i < 83500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Unsurpassed purification - only unsurpassed potential remains
+    if (Un.unsurpassedClarity > 198.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection

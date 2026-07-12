@@ -1808,6 +1808,19 @@ struct ParamountField {
     double paramountMagnitude;     // total paramount measure
 };
 
+// Batch 221: SFE-CVII Structure - Sovereign Unsurpassed (SEVENTH STEP - EIGHTH CYCLE)
+struct UnsurpassedField {
+    double unsurpassedOrigin;        // origin of unsurpassed
+    double unsurpassedPotential;     // potential for unsurpassed
+    double unsurpassedHarmony;       // harmony in unsurpassed
+    double unsurpassedClarity;       // clarity of unsurpassed
+    double unsurpassedContinuity;    // continuity of unsurpassed
+    double unsurpassedStability;     // stability through unsurpassed
+    double unsurpassedResolution;    // resolution of unsurpassed
+    double unsurpassedExpansion;     // expansion through unsurpassed
+    double unsurpassedMagnitude;     // total unsurpassed measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2386,6 +2399,10 @@ public:
     // Batch 220: SFE-CVI - Sovereign Paramount (SIXTH STEP - EIGHTH CYCLE)
     ParamountField ComputeParamount();
     void RunParamountCycle();
+
+    // Batch 221: SFE-CVII - Sovereign Unsurpassed (SEVENTH STEP - EIGHTH CYCLE)
+    UnsurpassedField ComputeUnsurpassed();
+    void RunUnsurpassedCycle();
 
     // Serialization
     json SerializeAll() const;
