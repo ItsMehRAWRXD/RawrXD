@@ -1665,6 +1665,19 @@ struct VeneratedField {
     double veneratedMagnitude;     // total venerated measure
 };
 
+// Batch 210: SFE-XCVI Structure - Sovereign Exalted (TENTH STEP - SEVENTH CYCLE)
+struct ExaltedField {
+    double exaltedOrigin;        // origin of exalted
+    double exaltedPotential;     // potential for exalted
+    double exaltedHarmony;       // harmony in exalted
+    double exaltedClarity;       // clarity of exalted
+    double exaltedContinuity;    // continuity of exalted
+    double exaltedStability;     // stability through exalted
+    double exaltedResolution;    // resolution of exalted
+    double exaltedExpansion;     // expansion through exalted
+    double exaltedMagnitude;     // total exalted measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2199,6 +2212,10 @@ public:
     // Batch 209: SFE-XCV - Sovereign Venerated (NINTH STEP - SEVENTH CYCLE)
     VeneratedField ComputeVenerated();
     void RunVeneratedCycle();
+
+    // Batch 210: SFE-XCVI - Sovereign Exalted (TENTH STEP - SEVENTH CYCLE)
+    ExaltedField ComputeExalted();
+    void RunExaltedCycle();
 
     // Serialization
     json SerializeAll() const;
