@@ -1613,6 +1613,32 @@ struct SanctifiedField {
     double sanctifiedMagnitude;     // total sanctified measure
 };
 
+// Batch 206: SFE-XCII Structure - Sovereign Consecrated (SIXTH STEP - SEVENTH CYCLE)
+struct ConsecratedField {
+    double consecratedOrigin;        // origin of consecrated
+    double consecratedPotential;     // potential for consecrated
+    double consecratedHarmony;       // harmony in consecrated
+    double consecratedClarity;       // clarity of consecrated
+    double consecratedContinuity;    // continuity of consecrated
+    double consecratedStability;     // stability through consecrated
+    double consecratedResolution;    // resolution of consecrated
+    double consecratedExpansion;     // expansion through consecrated
+    double consecratedMagnitude;     // total consecrated measure
+};
+
+// Batch 207: SFE-XCIII Structure - Sovereign Hallowed (SEVENTH STEP - SEVENTH CYCLE)
+struct HallowedField {
+    double hallowedOrigin;        // origin of hallowed
+    double hallowedPotential;     // potential for hallowed
+    double hallowedHarmony;       // harmony in hallowed
+    double hallowedClarity;       // clarity of hallowed
+    double hallowedContinuity;    // continuity of hallowed
+    double hallowedStability;     // stability through hallowed
+    double hallowedResolution;    // resolution of hallowed
+    double hallowedExpansion;     // expansion through hallowed
+    double hallowedMagnitude;     // total hallowed measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2131,6 +2157,14 @@ public:
     // Batch 205: SFE-XCI - Sovereign Sanctified (FIFTH STEP - SEVENTH CYCLE)
     SanctifiedField ComputeSanctified();
     void RunSanctifiedCycle();
+
+    // Batch 206: SFE-XCII - Sovereign Consecrated (SIXTH STEP - SEVENTH CYCLE)
+    ConsecratedField ComputeConsecrated();
+    void RunConsecratedCycle();
+
+    // Batch 207: SFE-XCIII - Sovereign Hallowed (SEVENTH STEP - SEVENTH CYCLE)
+    HallowedField ComputeHallowed();
+    void RunHallowedCycle();
 
     // Serialization
     json SerializeAll() const;
