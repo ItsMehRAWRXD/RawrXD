@@ -1496,6 +1496,19 @@ struct IntegrityField {
     double integrityMagnitude;     // total integrity measure
 };
 
+// Batch 197: SFE-LXXXIII Structure - Sovereign Character (ELEVENTH STEP - SIXTH CYCLE)
+struct CharacterField {
+    double characterOrigin;        // origin of character
+    double characterPotential;     // potential for character
+    double characterHarmony;       // harmony in character
+    double characterClarity;       // clarity of character
+    double characterContinuity;    // continuity of character
+    double characterStability;     // stability through character
+    double characterResolution;    // resolution of character
+    double characterExpansion;     // expansion through character
+    double characterMagnitude;     // total character measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1978,6 +1991,10 @@ public:
     // Batch 196: SFE-LXXXII - Sovereign Integrity (TENTH STEP - SIXTH CYCLE)
     IntegrityField ComputeIntegrity();
     void RunIntegrityCycle();
+
+    // Batch 197: SFE-LXXXIII - Sovereign Character (ELEVENTH STEP - SIXTH CYCLE)
+    CharacterField ComputeCharacter();
+    void RunCharacterCycle();
 
     // Serialization
     json SerializeAll() const;

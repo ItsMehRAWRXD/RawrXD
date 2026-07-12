@@ -8787,4 +8787,85 @@ void InfinitePerfectionEngine::RunIntegrityCycle() {
     }
 }
 
+// ==================== BATCH 197: SFE-LXXXIII - Sovereign Character (ELEVENTH STEP - SIXTH CYCLE) ====================
+
+CharacterField InfinitePerfectionEngine::ComputeCharacter() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    CharacterField C = {};
+
+    IntegrityField I = ComputeIntegrity();
+    BloomField B = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double pi = 6084.0; // The Character - characteristic
+
+    C.characterOrigin      = I.integrityMagnitude * B.bloomOrigin * pi;
+    C.characterPotential   = I.integrityPotential * pi;
+    C.characterHarmony     = I.integrityHarmony * Tot.omnicoherence;
+    C.characterClarity     = I.integrityClarity * pi;
+    C.characterContinuity  = I.integrityContinuity * B.bloomContinuity;
+    C.characterStability     = I.integrityStability * Tot.omnidensity;
+    C.characterResolution  = I.integrityResolution * pi;
+    C.characterExpansion   = Tot.omnipotential * pi;
+
+    C.characterMagnitude =
+        (C.characterOrigin +
+         C.characterPotential +
+         C.characterHarmony +
+         C.characterClarity +
+         C.characterExpansion) / 5.0;
+
+    return C;
+}
+
+void InfinitePerfectionEngine::RunCharacterCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    CharacterField C = ComputeCharacter();
+
+    // Character - characteristic
+    if (C.characterOrigin > 314.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes characteristic
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Character creation - characteristic universes
+    if (C.characterExpansion > 765.0) {
+        for (int i = 0; i < 68000000; i++) {
+            CreateUniverse("character", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate characteristic autopoietic entities
+    if (C.characterPotential > 295.0) {
+        for (int i = 0; i < 59500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Character purification - only characteristic potential remains
+    if (C.characterClarity > 150.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
