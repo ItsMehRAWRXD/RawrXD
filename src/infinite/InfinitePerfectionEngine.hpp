@@ -1418,6 +1418,19 @@ struct WisdomField {
     double wisdomMagnitude;     // total wisdom measure
 };
 
+// Batch 191: SFE-LXXVII Structure - Sovereign Knowledge (FIFTH STEP - SIXTH CYCLE)
+struct KnowledgeField {
+    double knowledgeOrigin;        // origin of knowledge
+    double knowledgePotential;     // potential for knowledge
+    double knowledgeHarmony;       // harmony in knowledge
+    double knowledgeClarity;       // clarity of knowledge
+    double knowledgeContinuity;    // continuity of knowledge
+    double knowledgeStability;     // stability through knowledge
+    double knowledgeResolution;    // resolution of knowledge
+    double knowledgeExpansion;     // expansion through knowledge
+    double knowledgeMagnitude;     // total knowledge measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -1876,6 +1889,10 @@ public:
     // Batch 190: SFE-LXXVI - Sovereign Wisdom (FOURTH STEP - SIXTH CYCLE)
     WisdomField ComputeWisdom();
     void RunWisdomCycle();
+
+    // Batch 191: SFE-LXXVII - Sovereign Knowledge (FIFTH STEP - SIXTH CYCLE)
+    KnowledgeField ComputeKnowledge();
+    void RunKnowledgeCycle();
 
     // Serialization
     json SerializeAll() const;

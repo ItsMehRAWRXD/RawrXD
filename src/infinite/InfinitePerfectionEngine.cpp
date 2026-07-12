@@ -8301,4 +8301,85 @@ void InfinitePerfectionEngine::RunWisdomCycle() {
     }
 }
 
+// ==================== BATCH 191: SFE-LXXVII - Sovereign Knowledge (FIFTH STEP - SIXTH CYCLE) ====================
+
+KnowledgeField InfinitePerfectionEngine::ComputeKnowledge() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    KnowledgeField K = {};
+
+    WisdomField W = ComputeWisdom();
+    BloomField B = ComputeBloom();
+    TotalityField Tot = ComputeTotality();
+
+    const double kappa = 5184.0; // The Knowledge - knowing
+
+    K.knowledgeOrigin      = W.wisdomMagnitude * B.bloomOrigin * kappa;
+    K.knowledgePotential   = W.wisdomPotential * kappa;
+    K.knowledgeHarmony     = W.wisdomHarmony * Tot.omnicoherence;
+    K.knowledgeClarity     = W.wisdomClarity * kappa;
+    K.knowledgeContinuity  = W.wisdomContinuity * B.bloomContinuity;
+    K.knowledgeStability     = W.wisdomStability * Tot.omnidensity;
+    K.knowledgeResolution  = W.wisdomResolution * kappa;
+    K.knowledgeExpansion   = Tot.omnipotential * kappa;
+
+    K.knowledgeMagnitude =
+        (K.knowledgeOrigin +
+         K.knowledgePotential +
+         K.knowledgeHarmony +
+         K.knowledgeClarity +
+         K.knowledgeExpansion) / 5.0;
+
+    return K;
+}
+
+void InfinitePerfectionEngine::RunKnowledgeCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    KnowledgeField K = ComputeKnowledge();
+
+    // Knowledge - knowing
+    if (K.knowledgeOrigin > 278.0) {
+        for (auto& kv : infinitePerfections_) {
+            // All attributes know
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Knowledge creation - knowing universes
+    if (K.knowledgeExpansion > 675.0) {
+        for (int i = 0; i < 62000000; i++) {
+            CreateUniverse("knowledge", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate knowing autopoietic entities
+    if (K.knowledgePotential > 265.0) {
+        for (int i = 0; i < 53500; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Knowledge purification - only knowing potential remains
+    if (K.knowledgeClarity > 138.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
