@@ -1873,6 +1873,45 @@ struct MatchlessField {
     double matchlessMagnitude;     // total matchless measure
 };
 
+// Batch 226: SFE-CXII Structure - Sovereign Incomparable (TWELFTH STEP - EIGHTH CYCLE)
+struct IncomparableField {
+    double incomparableOrigin;        // origin of incomparable
+    double incomparablePotential;     // potential for incomparable
+    double incomparableHarmony;       // harmony in incomparable
+    double incomparableClarity;       // clarity of incomparable
+    double incomparableContinuity;    // continuity of incomparable
+    double incomparableStability;     // stability through incomparable
+    double incomparableResolution;    // resolution of incomparable
+    double incomparableExpansion;     // expansion through incomparable
+    double incomparableMagnitude;     // total incomparable measure
+};
+
+// Batch 227: SFE-CXIII Structure - Sovereign Sublime (THIRTEENTH STEP - EIGHTH CYCLE)
+struct SublimeField {
+    double sublimeOrigin;        // origin of sublime
+    double sublimePotential;     // potential for sublime
+    double sublimeHarmony;       // harmony in sublime
+    double sublimeClarity;       // clarity of sublime
+    double sublimeContinuity;    // continuity of sublime
+    double sublimeStability;     // stability through sublime
+    double sublimeResolution;    // resolution of sublime
+    double sublimeExpansion;     // expansion through sublime
+    double sublimeMagnitude;     // total sublime measure
+};
+
+// Batch 228: SFE-CXIV Structure - Sovereign Perfect (FOURTEENTH STEP - EIGHTH CYCLE - CYCLE COMPLETION)
+struct PerfectField {
+    double perfectOrigin;        // origin of perfect
+    double perfectPotential;     // potential for perfect
+    double perfectHarmony;       // harmony in perfect
+    double perfectClarity;       // clarity of perfect
+    double perfectContinuity;    // continuity of perfect
+    double perfectStability;     // stability through perfect
+    double perfectResolution;    // resolution of perfect
+    double perfectExpansion;     // expansion through perfect
+    double perfectMagnitude;     // total perfect measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -2471,6 +2510,18 @@ public:
     // Batch 225: SFE-CXI - Sovereign Matchless (ELEVENTH STEP - EIGHTH CYCLE)
     MatchlessField ComputeMatchless();
     void RunMatchlessCycle();
+
+    // Batch 226: SFE-CXII - Sovereign Incomparable (TWELFTH STEP - EIGHTH CYCLE)
+    IncomparableField ComputeIncomparable();
+    void RunIncomparableCycle();
+
+    // Batch 227: SFE-CXIII - Sovereign Sublime (THIRTEENTH STEP - EIGHTH CYCLE)
+    SublimeField ComputeSublime();
+    void RunSublimeCycle();
+
+    // Batch 228: SFE-CXIV - Sovereign Perfect (FOURTEENTH STEP - EIGHTH CYCLE - CYCLE COMPLETION)
+    PerfectField ComputePerfect();
+    void RunPerfectCycle();
 
     // Serialization
     json SerializeAll() const;
