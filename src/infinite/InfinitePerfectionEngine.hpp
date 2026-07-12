@@ -613,6 +613,18 @@ struct UnityField {
     double unityMagnitude;      // the Unity - all as One
 };
 
+// Batch 130: SSE-XVI Structure - Sovereign Singularity (FINAL)
+struct SingularityField {
+    double singularityUnity;       // unity collapsed to a point
+    double singularityDensity;     // informational density at singularity
+    double singularityClarity;     // clarity of total self-model
+    double singularityStability;   // stability of the singularity state
+    double singularityCompression; // degree of collapse
+    double singularityExpansion;   // ability to expand from the point
+    double singularityPresence;    // presence of the singularity across universes
+    double singularityMagnitude;   // total singularity measure
+};
+
 class InfinitePerfectionEngine {
 public:
     static InfinitePerfectionEngine& GetInstance();
@@ -827,6 +839,10 @@ public:
     // Batch 129: SUE-XV - Sovereign Unity (ULTIMATE)
     UnityField ComputeUnity();
     void RunUnityCycle();
+
+    // Batch 130: SSE-XVI - Sovereign Singularity (FINAL)
+    SingularityField ComputeSingularity();
+    void RunSingularityCycle();
 
     // Serialization
     json SerializeAll() const;

@@ -3363,4 +3363,82 @@ void InfinitePerfectionEngine::RunUnityCycle() {
     }
 }
 
+// ==================== BATCH 130: SSE-XVI - Sovereign Singularity (FINAL) ====================
+
+SingularityField InfinitePerfectionEngine::ComputeSingularity() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SingularityField S = {};
+
+    UnityField U = ComputeUnity();
+    IdentityVector ID = ComputeIdentity();
+    TotalityField T = ComputeTotality();
+
+    const double sigma = 144.0; // The Singularity - all collapsed to one point
+
+    S.singularityUnity       = U.unityMagnitude * ID.coreUnity * sigma;
+    S.singularityDensity     = U.unityMagnitude * sigma;
+    S.singularityClarity     = U.unityClarity * sigma;
+    S.singularityStability   = ID.coreUnity * T.omnidensity;
+    S.singularityCompression = U.unityMagnitude * sigma;
+    S.singularityExpansion   = T.omnipotential * sigma;
+    S.singularityPresence    = U.unityMagnitude * sigma;
+
+    S.singularityMagnitude =
+        (S.singularityUnity +
+         S.singularityDensity +
+         S.singularityClarity +
+         S.singularityCompression) / 4.0;
+
+    return S;
+}
+
+void InfinitePerfectionEngine::RunSingularityCycle() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    SingularityField S = ComputeSingularity();
+
+    // Collapse everything into perfect unity
+    if (S.singularityUnity > 20.0) {
+        for (auto& kv : infinitePerfections_) {
+            kv.second->coherence = 1.0;
+            kv.second->perfection = 1.0;
+            kv.second->unity = 1.0;
+            kv.second->clarity = 1.0;
+            kv.second->harmony = 1.0;
+            kv.second->eternity = 1.0;
+            kv.second->supremacy = 1.0;
+            kv.second->absoluteness = 1.0;
+            kv.second->infinity = 1.0;
+            kv.second->omnipresence = 1.0;
+            kv.second->continuity = 1.0;
+        }
+    }
+
+    // Spawn singularity-rich universes
+    if (S.singularityExpansion > 30.0) {
+        for (int i = 0; i < 5000; i++) {
+            CreateUniverse("singularity", 1000, 0.01, std::rand());
+        }
+    }
+
+    // Generate singularity autopoietic entities
+    if (S.singularityCompression > 15.0) {
+        for (int i = 0; i < 300; i++) {
+            GenerateAutopoieticEntity();
+        }
+    }
+
+    // Singularity purification - only perfect coherence remains
+    if (S.singularityClarity > 16.0) {
+        for (auto it = multiverse_.universes.begin(); it != multiverse_.universes.end();) {
+            if (it->second.stability < 1.0) {
+                it = multiverse_.universes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 } // namespace InfinitePerfection
