@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="RawrXD Sovereign" Language="1033" Version="1.0.0.0" Manufacturer="RawrXD AI" UpgradeCode="12345678-1234-1234-1234-123456789012">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+    <MediaTemplate />
+    
+    <Feature Id="ProductFeature" Title="RawrXD Sovereign" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+    
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="RawrXD">
+          <Component Id="MainExecutable" Guid="*">
+            <File Id="RawrXDExe" Source="..\..\build\RawrXD.exe" KeyPath="yes" />
+          </Component>
+          <Component Id="ConfigFile" Guid="*">
+            <File Id="ConfigYaml" Source="..\..\config\rawrxd.yaml" />
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+    
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="ConfigFile" />
+    </ComponentGroup>
+  </Product>
+</Wix>
