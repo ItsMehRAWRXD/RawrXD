@@ -2,12 +2,14 @@
 #include "../swarm/LearningSimulator.hpp"
 #include "../swarm/InfinitePerfectionTelemetry.hpp"
 #include "../swarm/InfinitePerfectionTelemetrySQLite.hpp"
+#include "../swarm/TelemetryDashboardServer.hpp"
 #include "../infinite/InfinitePerfectionEngine.hpp"
 #include <iostream>
 #include <iomanip>
 #include <cstring>
 #include <chrono>
 #include <fstream>
+#include <thread>
 
 namespace sovereign {
 namespace cli {
@@ -690,6 +692,38 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
                     }
                 } else {
                     std::cerr << "[ERROR] Failed to initialize SQLite database: " << dbPath << "\n";
+                }
+            }
+            
+            // Batch 7: Start telemetry dashboard server
+            if (opts.telemetryDashboard) {
+                std::cout << "[TASK] Batch 7: Starting telemetry dashboard server...\n";
+                
+                Sovereign::DashboardConfig dashboardConfig;
+                dashboardConfig.port = opts.dashboardPort;
+                dashboardConfig.updateIntervalMs = 1000;
+                dashboardConfig.enableCors = true;
+                
+                Sovereign::TelemetryDashboardServer dashboardServer(&engine, dashboardConfig);
+                
+                if (dashboardServer.Start()) {
+                    std::cout << "[INFO] Dashboard server started on port " << opts.dashboardPort << "\n";
+                    std::cout << "[INFO] WebSocket endpoint: ws://localhost:" << opts.dashboardPort << "\n";
+                    std::cout << "[INFO] Press Ctrl+C to stop server\n";
+                    std::cout << "[INFO] Waiting for connections...\n\n";
+                    
+                    // Keep server running until interrupted
+                    while (dashboardServer.IsRunning()) {
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                        
+                        // Print status every 10 seconds
+                        static int counter = 0;
+                        if (++counter % 10 == 0) {
+                            std::cout << "[INFO] Server status: " << dashboardServer.GetStatusJson() << "\n";
+                        }
+                    }
+                } else {
+                    std::cerr << "[ERROR] Failed to start dashboard server on port " << opts.dashboardPort << "\n";
                 }
             }
         } else {
