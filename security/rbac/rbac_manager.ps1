@@ -91,8 +91,14 @@ function Save-RBACConfig {
         [object]$Config
     )
     
-    $Config.last_updated = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
-    $Config | ConvertTo-Json -Depth 10 | Out-File $Path -Force
+    # Convert PSCustomObject to hashtable for modification
+    $configHash = @{}
+    $Config.PSObject.Properties | ForEach-Object {
+        $configHash[$_.Name] = $_.Value
+    }
+    
+    $configHash['last_updated'] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+    $configHash | ConvertTo-Json -Depth 10 | Out-File $Path -Force
 }
 
 function Get-Role {
@@ -161,19 +167,27 @@ function Add-AuditLogEntry {
         [string]$Details
     )
     
-    $entry = @{
+    $entry = [PSCustomObject]@{
         timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
         action = $Action
         user_id = $UserId
         details = $Details
     }
     
-    $Config.audit_log += $entry
+    # Convert to array list for modification
+    $auditList = [System.Collections.ArrayList]::new()
+    if ($Config.audit_log) {
+        $auditList.AddRange(@($Config.audit_log))
+    }
+    $auditList.Add($entry) | Out-Null
     
     # Keep only last 1000 entries
-    if ($Config.audit_log.Count -gt 1000) {
-        $Config.audit_log = @($Config.audit_log | Select-Object -Last 1000)
+    if ($auditList.Count -gt 1000) {
+        $auditList.RemoveRange(0, $auditList.Count - 1000)
     }
+    
+    # Update config
+    $Config | Add-Member -MemberType NoteProperty -Name "audit_log" -Value $auditList.ToArray() -Force
 }
 
 # Main Operations
