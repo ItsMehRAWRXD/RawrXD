@@ -1,6 +1,6 @@
-# Phase G.1 Complete: Integration & Hardening ✅
+# Phase G.1 Complete: Sovereign Governance & Live Monitoring 🛡️
 
-**Status:** All 5 batches verified and committed  
+**Status:** All 5 batches committed and pushed  
 **Date:** 2026-07-13  
 **Branch:** `copilot/vscode-mlyextom-3zgo-phase7a`
 
@@ -8,9 +8,7 @@
 
 ## Overview
 
-Phase G.1 wires together all previously built components (C.4 Stability, D.6 Intelligent Ops, Hotpatch system) into a **production-hardened, chaos-resilient benchmark execution pipeline**.
-
-This phase transforms RawrXD from a collection of capabilities into an **integrated, self-validating system**.
+Phase G.1 transitions from **certification** to **observability**. With production infrastructure and validation evidence in place, this phase provides real-time governance, monitoring, and automated response capabilities.
 
 ---
 
@@ -18,184 +16,198 @@ This phase transforms RawrXD from a collection of capabilities into an **integra
 
 | Batch | Component | Purpose | Status |
 |-------|-----------|---------|--------|
-| **1/5** | `run_stability_benchmark.ps1` | C.4 Stability Envelope integration with real-time oscillation detection | ✅ Complete |
-| **2/5** | `run_intelligent_ops.ps1` | D.6 Intelligent Ops telemetry with predictive analytics | ✅ Complete |
-| **3/5** | `run_hotpatch_benchmark.ps1` | Native x64 MASM hotpatch timing validation | ✅ Complete |
-| **4/5** | `run_chaos_suite.ps1` | Controlled failure injection + resilience validation | ✅ Complete |
-| **5/5** | `run_production_certification.ps1` | Unified certification of all G.1 components | ✅ Complete |
+| **1/5** | `telemetry_collector.ps1` | Real-time metrics ingestion via named pipes/TCP | ✅ Complete |
+| **2/5** | `health_monitor.ps1` | Threshold-based alerting with webhook/email | ✅ Complete |
+| **3/5** | `audit_logger.ps1` | Immutable hotpatch history with cryptographic chain | ✅ Complete |
+| **4/5** | `self_healing.ps1` | Circuit breaker, auto-rollback, selective patch management | ✅ Complete |
+| **5/5** | `dashboard_server.ps1` | WebSocket dashboard + REST API | ✅ Complete |
 
 ---
 
 ## Component Details
 
-### Batch 1/5: Stability Envelope Integration
-**File:** `benchmarks/phase_g1/batch1_stability_integration/run_stability_benchmark.ps1`
+### Batch 1/5: Telemetry Collection Pipeline
+**File:** `governance/telemetry/telemetry_collector.ps1`
 
 **Features:**
-- Real-time stability monitoring during benchmarks
-- Oscillation detection with automatic dampening
-- Safety gate blocks unsafe mutations
-- Automatic rollback on instability
-- Chaos injection with recovery validation
+- Named pipe server for local processes
+- TCP listener for network telemetry
+- Configurable buffer size and flush intervals
+- Threshold breach detection
+- JSONL output format for efficient storage
+
+**Metrics Supported:**
+| Metric | Unit | Threshold | Type |
+|--------|------|-----------|------|
+| TPS | tokens/sec | 30 | performance |
+| TTFT | ms | 50 | performance |
+| Latency | ms | 100 | performance |
+| MemoryUsage | MB | 8192 | resource |
+| GPUUtilization | percent | 95 | resource |
+| HotpatchStatus | enum | 0 | governance |
+| SIS_Score | points | 85 | governance |
 
 **Usage:**
 ```powershell
-# Basic stability benchmark
-.\batch1_stability_integration\run_stability_benchmark.ps1 `
-    -BenchmarkType hotpatch -Model phi-3-mini
+# Start collector daemon
+.\governance\telemetry\telemetry_collector.ps1 -Daemon
 
-# With chaos injection
-.\batch1_stability_integration\run_stability_benchmark.ps1 `
-    -BenchmarkType inference -EnableChaos -ChaosProbability 0.05
-
-# Strict mode (90% stability required)
-.\batch1_stability_integration\run_stability_benchmark.ps1 `
-    -BenchmarkType matrix -EnableChaos -StrictMode
+# Emit test metrics
+Emit-TestMetrics -Count 100 -DelayMs 100
 ```
-
-**Thresholds:**
-| Metric | Standard | Strict |
-|--------|----------|--------|
-| Min Stability Score | 80% | 90% |
-| Max Oscillations/min | 2 | 1 |
-| Max Sigma Breach Rate | 5% | 2% |
-| Max Rollbacks | 3 | 2 |
 
 ---
 
-### Batch 2/5: Intelligent Ops Telemetry
-**File:** `benchmarks/phase_g1/batch2_intelligent_ops/run_intelligent_ops.ps1`
+### Batch 2/5: Health Monitoring & Alerting
+**File:** `governance/monitoring/health_monitor.ps1`
 
 **Features:**
-- Predictive autoscaling with load forecasting
-- Real-time anomaly detection during execution
-- Performance analytics with bottleneck classification
-- Automated remediation trigger validation
-- Distributed tracing and flame graph generation
+- Real-time metric monitoring
+- Configurable thresholds (Warning/Critical)
+- Alert cooldown to prevent spam
+- Webhook support (Discord, Slack, Teams, Custom)
+- Email notifications via SMTP
+
+**Alert Thresholds:**
+| Metric | Warning | Critical |
+|--------|---------|----------|
+| TPS | < 35 | < 25 |
+| TTFT | > 40ms | > 60ms |
+| Latency | > 80ms | > 120ms |
+| Memory | > 7GB | > 9GB |
+| GPU | > 90% | > 98% |
+| SIS | < 88 | < 80 |
 
 **Usage:**
 ```powershell
-# Standard intelligent ops benchmark
-.\batch2_intelligent_ops\run_intelligent_ops.ps1 `
-    -BenchmarkType hotpatch -Model phi-3-mini
+# Start monitoring
+.\governance\monitoring\health_monitor.ps1 -Daemon
 
-# Maximum insight with tracing
-.\batch2_intelligent_ops\run_intelligent_ops.ps1 `
-    -BenchmarkType inference -EnableTracing -InsightLevel maximum
+# With webhook
+.\governance\monitoring\health_monitor.ps1 -AlertWebhook "https://discord.com/api/webhooks/..."
 ```
-
-**Parameters:**
-- `ForecastHorizon`: 1-120 minutes (default: 30)
-- `AnomalySensitivity`: 0.0-1.0 (default: 0.95)
-- `InsightLevel`: minimal, standard, maximum
 
 ---
 
-### Batch 3/5: Hotpatch MASM Benchmarks
-**File:** `benchmarks/phase_g1/batch3_hotpatch_masm/run_hotpatch_benchmark.ps1`
+### Batch 3/5: Governance Audit Trail
+**File:** `governance/audit/audit_logger.ps1`
 
 **Features:**
-- Zero-downtime kernel replacement (2-5ms deployment)
-- TPS improvement measurement (+15-40% target)
-- Hotpatch safety validation
-- Rollback verification
-- Performance delta analysis
+- Cryptographic hash chain (SHA256)
+- Immutable audit log
+- Sequence verification
+- Tamper detection
+- Query and reporting capabilities
+
+**Action Types:**
+- `Hotpatch_Applied`
+- `Hotpatch_Rolled_Back`
+- `Hotpatch_Failed`
+- `Performance_Threshold_Breach`
+- `SIS_Score_Change`
+- `Governance_Decision`
+- `Configuration_Change`
+- `Security_Event`
 
 **Usage:**
 ```powershell
-# Single kernel hotpatch benchmark
-.\batch3_hotpatch_masm\run_hotpatch_benchmark.ps1 -KernelType gemm -PatchCount 10
+# Log action
+.\governance\audit\audit_logger.ps1 -Action "Hotpatch_Applied" -ActionData @{ PatchName = "scheduler" }
 
-# All kernels with rollback verification
-.\batch3_hotpatch_masm\run_hotpatch_benchmark.ps1 `
-    -KernelType all -VerifyRollback -MeasureOverhead
+# Verify chain integrity
+.\governance\audit\audit_logger.ps1 -VerifyIntegrity
+
+# Generate report
+.\governance\audit\audit_logger.ps1 -ExportReport
 ```
-
-**Supported Kernels:**
-- `gemm` - Matrix multiplication
-- `attention` - Attention mechanism
-- `rmsnorm` - RMS normalization
-- `silu` - SiLU activation
-- `all` - All kernels sequentially
 
 ---
 
-### Batch 4/5: Chaos Engineering Suite
-**File:** `benchmarks/phase_g1/batch4_chaos_engineering/run_chaos_suite.ps1`
+### Batch 4/5: Self-Healing Automation
+**File:** `governance/healing/self_healing.ps1`
 
 **Features:**
-- Network partition simulation
-- Memory pressure testing
-- CPU throttling scenarios
-- Disk I/O failure injection
-- GPU memory exhaustion
-- Stability envelope recovery validation
+- Circuit breaker pattern for patch failures
+- Automatic rollback on degradation
+- Selective rollback based on affected metrics
+- Performance-based patch selection
+- Configurable thresholds and actions
+
+**Circuit Breaker States:**
+```
+Closed → Open (after 3 failures)
+Open → Half-Open (after 60s timeout)
+Half-Open → Closed (after 2 successes)
+Half-Open → Open (on failure)
+```
+
+**Auto-Rollback Triggers:**
+- TPS drop > 20%
+- Latency increase > 50%
+- SIS drop > 10 points
 
 **Usage:**
 ```powershell
-# Single experiment type
-.\batch4_chaos_engineering\run_chaos_suite.ps1 -ExperimentType network -Duration 120
+# Start self-healing daemon
+.\governance\healing\self_healing.ps1 -Daemon
 
-# Full chaos suite with auto-recovery
-.\batch4_chaos_engineering\run_chaos_suite.ps1 `
-    -ExperimentType all -Intensity 0.7 -AutoRecover
+# Apply patch with circuit breaker
+.\governance\healing\self_healing.ps1 -ApplyPatch "scheduler"
+
+# Dry run mode
+.\governance\healing\self_healing.ps1 -ApplyPatch "scheduler" -DryRun
 ```
-
-**Experiment Types:**
-- `network` - Network partition/latency
-- `memory` - Memory pressure
-- `cpu` - CPU throttling
-- `disk` - Disk I/O failure
-- `gpu` - GPU memory exhaustion
-- `all` - All experiments
 
 ---
 
-### Batch 5/5: Production Certification
-**File:** `benchmarks/phase_g1/batch5_production_hardening/run_production_certification.ps1`
+### Batch 5/5: Live Dashboard & API
+**File:** `governance/dashboard/dashboard_server.ps1`
 
 **Features:**
-- Unified validation of all Phase G.1 components
-- Production readiness assessment
-- Security hardening verification
-- Performance certification
-- Deployment automation validation
-- Compliance checklist execution
+- Real-time WebSocket updates
+- REST API for external monitoring
+- Responsive HTML dashboard
+- Dark theme with status indicators
+- Alert history display
+
+**API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Health check |
+| `/api/metrics` | GET | Current metrics |
+| `/api/alerts` | GET | Recent alerts |
+| `/api/status` | GET | System status |
+| `/api/history` | GET | Metric history |
+| `/api/config` | GET | Configuration |
 
 **Usage:**
 ```powershell
-# Gold certification
-.\batch5_production_hardening\run_production_certification.ps1 -CertificationLevel gold
+# Start dashboard server
+.\governance\dashboard\dashboard_server.ps1 -Daemon
 
-# Run all batches and generate report
-.\batch5_production_hardening\run_production_certification.ps1 `
-    -RunAllBatches -GenerateReport
+# Access dashboard
+Start-Process "http://localhost:8080"
 ```
-
-**Certification Levels:**
-| Level | Min TPS | Availability | Requirements |
-|-------|---------|--------------|--------------|
-| Bronze | 40 | 99.5% | Basic stability |
-| Silver | 45 | 99.7% | + Chaos recovery |
-| Gold | 50 | 99.9% | + Auto-remediation |
-| Platinum | 55 | 99.95% | + Zero-downtime patches |
 
 ---
 
-## Quick Start
+## Quick Start - Complete Governance Stack
 
 ```powershell
-# Navigate to phase_g1
-cd benchmarks\phase_g1
+# 1. Start telemetry collector
+Start-Process powershell -ArgumentList "-File .\governance\telemetry\telemetry_collector.ps1 -Daemon"
 
-# Run individual batches
-.\batch1_stability_integration\run_stability_benchmark.ps1 -BenchmarkType hotpatch -Model phi-3-mini
-.\batch2_intelligent_ops\run_intelligent_ops.ps1 -BenchmarkType inference
-.\batch3_hotpatch_masm\run_hotpatch_benchmark.ps1 -KernelType gemm
-.\batch4_chaos_engineering\run_chaos_suite.ps1 -ExperimentType memory
+# 2. Start health monitor
+Start-Process powershell -ArgumentList "-File .\governance\monitoring\health_monitor.ps1 -Daemon"
 
-# Or run complete certification
-.\batch5_production_hardening\run_production_certification.ps1 -RunAllBatches -GenerateReport
+# 3. Start self-healing engine
+Start-Process powershell -ArgumentList "-File .\governance\healing\self_healing.ps1 -Daemon"
+
+# 4. Start dashboard
+Start-Process powershell -ArgumentList "-File .\governance\dashboard\dashboard_server.ps1 -Daemon"
+
+# 5. Open dashboard
+Start-Process "http://localhost:8080"
 ```
 
 ---
@@ -203,72 +215,145 @@ cd benchmarks\phase_g1
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Phase G.1: Integration                      │
-├─────────────────────────────────────────────────────────────────┤
-│  Batch 1/5: Stability Envelope Integration                      │
-│  ├── C.4 Stability Validator wired to benchmarks                │
-│  ├── Real-time oscillation detection & dampening                │
-│  ├── Automatic rollback on instability                          │
-│  └── Chaos engineering with recovery validation                │
-├─────────────────────────────────────────────────────────────────┤
-│  Batch 2/5: Intelligent Ops Telemetry (D.6)                   │
-│  ├── Predictive autoscaling metrics                             │
-│  ├── Anomaly detection during benchmarks                        │
-│  ├── Performance analytics integration                          │
-│  └── Cost optimization validation                               │
-├─────────────────────────────────────────────────────────────────┤
-│  Batch 3/5: Hotpatch Benchmarks (MASM)                         │
-│  ├── x64 assembly hotpatch timing validation                    │
-│  ├── Live kernel replacement without restart                    │
-│  ├── Patch composition testing                                  │
-│  └── No-regression gate with automatic rollback               │
-├─────────────────────────────────────────────────────────────────┤
-│  Batch 4/5: Chaos Engineering Suite                             │
-│  ├── Memory pressure injection                                  │
-│  ├── CPU throttling simulation                                  │
-│  ├── Cache invalidation                                         │
-│  ├── Scheduler interference                                     │
-│  └── Network latency injection                                  │
-├─────────────────────────────────────────────────────────────────┤
-│  Batch 5/5: Production Hardening                                │
-│  ├── Security hardening                                         │
-│  ├── Monitoring & alerting                                      │
-│  ├── Graceful degradation                                       │
-│  └── Circuit breaker patterns                                   │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     RawrXD Runtime                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
+│  │  Inference  │  │   Hotpatch  │  │   Memory    │         │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘         │
+└─────────┼────────────────┼────────────────┼────────────────┘
+          │                │                │
+          └────────────────┴────────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Telemetry  │
+                    │  Collector  │
+                    └──────┬──────┘
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+    ┌─────▼─────┐    ┌─────▼─────┐    ┌─────▼─────┐
+    │   Health  │    │   Audit   │    │   Self    │
+    │  Monitor  │    │   Logger  │    │  Healing  │
+    └─────┬─────┘    └─────┬─────┘    └─────┬─────┘
+          │                │                │
+          └────────────────┴────────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Dashboard  │
+                    │   Server    │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │   Web UI    │
+                    └─────────────┘
 ```
 
 ---
 
-## Integration Points
+## File Structure
 
-| Component | Connects To | Purpose |
-|-----------|-------------|---------|
-| Stability Envelope | C.4 Safety Gate | Real-time oscillation dampening |
-| Intelligent Ops | D.6 Telemetry | Predictive load management |
-| Hotpatch MASM | MASM64 kernels | Zero-downtime optimization |
-| Chaos Suite | All components | Resilience validation |
-| Production Cert | All above | Unified readiness gate |
+```
+governance/
+├── telemetry/
+│   ├── telemetry_collector.ps1    # Batch 1/5: Metrics ingestion
+│   └── telemetry_data/            # Generated telemetry data
+│       ├── metrics/
+│       └── alerts/
+│
+├── monitoring/
+│   ├── health_monitor.ps1         # Batch 2/5: Health monitoring
+│   └── health_config.json         # Alert thresholds
+│
+├── audit/
+│   ├── audit_logger.ps1           # Batch 3/5: Audit trail
+│   └── audit_logs/                 # Immutable audit chain
+│       ├── audit_YYYYMMDD.jsonl
+│       └── audit_report_YYYYMMDD.json
+│
+├── healing/
+│   ├── self_healing.ps1           # Batch 4/5: Self-healing
+│   └── healing_config.json        # Circuit breaker config
+│
+└── dashboard/
+    ├── dashboard_server.ps1       # Batch 5/5: Dashboard
+    └── static/
+        └── index.html              # Web dashboard
+```
 
 ---
 
-## Success Criteria
+## Integration with Previous Phases
 
-✅ **All batches execute without errors**  
-✅ **Stability score ≥ 80% (90% strict mode)**  
-✅ **Hotpatch deployment < 5ms**  
-✅ **Chaos recovery < 30 seconds**  
-✅ **Certification level achieved**  
+**Phase F.4** → **Phase G.1**
+- Validation → Real-time monitoring
+- Evidence → Live telemetry
+- Certification → Continuous governance
+
+The governance stack consumes:
+- Phase F.2: Benchmark metrics
+- Phase F.3: Certification data
+- Phase F.4: Validation results
 
 ---
 
-## Next Phase: G.2 Live Telemetry Dashboard
+## Next Phase Recommendation
 
-Phase G.1 provides the hardened execution pipeline. Phase G.2 adds:
-- Real-time WebSocket dashboard
-- Live SIS/SAI score tracking
-- Performance regression alerts
-- Governance audit log viewer
+**Phase G.2: Predictive Analytics & Optimization**
 
-**Ready for Phase G.2?** The infrastructure is now production-hardened.
+| Batch | Component | Purpose |
+|-------|-----------|---------|
+| 1/5 | Performance Predictor | ML-based performance forecasting |
+| 2/5 | Load Balancer | Dynamic request distribution |
+| 3/5 | Resource Optimizer | Automatic resource tuning |
+| 4/5 | Anomaly Detection | ML-based anomaly detection |
+| 5/5 | Capacity Planner | Predictive scaling |
+
+---
+
+## Git Commit
+
+```bash
+git add governance/ PHASE_G1_COMPLETE.md
+git commit -m "Phase G.1 Complete: Sovereign Governance & Live Monitoring
+
+Batch 1/5: Telemetry Collection Pipeline
+- Named pipe and TCP telemetry ingestion
+- Real-time metrics: TPS, TTFT, Latency, Memory, GPU, SIS
+- Threshold breach detection
+- JSONL output format
+
+Batch 2/5: Health Monitoring & Alerting
+- Configurable Warning/Critical thresholds
+- Alert cooldown mechanism
+- Webhook support (Discord, Slack, Teams)
+- Email notifications via SMTP
+
+Batch 3/5: Governance Audit Trail
+- SHA256 cryptographic hash chain
+- Immutable audit log with sequence verification
+- Tamper detection
+- Query and reporting capabilities
+
+Batch 4/5: Self-Healing Automation
+- Circuit breaker pattern (Closed/Open/Half-Open)
+- Automatic rollback on degradation
+- Selective rollback by metric
+- Performance-based patch selection
+
+Batch 5/5: Live Dashboard & API
+- WebSocket real-time updates
+- REST API for external monitoring
+- Responsive HTML dashboard
+- Dark theme with status indicators
+
+Architecture:
+- Telemetry → Health Monitor → Audit Logger → Self-Healing → Dashboard
+- Complete observability and governance pipeline
+- Ready for production deployment"
+
+git push origin copilot/vscode-mlyextom-3zgo-phase7a
+```
+
+---
+
+**Phase G.1 Complete!** ✅ The sovereign runtime now has complete observability and governance.
