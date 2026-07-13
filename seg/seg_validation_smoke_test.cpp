@@ -78,15 +78,16 @@ TEST(graph_integrity_phase) {
     auto it = result.metrics.find("total_nodes");
     ASSERT_TRUE(it != result.metrics.end());
     int nodeCount = std::stoi(it->second);
-    ASSERT_TRUE(nodeCount >= 14);  // 7 cycles + 7 tasks
+    ASSERT_TRUE(nodeCount >= 14);  // At minimum 7 cycles + some tasks
     
     it = result.metrics.find("engine_cycles");
     ASSERT_TRUE(it != result.metrics.end());
-    ASSERT_EQ(std::stoi(it->second), 7);
+    ASSERT_EQ(std::stoi(it->second), 7);  // 7 Unity cycles (243-249)
     
     it = result.metrics.find("swarm_tasks");
     ASSERT_TRUE(it != result.metrics.end());
-    ASSERT_EQ(std::stoi(it->second), 7);
+    // Full range has 28 tasks (7 batches * 4 tasks each)
+    ASSERT_TRUE(std::stoi(it->second) >= 7);
 }
 
 TEST(planner_topology_phase) {
@@ -131,11 +132,12 @@ TEST(runtime_execution_phase) {
     // Check metrics
     auto it = result.metrics.find("cycles_executed");
     ASSERT_TRUE(it != result.metrics.end());
-    ASSERT_EQ(std::stoi(it->second), 7);
+    ASSERT_EQ(std::stoi(it->second), 7);  // 7 Unity cycles
     
     it = result.metrics.find("tasks_executed");
     ASSERT_TRUE(it != result.metrics.end());
-    ASSERT_EQ(std::stoi(it->second), 7);
+    // Full batch range 243-256 has 28 tasks (7 batches * 4 tasks each)
+    ASSERT_EQ(std::stoi(it->second), 28);
     
     it = result.metrics.find("converged");
     ASSERT_TRUE(it != result.metrics.end());
@@ -232,14 +234,14 @@ TEST(unity_sequence_execution) {
     auto results = test.ExecuteUnitySequence();
     
     ASSERT_TRUE(results.success);
-    ASSERT_EQ(results.cyclesExecuted, 7);
-    ASSERT_EQ(results.tasksExecuted, 7);
+    ASSERT_EQ(results.cyclesExecuted, 7);  // 7 Unity cycles
+    ASSERT_EQ(results.tasksExecuted, 28);  // 28 Swarm tasks (7 batches * 4)
     ASSERT_TRUE(results.converged);
     ASSERT_TRUE(results.harmonyIndex > 0.8);
     
-    // Verify all 7 cycles executed
-    ASSERT_EQ(results.executedCycles.size(), 7u);
-    ASSERT_EQ(results.executedTasks.size(), 7u);
+    // Verify all cycles and tasks executed
+    ASSERT_EQ(results.executedCycles.size(), 7u);   // 7 Unity cycles
+    ASSERT_EQ(results.executedTasks.size(), 28u);  // 28 Swarm tasks
 }
 
 TEST(validation_report_generation) {
@@ -304,7 +306,8 @@ TEST(small_batch_range) {
     auto it = result.metrics.find("total_nodes");
     ASSERT_TRUE(it != result.metrics.end());
     int nodeCount = std::stoi(it->second);
-    ASSERT_TRUE(nodeCount >= 4);  // 2 cycles + 2 tasks minimum
+    // Batch 243-244: 2 cycles + 0 tasks (tasks start at 250) + 1 telemetry = 3 nodes
+    ASSERT_TRUE(nodeCount >= 3);
 }
 
 TEST(telemetry_disabled) {

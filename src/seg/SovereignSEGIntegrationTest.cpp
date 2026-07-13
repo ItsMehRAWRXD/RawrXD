@@ -215,23 +215,35 @@ SEGValidationResult SovereignSEGIntegrationTest::ValidateGraphIntegrity() {
     result.AddMetric("swarm_tasks", static_cast<int>(stats.swarmTaskCount));
     result.AddMetric("edges", static_cast<int>(stats.edgeCount));
     
+    // Calculate expected counts based on batch range
+    int expectedCycles = std::min(7, std::max(0, std::min(endBatch_, 249) - std::max(startBatch_, 243) + 1));
+    int expectedTasks = 0;
+    if (endBatch_ >= 250) {
+        int taskStart = std::max(startBatch_, 250);
+        int taskEnd = std::min(endBatch_, 256);
+        if (taskEnd >= taskStart) {
+            expectedTasks = (taskEnd - taskStart + 1) * 4;  // 4 tasks per batch
+        }
+    }
+    int expectedMinNodes = expectedCycles + expectedTasks + (enableTelemetry_ ? 1 : 0);
+    
     // Assertions
-    bool nodeCountOk = stats.nodeCount >= 14;  // 7 cycles + 7 tasks minimum
-    bool cyclesOk = stats.cycleCount == 7;     // Unity through Balance
-    bool tasksOk = stats.swarmTaskCount == 7;  // Order through Harmony
+    bool nodeCountOk = stats.nodeCount >= expectedMinNodes;
+    bool cyclesOk = stats.cycleCount == expectedCycles;
+    bool tasksOk = stats.swarmTaskCount == expectedTasks;
     bool valid = graph_->Validate();
     
     result.passed = nodeCountOk && cyclesOk && tasksOk && valid;
     
     std::ostringstream details;
     if (!nodeCountOk) {
-        details << "Node count too low: " << stats.nodeCount << " < 14; ";
+        details << "Node count too low: " << stats.nodeCount << " < " << expectedMinNodes << "; ";
     }
     if (!cyclesOk) {
-        details << "Cycle count incorrect: " << stats.cycleCount << " != 7; ";
+        details << "Cycle count incorrect: " << stats.cycleCount << " != " << expectedCycles << "; ";
     }
     if (!tasksOk) {
-        details << "Task count incorrect: " << stats.swarmTaskCount << " != 7; ";
+        details << "Task count incorrect: " << stats.swarmTaskCount << " != " << expectedTasks << "; ";
     }
     if (!valid) {
         details << "Graph validation failed; ";
@@ -374,8 +386,19 @@ SEGValidationResult SovereignSEGIntegrationTest::ValidateRuntimeExecution() {
     result.AddMetric("converged", unityResults.converged ? 1 : 0);
     result.AddMetric("harmony_index", unityResults.harmonyIndex);
     
-    bool cyclesOk = unityResults.cyclesExecuted == 7;
-    bool tasksOk = unityResults.tasksExecuted == 7;
+    // For batch range 243-256: 7 cycles + 28 tasks = 35 nodes expected
+    // For smaller ranges, adjust expectations
+    int expectedCycles = 7;  // Unity through Balance (243-249)
+    int expectedTasks = 28;  // All 7 batches of tasks (250-256)
+    
+    if (endBatch_ < 250) {
+        expectedTasks = 0;
+    } else if (endBatch_ < 256) {
+        expectedTasks = (endBatch_ - 249) * 4;  // 4 tasks per batch
+    }
+    
+    bool cyclesOk = unityResults.cyclesExecuted == expectedCycles;
+    bool tasksOk = unityResults.tasksExecuted == expectedTasks;
     bool successOk = unityResults.success;
     bool convergedOk = unityResults.converged;
     bool harmonyOk = unityResults.harmonyIndex > 0.8;
@@ -472,7 +495,14 @@ SEGValidationResult SovereignSEGIntegrationTest::ValidateTelemetryFlow() {
     result.AddMetric("harmony_index", telemetry.harmonyIndex);
     
     bool completeOk = telemetry.segExecutionComplete;
-    bool nodesOk = telemetry.nodesExecuted >= 14;  // 7 cycles + 7 tasks
+    // For full batch range 243-256: 7 cycles + 28 tasks + 1 telemetry = 36 nodes
+    int expectedNodes = 36;
+    if (endBatch_ < 250) {
+        expectedNodes = 7 + 1;  // Just cycles + telemetry
+    } else if (endBatch_ < 256) {
+        expectedNodes = 7 + (endBatch_ - 249) * 4 + 1;  // Cycles + tasks + telemetry
+    }
+    bool nodesOk = telemetry.nodesExecuted >= expectedNodes;
     bool failuresOk = telemetry.failures == 0;
     bool convergedOk = telemetry.unityConverged;
     bool harmonyOk = telemetry.harmonyIndex > 0.8;

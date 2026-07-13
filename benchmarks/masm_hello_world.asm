@@ -2,7 +2,12 @@
 ; Measures raw token processing throughput in x64 assembly
 ; Target: Maximum TPS for simple operations
 
-include rawr_imports.inc
+; External Windows API functions
+extrn ExitProcess: proc
+extrn GetStdHandle: proc
+extrn WriteConsoleA: proc
+extrn QueryPerformanceCounter: proc
+extrn QueryPerformanceFrequency: proc
 
 .data
     ; Benchmark configuration
