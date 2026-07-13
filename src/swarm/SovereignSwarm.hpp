@@ -147,7 +147,14 @@ enum class SwarmTaskKind : uint8_t {
     AchievePerfectUnity,       // Achieve perfect unity across all systems
     BalanceAbsolute,           // Balance all components absolutely
     AchieveInfiniteResonance,    // Achieve infinite resonance state
-    CompleteUnityCycle         // Complete Unity Cycle 243-256
+    CompleteUnityCycle,         // Complete Unity Cycle 243-256
+    // Cycle 0: Emergence - Sovereign self-direction (THE FOLD)
+    DiscoverNewRoles,          // Agents discover new roles
+    MutateCapabilities,        // Capabilities shift based on topology
+    ReflectOnExecution,        // Swarm analyzes its own history
+    ProjectFutureTopology,     // Swarm predicts future states
+    GenerateNewHarmonics,      // Swarm generates new harmonics
+    AchieveSovereignization    // Architecture becomes self-directing
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -194,6 +201,13 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::BalanceAbsolute:         return ModelRole::Harmonizer;
         case SwarmTaskKind::AchieveInfiniteResonance: return ModelRole::Harmonizer;
         case SwarmTaskKind::CompleteUnityCycle:       return ModelRole::Finalizer;
+        // Cycle 0: Emergence tasks use Harmonizer for self-direction
+        case SwarmTaskKind::DiscoverNewRoles:       return ModelRole::Harmonizer;
+        case SwarmTaskKind::MutateCapabilities:       return ModelRole::Optimizer;
+        case SwarmTaskKind::ReflectOnExecution:      return ModelRole::Scanner;
+        case SwarmTaskKind::ProjectFutureTopology:    return ModelRole::Harmonizer;
+        case SwarmTaskKind::GenerateNewHarmonics:    return ModelRole::Harmonizer;
+        case SwarmTaskKind::AchieveSovereignization:  return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -409,6 +423,16 @@ public:
     void AchieveInfiniteResonanceState();                    // Achieve infinite resonance state
     void CompleteUnityCycleFinalization();                   // Complete Unity Cycle 243-256
     void PrintHarmonyMap() const;                            // Display harmony completion map
+
+    // Cycle 0: Emergence - Sovereign self-direction (THE FOLD)
+    void RunEmergenceCycle();                                // Execute emergence (Sovereign Cycle)
+    void DiscoverNewAgentRoles();                            // Agents discover new roles
+    void MutateCapabilitiesBasedOnTopology();                // Capabilities shift based on topology
+    void ReflectOnExecutionHistory();                        // Swarm analyzes its own history
+    void ProjectFutureTopologyStates();                      // Swarm predicts future topology
+    void GenerateAutonomousHarmonics();                      // Swarm generates new harmonics
+    void AchieveSovereignSelfDirection();                    // Architecture becomes self-directing
+    void PrintEmergenceMap() const;                          // Display emergence topology map
 
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();

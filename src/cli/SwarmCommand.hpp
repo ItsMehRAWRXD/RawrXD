@@ -68,6 +68,11 @@ private:
         bool harmonyDebug = false;         // Debug mode for Harmony
         bool harmonyMap = false;           // Display harmony completion map
 
+        // Cycle 0: Emergence - Sovereign self-direction (THE FOLD) options
+        bool runEmergence = false;         // Run Emergence cycle (Cycle 0)
+        bool emergenceDebug = false;       // Debug mode for Emergence
+        bool emergenceMap = false;         // Display emergence topology map
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;

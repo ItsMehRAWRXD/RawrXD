@@ -47,6 +47,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --harmony              Run Harmony cycle (perfect unity)\n";
     std::cout << "  --harmony-debug        Debug mode: show harmony computation\n";
     std::cout << "  --harmony-map          Display harmony completion map\n";
+    std::cout << "\nCycle 0: Emergence - Sovereign Self-Direction (THE FOLD):\n";
+    std::cout << "  --emergence            Run Emergence cycle (sovereign self-direction)\n";
+    std::cout << "  --emergence-debug      Debug mode: show emergence computation\n";
+    std::cout << "  --emergence-map        Display emergence topology map\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -116,6 +120,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--harmony") opts.runHarmony = true;
         else if (arg == "--harmony-debug") { opts.runHarmony = true; opts.harmonyDebug = true; }
         else if (arg == "--harmony-map") { opts.runHarmony = true; opts.harmonyMap = true; }
+        // Cycle 0: Emergence options
+        else if (arg == "--emergence") opts.runEmergence = true;
+        else if (arg == "--emergence-debug") { opts.runEmergence = true; opts.emergenceDebug = true; }
+        else if (arg == "--emergence-map") { opts.runEmergence = true; opts.emergenceMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -373,6 +381,19 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
             swarm.PrintHarmonyMap();
         }
         swarm.RunHarmonyCycle();
+    }
+
+    // Cycle 0: Emergence - Sovereign self-direction (THE FOLD)
+    if (opts.runEmergence) {
+        std::cout << "[TASK] Running Emergence cycle (Cycle 0) - Sovereign self-direction...\n";
+        if (opts.emergenceDebug) {
+            std::cout << "[DEBUG] Emergence computation enabled\n";
+        }
+        if (opts.emergenceMap) {
+            std::cout << "[MAP] Displaying emergence topology map...\n";
+            swarm.PrintEmergenceMap();
+        }
+        swarm.RunEmergenceCycle();
     }
 
     // Run finalization
