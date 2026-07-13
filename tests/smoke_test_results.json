@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-07-13T04:47:31.083076",
+  "total_tests": 6,
+  "passed": 6,
+  "failed": 0,
+  "coverage": 1.0,
+  "results": [
+    {
+      "test": "Found",
+      "passed": true,
+      "message": "Found 13 required structures"
+    },
+    {
+      "test": "Found",
+      "passed": true,
+      "message": "Found 149 cycle methods, 165 compute methods"
+    },
+    {
+      "test": "All",
+      "passed": true,
+      "message": "All 137 Run*Cycle methods implemented"
+    },
+    {
+      "test": "All",
+      "passed": true,
+      "message": "All 14 Unity Cycle methods present"
+    },
+    {
+      "test": "Found",
+      "passed": true,
+      "message": "Found 7 serialize, 7 deserialize"
+    },
+    {
+      "test": "Found",
+      "passed": true,
+      "message": "Found 151 batch documentation blocks"
+    }
+  ]
+}
