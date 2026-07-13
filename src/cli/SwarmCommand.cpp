@@ -72,6 +72,15 @@ void SwarmCommand::printUsage() {
     std::cout << "  --unity-sequence       Execute full Order→Harmony pipeline with engine\n";
     std::cout << "  --unity-sequence-log   Log detailed metrics after sequence\n";
     std::cout << "  --unity-sequence-output FILE  Export results to file\n";
+    std::cout << "\nPhase B.2: Telemetry Export (Batches 2-6):\n";
+    std::cout << "  --export-telemetry       Export Unity Cycle telemetry to JSON\n";
+    std::cout << "  --telemetry-output PATH  Output path for telemetry JSON\n";
+    std::cout << "  --show-convergence       Display convergence metrics\n";
+    std::cout << "  --show-unity-cycle       Display Unity Cycle field values\n";
+    std::cout << "  --export-sqlite          Export telemetry to SQLite database\n";
+    std::cout << "  --sqlite-db PATH         SQLite database path\n";
+    std::cout << "  --telemetry-dashboard    Start telemetry dashboard server\n";
+    std::cout << "  --dashboard-port PORT    Dashboard server port (default: 8080)\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -163,6 +172,15 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--unity-sequence") { opts.runUnitySequence = true; }
         else if (arg == "--unity-sequence-log") { opts.runUnitySequence = true; opts.unitySequenceLog = true; }
         else if (arg == "--unity-sequence-output" && i + 1 < argc) { opts.runUnitySequence = true; opts.unitySequenceOutput = argv[++i]; }
+        // Phase B.2: Telemetry Export Options (Batches 2-6)
+        else if (arg == "--export-telemetry") { opts.exportTelemetry = true; }
+        else if (arg == "--telemetry-output" && i + 1 < argc) { opts.exportTelemetry = true; opts.telemetryOutputPath = argv[++i]; }
+        else if (arg == "--show-convergence") { opts.showConvergence = true; }
+        else if (arg == "--show-unity-cycle") { opts.showUnityCycle = true; }
+        else if (arg == "--export-sqlite") { opts.exportSQLite = true; }
+        else if (arg == "--sqlite-db" && i + 1 < argc) { opts.exportSQLite = true; opts.sqliteDbPath = argv[++i]; }
+        else if (arg == "--telemetry-dashboard") { opts.telemetryDashboard = true; }
+        else if (arg == "--dashboard-port" && i + 1 < argc) { opts.telemetryDashboard = true; opts.dashboardPort = static_cast<uint16_t>(std::stoi(argv[++i])); }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -580,6 +598,74 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
         std::cout << "[SUCCESS] Unity Sequence completed: " << result.summary << "\n";
     }
 
+    // Phase B.2: Telemetry Export and Display
+    if (opts.exportTelemetry || opts.showConvergence || opts.showUnityCycle) {
+        std::cout << "[TASK] Phase B.2: Processing telemetry...\n";
+        
+        // Create telemetry bridge if engine is available
+        auto& engine = InfinitePerfection::InfinitePerfectionEngine::GetInstance();
+        if (engine.IsInitialized()) {
+            Sovereign::InfinitePerfectionTelemetry telemetry(&engine);
+            
+            // Show convergence metrics
+            if (opts.showConvergence) {
+                std::cout << "\n╔══════════════════════════════════════════════════════════════╗\n";
+                std::cout << "║           Unity Cycle Convergence Status                     ║\n";
+                std::cout << "╠══════════════════════════════════════════════════════════════╣\n";
+                
+                auto unity = engine.ComputeUnity();
+                auto integration = engine.ComputeIntegration();
+                auto synthesis = engine.ComputeSynthesis();
+                auto convergence = engine.ComputeConvergence();
+                auto coherence = engine.ComputeCoherence();
+                auto harmony = engine.ComputeHarmony();
+                auto balance = engine.ComputeBalance();
+                
+                std::cout << std::fixed << std::setprecision(2);
+                std::cout << "║  Order (Unity):          " << std::setw(6) << unity.unityPotential << "                    ║\n";
+                std::cout << "║  Resonance (Integration):" << std::setw(6) << integration.cycleIntegration << "                    ║\n";
+                std::cout << "║  Amplification (Synth):  " << std::setw(6) << synthesis.sovereignEmergenceIndex << "                    ║\n";
+                std::cout << "║  Integration (Converge): " << std::setw(6) << convergence.sovereignConvergenceIndex << "                    ║\n";
+                std::cout << "║  Convergence (Coherence):" << std::setw(6) << coherence.sovereignCoherenceIndex << "                    ║\n";
+                std::cout << "║  Coherence (Harmony):    " << std::setw(6) << harmony.sovereignHarmonyIndex << "                    ║\n";
+                std::cout << "║  Harmony (Balance):      " << std::setw(6) << balance.equilibriumStrength << "                    ║\n";
+                std::cout << "╠══════════════════════════════════════════════════════════════╣\n";
+                
+                double globalIndex = telemetry.GetConvergenceScore();
+                std::cout << "║  Global Harmony Index:   " << std::setw(6) << globalIndex << "                    ║\n";
+                std::cout << "║  Status: " << (telemetry.IsConverged() ? "CONVERGED ✓" : "CONVERGING...") << "                              ║\n";
+                std::cout << "╚══════════════════════════════════════════════════════════════╝\n";
+            }
+            
+            // Show Unity Cycle field values
+            if (opts.showUnityCycle) {
+                std::cout << "\n╔══════════════════════════════════════════════════════════════╗\n";
+                std::cout << "║              Unity Cycle Field Values                        ║\n";
+                std::cout << "╚══════════════════════════════════════════════════════════════╝\n";
+                
+                auto snapshot = telemetry.GetSnapshot();
+                std::cout << telemetry.ExportToJson() << "\n";
+            }
+            
+            // Export telemetry to JSON
+            if (opts.exportTelemetry) {
+                std::string outputPath = opts.telemetryOutputPath.empty() ? 
+                    "telemetry_export.json" : opts.telemetryOutputPath;
+                
+                std::ofstream outFile(outputPath);
+                if (outFile.is_open()) {
+                    outFile << telemetry.ExportToJson();
+                    outFile.close();
+                    std::cout << "[INFO] Telemetry exported to " << outputPath << "\n";
+                } else {
+                    std::cerr << "[ERROR] Failed to export telemetry to " << outputPath << "\n";
+                }
+            }
+        } else {
+            std::cout << "[WARN] Engine not initialized, skipping telemetry\n";
+        }
+    }
+    
     // Run finalization
     std::cout << "[TASK] Running finalization...\n";
     swarm.RunFinalization();

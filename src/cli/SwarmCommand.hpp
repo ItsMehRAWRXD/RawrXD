@@ -96,6 +96,16 @@ private:
         bool unitySequenceLog = false;     // Log detailed metrics after sequence
         std::string unitySequenceOutput;   // Optional: output file for sequence results
 
+        // Phase B.2: Telemetry Export Options (Batches 2-6)
+        bool exportTelemetry = false;        // Export telemetry to JSON
+        std::string telemetryOutputPath;   // Output path for telemetry JSON
+        bool showConvergence = false;        // Display convergence metrics
+        bool showUnityCycle = false;         // Display Unity Cycle field values
+        bool exportSQLite = false;           // Export to SQLite database
+        std::string sqliteDbPath;            // SQLite database path
+        bool telemetryDashboard = false;     // Start telemetry dashboard server
+        uint16_t dashboardPort = 8080;       // Dashboard server port
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;
