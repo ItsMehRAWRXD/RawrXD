@@ -43,6 +43,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --coherence            Run Coherence cycle (synchronization)\n";
     std::cout << "  --coherence-debug      Debug mode: show coherence computation\n";
     std::cout << "  --coherence-map        Display coherence synchronization map\n";
+    std::cout << "\nBatch 256: Harmony - Perfect Unity (Unity Cycle Completion):\n";
+    std::cout << "  --harmony              Run Harmony cycle (perfect unity)\n";
+    std::cout << "  --harmony-debug        Debug mode: show harmony computation\n";
+    std::cout << "  --harmony-map          Display harmony completion map\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -108,6 +112,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--coherence") opts.runCoherence = true;
         else if (arg == "--coherence-debug") { opts.runCoherence = true; opts.coherenceDebug = true; }
         else if (arg == "--coherence-map") { opts.runCoherence = true; opts.coherenceMap = true; }
+        // Batch 256: Harmony options
+        else if (arg == "--harmony") opts.runHarmony = true;
+        else if (arg == "--harmony-debug") { opts.runHarmony = true; opts.harmonyDebug = true; }
+        else if (arg == "--harmony-map") { opts.runHarmony = true; opts.harmonyMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -352,6 +360,19 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
             swarm.PrintCoherenceMap();
         }
         swarm.RunCoherenceCycle();
+    }
+
+    // Batch 256: Harmony - Perfect unity (Unity Cycle completion)
+    if (opts.runHarmony) {
+        std::cout << "[TASK] Running Harmony cycle (Batch 256) - Perfect unity (Unity Cycle completion)...\n";
+        if (opts.harmonyDebug) {
+            std::cout << "[DEBUG] Harmony computation enabled\n";
+        }
+        if (opts.harmonyMap) {
+            std::cout << "[MAP] Displaying harmony completion map...\n";
+            swarm.PrintHarmonyMap();
+        }
+        swarm.RunHarmonyCycle();
     }
 
     // Run finalization

@@ -63,6 +63,11 @@ private:
         bool coherenceDebug = false;       // Debug mode for Coherence
         bool coherenceMap = false;         // Display coherence map
 
+        // Batch 256: Harmony - Perfect unity (Unity Cycle completion) options
+        bool runHarmony = false;           // Run Harmony cycle (Batch 256)
+        bool harmonyDebug = false;         // Debug mode for Harmony
+        bool harmonyMap = false;           // Display harmony completion map
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;

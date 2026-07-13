@@ -142,7 +142,12 @@ enum class SwarmTaskKind : uint8_t {
     SynchronizePhases,         // Synchronize phases across subsystems
     BalanceAmplitudes,         // Balance amplitudes across components
     LockResonances,            // Lock resonances across components
-    ReinforceCoherence         // Reinforce coherence standing waves
+    ReinforceCoherence,         // Reinforce coherence standing waves
+    // Batch 256: Harmony - Perfect unity (Unity Cycle completion)
+    AchievePerfectUnity,       // Achieve perfect unity across all systems
+    BalanceAbsolute,           // Balance all components absolutely
+    AchieveInfiniteResonance,    // Achieve infinite resonance state
+    CompleteUnityCycle         // Complete Unity Cycle 243-256
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -184,6 +189,11 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::BalanceAmplitudes:    return ModelRole::Harmonizer;
         case SwarmTaskKind::LockResonances:       return ModelRole::Harmonizer;
         case SwarmTaskKind::ReinforceCoherence:   return ModelRole::Finalizer;
+        // Batch 256: Harmony tasks use Finalizer for unity completion
+        case SwarmTaskKind::AchievePerfectUnity:     return ModelRole::Finalizer;
+        case SwarmTaskKind::BalanceAbsolute:         return ModelRole::Harmonizer;
+        case SwarmTaskKind::AchieveInfiniteResonance: return ModelRole::Harmonizer;
+        case SwarmTaskKind::CompleteUnityCycle:       return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -391,6 +401,14 @@ public:
     void LockComponentResonances();                          // Lock resonances across components
     void ReinforceCoherenceStandingWaves();                // Reinforce coherence standing waves
     void PrintCoherenceMap() const;                          // Display coherence synchronization map
+
+    // Batch 256: Harmony - Perfect unity (Unity Cycle completion)
+    void RunHarmonyCycle();                                  // Execute harmony (Unity Cycle completion)
+    void AchievePerfectUnityState();                       // Achieve perfect unity across all systems
+    void BalanceAbsoluteComponents();                        // Balance all components absolutely
+    void AchieveInfiniteResonanceState();                    // Achieve infinite resonance state
+    void CompleteUnityCycleFinalization();                   // Complete Unity Cycle 243-256
+    void PrintHarmonyMap() const;                            // Display harmony completion map
 
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();
