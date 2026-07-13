@@ -44,6 +44,10 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `workspace-manager.ps1` | Development workspace management | `.\workspace-manager.ps1` |
 | `feature-flags.ps1` | Feature flags and gradual rollouts | `.\feature-flags.ps1` |
 | `env-manager.ps1` | Environment configuration management | `.\env-manager.ps1` |
+| `troubleshooter.ps1` | Automated troubleshooting and repair | `.\troubleshooter.ps1` |
+| `update-manager.ps1` | Software updates and version management | `.\update-manager.ps1` |
+| `plugin-manager.ps1` | Plugin/extension management | `.\plugin-manager.ps1` |
+| `template-generator.ps1` | Project template and boilerplate generator | `.\template-generator.ps1` |
 
 ## Development Setup
 
@@ -1446,6 +1450,161 @@ Manages different deployment environments (dev, staging, prod).
 
 # Delete environment
 .\env-manager.ps1 -Action Delete -Environment "testing"
+```
+
+## Troubleshooter
+
+### `troubleshooter.ps1`
+
+Automated troubleshooting and diagnostic repair.
+
+**Actions:**
+- `Diagnose` - Run diagnostics and identify issues
+- `Repair` - Attempt automatic repairs
+- `Reset` - Reset configuration to defaults
+- `Clean` - Clean temporary files
+- `Verify` - Verify installation integrity
+
+**Usage:**
+```powershell
+# Run diagnostics
+.\troubleshooter.ps1 -Action Diagnose
+
+# Run diagnostics with auto-fix
+.\troubleshooter.ps1 -Action Diagnose -AutoFix
+
+# Repair issues
+.\troubleshooter.ps1 -Action Repair
+
+# Reset configuration
+.\troubleshooter.ps1 -Action Reset
+
+# Clean temporary files
+.\troubleshooter.ps1 -Action Clean
+
+# Verify installation
+.\troubleshooter.ps1 -Action Verify
+```
+
+## Update Manager
+
+### `update-manager.ps1`
+
+Manages software updates and version migrations.
+
+**Actions:**
+- `Check` - Check for available updates
+- `Download` - Download update package
+- `Install` - Install update
+- `Rollback` - Rollback to previous version
+- `Status` - Show update status
+- `History` - Show update history
+
+**Usage:**
+```powershell
+# Check for updates
+.\update-manager.ps1 -Action Check
+
+# Download specific version
+.\update-manager.ps1 -Action Download -Version "3.3.0"
+
+# Install latest update
+.\update-manager.ps1 -Action Install
+
+# Install specific version with backup
+.\update-manager.ps1 -Action Install -Version "3.3.0" -BackupBeforeUpdate
+
+# Rollback to previous version
+.\update-manager.ps1 -Action Rollback
+
+# Show update status
+.\update-manager.ps1 -Action Status
+
+# Show update history
+.\update-manager.ps1 -Action History
+```
+
+## Plugin Manager
+
+### `plugin-manager.ps1`
+
+Manages plugins and extensions.
+
+**Actions:**
+- `List` - List installed plugins
+- `Install` - Install a plugin
+- `Uninstall` - Remove a plugin
+- `Enable` - Enable a plugin
+- `Disable` - Disable a plugin
+- `Update` - Update all plugins
+- `Search` - Search for plugins
+- `Info` - Show plugin information
+
+**Usage:**
+```powershell
+# List installed plugins
+.\plugin-manager.ps1 -Action List
+
+# Search for plugins
+.\plugin-manager.ps1 -Action Search -PluginName "vision"
+
+# Install a plugin
+.\plugin-manager.ps1 -Action Install -PluginName "my-plugin"
+
+# Install from local source
+.\plugin-manager.ps1 -Action Install -PluginName "my-plugin" -Source "./local-plugin"
+
+# Uninstall a plugin
+.\plugin-manager.ps1 -Action Uninstall -PluginName "my-plugin"
+
+# Enable/disable plugin
+.\plugin-manager.ps1 -Action Enable -PluginName "my-plugin"
+.\plugin-manager.ps1 -Action Disable -PluginName "my-plugin"
+
+# Update all plugins
+.\plugin-manager.ps1 -Action Update
+
+# Show plugin info
+.\plugin-manager.ps1 -Action Info -PluginName "my-plugin"
+```
+
+## Template Generator
+
+### `template-generator.ps1`
+
+Generates project templates and boilerplate code.
+
+**Template Types:**
+- `Model` - New GGML model wrapper
+- `Plugin` - RawrXD plugin/extension
+- `API` - REST API endpoint
+- `Test` - Unit test suite
+- `Config` - Configuration file
+- `Script` - PowerShell automation script
+- `List` - List available templates
+
+**Usage:**
+```powershell
+# List available templates
+.\template-generator.ps1 -TemplateType List
+
+# Generate model template
+.\template-generator.ps1 -TemplateType Model -Name "MyModel"
+
+# Generate plugin template
+.\template-generator.ps1 -TemplateType Plugin -Name "MyPlugin"
+
+# Generate API endpoint
+.\template-generator.ps1 -TemplateType API -Name "MyAPI" -OutputPath "./api"
+
+# Generate test suite
+.\template-generator.ps1 -TemplateType Test -Name "MyFeature"
+
+# Generate config files
+.\template-generator.ps1 -TemplateType Config -Name "production"
+
+# Generate script template
+.\template-generator.ps1 -TemplateType Script -Name "my-script"
 ```
 
 ## Common Workflows
