@@ -47,7 +47,12 @@ private:
         bool runAmplification = false;     // Run Amplification cycle (Batch 252)
         bool amplificationDebug = false;   // Debug mode for Amplification
         bool amplificationMap = false;     // Display adaptive amplification map
-        
+
+        // Batch 253: Integration - Cross-subsystem coupling options
+        bool runIntegration = false;       // Run Integration cycle (Batch 253)
+        bool integrationDebug = false;     // Debug mode for Integration
+        bool integrationMap = false;       // Display cross-subsystem integration map
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;

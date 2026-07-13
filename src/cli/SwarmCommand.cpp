@@ -31,6 +31,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --amplification        Run Amplification cycle (adaptive scaling)\n";
     std::cout << "  --amplification-debug  Debug mode: show adaptive scaling computation\n";
     std::cout << "  --amplification-map    Display adaptive amplification map\n";
+    std::cout << "\nBatch 253: Integration - Cross-Subsystem Coupling:\n";
+    std::cout << "  --integration          Run Integration cycle (cross-subsystem coupling)\n";
+    std::cout << "  --integration-debug    Debug mode: show integration computation\n";
+    std::cout << "  --integration-map      Display cross-subsystem integration map\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -84,6 +88,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--amplification") opts.runAmplification = true;
         else if (arg == "--amplification-debug") { opts.runAmplification = true; opts.amplificationDebug = true; }
         else if (arg == "--amplification-map") { opts.runAmplification = true; opts.amplificationMap = true; }
+        // Batch 253: Integration options
+        else if (arg == "--integration") opts.runIntegration = true;
+        else if (arg == "--integration-debug") { opts.runIntegration = true; opts.integrationDebug = true; }
+        else if (arg == "--integration-map") { opts.runIntegration = true; opts.integrationMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -290,7 +298,20 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
         }
         swarm.RunAmplificationCycle();
     }
-    
+
+    // Batch 253: Integration - Cross-subsystem coupling
+    if (opts.runIntegration) {
+        std::cout << "[TASK] Running Integration cycle (Batch 253) - Cross-subsystem coupling...\n";
+        if (opts.integrationDebug) {
+            std::cout << "[DEBUG] Cross-subsystem integration computation enabled\n";
+        }
+        if (opts.integrationMap) {
+            std::cout << "[MAP] Displaying cross-subsystem integration map...\n";
+            swarm.PrintIntegrationMap();
+        }
+        swarm.RunIntegrationCycle();
+    }
+
     // Run finalization
     std::cout << "[TASK] Running finalization...\n";
     swarm.RunFinalization();

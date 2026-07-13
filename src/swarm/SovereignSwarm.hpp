@@ -127,7 +127,12 @@ enum class SwarmTaskKind : uint8_t {
     ScaleAmplification,        // Scale amplification based on load/complexity
     BoostValuePatterns,        // Boost high-value patterns
     SuppressNoisePatterns,     // Suppress noisy patterns
-    AdaptToSubstrateLoad       // Adapt amplification to substrate health
+    AdaptToSubstrateLoad,      // Adapt amplification to substrate health
+    // Batch 253: Integration - Cross-subsystem coupling task kinds
+    DetectCrossPatterns,       // Detect patterns across subsystems
+    BuildIntegrationLinks,     // Build links between subsystems
+    StabilizeMultiFlows,       // Stabilize multi-subsystem flows
+    CoupleUnitySwarm           // Couple Unity Cycles to Swarm graph
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -154,6 +159,11 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::BoostValuePatterns:   return ModelRole::Optimizer;
         case SwarmTaskKind::SuppressNoisePatterns: return ModelRole::Optimizer;
         case SwarmTaskKind::AdaptToSubstrateLoad:  return ModelRole::Finalizer;
+        // Batch 253: Integration tasks use Harmonizer for coupling
+        case SwarmTaskKind::DetectCrossPatterns:   return ModelRole::Harmonizer;
+        case SwarmTaskKind::BuildIntegrationLinks: return ModelRole::Harmonizer;
+        case SwarmTaskKind::StabilizeMultiFlows:   return ModelRole::Finalizer;
+        case SwarmTaskKind::CoupleUnitySwarm:      return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -337,7 +347,15 @@ public:
     void SuppressNoisyPatterns();                            // Suppress low-value noisy patterns
     void AdaptToSubstrateHealth();                         // Adapt amplification to substrate health
     void PrintAmplificationMap() const;                      // Display adaptive amplification map
-    
+
+    // Batch 253: Integration - Cross-subsystem coupling and unified flows
+    void RunIntegrationCycle();                              // Execute cross-subsystem integration
+    void DetectCrossSubsystemPatterns();                     // Detect patterns across subsystem boundaries
+    void BuildCrossSubsystemLinks();                         // Build links between subsystems
+    void StabilizeMultiSubsystemFlows();                     // Stabilize flows across multiple subsystems
+    void CoupleUnityToSwarmGraph();                          // Couple Unity Cycles to Swarm task graph
+    void PrintIntegrationMap() const;                          // Display cross-subsystem integration map
+
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();
     
