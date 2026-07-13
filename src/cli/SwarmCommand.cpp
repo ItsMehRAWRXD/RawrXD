@@ -1,9 +1,11 @@
 #include "SwarmCommand.hpp"
 #include "../swarm/LearningSimulator.hpp"
+#include "../infinite/InfinitePerfectionEngine.hpp"
 #include <iostream>
 #include <iomanip>
 #include <cstring>
 #include <chrono>
+#include <fstream>
 
 namespace sovereign {
 namespace cli {
@@ -66,6 +68,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --simulator            Run deterministic simulator to validate learning\n";
     std::cout << "  --sim-scenario TYPE    Scenario: stationary, latency, noisy, dominant\n";
     std::cout << "  --sim-export PATH      Export results to CSV or JSON file\n";
+    std::cout << "\nPhase 2: Unity Sequence - Full Engine Integration:\n";
+    std::cout << "  --unity-sequence       Execute full Order→Harmony pipeline with engine\n";
+    std::cout << "  --unity-sequence-log   Log detailed metrics after sequence\n";
+    std::cout << "  --unity-sequence-output FILE  Export results to file\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -153,6 +159,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--simulator") { opts.runSimulator = true; }
         else if (arg == "--sim-scenario" && i + 1 < argc) { opts.simulatorScenario = argv[++i]; }
         else if (arg == "--sim-export" && i + 1 < argc) { opts.exportResults = true; opts.exportPath = argv[++i]; }
+        // Phase 2: Unity Sequence options
+        else if (arg == "--unity-sequence") { opts.runUnitySequence = true; }
+        else if (arg == "--unity-sequence-log") { opts.runUnitySequence = true; opts.unitySequenceLog = true; }
+        else if (arg == "--unity-sequence-output" && i + 1 < argc) { opts.runUnitySequence = true; opts.unitySequenceOutput = argv[++i]; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -521,6 +531,53 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
         } else {
             std::cout << "[WARNING] Some benchmark criteria failed. Review results above.\n";
         }
+    }
+
+    // Phase 2: Unity Sequence - Execute full Order→Harmony pipeline with engine
+    if (opts.runUnitySequence) {
+        std::cout << "[TASK] Running Phase 2: Unity Sequence (Order→Harmony with engine)...\n";
+        
+        // Create engine instance
+        auto& engine = InfinitePerfection::InfinitePerfectionEngine::GetInstance();
+        engine.Initialize();
+        
+        // Execute Unity Sequence
+        auto result = swarm.ExecuteUnitySequence(engine);
+        
+        // Log metrics if requested
+        if (opts.unitySequenceLog) {
+            swarm.LogUnitySequenceMetrics(result);
+        }
+        
+        // Export to file if requested
+        if (!opts.unitySequenceOutput.empty()) {
+            std::ofstream outFile(opts.unitySequenceOutput);
+            if (outFile.is_open()) {
+                outFile << "{\n";
+                outFile << "  \"success\": " << (result.success ? "true" : "false") << ",\n";
+                outFile << "  \"finalHarmonyIndex\": " << result.finalHarmonyIndex << ",\n";
+                outFile << "  \"finalEquilibriumStrength\": " << result.finalEquilibriumStrength << ",\n";
+                outFile << "  \"totalExecutionTimeMs\": " << result.totalExecutionTimeMs << ",\n";
+                outFile << "  \"summary\": \"" << result.summary << "\",\n";
+                outFile << "  \"stepMetrics\": [\n";
+                for (size_t i = 0; i < result.stepMetrics.size(); ++i) {
+                    outFile << "    {\"step\": \"" << result.stepMetrics[i].first << "\", \"metric\": " << result.stepMetrics[i].second << "}";
+                    if (i < result.stepMetrics.size() - 1) outFile << ",";
+                    outFile << "\n";
+                }
+                outFile << "  ]\n";
+                outFile << "}\n";
+                outFile.close();
+                std::cout << "[INFO] Unity Sequence results exported to " << opts.unitySequenceOutput << "\n";
+            } else {
+                std::cerr << "[ERROR] Failed to open output file: " << opts.unitySequenceOutput << "\n";
+            }
+        }
+        
+        // Shutdown engine
+        engine.Shutdown();
+        
+        std::cout << "[SUCCESS] Unity Sequence completed: " << result.summary << "\n";
     }
 
     // Run finalization

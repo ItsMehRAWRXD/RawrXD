@@ -91,6 +91,11 @@ private:
         bool exportResults = false;      // Export simulation results to file
         std::string exportPath = "";     // Path for export (csv or json)
 
+        // Phase 2: Unity Sequence - Full Order→Harmony pipeline with engine
+        bool runUnitySequence = false;     // Execute full Unity Sequence (Order→Harmony)
+        bool unitySequenceLog = false;     // Log detailed metrics after sequence
+        std::string unitySequenceOutput;   // Optional: output file for sequence results
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;
