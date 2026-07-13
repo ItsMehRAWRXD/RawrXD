@@ -1,4 +1,4 @@
-name: HexMag Swarm & IDE Build Test
+name: CI - Quality Gates
 
 on:
   push:
@@ -6,80 +6,378 @@ on:
       - main
       - master
       - dev
-      - feature/**
-      - feat/**
-      - bugfix/**
+      - release/**
       - hotfix/**
   pull_request:
+    branches:
+      - main
+      - master
+      - release/**
   workflow_dispatch:
 
+env:
+  BUILD_TYPE: Release
+
 jobs:
-  build-and-test:
-    runs-on: windows-latest
-
+  # Quick smoke check
+  quick-check:
+    runs-on: ubuntu-22.04
     steps:
-      - name: Enable Git long paths
-        shell: pwsh
-        run: git config --system core.longpaths true
+    - uses: actions/checkout@v4
+    
+    - name: Check file structure
+      run: |
+        test -f CMakeLists.txt || (echo "Missing CMakeLists.txt" && exit 1)
+        test -d include/rawrxd || (echo "Missing public headers" && exit 1)
+        test -f API_FREEZE.md || (echo "Missing API_FREEZE.md" && exit 1)
+        echo "✓ Repository structure valid"
+    
+    - name: Check version consistency
+      run: |
+        VERSION=$(grep -oP 'RAWRXD_VERSION "\K[^"]+' include/rawrxd/Version.hpp 2>/dev/null || echo "unknown")
+        echo "RawrXD Version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  # Build on multiple platforms
+  build:
+    needs: quick-check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            compiler: gcc
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-22.04
+            compiler: clang
+            cc: clang
+            cxx: clang++
+          - os: windows-2022
+            compiler: msvc
+          - os: macos-13
+            compiler: clang
+            cc: clang
+            cxx: clang++
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Setup Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build
+        if [ "${{ matrix.compiler }}" = "clang" ]; then
+          sudo apt-get install -y clang
+        fi
+    
+    - name: Setup Windows
+      if: runner.os == 'Windows'
+      uses: microsoft/setup-msbuild@v2
+    
+    - name: Setup Windows dependencies
+      if: runner.os == 'Windows'
+      run: |
+        choco install nasm -y
+        pip install aqtinstall
+        python -m aqt install-qt windows desktop 6.5.2 win64_msvc2019_64
+      shell: pwsh
+    
+    - name: Setup macOS
+      if: runner.os == 'macOS'
+      run: brew install cmake ninja
+    
+    - name: Configure (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -DCMAKE_C_COMPILER=${{ matrix.cc }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+          -DRAWRXD_BUILD_TESTS=ON \
+          -GNinja
+      env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+    
+    - name: Configure (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        $QtBase = Join-Path $PWD "Qt\6.5.2\msvc2019_64"
+        cmake -B build `
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+          -DRAWRXD_BUILD_TESTS=ON `
+          -DQt6_DIR="$QtBase\lib\cmake\Qt6"
+      shell: pwsh
+    
+    - name: Build
+      run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ matrix.os }}-${{ matrix.compiler }}
+        path: build/bin
+        retention-days: 1
 
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
+  # Unit tests with coverage
+  test:
+    needs: build
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build gcovr
+    
+    - name: Configure
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DRAWRXD_BUILD_TESTS=ON \
+          -DRAWRXD_ENABLE_COVERAGE=ON \
+          -GNinja
+    
+    - name: Build
+      run: cmake --build build --parallel
+    
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure -j$(nproc)
+    
+    - name: Generate coverage
+      run: |
+        cd build
+        gcovr -r .. --xml -o coverage.xml --exclude='.*test.*' --exclude='.*_deps.*'
+    
+    - name: Check coverage threshold
+      run: |
+        COVERAGE=$(grep -oP 'line-rate="\K[^"]+' build/coverage.xml | head -1)
+        COVERAGE_PCT=$(echo "$COVERAGE * 100" | bc)
+        echo "Coverage: ${COVERAGE_PCT}%"
+        if (( $(echo "$COVERAGE_PCT < 80" | bc -l) )); then
+          echo "::error::Coverage below 80% threshold"
+          exit 1
+        fi
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        files: build/coverage.xml
+        fail_ci_if_error: false
 
-      - name: Install NASM
-        run: |
-          choco install nasm -y
-          $env:PATH += ";C:\Program Files\NASM"
+  # Smoke tests
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build
+    
+    - name: Configure
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DRAWRXD_BUILD_TESTS=ON \
+          -GNinja
+    
+    - name: Build
+      run: cmake --build build --parallel
+    
+    - name: Run smoke tests
+      run: |
+        cd build
+        ctest -R smoke --output-on-failure
 
-      - name: Install Qt via aqtinstall
-        shell: pwsh
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.5.2 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.5.2\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
-          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+  # Benchmark regression check
+  benchmark:
+    needs: build
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build
+    
+    - name: Build PR branch
+      run: |
+        cmake -B build_pr -DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_BENCHMARKS=ON -GNinja
+        cmake --build build_pr --parallel
+    
+    - name: Run PR benchmarks
+      run: |
+        cd build_pr
+        ./bin/benchmark_core --benchmark_out=pr_results.json --benchmark_out_format=json
+    
+    - name: Checkout main
+      run: |
+        git stash
+        git checkout origin/main
+    
+    - name: Build main branch
+      run: |
+        cmake -B build_main -DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_BENCHMARKS=ON -GNinja
+        cmake --build build_main --parallel
+    
+    - name: Run main benchmarks
+      run: |
+        cd build_main
+        ./bin/benchmark_core --benchmark_out=main_results.json --benchmark_out_format=json
+    
+    - name: Compare benchmarks
+      run: |
+        python3 scripts/compare_benchmarks.py \
+          build_main/main_results.json \
+          build_pr/pr_results.json \
+          --threshold=1.1
 
-      - name: Clean build folder
-        shell: pwsh
-        run: |
-          if (Test-Path .\build) {
-            Write-Host "Removing existing build folder to avoid stale CMake cache..."
-            Remove-Item .\build -Recurse -Force -ErrorAction SilentlyContinue
-          }
+  # Static analysis
+  static-analysis:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build clang-tidy cppcheck
+    
+    - name: Configure
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
+          -GNinja
+    
+    - name: Run clang-tidy
+      run: |
+        cmake --build build 2>&1 | tee clang-tidy.log
+        if grep -q "error:" clang-tidy.log; then
+          echo "::error::clang-tidy found errors"
+          exit 1
+        fi
+    
+    - name: Run cppcheck
+      run: |
+        cppcheck --enable=all --error-exitcode=1 \
+          --suppress=missingIncludeSystem \
+          --suppress=unmatchedSuppression \
+          -I include src 2>&1 | tee cppcheck.log
+    
+    - name: Upload analysis results
+      uses: actions/upload-artifact@v4
+      with:
+        name: static-analysis
+        path: |
+          clang-tidy.log
+          cppcheck.log
+        retention-days: 7
 
-      - name: Build Win32 IDE
-        run: .\scripts\build.ps1 -Config Release -A x64
+  # Security scan
+  security:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: cpp
+        queries: security-extended
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    
+    - name: Analyze
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:cpp"
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+  # Documentation check
+  docs:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check documentation
+      run: |
+        # Check for required docs
+        test -f README.md || (echo "::error::Missing README.md" && exit 1)
+        test -f CONTRIBUTING.md || (echo "::error::Missing CONTRIBUTING.md" && exit 1)
+        test -f SECURITY.md || (echo "::error::Missing SECURITY.md" && exit 1)
+        test -f API_FREEZE.md || (echo "::error::Missing API_FREEZE.md" && exit 1)
+        
+        # Check CHANGELOG updated on PR
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          git fetch origin ${{ github.base_ref }}
+          if ! git diff --name-only origin/${{ github.base_ref }} | grep -q CHANGELOG.md; then
+            echo "::warning::CHANGELOG.md not updated in this PR"
+          fi
+        fi
+        
+        echo "✓ Documentation checks passed"
 
-      - name: Install Python dependencies
-        working-directory: services
-        run: pip install -r requirements.txt
-
-      - name: Start HexMag Test Swarm (background on port 8001)
-        working-directory: services/hexmag
-        shell: pwsh
-        run: |
-          Start-Process python -ArgumentList "hexmag_engine.py --port 8001" -NoNewWindow
-          do {
-            Start-Sleep -Seconds 1
-            $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
-          } while ($r -ne 200)
-
-      - name: Smoke-test /ask and /agent endpoints
-        working-directory: services
-        shell: pwsh
-        run: python test_smoke.py
-
-      - name: Kill test swarm
-        if: always()
-        shell: pwsh
-        run: |
-          Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+  # Summary
+  summary:
+    needs: [quick-check, build, test, smoke-test, benchmark, static-analysis, security, docs]
+    runs-on: ubuntu-22.04
+    if: always()
+    
+    steps:
+    - name: Generate Summary
+      run: |
+        echo "## CI Quality Gates Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Quick Check | ${{ needs.quick-check.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Build (Multi-platform) | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Unit Tests + Coverage | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Smoke Tests | ${{ needs.smoke-test.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Benchmark Regression | ${{ needs.benchmark.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Static Analysis | ${{ needs.static-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Scan | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Documentation | ${{ needs.docs.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Overall status
+        if [ "${{ needs.quick-check.result }}" = "success" ] && \
+           [ "${{ needs.build.result }}" = "success" ] && \
+           [ "${{ needs.test.result }}" = "success" ] && \
+           [ "${{ needs.smoke-test.result }}" = "success" ] && \
+           [ "${{ needs.static-analysis.result }}" = "success" ] && \
+           [ "${{ needs.security.result }}" = "success" ] && \
+           [ "${{ needs.docs.result }}" = "success" ]; then
+          echo "### ✅ All Quality Gates Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "### ❌ Some Quality Gates Failed" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi

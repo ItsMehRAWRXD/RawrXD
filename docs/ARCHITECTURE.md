@@ -1,10 +1,42 @@
-# RawrXD IDE — Architecture Reference
+# RawrXD Architecture Reference
 
 > **Version 7.4.0** | **150 Compilation Units** | **9 MASM64 Kernels** | **3.73 MB Binary**
 
 ## Overview
 
-RawrXD is a native Win32 C++20 IDE with integrated AI inference, reverse engineering, and agentic automation. It compiles to a single ~3.7 MB executable with zero Electron/Qt/CEF dependencies.
+RawrXD is a comprehensive AI inference runtime with multiple interfaces:
+- **Core Runtime**: High-performance inference engine
+- **Win32 IDE**: Native C++20 IDE with integrated AI
+- **Agentic Framework**: Autonomous AI workflows
+- **Distributed**: Multi-node cluster support
+
+This document covers both the runtime architecture and IDE implementation.
+
+## Runtime Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Application Layer                              │
+│         (CLI, IDE, HTTP Server, SDK Examples)                   │
+├─────────────────────────────────────────────────────────────────┤
+│                    Runtime Layer                                  │
+│              (Session, Model, Inference)                        │
+├─────────────────────────────────────────────────────────────────┤
+│                    Agentic Layer                                  │
+│         (Tools, Agents, Orchestrator, Plans)                    │
+├─────────────────────────────────────────────────────────────────┤
+│                    Backend Layer                                  │
+│    (CPU, CUDA, Vulkan, DirectML, Distributed)                   │
+├─────────────────────────────────────────────────────────────────┤
+│                    Kernel Layer                                   │
+│         (Quantization, Memory, Scheduling)                    │
+├─────────────────────────────────────────────────────────────────┤
+│                    Platform Layer                                 │
+│              (OS Abstractions, I/O)                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## IDE Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

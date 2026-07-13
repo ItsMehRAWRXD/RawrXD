@@ -1,0 +1,79 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "feature-flag-{timestamp}",
+  "Version": "1.0.0",
+  "Type": "feature",
+  "Severity": "low",
+  "Description": "Enable new feature flags for gradual rollout",
+  "Author": "feature-team@rawrxd.ai",
+  "CreatedAt": "{iso_timestamp}",
+  "ExpiresAt": "{iso_timestamp_plus_30d}",
+  
+  "Patches": [
+    {
+      "System": "swarm",
+      "Target": "config",
+      "PatchFile": "patches/features/swarm_feature_flags_v1.1.0.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "agent",
+      "Target": "config",
+      "PatchFile": "patches/features/agent_feature_flags_v1.1.0.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    }
+  ],
+  
+  "Dependencies": [
+    { "System": "swarm", "MinimumVersion": "1.1.0" },
+    { "System": "agent", "MinimumVersion": "1.1.0" }
+  ],
+  
+  "Conflicts": [
+    { "PatchId": "feature-flag-*", "Reason": "Feature flag patches should be coordinated" }
+  ],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 10,
+    "MinMemoryMB": 128,
+    "ServicesToStop": [],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "echo 'Checking feature prerequisites...'",
+      "powershell -File scripts/features/check_prerequisites.ps1 -Feature {feature_name}"
+    ],
+    "PostPatchCommands": [
+      "echo 'Validating feature flag activation...'",
+      "powershell -File scripts/features/validate_feature.ps1 -Feature {feature_name}"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": true,
+    "MaxRetries": 1,
+    "RetryDelaySeconds": 1,
+    "NotifyOnRollback": ["feature-team@rawrxd.ai"]
+  },
+  
+  "Notifications": {
+    "OnStart": ["feature-team@rawrxd.ai"],
+    "OnSuccess": ["feature-team@rawrxd.ai"],
+    "OnFailure": ["feature-team@rawrxd.ai", "ops@rawrxd.ai"],
+    "OnRollback": ["feature-team@rawrxd.ai", "ops@rawrxd.ai"]
+  },
+  
+  "Metadata": {
+    "FeatureName": "{feature_name}",
+    "FeatureDescription": "{feature_description}",
+    "RolloutPercentage": 10,
+    "TargetAudience": "beta_users",
+    "TestingStatus": "validated",
+    "ApprovalRequired": true,
+    "ApprovedBy": "",
+    "ApprovalTimestamp": ""
+  }
+}
