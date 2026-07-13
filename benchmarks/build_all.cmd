@@ -20,7 +20,7 @@ echo Building MASM Hello World...
 ml64 /c /W3 /nologo /Fo build\masm_hello_world.obj masm_hello_world.asm
 if errorlevel 1 goto :error
 
-link /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB /LARGEADDRESSAWARE:NO /OUT:build\masm_hello_world.exe build\masm_hello_world.obj kernel32.lib
+link /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB /LARGEADDRESSAWARE:NO /OUT:build\masm_hello_world.exe build\masm_hello_world.obj /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64" kernel32.lib
 if errorlevel 1 goto :error
 echo   OK: masm_hello_world.exe
 echo.
