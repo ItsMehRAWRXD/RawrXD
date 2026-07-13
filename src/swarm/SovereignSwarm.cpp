@@ -1,4 +1,5 @@
 #include "SovereignSwarm.hpp"
+#include "InfinitePerfectionTelemetry.hpp"
 #include <chrono>
 #include <sstream>
 #include <iomanip>
@@ -1497,6 +1498,13 @@ SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
     UnitySequenceResult result;
     auto startTime = std::chrono::steady_clock::now();
     
+    // Phase 3: Initialize telemetry for Unity Sequence
+    std::unique_ptr<InfinitePerfectionTelemetry> telemetry;
+    if (ctx_.telemetry) {
+        telemetry = std::make_unique<InfinitePerfectionTelemetry>(&engine);
+        telemetry->Reset();
+    }
+    
     std::cout << "\n╔══════════════════════════════════════════════════════════════╗" << std::endl;
     std::cout << "║     Phase 2: Unity Sequence Execution                        ║" << std::endl;
     std::cout << "║     Order → Resonance → Amplification → Integration          ║" << std::endl;
@@ -1509,6 +1517,10 @@ SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
     double unityIntegration = engine.ComputeCycleIntegration();
     result.stepMetrics.push_back({"Order", unityIntegration});
     std::cout << "  → Cycle Integration: " << std::fixed << std::setprecision(4) << unityIntegration << std::endl;
+    if (telemetry) {
+        telemetry->RecordSwarmExecution(0, "Order", "RunUnityCycle", 
+            static_cast<float>(unityIntegration), 0, true);
+    }
     
     // Step 2: Resonance (Batch 251) → Engine Integration Cycle (Batch 244)
     std::cout << "\n[UnitySequence] Step 2/7: RESONANCE (Integration Cycle 244)..." << std::endl;
@@ -1516,6 +1528,10 @@ SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
     double harmonicLock = engine.ComputeHarmonicLock();
     result.stepMetrics.push_back({"Resonance", harmonicLock});
     std::cout << "  → Harmonic Lock: " << std::fixed << std::setprecision(4) << harmonicLock << std::endl;
+    if (telemetry) {
+        telemetry->RecordSwarmExecution(0, "Resonance", "RunIntegrationCycle",
+            static_cast<float>(harmonicLock), 0, true);
+    }
     
     // Step 3: Amplification (Batch 252) → Engine Synthesis Cycle (Batch 245)
     std::cout << "\n[UnitySequence] Step 3/7: AMPLIFICATION (Synthesis Cycle 245)..." << std::endl;
@@ -1523,6 +1539,10 @@ SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
     double crossCycleSynergy = engine.ComputeCrossCycleSynergy();
     result.stepMetrics.push_back({"Amplification", crossCycleSynergy});
     std::cout << "  → Cross-Cycle Synergy: " << std::fixed << std::setprecision(4) << crossCycleSynergy << std::endl;
+    if (telemetry) {
+        telemetry->RecordSwarmExecution(0, "Amplification", "RunSynthesisCycle",
+            static_cast<float>(crossCycleSynergy), 0, true);
+    }
     
     // Step 4: Integration (Batch 253) → Engine Convergence Cycle (Batch 246)
     std::cout << "\n[UnitySequence] Step 4/7: INTEGRATION (Convergence Cycle 246)..." << std::endl;
@@ -1530,6 +1550,10 @@ SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
     double convergenceCoherence = engine.ComputeConvergenceCoherence();
     result.stepMetrics.push_back({"Integration", convergenceCoherence});
     std::cout << "  → Convergence Coherence: " << std::fixed << std::setprecision(4) << convergenceCoherence << std::endl;
+    if (telemetry) {
+        telemetry->RecordSwarmExecution(0, "Integration", "RunConvergenceCycle",
+            static_cast<float>(convergenceCoherence), 0, true);
+    }
     
     // Step 5: Convergence (Batch 254) → Engine Coherence Cycle (Batch 247)
     std::cout << "\n[UnitySequence] Step 5/7: CONVERGENCE (Coherence Cycle 247)..." << std::endl;
@@ -1537,6 +1561,10 @@ SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
     double phaseLockStrength = engine.ComputePhaseLockStrength();
     result.stepMetrics.push_back({"Convergence", phaseLockStrength});
     std::cout << "  → Phase Lock Strength: " << std::fixed << std::setprecision(4) << phaseLockStrength << std::endl;
+    if (telemetry) {
+        telemetry->RecordSwarmExecution(0, "Convergence", "RunCoherenceCycle",
+            static_cast<float>(phaseLockStrength), 0, true);
+    }
     
     // Step 6: Coherence (Batch 255) → Engine Harmony Cycle (Batch 248)
     std::cout << "\n[UnitySequence] Step 6/7: COHERENCE (Harmony Cycle 248)..." << std::endl;
@@ -1544,6 +1572,10 @@ SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
     double harmonyIndex = engine.ComputeSovereignHarmonyIndex();
     result.stepMetrics.push_back({"Coherence", harmonyIndex});
     std::cout << "  → Sovereign Harmony Index: " << std::fixed << std::setprecision(4) << harmonyIndex << std::endl;
+    if (telemetry) {
+        telemetry->RecordSwarmExecution(0, "Coherence", "RunHarmonyCycle",
+            static_cast<float>(harmonyIndex), 0, true);
+    }
     
     // Step 7: Harmony (Batch 256) → Engine Balance Cycle (Batch 249)
     std::cout << "\n[UnitySequence] Step 7/7: HARMONY (Balance Cycle 249)..." << std::endl;
