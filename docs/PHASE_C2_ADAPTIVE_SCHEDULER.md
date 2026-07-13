@@ -518,12 +518,75 @@ std::cout << "Success rate: " << metrics.success_rate << std::endl;
 | `AdaptiveScheduler.hpp` | ~400 | ✅ Complete |
 | `AdaptiveScheduler.cpp` | ~1,200 | ✅ Complete |
 | `SchedulerPolicy.hpp` | ~150 | ✅ Complete |
+| `SchedulerPolicy.cpp` | ~350 | ✅ Complete |
 | `SchedulerMetrics.hpp` | ~200 | ✅ Complete |
+| `SchedulerMetrics.cpp` | ~300 | ✅ Complete |
 | `adaptive_scheduler_smoke_test.cpp` | ~600 | ✅ Complete |
-| `PHASE_C2_ADAPTIVE_SCHEDULER.md` | ~500 | ✅ Complete |
+| `PHASE_C2_ADAPTIVE_SCHEDULER.md` | ~550 | ✅ Complete |
 
-**Total: ~3,050 lines**
+**Total: ~3,750 lines**
+
+## Additional Components
+
+### SchedulerPolicy.cpp
+
+Policy engine for dynamic scheduling strategy selection:
+
+```cpp
+// Policy types
+enum class SchedulingPolicy {
+    THROUGHPUT_OPTIMIZED,  // Maximize TPS
+    LATENCY_OPTIMIZED,     // Minimize latency
+    BALANCED,              // Balanced approach
+    RESOURCE_OPTIMIZED,    // Minimize resource usage
+    ADAPTIVE,              // Auto-adjust based on metrics
+    CUSTOM                 // User-defined weights
+};
+
+// Policy configuration
+struct PolicyConfig {
+    double throughput_weight = 0.3;
+    double latency_weight = 0.3;
+    double reliability_weight = 0.2;
+    double resource_efficiency_weight = 0.2;
+    // ...
+};
+```
+
+**Features:**
+- Pre-configured policy templates (HighThroughput, LowLatency, Balanced, ResourceOptimized)
+- Dynamic policy switching based on performance metrics
+- Task scoring for scheduling decisions
+- Policy history tracking
+
+### SchedulerMetrics.cpp
+
+Comprehensive metrics collection and export:
+
+```cpp
+// Real-time metrics collection
+class MetricsCollector {
+    void RecordTaskSubmission(uint64_t task_id);
+    void RecordTaskStart(uint64_t task_id);
+    void RecordTaskCompletion(uint64_t task_id, double tps, 
+                             double convergence, bool success);
+    SchedulerMetrics GetAggregatedMetrics() const;
+    void ExportToCSV(const std::string& filename) const;
+};
+```
+
+**Features:**
+- Sliding window metrics collection
+- Task-level history tracking
+- CSV export for analysis
+- Automatic window management
 
 ---
 
-**Phase C.2 Batch 1/5 Complete** — Pattern-Aware Scheduler Core fully implemented with orchestration layer, threading, and comprehensive test coverage.
+**Phase C.2 Batch 1/5 Complete** — Pattern-Aware Scheduler Core fully implemented with:
+- ✅ Complete orchestration layer (AdaptiveScheduler::Impl)
+- ✅ Multi-threaded scheduling and metrics collection
+- ✅ Policy engine for dynamic strategy selection
+- ✅ Comprehensive metrics collection and export
+- ✅ 30 smoke tests covering all components
+- ✅ ~3,750 lines of production-ready code
