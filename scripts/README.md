@@ -37,6 +37,8 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `ssl-manager.ps1` | SSL certificate management | `.\ssl-manager.ps1` |
 | `docs-generator.ps1` | Documentation generation | `.\docs-generator.ps1` |
 | `secrets-manager.ps1` | Secrets and API key management | `.\secrets-manager.ps1` |
+| `database-manager.ps1` | Database operations and migrations | `.\database-manager.ps1` |
+| `cache-manager.ps1` | Application cache management | `.\cache-manager.ps1` |
 
 ## Development Setup
 
