@@ -490,7 +490,7 @@ public:
     void EnqueueGlobalCompletionTasks();
     
     // Phase A: Self Model - Learned task assignment
-    void EnableLearnedTaskAssignment(bool enable);
+    void SetLearnedAssignmentEnabled(bool enable);
     bool IsLearnedAssignmentEnabled() const { return learnedAssignmentEnabled_; }
     
     // Phase A.1-A.5: Get best worker with full learning pipeline

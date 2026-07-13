@@ -3,7 +3,10 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-#include <nlohmann/json.hpp>
+#include <set>
+#include <algorithm>
+#include <numeric>
+#include <cmath>
 
 namespace Sovereign {
 
@@ -45,7 +48,7 @@ LearningSimulator::TestScenario LearningSimulator::CreateStationaryScenario() {
 LearningSimulator::TestScenario LearningSimulator::CreateLatencyTradeoffScenario() {
     TestScenario scenario;
     scenario.name = "Latency vs Success Tradeoff";
-    scenario.taskKind = SwarmTaskKind::CompileCode;
+    scenario.taskKind = SwarmTaskKind::OptimizeSubsystem;  // Use valid task kind
     scenario.iterations = 1000;
     
     // Agent A: High success, high latency
@@ -64,7 +67,7 @@ LearningSimulator::TestScenario LearningSimulator::CreateLatencyTradeoffScenario
 LearningSimulator::TestScenario LearningSimulator::CreateNoisyScenario() {
     TestScenario scenario;
     scenario.name = "High Variance Workers";
-    scenario.taskKind = SwarmTaskKind::TestCode;
+    scenario.taskKind = SwarmTaskKind::RepairSubsystem;  // Use valid task kind
     scenario.iterations = 2000;  // More iterations needed
     
     // High variance makes learning harder
@@ -81,7 +84,7 @@ LearningSimulator::TestScenario LearningSimulator::CreateNoisyScenario() {
 LearningSimulator::TestScenario LearningSimulator::CreateDominantScenario() {
     TestScenario scenario;
     scenario.name = "Dominant Best Agent";
-    scenario.taskKind = SwarmTaskKind::OptimizeCode;
+    scenario.taskKind = SwarmTaskKind::ExtendSubsystem;  // Use valid task kind
     scenario.iterations = 500;
     
     // One agent is clearly superior

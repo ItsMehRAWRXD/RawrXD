@@ -350,10 +350,6 @@ void SwarmScheduler::SetLearnedAssignmentEnabled(bool enabled) {
     learnedAssignmentEnabled_ = enabled;
 }
 
-bool SwarmScheduler::IsLearnedAssignmentEnabled() const {
-    return learnedAssignmentEnabled_;
-}
-
 // Phase A.1: Benchmark and validation
 SelfModelRegistry::BenchmarkResult SwarmScheduler::RunBenchmark(SwarmTaskKind kind, uint32_t iterations) const {
     return SelfModelRegistry::GetInstance().RunBenchmark(kind, iterations);
