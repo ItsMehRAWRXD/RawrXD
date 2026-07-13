@@ -30,6 +30,11 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `scheduler.ps1` | Task scheduling | `.\scheduler.ps1` |
 | `health-checker.ps1` | System health monitoring | `.\health-checker.ps1` |
 | `dependency-checker.ps1` | Dependency validation | `.\dependency-checker.ps1` |
+| `log-rotator.ps1` | Log rotation and archival | `.\log-rotator.ps1` |
+| `version-manager.ps1` | Version and release management | `.\version-manager.ps1` |
+| `cleanup-utility.ps1` | System cleanup and maintenance | `.\cleanup-utility.ps1` |
+| `metrics-collector.ps1` | Metrics collection and export | `.\metrics-collector.ps1` |
+| `ssl-manager.ps1` | SSL certificate management | `.\ssl-manager.ps1` |
 
 ## Development Setup
 
