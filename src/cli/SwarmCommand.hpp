@@ -77,6 +77,13 @@ private:
         bool runSelfModel = false;         // Run Self Model phase (Phase A)
         bool learnedAssignment = false;    // Enable learned task assignment
         bool selfModelReport = false;      // Display performance report
+        
+        // Phase A.1-A.5: Advanced learning options
+        bool benchmarkLearning = false;    // Run benchmark to validate learning
+        uint32_t benchmarkIterations = 500; // Number of iterations for benchmark
+        bool explainDecision = false;      // Explain last routing decision
+        double explorationRate = 0.1;      // Exploration rate (0.0-1.0)
+        bool resetStats = false;           // Reset statistics before run
 
         // Per-role model overrides
         std::string scannerModel;

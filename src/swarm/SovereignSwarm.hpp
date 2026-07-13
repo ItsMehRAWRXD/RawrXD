@@ -16,6 +16,14 @@
 #include <queue>
 #include <atomic>
 #include <unordered_map>
+#include <map>
+#include <deque>
+#include <random>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include <numeric>
 
 namespace Sovereign {
 
@@ -252,18 +260,42 @@ struct SwarmTaskResult {
 };
 
 // Phase A: Self Model - Performance tracking per agent for learned task assignment
+// Phase A.1-A.5: Measurable learning with confidence, exploration, forgetting, explainability
 struct AgentSelfModel {
     uint32_t agentId;
     
     // Task type performance metrics (learned from execution history)
     struct TaskPerformance {
+        // Phase A.1: Basic metrics
         uint32_t attempts = 0;
         uint32_t successes = 0;
         uint32_t failures = 0;
         double avgLatencyMs = 0.0;
         double successRate = 0.0;
         std::vector<std::string> failurePatterns;
-        std::map<std::string, double> strengthByTaskType;  // task type -> strength score
+        
+        // Phase A.2: Confidence scoring
+        double confidence = 0.0;           // 0.0-1.0 based on sample count
+        static constexpr uint32_t MIN_SAMPLES_FOR_CONFIDENCE = 10;
+        static constexpr uint32_t MAX_SAMPLES_FOR_CONFIDENCE = 1000;
+        
+        // Phase A.4: Rolling statistics (exponential moving average)
+        double emaSuccessRate = 0.5;       // EMA of success rate (alpha = 0.1)
+        double emaLatency = 0.0;           // EMA of latency
+        static constexpr double EMA_ALPHA = 0.1;
+        
+        // Phase A.4: Rolling window (last N executions)
+        static constexpr size_t ROLLING_WINDOW_SIZE = 100;
+        std::deque<bool> recentOutcomes;   // true = success, false = failure
+        std::deque<int64_t> recentLatencies;
+        double rollingSuccessRate = 0.5;   // Success rate over last N executions
+        double rollingLatency = 0.0;       // Average latency over last N executions
+        
+        // Phase A.1: Composite score (used for ranking)
+        double compositeScore = 0.5;       // Combined metric for selection
+        
+        // Phase A.5: Last update timestamp
+        std::chrono::steady_clock::time_point lastUpdated;
     };
     
     std::map<SwarmTaskKind, TaskPerformance> performanceByTaskType;
@@ -274,19 +306,54 @@ struct AgentSelfModel {
     double averageLatency = 0.0;       // ms, learned
     double reliabilityScore = 0.5;       // 0.0-1.0, computed from success/failure
     
+    // Phase A.3: Exploration tracking
+    uint32_t explorationCount = 0;       // Times this agent was selected for exploration
+    double explorationRate = 0.0;        // Historical exploration rate
+    
     // Methods to update model from execution results
     void RecordSuccess(SwarmTaskKind kind, int64_t latencyMs);
     void RecordFailure(SwarmTaskKind kind, const std::string& failurePattern);
     void UpdateStrengthScores();
     double GetStrengthForTask(SwarmTaskKind kind) const;
+    double GetCompositeScore(SwarmTaskKind kind) const;  // Phase A.1: Composite scoring
     SwarmTaskKind GetBestTaskType() const;
+    
+    // Phase A.2: Confidence calculation
+    double CalculateConfidence(uint32_t samples) const;
+    
+    // Phase A.5: Explainability
+    struct SelectionExplanation {
+        uint32_t agentId;
+        SwarmTaskKind taskKind;
+        double successRate;
+        double confidence;
+        uint32_t sampleCount;
+        double avgLatency;
+        double compositeScore;
+        bool wasExploration;
+        std::string reason;
+    };
+    SelectionExplanation ExplainSelection(SwarmTaskKind kind) const;
     
     // Serialization for persistence
     std::string ToJson() const;
     static AgentSelfModel FromJson(const std::string& json);
 };
 
+// Phase A.5: Routing decision log for explainability
+struct RoutingDecision {
+    uint64_t taskId;
+    SwarmTaskKind taskKind;
+    uint32_t selectedAgent;
+    double selectedScore;
+    std::vector<std::pair<uint32_t, double>> candidateScores;  // agent -> score
+    bool wasExploration;
+    std::string reason;
+    std::chrono::steady_clock::time_point timestamp;
+};
+
 // Phase A: Self Model Registry - Manages self-models for all agents
+// Phase A.1-A.5: Measurable learning with confidence, exploration, forgetting, explainability
 class SelfModelRegistry {
 public:
     static SelfModelRegistry& GetInstance();
@@ -298,11 +365,42 @@ public:
     void RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, int64_t latencyMs);
     void RecordTaskFailure(uint32_t agentId, SwarmTaskKind kind, const std::string& pattern);
     
-    // Query best agent for a task type (learned assignment)
+    // Phase A.1: Query best agent for a task type (learned assignment with composite scoring)
     uint32_t GetBestAgentForTask(SwarmTaskKind kind) const;
+    
+    // Phase A.3: Select agent with exploration
+    struct SelectionResult {
+        uint32_t agentId;
+        bool wasExploration;
+        double exploitationScore;
+        double explorationScore;
+        std::string reason;
+    };
+    SelectionResult SelectAgentWithExploration(SwarmTaskKind kind, double explorationRate = 0.1) const;
     
     // Get agent rankings for a task
     std::vector<std::pair<uint32_t, double>> GetAgentRankings(SwarmTaskKind kind) const;
+    
+    // Phase A.5: Get detailed explanation for a selection
+    AgentSelfModel::SelectionExplanation ExplainSelection(uint32_t agentId, SwarmTaskKind kind) const;
+    
+    // Phase A.5: Get routing decision history
+    std::vector<RoutingDecision> GetRoutingHistory(uint64_t taskId) const;
+    void LogRoutingDecision(const RoutingDecision& decision);
+    
+    // Phase A.1: Benchmark and validation
+    struct BenchmarkResult {
+        SwarmTaskKind taskKind;
+        uint32_t totalRuns;
+        std::map<uint32_t, uint32_t> assignmentCounts;  // agent -> count
+        std::map<uint32_t, double> agentSuccessRates;   // agent -> rate
+        std::map<uint32_t, double> agentLatencies;    // agent -> avg latency
+        double overallSuccessRate;
+        double avgLatency;
+        std::string ToString() const;
+    };
+    BenchmarkResult RunBenchmark(SwarmTaskKind kind, uint32_t iterations = 100) const;
+    void PrintBenchmarkReport(const BenchmarkResult& result) const;
     
     // Persistence
     void SaveToDisk(const std::string& path);
@@ -312,10 +410,20 @@ public:
     size_t GetModelCount() const;
     void PrintPerformanceReport() const;
     
+    // Phase A.1: Reset statistics (for testing)
+    void ResetStatistics();
+    
 private:
     SelfModelRegistry() = default;
     std::map<uint32_t, AgentSelfModel> models_;
     mutable std::mutex mutex_;
+    
+    // Phase A.5: Routing decision log
+    std::vector<RoutingDecision> routingHistory_;
+    static constexpr size_t MAX_ROUTING_HISTORY = 10000;
+    
+    // Phase A.3: Random number generation for exploration
+    mutable std::mt19937 rng_{std::random_device{}()};
 };
 
 class SwarmAgent {
@@ -385,8 +493,19 @@ public:
     void EnableLearnedTaskAssignment(bool enable);
     bool IsLearnedAssignmentEnabled() const { return learnedAssignmentEnabled_; }
     
-    // Get best worker for a task based on learned performance
+    // Phase A.1-A.5: Get best worker with full learning pipeline
     uint32_t GetBestWorkerForTask(const SwarmTask& task) const;
+    
+    // Phase A.3: Set exploration rate (0.0-1.0, default 0.1)
+    void SetExplorationRate(double rate) { explorationRate_ = std::clamp(rate, 0.0, 1.0); }
+    double GetExplorationRate() const { return explorationRate_; }
+    
+    // Phase A.1: Benchmark and validation
+    SelfModelRegistry::BenchmarkResult RunBenchmark(SwarmTaskKind kind, uint32_t iterations = 100) const;
+    void PrintBenchmarkReport(SwarmTaskKind kind, uint32_t iterations = 100) const;
+    
+    // Phase A.5: Explain last routing decision
+    std::string ExplainLastDecision() const;
     
     // Statistics
     size_t GetPendingCount() const;
@@ -420,6 +539,12 @@ private:
     
     // Phase A: Self Model - Learned task assignment
     bool learnedAssignmentEnabled_ = false;
+    
+    // Phase A.3: Exploration rate (10% default)
+    double explorationRate_ = 0.1;
+    
+    // Phase A.5: Last routing decision for explainability
+    mutable RoutingDecision lastDecision_;
     
     void WorkerLoop(uint32_t workerId);
     void BuildGlobalTaskList(std::vector<SwarmTask>& tasks);

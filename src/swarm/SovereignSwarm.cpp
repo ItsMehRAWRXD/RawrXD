@@ -315,16 +315,35 @@ uint32_t SwarmScheduler::GetBestWorkerForTask(SwarmTaskKind kind) const {
         return nextWorker.fetch_add(1) % workers_.size();
     }
     
-    // Use learned assignment from self-model registry
-    uint32_t bestAgent = SelfModelRegistry::GetInstance().GetBestAgentForTask(kind);
+    // Phase A.3: Use exploration-based selection
+    auto result = SelfModelRegistry::GetInstance().SelectAgentWithExploration(kind, explorationRate_);
     
-    // If no learned data, fall back to round-robin
-    if (bestAgent == 0 || bestAgent > workers_.size()) {
+    // Phase A.5: Log the routing decision
+    RoutingDecision decision;
+    decision.taskId = 0; // Will be set by caller
+    decision.taskKind = kind;
+    decision.selectedAgent = result.agentId;
+    decision.selectedScore = result.wasExploration ? result.explorationScore : result.exploitationScore;
+    decision.wasExploration = result.wasExploration;
+    decision.reason = result.reason;
+    decision.timestamp = std::chrono::steady_clock::now();
+    
+    // Get candidate scores for logging
+    auto rankings = SelfModelRegistry::GetInstance().GetAgentRankings(kind);
+    for (const auto& [agentId, score] : rankings) {
+        decision.candidateScores.push_back({agentId, score});
+    }
+    
+    SelfModelRegistry::GetInstance().LogRoutingDecision(decision);
+    lastDecision_ = decision;
+    
+    // Convert from 1-indexed agent ID to 0-indexed worker ID
+    if (result.agentId == 0 || result.agentId > workers_.size()) {
         static std::atomic<uint32_t> nextWorker{0};
         return nextWorker.fetch_add(1) % workers_.size();
     }
     
-    return bestAgent - 1; // Convert from 1-indexed agent ID to 0-indexed worker ID
+    return result.agentId - 1;
 }
 
 void SwarmScheduler::SetLearnedAssignmentEnabled(bool enabled) {
@@ -333,6 +352,54 @@ void SwarmScheduler::SetLearnedAssignmentEnabled(bool enabled) {
 
 bool SwarmScheduler::IsLearnedAssignmentEnabled() const {
     return learnedAssignmentEnabled_;
+}
+
+// Phase A.1: Benchmark and validation
+SelfModelRegistry::BenchmarkResult SwarmScheduler::RunBenchmark(SwarmTaskKind kind, uint32_t iterations) const {
+    return SelfModelRegistry::GetInstance().RunBenchmark(kind, iterations);
+}
+
+void SwarmScheduler::PrintBenchmarkReport(SwarmTaskKind kind, uint32_t iterations) const {
+    auto result = RunBenchmark(kind, iterations);
+    SelfModelRegistry::GetInstance().PrintBenchmarkReport(result);
+}
+
+// Phase A.5: Explain last routing decision
+std::string SwarmScheduler::ExplainLastDecision() const {
+    if (lastDecision_.timestamp == std::chrono::steady_clock::time_point{}) {
+        return "No routing decision recorded yet.";
+    }
+    
+    std::ostringstream oss;
+    oss << "\n╔══════════════════════════════════════════════════════════════╗\n";
+    oss << "║           Phase A.5: Routing Decision Explanation            ║\n";
+    oss << "╚══════════════════════════════════════════════════════════════╝\n";
+    oss << "Task: " << TaskKindToString(lastDecision_.taskKind) << "\n";
+    oss << "Selected Agent: " << lastDecision_.selectedAgent << "\n";
+    oss << "Score: " << std::fixed << std::setprecision(3) << lastDecision_.selectedScore << "\n";
+    oss << "Type: " << (lastDecision_.wasExploration ? "EXPLORATION" : "EXPLOITATION") << "\n";
+    oss << "Reason: " << lastDecision_.reason << "\n\n";
+    
+    // Get detailed explanation from agent
+    auto explanation = SelfModelRegistry::GetInstance().ExplainSelection(
+        lastDecision_.selectedAgent, lastDecision_.taskKind);
+    
+    oss << "Agent Performance:\n";
+    oss << "  Success Rate: " << std::fixed << std::setprecision(1) << (explanation.successRate * 100) << "%\n";
+    oss << "  Confidence: " << std::fixed << std::setprecision(2) << explanation.confidence << "\n";
+    oss << "  Samples: " << explanation.sampleCount << "\n";
+    oss << "  Avg Latency: " << std::fixed << std::setprecision(1) << explanation.avgLatency << "ms\n";
+    oss << "  Composite Score: " << std::fixed << std::setprecision(3) << explanation.compositeScore << "\n";
+    
+    if (!lastDecision_.candidateScores.empty()) {
+        oss << "\nCandidate Rankings:\n";
+        for (size_t i = 0; i < lastDecision_.candidateScores.size() && i < 5; ++i) {
+            oss << "  " << (i + 1) << ". Agent " << lastDecision_.candidateScores[i].first
+                << " (score: " << std::fixed << std::setprecision(3) << lastDecision_.candidateScores[i].second << ")\n";
+        }
+    }
+    
+    return oss.str();
 }
 
 // SovereignSwarm implementation
@@ -1487,12 +1554,52 @@ AgentSelfModel& SelfModelRegistry::GetOrCreateModel(uint32_t agentId) {
     return it->second;
 }
 
+// Phase A.2: Confidence calculation based on sample count
+double AgentSelfModel::CalculateConfidence(uint32_t samples) const {
+    if (samples >= TaskPerformance::MAX_SAMPLES_FOR_CONFIDENCE) {
+        return 1.0;
+    }
+    if (samples <= TaskPerformance::MIN_SAMPLES_FOR_CONFIDENCE) {
+        return static_cast<double>(samples) / TaskPerformance::MIN_SAMPLES_FOR_CONFIDENCE * 0.5;
+    }
+    // Linear interpolation between MIN and MAX
+    double range = TaskPerformance::MAX_SAMPLES_FOR_CONFIDENCE - TaskPerformance::MIN_SAMPLES_FOR_CONFIDENCE;
+    double progress = static_cast<double>(samples - TaskPerformance::MIN_SAMPLES_FOR_CONFIDENCE) / range;
+    return 0.5 + 0.5 * progress;
+}
+
 void SelfModelRegistry::RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, int64_t latencyMs) {
     auto& model = GetOrCreateModel(agentId);
     auto& perf = model.performanceByTaskType[kind];
     
     perf.attempts++;
     perf.successes++;
+    
+    // Phase A.4: Update rolling window
+    perf.recentOutcomes.push_back(true);
+    perf.recentLatencies.push_back(latencyMs);
+    if (perf.recentOutcomes.size() > TaskPerformance::ROLLING_WINDOW_SIZE) {
+        perf.recentOutcomes.pop_front();
+        perf.recentLatencies.pop_front();
+    }
+    
+    // Calculate rolling statistics
+    uint32_t recentSuccesses = std::count(perf.recentOutcomes.begin(), perf.recentOutcomes.end(), true);
+    perf.rollingSuccessRate = static_cast<double>(recentSuccesses) / perf.recentOutcomes.size();
+    
+    int64_t recentLatencySum = std::accumulate(perf.recentLatencies.begin(), perf.recentLatencies.end(), 0LL);
+    perf.rollingLatency = static_cast<double>(recentLatencySum) / perf.recentLatencies.size();
+    
+    // Phase A.4: Update exponential moving averages
+    if (perf.attempts == 1) {
+        perf.emaSuccessRate = 1.0;
+        perf.emaLatency = static_cast<double>(latencyMs);
+    } else {
+        perf.emaSuccessRate = (1.0 - TaskPerformance::EMA_ALPHA) * perf.emaSuccessRate + 
+                              TaskPerformance::EMA_ALPHA * 1.0;
+        perf.emaLatency = (1.0 - TaskPerformance::EMA_ALPHA) * perf.emaLatency + 
+                         TaskPerformance::EMA_ALPHA * static_cast<double>(latencyMs);
+    }
     
     // Update average latency with exponential moving average
     if (perf.avgLatencyMs == 0.0) {
@@ -1503,6 +1610,16 @@ void SelfModelRegistry::RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, 
     
     // Update success rate
     perf.successRate = static_cast<double>(perf.successes) / static_cast<double>(perf.attempts);
+    
+    // Phase A.2: Update confidence
+    perf.confidence = model.CalculateConfidence(perf.attempts);
+    
+    // Phase A.1: Update composite score
+    // Composite = success_rate * confidence * latency_factor
+    double latencyFactor = 100.0 / (100.0 + perf.avgLatencyMs);
+    perf.compositeScore = perf.successRate * perf.confidence * latencyFactor;
+    
+    perf.lastUpdated = std::chrono::steady_clock::now();
     
     // Update overall metrics
     model.UpdateStrengthScores();
@@ -1516,25 +1633,43 @@ void SelfModelRegistry::RecordTaskFailure(uint32_t agentId, SwarmTaskKind kind, 
     perf.failures++;
     perf.failurePatterns.push_back(pattern);
     
+    // Phase A.4: Update rolling window
+    perf.recentOutcomes.push_back(false);
+    if (perf.recentOutcomes.size() > TaskPerformance::ROLLING_WINDOW_SIZE) {
+        perf.recentOutcomes.pop_front();
+    }
+    
+    // Calculate rolling success rate
+    uint32_t recentSuccesses = std::count(perf.recentOutcomes.begin(), perf.recentOutcomes.end(), true);
+    perf.rollingSuccessRate = static_cast<double>(recentSuccesses) / perf.recentOutcomes.size();
+    
+    // Phase A.4: Update EMA
+    perf.emaSuccessRate = (1.0 - TaskPerformance::EMA_ALPHA) * perf.emaSuccessRate;
+    
     // Update success rate
     perf.successRate = static_cast<double>(perf.successes) / static_cast<double>(perf.attempts);
+    
+    // Phase A.2: Update confidence
+    perf.confidence = model.CalculateConfidence(perf.attempts);
+    
+    // Phase A.1: Update composite score
+    double latencyFactor = 100.0 / (100.0 + perf.avgLatencyMs);
+    perf.compositeScore = perf.successRate * perf.confidence * latencyFactor;
+    
+    perf.lastUpdated = std::chrono::steady_clock::now();
     
     // Update overall metrics
     model.UpdateStrengthScores();
 }
 
 void AgentSelfModel::UpdateStrengthScores() {
-    // Calculate overall strength from task performance
+    // Calculate overall strength from task performance using composite scores
     double totalStrength = 0.0;
     double totalWeight = 0.0;
     
     for (auto& [kind, perf] : performanceByTaskType) {
-        // Strength = success_rate * (1 / normalized_latency)
-        double latencyScore = 100.0 / (100.0 + perf.avgLatencyMs); // Normalize latency
-        double taskStrength = perf.successRate * latencyScore;
-        perf.strengthByTaskType[TaskKindToString(kind)] = taskStrength;
-        
-        totalStrength += taskStrength * perf.attempts; // Weight by experience
+        // Phase A.1: Use composite score instead of just success rate
+        totalStrength += perf.compositeScore * perf.attempts;
         totalWeight += static_cast<double>(perf.attempts);
     }
     
@@ -1542,35 +1677,77 @@ void AgentSelfModel::UpdateStrengthScores() {
         overallStrength = totalStrength / totalWeight;
     }
     
-    // Calculate reliability
+    // Calculate reliability using rolling success rate
     uint32_t totalAttempts = 0;
-    uint32_t totalSuccesses = 0;
+    double totalRollingRate = 0.0;
     for (const auto& [kind, perf] : performanceByTaskType) {
         totalAttempts += perf.attempts;
-        totalSuccesses += perf.successes;
+        totalRollingRate += perf.rollingSuccessRate;
     }
     
-    if (totalAttempts > 0) {
-        reliabilityScore = static_cast<double>(totalSuccesses) / static_cast<double>(totalAttempts);
+    if (!performanceByTaskType.empty()) {
+        reliabilityScore = totalRollingRate / performanceByTaskType.size();
     }
 }
 
 double AgentSelfModel::GetStrengthForTask(SwarmTaskKind kind) const {
     auto it = performanceByTaskType.find(kind);
     if (it != performanceByTaskType.end()) {
-        return it->second.successRate;
+        // Phase A.1: Return composite score instead of raw success rate
+        return it->second.compositeScore;
     }
     return 0.5; // Default neutral strength
 }
 
+// Phase A.1: Get composite score for ranking
+double AgentSelfModel::GetCompositeScore(SwarmTaskKind kind) const {
+    auto it = performanceByTaskType.find(kind);
+    if (it != performanceByTaskType.end()) {
+        return it->second.compositeScore;
+    }
+    return 0.5;
+}
+
+// Phase A.5: Explain selection decision
+AgentSelfModel::SelectionExplanation AgentSelfModel::ExplainSelection(SwarmTaskKind kind) const {
+    SelectionExplanation exp;
+    exp.agentId = agentId;
+    exp.taskKind = kind;
+    
+    auto it = performanceByTaskType.find(kind);
+    if (it != performanceByTaskType.end()) {
+        const auto& perf = it->second;
+        exp.successRate = perf.successRate;
+        exp.confidence = perf.confidence;
+        exp.sampleCount = perf.attempts;
+        exp.avgLatency = perf.avgLatencyMs;
+        exp.compositeScore = perf.compositeScore;
+        exp.wasExploration = false;
+        exp.reason = "Selected based on composite score: success_rate(" + 
+                     std::to_string(static_cast<int>(exp.successRate * 100)) + 
+                     "%) * confidence(" + std::to_string(static_cast<int>(exp.confidence * 100)) + 
+                     "%) with " + std::to_string(exp.sampleCount) + " samples";
+    } else {
+        exp.successRate = 0.5;
+        exp.confidence = 0.0;
+        exp.sampleCount = 0;
+        exp.avgLatency = 0.0;
+        exp.compositeScore = 0.5;
+        exp.wasExploration = true;
+        exp.reason = "No historical data - selected for exploration";
+    }
+    
+    return exp;
+}
+
 SwarmTaskKind AgentSelfModel::GetBestTaskType() const {
     SwarmTaskKind bestKind = SwarmTaskKind::ScanSubsystem;
-    double bestStrength = 0.0;
+    double bestScore = 0.0;
     
     for (const auto& [kind, perf] : performanceByTaskType) {
-        double strength = perf.successRate;
-        if (strength > bestStrength) {
-            bestStrength = strength;
+        // Phase A.1: Use composite score
+        if (perf.compositeScore > bestScore) {
+            bestScore = perf.compositeScore;
             bestKind = kind;
         }
     }
@@ -1582,12 +1759,13 @@ uint32_t SelfModelRegistry::GetBestAgentForTask(SwarmTaskKind kind) const {
     std::lock_guard<std::mutex> lock(mutex_);
     
     uint32_t bestAgent = 0;
-    double bestStrength = -1.0;
+    double bestScore = -1.0;
     
     for (const auto& [agentId, model] : models_) {
-        double strength = model.GetStrengthForTask(kind);
-        if (strength > bestStrength) {
-            bestStrength = strength;
+        // Phase A.1: Use composite score
+        double score = model.GetCompositeScore(kind);
+        if (score > bestScore) {
+            bestScore = score;
             bestAgent = agentId;
         }
     }
@@ -1595,51 +1773,242 @@ uint32_t SelfModelRegistry::GetBestAgentForTask(SwarmTaskKind kind) const {
     return bestAgent;
 }
 
+// Phase A.3: Select agent with exploration vs exploitation
+SelfModelRegistry::SelectionResult SelfModelRegistry::SelectAgentWithExploration(SwarmTaskKind kind, double explorationRate) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    SelectionResult result;
+    result.taskKind = kind;
+    
+    // Get all agents and their scores
+    std::vector<std::pair<uint32_t, double>> candidates;
+    for (const auto& [agentId, model] : models_) {
+        candidates.push_back({agentId, model.GetCompositeScore(kind)});
+    }
+    
+    if (candidates.empty()) {
+        result.agentId = 0;
+        result.wasExploration = true;
+        result.reason = "No agents available";
+        return result;
+    }
+    
+    // Sort by score descending
+    std::sort(candidates.begin(), candidates.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+    
+    // Decide: exploration or exploitation?
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    double roll = dist(rng_);
+    
+    if (roll < explorationRate && candidates.size() > 1) {
+        // Phase A.3: Exploration - select from lower-ranked agents
+        // Weight by inverse rank (lower ranked agents have higher exploration probability)
+        std::vector<double> explorationWeights;
+        for (size_t i = 0; i < candidates.size(); ++i) {
+            // Higher index = lower rank = higher exploration weight
+            explorationWeights.push_back(static_cast<double>(i + 1));
+        }
+        
+        std::discrete_distribution<size_t> exploreDist(explorationWeights.begin(), explorationWeights.end());
+        size_t selectedIdx = exploreDist(rng_);
+        
+        result.agentId = candidates[selectedIdx].first;
+        result.wasExploration = true;
+        result.exploitationScore = candidates[0].second;
+        result.explorationScore = candidates[selectedIdx].second;
+        result.reason = "Exploration: selected agent " + std::to_string(result.agentId) + 
+                       " (rank " + std::to_string(selectedIdx + 1) + 
+                       ") instead of best (rank 1)";
+    } else {
+        // Phase A.3: Exploitation - select best agent
+        result.agentId = candidates[0].first;
+        result.wasExploration = false;
+        result.exploitationScore = candidates[0].second;
+        result.explorationScore = candidates[0].second;
+        result.reason = "Exploitation: selected best agent " + std::to_string(result.agentId);
+    }
+    
+    return result;
+}
+
 std::vector<std::pair<uint32_t, double>> SelfModelRegistry::GetAgentRankings(SwarmTaskKind kind) const {
     std::lock_guard<std::mutex> lock(mutex_);
     
     std::vector<std::pair<uint32_t, double>> rankings;
     for (const auto& [agentId, model] : models_) {
-        rankings.push_back({agentId, model.GetStrengthForTask(kind)});
+        // Phase A.1: Use composite score for ranking
+        rankings.push_back({agentId, model.GetCompositeScore(kind)});
     }
     
-    // Sort by strength descending
+    // Sort by composite score descending
     std::sort(rankings.begin(), rankings.end(), 
               [](const auto& a, const auto& b) { return a.second > b.second; });
     
     return rankings;
 }
 
+// Phase A.5: Get explanation for a selection
+AgentSelfModel::SelectionExplanation SelfModelRegistry::ExplainSelection(uint32_t agentId, SwarmTaskKind kind) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    auto it = models_.find(agentId);
+    if (it != models_.end()) {
+        return it->second.ExplainSelection(kind);
+    }
+    
+    AgentSelfModel::SelectionExplanation exp;
+    exp.agentId = agentId;
+    exp.taskKind = kind;
+    exp.reason = "Agent not found in registry";
+    return exp;
+}
+
+// Phase A.5: Log routing decision
+void SelfModelRegistry::LogRoutingDecision(const RoutingDecision& decision) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    routingHistory_.push_back(decision);
+    
+    // Limit history size
+    if (routingHistory_.size() > MAX_ROUTING_HISTORY) {
+        routingHistory_.erase(routingHistory_.begin());
+    }
+}
+
+// Phase A.5: Get routing history for a task
+std::vector<RoutingDecision> SelfModelRegistry::GetRoutingHistory(uint64_t taskId) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::vector<RoutingDecision> history;
+    for (const auto& decision : routingHistory_) {
+        if (decision.taskId == taskId) {
+            history.push_back(decision);
+        }
+    }
+    return history;
+}
+
+// Phase A.1: Benchmark and validation
+SelfModelRegistry::BenchmarkResult SelfModelRegistry::RunBenchmark(SwarmTaskKind kind, uint32_t iterations) const {
+    BenchmarkResult result;
+    result.taskKind = kind;
+    result.totalRuns = iterations;
+    
+    // Simulate benchmark runs using historical data
+    for (const auto& [agentId, model] : models_) {
+        auto it = model.performanceByTaskType.find(kind);
+        if (it != model.performanceByTaskType.end()) {
+            const auto& perf = it->second;
+            result.agentSuccessRates[agentId] = perf.successRate;
+            result.agentLatencies[agentId] = perf.avgLatencyMs;
+            
+            // Estimate assignment count based on composite score
+            double totalScore = 0.0;
+            for (const auto& [otherId, otherModel] : models_) {
+                totalScore += otherModel.GetCompositeScore(kind);
+            }
+            if (totalScore > 0) {
+                result.assignmentCounts[agentId] = static_cast<uint32_t>(
+                    iterations * (model.GetCompositeScore(kind) / totalScore));
+            }
+        }
+    }
+    
+    // Calculate overall metrics
+    double totalSuccess = 0.0;
+    double totalLatency = 0.0;
+    size_t count = 0;
+    for (const auto& [agentId, rate] : result.agentSuccessRates) {
+        totalSuccess += rate;
+        count++;
+    }
+    for (const auto& [agentId, lat] : result.agentLatencies) {
+        totalLatency += lat;
+    }
+    
+    if (count > 0) {
+        result.overallSuccessRate = totalSuccess / count;
+        result.avgLatency = totalLatency / count;
+    }
+    
+    return result;
+}
+
+std::string SelfModelRegistry::BenchmarkResult::ToString() const {
+    std::ostringstream oss;
+    oss << "\n╔══════════════════════════════════════════════════════════════╗\n";
+    oss << "║           Phase A.1: Benchmark Report                        ║\n";
+    oss << "╚══════════════════════════════════════════════════════════════╝\n";
+    oss << "Task: " << TaskKindToString(taskKind) << " | Iterations: " << totalRuns << "\n\n";
+    
+    oss << "Agent Performance:\n";
+    oss << std::left << std::setw(10) << "Agent" 
+        << std::setw(15) << "Success Rate" 
+        << std::setw(15) <> "Avg Latency"
+        << std::setw(15) << "Assignments" << "\n";
+    oss << std::string(55, '-') << "\n";
+    
+    for (const auto& [agentId, rate] : agentSuccessRates) {
+        uint32_t assignments = assignmentCounts.count(agentId) ? assignmentCounts.at(agentId) : 0;
+        double latency = agentLatencies.count(agentId) ? agentLatencies.at(agentId) : 0.0;
+        
+        oss << std::left << std::setw(10) << agentId
+            << std::setw(14) << std::fixed << std::setprecision(1) << (rate * 100) << "%"
+            << std::setw(14) << std::fixed << std::setprecision(1) << latency << "ms"
+            << std::setw(14) << assignments << " (" 
+            << std::fixed << std::setprecision(1) << (totalRuns > 0 ? (assignments * 100.0 / totalRuns) : 0) << "%)\n";
+    }
+    
+    oss << "\nOverall: Success Rate " << std::fixed << std::setprecision(1) << (overallSuccessRate * 100) << "%"
+        << " | Avg Latency " << std::fixed << std::setprecision(1) << avgLatency << "ms\n";
+    
+    return oss.str();
+}
+
+void SelfModelRegistry::PrintBenchmarkReport(const BenchmarkResult& result) const {
+    std::cout << result.ToString() << std::endl;
+}
+
 void SelfModelRegistry::PrintPerformanceReport() const {
     std::lock_guard<std::mutex> lock(mutex_);
     
     std::cout << "\n╔══════════════════════════════════════════════════════════════╗" << std::endl;
-    std::cout << "║           Phase A: Self Model Performance Report             ║" << std::endl;
+    std::cout << "║     Phase A: Self Model Performance Report (A.1-A.5)         ║" << std::endl;
     std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
     
     for (const auto& [agentId, model] : models_) {
         std::cout << "\n[Agent " << agentId << "] Overall Strength: " 
-                  << std::fixed << std::setprecision(2) << model.overallStrength 
-                  << " | Reliability: " << model.reliabilityScore << std::endl;
+                  << std::fixed << std::setprecision(3) << model.overallStrength 
+                  << " | Reliability: " << std::fixed << std::setprecision(3) << model.reliabilityScore << std::endl;
         
         for (const auto& [kind, perf] : model.performanceByTaskType) {
-            std::cout << "  Task: " << TaskKindToString(kind) 
-                      << " | Success: " << perf.successes << "/" << perf.attempts
-                      << " (" << std::fixed << std::setprecision(1) << (perf.successRate * 100) << "%)"
-                      << " | Avg Latency: " << std::fixed << std::setprecision(0) << perf.avgLatencyMs << "ms"
-                      << " | Strength: " << std::fixed << std::setprecision(2) 
-                      << model.GetStrengthForTask(kind) << std::endl;
+            std::cout << "  Task: " << std::left << std::setw(15) << TaskKindToString(kind)
+                      << " | Success: " << std::setw(3) << perf.successes << "/" << std::setw(3) << perf.attempts
+                      << " (" << std::fixed << std::setprecision(1) << std::setw(5) << (perf.successRate * 100) << "%)"
+                      << " | Conf: " << std::fixed << std::setprecision(2) << std::setw(4) << perf.confidence
+                      << " | Latency: " << std::fixed << std::setprecision(0) << std::setw(4) << perf.avgLatencyMs << "ms"
+                      << " | Score: " << std::fixed << std::setprecision(3) << std::setw(5) << perf.compositeScore << std::endl;
         }
     }
     
     std::cout << "\n[LEARNED ASSIGNMENTS] Best agent per task type:" << std::endl;
-    for (int i = 0; i < 20; ++i) { // Check common task kinds
+    for (int i = 0; i < 20; ++i) {
         SwarmTaskKind kind = static_cast<SwarmTaskKind>(i);
-        uint32_t bestAgent = GetBestAgentForTask(kind);
-        if (bestAgent != 0) {
-            std::cout << "  " << TaskKindToString(kind) << " → Agent " << bestAgent << std::endl;
+        auto rankings = GetAgentRankings(kind);
+        if (!rankings.empty() && rankings[0].second > 0) {
+            std::cout << "  " << std::left << std::setw(20) << TaskKindToString(kind) 
+                      << " → Agent " << rankings[0].first 
+                      << " (score: " << std::fixed << std::setprecision(3) << rankings[0].second << ")" << std::endl;
         }
     }
+}
+
+// Phase A.1: Reset statistics for testing
+void SelfModelRegistry::ResetStatistics() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    models_.clear();
+    routingHistory_.clear();
 }
 
 std::string TaskKindToString(SwarmTaskKind kind) {

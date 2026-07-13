@@ -55,6 +55,12 @@ void SwarmCommand::printUsage() {
     std::cout << "  --self-model           Run Self Model phase (learned assignment)\n";
     std::cout << "  --learned-assignment   Enable learned task assignment based on history\n";
     std::cout << "  --self-model-report    Display performance report after execution\n";
+    std::cout << "\nPhase A.1-A.5: Advanced Learning Features:\n";
+    std::cout << "  --benchmark            Run benchmark to validate learning (A.1)\n";
+    std::cout << "  --benchmark-runs N     Number of benchmark iterations (default: 500)\n";
+    std::cout << "  --explain              Explain last routing decision (A.5)\n";
+    std::cout << "  --exploration-rate R   Set exploration rate 0.0-1.0 (default: 0.1) (A.3)\n";
+    std::cout << "  --reset-stats          Reset statistics before run\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -132,6 +138,12 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--self-model") opts.runSelfModel = true;
         else if (arg == "--learned-assignment") { opts.runSelfModel = true; opts.learnedAssignment = true; }
         else if (arg == "--self-model-report") { opts.runSelfModel = true; opts.selfModelReport = true; }
+        // Phase A.1-A.5: Advanced learning options
+        else if (arg == "--benchmark") { opts.runSelfModel = true; opts.benchmarkLearning = true; }
+        else if (arg == "--benchmark-runs" && i + 1 < argc) { opts.benchmarkIterations = std::stoi(argv[++i]); }
+        else if (arg == "--explain") { opts.runSelfModel = true; opts.explainDecision = true; }
+        else if (arg == "--exploration-rate" && i + 1 < argc) { opts.explorationRate = std::stod(argv[++i]); }
+        else if (arg == "--reset-stats") { opts.runSelfModel = true; opts.resetStats = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -408,17 +420,38 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
     if (opts.runSelfModel) {
         std::cout << "[TASK] Running Phase A: Self Model - Learned task assignment...\n";
         
+        // Phase A.1-A.5: Reset statistics if requested
+        if (opts.resetStats) {
+            std::cout << "[INFO] Resetting statistics...\n";
+            Sovereign::SelfModelRegistry::GetInstance().ResetStatistics();
+        }
+        
         // Enable learned assignment if requested
         if (opts.learnedAssignment) {
             std::cout << "[INFO] Learned task assignment enabled - agents will be assigned based on execution history\n";
             swarm.GetScheduler().SetLearnedAssignmentEnabled(true);
         }
         
+        // Phase A.3: Set exploration rate
+        swarm.GetScheduler().SetExplorationRate(opts.explorationRate);
+        std::cout << "[INFO] Exploration rate set to " << (opts.explorationRate * 100) << "%\n";
+        
         // Run a series of tasks to build up performance data
         std::cout << "[TASK] Executing task suite to build self-model...\n";
         swarm.RunOrderCycle();      // Batch 250
         swarm.RunResonanceCycle();  // Batch 251
         swarm.RunAmplificationCycle(); // Batch 252
+        
+        // Phase A.1: Benchmark and validation
+        if (opts.benchmarkLearning) {
+            std::cout << "[TASK] Running benchmark to validate learning...\n";
+            swarm.GetScheduler().PrintBenchmarkReport(Sovereign::SwarmTaskKind::ScanSubsystem, opts.benchmarkIterations);
+        }
+        
+        // Phase A.5: Explain last decision
+        if (opts.explainDecision) {
+            std::cout << swarm.GetScheduler().ExplainLastDecision();
+        }
         
         // Display performance report if requested
         if (opts.selfModelReport) {
