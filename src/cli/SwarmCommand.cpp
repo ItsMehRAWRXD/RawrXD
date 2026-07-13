@@ -35,6 +35,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --integration          Run Integration cycle (cross-subsystem coupling)\n";
     std::cout << "  --integration-debug    Debug mode: show integration computation\n";
     std::cout << "  --integration-map      Display cross-subsystem integration map\n";
+    std::cout << "\nBatch 254: Convergence - Alignment Toward Optimal States:\n";
+    std::cout << "  --convergence          Run Convergence cycle (alignment to optimal)\n";
+    std::cout << "  --convergence-debug    Debug mode: show convergence computation\n";
+    std::cout << "  --convergence-map      Display convergence toward optimal states\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -92,6 +96,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--integration") opts.runIntegration = true;
         else if (arg == "--integration-debug") { opts.runIntegration = true; opts.integrationDebug = true; }
         else if (arg == "--integration-map") { opts.runIntegration = true; opts.integrationMap = true; }
+        // Batch 254: Convergence options
+        else if (arg == "--convergence") opts.runConvergence = true;
+        else if (arg == "--convergence-debug") { opts.runConvergence = true; opts.convergenceDebug = true; }
+        else if (arg == "--convergence-map") { opts.runConvergence = true; opts.convergenceMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -310,6 +318,19 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
             swarm.PrintIntegrationMap();
         }
         swarm.RunIntegrationCycle();
+    }
+
+    // Batch 254: Convergence - Alignment toward optimal states
+    if (opts.runConvergence) {
+        std::cout << "[TASK] Running Convergence cycle (Batch 254) - Alignment toward optimal states...\n";
+        if (opts.convergenceDebug) {
+            std::cout << "[DEBUG] Convergence computation enabled\n";
+        }
+        if (opts.convergenceMap) {
+            std::cout << "[MAP] Displaying convergence toward optimal states...\n";
+            swarm.PrintConvergenceMap();
+        }
+        swarm.RunConvergenceCycle();
     }
 
     // Run finalization

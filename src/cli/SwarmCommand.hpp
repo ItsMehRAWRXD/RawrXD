@@ -53,6 +53,11 @@ private:
         bool integrationDebug = false;     // Debug mode for Integration
         bool integrationMap = false;       // Display cross-subsystem integration map
 
+        // Batch 254: Convergence - Alignment toward optimal states options
+        bool runConvergence = false;       // Run Convergence cycle (Batch 254)
+        bool convergenceDebug = false;     // Debug mode for Convergence
+        bool convergenceMap = false;       // Display convergence map
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;

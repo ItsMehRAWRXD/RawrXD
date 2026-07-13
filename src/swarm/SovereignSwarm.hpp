@@ -132,7 +132,12 @@ enum class SwarmTaskKind : uint8_t {
     DetectCrossPatterns,       // Detect patterns across subsystems
     BuildIntegrationLinks,     // Build links between subsystems
     StabilizeMultiFlows,       // Stabilize multi-subsystem flows
-    CoupleUnitySwarm           // Couple Unity Cycles to Swarm graph
+    CoupleUnitySwarm,          // Couple Unity Cycles to Swarm graph
+    // Batch 254: Convergence - Alignment toward optimal states
+    AlignToSharedGoals,        // Align subsystems toward shared goals
+    EstablishFeedbackLoops,    // Establish performance feedback loops
+    ConvergeToAttractors,      // Converge to optimal attractor states
+    OptimizeConvergenceRate    // Optimize rate of convergence
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -164,6 +169,11 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::BuildIntegrationLinks: return ModelRole::Harmonizer;
         case SwarmTaskKind::StabilizeMultiFlows:   return ModelRole::Finalizer;
         case SwarmTaskKind::CoupleUnitySwarm:      return ModelRole::Finalizer;
+        // Batch 254: Convergence tasks use Optimizer for alignment
+        case SwarmTaskKind::AlignToSharedGoals:     return ModelRole::Optimizer;
+        case SwarmTaskKind::EstablishFeedbackLoops: return ModelRole::Optimizer;
+        case SwarmTaskKind::ConvergeToAttractors:   return ModelRole::Harmonizer;
+        case SwarmTaskKind::OptimizeConvergenceRate: return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -355,6 +365,14 @@ public:
     void StabilizeMultiSubsystemFlows();                     // Stabilize flows across multiple subsystems
     void CoupleUnityToSwarmGraph();                          // Couple Unity Cycles to Swarm task graph
     void PrintIntegrationMap() const;                          // Display cross-subsystem integration map
+
+    // Batch 254: Convergence - Alignment toward optimal states
+    void RunConvergenceCycle();                              // Execute convergence toward optimal states
+    void AlignSubsystemsToSharedGoals();                   // Align all subsystems toward shared goals
+    void EstablishPerformanceFeedbackLoops();              // Establish feedback loops for peak performance
+    void ConvergeToOptimalAttractors();                      // Converge to optimal attractor states
+    void OptimizeConvergenceParameters();                    // Optimize rate and stability of convergence
+    void PrintConvergenceMap() const;                        // Display convergence toward optimal states
 
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();
