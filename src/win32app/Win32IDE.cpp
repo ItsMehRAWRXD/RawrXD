@@ -3749,6 +3749,639 @@ void Win32IDE::createSidebar(HWND hwnd)
     createPrimarySidebar(hwnd);
 }
 
+// ============================================================================
+// PRIMARY SIDEBAR IMPLEMENTATION - Activity Bar + View Switching
+// ============================================================================
+
+void Win32IDE::createPrimarySidebar(HWND hwndParent)
+{
+    // Create activity bar (far left - icon strip)
+    createActivityBar(hwndParent);
+
+    // Create main sidebar container
+    m_hwndSidebar = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+        48, 30, m_sidebarWidth, 500,
+        hwndParent,
+        nullptr,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndSidebar)
+    {
+        LOG_ERROR("Failed to create sidebar container");
+        return;
+    }
+
+    // Create sidebar content area (switches based on view)
+    m_hwndSidebarContent = CreateWindowExW(
+        0,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        0, 0, m_sidebarWidth - 2, 498,
+        m_hwndSidebar,
+        nullptr,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndSidebarContent)
+    {
+        LOG_ERROR("Failed to create sidebar content area");
+        return;
+    }
+
+    // Initialize with Explorer view
+    setSidebarView(SidebarView::Explorer);
+
+    LOG_INFO("Primary sidebar created successfully");
+}
+
+void Win32IDE::createActivityBar(HWND hwndParent)
+{
+    // Create activity bar container (far left)
+    m_hwndActivityBar = CreateWindowExW(
+        0,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+        0, 30, 48, 500,
+        hwndParent,
+        nullptr,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndActivityBar)
+    {
+        LOG_ERROR("Failed to create activity bar");
+        return;
+    }
+
+    // Create activity bar buttons
+    const wchar_t* buttonLabels[] = {
+        L"📁",  // Explorer
+        L"🔍",  // Search
+        L"📦",  // Source Control
+        L"🐛",  // Debug
+        L"🧩",  // Extensions
+        L"⚙️",  // Settings
+        L"👤"   // Accounts
+    };
+
+    int buttonIds[] = {
+        IDC_ACTBAR_EXPLORER,
+        IDC_ACTBAR_SEARCH,
+        IDC_ACTBAR_SCM,
+        IDC_ACTBAR_DEBUG,
+        IDC_ACTBAR_EXTENSIONS,
+        IDC_ACTBAR_SETTINGS,
+        IDC_ACTBAR_ACCOUNTS
+    };
+
+    for (int i = 0; i < 7; i++)
+    {
+        m_activityBarButtons[i] = CreateWindowExW(
+            0,
+            L"BUTTON",
+            buttonLabels[i],
+            WS_CHILD | WS_VISIBLE | BS_FLAT | BS_PUSHBUTTON,
+            0, i * 48, 48, 48,
+            m_hwndActivityBar,
+            (HMENU)(UINT_PTR)buttonIds[i],
+            m_hInstance,
+            nullptr);
+
+        if (m_activityBarButtons[i])
+        {
+            // Set button font
+            SendMessageW(m_activityBarButtons[i], WM_SETFONT,
+                        (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
+        }
+    }
+
+    m_activeActivityBarButton = 0; // Explorer is default
+    updateActivityBarState();
+
+    LOG_INFO("Activity bar created with 7 buttons");
+}
+
+void Win32IDE::updateActivityBarState()
+{
+    // Update button visual states based on active selection
+    for (int i = 0; i < 7; i++)
+    {
+        if (m_activityBarButtons[i])
+        {
+            // Set button style based on active state
+            DWORD style = GetWindowLongW(m_activityBarButtons[i], GWL_STYLE);
+            if (i == m_activeActivityBarButton)
+            {
+                // Active button - sunken style
+                SetWindowLongW(m_activityBarButtons[i], GWL_STYLE,
+                              (style & ~BS_FLAT) | BS_PUSHLIKE);
+            }
+            else
+            {
+                // Inactive button - flat style
+                SetWindowLongW(m_activityBarButtons[i], GWL_STYLE,
+                              (style & ~BS_PUSHLIKE) | BS_FLAT);
+            }
+            InvalidateRect(m_activityBarButtons[i], nullptr, TRUE);
+        }
+    }
+}
+
+void Win32IDE::setSidebarView(SidebarView view)
+{
+    if (m_currentSidebarView == view)
+        return;
+
+    // Hide current view content
+    if (m_hwndFileExplorer)
+        ShowWindow(m_hwndFileExplorer, SW_HIDE);
+    if (m_hwndSearchPanel)
+        ShowWindow(m_hwndSearchPanel, SW_HIDE);
+    if (m_hwndGitPanel)
+        ShowWindow(m_hwndGitPanel, SW_HIDE);
+    if (m_hwndDebugPanel)
+        ShowWindow(m_hwndDebugPanel, SW_HIDE);
+    if (m_hwndExtensionsPanel)
+        ShowWindow(m_hwndExtensionsPanel, SW_HIDE);
+
+    m_currentSidebarView = view;
+
+    // Show appropriate view
+    switch (view)
+    {
+        case SidebarView::Explorer:
+            if (!m_hwndFileExplorer)
+                createFileExplorer();
+            if (m_hwndFileExplorer)
+                ShowWindow(m_hwndFileExplorer, SW_SHOW);
+            m_activeActivityBarButton = 0;
+            break;
+
+        case SidebarView::Search:
+            if (!m_hwndSearchPanel)
+                createSearchPanel();
+            if (m_hwndSearchPanel)
+                ShowWindow(m_hwndSearchPanel, SW_SHOW);
+            m_activeActivityBarButton = 1;
+            break;
+
+        case SidebarView::SourceControl:
+            if (!m_hwndGitPanel)
+                createSourceControlView();
+            if (m_hwndGitPanel)
+                ShowWindow(m_hwndGitPanel, SW_SHOW);
+            m_activeActivityBarButton = 2;
+            break;
+
+        case SidebarView::RunDebug:
+            if (!m_hwndDebugPanel)
+                createRunDebugView();
+            if (m_hwndDebugPanel)
+                ShowWindow(m_hwndDebugPanel, SW_SHOW);
+            m_activeActivityBarButton = 3;
+            break;
+
+        case SidebarView::Extensions:
+            if (!m_hwndExtensionsPanel)
+                createExtensionsView();
+            if (m_hwndExtensionsPanel)
+                ShowWindow(m_hwndExtensionsPanel, SW_SHOW);
+            m_activeActivityBarButton = 4;
+            break;
+
+        default:
+            break;
+    }
+
+    updateActivityBarState();
+
+    // Update status bar
+    const wchar_t* viewNames[] = {
+        L"Explorer", L"Search", L"Source Control",
+        L"Run and Debug", L"Extensions", L"Settings"
+    };
+    int viewIndex = static_cast<int>(view) - 1;
+    if (viewIndex >= 0 && viewIndex < 6 && m_hwndStatusBar)
+    {
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0,
+                    (LPARAM)(L"Sidebar: " + std::wstring(viewNames[viewIndex])));
+    }
+
+    LOG_INFO("Sidebar view switched to: " + std::to_string(static_cast<int>(view)));
+}
+
+void Win32IDE::toggleSidebar()
+{
+    m_sidebarVisible = !m_sidebarVisible;
+
+    if (m_hwndSidebar)
+        ShowWindow(m_hwndSidebar, m_sidebarVisible ? SW_SHOW : SW_HIDE);
+    if (m_hwndActivityBar)
+        ShowWindow(m_hwndActivityBar, m_sidebarVisible ? SW_SHOW : SW_HIDE);
+
+    // Resize editor to fill space
+    resizeEditor();
+
+    LOG_INFO(m_sidebarVisible ? "Sidebar shown" : "Sidebar hidden");
+}
+
+void Win32IDE::resizeSidebar(int width, int height)
+{
+    if (!m_hwndSidebar || !m_hwndActivityBar)
+        return;
+
+    // Resize activity bar
+    SetWindowPos(m_hwndActivityBar, nullptr,
+                 0, 30, 48, height - 30,
+                 SWP_NOZORDER);
+
+    // Resize sidebar
+    SetWindowPos(m_hwndSidebar, nullptr,
+                 48, 30, width, height - 30,
+                 SWP_NOZORDER);
+
+    // Resize sidebar content
+    if (m_hwndSidebarContent)
+    {
+        SetWindowPos(m_hwndSidebarContent, nullptr,
+                     0, 0, width - 2, height - 32,
+                     SWP_NOZORDER);
+    }
+
+    // Resize current view content
+    switch (m_currentSidebarView)
+    {
+        case SidebarView::Explorer:
+            if (m_hwndFileExplorer)
+            {
+                SetWindowPos(m_hwndFileExplorer, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::Search:
+            if (m_hwndSearchPanel)
+            {
+                SetWindowPos(m_hwndSearchPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::SourceControl:
+            if (m_hwndGitPanel)
+            {
+                SetWindowPos(m_hwndGitPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::RunDebug:
+            if (m_hwndDebugPanel)
+            {
+                SetWindowPos(m_hwndDebugPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::Extensions:
+            if (m_hwndExtensionsPanel)
+            {
+                SetWindowPos(m_hwndExtensionsPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+// ============================================================================
+// SEARCH VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createSearchView(HWND hwndParent)
+{
+    createSearchPanel();
+}
+
+void Win32IDE::createSearchPanel()
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create search panel container
+    m_hwndSearchPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_SEARCH_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndSearchPanel)
+    {
+        LOG_ERROR("Failed to create search panel");
+        return;
+    }
+
+    // Create search input
+    m_hwndSearchInput = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"EDIT",
+        L"",
+        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        5, 5, m_sidebarWidth - 20, 24,
+        m_hwndSearchPanel,
+        (HMENU)IDC_SEARCH_INPUT,
+        m_hInstance,
+        nullptr);
+
+    // Create search button
+    HWND hwndSearchBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"Search",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 35, 80, 24,
+        m_hwndSearchPanel,
+        (HMENU)IDC_SEARCH_BUTTON,
+        m_hInstance,
+        nullptr);
+
+    // Create results list
+    m_hwndSearchResults = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        5, 65, m_sidebarWidth - 20, 330,
+        m_hwndSearchPanel,
+        (HMENU)IDC_SEARCH_RESULTS,
+        m_hInstance,
+        nullptr);
+
+    // Add placeholder text
+    SendMessageW(m_hwndSearchResults, LB_ADDSTRING, 0, (LPARAM)L"Enter search term and click Search");
+
+    LOG_INFO("Search panel created");
+}
+
+// ============================================================================
+// SOURCE CONTROL VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createSourceControlView(HWND hwndParent)
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create SCM panel container
+    m_hwndGitPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_GIT_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndGitPanel)
+    {
+        LOG_ERROR("Failed to create Git panel");
+        return;
+    }
+
+    // Create changes list
+    m_hwndSCMFileList = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        5, 5, m_sidebarWidth - 20, 200,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_FILE_LIST,
+        m_hInstance,
+        nullptr);
+
+    // Add placeholder items
+    SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"Changes (0)");
+    SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"No changes");
+
+    // Create action buttons
+    HWND hwndStageBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"Stage All",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 210, 80, 24,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_STAGE,
+        m_hInstance,
+        nullptr);
+
+    HWND hwndCommitBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"Commit",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        90, 210, 80, 24,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_COMMIT,
+        m_hInstance,
+        nullptr);
+
+    // Create commit message input
+    m_hwndSCMCommitMessage = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"EDIT",
+        L"",
+        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL,
+        5, 240, m_sidebarWidth - 20, 60,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_COMMIT_MSG,
+        m_hInstance,
+        nullptr);
+
+    LOG_INFO("Source control view created");
+}
+
+// ============================================================================
+// RUN AND DEBUG VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createRunDebugView(HWND hwndParent)
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create debug panel container
+    m_hwndDebugPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_DEBUG_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndDebugPanel)
+    {
+        LOG_ERROR("Failed to create debug panel");
+        return;
+    }
+
+    // Create debug configurations dropdown
+    m_hwndDebugConfigs = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"COMBOBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SORT,
+        5, 5, m_sidebarWidth - 20, 200,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_CONFIGS,
+        m_hInstance,
+        nullptr);
+
+    SendMessageW(m_hwndDebugConfigs, CB_ADDSTRING, 0, (LPARAM)L"No configurations");
+    SendMessageW(m_hwndDebugConfigs, CB_SETCURSEL, 0, 0);
+
+    // Create debug buttons
+    HWND hwndStartBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"▶ Start",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 35, 80, 24,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_START,
+        m_hInstance,
+        nullptr);
+
+    HWND hwndStopBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"⏹ Stop",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        90, 35, 80, 24,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_STOP,
+        m_hInstance,
+        nullptr);
+
+    // Create variables list
+    m_hwndDebugVariables = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL,
+        5, 65, m_sidebarWidth - 20, 150,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_VARIABLES,
+        m_hInstance,
+        nullptr);
+
+    SendMessageW(m_hwndDebugVariables, LB_ADDSTRING, 0, (LPARAM)L"Variables");
+    SendMessageW(m_hwndDebugVariables, LB_ADDSTRING, 0, (LPARAM)L"Not debugging");
+
+    // Create call stack list
+    m_hwndDebugCallStack = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL,
+        5, 220, m_sidebarWidth - 20, 150,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_CALLSTACK,
+        m_hInstance,
+        nullptr);
+
+    SendMessageW(m_hwndDebugCallStack, LB_ADDSTRING, 0, (LPARAM)L"Call Stack");
+    SendMessageW(m_hwndDebugCallStack, LB_ADDSTRING, 0, (LPARAM)L"Not debugging");
+
+    LOG_INFO("Run and debug view created");
+}
+
+// ============================================================================
+// EXTENSIONS VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createExtensionsView(HWND hwndParent)
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create extensions panel container
+    m_hwndExtensionsPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_EXTENSIONS_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndExtensionsPanel)
+    {
+        LOG_ERROR("Failed to create extensions panel");
+        return;
+    }
+
+    // Create search input
+    m_hwndExtensionSearch = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"EDIT",
+        L"",
+        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        5, 5, m_sidebarWidth - 20, 24,
+        m_hwndExtensionsPanel,
+        (HMENU)IDC_EXTENSION_SEARCH,
+        m_hInstance,
+        nullptr);
+
+    // Create extensions list
+    m_hwndExtensionsList = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        5, 35, m_sidebarWidth - 20, 330,
+        m_hwndExtensionsPanel,
+        (HMENU)IDC_EXTENSIONS_LIST,
+        m_hInstance,
+        nullptr);
+
+    // Add placeholder items
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"INSTALLED");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"No extensions installed");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"RECOMMENDED");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"RawrXD Language Support");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"Git Integration");
+
+    LOG_INFO("Extensions view created");
+}
 
 void Win32IDE::newFile()
 {
