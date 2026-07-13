@@ -23,6 +23,8 @@ set(SEG_SOURCES
     ../src/seg/SovereignExecutionPlanner.cpp
     ../src/seg/SovereignSEGCLI.cpp
     ../src/seg/SovereignSEGIntegrationTest.cpp
+    # Phase C.0: Performance Instrumentation Bridge
+    ../src/seg/SEGPerformanceBridge.cpp
 )
 
 set(SEG_HEADERS
@@ -39,6 +41,8 @@ set(SEG_HEADERS
     ../src/seg/SovereignExecutionGraph.hpp
     ../src/seg/SovereignSEGCLI.hpp
     ../src/seg/SovereignSEGIntegrationTest.hpp
+    # Phase C.0: Performance Instrumentation Bridge
+    ../src/seg/SEGPerformanceBridge.hpp
 )
 
 # ============================================================================
@@ -144,6 +148,10 @@ target_link_libraries(seg_cli_smoke_test PRIVATE seg)
 # Validation smoke test executable for Phase B.4 Batch 5/5
 add_executable(seg_validation_smoke_test seg_validation_smoke_test.cpp)
 target_link_libraries(seg_validation_smoke_test PRIVATE seg)
+
+# Performance Bridge smoke test executable for Phase C.0 Batch 1/5
+add_executable(seg_performance_bridge_smoke_test seg_performance_bridge_smoke_test.cpp)
+target_link_libraries(seg_performance_bridge_smoke_test PRIVATE seg)
 
 # Install
 install(TARGETS seg seg_example

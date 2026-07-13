@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <numeric>
 #include <algorithm>
+#include <fstream>
 
 namespace Sovereign {
 namespace SEG {
