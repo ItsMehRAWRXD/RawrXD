@@ -7150,6 +7150,31 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         case IDM_VIEW_VIDEO_STUDIO:  // 2046
             toggleVideoStudioWindow();
             return;
+
+        // Activity Bar Button Handlers (IDC_ACTBAR_*)
+        case IDC_ACTBAR_EXPLORER:  // 1101
+            setSidebarView(SidebarView::Explorer);
+            return;
+        case IDC_ACTBAR_SEARCH:  // 1102
+            setSidebarView(SidebarView::Search);
+            return;
+        case IDC_ACTBAR_SCM:  // 1103
+            setSidebarView(SidebarView::SourceControl);
+            return;
+        case IDC_ACTBAR_DEBUG:  // 1104
+            setSidebarView(SidebarView::RunDebug);
+            return;
+        case IDC_ACTBAR_EXTENSIONS:  // 1105
+            setSidebarView(SidebarView::Extensions);
+            return;
+        case IDC_ACTBAR_SETTINGS:  // 1106
+            showSettingsDialog();
+            return;
+        case IDC_ACTBAR_ACCOUNTS:  // 1107
+            // TODO: Show accounts/profile panel
+            appendToOutput("Accounts panel not yet implemented\n", "Output", OutputSeverity::Info);
+            return;
+
         case IDM_SECURITY_SCAN_SECRETS:
             RunSecretsScan();
             return;

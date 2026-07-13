@@ -2826,6 +2826,23 @@ class Win32IDE
     HWND m_hwndMaxTokensSlider;
     HWND m_hwndMaxTokensLabel;
 
+    // Sidebar View Panels
+    HWND m_hwndSearchPanel = nullptr;
+    HWND m_hwndSearchInput = nullptr;
+    HWND m_hwndSearchResults = nullptr;
+    HWND m_hwndGitPanel = nullptr;
+    HWND m_hwndSCMFileList = nullptr;
+    HWND m_hwndSCMCommitMessage = nullptr;
+    HWND m_hwndDebugPanel = nullptr;
+    HWND m_hwndDebugConfigs = nullptr;
+    HWND m_hwndDebugVariables = nullptr;
+    HWND m_hwndDebugCallStack = nullptr;
+    HWND m_hwndExtensionsPanel = nullptr;
+    HWND m_hwndExtensionsList = nullptr;
+    HWND m_hwndExtensionSearch = nullptr;
+    HWND m_activityBarButtons[7] = {};
+    int m_activeActivityBarButton = 0;
+
     // AI Mode Toggles
     HWND m_hwndChkMaxMode;
     HWND m_hwndChkDeepThink;
@@ -7254,6 +7271,26 @@ class Win32IDE
     static constexpr int IDC_RENAME_CHECKLIST = 11282;
     static constexpr int IDC_RENAME_APPLY_BTN = 11283;
     static constexpr int IDC_RENAME_CANCEL_BTN = 11284;
+
+    // Sidebar View Panel IDs
+    static constexpr int IDC_SEARCH_PANEL = 11300;
+    static constexpr int IDC_SEARCH_INPUT = 11301;
+    static constexpr int IDC_SEARCH_BUTTON = 11302;
+    static constexpr int IDC_SEARCH_RESULTS = 11303;
+    static constexpr int IDC_GIT_PANEL = 11310;
+    static constexpr int IDC_SCM_FILE_LIST = 11311;
+    static constexpr int IDC_SCM_STAGE = 11312;
+    static constexpr int IDC_SCM_COMMIT = 11313;
+    static constexpr int IDC_SCM_COMMIT_MSG = 11314;
+    static constexpr int IDC_DEBUG_PANEL = 11320;
+    static constexpr int IDC_DEBUG_CONFIGS = 11321;
+    static constexpr int IDC_DEBUG_START = 11322;
+    static constexpr int IDC_DEBUG_STOP = 11323;
+    static constexpr int IDC_DEBUG_VARIABLES = 11324;
+    static constexpr int IDC_DEBUG_CALLSTACK = 11325;
+    static constexpr int IDC_EXTENSIONS_PANEL = 11330;
+    static constexpr int IDC_EXTENSIONS_LIST = 11331;
+    static constexpr int IDC_EXTENSION_SEARCH = 11332;
 
     // 16. Find All References UI
     void initReferencePanel();
