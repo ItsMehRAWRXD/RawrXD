@@ -1,5 +1,7 @@
 #include "SwarmCommand.hpp"
 #include "../swarm/LearningSimulator.hpp"
+#include "../swarm/InfinitePerfectionTelemetry.hpp"
+#include "../swarm/InfinitePerfectionTelemetrySQLite.hpp"
 #include "../infinite/InfinitePerfectionEngine.hpp"
 #include <iostream>
 #include <iomanip>
@@ -659,6 +661,35 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
                     std::cout << "[INFO] Telemetry exported to " << outputPath << "\n";
                 } else {
                     std::cerr << "[ERROR] Failed to export telemetry to " << outputPath << "\n";
+                }
+            }
+            
+            // Batch 6: Export telemetry to SQLite
+            if (opts.exportSQLite) {
+                std::string dbPath = opts.sqliteDbPath.empty() ? 
+                    "telemetry.db" : opts.sqliteDbPath;
+                
+                std::cout << "[TASK] Batch 6: Exporting telemetry to SQLite database...\n";
+                
+                Sovereign::InfinitePerfectionTelemetrySQLite sqliteExporter(dbPath);
+                if (sqliteExporter.Initialize()) {
+                    auto snapshot = telemetry.GetSnapshot();
+                    if (sqliteExporter.StoreSnapshot(snapshot)) {
+                        std::cout << "[INFO] Telemetry exported to SQLite: " << dbPath << "\n";
+                        
+                        // Show statistics
+                        auto stats = sqliteExporter.GetStatistics();
+                        std::cout << "[INFO] Database statistics:\n";
+                        std::cout << "       Total executions: " << stats.totalExecutions << "\n";
+                        std::cout << "       Successful: " << stats.successfulExecutions << "\n";
+                        std::cout << "       Failed: " << stats.failedExecutions << "\n";
+                        std::cout << "       Avg execution time: " << std::fixed << std::setprecision(2) 
+                                  << stats.averageExecutionTimeMs << "ms\n";
+                    } else {
+                        std::cerr << "[ERROR] Failed to store telemetry in SQLite\n";
+                    }
+                } else {
+                    std::cerr << "[ERROR] Failed to initialize SQLite database: " << dbPath << "\n";
                 }
             }
         } else {
