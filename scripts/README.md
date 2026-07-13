@@ -35,6 +35,8 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `cleanup-utility.ps1` | System cleanup and maintenance | `.\cleanup-utility.ps1` |
 | `metrics-collector.ps1` | Metrics collection and export | `.\metrics-collector.ps1` |
 | `ssl-manager.ps1` | SSL certificate management | `.\ssl-manager.ps1` |
+| `docs-generator.ps1` | Documentation generation | `.\docs-generator.ps1` |
+| `secrets-manager.ps1` | Secrets and API key management | `.\secrets-manager.ps1` |
 
 ## Development Setup
 
@@ -1057,6 +1059,92 @@ Manages SSL certificates and HTTPS configuration.
 
 # Export to PFX
 .\ssl-manager.ps1 -Action Export -Domain "localhost"
+```
+
+## Documentation Generator
+
+### `docs-generator.ps1`
+
+Generates documentation from source code and configuration.
+
+**Doc Types:**
+- `API` - API reference from source code comments
+- `CLI` - CLI command reference
+- `Config` - Configuration reference
+- `All` - Generate all documentation types
+- `Markdown` - Markdown output
+- `HTML` - HTML output
+
+**Features:**
+- Extracts documentation from C++, Python, PowerShell comments
+- Generates markdown and HTML output
+- Includes examples and parameter descriptions
+- Built-in documentation server
+
+**Usage:**
+```powershell
+# Generate all documentation
+.\docs-generator.ps1 -DocType All
+
+# Generate API docs only
+.\docs-generator.ps1 -DocType API -SourcePath "src"
+
+# Generate with examples
+.\docs-generator.ps1 -DocType All -IncludeExamples
+
+# Generate HTML documentation
+.\docs-generator.ps1 -DocType All -DocType HTML
+
+# Serve documentation locally
+.\docs-generator.ps1 -DocType All -Serve -Port 8080
+```
+
+## Secrets Manager
+
+### `secrets-manager.ps1`
+
+Manages secrets, API keys, and sensitive configuration.
+
+**Actions:**
+- `Set` - Store a secret
+- `Get` - Retrieve a secret
+- `Remove` - Delete a secret
+- `List` - List all secrets
+- `Rotate` - Rotate all secrets
+- `Export` - Export secrets to file
+- `Import` - Import secrets from file
+
+**Security:**
+- Encrypted storage
+- Environment variable integration
+- Machine-specific encryption key
+- Secure input prompts
+
+**Usage:**
+```powershell
+# Set a secret
+.\secrets-manager.ps1 -Action Set -Key "API_KEY" -Value "secret123"
+
+# Set secret with secure prompt
+.\secrets-manager.ps1 -Action Set -Key "API_KEY"
+
+# Get a secret
+.\secrets-manager.ps1 -Action Get -Key "API_KEY"
+
+# Set as environment variable
+.\secrets-manager.ps1 -Action Get -Key "API_KEY" -UseEnvironmentVariable
+
+# List all secrets
+.\secrets-manager.ps1 -Action List
+
+# Remove a secret
+.\secrets-manager.ps1 -Action Remove -Key "API_KEY"
+
+# Export secrets
+.\secrets-manager.ps1 -Action Export -FilePath "secrets-backup.json"
+
+# Import secrets
+.\secrets-manager.ps1 -Action Import -FilePath "secrets-backup.json"
 ```
 
 ## Common Workflows
