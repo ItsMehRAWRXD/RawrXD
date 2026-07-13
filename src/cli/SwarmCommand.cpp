@@ -39,6 +39,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --convergence          Run Convergence cycle (alignment to optimal)\n";
     std::cout << "  --convergence-debug    Debug mode: show convergence computation\n";
     std::cout << "  --convergence-map      Display convergence toward optimal states\n";
+    std::cout << "\nBatch 255: Coherence - Synchronization and Mutual Reinforcement:\n";
+    std::cout << "  --coherence            Run Coherence cycle (synchronization)\n";
+    std::cout << "  --coherence-debug      Debug mode: show coherence computation\n";
+    std::cout << "  --coherence-map        Display coherence synchronization map\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -100,6 +104,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--convergence") opts.runConvergence = true;
         else if (arg == "--convergence-debug") { opts.runConvergence = true; opts.convergenceDebug = true; }
         else if (arg == "--convergence-map") { opts.runConvergence = true; opts.convergenceMap = true; }
+        // Batch 255: Coherence options
+        else if (arg == "--coherence") opts.runCoherence = true;
+        else if (arg == "--coherence-debug") { opts.runCoherence = true; opts.coherenceDebug = true; }
+        else if (arg == "--coherence-map") { opts.runCoherence = true; opts.coherenceMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -331,6 +339,19 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
             swarm.PrintConvergenceMap();
         }
         swarm.RunConvergenceCycle();
+    }
+
+    // Batch 255: Coherence - Synchronization and mutual reinforcement
+    if (opts.runCoherence) {
+        std::cout << "[TASK] Running Coherence cycle (Batch 255) - Synchronization and mutual reinforcement...\n";
+        if (opts.coherenceDebug) {
+            std::cout << "[DEBUG] Coherence computation enabled\n";
+        }
+        if (opts.coherenceMap) {
+            std::cout << "[MAP] Displaying coherence synchronization map...\n";
+            swarm.PrintCoherenceMap();
+        }
+        swarm.RunCoherenceCycle();
     }
 
     // Run finalization

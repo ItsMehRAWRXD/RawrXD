@@ -137,7 +137,12 @@ enum class SwarmTaskKind : uint8_t {
     AlignToSharedGoals,        // Align subsystems toward shared goals
     EstablishFeedbackLoops,    // Establish performance feedback loops
     ConvergeToAttractors,      // Converge to optimal attractor states
-    OptimizeConvergenceRate    // Optimize rate of convergence
+    OptimizeConvergenceRate,    // Optimize rate of convergence
+    // Batch 255: Coherence - Synchronization and mutual reinforcement
+    SynchronizePhases,         // Synchronize phases across subsystems
+    BalanceAmplitudes,         // Balance amplitudes across components
+    LockResonances,            // Lock resonances across components
+    ReinforceCoherence         // Reinforce coherence standing waves
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -174,6 +179,11 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::EstablishFeedbackLoops: return ModelRole::Optimizer;
         case SwarmTaskKind::ConvergeToAttractors:   return ModelRole::Harmonizer;
         case SwarmTaskKind::OptimizeConvergenceRate: return ModelRole::Finalizer;
+        // Batch 255: Coherence tasks use Harmonizer for synchronization
+        case SwarmTaskKind::SynchronizePhases:    return ModelRole::Harmonizer;
+        case SwarmTaskKind::BalanceAmplitudes:    return ModelRole::Harmonizer;
+        case SwarmTaskKind::LockResonances:       return ModelRole::Harmonizer;
+        case SwarmTaskKind::ReinforceCoherence:   return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -373,6 +383,14 @@ public:
     void ConvergeToOptimalAttractors();                      // Converge to optimal attractor states
     void OptimizeConvergenceParameters();                    // Optimize rate and stability of convergence
     void PrintConvergenceMap() const;                        // Display convergence toward optimal states
+
+    // Batch 255: Coherence - Synchronization and mutual reinforcement
+    void RunCoherenceCycle();                                // Execute coherence synchronization
+    void SynchronizeSubsystemPhases();                     // Synchronize phases across subsystems
+    void BalanceComponentAmplitudes();                       // Balance amplitudes across components
+    void LockComponentResonances();                          // Lock resonances across components
+    void ReinforceCoherenceStandingWaves();                // Reinforce coherence standing waves
+    void PrintCoherenceMap() const;                          // Display coherence synchronization map
 
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();

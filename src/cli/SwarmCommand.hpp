@@ -58,6 +58,11 @@ private:
         bool convergenceDebug = false;     // Debug mode for Convergence
         bool convergenceMap = false;       // Display convergence map
 
+        // Batch 255: Coherence - Synchronization and mutual reinforcement options
+        bool runCoherence = false;         // Run Coherence cycle (Batch 255)
+        bool coherenceDebug = false;       // Debug mode for Coherence
+        bool coherenceMap = false;         // Display coherence map
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;
