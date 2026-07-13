@@ -73,6 +73,11 @@ private:
         bool emergenceDebug = false;       // Debug mode for Emergence
         bool emergenceMap = false;         // Display emergence topology map
 
+        // Phase A: Self Model - Learned task assignment options
+        bool runSelfModel = false;         // Run Self Model phase (Phase A)
+        bool learnedAssignment = false;    // Enable learned task assignment
+        bool selfModelReport = false;      // Display performance report
+
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;

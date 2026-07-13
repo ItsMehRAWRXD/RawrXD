@@ -120,6 +120,8 @@ void SwarmAgentContext::InitializeDefaultRoleModels() {
 SwarmAgent::SwarmAgent(const SwarmAgentContext& ctx, uint32_t agentId) : ctx_(ctx), agentId_(agentId) {}
 
 SwarmTaskResult SwarmAgent::Execute(const SwarmTask& task) {
+    auto startTime = std::chrono::steady_clock::now();
+    
     SwarmTaskResult result;
     result.taskId = task.id;
     result.success = true;
@@ -132,6 +134,14 @@ SwarmTaskResult SwarmAgent::Execute(const SwarmTask& task) {
     
     // Simulate work
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    
+    // Phase A: Self Model - Record execution metrics
+    auto endTime = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    result.executionTimeMs = static_cast<int64_t>(duration);
+    
+    // Record success in self-model registry
+    SelfModelRegistry::GetInstance().RecordTaskSuccess(agentId_, task.kind, duration);
     
     return result;
 }
@@ -296,6 +306,33 @@ size_t SwarmScheduler::GetFailedCount() const {
         }
     }
     return count;
+}
+
+uint32_t SwarmScheduler::GetBestWorkerForTask(SwarmTaskKind kind) const {
+    if (!learnedAssignmentEnabled_) {
+        // Round-robin fallback
+        static std::atomic<uint32_t> nextWorker{0};
+        return nextWorker.fetch_add(1) % workers_.size();
+    }
+    
+    // Use learned assignment from self-model registry
+    uint32_t bestAgent = SelfModelRegistry::GetInstance().GetBestAgentForTask(kind);
+    
+    // If no learned data, fall back to round-robin
+    if (bestAgent == 0 || bestAgent > workers_.size()) {
+        static std::atomic<uint32_t> nextWorker{0};
+        return nextWorker.fetch_add(1) % workers_.size();
+    }
+    
+    return bestAgent - 1; // Convert from 1-indexed agent ID to 0-indexed worker ID
+}
+
+void SwarmScheduler::SetLearnedAssignmentEnabled(bool enabled) {
+    learnedAssignmentEnabled_ = enabled;
+}
+
+bool SwarmScheduler::IsLearnedAssignmentEnabled() const {
+    return learnedAssignmentEnabled_;
 }
 
 // SovereignSwarm implementation
@@ -1423,6 +1460,232 @@ void SovereignSwarm::PrintEmergenceMap() const {
     std::cout << "║     The Swarm is Sovereign.                                  ║" << std::endl;
     std::cout << "║                                                              ║" << std::endl;
     std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
+}
+
+// Phase A: Self Model Implementation
+namespace {
+    // Singleton instance
+    SelfModelRegistry* g_selfModelRegistry = nullptr;
+}
+
+SelfModelRegistry& SelfModelRegistry::GetInstance() {
+    if (!g_selfModelRegistry) {
+        g_selfModelRegistry = new SelfModelRegistry();
+    }
+    return *g_selfModelRegistry;
+}
+
+AgentSelfModel& SelfModelRegistry::GetOrCreateModel(uint32_t agentId) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = models_.find(agentId);
+    if (it == models_.end()) {
+        AgentSelfModel model;
+        model.agentId = agentId;
+        models_[agentId] = model;
+        return models_[agentId];
+    }
+    return it->second;
+}
+
+void SelfModelRegistry::RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, int64_t latencyMs) {
+    auto& model = GetOrCreateModel(agentId);
+    auto& perf = model.performanceByTaskType[kind];
+    
+    perf.attempts++;
+    perf.successes++;
+    
+    // Update average latency with exponential moving average
+    if (perf.avgLatencyMs == 0.0) {
+        perf.avgLatencyMs = static_cast<double>(latencyMs);
+    } else {
+        perf.avgLatencyMs = 0.7 * perf.avgLatencyMs + 0.3 * static_cast<double>(latencyMs);
+    }
+    
+    // Update success rate
+    perf.successRate = static_cast<double>(perf.successes) / static_cast<double>(perf.attempts);
+    
+    // Update overall metrics
+    model.UpdateStrengthScores();
+}
+
+void SelfModelRegistry::RecordTaskFailure(uint32_t agentId, SwarmTaskKind kind, const std::string& pattern) {
+    auto& model = GetOrCreateModel(agentId);
+    auto& perf = model.performanceByTaskType[kind];
+    
+    perf.attempts++;
+    perf.failures++;
+    perf.failurePatterns.push_back(pattern);
+    
+    // Update success rate
+    perf.successRate = static_cast<double>(perf.successes) / static_cast<double>(perf.attempts);
+    
+    // Update overall metrics
+    model.UpdateStrengthScores();
+}
+
+void AgentSelfModel::UpdateStrengthScores() {
+    // Calculate overall strength from task performance
+    double totalStrength = 0.0;
+    double totalWeight = 0.0;
+    
+    for (auto& [kind, perf] : performanceByTaskType) {
+        // Strength = success_rate * (1 / normalized_latency)
+        double latencyScore = 100.0 / (100.0 + perf.avgLatencyMs); // Normalize latency
+        double taskStrength = perf.successRate * latencyScore;
+        perf.strengthByTaskType[TaskKindToString(kind)] = taskStrength;
+        
+        totalStrength += taskStrength * perf.attempts; // Weight by experience
+        totalWeight += static_cast<double>(perf.attempts);
+    }
+    
+    if (totalWeight > 0) {
+        overallStrength = totalStrength / totalWeight;
+    }
+    
+    // Calculate reliability
+    uint32_t totalAttempts = 0;
+    uint32_t totalSuccesses = 0;
+    for (const auto& [kind, perf] : performanceByTaskType) {
+        totalAttempts += perf.attempts;
+        totalSuccesses += perf.successes;
+    }
+    
+    if (totalAttempts > 0) {
+        reliabilityScore = static_cast<double>(totalSuccesses) / static_cast<double>(totalAttempts);
+    }
+}
+
+double AgentSelfModel::GetStrengthForTask(SwarmTaskKind kind) const {
+    auto it = performanceByTaskType.find(kind);
+    if (it != performanceByTaskType.end()) {
+        return it->second.successRate;
+    }
+    return 0.5; // Default neutral strength
+}
+
+SwarmTaskKind AgentSelfModel::GetBestTaskType() const {
+    SwarmTaskKind bestKind = SwarmTaskKind::ScanSubsystem;
+    double bestStrength = 0.0;
+    
+    for (const auto& [kind, perf] : performanceByTaskType) {
+        double strength = perf.successRate;
+        if (strength > bestStrength) {
+            bestStrength = strength;
+            bestKind = kind;
+        }
+    }
+    
+    return bestKind;
+}
+
+uint32_t SelfModelRegistry::GetBestAgentForTask(SwarmTaskKind kind) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    uint32_t bestAgent = 0;
+    double bestStrength = -1.0;
+    
+    for (const auto& [agentId, model] : models_) {
+        double strength = model.GetStrengthForTask(kind);
+        if (strength > bestStrength) {
+            bestStrength = strength;
+            bestAgent = agentId;
+        }
+    }
+    
+    return bestAgent;
+}
+
+std::vector<std::pair<uint32_t, double>> SelfModelRegistry::GetAgentRankings(SwarmTaskKind kind) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::vector<std::pair<uint32_t, double>> rankings;
+    for (const auto& [agentId, model] : models_) {
+        rankings.push_back({agentId, model.GetStrengthForTask(kind)});
+    }
+    
+    // Sort by strength descending
+    std::sort(rankings.begin(), rankings.end(), 
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+    
+    return rankings;
+}
+
+void SelfModelRegistry::PrintPerformanceReport() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::cout << "\n╔══════════════════════════════════════════════════════════════╗" << std::endl;
+    std::cout << "║           Phase A: Self Model Performance Report             ║" << std::endl;
+    std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
+    
+    for (const auto& [agentId, model] : models_) {
+        std::cout << "\n[Agent " << agentId << "] Overall Strength: " 
+                  << std::fixed << std::setprecision(2) << model.overallStrength 
+                  << " | Reliability: " << model.reliabilityScore << std::endl;
+        
+        for (const auto& [kind, perf] : model.performanceByTaskType) {
+            std::cout << "  Task: " << TaskKindToString(kind) 
+                      << " | Success: " << perf.successes << "/" << perf.attempts
+                      << " (" << std::fixed << std::setprecision(1) << (perf.successRate * 100) << "%)"
+                      << " | Avg Latency: " << std::fixed << std::setprecision(0) << perf.avgLatencyMs << "ms"
+                      << " | Strength: " << std::fixed << std::setprecision(2) 
+                      << model.GetStrengthForTask(kind) << std::endl;
+        }
+    }
+    
+    std::cout << "\n[LEARNED ASSIGNMENTS] Best agent per task type:" << std::endl;
+    for (int i = 0; i < 20; ++i) { // Check common task kinds
+        SwarmTaskKind kind = static_cast<SwarmTaskKind>(i);
+        uint32_t bestAgent = GetBestAgentForTask(kind);
+        if (bestAgent != 0) {
+            std::cout << "  " << TaskKindToString(kind) << " → Agent " << bestAgent << std::endl;
+        }
+    }
+}
+
+std::string TaskKindToString(SwarmTaskKind kind) {
+    switch (kind) {
+        case SwarmTaskKind::ScanSubsystem: return "Scan";
+        case SwarmTaskKind::RepairSubsystem: return "Repair";
+        case SwarmTaskKind::ExtendSubsystem: return "Extend";
+        case SwarmTaskKind::OptimizeSubsystem: return "Optimize";
+        case SwarmTaskKind::HarmonizeCycle: return "Harmonize";
+        case SwarmTaskKind::FinalizeRuntime: return "Finalize";
+        case SwarmTaskKind::ComputeOrderTopology: return "OrderTopology";
+        case SwarmTaskKind::DiffuseCapabilities: return "DiffuseCaps";
+        case SwarmTaskKind::EmergeRoles: return "EmergeRoles";
+        case SwarmTaskKind::AlignSubstrate: return "AlignSubstrate";
+        case SwarmTaskKind::AmplifyPatterns: return "Amplify";
+        case SwarmTaskKind::StabilizeResonance: return "Stabilize";
+        case SwarmTaskKind::CoupleHarmonics: return "Couple";
+        case SwarmTaskKind::ReinforceTopology: return "Reinforce";
+        case SwarmTaskKind::ScaleAmplification: return "Scale";
+        case SwarmTaskKind::BoostValuePatterns: return "Boost";
+        case SwarmTaskKind::SuppressNoisePatterns: return "Suppress";
+        case SwarmTaskKind::AdaptToSubstrateLoad: return "Adapt";
+        case SwarmTaskKind::DetectCrossPatterns: return "Detect";
+        case SwarmTaskKind::BuildIntegrationLinks: return "BuildLinks";
+        case SwarmTaskKind::StabilizeMultiFlows: return "StabilizeFlows";
+        case SwarmTaskKind::CoupleUnitySwarm: return "CoupleUnity";
+        case SwarmTaskKind::AlignToSharedGoals: return "AlignGoals";
+        case SwarmTaskKind::EstablishFeedbackLoops: return "Feedback";
+        case SwarmTaskKind::ConvergeToAttractors: return "Converge";
+        case SwarmTaskKind::OptimizeConvergenceRate: return "OptimizeConv";
+        case SwarmTaskKind::SynchronizePhases: return "SyncPhases";
+        case SwarmTaskKind::BalanceAmplitudes: return "Balance";
+        case SwarmTaskKind::LockResonances: return "LockRes";
+        case SwarmTaskKind::ReinforceCoherence: return "ReinforceCoh";
+        case SwarmTaskKind::AchievePerfectUnity: return "PerfectUnity";
+        case SwarmTaskKind::BalanceAbsolute: return "BalanceAbs";
+        case SwarmTaskKind::AchieveInfiniteResonance: return "InfiniteRes";
+        case SwarmTaskKind::CompleteUnityCycle: return "Complete";
+        case SwarmTaskKind::DiscoverNewRoles: return "Discover";
+        case SwarmTaskKind::MutateCapabilities: return "Mutate";
+        case SwarmTaskKind::ReflectOnExecution: return "Reflect";
+        case SwarmTaskKind::ProjectFutureTopology: return "Project";
+        case SwarmTaskKind::GenerateNewHarmonics: return "Generate";
+        case SwarmTaskKind::AchieveSovereignization: return "Sovereign";
+        default: return "Unknown";
+    }
 }
 
 // Utility functions

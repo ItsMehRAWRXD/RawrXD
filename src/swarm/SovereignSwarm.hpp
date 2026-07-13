@@ -251,6 +251,73 @@ struct SwarmTaskResult {
     std::string modelUsed;
 };
 
+// Phase A: Self Model - Performance tracking per agent for learned task assignment
+struct AgentSelfModel {
+    uint32_t agentId;
+    
+    // Task type performance metrics (learned from execution history)
+    struct TaskPerformance {
+        uint32_t attempts = 0;
+        uint32_t successes = 0;
+        uint32_t failures = 0;
+        double avgLatencyMs = 0.0;
+        double successRate = 0.0;
+        std::vector<std::string> failurePatterns;
+        std::map<std::string, double> strengthByTaskType;  // task type -> strength score
+    };
+    
+    std::map<SwarmTaskKind, TaskPerformance> performanceByTaskType;
+    
+    // Overall agent capabilities (computed from history)
+    double overallStrength = 0.5;      // 0.0-1.0, learned
+    double overallWeakness = 0.5;      // 0.0-1.0, learned
+    double averageLatency = 0.0;       // ms, learned
+    double reliabilityScore = 0.5;       // 0.0-1.0, computed from success/failure
+    
+    // Methods to update model from execution results
+    void RecordSuccess(SwarmTaskKind kind, int64_t latencyMs);
+    void RecordFailure(SwarmTaskKind kind, const std::string& failurePattern);
+    void UpdateStrengthScores();
+    double GetStrengthForTask(SwarmTaskKind kind) const;
+    SwarmTaskKind GetBestTaskType() const;
+    
+    // Serialization for persistence
+    std::string ToJson() const;
+    static AgentSelfModel FromJson(const std::string& json);
+};
+
+// Phase A: Self Model Registry - Manages self-models for all agents
+class SelfModelRegistry {
+public:
+    static SelfModelRegistry& GetInstance();
+    
+    // Get or create self-model for an agent
+    AgentSelfModel& GetOrCreateModel(uint32_t agentId);
+    
+    // Record execution results
+    void RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, int64_t latencyMs);
+    void RecordTaskFailure(uint32_t agentId, SwarmTaskKind kind, const std::string& pattern);
+    
+    // Query best agent for a task type (learned assignment)
+    uint32_t GetBestAgentForTask(SwarmTaskKind kind) const;
+    
+    // Get agent rankings for a task
+    std::vector<std::pair<uint32_t, double>> GetAgentRankings(SwarmTaskKind kind) const;
+    
+    // Persistence
+    void SaveToDisk(const std::string& path);
+    void LoadFromDisk(const std::string& path);
+    
+    // Statistics
+    size_t GetModelCount() const;
+    void PrintPerformanceReport() const;
+    
+private:
+    SelfModelRegistry() = default;
+    std::map<uint32_t, AgentSelfModel> models_;
+    mutable std::mutex mutex_;
+};
+
 class SwarmAgent {
 public:
     explicit SwarmAgent(const SwarmAgentContext& ctx, uint32_t agentId = 0);
@@ -314,10 +381,20 @@ public:
     // Convenience: enqueue all global completion tasks
     void EnqueueGlobalCompletionTasks();
     
+    // Phase A: Self Model - Learned task assignment
+    void EnableLearnedTaskAssignment(bool enable);
+    bool IsLearnedAssignmentEnabled() const { return learnedAssignmentEnabled_; }
+    
+    // Get best worker for a task based on learned performance
+    uint32_t GetBestWorkerForTask(const SwarmTask& task) const;
+    
     // Statistics
     size_t GetPendingCount() const;
     size_t GetCompletedCount() const;
     size_t GetFailedCount() const;
+    
+    // Phase A: Export performance report
+    void ExportPerformanceReport(const std::string& path) const;
     
 private:
     SwarmAgentContext                              ctx_;
@@ -340,6 +417,9 @@ private:
     // Statistics
     std::atomic<size_t>                            completedCount_;
     std::atomic<size_t>                            failedCount_;
+    
+    // Phase A: Self Model - Learned task assignment
+    bool learnedAssignmentEnabled_ = false;
     
     void WorkerLoop(uint32_t workerId);
     void BuildGlobalTaskList(std::vector<SwarmTask>& tasks);
@@ -436,6 +516,10 @@ public:
 
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();
+    
+    // Phase A: Self Model - Access to scheduler for learned assignment
+    SwarmScheduler& GetScheduler() { return *scheduler_; }
+    const SwarmScheduler& GetScheduler() const { return *scheduler_; }
     
 private:
     SwarmAgentContext ctx_;

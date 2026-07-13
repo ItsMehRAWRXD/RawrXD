@@ -51,6 +51,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --emergence            Run Emergence cycle (sovereign self-direction)\n";
     std::cout << "  --emergence-debug      Debug mode: show emergence computation\n";
     std::cout << "  --emergence-map        Display emergence topology map\n";
+    std::cout << "\nPhase A: Self Model - Learned Task Assignment:\n";
+    std::cout << "  --self-model           Run Self Model phase (learned assignment)\n";
+    std::cout << "  --learned-assignment   Enable learned task assignment based on history\n";
+    std::cout << "  --self-model-report    Display performance report after execution\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -124,6 +128,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--emergence") opts.runEmergence = true;
         else if (arg == "--emergence-debug") { opts.runEmergence = true; opts.emergenceDebug = true; }
         else if (arg == "--emergence-map") { opts.runEmergence = true; opts.emergenceMap = true; }
+        // Phase A: Self Model options
+        else if (arg == "--self-model") opts.runSelfModel = true;
+        else if (arg == "--learned-assignment") { opts.runSelfModel = true; opts.learnedAssignment = true; }
+        else if (arg == "--self-model-report") { opts.runSelfModel = true; opts.selfModelReport = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -394,6 +402,28 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
             swarm.PrintEmergenceMap();
         }
         swarm.RunEmergenceCycle();
+    }
+
+    // Phase A: Self Model - Learned task assignment
+    if (opts.runSelfModel) {
+        std::cout << "[TASK] Running Phase A: Self Model - Learned task assignment...\n";
+        
+        // Enable learned assignment if requested
+        if (opts.learnedAssignment) {
+            std::cout << "[INFO] Learned task assignment enabled - agents will be assigned based on execution history\n";
+            swarm.GetScheduler().SetLearnedAssignmentEnabled(true);
+        }
+        
+        // Run a series of tasks to build up performance data
+        std::cout << "[TASK] Executing task suite to build self-model...\n";
+        swarm.RunOrderCycle();      // Batch 250
+        swarm.RunResonanceCycle();  // Batch 251
+        swarm.RunAmplificationCycle(); // Batch 252
+        
+        // Display performance report if requested
+        if (opts.selfModelReport) {
+            Sovereign::SelfModelRegistry::GetInstance().PrintPerformanceReport();
+        }
     }
 
     // Run finalization
