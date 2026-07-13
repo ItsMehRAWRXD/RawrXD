@@ -25,6 +25,7 @@ set(SEG_SOURCES
     ../src/seg/SovereignSEGIntegrationTest.cpp
     # Phase C.0: Performance Instrumentation Bridge
     ../src/seg/SEGPerformanceBridge.cpp
+    ../src/seg/SEGRuntimeCostProfiler.cpp
 )
 
 set(SEG_HEADERS
@@ -43,6 +44,7 @@ set(SEG_HEADERS
     ../src/seg/SovereignSEGIntegrationTest.hpp
     # Phase C.0: Performance Instrumentation Bridge
     ../src/seg/SEGPerformanceBridge.hpp
+    ../src/seg/SEGRuntimeCostProfiler.hpp
 )
 
 # ============================================================================
@@ -152,6 +154,10 @@ target_link_libraries(seg_validation_smoke_test PRIVATE seg)
 # Performance Bridge smoke test executable for Phase C.0 Batch 1/5
 add_executable(seg_performance_bridge_smoke_test seg_performance_bridge_smoke_test.cpp)
 target_link_libraries(seg_performance_bridge_smoke_test PRIVATE seg)
+
+# Runtime Cost Profiler smoke test executable for Phase C.0 Batch 2/5
+add_executable(seg_runtime_cost_profiler_smoke_test seg_runtime_cost_profiler_smoke_test.cpp)
+target_link_libraries(seg_runtime_cost_profiler_smoke_test PRIVATE seg)
 
 # Install
 install(TARGETS seg seg_example
