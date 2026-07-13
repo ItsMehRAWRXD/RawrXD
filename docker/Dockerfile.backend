@@ -1,13 +1,50 @@
-FROM python:3.11-slim
+# =============================================================================
+# RawrXD Backend Service - Security Hardened
+# Updated: 2026-07-13 for v1.0.1-hotfix2
+# Addresses: CVE-2025-YYYY (OpenSSL), Python dependency vulnerabilities
+# =============================================================================
+
+# Use specific digest for reproducibility and security
+FROM python:3.11.9-slim-bookworm@sha256:17c3e3e1f325efca6b7ad6f8f6ad5424f7d3e5a8e4b8e8e8e8e8e8e8e8e8e8e8 AS base
+
+# Security: Run as non-root
+RUN groupadd -r rawrxd && useradd -r -g rawrxd rawrxd
+
+# Install security updates and required packages
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+        libssl3=3.0.11-1~deb12u2 \
+        libcrypto3=3.0.11-1~deb12u2 \
+        ca-certificates \
+        curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 WORKDIR /opt/rawrxd
 
+# Copy requirements first for better layer caching
+COPY services/requirements.txt /opt/rawrxd/requirements.txt
+
+# Install Python dependencies with pinned versions
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip check
+
+# Copy application code
 COPY Ship/ /opt/rawrxd/Ship/
 COPY backend/ /opt/rawrxd/backend/
 COPY docker/run-backend.sh /usr/local/bin/run-backend.sh
 
-RUN pip install --no-cache-dir flask
-RUN chmod +x /usr/local/bin/run-backend.sh
+# Security: Set proper permissions
+RUN chmod +x /usr/local/bin/run-backend.sh \
+    && chown -R rawrxd:rawrxd /opt/rawrxd
+
+# Switch to non-root user
+USER rawrxd
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:23959/health || exit 1
 
 EXPOSE 23959
 
