@@ -1,4 +1,5 @@
 #include "SwarmCommand.hpp"
+#include "../swarm/LearningSimulator.hpp"
 #include <iostream>
 #include <iomanip>
 #include <cstring>
@@ -61,6 +62,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --explain              Explain last routing decision (A.5)\n";
     std::cout << "  --exploration-rate R   Set exploration rate 0.0-1.0 (default: 0.1) (A.3)\n";
     std::cout << "  --reset-stats          Reset statistics before run\n";
+    std::cout << "\nPhase A.1: Deterministic Learning Simulator:\n";
+    std::cout << "  --simulator            Run deterministic simulator to validate learning\n";
+    std::cout << "  --sim-scenario TYPE    Scenario: stationary, latency, noisy, dominant\n";
+    std::cout << "  --sim-export PATH      Export results to CSV or JSON file\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -144,6 +149,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--explain") { opts.runSelfModel = true; opts.explainDecision = true; }
         else if (arg == "--exploration-rate" && i + 1 < argc) { opts.explorationRate = std::stod(argv[++i]); }
         else if (arg == "--reset-stats") { opts.runSelfModel = true; opts.resetStats = true; }
+        // Phase A.1: Simulator options
+        else if (arg == "--simulator") { opts.runSimulator = true; }
+        else if (arg == "--sim-scenario" && i + 1 < argc) { opts.simulatorScenario = argv[++i]; }
+        else if (arg == "--sim-export" && i + 1 < argc) { opts.exportResults = true; opts.exportPath = argv[++i]; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -456,6 +465,61 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
         // Display performance report if requested
         if (opts.selfModelReport) {
             Sovereign::SelfModelRegistry::GetInstance().PrintPerformanceReport();
+        }
+    }
+
+    // Phase A.1: Deterministic Learning Simulator
+    if (opts.runSimulator) {
+        std::cout << "[TASK] Running Phase A.1: Deterministic Learning Simulator...\n";
+        
+        // Select scenario
+        Sovereign::LearningSimulator::TestScenario scenario;
+        if (opts.simulatorScenario == "stationary") {
+            scenario = Sovereign::LearningSimulator::CreateStationaryScenario();
+        } else if (opts.simulatorScenario == "latency") {
+            scenario = Sovereign::LearningSimulator::CreateLatencyTradeoffScenario();
+        } else if (opts.simulatorScenario == "noisy") {
+            scenario = Sovereign::LearningSimulator::CreateNoisyScenario();
+        } else if (opts.simulatorScenario == "dominant") {
+            scenario = Sovereign::LearningSimulator::CreateDominantScenario();
+        } else {
+            std::cout << "[WARN] Unknown scenario '" << opts.simulatorScenario 
+                      << "', using 'stationary'\n";
+            scenario = Sovereign::LearningSimulator::CreateStationaryScenario();
+        }
+        
+        std::cout << "[INFO] Running scenario: " << scenario.name << "\n";
+        std::cout << "[INFO] Iterations: " << scenario.iterations << "\n";
+        
+        // Create and run simulator
+        Sovereign::LearningSimulator simulator(scenario);
+        auto snapshots = simulator.RunWithTracking(10);
+        
+        // Print results
+        simulator.PrintReport();
+        simulator.PrintConvergenceGraph(snapshots);
+        
+        // Export if requested
+        if (opts.exportResults && !opts.exportPath.empty()) {
+            if (opts.exportPath.ends_with(".csv")) {
+                simulator.ExportCSV(opts.exportPath);
+                std::cout << "[INFO] Exported results to " << opts.exportPath << "\n";
+            } else if (opts.exportPath.ends_with(".json")) {
+                simulator.ExportJSON(opts.exportPath);
+                std::cout << "[INFO] Exported results to " << opts.exportPath << "\n";
+            } else {
+                std::cout << "[WARN] Unknown export format, use .csv or .json\n";
+            }
+        }
+        
+        // Validate and report
+        auto criteria = simulator.Validate();
+        std::cout << criteria.ToString() << "\n";
+        
+        if (criteria.AllPassed()) {
+            std::cout << "[SUCCESS] All benchmark criteria passed!\n";
+        } else {
+            std::cout << "[WARNING] Some benchmark criteria failed. Review results above.\n";
         }
     }
 

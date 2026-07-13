@@ -84,6 +84,12 @@ private:
         bool explainDecision = false;      // Explain last routing decision
         double explorationRate = 0.1;      // Exploration rate (0.0-1.0)
         bool resetStats = false;           // Reset statistics before run
+        
+        // Phase A.1: Deterministic simulator options
+        bool runSimulator = false;         // Run deterministic learning simulator
+        std::string simulatorScenario = "stationary"; // stationary, latency, noisy, dominant
+        bool exportResults = false;      // Export simulation results to file
+        std::string exportPath = "";     // Path for export (csv or json)
 
         // Per-role model overrides
         std::string scannerModel;
