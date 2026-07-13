@@ -39,6 +39,9 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `secrets-manager.ps1` | Secrets and API key management | `.\secrets-manager.ps1` |
 | `database-manager.ps1` | Database operations and migrations | `.\database-manager.ps1` |
 | `cache-manager.ps1` | Application cache management | `.\cache-manager.ps1` |
+| `service-manager.ps1` | Windows service management | `.\service-manager.ps1` |
+| `package-manager.ps1` | Package and dependency management | `.\package-manager.ps1` |
+| `workspace-manager.ps1` | Development workspace management | `.\workspace-manager.ps1` |
 
 ## Development Setup
 
@@ -1226,6 +1229,133 @@ Manages application cache for improved performance.
 
 # Dry run (show what would be cleared)
 .\cache-manager.ps1 -Action Clear -DryRun
+```
+
+## Service Manager
+
+### `service-manager.ps1`
+
+Manages RawrXD as a Windows service.
+
+**Actions:**
+- `Install` - Install RawrXD as a Windows service
+- `Uninstall` - Remove the service
+- `Start` - Start the service
+- `Stop` - Stop the service
+- `Restart` - Restart the service
+- `Status` - Show service status
+- `Configure` - Configure service settings
+
+**Usage:**
+```powershell
+# Install service
+.\service-manager.ps1 -Action Install -ServiceName "RawrXD" -AutoStart
+
+# Install with custom binary path
+.\service-manager.ps1 -Action Install -BinaryPath "C:\RawrXD\bin\rawrxd.exe"
+
+# Start service
+.\service-manager.ps1 -Action Start
+
+# Stop service
+.\service-manager.ps1 -Action Stop
+
+# Restart service
+.\service-manager.ps1 -Action Restart
+
+# Check status
+.\service-manager.ps1 -Action Status
+
+# Uninstall service
+.\service-manager.ps1 -Action Uninstall
+
+# Configure delayed start
+.\service-manager.ps1 -Action Configure -DelayedStart
+```
+
+## Package Manager
+
+### `package-manager.ps1`
+
+Manages packages, dependencies, and distribution.
+
+**Actions:**
+- `Create` - Create a new package
+- `Install` - Install a package
+- `Uninstall` - Remove a package
+- `List` - List installed packages
+- `Update` - Update a package
+- `Validate` - Validate package structure
+- `Publish` - Publish package to repository
+
+**Usage:**
+```powershell
+# Create package
+.\package-manager.ps1 -Action Create -PackageName "my-model" -PackagePath "./my-model"
+
+# Install package
+.\package-manager.ps1 -Action Install -PackageName "llama-7b-q4"
+
+# Install specific version
+.\package-manager.ps1 -Action Install -PackageName "llama-7b-q4" -Version "1.2.0"
+
+# List installed packages
+.\package-manager.ps1 -Action List
+
+# Update package
+.\package-manager.ps1 -Action Update -PackageName "llama-7b-q4"
+
+# Uninstall package
+.\package-manager.ps1 -Action Uninstall -PackageName "llama-7b-q4"
+
+# Validate package
+.\package-manager.ps1 -Action Validate -PackagePath "./my-model"
+
+# Publish package
+.\package-manager.ps1 -Action Publish -PackagePath "./my-model"
+```
+
+## Workspace Manager
+
+### `workspace-manager.ps1`
+
+Manages development workspaces and environments.
+
+**Actions:**
+- `Create` - Create a new workspace
+- `Switch` - Switch to a workspace
+- `List` - List all workspaces
+- `Delete` - Delete a workspace
+- `Backup` - Backup a workspace
+- `Clone` - Clone an existing workspace
+
+**Templates:**
+- `default` - Standard workspace
+- `development` - Development-optimized workspace
+- `production` - Production-like workspace
+
+**Usage:**
+```powershell
+# Create new workspace
+.\workspace-manager.ps1 -Action Create -WorkspaceName "my-project"
+
+# Create with template
+.\workspace-manager.ps1 -Action Create -WorkspaceName "my-project" -Template "development"
+
+# List workspaces
+.\workspace-manager.ps1 -Action List
+
+# Switch workspace
+.\workspace-manager.ps1 -Action Switch -WorkspaceName "my-project"
+
+# Backup workspace
+.\workspace-manager.ps1 -Action Backup -WorkspaceName "my-project"
+
+# Clone workspace
+.\workspace-manager.ps1 -Action Clone -SourceWorkspace "my-project" -WorkspaceName "my-project-copy"
+
+# Delete workspace
+.\workspace-manager.ps1 -Action Delete -WorkspaceName "my-project"
 ```
 
 ## Common Workflows
