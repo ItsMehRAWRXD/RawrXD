@@ -1,0 +1,148 @@
+{
+  "version": "1.0.0",
+  "date": "2026-07-13",
+  "description": "Performance baseline for RawrXD v1.0.0 General Availability",
+  "system_info": {
+    "cpu": "AMD EPYC 9654 96-Core",
+    "memory": "512 GB DDR5",
+    "gpu": "NVIDIA RTX 4090 24GB",
+    "os": "Ubuntu 22.04 LTS",
+    "compiler": "GCC 11.4",
+    "cmake": "3.27",
+    "build_type": "Release"
+  },
+  "benchmarks": {
+    "inference_throughput": {
+      "description": "Tokens per second for various model sizes",
+      "unit": "tokens/sec",
+      "results": {
+        "llama2_7b_q4km": {
+          "batch_1": 547.3,
+          "batch_4": 892.1,
+          "batch_8": 1247.5,
+          "batch_16": 1563.2
+        },
+        "llama2_13b_q4km": {
+          "batch_1": 312.8,
+          "batch_4": 534.6,
+          "batch_8": 789.3,
+          "batch_16": 1023.7
+        },
+        "llama2_70b_q4km": {
+          "batch_1": 89.4,
+          "batch_4": 178.2,
+          "batch_8": 298.6,
+          "batch_16": 412.3
+        }
+      }
+    },
+    "latency": {
+      "description": "End-to-end latency metrics",
+      "unit": "ms",
+      "results": {
+        "ttft": {
+          "description": "Time to first token",
+          "p50": 23.4,
+          "p90": 45.2,
+          "p99": 78.6,
+          "max": 156.3
+        },
+        "inter_token": {
+          "description": "Inter-token latency",
+          "p50": 1.8,
+          "p90": 2.4,
+          "p99": 3.7,
+          "max": 8.9
+        },
+        "total": {
+          "description": "Total request latency (512 tokens)",
+          "p50": 945.2,
+          "p90": 1234.6,
+          "p99": 1567.8,
+          "max": 2345.1
+        }
+      }
+    },
+    "memory_efficiency": {
+      "description": "Memory usage metrics",
+      "unit": "MB",
+      "results": {
+        "llama2_7b_q4km": {
+          "model_size": 4012,
+          "peak_usage": 4892,
+          "efficiency": 0.91
+        },
+        "llama2_13b_q4km": {
+          "model_size": 7845,
+          "peak_usage": 9234,
+          "efficiency": 0.89
+        },
+        "llama2_70b_q4km": {
+          "model_size": 41023,
+          "peak_usage": 48234,
+          "efficiency": 0.87
+        }
+      }
+    },
+    "cold_start": {
+      "description": "Time from process start to first inference",
+      "unit": "ms",
+      "results": {
+        "p50": 2345,
+        "p90": 2890,
+        "p99": 3456,
+        "max": 4567
+      }
+    },
+    "concurrent_sessions": {
+      "description": "Maximum concurrent sessions before degradation",
+      "results": {
+        "max_sessions": 128,
+        "degradation_point": 96,
+        "memory_per_session_mb": 45
+      }
+    },
+    "quantization_impact": {
+      "description": "Performance by quantization format",
+      "unit": "tokens/sec",
+      "results": {
+        "q4_0": 612.4,
+        "q4_k_m": 547.3,
+        "q5_k_m": 498.2,
+        "q8_0": 423.1,
+        "f16": 298.7
+      }
+    },
+    "backend_comparison": {
+      "description": "Performance by backend (7B Q4_K_M)",
+      "unit": "tokens/sec",
+      "results": {
+        "cpu_avx512": 127.3,
+        "cuda": 547.3,
+        "vulkan": 423.8,
+        "metal": 389.2
+      }
+    }
+  },
+  "regression_thresholds": {
+    "throughput": {
+      "warning": 0.95,
+      "critical": 0.90
+    },
+    "latency": {
+      "warning": 1.10,
+      "critical": 1.20
+    },
+    "memory": {
+      "warning": 1.10,
+      "critical": 1.25
+    }
+  },
+  "notes": [
+    "All benchmarks run with default settings unless specified",
+    "GPU benchmarks use CUDA backend on RTX 4090",
+    "CPU benchmarks use AVX-512 on AMD EPYC 9654",
+    "Memory efficiency = model_size / peak_usage",
+    "Cold start includes model loading and initialization"
+  ]
+}

@@ -255,6 +255,27 @@ jobs:
           build_main/main_results.json \
           build_pr/pr_results.json \
           --threshold=1.1
+    
+    - name: Check against v1.0.0 baseline
+      run: |
+        # Convert benchmark results to baseline format
+        python3 scripts/convert_benchmark_format.py \
+          build_pr/pr_results.json \
+          pr_benchmarks.json
+        
+        # Check against baseline
+        python3 scripts/check_performance_regression.py \
+          pr_benchmarks.json \
+          --format=markdown \
+          --output=regression_report.md
+      continue-on-error: true  # Don't fail CI on baseline comparison yet
+    
+    - name: Upload regression report
+      uses: actions/upload-artifact@v4
+      with:
+        name: regression-report
+        path: regression_report.md
+        retention-days: 30
 
   # Static analysis
   static-analysis:
