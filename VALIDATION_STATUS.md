@@ -85,9 +85,41 @@
 The following must reach L3+ before v1.0.0-GA:
 
 1. **Plugin SDK** - Currently L2, needs L3 validation
+   - Test: `tests/ga_blockers/test_plugin_sdk.cpp`
+   - Status: Tests created, awaiting execution
+   
 2. **Extension Host** - Currently L2, needs L3 validation
+   - Test: `tests/ga_blockers/test_extension_host.cpp`
+   - Status: Tests created, awaiting execution
+   
 3. **Packaging** - Currently L2, needs L3 validation
+   - Test: `tests/ga_blockers/test_packaging.cpp`
+   - Status: Tests created, awaiting execution
+   
 4. **Real GGML Execution** - Currently L0-L1, needs L4
+   - Test: `tests/ga_blockers/test_real_ggml_execution.cpp`
+   - Status: Tests created, awaiting execution
+   - Target: L4.1 embedding lookup validation
+
+### GA Blocker Test Suite
+
+All GA blocker tests are located in `tests/ga_blockers/`:
+
+```bash
+# Build GA blocker tests
+cmake -B build -DRAWRXD_BUILD_TESTS=ON
+cmake --build build --target test_plugin_sdk test_extension_host test_packaging test_real_ggml_execution
+
+# Run GA blocker tests
+ctest -R GA_ --output-on-failure
+```
+
+| Test | Target Level | Status |
+|------|--------------|--------|
+| GA_PluginSDK_L3 | L3 | 📝 Tests created |
+| GA_ExtensionHost_L3 | L3 | 📝 Tests created |
+| GA_Packaging_L3 | L3 | 📝 Tests created |
+| GA_RealGGML_L4 | L4 | 📝 Tests created |
 
 ---
 
