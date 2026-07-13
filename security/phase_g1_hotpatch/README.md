@@ -1,0 +1,172 @@
+# Phase G.1: Extended Hotpatch System
+
+## Overview
+
+This directory contains the extended hotpatch system for RawrXD, providing runtime patching capabilities for:
+- **Swarm components** (coordinator, workers, load balancer)
+- **Agent components** (orchestrator, workers, tools, policy, memory)
+- **Non-agentic tools** (CLI, utilities, extensions, plugins, scripts)
+
+## Components
+
+### 1. Swarm Hotpatch Manager (`swarm_hotpatch_manager.ps1`)
+Manages hotpatching for swarm infrastructure components.
+
+**Features:**
+- Coordinator hotpatching
+- Worker node updates
+- Load balancer configuration changes
+- Swarm-wide config updates
+- Emergency failover patches
+
+**Usage:**
+```powershell
+# Apply patch to coordinator
+.\swarm_hotpatch_manager.ps1 -Action apply -Target coordinator -PatchFile .\patches\coord_v2.json
+
+# Check status
+.\swarm_hotpatch_manager.ps1 -Action status
+
+# Emergency mode
+.\swarm_hotpatch_manager.ps1 -Action emergency
+```
+
+### 2. Agent Hotpatch Manager (`agent_hotpatch_manager.ps1`)
+Manages hotpatching for agentic framework components.
+
+**Features:**
+- Agent orchestrator updates
+- Worker agent patches
+- Tool configuration updates
+- Policy engine updates
+- Memory store configuration
+- Agent-specific targeting
+
+**Usage:**
+```powershell
+# Apply patch to all agent components
+.\agent_hotpatch_manager.ps1 -Action apply -Target all -PatchFile .\patches\agent_v2.json
+
+# Apply patch to specific agent
+.\agent_hotpatch_manager.ps1 -Action apply -Target worker -AgentId "agent-001" -PatchFile .\patches\worker_v2.json
+
+# Update policies
+.\agent_hotpatch_manager.ps1 -Action policy-update -PatchFile .\patches\new_policies.json
+```
+
+### 3. Tools Hotpatch Manager (`tools_hotpatch_manager.ps1`)
+Manages hotpatching for non-agentic tools and utilities.
+
+**Features:**
+- CLI tool updates
+- Utility patches
+- Extension management
+- Plugin updates
+- Script updates
+- Library refreshes
+
+**Usage:**
+```powershell
+# Scan for hotpatchable tools
+.\tools_hotpatch_manager.ps1 -Action scan
+
+# Apply patch to CLI tools
+.\tools_hotpatch_manager.ps1 -Action apply -Target cli -PatchFile .\patches\cli_v2.json
+
+# Apply patch to specific tool
+.\tools_hotpatch_manager.ps1 -Action apply -Target scripts -ToolName "deploy.ps1" -PatchFile .\patches\deploy_v2.json
+```
+
+### 4. Unified Hotpatch Orchestrator (`unified_hotpatch_orchestrator.ps1`)
+Coordinates hotpatching across all systems with dependency management.
+
+**Features:**
+- Coordinated multi-system patches
+- Dependency validation
+- Conflict detection
+- Rollback coordination
+- System health monitoring
+- Emergency procedures
+
+**Usage:**
+```powershell
+# Apply coordinated patch bundle
+.\unified_hotpatch_orchestrator.ps1 -Action apply -System all -PatchBundle .\patches\hotfix_v1.1.json
+
+# Check all systems status
+.\unified_hotpatch_orchestrator.ps1 -Action status
+
+# Health check
+.\unified_hotpatch_orchestrator.ps1 -Action health-check
+
+# Sync systems
+.\unified_hotpatch_orchestrator.ps1 -Action sync
+```
+
+## Patch Bundle Format
+
+```json
+{
+  "Version": "1.1.0",
+  "Description": "Critical security fix for all systems",
+  "Patches": [
+    {
+      "System": "tools",
+      "Target": "cli",
+      "PatchFile": "patches/cli_security_v1.1.json"
+    },
+    {
+      "System": "agent",
+      "Target": "orchestrator",
+      "PatchFile": "patches/agent_security_v1.1.json"
+    },
+    {
+      "System": "swarm",
+      "Target": "coordinator",
+      "PatchFile": "patches/swarm_security_v1.1.json"
+    }
+  ],
+  "Dependencies": [
+    { "System": "tools", "MinimumVersion": "1.0.0" },
+    { "System": "agent", "MinimumVersion": "1.0.0" }
+  ],
+  "Conflicts": [
+    { "PatchId": "old-security-patch" }
+  ]
+}
+```
+
+## Safety Features
+
+1. **Backup Creation**: Automatic backups before applying patches
+2. **Health Checks**: Component health validation before patching
+3. **Dry Run Mode**: Test patches without applying
+4. **Dependency Validation**: Ensure prerequisites are met
+5. **Conflict Detection**: Prevent incompatible patches
+6. **Coordinated Rollback**: Rollback all systems if any fails
+7. **Emergency Mode**: Quick fixes for critical issues
+
+## Integration
+
+These hotpatch managers integrate with:
+- Existing `unified_hotpatch_manager` (C++ layer)
+- Phase G platform hardening
+- Phase H enterprise security
+- CI/CD pipelines for automated patching
+
+## Status
+
+| Component | Status | Lines |
+|-----------|--------|-------|
+| Swarm Hotpatch Manager | ✅ Complete | 450+ |
+| Agent Hotpatch Manager | ✅ Complete | 500+ |
+| Tools Hotpatch Manager | ✅ Complete | 450+ |
+| Unified Orchestrator | ✅ Complete | 400+ |
+| **Total** | **✅ Complete** | **1,800+** |
+
+## Next Steps
+
+1. Create patch bundle templates
+2. Integrate with CI/CD for automated patch deployment
+3. Add patch testing framework
+4. Create patch monitoring dashboard
