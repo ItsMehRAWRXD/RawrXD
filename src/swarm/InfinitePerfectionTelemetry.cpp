@@ -47,16 +47,19 @@ UnityCycleTelemetry InfinitePerfectionTelemetry::CaptureUnityCycle() const {
     telemetry.emergenceDensity = synthesis.emergenceDensity;
     telemetry.patternNovelty = synthesis.patternNovelty;
     telemetry.crossCycleSynergy = synthesis.crossCycleSynergy;
+    telemetry.sovereignEmergenceIndex = synthesis.sovereignEmergenceIndex;
     
     // Batch 246: Convergence
     telemetry.focalPointDensity = convergence.focalPointDensity;
     telemetry.attractorStrength = convergence.attractorStrength;
     telemetry.convergenceCoherence = convergence.convergenceCoherence;
+    telemetry.sovereignConvergenceIndex = convergence.sovereignConvergenceIndex;
     
     // Batch 247: Coherence
     telemetry.coherenceStability = coherence.coherenceStability;
     telemetry.unifiedPatternIndex = coherence.unifiedPatternIndex;
     telemetry.harmonicConsistency = coherence.harmonicConsistency;
+    telemetry.sovereignCoherenceIndex = coherence.sovereignCoherenceIndex;
     
     // Batch 248: Harmony
     telemetry.resonanceAmplitude = harmony.resonanceAmplitude;
