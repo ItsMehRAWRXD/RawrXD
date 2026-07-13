@@ -3749,6 +3749,1122 @@ void Win32IDE::createSidebar(HWND hwnd)
     createPrimarySidebar(hwnd);
 }
 
+// ============================================================================
+// PRIMARY SIDEBAR IMPLEMENTATION - Activity Bar + View Switching
+// ============================================================================
+
+void Win32IDE::createPrimarySidebar(HWND hwndParent)
+{
+    // Create activity bar (far left - icon strip)
+    createActivityBar(hwndParent);
+
+    // Create main sidebar container
+    m_hwndSidebar = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+        48, 30, m_sidebarWidth, 500,
+        hwndParent,
+        nullptr,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndSidebar)
+    {
+        LOG_ERROR("Failed to create sidebar container");
+        return;
+    }
+
+    // Create sidebar content area (switches based on view)
+    m_hwndSidebarContent = CreateWindowExW(
+        0,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        0, 0, m_sidebarWidth - 2, 498,
+        m_hwndSidebar,
+        nullptr,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndSidebarContent)
+    {
+        LOG_ERROR("Failed to create sidebar content area");
+        return;
+    }
+
+    // Initialize with Explorer view
+    setSidebarView(SidebarView::Explorer);
+
+    LOG_INFO("Primary sidebar created successfully");
+}
+
+void Win32IDE::createActivityBar(HWND hwndParent)
+{
+    // Create activity bar container (far left)
+    m_hwndActivityBar = CreateWindowExW(
+        0,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+        0, 30, 48, 500,
+        hwndParent,
+        nullptr,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndActivityBar)
+    {
+        LOG_ERROR("Failed to create activity bar");
+        return;
+    }
+
+    // Create activity bar buttons
+    const wchar_t* buttonLabels[] = {
+        L"📁",  // Explorer
+        L"🔍",  // Search
+        L"📦",  // Source Control
+        L"🐛",  // Debug
+        L"🧩",  // Extensions
+        L"⚙️",  // Settings
+        L"👤"   // Accounts
+    };
+
+    int buttonIds[] = {
+        IDC_ACTBAR_EXPLORER,
+        IDC_ACTBAR_SEARCH,
+        IDC_ACTBAR_SCM,
+        IDC_ACTBAR_DEBUG,
+        IDC_ACTBAR_EXTENSIONS,
+        IDC_ACTBAR_SETTINGS,
+        IDC_ACTBAR_ACCOUNTS
+    };
+
+    for (int i = 0; i < 7; i++)
+    {
+        m_activityBarButtons[i] = CreateWindowExW(
+            0,
+            L"BUTTON",
+            buttonLabels[i],
+            WS_CHILD | WS_VISIBLE | BS_FLAT | BS_PUSHBUTTON,
+            0, i * 48, 48, 48,
+            m_hwndActivityBar,
+            (HMENU)(UINT_PTR)buttonIds[i],
+            m_hInstance,
+            nullptr);
+
+        if (m_activityBarButtons[i])
+        {
+            // Set button font
+            SendMessageW(m_activityBarButtons[i], WM_SETFONT,
+                        (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
+        }
+    }
+
+    m_activeActivityBarButton = 0; // Explorer is default
+    updateActivityBarState();
+
+    LOG_INFO("Activity bar created with 7 buttons");
+}
+
+void Win32IDE::updateActivityBarState()
+{
+    // Update button visual states based on active selection
+    for (int i = 0; i < 7; i++)
+    {
+        if (m_activityBarButtons[i])
+        {
+            // Set button style based on active state
+            DWORD style = GetWindowLongW(m_activityBarButtons[i], GWL_STYLE);
+            if (i == m_activeActivityBarButton)
+            {
+                // Active button - sunken style
+                SetWindowLongW(m_activityBarButtons[i], GWL_STYLE,
+                              (style & ~BS_FLAT) | BS_PUSHLIKE);
+            }
+            else
+            {
+                // Inactive button - flat style
+                SetWindowLongW(m_activityBarButtons[i], GWL_STYLE,
+                              (style & ~BS_PUSHLIKE) | BS_FLAT);
+            }
+            InvalidateRect(m_activityBarButtons[i], nullptr, TRUE);
+        }
+    }
+}
+
+void Win32IDE::setSidebarView(SidebarView view)
+{
+    if (m_currentSidebarView == view)
+        return;
+
+    // Hide current view content
+    if (m_hwndFileExplorer)
+        ShowWindow(m_hwndFileExplorer, SW_HIDE);
+    if (m_hwndSearchPanel)
+        ShowWindow(m_hwndSearchPanel, SW_HIDE);
+    if (m_hwndGitPanel)
+        ShowWindow(m_hwndGitPanel, SW_HIDE);
+    if (m_hwndDebugPanel)
+        ShowWindow(m_hwndDebugPanel, SW_HIDE);
+    if (m_hwndExtensionsPanel)
+        ShowWindow(m_hwndExtensionsPanel, SW_HIDE);
+
+    m_currentSidebarView = view;
+
+    // Show appropriate view
+    switch (view)
+    {
+        case SidebarView::Explorer:
+            if (!m_hwndFileExplorer)
+                createFileExplorer();
+            if (m_hwndFileExplorer)
+                ShowWindow(m_hwndFileExplorer, SW_SHOW);
+            m_activeActivityBarButton = 0;
+            break;
+
+        case SidebarView::Search:
+            if (!m_hwndSearchPanel)
+                createSearchPanel();
+            if (m_hwndSearchPanel)
+                ShowWindow(m_hwndSearchPanel, SW_SHOW);
+            m_activeActivityBarButton = 1;
+            break;
+
+        case SidebarView::SourceControl:
+            if (!m_hwndGitPanel)
+                createSourceControlView();
+            if (m_hwndGitPanel)
+                ShowWindow(m_hwndGitPanel, SW_SHOW);
+            m_activeActivityBarButton = 2;
+            break;
+
+        case SidebarView::RunDebug:
+            if (!m_hwndDebugPanel)
+                createRunDebugView();
+            if (m_hwndDebugPanel)
+                ShowWindow(m_hwndDebugPanel, SW_SHOW);
+            m_activeActivityBarButton = 3;
+            break;
+
+        case SidebarView::Extensions:
+            if (!m_hwndExtensionsPanel)
+                createExtensionsView();
+            if (m_hwndExtensionsPanel)
+                ShowWindow(m_hwndExtensionsPanel, SW_SHOW);
+            m_activeActivityBarButton = 4;
+            break;
+
+        default:
+            break;
+    }
+
+    updateActivityBarState();
+
+    // Update status bar
+    const wchar_t* viewNames[] = {
+        L"Explorer", L"Search", L"Source Control",
+        L"Run and Debug", L"Extensions", L"Settings"
+    };
+    int viewIndex = static_cast<int>(view) - 1;
+    if (viewIndex >= 0 && viewIndex < 6 && m_hwndStatusBar)
+    {
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0,
+                    (LPARAM)(L"Sidebar: " + std::wstring(viewNames[viewIndex])));
+    }
+
+    LOG_INFO("Sidebar view switched to: " + std::to_string(static_cast<int>(view)));
+}
+
+void Win32IDE::toggleSidebar()
+{
+    m_sidebarVisible = !m_sidebarVisible;
+
+    if (m_hwndSidebar)
+        ShowWindow(m_hwndSidebar, m_sidebarVisible ? SW_SHOW : SW_HIDE);
+    if (m_hwndActivityBar)
+        ShowWindow(m_hwndActivityBar, m_sidebarVisible ? SW_SHOW : SW_HIDE);
+
+    // Resize editor to fill space
+    resizeEditor();
+
+    LOG_INFO(m_sidebarVisible ? "Sidebar shown" : "Sidebar hidden");
+}
+
+void Win32IDE::resizeSidebar(int width, int height)
+{
+    if (!m_hwndSidebar || !m_hwndActivityBar)
+        return;
+
+    // Resize activity bar
+    SetWindowPos(m_hwndActivityBar, nullptr,
+                 0, 30, 48, height - 30,
+                 SWP_NOZORDER);
+
+    // Resize sidebar
+    SetWindowPos(m_hwndSidebar, nullptr,
+                 48, 30, width, height - 30,
+                 SWP_NOZORDER);
+
+    // Resize sidebar content
+    if (m_hwndSidebarContent)
+    {
+        SetWindowPos(m_hwndSidebarContent, nullptr,
+                     0, 0, width - 2, height - 32,
+                     SWP_NOZORDER);
+    }
+
+    // Resize current view content
+    switch (m_currentSidebarView)
+    {
+        case SidebarView::Explorer:
+            if (m_hwndFileExplorer)
+            {
+                SetWindowPos(m_hwndFileExplorer, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::Search:
+            if (m_hwndSearchPanel)
+            {
+                SetWindowPos(m_hwndSearchPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::SourceControl:
+            if (m_hwndGitPanel)
+            {
+                SetWindowPos(m_hwndGitPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::RunDebug:
+            if (m_hwndDebugPanel)
+            {
+                SetWindowPos(m_hwndDebugPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        case SidebarView::Extensions:
+            if (m_hwndExtensionsPanel)
+            {
+                SetWindowPos(m_hwndExtensionsPanel, nullptr,
+                            5, 30, width - 10, height - 40,
+                            SWP_NOZORDER);
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+// ============================================================================
+// SEARCH VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createSearchView(HWND hwndParent)
+{
+    createSearchPanel();
+}
+
+void Win32IDE::createSearchPanel()
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create search panel container
+    m_hwndSearchPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_SEARCH_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndSearchPanel)
+    {
+        LOG_ERROR("Failed to create search panel");
+        return;
+    }
+
+    // Create search input
+    m_hwndSearchInput = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"EDIT",
+        L"",
+        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        5, 5, m_sidebarWidth - 20, 24,
+        m_hwndSearchPanel,
+        (HMENU)IDC_SEARCH_INPUT,
+        m_hInstance,
+        nullptr);
+
+    // Create search button
+    HWND hwndSearchBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"Search",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 35, 80, 24,
+        m_hwndSearchPanel,
+        (HMENU)IDC_SEARCH_BUTTON,
+        m_hInstance,
+        nullptr);
+
+    // Create results list
+    m_hwndSearchResults = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        5, 65, m_sidebarWidth - 20, 330,
+        m_hwndSearchPanel,
+        (HMENU)IDC_SEARCH_RESULTS,
+        m_hInstance,
+        nullptr);
+
+    // Add placeholder text
+    SendMessageW(m_hwndSearchResults, LB_ADDSTRING, 0, (LPARAM)L"Enter search term and click Search");
+
+    LOG_INFO("Search panel created");
+}
+
+// ============================================================================
+// SOURCE CONTROL VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createSourceControlView(HWND hwndParent)
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create SCM panel container
+    m_hwndGitPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_GIT_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndGitPanel)
+    {
+        LOG_ERROR("Failed to create Git panel");
+        return;
+    }
+
+    // Create changes list
+    m_hwndSCMFileList = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        5, 5, m_sidebarWidth - 20, 200,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_FILE_LIST,
+        m_hInstance,
+        nullptr);
+
+    // Add placeholder items
+    SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"Changes (0)");
+    SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"No changes");
+
+    // Create action buttons
+    HWND hwndStageBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"Stage All",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 210, 80, 24,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_STAGE,
+        m_hInstance,
+        nullptr);
+
+    HWND hwndCommitBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"Commit",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        90, 210, 80, 24,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_COMMIT,
+        m_hInstance,
+        nullptr);
+
+    // Create commit message input
+    m_hwndSCMCommitMessage = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"EDIT",
+        L"",
+        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL,
+        5, 240, m_sidebarWidth - 20, 60,
+        m_hwndGitPanel,
+        (HMENU)IDC_SCM_COMMIT_MSG,
+        m_hInstance,
+        nullptr);
+
+    LOG_INFO("Source control view created");
+}
+
+// ============================================================================
+// RUN AND DEBUG VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createRunDebugView(HWND hwndParent)
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create debug panel container
+    m_hwndDebugPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_DEBUG_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndDebugPanel)
+    {
+        LOG_ERROR("Failed to create debug panel");
+        return;
+    }
+
+    // Create debug configurations dropdown
+    m_hwndDebugConfigs = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"COMBOBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_SORT,
+        5, 5, m_sidebarWidth - 20, 200,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_CONFIGS,
+        m_hInstance,
+        nullptr);
+
+    SendMessageW(m_hwndDebugConfigs, CB_ADDSTRING, 0, (LPARAM)L"No configurations");
+    SendMessageW(m_hwndDebugConfigs, CB_SETCURSEL, 0, 0);
+
+    // Create debug buttons
+    HWND hwndStartBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"▶ Start",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 35, 80, 24,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_START,
+        m_hInstance,
+        nullptr);
+
+    HWND hwndStopBtn = CreateWindowExW(
+        0,
+        L"BUTTON",
+        L"⏹ Stop",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        90, 35, 80, 24,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_STOP,
+        m_hInstance,
+        nullptr);
+
+    // Create variables list
+    m_hwndDebugVariables = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL,
+        5, 65, m_sidebarWidth - 20, 150,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_VARIABLES,
+        m_hInstance,
+        nullptr);
+
+    SendMessageW(m_hwndDebugVariables, LB_ADDSTRING, 0, (LPARAM)L"Variables");
+    SendMessageW(m_hwndDebugVariables, LB_ADDSTRING, 0, (LPARAM)L"Not debugging");
+
+    // Create call stack list
+    m_hwndDebugCallStack = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL,
+        5, 220, m_sidebarWidth - 20, 150,
+        m_hwndDebugPanel,
+        (HMENU)IDC_DEBUG_CALLSTACK,
+        m_hInstance,
+        nullptr);
+
+    SendMessageW(m_hwndDebugCallStack, LB_ADDSTRING, 0, (LPARAM)L"Call Stack");
+    SendMessageW(m_hwndDebugCallStack, LB_ADDSTRING, 0, (LPARAM)L"Not debugging");
+
+    LOG_INFO("Run and debug view created");
+}
+
+// ============================================================================
+// EXTENSIONS VIEW IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::createExtensionsView(HWND hwndParent)
+{
+    if (!m_hwndSidebar)
+        return;
+
+    // Create extensions panel container
+    m_hwndExtensionsPanel = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE,
+        5, 30, m_sidebarWidth - 10, 400,
+        m_hwndSidebar,
+        (HMENU)IDC_EXTENSIONS_PANEL,
+        m_hInstance,
+        nullptr);
+
+    if (!m_hwndExtensionsPanel)
+    {
+        LOG_ERROR("Failed to create extensions panel");
+        return;
+    }
+
+    // Create search input
+    m_hwndExtensionSearch = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"EDIT",
+        L"",
+        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        5, 5, m_sidebarWidth - 20, 24,
+        m_hwndExtensionsPanel,
+        (HMENU)IDC_EXTENSION_SEARCH,
+        m_hInstance,
+        nullptr);
+
+    // Create extensions list
+    m_hwndExtensionsList = CreateWindowExW(
+        WS_EX_CLIENTEDGE,
+        L"LISTBOX",
+        L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        5, 35, m_sidebarWidth - 20, 330,
+        m_hwndExtensionsPanel,
+        (HMENU)IDC_EXTENSIONS_LIST,
+        m_hInstance,
+        nullptr);
+
+    // Add placeholder items
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"INSTALLED");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"No extensions installed");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"RECOMMENDED");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"RawrXD Language Support");
+    SendMessageW(m_hwndExtensionsList, LB_ADDSTRING, 0, (LPARAM)L"Git Integration");
+
+    LOG_INFO("Extensions view created");
+}
+
+// ============================================================================
+// SEARCH FUNCTIONALITY IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::performWorkspaceSearch(const std::string& query, bool useRegex, bool caseSensitive, bool wholeWord)
+{
+    if (query.empty())
+        return;
+
+    LOG_INFO("Starting workspace search for: " + query);
+    appendToOutput("Searching for: " + query + "\n", "Output", OutputSeverity::Info);
+
+    // Clear previous results
+    if (m_hwndSearchResults)
+    {
+        SendMessageW(m_hwndSearchResults, LB_RESETCONTENT, 0, 0);
+    }
+
+    // Determine search root
+    std::string searchRoot = m_projectRoot;
+    if (searchRoot.empty())
+        searchRoot = m_currentDirectory;
+    if (searchRoot.empty())
+        searchRoot = ".";
+
+    // Perform search in background thread
+    std::thread([this, query, searchRoot, useRegex, caseSensitive, wholeWord]() {
+        std::vector<std::string> results;
+        int matchCount = 0;
+        int fileCount = 0;
+
+        try
+        {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(searchRoot, std::filesystem::directory_options::skip_permission_denied))
+            {
+                if (matchCount >= 100) // Limit results
+                    break;
+
+                if (!entry.is_regular_file())
+                    continue;
+
+                // Skip binary and large files
+                auto fileSize = entry.file_size();
+                if (fileSize > 1024 * 1024) // Skip files > 1MB
+                    continue;
+
+                std::string ext = entry.path().extension().string();
+                if (ext == ".exe" || ext == ".dll" || ext == ".pdb" || ext == ".obj" || ext == ".bin")
+                    continue;
+
+                std::ifstream file(entry.path());
+                if (!file)
+                    continue;
+
+                std::string line;
+                int lineNum = 0;
+                bool fileMatched = false;
+
+                while (std::getline(file, line) && matchCount < 100)
+                {
+                    lineNum++;
+
+                    std::string searchLine = line;
+                    std::string searchQuery = query;
+
+                    if (!caseSensitive)
+                    {
+                        std::transform(searchLine.begin(), searchLine.end(), searchLine.begin(), ::tolower);
+                        std::transform(searchQuery.begin(), searchQuery.end(), searchQuery.begin(), ::tolower);
+                    }
+
+                    bool match = false;
+                    if (useRegex)
+                    {
+                        try
+                        {
+                            std::regex pattern(searchQuery);
+                            match = std::regex_search(searchLine, pattern);
+                        }
+                        catch (...)
+                        {
+                            match = searchLine.find(searchQuery) != std::string::npos;
+                        }
+                    }
+                    else if (wholeWord)
+                    {
+                        // Simple whole word check
+                        size_t pos = searchLine.find(searchQuery);
+                        if (pos != std::string::npos)
+                        {
+                            bool wordStart = (pos == 0) || !std::isalnum(searchLine[pos - 1]);
+                            bool wordEnd = (pos + searchQuery.length() >= searchLine.length()) ||
+                                           !std::isalnum(searchLine[pos + searchQuery.length()]);
+                            match = wordStart && wordEnd;
+                        }
+                    }
+                    else
+                    {
+                        match = searchLine.find(searchQuery) != std::string::npos;
+                    }
+
+                    if (match)
+                    {
+                        matchCount++;
+                        if (!fileMatched)
+                        {
+                            fileCount++;
+                            fileMatched = true;
+                        }
+
+                        // Format result
+                        std::string result = entry.path().string() + ":" + std::to_string(lineNum) + ": " +
+                                           line.substr(0, std::min<size_t>(80, line.length()));
+                        results.push_back(result);
+
+                        // Update UI from main thread
+                        PostMessageW(m_hwndMain, WM_USER + 100, 0, 0);
+                    }
+                }
+            }
+        }
+        catch (const std::exception& e)
+        {
+            LOG_ERROR("Search error: " + std::string(e.what()));
+        }
+
+        // Final UI update
+        updateSearchResults(results);
+
+        std::string summary = "Search complete: " + std::to_string(matchCount) + " matches in " +
+                              std::to_string(fileCount) + " files\n";
+        appendToOutput(summary, "Output", OutputSeverity::Info);
+
+    }).detach();
+}
+
+void Win32IDE::updateSearchResults(const std::vector<std::string>& results)
+{
+    if (!m_hwndSearchResults)
+        return;
+
+    // Must be called from UI thread
+    SendMessageW(m_hwndSearchResults, LB_RESETCONTENT, 0, 0);
+
+    if (results.empty())
+    {
+        SendMessageW(m_hwndSearchResults, LB_ADDSTRING, 0, (LPARAM)L"No results found");
+        return;
+    }
+
+    for (const auto& result : results)
+    {
+        std::wstring wresult = utf8ToWide(result);
+        SendMessageW(m_hwndSearchResults, LB_ADDSTRING, 0, (LPARAM)wresult.c_str());
+    }
+
+    LOG_INFO("Updated search results: " + std::to_string(results.size()) + " items");
+}
+
+void Win32IDE::searchInFiles(const std::string& query)
+{
+    performWorkspaceSearch(query, false, false, false);
+}
+
+void Win32IDE::applySearchFilters(const std::string& includePattern, const std::string& excludePattern)
+{
+    // Store filter patterns for future searches
+    m_searchIncludePattern = includePattern;
+    m_searchExcludePattern = excludePattern;
+    LOG_INFO("Search filters updated - Include: " + includePattern + ", Exclude: " + excludePattern);
+}
+
+void Win32IDE::onSearchResultDoubleClick(int index)
+{
+    if (!m_hwndSearchResults || index < 0)
+        return;
+
+    // Get selected result
+    wchar_t buffer[512];
+    int len = (int)SendMessageW(m_hwndSearchResults, LB_GETTEXT, index, (LPARAM)buffer);
+    if (len <= 0)
+        return;
+
+    std::string result = wideToUtf8(buffer);
+
+    // Parse file path and line number
+    size_t colonPos = result.find(':');
+    if (colonPos == std::string::npos)
+        return;
+
+    std::string filePath = result.substr(0, colonPos);
+    size_t colonPos2 = result.find(':', colonPos + 1);
+    if (colonPos2 == std::string::npos)
+        return;
+
+    std::string lineStr = result.substr(colonPos + 1, colonPos2 - colonPos - 1);
+    int lineNum = std::stoi(lineStr);
+
+    // Open file at line
+    openFile(filePath);
+    goToLine(lineNum);
+
+    LOG_INFO("Opened search result: " + filePath + " at line " + std::to_string(lineNum));
+}
+
+// ============================================================================
+// GIT/SCM FUNCTIONALITY IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::refreshSourceControlView()
+{
+    if (!m_hwndGitPanel)
+        return;
+
+    LOG_INFO("Refreshing source control view");
+
+    // Clear current list
+    if (m_hwndSCMFileList)
+    {
+        SendMessageW(m_hwndSCMFileList, LB_RESETCONTENT, 0, 0);
+    }
+
+    // Check if we're in a git repository
+    std::string gitRoot = findGitRepositoryRoot();
+    if (gitRoot.empty())
+    {
+        if (m_hwndSCMFileList)
+        {
+            SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"Not a git repository");
+            SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"Open a folder with git to see changes");
+        }
+        return;
+    }
+
+    m_gitRepoPath = gitRoot;
+
+    // Get git status via PowerShell
+    std::string command = "cd \"" + gitRoot + "\" && git status --porcelain 2>nul";
+    executePowerShellCommandAsync(command, [this](const std::string& output, bool success) {
+        if (!success)
+        {
+            if (m_hwndSCMFileList)
+            {
+                SendMessageW(m_hwndSCMFileList, LB_RESETCONTENT, 0, 0);
+                SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"Failed to get git status");
+            }
+            return;
+        }
+
+        // Parse git status output
+        std::istringstream stream(output);
+        std::string line;
+        int stagedCount = 0;
+        int unstagedCount = 0;
+
+        while (std::getline(stream, line))
+        {
+            if (line.length() < 3)
+                continue;
+
+            char staged = line[0];
+            char unstaged = line[1];
+            std::string filePath = line.substr(3);
+
+            std::wstring display;
+            if (staged != ' ' && staged != '?')
+            {
+                display = L"[Staged] " + utf8ToWide(filePath);
+                stagedCount++;
+            }
+            else if (unstaged != ' ')
+            {
+                display = L"[Modified] " + utf8ToWide(filePath);
+                unstagedCount++;
+            }
+            else if (staged == '?')
+            {
+                display = L"[Untracked] " + utf8ToWide(filePath);
+                unstagedCount++;
+            }
+
+            if (!display.empty() && m_hwndSCMFileList)
+            {
+                SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)display.c_str());
+            }
+        }
+
+        // Add summary
+        if (m_hwndSCMFileList)
+        {
+            if (stagedCount == 0 && unstagedCount == 0)
+            {
+                SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"No changes");
+                SendMessageW(m_hwndSCMFileList, LB_ADDSTRING, 0, (LPARAM)L"Working tree clean");
+            }
+            else
+            {
+                std::wstring summary = L"Changes: " + std::to_wstring(stagedCount) + L" staged, " +
+                                       std::to_wstring(unstagedCount) + L" unstaged";
+                SendMessageW(m_hwndSCMFileList, LB_INSERTSTRING, 0, (LPARAM)summary.c_str());
+            }
+        }
+
+        appendToOutput("Git status refreshed: " + std::to_string(stagedCount) + " staged, " +
+                       std::to_string(unstagedCount) + " unstaged\n", "Output", OutputSeverity::Info);
+    });
+}
+
+void Win32IDE::stageSelectedFiles()
+{
+    if (!m_hwndSCMFileList)
+        return;
+
+    int sel = (int)SendMessageW(m_hwndSCMFileList, LB_GETCURSEL, 0, 0);
+    if (sel == LB_ERR)
+        return;
+
+    wchar_t buffer[512];
+    int len = (int)SendMessageW(m_hwndSCMFileList, LB_GETTEXT, sel, (LPARAM)buffer);
+    if (len <= 0)
+        return;
+
+    std::string item = wideToUtf8(buffer);
+
+    // Extract file path from display string
+    size_t pos = item.find("] ");
+    if (pos == std::string::npos)
+        return;
+
+    std::string filePath = item.substr(pos + 2);
+
+    // Stage the file
+    std::string command = "cd \"" + m_gitRepoPath + "\" && git add \"" + filePath + "\"";
+    executePowerShellCommandAsync(command, [this, filePath](const std::string& output, bool success) {
+        if (success)
+        {
+            appendToOutput("Staged: " + filePath + "\n", "Output", OutputSeverity::Success);
+            refreshSourceControlView();
+        }
+        else
+        {
+            appendToOutput("Failed to stage: " + filePath + "\n", "Output", OutputSeverity::Error);
+        }
+    });
+}
+
+void Win32IDE::unstageSelectedFiles()
+{
+    if (!m_hwndSCMFileList)
+        return;
+
+    int sel = (int)SendMessageW(m_hwndSCMFileList, LB_GETCURSEL, 0, 0);
+    if (sel == LB_ERR)
+        return;
+
+    wchar_t buffer[512];
+    int len = (int)SendMessageW(m_hwndSCMFileList, LB_GETTEXT, sel, (LPARAM)buffer);
+    if (len <= 0)
+        return;
+
+    std::string item = wideToUtf8(buffer);
+
+    // Extract file path from display string
+    size_t pos = item.find("] ");
+    if (pos == std::string::npos)
+        return;
+
+    std::string filePath = item.substr(pos + 2);
+
+    // Unstage the file
+    std::string command = "cd \"" + m_gitRepoPath + "\" && git reset HEAD \"" + filePath + "\"";
+    executePowerShellCommandAsync(command, [this, filePath](const std::string& output, bool success) {
+        if (success)
+        {
+            appendToOutput("Unstaged: " + filePath + "\n", "Output", OutputSeverity::Success);
+            refreshSourceControlView();
+        }
+        else
+        {
+            appendToOutput("Failed to unstage: " + filePath + "\n", "Output", OutputSeverity::Error);
+        }
+    });
+}
+
+void Win32IDE::commitChangesFromSidebar()
+{
+    if (!m_hwndSCMCommitMessage || m_gitRepoPath.empty())
+        return;
+
+    // Get commit message
+    wchar_t buffer[1024];
+    GetWindowTextW(m_hwndSCMCommitMessage, buffer, 1024);
+    std::string message = wideToUtf8(buffer);
+
+    if (message.empty())
+    {
+        MessageBoxW(m_hwndMain, L"Please enter a commit message", L"Git Commit", MB_OK);
+        return;
+    }
+
+    // Escape quotes in message
+    size_t pos = 0;
+    while ((pos = message.find('"', pos)) != std::string::npos)
+    {
+        message.insert(pos, "\\");
+        pos += 2;
+    }
+
+    // Commit
+    std::string command = "cd \"" + m_gitRepoPath + "\" && git commit -m \"" + message + "\"";
+    executePowerShellCommandAsync(command, [this, message](const std::string& output, bool success) {
+        if (success)
+        {
+            appendToOutput("Committed: " + message + "\n", "Output", OutputSeverity::Success);
+            refreshSourceControlView();
+
+            // Clear commit message
+            if (m_hwndSCMCommitMessage)
+                SetWindowTextW(m_hwndSCMCommitMessage, L"");
+        }
+        else
+        {
+            appendToOutput("Commit failed\n", "Output", OutputSeverity::Error);
+        }
+    });
+}
+
+void Win32IDE::syncRepository()
+{
+    if (m_gitRepoPath.empty())
+        return;
+
+    appendToOutput("Syncing repository...\n", "Output", OutputSeverity::Info);
+
+    // Pull
+    std::string pullCmd = "cd \"" + m_gitRepoPath + "\" && git pull";
+    executePowerShellCommandAsync(pullCmd, [this](const std::string& output, bool success) {
+        if (success)
+        {
+            appendToOutput("Pull complete\n", "Output", OutputSeverity::Success);
+
+            // Push
+            std::string pushCmd = "cd \"" + m_gitRepoPath + "\" && git push";
+            executePowerShellCommandAsync(pushCmd, [this](const std::string& output2, bool success2) {
+                if (success2)
+                {
+                    appendToOutput("Push complete\n", "Output", OutputSeverity::Success);
+                    refreshSourceControlView();
+                }
+                else
+                {
+                    appendToOutput("Push failed\n", "Output", OutputSeverity::Error);
+                }
+            });
+        }
+        else
+        {
+            appendToOutput("Pull failed\n", "Output", OutputSeverity::Error);
+        }
+    });
+}
+
+std::string Win32IDE::findGitRepositoryRoot()
+{
+    std::string currentDir = m_projectRoot;
+    if (currentDir.empty())
+        currentDir = m_currentDirectory;
+    if (currentDir.empty())
+        currentDir = ".";
+
+    std::filesystem::path path(currentDir);
+    while (!path.empty() && path != path.parent_path())
+    {
+        if (std::filesystem::exists(path / ".git"))
+        {
+            return path.string();
+        }
+        path = path.parent_path();
+    }
+
+    return "";
+}
 
 void Win32IDE::newFile()
 {
@@ -19138,4 +20254,787 @@ Win32IDE::~Win32IDE()
     {
         NeuralBridge::Shutdown();
     }
+}
+
+// ============================================================================
+// COMMAND PALETTE IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::buildCommandRegistry()
+{
+    m_commandRegistry.clear();
+    m_commandRegistry.reserve(100);
+
+    // File Commands
+    m_commandRegistry.push_back({ID_FILE_NEW, "File: New File", "Ctrl+N", "File"});
+    m_commandRegistry.push_back({ID_FILE_OPEN, "File: Open File", "Ctrl+O", "File"});
+    m_commandRegistry.push_back({ID_FILE_SAVE, "File: Save", "Ctrl+S", "File"});
+    m_commandRegistry.push_back({ID_FILE_SAVEAS, "File: Save As", "Ctrl+Shift+S", "File"});
+    m_commandRegistry.push_back({ID_FILE_EXIT, "File: Exit", "Alt+F4", "File"});
+
+    // Edit Commands
+    m_commandRegistry.push_back({ID_EDIT_UNDO, "Edit: Undo", "Ctrl+Z", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_REDO, "Edit: Redo", "Ctrl+Y", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_CUT, "Edit: Cut", "Ctrl+X", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_COPY, "Edit: Copy", "Ctrl+C", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_PASTE, "Edit: Paste", "Ctrl+V", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_SELECT_ALL, "Edit: Select All", "Ctrl+A", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_FIND, "Edit: Find", "Ctrl+F", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_REPLACE, "Edit: Replace", "Ctrl+H", "Edit"});
+    m_commandRegistry.push_back({ID_EDIT_GOTO, "Edit: Go to Line", "Ctrl+G", "Edit"});
+
+    // View Commands
+    m_commandRegistry.push_back({ID_VIEW_EXPLORER, "View: Explorer", "Ctrl+Shift+E", "View"});
+    m_commandRegistry.push_back({ID_VIEW_SEARCH, "View: Search", "Ctrl+Shift+F", "View"});
+    m_commandRegistry.push_back({ID_VIEW_SIDEBAR, "View: Toggle Sidebar", "Ctrl+B", "View"});
+    m_commandRegistry.push_back({ID_VIEW_TERMINAL, "View: Terminal", "Ctrl+`", "View"});
+    m_commandRegistry.push_back({ID_VIEW_OUTPUT, "View: Output", "Ctrl+Shift+U", "View"});
+    m_commandRegistry.push_back({ID_VIEW_PROBLEMS, "View: Problems", "Ctrl+Shift+M", "View"});
+    m_commandRegistry.push_back({ID_VIEW_TOOLBAR, "View: Toggle Toolbar", "", "View"});
+    m_commandRegistry.push_back({ID_VIEW_STATUS_BAR, "View: Toggle Status Bar", "", "View"});
+
+    // Build Commands
+    m_commandRegistry.push_back({ID_BUILD_BUILD, "Build: Build Solution", "Ctrl+Shift+B", "Build"});
+    m_commandRegistry.push_back({ID_BUILD_COMPILE, "Build: Compile", "", "Build"});
+    m_commandRegistry.push_back({ID_BUILD_REBUILD, "Build: Rebuild", "", "Build"});
+    m_commandRegistry.push_back({ID_BUILD_CLEAN, "Build: Clean", "", "Build"});
+    m_commandRegistry.push_back({ID_BUILD_RUN, "Build: Run", "Ctrl+F5", "Build"});
+    m_commandRegistry.push_back({ID_BUILD_DEBUG, "Build: Debug", "F5", "Build"});
+
+    // Tools Commands
+    m_commandRegistry.push_back({ID_TOOLS_SETTINGS, "Tools: Settings", "Ctrl+,", "Tools"});
+    m_commandRegistry.push_back({ID_TOOLS_OPTIONS, "Tools: Options", "", "Tools"});
+    m_commandRegistry.push_back({ID_TOOLS_PLUGINS, "Tools: Plugins", "", "Tools"});
+    m_commandRegistry.push_back({ID_TOOLS_EXTENSIONS, "Tools: Extensions", "", "Tools"});
+
+    // Help Commands
+    m_commandRegistry.push_back({ID_HELP_CONTENTS, "Help: Contents", "F1", "Help"});
+    m_commandRegistry.push_back({ID_HELP_INDEX, "Help: Index", "", "Help"});
+    m_commandRegistry.push_back({ID_HELP_ABOUT, "Help: About", "", "Help"});
+
+    // Initialize filtered commands
+    m_filteredCommands = m_commandRegistry;
+
+    LOG_INFO("Command registry built with " + std::to_string(m_commandRegistry.size()) + " commands");
+}
+
+void Win32IDE::showCommandPalette()
+{
+    if (m_commandRegistry.empty())
+    {
+        buildCommandRegistry();
+    }
+
+    // Create command palette window if not exists
+    if (!m_hwndCommandPalette || !IsWindow(m_hwndCommandPalette))
+    {
+        // Register window class
+        WNDCLASSEXW wc = {};
+        wc.cbSize = sizeof(wc);
+        wc.lpfnWndProc = CommandPaletteProc;
+        wc.hInstance = m_hInstance;
+        wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        wc.lpszClassName = L"RawrXD_CommandPalette";
+        RegisterClassExW(&wc);
+
+        // Get main window rect for positioning
+        RECT rcMain;
+        GetWindowRect(m_hwndMain, &rcMain);
+        int width = 600;
+        int height = 400;
+        int x = rcMain.left + (rcMain.right - rcMain.left - width) / 2;
+        int y = rcMain.top + 100;
+
+        m_hwndCommandPalette = CreateWindowExW(
+            WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+            L"RawrXD_CommandPalette",
+            L"Command Palette",
+            WS_POPUP | WS_CAPTION | WS_THICKFRAME,
+            x, y, width, height,
+            m_hwndMain,
+            nullptr,
+            m_hInstance,
+            this);
+
+        if (!m_hwndCommandPalette)
+        {
+            LOG_ERROR("Failed to create command palette window");
+            return;
+        }
+
+        // Create input field
+        m_hwndCommandPaletteInput = CreateWindowExW(
+            WS_EX_CLIENTEDGE,
+            L"EDIT",
+            L"",
+            WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+            10, 10, width - 30, 24,
+            m_hwndCommandPalette,
+            (HMENU)IDC_COMMAND_PALETTE_INPUT,
+            m_hInstance,
+            nullptr);
+
+        // Create results list
+        m_hwndCommandPaletteList = CreateWindowExW(
+            WS_EX_CLIENTEDGE,
+            L"LISTBOX",
+            L"",
+            WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+            10, 40, width - 30, height - 80,
+            m_hwndCommandPalette,
+            (HMENU)IDC_COMMAND_PALETTE_LIST,
+            m_hInstance,
+            nullptr);
+
+        // Set window user data for proc
+        SetWindowLongPtrW(m_hwndCommandPalette, GWLP_USERDATA, (LONG_PTR)this);
+    }
+
+    // Reset and show
+    SetWindowTextW(m_hwndCommandPaletteInput, L"");
+    filterCommandPalette("");
+    ShowWindow(m_hwndCommandPalette, SW_SHOW);
+    SetForegroundWindow(m_hwndCommandPalette);
+    SetFocus(m_hwndCommandPaletteInput);
+
+    m_commandPaletteVisible = true;
+    LOG_INFO("Command palette shown");
+}
+
+void Win32IDE::hideCommandPalette()
+{
+    if (m_hwndCommandPalette && IsWindow(m_hwndCommandPalette))
+    {
+        ShowWindow(m_hwndCommandPalette, SW_HIDE);
+    }
+    m_commandPaletteVisible = false;
+    LOG_INFO("Command palette hidden");
+}
+
+void Win32IDE::filterCommandPalette(const std::string& query)
+{
+    m_filteredCommands.clear();
+
+    std::string lowerQuery = query;
+    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+
+    for (const auto& cmd : m_commandRegistry)
+    {
+        std::string lowerName = cmd.name;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+
+        if (lowerQuery.empty() || lowerName.find(lowerQuery) != std::string::npos)
+        {
+            m_filteredCommands.push_back(cmd);
+        }
+    }
+
+    // Update list box
+    if (m_hwndCommandPaletteList)
+    {
+        SendMessageW(m_hwndCommandPaletteList, LB_RESETCONTENT, 0, 0);
+        for (const auto& cmd : m_filteredCommands)
+        {
+            std::wstring wname = utf8ToWide(cmd.name);
+            SendMessageW(m_hwndCommandPaletteList, LB_ADDSTRING, 0, (LPARAM)wname.c_str());
+        }
+        if (!m_filteredCommands.empty())
+        {
+            SendMessageW(m_hwndCommandPaletteList, LB_SETCURSEL, 0, 0);
+        }
+    }
+}
+
+void Win32IDE::executeCommandFromPalette(int index)
+{
+    if (index < 0 || index >= static_cast<int>(m_filteredCommands.size()))
+        return;
+
+    const auto& cmd = m_filteredCommands[index];
+    LOG_INFO("Executing command from palette: " + cmd.name);
+
+    // Send command to main window
+    if (m_hwndMain)
+    {
+        SendMessageW(m_hwndMain, WM_COMMAND, MAKEWPARAM(cmd.id, 0), 0);
+    }
+
+    hideCommandPalette();
+}
+
+LRESULT CALLBACK Win32IDE::CommandPaletteProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {
+            int id = LOWORD(wParam);
+            int code = HIWORD(wParam);
+
+            if (id == IDC_COMMAND_PALETTE_INPUT && code == EN_CHANGE && pThis)
+            {
+                // Get input text and filter
+                wchar_t buffer[256];
+                GetWindowTextW(pThis->m_hwndCommandPaletteInput, buffer, 256);
+                std::string query = wideToUtf8(buffer);
+                pThis->filterCommandPalette(query);
+                return 0;
+            }
+
+            if (id == IDC_COMMAND_PALETTE_LIST && code == LBN_DBLCLK && pThis)
+            {
+                int sel = (int)SendMessageW(pThis->m_hwndCommandPaletteList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR)
+                {
+                    pThis->executeCommandFromPalette(sel);
+                }
+                return 0;
+            }
+            break;
+        }
+
+        case WM_KEYDOWN:
+        {
+            if (!pThis)
+                break;
+
+            if (wParam == VK_ESCAPE)
+            {
+                pThis->hideCommandPalette();
+                return 0;
+            }
+
+            if (wParam == VK_RETURN)
+            {
+                int sel = (int)SendMessageW(pThis->m_hwndCommandPaletteList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR)
+                {
+                    pThis->executeCommandFromPalette(sel);
+                }
+                return 0;
+            }
+
+            if (wParam == VK_UP || wParam == VK_DOWN)
+            {
+                // Let listbox handle arrow keys
+                SendMessageW(pThis->m_hwndCommandPaletteList, uMsg, wParam, lParam);
+                return 0;
+            }
+            break;
+        }
+
+        case WM_CLOSE:
+        {
+            if (pThis)
+            {
+                pThis->hideCommandPalette();
+            }
+            return 0;
+        }
+    }
+
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK Win32IDE::CommandPaletteInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    // Subclassed input proc for special key handling
+    Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+
+    switch (uMsg)
+    {
+        case WM_KEYDOWN:
+        {
+            if (wParam == VK_DOWN || wParam == VK_UP)
+            {
+                // Forward to listbox
+                if (pThis && pThis->m_hwndCommandPaletteList)
+                {
+                    SendMessageW(pThis->m_hwndCommandPaletteList, uMsg, wParam, lParam);
+                    return 0;
+                }
+            }
+            break;
+        }
+    }
+
+    // Call original proc
+    WNDPROC oldProc = (WNDPROC)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (oldProc)
+    {
+        return CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
+    }
+
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+// ============================================================================
+// DOCKING AND RESIZING FRAMEWORK IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::initDockingFramework()
+{
+    if (m_dockingInitialized)
+        return;
+
+    // Initialize splitter positions
+    m_sidebarWidth = 250;
+    m_bottomPanelHeight = 200;
+    m_secondarySidebarWidth = 300;
+
+    // Create splitter bars
+    createSidebarSplitter();
+    createBottomPanelSplitter();
+    createSecondarySidebarSplitter();
+
+    m_dockingInitialized = true;
+    LOG_INFO("Docking framework initialized");
+}
+
+void Win32IDE::createSidebarSplitter()
+{
+    if (m_hwndSidebarSplitter)
+        return;
+
+    m_hwndSidebarSplitter = CreateWindowExW(
+        0,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+        m_sidebarWidth, 30, 4, 500,
+        m_hwndMain,
+        (HMENU)IDC_SIDEBAR_SPLITTER,
+        m_hInstance,
+        nullptr);
+
+    if (m_hwndSidebarSplitter)
+    {
+        SetWindowLongPtrW(m_hwndSidebarSplitter, GWLP_USERDATA, (LONG_PTR)this);
+        m_oldSidebarSplitterProc = (WNDPROC)SetWindowLongPtrW(
+            m_hwndSidebarSplitter, GWLP_WNDPROC, (LONG_PTR)SidebarSplitterProc);
+    }
+}
+
+void Win32IDE::createBottomPanelSplitter()
+{
+    if (m_hwndBottomSplitter)
+        return;
+
+    RECT rcMain;
+    GetClientRect(m_hwndMain, &rcMain);
+    int splitterY = rcMain.bottom - m_bottomPanelHeight - 30;
+
+    m_hwndBottomSplitter = CreateWindowExW(
+        0,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+        0, splitterY, rcMain.right, 4,
+        m_hwndMain,
+        (HMENU)IDC_BOTTOM_SPLITTER,
+        m_hInstance,
+        nullptr);
+
+    if (m_hwndBottomSplitter)
+    {
+        SetWindowLongPtrW(m_hwndBottomSplitter, GWLP_USERDATA, (LONG_PTR)this);
+        m_oldBottomSplitterProc = (WNDPROC)SetWindowLongPtrW(
+            m_hwndBottomSplitter, GWLP_WNDPROC, (LONG_PTR)BottomSplitterProc);
+    }
+}
+
+void Win32IDE::createSecondarySidebarSplitter()
+{
+    if (m_hwndSecondarySidebarSplitter)
+        return;
+
+    RECT rcMain;
+    GetClientRect(m_hwndMain, &rcMain);
+    int splitterX = rcMain.right - m_secondarySidebarWidth;
+
+    m_hwndSecondarySidebarSplitter = CreateWindowExW(
+        0,
+        L"STATIC",
+        L"",
+        WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+        splitterX, 30, 4, 500,
+        m_hwndMain,
+        (HMENU)IDC_SECONDARY_SIDEBAR_SPLITTER,
+        m_hInstance,
+        nullptr);
+
+    if (m_hwndSecondarySidebarSplitter)
+    {
+        SetWindowLongPtrW(m_hwndSecondarySidebarSplitter, GWLP_USERDATA, (LONG_PTR)this);
+        m_oldSecondarySidebarSplitterProc = (WNDPROC)SetWindowLongPtrW(
+            m_hwndSecondarySidebarSplitter, GWLP_WNDPROC, (LONG_PTR)SecondarySidebarSplitterProc);
+    }
+}
+
+LRESULT CALLBACK Win32IDE::SidebarSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    if (!pThis)
+        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+
+    switch (uMsg)
+    {
+        case WM_LBUTTONDOWN:
+        {
+            pThis->m_draggingSplitter = true;
+            pThis->m_dragStartX = GET_X_LPARAM(lParam);
+            pThis->m_dragStartWidth = pThis->m_sidebarWidth;
+            SetCapture(hwnd);
+            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+            return 0;
+        }
+
+        case WM_MOUSEMOVE:
+        {
+            if (pThis->m_draggingSplitter)
+            {
+                int deltaX = GET_X_LPARAM(lParam) - pThis->m_dragStartX;
+                int newWidth = pThis->m_dragStartWidth + deltaX;
+                newWidth = std::max(150, std::min(500, newWidth));
+                pThis->m_sidebarWidth = newWidth;
+                pThis->updateLayout();
+                return 0;
+            }
+            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+            return 0;
+        }
+
+        case WM_LBUTTONUP:
+        {
+            if (pThis->m_draggingSplitter)
+            {
+                pThis->m_draggingSplitter = false;
+                ReleaseCapture();
+            }
+            return 0;
+        }
+
+        case WM_SETCURSOR:
+        {
+            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+            return TRUE;
+        }
+    }
+
+    if (pThis->m_oldSidebarSplitterProc)
+        return CallWindowProcW(pThis->m_oldSidebarSplitterProc, hwnd, uMsg, wParam, lParam);
+
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK Win32IDE::BottomSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    if (!pThis)
+        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+
+    switch (uMsg)
+    {
+        case WM_LBUTTONDOWN:
+        {
+            pThis->m_draggingSplitter = true;
+            pThis->m_dragStartY = GET_Y_LPARAM(lParam);
+            pThis->m_dragStartHeight = pThis->m_bottomPanelHeight;
+            SetCapture(hwnd);
+            SetCursor(LoadCursor(nullptr, IDC_SIZENS));
+            return 0;
+        }
+
+        case WM_MOUSEMOVE:
+        {
+            if (pThis->m_draggingSplitter)
+            {
+                int deltaY = pThis->m_dragStartY - GET_Y_LPARAM(lParam);
+                int newHeight = pThis->m_dragStartHeight + deltaY;
+                newHeight = std::max(100, std::min(600, newHeight));
+                pThis->m_bottomPanelHeight = newHeight;
+                pThis->updateLayout();
+                return 0;
+            }
+            SetCursor(LoadCursor(nullptr, IDC_SIZENS));
+            return 0;
+        }
+
+        case WM_LBUTTONUP:
+        {
+            if (pThis->m_draggingSplitter)
+            {
+                pThis->m_draggingSplitter = false;
+                ReleaseCapture();
+            }
+            return 0;
+        }
+
+        case WM_SETCURSOR:
+        {
+            SetCursor(LoadCursor(nullptr, IDC_SIZENS));
+            return TRUE;
+        }
+    }
+
+    if (pThis->m_oldBottomSplitterProc)
+        return CallWindowProcW(pThis->m_oldBottomSplitterProc, hwnd, uMsg, wParam, lParam);
+
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK Win32IDE::SecondarySidebarSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    if (!pThis)
+        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+
+    switch (uMsg)
+    {
+        case WM_LBUTTONDOWN:
+        {
+            pThis->m_draggingSplitter = true;
+            pThis->m_dragStartX = GET_X_LPARAM(lParam);
+            pThis->m_dragStartWidth = pThis->m_secondarySidebarWidth;
+            SetCapture(hwnd);
+            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+            return 0;
+        }
+
+        case WM_MOUSEMOVE:
+        {
+            if (pThis->m_draggingSplitter)
+            {
+                int deltaX = pThis->m_dragStartX - GET_X_LPARAM(lParam);
+                int newWidth = pThis->m_dragStartWidth + deltaX;
+                newWidth = std::max(200, std::min(600, newWidth));
+                pThis->m_secondarySidebarWidth = newWidth;
+                pThis->updateLayout();
+                return 0;
+            }
+            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+            return 0;
+        }
+
+        case WM_LBUTTONUP:
+        {
+            if (pThis->m_draggingSplitter)
+            {
+                pThis->m_draggingSplitter = false;
+                ReleaseCapture();
+            }
+            return 0;
+        }
+
+        case WM_SETCURSOR:
+        {
+            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+            return TRUE;
+        }
+    }
+
+    if (pThis->m_oldSecondarySidebarSplitterProc)
+        return CallWindowProcW(pThis->m_oldSecondarySidebarSplitterProc, hwnd, uMsg, wParam, lParam);
+
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+void Win32IDE::updateLayout()
+{
+    if (!m_hwndMain)
+        return;
+
+    RECT rcMain;
+    GetClientRect(m_hwndMain, &rcMain);
+    int mainWidth = rcMain.right - rcMain.left;
+    int mainHeight = rcMain.bottom - rcMain.top;
+
+    // Calculate positions
+    int sidebarLeft = m_sidebarVisible ? 48 : 0;
+    int sidebarRight = m_sidebarVisible ? sidebarLeft + m_sidebarWidth : sidebarLeft;
+    int secondarySidebarLeft = m_secondarySidebarVisible ? mainWidth - m_secondarySidebarWidth : mainWidth;
+    int bottomPanelTop = mainHeight - m_bottomPanelHeight;
+
+    // Update activity bar
+    if (m_hwndActivityBar)
+    {
+        SetWindowPos(m_hwndActivityBar, nullptr,
+                     0, 30, 48, mainHeight - 30,
+                     SWP_NOZORDER);
+    }
+
+    // Update sidebar
+    if (m_hwndSidebar)
+    {
+        SetWindowPos(m_hwndSidebar, nullptr,
+                     sidebarLeft, 30, m_sidebarWidth, mainHeight - m_bottomPanelHeight - 30,
+                     SWP_NOZORDER);
+        ShowWindow(m_hwndSidebar, m_sidebarVisible ? SW_SHOW : SW_HIDE);
+    }
+
+    // Update sidebar splitter
+    if (m_hwndSidebarSplitter)
+    {
+        SetWindowPos(m_hwndSidebarSplitter, nullptr,
+                     sidebarRight, 30, 4, mainHeight - m_bottomPanelHeight - 30,
+                     SWP_NOZORDER);
+        ShowWindow(m_hwndSidebarSplitter, m_sidebarVisible ? SW_SHOW : SW_HIDE);
+    }
+
+    // Update secondary sidebar
+    if (m_hwndSecondarySidebar)
+    {
+        SetWindowPos(m_hwndSecondarySidebar, nullptr,
+                     secondarySidebarLeft, 30, m_secondarySidebarWidth, mainHeight - m_bottomPanelHeight - 30,
+                     SWP_NOZORDER);
+        ShowWindow(m_hwndSecondarySidebar, m_secondarySidebarVisible ? SW_SHOW : SW_HIDE);
+    }
+
+    // Update secondary sidebar splitter
+    if (m_hwndSecondarySidebarSplitter)
+    {
+        SetWindowPos(m_hwndSecondarySidebarSplitter, nullptr,
+                     secondarySidebarLeft - 4, 30, 4, mainHeight - m_bottomPanelHeight - 30,
+                     SWP_NOZORDER);
+        ShowWindow(m_hwndSecondarySidebarSplitter, m_secondarySidebarVisible ? SW_SHOW : SW_HIDE);
+    }
+
+    // Update editor
+    if (m_hwndEditor)
+    {
+        int editorLeft = sidebarRight + 4;
+        int editorWidth = secondarySidebarLeft - sidebarRight - 8;
+        int editorHeight = mainHeight - m_bottomPanelHeight - 30;
+        SetWindowPos(m_hwndEditor, nullptr,
+                       editorLeft, 30, editorWidth, editorHeight,
+                       SWP_NOZORDER);
+    }
+
+    // Update bottom panel
+    if (m_hwndPanelContainer)
+    {
+        SetWindowPos(m_hwndPanelContainer, nullptr,
+                     sidebarRight, bottomPanelTop, mainWidth - sidebarRight, m_bottomPanelHeight,
+                     SWP_NOZORDER);
+    }
+
+    // Update bottom splitter
+    if (m_hwndBottomSplitter)
+    {
+        SetWindowPos(m_hwndBottomSplitter, nullptr,
+                     sidebarRight, bottomPanelTop - 4, mainWidth - sidebarRight, 4,
+                     SWP_NOZORDER);
+    }
+
+    // Resize sidebar content
+    resizeSidebar(m_sidebarWidth, mainHeight - m_bottomPanelHeight - 30);
+
+    LOG_INFO("Layout updated: sidebar=" + std::to_string(m_sidebarWidth) +
+             " bottom=" + std::to_string(m_bottomPanelHeight) +
+             " secondary=" + std::to_string(m_secondarySidebarWidth));
+}
+
+void Win32IDE::toggleSidebar()
+{
+    m_sidebarVisible = !m_sidebarVisible;
+    updateLayout();
+    LOG_INFO(m_sidebarVisible ? "Sidebar shown" : "Sidebar hidden");
+}
+
+void Win32IDE::toggleSecondarySidebar()
+{
+    m_secondarySidebarVisible = !m_secondarySidebarVisible;
+    updateLayout();
+    LOG_INFO(m_secondarySidebarVisible ? "Secondary sidebar shown" : "Secondary sidebar hidden");
+}
+
+void Win32IDE::toggleBottomPanel()
+{
+    m_bottomPanelVisible = !m_bottomPanelVisible;
+    if (m_bottomPanelVisible)
+    {
+        m_bottomPanelHeight = 200; // Default height
+    }
+    else
+    {
+        m_bottomPanelHeight = 0;
+    }
+    updateLayout();
+    LOG_INFO(m_bottomPanelVisible ? "Bottom panel shown" : "Bottom panel hidden");
+}
+
+void Win32IDE::resetLayout()
+{
+    m_sidebarWidth = 250;
+    m_bottomPanelHeight = 200;
+    m_secondarySidebarWidth = 300;
+    m_sidebarVisible = true;
+    m_secondarySidebarVisible = false;
+    m_bottomPanelVisible = true;
+    updateLayout();
+    LOG_INFO("Layout reset to defaults");
+}
+
+void Win32IDE::saveLayout()
+{
+    // Save layout to config file
+    nlohmann::json layout;
+    layout["sidebarWidth"] = m_sidebarWidth;
+    layout["bottomPanelHeight"] = m_bottomPanelHeight;
+    layout["secondarySidebarWidth"] = m_secondarySidebarWidth;
+    layout["sidebarVisible"] = m_sidebarVisible;
+    layout["secondarySidebarVisible"] = m_secondarySidebarVisible;
+    layout["bottomPanelVisible"] = m_bottomPanelVisible;
+
+    std::string configPath = getConfigDirectory() + "\\layout.json";
+    std::ofstream file(configPath);
+    if (file)
+    {
+        file << layout.dump(4);
+        LOG_INFO("Layout saved to " + configPath);
+    }
+}
+
+void Win32IDE::loadLayout()
+{
+    std::string configPath = getConfigDirectory() + "\\layout.json";
+    std::ifstream file(configPath);
+    if (file)
+    {
+        try
+        {
+            nlohmann::json layout;
+            file >> layout;
+
+            m_sidebarWidth = layout.value("sidebarWidth", 250);
+            m_bottomPanelHeight = layout.value("bottomPanelHeight", 200);
+            m_secondarySidebarWidth = layout.value("secondarySidebarWidth", 300);
+            m_sidebarVisible = layout.value("sidebarVisible", true);
+            m_secondarySidebarVisible = layout.value("secondarySidebarVisible", false);
+            m_bottomPanelVisible = layout.value("bottomPanelVisible", true);
+
+            updateLayout();
+            LOG_INFO("Layout loaded from " + configPath);
+        }
+        catch (const std::exception& e)
+        {
+            LOG_ERROR("Failed to load layout: " + std::string(e.what()));
+        }
+    }
+}
+
+std::string Win32IDE::getConfigDirectory()
+{
+    wchar_t path[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(nullptr, CSIDL_APPDATA, nullptr, 0, path)))
+    {
+        std::wstring wpath(path);
+        wpath += L"\\RawrXD";
+        CreateDirectoryW(wpath.c_str(), nullptr);
+        return wideToUtf8(wpath);
+    }
+    return ".";
 }

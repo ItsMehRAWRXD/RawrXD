@@ -1941,6 +1941,23 @@ class Win32IDE
     void setSidebarView(SidebarView view);
     void updateSidebarContent();
     void resizeSidebar(int width, int height);
+
+    // Docking Framework
+    void initDockingFramework();
+    void createSidebarSplitter();
+    void createBottomPanelSplitter();
+    void createSecondarySidebarSplitter();
+    void updateLayout();
+    void toggleSecondarySidebar();
+    void toggleBottomPanel();
+    void resetLayout();
+    void saveLayout();
+    void loadLayout();
+    std::string getConfigDirectory();
+    static LRESULT CALLBACK SidebarSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK BottomSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK SecondarySidebarSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
     static LRESULT CALLBACK ActivityBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK SidebarContentProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -2825,6 +2842,42 @@ class Win32IDE
     HWND m_hwndSidebarCaptionContext = nullptr;
     HWND m_hwndMaxTokensSlider;
     HWND m_hwndMaxTokensLabel;
+
+    // Sidebar View Panels
+    HWND m_hwndSearchPanel = nullptr;
+    HWND m_hwndSearchInput = nullptr;
+    HWND m_hwndSearchResults = nullptr;
+    HWND m_hwndGitPanel = nullptr;
+    HWND m_hwndSCMFileList = nullptr;
+    HWND m_hwndSCMCommitMessage = nullptr;
+    HWND m_hwndDebugPanel = nullptr;
+    HWND m_hwndDebugConfigs = nullptr;
+    HWND m_hwndDebugVariables = nullptr;
+    HWND m_hwndDebugCallStack = nullptr;
+    HWND m_hwndExtensionsPanel = nullptr;
+    HWND m_hwndExtensionsList = nullptr;
+    HWND m_hwndExtensionSearch = nullptr;
+    HWND m_activityBarButtons[7] = {};
+    int m_activeActivityBarButton = 0;
+
+    // Command Palette
+    HWND m_hwndCommandPalette = nullptr;
+    HWND m_hwndCommandPaletteInput = nullptr;
+    HWND m_hwndCommandPaletteList = nullptr;
+
+    // Docking Framework
+    HWND m_hwndSidebarSplitter = nullptr;
+    HWND m_hwndBottomSplitter = nullptr;
+    HWND m_hwndSecondarySidebarSplitter = nullptr;
+    WNDPROC m_oldSidebarSplitterProc = nullptr;
+    WNDPROC m_oldBottomSplitterProc = nullptr;
+    WNDPROC m_oldSecondarySidebarSplitterProc = nullptr;
+    bool m_dockingInitialized = false;
+    bool m_draggingSplitter = false;
+    int m_dragStartX = 0;
+    int m_dragStartY = 0;
+    int m_dragStartWidth = 0;
+    int m_dragStartHeight = 0;
 
     // AI Mode Toggles
     HWND m_hwndChkMaxMode;
@@ -7254,6 +7307,35 @@ class Win32IDE
     static constexpr int IDC_RENAME_CHECKLIST = 11282;
     static constexpr int IDC_RENAME_APPLY_BTN = 11283;
     static constexpr int IDC_RENAME_CANCEL_BTN = 11284;
+
+    // Command Palette IDs
+    static constexpr int IDC_COMMAND_PALETTE_INPUT = 11290;
+    static constexpr int IDC_COMMAND_PALETTE_LIST = 11291;
+
+    // Docking Framework Splitter IDs
+    static constexpr int IDC_SIDEBAR_SPLITTER = 11295;
+    static constexpr int IDC_BOTTOM_SPLITTER = 11296;
+    static constexpr int IDC_SECONDARY_SIDEBAR_SPLITTER = 11297;
+
+    // Sidebar View Panel IDs
+    static constexpr int IDC_SEARCH_PANEL = 11300;
+    static constexpr int IDC_SEARCH_INPUT = 11301;
+    static constexpr int IDC_SEARCH_BUTTON = 11302;
+    static constexpr int IDC_SEARCH_RESULTS = 11303;
+    static constexpr int IDC_GIT_PANEL = 11310;
+    static constexpr int IDC_SCM_FILE_LIST = 11311;
+    static constexpr int IDC_SCM_STAGE = 11312;
+    static constexpr int IDC_SCM_COMMIT = 11313;
+    static constexpr int IDC_SCM_COMMIT_MSG = 11314;
+    static constexpr int IDC_DEBUG_PANEL = 11320;
+    static constexpr int IDC_DEBUG_CONFIGS = 11321;
+    static constexpr int IDC_DEBUG_START = 11322;
+    static constexpr int IDC_DEBUG_STOP = 11323;
+    static constexpr int IDC_DEBUG_VARIABLES = 11324;
+    static constexpr int IDC_DEBUG_CALLSTACK = 11325;
+    static constexpr int IDC_EXTENSIONS_PANEL = 11330;
+    static constexpr int IDC_EXTENSIONS_LIST = 11331;
+    static constexpr int IDC_EXTENSION_SEARCH = 11332;
 
     // 16. Find All References UI
     void initReferencePanel();

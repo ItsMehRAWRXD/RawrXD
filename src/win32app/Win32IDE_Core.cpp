@@ -7150,6 +7150,66 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         case IDM_VIEW_VIDEO_STUDIO:  // 2046
             toggleVideoStudioWindow();
             return;
+
+        // Activity Bar Button Handlers (IDC_ACTBAR_*)
+        case IDC_ACTBAR_EXPLORER:  // 1101
+            setSidebarView(SidebarView::Explorer);
+            return;
+        case IDC_ACTBAR_SEARCH:  // 1102
+            setSidebarView(SidebarView::Search);
+            return;
+        case IDC_ACTBAR_SCM:  // 1103
+            setSidebarView(SidebarView::SourceControl);
+            return;
+        case IDC_ACTBAR_DEBUG:  // 1104
+            setSidebarView(SidebarView::RunDebug);
+            return;
+        case IDC_ACTBAR_EXTENSIONS:  // 1105
+            setSidebarView(SidebarView::Extensions);
+            return;
+        case IDC_ACTBAR_SETTINGS:  // 1106
+            showSettingsDialog();
+            return;
+        case IDC_ACTBAR_ACCOUNTS:  // 1107
+            // TODO: Show accounts/profile panel
+            appendToOutput("Accounts panel not yet implemented\n", "Output", OutputSeverity::Info);
+            return;
+
+        case IDC_SEARCH_BUTTON:  // 11302
+        {
+            // Get search text
+            wchar_t searchText[256];
+            GetWindowTextW(m_hwndSearchInput, searchText, 256);
+            if (wcslen(searchText) > 0)
+            {
+                std::string query = wideToUtf8(searchText);
+                LOG_INFO("Searching for: " + query);
+                performWorkspaceSearch(query, false, false, false);
+            }
+            return;
+        }
+
+        case IDC_SEARCH_RESULTS:  // 11303
+        {
+            if (codeNotify == LBN_DBLCLK)
+            {
+                int sel = (int)SendMessageW(m_hwndSearchResults, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR)
+                {
+                    onSearchResultDoubleClick(sel);
+                }
+            }
+            return;
+        }
+
+        case IDC_SCM_STAGE:  // 11312
+            stageSelectedFiles();
+            return;
+
+        case IDC_SCM_COMMIT:  // 11313
+            commitChangesFromSidebar();
+            return;
+
         case IDM_SECURITY_SCAN_SECRETS:
             RunSecretsScan();
             return;

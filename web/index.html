@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD - LLM Inference Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🚀</span>
+                    <span class="logo-text">RawrXD</span>
+                </div>
+                <div class="version">v1.5.0</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="chat">
+                    <span class="nav-icon">💬</span>
+                    <span>Chat</span>
+                </button>
+                <button class="nav-item" data-view="models">
+                    <span class="nav-icon">🤖</span>
+                    <span>Models</span>
+                </button>
+                <button class="nav-item" data-view="playground">
+                    <span class="nav-icon">🎮</span>
+                    <span>Playground</span>
+                </button>
+                <button class="nav-item" data-view="monitoring">
+                    <span class="nav-icon">📊</span>
+                    <span>Monitoring</span>
+                </button>
+                <button class="nav-item" data-view="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="server-status">
+                    <span class="status-indicator online"></span>
+                    <span class="status-text">Connected</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat View -->
+            <div class="view active" id="chat-view">
+                <div class="view-header">
+                    <h1>Chat</h1>
+                    <div class="model-selector">
+                        <select id="chat-model-select">
+                            <option value="">Loading models...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="welcome-message">
+                            <h2>Welcome to RawrXD</h2>
+                            <p>Start a conversation with your AI assistant. Select a model from the dropdown above.</p>
+                            <div class="suggested-prompts">
+                                <button class="prompt-chip" data-prompt="Explain quantum computing in simple terms">
+                                    💡 Explain quantum computing
+                                </button>
+                                <button class="prompt-chip" data-prompt="Write a Python function to calculate fibonacci numbers">
+                                    🐍 Write Python code
+                                </button>
+                                <button class="prompt-chip" data-prompt="What are the benefits of renewable energy?">
+                                    🌱 Renewable energy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <textarea 
+                                id="chat-input" 
+                                placeholder="Type your message..."
+                                rows="1"
+                            ></textarea>
+                            <button class="send-button" id="send-button" disabled>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="input-footer">
+                            <span class="token-count">0 tokens</span>
+                            <span class="shortcut-hint">Press Enter to send, Shift+Enter for new line</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Models View -->
+            <div class="view" id="models-view">
+                <div class="view-header">
+                    <h1>Models</h1>
+                    <button class="btn btn-primary" id="pull-model-btn">
+                        <span>+ Pull Model</span>
+                    </button>
+                </div>
+                
+                <div class="models-container">
+                    <div class="models-grid" id="models-grid">
+                        <!-- Models will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playground View -->
+            <div class="view" id="playground-view">
+                <div class="view-header">
+                    <h1>Playground</h1>
+                </div>
+                
+                <div class="playground-container">
+                    <div class="playground-panel">
+                        <div class="panel-section">
+                            <label>Model</label>
+                            <select id="playground-model">
+                                <option value="">Select model...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="panel-section">
+                            <label>Prompt</label>
+                            <textarea id="playground-prompt" rows="6" placeholder="Enter your prompt here..."></textarea>
+                        </div>
+                        
+                        <div class="panel-section parameters">
+                            <div class="param-row">
+                                <label>Temperature</label>
+                                <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                                <span class="param-value">0.7</span>
+                            </div>
+                            
+                            <div class="param-row">
+                                <label>Max Tokens</label>
+                                <input type="range" id="max-tokens" min="1" max="4096" step="1" value="256">
+                                <span class="param-value">256</span>
+                            </div>
+                            
+                            <div class="param-row">
+                                <label>Top P</label>
+                                <input type="range" id="top-p" min="0" max="1" step="0.05" value="0.9">
+                                <span class="param-value">0.9</span>
+                            </div>
+                            
+                            <div class="param-row">
+                                <label>Top K</label>
+                                <input type="range" id="top-k" min="1" max="100" step="1" value="40">
+                                <span class="param-value">40</span>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-full" id="run-playground">
+                            Run
+                        </button>
+                    </div>
+                    
+                    <div class="playground-output">
+                        <div class="output-header">
+                            <span>Output</span>
+                            <button class="btn btn-secondary btn-sm" id="clear-output">Clear</button>
+                        </div>
+                        <div class="output-content" id="playground-output">
+                            <div class="empty-state">
+                                <span class="empty-icon">📝</span>
+                                <p>Run a prompt to see the output</p>
+                            </div>
+                        </div>
+                        <div class="output-stats" id="output-stats"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monitoring View -->
+            <div class="view" id="monitoring-view">
+                <div class="view-header">
+                    <h1>Monitoring</h1>
+                    <div class="time-range">
+                        <select id="time-range">
+                            <option value="1h">Last 1 hour</option>
+                            <option value="6h">Last 6 hours</option>
+                            <option value="24h" selected>Last 24 hours</option>
+                            <option value="7d">Last 7 days</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="monitoring-container">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Requests/min</div>
+                            <div class="metric-value" id="metric-rpm">0</div>
+                            <div class="metric-change positive">+12%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Latency</div>
+                            <div class="metric-value" id="metric-latency">0ms</div>
+                            <div class="metric-change positive">-5%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Tokens/sec</div>
+                            <div class="metric-value" id="metric-tps">0</div>
+                            <div class="metric-change positive">+8%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">GPU Utilization</div>
+                            <div class="metric-value" id="metric-gpu">0%</div>
+                            <div class="metric-change neutral">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-container">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Request Rate</h3>
+                            </div>
+                            <div class="chart-placeholder" id="chart-requests">
+                                <div class="chart-mock">
+                                    <svg viewBox="0 0 400 150" class="chart-svg">
+                                        <path class="chart-line" d="M0,120 Q50,100 100,110 T200,80 T300,60 T400,40"></path>
+                                        <path class="chart-area" d="M0,120 Q50,100 100,110 T200,80 T300,60 T400,40 L400,150 L0,150 Z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Latency Distribution</h3>
+                            </div>
+                            <div class="chart-placeholder" id="chart-latency">
+                                <div class="chart-mock">
+                                    <svg viewBox="0 0 400 150" class="chart-svg">
+                                        <rect x="20" y="100" width="30" height="50" class="chart-bar"></rect>
+                                        <rect x="60" y="80" width="30" height="70" class="chart-bar"></rect>
+                                        <rect x="100" y="60" width="30" height="90" class="chart-bar"></rect>
+                                        <rect x="140" y="40" width="30" height="110" class="chart-bar"></rect>
+                                        <rect x="180" y="50" width="30" height="100" class="chart-bar"></rect>
+                                        <rect x="220" y="70" width="30" height="80" class="chart-bar"></rect>
+                                        <rect x="260" y="90" width="30" height="60" class="chart-bar"></rect>
+                                        <rect x="300" y="110" width="30" height="40" class="chart-bar"></rect>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div class="view" id="settings-view">
+                <div class="view-header">
+                    <h1>Settings</h1>
+                </div>
+                
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h2>Server Configuration</h2>
+                        <div class="setting-item">
+                            <label>Server URL</label>
+                            <input type="text" id="server-url" value="http://localhost:8080" placeholder="http://localhost:8080">
+                        </div>
+                        <div class="setting-item">
+                            <label>API Key (optional)</label>
+                            <input type="password" id="api-key" placeholder="Enter API key">
+                        </div>
+                        <button class="btn btn-primary" id="save-server-settings">Save</button>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h2>Appearance</h2>
+                        <div class="setting-item">
+                            <label>Theme</label>
+                            <select id="theme-select">
+                                <option value="dark">Dark</option>
+                                <option value="light">Light</option>
+                                <option value="system">System</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Font Size</label>
+                            <select id="font-size">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h2>About</h2>
+                        <div class="about-info">
+                            <div class="about-row">
+                                <span class="about-label">Version</span>
+                                <span class="about-value">1.5.0</span>
+                            </div>
+                            <div class="about-row">
+                                <span class="about-label">Build</span>
+                                <span class="about-value">2024.07.13</span>
+                            </div>
+                            <div class="about-row">
+                                <span class="about-label">Documentation</span>
+                                <a href="https://rawrxd.readthedocs.io" target="_blank">rawrxd.readthedocs.io</a>
+                            </div>
+                            <div class="about-row">
+                                <span class="about-label">GitHub</span>
+                                <a href="https://github.com/ItsMehRAWRXD/RawrXD" target="_blank">github.com/ItsMehRAWRXD/RawrXD</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Pull Model Modal -->
+    <div class="modal" id="pull-model-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Pull Model</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Model Name</label>
+                    <input type="text" id="pull-model-name" placeholder="e.g., llama-2-7b-chat">
+                    <span class="form-hint">Enter the model ID from Hugging Face or RawrXD registry</span>
+                </div>
+                <div class="form-group">
+                    <label>Quantization</label>
+                    <select id="pull-model-quantization">
+                        <option value="Q4_K_M">Q4_K_M (Recommended)</option>
+                        <option value="Q5_K_M">Q5_K_M (Better quality)</option>
+                        <option value="Q6_K">Q6_K (Best quality)</option>
+                        <option value="Q8_0">Q8_0 (Maximum quality)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="confirm-pull-model">Pull Model</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

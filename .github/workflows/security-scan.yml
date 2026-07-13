@@ -1,0 +1,118 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, 'release/**', 'hotfix/**' ]
+  pull_request:
+    branches: [ main, 'release/**' ]
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+
+jobs:
+  # Python dependency vulnerability scan
+  python-security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install pip-audit
+      run: pip install pip-audit
+    
+    - name: Run pip-audit
+      working-directory: services
+      run: |
+        pip-audit --format=json --output=../security-report.json || true
+        pip-audit --format=markdown --output=../security-report.md || true
+    
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-security-report
+        path: |
+          security-report.json
+          security-report.md
+        retention-days: 30
+
+  # Container vulnerability scan
+  container-security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Static code analysis
+  codeql-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: cpp, python
+        queries: security-extended,security-and-quality
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:cpp,python"
+
+  # Secret scanning
+  secret-detection:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Secret Detection
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  # Summary
+  security-summary:
+    needs: [python-security, container-security, codeql-analysis, secret-detection]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Security Scan Summary
+      run: |
+        echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Scan | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Python Dependencies | ${{ needs.python-security.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Container Scan | ${{ needs.container-security.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| CodeQL Analysis | ${{ needs.codeql-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Secret Detection | ${{ needs.secret-detection.result }} |" >> $GITHUB_STEP_SUMMARY

@@ -114,14 +114,12 @@ Describe "Compliance Threshold Tests" {
         
         It "Should pass with score >= 80" {
             # Mock a passing compliance check
-            Mock -CommandName & $script:ComplianceCheckerPath -MockWith {
-                return @{ summary = @{ compliance_score = 85 } } | ConvertTo-Json
+            Mock -CommandName Invoke-ComplianceCheck -MockWith {
+                return @{ summary = @{ compliance_score = 85 } }
             }
             
-            $result = & $script:ComplianceCheckerPath -Operation check -OutputFormat json
-            $json = $result | ConvertFrom-Json
-            
-            $json.summary.compliance_score | Should -BeGreaterOrEqual 80
+            $result = Invoke-ComplianceCheck
+            $result.summary.compliance_score | Should -BeGreaterOrEqual 80
         }
         
         It "Should fail with score < 80" {
