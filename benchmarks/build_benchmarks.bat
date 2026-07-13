@@ -44,7 +44,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-"%LINK%" /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB /LARGEADDRESSAWARE:NO /OUT:"%BUILD_DIR%\masm_hello_world.exe" "%BUILD_DIR%\masm_hello_world.obj"
+"%LINK%" /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB /LARGEADDRESSAWARE:NO /OUT:"%BUILD_DIR%\masm_hello_world.exe" /MACHINE:X64 /LIBPATH:"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\lib\x64" /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64" "%BUILD_DIR%\masm_hello_world.obj" kernel32.lib
 if errorlevel 1 (
     echo FAILED to link masm_hello_world.exe
     exit /b 1
