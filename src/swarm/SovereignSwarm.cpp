@@ -119,21 +119,110 @@ void SwarmAgentContext::InitializeDefaultRoleModels() {
 // SwarmAgent implementation
 SwarmAgent::SwarmAgent(const SwarmAgentContext& ctx, uint32_t agentId) : ctx_(ctx), agentId_(agentId) {}
 
+// Phase 1: Map SwarmTaskKind to Engine Cycle execution
 SwarmTaskResult SwarmAgent::Execute(const SwarmTask& task) {
     auto startTime = std::chrono::steady_clock::now();
     
     SwarmTaskResult result;
     result.taskId = task.id;
     result.success = true;
-    result.message = "Task executed successfully";
-    result.confidence = 0.95f;
-    result.executionTimeMs = 100;
     result.modelUsed = ctx_.roleModels.at(TaskKindToModelRole(task.kind)).modelName;
     
     std::cout << "[SwarmAgent " << agentId_ << "] Executing task: " << task.description << std::endl;
     
-    // Simulate work
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    // Execute appropriate engine cycle based on task kind
+    // Mapping: Swarm Batches 250-256 → Engine Batches 243-249 (Unity Cycle)
+    if (ctx_.engine) {
+        try {
+            switch (task.kind) {
+                // Batch 250: ORDER → Engine Batch 243: UNITY (Self-organization)
+                case SwarmTaskKind::ComputeOrderTopology:
+                case SwarmTaskKind::DiffuseCapabilities:
+                case SwarmTaskKind::EmergeRoles:
+                case SwarmTaskKind::AlignSubstrate:
+                    ctx_.engine->RunUnityCycle();
+                    result.message = "Unity cycle executed - topology emergent";
+                    result.confidence = static_cast<float>(ctx_.engine->ComputeCycleIntegration());
+                    break;
+                    
+                // Batch 251: RESONANCE → Engine Batch 244: INTEGRATION (Harmonic amplification)
+                case SwarmTaskKind::AmplifyPatterns:
+                case SwarmTaskKind::StabilizeResonance:
+                case SwarmTaskKind::CoupleHarmonics:
+                case SwarmTaskKind::ReinforceTopology:
+                    ctx_.engine->RunIntegrationCycle();
+                    result.message = "Integration cycle executed - harmonics coupled";
+                    result.confidence = static_cast<float>(ctx_.engine->ComputeHarmonicLock());
+                    break;
+                    
+                // Batch 252: AMPLIFICATION → Engine Batch 245: SYNTHESIS (Adaptive scaling)
+                case SwarmTaskKind::ScaleAmplification:
+                case SwarmTaskKind::BoostValuePatterns:
+                case SwarmTaskKind::SuppressNoisePatterns:
+                case SwarmTaskKind::AdaptToSubstrateLoad:
+                    ctx_.engine->RunSynthesisCycle();
+                    result.message = "Synthesis cycle executed - patterns scaled";
+                    result.confidence = static_cast<float>(ctx_.engine->ComputeCrossCycleSynergy());
+                    break;
+                    
+                // Batch 253: INTEGRATION → Engine Batch 246: CONVERGENCE (Cross-subsystem coupling)
+                case SwarmTaskKind::DetectCrossPatterns:
+                case SwarmTaskKind::BuildIntegrationLinks:
+                case SwarmTaskKind::StabilizeMultiFlows:
+                case SwarmTaskKind::CoupleUnitySwarm:
+                    ctx_.engine->RunConvergenceCycle();
+                    result.message = "Convergence cycle executed - subsystems coupled";
+                    result.confidence = static_cast<float>(ctx_.engine->ComputeConvergenceCoherence());
+                    break;
+                    
+                // Batch 254: CONVERGENCE → Engine Batch 247: COHERENCE (Alignment to attractors)
+                case SwarmTaskKind::AlignToSharedGoals:
+                case SwarmTaskKind::EstablishFeedbackLoops:
+                case SwarmTaskKind::ConvergeToAttractors:
+                case SwarmTaskKind::OptimizeConvergenceRate:
+                    ctx_.engine->RunCoherenceCycle();
+                    result.message = "Coherence cycle executed - attractors aligned";
+                    result.confidence = static_cast<float>(ctx_.engine->ComputePhaseLockStrength());
+                    break;
+                    
+                // Batch 255: COHERENCE → Engine Batch 248: HARMONY (Phase synchronization)
+                case SwarmTaskKind::SynchronizePhases:
+                case SwarmTaskKind::BalanceAmplitudes:
+                case SwarmTaskKind::LockResonances:
+                case SwarmTaskKind::ReinforceCoherence:
+                    ctx_.engine->RunHarmonyCycle();
+                    result.message = "Harmony cycle executed - phases locked";
+                    result.confidence = static_cast<float>(ctx_.engine->ComputeSovereignHarmonyIndex());
+                    break;
+                    
+                // Batch 256: HARMONY → Engine Batch 249: BALANCE (Perfect unity)
+                case SwarmTaskKind::AchievePerfectUnity:
+                case SwarmTaskKind::BalanceAbsolute:
+                case SwarmTaskKind::AchieveInfiniteResonance:
+                case SwarmTaskKind::CompleteUnityCycle:
+                    ctx_.engine->RunBalanceCycle();
+                    result.message = "Balance cycle executed - unity achieved";
+                    result.confidence = static_cast<float>(ctx_.engine->ComputeEquilibriumStrength());
+                    break;
+                    
+                // Legacy tasks - no engine cycle (maintain backward compatibility)
+                default:
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    result.message = "Task executed (legacy mode)";
+                    result.confidence = 0.95f;
+                    break;
+            }
+        } catch (const std::exception& e) {
+            result.success = false;
+            result.message = std::string("Engine cycle failed: ") + e.what();
+            result.confidence = 0.0f;
+        }
+    } else {
+        // No engine available - simulate work
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        result.message = "Task executed (simulated - no engine)";
+        result.confidence = 0.5f;
+    }
     
     // Phase A: Self Model - Record execution metrics
     auto endTime = std::chrono::steady_clock::now();
@@ -141,7 +230,11 @@ SwarmTaskResult SwarmAgent::Execute(const SwarmTask& task) {
     result.executionTimeMs = static_cast<int64_t>(duration);
     
     // Record success in self-model registry
-    SelfModelRegistry::GetInstance().RecordTaskSuccess(agentId_, task.kind, duration);
+    if (result.success) {
+        SelfModelRegistry::GetInstance().RecordTaskSuccess(agentId_, task.kind, duration);
+    } else {
+        SelfModelRegistry::GetInstance().RecordTaskFailure(agentId_, task.kind, result.message);
+    }
     
     return result;
 }
@@ -1344,6 +1437,105 @@ void SovereignSwarm::PrintHarmonyMap() const {
     std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
 }
 
+// Phase 2: Unity Sequence - Execute full Order→Harmony pipeline with real engine
+SovereignSwarm::UnitySequenceResult SovereignSwarm::ExecuteUnitySequence(
+    InfinitePerfection::InfinitePerfectionEngine& engine) {
+    
+    UnitySequenceResult result;
+    auto startTime = std::chrono::steady_clock::now();
+    
+    std::cout << "\n╔══════════════════════════════════════════════════════════════╗" << std::endl;
+    std::cout << "║     Phase 2: Unity Sequence Execution                        ║" << std::endl;
+    std::cout << "║     Order → Resonance → Amplification → Integration          ║" << std::endl;
+    std::cout << "║              → Convergence → Coherence → Harmony            ║" << std::endl;
+    std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
+    
+    // Step 1: Order (Batch 250) → Engine Unity Cycle (Batch 243)
+    std::cout << "\n[UnitySequence] Step 1/7: ORDER (Unity Cycle 243)..." << std::endl;
+    engine.RunUnityCycle();
+    double unityIntegration = engine.ComputeCycleIntegration();
+    result.stepMetrics.push_back({"Order", unityIntegration});
+    std::cout << "  → Cycle Integration: " << std::fixed << std::setprecision(4) << unityIntegration << std::endl;
+    
+    // Step 2: Resonance (Batch 251) → Engine Integration Cycle (Batch 244)
+    std::cout << "\n[UnitySequence] Step 2/7: RESONANCE (Integration Cycle 244)..." << std::endl;
+    engine.RunIntegrationCycle();
+    double harmonicLock = engine.ComputeHarmonicLock();
+    result.stepMetrics.push_back({"Resonance", harmonicLock});
+    std::cout << "  → Harmonic Lock: " << std::fixed << std::setprecision(4) << harmonicLock << std::endl;
+    
+    // Step 3: Amplification (Batch 252) → Engine Synthesis Cycle (Batch 245)
+    std::cout << "\n[UnitySequence] Step 3/7: AMPLIFICATION (Synthesis Cycle 245)..." << std::endl;
+    engine.RunSynthesisCycle();
+    double crossCycleSynergy = engine.ComputeCrossCycleSynergy();
+    result.stepMetrics.push_back({"Amplification", crossCycleSynergy});
+    std::cout << "  → Cross-Cycle Synergy: " << std::fixed << std::setprecision(4) << crossCycleSynergy << std::endl;
+    
+    // Step 4: Integration (Batch 253) → Engine Convergence Cycle (Batch 246)
+    std::cout << "\n[UnitySequence] Step 4/7: INTEGRATION (Convergence Cycle 246)..." << std::endl;
+    engine.RunConvergenceCycle();
+    double convergenceCoherence = engine.ComputeConvergenceCoherence();
+    result.stepMetrics.push_back({"Integration", convergenceCoherence});
+    std::cout << "  → Convergence Coherence: " << std::fixed << std::setprecision(4) << convergenceCoherence << std::endl;
+    
+    // Step 5: Convergence (Batch 254) → Engine Coherence Cycle (Batch 247)
+    std::cout << "\n[UnitySequence] Step 5/7: CONVERGENCE (Coherence Cycle 247)..." << std::endl;
+    engine.RunCoherenceCycle();
+    double phaseLockStrength = engine.ComputePhaseLockStrength();
+    result.stepMetrics.push_back({"Convergence", phaseLockStrength});
+    std::cout << "  → Phase Lock Strength: " << std::fixed << std::setprecision(4) << phaseLockStrength << std::endl;
+    
+    // Step 6: Coherence (Batch 255) → Engine Harmony Cycle (Batch 248)
+    std::cout << "\n[UnitySequence] Step 6/7: COHERENCE (Harmony Cycle 248)..." << std::endl;
+    engine.RunHarmonyCycle();
+    double harmonyIndex = engine.ComputeSovereignHarmonyIndex();
+    result.stepMetrics.push_back({"Coherence", harmonyIndex});
+    std::cout << "  → Sovereign Harmony Index: " << std::fixed << std::setprecision(4) << harmonyIndex << std::endl;
+    
+    // Step 7: Harmony (Batch 256) → Engine Balance Cycle (Batch 249)
+    std::cout << "\n[UnitySequence] Step 7/7: HARMONY (Balance Cycle 249)..." << std::endl;
+    engine.RunBalanceCycle();
+    double equilibriumStrength = engine.ComputeEquilibriumStrength();
+    result.stepMetrics.push_back({"Harmony", equilibriumStrength});
+    std::cout << "  → Equilibrium Strength: " << std::fixed << std::setprecision(4) << equilibriumStrength << std::endl;
+    
+    // Calculate final results
+    auto endTime = std::chrono::steady_clock::now();
+    result.totalExecutionTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    result.finalHarmonyIndex = harmonyIndex;
+    result.finalEquilibriumStrength = equilibriumStrength;
+    result.success = true;
+    
+    // Build summary
+    std::ostringstream oss;
+    oss << "Unity Sequence Complete: " << result.stepMetrics.size() << " steps executed in "
+        << result.totalExecutionTimeMs << "ms. Final Harmony Index: " 
+        << std::fixed << std::setprecision(4) << result.finalHarmonyIndex;
+    result.summary = oss.str();
+    
+    std::cout << "\n╔══════════════════════════════════════════════════════════════╗" << std::endl;
+    std::cout << "║     Unity Sequence COMPLETE                                  ║" << std::endl;
+    std::cout << "║     Total Time: " << std::setw(10) << result.totalExecutionTimeMs << "ms                              ║" << std::endl;
+    std::cout << "║     Final Harmony Index: " << std::fixed << std::setprecision(4) << result.finalHarmonyIndex << "                          ║" << std::endl;
+    std::cout << "║     Final Equilibrium: " << std::fixed << std::setprecision(4) << result.finalEquilibriumStrength << "                           ║" << std::endl;
+    std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
+    
+    return result;
+}
+
+void SovereignSwarm::LogUnitySequenceMetrics(const UnitySequenceResult& result) const {
+    std::cout << "\n╔══════════════════════════════════════════════════════════════╗" << std::endl;
+    std::cout << "║     Unity Sequence Metrics Log                               ║" << std::endl;
+    std::cout << "╠══════════════════════════════════════════════════════════════╣" << std::endl;
+    std::cout << "║  Step-by-Step Metrics:                                       ║" << std::endl;
+    for (const auto& [step, metric] : result.stepMetrics) {
+        std::cout << "║    " << std::left << std::setw(15) << step << ": " << std::fixed << std::setprecision(4) << metric << std::endl;
+    }
+    std::cout << "╠══════════════════════════════════════════════════════════════╣" << std::endl;
+    std::cout << "║  Summary: " << std::left << std::setw(45) << result.summary << " ║" << std::endl;
+    std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
+}
+
 // Cycle 0: Emergence - Sovereign self-direction (THE FOLD)
 void SovereignSwarm::RunEmergenceCycle() {
     std::cout << "\n========================================" << std::endl;
@@ -1574,7 +1766,7 @@ void SelfModelRegistry::RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, 
     // Phase A.4: Update rolling window
     perf.recentOutcomes.push_back(true);
     perf.recentLatencies.push_back(latencyMs);
-    if (perf.recentOutcomes.size() > TaskPerformance::ROLLING_WINDOW_SIZE) {
+    if (perf.recentOutcomes.size() > AgentSelfModel::TaskPerformance::ROLLING_WINDOW_SIZE) {
         perf.recentOutcomes.pop_front();
         perf.recentLatencies.pop_front();
     }
@@ -1591,10 +1783,10 @@ void SelfModelRegistry::RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, 
         perf.emaSuccessRate = 1.0;
         perf.emaLatency = static_cast<double>(latencyMs);
     } else {
-        perf.emaSuccessRate = (1.0 - TaskPerformance::EMA_ALPHA) * perf.emaSuccessRate + 
-                              TaskPerformance::EMA_ALPHA * 1.0;
-        perf.emaLatency = (1.0 - TaskPerformance::EMA_ALPHA) * perf.emaLatency + 
-                         TaskPerformance::EMA_ALPHA * static_cast<double>(latencyMs);
+        perf.emaSuccessRate = (1.0 - AgentSelfModel::TaskPerformance::EMA_ALPHA) * perf.emaSuccessRate + 
+                              AgentSelfModel::TaskPerformance::EMA_ALPHA * 1.0;
+        perf.emaLatency = (1.0 - AgentSelfModel::TaskPerformance::EMA_ALPHA) * perf.emaLatency + 
+                         AgentSelfModel::TaskPerformance::EMA_ALPHA * static_cast<double>(latencyMs);
     }
     
     // Update average latency with exponential moving average
@@ -1612,7 +1804,10 @@ void SelfModelRegistry::RecordTaskSuccess(uint32_t agentId, SwarmTaskKind kind, 
     
     // Phase A.1: Update composite score
     // Composite = success_rate * confidence * latency_factor
-    double latencyFactor = 100.0 / (100.0 + perf.avgLatencyMs);
+    // Latency factor: normalize so lower latency is better, but don't over-weight it
+    // Use a gentler curve: factor = 1.0 / (1.0 + latency/200.0)
+    // This gives: 30ms -> 0.87, 100ms -> 0.67, 200ms -> 0.50
+    double latencyFactor = 1.0 / (1.0 + perf.avgLatencyMs / 200.0);
     perf.compositeScore = perf.successRate * perf.confidence * latencyFactor;
     
     perf.lastUpdated = std::chrono::steady_clock::now();
@@ -1631,16 +1826,16 @@ void SelfModelRegistry::RecordTaskFailure(uint32_t agentId, SwarmTaskKind kind, 
     
     // Phase A.4: Update rolling window
     perf.recentOutcomes.push_back(false);
-    if (perf.recentOutcomes.size() > TaskPerformance::ROLLING_WINDOW_SIZE) {
+    if (perf.recentOutcomes.size() > AgentSelfModel::TaskPerformance::ROLLING_WINDOW_SIZE) {
         perf.recentOutcomes.pop_front();
     }
-    
+
     // Calculate rolling success rate
     uint32_t recentSuccesses = std::count(perf.recentOutcomes.begin(), perf.recentOutcomes.end(), true);
     perf.rollingSuccessRate = static_cast<double>(recentSuccesses) / perf.recentOutcomes.size();
-    
+
     // Phase A.4: Update EMA
-    perf.emaSuccessRate = (1.0 - TaskPerformance::EMA_ALPHA) * perf.emaSuccessRate;
+    perf.emaSuccessRate = (1.0 - AgentSelfModel::TaskPerformance::EMA_ALPHA) * perf.emaSuccessRate;
     
     // Update success rate
     perf.successRate = static_cast<double>(perf.successes) / static_cast<double>(perf.attempts);
@@ -1772,9 +1967,8 @@ uint32_t SelfModelRegistry::GetBestAgentForTask(SwarmTaskKind kind) const {
 // Phase A.3: Select agent with exploration vs exploitation
 SelfModelRegistry::SelectionResult SelfModelRegistry::SelectAgentWithExploration(SwarmTaskKind kind, double explorationRate) const {
     std::lock_guard<std::mutex> lock(mutex_);
-    
+
     SelectionResult result;
-    result.taskKind = kind;
     
     // Get all agents and their scores
     std::vector<std::pair<uint32_t, double>> candidates;
@@ -1941,7 +2135,7 @@ std::string SelfModelRegistry::BenchmarkResult::ToString() const {
     oss << "Agent Performance:\n";
     oss << std::left << std::setw(10) << "Agent" 
         << std::setw(15) << "Success Rate" 
-        << std::setw(15) <> "Avg Latency"
+        << std::setw(15) << "Avg Latency"
         << std::setw(15) << "Assignments" << "\n";
     oss << std::string(55, '-') << "\n";
     
@@ -2005,52 +2199,6 @@ void SelfModelRegistry::ResetStatistics() {
     std::lock_guard<std::mutex> lock(mutex_);
     models_.clear();
     routingHistory_.clear();
-}
-
-std::string TaskKindToString(SwarmTaskKind kind) {
-    switch (kind) {
-        case SwarmTaskKind::ScanSubsystem: return "Scan";
-        case SwarmTaskKind::RepairSubsystem: return "Repair";
-        case SwarmTaskKind::ExtendSubsystem: return "Extend";
-        case SwarmTaskKind::OptimizeSubsystem: return "Optimize";
-        case SwarmTaskKind::HarmonizeCycle: return "Harmonize";
-        case SwarmTaskKind::FinalizeRuntime: return "Finalize";
-        case SwarmTaskKind::ComputeOrderTopology: return "OrderTopology";
-        case SwarmTaskKind::DiffuseCapabilities: return "DiffuseCaps";
-        case SwarmTaskKind::EmergeRoles: return "EmergeRoles";
-        case SwarmTaskKind::AlignSubstrate: return "AlignSubstrate";
-        case SwarmTaskKind::AmplifyPatterns: return "Amplify";
-        case SwarmTaskKind::StabilizeResonance: return "Stabilize";
-        case SwarmTaskKind::CoupleHarmonics: return "Couple";
-        case SwarmTaskKind::ReinforceTopology: return "Reinforce";
-        case SwarmTaskKind::ScaleAmplification: return "Scale";
-        case SwarmTaskKind::BoostValuePatterns: return "Boost";
-        case SwarmTaskKind::SuppressNoisePatterns: return "Suppress";
-        case SwarmTaskKind::AdaptToSubstrateLoad: return "Adapt";
-        case SwarmTaskKind::DetectCrossPatterns: return "Detect";
-        case SwarmTaskKind::BuildIntegrationLinks: return "BuildLinks";
-        case SwarmTaskKind::StabilizeMultiFlows: return "StabilizeFlows";
-        case SwarmTaskKind::CoupleUnitySwarm: return "CoupleUnity";
-        case SwarmTaskKind::AlignToSharedGoals: return "AlignGoals";
-        case SwarmTaskKind::EstablishFeedbackLoops: return "Feedback";
-        case SwarmTaskKind::ConvergeToAttractors: return "Converge";
-        case SwarmTaskKind::OptimizeConvergenceRate: return "OptimizeConv";
-        case SwarmTaskKind::SynchronizePhases: return "SyncPhases";
-        case SwarmTaskKind::BalanceAmplitudes: return "Balance";
-        case SwarmTaskKind::LockResonances: return "LockRes";
-        case SwarmTaskKind::ReinforceCoherence: return "ReinforceCoh";
-        case SwarmTaskKind::AchievePerfectUnity: return "PerfectUnity";
-        case SwarmTaskKind::BalanceAbsolute: return "BalanceAbs";
-        case SwarmTaskKind::AchieveInfiniteResonance: return "InfiniteRes";
-        case SwarmTaskKind::CompleteUnityCycle: return "Complete";
-        case SwarmTaskKind::DiscoverNewRoles: return "Discover";
-        case SwarmTaskKind::MutateCapabilities: return "Mutate";
-        case SwarmTaskKind::ReflectOnExecution: return "Reflect";
-        case SwarmTaskKind::ProjectFutureTopology: return "Project";
-        case SwarmTaskKind::GenerateNewHarmonics: return "Generate";
-        case SwarmTaskKind::AchieveSovereignization: return "Sovereign";
-        default: return "Unknown";
-    }
 }
 
 // Utility functions

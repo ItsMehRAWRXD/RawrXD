@@ -108,6 +108,11 @@ void LearningSimulator::Run() {
     // Reset registry
     SelfModelRegistry::GetInstance().ResetStatistics();
     
+    // Pre-register all agents in the registry so they are available for selection
+    for (const auto& worker : scenario_.workers) {
+        SelfModelRegistry::GetInstance().GetOrCreateModel(worker.agentId);
+    }
+    
     // Run simulation
     for (uint32_t i = 0; i < scenario_.iterations; ++i) {
         // Select agent using learned assignment
@@ -155,6 +160,11 @@ std::vector<LearningSimulator::ConvergenceSnapshot> LearningSimulator::RunWithTr
     
     // Reset registry
     SelfModelRegistry::GetInstance().ResetStatistics();
+    
+    // Pre-register all agents in the registry so they are available for selection
+    for (const auto& worker : scenario_.workers) {
+        SelfModelRegistry::GetInstance().GetOrCreateModel(worker.agentId);
+    }
     
     // Calculate baselines
     double randomBaseline = CalculateRandomBaseline(scenario_);

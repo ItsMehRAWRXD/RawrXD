@@ -6,6 +6,7 @@
 #include "../cli/SovereignCLI.hpp"
 #include "../core/SovereignSEG.h"
 #include "../telemetry.h"
+#include "InfinitePerfectionTelemetry.hpp"
 #include <vector>
 #include <string>
 #include <functional>
@@ -99,6 +100,7 @@ struct SwarmAgentContext {
     SovereignSEG*             seg;
     void*                     os;  // Placeholder for SovereignOS
     Telemetry*                telemetry;
+    InfinitePerfectionTelemetry* infiniteTelemetry;  // Phase B.2: Engine telemetry bridge
     
     // Role-to-model mapping (configurable per swarm)
     std::unordered_map<ModelRole, RoleModelConfig> roleModels;
@@ -217,6 +219,53 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::GenerateNewHarmonics:    return ModelRole::Harmonizer;
         case SwarmTaskKind::AchieveSovereignization:  return ModelRole::Finalizer;
         default: return ModelRole::General;
+    }
+}
+
+// Convert SwarmTaskKind to string for logging/debugging
+inline std::string TaskKindToString(SwarmTaskKind kind) {
+    switch (kind) {
+        case SwarmTaskKind::ScanSubsystem: return "ScanSubsystem";
+        case SwarmTaskKind::RepairSubsystem: return "RepairSubsystem";
+        case SwarmTaskKind::ExtendSubsystem: return "ExtendSubsystem";
+        case SwarmTaskKind::OptimizeSubsystem: return "OptimizeSubsystem";
+        case SwarmTaskKind::HarmonizeCycle: return "HarmonizeCycle";
+        case SwarmTaskKind::FinalizeRuntime: return "FinalizeRuntime";
+        case SwarmTaskKind::ComputeOrderTopology: return "ComputeOrderTopology";
+        case SwarmTaskKind::DiffuseCapabilities: return "DiffuseCapabilities";
+        case SwarmTaskKind::EmergeRoles: return "EmergeRoles";
+        case SwarmTaskKind::AlignSubstrate: return "AlignSubstrate";
+        case SwarmTaskKind::AmplifyPatterns: return "AmplifyPatterns";
+        case SwarmTaskKind::StabilizeResonance: return "StabilizeResonance";
+        case SwarmTaskKind::CoupleHarmonics: return "CoupleHarmonics";
+        case SwarmTaskKind::ReinforceTopology: return "ReinforceTopology";
+        case SwarmTaskKind::ScaleAmplification: return "ScaleAmplification";
+        case SwarmTaskKind::BoostValuePatterns: return "BoostValuePatterns";
+        case SwarmTaskKind::SuppressNoisePatterns: return "SuppressNoisePatterns";
+        case SwarmTaskKind::AdaptToSubstrateLoad: return "AdaptToSubstrateLoad";
+        case SwarmTaskKind::DetectCrossPatterns: return "DetectCrossPatterns";
+        case SwarmTaskKind::BuildIntegrationLinks: return "BuildIntegrationLinks";
+        case SwarmTaskKind::StabilizeMultiFlows: return "StabilizeMultiFlows";
+        case SwarmTaskKind::CoupleUnitySwarm: return "CoupleUnitySwarm";
+        case SwarmTaskKind::AlignToSharedGoals: return "AlignToSharedGoals";
+        case SwarmTaskKind::EstablishFeedbackLoops: return "EstablishFeedbackLoops";
+        case SwarmTaskKind::ConvergeToAttractors: return "ConvergeToAttractors";
+        case SwarmTaskKind::OptimizeConvergenceRate: return "OptimizeConvergenceRate";
+        case SwarmTaskKind::SynchronizePhases: return "SynchronizePhases";
+        case SwarmTaskKind::BalanceAmplitudes: return "BalanceAmplitudes";
+        case SwarmTaskKind::LockResonances: return "LockResonances";
+        case SwarmTaskKind::ReinforceCoherence: return "ReinforceCoherence";
+        case SwarmTaskKind::AchievePerfectUnity: return "AchievePerfectUnity";
+        case SwarmTaskKind::BalanceAbsolute: return "BalanceAbsolute";
+        case SwarmTaskKind::AchieveInfiniteResonance: return "AchieveInfiniteResonance";
+        case SwarmTaskKind::CompleteUnityCycle: return "CompleteUnityCycle";
+        case SwarmTaskKind::DiscoverNewRoles: return "DiscoverNewRoles";
+        case SwarmTaskKind::MutateCapabilities: return "MutateCapabilities";
+        case SwarmTaskKind::ReflectOnExecution: return "ReflectOnExecution";
+        case SwarmTaskKind::ProjectFutureTopology: return "ProjectFutureTopology";
+        case SwarmTaskKind::GenerateNewHarmonics: return "GenerateNewHarmonics";
+        case SwarmTaskKind::AchieveSovereignization: return "AchieveSovereignization";
+        default: return "Unknown";
     }
 }
 
@@ -494,7 +543,7 @@ public:
     bool IsLearnedAssignmentEnabled() const { return learnedAssignmentEnabled_; }
     
     // Phase A.1-A.5: Get best worker with full learning pipeline
-    uint32_t GetBestWorkerForTask(const SwarmTask& task) const;
+    uint32_t GetBestWorkerForTask(SwarmTaskKind kind) const;
     
     // Phase A.3: Set exploration rate (0.0-1.0, default 0.1)
     void SetExplorationRate(double rate) { explorationRate_ = std::clamp(rate, 0.0, 1.0); }
@@ -628,6 +677,18 @@ public:
     void AchieveInfiniteResonanceState();                    // Achieve infinite resonance state
     void CompleteUnityCycleFinalization();                   // Complete Unity Cycle 243-256
     void PrintHarmonyMap() const;                            // Display harmony completion map
+
+    // Phase 2: Unity Sequence - Execute full Order→Harmony pipeline
+    struct UnitySequenceResult {
+        bool success = false;
+        double finalHarmonyIndex = 0.0;
+        double finalEquilibriumStrength = 0.0;
+        std::vector<std::pair<std::string, double>> stepMetrics; // step name → metric
+        int64_t totalExecutionTimeMs = 0;
+        std::string summary;
+    };
+    UnitySequenceResult ExecuteUnitySequence(InfinitePerfection::InfinitePerfectionEngine& engine);
+    void LogUnitySequenceMetrics(const UnitySequenceResult& result) const;
 
     // Cycle 0: Emergence - Sovereign self-direction (THE FOLD)
     void RunEmergenceCycle();                                // Execute emergence (Sovereign Cycle)
