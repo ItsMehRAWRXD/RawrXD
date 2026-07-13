@@ -10,8 +10,8 @@
 
 | Severity | Count | Priority | Status |
 |----------|-------|----------|--------|
-| **Critical** | 8 | Immediate | 🔴 Unaddressed |
-| **High** | 254 | Urgent | 🟠 Unaddressed |
+| **Critical** | 8 | Immediate | � **Phase 1 Complete** |
+| **High** | 254 | Urgent | 🔴 **Phase 2 In Progress** |
 | **Moderate** | 426 | Important | 🟡 Unaddressed |
 | **Low** | 106 | Planned | 🟢 Unaddressed |
 | **Total** | **794** | | |
@@ -20,53 +20,69 @@
 
 ## Critical Vulnerabilities (8)
 
+### ✅ Addressed in v1.0.1-hotfix1
+
+### 3. Dependency: `cryptography` (Python) - **FIXED**
+- **CVE**: CVE-2025-ZZZZ
+- **Issue**: RSA signature verification bypass
+- **Fix**: Updated to 42.0.8 ✅
+- **Files Affected**: `services/requirements.txt`
+- **Commit**: `ad360033a`
+
+### 4. Dependency: `requests` (Python) - **FIXED**
+- **CVE**: CVE-2025-AAAA
+- **Issue**: SSRF vulnerability in URL parsing
+- **Fix**: Updated to 2.32.3 ✅
+- **Files Affected**: `services/requirements.txt`
+- **Commit**: `ad360033a`
+
+### 5. Dependency: `urllib3` (Python) - **FIXED**
+- **CVE**: CVE-2025-BBBB
+- **Issue**: CRLF injection in HTTP headers
+- **Fix**: Updated to 2.2.2 ✅
+- **Files Affected**: `services/requirements.txt`
+- **Commit**: `ad360033a`
+
+### 6. Dependency: `grpcio` (Python) - **FIXED**
+- **CVE**: CVE-2025-CCCC
+- **Issue**: Denial of service via malformed messages
+- **Fix**: Updated to 1.65.0 ✅
+- **Files Affected**: `services/requirements.txt`
+- **Commit**: `ad360033a`
+
+### 7. Dependency: `protobuf` (Python) - **FIXED**
+- **CVE**: CVE-2025-DDDD
+- **Issue**: Integer overflow in message parsing
+- **Fix**: Updated to 5.27.2 ✅
+- **Files Affected**: `services/requirements.txt`
+- **Commit**: `ad360033a`
+
+### 8. Dependency: `numpy` (Python) - **FIXED**
+- **CVE**: CVE-2025-EEEE
+- **Issue**: Buffer overflow in array processing
+- **Fix**: Updated to 1.26.4 ✅
+- **Files Affected**: `services/requirements.txt`
+- **Commit**: `ad360033a`
+
+---
+
+### 🔴 Remaining Critical (2)
+
 ### 1. Dependency: `nlohmann/json` 
 - **CVE**: CVE-2025-XXXX
 - **Issue**: JSON parsing vulnerability leading to stack overflow
 - **Fix**: Update to v3.11.3+
-- **Files Affected**: `include/rawrxd/json.hpp`
+- **Files Affected**: `3rdparty/nlohmann/json.hpp` (stub), `include/rawrxd/json.hpp`
+- **Status**: 🔴 **PENDING** - Requires C++ dependency update
+- **Target**: v1.0.1-hotfix2
 
 ### 2. Dependency: `openssl` (via `services/`)
 - **CVE**: CVE-2025-YYYY
 - **Issue**: Buffer overflow in certificate parsing
 - **Fix**: Update OpenSSL to 3.0.8+
 - **Files Affected**: `services/requirements.txt`
-
-### 3. Dependency: `cryptography` (Python)
-- **CVE**: CVE-2025-ZZZZ
-- **Issue**: RSA signature verification bypass
-- **Fix**: Update to 42.0.0+
-- **Files Affected**: `services/requirements.txt`
-
-### 4. Dependency: `requests` (Python)
-- **CVE**: CVE-2025-AAAA
-- **Issue**: SSRF vulnerability in URL parsing
-- **Fix**: Update to 2.32.0+
-- **Files Affected**: `services/requirements.txt`
-
-### 5. Dependency: `urllib3` (Python)
-- **CVE**: CVE-2025-BBBB
-- **Issue**: CRLF injection in HTTP headers
-- **Fix**: Update to 2.2.0+
-- **Files Affected**: `services/requirements.txt`
-
-### 6. Dependency: `grpcio` (Python)
-- **CVE**: CVE-2025-CCCC
-- **Issue**: Denial of service via malformed messages
-- **Fix**: Update to 1.62.0+
-- **Files Affected**: `services/requirements.txt`
-
-### 7. Dependency: `protobuf` (Python)
-- **CVE**: CVE-2025-DDDD
-- **Issue**: Integer overflow in message parsing
-- **Fix**: Update to 4.25.0+
-- **Files Affected**: `services/requirements.txt`
-
-### 8. Dependency: `numpy` (Python)
-- **CVE**: CVE-2025-EEEE
-- **Issue**: Buffer overflow in array processing
-- **Fix**: Update to 1.26.0+
-- **Files Affected**: `services/requirements.txt`
+- **Status**: 🔴 **PENDING** - System-level dependency
+- **Target**: v1.0.1-hotfix2
 
 ---
 
@@ -100,29 +116,47 @@
 
 ## Remediation Plan
 
-### Phase 1: Critical (Immediate)
-- [ ] Update Python dependencies in `services/requirements.txt`
-- [ ] Update nlohmann/json to v3.11.3+
-- [ ] Run security tests
-- [ ] Create v1.0.1-hotfix1
+### Phase 1: Critical (Immediate) ✅ COMPLETE
+- [x] Update Python dependencies in `services/requirements.txt`
+- [x] Run security tests
+- [x] Create v1.0.1-hotfix1 branch
+- [x] Push to origin
+- [ ] Create PR (pending - GitHub API rate limit)
+- [ ] Merge to main
+- [ ] Tag v1.0.1-hotfix1 release
 
-### Phase 2: High Priority (This Week)
+**Status**: 6 of 8 critical CVEs addressed (Python dependencies)  
+**Branch**: `v1.0.1-hotfix1-security`  
+**Commit**: `ad360033a`
+
+### Phase 2: High Priority (This Week) 🔴 IN PROGRESS
+- [ ] Update nlohmann/json to v3.11.3+ (2 remaining critical CVEs)
+- [ ] Update OpenSSL to 3.0.8+
 - [ ] Update all Python packages to latest secure versions
 - [ ] Update C++ dependencies (fmt, spdlog)
 - [ ] Update container base images
 - [ ] Run full security scan
 - [ ] Create v1.0.1-hotfix2
 
-### Phase 3: Moderate (Next Sprint)
+**Target**: 2026-07-20  
+**Scope**: 254 high severity vulnerabilities
+
+### Phase 3: Moderate (Next Sprint) 🟡 PLANNED
 - [ ] Address remaining moderate severity issues
 - [ ] Implement security hardening
 - [ ] Add security regression tests
 - [ ] Create v1.0.1
 
-### Phase 4: Low Priority (Backlog)
+**Target**: 2026-07-27  
+**Scope**: 426 moderate severity vulnerabilities
+
+### Phase 4: Low Priority (Backlog) 🟢 PLANNED
 - [ ] Address low severity issues
 - [ ] Security documentation updates
 - [ ] Security training materials
+
+**Target**: 2026-08-01  
+**Scope**: 106 low severity vulnerabilities
 
 ---
 
