@@ -40,6 +40,10 @@ scale_factor REAL4 0.0078125, 0.0078125, 0.0078125, 0.0078125  ; 1/128
 .code
 ALIGN 64
 
+; Public exports for kernel functions
+PUBLIC Sovereign_Q4Q8_MatMul_AVX512
+PUBLIC q4q8_matmul_avx512
+
 ; ============================================================================
 ; Sovereign_Q4Q8_MatMul_AVX512 - Optimized quantized matmul
 ; ============================================================================

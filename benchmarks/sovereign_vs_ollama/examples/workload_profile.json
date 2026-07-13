@@ -1,0 +1,145 @@
+{
+  "name": "example_workload_profile",
+  "description": "Example workload profile demonstrating all configuration options",
+  "version": "1.0.0",
+  "author": "RawrXD Team",
+  "created": "2024-01-15",
+  
+  "benchmarks": [
+    {
+      "benchmark_name": "inference_tps",
+      "description": "Core TPS measurement with custom parameters",
+      "iterations": 30,
+      "warmup_iterations": 5,
+      "timeout_seconds": 300,
+      "enabled": true,
+      "parameters": {
+        "model": "phi-4",
+        "prompt": "Explain the theory of relativity in simple terms.",
+        "max_tokens": "256",
+        "temperature": "0.0",
+        "seed": "42"
+      }
+    },
+    {
+      "benchmark_name": "context_scaling",
+      "description": "Test performance across different context lengths",
+      "iterations": 20,
+      "warmup_iterations": 3,
+      "timeout_seconds": 600,
+      "enabled": true,
+      "parameters": {
+        "model": "phi-4",
+        "context_lengths": "1024,2048,4096,8192",
+        "max_tokens": "128"
+      }
+    },
+    {
+      "benchmark_name": "concurrent_load",
+      "description": "Test parallel request handling",
+      "iterations": 25,
+      "warmup_iterations": 5,
+      "timeout_seconds": 400,
+      "enabled": true,
+      "parameters": {
+        "model": "phi-4",
+        "concurrency_levels": "1,2,4,8,16",
+        "max_tokens": "64"
+      }
+    },
+    {
+      "benchmark_name": "latency_percentiles",
+      "description": "Measure tail latency distribution",
+      "iterations": 100,
+      "warmup_iterations": 10,
+      "timeout_seconds": 300,
+      "enabled": true,
+      "parameters": {
+        "model": "phi-4",
+        "prompt": "What is machine learning?",
+        "max_tokens": "128"
+      }
+    },
+    {
+      "benchmark_name": "planning_task",
+      "description": "Multi-step planning evaluation",
+      "iterations": 20,
+      "warmup_iterations": 2,
+      "timeout_seconds": 600,
+      "enabled": true,
+      "parameters": {
+        "model": "phi-4",
+        "task_types": "sequential,parallel,conditional,loop",
+        "max_steps": "10"
+      }
+    },
+    {
+      "benchmark_name": "memory_leak",
+      "description": "Long-running stability test",
+      "iterations": 1,
+      "warmup_iterations": 0,
+      "timeout_seconds": 3600,
+      "enabled": false,
+      "parameters": {
+        "model": "phi-4",
+        "duration_hours": "1",
+        "sample_interval_seconds": "60"
+      }
+    }
+  ],
+  
+  "environment": {
+    "backend_url": "http://localhost:8080",
+    "model_name": "phi-4",
+    "log_level": "info",
+    "env_vars": {
+      "BENCHMARK_TIMEOUT": "3600",
+      "BENCHMARK_VERBOSE": "true",
+      "CUDA_VISIBLE_DEVICES": "0"
+    }
+  },
+  
+  "thresholds": {
+    "max_latency_ms": 1000.0,
+    "min_throughput_tps": 20.0,
+    "max_error_rate": 0.05,
+    "max_regression_percent": 10.0,
+    "min_availability": 0.99,
+    "max_memory_growth_mb_per_hour": 100.0
+  },
+  
+  "reporting": {
+    "formats": ["json", "html", "markdown"],
+    "output_directory": "./results",
+    "upload_to_s3": false,
+    "s3_bucket": "rawrxd-benchmarks",
+    "notify_on_completion": true,
+    "notification_channels": ["slack"],
+    "include_system_info": true,
+    "include_hardware_info": true
+  },
+  
+  "execution": {
+    "parallel": false,
+    "max_workers": 4,
+    "stop_on_failure": false,
+    "retry_failed": true,
+    "max_retries": 2,
+    "cooldown_seconds": 5
+  },
+  
+  "profiling": {
+    "enabled": false,
+    "cpu_profiling": false,
+    "memory_profiling": false,
+    "gpu_profiling": false,
+    "profile_output_dir": "./profiles"
+  },
+  
+  "metadata": {
+    "tags": ["example", "documentation", "ci"],
+    "category": "demonstration",
+    "priority": "low",
+    "estimated_duration_minutes": 30
+  }
+}

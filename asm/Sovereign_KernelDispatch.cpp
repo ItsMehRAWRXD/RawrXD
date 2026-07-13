@@ -250,13 +250,13 @@ bool KernelDispatch::Q4Q8MatMul(const void* A, const void* B, float* C,
 bool KernelDispatch::Q4Q8MatMulIntrinsics(const void* A, const void* B, float* C,
                                              size_t m, size_t n, size_t k) {
     if (!initialized_ || !table_.q4q8_matmul_intrinsics) return false;
-    return table_->q4q8_matmul_intrinsics(A, B, C, m, n, k) == 0;
+    return table_.q4q8_matmul_intrinsics(A, B, C, m, n, k) == 0;
 }
 
 bool KernelDispatch::FlashAttentionV2Intrinsics(float* Q, float* K, float* V, float* output,
                                                   size_t seq_len, size_t head_dim) {
     if (!initialized_ || !table_.flash_attention_v2_intrinsics) return false;
-    return table_->flash_attention_v2_intrinsics(Q, K, V, output, seq_len, head_dim) == 0;
+    return table_.flash_attention_v2_intrinsics(Q, K, V, output, seq_len, head_dim) == 0;
 }
 
 const char* KernelDispatch::GetVersion() {

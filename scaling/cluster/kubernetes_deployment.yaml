@@ -1,0 +1,278 @@
+# RawrXD Kubernetes Deployment
+# Phase L.2 - Multi-Node Cluster Setup
+# Production-ready K8s manifests for RawrXD cluster
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rawrxd
+  labels:
+    app.kubernetes.io/name: rawrxd
+    app.kubernetes.io/component: namespace
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rawrxd-config
+  namespace: rawrxd
+data:
+  RAWRXD_MODE: "cluster"
+  RAWRXD_LOG_LEVEL: "INFO"
+  RAWRXD_METRICS_ENABLED: "true"
+  RAWRXD_CLUSTER_ENABLED: "true"
+  RAWRXD_CLUSTER_PORT: "7946"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rawrxd-secrets
+  namespace: rawrxd
+type: Opaque
+stringData:
+  api-key: "rawrxd-api-key-change-me"
+  cluster-token: "cluster-token-change-me"
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rawrxd-node
+  namespace: rawrxd
+  labels:
+    app.kubernetes.io/name: rawrxd
+    app.kubernetes.io/component: inference-node
+spec:
+  serviceName: rawrxd-cluster
+  replicas: 4
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rawrxd
+      app.kubernetes.io/component: inference-node
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rawrxd
+        app.kubernetes.io/component: inference-node
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - rawrxd
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: rawrxd
+          image: rawrxd/sovereign:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 7946
+              name: cluster
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: RAWRXD_NODE_ID
+              value: "$(POD_NAME)"
+            - name: RAWRXD_NODE_ADDRESS
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: RAWRXD_CLUSTER_SEED
+              value: "true"
+            - name: RAWRXD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rawrxd-secrets
+                  key: api-key
+          envFrom:
+            - configMapRef:
+                name: rawrxd-config
+          resources:
+            requests:
+              memory: "8Gi"
+              cpu: "4"
+              nvidia.com/gpu: "1"
+            limits:
+              memory: "16Gi"
+              cpu: "8"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: models
+              mountPath: /app/models
+              readOnly: true
+            - name: data
+              mountPath: /app/data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rawrxd-cluster
+  namespace: rawrxd
+  labels:
+    app.kubernetes.io/name: rawrxd
+    app.kubernetes.io/component: cluster-service
+spec:
+  selector:
+    app.kubernetes.io/name: rawrxd
+    app.kubernetes.io/component: inference-node
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+    - name: cluster
+      port: 7946
+      targetPort: cluster
+      protocol: TCP
+  clusterIP: None
+  publishNotReadyAddresses: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rawrxd-lb
+  namespace: rawrxd
+  labels:
+    app.kubernetes.io/name: rawrxd
+    app.kubernetes.io/component: load-balancer
+spec:
+  selector:
+    app.kubernetes.io/name: rawrxd
+    app.kubernetes.io/component: inference-node
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+  type: LoadBalancer
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rawrxd-ingress
+  namespace: rawrxd
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.rawrxd.local
+      secretName: rawrxd-tls
+  rules:
+    - host: api.rawrxd.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rawrxd-lb
+                port:
+                  number: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rawrxd-hpa
+  namespace: rawrxd
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: rawrxd-node
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rawrxd-pdb
+  namespace: rawrxd
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rawrxd
+      app.kubernetes.io/component: inference-node

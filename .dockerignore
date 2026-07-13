@@ -1,0 +1,103 @@
+# Phase H.2/5: Docker Ignore
+# Excludes files from Docker build context
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+README*
+LICENSE*
+CONTRIBUTING*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+build/
+cmake-build-*/
+out/
+bin/
+obj/
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+
+# Test results
+test-results/
+test_output/
+coverage/
+*.gcov
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+appveyor.yml
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker/
+
+# Kubernetes
+k8s/
+kubernetes/
+helm/
+*.yaml
+*.yml
+!config/*.yaml
+
+# Logs
+logs/
+*.log
+log/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Package managers
+node_modules/
+vendor/
+package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Secrets (never include in build)
+*.pem
+*.key
+*.crt
+secrets/
+.env
+.env.local
+
+# Large files
+*.gguf
+*.bin
+models/
+checkpoints/

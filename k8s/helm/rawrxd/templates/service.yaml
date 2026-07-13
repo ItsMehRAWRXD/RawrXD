@@ -1,0 +1,27 @@
+{{/* Phase H.3/5: Kubernetes Operator - Service Template */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rawrxd.fullname" . }}
+  labels:
+    {{- include "rawrxd.labels" . | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: {{ .Values.service.metricsPort }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "rawrxd.selectorLabels" . | nindent 4 }}

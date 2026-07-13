@@ -25,8 +25,8 @@ set "INCLUDE=%VS_ROOT%\VC\Tools\MSVC\%MSVC_VER%\include;C:\Program Files (x86)\W
 set "LIB=%VS_ROOT%\VC\Tools\MSVC\%MSVC_VER%\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
 set "PATH=%VS_TOOLS%;%PATH%"
 
-:: Tool paths
-set "CL=%VS_TOOLS%\cl.exe"
+:: Tool paths (don't quote here, quote at usage)
+set CL=%VS_TOOLS%\cl.exe
 
 :: Compiler flags
 set CFLAGS=/EHsc /O2 /W3 /nologo /MD

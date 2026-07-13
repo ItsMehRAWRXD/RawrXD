@@ -40,6 +40,7 @@ extern "C" {
 
 // Include configuration management
 #include "SovereignConfig.hpp"
+#include "SwarmCommand.hpp"
 
 using namespace std::chrono;
 
@@ -109,6 +110,7 @@ void printUsage(const char* program) {
     printf("  %-15s %s\n", "validate", "Extended validation tests");
     printf("  %-15s %s\n", "export", "Export results to file");
     printf("  %-15s %s\n", "version", "Show version information");
+    printf("  %-15s %s\n", "swarm", "Run SovereignSwarm for IDE completion");
     printf("  %-15s %s\n", "help", "Show this help message");
     printf("\n");
     printf("Global Options:\n");
@@ -1045,6 +1047,13 @@ int cmdExport(int argc, char* argv[]) {
 //==============================================================================
 // Initialize Commands
 //==============================================================================
+// Swarm command wrapper
+int cmdSwarm(int argc, char* argv[]) {
+    sovereign::cli::SwarmCommand cmd;
+    auto result = cmd.execute(argc, argv);
+    return (result == sovereign::cli::CommandResult::Success) ? 0 : 1;
+}
+
 void initializeCommands() {
     registerCommand("status", "Show system status", "status", cmdStatus);
     registerCommand("test", "Run kernel validation tests", "test", cmdTest);
@@ -1058,6 +1067,7 @@ void initializeCommands() {
     registerCommand("profile", "Detailed performance profiling", "profile", cmdProfile);
     registerCommand("validate", "Extended validation tests", "validate", cmdValidate);
     registerCommand("export", "Export results to file", "export <file> [json|csv|txt]", cmdExport);
+    registerCommand("swarm", "Run SovereignSwarm for IDE completion", "swarm [--finish-ide|--finish-all]", cmdSwarm);
 }
 
 //==============================================================================

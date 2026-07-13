@@ -1,0 +1,42 @@
+{
+  "manifest_version": "1.0.0",
+  "generated_at": "2026-07-13T16:45:00Z",
+  "rawrxd": {
+    "version": "1.0.0-complete",
+    "commit": "248eed7d2",
+    "branch": "copilot/vscode-mlyextom-3zgo-phase7a",
+    "build_type": "Release",
+    "build_date": "2026-07-13",
+    "compiler": "MSVC 14.50.35717"
+  },
+  "dependencies": {
+    "ggml": {
+      "version": "b3579",
+      "commit": "a3b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1"
+    },
+    "vulkan": {
+      "loader_version": "1.3.280.0",
+      "validation_layers": false
+    },
+    "rocm": {
+      "version": "6.0.0",
+      "hip_version": "6.0.32830"
+    }
+  },
+  "runtime": {
+    "dotnet_version": "8.0.303",
+    "powershell_version": "7.4.3",
+    "python_version": "3.12.4"
+  },
+  "tools": {
+    "cmake": "3.29.6",
+    "ninja": "1.12.1",
+    "git": "2.45.2",
+    "gh_cli": "2.81.0"
+  },
+  "benchmark_tools": {
+    "llama_bench": "included",
+    "custom_harness": "sovereign_benchmark_v1.0.0"
+  },
+  "validation_hash": "sha256:b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4"
+}

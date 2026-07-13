@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace sovereign {
 namespace cli {

@@ -1,0 +1,38 @@
+{{/* Phase H.3/5: Kubernetes Operator - ConfigMap Template */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "rawrxd.fullname" . }}-config
+  labels:
+    {{- include "rawrxd.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {
+      "server": {
+        "port": 8080,
+        "host": "0.0.0.0"
+      },
+      "metrics": {
+        "enabled": {{ .Values.config.enableMetrics }},
+        "port": {{ .Values.config.metricsPort }}
+      },
+      "stability": {
+        "enabled": {{ .Values.config.stability.enabled }},
+        "oscillationThreshold": {{ .Values.config.stability.oscillationThreshold }},
+        "rollbackEnabled": {{ .Values.config.stability.rollbackEnabled }}
+      },
+      "intelligentOps": {
+        "enabled": {{ .Values.config.intelligentOps.enabled }},
+        "forecastHorizon": {{ .Values.config.intelligentOps.forecastHorizon }},
+        "anomalySensitivity": {{ .Values.config.intelligentOps.anomalySensitivity }}
+      },
+      "hotpatch": {
+        "enabled": {{ .Values.config.hotpatch.enabled }},
+        "autoRollback": {{ .Values.config.hotpatch.autoRollback }},
+        "safetyThreshold": {{ .Values.config.hotpatch.safetyThreshold }}
+      },
+      "logging": {
+        "level": "{{ .Values.config.logLevel }}",
+        "format": "json"
+      }
+    }

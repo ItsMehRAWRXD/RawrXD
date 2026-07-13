@@ -33,6 +33,14 @@ residual_sqrt2  REAL4 1.41421356, 1.41421356, 1.41421356, 1.41421356
 ; ----------------------------------------------------------------------------
 .code
 
+; Public exports for kernel functions
+PUBLIC Sovereign_ResidualAdd_F32_AVX2
+PUBLIC Sovereign_ResidualAdd_F32_InPlace_AVX2
+PUBLIC Sovereign_ResidualAdd_Scaled_F32_AVX2
+PUBLIC residual_add_f32
+PUBLIC residual_add_f32_inplace
+PUBLIC residual_add_f32_scaled
+
 ; ============================================================================
 ; KERNEL_COMPLETE: MASM_ResidualAdd_F32_AVX2
 ; Sovereign_ResidualAdd_F32_AVX2 - Element-wise addition for F32 tensors

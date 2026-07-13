@@ -43,6 +43,14 @@ one             REAL4 1.0, 1.0, 1.0, 1.0
 ; ----------------------------------------------------------------------------
 .code
 
+; Public exports for kernel functions
+PUBLIC Sovereign_RoPE_Precompute_FreqCache
+PUBLIC Sovereign_RoPE_Apply_F32_AVX2
+PUBLIC Sovereign_RoPE_LlamaStyle_F32
+PUBLIC rope_precompute_cache
+PUBLIC rope_apply_f32
+PUBLIC rope_apply_llama_f32
+
 ; ============================================================================
 ; KERNEL_COMPLETE: MASM_RoPE_Precompute_FreqCache
 ; Sovereign_RoPE_Precompute_FreqCache - Precompute cos/sin frequency tables

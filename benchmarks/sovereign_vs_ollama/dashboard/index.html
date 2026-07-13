@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Benchmark Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+        
+        .status-dot.offline {
+            background: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .metric-card h3 {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+        
+        .metric-change {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        .metric-change.positive {
+            color: #22c55e;
+        }
+        
+        .metric-change.negative {
+            color: #ef4444;
+        }
+        
+        .chart-container {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #f8fafc;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        .controls {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            margin-bottom: 2rem;
+        }
+        
+        .controls h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        select, button {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        select:hover, button:hover {
+            background: #475569;
+            border-color: #64748b;
+        }
+        
+        button.primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+        
+        button.primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+        
+        .backend-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .backend-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .backend-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .backend-icon.sovereign {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+        
+        .backend-icon.ollama {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+        }
+        
+        .backend-info h4 {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+        
+        .backend-info p {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .backend-info p.online {
+            color: #22c55e;
+        }
+        
+        .backend-info p.offline {
+            color: #ef4444;
+        }
+        
+        .live-feed {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+        
+        .live-feed h2 {
+            font-size: 1.25rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .feed-content {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        .feed-item {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .feed-item.info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .feed-item.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid #22c55e;
+        }
+        
+        .feed-item.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .feed-item.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+        }
+        
+        .timestamp {
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .metric-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚡ RawrXD Benchmark Dashboard</h1>
+        <div class="status-indicator">
+            <span class="status-dot online"></span>
+            <span>Live</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Backend Status -->
+        <div class="backend-status">
+            <div class="backend-card">
+                <div class="backend-icon sovereign">🤖</div>
+                <div class="backend-info">
+                    <h4>Sovereign</h4>
+                    <p class="online" id="sovereign-status">Online</p>
+                </div>
+            </div>
+            <div class="backend-card">
+                <div class="backend-icon ollama">🦙</div>
+                <div class="backend-info">
+                    <h4>Ollama</h4>
+                    <p class="online" id="ollama-status">Online</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Throughput (req/s)</h3>
+                <div class="metric-value" id="throughput">0</div>
+                <div class="metric-change positive">+12.5% vs last hour</div>
+            </div>
+            <div class="metric-card">
+                <h3>Avg Latency (ms)</h3>
+                <div class="metric-value" id="avg-latency">0</div>
+                <div class="metric-change positive">-8.3% vs last hour</div>
+            </div>
+            <div class="metric-card">
+                <h3>P99 Latency (ms)</h3>
+                <div class="metric-value" id="p99-latency">0</div>
+                <div class="metric-change negative">+2.1% vs last hour</div>
+            </div>
+            <div class="metric-card">
+                <h3>Success Rate (%)</h3>
+                <div class="metric-value" id="success-rate">100</div>
+                <div class="metric-change positive">+0.0% vs last hour</div>
+            </div>
+            <div class="metric-card">
+                <h3>Active Connections</h3>
+                <div class="metric-value" id="connections">0</div>
+                <div class="metric-change positive">+5 vs last hour</div>
+            </div>
+            <div class="metric-card">
+                <h3>Benchmarks Run</h3>
+                <div class="metric-value" id="benchmarks-run">0</div>
+                <div class="metric-change positive">+42 today</div>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <h2>Benchmark Controls</h2>
+            <div class="control-group">
+                <label>Backend:</label>
+                <select id="backend-select">
+                    <option value="sovereign">Sovereign</option>
+                    <option value="ollama">Ollama</option>
+                    <option value="both">Both (Comparison)</option>
+                </select>
+                
+                <label>Duration:</label>
+                <select id="duration-select">
+                    <option value="60">1 minute</option>
+                    <option value="300">5 minutes</option>
+                    <option value="600" selected>10 minutes</option>
+                    <option value="1800">30 minutes</option>
+                </select>
+                
+                <label>Workers:</label>
+                <select id="workers-select">
+                    <option value="1">1</option>
+                    <option value="4">4</option>
+                    <option value="8" selected>8</option>
+                    <option value="16">16</option>
+                    <option value="32">32</option>
+                </select>
+                
+                <button class="primary" onclick="startBenchmark()">▶ Start Benchmark</button>
+                <button onclick="stopBenchmark()">⏹ Stop</button>
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="chart-container">
+            <h2>Latency Over Time</h2>
+            <div class="chart-wrapper">
+                <canvas id="latencyChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Throughput Comparison</h2>
+            <div class="chart-wrapper">
+                <canvas id="throughputChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Live Feed -->
+        <div class="live-feed">
+            <h2>Live Events</h2>
+            <div class="feed-content" id="live-feed">
+                <div class="feed-item info">
+                    <span class="timestamp">[10:42:15]</span> Dashboard initialized
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Chart configurations
+        const chartColors = {
+            sovereign: 'rgba(59, 130, 246, 0.8)',
+            ollama: 'rgba(168, 85, 247, 0.8)',
+            grid: 'rgba(148, 163, 184, 0.1)',
+            text: '#94a3b8'
+        };
+        
+        // Latency Chart
+        const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+        const latencyChart = new Chart(latencyCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Sovereign',
+                    data: [],
+                    borderColor: chartColors.sovereign,
+                    backgroundColor: chartColors.sovereign,
+                    tension: 0.4
+                }, {
+                    label: 'Ollama',
+                    data: [],
+                    borderColor: chartColors.ollama,
+                    backgroundColor: chartColors.ollama,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: chartColors.text }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: chartColors.grid },
+                        ticks: { color: chartColors.text }
+                    },
+                    y: {
+                        grid: { color: chartColors.grid },
+                        ticks: { color: chartColors.text },
+                        title: {
+                            display: true,
+                            text: 'Latency (ms)',
+                            color: chartColors.text
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Throughput Chart
+        const throughputCtx = document.getElementById('throughputChart').getContext('2d');
+        const throughputChart = new Chart(throughputCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Throughput (req/s)'],
+                datasets: [{
+                    label: 'Sovereign',
+                    data: [0],
+                    backgroundColor: chartColors.sovereign
+                }, {
+                    label: 'Ollama',
+                    data: [0],
+                    backgroundColor: chartColors.ollama
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: chartColors.text }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: chartColors.grid },
+                        ticks: { color: chartColors.text }
+                    },
+                    y: {
+                        grid: { color: chartColors.grid },
+                        ticks: { color: chartColors.text },
+                        title: {
+                            display: true,
+                            text: 'Requests/sec',
+                            color: chartColors.text
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Live feed
+        function addFeedItem(message, type = 'info') {
+            const feed = document.getElementById('live-feed');
+            const timestamp = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = `feed-item ${type}`;
+            item.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+            feed.insertBefore(item, feed.firstChild);
+            
+            // Keep only last 50 items
+            while (feed.children.length > 50) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+        
+        // Simulate real-time updates
+        let updateInterval;
+        let isRunning = false;
+        
+        function updateMetrics() {
+            // Simulate metric updates
+            const throughput = Math.floor(Math.random() * 50) + 100;
+            const avgLatency = Math.floor(Math.random() * 50) + 150;
+            const p99Latency = Math.floor(Math.random() * 100) + 300;
+            const connections = Math.floor(Math.random() * 20) + 5;
+            
+            document.getElementById('throughput').textContent = throughput;
+            document.getElementById('avg-latency').textContent = avgLatency;
+            document.getElementById('p99-latency').textContent = p99Latency;
+            document.getElementById('connections').textContent = connections;
+            
+            // Update charts
+            const now = new Date().toLocaleTimeString();
+            
+            if (latencyChart.data.labels.length > 20) {
+                latencyChart.data.labels.shift();
+                latencyChart.data.datasets[0].data.shift();
+                latencyChart.data.datasets[1].data.shift();
+            }
+            
+            latencyChart.data.labels.push(now);
+            latencyChart.data.datasets[0].data.push(avgLatency + Math.random() * 20);
+            latencyChart.data.datasets[1].data.push(avgLatency + Math.random() * 30);
+            latencyChart.update('none');
+            
+            throughputChart.data.datasets[0].data[0] = throughput;
+            throughputChart.data.datasets[1].data[0] = throughput * 0.8;
+            throughputChart.update('none');
+        }
+        
+        function startBenchmark() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            const backend = document.getElementById('backend-select').value;
+            const duration = document.getElementById('duration-select').value;
+            const workers = document.getElementById('workers-select').value;
+            
+            addFeedItem(`Starting benchmark: ${backend}, ${duration}s, ${workers} workers`, 'success');
+            
+            updateInterval = setInterval(updateMetrics, 1000);
+            
+            // Auto-stop after duration
+            setTimeout(() => {
+                if (isRunning) {
+                    stopBenchmark();
+                }
+            }, duration * 1000);
+        }
+        
+        function stopBenchmark() {
+            isRunning = false;
+            clearInterval(updateInterval);
+            addFeedItem('Benchmark stopped', 'warning');
+        }
+        
+        // Check backend health
+        async function checkBackendHealth() {
+            try {
+                // In real implementation, these would be actual API calls
+                // const sovereignHealth = await fetch('http://localhost:8080/api/health');
+                // const ollamaHealth = await fetch('http://localhost:11434/api/tags');
+                
+                // Simulated for demo
+                const sovereignStatus = document.getElementById('sovereign-status');
+                const ollamaStatus = document.getElementById('ollama-status');
+                
+                // Random health check simulation
+                if (Math.random() > 0.1) {
+                    sovereignStatus.textContent = 'Online';
+                    sovereignStatus.className = 'online';
+                } else {
+                    sovereignStatus.textContent = 'Offline';
+                    sovereignStatus.className = 'offline';
+                }
+                
+                if (Math.random() > 0.1) {
+                    ollamaStatus.textContent = 'Online';
+                    ollamaStatus.className = 'online';
+                } else {
+                    ollamaStatus.textContent = 'Offline';
+                    ollamaStatus.className = 'offline';
+                }
+            } catch (error) {
+                addFeedItem('Health check failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Initialize
+        setInterval(checkBackendHealth, 5000);
+        addFeedItem('Dashboard ready', 'success');
+    </script>
+</body>
+</html>

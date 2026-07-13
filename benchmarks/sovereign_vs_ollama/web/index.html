@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Benchmark Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 RawrXD Benchmark Dashboard</h1>
+            <div class="status-bar">
+                <span id="connection-status" class="status disconnected">Disconnected</span>
+                <span id="last-update">Last update: Never</span>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="overview">Overview</button>
+            <button class="tab-btn" data-tab="benchmarks">Benchmarks</button>
+            <button class="tab-btn" data-tab="comparison">Comparison</button>
+            <button class="tab-btn" data-tab="trends">Trends</button>
+            <button class="tab-btn" data-tab="system">System</button>
+        </nav>
+
+        <main>
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3>Total Benchmarks</h3>
+                        <div class="metric-value" id="total-benchmarks">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Last Run</h3>
+                        <div class="metric-value" id="last-run">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Avg TPS</h3>
+                        <div class="metric-value" id="avg-tps">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Best Backend</h3>
+                        <div class="metric-value" id="best-backend">-</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h2>Quick Comparison</h2>
+                    <canvas id="overview-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Benchmarks Tab -->
+            <div id="benchmarks" class="tab-content">
+                <div class="filters">
+                    <select id="tier-filter">
+                        <option value="all">All Tiers</option>
+                        <option value="1">Tier 1 (Core)</option>
+                        <option value="2">Tier 2 (Agentic)</option>
+                        <option value="3">Tier 3 (Advanced)</option>
+                        <option value="4">Tier 4 (Stress)</option>
+                    </select>
+                    <select id="backend-filter">
+                        <option value="all">All Backends</option>
+                        <option value="sovereign">Sovereign</option>
+                        <option value="ollama">Ollama</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="anthropic">Anthropic</option>
+                    </select>
+                </div>
+
+                <div class="benchmarks-list" id="benchmarks-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Comparison Tab -->
+            <div id="comparison" class="tab-content">
+                <div class="chart-row">
+                    <div class="chart-container half">
+                        <h2>Throughput Comparison</h2>
+                        <canvas id="tps-comparison-chart"></canvas>
+                    </div>
+                    <div class="chart-container half">
+                        <h2>Latency Comparison</h2>
+                        <canvas id="latency-comparison-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="comparison-table-container">
+                    <h2>Detailed Comparison</h2>
+                    <table id="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Backend</th>
+                                <th>Mean TPS</th>
+                                <th>TTFT (ms)</th>
+                                <th>95th Percentile</th>
+                                <th>Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-tbody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Trends Tab -->
+            <div id="trends" class="tab-content">
+                <div class="chart-container">
+                    <h2>Performance Over Time</h2>
+                    <canvas id="trends-chart"></canvas>
+                </div>
+
+                <div class="trend-metrics">
+                    <div class="trend-card positive">
+                        <h3>Trend</h3>
+                        <p>+5.2% vs last week</p>
+                    </div>
+                    <div class="trend-card">
+                        <h3>Volatility</h3>
+                        <p>Low (σ = 2.1)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div id="system" class="tab-content">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3>CPU Usage</h3>
+                        <div class="metric-value" id="cpu-usage">-</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cpu-bar"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Memory Usage</h3>
+                        <div class="metric-value" id="memory-usage">-</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="memory-bar"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>GPU Usage</h3>
+                        <div class="metric-value" id="gpu-usage">-</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="gpu-bar"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Active Benchmarks</h3>
+                        <div class="metric-value" id="active-benchmarks">-</div>
+                    </div>
+                </div>
+
+                <div class="log-container">
+                    <h2>Live Log</h2>
+                    <div id="live-log" class="log-output"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>RawrXD Benchmark Framework v1.0 | <a href="/api/docs">API Docs</a></p>
+        </footer>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
