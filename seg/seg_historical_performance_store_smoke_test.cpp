@@ -236,8 +236,11 @@ TEST(store_initialization) {
 // ============================================================================
 
 TEST(store_and_retrieve_record) {
+    std::cerr << "[TEST] Starting store_and_retrieve_record" << std::endl;
     SEGHistoricalPerformanceStore store;
+    std::cerr << "[TEST] About to initialize" << std::endl;
     store.Initialize(":memory:");
+    std::cerr << "[TEST] Initialized" << std::endl;
     
     PerformanceRecord record;
     record.executionId = "test-exec-1";
@@ -251,19 +254,27 @@ TEST(store_and_retrieve_record) {
     record.success = true;
     record.batchNumber = 243;
     
+    std::cerr << "[TEST] About to store record" << std::endl; fflush(stderr);
     bool stored = store.StoreRecord(record);
+    std::cerr << "[TEST] StoreRecord returned: " << stored << std::endl; fflush(stderr);
     ASSERT_TRUE(stored);
+    std::cerr << "[TEST] Assertion passed" << std::endl; fflush(stderr);
     
     // Query the record
+    std::cerr << "[TEST] About to create query" << std::endl; fflush(stderr);
     HistoryQuery query;
     query.componentFilter = "RunUnityCycle";
+    std::cerr << "[TEST] About to call QueryRecords" << std::endl;
     auto records = store.QueryRecords(query);
+    std::cerr << "[TEST] QueryRecords returned, records.size()=" << records.size() << std::endl;
     
     ASSERT_EQ(records.size(), 1u);
     ASSERT_EQ(records[0].component, "RunUnityCycle");
     ASSERT_EQ(records[0].durationMs, 14.5);
     
+    std::cerr << "[TEST] About to shutdown" << std::endl;
     store.Shutdown();
+    std::cerr << "[TEST] Done" << std::endl;
 }
 
 // ============================================================================

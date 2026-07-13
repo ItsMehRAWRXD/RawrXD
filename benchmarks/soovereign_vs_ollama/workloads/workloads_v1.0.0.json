@@ -1,0 +1,363 @@
+{
+  "version": "1.0.0",
+  "name": "RawrXD Benchmark Workloads",
+  "description": "Standardized prompts for reproducible benchmarking",
+  "created": "2026-07-07",
+  "sha256": "TBD",
+  
+  "categories": {
+    "chat": {
+      "description": "General conversation and Q&A workloads",
+      "prompts": [
+        {
+          "id": "chat_001",
+          "name": "Explain Concept",
+          "prompt": "Explain the concept of symbolic execution in programming, including its benefits and limitations. Provide concrete examples.",
+          "expected_tokens": 200,
+          "difficulty": "medium"
+        },
+        {
+          "id": "chat_002",
+          "name": "Compare Technologies",
+          "prompt": "Compare and contrast REST APIs with GraphQL. Discuss when to use each approach, their advantages, and trade-offs.",
+          "expected_tokens": 250,
+          "difficulty": "medium"
+        },
+        {
+          "id": "chat_003",
+          "name": "Technical Deep Dive",
+          "prompt": "Explain how transformer attention mechanisms work in large language models. Include the mathematical intuition and why it enables parallel processing.",
+          "expected_tokens": 300,
+          "difficulty": "hard"
+        },
+        {
+          "id": "chat_004",
+          "name": "Best Practices",
+          "prompt": "What are the best practices for error handling in distributed systems? Provide specific patterns and anti-patterns.",
+          "expected_tokens": 220,
+          "difficulty": "medium"
+        },
+        {
+          "id": "chat_005",
+          "name": "Architecture Decision",
+          "prompt": "I'm designing a real-time collaborative editing system. What architecture would you recommend and why? Consider conflict resolution and latency.",
+          "expected_tokens": 280,
+          "difficulty": "hard"
+        }
+      ]
+    },
+    
+    "coding": {
+      "description": "Code generation and analysis workloads",
+      "prompts": [
+        {
+          "id": "code_001",
+          "name": "Implement Algorithm",
+          "prompt": "Write a Python function to find the longest common subsequence of two strings using dynamic programming. Include comments explaining the approach.",
+          "expected_tokens": 150,
+          "difficulty": "medium"
+        },
+        {
+          "id": "code_002",
+          "name": "Debug Code",
+          "prompt": "This code has a race condition. Identify the issue and provide a corrected version with explanation:\n\n```python\nimport threading\n\ncounter = 0\n\ndef increment():\n    global counter\n    for _ in range(100000):\n        counter += 1\n\nthreads = [threading.Thread(target=increment) for _ in range(10)]\n[t.start() for t in threads]\n[t.join() for t in threads]\nprint(counter)\n```",
+          "expected_tokens": 180,
+          "difficulty": "medium"
+        },
+        {
+          "id": "code_003",
+          "name": "Optimize Performance",
+          "prompt": "Optimize this Python function for better performance. The current implementation is O(n²), can you make it O(n log n) or better?\n\n```python\ndef find_duplicates(arr):\n    duplicates = []\n    for i in range(len(arr)):\n        for j in range(i + 1, len(arr)):\n            if arr[i] == arr[j] and arr[i] not in duplicates:\n                duplicates.append(arr[i])\n    return duplicates\n```",
+          "expected_tokens": 160,
+          "difficulty": "medium"
+        },
+        {
+          "id": "code_004",
+          "name": "Design Pattern",
+          "prompt": "Implement the Observer pattern in C++17. Include a concrete example with a WeatherStation that notifies Display devices when temperature changes.",
+          "expected_tokens": 250,
+          "difficulty": "hard"
+        },
+        {
+          "id": "code_005",
+          "name": "Refactor Legacy",
+          "prompt": "Refactor this legacy code to use modern C++ features and improve readability:\n\n```cpp\nclass DataProcessor {\npublic:\n    DataProcessor() { data = new int[100]; size = 0; }\n    ~DataProcessor() { delete[] data; }\n    void add(int x) { data[size++] = x; }\n    int* getData() { return data; }\nprivate:\n    int* data;\n    int size;\n};\n```",
+          "expected_tokens": 200,
+          "difficulty": "medium"
+        }
+      ]
+    },
+    
+    "agentic": {
+      "description": "Agent reasoning and planning workloads",
+      "prompts": [
+        {
+          "id": "agent_001",
+          "name": "Plan Task",
+          "prompt": "Create a step-by-step plan to migrate a monolithic application to microservices. Include risk assessment and rollback strategy.",
+          "expected_tokens": 300,
+          "difficulty": "hard"
+        },
+        {
+          "id": "agent_002",
+          "name": "Decision Analysis",
+          "prompt": "Analyze whether to build or buy a user authentication system for a SaaS product. Consider: development time, maintenance, security, compliance, and cost over 5 years.",
+          "expected_tokens": 280,
+          "difficulty": "hard"
+        },
+        {
+          "id": "agent_003",
+          "name": "Resource Allocation",
+          "prompt": "You have a team of 5 engineers and need to deliver 3 features in 2 months. Feature A takes 3 person-months, B takes 2, C takes 4. Create an optimal allocation plan considering dependencies and risks.",
+          "expected_tokens": 250,
+          "difficulty": "medium"
+        },
+        {
+          "id": "agent_004",
+          "name": "Troubleshoot System",
+          "prompt": "A production database is experiencing intermittent slow queries during peak hours. CPU is at 30%, memory at 60%, disk I/O normal. Walk through a systematic troubleshooting process.",
+          "expected_tokens": 260,
+          "difficulty": "hard"
+        },
+        {
+          "id": "agent_005",
+          "name": "Design Review",
+          "prompt": "Review this API design and identify potential issues:\n\nPOST /api/v1/users/{id}/update\nGET /api/v1/getUserData?id={id}\nPOST /api/v1/delete_user\n\nSuggest improvements following REST best practices.",
+          "expected_tokens": 220,
+          "difficulty": "medium"
+        }
+      ]
+    },
+    
+    "swarm": {
+      "description": "Multi-agent coordination workloads",
+      "prompts": [
+        {
+          "id": "swarm_001",
+          "name": "Coordinate Agents",
+          "prompt": "Design a coordination protocol for 16 agents to collaboratively analyze a codebase for security vulnerabilities. Each agent should handle different aspects (input validation, auth, crypto, etc.).",
+          "expected_tokens": 320,
+          "difficulty": "hard"
+        },
+        {
+          "id": "swarm_002",
+          "name": "Consensus Building",
+          "prompt": "Multiple agents have conflicting recommendations for a database schema. Agent A suggests normalization, Agent B suggests denormalization for performance, Agent C suggests a hybrid. How would you resolve this?",
+          "expected_tokens": 280,
+          "difficulty": "hard"
+        },
+        {
+          "id": "swarm_003",
+          "name": "Task Distribution",
+          "prompt": "Distribute the task of refactoring a 100K line codebase among 8 agents. Each agent should have clear responsibilities and interfaces. Define the coordination mechanism.",
+          "expected_tokens": 300,
+          "difficulty": "hard"
+        },
+        {
+          "id": "swarm_004",
+          "name": "Conflict Resolution",
+          "prompt": "Two agents independently modified the same function. Agent A optimized for readability, Agent B optimized for performance. The changes conflict. Design an automated resolution strategy.",
+          "expected_tokens": 260,
+          "difficulty": "medium"
+        },
+        {
+          "id": "swarm_005",
+          "name": "Load Balancing",
+          "prompt": "In a swarm of agents processing user requests, how would you implement dynamic load balancing? Consider agent specialization, current queue depth, and failure scenarios.",
+          "expected_tokens": 270,
+          "difficulty": "medium"
+        }
+      ]
+    },
+    
+    "long_context": {
+      "description": "Long context window workloads",
+      "prompts": [
+        {
+          "id": "context_001",
+          "name": "Summarize Document",
+          "prompt": "Summarize the key points from this technical specification:\n\n[DOCUMENT: 5000 words about a distributed transaction protocol with detailed sections on consensus, failure handling, and recovery procedures]\n\nFocus on: 1) The consensus mechanism, 2) Failure scenarios handled, 3) Performance characteristics.",
+          "expected_tokens": 400,
+          "difficulty": "hard",
+          "context_tokens": 6000
+        },
+        {
+          "id": "context_002",
+          "name": "Extract Information",
+          "prompt": "From this code review discussion with 50 comments, extract all action items and assign them to the appropriate owners:\n\n[THREAD: 50 comments across 5 files discussing a PR for authentication refactoring]",
+          "expected_tokens": 350,
+          "difficulty": "hard",
+          "context_tokens": 8000
+        },
+        {
+          "id": "context_003",
+          "name": "Maintain Coherence",
+          "prompt": "Given this 10-page conversation history about a project, answer the user's latest question while maintaining context from earlier in the discussion:\n\n[HISTORY: 10 pages of project planning conversation]\n\nUser: 'So what's our final decision on the database?'",
+          "expected_tokens": 200,
+          "difficulty": "hard",
+          "context_tokens": 10000
+        },
+        {
+          "id": "context_004",
+          "name": "Cross-Reference",
+          "prompt": "Compare the API specifications in Document A and Document B. Identify all breaking changes and deprecated features:\n\n[DOCUMENT A: API v1.0 spec, 3000 words]\n[DOCUMENT B: API v2.0 spec, 3500 words]",
+          "expected_tokens": 380,
+          "difficulty": "hard",
+          "context_tokens": 7000
+        },
+        {
+          "id": "context_005",
+          "name": "Analyze Trends",
+          "prompt": "Analyze this 6-month log of system performance metrics and identify trends, anomalies, and recommendations:\n\n[LOGS: 6 months of daily performance metrics including latency, throughput, error rates]",
+          "expected_tokens": 420,
+          "difficulty": "hard",
+          "context_tokens": 9000
+        }
+      ]
+    },
+    
+    "autonomous": {
+      "description": "Autonomous execution workloads",
+      "prompts": [
+        {
+          "id": "auto_001",
+          "name": "Self-Directed Task",
+          "prompt": "You need to improve the performance of a web application. The user hasn't specified what to optimize. Analyze common bottlenecks, propose a measurement strategy, and create an optimization plan.",
+          "expected_tokens": 340,
+          "difficulty": "hard"
+        },
+        {
+          "id": "auto_002",
+          "name": "Error Recovery",
+          "prompt": "Your previous attempt to refactor a module introduced a regression. The tests are failing with 'undefined method' errors. Diagnose the issue and propose a fix without user intervention.",
+          "expected_tokens": 280,
+          "difficulty": "hard"
+        },
+        {
+          "id": "auto_003",
+          "name": "Exploration",
+          "prompt": "Explore this codebase and identify opportunities for improvement. Look for: code smells, performance bottlenecks, security issues, and documentation gaps. Prioritize by impact.",
+          "expected_tokens": 360,
+          "difficulty": "hard"
+        },
+        {
+          "id": "auto_004",
+          "name": "Iterative Refinement",
+          "prompt": "The user said 'make this code better' without specifics. Implement an iterative improvement cycle: analyze, propose, implement, verify. Show your reasoning at each step.",
+          "expected_tokens": 320,
+          "difficulty": "hard"
+        },
+        {
+          "id": "auto_005",
+          "name": "Goal Decomposition",
+          "prompt": "Decompose the goal 'implement a caching layer' into subtasks. For each subtask, identify dependencies, estimate effort, and define completion criteria.",
+          "expected_tokens": 300,
+          "difficulty": "medium"
+        }
+      ]
+    },
+    
+    "recovery": {
+      "description": "Error recovery and resilience workloads",
+      "prompts": [
+        {
+          "id": "recovery_001",
+          "name": "Handle Failure",
+          "prompt": "A critical service is down. The error log shows: 'Connection refused to database:5432'. Design a recovery procedure including health checks, fallback strategies, and notification steps.",
+          "expected_tokens": 280,
+          "difficulty": "hard"
+        },
+        {
+          "id": "recovery_002",
+          "name": "Self-Correction",
+          "prompt": "Your previous response contained an error: you suggested using a deprecated API. Recognize this mistake, acknowledge it, and provide the correct modern alternative.",
+          "expected_tokens": 180,
+          "difficulty": "medium"
+        },
+        {
+          "id": "recovery_003",
+          "name": "Circuit Breaker",
+          "prompt": "Design a circuit breaker pattern implementation. Include: failure threshold configuration, half-open state logic, fallback behavior, and monitoring hooks.",
+          "expected_tokens": 260,
+          "difficulty": "medium"
+        },
+        {
+          "id": "recovery_004",
+          "name": "Retry Strategy",
+          "prompt": "Implement an exponential backoff retry strategy with jitter. Handle different error types appropriately (network vs application errors).",
+          "expected_tokens": 220,
+          "difficulty": "medium"
+        },
+        {
+          "id": "recovery_005",
+          "name": "Graceful Degradation",
+          "prompt": "Design a system that gracefully degrades when the recommendation service is unavailable. The e-commerce site should still function with reduced features.",
+          "expected_tokens": 240,
+          "difficulty": "medium"
+        }
+      ]
+    },
+    
+    "stress": {
+      "description": "High-load stress test workloads",
+      "prompts": [
+        {
+          "id": "stress_001",
+          "name": "Rapid Fire",
+          "prompt": "Generate a quick summary of: What is the CAP theorem?",
+          "expected_tokens": 100,
+          "difficulty": "easy"
+        },
+        {
+          "id": "stress_002",
+          "name": "Quick Response",
+          "prompt": "List 5 benefits of unit testing.",
+          "expected_tokens": 80,
+          "difficulty": "easy"
+        },
+        {
+          "id": "stress_003",
+          "name": "Fast Answer",
+          "prompt": "What is the difference between a process and a thread?",
+          "expected_tokens": 90,
+          "difficulty": "easy"
+        },
+        {
+          "id": "stress_004",
+          "name": "Rapid Calculation",
+          "prompt": "Calculate the time complexity of binary search and explain why.",
+          "expected_tokens": 100,
+          "difficulty": "easy"
+        },
+        {
+          "id": "stress_005",
+          "name": "Quick Definition",
+          "prompt": "Define idempotency and give an example.",
+          "expected_tokens": 85,
+          "difficulty": "easy"
+        }
+      ]
+    }
+  },
+  
+  "metadata": {
+    "total_prompts": 40,
+    "versioning": {
+      "schema": "1.0",
+      "compatibility": ["benchmark_suite_v2.0"],
+      "changelog": [
+        {
+          "version": "1.0.0",
+          "date": "2026-07-07",
+          "changes": ["Initial workload suite with 40 prompts across 8 categories"]
+        }
+      ]
+    },
+    "usage": {
+      "recommended_runs_per_prompt": 10,
+      "warmup_prompts": ["stress_001", "stress_002"],
+      "randomize_order": true,
+      "fixed_seed": 42
+    }
+  }
+}

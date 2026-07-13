@@ -1,0 +1,57 @@
+# Dockerfile.benchmark-suite
+# Phase F.1 Batch 1/5: Docker containerization for RawrXD Benchmark Suite
+
+FROM rawrxd/sovereign-runtime:latest AS base
+
+USER root
+
+# Install benchmark dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-matplotlib \
+    python3-numpy \
+    python3-scipy \
+    sqlite3 \
+    jq \
+    gnuplot \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages for analysis
+RUN pip3 install --no-cache-dir \
+    pandas \
+    seaborn \
+    jinja2 \
+    markdown \
+    requests
+
+# Copy benchmark binaries and scripts
+COPY --from=rawrxd/builder:latest /build/benchmarks/sovereign_vs_ollama/build/RawrXD_Benchmark /opt/rawrxd/bin/
+COPY benchmarks/sovereign_vs_ollama/scripts/ /opt/rawrxd/benchmark-scripts/
+COPY benchmarks/sovereign_vs_ollama/config/ /opt/rawrxd/benchmark-config/
+
+# Make scripts executable
+RUN chmod +x /opt/rawrxd/benchmark-scripts/*.py \
+    /opt/rawrxd/benchmark-scripts/*.sh
+
+# Create benchmark output directory
+RUN mkdir -p /benchmarks/output && \
+    chown -R rawrxd:rawrxd /benchmarks
+
+# Set environment variables
+ENV BENCHMARK_OUTPUT="/benchmarks/output"
+ENV BENCHMARK_CONFIG="/opt/rawrxd/benchmark-config"
+ENV PATH="/opt/rawrxd/benchmark-scripts:${PATH}"
+
+# Volume for benchmark results
+VOLUME ["/benchmarks/output"]
+
+# Switch back to rawrxd user
+USER rawrxd
+
+# Working directory
+WORKDIR /benchmarks
+
+# Default command runs full benchmark suite
+ENTRYPOINT ["rawrxd-benchmark"]
+CMD ["--backend", "sovereign", "--output-dir", "/benchmarks/output", "--confidence", "0.95"]

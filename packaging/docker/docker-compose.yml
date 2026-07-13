@@ -1,0 +1,163 @@
+# docker-compose.yml
+# Phase F.1 Batch 1/5: Docker Compose for RawrXD Sovereign + Benchmarks
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # RawrXD Sovereign Runtime
+  # ==========================================================================
+  sovereign-runtime:
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sovereign-runtime
+    image: rawrxd/sovereign-runtime:${VERSION:-latest}
+    container_name: rawrxd-sovereign
+    restart: unless-stopped
+    
+    # GPU access (AMD ROCm)
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    security_opt:
+      - seccomp:unconfined
+    group_add:
+      - video
+    
+    # Environment
+    environment:
+      - RWRXD_LOG_LEVEL=info
+      - RWRXD_TELEMETRY=0
+      - RWRXD_MODELS=/models
+      - RWRXD_GPU_ENABLED=1
+    
+    # Ports
+    ports:
+      - "8080:8080"  # HTTP API
+      - "9090:9090"  # Metrics
+    
+    # Volumes
+    volumes:
+      - models:/models:ro
+      - data:/data
+      - ./config:/config:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "rawrxd", "health-check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '16'
+          memory: 64G
+        reservations:
+          cpus: '4'
+          memory: 8G
+
+  # ==========================================================================
+  # Benchmark Service
+  # ==========================================================================
+  benchmark-suite:
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.benchmark-suite
+    image: rawrxd/benchmark-suite:${VERSION:-latest}
+    container_name: rawrxd-benchmarks
+    
+    # Depends on sovereign runtime
+    depends_on:
+      sovereign-runtime:
+        condition: service_healthy
+    
+    # Environment
+    environment:
+      - BENCHMARK_BACKEND_URL=http://sovereign-runtime:8080
+      - BENCHMARK_OUTPUT=/benchmarks/output
+      - BENCHMARK_CONFIDENCE=0.95
+      - BENCHMARK_MODEL=phi-3-mini-Q4
+    
+    # Volumes
+    volumes:
+      - benchmark-results:/benchmarks/output
+      - ./reports:/reports
+    
+    # Run benchmarks and exit
+    command: >
+      --backend sovereign
+      --url http://sovereign-runtime:8080
+      --model phi-3-mini-Q4
+      --output-dir /benchmarks/output
+      --export-csv
+      --export-json
+      --generate-dashboard
+    
+    profiles:
+      - benchmark
+
+  # ==========================================================================
+  # Ollama Comparison Service (optional)
+  # ==========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rawrxd-ollama
+    restart: unless-stopped
+    
+    # GPU access
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    security_opt:
+      - seccomp:unconfined
+    group_add:
+      - video
+    
+    # Ports
+    ports:
+      - "11434:11434"
+    
+    # Volumes
+    volumes:
+      - ollama-models:/root/.ollama
+    
+    profiles:
+      - comparison
+
+  # ==========================================================================
+  # Results Dashboard (nginx serving HTML reports)
+  # ==========================================================================
+  dashboard:
+    image: nginx:alpine
+    container_name: rawrxd-dashboard
+    restart: unless-stopped
+    
+    depends_on:
+      - benchmark-suite
+    
+    ports:
+      - "8081:80"
+    
+    volumes:
+      - benchmark-results:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    
+    profiles:
+      - dashboard
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  models:
+    driver: local
+  data:
+    driver: local
+  ollama-models:
+    driver: local
+  benchmark-results:
+    driver: local

@@ -1,9 +1,10 @@
-# RawrXD Benchmark Suite — Phase D.5 Refined
+# RawrXD Benchmark Suite — Phase 3 Complete
 
-A comprehensive benchmark suite featuring a **4-tier structure** with statistical rigor, fair comparisons, and comprehensive CI integration.
+A comprehensive benchmark suite featuring **real backend integration** with HTTP connectivity to Sovereign and Ollama, statistical rigor, and comprehensive CI integration.
 
-> **Version**: 2.1.0 (Phase D.5 Refined)  
-> **Previous**: v1.0/v2.0 (see legacy documentation)
+> **Version**: 3.0.0 (Phase 3 - Real Backend Integration)  
+> **Previous**: Phase D.5 Refined, Phase E Statistical Validation  
+> **Status**: ✅ HTTP Client | ✅ Backend Adapters | ✅ Integration | ✅ Testing | ✅ Documentation
 
 ## Overview
 
@@ -28,20 +29,44 @@ This benchmark suite provides rigorous, repeatable, publishable evidence of perf
          (End-to-end IDE tasks)
 ```
 
-## What's New in Phase D.5 Refined
+## What's New in Phase 3 (Real Backend Integration)
 
-### 4-Tier Structure
+### HTTP Client Infrastructure
+- **Connection Pooling**: Reuse connections for improved performance
+- **Retry Policies**: Exponential backoff with configurable max retries
+- **Timeout Management**: Connect, read, and total timeout controls
+- **Platform Support**: Windows (Winsock2) and Linux (BSD sockets)
+
+### Backend Adapters
+- **Sovereign Adapter**: Full native support for agents, swarm, SEG
+- **Ollama Adapter**: Inference, chat, simulated agents
+- **Unified Interface**: Common API across all backends
+- **Health Checking**: Automatic backend health monitoring
+
+### Integration Features
+- **Configuration Management**: Files, environment variables, CLI args
+- **Result Validation**: Outlier detection, sanity checking, CI validation
+- **Baseline Management**: Track performance over time
+- **Regression Detection**: Automatic detection of performance changes
+
+### Testing Infrastructure
+- **40+ Unit Tests**: HTTP client, adapters, validation
+- **Mock Servers**: CI/CD testing without real backends
+- **E2E Tests**: Smoke, integration, performance, regression, chaos
+- **Multiple Formats**: Console, JSON, HTML, JUnit output
+
+### 4-Tier Structure (Phase D.5)
 - **Tier 1**: Fair apples-to-apples comparisons where both systems solve the same problem
 - **Tier 2**: Comparable agentic capabilities (planning, tools, structured output)
 - **Tier 3**: Self-contained demonstrations of Sovereign-unique features
 - **Tier 4**: Extended soak tests for stability validation
 
-### Statistical Rigor
+### Statistical Rigor (Phase E)
 - **Warmup protocol**: 5 runs discarded, 30 runs measured
 - **Fixed random seed**: 42 (reproducibility)
 - **Temperature**: 0 (deterministic)
 - **Confidence intervals**: 95% CI reported for all metrics
-- **Significance testing**: CI overlap, 2× SE rule
+- **Significance testing**: Welch's t-test, Cohen's d, p-values
 
 ### Developer Workflow Benchmark
 End-to-end tasks mirroring real IDE usage:
@@ -60,6 +85,12 @@ End-to-end tasks mirroring real IDE usage:
 
 ## Quick Start
 
+### Prerequisites
+
+- C++17 compatible compiler (GCC 8+, Clang 7+, MSVC 2019+)
+- CMake 3.16+
+- Sovereign running on `localhost:8080` OR Ollama running on `localhost:11434`
+
 ### Build
 
 ```bash
@@ -69,23 +100,26 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 ```
 
-### Run Benchmarks
+### Run Benchmarks (New Integrated Runner)
 
 ```bash
-# Run complete benchmark suite
-./benchmark_runner --full
+# Run with Sovereign (default)
+./integrated_benchmark_runner --backend sovereign --verbose
 
-# Run specific tier
+# Run with Ollama
+./integrated_benchmark_runner --backend ollama --endpoint http://localhost:11434 --model phi3:mini
+
+# Run smoke tests
+./integrated_benchmark_runner --category smoke
+
+# Run full benchmark suite
+./integrated_benchmark_runner --category standard --measured-runs 50
+
+# Run specific tier (legacy runner)
 ./benchmark_runner --tier 1  # Runtime Performance
 ./benchmark_runner --tier 2  # Agentic Capability
 ./benchmark_runner --tier 3  # Sovereign Features
 ./benchmark_runner --tier 4  # Long-Term Reliability
-
-# Run developer workflow benchmark
-./benchmark_runner --workflow
-
-# Run soak test (1 hour)
-./benchmark_runner --tier4 --soak-duration 3600
 ```
 
 ### Compare Against Baseline
@@ -165,6 +199,64 @@ The GitHub Actions workflow (`.github/workflows/performance-regression.yml`) aut
 | Critical | ≥20% regression | ❌ Block merge |
 | Warning | ≥10% regression | ⚠️ Notify |
 | Improvement | ≥10% improvement | 🎉 Celebrate |
+
+## Phase 3 Features
+
+### HTTP Client Infrastructure
+
+```cpp
+#include "http_client.hpp"
+
+HttpClient client;
+client.Initialize();
+client.EnableConnectionPool(10);
+client.SetRetryPolicy(3, 1000, true);
+client.SetDefaultTimeout(5000, 30000, 60000);
+
+HttpResponse response = client.Get("http://localhost:8080/api/health");
+if (response.IsSuccess()) {
+    std::cout << "Backend is healthy" << std::endl;
+}
+```
+
+### Backend Adapters
+
+```cpp
+#include "backend_factory.hpp"
+
+// Create backend
+auto backend = BackendFactory::Create(BackendType::SOVEREIGN);
+
+// Configure
+BenchmarkConfig config;
+config.sovereign_endpoint = "http://localhost:8080";
+config.model_name = "phi-3-mini-Q4";
+
+// Initialize
+backend->Initialize(config);
+
+// Generate text
+std::string response = backend->Generate("Hello, world!", 100);
+```
+
+### Running Tests
+
+```bash
+# Unit tests
+./http_client_tests
+./backend_adapter_tests
+./e2e_tests --category smoke
+
+# With CTest
+ctest --output-on-failure
+```
+
+## Documentation
+
+- [HTTP Client API](docs/http_client_api.md) - HTTP client reference
+- [Backend Adapter Guide](docs/backend_adapter_guide.md) - Backend usage guide
+- [Configuration Reference](docs/configuration_reference.md) - All configuration options
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
 
 ## Legacy Quick Start
 

@@ -12,6 +12,7 @@
 #include <fstream>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 
 // SQLite stub for Phase C.0 Batch 3/5 testing
 // In production, link against sqlite3.lib
@@ -343,13 +344,33 @@ bool SEGHistoricalPerformanceStore::StoreRecord(const PerformanceRecord& record)
     sqlite3_bind_text(stmt, 17, record.cycleName.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 18, record.taskCategory.c_str(), -1, SQLITE_STATIC);
     
-    bool success = sqlite3_step(stmt) == SQLITE_DONE;
+    int stepResult = sqlite3_step(stmt);
+    fprintf(stderr, "[STORE] sqlite3_step returned %d\n", stepResult);
+    bool success = (stepResult == SQLITE_DONE);
+    fprintf(stderr, "[STORE] success=%d\n", success);
     sqlite3_finalize(stmt);
+    fprintf(stderr, "[STORE] finalize done\n");
     
     if (success && autoPruningEnabled_) {
         MaybePrune();
     }
     
+    fprintf(stderr, "[STORE] returning %d\n", success);
+    if (success && autoPruningEnabled_) {
+        MaybePrune();
+    }
+    
+    fprintf(stderr, "[STORE] returning %d\n", success);
+    if (success && autoPruningEnabled_) {
+        MaybePrune();
+    }
+    
+    fprintf(stderr, "[STORE] returning %d\n", success);
+    if (success && autoPruningEnabled_) {
+        MaybePrune();
+    }
+    
+    fprintf(stderr, "[STORE] returning %d\n", success);
     return success;
 }
 
@@ -383,20 +404,29 @@ bool SEGHistoricalPerformanceStore::StoreRecords(const std::vector<PerformanceRe
 std::vector<PerformanceRecord> SEGHistoricalPerformanceStore::QueryRecords(
     const HistoryQuery& query
 ) const {
+    fprintf(stderr, "[STORE] QueryRecords ENTER\n"); fflush(stderr);
     std::lock_guard<std::mutex> lock(mutex_);
     std::vector<PerformanceRecord> results;
     
-    if (!db_) return results;
+    if (!db_) {
+        fprintf(stderr, "[STORE] QueryRecords: db_ is null\n"); fflush(stderr);
+        return results;
+    }
     
     std::string sql = "SELECT * FROM execution_history " + query.ToSqlWhere() +
                       " ORDER BY timestamp DESC LIMIT " + std::to_string(query.limit) +
                       " OFFSET " + std::to_string(query.offset) + ";";
     
+    fprintf(stderr, "[STORE] QueryRecords SQL: %s\n", sql.c_str()); fflush(stderr);
+    
     sqlite3_stmt* stmt = nullptr;
-    if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+    int rc = sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr);
+    fprintf(stderr, "[STORE] prepare_v2 returned %d\n", rc); fflush(stderr);
+    if (rc != SQLITE_OK) {
         return results;
     }
     
+    fprintf(stderr, "[STORE] About to call sqlite3_step\n"); fflush(stderr);
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         results.push_back(RowToRecord(stmt));
     }
