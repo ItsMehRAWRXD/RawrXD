@@ -19,6 +19,10 @@ set(SEG_SOURCES
     seg_telemetry_view.cpp
     # Phase B.4: Sovereign Execution Graph Core
     ../src/seg/SovereignExecutionGraph.cpp
+    ../src/seg/SovereignExecutionGraphBuilder.cpp
+    ../src/seg/SovereignExecutionPlanner.cpp
+    ../src/seg/SovereignSEGCLI.cpp
+    ../src/seg/SovereignSEGIntegrationTest.cpp
 )
 
 set(SEG_HEADERS
@@ -33,17 +37,23 @@ set(SEG_HEADERS
     seg_telemetry_view.hpp
     # Phase B.4: Sovereign Execution Graph Core
     ../src/seg/SovereignExecutionGraph.hpp
+    ../src/seg/SovereignSEGCLI.hpp
+    ../src/seg/SovereignSEGIntegrationTest.hpp
 )
 
 # ============================================================================
-# Runtime Sources (shared with RawrXD)
+# Runtime Sources (shared with RawrXD) - DISABLED for Phase B.4
+# Re-enable after SEG core validation
 # ============================================================================
+# set(RUNTIME_SOURCES
+#     ../runtime/streaming_multi_layer_backend.cpp
+#     ../runtime/streaming_gguf_loader.cpp
+#     ../runtime/streaming_layer_registry.cpp
+#     ../runtime/kv_cache.cpp
+#     ../runtime/q4k_decoder.cpp
+#     ../runtime/telemetry_stub.cpp
+# )
 set(RUNTIME_SOURCES
-    ../runtime/streaming_multi_layer_backend.cpp
-    ../runtime/streaming_gguf_loader.cpp
-    ../runtime/streaming_layer_registry.cpp
-    ../runtime/kv_cache.cpp
-    ../runtime/q4k_decoder.cpp
     ../runtime/telemetry_stub.cpp
 )
 
@@ -114,6 +124,26 @@ endif()
 # Example executable
 add_executable(seg_example example.cpp)
 target_link_libraries(seg_example PRIVATE seg)
+
+# Smoke test executable for Phase B.4
+add_executable(seg_smoke_test seg_smoke_test.cpp)
+target_link_libraries(seg_smoke_test PRIVATE seg)
+
+# Builder smoke test executable for Phase B.4 Batch 2/5
+add_executable(seg_builder_smoke_test seg_builder_smoke_test.cpp)
+target_link_libraries(seg_builder_smoke_test PRIVATE seg)
+
+# Planner smoke test executable for Phase B.4 Batch 3/5
+add_executable(seg_planner_smoke_test seg_planner_smoke_test.cpp)
+target_link_libraries(seg_planner_smoke_test PRIVATE seg)
+
+# CLI smoke test executable for Phase B.4 Batch 4/5
+add_executable(seg_cli_smoke_test seg_cli_smoke_test.cpp)
+target_link_libraries(seg_cli_smoke_test PRIVATE seg)
+
+# Validation smoke test executable for Phase B.4 Batch 5/5
+add_executable(seg_validation_smoke_test seg_validation_smoke_test.cpp)
+target_link_libraries(seg_validation_smoke_test PRIVATE seg)
 
 # Install
 install(TARGETS seg seg_example

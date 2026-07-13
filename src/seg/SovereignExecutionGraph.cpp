@@ -301,77 +301,107 @@ std::vector<ExecutionNode*> ExecutionGraph::GetNodesByState(ExecutionState state
     return result;
 }
 
-// Topological Sorting
+// Topological Sorting (Kahn's Algorithm - iterative)
 std::vector<NodeId> ExecutionGraph::TopologicalSort() const {
     std::lock_guard<std::mutex> lock(mutex_);
     std::vector<NodeId> result;
-    std::map<NodeId, bool> visited;
-    std::map<NodeId, bool> recStack;
     
+    if (nodes_.empty()) {
+        return result;
+    }
+    
+    // Calculate in-degrees
+    std::map<NodeId, size_t> inDegree;
     for (const auto& [id, node] : nodes_) {
-        if (!visited[id]) {
-            TopologicalSortUtil(id, visited, recStack, result);
+        inDegree[id] = 0;
+    }
+    for (const auto& [id, node] : nodes_) {
+        for (NodeId outputId : node->outputs) {
+            inDegree[outputId]++;
         }
     }
     
-    std::reverse(result.begin(), result.end());
+    // Queue for nodes with no incoming edges
+    std::queue<NodeId> queue;
+    for (const auto& [id, deg] : inDegree) {
+        if (deg == 0) {
+            queue.push(id);
+        }
+    }
+    
+    // Process nodes
+    while (!queue.empty()) {
+        NodeId current = queue.front();
+        queue.pop();
+        result.push_back(current);
+        
+        auto it = nodes_.find(current);
+        if (it != nodes_.end()) {
+            for (NodeId outputId : it->second->outputs) {
+                inDegree[outputId]--;
+                if (inDegree[outputId] == 0) {
+                    queue.push(outputId);
+                }
+            }
+        }
+    }
+    
     return result;
 }
 
 void ExecutionGraph::TopologicalSortUtil(NodeId nodeId, std::map<NodeId, bool>& visited,
                                          std::map<NodeId, bool>& recStack,
                                          std::vector<NodeId>& result) const {
-    visited[nodeId] = true;
-    recStack[nodeId] = true;
-    
-    auto it = nodes_.find(nodeId);
-    if (it != nodes_.end()) {
-        for (NodeId outputId : it->second->outputs) {
-            if (!visited[outputId]) {
-                TopologicalSortUtil(outputId, visited, recStack, result);
-            }
-        }
-    }
-    
-    recStack[nodeId] = false;
-    result.push_back(nodeId);
+    // Deprecated: Use Kahn's algorithm in TopologicalSort instead
+    (void)nodeId; (void)visited; (void)recStack; (void)result;
 }
 
 bool ExecutionGraph::HasCycle() const {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::map<NodeId, bool> visited;
-    std::map<NodeId, bool> recStack;
     
+    // Use Kahn's algorithm: if topological sort doesn't include all nodes, there's a cycle
+    std::map<NodeId, size_t> inDegree;
     for (const auto& [id, node] : nodes_) {
-        if (!visited[id]) {
-            if (HasCycleUtil(id, visited, recStack)) {
-                return true;
+        inDegree[id] = 0;
+    }
+    for (const auto& [id, node] : nodes_) {
+        for (NodeId outputId : node->outputs) {
+            inDegree[outputId]++;
+        }
+    }
+    
+    std::queue<NodeId> queue;
+    size_t visitedCount = 0;
+    
+    for (const auto& [id, deg] : inDegree) {
+        if (deg == 0) {
+            queue.push(id);
+        }
+    }
+    
+    while (!queue.empty()) {
+        NodeId current = queue.front();
+        queue.pop();
+        visitedCount++;
+        
+        auto it = nodes_.find(current);
+        if (it != nodes_.end()) {
+            for (NodeId outputId : it->second->outputs) {
+                inDegree[outputId]--;
+                if (inDegree[outputId] == 0) {
+                    queue.push(outputId);
+                }
             }
         }
     }
     
-    return false;
+    return visitedCount != nodes_.size();
 }
 
 bool ExecutionGraph::HasCycleUtil(NodeId nodeId, std::map<NodeId, bool>& visited,
                                    std::map<NodeId, bool>& recStack) const {
-    visited[nodeId] = true;
-    recStack[nodeId] = true;
-    
-    auto it = nodes_.find(nodeId);
-    if (it != nodes_.end()) {
-        for (NodeId outputId : it->second->outputs) {
-            if (!visited[outputId]) {
-                if (HasCycleUtil(outputId, visited, recStack)) {
-                    return true;
-                }
-            } else if (recStack[outputId]) {
-                return true;
-            }
-        }
-    }
-    
-    recStack[nodeId] = false;
+    // Deprecated: Use iterative HasCycle instead
+    (void)nodeId; (void)visited; (void)recStack;
     return false;
 }
 
@@ -523,8 +553,44 @@ std::vector<std::string> ExecutionGraph::GetValidationErrors() const {
     std::lock_guard<std::mutex> lock(mutex_);
     std::vector<std::string> errors;
     
-    // Check for cycles
-    if (HasCycle()) {
+    // Check for cycles (using internal implementation to avoid mutex deadlock)
+    // Calculate in-degrees
+    std::map<NodeId, size_t> inDegree;
+    for (const auto& [id, node] : nodes_) {
+        inDegree[id] = 0;
+    }
+    for (const auto& [id, node] : nodes_) {
+        for (NodeId outputId : node->outputs) {
+            inDegree[outputId]++;
+        }
+    }
+    
+    std::queue<NodeId> queue;
+    size_t visitedCount = 0;
+    
+    for (const auto& [id, deg] : inDegree) {
+        if (deg == 0) {
+            queue.push(id);
+        }
+    }
+    
+    while (!queue.empty()) {
+        NodeId current = queue.front();
+        queue.pop();
+        visitedCount++;
+        
+        auto it = nodes_.find(current);
+        if (it != nodes_.end()) {
+            for (NodeId outputId : it->second->outputs) {
+                inDegree[outputId]--;
+                if (inDegree[outputId] == 0) {
+                    queue.push(outputId);
+                }
+            }
+        }
+    }
+    
+    if (visitedCount != nodes_.size()) {
         errors.push_back("Graph contains cycles");
     }
     
@@ -538,8 +604,15 @@ std::vector<std::string> ExecutionGraph::GetValidationErrors() const {
         }
     }
     
-    // Check for entry points
-    if (GetEntryPoints().empty()) {
+    // Check for entry points (nodes with no dependencies)
+    bool hasEntryPoints = false;
+    for (const auto& [id, node] : nodes_) {
+        if (node->dependencies.empty()) {
+            hasEntryPoints = true;
+            break;
+        }
+    }
+    if (!hasEntryPoints && !nodes_.empty()) {
         errors.push_back("Graph has no entry points");
     }
     

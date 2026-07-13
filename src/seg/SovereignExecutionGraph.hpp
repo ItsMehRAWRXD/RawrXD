@@ -265,6 +265,8 @@ private:
     void TopologicalSortUtil(NodeId nodeId, std::map<NodeId, bool>& visited,
                               std::map<NodeId, bool>& recStack,
                               std::vector<NodeId>& result) const;
+    bool HasCycleUtil(NodeId nodeId, std::map<NodeId, bool>& visited,
+                      std::map<NodeId, bool>& recStack) const;
 };
 
 /**
