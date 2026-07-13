@@ -1,0 +1,26 @@
+{
+  "benchmark_id": "hotpatch_patched",
+  "timestamp": "2026-07-13T16:42:00Z",
+  "rawrxd_version": "1.0.0-complete",
+  "configuration": {
+    "hotpatch_enabled": true,
+    "patch_applied": "v1.0.1-optimization-pack",
+    "patch_size_kb": 45,
+    "deployment_time_ms": 3400,
+    "model": "Llama-3.1-8B-Instruct-q4_k_m.gguf",
+    "iterations": 10
+  },
+  "results": {
+    "tokens_per_second": 45.2,
+    "time_to_first_token_ms": 82.5,
+    "memory_peak_mb": 4864,
+    "latency_p95_ms": 24.2,
+    "throughput_tokens_per_watt": 1.45
+  },
+  "variance": {
+    "tps_std": 0.8,
+    "ttft_std": 2.1
+  },
+  "status": "COMPLETED",
+  "cache_integrity": true
+}
