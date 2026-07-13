@@ -1360,6 +1360,94 @@ Manages development workspaces and environments.
 .\workspace-manager.ps1 -Action Delete -WorkspaceName "my-project"
 ```
 
+## Feature Flags
+
+### `feature-flags.ps1`
+
+Manages feature flags and toggles for gradual rollouts.
+
+**Actions:**
+- `List` - List all feature flags
+- `Enable` - Enable a feature flag
+- `Disable` - Disable a feature flag
+- `Create` - Create a new feature flag
+- `Delete` - Delete a feature flag
+- `Rollout` - Gradual percentage rollout
+- `Status` - Show flag status
+
+**Flag Types:**
+- `Boolean` - Simple on/off toggle
+- `Percentage` - Gradual rollout percentage
+- `UserGroup` - Enable for specific user groups
+- `TimeBased` - Time-based activation
+
+**Usage:**
+```powershell
+# List all feature flags
+.\feature-flags.ps1 -Action List
+
+# Create feature flag
+.\feature-flags.ps1 -Action Create -FlagName "new-ui" -Description "New UI design" -FlagType Boolean
+
+# Create percentage-based flag
+.\feature-flags.ps1 -Action Create -FlagName "beta-feature" -Description "Beta feature" -FlagType Percentage -Percentage 10
+
+# Enable flag
+.\feature-flags.ps1 -Action Enable -FlagName "new-ui"
+
+# Disable flag
+.\feature-flags.ps1 -Action Disable -FlagName "new-ui"
+
+# Gradual rollout
+.\feature-flags.ps1 -Action Rollout -FlagName "beta-feature"
+
+# Show flag status
+.\feature-flags.ps1 -Action Status -FlagName "new-ui"
+
+# Delete flag
+.\feature-flags.ps1 -Action Delete -FlagName "new-ui"
+```
+
+## Environment Manager
+
+### `env-manager.ps1`
+
+Manages different deployment environments (dev, staging, prod).
+
+**Actions:**
+- `List` - List all environments
+- `Create` - Create a new environment
+- `Switch` - Switch to an environment
+- `Delete` - Delete an environment
+- `Compare` - Compare two environments
+- `Sync` - Sync environment configuration
+
+**Default Environments:**
+- `development` - Development environment
+- `staging` - Staging environment
+- `production` - Production environment
+
+**Usage:**
+```powershell
+# List environments
+.\env-manager.ps1 -Action List
+
+# Create environment
+.\env-manager.ps1 -Action Create -Environment "testing"
+
+# Switch environment
+.\env-manager.ps1 -Action Switch -Environment "staging"
+
+# Compare environments
+.\env-manager.ps1 -Action Compare -SourceEnv "development" -Environment "production"
+
+# Sync environments
+.\env-manager.ps1 -Action Sync -SourceEnv "development" -Environment "staging"
+
+# Delete environment
+.\env-manager.ps1 -Action Delete -Environment "testing"
+```
+
 ## Common Workflows
 
 ### First-Time Setup
