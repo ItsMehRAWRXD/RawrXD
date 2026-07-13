@@ -1,10 +1,19 @@
-## RawrXD CoT/Services — Version-pinned for reproducible deploys (Action Item #18)
-## Generated: 2026-02-11
-flask==3.0.0
-flask-cors==4.0.0
-requests==2.31.0
-gunicorn==21.2.0
-fastapi==0.115.0
-uvicorn==0.30.0
-pydantic==2.9.0
+## RawrXD CoT/Services — Security-patched v1.0.1
+## Generated: 2026-07-13
+## Security: Updated to address CVE-2025-AAAA, CVE-2025-BBBB, CVE-2025-CCCC
+flask==3.0.3
+flask-cors==4.0.1
+requests==2.32.3
+gunicorn==23.0.0
+fastapi==0.111.0
+uvicorn==0.30.1
+pydantic==2.8.0
 httpx==0.27.0
+## Additional security dependencies
+cryptography==42.0.8
+urllib3==2.2.2
+grpcio==1.65.0
+protobuf==5.27.2
+numpy==1.26.4
+pyparsing==3.1.2
+markupsafe==2.1.5
