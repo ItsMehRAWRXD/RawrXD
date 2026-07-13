@@ -1,21 +1,30 @@
 {
   "name": "rawrxd-ide-chatbot",
-  "version": "1.0.0",
-  "description": "RawrXD agentic IDE competing with GitHub Copilot Chat and Cursor Composer",
+  "version": "1.0.1-hotfix3",
+  "description": "RawrXD agentic IDE competing with GitHub Copilot Chat and Cursor Composer - Security Hardened",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "build": "build_phase3.bat",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+    "security:scan": "npm audit --audit-level=high"
   },
   "dependencies": {
     "ffi-napi": "^4.0.3",
-    "jsdom": "^28.0.0",
-    "ref-napi": "^3.0.3"
+    "jsdom": "^24.1.0",
+    "ref-napi": "^3.0.3",
+    "axios": "^1.7.2",
+    "express": "^4.19.2",
+    "ws": "^8.18.0",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "acorn": "^8.15.0",
-    "nodemon": "^3.0.1"
+    "acorn": "^8.12.1",
+    "nodemon": "^3.1.4",
+    "eslint": "^9.7.0",
+    "eslint-plugin-security": "^3.0.1"
   },
   "keywords": [
     "ai",
@@ -25,5 +34,8 @@
     "model"
   ],
   "author": "RawrXD",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

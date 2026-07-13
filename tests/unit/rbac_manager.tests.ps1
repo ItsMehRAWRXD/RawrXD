@@ -3,8 +3,10 @@
 # Run with: Invoke-Pester -Path tests/unit/rbac_manager.tests.ps1
 
 BeforeAll {
-    $script:TestRBACPath = "tests/fixtures/test_rbac_config.json"
-    $script:RBACManagerPath = "security/phase_h_enterprise_security/rbac/rbac_manager.ps1"
+    $script:TestRoot = Join-Path $PSScriptRoot ".."
+    $script:ProjectRoot = Join-Path $PSScriptRoot "..\.."
+    $script:TestRBACPath = Join-Path $script:TestRoot "fixtures/test_rbac_config.json"
+    $script:RBACManagerPath = Join-Path $script:ProjectRoot "security/phase_h_enterprise_security/rbac/rbac_manager.ps1"
     
     # Create test RBAC config
     $testConfig = @{
