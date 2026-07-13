@@ -2,8 +2,8 @@
 
 #include "SovereignCLI.hpp"
 #include "../swarm/SovereignSwarm.hpp"
-#include "../model/ModelRegistry.hpp"
-#include "../inference/InferenceBackend.hpp"
+#include "../core/ModelRegistry.h"
+#include "../core/InferenceBackend.h"
 
 namespace sovereign {
 namespace cli {

@@ -1,12 +1,11 @@
 #pragma once
 
 #include "../infinite/InfinitePerfectionEngine.hpp"
-#include "../model/ModelRegistry.hpp"
-#include "../inference/InferenceBackend.hpp"
+#include "../core/ModelRegistry.h"
+#include "../core/InferenceBackend.h"
 #include "../cli/SovereignCLI.hpp"
-#include "../seg/SovereignSEG.hpp"
-#include "../os/SovereignOS.hpp"
-#include "../telemetry/Telemetry.hpp"
+#include "../core/SovereignSEG.h"
+#include "../telemetry.h"
 #include <vector>
 #include <string>
 #include <functional>
@@ -19,6 +18,17 @@
 #include <unordered_map>
 
 namespace Sovereign {
+
+// Forward declarations from external headers
+namespace InfinitePerfection { class InfinitePerfectionEngine; }
+class InferenceBackend;
+class ModelRegistry;
+class SovereignCLI;
+class SovereignSEG;
+class Telemetry;
+
+// Placeholder for SovereignOS (not yet implemented)
+struct SovereignOS {};
 
 // Forward declarations
 struct SwarmAgentContext;
@@ -74,12 +84,12 @@ struct DefaultRoleModels {
 };
 
 struct SwarmAgentContext {
-    InfinitePerfectionEngine* engine;
+    InfinitePerfection::InfinitePerfectionEngine* engine;
     InferenceBackend*         backend;
     ModelRegistry*            registry;
     SovereignCLI*             cli;
     SovereignSEG*             seg;
-    SovereignOS*              os;
+    void*                     os;  // Placeholder for SovereignOS
     Telemetry*                telemetry;
     
     // Role-to-model mapping (configurable per swarm)
@@ -131,7 +141,13 @@ struct SwarmTask {
     // Assigned model (set by scheduler based on role)
     std::string   assignedModel;
     
+    // Description for logging
+    std::string   description;
+    
     SwarmTask() : kind(SwarmTaskKind::ScanSubsystem), target(""), cycleId(0), priority(10), id(0) {}
+    
+    SwarmTask(SwarmTaskKind k, const std::string& tgt, uint32_t cyc, uint32_t pri, uint64_t taskId, const std::string& desc)
+        : kind(k), target(tgt), cycleId(cyc), priority(pri), id(taskId), description(desc) {}
 };
 
 // Priority queue comparator
@@ -259,7 +275,7 @@ public:
     void PrintRoleConfiguration() const;
     
     // Main entry point - runs global completion with full swarm
-    void RunGlobalCompletion(InfinitePerfectionEngine& engine,
+    void RunGlobalCompletion(InfinitePerfection::InfinitePerfectionEngine& engine,
                              InferenceBackend&         backend,
                              ModelRegistry&            registry,
                              SovereignCLI&             cli);
