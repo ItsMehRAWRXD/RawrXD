@@ -52,6 +52,17 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `remote-manager.ps1` | Remote instance and distributed operations | `.\remote-manager.ps1` |
 | `integration-manager.ps1` | Third-party integrations and connectors | `.\integration-manager.ps1` |
 | `analytics-dashboard.ps1` | Analytics and insights dashboard | `.\analytics-dashboard.ps1` |
+| `model-comparator.ps1` | Model comparison and benchmarking | `.\model-comparator.ps1` |
+| `chat-session-manager.ps1` | Chat session and conversation management | `.\chat-session-manager.ps1` |
+| `prompt-engineer.ps1` | Prompt engineering and optimization | `.\prompt-engineer.ps1` |
+| `token-calculator.ps1` | Token counting and cost estimation | `.\token-calculator.ps1` |
+| `model-validator.ps1` | Model file validation and repair | `.\model-validator.ps1` |
+| `api-gateway-manager.ps1` | API gateway configuration and routing | `.\api-gateway-manager.ps1` |
+| `load-balancer.ps1` | Load balancing across instances | `.\load-balancer.ps1` |
+| `system-resource-monitor.ps1` | System resource monitoring | `.\system-resource-monitor.ps1` |
+| `log-aggregator.ps1` | Log aggregation and centralization | `.\log-aggregator.ps1` |
+| `config-validator.ps1` | Configuration validation and schemas | `.\config-validator.ps1` |
+| `deployment-orchestrator.ps1` | Multi-stage deployment orchestration | `.\deployment-orchestrator.ps1` |
 
 ## Development Setup
 
