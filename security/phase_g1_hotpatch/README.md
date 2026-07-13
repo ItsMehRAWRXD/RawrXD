@@ -242,3 +242,76 @@ Located in `monitoring/patch_dashboard.ps1`:
 - System health metrics (CPU, Memory, Disk)
 - Recent patch activity history
 - Interactive commands (Refresh, History, Details, Export)
+
+## Patch Registry
+
+Located in `registry/patch_registry.ps1`:
+
+**Features:**
+- Centralized patch tracking
+- Status management (pending, active, failed, rolled-back)
+- History tracking
+- Expiration management
+- Statistics and reporting
+
+**Usage:**
+```powershell
+# Register a patch
+.\registry\patch_registry.ps1 -Action register -PatchBundle patches\hotfix.json
+
+# List all patches
+.\registry\patch_registry.ps1 -Action list
+
+# Get patch status
+.\registry\patch_registry.ps1 -Action status -BundleId "hotfix-001"
+
+# View statistics
+.\registry\patch_registry.ps1 -Action status
+
+# Cleanup expired patches
+.\registry\patch_registry.ps1 -Action cleanup
+
+# Validate registry integrity
+.\registry\patch_registry.ps1 -Action validate
+```
+
+## Sample Patches
+
+Located in `patches/`:
+
+- **security/cve_2026_0001_memory_safety.json** - Critical CVE fix
+- **performance/inference_throughput_v1.1.0.json** - 15% throughput improvement
+- **config/logging_verbosity_v1.0.1.json** - Structured logging update
+- **features/beta_gpu_offloading_v1.1.0.json** - 10% rollout feature
+- **emergency/rollback_all_v1.0.0.json** - Emergency rollback procedure
+
+## Documentation
+
+- **README.md** - This file
+- **PATCH_AUTHORING_GUIDE.md** - Complete guide for patch authors
+- **PHASE_G1_COMPLETION.md** - Phase completion report
+
+## Quick Start
+
+```powershell
+# 1. Create a patch from template
+Copy-Item templates\security_hotfix_template.json patches\my_patch.json
+
+# 2. Edit the patch
+notepad patches\my_patch.json
+
+# 3. Test the patch
+.\testing\patch_test_framework.ps1 -PatchBundle patches\my_patch.json -TestLevel full
+
+# 4. Register the patch
+.\registry\patch_registry.ps1 -Action register -PatchBundle patches\my_patch.json
+
+# 5. Deploy (dry-run first)
+.\unified_hotpatch_orchestrator.ps1 -Action apply -System all -PatchBundle patches\my_patch.json -DryRun
+
+# 6. Deploy for real
+.\unified_hotpatch_orchestrator.ps1 -Action apply -System all -PatchBundle patches\my_patch.json
+
+# 7. Monitor
+.\monitoring\patch_dashboard.ps1 -RefreshInterval 5
+```
