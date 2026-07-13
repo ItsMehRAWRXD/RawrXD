@@ -545,6 +545,41 @@ std::string SwarmScheduler::ExplainLastDecision() const {
     return oss.str();
 }
 
+// Phase B.2 Batch 13-17: Adaptive Scheduling
+void SwarmScheduler::AdaptExplorationRate(double convergenceScore) {
+    lastConvergenceScore_ = convergenceScore;
+    
+    // If converging well, reduce exploration to exploit known good paths
+    // If not converging, increase exploration to find better paths
+    if (convergenceScore >= targetConvergenceRate_) {
+        // Converging well - reduce exploration
+        explorationRate_ = std::max(0.01, explorationRate_ * 0.95);
+        std::cout << "[Scheduler] Convergence " << std::fixed << std::setprecision(3) << convergenceScore
+                  << " >= target " << targetConvergenceRate_ << ", reducing exploration to "
+                  << std::setprecision(2) << (explorationRate_ * 100) << "%\n";
+    } else if (convergenceScore < targetConvergenceRate_ * 0.8) {
+        // Not converging - increase exploration
+        explorationRate_ = std::min(0.5, explorationRate_ * 1.1);
+        std::cout << "[Scheduler] Convergence " << std::fixed << std::setprecision(3) << convergenceScore
+                  << " < " << (targetConvergenceRate_ * 0.8) << ", increasing exploration to "
+                  << std::setprecision(2) << (explorationRate_ * 100) << "%\n";
+    }
+}
+
+uint32_t SwarmScheduler::GetOptimalWorkerCount(double convergenceScore) const {
+    if (!autoScaleWorkers_) {
+        return workerCount_;
+    }
+    
+    // Scale workers based on convergence
+    // Low convergence = more workers to explore faster
+    // High convergence = fewer workers to conserve resources
+    double ratio = 1.0 + (1.0 - convergenceScore);  // 1.0 to 2.0 range
+    uint32_t optimal = static_cast<uint32_t>(workerCount_ * ratio);
+    
+    return std::clamp(optimal, minWorkers_, maxWorkers_);
+}
+
 // SovereignSwarm implementation
 SovereignSwarm::SovereignSwarm(const SwarmAgentContext& ctx) : ctx_(ctx) {
     InitializeScheduler();

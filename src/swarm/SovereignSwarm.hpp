@@ -556,6 +556,20 @@ public:
     // Phase A.5: Explain last routing decision
     std::string ExplainLastDecision() const;
     
+    // Phase B.2 Batch 13-17: Adaptive Scheduling
+    void AdaptExplorationRate(double convergenceScore);
+    double GetTargetConvergenceRate() const { return targetConvergenceRate_; }
+    void SetTargetConvergenceRate(double rate) { targetConvergenceRate_ = std::clamp(rate, 0.0, 1.0); }
+    
+    // Convergence-based task prioritization
+    void PrioritizeConvergingTasks(bool enable) { prioritizeConverging_ = enable; }
+    bool IsPrioritizingConverging() const { return prioritizeConverging_; }
+    
+    // Dynamic worker scaling based on convergence
+    void SetAutoScaleWorkers(bool enable) { autoScaleWorkers_ = enable; }
+    bool IsAutoScalingWorkers() const { return autoScaleWorkers_; }
+    uint32_t GetOptimalWorkerCount(double convergenceScore) const;
+    
     // Statistics
     size_t GetPendingCount() const;
     size_t GetCompletedCount() const;
@@ -594,6 +608,14 @@ private:
     
     // Phase A.5: Last routing decision for explainability
     mutable RoutingDecision lastDecision_;
+    
+    // Phase B.2 Batch 13-17: Adaptive Scheduling
+    double targetConvergenceRate_ = 0.85;  // Target convergence score
+    bool prioritizeConverging_ = true;      // Prioritize tasks that improve convergence
+    bool autoScaleWorkers_ = false;         // Auto-scale worker count based on convergence
+    double lastConvergenceScore_ = 0.0;     // Track for adaptation
+    uint32_t minWorkers_ = 2;               // Minimum worker count
+    uint32_t maxWorkers_ = 32;              // Maximum worker count
     
     void WorkerLoop(uint32_t workerId);
     void BuildGlobalTaskList(std::vector<SwarmTask>& tasks);

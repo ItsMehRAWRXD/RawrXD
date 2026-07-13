@@ -17,6 +17,8 @@ set(SEG_SOURCES
     seg_runtime.cpp
     seg_models.cpp
     seg_telemetry_view.cpp
+    # Phase B.4: Sovereign Execution Graph Core
+    ../src/seg/SovereignExecutionGraph.cpp
 )
 
 set(SEG_HEADERS
@@ -29,6 +31,8 @@ set(SEG_HEADERS
     seg_runtime.hpp
     seg_models.hpp
     seg_telemetry_view.hpp
+    # Phase B.4: Sovereign Execution Graph Core
+    ../src/seg/SovereignExecutionGraph.hpp
 )
 
 # ============================================================================
