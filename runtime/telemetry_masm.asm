@@ -5,26 +5,29 @@
 ; - Lock-free ring buffer (SPSC: single producer, single consumer)
 ; - RDTSC timestamps (cycle-accurate)
 ; - No CRT dependencies
-; - Direct syscall-based output
 ; - x64 ABI compliant
 ; ============================================================================
 
 option casemap:none
-option frame:auto
+
+; ============================================================================
+; External Functions
+; ============================================================================
+extrn VirtualAlloc:proc
+extrn VirtualFree:proc
 
 ; ============================================================================
 ; Data Section
 ; ============================================================================
 .data
-align 64
 
 ; Ring buffer configuration
 TELEMETRY_BUFFER_SIZE dq 1048576     ; 1MB default
 TELEMETRY_BUFFER_PTR  dq 0           ; Pointer to allocated buffer
-TELEMETRY_WRITE_IDX     dq 0           ; Write index (atomic)
-TELEMETRY_READ_IDX      dq 0           ; Read index (atomic)
-TELEMETRY_DROPPED       dq 0           ; Dropped event count
-TELEMETRY_INITIALIZED   db 0           ; Initialization flag
+TELEMETRY_WRITE_IDX   dq 0           ; Write index (atomic)
+TELEMETRY_READ_IDX    dq 0           ; Read index (atomic)
+TELEMETRY_DROPPED     dq 0           ; Dropped event count
+TELEMETRY_INITIALIZED db 0           ; Initialization flag
 
 ; Event structure (32 bytes)
 ;   timestamp:  dq (8 bytes) - RDTSC
@@ -52,6 +55,7 @@ MasmTelemetry_Init PROC FRAME
     .pushreg rbx
     .pushreg rdi
     .pushreg rsi
+    .endprolog
     
     ; Check if already initialized
     mov al, TELEMETRY_INITIALIZED
@@ -68,7 +72,7 @@ MasmTelemetry_Init PROC FRAME
     mov TELEMETRY_BUFFER_SIZE, rcx
     
     ; Allocate buffer using VirtualAlloc
-    xor rcx, rcx            ; lpAddress = NULL (let system choose)
+    xor ecx, ecx            ; lpAddress = NULL (let system choose)
     mov rdx, TELEMETRY_BUFFER_SIZE
     mov r8d, 00001000h      ; flAllocationType = MEM_COMMIT
     mov r9d, 04h            ; flProtect = PAGE_READWRITE
@@ -113,6 +117,7 @@ MasmTelemetry_Init ENDP
 MasmTelemetry_Shutdown PROC FRAME
     push rbx
     .pushreg rbx
+    .endprolog
     
     ; Check if initialized
     mov al, TELEMETRY_INITIALIZED
@@ -126,7 +131,7 @@ MasmTelemetry_Shutdown PROC FRAME
     
     ; Free buffer
     mov rcx, TELEMETRY_BUFFER_PTR
-    xor rdx, rdx            ; dwSize = 0 (must be 0 for MEM_RELEASE)
+    xor edx, edx            ; dwSize = 0 (must be 0 for MEM_RELEASE)
     mov r8d, 00008000h      ; dwFreeType = MEM_RELEASE
     sub rsp, 32
     call VirtualFree
@@ -152,6 +157,8 @@ MasmTelemetry_Shutdown ENDP
 ; Clobbers: RAX, R9, R10, R11
 ; ----------------------------------------------------------------------------
 MasmTelemetry_Log PROC FRAME
+    .endprolog
+    
     ; Check if initialized
     mov al, TELEMETRY_INITIALIZED
     test al, al
@@ -186,7 +193,7 @@ MasmTelemetry_Log PROC FRAME
     mov [r11], rax          ; timestamp
     mov [r11 + 8], ecx      ; phase
     mov [r11 + 16], rdx     ; value0
-    mov [r8 + 24], r8       ; value1
+    mov [r11 + 24], r8      ; value1
     
     ; Increment write index
     inc TELEMETRY_WRITE_IDX
@@ -205,6 +212,7 @@ MasmTelemetry_Log ENDP
 ; Output: RAX = RDTSC value
 ; ----------------------------------------------------------------------------
 MasmTelemetry_Rdtsc PROC FRAME
+    .endprolog
     rdtsc
     shl rdx, 32
     or rax, rdx
@@ -223,6 +231,7 @@ MasmTelemetry_Flush PROC FRAME
     .pushreg rbx
     .pushreg rdi
     .pushreg rsi
+    .endprolog
     
     ; Calculate number of events to flush
     mov rbx, TELEMETRY_WRITE_IDX
@@ -250,6 +259,7 @@ MasmTelemetry_Flush ENDP
 ; Input:  RCX = pointer to TelemetryStats structure
 ; ----------------------------------------------------------------------------
 MasmTelemetry_GetStats PROC FRAME
+    .endprolog
     mov rax, TELEMETRY_WRITE_IDX
     sub rax, TELEMETRY_READ_IDX
     mov [rcx], rax          ; eventsLogged
@@ -277,5 +287,7 @@ public MasmTelemetry_Log
 public MasmTelemetry_Rdtsc
 public MasmTelemetry_Flush
 public MasmTelemetry_GetStats
+
+END
 
 END

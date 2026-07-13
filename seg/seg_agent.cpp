@@ -1,7 +1,9 @@
 #include "seg_agent.hpp"
-#include "../runtime/telemetry_wrapper.cpp" // or header when you split it
+#include "../runtime/telemetry_ids.hpp"
 
 namespace seg {
+
+using RawrXD::Runtime::Telemetry::Telemetry_Log;
 
 void Agent::OnNodeStart(const Node& node) {
     if (!m_cfg.enable_telemetry) return;

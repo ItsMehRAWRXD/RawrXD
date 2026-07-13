@@ -1,0 +1,11 @@
+{
+  "runtime_cost_profiler": {
+    "execution_count": 1,
+    "component_types": [
+      {
+        "type": "EngineCycle",
+        "count": 1
+      }
+    ]
+  }
+}

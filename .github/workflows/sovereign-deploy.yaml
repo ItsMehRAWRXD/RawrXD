@@ -1,0 +1,517 @@
+# Phase D.4 Batch 5/5: GitOps & CI/CD
+# Sovereign Distributed Runtime Deployment Pipeline
+# Copyright (c) 2026 RawrXD Team
+
+name: Sovereign Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - release/*
+    paths:
+      - 'src/distributed/**'
+      - 'deploy/**'
+      - '.github/workflows/sovereign-deploy.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/distributed/**'
+      - 'deploy/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/sovereign-node
+  HELM_CHART_PATH: ./deploy/helm/sovereign-distributed
+  TERRAFORM_PATH: ./deploy/terraform
+
+jobs:
+  # ============================================================================
+  # Build & Test
+  # ============================================================================
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup C++ Build Environment
+        uses: actions/setup-cpp@v1
+        with:
+          compiler: gcc
+          version: 13
+      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libssl-dev zlib1g-dev
+      
+      - name: Build Distributed Runtime
+        run: |
+          mkdir -p build && cd build
+          cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release
+          ninja sovereign_distributed
+      
+      - name: Run Tests
+        run: |
+          cd build
+          ./distributed_tests --verbose
+      
+      - name: Run Benchmarks
+        run: |
+          cd build
+          ./distributed_tests --benchmarks-only
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: build/test_results.xml
+      
+      # Security scanning
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # Docker Build
+  # ============================================================================
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=,suffix=,format=short
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./deploy/docker/Dockerfile.sovereign
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+      
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+      
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+
+  # ============================================================================
+  # Helm Chart
+  # ============================================================================
+  helm:
+    name: Package Helm Chart
+    runs-on: ubuntu-latest
+    needs: docker
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+      
+      - name: Lint Helm Chart
+        run: |
+          helm lint ${{ env.HELM_CHART_PATH }}
+      
+      - name: Template Helm Chart
+        run: |
+          helm template sovereign ${{ env.HELM_CHART_PATH }} \
+            --namespace sovereign \
+            --set sovereign.image.tag=${{ github.sha }} \
+            > helm-rendered.yaml
+      
+      - name: Run Helm Chart Testing
+        uses: helm/chart-testing-action@v2.6.0
+        with:
+          command: lint
+          config: ct.yaml
+      
+      - name: Package Helm Chart
+        run: |
+          helm package ${{ env.HELM_CHART_PATH }} \
+            --version ${{ github.run_number }} \
+            --app-version ${{ github.sha }}
+      
+      - name: Login to GHCR
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+      
+      - name: Push Helm Chart
+        if: github.event_name != 'pull_request'
+        run: |
+          helm push sovereign-distributed-*.tgz oci://${{ env.REGISTRY }}/${{ github.repository }}
+
+  # ============================================================================
+  # Terraform Plan
+  # ============================================================================
+  terraform:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Terraform Init
+        run: |
+          cd ${{ env.TERRAFORM_PATH }}/environments/dev
+          terraform init
+      
+      - name: Terraform Format
+        run: |
+          cd ${{ env.TERRAFORM_PATH }}
+          terraform fmt -check -recursive
+      
+      - name: Terraform Validate
+        run: |
+          cd ${{ env.TERRAFORM_PATH }}/environments/dev
+          terraform validate
+      
+      - name: Terraform Plan
+        run: |
+          cd ${{ env.TERRAFORM_PATH }}/environments/dev
+          terraform plan -out=tfplan
+      
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: ${{ env.TERRAFORM_PATH }}/environments/dev/tfplan
+
+  # ============================================================================
+  # Security Scan
+  # ============================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [build, docker]
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: cpp, python
+          queries: security-extended,security-and-quality
+      
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:cpp"
+      
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ./deploy
+          framework: helm,terraform,kubernetes
+          output_format: sarif
+          output_file_path: reports/checkov.sarif
+      
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: reports/checkov.sarif
+
+  # ============================================================================
+  # Deploy to Development
+  # ============================================================================
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: [docker, helm, terraform]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: development
+      url: https://sovereign-dev.rawrxd.io
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name sovereign-dev --region us-east-1
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+      
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install sovereign ${{ env.HELM_CHART_PATH }} \
+            --namespace sovereign \
+            --create-namespace \
+            --set sovereign.image.tag=${{ github.sha }} \
+            --set sovereign.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --wait \
+            --timeout 10m
+      
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status statefulset/sovereign-sovereign-distributed -n sovereign --timeout=5m
+          kubectl get pods -n sovereign
+      
+      - name: Run Smoke Tests
+        run: |
+          kubectl run smoke-test --rm -i --restart=Never \
+            --image=curlimages/curl:latest \
+            -- curl -sf http://sovereign-sovereign-distributed:8080/health/ready
+
+  # ============================================================================
+  # Deploy to Staging
+  # ============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: startsWith(github.ref, 'refs/heads/release/')
+    environment:
+      name: staging
+      url: https://sovereign-staging.rawrxd.io
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name sovereign-staging --region us-east-1
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+      
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install sovereign ${{ env.HELM_CHART_PATH }} \
+            --namespace sovereign \
+            --create-namespace \
+            --values ${{ env.HELM_CHART_PATH }}/values-staging.yaml \
+            --set sovereign.image.tag=${{ github.sha }} \
+            --set sovereign.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --wait \
+            --timeout 10m
+      
+      - name: Run Integration Tests
+        run: |
+          kubectl run integration-test --rm -i --restart=Never \
+            --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -- /app/run-integration-tests.sh
+
+  # ============================================================================
+  # Deploy to Production
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://sovereign.rawrxd.io
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PROD_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name sovereign-prod --region us-east-1
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+      
+      - name: Deploy with Helm (Canary)
+        run: |
+          helm upgrade --install sovereign ${{ env.HELM_CHART_PATH }} \
+            --namespace sovereign \
+            --create-namespace \
+            --values ${{ env.HELM_CHART_PATH }}/values-production.yaml \
+            --set sovereign.image.tag=${{ github.ref_name }} \
+            --set sovereign.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set sovereign.canary.enabled=true \
+            --set sovereign.canary.weight=10 \
+            --wait \
+            --timeout 15m
+      
+      - name: Verify Canary
+        run: |
+          # Wait for canary to be healthy
+          sleep 60
+          kubectl get pods -n sovereign -l version=canary
+      
+      - name: Promote to Full Rollout
+        if: success()
+        run: |
+          helm upgrade --install sovereign ${{ env.HELM_CHART_PATH }} \
+            --namespace sovereign \
+            --values ${{ env.HELM_CHART_PATH }}/values-production.yaml \
+            --set sovereign.image.tag=${{ github.ref_name }} \
+            --set sovereign.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set sovereign.canary.enabled=false \
+            --wait \
+            --timeout 15m
+      
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          helm rollback sovereign -n sovereign
+      
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()
+
+  # ============================================================================
+  # Update ArgoCD
+  # ============================================================================
+  argocd:
+    name: Update ArgoCD
+    runs-on: ubuntu-latest
+    needs: [docker, helm]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout GitOps Repo
+        uses: actions/checkout@v4
+        with:
+          repository: rawrxd/gitops
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+      
+      - name: Update Image Tag
+        run: |
+          cd gitops/apps/sovereign/overlays/dev
+          kustomize edit set image sovereign=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      
+      - name: Commit and Push
+        run: |
+          cd gitops
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Update sovereign image to ${{ github.sha }}"
+          git push

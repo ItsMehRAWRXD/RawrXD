@@ -17,7 +17,6 @@ g++ -std=c++17 -O2 -I%RUNTIME_DIR% -I%SEG_DIR% ^
     %RUNTIME_DIR%\streaming_layer_registry.cpp ^
     %RUNTIME_DIR%\kv_cache.cpp ^
     %RUNTIME_DIR%\q4k_decoder.cpp ^
-    %RUNTIME_DIR%\tensor_view.cpp ^
     seg_graph.cpp ^
     seg_models.cpp ^
     seg_executor.cpp ^

@@ -1,0 +1,93 @@
+# Dockerfile.sovereign-runtime
+# Phase F.1 Batch 1/5: Docker containerization for RawrXD Sovereign Runtime
+
+# ============================================================================
+# Build Stage
+# ============================================================================
+FROM amd64/ubuntu:22.04 AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    python3 \
+    python3-pip \
+    libopenblas-dev \
+    libomp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install AMD ROCm (for GPU support)
+RUN wget https://repo.radeon.com/amdgpu-install/6.0/ubuntu/jammy/amdgpu-install_6.0.60000-1_all.deb && \
+    dpkg -i amdgpu-install_6.0.60000-1_all.deb && \
+    apt-get update && \
+    amdgpu-install -y --usecase=rocm --no-dkms && \
+    rm -f amdgpu-install_6.0.60000-1_all.deb
+
+# Set working directory
+WORKDIR /build
+
+# Copy source code
+COPY . /build/
+
+# Build RawrXD Sovereign Runtime
+RUN mkdir -p build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DRWRXD_ENABLE_GPU=ON \
+        -DRWRXD_ENABLE_ROCM=ON \
+        -DCMAKE_INSTALL_PREFIX=/opt/rawrxd && \
+    cmake --build . --parallel $(nproc) && \
+    cmake --install .
+
+# ============================================================================
+# Runtime Stage
+# ============================================================================
+FROM amd64/ubuntu:22.04 AS runtime
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libopenblas0 \
+    libgomp1 \
+    libcurl4 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ROCm runtime libraries (minimal)
+RUN apt-get update && apt-get install -y \
+    rocm-opencl-runtime \
+    rocblas \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r rawrxd && useradd -r -g rawrxd -m rawrxd
+
+# Copy built binaries from builder
+COPY --from=builder /opt/rawrxd /opt/rawrxd
+
+# Create necessary directories
+RUN mkdir -p /data /models /config && \
+    chown -R rawrxd:rawrxd /data /models /config
+
+# Set environment variables
+ENV PATH="/opt/rawrxd/bin:${PATH}"
+ENV RWRXD_HOME="/data"
+ENV RWRXD_CONFIG="/config"
+ENV RWRXD_MODELS="/models"
+ENV RWRXD_TELEMETRY="0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD rawrxd health-check || exit 1
+
+# Expose ports
+EXPOSE 8080  # HTTP API
+EXPOSE 9090  # Metrics
+
+# Switch to non-root user
+USER rawrxd
+
+# Default command
+ENTRYPOINT ["rawrxd"]
+CMD ["serve", "--host", "0.0.0.0", "--port", "8080"]

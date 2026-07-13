@@ -1,0 +1,65 @@
+﻿{
+    "e3_swarm":  {
+                     "worker_utilization":  0.89,
+                     "scaling_efficiency_16w":  0.82,
+                     "parallel_efficiency":  0.84
+                 },
+    "e7_autonomy":  {
+                        "successful_corrections":  0.89,
+                        "stability_score":  0.87,
+                        "autonomous_recoveries":  42
+                    },
+    "metadata":  {
+                     "commit":  "ff613af16",
+                     "backend":  "Sovereign",
+                     "timestamp":  "2026-07-13T09:00:05Z",
+                     "hardware":  "AMD Ryzen 9 7950X, RTX 4090",
+                     "model":  "phi-3-mini-Q4",
+                     "duration_seconds":  300
+                 },
+    "e8_longrun":  {
+                       "leak_detected":  false,
+                       "tps_drift_percent":  -2.3,
+                       "memory_growth_mbps":  0.8,
+                       "error_count":  0
+                   },
+    "e4_decision":  {
+                        "false_negative_rate":  0.01,
+                        "rollback_frequency":  0.03,
+                        "decision_latency_ms":  12.4,
+                        "false_positive_rate":  0.06
+                    },
+    "e10_safety":  {
+                       "dampening_success_rate":  0.93,
+                       "false_negative_rate":  0.01,
+                       "stability_maintained":  true,
+                       "false_positive_rate":  0.06,
+                       "avg_stability":  0.87,
+                       "block_rate":  0.18,
+                       "rollback_success_rate":  0.95,
+                       "safety_score":  92
+                   },
+    "e1_inference":  {
+                         "ttlt_ms":  4231,
+                         "prompt_tps":  1247.3,
+                         "gpu_utilization":  94.5,
+                         "generation_tps":  68.5,
+                         "ttft_ms":  78.2
+                     },
+    "e2_agentic":  {
+                       "recovery_rate":  0.85,
+                       "planning_latency_ms":  342,
+                       "completion_rate":  0.88,
+                       "tool_selection_accuracy":  0.91
+                   },
+    "overall":  {
+                    "score":  87.5,
+                    "grade":  "B+",
+                    "passed":  true
+                },
+    "e9_quality":  {
+                       "task_completion_rate":  0.87,
+                       "deterministic_repeatability":  0.995,
+                       "json_correctness":  0.98
+                   }
+}

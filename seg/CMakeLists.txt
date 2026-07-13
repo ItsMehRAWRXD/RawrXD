@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
-project(SEG VERSION 1.0.0 LANGUAGES CXX)
+project(SEG VERSION 1.0.0 LANGUAGES CXX ASM_MASM)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ============================================================================
 # Source files
+# ============================================================================
 set(SEG_SOURCES
     seg_node.cpp
     seg_graph.cpp
@@ -15,6 +17,17 @@ set(SEG_SOURCES
     seg_runtime.cpp
     seg_models.cpp
     seg_telemetry_view.cpp
+    # Phase B.4: Sovereign Execution Graph Core
+    ../src/seg/SovereignExecutionGraph.cpp
+    ../src/seg/SovereignExecutionGraphBuilder.cpp
+    ../src/seg/SovereignExecutionPlanner.cpp
+    ../src/seg/SovereignSEGCLI.cpp
+    ../src/seg/SovereignSEGIntegrationTest.cpp
+    # Phase C.0: Performance Instrumentation Bridge
+    ../src/seg/SEGPerformanceBridge.cpp
+    ../src/seg/SEGRuntimeCostProfiler.cpp
+    ../src/seg/SEGHistoricalPerformanceStore.cpp
+    ../src/seg/sqlite3_stub.cpp
 )
 
 set(SEG_HEADERS
@@ -27,10 +40,67 @@ set(SEG_HEADERS
     seg_runtime.hpp
     seg_models.hpp
     seg_telemetry_view.hpp
+    # Phase B.4: Sovereign Execution Graph Core
+    ../src/seg/SovereignExecutionGraph.hpp
+    ../src/seg/SovereignSEGCLI.hpp
+    ../src/seg/SovereignSEGIntegrationTest.hpp
+    # Phase C.0: Performance Instrumentation Bridge
+    ../src/seg/SEGPerformanceBridge.hpp
+    ../src/seg/SEGRuntimeCostProfiler.hpp
+    ../src/seg/SEGHistoricalPerformanceStore.hpp
+    ../src/seg/sqlite3_stub.h
 )
 
+# ============================================================================
+# Runtime Sources (shared with RawrXD) - DISABLED for Phase B.4
+# Re-enable after SEG core validation
+# ============================================================================
+# set(RUNTIME_SOURCES
+#     ../runtime/streaming_multi_layer_backend.cpp
+#     ../runtime/streaming_gguf_loader.cpp
+#     ../runtime/streaming_layer_registry.cpp
+#     ../runtime/kv_cache.cpp
+#     ../runtime/q4k_decoder.cpp
+#     ../runtime/telemetry_stub.cpp
+# )
+set(RUNTIME_SOURCES
+    ../runtime/telemetry_stub.cpp
+)
+
+set(RUNTIME_HEADERS
+    ../runtime/streaming_multi_layer_backend.hpp
+    ../runtime/streaming_gguf_loader.hpp
+    ../runtime/streaming_layer_registry.hpp
+    ../runtime/kv_cache.hpp
+    ../runtime/q4k_decoder.hpp
+    ../runtime/telemetry_masm_bridge.hpp
+    ../runtime/telemetry_ids.hpp
+)
+
+# ============================================================================
+# MASM Telemetry Core (x64 only) - DISABLED for Phase B.4
+# Re-enable after SEG core validation
+# ============================================================================
+# if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+#     enable_language(ASM_MASM)
+#     set(TELEMETRY_SOURCES
+#         ../runtime/telemetry_masm.asm
+#     )
+# else()
+#     message(FATAL_ERROR "x86 build not supported. Use x64.")
+# endif()
+set(TELEMETRY_SOURCES "")
+
+# ============================================================================
 # Create library
-add_library(seg STATIC ${SEG_SOURCES} ${SEG_HEADERS})
+# ============================================================================
+add_library(seg STATIC
+    ${SEG_SOURCES}
+    ${SEG_HEADERS}
+    ${RUNTIME_SOURCES}
+    ${RUNTIME_HEADERS}
+    ${TELEMETRY_SOURCES}
+)
 
 # Platform-specific settings
 if(WIN32)
@@ -64,6 +134,38 @@ endif()
 # Example executable
 add_executable(seg_example example.cpp)
 target_link_libraries(seg_example PRIVATE seg)
+
+# Smoke test executable for Phase B.4
+add_executable(seg_smoke_test seg_smoke_test.cpp)
+target_link_libraries(seg_smoke_test PRIVATE seg)
+
+# Builder smoke test executable for Phase B.4 Batch 2/5
+add_executable(seg_builder_smoke_test seg_builder_smoke_test.cpp)
+target_link_libraries(seg_builder_smoke_test PRIVATE seg)
+
+# Planner smoke test executable for Phase B.4 Batch 3/5
+add_executable(seg_planner_smoke_test seg_planner_smoke_test.cpp)
+target_link_libraries(seg_planner_smoke_test PRIVATE seg)
+
+# CLI smoke test executable for Phase B.4 Batch 4/5
+add_executable(seg_cli_smoke_test seg_cli_smoke_test.cpp)
+target_link_libraries(seg_cli_smoke_test PRIVATE seg)
+
+# Validation smoke test executable for Phase B.4 Batch 5/5
+add_executable(seg_validation_smoke_test seg_validation_smoke_test.cpp)
+target_link_libraries(seg_validation_smoke_test PRIVATE seg)
+
+# Performance Bridge smoke test executable for Phase C.0 Batch 1/5
+add_executable(seg_performance_bridge_smoke_test seg_performance_bridge_smoke_test.cpp)
+target_link_libraries(seg_performance_bridge_smoke_test PRIVATE seg)
+
+# Runtime Cost Profiler smoke test executable for Phase C.0 Batch 2/5
+add_executable(seg_runtime_cost_profiler_smoke_test seg_runtime_cost_profiler_smoke_test.cpp)
+target_link_libraries(seg_runtime_cost_profiler_smoke_test PRIVATE seg)
+
+# Historical Performance Store smoke test executable for Phase C.0 Batch 3/5
+add_executable(seg_historical_performance_store_smoke_test seg_historical_performance_store_smoke_test.cpp)
+target_link_libraries(seg_historical_performance_store_smoke_test PRIVATE seg)
 
 # Install
 install(TARGETS seg seg_example

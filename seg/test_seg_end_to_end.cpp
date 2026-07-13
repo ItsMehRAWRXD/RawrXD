@@ -66,15 +66,71 @@ TestConfig ParseArgs(int argc, char* argv[]) {
     return cfg;
 }
 
-// Simple tokenizer stub - replace with actual tokenizer
+// Sovereign BPE Tokenizer Integration
+#include "../src/tokenizer/bpe_tokenizer.hpp"
+#include "../src/tokenizer/tokenizer_factory.hpp"
+
+std::unique_ptr<tokenizer::TokenizerBase> g_tokenizer;
+
+bool InitializeTokenizer(const std::string& model_path) {
+    // Try to load using tokenizer factory
+    g_tokenizer = tokenizer::TokenizerFactory::load(model_path);
+    if (g_tokenizer) {
+        return true;
+    }
+    
+    // Fallback: try vocab.json + merges.txt
+    std::string vocab_path = model_path + ".vocab.json";
+    std::string merges_path = model_path + ".merges.txt";
+    
+    auto bpe = std::make_unique<tokenizer::BPETokenizer>();
+    if (bpe->load_from_file(vocab_path, merges_path)) {
+        g_tokenizer = std::move(bpe);
+        return true;
+    }
+    
+    return false;
+}
+
 std::vector<uint32_t> Tokenize(const std::string& text) {
+    if (!g_tokenizer) {
+        // Fallback: use ASCII codes if no tokenizer loaded
+        std::vector<uint32_t> tokens;
+        for (char c : text) {
+            tokens.push_back(static_cast<uint32_t>(c));
+        }
+        return tokens;
+    }
+    
+    auto encoding = g_tokenizer->encode(text, true);
     std::vector<uint32_t> tokens;
-    // Stub: use ASCII codes for testing
-    // In production, use SentencePiece or TikToken
-    for (char c : text) {
-        tokens.push_back(static_cast<uint32_t>(c));
+    tokens.reserve(encoding.token_ids.size());
+    for (auto id : encoding.token_ids) {
+        tokens.push_back(static_cast<uint32_t>(id));
     }
     return tokens;
+}
+
+std::string Detokenize(const std::vector<uint32_t>& tokens) {
+    if (!g_tokenizer) {
+        // Fallback: ASCII decode
+        std::string text;
+        for (auto id : tokens) {
+            if (id < 256) text += static_cast<char>(id);
+        }
+        return text;
+    }
+    
+    std::vector<tokenizer::TokenId> token_ids;
+    token_ids.reserve(tokens.size());
+    for (auto id : tokens) {
+        token_ids.push_back(static_cast<tokenizer::TokenId>(id));
+    }
+    
+    tokenizer::DecodeOptions options;
+    options.skip_special_tokens = true;
+    options.clean_up_tokenization = true;
+    return g_tokenizer->decode(token_ids, options);
 }
 
 void PrintTelemetrySummary() {
@@ -123,15 +179,29 @@ int main(int argc, char* argv[]) {
     std::cout << "Top-k:    " << cfg.top_k << "\n\n";
     
     // ------------------------------------------------------------------------
+    // Step 0: Initialize tokenizer
+    // ------------------------------------------------------------------------
+    std::cout << "[0/6] Initializing sovereign tokenizer...\n";
+    
+    if (!InitializeTokenizer(cfg.model_path)) {
+        std::cout << "      ⚠ Tokenizer not found, using ASCII fallback\n";
+        std::cout << "        (For full BPE support, ensure vocab.json exists)\n";
+    } else {
+        std::cout << "      ✓ Sovereign BPE tokenizer loaded\n";
+        std::cout << "      Vocab size: " << g_tokenizer->vocab_size() << "\n";
+    }
+    std::cout << "\n";
+    
+    // ------------------------------------------------------------------------
     // Step 1: Initialize MASM telemetry
     // ------------------------------------------------------------------------
     std::cout << "[1/6] Initializing MASM telemetry...\n";
     
-    if (!InitializeMasmTelemetry(10 * 1024 * 1024)) {  // 10MB buffer for long runs
+    if (!InitializeMasmTelemetry(8 * 1024 * 1024)) {  // 8MB buffer (power of 2)
         std::cerr << "FAILED: Could not initialize telemetry\n";
         return 1;
     }
-    std::cout << "      ✓ Telemetry initialized (10MB buffer)\n\n";
+    std::cout << "      ✓ Telemetry initialized (8MB buffer)\n\n";
     
     // ------------------------------------------------------------------------
     // Step 2: Load model
@@ -279,6 +349,11 @@ int main(int argc, char* argv[]) {
     
     std::cout << "\"\n\n";
     
+    // Detokenize output
+    std::cout << "Detokenizing output...\n";
+    std::string full_output = Detokenize(generated_tokens);
+    std::cout << "Full text: \"" << full_output << "\"\n\n";
+    
     // ------------------------------------------------------------------------
     // Results
     // ------------------------------------------------------------------------
@@ -287,6 +362,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Tokens:         " << (prompt_tokens.size() + generated_tokens.size()) << "\n";
     std::cout << "Tokens/sec:     " << ((prompt_tokens.size() + generated_tokens.size()) * 1000.0 / duration.count()) << "\n";
     std::cout << "Time/token:     " << (duration.count() / (prompt_tokens.size() + generated_tokens.size())) << " ms\n";
+    std::cout << "Tokenizer:      " << (g_tokenizer ? "Sovereign BPE" : "ASCII fallback") << "\n";
     
     // Print telemetry summary
     PrintTelemetrySummary();

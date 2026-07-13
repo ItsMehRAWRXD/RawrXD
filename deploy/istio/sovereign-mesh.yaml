@@ -1,0 +1,556 @@
+# Phase D.4 Batch 4/5: Service Mesh Integration
+# Istio Configuration for Sovereign Distributed Runtime
+# Copyright (c) 2026 RawrXD Team
+
+# ============================================================================
+# PeerAuthentication - Enable mTLS
+# ============================================================================
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: sovereign-default
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  mtls:
+    mode: STRICT
+---
+# Namespace-wide mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: sovereign-namespace
+  namespace: sovereign
+spec:
+  mtls:
+    mode: STRICT
+---
+# ============================================================================
+# DestinationRule - Traffic Policies
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: sovereign-nodes
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  host: "*.sovereign.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 300s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 100
+        maxRetries: 3
+    loadBalancer:
+      simple: LEAST_CONN
+      localityLbSetting:
+        enabled: true
+        failover:
+          - from: us-east-1
+            to: us-west-2
+          - from: us-west-2
+            to: us-east-1
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    portLevelSettings:
+      - port:
+          number: 8080
+        connectionPool:
+          http:
+            h2UpgradePolicy: UPGRADE
+      - port:
+          number: 7946
+        connectionPool:
+          tcp:
+            maxConnections: 50
+  subsets:
+    - name: stable
+      labels:
+        version: stable
+    - name: canary
+      labels:
+        version: canary
+---
+# ============================================================================
+# VirtualService - Traffic Routing
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: sovereign-api
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  hosts:
+    - "sovereign-api.sovereign.svc.cluster.local"
+    - "api.sovereign.rawrxd.io"
+  gateways:
+    - sovereign-gateway
+  http:
+    # Health checks - no retries
+    - match:
+        - uri:
+            prefix: /health
+      route:
+        - destination:
+            host: sovereign-api.sovereign.svc.cluster.local
+            port:
+              number: 8080
+      retries:
+        attempts: 0
+      timeout: 5s
+    
+    # Consensus API - high priority
+    - match:
+        - uri:
+            prefix: /v1/consensus
+      route:
+        - destination:
+            host: sovereign-api.sovereign.svc.cluster.local
+            subset: stable
+            port:
+              number: 8080
+          weight: 90
+        - destination:
+            host: sovereign-api.sovereign.svc.cluster.local
+            subset: canary
+            port:
+              number: 8080
+          weight: 10
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+      timeout: 10s
+      fault:
+        delay:
+          percentage:
+            value: 0.1
+          fixedDelay: 100ms
+    
+    # Replication API
+    - match:
+        - uri:
+            prefix: /v1/replication
+      route:
+        - destination:
+            host: sovereign-api.sovereign.svc.cluster.local
+            port:
+              number: 8080
+      retries:
+        attempts: 3
+        perTryTimeout: 5s
+        retryOn: gateway-error,connect-failure,refused-stream
+      timeout: 30s
+    
+    # Default route
+    - route:
+        - destination:
+            host: sovereign-api.sovereign.svc.cluster.local
+            port:
+              number: 8080
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+      timeout: 10s
+      corsPolicy:
+        allowOrigins:
+          - exact: "https://console.sovereign.rawrxd.io"
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowHeaders:
+          - authorization
+          - content-type
+          - x-request-id
+        allowCredentials: true
+        maxAge: "24h"
+---
+# Internal service routing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: sovereign-internal
+  namespace: sovereign
+spec:
+  hosts:
+    - "sovereign-discovery.sovereign.svc.cluster.local"
+  tcp:
+    - match:
+        - port: 7946
+      route:
+        - destination:
+            host: sovereign-discovery.sovereign.svc.cluster.local
+            port:
+              number: 7946
+---
+# ============================================================================
+# Gateway - Ingress
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: sovereign-gateway
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: sovereign-tls
+        minProtocolVersion: TLSV1_2
+        cipherSuites:
+          - TLS_AES_256_GCM_SHA384
+          - TLS_AES_128_GCM_SHA256
+      hosts:
+        - "api.sovereign.rawrxd.io"
+        - "*.sovereign.rawrxd.io"
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "api.sovereign.rawrxd.io"
+        - "*.sovereign.rawrxd.io"
+      tls:
+        httpsRedirect: true
+---
+# ============================================================================
+# AuthorizationPolicy - Access Control
+# ============================================================================
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sovereign-default
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  action: ALLOW
+  rules:
+    # Allow health checks from anywhere
+    - to:
+        - operation:
+            paths:
+              - /health/*
+              - /readyz
+              - /livez
+    
+    # Allow metrics from monitoring namespace
+    - from:
+        - source:
+            namespaces:
+              - monitoring
+      to:
+        - operation:
+            paths:
+              - /metrics
+    
+    # Allow internal sovereign traffic
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/sovereign/sa/sovereign-node"
+    
+    # Allow admin from specific namespaces
+    - from:
+        - source:
+            namespaces:
+              - admin
+              - kube-system
+      to:
+        - operation:
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            paths:
+              - /v1/admin/*
+---
+# Deny all by default
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sovereign-deny-all
+  namespace: sovereign
+spec:
+  action: DENY
+  # No rules = deny everything
+---
+# ============================================================================
+# RequestAuthentication - JWT Validation
+# ============================================================================
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: sovereign-jwt
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sovereign-node
+  jwtRules:
+    - issuer: "https://auth.rawrxd.io"
+      jwksUri: "https://auth.rawrxd.io/.well-known/jwks.json"
+      audiences:
+        - "sovereign-api"
+      forwardOriginalToken: true
+      outputPayloadToHeader: "x-jwt-payload"
+---
+# ============================================================================
+# EnvoyFilter - Custom Metrics
+# ============================================================================
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: sovereign-metrics
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.wasm
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            config:
+              name: sovereign_metrics
+              root_id: sovereign_metrics_root
+              vm_config:
+                vm_id: sovereign_metrics_vm
+                runtime: envoy.wasm.runtime.v8
+                code:
+                  remote:
+                    http_uri:
+                      uri: https://storage.rawrxd.io/wasm/sovereign-metrics.wasm
+                      cluster: google_storage
+                      timeout: 10s
+                    sha256: abc123...
+---
+# ============================================================================
+# Sidecar - Egress Control
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: Sidecar
+metadata:
+  name: sovereign-default
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  workloadSelector:
+    labels:
+      app.kubernetes.io/name: sovereign-node
+  egress:
+    - hosts:
+        - "sovereign/*"
+        - "kube-system/*"
+        - "monitoring/*"
+        - "istio-system/*"
+    - port:
+        number: 443
+        protocol: HTTPS
+        name: https
+      bind: 0.0.0.0
+      captureMode: IPTABLES
+      hosts:
+        - "*.amazonaws.com"
+    - port:
+        number: 53
+        protocol: UDP
+        name: dns
+      bind: 0.0.0.0
+      captureMode: IPTABLES
+      hosts:
+        - "*/*"
+  outboundTrafficPolicy:
+    mode: REGISTRY_ONLY
+---
+# ============================================================================
+# Telemetry - Metrics and Tracing
+# ============================================================================
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: sovereign-telemetry
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  metrics:
+    - providers:
+        - name: prometheus
+      overrides:
+        - match:
+            metric: REQUEST_COUNT
+          tagOverrides:
+            destination_cluster:
+              operation: UPSERT
+              value: "sovereign"
+  accessLogging:
+    - providers:
+        - name: envoy
+      filter:
+        expression: "response.code >= 400 || request.path == '/v1/consensus/*'"
+  tracing:
+    - providers:
+        - name: jaeger
+      randomSamplingPercentage: 10.0
+      customTags:
+        cluster:
+          literal:
+            value: "sovereign"
+---
+# ============================================================================
+# ServiceEntry - External Services
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: aws-s3
+  namespace: sovereign
+  labels:
+    app.kubernetes.io/part-of: rawrxd-distributed
+    app.kubernetes.io/component: mesh
+spec:
+  hosts:
+    - "*.s3.amazonaws.com"
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  resolution: DNS
+  location: MESH_EXTERNAL
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: aws-kms
+  namespace: sovereign
+spec:
+  hosts:
+    - "*.kms.*.amazonaws.com"
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  resolution: DNS
+  location: MESH_EXTERNAL
+---
+# ============================================================================
+# Circuit Breaker Configuration
+# ============================================================================
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: sovereign-circuit-breaker
+  namespace: sovereign
+spec:
+  host: "sovereign-api.sovereign.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 100
+        maxRetries: 3
+    circuitBreaker:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      consecutiveGatewayErrors: 3
+      consecutive5xxErrors: 5
+---
+# ============================================================================
+# Rate Limiting
+# ============================================================================
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: sovereign-rate-limit
+  namespace: sovereign
+spec:
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.local_ratelimit
+          typed_config:
+            "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+            value:
+              stat_prefix: http_local_rate_limiter
+              token_bucket:
+                max_tokens: 1000
+                tokens_per_fill: 100
+                fill_interval: 1s
+              filter_enabled:
+                runtime_key: local_rate_limit_enabled
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+              filter_enforced:
+                runtime_key: local_rate_limit_enforced
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+              response_headers_to_add:
+                - append_action: OVERWRITE_IF_EXISTS_OR_ADD
+                  header:
+                    key: x-local-rate-limit
+                    value: 'true'

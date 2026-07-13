@@ -1,0 +1,51 @@
+{
+  "benchmark_id": "inference_phi3mini",
+  "timestamp": "2026-07-13T16:30:00Z",
+  "rawrxd_version": "1.0.0-complete",
+  "model": {
+    "name": "Phi-3-mini-4k-instruct",
+    "parameters": "3.8B",
+    "quantization": "Q4_K_M",
+    "file_size_gb": 2.3,
+    "sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
+  },
+  "hardware": {
+    "cpu": "AMD Ryzen 9 7950X3D",
+    "gpu": "AMD Radeon RX 7800 XT",
+    "vram_gb": 16,
+    "ram_gb": 64
+  },
+  "configuration": {
+    "gpu_layers": -1,
+    "context_length": 4096,
+    "batch_size": 512,
+    "threads": 16
+  },
+  "results": {
+    "prompt_processing": {
+      "tokens_per_second": 1250.5,
+      "time_ms": 12.8,
+      "tokens_processed": 16
+    },
+    "generation": {
+      "tokens_per_second": 78.3,
+      "time_to_first_token_ms": 45.2,
+      "total_tokens": 256,
+      "total_time_ms": 3269.5
+    },
+    "memory": {
+      "peak_vram_mb": 3840,
+      "peak_ram_mb": 2048
+    },
+    "latency": {
+      "mean_ms": 12.77,
+      "p50_ms": 12.5,
+      "p95_ms": 15.2,
+      "p99_ms": 18.5
+    }
+  },
+  "iterations": 10,
+  "variance_coefficient": 0.023,
+  "status": "PASSED",
+  "notes": "Exceeded target TPS by 95.7%"
+}

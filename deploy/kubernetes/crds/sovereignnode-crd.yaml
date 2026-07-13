@@ -1,0 +1,274 @@
+# Phase D.4 Batch 1/5: Kubernetes Operators
+# SovereignNode Custom Resource Definition
+# Copyright (c) 2026 RawrXD Team
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: sovereignnodes.rawrxd.io
+  labels:
+    app.kubernetes.io/name: sovereign-node
+    app.kubernetes.io/part-of: rawrxd-distributed
+spec:
+  group: rawrxd.io
+  names:
+    kind: SovereignNode
+    listKind: SovereignNodeList
+    plural: sovereignnodes
+    singular: sovereignnode
+    shortNames:
+      - snode
+      - sn
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - nodeId
+                - datacenter
+              properties:
+                nodeId:
+                  type: string
+                  description: Unique identifier for this node
+                datacenter:
+                  type: string
+                  description: Datacenter/region identifier
+                rack:
+                  type: string
+                  description: Rack/availability zone
+                version:
+                  type: string
+                  default: "1.0.0"
+                replicas:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 3
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu:
+                          type: string
+                          default: "500m"
+                        memory:
+                          type: string
+                          default: "1Gi"
+                    limits:
+                      type: object
+                      properties:
+                        cpu:
+                          type: string
+                          default: "2000m"
+                        memory:
+                          type: string
+                          default: "4Gi"
+                consensus:
+                  type: object
+                  properties:
+                    requireUnanimous:
+                      type: boolean
+                      default: true
+                    timeoutMs:
+                      type: integer
+                      default: 5000
+                    quorumRatio:
+                      type: number
+                      minimum: 0.5
+                      maximum: 1.0
+                      default: 0.66
+                replication:
+                  type: object
+                  properties:
+                    consistency:
+                      type: string
+                      enum: ["eventual", "session", "bounded", "strong"]
+                      default: "bounded"
+                    strategy:
+                      type: string
+                      enum: ["primary-backup", "multi-master", "quorum", "state-machine"]
+                      default: "quorum"
+                    factor:
+                      type: integer
+                      minimum: 1
+                      maximum: 10
+                      default: 3
+                storage:
+                  type: object
+                  properties:
+                    size:
+                      type: string
+                      default: "10Gi"
+                    storageClass:
+                      type: string
+                      default: "fast-ssd"
+                    checkpoints:
+                      type: boolean
+                      default: true
+                service:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: ["ClusterIP", "NodePort", "LoadBalancer"]
+                      default: "ClusterIP"
+                    port:
+                      type: integer
+                      default: 8080
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+                monitoring:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                    prometheus:
+                      type: boolean
+                      default: true
+                    grafana:
+                      type: boolean
+                      default: true
+                    serviceMonitor:
+                      type: boolean
+                      default: true
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ["Pending", "Creating", "Running", "Degraded", "Failed", "Terminating"]
+                leader:
+                  type: string
+                healthyNodes:
+                  type: integer
+                totalNodes:
+                  type: integer
+                quorum:
+                  type: boolean
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                lastHeartbeat:
+                  type: string
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Leader
+          type: string
+          jsonPath: .status.leader
+        - name: Nodes
+          type: string
+          jsonPath: .status.healthyNodes
+        - name: Quorum
+          type: boolean
+          jsonPath: .status.quorum
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}
+        scale:
+          specReplicasPath: .spec.replicas
+          statusReplicasPath: .status.replicas
+---
+# SovereignCluster CRD for multi-cluster management
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: sovereignclusters.rawrxd.io
+  labels:
+    app.kubernetes.io/name: sovereign-cluster
+    app.kubernetes.io/part-of: rawrxd-distributed
+spec:
+  group: rawrxd.io
+  names:
+    kind: SovereignCluster
+    listKind: SovereignClusterList
+    plural: sovereignclusters
+    singular: sovereigncluster
+    shortNames:
+      - sclust
+  scope: Cluster
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - clusters
+              properties:
+                clusters:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - endpoint
+                    properties:
+                      name:
+                        type: string
+                      endpoint:
+                        type: string
+                      region:
+                        type: string
+                      weight:
+                        type: integer
+                        default: 1
+                federation:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    mode:
+                      type: string
+                      enum: ["active-active", "active-passive"]
+                      default: "active-active"
+                networking:
+                  type: object
+                  properties:
+                    meshEnabled:
+                      type: boolean
+                      default: true
+                    mtls:
+                      type: boolean
+                      default: true
+            status:
+              type: object
+              properties:
+                connectedClusters:
+                  type: integer
+                federationStatus:
+                  type: string
+      subresources:
+        status: {}

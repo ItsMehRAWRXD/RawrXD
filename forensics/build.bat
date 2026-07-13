@@ -1,10 +1,10 @@
 @echo off
-echo Building GGUF Forensics Tool...
+echo Building GGUF Forensics Tool (Windows)...
 echo.
 
 set CXX=g++
 set CXXFLAGS=-std=c++17 -O2 -Wall -Wextra
-set SOURCES=gguf_forensics.cpp gguf_types.cpp
+set SOURCES=gguf_forensics_win.cpp
 set OUTPUT=gguf_forensics.exe
 
 %CXX% %CXXFLAGS% %SOURCES% -o %OUTPUT%

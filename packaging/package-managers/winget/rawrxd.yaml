@@ -1,0 +1,78 @@
+# rawrxd.yaml
+# Phase F.1 Batch 1/5: Windows Package Manager (winget) manifest
+
+PackageIdentifier: RawrXD.SovereignRuntime
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: RawrXD AI
+PublisherUrl: https://rawrxd.ai
+PublisherSupportUrl: https://github.com/ItsMehRAWRXD/RawrXD/issues
+PrivacyUrl: https://rawrxd.ai/privacy
+Author: RawrXD AI
+PackageName: RawrXD Sovereign Runtime
+PackageUrl: https://rawrxd.ai
+License: MIT
+LicenseUrl: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/LICENSE
+Copyright: Copyright (c) 2024 RawrXD AI
+CopyrightUrl: https://rawrxd.ai/legal
+ShortDescription: Autonomous AI runtime with sovereign execution capabilities
+Description: |
+  RawrXD Sovereign is an autonomous AI runtime engine featuring native inference
+  with custom kernel optimization, multi-agent swarm orchestration, Sovereign
+  Execution Graph (SEG) for parallel workloads, autonomous decision-making
+  with safety constraints, and self-healing through rollback and oscillation
+  dampening.
+Moniker: rawrxd
+Tags:
+  - ai
+  - llm
+  - inference
+  - runtime
+  - autonomous
+  - benchmark
+  - swarm
+  - gpu
+  - amd
+  - rocm
+ReleaseNotes: |
+  - Initial release of RawrXD Sovereign Runtime
+  - Native inference engine with custom kernels
+  - Multi-agent swarm orchestration (16x parallel)
+  - Sovereign Execution Graph (SEG)
+  - Autonomous decision-making with safety constraints
+  - Self-healing and rollback capabilities
+  - Comprehensive benchmark suite with statistical rigor
+ReleaseNotesUrl: https://github.com/ItsMehRAWRXD/RawrXD/releases/tag/v1.0.0
+ManifestType: singleton
+ManifestVersion: 1.4.0
+
+Installers:
+  - Architecture: x64
+    InstallerType: msi
+    InstallerUrl: https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v1.0.0/rawrxd-1.0.0-x64.msi
+    InstallerSha256: PLACEHOLDER_SHA256
+    ProductCode: '{12345678-1234-1234-1234-123456789012}'
+    Scope: machine
+    InstallerLocale: en-US
+    UpgradeBehavior: install
+    Commands:
+      - rawrxd
+      - rawrxd-benchmark
+    Protocols:
+      - rawrxd
+    FileExtensions:
+      - gguf
+      - onnx
+    Dependencies:
+      PackageDependencies:
+        - PackageIdentifier: Microsoft.VCRedist.2015+.x64
+    InstallerSwitches:
+      Silent: /qn /norestart
+      SilentWithProgress: /qb /norestart
+      Log: /l*v "{0}"
+    AppsAndFeaturesEntries:
+      - DisplayName: RawrXD Sovereign Runtime
+        Publisher: RawrXD AI
+        DisplayVersion: 1.0.0
+        ProductCode: '{12345678-1234-1234-1234-123456789012}'
+        UpgradeCode: '{87654321-4321-4321-4321-210987654321}'

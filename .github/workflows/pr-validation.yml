@@ -1,0 +1,103 @@
+# Phase H.1/5: PR Validation Workflow
+# Fast feedback on pull requests - lightweight checks
+
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  # Quick build and test
+  quick-validation:
+    name: Quick Validation
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DRAWRXD_BUILD_TESTS=ON `
+            -DRAWRXD_ENABLE_VULKAN=OFF `
+            -DRAWRXD_ENABLE_CUDA=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Run Smoke Tests
+        shell: pwsh
+        run: |
+          # Quick smoke test
+          if (Test-Path build\bin\RawrXD_Main.exe) {
+            Write-Host "✓ Binary built successfully"
+          } else {
+            throw "Binary not found"
+          }
+
+      - name: Check Code Style
+        run: |
+          # Run clang-format check
+          $files = Get-ChildItem -Path src -Filter *.cpp -Recurse
+          foreach ($file in $files) {
+            $formatted = clang-format --dry-run --Werror $file.FullName 2>&1
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "Code style issue in: $($file.FullName)"
+            }
+          }
+
+  # PR size check
+  size-check:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR Size
+        run: |
+          # Get changed lines
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_LINES=$(git diff --stat origin/${{ github.base_ref }} | tail -1 | awk '{print $1}')
+          
+          echo "Changed lines: $CHANGED_LINES"
+          
+          if [ "$CHANGED_LINES" -gt 1000 ]; then
+            echo "⚠️ Warning: Large PR detected ($CHANGED_LINES lines changed)"
+            echo "Consider breaking into smaller PRs"
+          fi
+
+  # Dependency review
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: high

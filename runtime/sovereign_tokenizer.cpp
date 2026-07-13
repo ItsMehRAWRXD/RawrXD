@@ -565,7 +565,7 @@ std::string SovereignTokenizer::Decode(const std::vector<uint32_t>& tokens) cons
 
 std::string SovereignTokenizer::Decode(const uint32_t* tokens, size_t count) const {
     std::string result;
-    bool prev_was_word = false;
+    bool first_token = true;
     
     for (size_t i = 0; i < count; ++i) {
         uint32_t token_id = tokens[i];
@@ -587,7 +587,7 @@ std::string SovereignTokenizer::Decode(const uint32_t* tokens, size_t count) con
             }
             
             // Add space between words (heuristic: multi-char tokens that look like words)
-            if (prev_was_word && token.length() > 1) {
+            if (!first_token && (is_word_end || token.length() > 1)) {
                 result += ' ';
             }
             
@@ -595,8 +595,7 @@ std::string SovereignTokenizer::Decode(const uint32_t* tokens, size_t count) con
             std::string decoded = ByteDecode(token);
             result += decoded;
             
-            // Track if this was a word (multi-char or had </w> marker)
-            prev_was_word = (is_word_end || token.length() > 1);
+            first_token = false;
         }
     }
     
