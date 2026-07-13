@@ -273,11 +273,15 @@ InfinitePerfectionEngine& InfinitePerfectionEngine::GetInstance() {
     return instance;
 }
 
-void InfinitePerfectionEngine::Initialize() {}
+void InfinitePerfectionEngine::Initialize() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    initialized_ = true;
+}
 
 void InfinitePerfectionEngine::Shutdown() {
     std::lock_guard<std::mutex> lock(mutex_);
     infinitePerfections_.clear(); nodes_.clear(); streams_.clear(); waves_.clear(); matrices_.clear(); tensors_.clear(); clarities_.clear();
+    initialized_ = false;
 }
 
 std::string InfinitePerfectionEngine::GenerateId() const {
