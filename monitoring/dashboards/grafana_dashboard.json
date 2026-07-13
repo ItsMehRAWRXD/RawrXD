@@ -1,0 +1,190 @@
+{
+  "dashboard": {
+    "title": "RawrXD Sovereign - Production Overview",
+    "tags": ["rawrxd", "production", "sovereign"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Service Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rawrxd_service_status{instance=~\"$instance\"}",
+            "legendFormat": "Service Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "UP",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Inference TPS",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rawrxd_inference_tps{instance=~\"$instance\"}",
+            "legendFormat": "TPS"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "min": 0,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "green", "value": 40}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Latency (P95)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rawrxd_inference_latency_ms{instance=~\"$instance\"}",
+            "legendFormat": "Latency"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 100},
+                {"color": "red", "value": 500}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Active Requests",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rawrxd_inference_active_requests{instance=~\"$instance\"}",
+            "legendFormat": "Active"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "TPS Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(rawrxd_inference_tps{instance=~\"$instance\"}[5m])",
+            "legendFormat": "TPS"
+          }
+        ],
+        "yAxes": [
+          {"label": "Requests/sec", "min": 0}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Latency Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rawrxd_inference_latency_ms{instance=~\"$instance\"}",
+            "legendFormat": "Latency (ms)"
+          }
+        ],
+        "yAxes": [
+          {"label": "Milliseconds", "min": 0}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rawrxd_cpu_usage_percent{instance=~\"$instance\"}",
+            "legendFormat": "CPU %"
+          },
+          {
+            "expr": "rawrxd_memory_used_percent{instance=~\"$instance\"}",
+            "legendFormat": "Memory %"
+          }
+        ],
+        "yAxes": [
+          {"label": "Percentage", "min": 0, "max": 100}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "Process Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rawrxd_process_memory_mb{instance=~\"$instance\"}",
+            "legendFormat": "Memory (MB)"
+          },
+          {
+            "expr": "rawrxd_process_threads{instance=~\"$instance\"}",
+            "legendFormat": "Threads"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(rawrxd_service_status, instance)",
+          "multi": true,
+          "includeAll": true,
+          "current": {"text": "All", "value": "$__all"}
+        }
+      ]
+    },
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}
