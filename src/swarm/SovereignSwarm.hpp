@@ -112,7 +112,12 @@ enum class SwarmTaskKind : uint8_t {
     ExtendSubsystem,
     OptimizeSubsystem,
     HarmonizeCycle,
-    FinalizeRuntime
+    FinalizeRuntime,
+    // Batch 250: Order - Self-organization task kinds
+    ComputeOrderTopology,      // Compute emergent role topology
+    DiffuseCapabilities,       // Spread capabilities across agents
+    EmergeRoles,               // Self-define roles based on demand
+    AlignSubstrate           // Align substrate flows with topology
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -124,6 +129,11 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::OptimizeSubsystem: return ModelRole::Optimizer;
         case SwarmTaskKind::HarmonizeCycle:  return ModelRole::Harmonizer;
         case SwarmTaskKind::FinalizeRuntime: return ModelRole::Finalizer;
+        // Batch 250: Order tasks use Harmonizer for topology computation
+        case SwarmTaskKind::ComputeOrderTopology: return ModelRole::Harmonizer;
+        case SwarmTaskKind::DiffuseCapabilities:  return ModelRole::Optimizer;
+        case SwarmTaskKind::EmergeRoles:          return ModelRole::Harmonizer;
+        case SwarmTaskKind::AlignSubstrate:       return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -284,6 +294,13 @@ public:
     void RunSubsystemCompletion(const std::string& target); // "IDE", "GUI", "SEG", "OS"
     void RunCycleHarmonization(uint32_t startCycle, uint32_t endCycle);
     void RunFinalization();
+    
+    // Batch 250: Order - Self-organization and dynamic topology
+    void RunOrderCycle();                                    // Execute order self-organization
+    void ComputeDynamicRoleTopology();                       // Compute emergent role assignments
+    void DiffuseAgentCapabilities();                         // Spread capabilities across swarm
+    void AlignSubstrateFlows();                              // Align substrate with topology
+    void PrintOrderTopology() const;                         // Display current role topology
     
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();

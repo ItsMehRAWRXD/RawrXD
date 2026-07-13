@@ -19,6 +19,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --cycles START-END     Run Unity Cycle harmonization (default: 243-256)\n";
     std::cout << "  --interactive          Interactive mode: configure models per role\n";
     std::cout << "  --list-models          List available models from Ollama\n";
+    std::cout << "\nBatch 250: Order - Self-Organization:\n";
+    std::cout << "  --order                Run Order cycle (dynamic role topology)\n";
+    std::cout << "  --order-debug          Debug mode: show topology computation\n";
+    std::cout << "  --order-map            Display role topology map\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -60,6 +64,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         }
         else if (arg == "--interactive") opts.interactive = true;
         else if (arg == "--list-models") opts.listModels = true;
+        // Batch 250: Order options
+        else if (arg == "--order") opts.runOrder = true;
+        else if (arg == "--order-debug") { opts.runOrder = true; opts.orderDebug = true; }
+        else if (arg == "--order-map") { opts.runOrder = true; opts.orderMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -226,6 +234,19 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
         std::cout << "[TASK] Running Unity Cycle harmonization (" 
                   << opts.cycleStart << "-" << opts.cycleEnd << ")...\n";
         swarm.RunCycleHarmonization(opts.cycleStart, opts.cycleEnd);
+    }
+    
+    // Batch 250: Order - Self-organization
+    if (opts.runOrder) {
+        std::cout << "[TASK] Running Order cycle (Batch 250) - Self-organization...\n";
+        if (opts.orderDebug) {
+            std::cout << "[DEBUG] Order topology computation enabled\n";
+        }
+        if (opts.orderMap) {
+            std::cout << "[MAP] Displaying role topology map...\n";
+            swarm.PrintOrderTopology();
+        }
+        swarm.RunOrderCycle();
     }
     
     // Run finalization

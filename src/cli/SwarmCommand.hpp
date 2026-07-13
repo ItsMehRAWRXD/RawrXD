@@ -33,6 +33,11 @@ private:
         bool interactive = false;
         bool listModels = false;
         
+        // Batch 250: Order - Self-organization options
+        bool runOrder = false;           // Run Order cycle (Batch 250)
+        bool orderDebug = false;         // Debug mode for Order topology
+        bool orderMap = false;           // Display role topology map
+        
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;
