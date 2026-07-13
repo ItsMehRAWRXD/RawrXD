@@ -1149,6 +1149,85 @@ Manages secrets, API keys, and sensitive configuration.
 .\secrets-manager.ps1 -Action Import -FilePath "secrets-backup.json"
 ```
 
+## Database Manager
+
+### `database-manager.ps1`
+
+Manages database connections, migrations, and operations.
+
+**Actions:**
+- `Connect` - Test database connection
+- `Query` - Execute SQL query
+- `Migrate` - Run database migrations
+- `Backup` - Create database backup
+- `Restore` - Restore from backup
+- `Status` - Show database status
+- `Optimize` - Optimize database
+
+**Database Types:**
+- `SQLite` - SQLite database (default)
+- `PostgreSQL` - PostgreSQL database
+- `MySQL` - MySQL database
+- `SQLServer` - Microsoft SQL Server
+
+**Usage:**
+```powershell
+# Check database status
+.\database-manager.ps1 -Action Status
+
+# Test connection
+.\database-manager.ps1 -Action Connect
+
+# Execute query
+.\database-manager.ps1 -Action Query -Query "SELECT * FROM models"
+
+# Run migrations
+.\database-manager.ps1 -Action Migrate -MigrationPath "migrations"
+
+# Backup database
+.\database-manager.ps1 -Action Backup -BackupPath "backups"
+
+# Restore database
+.\database-manager.ps1 -Action Restore -BackupFile "backups/rawrxd-backup-20240115.zip"
+
+# Optimize database
+.\database-manager.ps1 -Action Optimize
+```
+
+## Cache Manager
+
+### `cache-manager.ps1`
+
+Manages application cache for improved performance.
+
+**Actions:**
+- `Clear` - Clear expired cache entries
+- `Warm` - Pre-populate cache
+- `Status` - Show cache statistics
+- `Configure` - Export cache configuration
+- `Analyze` - Analyze cache contents
+
+**Usage:**
+```powershell
+# Show cache status
+.\cache-manager.ps1 -Action Status
+
+# Clear old cache entries
+.\cache-manager.ps1 -Action Clear -MaxAgeHours 24
+
+# Warm cache with specific paths
+.\cache-manager.ps1 -Action Warm -WarmPaths @("models/*.gguf", "config/*.json")
+
+# Analyze cache contents
+.\cache-manager.ps1 -Action Analyze
+
+# Export configuration
+.\cache-manager.ps1 -Action Configure
+
+# Dry run (show what would be cleared)
+.\cache-manager.ps1 -Action Clear -DryRun
+```
+
 ## Common Workflows
 
 ### First-Time Setup
