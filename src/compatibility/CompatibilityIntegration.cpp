@@ -1,5 +1,7 @@
 #include "rawrxd/compatibility/CompatibilityIntegration.hpp"
+#include "rawrxd/compatibility/CompatibilityTelemetry.hpp"
 #include <sstream>
+#include <chrono>
 
 namespace rawrxd {
 namespace compatibility {
@@ -11,12 +13,50 @@ CompatibilityIntegration::CompatibilityIntegration()
 bool CompatibilityIntegration::Initialize(const std::string& gguf_path) {
     model_path_ = gguf_path;
     
+    auto& telemetry = CompatibilityTelemetryManager::GetInstance();
+    auto start = std::chrono::high_resolution_clock::now();
+    
     if (!loader_->Load(gguf_path)) {
+        telemetry.EmitError("Failed to load model: " + gguf_path);
         return false;
     }
     
+    auto end = std::chrono::high_resolution_clock::now();
+    float loadTimeMs = std::chrono::duration<float, std::milli>(end - start).count();
+    
     adapter_ = loader_->GetAdapter();
     initialized_ = true;
+    
+    // Emit telemetry
+    ArchitectureDetector detector;
+    std::string archName = detector.GetArchitectureName(loader_->GetArchitecture());
+    
+    telemetry.EmitModelLoad(gguf_path, archName, loadTimeMs);
+    telemetry.SetArchitecture(archName);
+    telemetry.SetModelPath(gguf_path);
+    
+    if (adapter_) {
+        auto config = adapter_->GetConfig();
+        telemetry.SetContextLength(config.max_position_embeddings);
+        
+        // Extract capabilities and emit
+        auto caps = CapabilityDetector::DetectFromConfig(config);
+        telemetry.SetCapabilities(caps);
+        telemetry.SetRoPEVariant(caps.GetRoPEVariant());
+        
+        // Emit warnings for special handling
+        if (caps.RequiresSpecialAttention()) {
+            telemetry.EmitWarning("Model requires special attention (ALiBi/YaRN/MoE/SlidingWindow)");
+        }
+        if (caps.supportsLongContext && caps.maxContextLength > 65536) {
+            telemetry.EmitWarning("Very long context model - high memory usage expected");
+        }
+    }
+    
+    // Emit kernel selection telemetry
+    auto kernelConfig = GetKernelConfig();
+    telemetry.EmitKernelSelected(kernelConfig.attention_kernel, "auto-selected based on architecture");
+    telemetry.SetAttentionImplementation(kernelConfig.attention_kernel);
     
     return true;
 }
