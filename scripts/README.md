@@ -48,6 +48,10 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `update-manager.ps1` | Software updates and version management | `.\update-manager.ps1` |
 | `plugin-manager.ps1` | Plugin/extension management | `.\plugin-manager.ps1` |
 | `template-generator.ps1` | Project template and boilerplate generator | `.\template-generator.ps1` |
+| `import-export.ps1` | Data import/export and format conversion | `.\import-export.ps1` |
+| `remote-manager.ps1` | Remote instance and distributed operations | `.\remote-manager.ps1` |
+| `integration-manager.ps1` | Third-party integrations and connectors | `.\integration-manager.ps1` |
+| `analytics-dashboard.ps1` | Analytics and insights dashboard | `.\analytics-dashboard.ps1` |
 
 ## Development Setup
 
@@ -1605,6 +1609,159 @@ Generates project templates and boilerplate code.
 
 # Generate script template
 .\template-generator.ps1 -TemplateType Script -Name "my-script"
+```
+
+## Import/Export Manager
+
+### `import-export.ps1`
+
+Manages data import, export, and format conversion.
+
+**Actions:**
+- `Export` - Export data to file
+- `Import` - Import data from file
+- `Convert` - Convert between formats
+- `Validate` - Validate data file
+- `List` - List supported formats
+
+**Usage:**
+```powershell
+# Export data to JSON
+.\import-export.ps1 -Action Export -Source "./data" -Destination "./backup" -Format json
+
+# Export with compression
+.\import-export.ps1 -Action Export -Source "./data" -Destination "./backup" -Format json -Compress
+
+# Import data
+.\import-export.ps1 -Action Import -Source "./backup/export.json" -Destination "./data"
+
+# Convert format
+.\import-export.ps1 -Action Convert -Source "./data.json" -Format csv
+
+# Validate file
+.\import-export.ps1 -Action Validate -Source "./data.json"
+
+# List supported formats
+.\import-export.ps1 -Action List
+```
+
+## Remote Manager
+
+### `remote-manager.ps1`
+
+Manages remote instances and distributed operations.
+
+**Actions:**
+- `List` - List known remote hosts
+- `Connect` - Connect to remote host
+- `Deploy` - Deploy to remote host
+- `Sync` - Sync data with remote
+- `Execute` - Execute command on remote
+- `Monitor` - Monitor remote status
+- `Disconnect` - Disconnect from remote
+
+**Usage:**
+```powershell
+# List known hosts
+.\remote-manager.ps1 -Action List
+
+# Connect to remote host
+.\remote-manager.ps1 -Action Connect -Host "server1" -User "admin"
+
+# Execute command remotely
+.\remote-manager.ps1 -Action Execute -Host "server1" -Command "Get-Process"
+
+# Deploy to remote
+.\remote-manager.ps1 -Action Deploy -Host "server1" -ConfigFile "./app" -User "C:/apps"
+
+# Sync data
+.\remote-manager.ps1 -Action Sync -ConfigFile "./local" -User "./remote"
+
+# Monitor remote
+.\remote-manager.ps1 -Action Monitor -Host "server1"
+
+# Disconnect
+.\remote-manager.ps1 -Action Disconnect -Host "server1"
+```
+
+## Integration Manager
+
+### `integration-manager.ps1`
+
+Manages third-party integrations and connectors.
+
+**Actions:**
+- `List` - List available integrations
+- `Configure` - Configure an integration
+- `Test` - Test integration connection
+- `Enable` - Enable an integration
+- `Disable` - Disable an integration
+- `Status` - Show integration status
+
+**Supported Integrations:**
+- OpenAI - OpenAI API for GPT models
+- Anthropic - Claude API
+- HuggingFace - Hugging Face Hub
+- AWS - Amazon Web Services
+- Azure - Microsoft Azure
+- GoogleCloud - Google Cloud Platform
+- Discord - Discord bot
+- Slack - Slack workspace
+- GitHub - GitHub API
+- Webhook - Generic webhooks
+
+**Usage:**
+```powershell
+# List available integrations
+.\integration-manager.ps1 -Action List
+
+# Configure OpenAI integration
+.\integration-manager.ps1 -Action Configure -Integration "OpenAI" -Parameters @{ api_key = "sk-..."; base_url = "https://api.openai.com" }
+
+# Test integration
+.\integration-manager.ps1 -Action Test -Integration "OpenAI"
+
+# Enable/disable integration
+.\integration-manager.ps1 -Action Enable -Integration "OpenAI"
+.\integration-manager.ps1 -Action Disable -Integration "OpenAI"
+
+# Show status
+.\integration-manager.ps1 -Action Status
+```
+
+## Analytics Dashboard
+
+### `analytics-dashboard.ps1`
+
+Provides analytics and insights.
+
+**Views:**
+- `Overview` - High-level system metrics
+- `Usage` - API endpoint usage statistics
+- `Performance` - Performance metrics and latencies
+- `Models` - Model usage statistics
+- `Export` - Export analytics data
+- `Schedule` - Schedule reports
+
+**Usage:**
+```powershell
+# Show overview
+.\analytics-dashboard.ps1 -View Overview
+
+# Show usage statistics
+.\analytics-dashboard.ps1 -View Usage
+
+# Show performance metrics
+.\analytics-dashboard.ps1 -View Performance
+
+# Show model statistics
+.\analytics-dashboard.ps1 -View Models
+
+# Export analytics
+.\analytics-dashboard.ps1 -View Export -ExportPath "./analytics.json"
+
+# Interactive mode
+.\analytics-dashboard.ps1 -Interactive
 ```
 
 ## Common Workflows
