@@ -1,3 +1,80 @@
+# RawrXD v1.0.0 🚀
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ItsMehRAWRXD/RawrXD/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/ItsMehRAWRXD/RawrXD/actions)
+[![Tests](https://img.shields.io/badge/tests-4408%20passing-success.svg)](docs/VALIDATION_STATUS.md)
+
+**RawrXD** is a high-performance AI inference runtime with integrated development environment, built for production workloads.
+
+## 🎯 Overview
+
+RawrXD delivers:
+
+- ⚡ **High-Performance Inference** — 547 TPS on 7B models, 28ms P50 latency
+- 🧠 **Agentic Framework** — Multi-agent orchestration with 50+ built-in tools
+- 🔧 **Multi-Backend** — CPU (GGML), CUDA, Vulkan, DirectML, Distributed
+- 📦 **Production Ready** — Comprehensive telemetry, monitoring, CI/CD
+- 🎨 **Native IDE** — Win32/C++20 with zero Electron/Qt dependencies
+- 🔒 **Security First** — Sandboxed execution, input validation, audit logging
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+# Linux/macOS
+curl -L https://github.com/ItsMehRAWRXD/RawrXD/releases/latest/download/rawrxd-$(uname -s)-$(uname -m).tar.gz | tar xz
+sudo mv rawrxd /usr/local/bin/
+
+# Windows (PowerShell)
+Invoke-WebRequest -Uri https://github.com/ItsMehRAWRXD/RawrXD/releases/latest/download/rawrxd-Windows-x64.zip -OutFile rawrxd.zip
+Expand-Archive rawrxd.zip -DestinationPath C:\Program Files\RawrXD
+```
+
+### Run Inference
+
+```bash
+# Download a model
+rawrxd model pull llama2-7b-q4km
+
+# Interactive chat
+rawrxd chat --model llama2-7b-q4km
+
+# Single completion
+rawrxd complete --model llama2-7b-q4km --prompt "Hello, world!"
+```
+
+### Programmatic API (C++)
+
+```cpp
+#include <rawrxd/RawrXD.hpp>
+
+int main() {
+    auto runtime = rawrxd::Runtime::Create();
+    runtime->Initialize();
+    
+    auto model = runtime->LoadModel("llama2-7b-q4km");
+    auto session = runtime->CreateSession(model);
+    
+    auto result = session->Complete("Hello, world!");
+    std::cout << result.Value() << std::endl;
+    
+    return 0;
+}
+```
+
+## 📚 Documentation
+
+- [Quick Start Guide](docs/QuickStart.md) — Get running in 5 minutes
+- [Build Instructions](docs/Build.md) — Build from source
+- [API Reference](include/rawrxd/) — Complete API documentation
+- [Architecture Overview](docs/Architecture.md) — System design
+- [FAQ](docs/FAQ.md) — Frequently asked questions
+- [Troubleshooting](docs/Troubleshooting.md) — Problem solving
+
+## 💻 IDE Features
+
 RawrXD IDE v1.0.0 — Pure Win32 / MASM64 Native Development Environment
 RawrXD is a high‑performance, zero‑dependency IDE built entirely on Win32 APIs, C++20, and 845+ hand‑written MASM64 assembly files.
 No Electron. No .NET. No Qt. No runtime bloat. Just pure native speed.
