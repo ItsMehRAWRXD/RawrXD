@@ -58,16 +58,18 @@ set(RUNTIME_HEADERS
 )
 
 # ============================================================================
-# MASM Telemetry Core (x64 only)
+# MASM Telemetry Core (x64 only) - DISABLED for Phase B.4
+# Re-enable after SEG core validation
 # ============================================================================
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    enable_language(ASM_MASM)
-    set(TELEMETRY_SOURCES
-        ../runtime/telemetry_masm.asm
-    )
-else()
-    message(FATAL_ERROR "x86 build not supported. Use x64.")
-endif()
+# if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+#     enable_language(ASM_MASM)
+#     set(TELEMETRY_SOURCES
+#         ../runtime/telemetry_masm.asm
+#     )
+# else()
+#     message(FATAL_ERROR "x86 build not supported. Use x64.")
+# endif()
+set(TELEMETRY_SOURCES "")
 
 # ============================================================================
 # Create library
