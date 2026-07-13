@@ -23,6 +23,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --order                Run Order cycle (dynamic role topology)\n";
     std::cout << "  --order-debug          Debug mode: show topology computation\n";
     std::cout << "  --order-map            Display role topology map\n";
+    std::cout << "\nBatch 251: Resonance - Amplification:\n";
+    std::cout << "  --resonance            Run Resonance cycle (pattern amplification)\n";
+    std::cout << "  --resonance-debug      Debug mode: show resonance computation\n";
+    std::cout << "  --resonance-map        Display resonance amplification map\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -68,6 +72,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--order") opts.runOrder = true;
         else if (arg == "--order-debug") { opts.runOrder = true; opts.orderDebug = true; }
         else if (arg == "--order-map") { opts.runOrder = true; opts.orderMap = true; }
+        // Batch 251: Resonance options
+        else if (arg == "--resonance") opts.runResonance = true;
+        else if (arg == "--resonance-debug") { opts.runResonance = true; opts.resonanceDebug = true; }
+        else if (arg == "--resonance-map") { opts.runResonance = true; opts.resonanceMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -247,6 +255,19 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
             swarm.PrintOrderTopology();
         }
         swarm.RunOrderCycle();
+    }
+    
+    // Batch 251: Resonance - Amplification
+    if (opts.runResonance) {
+        std::cout << "[TASK] Running Resonance cycle (Batch 251) - Pattern amplification...\n";
+        if (opts.resonanceDebug) {
+            std::cout << "[DEBUG] Resonance amplification computation enabled\n";
+        }
+        if (opts.resonanceMap) {
+            std::cout << "[MAP] Displaying resonance amplification map...\n";
+            swarm.PrintResonanceMap();
+        }
+        swarm.RunResonanceCycle();
     }
     
     // Run finalization

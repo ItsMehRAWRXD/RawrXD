@@ -38,6 +38,11 @@ private:
         bool orderDebug = false;         // Debug mode for Order topology
         bool orderMap = false;           // Display role topology map
         
+        // Batch 251: Resonance - Amplification options
+        bool runResonance = false;       // Run Resonance cycle (Batch 251)
+        bool resonanceDebug = false;       // Debug mode for Resonance
+        bool resonanceMap = false;         // Display resonance amplification map
+        
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;

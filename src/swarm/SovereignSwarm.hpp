@@ -117,7 +117,12 @@ enum class SwarmTaskKind : uint8_t {
     ComputeOrderTopology,      // Compute emergent role topology
     DiffuseCapabilities,       // Spread capabilities across agents
     EmergeRoles,               // Self-define roles based on demand
-    AlignSubstrate           // Align substrate flows with topology
+    AlignSubstrate,            // Align substrate flows with topology
+    // Batch 251: Resonance - Amplification task kinds
+    AmplifyPatterns,           // Amplify stable recurring patterns
+    StabilizeResonance,        // Stabilize harmonic resonance
+    CoupleHarmonics,           // Couple harmonic modes across cycles
+    ReinforceTopology          // Reinforce resonant topology
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -134,6 +139,11 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::DiffuseCapabilities:  return ModelRole::Optimizer;
         case SwarmTaskKind::EmergeRoles:          return ModelRole::Harmonizer;
         case SwarmTaskKind::AlignSubstrate:       return ModelRole::Finalizer;
+        // Batch 251: Resonance tasks use Harmonizer for amplification
+        case SwarmTaskKind::AmplifyPatterns:      return ModelRole::Harmonizer;
+        case SwarmTaskKind::StabilizeResonance:   return ModelRole::Harmonizer;
+        case SwarmTaskKind::CoupleHarmonics:      return ModelRole::Harmonizer;
+        case SwarmTaskKind::ReinforceTopology:    return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -301,6 +311,14 @@ public:
     void DiffuseAgentCapabilities();                         // Spread capabilities across swarm
     void AlignSubstrateFlows();                              // Align substrate with topology
     void PrintOrderTopology() const;                         // Display current role topology
+    
+    // Batch 251: Resonance - Amplification and pattern stabilization
+    void RunResonanceCycle();                                // Execute resonance amplification
+    void AmplifyResonantPatterns();                          // Amplify stable recurring patterns
+    void StabilizeHarmonicResonance();                       // Stabilize harmonic resonance
+    void CoupleHarmonicModes();                              // Couple harmonic modes across cycles
+    void ReinforceResonantTopology();                        // Reinforce resonant topology
+    void PrintResonanceMap() const;                          // Display resonance amplification map
     
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();
