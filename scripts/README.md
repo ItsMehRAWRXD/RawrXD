@@ -42,6 +42,8 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `service-manager.ps1` | Windows service management | `.\service-manager.ps1` |
 | `package-manager.ps1` | Package and dependency management | `.\package-manager.ps1` |
 | `workspace-manager.ps1` | Development workspace management | `.\workspace-manager.ps1` |
+| `feature-flags.ps1` | Feature flags and gradual rollouts | `.\feature-flags.ps1` |
+| `env-manager.ps1` | Environment configuration management | `.\env-manager.ps1` |
 
 ## Development Setup
 
