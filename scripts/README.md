@@ -879,6 +879,186 @@ Validates all build and runtime dependencies.
 .\dependency-checker.ps1 -Action Export -ExportPath "deps-report.json"
 ```
 
+## Log Rotator
+
+### `log-rotator.ps1`
+
+Manages log file rotation, archival, and cleanup.
+
+**Actions:**
+- `Rotate` - Rotate oversized log files
+- `Archive` - Archive old log files
+- `Clean` - Delete very old archived logs
+- `Status` - Show log directory status
+- `Configure` - Export configuration
+
+**Usage:**
+```powershell
+# Rotate logs over 100MB
+.\log-rotator.ps1 -Action Rotate -MaxSizeMB 100
+
+# Rotate and compress
+.\log-rotator.ps1 -Action Rotate -Compress
+
+# Archive logs older than 30 days
+.\log-rotator.ps1 -Action Archive -MaxAgeDays 30
+
+# Clean old archives
+.\log-rotator.ps1 -Action Clean -MaxAgeDays 60
+
+# Show status
+.\log-rotator.ps1 -Action Status
+
+# Dry run
+.\log-rotator.ps1 -Action Rotate -DryRun
+```
+
+## Version Manager
+
+### `version-manager.ps1`
+
+Manages versioning, releases, and changelogs.
+
+**Actions:**
+- `Show` - Display current version info
+- `Bump` - Bump version number
+- `Release` - Create new release
+- `Changelog` - Show changelog
+- `Tag` - Create git tag
+- `Validate` - Validate version consistency
+
+**Bump Types:**
+- `Major` - Increment major version
+- `Minor` - Increment minor version
+- `Patch` - Increment patch version
+- `Build` - Increment build number
+
+**Usage:**
+```powershell
+# Show current version
+.\version-manager.ps1 -Action Show
+
+# Bump patch version
+.\version-manager.ps1 -Action Bump -BumpType Patch
+
+# Create release
+.\version-manager.ps1 -Action Release -Version "3.2.0" -Message "Release notes"
+
+# Create and push git tag
+.\version-manager.ps1 -Action Tag -PushTag
+
+# Validate version consistency
+.\version-manager.ps1 -Action Validate
+```
+
+## Cleanup Utility
+
+### `cleanup-utility.ps1`
+
+Cleans up temporary files, build artifacts, and cache.
+
+**Cleanup Types:**
+- `Temp` - Temporary files only
+- `Build` - Build artifacts
+- `Cache` - Cache directories
+- `Logs` - Old log files
+- `All` - All of the above
+- `Aggressive` - Deep cleanup (requires -Force)
+
+**Usage:**
+```powershell
+# Clean temporary files
+.\cleanup-utility.ps1 -CleanupType Temp
+
+# Clean build artifacts
+.\cleanup-utility.ps1 -CleanupType Build
+
+# Clean everything
+.\cleanup-utility.ps1 -CleanupType All
+
+# Aggressive cleanup
+.\cleanup-utility.ps1 -CleanupType Aggressive -Force
+
+# Dry run
+.\cleanup-utility.ps1 -CleanupType All -DryRun
+
+# Clean custom paths
+.\cleanup-utility.ps1 -CleanupType Temp -AdditionalPaths @("C:\Custom\Temp")
+```
+
+## Metrics Collector
+
+### `metrics-collector.ps1`
+
+Collects and exports system and application metrics.
+
+**Actions:**
+- `Collect` - Collect metrics once
+- `Export` - Export collected metrics
+- `Dashboard` - Show metrics dashboard
+- `Alert` - Check thresholds and alert
+
+**Metric Types:**
+- `System` - CPU, memory, disk, network
+- `Application` - Process metrics, logs, models
+- `Performance` - Inference metrics, request stats
+- `All` - All metric types
+
+**Formats:**
+- `JSON` - JSON format
+- `CSV` - Comma-separated values
+- `Prometheus` - Prometheus exposition format
+
+**Usage:**
+```powershell
+# Collect all metrics
+.\metrics-collector.ps1 -Action Collect
+
+# Collect system metrics only
+.\metrics-collector.ps1 -Action Collect -MetricType System
+
+# Export as Prometheus format
+.\metrics-collector.ps1 -Action Export -Format Prometheus
+
+# Show dashboard
+.\metrics-collector.ps1 -Action Dashboard
+
+# Stream metrics (continuous collection)
+.\metrics-collector.ps1 -Action Collect -Stream -IntervalSeconds 60
+```
+
+## SSL Manager
+
+### `ssl-manager.ps1`
+
+Manages SSL certificates and HTTPS configuration.
+
+**Actions:**
+- `Check` - Check certificate status
+- `Generate` - Generate self-signed certificate
+- `Install` - Install certificate to Windows store
+- `Renew` - Renew certificate
+- `List` - List certificates
+- `Export` - Export certificate to PFX
+
+**Usage:**
+```powershell
+# Check certificates
+.\ssl-manager.ps1 -Action Check
+
+# Generate self-signed certificate
+.\ssl-manager.ps1 -Action Generate -Domain "localhost" -SelfSigned
+
+# Install to Windows store
+.\ssl-manager.ps1 -Action Install -Domain "localhost"
+
+# List certificates
+.\ssl-manager.ps1 -Action List
+
+# Export to PFX
+.\ssl-manager.ps1 -Action Export -Domain "localhost"
+```
+
 ## Common Workflows
 
 ### First-Time Setup
