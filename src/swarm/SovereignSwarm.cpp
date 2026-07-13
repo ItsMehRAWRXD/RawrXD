@@ -236,6 +236,59 @@ SwarmTaskResult SwarmAgent::Execute(const SwarmTask& task) {
         SelfModelRegistry::GetInstance().RecordTaskFailure(agentId_, task.kind, result.message);
     }
     
+    // Phase B.2: Record in InfinitePerfectionTelemetry
+    if (ctx_.infiniteTelemetry) {
+        std::string cycleName = "Unknown";
+        switch (task.kind) {
+            case SwarmTaskKind::ComputeOrderTopology:
+            case SwarmTaskKind::DiffuseCapabilities:
+            case SwarmTaskKind::EmergeRoles:
+            case SwarmTaskKind::AlignSubstrate:
+                cycleName = "UnityCycle"; break;
+            case SwarmTaskKind::AmplifyPatterns:
+            case SwarmTaskKind::StabilizeResonance:
+            case SwarmTaskKind::CoupleHarmonics:
+            case SwarmTaskKind::ReinforceTopology:
+                cycleName = "IntegrationCycle"; break;
+            case SwarmTaskKind::ScaleAmplification:
+            case SwarmTaskKind::BoostValuePatterns:
+            case SwarmTaskKind::SuppressNoisePatterns:
+            case SwarmTaskKind::AdaptToSubstrateLoad:
+                cycleName = "SynthesisCycle"; break;
+            case SwarmTaskKind::DetectCrossPatterns:
+            case SwarmTaskKind::BuildIntegrationLinks:
+            case SwarmTaskKind::StabilizeMultiFlows:
+            case SwarmTaskKind::CoupleUnitySwarm:
+                cycleName = "ConvergenceCycle"; break;
+            case SwarmTaskKind::AlignToSharedGoals:
+            case SwarmTaskKind::EstablishFeedbackLoops:
+            case SwarmTaskKind::ConvergeToAttractors:
+            case SwarmTaskKind::OptimizeConvergenceRate:
+                cycleName = "CoherenceCycle"; break;
+            case SwarmTaskKind::SynchronizePhases:
+            case SwarmTaskKind::BalanceAmplitudes:
+            case SwarmTaskKind::LockResonances:
+            case SwarmTaskKind::ReinforceCoherence:
+                cycleName = "HarmonyCycle"; break;
+            case SwarmTaskKind::AchievePerfectUnity:
+            case SwarmTaskKind::BalanceAbsolute:
+            case SwarmTaskKind::AchieveInfiniteResonance:
+            case SwarmTaskKind::CompleteUnityCycle:
+                cycleName = "BalanceCycle"; break;
+            default:
+                cycleName = "LegacyTask"; break;
+        }
+        
+        ctx_.infiniteTelemetry->RecordSwarmExecution(
+            agentId_,
+            TaskKindToString(task.kind),
+            cycleName,
+            result.confidence,
+            duration,
+            result.success
+        );
+    }
+    
     return result;
 }
 

@@ -106,7 +106,7 @@ struct SwarmAgentContext {
     std::unordered_map<ModelRole, RoleModelConfig> roleModels;
     
     // Default constructor with role model initialization
-    SwarmAgentContext() {
+    SwarmAgentContext() : engine(nullptr), backend(nullptr), registry(nullptr), cli(nullptr), seg(nullptr), os(nullptr), telemetry(nullptr), infiniteTelemetry(nullptr) {
         InitializeDefaultRoleModels();
     }
     
