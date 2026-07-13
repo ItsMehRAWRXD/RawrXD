@@ -1,0 +1,274 @@
+{
+  "name": "rawrxd-vscode",
+  "displayName": "RawrXD",
+  "description": "VS Code extension for RawrXD Sovereign Inferencer",
+  "version": "1.0.0",
+  "publisher": "rawrxd",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Snippets",
+    "Debuggers"
+  ],
+  "keywords": [
+    "llm",
+    "ai",
+    "inference",
+    "rawrxd",
+    "local-ai"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rawrxd.startServer",
+        "title": "Start Server",
+        "category": "RawrXD",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rawrxd.stopServer",
+        "title": "Stop Server",
+        "category": "RawrXD",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "rawrxd.restartServer",
+        "title": "Restart Server",
+        "category": "RawrXD",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "rawrxd.openChat",
+        "title": "Open Chat",
+        "category": "RawrXD",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "rawrxd.generateCompletion",
+        "title": "Generate Completion",
+        "category": "RawrXD",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "rawrxd.explainCode",
+        "title": "Explain Selected Code",
+        "category": "RawrXD",
+        "icon": "$(lightbulb)"
+      },
+      {
+        "command": "rawrxd.refactorCode",
+        "title": "Refactor Selected Code",
+        "category": "RawrXD",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "rawrxd.generateTests",
+        "title": "Generate Tests",
+        "category": "RawrXD",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "rawrxd.loadModel",
+        "title": "Load Model",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.unloadModel",
+        "title": "Unload Model",
+        "category": "RawrXD"
+      },
+      {
+        "command": "rawrxd.showStatus",
+        "title": "Show Status",
+        "category": "RawrXD",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "rawrxd.openSettings",
+        "title": "Open Settings",
+        "category": "RawrXD",
+        "icon": "$(gear)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "rawrxd",
+          "group": "9_cutcopypaste@5"
+        }
+      ],
+      "rawrxd": [
+        {
+          "command": "rawrxd.explainCode",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "rawrxd.refactorCode",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "rawrxd.generateTests",
+          "group": "1_actions@3"
+        },
+        {
+          "command": "rawrxd.generateCompletion",
+          "group": "1_actions@4"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "rawrxd.startServer",
+          "when": "view == rawrxdModels",
+          "group": "navigation@1"
+        },
+        {
+          "command": "rawrxd.stopServer",
+          "when": "view == rawrxdModels",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "rawrxd",
+        "label": "RawrXD"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "rawrxdModels",
+          "name": "RawrXD Models",
+          "when": "rawrxd:enabled"
+        },
+        {
+          "id": "rawrxdSessions",
+          "name": "Active Sessions",
+          "when": "rawrxd:enabled"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "rawrxd",
+          "title": "RawrXD",
+          "icon": "$(hub)"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "RawrXD",
+      "properties": {
+        "rawrxd.server.host": {
+          "type": "string",
+          "default": "localhost",
+          "description": "RawrXD server host"
+        },
+        "rawrxd.server.port": {
+          "type": "number",
+          "default": 8080,
+          "description": "RawrXD server port"
+        },
+        "rawrxd.server.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for authentication"
+        },
+        "rawrxd.model.default": {
+          "type": "string",
+          "default": "llama3",
+          "description": "Default model to use"
+        },
+        "rawrxd.model.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to model files"
+        },
+        "rawrxd.inference.maxTokens": {
+          "type": "number",
+          "default": 256,
+          "description": "Maximum tokens to generate"
+        },
+        "rawrxd.inference.temperature": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Sampling temperature"
+        },
+        "rawrxd.inference.topP": {
+          "type": "number",
+          "default": 0.9,
+          "description": "Top-p sampling"
+        },
+        "rawrxd.chat.showTimestamps": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show timestamps in chat"
+        },
+        "rawrxd.code.enableInline": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline code completions"
+        },
+        "rawrxd.code.enableHover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable hover information"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "rawrxd.openChat",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r"
+      },
+      {
+        "command": "rawrxd.generateCompletion",
+        "key": "ctrl+shift+space",
+        "mac": "cmd+shift+space"
+      },
+      {
+        "command": "rawrxd.explainCode",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "powershell",
+        "path": "./snippets/powershell.json"
+      },
+      {
+        "language": "python",
+        "path": "./snippets/python.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "ws": "^8.14.0"
+  }
+}
