@@ -160,8 +160,154 @@ std::string InfinitePerfectionTelemetry::ExportToJson() const {
 }
 
 bool InfinitePerfectionTelemetry::ExportToSQLite(const std::string& dbPath) const {
-    // Placeholder for SQLite export
-    // Would use SQLite C API to insert records
+    // Phase B.2 Batch 3/5: Persistent Telemetry
+    // SQLite implementation for durable storage
+    
+    sqlite3* db = nullptr;
+    int rc = sqlite3_open(dbPath.c_str(), &db);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Telemetry] Failed to open SQLite DB: " << sqlite3_errmsg(db) << std::endl;
+        if (db) sqlite3_close(db);
+        return false;
+    }
+    
+    // Create tables if they don't exist
+    const char* createCycleMetricsSQL = R"(
+        CREATE TABLE IF NOT EXISTS cycle_metrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cycle_name TEXT NOT NULL,
+            batch INTEGER NOT NULL,
+            score REAL NOT NULL,
+            execution_ms INTEGER,
+            timestamp INTEGER NOT NULL,
+            convergence_status TEXT
+        );
+    )";
+    
+    const char* createSwarmExecutionsSQL = R"(
+        CREATE TABLE IF NOT EXISTS swarm_executions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            agent_id INTEGER NOT NULL,
+            task_kind TEXT NOT NULL,
+            engine_cycle TEXT NOT NULL,
+            confidence REAL,
+            execution_time_ms INTEGER,
+            success BOOLEAN,
+            timestamp INTEGER NOT NULL
+        );
+    )";
+    
+    const char* createConvergenceEventsSQL = R"(
+        CREATE TABLE IF NOT EXISTS convergence_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            global_harmony_index REAL NOT NULL,
+            is_converged BOOLEAN NOT NULL,
+            timestamp INTEGER NOT NULL
+        );
+    )";
+    
+    char* errMsg = nullptr;
+    rc = sqlite3_exec(db, createCycleMetricsSQL, nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Telemetry] Failed to create cycle_metrics table: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        return false;
+    }
+    
+    rc = sqlite3_exec(db, createSwarmExecutionsSQL, nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Telemetry] Failed to create swarm_executions table: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        return false;
+    }
+    
+    rc = sqlite3_exec(db, createConvergenceEventsSQL, nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Telemetry] Failed to create convergence_events table: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        return false;
+    }
+    
+    // Insert cycle metrics
+    auto t = CaptureUnityCycle();
+    int64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    struct CycleMetric {
+        const char* name;
+        int batch;
+        double score;
+    };
+    
+    CycleMetric metrics[] = {
+        {"Unity", 243, t.unityPotential},
+        {"Integration", 244, t.cycleIntegration},
+        {"Synthesis", 245, t.sovereignEmergenceIndex},
+        {"Convergence", 246, t.sovereignConvergenceIndex},
+        {"Coherence", 247, t.sovereignCoherenceIndex},
+        {"Harmony", 248, t.sovereignHarmonyIndex},
+        {"Balance", 249, t.equilibriumStrength}
+    };
+    
+    sqlite3_stmt* stmt = nullptr;
+    const char* insertMetricSQL = "INSERT INTO cycle_metrics (cycle_name, batch, score, timestamp, convergence_status) VALUES (?, ?, ?, ?, ?);";
+    
+    for (const auto& metric : metrics) {
+        rc = sqlite3_prepare_v2(db, insertMetricSQL, -1, &stmt, nullptr);
+        if (rc == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, metric.name, -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, metric.batch);
+            sqlite3_bind_double(stmt, 3, metric.score);
+            sqlite3_bind_int64(stmt, 4, now);
+            sqlite3_bind_text(stmt, 5, IsConverged() ? "CONVERGED" : "CONVERGING", -1, SQLITE_STATIC);
+            
+            rc = sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+    
+    // Insert swarm executions
+    const char* insertExecutionSQL = "INSERT INTO swarm_executions (agent_id, task_kind, engine_cycle, confidence, execution_time_ms, success, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?);";
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto& exec : executionHistory_) {
+        rc = sqlite3_prepare_v2(db, insertExecutionSQL, -1, &stmt, nullptr);
+        if (rc == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, exec.agentId);
+            sqlite3_bind_text(stmt, 2, exec.taskKind.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 3, exec.engineCycle.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_double(stmt, 4, exec.confidence);
+            sqlite3_bind_int64(stmt, 5, exec.executionTimeMs);
+            sqlite3_bind_int(stmt, 6, exec.success ? 1 : 0);
+            sqlite3_bind_int64(stmt, 7, exec.timestamp);
+            
+            rc = sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+    
+    // Insert convergence event
+    const char* insertConvergenceSQL = "INSERT INTO convergence_events (global_harmony_index, is_converged, timestamp) VALUES (?, ?, ?);";
+    rc = sqlite3_prepare_v2(db, insertConvergenceSQL, -1, &stmt, nullptr);
+    if (rc == SQLITE_OK) {
+        sqlite3_bind_double(stmt, 1, GetConvergenceScore());
+        sqlite3_bind_int(stmt, 2, IsConverged() ? 1 : 0);
+        sqlite3_bind_int64(stmt, 3, now);
+        
+        rc = sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+    }
+    
+    sqlite3_close(db);
+    
+    std::cout << "[Telemetry] Exported to SQLite: " << dbPath << std::endl;
+    std::cout << "[Telemetry]   - Cycle metrics: 7 records" << std::endl;
+    std::cout << "[Telemetry]   - Swarm executions: " << executionHistory_.size() << " records" << std::endl;
+    std::cout << "[Telemetry]   - Convergence event: 1 record" << std::endl;
+    
     return true;
 }
 

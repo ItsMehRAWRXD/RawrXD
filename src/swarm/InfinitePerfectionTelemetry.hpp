@@ -14,6 +14,8 @@
 #include <vector>
 #include <chrono>
 #include <map>
+#include <sqlite3.h>
+#include <iostream>
 
 namespace Sovereign {
 
@@ -38,16 +40,19 @@ struct UnityCycleTelemetry {
     double emergenceDensity = 0.0;
     double patternNovelty = 0.0;
     double crossCycleSynergy = 0.0;
+    double sovereignEmergenceIndex = 0.0;  // Overall emergence measure
     
     // Batch 246: Convergence
     double focalPointDensity = 0.0;
     double attractorStrength = 0.0;
     double convergenceCoherence = 0.0;
+    double sovereignConvergenceIndex = 0.0;  // Overall convergence measure
     
     // Batch 247: Coherence
     double coherenceStability = 0.0;
     double unifiedPatternIndex = 0.0;
     double harmonicConsistency = 0.0;
+    double sovereignCoherenceIndex = 0.0;  // Overall coherence measure
     
     // Batch 248: Harmony
     double resonanceAmplitude = 0.0;
