@@ -43,6 +43,11 @@ private:
         bool resonanceDebug = false;       // Debug mode for Resonance
         bool resonanceMap = false;         // Display resonance amplification map
         
+        // Batch 252: Amplification - Adaptive scaling options
+        bool runAmplification = false;     // Run Amplification cycle (Batch 252)
+        bool amplificationDebug = false;   // Debug mode for Amplification
+        bool amplificationMap = false;     // Display adaptive amplification map
+        
         // Per-role model overrides
         std::string scannerModel;
         std::string repairerModel;

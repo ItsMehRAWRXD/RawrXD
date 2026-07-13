@@ -27,6 +27,10 @@ void SwarmCommand::printUsage() {
     std::cout << "  --resonance            Run Resonance cycle (pattern amplification)\n";
     std::cout << "  --resonance-debug      Debug mode: show resonance computation\n";
     std::cout << "  --resonance-map        Display resonance amplification map\n";
+    std::cout << "\nBatch 252: Amplification - Adaptive Scaling:\n";
+    std::cout << "  --amplification        Run Amplification cycle (adaptive scaling)\n";
+    std::cout << "  --amplification-debug  Debug mode: show adaptive scaling computation\n";
+    std::cout << "  --amplification-map    Display adaptive amplification map\n";
     std::cout << "\nPer-Role Model Selection:\n";
     std::cout << "  --scanner-model MODEL      Model for scanning (default: nemotron-super:latest)\n";
     std::cout << "  --repairer-model MODEL     Model for repairs (default: qwen3.5:40b)\n";
@@ -76,6 +80,10 @@ SwarmCommand::SwarmOptions SwarmCommand::parseArgs(int argc, char* argv[]) {
         else if (arg == "--resonance") opts.runResonance = true;
         else if (arg == "--resonance-debug") { opts.runResonance = true; opts.resonanceDebug = true; }
         else if (arg == "--resonance-map") { opts.runResonance = true; opts.resonanceMap = true; }
+        // Batch 252: Amplification options
+        else if (arg == "--amplification") opts.runAmplification = true;
+        else if (arg == "--amplification-debug") { opts.runAmplification = true; opts.amplificationDebug = true; }
+        else if (arg == "--amplification-map") { opts.runAmplification = true; opts.amplificationMap = true; }
         else if (arg == "--scanner-model" && i + 1 < argc) opts.scannerModel = argv[++i];
         else if (arg == "--repairer-model" && i + 1 < argc) opts.repairerModel = argv[++i];
         else if (arg == "--extender-model" && i + 1 < argc) opts.extenderModel = argv[++i];
@@ -268,6 +276,19 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
             swarm.PrintResonanceMap();
         }
         swarm.RunResonanceCycle();
+    }
+    
+    // Batch 252: Amplification - Adaptive scaling
+    if (opts.runAmplification) {
+        std::cout << "[TASK] Running Amplification cycle (Batch 252) - Adaptive scaling...\n";
+        if (opts.amplificationDebug) {
+            std::cout << "[DEBUG] Adaptive amplification computation enabled\n";
+        }
+        if (opts.amplificationMap) {
+            std::cout << "[MAP] Displaying adaptive amplification map...\n";
+            swarm.PrintAmplificationMap();
+        }
+        swarm.RunAmplificationCycle();
     }
     
     // Run finalization

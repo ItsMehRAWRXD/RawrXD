@@ -122,7 +122,12 @@ enum class SwarmTaskKind : uint8_t {
     AmplifyPatterns,           // Amplify stable recurring patterns
     StabilizeResonance,        // Stabilize harmonic resonance
     CoupleHarmonics,           // Couple harmonic modes across cycles
-    ReinforceTopology          // Reinforce resonant topology
+    ReinforceTopology,         // Reinforce resonant topology
+    // Batch 252: Amplification - Adaptive scaling task kinds
+    ScaleAmplification,        // Scale amplification based on load/complexity
+    BoostValuePatterns,        // Boost high-value patterns
+    SuppressNoisePatterns,     // Suppress noisy patterns
+    AdaptToSubstrateLoad       // Adapt amplification to substrate health
 };
 
 // Get ModelRole from SwarmTaskKind
@@ -144,6 +149,11 @@ inline ModelRole TaskKindToModelRole(SwarmTaskKind kind) {
         case SwarmTaskKind::StabilizeResonance:   return ModelRole::Harmonizer;
         case SwarmTaskKind::CoupleHarmonics:      return ModelRole::Harmonizer;
         case SwarmTaskKind::ReinforceTopology:    return ModelRole::Finalizer;
+        // Batch 252: Amplification tasks use Optimizer for scaling
+        case SwarmTaskKind::ScaleAmplification:   return ModelRole::Optimizer;
+        case SwarmTaskKind::BoostValuePatterns:   return ModelRole::Optimizer;
+        case SwarmTaskKind::SuppressNoisePatterns: return ModelRole::Optimizer;
+        case SwarmTaskKind::AdaptToSubstrateLoad:  return ModelRole::Finalizer;
         default: return ModelRole::General;
     }
 }
@@ -319,6 +329,14 @@ public:
     void CoupleHarmonicModes();                              // Couple harmonic modes across cycles
     void ReinforceResonantTopology();                        // Reinforce resonant topology
     void PrintResonanceMap() const;                          // Display resonance amplification map
+    
+    // Batch 252: Amplification - Adaptive scaling and dynamic modulation
+    void RunAmplificationCycle();                            // Execute adaptive amplification
+    void ScaleAmplificationDynamically();                    // Scale amplification based on load/complexity
+    void BoostHighValuePatterns();                           // Boost high-value resonant patterns
+    void SuppressNoisyPatterns();                            // Suppress low-value noisy patterns
+    void AdaptToSubstrateHealth();                         // Adapt amplification to substrate health
+    void PrintAmplificationMap() const;                      // Display adaptive amplification map
     
     // Interactive mode - user selects models per role
     void RunInteractiveConfiguration();
