@@ -5,7 +5,6 @@
 ; ============================================================================
 
 option casemap:none
-option win64:3
 
 ; =============================================================================
 ; CONSTANTS
@@ -45,39 +44,41 @@ MAX_TENSORS             EQU     1024
 MAX_METADATA_PAIRS      EQU     256
 CHUNK_SIZE              EQU     65536
 
+; Structure sizes
+SIZEOF_GGUF_HEADER      EQU     24      ; 4 + 4 + 8 + 8
+SIZEOF_TENSOR_INFO      EQU     320     ; 256 + 4 + 32 + 4 + 8 + 8 + 8 (padded)
+SIZEOF_MODEL_CONTEXT    EQU     328000  ; Approximate
+
 ; =============================================================================
-; STRUCTURES
+; DATA SECTION
 ; =============================================================================
 
-; GGUF Header
-GGUF_HEADER STRUCT
-    magic               DWORD   ?
-    version             DWORD   ?
-    tensor_count        QWORD   ?
-    metadata_kv_count   QWORD   ?
-GGUF_HEADER ENDS
+.data
 
-; Tensor Info
-TENSOR_INFO STRUCT
-    name                BYTE    MAX_TENSOR_NAME dup(?)
-    n_dims              DWORD   ?
-    dimensions          QWORD   4 dup(?)
-    type                DWORD   ?
-    offset              QWORD   ?
-    data_ptr            QWORD   ?
-TENSOR_INFO ENDS
+; Error messages
+err_no_file             BYTE    "Error: Could not open file", 0Dh, 0Ah, 0
+err_invalid_magic       BYTE    "Error: Invalid GGUF magic", 0Dh, 0Ah, 0
+err_mmap_failed         BYTE    "Error: Memory mapping failed", 0Dh, 0Ah, 0
+err_too_many_tensors    BYTE    "Error: Too many tensors", 0Dh, 0Ah, 0
 
-; Model Context
-MODEL_CONTEXT STRUCT
-    file_handle         QWORD   ?
-    map_handle          QWORD   ?
-    base_address        QWORD   ?
-    file_size           QWORD   ?
-    header              GGUF_HEADER <>
-    tensors             TENSOR_INFO MAX_TENSORS dup(<>)
-    tensor_count        QWORD   ?
-    data_offset         QWORD   ?
-MODEL_CONTEXT ENDS
+; Success messages
+msg_loading             BYTE    "Loading model: ", 0
+msg_loaded              BYTE    "Model loaded successfully", 0Dh, 0Ah, 0
+msg_tensors             BYTE    "Tensors: ", 0
+msg_metadata            BYTE    "Metadata pairs: ", 0
+
+; Format strings
+fmt_newline             BYTE    0Dh, 0Ah, 0
+fmt_string              BYTE    "%s", 0
+fmt_dword               BYTE    "%d", 0
+fmt_qword               BYTE    "%lld", 0
+fmt_tensor_info         BYTE    "  [%s] type=%d dims=%d offset=%lld", 0Dh, 0Ah, 0
+
+; =============================================================================
+; CODE SECTION
+; =============================================================================
+
+.code
 
 ; =============================================================================
 ; DATA SECTION

@@ -23,6 +23,7 @@ set(CORE_RUNTIME_SOURCES
     src/gguf/gguf_parser.cpp
     src/gguf/gguf_tensor.cpp
     src/gguf/vocab_resolver.cpp
+    src/core/gguf_loader_production.cpp
     
     # ---- Embedding Engine ----
     src/embeddings/embedding_engine.cpp
