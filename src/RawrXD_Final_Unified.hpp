@@ -348,6 +348,9 @@ namespace RawrXD {
         bool ValidateChecksum();
         bool IsSupportedArchitecture() const;
         
+        // Tensor size calculation
+        size_t GetTensorByteSize(const TensorInfo& tensor) const;
+        
     private:
         // File handling
         std::ifstream file_;
