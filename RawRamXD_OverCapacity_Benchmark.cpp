@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <chrono>
 #include <vector>
-#include <math>
+#include <cmath>
 #include <fstream>
 #include <signal.h>
 

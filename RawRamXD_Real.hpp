@@ -178,7 +178,7 @@ public:
     size_t getVRAMUsed() const { return vramUsed_.load(); }
     size_t getRAMUsed() const { return ramUsed_.load(); }
     size_t getNVMeUsed() const { return nvmeUsed_.load(); }
-    float getVRAMPres sure() const;
+    float getVRAMPressure() const;
 
 private:
     // Real physical allocation
