@@ -21,6 +21,13 @@ extern "C" {
 #define SOVEREIGN_MAX_TOKENS           8192
 #define SOVEREIGN_MAX_BATCH_SIZE       512
 
+// Export macro
+#ifdef SOVEREIGN_EXPORTS
+#define SOVEREIGN_API __declspec(dllexport)
+#else
+#define SOVEREIGN_API __declspec(dllimport)
+#endif
+
 // ============================================================================
 // ENUMS
 // ============================================================================

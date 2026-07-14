@@ -170,15 +170,23 @@ static int read_obj_file(const char *filename, obj_file_t *obj) {
     }
     
     // Read header
-    if (fread(&obj->header, sizeof(obj->header), 1, fp) != 1) {
+    size_t header_size = sizeof(coff_file_header_t);
+    printf("Reading COFF header (%zu bytes)...\n", header_size);
+    
+    if (fread(&obj->header, header_size, 1, fp) != 1) {
         fprintf(stderr, "Failed to read COFF header\n");
         fclose(fp);
         return -1;
     }
     
+    printf("Machine type: 0x%X\n", obj->header.Machine);
+    printf("Number of sections: %u\n", obj->header.NumberOfSections);
+    printf("Number of symbols: %u\n", obj->header.NumberOfSymbols);
+    
     // Verify machine type
     if (obj->header.Machine != IMAGE_FILE_MACHINE_AMD64) {
-        fprintf(stderr, "Unsupported machine type: 0x%X (expected AMD64)\n", obj->header.Machine);
+        fprintf(stderr, "Unsupported machine type: 0x%X (expected 0x%X)\n", 
+                obj->header.Machine, IMAGE_FILE_MACHINE_AMD64);
         fclose(fp);
         return -1;
     }
