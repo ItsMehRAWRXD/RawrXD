@@ -58,17 +58,20 @@ for %%f in (
     )
 )
 
-REM Compile SwarmV29 modules
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_Renderer_State_Cache.obj" SwarmV29_Renderer_State_Cache.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_Pipeline_Controller.obj" SwarmV29_Pipeline_Controller.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_NTT_Butterfly.obj" SwarmV29_NTT_Butterfly.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_INTT_Butterfly.obj" SwarmV29_INTT_Butterfly.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_Persistent_Buffer.obj" SwarmV29_Persistent_Buffer.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_Renderer_VTable.obj" SwarmV29_Renderer_VTable.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_Audit.obj" SwarmV29_Audit.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_VTable_Binding.obj" SwarmV29_VTable_Binding.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_Benchmark_Harness.obj" SwarmV29_Benchmark_Harness.asm
-"%ML64%" /c /nologo /Zi /Fo:"%OUT%\SwarmV29_Verification.obj" SwarmV29_Verification.asm
+REM Compile SwarmV29 modules (output to current directory first)
+"%ML64%" /c /nologo /Zi SwarmV29_Renderer_State_Cache.asm
+"%ML64%" /c /nologo /Zi SwarmV29_Pipeline_Controller.asm
+"%ML64%" /c /nologo /Zi SwarmV29_NTT_Butterfly.asm
+"%ML64%" /c /nologo /Zi SwarmV29_INTT_Butterfly.asm
+"%ML64%" /c /nologo /Zi SwarmV29_Persistent_Buffer.asm
+"%ML64%" /c /nologo /Zi SwarmV29_Renderer_VTable.asm
+"%ML64%" /c /nologo /Zi SwarmV29_Audit.asm
+"%ML64%" /c /nologo /Zi SwarmV29_VTable_Binding.asm
+"%ML64%" /c /nologo /Zi SwarmV29_Benchmark_Harness.asm
+"%ML64%" /c /nologo /Zi SwarmV29_Verification.asm
+
+REM Move object files to output directory
+move /Y SwarmV29_*.obj "%OUT%\" 2>nul
 
 echo.
 echo [3/4] Checking Sovereign objects...

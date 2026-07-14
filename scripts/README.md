@@ -1918,6 +1918,76 @@ ctest --output-on-failure
 
 ## Script Parameters
 
+## System Diagnostics
+
+### `diagnostic-tools.ps1`
+
+Comprehensive system diagnostics and troubleshooting utilities.
+
+**Diagnostic Types:**
+- `Quick` - Quick system health check (CPU, memory, disk)
+- `Deep` - Comprehensive diagnostics (all categories)
+- `System` - System health only
+- `Network` - Network diagnostics
+- `Storage` - Storage health check
+- `Memory` - Memory diagnostics
+- `GPU` - GPU health check
+- `All` - All diagnostic categories
+
+**Usage:**
+```powershell
+# Quick diagnostic
+.\diagnostic-tools.ps1 -DiagnosticType Quick
+
+# Deep system analysis
+.\diagnostic-tools.ps1 -DiagnosticType Deep
+
+# Network diagnostics with auto-fix
+.\diagnostic-tools.ps1 -DiagnosticType Network -FixIssues
+
+# Export results to JSON
+.\diagnostic-tools.ps1 -DiagnosticType All -JsonOutput -OutputPath "report.json"
+```
+
+## Workflow Automation
+
+### `workflow-automation.ps1`
+
+Automate common development and deployment workflows.
+
+**Workflows:**
+- `DevSetup` - Set up development environment
+- `BuildTest` - Build and test workflow
+- `DeployStaging` - Deploy to staging environment
+- `DeployProduction` - Deploy to production
+- `Backup` - Create system backup
+- `Restore` - Restore from backup
+- `Clean` - Clean build artifacts
+- `Update` - Update project dependencies
+
+**Usage:**
+```powershell
+# Set up development environment
+.\workflow-automation.ps1 -Workflow DevSetup
+
+# Build and test
+.\workflow-automation.ps1 -Workflow BuildTest
+
+# Deploy to staging
+.\workflow-automation.ps1 -Workflow DeployStaging
+
+# Deploy to production (requires confirmation)
+.\workflow-automation.ps1 -Workflow DeployProduction -Version "3.2.0"
+
+# Dry run (preview only)
+.\workflow-automation.ps1 -Workflow DeployProduction -DryRun
+
+# Skip tests for faster deployment
+.\workflow-automation.ps1 -Workflow DeployStaging -SkipTests
+```
+
+---
+
 All scripts support common parameters:
 
 - `-Verbose` - Detailed output

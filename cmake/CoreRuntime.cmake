@@ -235,6 +235,7 @@ set_target_properties(${CORE_RUNTIME_NAME} PROPERTIES
 add_executable(RawrXD-CoreRuntime-Test
     tests/core_runtime/test_inference_loop.cpp
     tests/core_runtime/test_gguf_loader.cpp
+    tests/core_runtime/test_gguf_production.cpp
     tests/core_runtime/test_task_graph.cpp
     tests/core_runtime/test_memory_pool.cpp
 )

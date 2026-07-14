@@ -180,7 +180,6 @@ static void emit_call_rel32(assembler_state_t *state, int32_t rel) {
     emit_byte(state, 0xE8);  // CALL rel32
     emit_u32(state, (uint32_t)rel);
 }
-}
 
 // Encode ret
 static void emit_ret(assembler_state_t *state) {
