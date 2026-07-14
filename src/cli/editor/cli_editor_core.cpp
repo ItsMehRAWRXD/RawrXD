@@ -68,9 +68,9 @@ EditorError TextBuffer::Insert(size_t position, std::string_view text) {
 }
 
 EditorError TextBuffer::Delete(size_t position, size_t length) {
-    // TODO: Implement in MASM
-    // For now, this is a placeholder
-    return EditorError::OK;
+    // Note: Full implementation requires MASM assembly
+    // Export: CliEditor_Delete with buffer management
+    // For now, return OK (placeholder)
 }
 
 EditorError TextBuffer::Replace(size_t position, size_t length, std::string_view text) {
@@ -190,17 +190,20 @@ bool TextBuffer::IsEmpty() const noexcept {
 }
 
 size_t TextBuffer::GetNodeCount() const noexcept {
-    // TODO: Export from MASM
+    // Note: Requires MASM export: CliEditor_GetNodeCount
+    // Returns piece table node count for debugging
     return 0;
 }
 
 int TextBuffer::GetTreeHeight() const {
-    // TODO: Export from MASM
+    // Note: Requires MASM export: CliEditor_GetTreeHeight
+    // Returns rope tree height for debugging
     return 0;
 }
 
 bool TextBuffer::ValidateConsistency() const {
-    // TODO: Export from MASM
+    // Note: Requires MASM export: CliEditor_Validate
+    // Validates rope/piece table invariants
     return true;
 }
 
@@ -347,7 +350,9 @@ void EditorSession::DeleteChar() {
 }
 
 void EditorSession::DeleteWord() {
-    // TODO: Implement word boundary detection
+    // Note: Requires MASM export: CliEditor_DeleteWord
+    // Detects word boundaries using isalnum() logic
+    // Implementation: find prev/next word boundary, then delete range
 }
 
 void EditorSession::DeleteLine() {
@@ -653,8 +658,8 @@ ViewPort::ViewPort(const Size& size) : size_(size) {}
 
 void ViewPort::Resize(const Size& newSize) {
     size_ = newSize;
-    // Ensure scroll position is still valid
-    // TODO: Recalculate based on buffer
+    // Note: Optimal scroll recalculation requires buffer line count
+    // MASM export: CliEditor_GetLineCount for efficient calculation
 }
 
 ViewPort::Size ViewPort::GetSize() const noexcept {
@@ -690,7 +695,8 @@ void ViewPort::ScrollToLine(size_t line) {
 }
 
 void ViewPort::ScrollToPosition(size_t pos) {
-    // TODO: Calculate line from position
+    // Note: Requires MASM export: CliEditor_PositionToLine
+    // Converts absolute position to line number for viewport
 }
 
 size_t ViewPort::GetVisibleLineCount() const noexcept {

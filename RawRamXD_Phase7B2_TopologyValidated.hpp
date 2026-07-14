@@ -58,7 +58,7 @@ struct GPUDeviceIdentity {
 // F2: Real Topology Graph with PCI Link Info
 // =============================================================================
 
-enum class LinkType : uint8_t {
+enum class LinkType {
     UNKNOWN = 0,
     PCIE_GEN3 = 3,      // PCIe Gen3
     PCIE_GEN4 = 4,      // PCIe Gen4

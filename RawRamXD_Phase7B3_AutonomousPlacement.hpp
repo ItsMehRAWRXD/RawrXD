@@ -3,10 +3,10 @@
 // Autonomous Tensor Placement with Predictive Migration
 // =============================================================================
 // Phase 7B.3: Autonomous Placement Engine
-// - Workload pattern analysis
-// - Predictive migration triggers
-// - Placement policy optimization
-// - Real-time adaptation
+// - Tensor Residency Predictor
+// - Autonomous Placement Solver
+// - Pre-Inference Placement Pass
+// - Fabric Scheduler Integration
 // =============================================================================
 
 #ifndef RAWRAMXD_PHASE7B3_AUTONOMOUS_PLACEMENT_HPP
@@ -26,39 +26,45 @@
 #include <deque>
 #include <algorithm>
 #include <thread>
+#include <map>
+#include <functional>
 
 namespace RawRamXD {
 
-// Phase 7B.3 uses its own minimal definitions to avoid conflicts
-// These are simplified versions for standalone testing
+// Forward declarations from Phase 7B.2
+struct FabricTopology;
+struct TopologyNode;
+struct TopologyLink;
+struct BandwidthBenchmark;
+enum class LinkType;
 
-struct TopologyNode {
-    uint32_t deviceId;
-    uint64_t budget;
-    uint64_t currentUsage;
+namespace Phase7B3 {
+
+// ============================================================================
+// Residency Tier Enumeration
+// ============================================================================
+
+enum class ResidencyTier {
+    GPU0_VRAM = 0,
+    GPU1_VRAM = 1,
+    SYSTEM_RAM = 2,
+    NVME_SSD = 3,
+    UNKNOWN = 4
 };
 
-struct SimpleTopology {
-    std::vector<TopologyNode> nodes;
-};
+const char* ResidencyTierToString(ResidencyTier tier);
 
-struct SimpleMigrationCost {
-    double totalCost;
-};
+// ============================================================================
+// Tensor Access Pattern Tracking
+// ============================================================================
 
-// =============================================================================
-// Workload Pattern Analysis
-// =============================================================================
-
-enum class AccessPattern : uint8_t {
-    SEQUENTIAL = 0,      // Linear access (e.g., streaming)
-    RANDOM = 1,          // Unpredictable access
-    STRIDED = 2,         // Regular stride pattern
-    BLOCKED = 3,         // Block-based access
-    REPEATED = 4,        // Hot data, frequent reuse
-    TEMPORAL = 5,        // Time-based locality
-    SPATIAL = 6,         // Spatial locality
-    HYBRID = 7           // Mixed pattern
+struct TensorAccessPattern {
+    uint64_t tensor_id;
+    uint32_t layer_id;
+    uint64_t last_access_time;
+    uint64_t access_count;
+    float attention_score;      // Attention weight from previous runs
+    float kv_cache_pressure;    // KV-cache contention metric
 };
 
 struct AccessRecord {
@@ -67,354 +73,310 @@ struct AccessRecord {
     size_t size;
     bool isRead;
     uint32_t nodeId;
+    uint32_t layerId;
 };
 
-struct PatternAnalysis {
-    AccessPattern detectedPattern;
-    double confidence;
-    uint64_t workingSetSize;
-    double temporalLocality;    // 0-1 score
-    double spatialLocality;     // 0-1 score
-    double reuseRatio;          // Cache hit ratio
-    uint32_t preferredNode;     // Best node for this pattern
-    std::vector<uint64_t> hotOffsets; // Frequently accessed regions
+// ============================================================================
+// Tensor Residency Predictor
+// ============================================================================
+
+struct TensorResidencyPrediction {
+    uint64_t tensor_id;
+    size_t size_bytes;
+
+    // Prediction outputs
+    float reuse_probability;        // 0.0 - 1.0 likelihood of reuse
+    float next_access_ms;           // Predicted time to next access
+    float residency_score[4];         // Score for each tier (GPU0, GPU1, RAM, NVMe)
+
+    // Cost components per tier
+    struct TierCost {
+        float migration_cost;       // Cost to migrate to this tier
+        float latency_penalty;      // Access latency penalty
+        float memory_pressure;      // Pressure on this memory tier
+        float future_reuse_benefit; // Benefit from predicted reuse
+        float total_cost;           // Combined cost
+    } costs[4];
+
+    ResidencyTier predicted_location;
+    float confidence;               // Prediction confidence 0.0 - 1.0
 };
 
-class WorkloadPatternAnalyzer {
+class TensorResidencyPredictor {
 public:
-    static constexpr size_t MAX_HISTORY = 10000;
-    static constexpr size_t PATTERN_WINDOW = 1000;
-    
-    bool Initialize();
-    void Shutdown();
-    
-    // Record access for pattern analysis
-    void RecordAccess(uint64_t tensorId, uint64_t offset, size_t size, 
-                      bool isRead, uint32_t nodeId);
-    
-    // Analyze pattern from history
-    PatternAnalysis AnalyzePattern(uint64_t tensorId);
-    
-    // Predict next access
-    struct AccessPrediction {
-        uint64_t predictedOffset;
-        double confidence;
-        uint64_t predictedTimeNs;
-        uint32_t predictedNode;
+    TensorResidencyPredictor();
+    ~TensorResidencyPredictor();
+
+    // Initialize with topology data from Phase 7B.2
+    void Initialize(const RawRamXD::FabricTopology& topology);
+
+    // Record access for learning
+    void RecordAccess(uint64_t tensor_id, uint32_t layer_id, size_t size_bytes);
+    void RecordAttentionPattern(uint64_t tensor_id, float attention_score);
+
+    // Predict residency for a tensor
+    TensorResidencyPrediction PredictResidency(uint64_t tensor_id, size_t size_bytes);
+
+    // Batch prediction for upcoming layers
+    std::vector<TensorResidencyPrediction> PredictUpcomingLayers(
+        const std::vector<uint32_t>& layer_ids,
+        uint32_t lookahead_count);
+
+    // Update thermal state
+    void UpdateThermalState(uint32_t gpu_id, float temperature);
+
+    // Update VRAM pressure
+    void UpdateVRAMPressure(uint32_t gpu_id, float pressure_ratio);
+
+    // Get current system state
+    struct SystemState {
+        float gpu0_vram_pressure;
+        float gpu1_vram_pressure;
+        float gpu0_temperature;
+        float gpu1_temperature;
+        float pcie_bandwidth_utilization;
+        uint64_t total_tokens_processed;
     };
-    AccessPrediction PredictNextAccess(uint64_t tensorId);
-    
-    // Get hotness score
-    double GetHotnessScore(uint64_t tensorId);
-    
-    // Detect phase changes
-    bool DetectPhaseChange(uint64_t tensorId);
+    SystemState GetSystemState() const;
 
 private:
-    std::unordered_map<uint64_t, std::deque<AccessRecord>> accessHistory_;
-    std::unordered_map<uint64_t, PatternAnalysis> lastAnalysis_;
-    std::mutex mutex_;
-    
-    AccessPattern DetectSequential(const std::deque<AccessRecord>& history);
-    AccessPattern DetectStrided(const std::deque<AccessRecord>& history);
-    double CalculateTemporalLocality(const std::deque<AccessRecord>& history);
-    double CalculateSpatialLocality(const std::deque<AccessRecord>& history);
+    class Impl;
+    std::unique_ptr<Impl> pImpl;
 };
 
-// =============================================================================
-// Predictive Migration Triggers
-// =============================================================================
+// ============================================================================
+// Autonomous Placement Solver
+// ============================================================================
 
-enum class MigrationTrigger : uint8_t {
-    NONE = 0,
-    CAPACITY_PRESSURE = 1,      // Node running out of memory
-    ACCESS_PATTERN_CHANGE = 2, // Workload pattern shifted
-    THERMAL_THROTTLE = 3,      // GPU overheating
-    BANDWIDTH_OPTIMIZATION = 4, // Better bandwidth available elsewhere
-    LOAD_BALANCING = 5,        // Even out node utilization
-    PREDICTIVE_PREFETCH = 6,   // Anticipate future access
-    COST_THRESHOLD = 7,          // Migration cost now acceptable
-    FEDERATED_OPTIMAL = 8      // Multi-node placement optimal
+struct PlacementDecision {
+    uint64_t tensor_id;
+    ResidencyTier source_tier;
+    ResidencyTier target_tier;
+    float migration_cost;
+    float latency_penalty;
+    float memory_pressure_penalty;
+    float future_reuse_benefit;
+    float total_cost;
+    float expected_tps_impact;
+    bool should_migrate;
+    uint32_t priority;          // Migration priority (lower = higher priority)
+    std::string reasoning;      // Explanation for the decision
 };
 
-struct MigrationTriggerEvent {
-    MigrationTrigger trigger;
-    uint64_t timestamp;
-    uint64_t tensorId;
-    uint32_t srcNode;
-    uint32_t dstNode;
-    double confidence;
-    std::string reasoning;
-    SimpleMigrationCost estimatedCost;
-    double expectedBenefit;
-};
-
-// Forward declaration for Phase 7B.3 standalone
-class SimpleMigrationEngine;
-
-class PredictiveMigrationEngine {
+class AutonomousPlacementSolver {
 public:
-    bool Initialize(SimpleMigrationEngine* economics,
-                    WorkloadPatternAnalyzer* analyzer);
-    void Shutdown();
-    
-    // Evaluate all tensors for migration triggers
-    std::vector<MigrationTriggerEvent> EvaluateTriggers(
-        const std::vector<uint64_t>& tensorIds,
-        const SimpleTopology& topology);
-    
-    // Check specific trigger conditions
-    bool CheckCapacityPressure(uint32_t nodeId, const SimpleTopology& topology);
-    bool CheckAccessPatternShift(uint64_t tensorId);
-    bool CheckThermalThrottle(uint32_t nodeId);
-    bool CheckBandwidthOptimization(uint64_t tensorId, const SimpleTopology& topology);
-    bool CheckLoadBalancing(const SimpleTopology& topology);
-    
-    // Predictive prefetch
-    struct PrefetchDecision {
-        uint64_t tensorId;
-        uint32_t targetNode;
-        uint64_t prefetchTimeNs;
-        double confidence;
+    AutonomousPlacementSolver();
+    ~AutonomousPlacementSolver();
+
+    // Initialize with fabric topology
+    void Initialize(const RawRamXD::FabricTopology& topology);
+
+    // Configure cost weights
+    void SetCostWeights(
+        float migration_weight,
+        float latency_weight,
+        float pressure_weight,
+        float reuse_weight);
+
+    // Solve placement for single tensor
+    PlacementDecision SolvePlacement(
+        const TensorResidencyPrediction& prediction,
+        ResidencyTier current_location);
+
+    // Solve batch placement for multiple tensors
+    std::vector<PlacementDecision> SolveBatchPlacement(
+        const std::vector<TensorResidencyPrediction>& predictions,
+        const std::map<uint64_t, ResidencyTier>& current_locations);
+
+    // Optimize placement under constraints
+    std::vector<PlacementDecision> OptimizePlacement(
+        const std::vector<TensorResidencyPrediction>& predictions,
+        const std::map<uint64_t, ResidencyTier>& current_locations,
+        float max_migration_cost,
+        float min_tps_threshold);
+
+    // Get solver statistics
+    struct SolverStats {
+        uint32_t decisions_made;
+        uint32_t migrations_recommended;
+        uint32_t migrations_skipped;
+        float avg_decision_time_ms;
+        float total_cost_saved;
     };
-    std::vector<PrefetchDecision> GeneratePrefetchList(uint64_t lookaheadMs);
-    
-    // Execute migration with validation
-    bool ExecuteMigration(uint64_t tensorId, uint32_t dstNode);
-    
-    // Get trigger history
-    std::vector<MigrationTriggerEvent> GetTriggerHistory() const;
+    SolverStats GetStats() const;
 
 private:
-    SimpleMigrationEngine* economics_;
-    WorkloadPatternAnalyzer* analyzer_;
-    std::vector<MigrationTriggerEvent> triggerHistory_;
-    mutable std::mutex mutex_;
-    
-    double CalculateExpectedBenefit(const MigrationTriggerEvent& event);
+    class Impl;
+    std::unique_ptr<Impl> pImpl;
 };
 
-// =============================================================================
-// Placement Policy Optimization
-// =============================================================================
+// ============================================================================
+// Pre-Inference Placement Pass
+// ============================================================================
 
-struct PlacementPolicy {
-    std::string name;
-    double memoryWeight;
-    double bandwidthWeight;
-    double latencyWeight;
-    double thermalWeight;
-    double computeWeight;
-    double residencyWeight;
-    double migrationThreshold;  // Min benefit to trigger migration
-    uint32_t replicationFactor; // Number of replicas
-    bool enablePrefetch;
-    uint64_t prefetchDistance;  // Bytes ahead to prefetch
+struct LayerExecutionPlan {
+    uint32_t layer_id;
+    std::vector<uint64_t> input_tensors;
+    std::vector<uint64_t> output_tensors;
+    std::vector<uint64_t> weight_tensors;
+    float estimated_compute_time_ms;
+    float estimated_memory_bandwidth_gb_s;
 };
 
-class PlacementPolicyOptimizer {
+struct PrefetchCommand {
+    uint64_t tensor_id;
+    ResidencyTier source_tier;
+    ResidencyTier target_tier;
+    uint32_t prefetch_layer;    // Layer to prefetch before
+    float estimated_migration_time_ms;
+    bool is_critical;           // Must complete before layer execution
+};
+
+class PreInferencePlacementPass {
 public:
-    static PlacementPolicy GetDefaultPolicy();
-    static PlacementPolicy GetLatencyOptimizedPolicy();
-    static PlacementPolicy GetThroughputOptimizedPolicy();
-    static PlacementPolicy GetBalancedPolicy();
-    static PlacementPolicy GetMemoryOptimizedPolicy();
-    
-    bool Initialize();
-    void Shutdown();
-    
-    // Optimize policy based on workload characteristics
-    PlacementPolicy OptimizePolicy(const std::vector<PatternAnalysis>& patterns,
-                                   const SimpleTopology& topology);
-    
-    // Evaluate policy effectiveness
-    struct PolicyMetrics {
-        double avgPlacementScore;
-        double migrationRate;       // Migrations per second
-        double cacheHitRate;
-        double bandwidthUtilization;
-        double thermalEfficiency;
-        double overallThroughput;
+    PreInferencePlacementPass();
+    ~PreInferencePlacementPass();
+
+    // Initialize with predictor and solver
+    void Initialize(
+        TensorResidencyPredictor* predictor,
+        AutonomousPlacementSolver* solver,
+        const RawRamXD::FabricTopology& topology);
+
+    // Build execution plan for model
+    void BuildExecutionPlan(const std::vector<LayerExecutionPlan>& layers);
+
+    // Analyze upcoming layers and generate prefetch commands
+    std::vector<PrefetchCommand> AnalyzeUpcomingLayers(
+        uint32_t current_layer,
+        uint32_t lookahead_window);
+
+    // Execute prefetch commands (returns commands that should be async)
+    std::vector<PrefetchCommand> ExecutePrefetches(
+        const std::vector<PrefetchCommand>& commands);
+
+    // Hide migration behind compute
+    bool HideMigrationBehindCompute(
+        const PrefetchCommand& migration,
+        const LayerExecutionPlan& concurrent_layer);
+
+    // Start inference with optimized placement
+    void BeginInference();
+
+    // End inference and record metrics
+    void EndInference();
+
+    // Get placement pass metrics
+    struct PassMetrics {
+        uint32_t total_prefetches_issued;
+        uint32_t prefetches_hidden;
+        uint32_t prefetches_stalled;
+        float avg_prefetch_time_ms;
+        float cold_migration_penalty_ms;
+        float tps_improvement;
+        uint32_t cache_hits;
+        uint32_t cache_misses;
     };
-    PolicyMetrics EvaluatePolicy(const PlacementPolicy& policy);
-    
-    // Auto-tune weights based on feedback
-    void UpdatePolicyFromFeedback(const PolicyMetrics& metrics);
-    
-    // Current active policy
-    PlacementPolicy GetActivePolicy() const { return activePolicy_; }
-    void SetActivePolicy(const PlacementPolicy& policy) { activePolicy_ = policy; }
+    PassMetrics GetMetrics() const;
 
 private:
-    PlacementPolicy activePolicy_;
-    std::vector<PolicyMetrics> metricsHistory_;
+    class Impl;
+    std::unique_ptr<Impl> pImpl;
 };
 
-// =============================================================================
-// Real-Time Adaptation Controller
-// =============================================================================
+// ============================================================================
+// Fabric Scheduler Integration
+// ============================================================================
 
-struct AdaptationDecision {
-    uint64_t timestamp;
-    enum class Action {
-        NONE,
-        MIGRATE_TENSOR,
-        REPLICATE_TENSOR,
-        EVICT_TENSOR,
-        PREFETCH_TENSOR,
-        CHANGE_POLICY,
-        REBALANCE_NODES
-    } action;
-    
-    uint64_t tensorId;
-    uint32_t srcNode;
-    uint32_t dstNode;
-    double confidence;
-    std::string reasoning;
-};
-
-// Forward declaration for Phase 7B.3 standalone
-class SimpleScheduler;
-
-class RealTimeAdaptationController {
+class AutonomousFabricScheduler {
 public:
-    bool Initialize(PredictiveMigrationEngine* migration,
-                    PlacementPolicyOptimizer* policy,
-                    SimpleScheduler* scheduler);
-    void Shutdown();
-    
-    // Main adaptation loop
-    void RunAdaptationCycle();
-    
-    // Process single tensor
-    AdaptationDecision ProcessTensor(uint64_t tensorId);
-    
-    // Global rebalancing
-    std::vector<AdaptationDecision> RebalanceNodes();
-    
-    // Emergency handling
-    std::vector<AdaptationDecision> HandleEmergency(uint32_t nodeId);
-    
-    // Get adaptation history
-    std::vector<AdaptationDecision> GetAdaptationHistory() const;
-    
-    // Performance metrics
-    struct AdaptationMetrics {
-        uint64_t decisionsPerSecond;
-        double avgDecisionLatencyMs;
-        double successRate;
-        uint64_t totalMigrations;
-        uint64_t totalPrefetches;
-        double throughputImprovement;
+    AutonomousFabricScheduler();
+    ~AutonomousFabricScheduler();
+
+    // Initialize all components
+    bool Initialize(const RawRamXD::FabricTopology& topology);
+
+    // Register tensor with scheduler
+    void RegisterTensor(uint64_t tensor_id, size_t size_bytes, ResidencyTier initial_tier);
+
+    // Get current tensor location
+    ResidencyTier GetTensorLocation(uint64_t tensor_id) const;
+
+    // Pre-inference optimization pass
+    void RunPreInferencePass(const std::vector<LayerExecutionPlan>& execution_plan);
+
+    // Notify layer completion (for learning)
+    void NotifyLayerComplete(uint32_t layer_id, float actual_compute_time_ms);
+
+    // Notify tensor access (for prediction updates)
+    void NotifyTensorAccess(uint64_t tensor_id, uint32_t layer_id);
+
+    // Get placement recommendations
+    std::vector<PlacementDecision> GetPlacementRecommendations();
+
+    // Execute autonomous placement
+    bool ExecutePlacement(const std::vector<PlacementDecision>& decisions);
+
+    // Emergency pressure relief
+    std::vector<PlacementDecision> EmergencyPressureRelief(uint32_t gpu_id);
+
+    // Export placement decisions
+    bool ExportPlacementDecisions(const std::string& filepath) const;
+
+    // Get scheduler status
+    struct SchedulerStatus {
+        bool is_initialized;
+        uint32_t tensors_managed;
+        uint32_t pending_migrations;
+        float current_tps;
+        float vram_pressure_gpu0;
+        float vram_pressure_gpu1;
+        ResidencyTier last_recommendation;
+        float last_decision_confidence;
     };
-    AdaptationMetrics GetMetrics() const;
+    SchedulerStatus GetStatus() const;
 
 private:
-    PredictiveMigrationEngine* migration_;
-    PlacementPolicyOptimizer* policy_;
-    SimpleScheduler* scheduler_;
-
-    std::vector<AdaptationDecision> adaptationHistory_;
-    std::atomic<uint64_t> decisionCount_{0};
-    std::atomic<uint64_t> totalLatencyNs_{0};
-
-    mutable std::mutex mutex_;
-
-    bool ShouldAdapt(const AdaptationDecision& decision);
-    bool ValidateDecision(const AdaptationDecision& decision);
+    class Impl;
+    std::unique_ptr<Impl> pImpl;
 };
 
-// =============================================================================
-// Autonomous Placement Report Generator
-// =============================================================================
+// ============================================================================
+// Acceptance Gate Functions (A1-A6)
+// ============================================================================
 
-class AutonomousPlacementReportGenerator {
-public:
-    bool GenerateReport(const std::vector<AdaptationDecision>& decisions,
-                        const PlacementPolicy& policy,
-                        const RealTimeAdaptationController::AdaptationMetrics& metrics,
-                        const std::string& filename);
-    
-    bool GenerateFullReport(const std::vector<PatternAnalysis>& patterns,
-                            const std::vector<MigrationTriggerEvent>& triggers,
-                            const std::vector<AdaptationDecision>& decisions,
-                            const PlacementPolicy& policy,
-                            const RealTimeAdaptationController::AdaptationMetrics& metrics,
-                            const std::string& filename);
+// A1: Predict placement before miss
+bool GateA1_PredictBeforeMiss(TensorResidencyPredictor* predictor);
 
-private:
-    std::string EscapeJsonString(const std::string& str);
-    std::string PatternToJson(const PatternAnalysis& pattern);
-    std::string TriggerToJson(const MigrationTriggerEvent& trigger);
-    std::string DecisionToJson(const AdaptationDecision& decision);
-    std::string PolicyToJson(const PlacementPolicy& policy);
-    std::string MetricsToJson(const RealTimeAdaptationController::AdaptationMetrics& metrics);
+// A2: Reduce cold migration penalty
+bool GateA2_ReduceColdMigrationPenalty(PreInferencePlacementPass* pass);
+
+// A3: Maintain TPS under VRAM pressure
+bool GateA3_MaintainTPSUnderPressure(AutonomousFabricScheduler* scheduler);
+
+// A4: Multi-GPU balancing
+bool GateA4_MultiGPUBalancing(AutonomousPlacementSolver* solver);
+
+// A5: Autonomous recovery from pressure
+bool GateA5_AutonomousRecovery(AutonomousFabricScheduler* scheduler);
+
+// A6: Placement decisions exported
+bool GateA6_ExportDecisions(const AutonomousFabricScheduler* scheduler);
+
+// Run all acceptance gates
+struct AcceptanceGateResults {
+    bool a1_predict_before_miss;
+    bool a2_reduce_penalty;
+    bool a3_maintain_tps;
+    bool a4_multi_gpu_balance;
+    bool a5_autonomous_recovery;
+    bool a6_export_decisions;
+    uint32_t passed_count;
+    uint32_t total_count;
 };
+AcceptanceGateResults RunAllAcceptanceGates(AutonomousFabricScheduler* scheduler);
 
-// =============================================================================
-// Phase 7B.3 Main Controller
-// =============================================================================
-
-class AutonomousPlacementController {
-public:
-    static AutonomousPlacementController& Instance();
-    
-    bool Initialize();
-    void Shutdown();
-    
-    // Core functionality
-    bool StartAutonomousMode();
-    void StopAutonomousMode();
-    bool IsRunning() const { return isRunning_; }
-    
-    // Manual control
-    AdaptationDecision PlaceTensor(uint64_t tensorId, size_t size);
-    bool TriggerMigration(uint64_t tensorId, uint32_t dstNode);
-    bool UpdatePolicy(const PlacementPolicy& policy);
-    
-    // Access subsystems
-    WorkloadPatternAnalyzer* GetPatternAnalyzer() { return patternAnalyzer_.get(); }
-    PredictiveMigrationEngine* GetMigrationEngine() { return migrationEngine_.get(); }
-    PlacementPolicyOptimizer* GetPolicyOptimizer() { return policyOptimizer_.get(); }
-    RealTimeAdaptationController* GetAdaptationController() { return adaptationController_.get(); }
-    
-    // Reporting
-    bool GeneratePlacementReport(const std::string& filename);
-
-private:
-    AutonomousPlacementController() = default;
-    ~AutonomousPlacementController() = default;
-    
-    std::unique_ptr<WorkloadPatternAnalyzer> patternAnalyzer_;
-    std::unique_ptr<PredictiveMigrationEngine> migrationEngine_;
-    std::unique_ptr<PlacementPolicyOptimizer> policyOptimizer_;
-    std::unique_ptr<RealTimeAdaptationController> adaptationController_;
-    
-    std::atomic<bool> isRunning_{false};
-    std::thread adaptationThread_;
-    
-    void AdaptationLoop();
-};
-
-// =============================================================================
-// C API for external integration
-// =============================================================================
-
-extern "C" {
-
-bool RawRamXD_Autonomous_Initialize();
-void RawRamXD_Autonomous_Shutdown();
-bool RawRamXD_Autonomous_Start();
-void RawRamXD_Autonomous_Stop();
-
-uint64_t RawRamXD_Autonomous_PlaceTensor(size_t size, uint32_t preferredNode);
-bool RawRamXD_Autonomous_Migrate(uint64_t tensorId, uint32_t dstNode);
-bool RawRamXD_Autonomous_SetPolicy(const char* policyName);
-
-bool RawRamXD_Autonomous_SaveReport(const char* filename);
-
-} // extern "C"
-
+} // namespace Phase7B3
 } // namespace RawRamXD
 
 #endif // RAWRAMXD_PHASE7B3_AUTONOMOUS_PLACEMENT_HPP

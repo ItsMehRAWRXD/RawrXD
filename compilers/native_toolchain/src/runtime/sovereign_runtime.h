@@ -231,6 +231,11 @@ SOVEREIGN_RUNTIME_API SovereignRuntimeStatus Sovereign_Runtime_Decode(
     int max_text_len
 );
 
+SOVEREIGN_RUNTIME_API const char* Sovereign_Runtime_DecodeSingle(
+    ModelContext* ctx,
+    int token_id
+);
+
 // G3: Embedding lookup from loaded model
 SOVEREIGN_RUNTIME_API SovereignRuntimeStatus Sovereign_Runtime_GetEmbedding(
     ModelContext* ctx,

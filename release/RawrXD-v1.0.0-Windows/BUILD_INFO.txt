@@ -1,0 +1,6 @@
+Build Date: 2026-07-14
+Compiler: GCC 11.2.0 (MinGW)
+Platform: Windows 10/11 x64
+Target: x86_64-pc-windows-gnu
+Optimization: -O2
+Build Type: Release Candidate

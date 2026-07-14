@@ -13,6 +13,7 @@
 #include <iomanip>
 
 #include "../core/streaming_loader.hpp"
+#include "../core/model_downloader.hpp"
 #include "../inference/unified_inference.hpp"
 
 using namespace RawrXD::Core;
@@ -39,6 +40,13 @@ struct CLIArgs {
     bool benchmark = false;
     bool interactive = false;
     
+    // Download mode
+    bool download_mode = false;
+    std::string download_repo;
+    std::string download_file;
+    std::string download_dir = "models/";
+    bool list_models = false;
+    
     // Chat mode
     bool chat_mode = false;
     std::vector<Message> chat_history;
@@ -52,8 +60,8 @@ void PrintHelp(const char* program_name) {
     std::cout << "RawrXD Inference CLI - Zero Dependencies\n";
     std::cout << "==========================================\n\n";
     std::cout << "Usage: " << program_name << " [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -m, --model <path>       Path to GGUF model file (required)\n";
+    std::cout << "Inference Options:\n";
+    std::cout << "  -m, --model <path>       Path to GGUF model file\n";
     std::cout << "  -p, --prompt <text>      Prompt text\n";
     std::cout << "  -f, --file <path>        Read prompt from file\n";
     std::cout << "  -o, --output <path>      Write output to file\n";
@@ -67,12 +75,18 @@ void PrintHelp(const char* program_name) {
     std::cout << "  -v, --verbose            Verbose output\n";
     std::cout << "  -b, --benchmark          Run benchmark mode\n";
     std::cout << "  -i, --interactive        Interactive chat mode\n";
+    std::cout << "\nDownload Options:\n";
+    std::cout << "  --download <repo>        Download model from Hugging Face\n";
+    std::cout << "  --file <name>            Specific file to download\n";
+    std::cout << "  --dir <path>             Download directory (default: models/)\n";
+    std::cout << "  --list-models            List recommended models\n";
+    std::cout << "\nOther Options:\n";
     std::cout << "  -h, --help               Show this help\n";
     std::cout << "\nExamples:\n";
     std::cout << "  " << program_name << " -m model.gguf -p \"Hello world\"\n";
-    std::cout << "  " << program_name << " -m model.gguf -f prompt.txt -o output.txt\n";
     std::cout << "  " << program_name << " -m model.gguf --interactive\n";
-    std::cout << "  " << program_name << " -m model.gguf -p \"Test\" --benchmark\n";
+    std::cout << "  " << program_name << " --download TheBloke/Llama-2-7B-GGUF --file llama-2-7b.Q4_K_M.gguf\n";
+    std::cout << "  " << program_name << " --list-models\n";
 }
 
 // ============================================================================
@@ -126,6 +140,19 @@ CLIArgs ParseArgs(int argc, char* argv[]) {
         }
         else if (arg == "-i" || arg == "--interactive") {
             args.interactive = true;
+        }
+        else if (arg == "--download" && i + 1 < argc) {
+            args.download_mode = true;
+            args.download_repo = argv[++i];
+        }
+        else if (arg == "--model-file" && i + 1 < argc) {
+            args.download_file = argv[++i];
+        }
+        else if (arg == "--dir" && i + 1 < argc) {
+            args.download_dir = argv[++i];
+        }
+        else if (arg == "--list-models") {
+            args.list_models = true;
         }
         else if (arg == "-h" || arg == "--help") {
             PrintHelp(argv[0]);
@@ -267,8 +294,87 @@ void RunInteractive(UnifiedInferenceEngine& engine, const CLIArgs& args) {
 // Main
 // ============================================================================
 
+// ============================================================================
+// Download Mode
+// ============================================================================
+
+void RunDownloadMode(const CLIArgs& args) {
+    using namespace RawrXD::Core;
+    
+    if (args.list_models) {
+        std::cout << "Recommended Models:\n";
+        std::cout << "==================\n\n";
+        
+        auto models = GetRecommendedModels();
+        for (size_t i = 0; i < models.size(); ++i) {
+            const auto& m = models[i];
+            std::cout << i + 1 << ". " << m.description << "\n";
+            std::cout << "   Repo: " << m.repo_id << "\n";
+            std::cout << "   File: " << m.filename << "\n";
+            std::cout << "   Quantization: " << m.quantization << "\n";
+            std::cout << "   Parameters: " << m.num_params << "B\n\n";
+        }
+        
+        std::cout << "Download with:\n";
+        std::cout << "  rawrxd-infer --download <repo> --model-file <filename>\n";
+        return;
+    }
+    
+    if (args.download_repo.empty()) {
+        std::cerr << "Error: --download requires a repository ID\n";
+        return;
+    }
+    
+    if (args.download_file.empty()) {
+        std::cerr << "Error: --model-file required for download\n";
+        return;
+    }
+    
+    std::cout << "Downloading model...\n";
+    std::cout << "Repository: " << args.download_repo << "\n";
+    std::cout << "File: " << args.download_file << "\n";
+    std::cout << "Destination: " << args.download_dir << "\n\n";
+    
+    ModelDownloader downloader;
+    ModelDownloader::SetCacheDirectory(args.download_dir);
+    
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    bool success = downloader.DownloadFromHuggingFace(
+        args.download_repo,
+        args.download_file,
+        "",
+        [](const DownloadProgress& progress) {
+            std::cout << "\r[" << std::fixed << std::setprecision(1) << progress.percent_complete << "%] "
+                      << FormatBytes(progress.bytes_downloaded) << " / " << FormatBytes(progress.total_bytes)
+                      << " @ " << std::setprecision(2) << progress.bytes_per_second / (1024.0 * 1024.0) << " MB/s"
+                      << std::flush;
+        });
+    
+    std::cout << "\n\n";
+    
+    if (success) {
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration<double>(end_time - start_time).count();
+        std::cout << "Download complete!\n";
+        std::cout << "Time: " << std::fixed << std::setprecision(2) << duration << "s\n";
+    } else {
+        std::cerr << "Download failed: " << downloader.GetProgress().error_message << "\n";
+    }
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
 int main(int argc, char* argv[]) {
     CLIArgs args = ParseArgs(argc, argv);
+    
+    // Handle download/list modes first
+    if (args.download_mode || args.list_models) {
+        RunDownloadMode(args);
+        return 0;
+    }
     
     // Validate arguments
     if (args.model_path.empty()) {

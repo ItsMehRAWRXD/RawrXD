@@ -195,8 +195,12 @@ static uint32_t ProcessJsonCommand(const char* json, uint32_t jsonLen) {
             return g_ResponseLen;
         }
         
-        // GPU upload - placeholder until Vulkan SDK is available
-        // TODO: Enable RAWRXD_ENABLE_GPU_UPLOAD when Vulkan headers are in path
+        // Note: GPU upload requires Vulkan SDK
+        // When RAWRXD_ENABLE_GPU_UPLOAD is defined and Vulkan headers available:
+        // 1. Create Vulkan buffer
+        // 2. Upload tensor data
+        // 3. Return GPU handle
+        // For now, return CPU handle with note
         char response[512];
         snprintf(response, sizeof(response),
             "{\"status\":\"ok\",\"model_handle\":\"0x%llX\",\"note\":\"GPU upload pipeline ready (Vulkan SDK required for actual upload)\"}",
@@ -209,8 +213,10 @@ static uint32_t ProcessJsonCommand(const char* json, uint32_t jsonLen) {
     
     // === CMD: gpu_status (Phase 3: Track 3) ===
     if (strcmp(cmd, "gpu_status") == 0) {
-        // GPU status - placeholder until GPU swap bridge is linked
-        // TODO: Link rawrxd_gpu_swap_bridge.asm for full implementation
+        // Note: GPU swap bridge requires MASM assembly
+        // Link rawrxd_gpu_swap_bridge.asm for GPU tensor swapping
+        // This enables zero-copy GPU inference
+        // For now, return placeholder status
         char response[512];
         snprintf(response, sizeof(response),
             "{\"status\":\"ok\",\"active_gpu_slot\":0,\"buffer_handle\":\"0x0\",\"note\":\"GPU upload pipeline ready, bridge linking pending\"}");

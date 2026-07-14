@@ -220,5 +220,8 @@ std::string FormatBytes(uint64_t bytes);
 // Format seconds to human-readable
 std::string FormatSeconds(uint32_t seconds);
 
+// Get recommended models (popular presets)
+std::vector<RemoteModelInfo> GetRecommendedModels();
+
 } // namespace Core
 } // namespace RawrXD

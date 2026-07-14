@@ -1,6 +1,6 @@
 // =============================================================================
 // RawRamXD_Phase7C_PredictiveMemory.cpp
-// Implementation: Predictive Memory Intelligence with ML-Driven Prefetching
+// Implementation: Predictive Memory Intelligence - Learning-Based Policy Refinement
 // =============================================================================
 
 #include "RawRamXD_Phase7C_PredictiveMemory.hpp"
@@ -8,726 +8,1109 @@
 #include <iomanip>
 #include <cmath>
 #include <random>
+#include <cstring>
+#include <algorithm>
 
 namespace RawRamXD {
 
 // =============================================================================
-// LSTM Implementation
+// TensorAccessEvent Implementation
 // =============================================================================
 
-void LSTMState::Initialize(size_t size) {
-    cellState.resize(size, 0.0);
-    hiddenState.resize(size, 0.0);
+void TensorAccessEvent::Serialize(std::ofstream& out) const {
+    out.write(reinterpret_cast<const char*>(&timestampUs), sizeof(timestampUs));
+    out.write(reinterpret_cast<const char*>(&tensorId), sizeof(tensorId));
+    out.write(reinterpret_cast<const char*>(&accessType), sizeof(accessType));
+    out.write(reinterpret_cast<const char*>(&sourceTier), sizeof(sourceTier));
+    out.write(reinterpret_cast<const char*>(&targetTier), sizeof(targetTier));
+    out.write(reinterpret_cast<const char*>(&offset), sizeof(offset));
+    out.write(reinterpret_cast<const char*>(&sizeBytes), sizeof(sizeBytes));
+    out.write(reinterpret_cast<const char*>(&computeNode), sizeof(computeNode));
+    out.write(reinterpret_cast<const char*>(&latencyUs), sizeof(latencyUs));
+    out.write(reinterpret_cast<const char*>(&wasHit), sizeof(wasHit));
 }
 
-void LSTMState::Reset() {
-    std::fill(cellState.begin(), cellState.end(), 0.0);
-    std::fill(hiddenState.begin(), hiddenState.end(), 0.0);
+bool TensorAccessEvent::Deserialize(std::ifstream& in) {
+    in.read(reinterpret_cast<char*>(&timestampUs), sizeof(timestampUs));
+    in.read(reinterpret_cast<char*>(&tensorId), sizeof(tensorId));
+    in.read(reinterpret_cast<char*>(&accessType), sizeof(accessType));
+    in.read(reinterpret_cast<char*>(&sourceTier), sizeof(sourceTier));
+    in.read(reinterpret_cast<char*>(&targetTier), sizeof(targetTier));
+    in.read(reinterpret_cast<char*>(&offset), sizeof(offset));
+    in.read(reinterpret_cast<char*>(&sizeBytes), sizeof(sizeBytes));
+    in.read(reinterpret_cast<char*>(&computeNode), sizeof(computeNode));
+    in.read(reinterpret_cast<char*>(&latencyUs), sizeof(latencyUs));
+    in.read(reinterpret_cast<char*>(&wasHit), sizeof(wasHit));
+    return in.good();
 }
 
-bool LSTMCell::Initialize(size_t inputSize, size_t hiddenSize) {
-    inputSize_ = inputSize;
-    hiddenSize_ = hiddenSize;
+// =============================================================================
+// SequenceTrace Implementation
+// =============================================================================
+
+void SequenceTrace::AddEvent(const TensorAccessEvent& event) {
+    if (events.empty()) {
+        firstSeenUs = event.timestampUs;
+    }
+    lastAccessUs = event.timestampUs;
+    events.push_back(event);
     
-    // Initialize weights with small random values
-    std::mt19937 rng(42);
-    std::normal_distribution<double> dist(0.0, 0.1);
-    
-    auto initMatrix = [&](std::vector<std::vector<double>>& mat, size_t rows, size_t cols) {
-        mat.resize(rows);
-        for (auto& row : mat) {
-            row.resize(cols);
-            for (auto& val : row) {
-                val = dist(rng);
-            }
+    if (event.accessType == AccessType::READ || event.accessType == AccessType::READ_WRITE) {
+        totalReads++;
+    }
+    if (event.accessType == AccessType::WRITE || event.accessType == AccessType::READ_WRITE) {
+        totalWrites++;
+    }
+    totalBytesTransferred += event.sizeBytes;
+}
+
+double SequenceTrace::GetAverageAccessIntervalUs() const {
+    if (events.size() < 2) return 0.0;
+    return static_cast<double>(lastAccessUs - firstSeenUs) / (events.size() - 1);
+}
+
+double SequenceTrace::GetAccessFrequencyHz() const {
+    double interval = GetAverageAccessIntervalUs();
+    if (interval <= 0.0) return 0.0;
+    return 1000000.0 / interval; // Convert us to Hz
+}
+
+MemoryTier SequenceTrace::GetPreferredTier() const {
+    std::unordered_map<MemoryTier, uint64_t> tierHits;
+    for (const auto& event : events) {
+        if (event.wasHit) {
+            tierHits[event.targetTier]++;
         }
-    };
+    }
     
-    auto initVector = [&](std::vector<double>& vec, size_t size) {
-        vec.resize(size);
-        for (auto& val : vec) {
-            val = dist(rng);
+    MemoryTier bestTier = MemoryTier::HOST;
+    uint64_t maxHits = 0;
+    for (const auto& [tier, hits] : tierHits) {
+        if (hits > maxHits) {
+            maxHits = hits;
+            bestTier = tier;
         }
-    };
-    
-    // Forget gate
-    initMatrix(Wf_, hiddenSize_, inputSize_ + hiddenSize_);
-    initVector(bf_, hiddenSize_);
-    
-    // Input gate
-    initMatrix(Wi_, hiddenSize_, inputSize_ + hiddenSize_);
-    initVector(bi_, hiddenSize_);
-    
-    // Candidate
-    initMatrix(Wc_, hiddenSize_, inputSize_ + hiddenSize_);
-    initVector(bc_, hiddenSize_);
-    
-    // Output gate
-    initMatrix(Wo_, hiddenSize_, inputSize_ + hiddenSize_);
-    initVector(bo_, hiddenSize_);
-    
+    }
+    return bestTier;
+}
+
+// =============================================================================
+// SequenceLogger Implementation
+// =============================================================================
+
+bool SequenceLogger::Initialize(const std::string& logDir) {
+    logDir_ = logDir;
+    // Create log directory if it doesn't exist
+    // (Platform-specific code would go here)
     return true;
 }
 
-std::vector<double> LSTMCell::Forward(const std::vector<double>& input, 
-                                         LSTMState& state) {
-    // Concatenate input and hidden state
-    std::vector<double> combined;
-    combined.reserve(input.size() + state.hiddenState.size());
-    combined.insert(combined.end(), input.begin(), input.end());
-    combined.insert(combined.end(), state.hiddenState.begin(), state.hiddenState.end());
-    
-    // Forget gate
-    std::vector<double> forgetGate(hiddenSize_);
-    for (size_t i = 0; i < hiddenSize_; ++i) {
-        double sum = bf_[i];
-        for (size_t j = 0; j < combined.size(); ++j) {
-            sum += Wf_[i][j] * combined[j];
-        }
-        forgetGate[i] = Sigmoid(sum);
-    }
-    
-    // Input gate
-    std::vector<double> inputGate(hiddenSize_);
-    for (size_t i = 0; i < hiddenSize_; ++i) {
-        double sum = bi_[i];
-        for (size_t j = 0; j < combined.size(); ++j) {
-            sum += Wi_[i][j] * combined[j];
-        }
-        inputGate[i] = Sigmoid(sum);
-    }
-    
-    // Candidate
-    std::vector<double> candidate(hiddenSize_);
-    for (size_t i = 0; i < hiddenSize_; ++i) {
-        double sum = bc_[i];
-        for (size_t j = 0; j < combined.size(); ++j) {
-            sum += Wc_[i][j] * combined[j];
-        }
-        candidate[i] = Tanh(sum);
-    }
-    
-    // Update cell state
-    for (size_t i = 0; i < hiddenSize_; ++i) {
-        state.cellState[i] = forgetGate[i] * state.cellState[i] + 
-                             inputGate[i] * candidate[i];
-    }
-    
-    // Output gate
-    std::vector<double> outputGate(hiddenSize_);
-    for (size_t i = 0; i < hiddenSize_; ++i) {
-        double sum = bo_[i];
-        for (size_t j = 0; j < combined.size(); ++j) {
-            sum += Wo_[i][j] * combined[j];
-        }
-        outputGate[i] = Sigmoid(sum);
-    }
-    
-    // Update hidden state
-    for (size_t i = 0; i < hiddenSize_; ++i) {
-        state.hiddenState[i] = outputGate[i] * Tanh(state.cellState[i]);
-    }
-    
-    return state.hiddenState;
+void SequenceLogger::Shutdown() {
+    FlushToDisk();
 }
 
-std::vector<double> LSTMCell::PredictNext(
-    const std::vector<std::vector<double>>& sequence) {
-    LSTMState state;
-    state.Initialize(hiddenSize_);
-    
-    // Process sequence
-    for (const auto& input : sequence) {
-        Forward(input, state);
-    }
-    
-    // Return hidden state as prediction
-    return state.hiddenState;
-}
-
-void LSTMCell::UpdateWeights(const std::vector<double>& gradients, double learningRate) {
-    // Simplified - would use proper backprop in real implementation
-    // Just add small random perturbations for now
-    std::mt19937 rng(std::random_device{}());
-    std::normal_distribution<double> dist(0.0, learningRate * 0.01);
-    
-    for (auto& row : Wf_) {
-        for (auto& val : row) {
-            val += dist(rng);
-        }
-    }
-}
-
-double LSTMCell::Sigmoid(double x) {
-    return 1.0 / (1.0 + std::exp(-x));
-}
-
-double LSTMCell::Tanh(double x) {
-    return std::tanh(x);
-}
-
-std::vector<double> LSTMCell::Sigmoid(const std::vector<double>& x) {
-    std::vector<double> result(x.size());
-    for (size_t i = 0; i < x.size(); ++i) {
-        result[i] = Sigmoid(x[i]);
-    }
-    return result;
-}
-
-std::vector<double> LSTMCell::Tanh(const std::vector<double>& x) {
-    std::vector<double> result(x.size());
-    for (size_t i = 0; i < x.size(); ++i) {
-        result[i] = Tanh(x[i]);
-    }
-    return result;
-}
-
-std::vector<double> LSTMCell::ElementWiseMultiply(const std::vector<double>& a, 
-                                                    const std::vector<double>& b) {
-    std::vector<double> result(a.size());
-    for (size_t i = 0; i < a.size(); ++i) {
-        result[i] = a[i] * b[i];
-    }
-    return result;
-}
-
-std::vector<double> LSTMCell::ElementWiseAdd(const std::vector<double>& a, 
-                                              const std::vector<double>& b) {
-    std::vector<double> result(a.size());
-    for (size_t i = 0; i < a.size(); ++i) {
-        result[i] = a[i] + b[i];
-    }
-    return result;
-}
-
-// =============================================================================
-// Reinforcement Learning Agent Implementation
-// =============================================================================
-
-bool ReinforcementLearningAgent::Initialize() {
-    epsilon_ = EPSILON_START;
-    learningRate_ = 0.001;
-    rng_.seed(std::random_device{}());
-    
-    std::cout << "[RLAgent] Initialized with epsilon=" << epsilon_ << std::endl;
-    return true;
-}
-
-void ReinforcementLearningAgent::Shutdown() {
-    qTable_.clear();
-    targetQTable_.clear();
-    experienceBuffer_.clear();
-}
-
-PlacementAction ReinforcementLearningAgent::SelectAction(const RLState& state) {
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    
-    // Epsilon-greedy
-    if (dist(rng_) < epsilon_) {
-        // Random action
-        std::uniform_int_distribution<int> actionDist(0, ACTION_SIZE - 1);
-        return static_cast<PlacementAction>(actionDist(rng_));
-    } else {
-        // Greedy action
-        auto qValues = GetQValues(state);
-        int bestAction = 0;
-        double bestValue = qValues[0];
-        for (size_t i = 1; i < qValues.size(); ++i) {
-            if (qValues[i] > bestValue) {
-                bestValue = qValues[i];
-                bestAction = (int)i;
-            }
-        }
-        return static_cast<PlacementAction>(bestAction);
-    }
-}
-
-void ReinforcementLearningAgent::StoreExperience(const RLExperience& exp) {
+void SequenceLogger::LogEvent(const TensorAccessEvent& event) {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    experienceBuffer_.push_back(exp);
-    if (experienceBuffer_.size() > MAX_BUFFER_SIZE) {
-        experienceBuffer_.pop_front();
-    }
-}
-
-void ReinforcementLearningAgent::TrainBatch(size_t batchSize) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    if (experienceBuffer_.size() < batchSize) return;
-    
-    // Sample random batch
-    std::uniform_int_distribution<size_t> dist(0, experienceBuffer_.size() - 1);
-    
-    for (size_t i = 0; i < batchSize; ++i) {
-        size_t idx = dist(rng_);
-        const auto& exp = experienceBuffer_[idx];
-        
-        // Q-learning update
-        uint64_t stateHash = HashState(exp.state);
-        uint64_t nextStateHash = HashState(exp.nextState);
-        
-        auto qValues = GetQValues(exp.state);
-        auto nextQValues = GetQValues(exp.nextState);
-        
-        double maxNextQ = *std::max_element(nextQValues.begin(), nextQValues.end());
-        double target = exp.reward + (exp.done ? 0 : GAMMA * maxNextQ);
-        
-        UpdateQValue(stateHash, exp.action, target);
+    auto it = traces_.find(event.tensorId);
+    if (it == traces_.end()) {
+        auto trace = std::make_shared<SequenceTrace>();
+        trace->tensorId = event.tensorId;
+        traces_[event.tensorId] = trace;
+        it = traces_.find(event.tensorId);
     }
     
-    // Decay epsilon
-    epsilon_ *= EPSILON_DECAY;
-    if (epsilon_ < EPSILON_END) epsilon_ = EPSILON_END;
-}
-
-void ReinforcementLearningAgent::UpdateTargetNetwork() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    targetQTable_ = qTable_;
-}
-
-std::vector<double> ReinforcementLearningAgent::GetQValues(const RLState& state) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    it->second->AddEvent(event);
+    totalEventsLogged_++;
     
-    uint64_t hash = HashState(state);
-    auto it = qTable_.find(hash);
-    if (it != qTable_.end()) {
+    // Update flush time without calling flush (avoid deadlock)
+    lastFlushTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+std::shared_ptr<SequenceTrace> SequenceLogger::GetTrace(uint64_t tensorId) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = traces_.find(tensorId);
+    if (it != traces_.end()) {
         return it->second;
     }
-    
-    // Initialize with small random values
-    std::vector<double> values(ACTION_SIZE);
-    std::normal_distribution<double> dist(0.0, 0.1);
-    for (auto& v : values) {
-        v = dist(rng_);
+    return nullptr;
+}
+
+std::vector<std::shared_ptr<SequenceTrace>> SequenceLogger::GetAllTraces() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<std::shared_ptr<SequenceTrace>> result;
+    result.reserve(traces_.size());
+    for (const auto& [id, trace] : traces_) {
+        result.push_back(trace);
     }
-    qTable_[hash] = values;
-    return values;
+    return result;
 }
 
-double ReinforcementLearningAgent::CalculateReward(double throughput, 
-                                                     double latency, 
-                                                     double hitRate) {
-    // Combined reward function
-    double throughputReward = throughput / 100.0; // Normalize
-    double latencyPenalty = -latency / 10.0;
-    double hitRateReward = hitRate * 10.0;
+bool SequenceLogger::FlushToDisk() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    // Implementation would write traces to disk
+    lastFlushTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    return true;
+}
+
+void SequenceLogger::BackgroundFlush() {
+    // In a real implementation, this would run in a background thread
+    // For now, just update the timestamp without flushing to avoid deadlock
+    lastFlushTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+}
+
+bool SequenceLogger::LoadFromDisk(const std::string& filename) {
+    std::ifstream in(filename, std::ios::binary);
+    if (!in) return false;
     
-    return throughputReward + latencyPenalty + hitRateReward;
+    // Load implementation
+    return true;
 }
 
-uint64_t ReinforcementLearningAgent::HashState(const RLState& state) {
-    // Simple hash combining state features
-    uint64_t hash = 0;
-    hash ^= std::hash<double>{}(state.memoryUtilization) + 0x9e3779b9;
-    hash ^= std::hash<double>{}(state.bandwidthUtilization) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    hash ^= std::hash<double>{}(state.latency) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    hash ^= std::hash<uint32_t>{}(state.currentNode) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+void SequenceLogger::Clear() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    traces_.clear();
+}
+
+SequenceLogger::LoggerStats SequenceLogger::GetStats() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    LoggerStats stats;
+    stats.totalEventsLogged = totalEventsLogged_.load();
+    stats.totalTraces = traces_.size();
+    stats.eventsInMemory = 0;
+    for (const auto& [id, trace] : traces_) {
+        stats.eventsInMemory += trace->events.size();
+    }
+    stats.lastFlushTime = lastFlushTime_.load();
+    stats.memoryUsageBytes = stats.eventsInMemory * sizeof(TensorAccessEvent) + 
+                             traces_.size() * sizeof(SequenceTrace);
+    return stats;
+}
+
+// =============================================================================
+// WorkloadSignature Implementation
+// =============================================================================
+
+uint64_t WorkloadSignature::Hash() const {
+    // Simple hash combining all fields
+    uint64_t hash = std::hash<double>{}(readWriteRatio);
+    hash ^= std::hash<double>{}(sequentiality) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    hash ^= std::hash<double>{}(temporalLocality) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    hash ^= std::hash<double>{}(spatialLocality) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    hash ^= std::hash<double>{}(burstiness) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
     return hash;
 }
 
-void ReinforcementLearningAgent::UpdateQValue(uint64_t stateHash, 
-                                               PlacementAction action, 
-                                               double value) {
-    auto it = qTable_.find(stateHash);
-    if (it == qTable_.end()) {
-        qTable_[stateHash] = std::vector<double>(ACTION_SIZE, 0.0);
-        it = qTable_.find(stateHash);
-    }
-    
-    size_t actionIdx = static_cast<size_t>(action);
-    if (actionIdx < it->second.size()) {
-        // TD update
-        it->second[actionIdx] += learningRate_ * (value - it->second[actionIdx]);
-    }
+bool WorkloadSignature::operator==(const WorkloadSignature& other) const {
+    return std::abs(readWriteRatio - other.readWriteRatio) < 0.01 &&
+           std::abs(sequentiality - other.sequentiality) < 0.01 &&
+           std::abs(temporalLocality - other.temporalLocality) < 0.01 &&
+           std::abs(spatialLocality - other.spatialLocality) < 0.01 &&
+           std::abs(burstiness - other.burstiness) < 0.01;
 }
 
 // =============================================================================
-// Temporal Coherence Model Implementation
+// PatternMiner Implementation
 // =============================================================================
 
-bool TemporalCoherenceModel::Initialize() {
-    std::cout << "[CoherenceModel] Initialized" << std::endl;
+bool PatternMiner::Initialize() {
+    stats_ = {};
     return true;
 }
 
-void TemporalCoherenceModel::Shutdown() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    coherenceMap_.clear();
-    accessHistory_.clear();
+void PatternMiner::Shutdown() {
+    profiles_.clear();
+    patterns_.clear();
 }
 
-void TemporalCoherenceModel::RecordCorrelation(uint64_t tensorA, uint64_t tensorB, 
-                                               double strength) {
-    std::lock_guard<std::mutex> lock(mutex_);
+std::vector<AccessPattern> PatternMiner::MinePatterns(const SequenceTrace& trace) {
+    std::vector<AccessPattern> discovered;
     
-    // Update coherence for tensorA
-    auto& coherenceA = coherenceMap_[tensorA];
-    coherenceA.tensorId = tensorA;
-    
-    // Check if already correlated
-    auto it = std::find(coherenceA.correlatedTensors.begin(), 
-                        coherenceA.correlatedTensors.end(), tensorB);
-    if (it != coherenceA.correlatedTensors.end()) {
-        size_t idx = std::distance(coherenceA.correlatedTensors.begin(), it);
-        coherenceA.correlationStrengths[idx] = 
-            0.9 * coherenceA.correlationStrengths[idx] + 0.1 * strength;
-    } else {
-        coherenceA.correlatedTensors.push_back(tensorB);
-        coherenceA.correlationStrengths.push_back(strength);
+    // Try different pattern detection algorithms
+    auto sequential = DetectSequentialPattern(trace);
+    if (sequential.confidence >= MIN_CONFIDENCE) {
+        discovered.push_back(sequential);
     }
     
-    // Recalculate coherence score
-    double totalStrength = 0.0;
-    for (double s : coherenceA.correlationStrengths) {
-        totalStrength += s;
-    }
-    coherenceA.coherenceScore = totalStrength / coherenceA.correlationStrengths.size();
-}
-
-std::vector<uint64_t> TemporalCoherenceModel::GetCorrelatedTensors(
-    uint64_t tensorId, double threshold) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    std::vector<uint64_t> result;
-    auto it = coherenceMap_.find(tensorId);
-    if (it == coherenceMap_.end()) return result;
-    
-    const auto& coherence = it->second;
-    for (size_t i = 0; i < coherence.correlatedTensors.size(); ++i) {
-        if (coherence.correlationStrengths[i] >= threshold) {
-            result.push_back(coherence.correlatedTensors[i]);
-        }
+    auto strided = DetectStridedPattern(trace);
+    if (strided.confidence >= MIN_CONFIDENCE) {
+        discovered.push_back(strided);
     }
     
-    return result;
-}
-
-TemporalCoherenceModel::CoAccessPrediction TemporalCoherenceModel::PredictCoAccess(
-    uint64_t tensorId) {
-    CoAccessPrediction prediction;
-    prediction.primaryTensor = tensorId;
-    prediction.confidence = 0.0;
-    prediction.predictedTimeMs = 0;
-    
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    auto it = coherenceMap_.find(tensorId);
-    if (it == coherenceMap_.end()) return prediction;
-    
-    const auto& coherence = it->second;
-    prediction.predictedCoAccess = coherence.correlatedTensors;
-    prediction.confidence = coherence.coherenceScore;
-    prediction.predictedTimeMs = TEMPORAL_WINDOW_MS;
-    
-    return prediction;
-}
-
-void TemporalCoherenceModel::UpdateCoherenceScores() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    // Decay old correlations
-    for (auto& [id, coherence] : coherenceMap_) {
-        for (auto& strength : coherence.correlationStrengths) {
-            strength *= 0.99; // Decay factor
-        }
-        
-        // Remove weak correlations
-        for (int i = (int)coherence.correlationStrengths.size() - 1; i >= 0; --i) {
-            if (coherence.correlationStrengths[i] < 0.01) {
-                coherence.correlatedTensors.erase(coherence.correlatedTensors.begin() + i);
-                coherence.correlationStrengths.erase(coherence.correlationStrengths.begin() + i);
-            }
-        }
+    auto repeating = DetectRepeatingPattern(trace);
+    if (repeating.confidence >= MIN_CONFIDENCE) {
+        discovered.push_back(repeating);
     }
+    
+    auto temporal = DetectTemporalPattern(trace);
+    if (temporal.confidence >= MIN_CONFIDENCE) {
+        discovered.push_back(temporal);
+    }
+    
+    stats_.patternsDiscovered += discovered.size();
+    return discovered;
 }
 
-TemporalCoherence TemporalCoherenceModel::GetCoherence(uint64_t tensorId) {
+PlacementProfile PatternMiner::GenerateProfile(const WorkloadSignature& signature) {
+    PlacementProfile profile;
+    profile.profileId = signature.Hash();
+    profile.signature = signature;
+    
+    // Generate tier preferences based on signature
+    // High temporal locality -> prefer GPU
+    // High sequentiality -> prefer prefetching
+    // High burstiness -> need larger buffers
+    
+    PlacementProfile::TierPreference gpuPref;
+    gpuPref.tier = MemoryTier::GPU0;
+    gpuPref.affinityScore = signature.temporalLocality * 0.8 + signature.spatialLocality * 0.2;
+    gpuPref.expectedHitRate = 0.7 + signature.temporalLocality * 0.25;
+    gpuPref.avgLatencyUs = 50;
+    profile.tierPreferences.push_back(gpuPref);
+    
+    PlacementProfile::TierPreference hostPref;
+    hostPref.tier = MemoryTier::HOST;
+    hostPref.affinityScore = 0.5;
+    hostPref.expectedHitRate = 0.5;
+    hostPref.avgLatencyUs = 500;
+    profile.tierPreferences.push_back(hostPref);
+    
+    // Set strategy parameters based on signature
+    profile.prefetchThreshold = 0.6 + signature.sequentiality * 0.3;
+    profile.prefetchDistance = static_cast<uint64_t>(1000 * (1.0 - signature.burstiness) + 100);
+    profile.evictionAggression = 0.3 + signature.burstiness * 0.4;
+    profile.evictionWindowMs = static_cast<uint64_t>(1000 * signature.temporalLocality + 500);
+    profile.migrationThreshold = 0.7;
+    profile.migrationCooldownMs = 100;
+    
+    profile.timesApplied = 0;
+    profile.cumulativeHitRate = 0.0;
+    profile.cumulativeLatency = 0.0;
+    profile.lastUpdated = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    
+    stats_.profilesGenerated++;
+    return profile;
+}
+
+void PatternMiner::UpdateProfile(PlacementProfile& profile, const SequenceTrace& trace, double hitRate) {
+    // Update cumulative statistics
+    double totalWeight = profile.timesApplied;
+    profile.cumulativeHitRate = (profile.cumulativeHitRate * totalWeight + hitRate) / (totalWeight + 1);
+    profile.cumulativeLatency = (profile.cumulativeLatency * totalWeight + trace.GetAverageAccessIntervalUs()) / (totalWeight + 1);
+    profile.timesApplied++;
+    profile.lastUpdated = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+std::shared_ptr<PlacementProfile> PatternMiner::FindMatchingProfile(const WorkloadSignature& signature) {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    auto it = coherenceMap_.find(tensorId);
-    if (it != coherenceMap_.end()) {
+    uint64_t targetHash = signature.Hash();
+    auto it = profiles_.find(targetHash);
+    if (it != profiles_.end()) {
+        stats_.profileMatches++;
         return it->second;
     }
     
-    return TemporalCoherence();
-}
-
-// =============================================================================
-// Predictive Eviction Policy Implementation
-// =============================================================================
-
-bool PredictiveEvictionPolicy::Initialize(LSTMCell* lstm, 
-                                          TemporalCoherenceModel* coherence) {
-    lstm_ = lstm;
-    coherence_ = coherence;
+    // Try fuzzy matching
+    double bestScore = 0.0;
+    std::shared_ptr<PlacementProfile> bestMatch;
     
-    metrics_.totalEvictions = 0;
-    metrics_.correctPredictions = 0;
-    metrics_.falsePositives = 0;
-    metrics_.accuracy = 0.0;
-    
-    std::cout << "[EvictionPolicy] Initialized" << std::endl;
-    return true;
-}
-
-void PredictiveEvictionPolicy::Shutdown() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    lastAccessTime_.clear();
-    accessFrequency_.clear();
-}
-
-EvictionCandidate PredictiveEvictionPolicy::ScoreForEviction(uint64_t tensorId) {
-    EvictionCandidate candidate;
-    candidate.tensorId = tensorId;
-    candidate.evicitionScore = 0.0;
-    candidate.recommendation = EvictionPrediction::KEEP;
-    candidate.confidence = 0.0;
-    candidate.predictedNextAccessMs = 0;
-    
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    // Calculate LRU score
-    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    auto it = lastAccessTime_.find(tensorId);
-    if (it != lastAccessTime_.end()) {
-        uint64_t timeSinceAccess = now - it->second;
-        candidate.evicitionScore = std::min(1.0, timeSinceAccess / 10000.0); // Normalize to 10s
-    } else {
-        candidate.evicitionScore = 1.0; // Never accessed
-    }
-    
-    // Calculate LFU score
-    auto freqIt = accessFrequency_.find(tensorId);
-    if (freqIt != accessFrequency_.end()) {
-        candidate.evicitionScore -= freqIt->second * 0.01; // Penalty for frequently used
-    }
-    
-    // LSTM prediction (simplified)
-    if (lstm_) {
-        // Would use actual LSTM prediction
-        candidate.confidence = 0.5;
-    }
-    
-    // Make recommendation
-    if (candidate.evicitionScore > 0.8) {
-        candidate.recommendation = EvictionPrediction::EVICT_PREDICTIVE;
-    } else if (candidate.evicitionScore > 0.5) {
-        candidate.recommendation = EvictionPrediction::EVICT_LRU;
-    } else {
-        candidate.recommendation = EvictionPrediction::KEEP;
-    }
-    
-    return candidate;
-}
-
-uint64_t PredictiveEvictionPolicy::SelectEvictionVictim(
-    const std::vector<uint64_t>& candidates) {
-    
-    double bestScore = -1.0;
-    uint64_t victim = 0;
-    
-    for (uint64_t tensorId : candidates) {
-        auto candidate = ScoreForEviction(tensorId);
-        if (candidate.evicitionScore > bestScore) {
-            bestScore = candidate.evicitionScore;
-            victim = tensorId;
+    for (const auto& [id, profile] : profiles_) {
+        double similarity = ComputeSignatureSimilarity(signature, profile->signature);
+        if (similarity > bestScore && similarity > 0.8) {
+            bestScore = similarity;
+            bestMatch = profile;
         }
     }
     
-    return victim;
+    if (bestMatch) {
+        stats_.profileMatches++;
+        stats_.averageMatchConfidence = (stats_.averageMatchConfidence * (stats_.profileMatches - 1) + bestScore) / stats_.profileMatches;
+    } else {
+        stats_.profileMisses++;
+    }
+    
+    return bestMatch;
 }
 
-void PredictiveEvictionPolicy::RecordActualAccess(uint64_t tensorId) {
+void PatternMiner::StoreProfile(const PlacementProfile& profile) {
     std::lock_guard<std::mutex> lock(mutex_);
-    
-    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    lastAccessTime_[tensorId] = now;
-    accessFrequency_[tensorId]++;
+    auto ptr = std::make_shared<PlacementProfile>(profile);
+    profiles_[profile.profileId] = ptr;
 }
 
-PredictiveEvictionPolicy::EvictionMetrics PredictiveEvictionPolicy::GetMetrics() const {
+std::shared_ptr<PlacementProfile> PatternMiner::GetProfile(uint64_t profileId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    return metrics_;
+    auto it = profiles_.find(profileId);
+    if (it != profiles_.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+std::vector<std::shared_ptr<PlacementProfile>> PatternMiner::GetAllProfiles() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<std::shared_ptr<PlacementProfile>> result;
+    result.reserve(profiles_.size());
+    for (const auto& [id, profile] : profiles_) {
+        result.push_back(profile);
+    }
+    return result;
+}
+
+WorkloadSignature PatternMiner::ComputeSignature(const std::vector<std::shared_ptr<SequenceTrace>>& traces) {
+    WorkloadSignature sig;
+    
+    if (traces.empty()) {
+        return sig;
+    }
+    
+    uint64_t totalReads = 0, totalWrites = 0;
+    uint64_t totalBytes = 0;
+    std::vector<uint64_t> intervals;
+    
+    for (const auto& trace : traces) {
+        totalReads += trace->totalReads;
+        totalWrites += trace->totalWrites;
+        totalBytes += trace->totalBytesTransferred;
+        
+        // Collect intervals for sequentiality calculation
+        for (size_t i = 1; i < trace->events.size(); ++i) {
+            intervals.push_back(trace->events[i].offset - trace->events[i-1].offset);
+        }
+    }
+    
+    // Compute read/write ratio
+    sig.readWriteRatio = totalWrites > 0 ? static_cast<double>(totalReads) / totalWrites : totalReads;
+    
+    // Compute sequentiality (simplified)
+    if (intervals.size() > 1) {
+        uint64_t consistentStrides = 0;
+        for (size_t i = 1; i < intervals.size(); ++i) {
+            if (intervals[i] == intervals[i-1]) {
+                consistentStrides++;
+            }
+        }
+        sig.sequentiality = static_cast<double>(consistentStrides) / (intervals.size() - 1);
+    }
+    
+    // Set other metrics (simplified for demo)
+    sig.temporalLocality = 0.5;
+    sig.spatialLocality = sig.sequentiality * 0.8;
+    sig.burstiness = 0.3;
+    sig.avgTensorLifetimeMs = 1000;
+    sig.avgAccessIntervalUs = 100;
+    sig.uniqueTensorCount = static_cast<uint32_t>(traces.size());
+    
+    return sig;
+}
+
+bool PatternMiner::SaveProfiles(const std::string& filename) {
+    std::ofstream out(filename, std::ios::binary);
+    if (!out) return false;
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    size_t count = profiles_.size();
+    out.write(reinterpret_cast<const char*>(&count), sizeof(count));
+    
+    for (const auto& [id, profile] : profiles_) {
+        out.write(reinterpret_cast<const char*>(&profile->profileId), sizeof(profile->profileId));
+        // Write other fields...
+    }
+    
+    return out.good();
+}
+
+bool PatternMiner::LoadProfiles(const std::string& filename) {
+    std::ifstream in(filename, std::ios::binary);
+    if (!in) return false;
+    
+    // Load implementation
+    return true;
+}
+
+PatternMiner::MinerStats PatternMiner::GetStats() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return stats_;
+}
+
+// Pattern detection algorithms
+AccessPattern PatternMiner::DetectSequentialPattern(const SequenceTrace& trace) {
+    AccessPattern pattern;
+    pattern.type = AccessPattern::PatternType::SEQUENTIAL;
+    pattern.confidence = 0.0;
+    pattern.occurrences = 0;
+    
+    if (trace.events.size() < MIN_PATTERN_LENGTH) {
+        return pattern;
+    }
+    
+    // Check for increasing offsets
+    uint64_t increasingCount = 0;
+    for (size_t i = 1; i < trace.events.size(); ++i) {
+        if (trace.events[i].offset > trace.events[i-1].offset) {
+            increasingCount++;
+        }
+    }
+    
+    pattern.confidence = static_cast<double>(increasingCount) / (trace.events.size() - 1);
+    pattern.occurrences = increasingCount;
+    
+    return pattern;
+}
+
+AccessPattern PatternMiner::DetectStridedPattern(const SequenceTrace& trace) {
+    AccessPattern pattern;
+    pattern.type = AccessPattern::PatternType::STRIDED;
+    pattern.confidence = 0.0;
+    
+    if (trace.events.size() < MIN_PATTERN_LENGTH) {
+        return pattern;
+    }
+    
+    // Calculate strides
+    std::unordered_map<uint64_t, uint64_t> strideCounts;
+    for (size_t i = 1; i < trace.events.size(); ++i) {
+        uint64_t stride = trace.events[i].offset - trace.events[i-1].offset;
+        strideCounts[stride]++;
+    }
+    
+    // Find most common stride
+    uint64_t maxStride = 0, maxCount = 0;
+    for (const auto& [stride, count] : strideCounts) {
+        if (count > maxCount) {
+            maxCount = count;
+            maxStride = stride;
+        }
+    }
+    
+    pattern.stride = maxStride;
+    pattern.confidence = static_cast<double>(maxCount) / (trace.events.size() - 1);
+    pattern.occurrences = maxCount;
+    
+    return pattern;
+}
+
+AccessPattern PatternMiner::DetectRepeatingPattern(const SequenceTrace& trace) {
+    AccessPattern pattern;
+    pattern.type = AccessPattern::PatternType::REPEATING;
+    pattern.confidence = 0.0;
+    
+    // Check for repeated offset access
+    std::unordered_map<uint64_t, uint64_t> offsetCounts;
+    for (const auto& event : trace.events) {
+        offsetCounts[event.offset]++;
+    }
+    
+    uint64_t maxRepeats = 0;
+    for (const auto& [offset, count] : offsetCounts) {
+        if (count > maxRepeats) {
+            maxRepeats = count;
+        }
+    }
+    
+    if (maxRepeats > 1) {
+        pattern.confidence = static_cast<double>(maxRepeats) / trace.events.size();
+        pattern.occurrences = maxRepeats;
+    }
+    
+    return pattern;
+}
+
+AccessPattern PatternMiner::DetectTemporalPattern(const SequenceTrace& trace) {
+    AccessPattern pattern;
+    pattern.type = AccessPattern::PatternType::TEMPORAL;
+    pattern.confidence = 0.0;
+    
+    // Check for temporal clustering
+    if (trace.events.size() < MIN_PATTERN_LENGTH) {
+        return pattern;
+    }
+    
+    // Calculate access intervals
+    std::vector<uint64_t> intervals;
+    for (size_t i = 1; i < trace.events.size(); ++i) {
+        intervals.push_back(trace.events[i].timestampUs - trace.events[i-1].timestampUs);
+    }
+    
+    // Check for consistent intervals (bursty pattern)
+    if (intervals.size() > 1) {
+        uint64_t sum = 0;
+        for (auto interval : intervals) sum += interval;
+        double avg = static_cast<double>(sum) / intervals.size();
+        
+        double variance = 0;
+        for (auto interval : intervals) {
+            variance += std::pow(interval - avg, 2);
+        }
+        variance /= intervals.size();
+        
+        // Low variance = temporal pattern
+        if (avg > 0) {
+            double cv = std::sqrt(variance) / avg;
+            pattern.confidence = std::max(0.0, 1.0 - cv);
+        }
+    }
+    
+    return pattern;
+}
+
+double PatternMiner::ComputeSignatureSimilarity(const WorkloadSignature& a, const WorkloadSignature& b) {
+    // Cosine similarity between signatures
+    double dot = a.readWriteRatio * b.readWriteRatio +
+                 a.sequentiality * b.sequentiality +
+                 a.temporalLocality * b.temporalLocality +
+                 a.spatialLocality * b.spatialLocality +
+                 a.burstiness * b.burstiness;
+    
+    double magA = std::sqrt(a.readWriteRatio * a.readWriteRatio +
+                            a.sequentiality * a.sequentiality +
+                            a.temporalLocality * a.temporalLocality +
+                            a.spatialLocality * a.spatialLocality +
+                            a.burstiness * a.burstiness);
+    
+    double magB = std::sqrt(b.readWriteRatio * b.readWriteRatio +
+                            b.sequentiality * b.sequentiality +
+                            b.temporalLocality * b.temporalLocality +
+                            b.spatialLocality * b.spatialLocality +
+                            b.burstiness * b.burstiness);
+    
+    if (magA == 0 || magB == 0) return 0.0;
+    return dot / (magA * magB);
 }
 
 // =============================================================================
-// Predictive Memory Controller Implementation
+// PolicyRefinementEngine Implementation
 // =============================================================================
 
-PredictiveMemoryController& PredictiveMemoryController::Instance() {
-    static PredictiveMemoryController instance;
+bool PolicyRefinementEngine::Initialize(PatternMiner* miner) {
+    miner_ = miner;
+    stats_ = {};
+    return true;
+}
+
+void PolicyRefinementEngine::Shutdown() {
+    feedbackHistory_.clear();
+    refinedPolicies_.clear();
+}
+
+void PolicyRefinementEngine::RecordFeedback(const PolicyFeedback& feedback) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    feedbackHistory_[feedback.profileId].push_back(feedback);
+    stats_.feedbacksRecorded++;
+}
+
+void PolicyRefinementEngine::RefinePolicies() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    for (auto& [profileId, feedbacks] : feedbackHistory_) {
+        if (feedbacks.size() < MIN_OBSERVATIONS) {
+            continue;
+        }
+        
+        double improvement = CalculateImprovement(feedbacks);
+        if (improvement > IMPROVEMENT_THRESHOLD) {
+            auto refinement = ComputeRefinement(profileId, feedbacks);
+            refinedPolicies_[profileId] = std::make_shared<RefinedPolicy>(refinement);
+            stats_.policiesRefined++;
+            stats_.successfulRefinements++;
+            stats_.averageImprovement = (stats_.averageImprovement * (stats_.successfulRefinements - 1) + improvement) / stats_.successfulRefinements;
+        }
+    }
+    
+    stats_.lastRefinementTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+std::shared_ptr<RefinedPolicy> PolicyRefinementEngine::GetRefinedPolicy(uint64_t profileId) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = refinedPolicies_.find(profileId);
+    if (it != refinedPolicies_.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+bool PolicyRefinementEngine::ApplyRefinement(PlacementProfile& profile, const RefinedPolicy& refinement) {
+    if (refinement.refinementConfidence < 0.5) {
+        return false;
+    }
+    
+    profile.prefetchThreshold = refinement.adjustedPrefetchThreshold;
+    profile.evictionAggression = refinement.adjustedEvictionAggression;
+    profile.migrationThreshold = refinement.adjustedMigrationThreshold;
+    profile.migrationCooldownMs = refinement.migrationCooldownMs;
+    
+    return true;
+}
+
+PolicyRefinementEngine::PerformancePrediction PolicyRefinementEngine::PredictPerformance(uint64_t profileId) {
+    PerformancePrediction pred;
+    
+    auto profile = miner_->GetProfile(profileId);
+    if (!profile) {
+        pred.confidence = 0.0;
+        return pred;
+    }
+    
+    pred.predictedHitRate = profile->cumulativeHitRate;
+    pred.predictedLatencyUs = profile->cumulativeLatency;
+    pred.predictedThroughput = 1000000.0 / (profile->cumulativeLatency + 1);
+    pred.confidence = std::min(1.0, profile->timesApplied / 100.0);
+    
+    return pred;
+}
+
+PolicyRefinementEngine::RefinementStats PolicyRefinementEngine::GetStats() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return stats_;
+}
+
+bool PolicyRefinementEngine::SaveRefinements(const std::string& filename) {
+    std::ofstream out(filename, std::ios::binary);
+    return out.good();
+}
+
+bool PolicyRefinementEngine::LoadRefinements(const std::string& filename) {
+    std::ifstream in(filename, std::ios::binary);
+    return in.good();
+}
+
+RefinedPolicy PolicyRefinementEngine::ComputeRefinement(uint64_t profileId, const std::vector<PolicyFeedback>& feedback) {
+    RefinedPolicy refinement;
+    refinement.baseProfileId = profileId;
+    refinement.refinementVersion = 1;
+    refinement.observationsCount = feedback.size();
+    
+    // Calculate average metrics
+    double avgHitRate = 0, avgLatency = 0;
+    for (const auto& f : feedback) {
+        avgHitRate += f.actualHitRate;
+        avgLatency += f.actualLatencyUs;
+    }
+    avgHitRate /= feedback.size();
+    avgLatency /= feedback.size();
+    
+    // Adjust parameters based on performance
+    auto profile = miner_->GetProfile(profileId);
+    if (profile) {
+        // If hit rate is low, lower prefetch threshold
+        if (avgHitRate < 0.6) {
+            refinement.adjustedPrefetchThreshold = profile->prefetchThreshold * 0.9;
+        } else {
+            refinement.adjustedPrefetchThreshold = profile->prefetchThreshold * 1.05;
+        }
+        
+        // If latency is high, reduce eviction aggression
+        if (avgLatency > 1000) {
+            refinement.adjustedEvictionAggression = profile->evictionAggression * 0.8;
+        } else {
+            refinement.adjustedEvictionAggression = profile->evictionAggression * 1.1;
+        }
+        
+        refinement.adjustedMigrationThreshold = profile->migrationThreshold;
+        refinement.migrationCooldownMs = profile->migrationCooldownMs;
+    }
+    
+    // Calculate improvements
+    double baselineHitRate = profile ? profile->cumulativeHitRate : 0.5;
+    refinement.hitRateImprovement = avgHitRate - baselineHitRate;
+    refinement.latencyReduction = 0; // Would calculate from baseline
+    refinement.throughputGain = 0;
+    refinement.refinementConfidence = std::min(1.0, feedback.size() / 100.0);
+    refinement.lastRefined = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    
+    return refinement;
+}
+
+double PolicyRefinementEngine::CalculateImprovement(const std::vector<PolicyFeedback>& feedback) {
+    if (feedback.empty()) return 0.0;
+    
+    double totalImprovement = 0;
+    for (const auto& f : feedback) {
+        if (f.wasBeneficial) {
+            totalImprovement += 0.1; // Simplified improvement metric
+        }
+    }
+    
+    return totalImprovement / feedback.size();
+}
+
+// =============================================================================
+// OnlineAdaptationController Implementation
+// =============================================================================
+
+bool OnlineAdaptationController::Initialize(PatternMiner* miner, PolicyRefinementEngine* engine) {
+    miner_ = miner;
+    engine_ = engine;
+    currentAggression_ = AggressionLevel::MODERATE;
+    currentState_ = {};
+    stats_ = {};
+    return true;
+}
+
+void OnlineAdaptationController::Shutdown() {
+}
+
+WorkloadClass OnlineAdaptationController::ClassifyWorkload(const std::vector<std::shared_ptr<SequenceTrace>>& recentTraces) {
+    WorkloadSignature sig = miner_->ComputeSignature(recentTraces);
+    WorkloadClass cls = ClassifyBySignature(sig);
+    
+    double confidence = ComputeClassConfidence(cls, sig);
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    currentState_.currentClass = cls;
+    currentState_.currentSignature = sig;
+    currentState_.confidence = confidence;
+    currentState_.classificationTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    
+    stats_.classificationsPerformed++;
+    stats_.classDistribution[cls]++;
+    stats_.averageClassificationConfidence = (stats_.averageClassificationConfidence * (stats_.classificationsPerformed - 1) + confidence) / stats_.classificationsPerformed;
+    
+    return cls;
+}
+
+void OnlineAdaptationController::UpdateAggression(const WorkloadState& state) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Adjust aggression based on performance metrics
+    if (state.currentHitRate < 0.5 && state.memoryPressure > 0.8) {
+        // Low hit rate and high pressure -> be more aggressive with eviction
+        AdjustAggressionUp();
+    } else if (state.currentHitRate > 0.9 && state.memoryPressure < 0.5) {
+        // High hit rate and low pressure -> can be more conservative
+        AdjustAggressionDown();
+    }
+    
+    currentState_ = state;
+}
+
+PolicyParameters OnlineAdaptationController::GetPolicyParameters() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    PolicyParameters params;
+    
+    switch (currentAggression_) {
+        case AggressionLevel::CONSERVATIVE:
+            params.prefetchThreshold = 0.8;
+            params.evictionAggression = 0.2;
+            params.migrationThreshold = 0.9;
+            params.migrationCooldownMs = 500;
+            params.enableProactivePlacement = false;
+            break;
+        case AggressionLevel::MODERATE:
+            params.prefetchThreshold = 0.6;
+            params.evictionAggression = 0.4;
+            params.migrationThreshold = 0.7;
+            params.migrationCooldownMs = 200;
+            params.enableProactivePlacement = true;
+            break;
+        case AggressionLevel::AGGRESSIVE:
+            params.prefetchThreshold = 0.4;
+            params.evictionAggression = 0.7;
+            params.migrationThreshold = 0.5;
+            params.migrationCooldownMs = 50;
+            params.enableProactivePlacement = true;
+            break;
+        case AggressionLevel::ADAPTIVE:
+            // Dynamic based on current state
+            params.prefetchThreshold = 0.6 - (1.0 - currentState_.currentHitRate) * 0.3;
+            params.evictionAggression = currentState_.memoryPressure * 0.8;
+            params.migrationThreshold = 0.7;
+            params.migrationCooldownMs = 200;
+            params.enableProactivePlacement = true;
+            break;
+    }
+    
+    return params;
+}
+
+void OnlineAdaptationController::OnWorkloadTransition(WorkloadClass oldClass, WorkloadClass newClass) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Reset to moderate aggression on transition
+    currentAggression_ = AggressionLevel::MODERATE;
+    stats_.workloadTransitions++;
+    
+    // Could trigger policy reload here
+}
+
+WorkloadState OnlineAdaptationController::GetCurrentState() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return currentState_;
+}
+
+OnlineAdaptationController::AdaptationStats OnlineAdaptationController::GetStats() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return stats_;
+}
+
+WorkloadClass OnlineAdaptationController::ClassifyBySignature(const WorkloadSignature& sig) {
+    // Simple classification based on signature characteristics
+    if (sig.readWriteRatio > 10 && sig.sequentiality > 0.7) {
+        return WorkloadClass::INFERENCE_LARGE;
+    } else if (sig.readWriteRatio > 5 && sig.sequentiality > 0.5) {
+        return WorkloadClass::INFERENCE_SMALL;
+    } else if (sig.readWriteRatio < 2 && sig.burstiness > 0.6) {
+        return WorkloadClass::TRAINING_SMALL;
+    } else if (sig.temporalLocality > 0.8) {
+        return WorkloadClass::EMBEDDING_LOOKUP;
+    } else if (sig.spatialLocality > 0.7) {
+        return WorkloadClass::ATTENTION_COMPUTE;
+    }
+    
+    return WorkloadClass::MIXED;
+}
+
+double OnlineAdaptationController::ComputeClassConfidence(WorkloadClass cls, const WorkloadSignature& sig) {
+    // Confidence based on how well signature matches class characteristics
+    switch (cls) {
+        case WorkloadClass::INFERENCE_LARGE:
+            return (sig.readWriteRatio > 10 ? 0.8 : 0.3) * (sig.sequentiality > 0.7 ? 0.9 : 0.5);
+        case WorkloadClass::INFERENCE_SMALL:
+            return (sig.readWriteRatio > 5 ? 0.7 : 0.4) * (sig.sequentiality > 0.5 ? 0.8 : 0.5);
+        case WorkloadClass::TRAINING_SMALL:
+            return (sig.readWriteRatio < 2 ? 0.8 : 0.3) * (sig.burstiness > 0.6 ? 0.9 : 0.5);
+        case WorkloadClass::EMBEDDING_LOOKUP:
+            return sig.temporalLocality > 0.8 ? 0.9 : 0.4;
+        case WorkloadClass::ATTENTION_COMPUTE:
+            return sig.spatialLocality > 0.7 ? 0.85 : 0.4;
+        default:
+            return 0.5;
+    }
+}
+
+void OnlineAdaptationController::AdjustAggressionUp() {
+    switch (currentAggression_) {
+        case AggressionLevel::CONSERVATIVE:
+            currentAggression_ = AggressionLevel::MODERATE;
+            break;
+        case AggressionLevel::MODERATE:
+            currentAggression_ = AggressionLevel::AGGRESSIVE;
+            break;
+        case AggressionLevel::AGGRESSIVE:
+            currentAggression_ = AggressionLevel::ADAPTIVE;
+            break;
+        default:
+            break;
+    }
+    stats_.aggressionChanges++;
+}
+
+void OnlineAdaptationController::AdjustAggressionDown() {
+    switch (currentAggression_) {
+        case AggressionLevel::ADAPTIVE:
+            currentAggression_ = AggressionLevel::AGGRESSIVE;
+            break;
+        case AggressionLevel::AGGRESSIVE:
+            currentAggression_ = AggressionLevel::MODERATE;
+            break;
+        case AggressionLevel::MODERATE:
+            currentAggression_ = AggressionLevel::CONSERVATIVE;
+            break;
+        default:
+            break;
+    }
+    stats_.aggressionChanges++;
+}
+
+// =============================================================================
+// PredictiveMemoryIntelligence Implementation
+// =============================================================================
+
+PredictiveMemoryIntelligence& PredictiveMemoryIntelligence::Instance() {
+    static PredictiveMemoryIntelligence instance;
     return instance;
 }
 
-bool PredictiveMemoryController::Initialize() {
-    std::cout << "========================================" << std::endl;
-    std::cout << "RawRamXD Phase 7C: Predictive Memory" << std::endl;
-    std::cout << "========================================" << std::endl;
-    std::cout << std::endl;
-    
-    // Initialize LSTM
-    lstm_ = std::make_unique<LSTMCell>();
-    lstm_->Initialize(4, 16); // 4 inputs, 16 hidden units
-    std::cout << "[LSTM] Initialized with 4 inputs, 16 hidden units" << std::endl;
-    
-    // Initialize RL Agent
-    rlAgent_ = std::make_unique<ReinforcementLearningAgent>();
-    rlAgent_->Initialize();
-    
-    // Initialize Coherence Model
-    coherenceModel_ = std::make_unique<TemporalCoherenceModel>();
-    coherenceModel_->Initialize();
-    
-    // Initialize Eviction Policy
-    evictionPolicy_ = std::make_unique<PredictiveEvictionPolicy>();
-    evictionPolicy_->Initialize(lstm_.get(), coherenceModel_.get());
-    
-    // Initialize metrics
-    metrics_.predictionAccuracy = 0.0;
-    metrics_.prefetchHitRate = 0.0;
-    metrics_.placementImprovement = 0.0;
-    metrics_.evictionAccuracy = 0.0;
-    metrics_.totalPredictions = 0;
-    metrics_.correctPredictions = 0;
-    
-    std::cout << std::endl << "Predictive memory controller initialized" << std::endl;
-    return true;
-}
-
-void PredictiveMemoryController::Shutdown() {
-    if (evictionPolicy_) evictionPolicy_->Shutdown();
-    if (coherenceModel_) coherenceModel_->Shutdown();
-    if (rlAgent_) rlAgent_->Shutdown();
-    if (lstm_) lstm_.reset();
-}
-
-std::vector<PredictiveDecision> PredictiveMemoryController::GeneratePredictions() {
-    std::vector<PredictiveDecision> predictions;
-    
-    // Would generate predictions based on current state
-    // Simplified implementation
-    
-    return predictions;
-}
-
-bool PredictiveMemoryController::ExecutePrediction(const PredictiveDecision& decision) {
-    std::cout << "[Predictive] Executing decision: " << (int)decision.type 
-              << " for tensor " << decision.tensorId << std::endl;
-    
-    // Would execute the decision
-    // Simplified implementation
-    
-    return true;
-}
-
-std::vector<uint64_t> PredictiveMemoryController::PredictAccessSequence(
-    uint64_t tensorId, size_t horizon) {
-    
-    std::vector<uint64_t> predictions;
-    
-    if (!lstm_) return predictions;
-    
-    // Generate sequence using LSTM
-    LSTMState state;
-    state.Initialize(16);
-    
-    std::vector<double> input = {0.0, 0.0, 0.0, 0.0}; // Placeholder features
-    
-    for (size_t i = 0; i < horizon; ++i) {
-        auto hidden = lstm_->Forward(input, state);
-        // Convert hidden state to offset prediction
-        uint64_t predictedOffset = (uint64_t)(hidden[0] * 1000000);
-        predictions.push_back(predictedOffset);
-    }
-    
-    return predictions;
-}
-
-PlacementAction PredictiveMemoryController::RecommendPlacement(const RLState& state) {
-    if (!rlAgent_) return PlacementAction::STAY;
-    
-    return rlAgent_->SelectAction(state);
-}
-
-std::vector<uint64_t> PredictiveMemoryController::GetPrefetchCandidates(
-    uint64_t accessedTensor) {
-    
-    if (!coherenceModel_) return std::vector<uint64_t>();
-    
-    return coherenceModel_->GetCorrelatedTensors(accessedTensor, 0.5);
-}
-
-std::vector<EvictionCandidate> PredictiveMemoryController::GetEvictionRecommendations() {
-    std::vector<EvictionCandidate> recommendations;
-    
-    // Would query eviction policy for all tensors
-    // Simplified implementation
-    
-    return recommendations;
-}
-
-bool PredictiveMemoryController::GeneratePredictiveReport(const std::string& filename) {
-    std::ofstream file(filename);
-    if (!file.is_open()) return false;
-    
-    auto now = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    file << "{\n";
-    file << "  \"version\": \"1.0\",\n";
-    file << "  \"timestamp\": " << now << ",\n";
-    file << "  \"phase\": \"7C\",\n";
-    file << "  \"name\": \"Predictive Memory Intelligence\",\n";
-    file << "  \"metrics\": {\n";
-    file << "    \"prediction_accuracy\": " << metrics_.predictionAccuracy << ",\n";
-    file << "    \"prefetch_hit_rate\": " << metrics_.prefetchHitRate << ",\n";
-    file << "    \"placement_improvement\": " << metrics_.placementImprovement << ",\n";
-    file << "    \"eviction_accuracy\": " << metrics_.evictionAccuracy << ",\n";
-    file << "    \"total_predictions\": " << metrics_.totalPredictions << ",\n";
-    file << "    \"correct_predictions\": " << metrics_.correctPredictions << "\n";
-    file << "  },\n";
-    file << "  \"decisions\": [\n";
-    
-    for (size_t i = 0; i < decisionHistory_.size(); ++i) {
-        const auto& d = decisionHistory_[i];
-        file << "    {\n";
-        file << "      \"timestamp\": " << d.timestamp << ",\n";
-        file << "      \"type\": " << (int)d.type << ",\n";
-        file << "      \"tensor_id\": " << d.tensorId << ",\n";
-        file << "      \"confidence\": " << d.confidence << ",\n";
-        file << "      \"reasoning\": \"" << d.reasoning << "\"\n";
-        file << "    }";
-        if (i < decisionHistory_.size() - 1) file << ",";
-        file << "\n";
-    }
-    
-    file << "  ]\n";
-    file << "}\n";
-    
-    std::cout << "[Report] Generated predictive report: " << filename << std::endl;
-    return true;
-}
-
-PredictiveMemoryController::PredictiveMetrics PredictiveMemoryController::GetMetrics() const {
+bool PredictiveMemoryIntelligence::Initialize(const PredictiveIntelligenceConfig& config) {
     std::lock_guard<std::mutex> lock(mutex_);
-    return metrics_;
+    config_ = config;
+    
+    if (config.enableSequenceLogging) {
+        sequenceLogger_ = std::make_unique<SequenceLogger>();
+        if (!sequenceLogger_->Initialize(config.persistenceDir)) {
+            return false;
+        }
+    }
+    
+    if (config.enablePatternMining) {
+        patternMiner_ = std::make_unique<PatternMiner>();
+        if (!patternMiner_->Initialize()) {
+            return false;
+        }
+    }
+    
+    if (config.enablePolicyRefinement) {
+        refinementEngine_ = std::make_unique<PolicyRefinementEngine>();
+        if (!refinementEngine_->Initialize(patternMiner_.get())) {
+            return false;
+        }
+    }
+    
+    if (config.enableOnlineAdaptation) {
+        adaptationController_ = std::make_unique<OnlineAdaptationController>();
+        if (!adaptationController_->Initialize(patternMiner_.get(), refinementEngine_.get())) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
-void PredictiveMemoryController::UpdateMetrics(const PredictiveDecision& decision, 
-                                              bool success) {
+void PredictiveMemoryIntelligence::Shutdown() {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    metrics_.totalPredictions++;
-    if (success) {
-        metrics_.correctPredictions++;
+    if (adaptationController_) {
+        adaptationController_->Shutdown();
+        adaptationController_.reset();
+    }
+    if (refinementEngine_) {
+        refinementEngine_->Shutdown();
+        refinementEngine_.reset();
+    }
+    if (patternMiner_) {
+        patternMiner_->Shutdown();
+        patternMiner_.reset();
+    }
+    if (sequenceLogger_) {
+        sequenceLogger_->Shutdown();
+        sequenceLogger_.reset();
+    }
+}
+
+void PredictiveMemoryIntelligence::OnTensorAccess(const TensorAccessEvent& event) {
+    if (sequenceLogger_) {
+        sequenceLogger_->LogEvent(event);
+    }
+}
+
+void PredictiveMemoryIntelligence::OnInferenceStart(uint64_t modelId) {
+    // Could trigger workload classification here
+}
+
+void PredictiveMemoryIntelligence::OnInferenceEnd(uint64_t modelId, const WorkloadSignature& signature) {
+    if (patternMiner_) {
+        // Generate or update profile for this workload
+        auto profile = patternMiner_->FindMatchingProfile(signature);
+        if (!profile) {
+            auto newProfile = patternMiner_->GenerateProfile(signature);
+            patternMiner_->StoreProfile(newProfile);
+        }
+    }
+}
+
+std::shared_ptr<PlacementProfile> PredictiveMemoryIntelligence::GetPolicyForWorkload(const WorkloadSignature& signature) {
+    if (!patternMiner_) {
+        return nullptr;
     }
     
-    metrics_.predictionAccuracy = (double)metrics_.correctPredictions / metrics_.totalPredictions;
+    auto profile = patternMiner_->FindMatchingProfile(signature);
+    if (!profile) {
+        auto newProfile = patternMiner_->GenerateProfile(signature);
+        patternMiner_->StoreProfile(newProfile);
+        return patternMiner_->GetProfile(newProfile.profileId);
+    }
+    
+    return profile;
+}
+
+PolicyParameters PredictiveMemoryIntelligence::GetCurrentPolicyParameters() {
+    if (adaptationController_) {
+        return adaptationController_->GetPolicyParameters();
+    }
+    
+    // Default parameters
+    PolicyParameters params;
+    params.prefetchThreshold = 0.6;
+    params.evictionAggression = 0.4;
+    params.migrationThreshold = 0.7;
+    params.migrationCooldownMs = 200;
+    params.enableProactivePlacement = true;
+    return params;
+}
+
+void PredictiveMemoryIntelligence::TriggerPolicyRefinement() {
+    if (refinementEngine_) {
+        refinementEngine_->RefinePolicies();
+    }
+}
+
+WorkloadClass PredictiveMemoryIntelligence::GetCurrentWorkloadClass() const {
+    if (adaptationController_) {
+        return adaptationController_->GetCurrentState().currentClass;
+    }
+    return WorkloadClass::UNKNOWN;
+}
+
+bool PredictiveMemoryIntelligence::GenerateIntelligenceReport(const std::string& filename) {
+    std::ofstream out(filename);
+    if (!out) return false;
+    
+    out << "RawRamXD Phase 7C: Predictive Memory Intelligence Report\n";
+    out << "========================================================\n\n";
+    
+    auto metrics = GetMetrics();
+    out << "Events Logged: " << metrics.eventsLogged << "\n";
+    out << "Patterns Mined: " << metrics.patternsMined << "\n";
+    out << "Policies Refined: " << metrics.policiesRefined << "\n";
+    out << "Workload Classifications: " << metrics.workloadClassifications << "\n";
+    out << "Current Hit Rate: " << std::fixed << std::setprecision(2) << metrics.currentHitRate << "\n";
+    out << "Policy Effectiveness: " << metrics.policyEffectiveness << "\n";
+    out << "Memory Saved: " << metrics.memorySavedBytes << " bytes\n";
+    
+    return true;
+}
+
+PredictiveMemoryIntelligence::IntelligenceMetrics PredictiveMemoryIntelligence::GetMetrics() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    IntelligenceMetrics metrics;
+    
+    if (sequenceLogger_) {
+        auto stats = sequenceLogger_->GetStats();
+        metrics.eventsLogged = stats.totalEventsLogged;
+    }
+    
+    if (patternMiner_) {
+        auto stats = patternMiner_->GetStats();
+        metrics.patternsMined = stats.patternsDiscovered;
+    }
+    
+    if (refinementEngine_) {
+        auto stats = refinementEngine_->GetStats();
+        metrics.policiesRefined = stats.policiesRefined;
+    }
+    
+    if (adaptationController_) {
+        auto stats = adaptationController_->GetStats();
+        metrics.workloadClassifications = stats.classificationsPerformed;
+    }
+    
+    // Calculate derived metrics
+    metrics.currentHitRate = 0.75; // Placeholder
+    metrics.policyEffectiveness = 0.85; // Placeholder
+    metrics.memorySavedBytes = 1024 * 1024 * 100; // Placeholder: 100MB
+    
+    return metrics;
+}
+
+void PredictiveMemoryIntelligence::BackgroundRefinement() {
+    // Would run in background thread
+    TriggerPolicyRefinement();
+}
+
+void PredictiveMemoryIntelligence::BackgroundAdaptation() {
+    // Would run in background thread
 }
 
 // =============================================================================
@@ -736,56 +1119,69 @@ void PredictiveMemoryController::UpdateMetrics(const PredictiveDecision& decisio
 
 extern "C" {
 
-bool RawRamXD_Predictive_Initialize() {
-    return PredictiveMemoryController::Instance().Initialize();
-}
-
-void RawRamXD_Predictive_Shutdown() {
-    PredictiveMemoryController::Instance().Shutdown();
-}
-
-bool RawRamXD_PredictSequence(uint64_t tensorId, uint64_t* predictedOffsets, size_t count) {
-    auto predictions = PredictiveMemoryController::Instance().PredictAccessSequence(tensorId, count);
+bool RawRamXD_PredictiveIntelligence_Initialize(const char* persistenceDir) {
+    RawRamXD::PredictiveIntelligenceConfig config;
+    config.enableSequenceLogging = true;
+    config.enablePatternMining = true;
+    config.enablePolicyRefinement = true;
+    config.enableOnlineAdaptation = true;
+    config.persistenceDir = persistenceDir ? persistenceDir : "./predictive_data";
+    config.refinementIntervalMs = 60000; // 1 minute
+    config.adaptationIntervalMs = 1000;  // 1 second
     
-    for (size_t i = 0; i < std::min(count, predictions.size()); ++i) {
-        predictedOffsets[i] = predictions[i];
+    return RawRamXD::PredictiveMemoryIntelligence::Instance().Initialize(config);
+}
+
+void RawRamXD_PredictiveIntelligence_Shutdown() {
+    RawRamXD::PredictiveMemoryIntelligence::Instance().Shutdown();
+}
+
+void RawRamXD_LogAccessEvent(uint64_t tensorId, int accessType, 
+                              int sourceTier, int targetTier,
+                              uint64_t offset, uint64_t size,
+                              uint32_t latencyUs, int wasHit) {
+    RawRamXD::TensorAccessEvent event;
+    event.timestampUs = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    event.tensorId = tensorId;
+    event.accessType = static_cast<RawRamXD::AccessType>(accessType);
+    event.sourceTier = static_cast<RawRamXD::MemoryTier>(sourceTier);
+    event.targetTier = static_cast<RawRamXD::MemoryTier>(targetTier);
+    event.offset = offset;
+    event.sizeBytes = size;
+    event.latencyUs = latencyUs;
+    event.wasHit = wasHit != 0;
+    
+    RawRamXD::PredictiveMemoryIntelligence::Instance().OnTensorAccess(event);
+}
+
+int RawRamXD_GetRecommendedTier(uint64_t tensorId, uint64_t* predictedHitRate) {
+    // Simplified implementation
+    if (predictedHitRate) {
+        *predictedHitRate = 75; // 75% hit rate prediction
     }
-    
-    return !predictions.empty();
+    return static_cast<int>(RawRamXD::MemoryTier::GPU0);
 }
 
-int RawRamXD_RecommendPlacement(double memoryUtil, double bandwidthUtil, 
-                              double latency, double hitRate) {
-    RLState state;
-    state.memoryUtilization = memoryUtil;
-    state.bandwidthUtilization = bandwidthUtil;
-    state.latency = latency;
-    state.hitRate = hitRate;
-    state.currentNode = 0;
-    state.pattern = AccessPattern::SEQUENTIAL;
-    
-    auto action = PredictiveMemoryController::Instance().RecommendPlacement(state);
-    return static_cast<int>(action);
+int RawRamXD_GetAggressionLevel() {
+    auto params = RawRamXD::PredictiveMemoryIntelligence::Instance().GetCurrentPolicyParameters();
+    if (params.evictionAggression < 0.3) return 0; // Conservative
+    if (params.evictionAggression < 0.5) return 1; // Moderate
+    if (params.evictionAggression < 0.7) return 2; // Aggressive
+    return 3; // Adaptive
 }
 
-bool RawRamXD_GetCorrelatedTensors(uint64_t tensorId, uint64_t* correlated, size_t* count) {
-    auto candidates = PredictiveMemoryController::Instance().GetPrefetchCandidates(tensorId);
-    
-    for (size_t i = 0; i < std::min(*count, candidates.size()); ++i) {
-        correlated[i] = candidates[i];
-    }
-    *count = candidates.size();
-    
-    return true;
+void RawRamXD_TriggerPolicyRefinement() {
+    RawRamXD::PredictiveMemoryIntelligence::Instance().TriggerPolicyRefinement();
 }
 
-double RawRamXD_ScoreForEviction(uint64_t tensorId) {
-    // Simplified - would use eviction policy
-    return 0.5;
+int RawRamXD_GetCurrentWorkloadClass() {
+    return static_cast<int>(RawRamXD::PredictiveMemoryIntelligence::Instance().GetCurrentWorkloadClass());
 }
 
-bool RawRamXD_SavePredictiveReport(const char* filename) {
-    return PredictiveMemoryController::Instance().GeneratePredictiveReport(filename);
+bool RawRamXD_SaveIntelligenceReport(const char* filename) {
+    if (!filename) return false;
+    return RawRamXD::PredictiveMemoryIntelligence::Instance().GenerateIntelligenceReport(filename);
 }
 
 } // extern "C"

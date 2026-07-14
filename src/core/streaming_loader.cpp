@@ -49,6 +49,39 @@ static uint64_t ReadU64(const uint8_t* data, size_t& pos) {
     return val;
 }
 
+// FP16 to FP32 conversion
+static float FP16ToFP32(uint16_t h) {
+    // IEEE 754 half-precision to single-precision
+    uint32_t sign = (h >> 15) & 0x1;
+    uint32_t exp = (h >> 10) & 0x1F;
+    uint32_t mant = h & 0x3FF;
+    
+    uint32_t f;
+    if (exp == 0) {
+        // Zero or denormal
+        if (mant == 0) {
+            f = sign << 31;
+        } else {
+            // Denormal
+            exp = 1;
+            while ((mant & 0x400) == 0) {
+                mant <<= 1;
+                exp--;
+            }
+            mant &= 0x3FF;
+            f = (sign << 31) | ((exp + 112) << 23) | (mant << 13);
+        }
+    } else if (exp == 31) {
+        // Infinity or NaN
+        f = (sign << 31) | (0xFF << 23) | (mant << 13);
+    } else {
+        // Normal
+        f = (sign << 31) | ((exp + 112) << 23) | (mant << 13);
+    }
+    
+    return *reinterpret_cast<float*>(&f);
+}
+
 static float ReadF32(const uint8_t* data, size_t& pos) {
     float val = *reinterpret_cast<const float*>(data + pos);
     pos += 4;
@@ -329,8 +362,14 @@ void StreamingLoader::Dequantize(const void* src, float* dst, const TensorInfo& 
         case QuantType::Q4_K:
             DequantizeQ4_K(src, dst, info.num_elements);
             break;
+        case QuantType::Q5_K:
+            DequantizeQ5_K(src, dst, info.num_elements);
+            break;
         case QuantType::Q6_K:
             DequantizeQ6_K(src, dst, info.num_elements);
+            break;
+        case QuantType::Q8_K:
+            DequantizeQ8_K(src, dst, info.num_elements);
             break;
         default:
             // Unknown type - zero fill
@@ -385,27 +424,138 @@ void StreamingLoader::DequantizeQ8_0(const void* src, float* dst, size_t n) {
 }
 
 void StreamingLoader::DequantizeQ4_K(const void* src, float* dst, size_t n) {
-    // Q4_K is complex - simplified version
+    // Q4_K dequantization - based on llama.cpp format
+    // Each block has 256 weights with 4-bit quantization
+    // Block structure: 2 scales (fp16) + 2 mins (fp16) + 128 nibbles (4-bit each)
     const uint8_t* data = static_cast<const uint8_t*>(src);
     size_t num_blocks = (n + 255) / 256;
     
     for (size_t b = 0; b < num_blocks; ++b) {
-        // Simplified - just zero fill for now
+        const uint8_t* block = data + b * 144; // 144 bytes per block
+        
+        // Read scales and mins (stored as fp16, convert to fp32)
+        uint16_t scale1_u16 = *reinterpret_cast<const uint16_t*>(block);
+        uint16_t scale2_u16 = *reinterpret_cast<const uint16_t*>(block + 2);
+        uint16_t min1_u16 = *reinterpret_cast<const uint16_t*>(block + 4);
+        uint16_t min2_u16 = *reinterpret_cast<const uint16_t*>(block + 6);
+        
+        float scale1 = FP16ToFP32(scale1_u16);
+        float scale2 = FP16ToFP32(scale2_u16);
+        float min1 = FP16ToFP32(min1_u16);
+        float min2 = FP16ToFP32(min2_u16);
+        
+        const uint8_t* qs = block + 8; // Quantized weights start at offset 8
+        
+        // Dequantize 256 weights (128 bytes of nibbles)
         for (size_t i = 0; i < 256 && (b * 256 + i) < n; ++i) {
-            dst[b * 256 + i] = 0.0f;
+            uint8_t byte_idx = i / 2;
+            uint8_t nibble = (i & 1) ? (qs[byte_idx] >> 4) : (qs[byte_idx] & 0xF);
+            
+            // First 128 weights use scale1/min1, second 128 use scale2/min2
+            if (i < 128) {
+                dst[b * 256 + i] = min1 + scale1 * nibble;
+            } else {
+                dst[b * 256 + i] = min2 + scale2 * nibble;
+            }
         }
     }
 }
 
 void StreamingLoader::DequantizeQ6_K(const void* src, float* dst, size_t n) {
-    // Q6_K is complex - simplified version
+    // Q6_K dequantization - based on llama.cpp format
+    // Each block has 256 weights with 6-bit quantization
+    // Block structure: scale (fp16) + 192 bytes of 6-bit weights
     const uint8_t* data = static_cast<const uint8_t*>(src);
     size_t num_blocks = (n + 255) / 256;
     
     for (size_t b = 0; b < num_blocks; ++b) {
-        // Simplified - just zero fill for now
+        const uint8_t* block = data + b * 210; // 210 bytes per block
+        
+        // Read scale (fp16)
+        uint16_t scale_u16 = *reinterpret_cast<const uint16_t*>(block);
+        float scale = FP16ToFP32(scale_u16);
+        
+        const uint8_t* qs = block + 2; // Quantized weights start at offset 2
+        
+        // Dequantize 256 weights (6-bit each, packed in 192 bytes)
+        // Each group of 4 weights uses 3 bytes (24 bits / 4 = 6 bits each)
         for (size_t i = 0; i < 256 && (b * 256 + i) < n; ++i) {
-            dst[b * 256 + i] = 0.0f;
+            size_t group = i / 4;
+            size_t idx_in_group = i % 4;
+            
+            uint32_t packed = qs[group * 3] | (qs[group * 3 + 1] << 8) | (qs[group * 3 + 2] << 16);
+            uint8_t q = (packed >> (idx_in_group * 6)) & 0x3F; // 6 bits
+            
+            // Center around 32 (typical for Q6_K)
+            dst[b * 256 + i] = scale * (q - 32);
+        }
+    }
+}
+
+void StreamingLoader::DequantizeQ5_K(const void* src, float* dst, size_t n) {
+    // Q5_K dequantization - based on llama.cpp format
+    // Each block has 256 weights with 5-bit quantization
+    // Block structure: 2 scales (fp16) + 2 mins (fp16) + 160 bytes of 5-bit weights
+    const uint8_t* data = static_cast<const uint8_t*>(src);
+    size_t num_blocks = (n + 255) / 256;
+    
+    for (size_t b = 0; b < num_blocks; ++b) {
+        const uint8_t* block = data + b * 176; // 176 bytes per block
+        
+        // Read scales and mins (stored as fp16)
+        uint16_t scale1_u16 = *reinterpret_cast<const uint16_t*>(block);
+        uint16_t scale2_u16 = *reinterpret_cast<const uint16_t*>(block + 2);
+        uint16_t min1_u16 = *reinterpret_cast<const uint16_t*>(block + 4);
+        uint16_t min2_u16 = *reinterpret_cast<const uint16_t*>(block + 6);
+        
+        float scale1 = FP16ToFP32(scale1_u16);
+        float scale2 = FP16ToFP32(scale2_u16);
+        float min1 = FP16ToFP32(min1_u16);
+        float min2 = FP16ToFP32(min2_u16);
+        
+        const uint8_t* qs = block + 8; // Quantized weights start at offset 8
+        
+        // Dequantize 256 weights (5-bit each, packed in 160 bytes)
+        // Each group of 8 weights uses 5 bytes (40 bits / 8 = 5 bits each)
+        for (size_t i = 0; i < 256 && (b * 256 + i) < n; ++i) {
+            size_t group = i / 8;
+            size_t idx_in_group = i % 8;
+            
+            uint64_t packed = 0;
+            for (int j = 0; j < 5; j++) {
+                packed |= (uint64_t)qs[group * 5 + j] << (j * 8);
+            }
+            uint8_t q = (packed >> (idx_in_group * 5)) & 0x1F; // 5 bits
+            
+            // First 128 weights use scale1/min1, second 128 use scale2/min2
+            if (i < 128) {
+                dst[b * 256 + i] = min1 + scale1 * q;
+            } else {
+                dst[b * 256 + i] = min2 + scale2 * q;
+            }
+        }
+    }
+}
+
+void StreamingLoader::DequantizeQ8_K(const void* src, float* dst, size_t n) {
+    // Q8_K dequantization - based on llama.cpp format
+    // Each block has 256 weights with 8-bit quantization
+    // Block structure: scale (fp16) + 256 bytes of 8-bit weights
+    const uint8_t* data = static_cast<const uint8_t*>(src);
+    size_t num_blocks = (n + 255) / 256;
+    
+    for (size_t b = 0; b < num_blocks; ++b) {
+        const uint8_t* block = data + b * 258; // 258 bytes per block
+        
+        // Read scale (fp16)
+        uint16_t scale_u16 = *reinterpret_cast<const uint16_t*>(block);
+        float scale = FP16ToFP32(scale_u16);
+        
+        const int8_t* qs = reinterpret_cast<const int8_t*>(block + 2);
+        
+        // Dequantize 256 weights (8-bit signed)
+        for (size_t i = 0; i < 256 && (b * 256 + i) < n; ++i) {
+            dst[b * 256 + i] = scale * qs[i];
         }
     }
 }

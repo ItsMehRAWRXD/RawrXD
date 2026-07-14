@@ -210,7 +210,9 @@ private:
     void DequantizeQ4_1(const void* src, float* dst, size_t n);
     void DequantizeQ8_0(const void* src, float* dst, size_t n);
     void DequantizeQ4_K(const void* src, float* dst, size_t n);
+    void DequantizeQ5_K(const void* src, float* dst, size_t n);
     void DequantizeQ6_K(const void* src, float* dst, size_t n);
+    void DequantizeQ8_K(const void* src, float* dst, size_t n);
 };
 
 // ============================================================================
