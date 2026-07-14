@@ -48,6 +48,8 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `env-manager.ps1` | Environment configuration management | `.\env-manager.ps1` |
 | `troubleshooter.ps1` | Automated troubleshooting and repair | `.\troubleshooter.ps1` |
 | `update-manager.ps1` | Software updates and version management | `.\update-manager.ps1` |
+| `diagnostic-tools.ps1` | System diagnostics and troubleshooting | `.\diagnostic-tools.ps1` |
+| `workflow-automation.ps1` | Development workflow automation | `.\workflow-automation.ps1` |
 | `plugin-manager.ps1` | Plugin/extension management | `.\plugin-manager.ps1` |
 | `template-generator.ps1` | Project template and boilerplate generator | `.\template-generator.ps1` |
 | `import-export.ps1` | Data import/export and format conversion | `.\import-export.ps1` |
