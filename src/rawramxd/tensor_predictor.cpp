@@ -1,21 +1,17 @@
-/**
- * RawRamXD Phase 7C: Tensor Access Predictor Implementation
- * 
- * Implements pattern recognition and predictive prefetching.
- */
+// ============================================================================
+// src/rawramxd/tensor_predictor.cpp
+// Implementation matching tensor_predictor.hpp API
+// ============================================================================
 
 #include "rawramxd/tensor_predictor.hpp"
-#include "rawramxd/gpu_fabric.hpp"
-
-#include <iostream>
-#include <algorithm>
 #include <cmath>
-#include <string>
+#include <algorithm>
+#include <chrono>
 
 namespace RawRamXD {
 
 // =============================================================================
-// PREDICTOR IMPLEMENTATION
+// TENSOR PREDICTOR IMPLEMENTATION
 // =============================================================================
 
 struct TensorPredictor::Impl {
@@ -131,42 +127,42 @@ TensorPredictor::TensorPredictor() : impl_(std::make_unique<Impl>()) {}
 TensorPredictor::~TensorPredictor() = default;
 
 bool TensorPredictor::Initialize(uint32_t layerCount, uint64_t tokenLatencyUs) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
-    impl_-\u003elayerCount_ = layerCount;
-    impl_-\u003etokenLatencyUs_ = tokenLatencyUs;
-    impl_-\u003estartTimeUs_ = impl_-\u003eGetCurrentTimeUs();
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    impl_->layerCount_ = layerCount;
+    impl_->tokenLatencyUs_ = tokenLatencyUs;
+    impl_->startTimeUs_ = impl_->GetCurrentTimeUs();
     return true;
 }
 
 void TensorPredictor::Shutdown() {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
-    impl_-\u003eaccessHistory_.clear();
-    impl_-\u003ehotnessCache_.clear();
-    impl_-\u003einterArrivalTimes_.clear();
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    impl_->accessHistory_.clear();
+    impl_->hotnessCache_.clear();
+    impl_->interArrivalTimes_.clear();
 }
 
 void TensorPredictor::RecordAccess(const AccessEvent& event) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
     // Store in history
-    impl_-\u003eaccessHistory_[event.tensorHandle].push_back(event);
+    impl_->accessHistory_[event.tensorHandle].push_back(event);
     
     // Keep only last 1000 events per tensor
-    if (impl_-\u003eaccessHistory_[event.tensorHandle].size() > 1000) {
-        impl_-\u003eaccessHistory_[event.tensorHandle].pop_front();
+    if (impl_->accessHistory_[event.tensorHandle].size() > 1000) {
+        impl_->accessHistory_[event.tensorHandle].pop_front();
     }
     
     // Update hotness
-    impl_-\u003eUpdateHotness(event.tensorHandle, event);
+    impl_->UpdateHotness(event.tensorHandle, event);
 }
 
 std::vector<Prediction> TensorPredictor::PredictNextAccesses(uint64_t horizonUs) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
     std::vector<Prediction> predictions;
-    uint64_t now = impl_-\u003eGetCurrentTimeUs();
+    uint64_t now = impl_->GetCurrentTimeUs();
     
-    for (const auto& [handle, hotness] : impl_-\u003ehotnessCache_) {
+    for (const auto& [handle, hotness] : impl_->hotnessCache_) {
         if (hotness.reuseProbability < 0.1f) continue;
         
         Prediction pred{};
@@ -196,19 +192,19 @@ std::vector<Prediction> TensorPredictor::PredictNextAccesses(uint64_t horizonUs)
 }
 
 TensorHotness TensorPredictor::GetHotness(uint64_t tensorHandle) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
-    auto it = impl_-\u003ehotnessCache_.find(tensorHandle);
-    if (it != impl_-\u003ehotnessCache_.end()) {
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    auto it = impl_->hotnessCache_.find(tensorHandle);
+    if (it != impl_->hotnessCache_.end()) {
         return it->second;
     }
     return TensorHotness{};
 }
 
 std::vector<TensorHotness> TensorPredictor::GetHotTensors(uint32_t count) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
     std::vector<TensorHotness> hot;
-    for (const auto& [handle, h] : impl_-\u003ehotnessCache_) {
+    for (const auto& [handle, h] : impl_->hotnessCache_) {
         hot.push_back(h);
     }
     
@@ -239,30 +235,30 @@ PrefetchWindow TensorPredictor::CalculatePrefetchWindow(uint64_t currentTimeUs,
 }
 
 AccessPattern TensorPredictor::DetectPattern(uint64_t tensorHandle) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
-    auto pattern = impl_-\u003eDetectPatternInternal(tensorHandle);
-    impl_-\u003ehotnessCache_[tensorHandle].detectedPattern = pattern;
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    auto pattern = impl_->DetectPatternInternal(tensorHandle);
+    impl_->hotnessCache_[tensorHandle].detectedPattern = pattern;
     return pattern;
 }
 
 void TensorPredictor::UpdatePredictionAccuracy(uint64_t tensorHandle, bool wasCorrect) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
-    impl_-\u003estats_.totalPredictions++;
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    impl_->stats_.totalPredictions++;
     if (wasCorrect) {
-        impl_-\u003estats_.correctPredictions++;
+        impl_->stats_.correctPredictions++;
     } else {
-        impl_-\u003estats_.falsePositives++;
+        impl_->stats_.falsePositives++;
     }
     
-    if (impl_-\u003estats_.totalPredictions > 0) {
-        impl_-\u003estats_.accuracy = 
-            (float)impl_-\u003estats_.correctPredictions / impl_-\u003estats_.totalPredictions;
+    if (impl_->stats_.totalPredictions > 0) {
+        impl_->stats_.accuracy = 
+            (float)impl_->stats_.correctPredictions / impl_->stats_.totalPredictions;
     }
 }
 
 TensorPredictor::Stats TensorPredictor::GetStats() const {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
-    return impl_-\u003estats_;
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    return impl_->stats_;
 }
 
 // =============================================================================
@@ -301,8 +297,8 @@ bool PrefetchOrchestrator::Initialize(uint64_t migrationBandwidthBytesPerSec) {
 }
 
 void PrefetchOrchestrator::Shutdown() {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
-    impl_-\u003epending_.clear();
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    impl_->pending_.clear();
 }
 
 void PrefetchOrchestrator::OnTokenStart(uint64_t tokenIndex) {
@@ -312,15 +308,15 @@ void PrefetchOrchestrator::OnTokenStart(uint64_t tokenIndex) {
 }
 
 void PrefetchOrchestrator::OnTokenComplete(uint64_t tokenIndex, uint64_t durationUs) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
     // Update pending prefetches
-    uint64_t now = impl_-\u003eGetCurrentTimeUs();
+    uint64_t now = impl_->GetCurrentTimeUs();
     
-    for (auto& pending : impl_-\u003epending_) {
+    for (auto& pending : impl_->pending_) {
         if (!pending.completed && now >= pending.deadlineUs) {
             pending.completed = true;
-            impl_-\u003estats_.prefetchesCompleted++;
+            impl_->stats_.prefetchesCompleted++;
         }
     }
     
@@ -329,20 +325,20 @@ void PrefetchOrchestrator::OnTokenComplete(uint64_t tokenIndex, uint64_t duratio
 }
 
 std::vector<uint64_t> PrefetchOrchestrator::GetPrefetchCandidates(uint64_t maxBytes) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
     std::vector<uint64_t> candidates;
-    uint64_t now = impl_-\u003eGetCurrentTimeUs();
+    uint64_t now = impl_->GetCurrentTimeUs();
     
     // Get predictions from predictor
-    auto predictions = predictor_? predictor_>-PredictNextAccesses(100000) // 100ms horizon
+    auto predictions = predictor_? predictor_->PredictNextAccesses(100000) // 100ms horizon
                      : std::vector<Prediction>{};
     
     uint64_t bytesQueued = 0;
     for (const auto& pred : predictions) {
         // Skip if already prefetched recently
-        auto it = impl_-\u003elastPrefetch_.find(pred.tensorHandle);
-        if (it != impl_-\u003elastPrefetch_.end()) {
+        auto it = impl_->lastPrefetch_.find(pred.tensorHandle);
+        if (it != impl_->lastPrefetch_.end()) {
             if (now - it->second < 100000) { // 100ms cooldown
                 continue;
             }
@@ -356,16 +352,16 @@ std::vector<uint64_t> PrefetchOrchestrator::GetPrefetchCandidates(uint64_t maxBy
         bytesQueued += tensorSize;
         
         // Record prefetch
-        impl_-\u003elastPrefetch_[pred.tensorHandle] = now;
+        impl_->lastPrefetch_[pred.tensorHandle] = now;
     }
     
-    impl_-\u003estats_.prefetchesIssued += candidates.size();
+    impl_->stats_.prefetchesIssued += candidates.size();
     return candidates;
 }
 
 std::vector<uint64_t> PrefetchOrchestrator::GetEvictionCandidates(uint64_t bytesNeeded) {
     // Get cold tensors that can be evicted
-    auto hotTensors = predictor_? predictor_>-GetHotTensors(1000)
+    auto hotTensors = predictor_? predictor_->GetHotTensors(1000)
                      : std::vector<TensorHotness>{};
     
     std::vector<uint64_t> cold;
@@ -390,7 +386,7 @@ std::vector<uint64_t> PrefetchOrchestrator::GetEvictionCandidates(uint64_t bytes
 
 bool PrefetchOrchestrator::SchedulePrefetchDuringCompute(uint64_t tensorHandle, 
                                                          uint64_t computeDurationUs) {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
     // Calculate if transfer can be hidden
     uint64_t transferTimeUs = (256ULL * 1024 * 1024 * 1000000) / bandwidthBytesPerSec_;
@@ -398,39 +394,39 @@ bool PrefetchOrchestrator::SchedulePrefetchDuringCompute(uint64_t tensorHandle,
     if (transferTimeUs < computeDurationUs * 0.8) { // Can hide 80% of transfer
         PrefetchOrchestrator::Impl::PendingPrefetch pending{};
         pending.tensorHandle = tensorHandle;
-        pending.issueTimeUs = impl_-\u003eGetCurrentTimeUs();
+        pending.issueTimeUs = impl_->GetCurrentTimeUs();
         pending.deadlineUs = pending.issueTimeUs + transferTimeUs;
         pending.completed = false;
         
-        impl_-\u003epending_.push_back(pending);
-        impl_-\u003estats_.hiddenTransfers++;
+        impl_->pending_.push_back(pending);
+        impl_->stats_.hiddenTransfers++;
         return true;
     }
     
-    impl_-\u003estats_.visibleStalls++;
+    impl_->stats_.visibleStalls++;
     return false;
 }
 
 bool PrefetchOrchestrator::ScheduleEmergencyPrefetch(uint64_t tensorHandle) {
     // High priority prefetch - bypass normal scheduling
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
     PrefetchOrchestrator::Impl::PendingPrefetch pending{};
     pending.tensorHandle = tensorHandle;
-    pending.issueTimeUs = impl_-\u003eGetCurrentTimeUs();
+    pending.issueTimeUs = impl_->GetCurrentTimeUs();
     pending.deadlineUs = pending.issueTimeUs + 50000; // 50ms deadline
     pending.completed = false;
     
-    impl_-\u003epending_.push_back(pending);
-    impl_-\u003estats_.prefetchesIssued++;
+    impl_->pending_.push_back(pending);
+    impl_->stats_.prefetchesIssued++;
     
     return true;
 }
 
 PrefetchOrchestrator::Stats PrefetchOrchestrator::GetStats() const {
-    std::lock_guard<std::mutex> lock(impl_-\u003emutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     
-    auto stats = impl_-\u003estats_;
+    auto stats = impl_->stats_;
     
     // Calculate stall reduction
     uint64_t totalPrefetches = stats.prefetchesIssued;
