@@ -22,6 +22,8 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `cloud-deploy.ps1` | Cloud deployment (AWS/Azure/GCP/K8s) | `.\cloud-deploy.ps1` |
 | `backup-manager.ps1` | Backup & restore management | `.\backup-manager.ps1` |
 | `license-manager.ps1` | License activation & management | `.\license-manager.ps1` |
+| `hotpatch-manager.ps1` | 7-layer hotpatch system management | `.\hotpatch-manager.ps1` |
+| `model-optimizer.ps1` | Model quantization & optimization | `.\model-optimizer.ps1` |
 | `test-runner.ps1` | Unified test execution | `.\test-runner.ps1` |
 | `monitor-dashboard.ps1` | Real-time monitoring dashboard | `.\monitor-dashboard.ps1` |
 | `data-migrator.ps1` | Data migration & conversion | `.\data-migrator.ps1` |
@@ -482,6 +484,95 @@ Checks for updates and manages version upgrades.
 
 # View version history
 .\update-checker.ps1 -Action List
+```
+
+## Hotpatch Management
+
+### `hotpatch-manager.ps1`
+
+Manages the 7-layer hotpatching system for real-time failure correction.
+
+**7-Layer Architecture:**
+- `pt-driver` - Page table watchpoints and snapshots (Layer 0)
+- `memory` - Direct RAM patching with SIMD/TSX RTM (Layer 1)
+- `byte` - GGUF file byte-level patches (Layer 2)
+- `server` - Request/response transforms (Layer 3)
+- `binary` - Live binary code replacement (Layer 5)
+- `shadow` - Atomic prologue rewrite (Layer 6)
+- `sentinel` - .text integrity monitor (Layer 6)
+
+**Failure Types:**
+- Refusal, Hallucination, FormatViolation, InfiniteLoop
+- TokenLimit, ResourceExhausted, Timeout, SafetyViolation
+- LowConfidence, GarbageOutput
+
+**Usage:**
+```powershell
+# Show hotpatch system status
+.\hotpatch-manager.ps1 -Action Status
+
+# Enable a layer
+.\hotpatch-manager.ps1 -Action Enable -Layer memory
+
+# Disable a layer
+.\hotpatch-manager.ps1 -Action Disable -Layer byte -Force
+
+# Test hotpatch system
+.\hotpatch-manager.ps1 -Action Test
+
+# Apply a patch
+.\hotpatch-manager.ps1 -Action Apply -PatchFile "fix.json" -Layer memory
+
+# List available patches
+.\hotpatch-manager.ps1 -Action List
+
+# Monitor hotpatch activity
+.\hotpatch-manager.ps1 -Action Monitor -MonitorDuration 120
+
+# View policies
+.\hotpatch-manager.ps1 -Action Policy
+```
+
+## Model Optimization
+
+### `model-optimizer.ps1`
+
+Optimizes GGUF models for performance and memory efficiency.
+
+**Actions:**
+- `Analyze` - Analyze model and show optimization options
+- `Quantize` - Convert to quantized format
+- `Prune` - Remove redundant parameters
+- `Convert` - Convert between formats
+- `Benchmark` - Performance benchmarking
+- `Tune` - Optimize for target hardware
+
+**Quantization Types:**
+- `Q4_0` / `Q4_1` - 4-bit (75% size reduction)
+- `Q5_0` / `Q5_1` - 5-bit (68% size reduction)
+- `Q8_0` / `Q8_1` - 8-bit (50% size reduction)
+- `F16` - Half precision (50% size reduction)
+- `F32` - Full precision (no reduction)
+
+**Usage:**
+```powershell
+# Analyze model
+.\model-optimizer.ps1 -Action Analyze -ModelPath "model.gguf"
+
+# Quantize to Q4_0
+.\model-optimizer.ps1 -Action Quantize -ModelPath "model.gguf" -Quantization Q4_0
+
+# Quantize with custom output
+.\model-optimizer.ps1 -Action Quantize -ModelPath "model.gguf" -Quantization Q5_0 -OutputPath "model-q5.gguf"
+
+# Benchmark model
+.\model-optimizer.ps1 -Action Benchmark -ModelPath "model.gguf"
+
+# Tune for hardware
+.\model-optimizer.ps1 -Action Tune -ModelPath "model.gguf"
+
+# Convert format
+.\model-optimizer.ps1 -Action Convert -ModelPath "model.bin"
 ```
 
 ## Cloud Deployment

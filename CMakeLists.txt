@@ -334,6 +334,7 @@ if(RAWRXD_BUILD_CLI)
         cli/tensor_view.cpp
         cli/q2k_decoder.cpp
         cli/quantization_decoder.cpp
+        cli/model_loader_streaming.cpp
         runtime/transformer_layer_runtime.cpp
         runtime/kv_cache.cpp
         src/asm/Sovereign_KernelDispatch.cpp
