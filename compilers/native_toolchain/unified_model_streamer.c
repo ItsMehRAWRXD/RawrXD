@@ -6,10 +6,13 @@
  */
 
 #include <windows.h>
+#include <winhttp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+
+#pragma comment(lib, "winhttp.lib")
 
 /* ============================================================================
  * GGUF Format Definitions
@@ -81,9 +84,9 @@ typedef struct {
  * ============================================================================ */
 
 typedef struct {
-    HINTERNET hSession;
-    HINTERNET hConnect;
-    HINTERNET hRequest;
+    void* hSession;
+    void* hConnect;
+    void* hRequest;
     char* response_buffer;
     size_t response_size;
     size_t response_capacity;
