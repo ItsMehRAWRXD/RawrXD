@@ -353,7 +353,7 @@ namespace RawrXD {
         
     private:
         // File handling
-        std::ifstream file_;
+        mutable std::ifstream file_;
         std::string filepath_;
         bool is_open_ = false;
         uint64_t file_size_ = 0;
@@ -382,7 +382,7 @@ namespace RawrXD {
         bool ReadString(std::string& str);
         bool ReadTensorType(GGMLType& type);
         bool Seek(uint64_t offset);
-        uint64_t GetPosition() const;
+        uint64_t GetPosition();
         
         // Architecture mapping
         ArchitectureType MapArchitectureString(const std::string& arch) const;
