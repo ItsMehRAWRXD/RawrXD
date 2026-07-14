@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include <math.h>
 // Test results
 static int tests_passed = 0;
 static int tests_failed = 0;
