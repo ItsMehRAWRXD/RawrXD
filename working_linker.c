@@ -119,7 +119,8 @@ typedef struct {
 #define IMAGE_REL_AMD64_ADDR32 2
 #define IMAGE_REL_AMD64_REL32 4
 
-// COFF structures (from object file)
+// COFF structures (from object file) - must match assembler output
+#pragma pack(push, 1)
 typedef struct {
     char name[8];
     uint32_t virtual_size;
@@ -140,19 +141,14 @@ typedef struct {
 } coff_reloc_t;
 
 typedef struct {
-    union {
-        char short_name[8];
-        struct {
-            uint32_t zeroes;
-            uint32_t offset;
-        } long_name;
-    } name;
+    char name[8];
     uint32_t value;
     int16_t section;
     uint16_t type;
     uint8_t storage_class;
     uint8_t num_aux;
 } coff_symbol_t;
+#pragma pack(pop)
 
 // Object file
 typedef struct {
@@ -266,7 +262,7 @@ static void free_obj_file(obj_file_t *obj) {
 // Get symbol name
 static const char* get_symbol_name(coff_symbol_t *sym, char *string_table) {
     // Check if using long name (first 4 bytes are zero)
-    uint32_t *name_ptr = (uint32_t*)sym->name.short_name;
+    uint32_t *name_ptr = (uint32_t*)sym->name;
     if (name_ptr[0] == 0) {
         // Long name in string table
         uint32_t offset = name_ptr[1];
@@ -274,7 +270,7 @@ static const char* get_symbol_name(coff_symbol_t *sym, char *string_table) {
     }
     // Short name embedded
     static char name_buf[9];
-    memcpy(name_buf, sym->name.short_name, 8);
+    memcpy(name_buf, sym->name, 8);
     name_buf[8] = '\0';
     return name_buf;
 }

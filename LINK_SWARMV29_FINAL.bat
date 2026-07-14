@@ -6,8 +6,8 @@ echo.
 
 set "LINK=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
 set "VC_LIB=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64"
-set "UM_LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64"
-set "UCRT_LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\ucrt\x64"
+set "UM_LIB=C:\Progra~1\Windows~1\10\Lib\10.0.26100.0\um\x64"
+set "UCRT_LIB=C:\Progra~1\Windows~1\10\Lib\10.0.26100.0\ucrt\x64"
 
 set "ROOT=d:\rawrxd"
 set "OUTDIR=%ROOT%\build\final"

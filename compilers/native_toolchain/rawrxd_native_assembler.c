@@ -2427,6 +2427,7 @@ static int handle_directive(char *line) {
             if (g_state.extern_count < MAX_EXTERN_SYMBOLS) {
                 strncpy(g_state.extern_symbols[g_state.extern_count], sym_name, 255);
                 g_state.extern_symbols[g_state.extern_count][255] = '\0';
+                fprintf(stderr, "DEBUG: Added EXTERNDEF symbol '%s'\n", sym_name);
                 g_state.extern_count++;
             }
             return 1;
