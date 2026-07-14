@@ -24,14 +24,8 @@ if not exist "%LINK%" (
 )
 echo   OK: Linker found
 
-if not exist "%VC_LIB%\kernel32.lib" (
-    echo ERROR: VC libraries not found
-    exit /b 1
-)
-echo   OK: VC libraries found
-
 if not exist "%UM_LIB%\kernel32.lib" (
-    echo ERROR: Windows SDK libraries not found
+    echo ERROR: Windows SDK libraries not found at %UM_LIB%
     exit /b 1
 )
 echo   OK: Windows SDK libraries found

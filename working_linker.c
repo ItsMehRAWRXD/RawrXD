@@ -265,9 +265,12 @@ static void free_obj_file(obj_file_t *obj) {
 
 // Get symbol name
 static const char* get_symbol_name(coff_symbol_t *sym, char *string_table) {
-    if (sym->name.zeroes == 0) {
+    // Check if using long name (first 4 bytes are zero)
+    uint32_t *name_ptr = (uint32_t*)sym->name.short_name;
+    if (name_ptr[0] == 0) {
         // Long name in string table
-        return string_table + sym->name.offset;
+        uint32_t offset = name_ptr[1];
+        return string_table + offset;
     }
     // Short name embedded
     static char name_buf[9];
@@ -308,7 +311,7 @@ static int write_pe(const char *filename, obj_file_t *obj) {
     }
     
     // Virtual addresses (SectionAlignment = 4096)
-    uint32_t image_base = 0x140000000;  // Default for x64 EXE
+    uint64_t image_base = 0x140000000ULL;  // Default for x64 EXE
     uint32_t *virtual_addrs = calloc(obj->header.NumberOfSections, sizeof(uint32_t));
     uint32_t current_va = 0x1000;  // First section at RVA 0x1000
     
