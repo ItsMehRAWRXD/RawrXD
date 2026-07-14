@@ -18,8 +18,8 @@ set "CXX=g++.exe"
 set "CXXFLAGS=-std=c++17 -O2 -Wall -Wextra -DUNICODE -D_UNICODE"
 set "CXXFLAGS=%CXXFLAGS% -I%SRC_DIR%\..\..\include"
 
-:: Linker flags - Windows-specific
-set "LDFLAGS=-ld3d12 -ldxgi -lcuda -lkernel32 -luser32 -ladvapi32"
+:: Linker flags - Windows-specific (no CUDA)
+set "LDFLAGS=-ld3d12 -ldxgi -lkernel32 -luser32 -ladvapi32"
 
 :: Create build directory
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
