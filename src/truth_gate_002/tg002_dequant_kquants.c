@@ -259,8 +259,17 @@ bool find_tensor(const uint8_t* data, const char* target_name,
     (void)version;
     
     /* Skip metadata */
+    printf("  Skipping %llu metadata entries...\n", (unsigned long long)metadata_count);
     for (uint64_t i = 0; i < metadata_count; i++) {
+        if (pos > 100000) {
+            printf("    ERROR: pos too large (%zu), breaking\n", pos);
+            return false;
+        }
         uint64_t key_len = *(uint64_t*)(data + pos); pos += 8;
+        if (key_len > 10000) {
+            printf("    ERROR: key_len too large (%llu)\n", (unsigned long long)key_len);
+            return false;
+        }
         pos += key_len;
         uint32_t val_type = *(uint32_t*)(data + pos); pos += 4;
         
@@ -373,12 +382,15 @@ int main(int argc, char* argv[]) {
     const char* tensor_name = (argc > 2) ? argv[2] : "token_embd.weight";
     
     mapped_file_t mf;
+    printf("Opening file...\n");
     if (!mmap_file(model_path, &mf)) {
         printf("Failed to open: %s\n", model_path);
         return 1;
     }
     
     printf("File: %s (%.2f MB)\n\n", model_path, mf.size / (1024.0 * 1024.0));
+    
+    printf("Finding tensor...\n");
     
     tensor_info_t info;
     uint64_t data_offset;
