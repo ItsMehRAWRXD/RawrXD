@@ -418,6 +418,10 @@ uint64_t StreamingLoader::GetDequantizedSize() const {
     return total;
 }
 
+ModelArchitecture StreamingLoader::GetArchitecture() const {
+    return arch_;
+}
+
 // ============================================================================
 // ModelWeights Implementation
 // ============================================================================

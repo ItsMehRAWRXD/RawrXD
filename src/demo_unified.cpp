@@ -107,7 +107,7 @@ void DemoInferenceEngine() {
     InferenceEngine engine;
     
     ModelConfig config;
-    config.model_id = "demo_model";
+    config.model_path = "demo_model";
     config.arch_type = ArchitectureType::QWEN2;
     config.max_tokens = 512;
     config.temperature = 0.7f;
@@ -153,7 +153,7 @@ void DemoOrchestrator() {
         
         // Register a model
         ModelConfig model_config;
-        model_config.model_id = "test_model";
+        model_config.model_path = "test_model";
         model_config.model_path = "./test.gguf";
         
         if (orchestrator.RegisterModel("test_model", model_config)) {

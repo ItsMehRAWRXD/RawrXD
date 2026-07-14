@@ -430,8 +430,9 @@ static const char* get_symbol_name(COFF_File *coff, IMAGE_SYMBOL *sym) {
     if (sym->N.Name.Zeroes == 0) {
         /* Long name in string table */
         uint32_t offset = sym->N.Name.Offset;
-        if (offset < coff->StringTableSize) {
-            strncpy(name_buf, coff->StringTable + offset, 255);
+        /* String table has 4-byte size field at the beginning, so add 4 to offset */
+        if (offset + 4 < coff->StringTableSize) {
+            strncpy(name_buf, coff->StringTable + 4 + offset, 255);
             name_buf[255] = '\0';
             return name_buf;
         }

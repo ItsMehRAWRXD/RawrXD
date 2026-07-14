@@ -3192,6 +3192,46 @@ static int is_label_definition(char *line, char *label_out) {
 
     label_out[i] = '\0';
 
+    /* Check if the first word is a directive (not a label) */
+    if (_stricmp(label_out, "INCLUDE") == 0) return 0;
+    if (_stricmp(label_out, "OPTION") == 0) return 0;
+    if (_stricmp(label_out, "PUBLIC") == 0) return 0;
+    if (_stricmp(label_out, "EXTERN") == 0) return 0;
+    if (_stricmp(label_out, "EXTRN") == 0) return 0;
+    if (_stricmp(label_out, "EXTERNDEF") == 0) return 0;
+    if (_stricmp(label_out, "ALIGN") == 0) return 0;
+    if (_stricmp(label_out, "END") == 0) return 0;
+    if (_stricmp(label_out, "ENDP") == 0) return 0;
+    if (_stricmp(label_out, "PROC") == 0) return 0;
+    if (_stricmp(label_out, "SEGMENT") == 0) return 0;
+    if (_stricmp(label_out, "ENDS") == 0) return 0;
+    if (_stricmp(label_out, "GROUP") == 0) return 0;
+    if (_stricmp(label_out, "ASSUME") == 0) return 0;
+    if (_stricmp(label_out, "MODEL") == 0) return 0;
+    if (_stricmp(label_out, "INCLUDELIB") == 0) return 0;
+    if (_stricmp(label_out, "TITLE") == 0) return 0;
+    if (_stricmp(label_out, "SUBTITLE") == 0) return 0;
+    if (_stricmp(label_out, "PAGE") == 0) return 0;
+    if (_stricmp(label_out, "COMMENT") == 0) return 0;
+    if (_stricmp(label_out, "IF") == 0) return 0;
+    if (_stricmp(label_out, "ELSE") == 0) return 0;
+    if (_stricmp(label_out, "ELSEIF") == 0) return 0;
+    if (_stricmp(label_out, "ENDIF") == 0) return 0;
+    if (_stricmp(label_out, "FOR") == 0) return 0;
+    if (_stricmp(label_out, "ENDFOR") == 0) return 0;
+    if (_stricmp(label_out, "REPEAT") == 0) return 0;
+    if (_stricmp(label_out, "ENDREPEAT") == 0) return 0;
+    if (_stricmp(label_out, "WHILE") == 0) return 0;
+    if (_stricmp(label_out, "ENDWHILE") == 0) return 0;
+    if (_stricmp(label_out, "MACRO") == 0) return 0;
+    if (_stricmp(label_out, "ENDM") == 0) return 0;
+    if (_stricmp(label_out, "LOCAL") == 0) return 0;
+    if (_stricmp(label_out, "EXITM") == 0) return 0;
+    if (_stricmp(label_out, "GOTO") == 0) return 0;
+    if (_stricmp(label_out, "FORC") == 0) return 0;
+    if (_stricmp(label_out, "IRP") == 0) return 0;
+    if (_stricmp(label_out, "IRPC") == 0) return 0;
+
     /* Check if followed by colon OR EQU directive OR data directive OR PROC */
     char *after = skip_whitespace(p + i);
     if (*after == ':') {

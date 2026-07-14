@@ -74,7 +74,7 @@ bool StreamingModelLoader::StreamNextChunk(std::function<void(const LoadProgress
     
     // Load chunk
     for (size_t i = current_tensor_idx_; i < end_idx && !cancel_requested_; ++i) {
-        auto& info = tensors[i];
+        auto& info = const_cast<TensorInfo&>(tensors[i]);
         if (!info.loaded) {
             if (!loader_->LoadTensorData(info.name, info.hostData)) {
                 return false;
