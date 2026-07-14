@@ -1,23 +1,20 @@
 @echo off
 REM ============================================================================
-REM RAWRXD FINAL UNIFIED SYSTEM - BUILD SCRIPT
+REM RAWRXD FINAL UNIFIED SYSTEM - BUILD SCRIPT (GCC)
 REM Zero-Dependency Model Loading & Streaming + Complete Infrastructure
 REM ============================================================================
 
 setlocal enabledelayedexpansion
 
-REM Configuration
-set SRC_DIR=%~dp0
-set OUT_DIR=%SRC_DIR%\..\bin
-set OBJ_DIR=%SRC_DIR%\..\obj
+REM Configuration - use absolute paths
+set "SRC_DIR=D:\rawrxd\src"
+set "OUT_DIR=D:\rawrxd\bin"
+set "OBJ_DIR=D:\rawrxd\obj"
 
 REM Compiler settings
-set CXX=cl.exe
-set CXXFLAGS=/std:c++20 /O2 /W3 /EHsc /nologo /MP /D_CRT_SECURE_NO_WARNINGS
-set CXXFLAGS=%CXXFLAGS% /DWIN32_LEAN_AND_MEAN /DNOMINMAX
-set CXXFLAGS=%CXXFLAGS% /I"%SRC_DIR%"
-
-set LDFLAGS=/SUBSYSTEM:CONSOLE /MACHINE:X64
+set "CXX=g++.exe"
+set "CXXFLAGS=-std=c++20 -O2 -Wall -Wextra -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN -DNOMINMAX -I%SRC_DIR%"
+set "LDFLAGS=-static-libgcc -static-libstdc++"
 
 REM Create output directories
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
@@ -25,7 +22,7 @@ if not exist "%OBJ_DIR%" mkdir "%OBJ_DIR%"
 
 echo.
 echo ============================================================================
-echo  RAWRXD FINAL UNIFIED SYSTEM - BUILD
+echo  RAWRXD FINAL UNIFIED SYSTEM - BUILD (GCC)
 echo ============================================================================
 echo.
 echo  Source: %SRC_DIR%
@@ -33,39 +30,27 @@ echo  Output: %OUT_DIR%
 echo  Objects: %OBJ_DIR%
 echo.
 
-REM Source files
-set SOURCES=
-set SOURCES=%SOURCES% "%SRC_DIR%\RawrXD_Final_Unified.cpp"
-set SOURCES=%SOURCES% "%SRC_DIR%\RawrXD_Final_Unified_Part2.cpp"
-set SOURCES=%SOURCES% "%SRC_DIR%\RawrXD_Final_Unified_Part3.cpp"
-
-REM Object files
-set OBJECTS=
-set OBJECTS=%OBJECTS% "%OBJ_DIR%\RawrXD_Final_Unified.obj"
-set OBJECTS=%OBJECTS% "%OBJ_DIR%\RawrXD_Final_Unified_Part2.obj"
-set OBJECTS=%OBJECTS% "%OBJ_DIR%\RawrXD_Final_Unified_Part3.obj"
-
 REM Compile each source file
 echo [1/5] Compiling RawrXD_Final_Unified.cpp...
-%CXX% %CXXFLAGS% /c /Fo"%OBJ_DIR%\RawrXD_Final_Unified.obj" "%SRC_DIR%\RawrXD_Final_Unified.cpp"
+%CXX% %CXXFLAGS% -c -o "%OBJ_DIR%\RawrXD_Final_Unified.o" "%SRC_DIR%\RawrXD_Final_Unified.cpp"
 if errorlevel 1 goto :compile_error
 
 echo [2/5] Compiling RawrXD_Final_Unified_Part2.cpp...
-%CXX% %CXXFLAGS% /c /Fo"%OBJ_DIR%\RawrXD_Final_Unified_Part2.obj" "%SRC_DIR%\RawrXD_Final_Unified_Part2.cpp"
+%CXX% %CXXFLAGS% -c -o "%OBJ_DIR%\RawrXD_Final_Unified_Part2.o" "%SRC_DIR%\RawrXD_Final_Unified_Part2.cpp"
 if errorlevel 1 goto :compile_error
 
 echo [3/5] Compiling RawrXD_Final_Unified_Part3.cpp...
-%CXX% %CXXFLAGS% /c /Fo"%OBJ_DIR%\RawrXD_Final_Unified_Part3.obj" "%SRC_DIR%\RawrXD_Final_Unified_Part3.cpp"
+%CXX% %CXXFLAGS% -c -o "%OBJ_DIR%\RawrXD_Final_Unified_Part3.o" "%SRC_DIR%\RawrXD_Final_Unified_Part3.cpp"
 if errorlevel 1 goto :compile_error
 
 REM Link library
-echo [4/5] Linking RawrXD_Unified.exe (library)...
-link.exe %LDFLAGS% /OUT:"%OUT_DIR%\RawrXD_Unified.exe" %OBJECTS%
+echo [4/5] Linking RawrXD_Unified.exe...
+%CXX% %CXXFLAGS% %LDFLAGS% -o "%OUT_DIR%\RawrXD_Unified.exe" "%OBJ_DIR%\RawrXD_Final_Unified.o" "%OBJ_DIR%\RawrXD_Final_Unified_Part2.o" "%OBJ_DIR%\RawrXD_Final_Unified_Part3.o"
 if errorlevel 1 goto :link_error
 
-REM Compile and link demo
+REM Build demo
 echo [5/5] Building demo_unified.exe...
-%CXX% %CXXFLAGS% /Fe"%OUT_DIR%\demo_unified.exe" "%SRC_DIR%\demo_unified.cpp" /link %OBJECTS%
+%CXX% %CXXFLAGS% %LDFLAGS% -o "%OUT_DIR%\demo_unified.exe" "%SRC_DIR%\demo_unified.cpp" "%OBJ_DIR%\RawrXD_Final_Unified.o" "%OBJ_DIR%\RawrXD_Final_Unified_Part2.o" "%OBJ_DIR%\RawrXD_Final_Unified_Part3.o"
 if errorlevel 1 goto :link_error
 
 echo.
@@ -74,11 +59,11 @@ echo  BUILD SUCCESSFUL
 echo ============================================================================
 echo.
 echo  Output: %OUT_DIR%\RawrXD_Unified.exe
+echo  Demo: %OUT_DIR%\demo_unified.exe
 echo.
 
 REM Show file info
 if exist "%OUT_DIR%\RawrXD_Unified.exe" (
-    dir /b "%OUT_DIR%\RawrXD_Unified.exe"
     for %%F in ("%OUT_DIR%\RawrXD_Unified.exe") do (
         echo  Size: %%~zF bytes
     )

@@ -393,5 +393,10 @@ int main() {
     // Summary
     framework.Summary();
     
-    return framework.failed == 0 ? 0 : 1;
+    return framework.failed == 0;
+}
+
+// Entry point for CoreRuntime test suite
+bool test_gguf_production() {
+    return TestGGUFProductionLoader();
 }

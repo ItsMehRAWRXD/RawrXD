@@ -14,6 +14,7 @@ set(CORE_RUNTIME_NAME "RawrXD-CoreRuntime")
 set(CORE_RUNTIME_SOURCES
     # ---- Inference Engine Core ----
     src/inference/inference_engine.cpp
+    src/inference/inference_engine_quantized.cpp
     src/inference/graph_executor.cpp
     src/inference/memory_pool.cpp
     src/inference/tensor_ops.cpp

@@ -133,15 +133,15 @@ public:
     }
 
     // Iteration
-    auto begin() const {
+    JsonObject::const_iterator begin() const {
         if (auto* p = std::get_if<JsonObject>(&value_)) return p->begin();
-        static JsonObject empty;
+        static const JsonObject empty;
         return empty.begin();
     }
 
-    auto end() const {
+    JsonObject::const_iterator end() const {
         if (auto* p = std::get_if<JsonObject>(&value_)) return p->end();
-        static JsonObject empty;
+        static const JsonObject empty;
         return empty.end();
     }
 
@@ -183,8 +183,8 @@ private:
 // Convenience Functions
 // ============================================================================
 
-inline JsonValue JsonObject() { return JsonValue(JsonObject{}); }
-inline JsonValue JsonArray() { return JsonValue(JsonArray{}); }
+inline JsonValue MakeJsonObject() { return JsonValue(JsonObject{}); }
+inline JsonValue MakeJsonArray() { return JsonValue(JsonArray{}); }
 
 // Parse from file
 JsonValue JsonParseFile(const std::string& filepath);

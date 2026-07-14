@@ -22,6 +22,8 @@
 #include <string>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
+#include <set>
 #include <functional>
 #include <thread>
 #include <mutex>
@@ -36,6 +38,8 @@
 #include <array>
 #include <optional>
 #include <variant>
+#include <future>
+#include <filesystem>
 
 // ============================================================================
 // PLATFORM DETECTION

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include <math>
+#include <cmath>
 
 namespace RawrXD {
 namespace Inference {

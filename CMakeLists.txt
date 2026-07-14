@@ -1865,6 +1865,11 @@ set(RAWR_ENGINE_ASM_SOURCES
 )
 
 # =============================================================================
+# CoreRuntime Target Definition (Zero-Dependency Core)
+# =============================================================================
+include(cmake/CoreRuntime.cmake)
+
+# =============================================================================
 # Command Table Audit — Build-time coverage validation targets
 # =============================================================================
 include(cmake/AutoFeatureRegistry.cmake)

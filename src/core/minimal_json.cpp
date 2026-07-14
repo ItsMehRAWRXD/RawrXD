@@ -4,6 +4,7 @@
 
 #include "minimal_json.hpp"
 #include <cctype>
+#include <cstring>
 #include <fstream>
 #include <sstream>
 
@@ -21,9 +22,9 @@ void JsonValue::Parser::SkipWhitespace() {
 }
 
 bool JsonValue::Parser::Match(const char* s) {
-    size_t slen = std::strlen(s);
+    size_t slen = strlen(s);
     if (pos + slen > len) return false;
-    if (std::strncmp(data + pos, s, slen) != 0) return false;
+    if (strncmp(data + pos, s, slen) != 0) return false;
     pos += slen;
     return true;
 }

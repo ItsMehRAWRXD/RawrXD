@@ -4264,11 +4264,16 @@ static void write_coff_object(const char *filename) {
         }
     }
     
-    /* Count external symbols */
+    /* Assign string table offsets to external symbols */
+    uint32_t extern_string_offsets[MAX_EXTERN_SYMBOLS];
     for (int i = 0; i < g_state.extern_count; i++) {
-        if (strlen(g_state.extern_symbols[i]) > 8) {
+        size_t name_len = strlen(g_state.extern_symbols[i]);
+        if (name_len > 8) {
             need_string_table = 1;
-            string_table_size += strlen(g_state.extern_symbols[i]) + 1;
+            extern_string_offsets[i] = string_table_size;
+            string_table_size += name_len + 1;
+        } else {
+            extern_string_offsets[i] = 0;
         }
     }
     
@@ -4306,9 +4311,6 @@ static void write_coff_object(const char *filename) {
     }
     
     /* Write external symbols (from EXTERNDEF) */
-    /* Continue string offsets from where labels left off */
-    uint32_t current_string_offset = string_table_size;
-    
     for (int i = 0; i < g_state.extern_count; i++) {
         COFF_SYMBOL sym = {0};
         
@@ -4317,8 +4319,7 @@ static void write_coff_object(const char *filename) {
             memcpy(sym.N.ShortName, g_state.extern_symbols[i], name_len);
         } else {
             sym.N.Name.Zeroes = 0;
-            sym.N.Name.Offset = current_string_offset;
-            current_string_offset += name_len + 1;
+            sym.N.Name.Offset = extern_string_offsets[i];
         }
         
         sym.Value = 0;

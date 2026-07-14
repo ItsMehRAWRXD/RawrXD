@@ -58,6 +58,7 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `analytics-dashboard.ps1` | Analytics and insights dashboard | `.\analytics-dashboard.ps1` |
 | `model-comparator.ps1` | Model comparison and benchmarking | `.\model-comparator.ps1` |
 | `chat-session-manager.ps1` | Chat session and conversation management | `.\chat-session-manager.ps1` |
+| `integration-test-suite.ps1` | Comprehensive integration testing | `.\integration-test-suite.ps1` |
 | `prompt-engineer.ps1` | Prompt engineering and optimization | `.\prompt-engineer.ps1` |
 | `token-calculator.ps1` | Token counting and cost estimation | `.\token-calculator.ps1` |
 | `model-validator.ps1` | Model file validation and repair | `.\model-validator.ps1` |
@@ -1984,6 +1985,44 @@ Automate common development and deployment workflows.
 
 # Skip tests for faster deployment
 .\workflow-automation.ps1 -Workflow DeployStaging -SkipTests
+```
+
+## Integration Testing
+
+### `integration-test-suite.ps1`
+
+Comprehensive integration testing for all system components.
+
+**Test Suites:**
+- `Quick` - Fast smoke tests and API checks
+- `Full` - Complete test suite (all categories)
+- `API` - API endpoint tests
+- `Models` - Model operation tests
+- `Gateway` - API gateway tests
+- `Storage` - Storage and disk tests
+- `Security` - Security configuration tests
+- `Performance` - Performance benchmarks
+- `Smoke` - Basic health checks
+
+**Usage:**
+```powershell
+# Quick test suite
+.\integration-test-suite.ps1 -TestSuite Quick
+
+# Full integration test
+.\integration-test-suite.ps1 -TestSuite Full
+
+# API tests only
+.\integration-test-suite.ps1 -TestSuite API -Environment staging
+
+# Generate report
+.\integration-test-suite.ps1 -TestSuite Full -GenerateReport -OutputPath "report.json"
+
+# Stop on first failure
+.\integration-test-suite.ps1 -TestSuite Full -StopOnFailure
+
+# Parallel execution
+.\integration-test-suite.ps1 -TestSuite Full -Parallel
 ```
 
 ---

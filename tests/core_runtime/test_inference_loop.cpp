@@ -132,6 +132,7 @@ bool test_version_string() {
 // =============================================================================
 
 extern bool test_gguf_loader();
+extern bool test_gguf_production();
 extern bool test_task_graph();
 extern bool test_memory_pool();
 
@@ -168,6 +169,7 @@ int main(int argc, char** argv) {
     RUN_TEST(avx512_detection);
     RUN_TEST(version_string);
     RUN_TEST(gguf_loader);
+    RUN_TEST(gguf_production);
     RUN_TEST(task_graph);
     RUN_TEST(memory_pool);
     

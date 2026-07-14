@@ -19,7 +19,7 @@ namespace Core {
 // Note: Uses composition instead of inheritance since InferenceEngine has no virtual methods
 // ============================================================================
 
-class QuantizedInferenceEngine {
+class QuantizedInferenceEngine : public InferenceEngine {
 public:
     QuantizedInferenceEngine();
     ~QuantizedInferenceEngine();

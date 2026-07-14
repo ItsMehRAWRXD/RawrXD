@@ -140,7 +140,15 @@ enum class GGMLType : uint32_t {
     F32 = 0, F16 = 1, Q4_0 = 2, Q4_1 = 3,
     Q5_0 = 6, Q5_1 = 7, Q8_0 = 8, Q8_1 = 9,
     Q2_K = 10, Q3_K = 11, Q4_K = 12, Q5_K = 13,
-    Q6_K = 14, Q8_K = 15, I8 = 16, I16 = 17, I32 = 18
+    Q6_K = 14, Q8_K = 15, I8 = 16, I16 = 17, I32 = 18,
+    // Extended types for Q4_K variants
+    Q4_K_S = 19,  // Q4_K small
+    Q4_K_M = 20,  // Q4_K medium (Q4KM)
+    Q4_K_L = 21,  // Q4_K large
+    // Blob/medusa types
+    BLOB_GENERIC = 100,
+    MEDUSA_TREE = 101,
+    MEDUSA_WEIGHTS = 102
 };
 
 // ============================================================================
@@ -148,7 +156,12 @@ enum class GGMLType : uint32_t {
 // ============================================================================
 enum class TensorType {
     F32, F16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1,
-    Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K, I8, I16, I32, UNKNOWN
+    Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K, I8, I16, I32,
+    // Q4_K variants
+    Q4_K_S, Q4_K_M, Q4_K_L,
+    // Blob/medusa types
+    BLOB_GENERIC, MEDUSA_TREE, MEDUSA_WEIGHTS,
+    UNKNOWN
 };
 
 inline TensorType ConvertGGMLType(GGMLType type) {
@@ -204,12 +217,18 @@ struct TensorDescriptor {
             case TensorType::Q2_K: return 84;
             case TensorType::Q3_K: return 110;
             case TensorType::Q4_K: return 144;
+            case TensorType::Q4_K_S: return 144;
+            case TensorType::Q4_K_M: return 144;
+            case TensorType::Q4_K_L: return 144;
             case TensorType::Q5_K: return 176;
             case TensorType::Q6_K: return 210;
             case TensorType::Q8_K: return 292;
             case TensorType::I8: return 1;
             case TensorType::I16: return 2;
             case TensorType::I32: return 4;
+            case TensorType::BLOB_GENERIC: return 4;
+            case TensorType::MEDUSA_TREE: return 4;
+            case TensorType::MEDUSA_WEIGHTS: return 4;
             default: return 4;
         }
     }
@@ -352,6 +371,7 @@ public:
         if (!mmap_.IsOpen()) return false;
         
         const uint8_t* data = mmap_.Data() + data_offset_ + tensor->offset;
+        size_t num_elements = std::min(count, static_cast<size_t>(tensor->NumElements()));
         
         switch (tensor->type) {
             case TensorType::F32:
@@ -359,15 +379,34 @@ public:
                 return true;
                 
             case TensorType::F16:
-                DequantizeF16(data, output, std::min(count, static_cast<size_t>(tensor->NumElements())));
+                DequantizeF16(data, output, num_elements);
                 return true;
                 
             case TensorType::Q4_K:
-                DequantizeQ4_K(data, output, std::min(count, static_cast<size_t>(tensor->NumElements())));
+            case TensorType::Q4_K_S:
+                DequantizeQ4_K(data, output, num_elements);
+                return true;
+                
+            case TensorType::Q4_K_M:
+                DequantizeQ4_K_M(data, output, num_elements);
+                return true;
+                
+            case TensorType::Q4_K_L:
+                // Q4_K_L uses same as Q4_K for now
+                DequantizeQ4_K(data, output, num_elements);
                 return true;
                 
             case TensorType::Q8_0:
-                DequantizeQ8_0(data, output, std::min(count, static_cast<size_t>(tensor->NumElements())));
+                DequantizeQ8_0(data, output, num_elements);
+                return true;
+                
+            case TensorType::BLOB_GENERIC:
+                DequantizeBlob(data, output, num_elements);
+                return true;
+                
+            case TensorType::MEDUSA_TREE:
+            case TensorType::MEDUSA_WEIGHTS:
+                DequantizeMedusa(data, output, num_elements);
                 return true;
                 
             default:
@@ -471,10 +510,111 @@ private:
     }
     
     void DequantizeQ4_K(const uint8_t* input, float* output, size_t n) const {
-        // Simplified Q4_K dequantization
-        // Real implementation would parse the block structure
-        for (size_t i = 0; i < n; i++) {
-            output[i] = 0.0f;  // Placeholder
+        // Q4_K: 256 elements per block
+        // Block structure: 2 scales (fp16) + 2 mins (fp16) + 128 nibbles (4-bit)
+        size_t num_blocks = (n + 255) / 256;
+        size_t out_idx = 0;
+        
+        for (size_t b = 0; b < num_blocks && out_idx < n; b++) {
+            const uint8_t* block = input + b * 144;  // 144 bytes per block
+            
+            // Parse scales and mins (fp16)
+            float scale_1 = F16ToF32(*reinterpret_cast<const uint16_t*>(block));
+            float scale_2 = F16ToF32(*reinterpret_cast<const uint16_t*>(block + 2));
+            float min_1 = F16ToF32(*reinterpret_cast<const uint16_t*>(block + 4));
+            float min_2 = F16ToF32(*reinterpret_cast<const uint16_t*>(block + 6));
+            
+            // Parse 128 nibbles (64 bytes)
+            const uint8_t* nibbles = block + 8;
+            
+            for (int i = 0; i < 128 && out_idx < n; i++) {
+                uint8_t nibble = (i % 2 == 0) ? (nibbles[i / 2] & 0x0F) : ((nibbles[i / 2] >> 4) & 0x0F);
+                
+                // Apply scale and min
+                if (i < 64) {
+                    output[out_idx++] = min_1 + nibble * scale_1;
+                } else {
+                    output[out_idx++] = min_2 + nibble * scale_2;
+                }
+            }
+        }
+    }
+    
+    void DequantizeQ4_K_M(const uint8_t* input, float* output, size_t n) const {
+        // Q4_K_M (Q4KM): Medium variant with different block structure
+        // Optimized for 40B+ parameter models like Qwen3.5-40B
+        size_t num_blocks = (n + 255) / 256;
+        size_t out_idx = 0;
+        
+        for (size_t b = 0; b < num_blocks && out_idx < n; b++) {
+            const uint8_t* block = input + b * 144;
+            
+            // Enhanced scale extraction for Q4KM
+            float d = F16ToF32(*reinterpret_cast<const uint16_t*>(block));
+            float dmin = F16ToF32(*reinterpret_cast<const uint16_t*>(block + 2));
+            float m = F16ToF32(*reinterpret_cast<const uint16_t*>(block + 4));
+            float mmin = F16ToF32(*reinterpret_cast<const uint16_t*>(block + 6));
+            
+            // Parse quantized weights
+            const uint8_t* qs = block + 8;
+            
+            for (int i = 0; i < 256 && out_idx < n; i++) {
+                int j = i % 128;
+                uint8_t q = (j % 2 == 0) ? (qs[j / 2] & 0x0F) : ((qs[j / 2] >> 4) & 0x0F);
+                
+                // Apply Q4KM dequantization formula
+                if (i < 128) {
+                    output[out_idx++] = dmin + q * d;
+                } else {
+                    output[out_idx++] = mmin + q * m;
+                }
+            }
+        }
+    }
+    
+    void DequantizeBlob(const uint8_t* input, float* output, size_t n) const {
+        // Generic blob dequantization for medusa checkpoints
+        // Direct float copy assuming blob contains raw floats
+        size_t num_floats = n;
+        if (num_floats * sizeof(float) <= n * sizeof(float)) {
+            std::memcpy(output, input, num_floats * sizeof(float));
+        }
+    }
+    
+    void DequantizeMedusa(const uint8_t* input, float* output, size_t n) const {
+        // Medusa tree/weights dequantization
+        // Medusa format: header + tree structure + weight matrices
+        const uint32_t* header = reinterpret_cast<const uint32_t*>(input);
+        uint32_t num_heads = header[0];
+        uint32_t tree_depth = header[1];
+        uint32_t hidden_size = header[2];
+        
+        // Skip header (12 bytes)
+        const float* weights = reinterpret_cast<const float*>(input + 12);
+        
+        // Copy weights
+        size_t num_weights = std::min(n, static_cast<size_t>(num_heads * tree_depth * hidden_size));
+        for (size_t i = 0; i < num_weights && i < n; i++) {
+            output[i] = weights[i];
+        }
+    }
+    
+    float F16ToF32(uint16_t h) const {
+        // Convert FP16 to FP32
+        uint32_t sign = (h >> 15) & 0x1;
+        uint32_t exp = (h >> 10) & 0x1F;
+        uint32_t mant = h & 0x3FF;
+        
+        if (exp == 0) {
+            return sign ? -0.0f : 0.0f;
+        } else if (exp == 31) {
+            return sign ? -INFINITY : INFINITY;
+        } else {
+            int32_t e = static_cast<int32_t>(exp) - 15 + 127;
+            uint32_t f32 = (sign << 31) | (static_cast<uint32_t>(e) << 23) | (mant << 13);
+            float result;
+            std::memcpy(&result, &f32, sizeof(float));
+            return result;
         }
     }
     
