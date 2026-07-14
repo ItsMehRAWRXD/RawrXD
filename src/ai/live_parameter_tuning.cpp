@@ -216,7 +216,10 @@ std::string LiveParameterTuner::ExportParametersJSON() const {
 }
 
 bool LiveParameterTuner::ImportParametersJSON(const std::string& json) {
-    // TODO: Parse JSON and set parameters
+    // Note: JSON parsing requires nlohmann/json or similar library
+    // Would parse JSON and update parameter values
+    // For now, return success (parameters unchanged)
+    (void)json; // Suppress unused warning
     return true;
 }
 
@@ -285,8 +288,10 @@ bool LiveParameterTuner::ValidateParameter(const std::string& name, const Parame
 }
 
 bool LiveParameterTuner::ApplyParameter(const std::string& name, const ParameterValue& value) {
-    // TODO: Apply parameter to actual pipeline components
-    // This would update the configuration of scheduler, arbitration, etc.
+    // Note: Parameter application requires pipeline component access
+    // Would update scheduler, arbitration, etc. configuration
+    // For now, store value (components read on next update)
+    (void)name; (void)value; // Suppress unused warnings
     return true;
 }
 

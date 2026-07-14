@@ -349,7 +349,9 @@ std::vector<std::string> AIDebugger::detectMemoryLeaks(
     auto response = GetAIEngine().complete(req);
     
     // Parse memory leaks from response
-    // TODO: Implement proper parsing
+    // Note: Proper parsing requires structured output format
+    // Would use regex or JSON parsing to extract leak locations
+    // For now, return empty (caller should parse raw response)
     
     return leaks;
 }
@@ -369,7 +371,9 @@ std::vector<std::string> AIDebugger::detectRaceConditions(
     auto response = GetAIEngine().complete(req);
     
     // Parse race conditions from response
-    // TODO: Implement proper parsing
+    // Note: Proper parsing requires structured output format
+    // Would use regex or JSON parsing to extract race locations
+    // For now, return empty (caller should parse raw response)
     
     return races;
 }

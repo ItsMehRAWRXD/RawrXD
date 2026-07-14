@@ -131,7 +131,29 @@ private:
     
     size_t data_offset_ = 0;
     uint32_t version_ = 0;
+    
+    // Vocabulary metadata for tokenizer
+    uint64_t vocab_hash_ = 0;
+    std::vector<std::string> vocab_tokens_;
 };
+
+// ============================================================================
+// Vocabulary Extraction
+// ============================================================================
+
+// Compute hash of vocabulary
+uint64_t ComputeVocabHash(const std::vector<std::string>& vocab);
+
+// Extract vocabulary from GGUF and compute hash
+uint64_t ExtractVocabHash(const std::string& gguf_path);
+
+// Get vocabulary tokens from GGUF
+std::vector<std::string> ExtractVocabulary(const std::string& gguf_path);
+
+// Extract vocabulary with merge rules for BPE
+bool ExtractVocabAndMerges(const std::string& gguf_path,
+                          std::vector<std::string>& vocab,
+                          std::vector<std::pair<std::string, std::string>>& merges);
 
 // ============================================================================
 // Simple Tokenizer (BPE-based, minimal implementation)

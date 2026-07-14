@@ -370,8 +370,12 @@ std::optional<std::string> AICodeReview::generateFix(
 bool AICodeReview::applyFix(
     const std::string& filePath,
     const ReviewComment& comment) {
-    // TODO: Apply fix to file
-    OutputDebugStringA("[AICodeReview] Applying fix\n");
+    // Note: Apply fix requires file modification API
+    // Would need to:
+    // 1. Parse the suggested fix from comment
+    // 2. Apply edit to file (via IDE API or direct file write)
+    // 3. Handle line number offsets for multi-line fixes
+    OutputDebugStringA("[AICodeReview] Applying fix (not yet implemented)\n");
     return false;
 }
 
@@ -403,15 +407,21 @@ std::vector<AICodeReview::FullReview> AICodeReview::reviewBatch(
 void AICodeReview::recordFeedback(
     const ReviewComment& comment,
     bool wasHelpful) {
-    // TODO: Learn from feedback
+    // Note: Feedback learning requires ML training pipeline
+    // Would store feedback in database and periodically retrain model
+    // For now, just log the feedback
     OutputDebugStringA(wasHelpful ? "[AICodeReview] Positive feedback\n" 
                                    : "[AICodeReview] Negative feedback\n");
 }
 
 void AICodeReview::trainOnCodebase(
     const std::vector<std::string>& filePaths) {
-    // TODO: Train on codebase patterns
-    OutputDebugStringA("[AICodeReview] Training on codebase\n");
+    // Note: Training requires ML pipeline with:
+    // 1. Code pattern extraction
+    // 2. Fine-tuning dataset creation
+    // 3. Model training infrastructure
+    // This is a long-term feature
+    OutputDebugStringA("[AICodeReview] Training on codebase (not yet implemented)\n");
 }
 
 AICodeReview& GetAICodeReview() {

@@ -270,9 +270,7 @@ bool StreamingLoader::ParseHeader() {
         }
     }
     
-    // Parse tensors
-    data_offset_ = (pos + 31) & ~31ULL;  // Align to 32 bytes
-    
+    // Parse tensors (tensor info is in the header, before tensor data)
     tensors_.reserve(tensor_count);
     for (uint64_t i = 0; i < tensor_count; ++i) {
         TensorInfo info;
@@ -305,10 +303,13 @@ bool StreamingLoader::ParseHeader() {
         size_t block_size = GetQuantBlockSize(info.quant_type);
         size_t type_size = GetQuantTypeSize(info.quant_type);
         info.size_bytes = ((num_elements + block_size - 1) / block_size) * type_size;
-        
+
         tensors_.push_back(info);
     }
-    
+
+    // Tensor data starts after header, aligned to 32 bytes
+    data_offset_ = (pos + 31) & ~31ULL;
+
     return true;
 }
 
@@ -347,9 +348,14 @@ void StreamingLoader::Dequantize(const void* src, float* dst, const TensorInfo& 
         case QuantType::F32:
             std::memcpy(dst, src, info.num_elements * sizeof(float));
             break;
-        case QuantType::F16:
-            // Would need F16 to F32 conversion
+        case QuantType::F16: {
+            // F16 to F32 conversion
+            const uint16_t* src_f16 = static_cast<const uint16_t*>(src);
+            for (uint64_t i = 0; i < info.num_elements; ++i) {
+                dst[i] = FP16ToFP32(src_f16[i]);
+            }
             break;
+        }
         case QuantType::Q4_0:
             DequantizeQ4_0(src, dst, info.num_elements);
             break;
@@ -381,11 +387,13 @@ void StreamingLoader::Dequantize(const void* src, float* dst, const TensorInfo& 
 void StreamingLoader::DequantizeQ4_0(const void* src, float* dst, size_t n) {
     const uint8_t* data = static_cast<const uint8_t*>(src);
     size_t num_blocks = (n + 31) / 32;
-    
+
     for (size_t b = 0; b < num_blocks; ++b) {
-        float scale = *reinterpret_cast<const float*>(data + b * 18);
+        // Q4_0: 2 bytes FP16 scale + 16 bytes for 32 4-bit weights = 18 bytes
+        uint16_t scale_u16 = *reinterpret_cast<const uint16_t*>(data + b * 18);
+        float scale = FP16ToFP32(scale_u16);
         const uint8_t* qs = data + b * 18 + 2;
-        
+
         for (size_t i = 0; i < 32 && (b * 32 + i) < n; ++i) {
             uint8_t q = (i & 1) ? (qs[i / 2] >> 4) : (qs[i / 2] & 0xF);
             dst[b * 32 + i] = scale * (q - 8);
@@ -396,12 +404,15 @@ void StreamingLoader::DequantizeQ4_0(const void* src, float* dst, size_t n) {
 void StreamingLoader::DequantizeQ4_1(const void* src, float* dst, size_t n) {
     const uint8_t* data = static_cast<const uint8_t*>(src);
     size_t num_blocks = (n + 31) / 32;
-    
+
     for (size_t b = 0; b < num_blocks; ++b) {
-        float scale = *reinterpret_cast<const float*>(data + b * 20);
-        float min = *reinterpret_cast<const float*>(data + b * 20 + 4);
-        const uint8_t* qs = data + b * 20 + 8;
-        
+        // Q4_1: 2 bytes FP16 scale + 2 bytes FP16 min + 16 bytes for 32 4-bit weights = 20 bytes
+        uint16_t scale_u16 = *reinterpret_cast<const uint16_t*>(data + b * 20);
+        uint16_t min_u16 = *reinterpret_cast<const uint16_t*>(data + b * 20 + 2);
+        float scale = FP16ToFP32(scale_u16);
+        float min = FP16ToFP32(min_u16);
+        const uint8_t* qs = data + b * 20 + 4;
+
         for (size_t i = 0; i < 32 && (b * 32 + i) < n; ++i) {
             uint8_t q = (i & 1) ? (qs[i / 2] >> 4) : (qs[i / 2] & 0xF);
             dst[b * 32 + i] = min + scale * q;
@@ -412,11 +423,13 @@ void StreamingLoader::DequantizeQ4_1(const void* src, float* dst, size_t n) {
 void StreamingLoader::DequantizeQ8_0(const void* src, float* dst, size_t n) {
     const uint8_t* data = static_cast<const uint8_t*>(src);
     size_t num_blocks = (n + 31) / 32;
-    
+
     for (size_t b = 0; b < num_blocks; ++b) {
-        float scale = *reinterpret_cast<const float*>(data + b * 34);
+        // Q8_0: 2 bytes FP16 scale + 32 bytes for 32 8-bit weights = 34 bytes
+        uint16_t scale_u16 = *reinterpret_cast<const uint16_t*>(data + b * 34);
+        float scale = FP16ToFP32(scale_u16);
         const int8_t* qs = reinterpret_cast<const int8_t*>(data + b * 34 + 2);
-        
+
         for (size_t i = 0; i < 32 && (b * 32 + i) < n; ++i) {
             dst[b * 32 + i] = scale * qs[i];
         }

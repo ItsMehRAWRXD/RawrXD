@@ -80,8 +80,12 @@ void DualStreamSpeculative::DraftThread(
     int tokens_generated = 0;
     
     while (tokens_generated < max_tokens && !stop_flag_.load()) {
-        // Generate draft token with Q4_K
-        // TODO: Call actual Q4_K inference
+        // Note: Draft token generation requires Q4_K inference
+        // Implementation would:
+        // 1. Run transformer forward pass with Q4_K quantized weights
+        // 2. Sample from output logits
+        // 3. Return token ID and text
+        // This requires kernel integration with Q4_K matmul
         
         DualToken token;
         token.draft_token = 0;  // Placeholder
@@ -151,8 +155,12 @@ void DualStreamSpeculative::VerifyThread(
             }
         }
         
-        // Generate verify token with Q6_K
-        // TODO: Call actual Q6_K inference
+        // Note: Verify token generation requires Q6_K inference
+        // Implementation would:
+        // 1. Run transformer forward pass with Q6_K quantized weights
+        // 2. Sample from output logits
+        // 3. Compare with draft token for acceptance
+        // This requires kernel integration with Q6_K matmul
         
         DualToken token;
         token.verify_token = 0;  // Placeholder

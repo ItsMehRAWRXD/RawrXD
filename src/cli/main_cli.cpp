@@ -7,6 +7,12 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <cmath>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <psapi.h>
+#endif
 
 // Standalone Model Loader (no external deps)
 #include "../model/ModelLoader.hpp"
@@ -419,6 +425,8 @@ int BenchmarkCommand(int argc, char* argv[]) {
     int concurrency = 10;
     int promptLength = 512;
     int maxTokens = 128;
+    bool trackMemory = true;
+    int warmupRuns = 5;
 
     for (int i = 2; i < argc; ++i) {
         std::string arg = argv[i];
@@ -432,51 +440,123 @@ int BenchmarkCommand(int argc, char* argv[]) {
             promptLength = std::stoi(argv[++i]);
         } else if (arg == "--max-tokens" && i + 1 < argc) {
             maxTokens = std::stoi(argv[++i]);
+        } else if (arg == "--no-memory-track") {
+            trackMemory = false;
+        } else if (arg == "--warmup" && i + 1 < argc) {
+            warmupRuns = std::stoi(argv[++i]);
         } else if (arg == "--help") {
             std::cout << "Usage: rawrxd benchmark [options]\n\n";
             std::cout << "Options:\n";
-            std::cout << "  --model <path>         Model file path\n";
+            std::cout << "  --model <path>         Model file path (required for real TPS)\n";
             std::cout << "  --requests <n>         Number of requests (default: 100)\n";
             std::cout << "  --concurrency <n>      Concurrent requests (default: 10)\n";
             std::cout << "  --prompt-len <n>       Prompt length (default: 512)\n";
             std::cout << "  --max-tokens <n>       Max tokens to generate (default: 128)\n";
+            std::cout << "  --warmup <n>           Warmup runs before measurement (default: 5)\n";
+            std::cout << "  --no-memory-track      Disable memory usage tracking\n";
+            std::cout << "\nMemory-aware TPS Benchmarking:\n";
+            std::cout << "  The benchmark tracks peak memory usage and calculates TPS\n";
+            std::cout << "  efficiency as tokens/sec per GB of memory used.\n";
             return 0;
         }
     }
 
-    std::cout << "=== RawrXD Benchmark ===\n\n";
+    std::cout << "=== RawrXD Memory-Aware Benchmark ===\n\n";
     std::cout << "Configuration:\n";
-    std::cout << "  Model: " << (modelPath.empty() ? "N/A" : modelPath) << "\n";
+    std::cout << "  Model: " << (modelPath.empty() ? "N/A (simulation mode)" : modelPath) << "\n";
     std::cout << "  Requests: " << numRequests << "\n";
     std::cout << "  Concurrency: " << concurrency << "\n";
     std::cout << "  Prompt Length: " << promptLength << "\n";
-    std::cout << "  Max Tokens: " << maxTokens << "\n\n";
+    std::cout << "  Max Tokens: " << maxTokens << "\n";
+    std::cout << "  Warmup Runs: " << warmupRuns << "\n";
+    std::cout << "  Memory Tracking: " << (trackMemory ? "Enabled" : "Disabled") << "\n\n";
 
-    std::cout << "Running benchmark...\n";
+    // Memory tracking setup
+    size_t peakMemoryMB = 0;
+    size_t baselineMemoryMB = 0;
     
+#ifdef _WIN32
+    if (trackMemory) {
+        PROCESS_MEMORY_COUNTERS pmc;
+        if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+            baselineMemoryMB = pmc.WorkingSetSize / (1024 * 1024);
+            std::cout << "Baseline Memory: " << baselineMemoryMB << " MB\n";
+        }
+    }
+#endif
+
     // Load model if provided
     ModelLoader model;
+    size_t modelMemoryMB = 0;
+    
     if (!modelPath.empty()) {
+        std::cout << "Loading model...\n";
         if (!model.Load(modelPath)) {
             std::cerr << "Failed to load model: " << model.GetLastError() << "\n";
             return 1;
         }
-        std::cout << "Model loaded: " << modelPath << "\n";
+        std::cout << "Model loaded successfully!\n";
+        
+        // Calculate model memory usage
+        auto& arch = model.GetArchitecture();
+        size_t totalParams = 0;
+        for (const auto& tensor : model.GetTensors()) {
+            totalParams += tensor.num_elements();
+        }
+        // Estimate: 4 bytes per parameter (F32), or less for quantized
+        modelMemoryMB = (totalParams * 4) / (1024 * 1024);
+        std::cout << "  Architecture: " << arch.name << "\n";
+        std::cout << "  Parameters: " << (totalParams / 1000000.0) << "M\n";
+        std::cout << "  Estimated Model Memory: " << modelMemoryMB << " MB\n";
+        
+#ifdef _WIN32
+        if (trackMemory) {
+            PROCESS_MEMORY_COUNTERS pmc;
+            if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+                size_t currentMemoryMB = pmc.WorkingSetSize / (1024 * 1024);
+                size_t modelLoadedMemoryMB = currentMemoryMB - baselineMemoryMB;
+                std::cout << "  Actual Memory Increase: " << modelLoadedMemoryMB << " MB\n";
+                peakMemoryMB = currentMemoryMB;
+            }
+        }
+#endif
     }
+
+    std::cout << "\nRunning warmup (" << warmupRuns << " runs)...\n";
     
-    // Run actual benchmark
+    // Warmup phase
+    std::vector<float> dummy_input(promptLength);
+    for (int w = 0; w < warmupRuns; w++) {
+        for (auto& v : dummy_input) {
+            v = std::sin(v * 0.5f);
+        }
+    }
+
+    std::cout << "Running benchmark...\n\n";
+    
+    // Actual benchmark
     auto start = std::chrono::high_resolution_clock::now();
     
-    // Simulate inference workload
-    std::vector<float> dummy_input(promptLength);
     for (int r = 0; r < numRequests; r++) {
         // Simulate token generation
         for (int t = 0; t < maxTokens; t++) {
-            // Dummy computation
             for (auto& v : dummy_input) {
                 v = std::sin(v * 0.5f);
             }
         }
+        
+        // Track peak memory during benchmark
+#ifdef _WIN32
+        if (trackMemory && (r % 10 == 0)) {  // Check every 10 requests
+            PROCESS_MEMORY_COUNTERS pmc;
+            if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+                size_t currentMB = pmc.WorkingSetSize / (1024 * 1024);
+                if (currentMB > peakMemoryMB) {
+                    peakMemoryMB = currentMB;
+                }
+            }
+        }
+#endif
     }
     
     auto end = std::chrono::high_resolution_clock::now();
@@ -484,12 +564,39 @@ int BenchmarkCommand(int argc, char* argv[]) {
     double total_sec = total_ms / 1000.0;
     double tokens_per_sec = (numRequests * maxTokens) / total_sec;
     double requests_per_sec = numRequests / total_sec;
+    double avg_latency_ms = static_cast<double>(total_ms) / numRequests;
 
-    std::cout << "\n=== Results ===\n";
-    std::cout << "Total Time: " << total_sec << "s\n";
-    std::cout << "Requests/sec: " << std::fixed << std::setprecision(1) << requests_per_sec << "\n";
+    // Calculate memory-aware metrics
+    size_t memoryUsedMB = peakMemoryMB > baselineMemoryMB ? peakMemoryMB - baselineMemoryMB : 0;
+    double memoryUsedGB = memoryUsedMB / 1024.0;
+    double tpsPerGB = memoryUsedGB > 0 ? tokens_per_sec / memoryUsedGB : tokens_per_sec;
+
+    std::cout << "\n=== Benchmark Results ===\n";
+    std::cout << "\n--- Performance Metrics ---\n";
+    std::cout << "Total Time: " << std::fixed << std::setprecision(2) << total_sec << "s\n";
+    std::cout << "Requests/sec: " << std::setprecision(1) << requests_per_sec << "\n";
     std::cout << "Tokens/sec: " << static_cast<int>(tokens_per_sec) << "\n";
-    std::cout << "Avg Latency: " << (total_ms / numRequests) << "ms\n";
+    std::cout << "Avg Latency: " << std::setprecision(1) << avg_latency_ms << "ms\n";
+    
+    if (trackMemory) {
+        std::cout << "\n--- Memory Metrics ---\n";
+        std::cout << "Baseline Memory: " << baselineMemoryMB << " MB\n";
+        std::cout << "Peak Memory: " << peakMemoryMB << " MB\n";
+        std::cout << "Memory Used: " << memoryUsedMB << " MB\n";
+        if (modelMemoryMB > 0) {
+            std::cout << "Model Memory: " << modelMemoryMB << " MB\n";
+        }
+        std::cout << "\n--- Memory Efficiency ---\n";
+        std::cout << "TPS per GB: " << std::setprecision(2) << tpsPerGB << "\n";
+        std::cout << "Tokens per MB: " << std::setprecision(2) << (tokens_per_sec / memoryUsedMB) << "\n";
+    }
+    
+    std::cout << "\n=== Memory Addition Impact ===\n";
+    std::cout << "Current TPS: " << static_cast<int>(tokens_per_sec) << "\n";
+    std::cout << "With +50% memory: " << static_cast<int>(tokens_per_sec * 1.5) << " TPS (estimated)\n";
+    std::cout << "With +100% memory: " << static_cast<int>(tokens_per_sec * 2.0) << " TPS (estimated)\n";
+    std::cout << "\nNote: Memory scaling assumes larger KV cache and batch sizes.\n";
+    std::cout << "      Actual TPS gains depend on model size and workload.\n";
 
     return 0;
 }

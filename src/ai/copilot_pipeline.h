@@ -25,6 +25,7 @@
 #include "streaming_inference_engine.h"
 #include "ide_completion_bridge.h"
 #include "vulkan_compute.h"
+#include "../model/ModelLoader.hpp"
 #include <memory>
 #include <string>
 
@@ -78,6 +79,7 @@ private:
     
     std::unique_ptr<StreamingInferenceEngine> streaming_engine_;
     std::unique_ptr<IDECompletionBridge> ide_bridge_;
+    std::unique_ptr<rawrxd::model::ModelLoader> model_loader_;
     VulkanCompute* vulkan_;
     
     // Model state

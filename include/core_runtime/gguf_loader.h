@@ -9,6 +9,8 @@
 
 #include "core_export.h"
 #include <memory>
+#include <cstddef>
+#include <cstdint>
 
 namespace RawrXD {
 namespace Core {
@@ -37,6 +39,23 @@ public:
 
     // Unload model
     void Unload();
+    
+    // ---- Model Information ----
+    
+    // Get number of tensors in the model
+    size_t GetTensorCount() const;
+    
+    // Get number of transformer layers
+    uint32_t GetLayerCount() const;
+    
+    // Get vocabulary size
+    uint32_t GetVocabSize() const;
+    
+    // Get embedding dimension
+    uint32_t GetEmbeddingDim() const;
+    
+    // Get model architecture (e.g., "llama", "qwen2", "phi3")
+    const char* GetArchitecture() const;
 
 private:
     class Impl;

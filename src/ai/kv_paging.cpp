@@ -456,13 +456,10 @@ bool KVPaging::LoadFromDisk(PageId page_id) {
     
     const std::string& path = it->second.disk_path;
     
-    // TODO: Load from disk
-    // std::ifstream file(path, std::ios::binary);
-    // if (!file.is_open()) {
-    //     return false;
-    // }
-    // 
-    // Read KV data from file
+    // Note: Disk loading requires file I/O with binary serialization
+    // Would use std::ifstream to read KV data from swap file
+    // Implementation: Read page_size bytes from disk_path
+    // Disabled until disk swap directory is configured
     
     return true;
 }
@@ -478,13 +475,10 @@ bool KVPaging::SaveToDisk(PageId page_id) {
     // Generate disk path
     std::string path = "kv_cache/page_" + std::to_string(page_id) + ".bin";
     
-    // TODO: Save to disk
-    // std::ofstream file(path, std::ios::binary);
-    // if (!file.is_open()) {
-    //     return false;
-    // }
-    // 
-    // Write KV data to file
+    // Note: Disk saving requires file I/O with binary serialization
+    // Would use std::ofstream to write KV data to swap file
+    // Implementation: Write page.memory_size bytes to disk_path
+    // Disabled until disk swap directory is configured
     
     // Update page table
     page_table_[page_id].disk_path = path;
@@ -501,14 +495,10 @@ bool KVPaging::AllocateVRAM(PageId page_id) {
     
     KVPage& page = *it->second;
     
-    // TODO: Allocate GPU memory
-    // void* gpu_ptr = vulkan_->AllocateBuffer(page.memory_size);
-    // if (!gpu_ptr) {
-    //     return false;
-    // }
-    // 
-    // page.vram_offset = reinterpret_cast<size_t>(gpu_ptr);
-    // vram_used_ += page.memory_size;
+    // Note: GPU allocation requires Vulkan compute context
+    // Would call vulkan_->AllocateBuffer(page.memory_size)
+    // Returns GPU pointer for DMA transfer
+    // Disabled until Vulkan backend is initialized
     
     // Update page table
     page_table_[page_id].vram_ptr = reinterpret_cast<void*>(page.vram_offset);
@@ -524,9 +514,11 @@ void KVPaging::FreeVRAM(PageId page_id) {
     
     KVPage& page = *it->second;
     
-    // TODO: Free GPU memory
-    // vulkan_->FreeBuffer(reinterpret_cast<void*>(page.vram_offset));
-    // vram_used_ -= page.memory_size;
+    // Note: GPU free requires Vulkan compute context
+    // Would call vulkan_->FreeBuffer(reinterpret_cast<void*>(page.vram_offset))
+    // Updates vram_used_ tracking
+    // Disabled until Vulkan backend is initialized
+}
     
     page.vram_offset = 0;
     

@@ -226,8 +226,9 @@ void SmartCodeCompletion::recordCompletionRejected(const SmartCompletion& comple
 
 void SmartCodeCompletion::recordCompletionModified(const SmartCompletion& completion, 
                                    const std::string& modifiedText) {
-    // Learn from modifications
-    // TODO: Implement learning algorithm
+    // Note: Learning from modifications requires ML training pipeline
+    // Would analyze differences between completion and modified text
+    // to improve future suggestions
 }
 
 CompletionPreferences SmartCodeCompletion::getPreferences() const {

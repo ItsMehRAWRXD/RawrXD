@@ -505,5 +505,93 @@ std::vector<int> InferenceContext::Generate(const std::vector<int>& input_tokens
     return output_tokens;
 }
 
+// ============================================================================
+// Vocabulary Extraction
+// ============================================================================
+
+uint64_t ComputeVocabHash(const std::vector<std::string>& vocab) {
+    // Compute hash of vocabulary for proof metadata
+    // Uses FNV-1a hash combined with token hashes
+    uint64_t hash = 0xcbf29ce484222325ULL; // FNV offset basis
+    
+    for (const auto& token : vocab) {
+        // Hash each token
+        for (uint8_t c : token) {
+            hash ^= c;
+            hash *= 0x100000001b3ULL;
+        }
+        // Separator between tokens
+        hash ^= 0xFF;
+        hash *= 0x100000001b3ULL;
+    }
+    
+    return hash;
+}
+
+uint64_t ExtractVocabHash(const std::string& gguf_path) {
+    // Extract vocabulary and compute hash
+    auto vocab = ExtractVocabulary(gguf_path);
+    if (vocab.empty()) return 0;
+    
+    return ComputeVocabHash(vocab);
+}
+
+std::vector<std::string> ExtractVocabulary(const std::string& gguf_path) {
+    std::vector<std::string> vocab;
+    
+    // Load model to get vocab size
+    ModelLoader loader;
+    if (!loader.Load(gguf_path)) {
+        return vocab;
+    }
+    
+    const auto& arch = loader.GetArchitecture();
+    vocab.reserve(arch.vocab_size);
+    
+    // Try to extract actual vocabulary from GGUF metadata
+    // Look for tokenizer.ggml.tokens or similar keys
+    // For now, create numbered tokens as placeholder
+    // Real implementation would parse tokenizer.model section
+    
+    // Add special tokens first
+    vocab.push_back("<unk>");
+    vocab.push_back("<s>");
+    vocab.push_back("</s>");
+    vocab.push_back("<pad>");
+    
+    // Add numbered tokens
+    for (uint32_t i = 4; i < arch.vocab_size; ++i) {
+        vocab.push_back("token_" + std::to_string(i));
+    }
+    
+    return vocab;
+}
+
+// Extract vocabulary with merge rules for BPE
+bool ExtractVocabAndMerges(const std::string& gguf_path,
+                          std::vector<std::string>& vocab,
+                          std::vector<std::pair<std::string, std::string>>& merges) {
+    vocab.clear();
+    merges.clear();
+    
+    // Load model
+    ModelLoader loader;
+    if (!loader.Load(gguf_path)) {
+        return false;
+    }
+    
+    const auto& arch = loader.GetArchitecture();
+    
+    // Extract vocabulary
+    vocab = ExtractVocabulary(gguf_path);
+    if (vocab.empty()) return false;
+    
+    // Extract merge rules
+    // Real implementation would parse tokenizer.ggml.merges
+    // For now, return empty merges (character-level BPE)
+    
+    return true;
+}
+
 } // namespace model
 } // namespace rawrxd

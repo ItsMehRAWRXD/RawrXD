@@ -589,7 +589,9 @@ int StreamingModelInferenceEngine::GetNumLayers() const {
 }
 
 int StreamingModelInferenceEngine::GetNumHeads() const {
-    // TODO: Get from metadata when available
+    // Note: Num heads requires metadata extension
+    // Currently metadata only provides layer_count
+    // Would need to add heads_count to ModelMetadata struct
     return 0;
 }
 

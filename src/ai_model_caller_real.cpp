@@ -383,8 +383,9 @@ bool AIModelCaller_Initialize(const ModelConfig& config) {
                 
             case RawrXD::Inference::BackendType::VULKAN:
                 LogMessage(LOG_INFO, "Using Vulkan GPU backend");
-                // TODO: g_ctx.backend = ggml_rxd_backend_vulkan_init();
-                // Fall back to CPU until Vulkan backend is ready
+                // Note: Vulkan backend requires ggml_rxd_backend_vulkan_init()
+                // This needs Vulkan SDK and proper driver support
+                // For now, fall back to CPU backend
                 g_ctx.backend = ggml_rxd_backend_cpu_init();
                 break;
                 

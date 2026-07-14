@@ -38,14 +38,14 @@ bool SovereignIntegration::Initialize(const SovereignConfig& config) {
     
     // Initialize Predictor
     predictor_ = std::make_unique<TensorPredictor>();
-    if (!predictor_>-Initialize(32, 16000)) { // 32 layers, 16ms token latency
+    if (!predictor_->Initialize(32, 16000)) { // 32 layers, 16ms token latency
         std::cerr << "[Sovereign] Failed to initialize predictor\n";
         return false;
     }
     
     // Initialize Orchestrator
     orchestrator_ = std::make_unique<PrefetchOrchestrator>(predictor_.get());
-    if (!orchestrator_>-Initialize(config_.prefetchBandwidthLimit)) {
+    if (!orchestrator_->Initialize(config_.prefetchBandwidthLimit)) {
         std::cerr << "[Sovereign] Failed to initialize orchestrator\n";
         return false;
     }
@@ -63,12 +63,12 @@ void SovereignIntegration::Shutdown() {
     if (!initialized_) return;
     
     if (orchestrator_) {
-        orchestrator_>-Shutdown();
+        orchestrator_->Shutdown();
         orchestrator_.reset();
     }
     
     if (predictor_) {
-        predictor_>-Shutdown();
+        predictor_->Shutdown();
         predictor_.reset();
     }
     
@@ -120,7 +120,7 @@ void SovereignIntegration::RecordTensorAccess(uint64_t tensorId, uint64_t offset
     event.opType = 1; // Compute
     event.computeTimeUs = 500; // Estimated
     
-    predictor_>-RecordAccess(event);
+    predictor_->RecordAccess(event);
     
     // Call user callback if registered
     if (accessCallback_) {
@@ -138,12 +138,12 @@ void SovereignIntegration::OnTokenStart(uint64_t tokenIndex) {
     currentToken_ = tokenIndex;
     
     if (orchestrator_) {
-        orchestrator_>-OnTokenStart(tokenIndex);
+        orchestrator_->OnTokenStart(tokenIndex);
     }
     
     // Issue prefetches based on predictions
     if (config_.enablePrefetch && predictor_) {
-        auto predictions = predictor_>-PredictNextAccesses(100000); // 100ms horizon
+        auto predictions = predictor_->PredictNextAccesses(100000); // 100ms horizon
         
         uint32_t prefetchesIssued = 0;
         for (const auto& pred : predictions) {
@@ -154,7 +154,7 @@ void SovereignIntegration::OnTokenStart(uint64_t tokenIndex) {
             if (activePrefetches_.count(pred.tensorHandle)) continue;
             
             // Schedule prefetch
-            if (orchestrator_>-SchedulePrefetchDuringCompute(
+            if (orchestrator_->SchedulePrefetchDuringCompute(
                 pred.tensorHandle, 16000)) { // 16ms compute window
                 
                 activePrefetches_.insert(pred.tensorHandle);
@@ -197,7 +197,7 @@ void SovereignIntegration::OnTokenComplete(uint64_t tokenIndex, uint64_t duratio
         / stats_.tokensProcessed;
     
     if (orchestrator_) {
-        orchestrator_>-OnTokenComplete(tokenIndex, durationUs);
+        orchestrator_->OnTokenComplete(tokenIndex, durationUs);
     }
     
     // Clear prefetch tracking for next token
@@ -226,14 +226,14 @@ std::vector<uint64_t> SovereignIntegration::GetPrefetchRecommendations(uint64_t 
     if (!initialized_ || !orchestrator_) {
         return {};
     }
-    return orchestrator_>-GetPrefetchCandidates(maxBytes);
+    return orchestrator_->GetPrefetchCandidates(maxBytes);
 }
 
 bool SovereignIntegration::ExecutePrefetch(uint64_t tensorId) {
     if (!initialized_ || !orchestrator_) {
         return false;
     }
-    return orchestrator_>-ScheduleEmergencyPrefetch(tensorId);
+    return orchestrator_->ScheduleEmergencyPrefetch(tensorId);
 }
 
 // =============================================================================

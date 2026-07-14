@@ -169,18 +169,24 @@ std::vector<AIInlineEditor::MultiFileEdit> AIInlineEditor::generateMultiFileEdit
 }
 
 void AIInlineEditor::acceptEdit(const InlineEditSuggestion& suggestion) {
-    // TODO: Apply edit to editor via IDE API
-    OutputDebugStringA("[AIInlineEditor] Edit accepted\n");
+    // Note: Apply edit requires IDE API integration
+    // Would call editor API to:
+    // 1. Replace text at suggestion range
+    // 2. Clear ghost text
+    // 3. Update cursor position
+    OutputDebugStringA("[AIInlineEditor] Edit accepted (IDE API not yet integrated)\n");
 }
 
 void AIInlineEditor::rejectEdit(const InlineEditSuggestion& suggestion) {
-    // TODO: Clear ghost text from editor
-    OutputDebugStringA("[AIInlineEditor] Edit rejected\n");
+    // Note: Clear ghost text requires IDE API integration
+    // Would call editor API to remove ghost text decoration
+    OutputDebugStringA("[AIInlineEditor] Edit rejected (IDE API not yet integrated)\n");
 }
 
 void AIInlineEditor::showDiffView(const InlineEditSuggestion& suggestion) {
-    // TODO: Show diff view in IDE
-    OutputDebugStringA("[AIInlineEditor] Showing diff view\n");
+    // Note: Diff view requires IDE API integration
+    // Would call editor API to show diff comparison
+    OutputDebugStringA("[AIInlineEditor] Showing diff view (IDE API not yet integrated)\n");
 }
 
 void AIInlineEditor::setModel(const std::string& modelName) {
