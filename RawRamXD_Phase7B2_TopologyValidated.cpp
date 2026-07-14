@@ -197,8 +197,8 @@ bool BandwidthValidator::Initialize(ID3D12Device* device) {
 
 void BandwidthValidator::Shutdown() {
     if (fenceEvent_) CloseHandle(fenceEvent_);
-    if (fence_) fence_>Release();
-    if (copyQueue_) copyQueue_>Release();
+    if (fence_) fence_->Release();
+    if (copyQueue_) copyQueue_->Release();
 }
 
 uint64_t BandwidthValidator::GetTimestamp() {
@@ -226,8 +226,8 @@ BandwidthBenchmarkResult BandwidthValidator::MeasureP2P(uint32_t srcNode, uint32
     ID3D12CommandAllocator* allocator = nullptr;
     ID3D12GraphicsCommandList* cmdList = nullptr;
     
-    device_>CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&allocator));
-    device_>CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, allocator, nullptr,
+    device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&allocator));
+    device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, allocator, nullptr,
                                 IID_PPV_ARGS(&cmdList));
     
     // Record copy command
@@ -238,12 +238,12 @@ BandwidthBenchmarkResult BandwidthValidator::MeasureP2P(uint32_t srcNode, uint32
     uint64_t startNs = GetTimestamp();
     
     ID3D12CommandList* lists[] = {cmdList};
-    copyQueue_>ExecuteCommandLists(1, lists);
+    copyQueue_->ExecuteCommandLists(1, lists);
     
     // Signal fence and wait
     fenceValue_++;
-    copyQueue_>Signal(fence_, fenceValue_);
-    fence_>SetEventOnCompletion(fenceValue_, fenceEvent_);
+    copyQueue_->Signal(fence_, fenceValue_);
+    fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
     WaitForSingleObject(fenceEvent_, INFINITE);
     
     uint64_t endNs = GetTimestamp();
@@ -361,33 +361,33 @@ bool ShardResidencyManager::SaveResidencyMap(uint64_t tensorId, const std::strin
     auto map = GetResidencyMap(tensorId);
     if (map.tensorId == 0) return false;
     
-    Json::Value root;
-    root["tensor_id"] = (Json::UInt64)map.tensorId;
-    root["total_size"] = (Json::UInt64)map.totalSize;
-    root["home_node"] = map.homeNode;
-    root["hotness_score"] = map.hotnessScore;
-    root["is_replicated"] = map.isReplicated;
-    
-    Json::Value shards(Json::arrayValue);
-    for (const auto& shard : map.shards) {
-        Json::Value s;
-        s["shard_id"] = (Json::UInt64)shard.shardId;
-        s["offset"] = (Json::UInt64)shard.offset;
-        s["size"] = (Json::UInt64)shard.size;
-        s["location"] = (int)shard.location;
-        s["node_id"] = shard.nodeId;
-        s["access_count"] = shard.accessCount;
-        shards.append(s);
-    }
-    root["shards"] = shards;
-    
     std::ofstream file(filename);
     if (!file.is_open()) return false;
     
-    Json::StreamWriterBuilder builder;
-    builder["indentation"] = "  ";
-    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-    writer->write(root, &file);
+    file << "{\n";
+    file << "  \"tensor_id\": " << map.tensorId << ",\n";
+    file << "  \"total_size\": " << map.totalSize << ",\n";
+    file << "  \"home_node\": " << map.homeNode << ",\n";
+    file << "  \"hotness_score\": " << map.hotnessScore << ",\n";
+    file << "  \"is_replicated\": " << (map.isReplicated ? "true" : "false") << ",\n";
+    file << "  \"shards\": [\n";
+    
+    for (size_t i = 0; i < map.shards.size(); ++i) {
+        const auto& shard = map.shards[i];
+        file << "    {\n";
+        file << "      \"shard_id\": " << shard.shardId << ",\n";
+        file << "      \"offset\": " << shard.offset << ",\n";
+        file << "      \"size\": " << shard.size << ",\n";
+        file << "      \"location\": " << (int)shard.location << ",\n";
+        file << "      \"node_id\": " << shard.nodeId << ",\n";
+        file << "      \"access_count\": " << shard.accessCount << "\n";
+        file << "    }";
+        if (i < map.shards.size() - 1) file << ",";
+        file << "\n";
+    }
+    
+    file << "  ]\n";
+    file << "}\n";
     
     std::cout << "  Saved residency map to " << filename << std::endl;
     return true;
@@ -415,7 +415,7 @@ double FederatedInferenceEngine::BenchmarkNodeTPS(uint32_t nodeId, size_t modelS
     
     // Estimate TPS based on VRAM bandwidth
     double bandwidthGBps = 500.0; // Default
-    for (const auto& node : topology_>nodes) {
+    for (const auto& node : topology_->nodes) {
         if (node.deviceId == nodeId) {
             bandwidthGBps = node.dedicatedVRAM > 0 ? 500.0 : 50.0; // GPU vs RAM
             break;
@@ -495,9 +495,9 @@ MigrationCost MigrationEconomicsEngine::CalculateCost(uint32_t srcNode, uint32_t
     uint32_t latencyNs = 1000;
     
     uint64_t key = ((uint64_t)srcNode << 32) | dstNode;
-    auto it = topology_>linkIndex.find(key);
-    if (it != topology_>linkIndex.end()) {
-        const auto& link = topology_>links[it->second];
+    auto it = topology_->linkIndex.find(key);
+    if (it != topology_->linkIndex.end()) {
+        const auto& link = topology_->links[it->second];
         bandwidth = link.measuredBandwidth > 0 ? link.measuredBandwidth : link.theoreticalBandwidth;
         latencyNs = link.latencyNs;
     }
@@ -567,7 +567,7 @@ CostModelScheduler::PlacementScore CostModelScheduler::ScorePlacement(uint64_t t
     
     // Memory headroom (lower is better)
     double availableVRAM = 16.0 * 1024 * 1024 * 1024; // Default 16GB
-    for (const auto& node : topology_>nodes) {
+    for (const auto& node : topology_->nodes) {
         if (node.deviceId == nodeId) {
             availableVRAM = node.budget - node.currentUsage;
             break;
@@ -579,9 +579,9 @@ CostModelScheduler::PlacementScore CostModelScheduler::ScorePlacement(uint64_t t
     score.bandwidthCost = 0.5; // Default
     
     // Migration cost from current location
-    auto residencyMap = residency_>GetResidencyMap(tensorId);
+    auto residencyMap = residency_->GetResidencyMap(tensorId);
     if (!residencyMap.shards.empty() && residencyMap.shards[0].nodeId != nodeId) {
-        MigrationCost migCost = economics_>CalculateCost(
+        MigrationCost migCost = economics_->CalculateCost(
             residencyMap.shards[0].nodeId, nodeId, residencyMap.totalSize);
         score.migrationCost = migCost.totalCost;
     } else {
@@ -652,72 +652,106 @@ uint32_t CostModelScheduler::SelectOptimalNode(uint64_t tensorId,
 // Topology Report Generator
 // =============================================================================
 
-Json::Value TopologyReportGenerator::NodeToJson(const GPUDeviceIdentity& node) {
-    Json::Value n;
-    n["id"] = node.deviceId;
-    n["name"] = std::wstring(node.name, wcslen(node.name));
-    n["pci_path"] = node.pciBusPath;
-    n["vendor_id"] = node.vendorId;
-    n["device_id"] = node.deviceId_pci;
-    n["capacity"] = (Json::UInt64)node.dedicatedVRAM;
-    n["budget"] = (Json::UInt64)node.budget;
-    n["current_usage"] = (Json::UInt64)node.currentUsage;
-    n["node_count"] = node.nodeCount;
-    return n;
+std::string TopologyReportGenerator::EscapeJsonString(const std::string& str) {
+    std::string result;
+    for (char c : str) {
+        switch (c) {
+            case '"': result += "\\\""; break;
+            case '\\': result += "\\\\"; break;
+            case '\b': result += "\\b"; break;
+            case '\f': result += "\\f"; break;
+            case '\n': result += "\\n"; break;
+            case '\r': result += "\\r"; break;
+            case '\t': result += "\\t"; break;
+            default: result += c;
+        }
+    }
+    return result;
 }
 
-Json::Value TopologyReportGenerator::LinkToJson(const TopologyLink& link) {
-    Json::Value l;
-    l["src"] = link.srcNode;
-    l["dst"] = link.dstNode;
-    l["type"] = (int)link.linkType;
-    l["link_width"] = link.linkWidth;
-    l["link_speed_gtps"] = link.linkSpeed;
-    l["theoretical_bandwidth"] = (Json::UInt64)link.theoreticalBandwidth;
-    l["measured_bandwidth"] = (Json::UInt64)link.measuredBandwidth;
-    l["latency_ns"] = link.latencyNs;
-    l["is_symmetric"] = link.isSymmetric;
-    return l;
+std::string TopologyReportGenerator::NodeToJson(const GPUDeviceIdentity& node) {
+    std::stringstream ss;
+    ss << "{\n";
+    ss << "      \"id\": " << node.deviceId << ",\n";
+    
+    // Convert wide name to narrow
+    std::string name;
+    for (int i = 0; i < 256 && node.name[i]; ++i) {
+        name += (char)node.name[i];
+    }
+    ss << "      \"name\": \"" << EscapeJsonString(name) << "\",\n";
+    ss << "      \"pci_path\": \"" << EscapeJsonString(node.pciBusPath) << "\",\n";
+    ss << "      \"vendor_id\": " << node.vendorId << ",\n";
+    ss << "      \"device_id\": " << node.deviceId_pci << ",\n";
+    ss << "      \"capacity\": " << node.dedicatedVRAM << ",\n";
+    ss << "      \"budget\": " << node.budget << ",\n";
+    ss << "      \"current_usage\": " << node.currentUsage << ",\n";
+    ss << "      \"node_count\": " << node.nodeCount << "\n";
+    ss << "    }";
+    return ss.str();
 }
 
-Json::Value TopologyReportGenerator::BenchmarkToJson(const BandwidthBenchmarkResult& result) {
-    Json::Value b;
-    b["src_node"] = result.srcNode;
-    b["dst_node"] = result.dstNode;
-    b["transfer_size"] = (Json::UInt64)result.transferSize;
-    b["elapsed_ns"] = (Json::UInt64)result.elapsedNs;
-    b["bandwidth_gbps"] = result.bandwidthGBps;
-    b["latency_us"] = result.latencyUs;
-    b["is_p2p"] = result.isP2P;
-    return b;
+std::string TopologyReportGenerator::LinkToJson(const TopologyLink& link) {
+    std::stringstream ss;
+    ss << "{\n";
+    ss << "      \"src\": " << link.srcNode << ",\n";
+    ss << "      \"dst\": " << link.dstNode << ",\n";
+    ss << "      \"type\": " << (int)link.linkType << ",\n";
+    ss << "      \"link_width\": " << link.linkWidth << ",\n";
+    ss << "      \"link_speed_gtps\": " << link.linkSpeed << ",\n";
+    ss << "      \"theoretical_bandwidth\": " << link.theoreticalBandwidth << ",\n";
+    ss << "      \"measured_bandwidth\": " << link.measuredBandwidth << ",\n";
+    ss << "      \"latency_ns\": " << link.latencyNs << ",\n";
+    ss << "      \"is_symmetric\": " << (link.isSymmetric ? "true" : "false") << "\n";
+    ss << "    }";
+    return ss.str();
+}
+
+std::string TopologyReportGenerator::BenchmarkToJson(const BandwidthBenchmarkResult& result) {
+    std::stringstream ss;
+    ss << "{\n";
+    ss << "      \"src_node\": " << result.srcNode << ",\n";
+    ss << "      \"dst_node\": " << result.dstNode << ",\n";
+    ss << "      \"transfer_size\": " << result.transferSize << ",\n";
+    ss << "      \"elapsed_ns\": " << result.elapsedNs << ",\n";
+    ss << "      \"bandwidth_gbps\": " << result.bandwidthGBps << ",\n";
+    ss << "      \"latency_us\": " << result.latencyUs << ",\n";
+    ss << "      \"is_p2p\": " << (result.isP2P ? "true" : "false") << "\n";
+    ss << "    }";
+    return ss.str();
 }
 
 bool TopologyReportGenerator::GenerateReport(const FabricTopology& topology,
                                               const std::string& filename) {
-    Json::Value root;
-    root["version"] = "1.0";
-    root["timestamp"] = (Json::UInt64)std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    Json::Value nodes(Json::arrayValue);
-    for (const auto& node : topology.nodes) {
-        nodes.append(NodeToJson(node));
-    }
-    root["nodes"] = nodes;
-    
-    Json::Value links(Json::arrayValue);
-    for (const auto& link : topology.links) {
-        links.append(LinkToJson(link));
-    }
-    root["links"] = links;
-    
     std::ofstream file(filename);
     if (!file.is_open()) return false;
     
-    Json::StreamWriterBuilder builder;
-    builder["indentation"] = "  ";
-    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-    writer->write(root, &file);
+    auto now = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    file << "{\n";
+    file << "  \"version\": \"1.0\",\n";
+    file << "  \"timestamp\": " << now << ",\n";
+    
+    // Nodes
+    file << "  \"nodes\": [\n";
+    for (size_t i = 0; i < topology.nodes.size(); ++i) {
+        file << NodeToJson(topology.nodes[i]);
+        if (i < topology.nodes.size() - 1) file << ",";
+        file << "\n";
+    }
+    file << "  ],\n";
+    
+    // Links
+    file << "  \"links\": [\n";
+    for (size_t i = 0; i < topology.links.size(); ++i) {
+        file << LinkToJson(topology.links[i]);
+        if (i < topology.links.size() - 1) file << ",";
+        file << "\n";
+    }
+    file << "  ]\n";
+    
+    file << "}\n";
     
     std::cout << "[Report] Generated topology report: " << filename << std::endl;
     return true;
@@ -726,38 +760,44 @@ bool TopologyReportGenerator::GenerateReport(const FabricTopology& topology,
 bool TopologyReportGenerator::GenerateFullReport(const FabricTopology& topology,
                                                   const std::vector<BandwidthBenchmarkResult>& benchmarks,
                                                   const std::string& filename) {
-    Json::Value root;
-    root["version"] = "1.0";
-    root["timestamp"] = (Json::UInt64)std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    // Topology
-    Json::Value nodes(Json::arrayValue);
-    for (const auto& node : topology.nodes) {
-        nodes.append(NodeToJson(node));
-    }
-    root["nodes"] = nodes;
-    
-    Json::Value links(Json::arrayValue);
-    for (const auto& link : topology.links) {
-        links.append(LinkToJson(link));
-    }
-    root["links"] = links;
-    
-    // Benchmarks
-    Json::Value benchResults(Json::arrayValue);
-    for (const auto& result : benchmarks) {
-        benchResults.append(BenchmarkToJson(result));
-    }
-    root["bandwidth_benchmarks"] = benchResults;
-    
     std::ofstream file(filename);
     if (!file.is_open()) return false;
     
-    Json::StreamWriterBuilder builder;
-    builder["indentation"] = "  ";
-    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-    writer->write(root, &file);
+    auto now = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    file << "{\n";
+    file << "  \"version\": \"1.0\",\n";
+    file << "  \"timestamp\": " << now << ",\n";
+    
+    // Nodes
+    file << "  \"nodes\": [\n";
+    for (size_t i = 0; i < topology.nodes.size(); ++i) {
+        file << NodeToJson(topology.nodes[i]);
+        if (i < topology.nodes.size() - 1) file << ",";
+        file << "\n";
+    }
+    file << "  ],\n";
+    
+    // Links
+    file << "  \"links\": [\n";
+    for (size_t i = 0; i < topology.links.size(); ++i) {
+        file << LinkToJson(topology.links[i]);
+        if (i < topology.links.size() - 1) file << ",";
+        file << "\n";
+    }
+    file << "  ],\n";
+    
+    // Benchmarks
+    file << "  \"bandwidth_benchmarks\": [\n";
+    for (size_t i = 0; i < benchmarks.size(); ++i) {
+        file << BenchmarkToJson(benchmarks[i]);
+        if (i < benchmarks.size() - 1) file << ",";
+        file << "\n";
+    }
+    file << "  ]\n";
+    
+    file << "}\n";
     
     std::cout << "[Report] Generated full report: " << filename << std::endl;
     return true;
@@ -799,16 +839,16 @@ bool FabricController::Initialize() {
     
     // Initialize subsystems
     residencyManager_ = std::make_unique<ShardResidencyManager>();
-    residencyManager_>Initialize();
+    residencyManager_->Initialize();
     
     economicsEngine_ = std::make_unique<MigrationEconomicsEngine>();
-    economicsEngine_>Initialize(&topology_);
+    economicsEngine_->Initialize(&topology_);
     
     inferenceEngine_ = std::make_unique<FederatedInferenceEngine>();
-    inferenceEngine_>Initialize(&topology_);
+    inferenceEngine_->Initialize(&topology_);
     
     scheduler_ = std::make_unique<CostModelScheduler>();
-    scheduler_>Initialize(&topology_, economicsEngine_.get(), residencyManager_.get());
+    scheduler_->Initialize(&topology_, economicsEngine_.get(), residencyManager_.get());
     
     initialized_ = true;
     
@@ -817,10 +857,10 @@ bool FabricController::Initialize() {
 }
 
 void FabricController::Shutdown() {
-    if (scheduler_) scheduler_>Shutdown();
-    if (inferenceEngine_) inferenceEngine_>Shutdown();
-    if (economicsEngine_) economicsEngine_>Shutdown();
-    if (residencyManager_) residencyManager_>Shutdown();
+    if (scheduler_) scheduler_->Shutdown();
+    if (inferenceEngine_) inferenceEngine_->Shutdown();
+    if (economicsEngine_) economicsEngine_->Shutdown();
+    if (residencyManager_) residencyManager_->Shutdown();
     
     initialized_ = false;
 }

@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "timestamp": 1784044006,
+  "nodes": [
+{
+      "id": 0,
+      "name": "AMD Radeon RX 7800 XT",
+      "pci_path": "PCI\\VEN_1002&DEV_747e&SUBSYS_53241849",
+      "vendor_id": 4098,
+      "device_id": 29822,
+      "capacity": 16963137536,
+      "budget": 16157831168,
+      "current_usage": 0,
+      "node_count": 1
+    },
+{
+      "id": 1,
+      "name": "AMD Radeon(TM) Graphics",
+      "pci_path": "PCI\\VEN_1002&DEV_164e&SUBSYS_88771043",
+      "vendor_id": 4098,
+      "device_id": 5710,
+      "capacity": 509374464,
+      "budget": 33640931328,
+      "current_usage": 0,
+      "node_count": 1
+    }
+  ],
+  "links": [
+{
+      "src": 0,
+      "dst": 1,
+      "type": 10,
+      "link_width": 16,
+      "link_speed_gtps": 16,
+      "theoretical_bandwidth": 214748364800,
+      "measured_bandwidth": 171798691840,
+      "latency_ns": 500,
+      "is_symmetric": true
+    },
+{
+      "src": 1,
+      "dst": 0,
+      "type": 10,
+      "link_width": 16,
+      "link_speed_gtps": 16,
+      "theoretical_bandwidth": 214748364800,
+      "measured_bandwidth": 171798691840,
+      "latency_ns": 500,
+      "is_symmetric": true
+    }
+  ],
+  "bandwidth_benchmarks": [
+{
+      "src_node": 0,
+      "dst_node": 1,
+      "transfer_size": 1073741824,
+      "elapsed_ns": 6249999,
+      "bandwidth_gbps": 160,
+      "latency_us": 6250,
+      "is_p2p": true
+    },
+{
+      "src_node": 1,
+      "dst_node": 0,
+      "transfer_size": 1073741824,
+      "elapsed_ns": 6249999,
+      "bandwidth_gbps": 160,
+      "latency_us": 6250,
+      "is_p2p": true
+    }
+  ]
+}

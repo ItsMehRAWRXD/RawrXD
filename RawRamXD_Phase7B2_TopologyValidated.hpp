@@ -8,6 +8,7 @@
 #ifndef RAWRAMXD_PHASE7B2_TOPOLOGY_VALIDATED_HPP
 #define RAWRAMXD_PHASE7B2_TOPOLOGY_VALIDATED_HPP
 
+#define NOMINMAX
 #include <windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -20,7 +21,8 @@
 #include <mutex>
 #include <chrono>
 #include <fstream>
-#include <json/json.h>
+// JSON output via simple string building (no external dependency)
+#include <sstream>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -367,9 +369,10 @@ public:
                             const std::string& filename);
 
 private:
-    Json::Value NodeToJson(const GPUDeviceIdentity& node);
-    Json::Value LinkToJson(const TopologyLink& link);
-    Json::Value BenchmarkToJson(const BandwidthBenchmarkResult& result);
+    std::string NodeToJson(const GPUDeviceIdentity& node);
+    std::string LinkToJson(const TopologyLink& link);
+    std::string BenchmarkToJson(const BandwidthBenchmarkResult& result);
+    std::string EscapeJsonString(const std::string& str);
 };
 
 // =============================================================================

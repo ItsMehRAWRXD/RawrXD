@@ -30,35 +30,29 @@ set "BUILD_DIR=build_phase7b2_topology"
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 
 echo.
-echo [+] Finding Visual C++ compiler...
+echo [+] Setting up Visual C++ environment...
 
-set "VSWHERE=C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-set "VCVARS="
+:: Set up paths manually
+set "VS_ROOT=C:\Program Files\Microsoft Visual Studio\18\Enterprise"
+set "VC_TOOLS=%VS_ROOT%\VC\Tools\MSVC\14.51.36231"
+set "WINSDK_ROOT=C:\Program Files (x86)\Windows Kits\10"
+set "WINSDK_VER=10.0.22621.0"
 
-if exist "%VSWHERE%" (
-    for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
-        set "VCVARS=%%i\VC\Auxiliary\Build\vcvars64.bat"
-    )
-)
+:: Add to PATH
+set "PATH=%VC_TOOLS%\bin\Hostx64\x64;%PATH%"
 
-if exist "%VCVARS%" (
-    echo     Found VS at: %VCVARS%
-    call "%VCVARS%" > nul
-) else (
-    echo     Checking for cl.exe in PATH...
-    where cl.exe > nul 2>&1
-    if %ERRORLEVEL% neq 0 (
-        echo [!] Visual C++ not found!
-        echo [!] Trying alternative VS path...
-        if exist "C:\VS2022Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
-            call "C:\VS2022Enterprise\VC\Auxiliary\Build\vcvars64.bat" > nul
-        ) else (
-            echo [!] Could not find Visual C++!
-            pause
-            exit /b 1
-        )
-    )
-)
+:: Set include paths
+set "INCLUDE=%VC_TOOLS%\include;%WINSDK_ROOT%\Include\%WINSDK_VER%\ucrt;%WINSDK_ROOT%\Include\%WINSDK_VER%\um;%WINSDK_ROOT%\Include\%WINSDK_VER%\shared;%WINSDK_ROOT%\Include\%WINSDK_VER%\winrt;%WINSDK_ROOT%\Include\%WINSDK_VER%\cppwinrt"
+
+:: Set lib paths
+set "LIB=%VC_TOOLS%\lib\x64;%WINSDK_ROOT%\Lib\%WINSDK_VER%\ucrt\x64;%WINSDK_ROOT%\Lib\%WINSDK_VER%\um\x64"
+
+:: Add JsonCpp include path (adjust if needed)
+set "INCLUDE=C:\vcpkg\installed\x64-windows\include;%INCLUDE%"
+set "LIB=C:\vcpkg\installed\x64-windows\lib;%LIB%"
+
+echo     INCLUDE paths set
+echo     LIB paths set
 
 echo.
 echo [+] Compiling Phase 7B.2 Topology Validated...
