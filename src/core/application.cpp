@@ -19,28 +19,20 @@
 namespace RawrXD {
 
 // Service Container implementation
-class ServiceContainer {
-public:
-    template<typename T>
-    void Register(std::unique_ptr<T> service) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        services_[typeid(T).name()] = std::move(service);
-    }
-    
-    template<typename T>
-    T* Get() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = services_.find(typeid(T).name());
-        if (it != services_.end()) {
-            return static_cast<T*>(it->second.get());
-        }
-        return nullptr;
-    }
-    
-private:
-    std::map<std::string, std::unique_ptr<void, void(*)(void*)>> services_;
-    std::mutex mutex_;
-};
+ServiceContainer& ServiceContainer::Instance() {
+    static ServiceContainer instance;
+    return instance;
+}
+
+void ServiceContainer::Clear() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    services_.clear();
+}
+
+size_t ServiceContainer::Count() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return services_.size();
+}
 
 Application& Application::Instance() {
     static Application instance;
@@ -91,12 +83,21 @@ bool Application::InitializeSubsystems() {
     // Initialize Event Bus first (used by all subsystems)
     EventBus::Instance(); // Ensure singleton is created
     
+    // Register core services in Service Container
+    g_Services.Register<EventBus>(std::shared_ptr<EventBus>(&EventBus::Instance(), [](EventBus*){}));
+    g_Services.Register<CommandRegistry>(std::shared_ptr<CommandRegistry>(&CommandRegistry::Instance(), [](CommandRegistry*){}));
+    
     // Settings (must be first - other systems depend on it)
     settingsManager_ = std::make_unique<Settings::SettingsManager>();
     if (!settingsManager_->Initialize()) {
         ShowError("Initialization Failed", "Failed to initialize Settings Manager.");
         return false;
     }
+    
+    // Register settings in service container
+    g_Services.Register<Settings::SettingsManager>(
+        std::shared_ptr<Settings::SettingsManager>(settingsManager_.get(), [](Settings::SettingsManager*){})
+    );
     
     // Load settings into config
     config_.windowWidth = settingsManager_->GetInteger("window.width", config_.windowWidth);
@@ -126,6 +127,11 @@ bool Application::InitializeSubsystems() {
         return false;
     }
     
+    // Register workspace in service container
+    g_Services.Register<Workspace::WorkspaceManager>(
+        std::shared_ptr<Workspace::WorkspaceManager>(workspaceManager_.get(), [](Workspace::WorkspaceManager*){})
+    );
+    
     // Wire workspace events
     workspaceManager_->SetFileChangeCallback([](const std::string& path, const std::string& changeType) {
         FileEventData data;
@@ -146,6 +152,11 @@ bool Application::InitializeSubsystems() {
         ShowError("Initialization Failed", "Failed to initialize Task Runner.");
         return false;
     }
+    
+    // Register task runner in service container
+    g_Services.Register<Tasks::TaskRunner>(
+        std::shared_ptr<Tasks::TaskRunner>(taskRunner_.get(), [](Tasks::TaskRunner*){})
+    );
     
     // Wire task events
     taskRunner_->SetTaskEventCallback([](const std::string& taskId, Tasks::TaskStatus status) {
@@ -177,6 +188,10 @@ bool Application::InitializeSubsystems() {
             extensionHost_.reset();
             config_.enableExtensions = false;
         } else {
+            // Register extension host in service container
+            g_Services.Register<Extensions::ExtensionHost>(
+                std::shared_ptr<Extensions::ExtensionHost>(extensionHost_.get(), [](Extensions::ExtensionHost*){})
+            );
             // Wire extension events
             // TODO: Add extension event callbacks
         }
@@ -186,12 +201,18 @@ bool Application::InitializeSubsystems() {
     if (config_.enableLSP) {
         lspClient_ = std::make_unique<LSP::LspClient>();
         // LSP client initialization is deferred until workspace is opened
+        g_Services.Register<LSP::LspClient>(
+            std::shared_ptr<LSP::LspClient>(lspClient_.get(), [](LSP::LspClient*){})
+        );
     }
     
     // Debugger
     if (config_.enableDebugger) {
         debugger_ = std::make_unique<Debugger::DAPAdapter>();
         // Debugger initialization is deferred until needed
+        g_Services.Register<Debugger::DAPAdapter>(
+            std::shared_ptr<Debugger::DAPAdapter>(debugger_.get(), [](Debugger::DAPAdapter*){})
+        );
     }
     
     // Terminal
@@ -201,6 +222,10 @@ bool Application::InitializeSubsystems() {
             ShowNotification("Terminal initialization failed - continuing without terminal", 5000);
             terminal_.reset();
             config_.enableTerminal = false;
+        } else {
+            g_Services.Register<Terminal::EmbeddedTerminal>(
+                std::shared_ptr<Terminal::EmbeddedTerminal>(terminal_.get(), [](Terminal::EmbeddedTerminal*){})
+            );
         }
     }
     
@@ -211,6 +236,10 @@ bool Application::InitializeSubsystems() {
             ShowNotification("Git integration initialization failed - continuing without Git", 5000);
             gitIntegration_.reset();
             config_.enableGit = false;
+        } else {
+            g_Services.Register<VCS::GitIntegration>(
+                std::shared_ptr<VCS::GitIntegration>(gitIntegration_.get(), [](VCS::GitIntegration*){})
+            );
         }
     }
     

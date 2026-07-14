@@ -3504,27 +3504,6 @@ set_target_properties(TPSBenchmark PROPERTIES
 )
 
 # ---------------------------------------------------------------------------
-# Elastic Residency Benchmark - Real memory tier stress test
-# ---------------------------------------------------------------------------
-add_executable(ElasticResidencyBench EXCLUDE_FROM_ALL
-    ElasticResidencyBench.cpp
-    RawRamXD_Real.cpp
-)
-target_include_directories(ElasticResidencyBench PRIVATE
-    ${CMAKE_SOURCE_DIR}
-)
-set_target_properties(ElasticResidencyBench PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
-)
-if(MSVC)
-    target_compile_options(ElasticResidencyBench PRIVATE /O2 /EHsc /W3)
-else()
-    target_compile_options(ElasticResidencyBench PRIVATE -O3 -pthread -Wall)
-    target_link_libraries(ElasticResidencyBench PRIVATE pthread)
-endif()
-
-# ---------------------------------------------------------------------------
 # Autocomplete engine – zero-dependency, single-file GGUF transformer daemon
 # ---------------------------------------------------------------------------
 add_executable(RawrXD-Autocomplete EXCLUDE_FROM_ALL

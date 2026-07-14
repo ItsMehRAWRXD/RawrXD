@@ -19,16 +19,76 @@ namespace VCS { class GitIntegration; }
 // Service Container for dependency injection
 class ServiceContainer {
 public:
-    template<typename T>
-    void Register(std::unique_ptr<T> service);
+    static ServiceContainer& Instance();
     
+    // Register a service (takes ownership)
     template<typename T>
-    T* Get();
+    void Register(std::shared_ptr<T> service) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        services_[typeid(T).name()] = service;
+    }
+    
+    // Register with interface/implementation separation
+    template<typename Interface, typename Implementation>
+    void Register() {
+        static_assert(std::is_base_of<Interface, Implementation>::value, 
+                      "Implementation must derive from Interface");
+        std::lock_guard<std::mutex> lock(mutex_);
+        services_[typeid(Interface).name()] = std::make_shared<Implementation>();
+    }
+    
+    // Resolve a service
+    template<typename T>
+    std::shared_ptr<T> Resolve() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = services_.find(typeid(T).name());
+        if (it != services_.end()) {
+            return std::static_pointer_cast<T>(it->second);
+        }
+        return nullptr;
+    }
+    
+    // Resolve or create (factory pattern)
+    template<typename T, typename... Args>
+    std::shared_ptr<T> ResolveOrCreate(Args&&... args) {
+        auto existing = Resolve<T>();
+        if (existing) return existing;
+        
+        auto created = std::make_shared<T>(std::forward<Args>(args)...);
+        Register<T>(created);
+        return created;
+    }
+    
+    // Check if service exists
+    template<typename T>
+    bool Has() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return services_.find(typeid(T).name()) != services_.end();
+    }
+    
+    // Remove a service
+    template<typename T>
+    void Remove() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        services_.erase(typeid(T).name());
+    }
+    
+    // Clear all services
+    void Clear();
+    
+    // Get count of registered services
+    size_t Count() const;
     
 private:
+    ServiceContainer() = default;
+    ~ServiceContainer() = default;
+    
     std::map<std::string, std::shared_ptr<void>> services_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
 };
+
+// Convenience macro for service access
+#define g_Services RawrXD::ServiceContainer::Instance()
 
 namespace RawrXD {
 

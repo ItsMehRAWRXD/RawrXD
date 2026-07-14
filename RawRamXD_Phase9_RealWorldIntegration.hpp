@@ -26,6 +26,9 @@
 #include <thread>
 #include <queue>
 #include <functional>
+#include <random>
+#include <algorithm>
+#include <ctime>
 
 namespace RawRamXD {
 
