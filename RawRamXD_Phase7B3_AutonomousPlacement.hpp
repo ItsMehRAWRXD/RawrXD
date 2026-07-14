@@ -12,10 +12,6 @@
 #ifndef RAWRAMXD_PHASE7B3_AUTONOMOUS_PLACEMENT_HPP
 #define RAWRAMXD_PHASE7B3_AUTONOMOUS_PLACEMENT_HPP
 
-#define NOMINMAX
-#include <windows.h>
-#include <d3d12.h>
-#include <dxgi1_6.h>
 #include <stdint.h>
 #include <vector>
 #include <string>
@@ -29,22 +25,26 @@
 #include <queue>
 #include <deque>
 #include <algorithm>
-
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
+#include <thread>
 
 namespace RawRamXD {
 
-// Forward declarations from Phase 7B.2
-struct GPUDeviceIdentity;
-struct TopologyLink;
-struct FabricTopology;
-struct TensorShard;
-struct ResidencyMap;
-struct MigrationCost;
-class ShardResidencyManager;
-class MigrationEconomicsEngine;
-class CostModelScheduler;
+// Phase 7B.3 uses its own minimal definitions to avoid conflicts
+// These are simplified versions for standalone testing
+
+struct TopologyNode {
+    uint32_t deviceId;
+    uint64_t budget;
+    uint64_t currentUsage;
+};
+
+struct SimpleTopology {
+    std::vector<TopologyNode> nodes;
+};
+
+struct SimpleMigrationCost {
+    double totalCost;
+};
 
 // =============================================================================
 // Workload Pattern Analysis
@@ -145,27 +145,30 @@ struct MigrationTriggerEvent {
     uint32_t dstNode;
     double confidence;
     std::string reasoning;
-    MigrationCost estimatedCost;
+    SimpleMigrationCost estimatedCost;
     double expectedBenefit;
 };
 
+// Forward declaration for Phase 7B.3 standalone
+class SimpleMigrationEngine;
+
 class PredictiveMigrationEngine {
 public:
-    bool Initialize(MigrationEconomicsEngine* economics,
+    bool Initialize(SimpleMigrationEngine* economics,
                     WorkloadPatternAnalyzer* analyzer);
     void Shutdown();
     
     // Evaluate all tensors for migration triggers
     std::vector<MigrationTriggerEvent> EvaluateTriggers(
         const std::vector<uint64_t>& tensorIds,
-        const FabricTopology& topology);
+        const SimpleTopology& topology);
     
     // Check specific trigger conditions
-    bool CheckCapacityPressure(uint32_t nodeId, const FabricTopology& topology);
+    bool CheckCapacityPressure(uint32_t nodeId, const SimpleTopology& topology);
     bool CheckAccessPatternShift(uint64_t tensorId);
     bool CheckThermalThrottle(uint32_t nodeId);
-    bool CheckBandwidthOptimization(uint64_t tensorId, const FabricTopology& topology);
-    bool CheckLoadBalancing(const FabricTopology& topology);
+    bool CheckBandwidthOptimization(uint64_t tensorId, const SimpleTopology& topology);
+    bool CheckLoadBalancing(const SimpleTopology& topology);
     
     // Predictive prefetch
     struct PrefetchDecision {
@@ -183,10 +186,10 @@ public:
     std::vector<MigrationTriggerEvent> GetTriggerHistory() const;
 
 private:
-    MigrationEconomicsEngine* economics_;
+    SimpleMigrationEngine* economics_;
     WorkloadPatternAnalyzer* analyzer_;
     std::vector<MigrationTriggerEvent> triggerHistory_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     
     double CalculateExpectedBenefit(const MigrationTriggerEvent& event);
 };
@@ -222,7 +225,7 @@ public:
     
     // Optimize policy based on workload characteristics
     PlacementPolicy OptimizePolicy(const std::vector<PatternAnalysis>& patterns,
-                                   const FabricTopology& topology);
+                                   const SimpleTopology& topology);
     
     // Evaluate policy effectiveness
     struct PolicyMetrics {
@@ -270,11 +273,14 @@ struct AdaptationDecision {
     std::string reasoning;
 };
 
+// Forward declaration for Phase 7B.3 standalone
+class SimpleScheduler;
+
 class RealTimeAdaptationController {
 public:
     bool Initialize(PredictiveMigrationEngine* migration,
                     PlacementPolicyOptimizer* policy,
-                    CostModelScheduler* scheduler);
+                    SimpleScheduler* scheduler);
     void Shutdown();
     
     // Main adaptation loop
@@ -306,14 +312,14 @@ public:
 private:
     PredictiveMigrationEngine* migration_;
     PlacementPolicyOptimizer* policy_;
-    CostModelScheduler* scheduler_;
-    
+    SimpleScheduler* scheduler_;
+
     std::vector<AdaptationDecision> adaptationHistory_;
     std::atomic<uint64_t> decisionCount_{0};
     std::atomic<uint64_t> totalLatencyNs_{0};
-    
-    std::mutex mutex_;
-    
+
+    mutable std::mutex mutex_;
+
     bool ShouldAdapt(const AdaptationDecision& decision);
     bool ValidateDecision(const AdaptationDecision& decision);
 };

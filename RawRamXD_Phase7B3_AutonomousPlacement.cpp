@@ -4,10 +4,9 @@
 // =============================================================================
 
 #include "RawRamXD_Phase7B3_AutonomousPlacement.hpp"
-#include "RawRamXD_Phase7B2_TopologyValidated.hpp"
 #include <iostream>
 #include <iomanip>
-#include <math>
+#include <cmath>
 
 namespace RawRamXD {
 
@@ -299,7 +298,7 @@ bool WorkloadPatternAnalyzer::DetectPhaseChange(uint64_t tensorId) {
 // Predictive Migration Engine Implementation
 // =============================================================================
 
-bool PredictiveMigrationEngine::Initialize(MigrationEconomicsEngine* economics,
+bool PredictiveMigrationEngine::Initialize(SimpleMigrationEngine* economics,
                                            WorkloadPatternAnalyzer* analyzer) {
     economics_ = economics;
     analyzer_ = analyzer;
@@ -314,7 +313,7 @@ void PredictiveMigrationEngine::Shutdown() {
 
 std::vector<MigrationTriggerEvent> PredictiveMigrationEngine::EvaluateTriggers(
     const std::vector<uint64_t>& tensorIds,
-    const FabricTopology& topology) {
+    const SimpleTopology& topology) {
     
     std::vector<MigrationTriggerEvent> triggers;
     
@@ -345,7 +344,7 @@ std::vector<MigrationTriggerEvent> PredictiveMigrationEngine::EvaluateTriggers(
 }
 
 bool PredictiveMigrationEngine::CheckCapacityPressure(uint32_t nodeId, 
-                                                       const FabricTopology& topology) {
+                                                       const SimpleTopology& topology) {
     // Check if node is near capacity
     for (const auto& node : topology.nodes) {
         if (node.deviceId == nodeId) {
@@ -366,7 +365,7 @@ bool PredictiveMigrationEngine::CheckThermalThrottle(uint32_t nodeId) {
 }
 
 bool PredictiveMigrationEngine::CheckBandwidthOptimization(uint64_t tensorId,
-                                                          const FabricTopology& topology) {
+                                                          const SimpleTopology& topology) {
     auto analysis = analyzer_->AnalyzePattern(tensorId);
     
     // Check if there's a better node for this pattern
@@ -379,7 +378,7 @@ bool PredictiveMigrationEngine::CheckBandwidthOptimization(uint64_t tensorId,
     return false;
 }
 
-bool PredictiveMigrationEngine::CheckLoadBalancing(const FabricTopology& topology) {
+bool PredictiveMigrationEngine::CheckLoadBalancing(const SimpleTopology& topology) {
     // Check node utilization imbalance
     double avgUsage = 0.0;
     for (const auto& node : topology.nodes) {
@@ -487,7 +486,7 @@ void PlacementPolicyOptimizer::Shutdown() {
 
 PlacementPolicy PlacementPolicyOptimizer::OptimizePolicy(
     const std::vector<PatternAnalysis>& patterns,
-    const FabricTopology& topology) {
+    const SimpleTopology& topology) {
     
     // Analyze workload characteristics
     uint32_t sequentialCount = 0;
@@ -561,7 +560,7 @@ void PlacementPolicyOptimizer::UpdatePolicyFromFeedback(const PolicyMetrics& met
 
 bool RealTimeAdaptationController::Initialize(PredictiveMigrationEngine* migration,
                                                PlacementPolicyOptimizer* policy,
-                                               CostModelScheduler* scheduler) {
+                                               SimpleScheduler* scheduler) {
     migration_ = migration;
     policy_ = policy;
     scheduler_ = scheduler;
