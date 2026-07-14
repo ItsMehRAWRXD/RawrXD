@@ -415,11 +415,12 @@ bool GGUFLoaderImpl::LoadTensor(const std::string& name, std::vector<uint8_t>& d
 uint64_t GGUFLoaderImpl::GetFileSize() const {
     if (!m_file.is_open()) return 0;
     
-    auto pos = m_file.tellg();
-    m_file.seekg(0, std::ios::end);
-    auto size = m_file.tellg();
-    m_file.seekg(pos);
-    return static_cast<uint64_t>(size);
+    // Get file size from filesystem
+    try {
+        return std::filesystem::file_size(m_filepath);
+    } catch (...) {
+        return 0;
+    }
 }
 
 uint64_t GGUFLoaderImpl::GetMemoryUsage() const {
@@ -446,7 +447,7 @@ bool GGUFLoader::IsOpen() const {
 }
 
 std::string GGUFLoader::GetFilePath() const {
-    return m_impl->m_filepath;
+    return m_impl->GetFilePath();
 }
 
 GGUFHeader GGUFLoader::GetHeader() const {

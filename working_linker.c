@@ -33,7 +33,6 @@ typedef struct {
 } dos_header_t;
 
 typedef struct {
-    uint32_t Signature;
     uint16_t Machine;
     uint16_t NumberOfSections;
     uint32_t TimeDateStamp;
@@ -182,6 +181,32 @@ static int read_obj_file(const char *filename, obj_file_t *obj) {
     printf("Machine type: 0x%X\n", obj->header.Machine);
     printf("Number of sections: %u\n", obj->header.NumberOfSections);
     printf("Number of symbols: %u\n", obj->header.NumberOfSymbols);
+    
+    // Check if this is a COFF object file or PE executable
+    // COFF object files start directly with the header
+    // PE executables have "PE\0\0" signature at offset 0x3C
+    // If Machine is 0, this might be a PE file - check for signature
+    if (obj->header.Machine == 0) {
+        // Check for PE signature at offset 0x3C
+        fseek(fp, 0x3C, SEEK_SET);
+        uint32_t pe_offset;
+        if (fread(&pe_offset, sizeof(pe_offset), 1, fp) == 1 && pe_offset != 0) {
+            fseek(fp, pe_offset, SEEK_SET);
+            uint32_t pe_sig;
+            if (fread(&pe_sig, sizeof(pe_sig), 1, fp) == 1 && pe_sig == 0x00004550) {
+                fprintf(stderr, "Error: This is a PE executable, not a COFF object file\n");
+                fclose(fp);
+                return -1;
+            }
+        }
+        // Reset to beginning and try reading again
+        fseek(fp, 0, SEEK_SET);
+        if (fread(&obj->header, header_size, 1, fp) != 1) {
+            fprintf(stderr, "Failed to read COFF header\n");
+            fclose(fp);
+            return -1;
+        }
+    }
     
     // Verify machine type
     if (obj->header.Machine != IMAGE_FILE_MACHINE_AMD64) {

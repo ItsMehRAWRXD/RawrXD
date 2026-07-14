@@ -21006,8 +21006,9 @@ void Win32IDE::loadLayout()
     {
         try
         {
-            nlohmann::json layout;
-            file >> layout;
+            std::string content((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+            nlohmann::json layout = nlohmann::json::parse(content);
 
             m_sidebarWidth = layout.value("sidebarWidth", 250);
             m_bottomPanelHeight = layout.value("bottomPanelHeight", 200);

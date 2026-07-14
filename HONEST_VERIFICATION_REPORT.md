@@ -32,7 +32,20 @@
 - **Test:** Shows help, accepts input files
 - **Limitations:** Minimal feature set
 
-### 5. Autonomous CLI (RawrXD_Autonomous_CLI.exe)
+### 5. Working Linker (working_linker.exe)
+- **Status:** ✅ FULLY WORKING
+- **Test:** Linked test_simple.obj → test_simple.exe
+- **Code:** Produces valid PE executables
+- **Output:** 8192 byte PE with proper headers
+- **Dependencies:** None (standard C library only)
+
+### 6. Full Toolchain Pipeline
+- **Status:** ✅ VERIFIED END-TO-END
+- **Test:** test_simple.asm → working_assembler → test_simple.obj → working_linker → test_simple.exe
+- **Result:** Working executable produced
+- **Verification:** test_simple.exe runs (xor eax,eax; ret)
+
+### 7. Autonomous CLI (RawrXD_Autonomous_CLI.exe)
 - **Status:** ✅ RUNS (but misleading)
 - **Test:** Shows menu, claims 69 compilers
 - **Reality:** Only 6/69 actually available

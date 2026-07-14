@@ -1298,7 +1298,6 @@ class Win32IDE
     // View Toggle/Show Methods (missing implementations for linker errors)
     void toggleMinimap();
     void toggleFloatingPanel();
-    void toggleSecondarySidebar();
     void togglePanel();
     void toggleSyntaxHighlighting();
 
@@ -1948,7 +1947,6 @@ class Win32IDE
     void createBottomPanelSplitter();
     void createSecondarySidebarSplitter();
     void updateLayout();
-    void toggleSecondarySidebar();
     void toggleBottomPanel();
     void resetLayout();
     void saveLayout();
@@ -2845,25 +2843,11 @@ class Win32IDE
 
     // Sidebar View Panels
     HWND m_hwndSearchPanel = nullptr;
-    HWND m_hwndSearchInput = nullptr;
-    HWND m_hwndSearchResults = nullptr;
-    HWND m_hwndGitPanel = nullptr;
-    HWND m_hwndSCMFileList = nullptr;
     HWND m_hwndSCMCommitMessage = nullptr;
     HWND m_hwndDebugPanel = nullptr;
-    HWND m_hwndDebugConfigs = nullptr;
-    HWND m_hwndDebugVariables = nullptr;
-    HWND m_hwndDebugCallStack = nullptr;
     HWND m_hwndExtensionsPanel = nullptr;
-    HWND m_hwndExtensionsList = nullptr;
-    HWND m_hwndExtensionSearch = nullptr;
-    HWND m_activityBarButtons[7] = {};
-    int m_activeActivityBarButton = 0;
 
     // Command Palette
-    HWND m_hwndCommandPalette = nullptr;
-    HWND m_hwndCommandPaletteInput = nullptr;
-    HWND m_hwndCommandPaletteList = nullptr;
 
     // Docking Framework
     HWND m_hwndSidebarSplitter = nullptr;
@@ -7823,8 +7807,6 @@ class Win32IDE
     bool m_tabDragging = false;
     int m_dragTabIndex = -1;
     int m_dragInsertIndex = -1;
-    int m_dragStartX = 0;
-    int m_dragStartY = 0;
 
     // 9. Split Editor (Grid Layout)
     void initSplitEditor();

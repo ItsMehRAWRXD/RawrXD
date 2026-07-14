@@ -71,6 +71,11 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `failure-analyzer.ps1` | Inference failure analysis and correction | `.\failure-analyzer.ps1` |
 | `patch-deployment.ps1` | Hotpatch deployment and rollback | `.\patch-deployment.ps1` |
 | `inference-monitor.ps1` | Real-time inference monitoring | `.\inference-monitor.ps1` |
+| `capacity-planner.ps1` | Infrastructure capacity planning | `.\capacity-planner.ps1` |
+| `cost-optimizer.ps1` | Cloud cost analysis and optimization | `.\cost-optimizer.ps1` |
+| `alert-manager.ps1` | Alert rules and notification management | `.\alert-manager.ps1` |
+| `chaos-engineering.ps1` | Resilience testing via controlled failures | `.\chaos-engineering.ps1` |
+| `compliance-auditor.ps1` | Security and operational compliance audit | `.\compliance-auditor.ps1` |
 
 ## Development Setup
 
