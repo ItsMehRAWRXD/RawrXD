@@ -163,17 +163,20 @@ bool GPUFabric::EnumerateDevices() {
             ramTarget->pageSize = 4096; // 4KB
             ramTarget->alignment = 64;
             
-            scheduler_->RegisterTarget(std::move(ramTarget));
-            
+            // Print before move
             std::cout << "[RawRamXD] RAM Device " << gpuIndex << ": System RAM" << std::endl;
             std::cout << "  Capacity: " << (ramTarget->capacityBytes / (1024*1024*1024)) 
                        << " GB" << std::endl;
+            
+            scheduler_->RegisterTarget(std::move(ramTarget));
         }
         gpuIndex++;
     }
 
-    // Register NVMe as streaming tier
+    // Register NVMe as streaming tier (optional - skip if fails)
     {
+        std::cout << "[RawRamXD] Initializing storage tier..." << std::endl;
+        
         auto storageTarget = std::make_unique<ComputeTarget>();
         storageTarget->id = gpuIndex;
         storageTarget->type = ComputeTargetType::NVME_STORE;
@@ -195,6 +198,8 @@ bool GPUFabric::EnumerateDevices() {
         GetTempPathW(MAX_PATH, tempPath);
         wcscat_s(tempPath, L"RawRamXD_Storage.bin");
         
+        std::cout << "[RawRamXD] Creating storage file (this may take a moment)..." << std::endl;
+        
         if (InitializeStorageTarget(storageTarget.get(), tempPath)) {
             storageTarget->bandwidthBytesPerSec = 3ULL * 1024 * 1024 * 1024; // 3 GB/s for NVMe
             storageTarget->latencyNs = 10000; // ~10us for NVMe
@@ -205,11 +210,13 @@ bool GPUFabric::EnumerateDevices() {
             storageTarget->pageSize = 4096;
             storageTarget->alignment = 512;
             
-            scheduler_->RegisterTarget(std::move(storageTarget));
-            
             std::cout << "[RawRamXD] Storage Device " << gpuIndex << ": NVMe" << std::endl;
             std::cout << "  Capacity: " << (storageTarget->capacityBytes / (1024*1024*1024)) 
                        << " GB" << std::endl;
+            
+            scheduler_->RegisterTarget(std::move(storageTarget));
+        } else {
+            std::cout << "[RawRamXD] Storage initialization skipped (using RAM fallback)" << std::endl;
         }
     }
 
@@ -261,23 +268,17 @@ bool GPUFabric::InitializeGPUTarget(ComputeTarget* target, IDXGIAdapter4* adapte
 }
 
 bool GPUFabric::InitializeRAMTarget(ComputeTarget* target) {
-    // Reserve virtual address space for pinned allocations
-    size_t reserveSize = std::min(target->capacityBytes / 4, 16ULL * 1024 * 1024 * 1024); // Max 16GB
+    // Use process heap for RAM allocations - no need to reserve large blocks
+    target->platform.ram.pinnedBase = nullptr;
+    target->platform.ram.pinnedSize = 0;
+    target->platform.ram.heapHandle = GetProcessHeap();
     
-    target->platform.ram.pinnedBase = VirtualAlloc(
-        nullptr,
-        reserveSize,
-        MEM_RESERVE,
-        PAGE_READWRITE);
-    
-    if (!target->platform.ram.pinnedBase) {
-        std::cerr << "[RawRamXD] Failed to reserve RAM address space" << std::endl;
+    if (!target->platform.ram.heapHandle) {
+        std::cerr << "[RawRamXD] Failed to get process heap" << std::endl;
         return false;
     }
     
-    target->platform.ram.pinnedSize = reserveSize;
-    target->platform.ram.heapHandle = GetProcessHeap();
-    
+    std::cout << "[RawRamXD] RAM target initialized (using process heap)" << std::endl;
     return true;
 }
 
