@@ -756,6 +756,7 @@ namespace RawrXD {
         
         bool Initialize(const OrchestratorConfig& config);
         void Shutdown();
+        bool IsInitialized() const { return initialized_; }
         
         // Main API
         InferenceResponse Execute(const InferenceRequest& request);

@@ -364,7 +364,7 @@ bool ZeroDependencyGGUFLoader::Seek(uint64_t offset) {
     return file_.good();
 }
 
-uint64_t ZeroDependencyGGUFLoader::GetPosition() const {
+uint64_t ZeroDependencyGGUFLoader::GetPosition() {
     return static_cast<uint64_t>(file_.tellg());
 }
 
