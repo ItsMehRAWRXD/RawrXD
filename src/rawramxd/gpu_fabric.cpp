@@ -8,6 +8,7 @@
 #include <cstring>
 #include <chrono>
 #include <iostream>
+#include <shared_mutex>
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "advapi32.lib")
@@ -972,7 +973,23 @@ bool RawRamXD_GetDeviceInfo(uint32_t index, ComputeTarget* info) {
     auto* target = scheduler->GetTarget(index);
     if (!target || !info) return false;
     
-    *info = *target;
+    // Copy fields individually (can't copy atomics/mutexes)
+    info->id = target->id;
+    info->type = target->type;
+    wcscpy_s(info->name, target->name);
+    info->capacityBytes = target->capacityBytes;
+    info->availableBytes = target->availableBytes;
+    info->allocatedBytes = target->allocatedBytes;
+    info->bandwidthBytesPerSec = target->bandwidthBytesPerSec;
+    info->latencyNs = target->latencyNs;
+    info->computeScore = target->computeScore;
+    info->pageSize = target->pageSize;
+    info->alignment = target->alignment;
+    info->capabilities = target->capabilities;
+    info->bytesTransferred = target->bytesTransferred.load();
+    info->transferCount = target->transferCount.load();
+    info->computeDispatches = target->computeDispatches.load();
+    
     return true;
 }
 
@@ -1007,7 +1024,23 @@ bool RawRamXD_GetResidency(uint64_t handle, TensorResidency* residency) {
     auto* tensor = scheduler->GetTensor(handle);
     if (!tensor || !residency) return false;
     
-    *residency = *tensor;
+    // Copy fields individually (can't copy atomics/mutexes)
+    residency->tensorId = tensor->tensorId;
+    residency->sizeBytes = tensor->sizeBytes;
+    residency->dimensions = tensor->dimensions;
+    residency->elementSize = tensor->elementSize;
+    residency->currentTarget = tensor->currentTarget;
+    residency->currentAddress = tensor->currentAddress;
+    residency->state = tensor->state;
+    residency->preferredType = tensor->preferredType;
+    residency->heat = tensor->heat;
+    residency->lastAccessTime = tensor->lastAccessTime.load();
+    residency->accessCount = tensor->accessCount.load();
+    residency->bytesRead = tensor->bytesRead.load();
+    residency->bytesWritten = tensor->bytesWritten.load();
+    residency->migrationCount = tensor->migrationCount;
+    residency->lastMigrationTime = tensor->lastMigrationTime;
+    
     return true;
 }
 
