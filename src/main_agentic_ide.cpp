@@ -2,6 +2,8 @@
 // Production-ready native Win32 IDE with zero dependencies
 
 #include "core/application.h"
+#include "core/command_registry.h"
+#include "core/event_bus.h"
 #include <windows.h>
 #include <shellapi.h>
 #include <vector>
@@ -160,6 +162,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             MB_OK | MB_ICONERROR);
         return 1;
     }
+    
+    // Register built-in commands
+    RawrXD::CommandRegistry::Instance().RegisterBuiltInCommands();
     
     // Open workspace if specified
     if (!config.workspacePath.empty()) {

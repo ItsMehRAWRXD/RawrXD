@@ -1,4 +1,5 @@
 #include "application.h"
+#include "event_bus.h"
 #include "../extensions/extension_host.h"
 #include "../workspace/workspace_manager.h"
 #include "../tasks/task_runner.h"
@@ -16,6 +17,30 @@
 #pragma comment(lib, "shlwapi.lib")
 
 namespace RawrXD {
+
+// Service Container implementation
+class ServiceContainer {
+public:
+    template<typename T>
+    void Register(std::unique_ptr<T> service) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        services_[typeid(T).name()] = std::move(service);
+    }
+    
+    template<typename T>
+    T* Get() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = services_.find(typeid(T).name());
+        if (it != services_.end()) {
+            return static_cast<T*>(it->second.get());
+        }
+        return nullptr;
+    }
+    
+private:
+    std::map<std::string, std::unique_ptr<void, void(*)(void*)>> services_;
+    std::mutex mutex_;
+};
 
 Application& Application::Instance() {
     static Application instance;
@@ -63,9 +88,13 @@ bool Application::Initialize(const AppConfig& config) {
 }
 
 bool Application::InitializeSubsystems() {
-    // Settings (must be first)
+    // Initialize Event Bus first (used by all subsystems)
+    EventBus::Instance(); // Ensure singleton is created
+    
+    // Settings (must be first - other systems depend on it)
     settingsManager_ = std::make_unique<Settings::SettingsManager>();
     if (!settingsManager_->Initialize()) {
+        ShowError("Initialization Failed", "Failed to initialize Settings Manager.");
         return false;
     }
     
@@ -80,24 +109,76 @@ bool Application::InitializeSubsystems() {
     config_.enableExtensions = settingsManager_->GetBoolean("features.extensions", config_.enableExtensions);
     config_.enableAI = settingsManager_->GetBoolean("features.ai", config_.enableAI);
     
+    // Wire settings change events
+    settingsManager_->SetChangeCallback([](const std::string& key, const Settings::SettingValue& newVal, const Settings::SettingValue& oldVal) {
+        SettingsEventData data;
+        data.key = key;
+        data.oldValue = oldVal.AsString();
+        data.newValue = newVal.AsString();
+        data.source = "SettingsManager";
+        RAWRXD_PUBLISH_EVENT(EventType::SettingsChanged, data);
+    });
+    
     // Workspace
     workspaceManager_ = std::make_unique<Workspace::WorkspaceManager>();
     if (!workspaceManager_->Initialize()) {
+        ShowError("Initialization Failed", "Failed to initialize Workspace Manager.");
         return false;
     }
+    
+    // Wire workspace events
+    workspaceManager_->SetFileChangeCallback([](const std::string& path, const std::string& changeType) {
+        FileEventData data;
+        data.path = path;
+        data.source = "WorkspaceManager";
+        
+        EventType type = EventType::FileModified;
+        if (changeType == "created") type = EventType::FileCreated;
+        else if (changeType == "deleted") type = EventType::FileDeleted;
+        else if (changeType == "renamed") type = EventType::FileRenamed;
+        
+        RAWRXD_PUBLISH_EVENT(type, data);
+    });
     
     // Task Runner
     taskRunner_ = std::make_unique<Tasks::TaskRunner>();
     if (!taskRunner_->Initialize()) {
+        ShowError("Initialization Failed", "Failed to initialize Task Runner.");
         return false;
     }
+    
+    // Wire task events
+    taskRunner_->SetTaskEventCallback([](const std::string& taskId, Tasks::TaskStatus status) {
+        TaskEventData data;
+        data.taskId = taskId;
+        data.source = "TaskRunner";
+        
+        EventType type = EventType::TaskStarted;
+        if (status == Tasks::TaskStatus::Succeeded) type = EventType::TaskCompleted;
+        else if (status == Tasks::TaskStatus::Failed) type = EventType::TaskFailed;
+        else if (status == Tasks::TaskStatus::Cancelled) type = EventType::TaskCancelled;
+        
+        RAWRXD_PUBLISH_EVENT(type, data);
+    });
+    
+    taskRunner_->SetOutputCallback([](const std::string& taskId, const std::string& output) {
+        TaskEventData data;
+        data.taskId = taskId;
+        data.output = output;
+        data.source = "TaskRunner";
+        RAWRXD_PUBLISH_EVENT(EventType::TaskProgress, data);
+    });
     
     // Extension Host
     if (config_.enableExtensions) {
         extensionHost_ = std::make_unique<Extensions::ExtensionHost>();
         if (!extensionHost_->Initialize()) {
+            ShowNotification("Extension Host initialization failed - continuing without extensions", 5000);
             extensionHost_.reset();
             config_.enableExtensions = false;
+        } else {
+            // Wire extension events
+            // TODO: Add extension event callbacks
         }
     }
     
@@ -117,6 +198,7 @@ bool Application::InitializeSubsystems() {
     if (config_.enableTerminal) {
         terminal_ = std::make_unique<Terminal::EmbeddedTerminal>();
         if (!terminal_->Initialize()) {
+            ShowNotification("Terminal initialization failed - continuing without terminal", 5000);
             terminal_.reset();
             config_.enableTerminal = false;
         }
@@ -126,10 +208,16 @@ bool Application::InitializeSubsystems() {
     if (config_.enableGit) {
         gitIntegration_ = std::make_unique<VCS::GitIntegration>();
         if (!gitIntegration_->Initialize()) {
+            ShowNotification("Git integration initialization failed - continuing without Git", 5000);
             gitIntegration_.reset();
             config_.enableGit = false;
         }
     }
+    
+    // Publish app ready event
+    EventData readyData;
+    readyData.source = "Application";
+    RAWRXD_PUBLISH_EVENT(EventType::AppReady, readyData);
     
     return true;
 }
@@ -259,6 +347,9 @@ int Application::Run() {
     while (GetMessageA(&msg, nullptr, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
+        
+        // Process event bus events after each message
+        EventBus::Instance().ProcessEvents();
     }
     
     return exitCode_;

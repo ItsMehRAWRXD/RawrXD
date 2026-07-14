@@ -1,5 +1,6 @@
 #pragma once
 
+#include "event_bus.h"
 #include <memory>
 #include <functional>
 #include <string>
@@ -14,7 +15,20 @@ namespace LSP { class LspClient; }
 namespace Debugger { class DAPAdapter; }
 namespace Terminal { class EmbeddedTerminal; }
 namespace VCS { class GitIntegration; }
-}
+
+// Service Container for dependency injection
+class ServiceContainer {
+public:
+    template<typename T>
+    void Register(std::unique_ptr<T> service);
+    
+    template<typename T>
+    T* Get();
+    
+private:
+    std::map<std::string, std::shared_ptr<void>> services_;
+    std::mutex mutex_;
+};
 
 namespace RawrXD {
 

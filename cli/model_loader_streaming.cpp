@@ -315,34 +315,37 @@ public:
         ModelArchitecture arch;
         
         auto it = metadata_.find("general.architecture");
-        if (it != metadata_.end()) arch.architecture = std::get<std::string>(it->second);
-        
-        it = metadata_.find(it->second + ".vocab_size");
-        if (it != metadata_.end()) arch.vocab_size = std::get<uint32_t>(it->second);
-        
-        it = metadata_.find(it->second + ".hidden_size");
-        if (it != metadata_.end()) arch.hidden_size = std::get<uint32_t>(it->second);
-        
-        it = metadata_.find(it->second + ".num_hidden_layers");
-        if (it != metadata_.end()) arch.num_layers = std::get<uint32_t>(it->second);
-        
-        it = metadata_.find(it->second + ".num_attention_heads");
-        if (it != metadata_.end()) arch.num_heads = std::get<uint32_t>(it->second);
-        
-        it = metadata_.find(it->second + ".num_key_value_heads");
-        if (it != metadata_.end()) arch.num_kv_heads = std::get<uint32_t>(it->second);
-        
-        it = metadata_.find(it->second + ".intermediate_size");
-        if (it != metadata_.end()) arch.intermediate_size = std::get<uint32_t>(it->second);
-        
-        it = metadata_.find(it->second + ".max_position_embeddings");
-        if (it != metadata_.end()) arch.context_length = std::get<uint32_t>(it->second);
-        
-        it = metadata_.find(it->second + ".rms_norm_eps");
-        if (it != metadata_.end()) arch.rms_norm_eps = std::get<float>(it->second);
-        
-        it = metadata_.find(it->second + ".rope_theta");
-        if (it != metadata_.end()) arch.rope_theta = std::get<float>(it->second);
+        if (it != metadata_.end()) {
+            arch.architecture = std::get<std::string>(it->second);
+            std::string prefix = arch.architecture;
+            
+            auto it2 = metadata_.find(prefix + ".vocab_size");
+            if (it2 != metadata_.end()) arch.vocab_size = std::get<uint32_t>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".hidden_size");
+            if (it2 != metadata_.end()) arch.hidden_size = std::get<uint32_t>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".num_hidden_layers");
+            if (it2 != metadata_.end()) arch.num_layers = std::get<uint32_t>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".num_attention_heads");
+            if (it2 != metadata_.end()) arch.num_heads = std::get<uint32_t>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".num_key_value_heads");
+            if (it2 != metadata_.end()) arch.num_kv_heads = std::get<uint32_t>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".intermediate_size");
+            if (it2 != metadata_.end()) arch.intermediate_size = std::get<uint32_t>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".max_position_embeddings");
+            if (it2 != metadata_.end()) arch.context_length = std::get<uint32_t>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".rms_norm_eps");
+            if (it2 != metadata_.end()) arch.rms_norm_eps = std::get<float>(it2->second);
+            
+            it2 = metadata_.find(prefix + ".rope_theta");
+            if (it2 != metadata_.end()) arch.rope_theta = std::get<float>(it2->second);
+        }
         
         return arch;
     }
