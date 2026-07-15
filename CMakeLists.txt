@@ -1316,6 +1316,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/ConfigurationValidator.cpp
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
+    src/core/rawrengine_missing_stubs.cpp
 
     # NOTE: rawrengine_command_handlers.cpp removed - depends on SelfHostEngine,
     # SpeciatorEngine, TranscendenceCoordinator which are excluded from RawrEngine
