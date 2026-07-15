@@ -10,14 +10,7 @@
 #include <math.h>
 #include <float.h>
 #include <setjmp.h>
-
-#ifdef _WIN32
-    #include <windows.h>
-    #include <excpt.h>
-#else
-    #include <signal.h>
-    #include <setjmp.h>
-#endif
+#include <signal.h>
 
 #define FUZZ_ITERATIONS 10000
 #define MAX_INPUT_SIZE 4096
@@ -130,20 +123,7 @@ int fuzz_softmax(rng_t *rng, int size) {
         }
     }
     
-    /* Verify */
-    float prob_sum = 0.0f;
-    int nan_count = 0;
-    for (int i = 0; i < size; i++) {
-        if (isnan(output[i])) {
-            nan_count++;
-        } else {
-            prob_sum += output[i];
-        }
-    }
-    
     free(input); free(output);
-    
-    /* Check for crashes only - edge cases are valid */
     return 0;
 }
 
@@ -220,33 +200,6 @@ int fuzz_gelu(rng_t *rng, int size) {
     return 0;
 }
 
-/* Run fuzz test with crash protection */
-int run_fuzz_test(fuzz_stats_t *stats) {
-    rng_t rng;
-    rng_init(&rng, SEED);
-    
-    printf("Starting fuzz test (%d iterations)...\n", FUZZ_ITERATIONS);
-    printf("Testing: softmax, rmsnorm, gelu\n");
-    printf("\n");
-    
-    int last_progress = -1;
-    
-    for (int iter = 0; iter < FUZZ_ITERATIONS; iter++) {
-        int result = 0;
-        
-        /* Progress */
-        int progress = (iter * 100) / FUZZ_ITERATIONS;
-        if (progress != last_progress && progress % 10 == 0) {
-            printf("Progress: %d%% (iter: %d, crashes: %d)\n",
-                   progress, iter, stats->crashes);
-            last_progress = progress;
-        }
-        
-        /* Fuzz with varying sizes */
-        int size_softmax = 32 + (rng_next(&rng) % 1024);
-        int size_rmsnorm = 128 + (rng_next(&rng) % 4096);
-        int size_gelu = 64 + (rng_next(&rng) % 512);
-        
 /* Fuzz attention with random inputs */
 int fuzz_attention(rng_t *rng, int seq_len, int head_dim) {
     size_t size = seq_len * head_dim * sizeof(float);
@@ -377,9 +330,42 @@ int fuzz_rope(rng_t *rng, int n, int head_dim) {
     free(x);
     return 0;
 }
+
+/* Run fuzz test with crash protection */
+int run_fuzz_test(fuzz_stats_t *stats) {
+    rng_t rng;
+    rng_init(&rng, SEED);
+    
+    printf("Starting fuzz test (%d iterations)...\n", FUZZ_ITERATIONS);
+    printf("Testing: softmax, rmsnorm, gelu, attention, rope\n");
+    printf("\n");
+    
+    int last_progress = -1;
+    
+    for (int iter = 0; iter < FUZZ_ITERATIONS; iter++) {
+        int result = 0;
+        
+        /* Progress */
+        int progress = (iter * 100) / FUZZ_ITERATIONS;
+        if (progress != last_progress && progress % 10 == 0) {
+            printf("Progress: %d%% (iter: %d, crashes: %d)\n",
+                   progress, iter, stats->crashes);
+            last_progress = progress;
+        }
+        
+        /* Fuzz with varying sizes */
+        int size_softmax = 32 + (rng_next(&rng) % 1024);
+        int size_rmsnorm = 128 + (rng_next(&rng) % 4096);
+        int size_gelu = 64 + (rng_next(&rng) % 512);
+        int seq_len = 16 + (rng_next(&rng) % 64);
+        int head_dim = 64 + (rng_next(&rng) % 64);
+        int n_rope = 128 + (rng_next(&rng) % 512);
+        
         result |= fuzz_softmax(&rng, size_softmax);
         result |= fuzz_rmsnorm(&rng, size_rmsnorm);
         result |= fuzz_gelu(&rng, size_gelu);
+        result |= fuzz_attention(&rng, seq_len, head_dim);
+        result |= fuzz_rope(&rng, n_rope, head_dim);
         
         stats->iterations++;
         
@@ -406,26 +392,21 @@ int main() {
     
     run_fuzz_test(&stats);
     
-    /* Summary */
     printf("\n");
-    printf("================\n");
-    printf("Fuzz Test Summary\n");
-    printf("================\n");
-    printf("Iterations:     %d\n", stats.iterations);
-    printf("Passed:         %d\n", stats.passed);
-    printf("Crashes:        %d\n", stats.crashes);
-    printf("Success Rate:   %.2f%%\n", 
-           (stats.passed * 100.0) / stats.iterations);
+    printf("Fuzz Test Complete\n");
+    printf("==================\n");
+    printf("Iterations: %d\n", stats.iterations);
+    printf("Passed: %d\n", stats.passed);
+    printf("Crashes: %d\n", stats.crashes);
+    printf("Pass Rate: %.2f%%\n", (stats.iterations > 0) ? 
+           (100.0f * stats.passed / stats.iterations) : 0.0f);
     printf("\n");
     
     if (stats.crashes == 0) {
-        printf("✓ PASS: No crashes detected\n");
-        printf("  All %d iterations completed successfully\n", stats.iterations);
-        printf("  Kernels are robust against edge case inputs\n");
+        printf("SUCCESS: No crashes detected!\n");
         return 0;
     } else {
-        printf("✗ FAIL: %d crashes detected\n", stats.crashes);
-        printf("  Crash rate: %.4f%%\n", (stats.crashes * 100.0) / stats.iterations);
+        printf("FAILURE: %d crashes detected\n", stats.crashes);
         return 1;
     }
 }
