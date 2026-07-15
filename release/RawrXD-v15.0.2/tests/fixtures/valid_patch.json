@@ -1,0 +1,54 @@
+{
+  "patch_id": "valid-test-patch-v1.0.0",
+  "version": "1.0.0",
+  "system_type": "swarm",
+  "description": "A valid test patch for unit testing",
+  "author": "test-author",
+  "created_at": "2026-07-13T00:00:00Z",
+  "components": [
+    "coordinator",
+    "worker"
+  ],
+  "files": [
+    {
+      "path": "src/swarm/coordinator.ps1",
+      "checksum": "a9993e364706816aba3e25717850c26c9cd0d89d",
+      "content": "IyBUZXN0IGNvbnRlbnQ=",
+      "size": 1024
+    },
+    {
+      "path": "src/swarm/worker.ps1",
+      "checksum": "b9993e364706816aba3e25717850c26c9cd0d89e",
+      "content": "IyBUZXN0IGNvbnRlbnQ=",
+      "size": 2048
+    }
+  ],
+  "dependencies": [
+    "swarm-core-v2.0.0"
+  ],
+  "conflicts": [],
+  "requires_restart": false,
+  "backup_paths": [
+    "src/swarm/coordinator.ps1",
+    "src/swarm/worker.ps1"
+  ],
+  "security": {
+    "signature": "MEUCIQDtP8U5fL6M0P8L3N7J9K2M5N8P1Q4R7T0W3X6Z9C2F5I8L1O4R7U0X3",
+    "approved_by": [
+      "security-admin-1",
+      "security-admin-2"
+    ],
+    "requires_2fa": true,
+    "min_role_level": 60
+  },
+  "rollback": {
+    "enabled": true,
+    "automatic_on_failure": true,
+    "timeout_seconds": 300
+  },
+  "metadata": {
+    "test_environment": true,
+    "jira_ticket": "TEST-123",
+    "change_description": "Test patch for validation"
+  }
+}

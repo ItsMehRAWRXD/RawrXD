@@ -124,7 +124,8 @@ bool ToolRegistry::LoadFromDisk(const std::wstring& path) {
 
     json root;
     try {
-        root = json::parse(buffer.str());
+        std::string content = buffer.str();
+        root = json::parse(content);
     } catch (const std::exception& ex) {
 
         return false;
