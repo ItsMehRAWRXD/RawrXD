@@ -64,6 +64,68 @@ double simulate_inference(void) {
     return (double)(end - start);
 }
 
+/* Simulate transformer layer operation */
+double simulate_transformer_layer(float* input, float* output, int dim, int seq_len) {
+    uint64_t start = get_time_ms();
+    
+    /* Simulate: RMSNorm -> Attention -> Residual -> FFN -> Residual */
+    
+    /* RMSNorm */
+    float sum_sq = 0.0f;
+    for (int i = 0; i < dim * seq_len; i++) {
+        sum_sq += input[i] * input[i];
+    }
+    float rms = sqrtf(sum_sq / (dim * seq_len) + 1e-6f);
+    float scale = 1.0f / rms;
+    
+    for (int i = 0; i < dim * seq_len; i++) {
+        input[i] *= scale;
+    }
+    
+    /* Simulate attention (simplified) */
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < dim; j++) {
+            /* Q @ K^T simplified */
+            float attn_score = 0.0f;
+            for (int k = 0; k < dim; k += 64) {
+                attn_score += input[i * dim + k] * input[i * dim + k];
+            }
+            output[i * dim + j] = input[i * dim + j] + (attn_score / dim);
+        }
+    }
+    
+    /* Simulate FFN (simplified GELU) */
+    for (int i = 0; i < dim * seq_len; i++) {
+        float x = output[i];
+        /* GELU approximation */
+        float gelu = x * 0.5f * (1.0f + tanhf(0.7978845608f * (x + 0.044715f * x * x * x)));
+        output[i] = x + gelu * 0.5f; /* Residual */
+    }
+    
+    uint64_t end = get_time_ms();
+    return (double)(end - start);
+}
+
+/* Memory stress test - allocate and touch memory */
+void memory_stress_test(size_t bytes) {
+    float* buffer = (float*)malloc(bytes);
+    if (!buffer) return;
+    
+    /* Touch all memory to ensure it's committed */
+    size_t floats = bytes / sizeof(float);
+    for (size_t i = 0; i < floats; i++) {
+        buffer[i] = (float)(i % 100) / 100.0f;
+    }
+    
+    /* Simulate compute on buffer */
+    volatile float sum = 0.0f;
+    for (size_t i = 0; i < floats; i++) {
+        sum += buffer[i] * buffer[i];
+    }
+    
+    free(buffer);
+}
+
 /* Run soak test */
 int run_soak_test(int duration_minutes) {
     soak_stats_t stats = {0};
@@ -73,15 +135,37 @@ int run_soak_test(int duration_minutes) {
     uint64_t duration_ms = duration_minutes * 60 * 1000;
     uint64_t next_report = stats.start_time_ms + 10000; /* First report at 10s */
     
+    /* Allocate buffers for transformer simulation */
+    int dim = 4096;
+    int seq_len = 512;
+    size_t buffer_size = dim * seq_len * sizeof(float);
+    
+    float* input = (float*)malloc(buffer_size);
+    float* output = (float*)malloc(buffer_size);
+    
+    if (!input || !output) {
+        printf("ERROR: Failed to allocate buffers\n");
+        return 1;
+    }
+    
+    /* Initialize input */
+    for (int i = 0; i < dim * seq_len; i++) {
+        input[i] = (float)(i % 100) / 100.0f;
+    }
+    
     printf("RawrXD Soak Test\n");
     printf("=================\n");
     printf("Duration: %d minutes\n", duration_minutes);
-    printf("Start time: %llu\n\n", (unsigned long long)stats.start_time_ms);
+    printf("Buffer size: %.2f MB\n", buffer_size / (1024.0 * 1024.0));
+    printf("Dimensions: %d x %d\n\n", seq_len, dim);
     
     /* Warmup */
-    printf("Warming up (%d iterations)...\n", WARMUP_ITERATIONS);
+    printf("Warming up (%d iterations)...
+", WARMUP_ITERATIONS);
     for (int i = 0; i < WARMUP_ITERATIONS; i++) {
-        simulate_inference();
+        simulate_transformer_layer(input, output, dim, seq_len);
+        /* Swap buffers */
+        float* temp = input; input = output; output = temp;
     }
     printf("Warmup complete.\n\n");
     

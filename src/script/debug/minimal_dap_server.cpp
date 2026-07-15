@@ -321,7 +321,9 @@ private:
         registers["expensive"] = false;
         scopes.push_back(registers);
         
-        SendResponse(seq, "scopes", {{"scopes", scopes}});
+        json scopesBody = json::object();
+        scopesBody["scopes"] = scopes;
+        SendResponse(seq, "scopes", scopesBody);
     }
 
     void HandleVariables(int seq, const json& args) {

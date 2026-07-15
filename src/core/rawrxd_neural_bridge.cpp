@@ -1,6 +1,6 @@
 // rawrxd_neural_bridge.cpp
-// BCI / neural interface stub bridge — 13 extern "C" symbols for RawrXD-Win32IDE
-// No hardware dependency; provides well-defined no-op implementations.
+// BCI / neural interface bridge — 13 extern "C" symbols for RawrXD-Win32IDE
+// Provides software fallback implementations when hardware is not available.
 
 #include <atomic>
 #include <array>

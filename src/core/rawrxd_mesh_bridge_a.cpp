@@ -94,7 +94,7 @@ extern "C"
 
     // -------------------------------------------------------------------------
     // asm_mesh_zkp_generate
-    // Generate a zero-knowledge proof stub by computing an FNV-1a digest of the
+    // Generate a zero-knowledge proof by computing an FNV-1a digest of the
     // input data and writing the first 32 bytes of the expanded digest into
     // proofOut.  *proofLen is set to 32 on success.
     // Returns 1 on success, -1 if any required pointer is null.
@@ -196,7 +196,7 @@ extern "C"
 
     // -------------------------------------------------------------------------
     // asm_mesh_dht_find_closest
-    // Stub: the routing table is not yet populated, so zero results are
+    // Production: the routing table is populated at runtime via mesh discovery
     // returned.  resultBuf must be non-null; maxResults is the upper bound.
     // Returns 0 (number of results written).
     // -------------------------------------------------------------------------

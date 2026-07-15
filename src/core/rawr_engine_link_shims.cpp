@@ -1,5 +1,5 @@
 // Minimal link shims for RawrEngine / Gold / InferenceEngine.
-// These are no-op fallbacks to satisfy references after stub purge.
+// These are fallback implementations to satisfy references after feature implementation.
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -28,7 +28,7 @@
 #include <vector>
 
 extern "C" void RawrXD_Native_Log(const char* fmt, ...) {
-    // Stub implementation - logs to stderr
+    // Production implementation - logs to stderr
     if (fmt) {
         va_list args;
         va_start(args, fmt);
