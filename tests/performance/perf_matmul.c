@@ -49,6 +49,47 @@ void optimized_matmul(const float* A, const float* B, float* C,
     }
 }
 
+/* AVX-512 matmul for maximum performance */
+#include <immintrin.h>
+
+void avx512_matmul(const float* A, const float* B, float* C,
+                   int M, int N, int K) {
+    const int TILE_M = 64;
+    const int TILE_N = 64;
+    const int TILE_K = 256;
+    
+    memset(C, 0, M * N * sizeof(float));
+    
+    for (int ii = 0; ii < M; ii += TILE_M) {
+        for (int jj = 0; jj < N; jj += TILE_N) {
+            for (int kk = 0; kk < K; kk += TILE_K) {
+                int i_end = (ii + TILE_M < M) ? ii + TILE_M : M;
+                int j_end = (jj + TILE_N < N) ? jj + TILE_N : N;
+                int k_end = (kk + TILE_K < K) ? kk + TILE_K : K;
+                
+                for (int i = ii; i < i_end; i++) {
+                    for (int k = kk; k < k_end; k++) {
+                        __m512 va = _mm512_set1_ps(A[i * K + k]);
+                        
+                        int j = jj;
+                        for (; j <= j_end - 16; j += 16) {
+                            __m512 vb = _mm512_loadu_ps(&B[k * N + j]);
+                            __m512 vc = _mm512_loadu_ps(&C[i * N + j]);
+                            vc = _mm512_fmadd_ps(va, vb, vc);
+                            _mm512_storeu_ps(&C[i * N + j], vc);
+                        }
+                        
+                        /* Scalar tail */
+                        for (; j < j_end; j++) {
+                            C[i * N + j] += A[i * K + k] * B[k * N + j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /* Benchmark matmul */
 perf_metrics_t benchmark_matmul(int M, int N, int K, int iterations) {
     perf_metrics_t metrics = {0};
