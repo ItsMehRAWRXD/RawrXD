@@ -1398,3 +1398,4 @@
 55	697	8058512345685863	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
 697	866	8058512352117679	CMakeFiles/RawrEngine.dir/src/core/ssot_beacon.cpp.obj	5acef419421a2658
 706	3500	8058512352193747	CMakeFiles/RawrEngine.dir/src/core/rawr_engine_link_shims.cpp.obj	a36fab3b81e826d2
+54	2179	8058512831166368	CMakeFiles/RawrXD-Win32IDE.dir/src/core/rawr_engine_link_shims.cpp.obj	bd2e4b64799d16d
