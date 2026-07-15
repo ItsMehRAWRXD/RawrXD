@@ -4157,6 +4157,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
+    # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
+    set_property(TARGET RawrXD-Win32IDE PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
     # GPU sovereign ASM link state (UI/runtime detection)
     if(DEFINED RAWRXD_HAS_SOVEREIGN_GPU_ASM)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=${RAWRXD_HAS_SOVEREIGN_GPU_ASM})
