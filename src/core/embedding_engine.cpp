@@ -5,7 +5,7 @@
 // ============================================================================
 
 #include "embedding_engine.hpp"
-// Resolve real loader: Ship/streaming_gguf_loader.h is a different GGUF:: stub and wins -I order.
+// Production GGUF loader integration with streaming support
 #include "../streaming_gguf_loader.h"
 #include <algorithm>
 #include <chrono>

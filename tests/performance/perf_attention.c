@@ -61,7 +61,114 @@ void reference_attention(const float* Q, const float* K, const float* V,
     free(scores);
 }
 
-/* Benchmark attention */
+/* Optimized AVX-512 attention */
+#include <immintrin.h>
+
+void optimized_attention(const float* Q, const float* K, const float* V,
+                         float* output, int seq_len, int head_dim) {
+    float* scores = (float*)aligned_alloc(64, seq_len * seq_len * sizeof(float));
+    
+    const float scale = 1.0f / sqrtf((float)head_dim);
+    const __m512 vscale = _mm512_set1_ps(scale);
+    
+    /* Q @ K^T with AVX-512 */
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < seq_len; j++) {
+            __m512 vsum = _mm512_setzero_ps();
+            int k = 0;
+            
+            /* Vectorized dot product */
+            for (; k <= head_dim - 16; k += 16) {
+                __m512 vq = _mm512_loadu_ps(&Q[i * head_dim + k]);
+                __m512 vk = _mm512_loadu_ps(&K[j * head_dim + k]);
+                vsum = _mm512_fmadd_ps(vq, vk, vsum);
+            }
+            
+            /* Horizontal reduction */
+            float sum = _mm512_reduce_add_ps(vsum);
+            
+            /* Scalar tail */
+            for (; k < head_dim; k++) {
+                sum += Q[i * head_dim + k] * K[j * head_dim + k];
+            }
+            
+            scores[i * seq_len + j] = sum * scale;
+        }
+    }
+    
+    /* Softmax with AVX-512 */
+    for (int i = 0; i < seq_len; i++) {
+        /* Find max */
+        __m512 vmax = _mm512_set1_ps(-INFINITY);
+        int j = 0;
+        for (; j <= seq_len - 16; j += 16) {
+            __m512 vs = _mm512_loadu_ps(&scores[i * seq_len + j]);
+            vmax = _mm512_max_ps(vmax, vs);
+        }
+        float max_val = _mm512_reduce_max_ps(vmax);
+        for (; j < seq_len; j++) {
+            if (scores[i * seq_len + j] > max_val) {
+                max_val = scores[i * seq_len + j];
+            }
+        }
+        
+        /* Compute exp and sum */
+        __m512 vsum = _mm512_setzero_ps();
+        __m512 v_max = _mm512_set1_ps(max_val);
+        j = 0;
+        
+        for (; j <= seq_len - 16; j += 16) {
+            __m512 vs = _mm512_loadu_ps(&scores[i * seq_len + j]);
+            __m512 vshifted = _mm512_sub_ps(vs, v_max);
+            __m512 vexp = _mm512_exp_ps(vshifted);
+            _mm512_storeu_ps(&scores[i * seq_len + j], vexp);
+            vsum = _mm512_add_ps(vsum, vexp);
+        }
+        
+        float sum = _mm512_reduce_add_ps(vsum);
+        for (; j < seq_len; j++) {
+            scores[i * seq_len + j] = expf(scores[i * seq_len + j] - max_val);
+            sum += scores[i * seq_len + j];
+        }
+        
+        /* Normalize */
+        __m512 vsum_inv = _mm512_set1_ps(1.0f / sum);
+        j = 0;
+        for (; j <= seq_len - 16; j += 16) {
+            __m512 vs = _mm512_loadu_ps(&scores[i * seq_len + j]);
+            vs = _mm512_mul_ps(vs, vsum_inv);
+            _mm512_storeu_ps(&scores[i * seq_len + j], vs);
+        }
+        for (; j < seq_len; j++) {
+            scores[i * seq_len + j] /= sum;
+        }
+    }
+    
+    /* Softmax @ V with AVX-512 */
+    for (int i = 0; i < seq_len; i++) {
+        for (int k = 0; k < head_dim; k++) {
+            __m512 vsum = _mm512_setzero_ps();
+            int j = 0;
+            
+            for (; j <= seq_len - 16; j += 16) {
+                __m512 vscore = _mm512_loadu_ps(&scores[i * seq_len + j]);
+                
+                /* Gather V values - need to load 16 separate elements */
+                /* For simplicity, using scalar gather or process in chunks */
+                /* Full implementation would use _mm512_i32gather_ps */
+            }
+            
+            /* Scalar for now - full gather optimization complex */
+            float sum = 0.0f;
+            for (j = 0; j < seq_len; j++) {
+                sum += scores[i * seq_len + j] * V[j * head_dim + k];
+            }
+            output[i * head_dim + k] = sum;
+        }
+    }
+    
+    free(scores);
+}
 perf_metrics_t benchmark_attention(int seq_len, int head_dim, int num_heads, int iterations) {
     perf_metrics_t metrics = {0};
     

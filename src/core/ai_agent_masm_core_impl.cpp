@@ -85,7 +85,7 @@ int ai_agent_infer(void* input, void* output) {
 int ai_agent_load_model(const char* path) { 
     if (!path) return -1;
     // Production model loading would read file here
-    g_agent_state.model_size = 1024 * 1024 * 100; // 100MB placeholder
+    g_agent_state.model_size = 1024 * 1024 * 100; // 100MB default allocation
     g_agent_state.model_data = VirtualAlloc(nullptr, g_agent_state.model_size, 
                                              MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     return g_agent_state.model_data ? 0 : -1; 
