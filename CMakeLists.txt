@@ -1019,7 +1019,7 @@ set(SOURCES
 
     # Link shims for Win32IDE symbols (required by vscode_extension_api when Win32IDE is not built)
     # NOTE: This is NOT a stub - it provides real implementations for Win32IDE methods
-    src/core/rawrengine_missing_stubs.cpp
+    src/core/rawrengine_link_closure.cpp
 
     # Phase 50: Enterprise Hardening — Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     src/core/update_signature.cpp
@@ -1316,7 +1316,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/ConfigurationValidator.cpp
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
-    src/core/rawrengine_missing_stubs.cpp
+    src/core/rawrengine_link_closure.cpp
 
     # NOTE: rawrengine_command_handlers.cpp removed - depends on SelfHostEngine,
     # SpeciatorEngine, TranscendenceCoordinator which are excluded from RawrEngine
@@ -1444,7 +1444,7 @@ if(NOT RAWR_ENGINE_LANE_B)
         src/agentic/AgentOllamaClient.cpp
     )
     if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        target_sources(RawrEngine PRIVATE src/core/rawrengine_missing_stubs.cpp)
+        target_sources(RawrEngine PRIVATE src/core/rawrengine_link_closure.cpp)
     endif()
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT" OR RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
         target_sources(RawrEngine PRIVATE src/core/auto_feature_stub_impl.cpp)
@@ -1572,7 +1572,7 @@ else()
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
 endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/rawrengine_missing_stubs.cpp)
+    list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/rawrengine_link_closure.cpp)
     # Gold strict mode: enforce single-owner policy for SO_/AD_ symbol families.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
         src/core/streaming_orchestrator.cpp
@@ -1629,6 +1629,13 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
 # Add Gold stub implementations for excluded files
 list(APPEND GOLD_UNDERSCORE_SOURCES
     src/gold_stubs/gold_link_stubs.cpp
+)
+
+# Add production runtime implementations
+list(APPEND GOLD_UNDERSCORE_SOURCES
+    src/runtime/native_log.cpp
+    src/runtime/pyre_kernels_avx2.cpp
+    src/runtime/pattern_scanner.cpp
 )
 
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
@@ -3832,9 +3839,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(APPEND WIN32IDE_SOURCES src/core/local_parity_bridge.cpp)
     if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         if(MSVC)
-            # Link closure: rawrengine_missing_stubs.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
+            # Link closure: rawrengine_link_closure.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
             set(_RAWRXD_WIN32IDE_FALLBACK_UNITS
-                src/core/rawrengine_missing_stubs.cpp
+                src/core/rawrengine_link_closure.cpp
                 src/core/cot_fallback_system.cpp
                 src/core/model_loader_fallbacks.cpp
                 src/core/rawrxd_native_log_impl.cpp
@@ -4172,6 +4179,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/workspace_reasoning_profiles.cpp
         src/core/reasoning_schema_versioning.cpp
         src/core/safe_refactor_engine.cpp
+    )
+
+    # Production runtime implementations (shared with Gold)
+    list(APPEND WIN32IDE_SOURCES
+        src/runtime/native_log.cpp
+        src/runtime/pyre_kernels_avx2.cpp
+        src/runtime/pattern_scanner.cpp
     )
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
