@@ -1,15 +1,34 @@
-# RawrXD v15.0 Validation Framework - Complete
+# RawrXD Validation Framework - Complete
+
+**Status:** ✅ Production Ready  
+**Branch:** `release/14.7.3`  
+**Date:** 2026-07-15
 
 ## Executive Summary
 
-The RawrXD v15.0 validation framework is now **fully operational** with three complete milestones:
+Complete automated validation framework proving numerical equivalence between RawrXD and llama.cpp.
 
-| Milestone | Status | Tests | Purpose |
-|-----------|--------|-------|---------|
-| **Milestone 1** | ✅ Complete | 14 | Core kernel validation |
-| **Milestone 2** | ✅ Complete | 9 | Golden reference regression testing |
-| **Milestone 3** | ✅ Complete | 3 | Performance baselines |
-| **Total** | ✅ **100%** | **26** | **Production-ready validation** |
+| Component | Status | Purpose |
+|-----------|--------|---------|
+| Core Library | ✅ Complete | AVX-512 tensor comparison, reference I/O |
+| Runtime Hooks | ✅ Complete | Header-only validation macros |
+| llama.cpp Patch | ✅ Complete | Reference data generation |
+| Automation | ✅ Complete | One-command validation pipeline |
+| CI/CD | ✅ Complete | GitHub Actions workflow |
+| Documentation | ✅ Complete | Full API and usage guides |
+
+## Quick Start (One Command)
+
+```bash
+python scripts/validate_against_llama.py \
+    --model /path/to/model.gguf \
+    --prompt "Hello world" \
+    --tokens 10
+```
+
+Runs complete pipeline: llama.cpp build → reference generation → RawrXD build → comparison → report.
+
+## Components
 
 ## Quick Start
 
