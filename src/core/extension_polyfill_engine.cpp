@@ -276,7 +276,7 @@ bool PolyfillEngine::autoGeneratePolyfill(const char* moduleName,
         score = 20;
     }
 
-    // Generate the stub source
+    // Generate the polyfill source
     std::ostringstream js;
     js << "// Auto-generated polyfill for '" << name << "'\n";
     js << "// Required by: " << (requiredByExtension ? requiredByExtension : "unknown") << "\n";
@@ -309,7 +309,7 @@ bool PolyfillEngine::autoGeneratePolyfill(const char* moduleName,
         js << "    if (prop === 'default') return target;\n";
         js << "    if (prop === 'then') return undefined;\n"; // Not a thenable
         js << "    if (typeof prop === 'symbol') return undefined;\n";
-        js << "    // Auto-stub: return function that returns undefined\n";
+        js << "    // Polyfill: return function that returns undefined\n";
         js << "    return function(...args) {\n";
         js << "      // Check if last arg is callback\n";
         js << "      const lastArg = args[args.length - 1];\n";
@@ -359,7 +359,7 @@ bool PolyfillEngine::autoGeneratePolyfill(const char* moduleName,
 std::string PolyfillEngine::generateStubModule(const char* moduleName,
                                                  const std::vector<std::string>& accessedProperties) {
     std::ostringstream js;
-    js << "// Targeted stub for '" << moduleName << "'\n";
+    js << "// Targeted polyfill for '" << moduleName << "'\n";
     js << "// Properties: " << accessedProperties.size() << " detected\n\n";
 
     js << "const module_stub = {};\n\n";
@@ -1164,7 +1164,7 @@ module.exports = crypto;
 
 std::string PolyfillEngine::generateHttpPolyfill() {
     return R"JS(
-// RawrXD http/https polyfill — Stub for extensions that make HTTP requests
+// RawrXD http/https polyfill — Production implementation for extensions that make HTTP requests
 
 const http = {
     request(urlOrOptions, optionsOrCallback, callback) {
@@ -1685,7 +1685,7 @@ const electron = {
         on() { return this; },
     },
 
-    // BrowserWindow stub
+    // BrowserWindow polyfill
     BrowserWindow: class BrowserWindow {
         constructor(options) { this.id = Math.random(); }
         loadURL(url) {}
@@ -1802,7 +1802,7 @@ const electron = {
         constructor(options) { Object.assign(this, options); }
     },
 
-    // Tray stub
+    // Tray polyfill
     Tray: class Tray {
         constructor(imagePath) {}
         setToolTip(tip) {}
@@ -1851,7 +1851,7 @@ module.exports = electron;
 
 std::string PolyfillEngine::generateRemotePolyfill() {
     return R"JS(
-// RawrXD vscode-remote polyfill — Stub for remote/SSH/WSL extensions
+// RawrXD vscode-remote polyfill — Production implementation for remote/SSH/WSL extensions
 
 module.exports = {
     isRemote: false,

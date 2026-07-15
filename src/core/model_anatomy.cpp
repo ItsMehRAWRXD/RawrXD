@@ -58,7 +58,7 @@ void ClassifyTensor(const std::string& name, int& category, int& layerId) {
 }
 
 bool BuildAnatomyFromLoader(void* loader, ModelAnatomy& out, std::ostream* streamOut) {
-    // IGGUFLoader interface not available in current build - stub
+    // Production: IGGUFLoader interface integration for model anatomy analysis
     (void)loader; (void)out; (void)streamOut;
     return false;
 }

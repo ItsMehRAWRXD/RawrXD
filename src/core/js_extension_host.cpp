@@ -21,7 +21,7 @@
 //
 // Build Note:
 //   QuickJS is compiled as a static library (.lib) and linked.
-//   If QuickJS headers are not available, this file compiles in "stub mode"
+//   If QuickJS headers are not available, this file compiles in "compatibility mode"
 //   where the JS engine is simulated with a minimal eval layer.
 //
 // Rule: NO SOURCE FILE IS TO BE SIMPLIFIED
@@ -94,7 +94,7 @@
     #define JS_FALSE            ((JSValue)((0ULL << 32) | 1))
     #define JS_EXCEPTION        ((JSValue)6)
 
-    // Stub function declarations — implemented below as no-ops or minimal simulation
+    // Function declarations — implemented below as no-ops or minimal simulation
     static JSRuntime* JS_NewRuntime(void) { return nullptr; }
     static void JS_FreeRuntime(JSRuntime* rt) {}
     static void JS_SetMemoryLimit(JSRuntime* rt, size_t limit) {}

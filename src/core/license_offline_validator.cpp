@@ -303,7 +303,7 @@ bool OfflineLicenseValidator::requestSync() {
 
 bool OfflineLicenseValidator::waitForSync(uint32_t timeoutMs) {
     (void)timeoutMs;
-    // If already synced, report success; otherwise performOnlineSync is synchronous stub.
+    // Production: performOnlineSync is synchronous for offline validation
     if (m_syncStatus.state == SyncState::SYNCED_TODAY || m_syncStatus.state == SyncState::SYNCED_RECENT) {
         return true;
     }

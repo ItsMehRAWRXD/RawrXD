@@ -265,14 +265,14 @@ ContextPrepareResult ContextDeteriorationHotpatch::applySlidingWindow(
         headerLen = header.size();
     }
 
-    size_t tailMax = targetChars - headerLen - 200;  // Reserve for placeholder
+    size_t tailMax = targetChars - headerLen - 200;  // Reserve for truncation message
     if (tailMax > targetChars) tailMax = targetChars / 2;
 
     std::string tail;
     if (sysEnd) {
         tail = std::string(sysEnd);
         if (tail.size() > tailMax) {
-            size_t keepChars = tailMax - 80;  // Reserve for placeholder
+            size_t keepChars = tailMax - 80;  // Reserve for truncation message
             if (keepChars < tailMax / 2) keepChars = tailMax / 2;
             std::string truncated = tail.substr(tail.size() - keepChars);
             truncated = truncateToTokenBoundary(truncated, keepChars);

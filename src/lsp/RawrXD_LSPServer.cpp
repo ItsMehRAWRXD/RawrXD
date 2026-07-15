@@ -17,7 +17,9 @@
 // Copyright (c) 2025 RawrXD Project — All rights reserved.
 // ============================================================================
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include "lsp/RawrXD_LSPServer.h"
 
 #include <nlohmann/json.hpp>

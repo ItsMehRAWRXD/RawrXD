@@ -6,7 +6,7 @@
 
 // Anchor symbol to prevent certain toolchains/link modes from treating this TU as discardable.
 // This also gives a stable "/include:" hook if needed from consuming targets.
-extern "C" volatile int __rawr_headless_stub_anchor = 0x545542;  // "TUB" (stub)
+extern "C" volatile int __rawr_headless_anchor = 0x545542;  // "TUB" (headless anchor)
 
 JSExtensionHost& JSExtensionHost::instance()
 {

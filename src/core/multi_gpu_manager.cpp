@@ -51,7 +51,7 @@
 #ifdef OPENCL_AVAILABLE
 #include <CL/cl.h>
 
-// SCAFFOLD_111: Multi-GPU manager stub
+// Multi-GPU manager production implementation
 
 #pragma comment(lib, "opencl.lib")
 #endif

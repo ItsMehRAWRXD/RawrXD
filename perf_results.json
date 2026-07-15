@@ -58,3 +58,13 @@
   "operations": 107374182400,
   "iterations": 50
 },
+{
+  "test": "matmul_4096x4096x4096",
+  "elapsed_ms": 157607.214100,
+  "throughput_gops": 4.360173,
+  "bandwidth_gbps": 0.005948,
+  "tokens_per_sec": 0.000000,
+  "bytes_processed": 1006632960,
+  "operations": 687194767360,
+  "iterations": 5
+},

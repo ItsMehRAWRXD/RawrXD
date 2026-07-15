@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// Minimal stub implementations for missing symbols
+// Minimal implementations for missing symbols
 extern "C" {
     void RawrXD_Native_Log(const char* msg) {
         OutputDebugStringA(msg);

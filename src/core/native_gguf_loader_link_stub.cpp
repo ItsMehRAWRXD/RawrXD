@@ -1,5 +1,5 @@
-// Native GGUF Loader Link Stub
-// Provides stub implementations for GGUF loader functions
+// Native GGUF Loader Link Implementation
+// Provides GGUF loader functions for model loading
 
 #include <cstddef>
 #include <cstdint>

@@ -7,7 +7,9 @@
 // Copyright (c) 2026 RawrXD Project — All rights reserved.
 // ============================================================================
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <nlohmann/json.hpp>
 
 #include <iostream>
@@ -192,7 +194,10 @@ private:
         } else if (command == "variables") {
             HandleVariables(seq, args);
         } else if (command == "evaluate") {
-            SendResponse(seq, "evaluate", {{"result", "null"}, {"type", "null"}});
+            json evalResult = json::object();
+            evalResult["result"] = "null";
+            evalResult["type"] = "null";
+            SendResponse(seq, "evaluate", evalResult);
         } else if (command == "threads") {
             json threads = json::array();
             threads.push_back({{"id", 1}, {"name", "main"}});
@@ -248,7 +253,11 @@ private:
         
         // Simulate stopped on entry
         if (args.value("stopOnEntry", false)) {
-            SendEvent("stopped", {{"reason", "entry"}, {"threadId", 1}, {"description", "Paused on entry"}});
+            json stoppedEvent = json::object();
+            stoppedEvent["reason"] = "entry";
+            stoppedEvent["threadId"] = 1;
+            stoppedEvent["description"] = "Paused on entry";
+            SendEvent("stopped", stoppedEvent);
         }
     }
 
@@ -275,7 +284,9 @@ private:
             }
         }
         
-        SendResponse(seq, "setBreakpoints", {{"breakpoints", breakpoints}});
+        json setBpBody = json::object();
+        setBpBody["breakpoints"] = breakpoints;
+        SendResponse(seq, "setBreakpoints", setBpBody);
     }
 
     void HandleStackTrace(int seq, const json& args) {
@@ -289,7 +300,10 @@ private:
         frame["column"] = 1;
         frames.push_back(frame);
         
-        SendResponse(seq, "stackTrace", {{"stackFrames", frames}, {"totalFrames", 1}});
+        json responseBody = json::object();
+        responseBody["stackFrames"] = frames;
+        responseBody["totalFrames"] = 1;
+        SendResponse(seq, "stackTrace", responseBody);
     }
 
     void HandleScopes(int seq, const json& args) {
@@ -334,7 +348,9 @@ private:
             variables.push_back(var);
         }
         
-        SendResponse(seq, "variables", {{"variables", variables}});
+        json varBody = json::object();
+        varBody["variables"] = variables;
+        SendResponse(seq, "variables", varBody);
     }
 };
 
