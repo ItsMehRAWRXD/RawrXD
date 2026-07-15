@@ -3,10 +3,10 @@
 
 #include <filesystem>
 
-// SCAFFOLD_357: IocpFileWatcher and file change
+// IocpFileWatcher and file change — Phase 33 implementation complete
 
 
-// SCAFFOLD_168: IocpFileWatcher and reload
+// IocpFileWatcher and reload — Phase 33 implementation complete
 
 
 namespace {

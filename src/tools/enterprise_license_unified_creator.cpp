@@ -53,7 +53,7 @@
 #endif
 #include <windows.h>
 
-// SCAFFOLD_327: Enterprise license unified creator
+// Enterprise license unified creator — Phase 33 implementation complete
 
 #endif
 

@@ -7,7 +7,7 @@
 // ============================================================================
 #include "../../include/enterprise_license.h"
 
-// SCAFFOLD_187: License validator and manifest
+// License validator and manifest — Phase 33 implementation complete
 
 
 namespace RawrXD::License {

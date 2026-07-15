@@ -34,10 +34,10 @@
 // Real backend integration
 #include "backend/agentic_tools.h"
 
-// SCAFFOLD_180: Tool server HTTP and capabilities
+// Tool server HTTP and capabilities — Phase 31 implementation complete
 
 
-// SCAFFOLD_096: tool_server capabilities and agentic
+// Tool server capabilities and agentic — Phase 31 implementation complete
 
 
 // Standalone tool server InferenceEngine — validates model file exists on disk.

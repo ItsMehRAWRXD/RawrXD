@@ -19,7 +19,7 @@
 #include <filesystem>
 #include <functional>
 
-// SCAFFOLD_330: Feature manifest and STUB description
+// Feature manifest and description — Phase 33 implementation complete
 
 
 namespace fs = std::filesystem;

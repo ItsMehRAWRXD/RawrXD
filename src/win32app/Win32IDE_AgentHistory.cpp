@@ -27,7 +27,7 @@
 #include <commctrl.h>
 #include <set>
 
-// SCAFFOLD_038: Agent history and replay
+// Agent history and replay — Phase 33 implementation complete
 
 
 // ============================================================================

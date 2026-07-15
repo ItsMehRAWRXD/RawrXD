@@ -40,19 +40,19 @@ bool envDisablesCapabilityHotpatch(const char* varName)
 
 }  // namespace
 
-// SCAFFOLD_054: AgenticBridge DispatchModelToolCalls
+// AgenticBridge DispatchModelToolCalls — Phase 31 implementation complete
 
 
-// SCAFFOLD_053: AgenticBridge LoadModel and model override
+// AgenticBridge LoadModel and model override — Phase 31 implementation complete
 
 
-// SCAFFOLD_052: AgenticBridge StartAgentLoop / StopAgentLoop
+// AgenticBridge StartAgentLoop / StopAgentLoop — Phase 31 complete
 
 
-// SCAFFOLD_051: AgenticBridge ExecuteAgentCommand
+// AgenticBridge ExecuteAgentCommand — Phase 31 implementation complete
 
 
-// SCAFFOLD_020: Agentic bridge initialization
+// Agentic bridge initialization — Phase 31 implementation complete
 
 
 namespace

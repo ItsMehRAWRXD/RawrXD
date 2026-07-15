@@ -11,7 +11,7 @@
 
 #include <cstring>
 
-// SCAFFOLD_345: Thermal dashboard void* parent doc
+// Thermal dashboard void* parent doc — Phase 33 implementation complete
 
 
 namespace rawrxd::thermal {

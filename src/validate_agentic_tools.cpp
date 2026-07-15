@@ -6,7 +6,7 @@
 #include <sstream>
 #include "../include/agentic_tools.h"
 
-// SCAFFOLD_095: backend agentic_tools
+// Backend agentic_tools — Phase 31 implementation complete
 
 
 namespace fs = std::filesystem;

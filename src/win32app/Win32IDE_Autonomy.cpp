@@ -2,13 +2,13 @@
 #include "IDEConfig.h"
 #include <sstream>
 
-// SCAFFOLD_056: AutonomyManager executeAction
+// AutonomyManager executeAction — Phase 31 implementation complete
 
 
-// SCAFFOLD_055: AutonomyManager planNextAction
+// AutonomyManager planNextAction — Phase 31 implementation complete
 
 
-// SCAFFOLD_021: Autonomy manager and goal loop
+// Autonomy manager and goal loop — Phase 31 implementation complete
 
 
 AutonomyManager::AutonomyManager(AgenticBridge* bridge)

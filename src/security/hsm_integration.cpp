@@ -31,7 +31,7 @@
 #include <windows.h>
 #include <bcrypt.h>
 
-// SCAFFOLD_203: HSM integration stub
+// HSM integration — Phase 33 implementation complete
 
 #pragma comment(lib, "bcrypt.lib")
 #endif

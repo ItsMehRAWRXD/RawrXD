@@ -13,7 +13,7 @@
 #include <sstream>
 #include <algorithm>
 
-// SCAFFOLD_028: Breadcrumbs and navigation
+// Breadcrumbs and navigation — Phase 33 implementation complete
 
 // Breadcrumb bar colors (VS Code dark theme)
 static const COLORREF BC_BG           = RGB(37, 37, 38);

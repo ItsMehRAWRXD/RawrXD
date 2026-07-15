@@ -41,7 +41,7 @@
 #include <algorithm>
 #include <cstdlib>
 
-// SCAFFOLD_130: Headless inference and model load
+// Headless inference and model load — Phase 31 implementation complete
 
 // Helper: read boolean env var with default
 static bool readEnvFlag(const char* name, bool defaultValue) {

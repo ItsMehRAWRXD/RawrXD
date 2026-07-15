@@ -68,7 +68,9 @@ void reference_attention(const float* Q, const float* K, const float* V,
 
 void optimized_attention(const float* Q, const float* K, const float* V,
                          float* output, int seq_len, int head_dim) {
-    float* scores = (float*)aligned_alloc(64, seq_len * seq_len * sizeof(float));
+    float* scores = (float*)malloc(seq_len * seq_len * sizeof(float) + 64);
+    /* Align to 64-byte boundary */
+    scores = (float*)(((uintptr_t)scores + 63) & ~63);
     
     const float scale = 1.0f / sqrtf((float)head_dim);
     const __m512 vscale = _mm512_set1_ps(scale);
@@ -114,26 +116,9 @@ void optimized_attention(const float* Q, const float* K, const float* V,
             }
         }
         
-        /* Compute exp and sum */
-        __m512 vsum = _mm512_setzero_ps();
-        __m512 v_max = _mm512_set1_ps(max_val);
-        j = 0;
-        
-        for (; j <= seq_len - 16; j += 16) {
-            __m512 vs = _mm512_loadu_ps(&scores[i * seq_len + j]);
-            __m512 vshifted = _mm512_sub_ps(vs, v_max);
-            /* Store for scalar exp processing */
-            _mm512_storeu_ps(&scores[i * seq_len + j], vshifted);
-        }
-        
-        /* Scalar exp for numerical accuracy */
+        /* Compute exp and sum - scalar for accuracy */
+        float sum = 0.0f;
         for (j = 0; j < seq_len; j++) {
-            scores[i * seq_len + j] = expf(scores[i * seq_len + j]);
-            sum += scores[i * seq_len + j];
-        }
-        
-        float sum = _mm512_reduce_add_ps(vsum);
-        for (; j < seq_len; j++) {
             scores[i * seq_len + j] = expf(scores[i * seq_len + j] - max_val);
             sum += scores[i * seq_len + j];
         }

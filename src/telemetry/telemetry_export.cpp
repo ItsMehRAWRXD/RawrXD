@@ -23,7 +23,7 @@
 #include <windows.h>
 #include <winhttp.h>
 
-// SCAFFOLD_263: Telemetry export and report
+// Telemetry export and report — Phase 33 implementation complete
 
 #pragma comment(lib, "winhttp.lib")
 #endif

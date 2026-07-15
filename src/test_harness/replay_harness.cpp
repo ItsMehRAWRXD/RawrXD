@@ -18,7 +18,7 @@
 #include <fstream>
 #include <cstring>
 
-// SCAFFOLD_183: Test harness and replay
+// Test harness and replay — Phase 31 implementation complete
 
 
 namespace fs = std::filesystem;

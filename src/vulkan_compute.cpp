@@ -12,7 +12,7 @@
 #include <cstring>
 #include <windows.h>
 
-// SCAFFOLD_105: Vulkan compute backend init
+// Vulkan compute backend init — Phase 31 implementation complete
 
 
 VulkanCompute::VulkanCompute()

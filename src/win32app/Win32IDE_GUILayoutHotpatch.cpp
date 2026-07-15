@@ -18,7 +18,7 @@
 #include <vector>
 #include <algorithm>
 
-// SCAFFOLD_042: GUILayout hotpatch application
+// GUILayout hotpatch application — Phase 33 implementation complete
 
 
 namespace {

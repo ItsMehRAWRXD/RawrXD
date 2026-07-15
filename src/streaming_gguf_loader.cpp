@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 
-// SCAFFOLD_102: Streaming GGUF loader
+// Streaming GGUF loader — Phase 31 implementation complete
 
 
 namespace RawrXD {

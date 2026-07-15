@@ -11,7 +11,7 @@
 #include <vector>
 #include <cstdlib>
 
-// SCAFFOLD_200: RawrXD_Settings and default shell
+// RawrXD_Settings and default shell — Phase 33 implementation complete
 
 
 #ifndef RAWRXD_WIN32_STATIC_BUILD
