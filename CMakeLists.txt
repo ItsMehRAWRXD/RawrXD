@@ -1622,6 +1622,7 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     src/complete_server.cpp
     src/modules/vscode_extension_api.cpp
     src/core/js_extension_host.cpp
+    src/ui/entry_point.cpp
 )
 
 # Add Gold stub implementations for excluded files
