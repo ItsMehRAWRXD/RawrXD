@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(151) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(161) : error A2006:undefined symbol : GetFileSizeEx
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(171) : error A2006:undefined symbol : CreateFileMappingA
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(185) : error A2006:undefined symbol : MapViewOfFile
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(201) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(203) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(210) : error A2006:undefined symbol : UnmapViewOfFile
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(213) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769624381960_EU0k.asm(216) : error A2006:undefined symbol : CloseHandle

@@ -1,0 +1,38 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 10s
+
+scrape_configs:
+  # Sovereign Head Node
+  - job_name: 'sovereign-head'
+    static_configs:
+      - targets: ['192.168.1.10:8080']
+    metrics_path: /metrics
+    scrape_interval: 5s
+
+  # Sovereign Workers
+  - job_name: 'sovereign-workers'
+    static_configs:
+      - targets:
+        - '192.168.1.11:8080'
+        - '192.168.1.12:8080'
+        - '192.168.1.13:8080'
+        - '192.168.1.14:8080'
+        - '192.168.1.15:8080'
+        - '192.168.1.16:8080'
+        - '192.168.1.17:8080'
+    metrics_path: /metrics
+    scrape_interval: 5s
+
+  # Local aggregator
+  - job_name: 'telemetry-aggregator'
+    static_configs:
+      - targets: ['localhost:9090']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+rule_files:
+  - 'sovereign_alerts.yml'

@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\gguf\memory\map.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\gguf\memory\map.asm(2) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\gguf\memory\map.asm(3) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\gguf\memory\map.asm(21) : error A2008:syntax error : size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\gguf\memory\map.asm(29) : error A2177:nested structure improperly initialized
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\gguf\memory\map.asm(39) : error A2008:syntax error : size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\gguf\memory\map.asm(55) : fatal error A1010:unmatched block nesting : GgufMemoryMap_AddRegion

@@ -1,0 +1,40 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(105) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(119) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(187) : error A2008:syntax error : SendMessageA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(196) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(211) : error A2008:syntax error : integer
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(226) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(229) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(232) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(235) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(238) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(247) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(258) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(264) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(270) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(279) : error A2008:syntax error : QTIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(280) : error A2008:syntax error : CLIIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(285) : error A2008:syntax error : QTIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(286) : error A2008:syntax error : CLIIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(291) : error A2008:syntax error : QTIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(292) : error A2008:syntax error : CLIIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(304) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(324) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(327) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(330) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(333) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(336) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(339) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(342) : error A2008:syntax error : QTIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(343) : error A2008:syntax error : CLIIdeSendMessage
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(354) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(357) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(363) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(366) : error A2008:syntax error : AgentRun
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(389) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(395) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(402) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(408) : error A2008:syntax error : CallScaffolder
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(743) : error A2005:symbol redefinition : PerformEdit
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_agentic_ide_bridge.asm(747) : fatal error A1010:unmatched block nesting : PerformEdit

@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(26) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(34) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(41) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(57) : error A2006:undefined symbol : InitializeCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(76) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(89) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(105) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(120) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(142) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(159) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(170) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(245) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(258) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(270) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(287) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(299) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(315) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(412) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_undoredo.asm(424) : error A2006:undefined symbol : LeaveCriticalSection

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771292214323_6mSc.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771292214323_6mSc.asm(544) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771292214323_6mSc.asm(561) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771292214323_6mSc.asm(588) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771292214323_6mSc.asm(763) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771292214323_6mSc.asm(953) : error A2006:undefined symbol : GetFileSize

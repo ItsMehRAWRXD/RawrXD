@@ -1,0 +1,42 @@
+# prometheus.yml
+# Phase H.5 Batch 3/5: Prometheus Configuration for RawrXD
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'rawrxd-monitor'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+rule_files:
+  - "rawrxd_alerts.yml"
+
+scrape_configs:
+  # RawrXD Metrics Endpoint
+  - job_name: 'rawrxd'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Windows Exporter (if running on Windows)
+  - job_name: 'windows'
+    static_configs:
+      - targets: ['localhost:9182']
+    scrape_interval: 30s
+
+  # Node Exporter (if running on Linux)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 30s
+
+  # Prometheus Self-Monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

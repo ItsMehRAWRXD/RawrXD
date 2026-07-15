@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-2a1bb96c\FjMQ.asm
+D:\rawrxd\history\-2a1bb96c\FjMQ.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\-2a1bb96c\FjMQ.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-2a1bb96c\FjMQ.asm(10) : fatal error A1000:cannot open file : \masm32\include\windows.inc

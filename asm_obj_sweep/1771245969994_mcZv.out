@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm(24) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm(61) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm(83) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm(105) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm(165) : error A2006:undefined symbol : SetFilePointer
+D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm(179) : error A2006:undefined symbol : SetFilePointer
+D:\rawrxd\history\all_versions\terraform.asm\1771245969994_mcZv.asm(217) : error A2006:undefined symbol : WriteConsoleA

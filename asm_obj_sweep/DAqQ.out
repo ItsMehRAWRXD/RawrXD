@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\-1a20c699\DAqQ.asm
+D:\rawrxd\history\-1a20c699\DAqQ.asm(26) : error A2034:must be in segment block : Tool_GenerateIntegrationTest
+D:\rawrxd\history\-1a20c699\DAqQ.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(38) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(42) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(45) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(46) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(49) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(50) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(51) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(59) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(61) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(62) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(63) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(64) : error A2034:must be in segment block
+D:\rawrxd\history\-1a20c699\DAqQ.asm(65) : fatal error A1010:unmatched block nesting : Tool_GenerateIntegrationTest

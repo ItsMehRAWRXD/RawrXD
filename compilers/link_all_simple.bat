@@ -1,0 +1,17 @@
+@echo off
+cd /d d:\rawrxd\compilers\all_69
+
+set "LINK=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
+set "SDK_LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\kernel32.lib"
+
+for %%O in (*.obj) do (
+    echo Linking %%O...
+    "%LINK%" /SUBSYSTEM:CONSOLE /ENTRY:main "%%O" "%SDK_LIB%" /OUT:"%%~nO.exe" >nul 2>&1
+    if errorlevel 1 (
+        echo   [FAIL] %%O
+    ) else (
+        echo   [OK] %%O -^> %%~nO.exe
+    )
+)
+
+echo Done!

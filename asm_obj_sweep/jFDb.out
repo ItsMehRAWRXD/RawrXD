@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-2d7bc67b\jFDb.asm
+D:\rawrxd\history\-2d7bc67b\jFDb.asm(107) : error A2008:syntax error : dq
+D:\rawrxd\history\-2d7bc67b\jFDb.asm(180) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\jFDb.asm(291) : error A2008:syntax error : pConfig

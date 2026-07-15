@@ -1,0 +1,197 @@
+name: PR Quality Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - master
+      - release/**
+
+jobs:
+  # Fast feedback - run first
+  quick-validation:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Validate PR title
+      run: |
+        PR_TITLE="${{ github.event.pull_request.title }}"
+        echo "PR Title: $PR_TITLE"
+        
+        # Check conventional commit format
+        if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?:\ .+ ]]; then
+          echo "::error::PR title must follow Conventional Commits format"
+          echo "Expected: type(scope)?: description"
+          echo "Examples:"
+          echo "  feat: add new inference mode"
+          echo "  fix(core): resolve memory leak"
+          echo "  docs(api): update README"
+          exit 1
+        fi
+        
+        echo "✓ PR title format valid"
+    
+    - name: Check PR size
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} | wc -l)
+        echo "Changed files: $CHANGED_FILES"
+        
+        if [ $CHANGED_FILES -gt 50 ]; then
+          echo "::warning::Large PR ($CHANGED_FILES files). Consider breaking into smaller PRs."
+        fi
+    
+    - name: Check for merge conflicts
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        git merge-tree $(git merge-base HEAD origin/${{ github.base_ref }}) origin/${{ github.base_ref }} HEAD || {
+          echo "::error::Merge conflicts detected"
+          exit 1
+        }
+        echo "✓ No merge conflicts"
+
+  # Required status checks
+  required-checks:
+    needs: quick-validation
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check required files modified
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }})
+        
+        # Check if API headers changed
+        if echo "$CHANGED_FILES" | grep -q "^include/rawrxd/"; then
+          echo "::notice::API headers modified - ensure API_FREEZE.md is updated if needed"
+          
+          # Check if API_FREEZE.md was updated
+          if ! echo "$CHANGED_FILES" | grep -q "API_FREEZE.md"; then
+            echo "::warning::API headers changed but API_FREEZE.md not updated"
+          fi
+        fi
+        
+        # Check if tests added for new code
+        if echo "$CHANGED_FILES" | grep -q "^src/"; then
+          if ! echo "$CHANGED_FILES" | grep -q "^tests/"; then
+            echo "::warning::Source files changed but no test files modified"
+          fi
+        fi
+    
+    - name: Verify commit sign-off
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        COMMITS=$(git rev-list origin/${{ github.base_ref }}..HEAD)
+        
+        for commit in $COMMITS; do
+          MESSAGE=$(git log -1 --format=%B $commit)
+          if [[ ! "$MESSAGE" =~ Signed-off-by:\ .+ ]]; then
+            echo "::error::Commit $commit missing Signed-off-by"
+            echo "Run: git commit --amend --signoff"
+            exit 1
+          fi
+        done
+        
+        echo "✓ All commits signed off"
+
+  # Label management
+  label-check:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check PR labels
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const requiredLabels = ['status:needs-review'];
+          const blockingLabels = ['status:wip', 'status:blocked'];
+          
+          const pr = context.payload.pull_request;
+          const labels = pr.labels.map(l => l.name);
+          
+          // Check for blocking labels
+          const hasBlocking = labels.some(l => blockingLabels.includes(l));
+          if (hasBlocking) {
+            core.setFailed('PR has blocking label (wip/blocked)');
+            return;
+          }
+          
+          // Check for required labels
+          const hasRequired = labels.some(l => l.includes('status:'));
+          if (!hasRequired) {
+            core.setFailed('PR missing status label');
+            return;
+          }
+          
+          console.log('✓ Labels valid');
+
+  # Size check
+  size-check:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Calculate PR size
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        
+        # Count lines changed
+        STATS=$(git diff --stat origin/${{ github.base_ref }} | tail -1)
+        INSERTIONS=$(echo "$STATS" | grep -oP '\d+(?= insertion)' || echo "0")
+        DELETIONS=$(echo "$STATS" | grep -oP '\d+(?= deletion)' || echo "0")
+        
+        TOTAL=$((INSERTIONS + DELETIONS))
+        echo "Lines changed: +$INSERTIONS -$DELETIONS = $TOTAL total"
+        
+        # Set size label
+        if [ $TOTAL -lt 50 ]; then
+          SIZE="XS"
+        elif [ $TOTAL -lt 200 ]; then
+          SIZE="S"
+        elif [ $TOTAL -lt 500 ]; then
+          SIZE="M"
+        elif [ $TOTAL -lt 1000 ]; then
+          SIZE="L"
+        else
+          SIZE="XL"
+          echo "::warning::Large PR ($TOTAL lines). Consider breaking into smaller changes."
+        fi
+        
+        echo "Size: $SIZE"
+
+  # Final gate
+  quality-gate:
+    needs: [quick-validation, required-checks, label-check, size-check]
+    runs-on: ubuntu-22.04
+    if: always()
+    steps:
+    - name: Final Quality Gate
+      run: |
+        echo "## PR Quality Gate Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Quick Validation | ${{ needs.quick-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Required Checks | ${{ needs.required-checks.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Label Check | ${{ needs.label-check.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Size Check | ${{ needs.size-check.result }} |" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.quick-validation.result }}" = "success" ] && \
+           [ "${{ needs.required-checks.result }}" = "success" ] && \
+           [ "${{ needs.label-check.result }}" = "success" ] && \
+           [ "${{ needs.size-check.result }}" = "success" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ PR Quality Gate Passed" >> $GITHUB_STEP_SUMMARY
+          echo "Ready for review!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ❌ PR Quality Gate Failed" >> $GITHUB_STEP_SUMMARY
+          echo "Please address the issues above." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi

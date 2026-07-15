@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-1ec43a2c\wdh5.asm
+D:\rawrxd\history\-1ec43a2c\wdh5.asm(266) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1ec43a2c\wdh5.asm(268) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1ec43a2c\wdh5.asm(270) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1ec43a2c\wdh5.asm(272) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1ec43a2c\wdh5.asm(274) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1ec43a2c\wdh5.asm(863) : error A2006:undefined symbol : BasicBlockCovMode
+D:\rawrxd\history\-1ec43a2c\wdh5.asm(951) : error A2006:undefined symbol : BasicBlockCovMode

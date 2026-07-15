@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(240) : error A2008:syntax error : HINSTANCE
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(247) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(257) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(352) : error A2006:undefined symbol : h_instance
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(471) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(472) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(703) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(742) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(743) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(745) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(802) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(805) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(847) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(883) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_Universal_OS_ML_IDE_Source_02_PURE_MASM_IN_PROGRESS_main_masm.asm(1046) : error A2006:undefined symbol : h_instance

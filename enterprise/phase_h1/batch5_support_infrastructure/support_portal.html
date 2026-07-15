@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Enterprise Support Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1f6feb 0%, #58a6ff 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .support-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 30px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .support-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border-color: #58a6ff;
+        }
+        
+        .support-card h2 {
+            color: #f0f6fc;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .support-card p {
+            color: #8b949e;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #1f6feb;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #388bfd;
+        }
+        
+        .status-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .status-section h2 {
+            color: #f0f6fc;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-operational { background: #3fb950; }
+        .status-degraded { background: #f0883e; }
+        .status-down { background: #f85149; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .ticket-form {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .ticket-form h2 {
+            color: #f0f6fc;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #8b949e;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 1em;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .tier-table th,
+        .tier-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        .tier-table th {
+            background: #21262d;
+            color: #f0f6fc;
+            font-weight: 600;
+        }
+        
+        .tier-table tr:hover {
+            background: #21262d;
+        }
+        
+        .priority-critical { color: #f85149; font-weight: bold; }
+        .priority-high { color: #f0883e; }
+        .priority-medium { color: #58a6ff; }
+        .priority-low { color: #8b949e; }
+        
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+            border-top: 1px solid #30363d;
+            margin-top: 40px;
+        }
+        
+        .footer a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 RawrXD Enterprise Support</h1>
+        <p>24/7 support for mission-critical AI inference</p>
+    </div>
+
+    <div class="container">
+        <!-- System Status -->
+        <div class="status-section">
+            <h2>📊 System Status</h2>
+            <div class="status-indicator">
+                <div class="status-dot status-operational"></div>
+                <span>Inference API — Operational</span>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot status-operational"></div>
+                <span>Telemetry Dashboard — Operational</span>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot status-operational"></div>
+                <span>Hotpatch Engine — Operational</span>
+            </div>
+            <p style="margin-top: 20px; color: #8b949e;">
+                Last updated: <span id="last-updated">Just now</span> | 
+                <a href="#" style="color: #58a6ff;">View Status Page →</a>
+            </p>
+        </div>
+
+        <!-- Support Options -->
+        <div class="support-grid">
+            <div class="support-card">
+                <h2>📚 Documentation</h2>
+                <p>Comprehensive guides, API reference, and troubleshooting articles.</p>
+                <a href="https://docs.rawrxd.io" class="btn">Browse Docs</a>
+            </div>
+
+            <div class="support-card">
+                <h2>💬 Community</h2>
+                <p>Get help from the RawrXD community on Discord and GitHub.</p>
+                <a href="https://discord.gg/rawrxd" class="btn">Join Discord</a>
+            </div>
+
+            <div class="support-card">
+                <h2>🎫 Submit Ticket</h2>
+                <p>Enterprise customers: Priority support with guaranteed response times.</p>
+                <a href="#ticket" class="btn">Create Ticket</a>
+            </div>
+
+            <div class="support-card">
+                <h2>📞 Phone Support</h2>
+                <p>Mission Critical tier: 24/7 phone support with direct escalation.</p>
+                <a href="tel:+1-555-RAW-RXD9" class="btn">Call Now</a>
+            </div>
+        </div>
+
+        <!-- Support Tiers -->
+        <div class="status-section">
+            <h2>🎯 Support Tiers & Response Times</h2>
+            
+            <table class="tier-table">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Standard</th>
+                        <th>Enterprise</th>
+                        <th>Mission Critical</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="priority-critical">🔴 Critical (P1)</td>
+                        <td>4 hours</td>
+                        <td>1 hour</td>
+                        <td>15 minutes</td>
+                    </tr>
+                    <tr>
+                        <td class="priority-high">🟠 High (P2)</td>
+                        <td>8 hours</td>
+                        <td>4 hours</td>
+                        <td>1 hour</td>
+                    </tr>
+                    <tr>
+                        <td class="priority-medium">🔵 Medium (P3)</td>
+                        <td>24 hours</td>
+                        <td>8 hours</td>
+                        <td>4 hours</td>
+                    </tr>
+                    <tr>
+                        <td class="priority-low">⚪ Low (P4)</td>
+                        <td>48 hours</td>
+                        <td>24 hours</td>
+                        <td>8 hours</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Ticket Form -->
+        <div class="ticket-form" id="ticket">
+            <h2>🎫 Submit Support Ticket</h2>
+            
+            <form onsubmit="event.preventDefault(); alert('Ticket submitted! (Demo only)');">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="you@company.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="tier">Support Tier</label>
+                    <select id="tier" name="tier" required>
+                        <option value="">Select your tier...</option>
+                        <option value="standard">Standard (Business Hours)</option>
+                        <option value="enterprise">Enterprise (Extended Hours)</option>
+                        <option value="mission-critical">Mission Critical (24/7)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Priority</label>
+                    <select id="priority" name="priority" required>
+                        <option value="">Select priority...</option>
+                        <option value="critical">🔴 Critical - Production down</option>
+                        <option value="high">🟠 High - Major feature unavailable</option>
+                        <option value="medium">🔵 Medium - Minor issue</option>
+                        <option value="low">⚪ Low - Question/Feature request</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" required placeholder="Brief description of the issue">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" required placeholder="Detailed description of the issue, steps to reproduce, expected vs actual behavior..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="logs">Logs/Attachments (optional)</label>
+                    <input type="file" id="logs" name="logs" multiple>
+                </div>
+
+                <button type="submit" class="btn">Submit Ticket</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>
+            <a href="https://rawrxd.io">RawrXD.io</a> | 
+            <a href="https://docs.rawrxd.io">Documentation</a> | 
+            <a href="https://status.rawrxd.io">Status</a> | 
+            <a href="mailto:support@rawrxd.io">support@rawrxd.io</a>
+        </p>
+        <p>© 2026 RawrXD. All rights reserved.</p>
+    </div>
+
+    <script>
+        // Update timestamp
+        document.getElementById('last-updated').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

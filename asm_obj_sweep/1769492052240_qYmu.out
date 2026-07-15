@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769492052240_qYmu.asm
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769492052240_qYmu.asm(35) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769492052240_qYmu.asm(95) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769492052240_qYmu.asm(47) : error A2006:undefined symbol : wait
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769492052240_qYmu.asm(98) : error A2006:undefined symbol : try

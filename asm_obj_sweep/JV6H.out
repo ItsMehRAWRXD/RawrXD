@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-20e2897f\JV6H.asm
+D:\rawrxd\history\-20e2897f\JV6H.asm(135) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-20e2897f\JV6H.asm(146) : error A2006:undefined symbol : CACHE_EVICT_THRESHOLD
+D:\rawrxd\history\-20e2897f\JV6H.asm(219) : error A2006:undefined symbol : ENGINE_STATE
+D:\rawrxd\history\-20e2897f\JV6H.asm(224) : error A2006:undefined symbol : ENGINE_STATE
+D:\rawrxd\history\-20e2897f\JV6H.asm(225) : error A2006:undefined symbol : ENGINE_STATE
+D:\rawrxd\history\-20e2897f\JV6H.asm(226) : error A2006:undefined symbol : ENGINE_STATE
+D:\rawrxd\history\-20e2897f\JV6H.asm(227) : error A2006:undefined symbol : ENGINE_STATE

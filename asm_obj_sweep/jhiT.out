@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\-21b6f62b\jhiT.asm
+D:\rawrxd\history\-21b6f62b\jhiT.asm(17) : error A2008:syntax error : WIN64
+D:\rawrxd\history\-21b6f62b\jhiT.asm(18) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\-21b6f62b\jhiT.asm(144) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\-21b6f62b\jhiT.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(148) : error A2008:syntax error : size
+D:\rawrxd\history\-21b6f62b\jhiT.asm(151) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(156) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(161) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(162) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(165) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(167) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(168) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(171) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\-21b6f62b\jhiT.asm(173) : error A2008:syntax error : BufferLock
+D:\rawrxd\history\-21b6f62b\jhiT.asm(174) : fatal error A1010:unmatched block nesting : RING_BUFFER

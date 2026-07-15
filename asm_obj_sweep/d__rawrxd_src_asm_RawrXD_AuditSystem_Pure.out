@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(66) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(86) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(87) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(88) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(190) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(235) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(236) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\runoff\part_0012\d__rawrxd_src_asm_RawrXD_AuditSystem_Pure.asm(237) : error A2006:undefined symbol : r32d

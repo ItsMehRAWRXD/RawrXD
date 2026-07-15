@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(46) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(47) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(48) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(49) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(50) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(51) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(52) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(53) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_zen4_streaming_store.asm(75) : error A2220:Missing .ENDPROLOG

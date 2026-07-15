@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-2d7bc67b\zSGG.asm
+D:\rawrxd\history\-2d7bc67b\zSGG.asm(107) : error A2008:syntax error : qword
+D:\rawrxd\history\-2d7bc67b\zSGG.asm(180) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\zSGG.asm(291) : error A2008:syntax error : pConfig

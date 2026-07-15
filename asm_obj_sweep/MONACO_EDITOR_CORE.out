@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(41) : error A2008:syntax error : length
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(78) : error A2008:syntax error : length
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(113) : error A2008:syntax error : width
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(136) : error A2008:syntax error : offset
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(137) : error A2008:syntax error : length
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(138) : error A2008:syntax error : type
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(139) : warning A6006:structure contains no members
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(276) : error A2006:undefined symbol : FindPieceAtOffset
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(286) : error A2006:undefined symbol : SplitPiece
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(293) : error A2006:undefined symbol : InsertNewPiece
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(301) : error A2006:undefined symbol : InvalidateLineCacheFrom
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(305) : error A2006:undefined symbol : RebalanceTree
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(393) : error A2081:missing operand after unary operator
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(233) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(330) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(339) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(407) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(430) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(445) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(461) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(472) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_CORE.ASM(488) : error A2220:Missing .ENDPROLOG

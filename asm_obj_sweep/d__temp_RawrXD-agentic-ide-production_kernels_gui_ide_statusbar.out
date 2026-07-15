@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(68) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(74) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(84) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(87) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(90) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(93) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(96) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(99) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(133) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(140) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(170) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(129) : warning A6004:procedure argument or local not referenced : line
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(129) : warning A6004:procedure argument or local not referenced : column
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(129) : warning A6004:procedure argument or local not referenced : buffer
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(136) : warning A6004:procedure argument or local not referenced : pszBranch
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(143) : warning A6004:procedure argument or local not referenced : pszModel
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(173) : warning A6004:procedure argument or local not referenced : pszStatus
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(189) : warning A6004:procedure argument or local not referenced : usageMB
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_statusbar.asm(189) : warning A6004:procedure argument or local not referenced : buffer

@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(106) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(167) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(347) : error A2005:symbol redefinition : LSPInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(376) : error A2005:symbol redefinition : LSPParseCapabilities
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(441) : error A2005:symbol redefinition : LSPSendInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(508) : error A2005:symbol redefinition : LSPTextDocumentDidOpen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(518) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(519) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(556) : error A2005:symbol redefinition : LSPTextDocumentDidChange
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(645) : error A2005:symbol redefinition : LSPCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(734) : error A2005:symbol redefinition : IntelliSenseRenderPopup
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(757) : error A2005:symbol redefinition : IntelliSenseApplyCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(843) : error A2005:symbol redefinition : DiagnosticsRenderSquiggles
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(857) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(858) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(922) : error A2005:symbol redefinition : DAPLaunch
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(932) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(933) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(1001) : error A2005:symbol redefinition : DAPSetBreakpoint
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(1010) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(1011) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(1044) : error A2005:symbol redefinition : DAPContinue
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(1053) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(1054) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290770874_6EIg.ASM(1081) : fatal error A1007:nesting level too deep

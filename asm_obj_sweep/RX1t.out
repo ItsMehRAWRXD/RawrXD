@@ -1,0 +1,37 @@
+ Assembling: D:\rawrxd\history\-104768b5\RX1t.asm
+D:\rawrxd\history\-104768b5\RX1t.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-104768b5\RX1t.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-104768b5\RX1t.asm(12) : error A2008:syntax error : EQU
+D:\rawrxd\history\-104768b5\RX1t.asm(39) : warning A6004:procedure argument or local not referenced : level
+D:\rawrxd\history\-104768b5\RX1t.asm(39) : warning A6004:procedure argument or local not referenced : message
+D:\rawrxd\history\-104768b5\RX1t.asm(44) : warning A6004:procedure argument or local not referenced : level
+D:\rawrxd\history\-104768b5\RX1t.asm(44) : warning A6004:procedure argument or local not referenced : buffer
+D:\rawrxd\history\-104768b5\RX1t.asm(168) : warning A6004:procedure argument or local not referenced : pszInput
+D:\rawrxd\history\-104768b5\RX1t.asm(168) : warning A6004:procedure argument or local not referenced : pszOutput
+D:\rawrxd\history\-104768b5\RX1t.asm(173) : warning A6004:procedure argument or local not referenced : pszInput
+D:\rawrxd\history\-104768b5\RX1t.asm(173) : warning A6004:procedure argument or local not referenced : pszOutput
+D:\rawrxd\history\-104768b5\RX1t.asm(178) : warning A6004:procedure argument or local not referenced : pInput
+D:\rawrxd\history\-104768b5\RX1t.asm(178) : warning A6004:procedure argument or local not referenced : dwInputSize
+D:\rawrxd\history\-104768b5\RX1t.asm(178) : warning A6004:procedure argument or local not referenced : pOutput
+D:\rawrxd\history\-104768b5\RX1t.asm(178) : warning A6004:procedure argument or local not referenced : pdwOutputSize
+D:\rawrxd\history\-104768b5\RX1t.asm(183) : warning A6004:procedure argument or local not referenced : pInput
+D:\rawrxd\history\-104768b5\RX1t.asm(183) : warning A6004:procedure argument or local not referenced : dwInputSize
+D:\rawrxd\history\-104768b5\RX1t.asm(183) : warning A6004:procedure argument or local not referenced : pOutput
+D:\rawrxd\history\-104768b5\RX1t.asm(183) : warning A6004:procedure argument or local not referenced : pdwOutputSize
+D:\rawrxd\history\-104768b5\RX1t.asm(252) : warning A6004:procedure argument or local not referenced : pszPrompt
+D:\rawrxd\history\-104768b5\RX1t.asm(252) : warning A6004:procedure argument or local not referenced : pszResponse
+D:\rawrxd\history\-104768b5\RX1t.asm(252) : warning A6004:procedure argument or local not referenced : dwMaxResponse
+D:\rawrxd\history\-104768b5\RX1t.asm(257) : warning A6004:procedure argument or local not referenced : pszEndpoint
+D:\rawrxd\history\-104768b5\RX1t.asm(271) : warning A6004:procedure argument or local not referenced : pszPlan
+D:\rawrxd\history\-104768b5\RX1t.asm(276) : warning A6004:procedure argument or local not referenced : pszRoot
+D:\rawrxd\history\-104768b5\RX1t.asm(331) : warning A6004:procedure argument or local not referenced : pszPath
+D:\rawrxd\history\-104768b5\RX1t.asm(364) : warning A6004:procedure argument or local not referenced : hTree
+D:\rawrxd\history\-104768b5\RX1t.asm(364) : warning A6004:procedure argument or local not referenced : hParent
+D:\rawrxd\history\-104768b5\RX1t.asm(364) : warning A6004:procedure argument or local not referenced : pszPath
+D:\rawrxd\history\-104768b5\RX1t.asm(369) : warning A6004:procedure argument or local not referenced : hTree
+D:\rawrxd\history\-104768b5\RX1t.asm(369) : warning A6004:procedure argument or local not referenced : hItem
+D:\rawrxd\history\-104768b5\RX1t.asm(369) : warning A6004:procedure argument or local not referenced : pszBuffer
+D:\rawrxd\history\-104768b5\RX1t.asm(369) : warning A6004:procedure argument or local not referenced : dwSize
+D:\rawrxd\history\-104768b5\RX1t.asm(374) : warning A6004:procedure argument or local not referenced : hTree
+D:\rawrxd\history\-104768b5\RX1t.asm(395) : warning A6004:procedure argument or local not referenced : hStatusBar
+D:\rawrxd\history\-104768b5\RX1t.asm(414) : warning A6004:procedure argument or local not referenced : pMemory

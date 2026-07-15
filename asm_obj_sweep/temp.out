@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\asm\sync\temp.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\asm\sync\temp.asm(379) : fatal error A1010:unmatched block nesting : asm_event_destroy

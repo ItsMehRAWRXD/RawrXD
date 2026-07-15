@@ -1,0 +1,72 @@
+ Assembling: D:\rawrxd\RawrXD_AutonomyStack_Complete.asm
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(50) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(114) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(118) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(122) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(126) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(130) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(134) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(182) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(185) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(204) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(226) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(247) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(263) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(271) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(282) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(305) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(330) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(386) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(388) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(392) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(399) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(403) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(410) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(422) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(466) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(495) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(506) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(555) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(83) : error A2006:undefined symbol : phase1_failed
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(88) : error A2006:undefined symbol : phase2_failed
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(93) : error A2006:undefined symbol : phase3_failed
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(99) : error A2006:undefined symbol : phase4_failed
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(105) : error A2006:undefined symbol : phase5_failed
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(112) : error A2006:undefined symbol : exit_autonomy
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(116) : error A2006:undefined symbol : exit_autonomy
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(120) : error A2006:undefined symbol : exit_autonomy
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(124) : error A2006:undefined symbol : exit_autonomy
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(128) : error A2006:undefined symbol : exit_autonomy
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(132) : error A2006:undefined symbol : exit_autonomy
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(176) : error A2006:undefined symbol : decomp_done
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(180) : error A2006:undefined symbol : decomp_success
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(206) : error A2006:undefined symbol : init_swarm_done
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(210) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(221) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(224) : error A2006:undefined symbol : init_agent_loop
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(249) : error A2006:undefined symbol : spawn_pe_writer
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(261) : error A2006:undefined symbol : spawn_agents
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(274) : error A2006:undefined symbol : wait_agents_done
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(276) : error A2006:undefined symbol : wait_agents_done
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(280) : error A2006:undefined symbol : wait_agents
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(307) : error A2006:undefined symbol : reasoning_complete
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(312) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(321) : error A2006:undefined symbol : reasoning_step_loop
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(328) : error A2006:undefined symbol : reasoning_step_loop
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(333) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(361) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(390) : error A2006:undefined symbol : voting_done
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(394) : error A2006:undefined symbol : voting_skip
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(401) : error A2006:undefined symbol : voting_loop
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(412) : error A2006:undefined symbol : copy_done
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(417) : error A2006:undefined symbol : copy_done
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(420) : error A2006:undefined symbol : copy_result
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(448) : error A2050:real or BCD number not allowed
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(450) : error A2006:undefined symbol : validation_pass
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(453) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(461) : error A2006:undefined symbol : validation_pass
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(468) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(497) : error A2006:undefined symbol : agg_pe_metrics
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(504) : error A2006:undefined symbol : agg_agent_loop
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(634) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_AutonomyStack_Complete.asm(636) : error A2206:missing operator in expression

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595354990_BSv6.asm
+D:\rawrxd\history\all_versions\src\asm\rawrxd_cot_engine.asm\1770595354990_BSv6.asm(70) : error A2006:undefined symbol : CoT_Release_Core

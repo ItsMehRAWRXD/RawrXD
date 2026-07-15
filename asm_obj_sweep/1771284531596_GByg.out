@@ -1,0 +1,110 @@
+ Assembling: D:\rawrxd\history\all_versions\src\CodexUltimate_simple.asm\1771284531596_GByg.asm
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(156) : error A2004:symbol type conflict : bool
+C:\masm32\include\windows.inc(7835) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(7835) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9045) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9045) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9046) : warning A6006:structure contains no members
+C:\masm32\include\windows.inc(9058) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9058) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9070) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9070) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9075) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9075) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9080) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9080) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9085) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9085) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9090) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9090) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9097) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9097) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9104) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9104) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9111) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9111) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9116) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9116) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9122) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9122) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9130) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9130) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9131) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9131) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9132) : warning A6006:structure contains no members
+C:\masm32\include\windows.inc(9135) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9135) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9141) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9141) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9148) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9148) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9155) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9155) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9160) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9160) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9168) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9168) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9175) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9175) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9183) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9183) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9190) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9190) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9200) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9200) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9201) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9201) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9202) : warning A6006:structure contains no members
+C:\masm32\include\windows.inc(9205) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9205) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9206) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9206) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9211) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9211) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9217) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9217) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9224) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9224) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9231) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9231) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9237) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9237) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9248) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9248) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9256) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9256) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9267) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9267) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9279) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9279) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9287) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9287) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9295) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9295) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9306) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9306) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9317) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9317) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9326) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9326) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9334) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9334) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9343) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9343) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9350) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9350) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9355) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9355) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9359) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9359) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9364) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9364) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9374) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9374) : error A2008:syntax error : in structure
+C:\masm32\include\windows.inc(9393) : error A2179:structure improperly initialized
+C:\masm32\include\windows.inc(9393) : fatal error A1012:error count exceeds 100; stopping assembly

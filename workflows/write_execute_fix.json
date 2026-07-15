@@ -1,0 +1,36 @@
+{
+  "autoloop": "write_execute_fix",
+  "description": "Generate code, execute, and fix errors until success",
+  "max_iterations": 5,
+  "convergence_threshold": 1,
+  "steps": [
+    {
+      "type": "generate",
+      "description": "Generate code from spec",
+      "subsystem": "agent",
+      "command": "generate",
+      "args_template": "${spec}"
+    },
+    {
+      "type": "compile",
+      "description": "Compile generated code",
+      "subsystem": "${language}",
+      "command": "compile",
+      "args_template": "${target_file}"
+    },
+    {
+      "type": "execute",
+      "description": "Run compiled code",
+      "subsystem": "${language}",
+      "command": "run",
+      "args_template": "${target_file}"
+    },
+    {
+      "type": "fix",
+      "description": "Fix errors if any",
+      "subsystem": "agent",
+      "command": "fix",
+      "args_template": "${error_output}"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\-22834053\8Zit.asm
+D:\rawrxd\history\-22834053\8Zit.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\-22834053\8Zit.asm(112) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\-22834053\8Zit.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\-22834053\8Zit.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\-22834053\8Zit.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\-22834053\8Zit.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\-22834053\8Zit.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\-22834053\8Zit.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\-22834053\8Zit.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\-22834053\8Zit.asm(120) : fatal error A1010:unmatched block nesting : PerformanceCounter

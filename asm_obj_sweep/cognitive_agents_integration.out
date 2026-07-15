@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(43) : error A2008:syntax error : agent_registry
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(44) : error A2008:syntax error : agent_count
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(45) : error A2008:syntax error : active_agents
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(48) : error A2008:syntax error : message_queue
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(49) : error A2008:syntax error : message_queue_head
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(50) : error A2008:syntax error : message_queue_tail
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(51) : error A2008:syntax error : message_queue_size
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(54) : error A2008:syntax error : coordination_state
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(55) : error A2008:syntax error : task_distribution
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(56) : error A2008:syntax error : load_balancing
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(59) : error A2008:syntax error : agent_performance
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(60) : error A2008:syntax error : total_tasks_processed
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(61) : error A2008:syntax error : average_response_time
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(62) : error A2008:syntax error : system_throughput
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(65) : error A2008:syntax error : agent_authentication
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(66) : error A2008:syntax error : security_level
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(67) : error A2008:syntax error : access_control
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(70) : error A2008:syntax error : monitoring_enabled
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(71) : error A2008:syntax error : log_level
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(72) : error A2008:syntax error : debug_mode
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(74) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(75) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(76) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(77) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(78) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(79) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(80) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(81) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(82) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(83) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(84) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(85) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(86) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(87) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(88) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(89) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(90) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(91) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(92) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(93) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(94) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(95) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(98) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(99) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(100) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(103) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(104) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(105) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(106) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(109) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(110) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(113) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(114) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(115) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(118) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(119) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(120) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(123) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(124) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(128) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(129) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(132) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(133) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(134) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(137) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(138) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(139) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(142) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(143) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(144) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(147) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(148) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(149) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(152) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(153) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(154) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(156) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(157) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(160) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(161) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(162) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(167) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(168) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(169) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(172) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(173) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(175) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(176) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(177) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(179) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(180) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(181) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(184) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(185) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(187) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(189) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\cognitive_agents_integration.asm(192) : fatal error A1012:error count exceeds 100; stopping assembly

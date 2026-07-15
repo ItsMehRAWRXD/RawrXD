@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(17) : error A2006:undefined symbol : HANDLE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(17) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(19) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(21) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(22) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(24) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(27) : error A2008:syntax error : HeapAlloc
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(29) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(30) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(32) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(37) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(39) : error A2008:syntax error : RtlCopyMemory
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(49) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(59) : error A2008:syntax error : ch
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(65) : error A2008:syntax error : HeapAlloc
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(70) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(71) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(72) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(73) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(80) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(81) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(85) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(86) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(87) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(88) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(94) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(95) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(97) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(98) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(108) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(109) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(121) : error A2008:syntax error : ch
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(127) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(129) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(130) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(134) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(141) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(142) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(143) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(144) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(155) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(156) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(158) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(159) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(161) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(162) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(164) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(166) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(167) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(170) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(171) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(173) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(177) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(184) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(185) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(187) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(188) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(193) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(194) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(195) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(215) : error A2008:syntax error : HeapAlloc
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(218) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(219) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(222) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(223) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(224) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(233) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(234) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(240) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(261) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(268) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(270) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(271) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(272) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(273) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(282) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(283) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(286) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(288) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(289) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(292) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(299) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(300) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(301) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(302) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(314) : error A2008:syntax error : RtlCopyMemory
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(321) : error A2008:syntax error : RtlCopyMemory
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(322) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(325) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(329) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(330) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(335) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(340) : error A2008:syntax error : RtlCopyMemory
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(342) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(345) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(347) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(365) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(366) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(367) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(368) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_text_search.asm(383) : fatal error A1012:error count exceeds 100; stopping assembly

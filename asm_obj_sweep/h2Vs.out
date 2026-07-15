@@ -1,0 +1,34 @@
+ Assembling: D:\rawrxd\history\-2aca0901\h2Vs.asm
+D:\rawrxd\history\-2aca0901\h2Vs.asm(68) : error A2008:syntax error : panel_rect
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1430) : error A2008:syntax error : client_rect
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1432) : error A2008:syntax error : .
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1432) : error A2088:END directive required at end of file
+D:\rawrxd\history\-2aca0901\h2Vs.asm(708) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-2aca0901\h2Vs.asm(717) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2aca0901\h2Vs.asm(718) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2aca0901\h2Vs.asm(719) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2aca0901\h2Vs.asm(720) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2aca0901\h2Vs.asm(840) : error A2083:invalid scale value
+D:\rawrxd\history\-2aca0901\h2Vs.asm(850) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2aca0901\h2Vs.asm(900) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2aca0901\h2Vs.asm(927) : error A2083:invalid scale value
+D:\rawrxd\history\-2aca0901\h2Vs.asm(932) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2aca0901\h2Vs.asm(987) : error A2083:invalid scale value
+D:\rawrxd\history\-2aca0901\h2Vs.asm(993) : error A2083:invalid scale value
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1026) : error A2006:undefined symbol : client_rect
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1029) : error A2006:undefined symbol : client_rect
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1030) : error A2006:undefined symbol : client_rect
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1035) : error A2006:undefined symbol : SB_VERT
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1037) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1038) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1055) : error A2006:undefined symbol : SB_VERT
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1056) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1105) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1108) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1109) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1147) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1148) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1150) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1151) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1208) : error A2006:undefined symbol : FW_NORMAL
+D:\rawrxd\history\-2aca0901\h2Vs.asm(1284) : error A2006:undefined symbol : GetSystemTime

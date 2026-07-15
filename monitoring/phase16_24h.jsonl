@@ -1,0 +1,1 @@
+{"alerts":[],"p95_latency_us":2681,"cache_hit_rate":24.4,"p50_latency_us":1579,"timestamp":"2026-06-20 20:16:10","status":"HEALTHY","memory_kb":808,"window":"24h_monitor","acceptance_rate":90.5,"bg_thread_av_count":3,"p99_latency_us":3145,"epoch":1782000970}

@@ -1,0 +1,74 @@
+ Assembling: D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(22) : error A2008:syntax error : mask
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(567) : error A2068:instruction prefix not allowed
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(35) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(35) : error A2036:too many initial values for structure
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(36) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(37) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(38) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(39) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(40) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(41) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(42) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(43) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(44) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(45) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(46) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(47) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(103) : error A2006:undefined symbol : GetCurrentProcess
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(129) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(130) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(132) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(145) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(146) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(148) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(258) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1073) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1076) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1077) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1079) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1093) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1097) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1139) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1148) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(169) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(230) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(293) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(318) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(354) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(395) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(437) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(451) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(462) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(496) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(507) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(532) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(546) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(607) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(623) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(633) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(694) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(709) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(724) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(744) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(772) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(813) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(845) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(850) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(855) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(874) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(879) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(909) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(920) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(929) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(942) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(957) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(962) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(973) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(978) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1047) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1053) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1061) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1109) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1115) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\reverse_engineering\deobfuscator\RawrXD_OmegaDeobfuscator.asm\1770529434390_5g2l.asm(1155) : error A2220:Missing .ENDPROLOG

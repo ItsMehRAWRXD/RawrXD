@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(61) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(74) : error A2006:undefined symbol : GPU_BACKEND_AUTO
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(75) : error A2006:undefined symbol : gpu_buffer_pool_init
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(80) : error A2006:undefined symbol : DLSS_QUALITY_BALANCED
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(84) : error A2006:undefined symbol : dlss_upscaler_init
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(145) : error A2006:undefined symbol : gpu_submit_prefetch_job
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(152) : error A2006:undefined symbol : gpu_buffer_pool_allocate
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(167) : error A2006:undefined symbol : gpu_process_prefetch_jobs
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(174) : error A2006:undefined symbol : gpu_load_model_accelerated
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(235) : error A2050:real or BCD number not allowed
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(281) : error A2006:undefined symbol : gpu_get_prefetch_stats
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_agent_integration.asm(310) : error A2006:undefined symbol : dlss_upscaler_shutdown

@@ -1,0 +1,42 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(48) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(59) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(331) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(459) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(192) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(319) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(359) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(421) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(437) : error A2006:undefined symbol : vec_state_string
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(438) : error A2006:undefined symbol : vec_state_comment
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(441) : error A2006:undefined symbol : vec_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(482) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(497) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(504) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(521) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(525) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(531) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(538) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(546) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(554) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(556) : error A2006:undefined symbol : current_state
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(607) : error A2006:undefined symbol : QueryPerformanceFrequency
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(142) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(225) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(263) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(294) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(299) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(376) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(412) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(445) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(463) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(568) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(597) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(619) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(663) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(671) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Lexer_AVX2.asm\1769993295888_DMdJ.asm(679) : error A2220:Missing .ENDPROLOG

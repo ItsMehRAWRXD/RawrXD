@@ -1,0 +1,54 @@
+ Assembling: D:\rawrxd\history\-2c7a0a9\DmNN.asm
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(30) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(30) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(32) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(33) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(36) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(39) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(40) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(41) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(46) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(51) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(53) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(54) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(58) : error A2008:syntax error : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(61) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(64) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(68) : error A2008:syntax error : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(71) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(74) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(76) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(77) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(83) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(87) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(92) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(93) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(96) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(104) : error A2008:syntax error : SetWindowPos
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(116) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(119) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(125) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(128) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(132) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(133) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(134) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(136) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(137) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(138) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(145) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(148) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(151) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(152) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(155) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(162) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(100) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(121) : error A2006:undefined symbol : HEAP_ZERO_MEMORY
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(122) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(131) : error A2006:undefined symbol : numDifferences
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(149) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(107) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(141) : warning A6004:procedure argument or local not referenced : hOld
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(141) : warning A6004:procedure argument or local not referenced : hNew
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(141) : warning A6004:procedure argument or local not referenced : pNewText
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(141) : warning A6004:procedure argument or local not referenced : hOldDC
+D:\rawrxd\history\-2c7a0a9\DmNN.asm(141) : warning A6004:procedure argument or local not referenced : hNewDC

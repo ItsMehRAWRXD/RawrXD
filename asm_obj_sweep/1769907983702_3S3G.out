@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907983702_3S3G.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907983702_3S3G.asm(526) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907983702_3S3G.asm(529) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907983702_3S3G.asm(530) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907983702_3S3G.asm(546) : error A2006:undefined symbol : PAGE_READONLY
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907983702_3S3G.asm(558) : error A2006:undefined symbol : FILE_MAP_READ

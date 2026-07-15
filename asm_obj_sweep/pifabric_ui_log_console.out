@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\pifabric_ui_log_console.asm
+D:\rawrxd\pifabric_ui_log_console.asm(2) : error A2008:syntax error : .
+D:\rawrxd\pifabric_ui_log_console.asm(3) : error A2008:syntax error : .
+D:\rawrxd\pifabric_ui_log_console.asm(7) : fatal error A1000:cannot open file : user32.inc

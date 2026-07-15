@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618199804_Givn.asm
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618199804_Givn.asm(38) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618199804_Givn.asm(188) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618199804_Givn.asm(150) : error A2006:undefined symbol : JsonSuffix

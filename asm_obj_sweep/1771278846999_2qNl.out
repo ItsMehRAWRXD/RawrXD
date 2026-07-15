@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_BounceTPS.asm\1771278846999_2qNl.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_BounceTPS.asm\1771278846999_2qNl.asm(407) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\masm\RawrXD_BounceTPS.asm\1771278846999_2qNl.asm(1248) : error A2006:undefined symbol : _bnc_rotate_direction
+D:\rawrxd\history\all_versions\src\masm\RawrXD_BounceTPS.asm\1771278846999_2qNl.asm(1251) : error A2006:undefined symbol : _bnc_calc_super_strength

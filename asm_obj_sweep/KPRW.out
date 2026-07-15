@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1fb924a\KPRW.asm
+D:\rawrxd\history\-1fb924a\KPRW.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-1fb924a\KPRW.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-1fb924a\KPRW.asm(11) : fatal error A1000:cannot open file : \masm32\include\windows.inc

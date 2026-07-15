@@ -1,0 +1,17 @@
+{
+  "tensor_id": 2,
+  "total_size": 536870912,
+  "home_node": 0,
+  "hotness_score": 1,
+  "is_replicated": false,
+  "shards": [
+    {
+      "shard_id": 2,
+      "offset": 0,
+      "size": 536870912,
+      "location": 0,
+      "node_id": 0,
+      "access_count": 0
+    }
+  ]
+}

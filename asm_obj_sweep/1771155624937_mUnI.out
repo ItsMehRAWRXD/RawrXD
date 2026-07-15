@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155624937_mUnI.asm
+D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155624937_mUnI.asm(460) : error A2006:undefined symbol : CheckNVIDIADevice
+D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155624937_mUnI.asm(465) : error A2006:undefined symbol : NvAPI_GPU_GetThermalSettings
+D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155624937_mUnI.asm(476) : error A2006:undefined symbol : ADL_Overdrive5_Temperature_Get
+D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155624937_mUnI.asm(501) : error A2006:undefined symbol : SMBus_ReadWord
+D:\rawrxd\history\all_versions\src\x64\rawrxd_governor.asm\1771155624937_mUnI.asm(530) : error A2006:undefined symbol : NVMe_GetHealthInfo

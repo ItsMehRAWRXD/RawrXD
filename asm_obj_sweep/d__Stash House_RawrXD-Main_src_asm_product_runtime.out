@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_product_runtime.asm
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_product_runtime.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0019\d__Stash House_RawrXD-Main_src_asm_product_runtime.asm(10) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

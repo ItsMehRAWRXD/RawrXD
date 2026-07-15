@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0010\d__rawrxd_RawrXD_OmegaDeobfuscator.asm
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_RawrXD_OmegaDeobfuscator.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_RawrXD_OmegaDeobfuscator.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_RawrXD_OmegaDeobfuscator.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_RawrXD_OmegaDeobfuscator.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_RawrXD_OmegaDeobfuscator.asm(27) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_RawrXD_OmegaDeobfuscator.asm(32) : error A2220:Missing .ENDPROLOG

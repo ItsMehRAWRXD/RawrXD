@@ -1,0 +1,53 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(242) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(243) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(244) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(245) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(248) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(257) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(258) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(259) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(260) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(263) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(279) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(280) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(281) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(282) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(285) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(294) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(295) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(296) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(297) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(300) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(366) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(388) : error A2008:syntax error : code
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(699) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(700) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(835) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(269) : error A2006:undefined symbol : TVM_SETEXTENDEDSTYLE
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(306) : error A2006:undefined symbol : LVM_SETEXTENDEDLISTVIEWSTYLE
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(477) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(480) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(482) : error A2006:undefined symbol : SetBkColor
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(483) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(485) : error A2006:undefined symbol : SetTextColor
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(488) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(489) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(494) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(510) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(512) : error A2006:undefined symbol : SetTextAlign
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(514) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(516) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(518) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(521) : error A2006:undefined symbol : DRAWITEMSTRUCT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(522) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(523) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(526) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(529) : error A2006:undefined symbol : TextOutA
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(735) : error A2006:undefined symbol : LVM_DELETEALLITEMS
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(777) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(568) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(657) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(754) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(811) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\Win32IDE_Sidebar.asm\1771507954155_EFbY.asm(875) : error A2220:Missing .ENDPROLOG

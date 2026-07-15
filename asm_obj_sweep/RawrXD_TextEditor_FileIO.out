@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditor_FileIO.asm
+D:\rawrxd\RawrXD_TextEditor_FileIO.asm(36) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_TextEditor_FileIO.asm(37) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\RawrXD_TextEditor_FileIO.asm(69) : fatal error A1010:unmatched block nesting : FileIO_OpenRead

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703460594_BbkD.asm
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703460594_BbkD.asm(4526) : error A2006:undefined symbol : BBDetectJumpTables
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703460594_BbkD.asm(4534) : error A2006:undefined symbol : BBIsInSkipRegion
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703460594_BbkD.asm(4787) : error A2006:undefined symbol : BBValidateBlocks

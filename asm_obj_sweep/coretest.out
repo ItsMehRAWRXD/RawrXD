@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\coretest.asm
+D:\rawrxd\coretest.asm(1) : error A2008:syntax error : in instruction
+D:\rawrxd\coretest.asm(1) : error A2088:END directive required at end of file

@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\H3GJ.asm
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1028) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1039) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1050) : error A2006:undefined symbol : _append_bool
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1068) : error A2006:undefined symbol : _write_json_to_file
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1101) : error A2006:undefined symbol : _read_json_from_file
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1117) : error A2006:undefined symbol : _find_json_key
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1133) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1139) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1144) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1149) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1154) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1159) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1164) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1169) : error A2006:undefined symbol : _parse_json_int
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1174) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1179) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1184) : error A2006:undefined symbol : _parse_json_bool
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1869) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1870) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1876) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(1877) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\H3GJ.asm(2036) : error A2006:undefined symbol : WS_CHILD

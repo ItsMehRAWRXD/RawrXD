@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\RawrXD_v23_Singularity.asm
+D:\rawrxd\src\RawrXD_v23_Singularity.asm(22) : error A2006:undefined symbol : SwarmV23_Holographic_Map
+D:\rawrxd\src\RawrXD_v23_Singularity.asm(24) : error A2006:undefined symbol : SwarmV23_Hardware_Rebalancer
+D:\rawrxd\src\RawrXD_v23_Singularity.asm(13) : error A2206:missing operator in expression

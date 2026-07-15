@@ -1,0 +1,10 @@
+; RawrXD Intermediate Representation
+; Format: Simple IR for Language Backend
+
+function main
+  params 0
+  body
+  return 0
+  end
+end_function
+

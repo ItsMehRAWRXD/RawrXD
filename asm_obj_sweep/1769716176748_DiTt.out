@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(178) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(179) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(188) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(189) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(322) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(346) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(348) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(350) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(335) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(338) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(70) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(70) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716176748_DiTt.asm(70) : warning A6004:procedure argument or local not referenced : lpReserved

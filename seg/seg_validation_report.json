@@ -1,0 +1,90 @@
+{
+  "seg_validation": {
+    "version": "1.0.0",
+    "timestamp": "2026-07-13 07:06:48",
+    "summary": {
+      "total_tests": 6,
+      "passed": 6,
+      "failed": 0,
+      "all_passed": true
+    },
+    "phases": [
+      {
+        "phase": "GraphIntegrity",
+        "description": "Validate graph node counts and dependency structure",
+        "passed": true,
+        "details": "Graph integrity validated successfully",
+        "metrics": {
+          "edges": 20,
+          "engine_cycles": 7,
+          "swarm_tasks": 28,
+          "total_nodes": 36
+        }
+      },
+      {
+        "phase": "PlannerTopology",
+        "description": "Validate planner topological ordering and critical path",
+        "passed": true,
+        "details": "Planner topology validated successfully",
+        "metrics": {
+          "deterministic": 1,
+          "has_critical_path": 1,
+          "max_parallelism": 28,
+          "stages": 9,
+          "topologically_valid": 1
+        }
+      },
+      {
+        "phase": "RuntimeExecution",
+        "description": "Execute Unity sequence and validate results",
+        "passed": true,
+        "details": "Unity sequence executed successfully",
+        "metrics": {
+          "converged": 1,
+          "cycles_executed": 7,
+          "harmony_index": 1.000000,
+          "tasks_executed": 28,
+          "total_duration_ms": 0.534700
+        }
+      },
+      {
+        "phase": "TelemetryFlow",
+        "description": "Validate telemetry capture and reporting",
+        "passed": true,
+        "details": "Telemetry flow validated successfully",
+        "metrics": {
+          "execution_complete": 1,
+          "failures": 0,
+          "harmony_index": 1.000000,
+          "nodes_executed": 36,
+          "unity_converged": 1
+        }
+      },
+      {
+        "phase": "CheckpointRecovery",
+        "description": "Validate checkpoint save/restore and graph integrity",
+        "passed": true,
+        "details": "Checkpoint recovery validated successfully",
+        "metrics": {
+          "graph_integrity": 1,
+          "restore_successful": 1,
+          "resume_point_correct": 1,
+          "save_successful": 1
+        }
+      },
+      {
+        "phase": "DeterministicExecution",
+        "description": "Validate execution produces identical results across runs",
+        "passed": true,
+        "details": "Execution is deterministic across runs",
+        "metrics": {
+          "order_match": 1,
+          "run1_cycles": 7,
+          "run1_tasks": 28,
+          "run2_cycles": 7,
+          "run2_tasks": 28
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm(79) : warning A6004:procedure argument or local not referenced : pOutputPath
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm(92) : warning A6004:procedure argument or local not referenced : pOutputPath
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm(105) : warning A6004:procedure argument or local not referenced : pOutputPath
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm(118) : warning A6004:procedure argument or local not referenced : pOutputPath
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm(131) : warning A6004:procedure argument or local not referenced : pOutputPath
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm(144) : warning A6004:procedure argument or local not referenced : pOutputPath
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_language_scaffolders_simple.asm(157) : warning A6004:procedure argument or local not referenced : pOutputPath

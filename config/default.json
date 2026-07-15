@@ -1,0 +1,88 @@
+{
+  "version": "14.7.3",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8080,
+    "workers": 4,
+    "timeout": 300,
+    "max_connections": 1000,
+    "keep_alive": true,
+    "compression": true
+  },
+  "inference": {
+    "default_model": "",
+    "max_context_length": 8192,
+    "batch_size": 1,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 40,
+    "repeat_penalty": 1.1,
+    "presence_penalty": 0.0,
+    "frequency_penalty": 0.0,
+    "max_tokens": 256,
+    "seed": null,
+    "stream": true
+  },
+  "hardware": {
+    "gpu_acceleration": true,
+    "gpu_layers": 0,
+    "cpu_threads": 0,
+    "memory_limit_mb": 0,
+    "use_mmap": true,
+    "use_mlock": false,
+    "numa_aware": true
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/rawrxd.log",
+    "max_size_mb": 100,
+    "max_files": 5,
+    "console": true,
+    "colors": true,
+    "timestamp_format": "%Y-%m-%d %H:%M:%S"
+  },
+  "security": {
+    "enable_auth": false,
+    "api_key": "",
+    "allowed_origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+    "rate_limit": {
+      "requests_per_minute": 60,
+      "burst_size": 10
+    },
+    "max_request_size_mb": 10,
+    "enable_cors": true
+  },
+  "models": {
+    "directory": "./models",
+    "cache_size_mb": 4096,
+    "auto_load": false,
+    "preload": [],
+    "embedding_models": []
+  },
+  "distributed": {
+    "enabled": false,
+    "node_id": "",
+    "coordinator_url": "",
+    "heartbeat_interval_sec": 5,
+    "election_timeout_sec": 15
+  },
+  "plugins": {
+    "directory": "./plugins",
+    "auto_load": false,
+    "allowed_extensions": [".dll", ".so", ".dylib"],
+    "blacklist": []
+  },
+  "telemetry": {
+    "enabled": false,
+    "endpoint": "",
+    "interval_sec": 60,
+    "include_system_metrics": true,
+    "include_model_metrics": true
+  },
+  "cache": {
+    "kv_cache_enabled": true,
+    "kv_cache_size_mb": 2048,
+    "prompt_cache_enabled": true,
+    "prompt_cache_ttl_sec": 3600
+  }
+}

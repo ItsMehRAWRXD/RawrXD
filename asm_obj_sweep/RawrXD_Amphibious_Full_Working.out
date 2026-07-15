@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\RawrXD_Amphibious_Full_Working.asm
+D:\rawrxd\RawrXD_Amphibious_Full_Working.asm(258) : error A2005:symbol redefinition : StreamTokensToIDE
+D:\rawrxd\RawrXD_Amphibious_Full_Working.asm(259) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\RawrXD_Amphibious_Full_Working.asm(262) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_Amphibious_Full_Working.asm(264) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_Amphibious_Full_Working.asm(266) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_Amphibious_Full_Working.asm(267) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_Amphibious_Full_Working.asm(292) : fatal error A1010:unmatched block nesting : StreamTokensToIDE

@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(176) : error A2005:symbol redefinition : hInput
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(177) : error A2005:symbol redefinition : hOutput
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(178) : error A2005:symbol redefinition : lpSource
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(179) : error A2005:symbol redefinition : cbSource
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(180) : error A2005:symbol redefinition : iSource
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(181) : error A2005:symbol redefinition : iLine
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(183) : error A2005:symbol redefinition : lpTokens
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(184) : error A2005:symbol redefinition : nTokens
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(185) : error A2005:symbol redefinition : iToken
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(187) : error A2005:symbol redefinition : lpOutput
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(188) : error A2005:symbol redefinition : cbOutput
+D:\rawrxd\history\all_versions\terraform.asm\1771247846380_DQe3.asm(296) : error A2070:invalid instruction operands

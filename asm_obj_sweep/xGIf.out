@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-21cff9bc\xGIf.asm
+D:\rawrxd\history\-21cff9bc\xGIf.asm(31) : error A2008:syntax error : width
+D:\rawrxd\history\-21cff9bc\xGIf.asm(100) : error A2070:invalid instruction operands
+D:\rawrxd\history\-21cff9bc\xGIf.asm(101) : error A2070:invalid instruction operands
+D:\rawrxd\history\-21cff9bc\xGIf.asm(102) : error A2070:invalid instruction operands
+D:\rawrxd\history\-21cff9bc\xGIf.asm(103) : error A2070:invalid instruction operands
+D:\rawrxd\history\-21cff9bc\xGIf.asm(128) : fatal error A1010:unmatched block nesting : Renderer_Init

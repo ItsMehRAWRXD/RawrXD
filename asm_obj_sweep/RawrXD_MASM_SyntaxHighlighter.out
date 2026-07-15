@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(184) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(195) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(202) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(213) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(217) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(220) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(256) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(275) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(291) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(307) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(327) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(346) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(355) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(358) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(364) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(370) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(372) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(378) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(385) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(386) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(388) : error A2008:syntax error : short
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(389) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(398) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(404) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(416) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(431) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(437) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(441) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(442) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(451) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(457) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(463) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(465) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(474) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(479) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(485) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(489) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(505) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(509) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(190) : error A2006:undefined symbol : al_ok
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(192) : error A2006:undefined symbol : al_ok
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(197) : error A2006:undefined symbol : bl_ok
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(199) : error A2006:undefined symbol : bl_ok
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(204) : error A2006:undefined symbol : cmp_fail
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(207) : error A2006:undefined symbol : cmp_ok
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(211) : error A2006:undefined symbol : cmp_loop
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(215) : error A2006:undefined symbol : done
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(259) : error A2006:undefined symbol : done
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(263) : error A2006:undefined symbol : skip_ws
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(265) : error A2006:undefined symbol : skip_ws
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(269) : error A2006:undefined symbol : handle_comment
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(278) : error A2006:undefined symbol : handle_label
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(280) : error A2006:undefined symbol : not_label
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(282) : error A2006:undefined symbol : not_label
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(284) : error A2006:undefined symbol : not_label
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(289) : error A2006:undefined symbol : find_label_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(294) : error A2006:undefined symbol : handle_string
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(296) : error A2006:undefined symbol : handle_string
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(300) : error A2006:undefined symbol : check_operator
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(302) : error A2006:undefined symbol : check_operator
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(305) : error A2006:undefined symbol : scan_number
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(313) : error A2006:undefined symbol : add_token_op
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(315) : error A2006:undefined symbol : add_token_op
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(317) : error A2006:undefined symbol : add_token_op
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(319) : error A2006:undefined symbol : add_token_op
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(321) : error A2006:undefined symbol : add_token_op
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(328) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(330) : error A2006:undefined symbol : id_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(332) : error A2006:undefined symbol : id_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(334) : error A2006:undefined symbol : id_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(336) : error A2006:undefined symbol : id_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(338) : error A2006:undefined symbol : id_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(340) : error A2006:undefined symbol : id_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(344) : error A2006:undefined symbol : scan_identifier
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(353) : error A2006:undefined symbol : add_token_type
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(359) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(360) : error A2006:undefined symbol : comment_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(362) : error A2006:undefined symbol : find_comment_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(368) : error A2006:undefined symbol : add_token_type
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(373) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(374) : error A2006:undefined symbol : label_found
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(376) : error A2006:undefined symbol : find_label_end_2
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(383) : error A2006:undefined symbol : add_token_type
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(390) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(392) : error A2006:undefined symbol : string_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(394) : error A2006:undefined symbol : string_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(396) : error A2006:undefined symbol : scan_string
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(402) : error A2006:undefined symbol : add_token_type
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(408) : error A2006:undefined symbol : hex_or_dec
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(412) : error A2006:undefined symbol : decimal_number
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(417) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(419) : error A2006:undefined symbol : hex_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(421) : error A2006:undefined symbol : hex_digit
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(423) : error A2006:undefined symbol : hex_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(425) : error A2006:undefined symbol : hex_digit
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(427) : error A2006:undefined symbol : hex_end
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(429) : error A2006:undefined symbol : hex_digit
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(435) : error A2006:undefined symbol : add_token_type
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(439) : error A2006:undefined symbol : scan_hex
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(443) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_MASM_SyntaxHighlighter.asm(445) : fatal error A1012:error count exceeds 100; stopping assembly

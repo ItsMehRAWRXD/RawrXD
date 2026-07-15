@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(352) : error A2005:symbol redefinition : g_heartbeat_monitor
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(399) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(430) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(445) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(453) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(461) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(469) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(485) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(512) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(670) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(671) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(348) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(349) : error A2167:unexpected literal found in expression
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589440309_D6tn.asm(350) : error A2167:unexpected literal found in expression

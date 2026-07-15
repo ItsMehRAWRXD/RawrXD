@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(560) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(1738) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(1739) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(1743) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(1744) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(1755) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(2152) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(2153) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\terraform.asm\1771246630622_i5s3.asm(2163) : fatal error A1010:unmatched block nesting : write_file

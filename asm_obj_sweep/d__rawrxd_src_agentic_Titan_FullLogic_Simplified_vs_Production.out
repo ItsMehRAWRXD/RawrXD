@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(49) : error A2008:syntax error : ptr
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(50) : warning A6006:structure contains no members
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(62) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(63) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(83) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(86) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(87) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(88) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(89) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(107) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(111) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(115) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(181) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(193) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(205) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(217) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(229) : error A2006:undefined symbol : g_LockRingBuffer
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(241) : error A2006:undefined symbol : g_LockRingBuffer
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(596) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(677) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(921) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(922) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(931) : error A2006:undefined symbol : g_LockRingBuffer
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1038) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1039) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1065) : error A2006:undefined symbol : g_LockRingBuffer
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1160) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1384) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1387) : error A2006:undefined symbol : g_LockScheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1416) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_FullLogic_Simplified_vs_Production.asm(1419) : error A2006:undefined symbol : g_LockScheduler

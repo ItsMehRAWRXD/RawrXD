@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_renderer.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_renderer.asm(31) : error A2008:syntax error : width
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_renderer.asm(100) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_renderer.asm(101) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_renderer.asm(102) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_renderer.asm(103) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_renderer.asm(128) : fatal error A1010:unmatched block nesting : Renderer_Init

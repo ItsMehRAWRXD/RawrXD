@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm(127) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm(157) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm(184) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm(470) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm(283) : error A2006:undefined symbol : Tmpl_Code_Critic
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm(283) : error A2006:undefined symbol : Tmpl_Sec_Critic
+D:\rawrxd\history\all_versions\src\asm\RawrXD_DynamicPromptEngine.asm\1770813873834_KT2Y.asm(283) : error A2006:undefined symbol : Tmpl_Shell_Critic

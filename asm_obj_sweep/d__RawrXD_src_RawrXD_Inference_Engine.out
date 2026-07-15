@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_RawrXD_Inference_Engine.asm
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_RawrXD_Inference_Engine.asm(486) : error A2006:undefined symbol : Inference_SampleGreedy
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_RawrXD_Inference_Engine.asm(525) : error A2006:undefined symbol : Inference_SampleGreedy
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_RawrXD_Inference_Engine.asm(552) : error A2006:undefined symbol : Inference_ReleaseSequence
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_RawrXD_Inference_Engine.asm(576) : error A2006:undefined symbol : Inference_ReleaseSequence
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_RawrXD_Inference_Engine.asm(607) : error A2006:undefined symbol : Inference_ReleaseSequence

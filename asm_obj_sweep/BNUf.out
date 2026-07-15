@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\BNUf.asm
+D:\rawrxd\history\-29b34fd4\BNUf.asm(46) : error A2179:structure improperly initialized
+D:\rawrxd\history\-29b34fd4\BNUf.asm(46) : error A2065:expected : )
+D:\rawrxd\history\-29b34fd4\BNUf.asm(59) : error A2008:syntax error : type
+D:\rawrxd\history\-29b34fd4\BNUf.asm(109) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(110) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(111) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(125) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(177) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(221) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(320) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(352) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\-29b34fd4\BNUf.asm(397) : error A2081:missing operand after unary operator

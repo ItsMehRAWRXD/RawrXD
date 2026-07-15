@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(22) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(117) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(137) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(149) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(204) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(218) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(230) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(249) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(312) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(325) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(346) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(197) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(305) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\compression\hierarchical_quant.asm\1771249240953_bCAt.asm(367) : error A2083:invalid scale value

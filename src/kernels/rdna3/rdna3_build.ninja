@@ -1,0 +1,40 @@
+# RDNA3 Kernel Build - Ninja configuration
+# Target: RX 7800 XT (gfx1101), user-mode doorbell dispatch
+
+# Tool paths
+ml64 = C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe
+link = C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.exe
+cl = C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe
+
+# Flags
+asm_flags = /c /W3 /nologo /Zi /Fo
+cxx_flags = /std:c++23 /O2 /Isrc /I../../.. /D_WIN32_WINNT=0x0A00 /DNDEBUG /Zi /Fo
+link_flags = /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB /LARGEADDRESSAWARE:NO /OPT:REF /OPT:ICF
+
+# Rules
+rule asm_rule
+  command = $ml64 $asm_flags $out $in
+  description = Assembling $in
+
+rule cxx_rule
+  command = $cl $cxx_flags $out $in
+  description = Compiling $in
+
+rule link_rule
+  command = $link $link_flags /OUT:$out $in
+  description = Linking $out
+
+# Build kernel objects
+build obj/Q4MatMul_RDNA3.obj: asm_rule Q4MatMul_RDNA3.asm
+build obj/KVCacheAttention_RDNA3.obj: asm_rule KVCacheAttention_RDNA3.asm
+build obj/TileStreamer_RDNA3.obj: asm_rule TileStreamer_RDNA3.asm
+build obj/DispatchTable_RDNA3.obj: asm_rule DispatchTable_RDNA3.asm
+
+# Build harness
+build obj/RDNA3_Hardware_Probe.obj: cxx_rule RDNA3_Hardware_Probe.cpp
+
+# Link harness executable
+build bin/RDNA3_Kernel_Harness.exe: link_rule obj/Q4MatMul_RDNA3.obj obj/KVCacheAttention_RDNA3.obj obj/TileStreamer_RDNA3.obj obj/DispatchTable_RDNA3.obj obj/RDNA3_Hardware_Probe.obj
+
+# Default target
+default bin/RDNA3_Kernel_Harness.exe

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\agentic\Part1.asm
+D:\rawrxd\src\agentic\Part1.asm(178) : error A2088:END directive required at end of file
+D:\rawrxd\src\agentic\Part1.asm(171) : error A2006:undefined symbol : Emitter_Init

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900406101_m7oT.asm
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900406101_m7oT.asm(19) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900406101_m7oT.asm(19) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900406101_m7oT.asm(36) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900406101_m7oT.asm(72) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900406101_m7oT.asm(83) : error A2220:Missing .ENDPROLOG

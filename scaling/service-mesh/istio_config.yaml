@@ -1,0 +1,383 @@
+# RawrXD Istio Service Mesh Configuration
+# Phase L.4 - Service Mesh Integration
+# Provides traffic management, security, and observability
+
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: rawrxd-istio
+spec:
+  profile: default
+  components:
+    pilot:
+      k8s:
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+        hpaSpec:
+          minReplicas: 2
+          maxReplicas: 5
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                targetAverageUtilization: 80
+    ingressGateways:
+      - name: rawrxd-gateway
+        enabled: true
+        k8s:
+          resources:
+            requests:
+              cpu: 2000m
+              memory: 4Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+          service:
+            type: LoadBalancer
+            ports:
+              - name: http
+                port: 80
+                targetPort: 8080
+              - name: https
+                port: 443
+                targetPort: 8443
+              - name: grpc
+                port: 50051
+                targetPort: 50051
+          overlays:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: rawrxd-gateway
+              patches:
+                - path: spec.template.spec.containers.[name:istio-proxy].resources.requests.memory
+                  value: 4Gi
+    egressGateways:
+      - name: rawrxd-egress-gateway
+        enabled: true
+        k8s:
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+
+  meshConfig:
+    defaultConfig:
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+      tracing:
+        sampling: 100.0
+        customTags:
+          service:
+            literal:
+              value: rawrxd
+      proxyStatsMatcher:
+        inclusionRegexps:
+          - ".*rawrxd.*"
+          - ".*inference.*"
+          - ".*latency.*"
+    enableAutoMtls: true
+    enableAutoSni: true
+    outboundTrafficPolicy:
+      mode: REGISTRY_ONLY
+
+  values:
+    global:
+      proxy:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 1Gi
+      controlPlaneSecurityEnabled: true
+    pilot:
+      env:
+        PILOT_ENABLE_CROSS_CLUSTER_WORKLOAD_ENTRY: "true"
+        PILOT_ENABLE_K8S_SELECT_WORKLOAD_ENTRIES: "false"
+        PILOT_ENABLE_ALPHA_GATEWAY_API: "true"
+
+---
+# Gateway configuration
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: rawrxd-gateway
+  namespace: rawrxd
+spec:
+  selector:
+    istio: rawrxd-gateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "api.rawrxd.local"
+        - "*.rawrxd.local"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: rawrxd-tls
+        minProtocolVersion: TLSV1_2
+        cipherSuites:
+          - TLS_AES_256_GCM_SHA384
+          - TLS_AES_128_GCM_SHA256
+          - TLS_CHACHA20_POLY1305_SHA256
+      hosts:
+        - "api.rawrxd.local"
+        - "*.rawrxd.local"
+    - port:
+        number: 50051
+        name: grpc
+        protocol: GRPC
+      tls:
+        mode: SIMPLE
+        credentialName: rawrxd-tls
+      hosts:
+        - "api.rawrxd.local"
+
+---
+# Virtual Service for traffic routing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: rawrxd-routing
+  namespace: rawrxd
+spec:
+  hosts:
+    - api.rawrxd.local
+    - rawrxd-lb
+  gateways:
+    - rawrxd-gateway
+    - mesh
+  http:
+    # Health check endpoint - no timeout
+    - match:
+        - uri:
+            exact: /health
+      route:
+        - destination:
+            host: rawrxd-lb
+            port:
+              number: 80
+      timeout: 5s
+      retries:
+        attempts: 0
+
+    # Streaming endpoints - longer timeout
+    - match:
+        - uri:
+            prefix: /v1/completions/stream
+      route:
+        - destination:
+            host: rawrxd-lb
+            port:
+              number: 80
+          weight: 100
+      timeout: 300s
+      retries:
+        attempts: 3
+        perTryTimeout: 300s
+        retryOn: gateway-error,connect-failure,refused-stream
+
+    # Standard API endpoints
+    - match:
+        - uri:
+            prefix: /v1/
+      route:
+        - destination:
+            host: rawrxd-lb
+            port:
+              number: 80
+          weight: 100
+      timeout: 60s
+      retries:
+        attempts: 3
+        perTryTimeout: 60s
+        retryOn: gateway-error,connect-failure,refused-stream
+
+    # Default route
+    - route:
+        - destination:
+            host: rawrxd-lb
+            port:
+              number: 80
+
+---
+# Destination Rule for traffic policies
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: rawrxd-traffic-policy
+  namespace: rawrxd
+spec:
+  host: rawrxd-lb
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 300s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 100
+        maxRetries: 3
+    loadBalancer:
+      simple: LEAST_CONN
+      localityLbSetting:
+        enabled: true
+        failover:
+          - from: us-east-1
+            to: us-west-2
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    portLevelSettings:
+      - port:
+          number: 80
+        connectionPool:
+          http:
+            h2UpgradePolicy: UPGRADE
+
+---
+# Peer Authentication for mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: rawrxd-mtls
+  namespace: rawrxd
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# Authorization Policy
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: rawrxd-authz
+  namespace: rawrxd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rawrxd
+  action: ALLOW
+  rules:
+    # Allow health checks from anywhere
+    - to:
+        - operation:
+            paths: ["/health"]
+    # Allow API access from specific namespaces
+    - from:
+        - source:
+            namespaces: ["default", "monitoring", "istio-system"]
+      to:
+        - operation:
+            paths: ["/v1/*"]
+            methods: ["POST", "GET"]
+    # Allow admin access from admin service accounts
+    - from:
+        - source:
+            principals: ["cluster.local/ns/admin/sa/admin-service"]
+      to:
+        - operation:
+            paths: ["/admin/*"]
+
+---
+# Request Authentication
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: rawrxd-jwt
+  namespace: rawrxd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rawrxd
+  jwtRules:
+    - issuer: "https://auth.rawrxd.local"
+      jwksUri: "https://auth.rawrxd.local/.well-known/jwks.json"
+      audiences: ["rawrxd-api"]
+      forwardOriginalToken: true
+
+---
+# Rate Limiting with EnvoyFilter
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: rawrxd-rate-limit
+  namespace: istio-system
+spec:
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.local_ratelimit
+          typed_config:
+            "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+            value:
+              stat_prefix: rawrxd_rate_limit
+              token_bucket:
+                max_tokens: 100
+                tokens_per_fill: 10
+                fill_interval: 1s
+              filter_enabled:
+                runtime_key: rawrxd_rate_limit_enabled
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+              filter_enforced:
+                runtime_key: rawrxd_rate_limit_enforced
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+              response_headers_to_add:
+                - append_action: OVERWRITE_IF_EXISTS_OR_ADD
+                  header:
+                    key: x-local-rate-limit
+                    value: 'true'
+
+---
+# Circuit Breaker configuration
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: rawrxd-circuit-breaker
+  namespace: rawrxd
+spec:
+  host: "*.rawrxd.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutiveErrors: 7
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      consecutiveGatewayErrors: 5
+      consecutive5xxErrors: 5

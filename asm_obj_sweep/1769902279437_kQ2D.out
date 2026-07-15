@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902279437_kQ2D.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902279437_kQ2D.asm(472) : error A2008:syntax error : add
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902279437_kQ2D.asm(630) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769902279437_kQ2D.asm(635) : error A2006:undefined symbol : OperationSize

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_RawrXD_Compiler_Engine_Stubs_BACKUP.asm
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_RawrXD_Compiler_Engine_Stubs_BACKUP.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_RawrXD_Compiler_Engine_Stubs_BACKUP.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_RawrXD_Compiler_Engine_Stubs_BACKUP.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_RawrXD_Compiler_Engine_Stubs_BACKUP.asm(17) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_src_agentic_RawrXD_Compiler_Engine_Stubs_BACKUP.asm(22) : fatal error A1000:cannot open file : \masm32\include\windows.inc

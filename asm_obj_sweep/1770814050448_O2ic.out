@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_AgenticShellBridge.asm\1770814050448_O2ic.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_AgenticShellBridge.asm\1770814050448_O2ic.asm(596) : error A2006:undefined symbol : g_AS_Counter_CtxDropped

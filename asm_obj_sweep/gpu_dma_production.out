@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\src\agentic\gpu_dma_production.asm
+D:\rawrxd\src\agentic\gpu_dma_production.asm(15) : error A2008:syntax error : FRAME
+D:\rawrxd\src\agentic\gpu_dma_production.asm(16) : error A2008:syntax error : WIN64
+D:\rawrxd\src\agentic\gpu_dma_production.asm(17) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\gpu_dma_production.asm(121) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\gpu_dma_production.asm(1288) : error A2189:invalid combination with segment alignment : 64

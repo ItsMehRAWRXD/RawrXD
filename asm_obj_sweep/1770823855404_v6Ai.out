@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(208) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(249) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(820) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(849) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(852) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(1847) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(1509) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\asm\RawrXD_CopilotGapCloser.asm\1770823855404_v6Ai.asm(1608) : error A2029:multiple base registers not allowed

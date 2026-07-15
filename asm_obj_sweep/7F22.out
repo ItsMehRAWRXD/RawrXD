@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\-1930cdf\7F22.asm
+D:\rawrxd\history\-1930cdf\7F22.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\-1930cdf\7F22.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\-1930cdf\7F22.asm(74) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(81) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(92) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1930cdf\7F22.asm(95) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(114) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1930cdf\7F22.asm(115) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1930cdf\7F22.asm(118) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\-1930cdf\7F22.asm(150) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(151) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(152) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(155) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1930cdf\7F22.asm(157) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(200) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1930cdf\7F22.asm(203) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(210) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(211) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(212) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(215) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1930cdf\7F22.asm(229) : error A2008:syntax error : ShellExecuteA
+D:\rawrxd\history\-1930cdf\7F22.asm(110) : error A2006:undefined symbol : g_hLogInitialized
+D:\rawrxd\history\-1930cdf\7F22.asm(166) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\-1930cdf\7F22.asm(166) : warning A6004:procedure argument or local not referenced : bytesWritten
+D:\rawrxd\history\-1930cdf\7F22.asm(166) : warning A6004:procedure argument or local not referenced : pBuffer
+D:\rawrxd\history\-1930cdf\7F22.asm(166) : warning A6004:procedure argument or local not referenced : bufferSize

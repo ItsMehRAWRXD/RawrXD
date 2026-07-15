@@ -1,0 +1,59 @@
+ Assembling: D:\rawrxd\TITAN_PRODUCTION_BUILD.asm
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(16) : error A2008:syntax error : .
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(17) : error A2008:syntax error : .
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(152) : error A2008:syntax error : ALIGN
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(155) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(156) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(157) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(158) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(159) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(162) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(163) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(166) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(167) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(170) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(171) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(174) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(177) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(178) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(179) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(182) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(183) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(184) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(187) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(188) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(189) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(190) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(191) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(194) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(195) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(196) : error A2034:must be in segment block
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(685) : error A2008:syntax error : zmm1
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(697) : error A2008:syntax error : main
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(697) : error A2088:END directive required at end of file
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(234) : error A2006:undefined symbol : g_EditorBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(235) : error A2006:undefined symbol : g_EditorLength
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(236) : error A2006:undefined symbol : g_EditorCursor
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(237) : error A2006:undefined symbol : g_EditorLineCount
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(238) : error A2006:undefined symbol : g_EditorModified
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(241) : error A2006:undefined symbol : g_SymbolCount
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(244) : error A2006:undefined symbol : g_TokenCount
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(247) : error A2006:undefined symbol : g_ASTCount
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(250) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(269) : error A2006:undefined symbol : g_EngineRunning
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(293) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(309) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(322) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(326) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(330) : error A2006:undefined symbol : g_TraceFile
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(334) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(336) : error A2006:undefined symbol : g_ProjectFile
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(340) : error A2006:undefined symbol : g_EngineRunning
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(505) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(544) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(553) : error A2006:undefined symbol : g_TraceBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(564) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(593) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(602) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(606) : error A2006:undefined symbol : g_TraceBuffer
+D:\rawrxd\TITAN_PRODUCTION_BUILD.asm(630) : error A2006:undefined symbol : g_NF4Lookup

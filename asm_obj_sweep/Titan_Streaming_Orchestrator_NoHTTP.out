@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\Titan_Streaming_Orchestrator_NoHTTP.asm
+D:\rawrxd\src\Titan_Streaming_Orchestrator_NoHTTP.asm(216) : warning A6004:procedure argument or local not referenced : pszPrompt

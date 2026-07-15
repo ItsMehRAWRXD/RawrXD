@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\src\RawrXD_v24_Omega.asm
+D:\rawrxd\src\RawrXD_v24_Omega.asm(40) : error A2023:instruction operand must have size
+D:\rawrxd\src\RawrXD_v24_Omega.asm(20) : error A2006:undefined symbol : SwarmV24_Quorum_Consensus
+D:\rawrxd\src\RawrXD_v24_Omega.asm(21) : error A2006:undefined symbol : SwarmV24_Holographic_Compressor
+D:\rawrxd\src\RawrXD_v24_Omega.asm(22) : error A2006:undefined symbol : SwarmV24_Fault_Isolation_Lock
+D:\rawrxd\src\RawrXD_v24_Omega.asm(23) : error A2006:undefined symbol : SwarmV24_Speculative_Pruner

@@ -1,0 +1,100 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(5) : error A2008:syntax error : .
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(6) : error A2008:syntax error : .
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(129) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(131) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(141) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(154) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(167) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(173) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(179) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(183) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(192) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(194) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(272) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(334) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(339) : error A2008:syntax error : wsprintf
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(340) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(343) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(344) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(349) : error A2008:syntax error : wsprintf
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(350) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(353) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(354) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(357) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(358) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(363) : error A2008:syntax error : wsprintf
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(364) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(376) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(393) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(394) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(395) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(396) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(397) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(398) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(399) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(400) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(404) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(423) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(443) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(456) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(457) : error A2008:syntax error : wsprintf
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(458) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(467) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(481) : error A2008:syntax error : rva_to_offset
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(483) : error A2008:syntax error : wsprintf
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(484) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(489) : error A2008:syntax error : wsprintf
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(490) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(501) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(514) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(568) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(569) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(597) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(598) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(600) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(618) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(619) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(620) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(623) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(626) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(627) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(631) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(632) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(633) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(636) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(639) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(640) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(644) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(645) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(646) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(649) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(652) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(653) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(657) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(658) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(659) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(662) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(663) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(667) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(668) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(669) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(672) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(675) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(676) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(680) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(689) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(691) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(695) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(698) : error A2008:syntax error : INVOKE
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(699) : error A2008:syntax error : start
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(699) : error A2088:END directive required at end of file
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(144) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(553) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(566) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(133) : warning A6004:procedure argument or local not referenced : pString
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(133) : warning A6004:procedure argument or local not referenced : bytes_written
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(158) : warning A6004:procedure argument or local not referenced : choice_bytes_read
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(197) : warning A6004:procedure argument or local not referenced : pFileName
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(197) : warning A6004:procedure argument or local not referenced : high_size
+D:\rawrxd\src\reverse_engineering\omega_suite\src_variants\omega_final_working.asm(504) : warning A6004:procedure argument or local not referenced : import_desc

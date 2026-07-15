@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(88) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(373) : error A2005:symbol redefinition : KERNEL_PREFETCH
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(375) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(377) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_final.asm\1769589570214_D7YB.asm(426) : fatal error A1010:unmatched block nesting : KERNEL_PREFETCH

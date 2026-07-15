@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(772) : error A2006:undefined symbol : szClaimIndicator_is
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(773) : error A2006:undefined symbol : strstr_custom
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(783) : error A2006:undefined symbol : extract_sentence
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(796) : error A2006:undefined symbol : next_claim_search
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(814) : error A2006:undefined symbol : g_factcheck_database
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(866) : error A2006:undefined symbol : db_search_claim
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(909) : error A2006:undefined symbol : strlen_custom
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(913) : error A2006:undefined symbol : szCorrectionPrefix
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(914) : error A2006:undefined symbol : append_str_safe
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(918) : error A2006:undefined symbol : append_str_safe
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(952) : error A2006:undefined symbol : dangerous_keywords_table
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\agentic\puppeteer.asm(962) : error A2006:undefined symbol : strstr_case_insensitive

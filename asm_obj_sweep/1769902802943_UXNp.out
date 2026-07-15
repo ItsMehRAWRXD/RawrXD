@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(262) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(270) : error A2008:syntax error : ojection
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(273) : error A2008:syntax error : inc
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(275) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(281) : error A2008:syntax error : rbx
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(290) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(294) : error A2008:syntax error : in
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(295) : error A2008:syntax error : Inference_SubmitBatch
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(303) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(310) : error A2008:syntax error : x
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(311) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(314) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(316) : error A2008:syntax error : g_InferenceContext
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902802943_UXNp.asm(317) : fatal error A1010:unmatched block nesting : Inference_ReleaseSequence

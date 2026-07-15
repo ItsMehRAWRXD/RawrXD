@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\jzI1.asm
+D:\rawrxd\history\-1bd1bafa\jzI1.asm(2369) : error A2005:symbol redefinition : strcmp_masm
+D:\rawrxd\history\-1bd1bafa\jzI1.asm(2398) : fatal error A1010:unmatched block nesting : strcmp_masm

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(2) : error A2008:syntax error : BITS
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(3) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(5) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(6) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(7) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(8) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(10) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(21) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(22) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(23) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(24) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(25) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(26) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(27) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(28) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(29) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(30) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(32) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(33) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(34) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(35) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(36) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(37) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(38) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(39) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(40) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(41) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(42) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(43) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(44) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(45) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(46) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(47) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(49) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(51) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(56) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(58) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(59) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(62) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(63) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(64) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(65) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(66) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(67) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(72) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(73) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(79) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(80) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(81) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(93) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(96) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(99) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(102) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(103) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(106) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(110) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(113) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_tests_test_stream_generate.asm(122) : fatal error A1012:error count exceeds 100; stopping assembly

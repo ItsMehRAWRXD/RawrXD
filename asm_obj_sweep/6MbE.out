@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\6MbE.asm
+D:\rawrxd\history\-29b34fd4\6MbE.asm(472) : error A2008:syntax error : add
+D:\rawrxd\history\-29b34fd4\6MbE.asm(447) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\-29b34fd4\6MbE.asm(451) : error A2006:undefined symbol : OperationSize
+D:\rawrxd\history\-29b34fd4\6MbE.asm(464) : error A2006:undefined symbol : OperationSize
+D:\rawrxd\history\-29b34fd4\6MbE.asm(630) : error A2006:undefined symbol : OperationType
+D:\rawrxd\history\-29b34fd4\6MbE.asm(635) : error A2006:undefined symbol : OperationSize

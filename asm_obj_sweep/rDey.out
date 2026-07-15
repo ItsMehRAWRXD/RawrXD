@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\-2055b1f6\rDey.asm
+D:\rawrxd\history\-2055b1f6\rDey.asm(66) : error A2034:must be in segment block
+D:\rawrxd\history\-2055b1f6\rDey.asm(67) : error A2034:must be in segment block
+D:\rawrxd\history\-2055b1f6\rDey.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\-2055b1f6\rDey.asm(69) : error A2034:must be in segment block
+D:\rawrxd\history\-2055b1f6\rDey.asm(178) : error A2179:structure improperly initialized
+D:\rawrxd\history\-2055b1f6\rDey.asm(178) : error A2008:syntax error : in structure
+D:\rawrxd\history\-2055b1f6\rDey.asm(924) : error A2008:syntax error : name
+D:\rawrxd\history\-2055b1f6\rDey.asm(318) : error A2006:undefined symbol
+D:\rawrxd\history\-2055b1f6\rDey.asm(319) : error A2006:undefined symbol
+D:\rawrxd\history\-2055b1f6\rDey.asm(328) : error A2006:undefined symbol
+D:\rawrxd\history\-2055b1f6\rDey.asm(336) : error A2006:undefined symbol

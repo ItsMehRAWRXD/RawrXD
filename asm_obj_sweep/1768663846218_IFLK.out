@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(12) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(13) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(14) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(46) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(49) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(58) : error A2008:syntax error : main
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(58) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(26) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(28) : error A2006:undefined symbol : error
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(37) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(40) : error A2006:undefined symbol : error
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(44) : error A2006:undefined symbol : exit
+D:\rawrxd\history\all_versions\tests\masm\hello.asm\1768663846218_IFLK.asm(52) : error A2006:undefined symbol : ExitProcess

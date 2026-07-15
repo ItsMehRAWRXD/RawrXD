@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_scheduler.asm\1766358323379_JI8s.asm
+D:\rawrxd\history\all_versions\pifabric_scheduler.asm\1766358323379_JI8s.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_scheduler.asm\1766358323379_JI8s.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_scheduler.asm\1766358323379_JI8s.asm(32) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\pifabric_scheduler.asm\1766358323379_JI8s.asm(33) : error A2070:invalid instruction operands

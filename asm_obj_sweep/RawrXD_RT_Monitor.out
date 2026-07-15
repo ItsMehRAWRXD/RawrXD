@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\src\asm\RawrXD_RT_Monitor.asm
+D:\rawrxd\src\asm\RawrXD_RT_Monitor.asm(111) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\asm\RawrXD_RT_Monitor.asm(112) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\asm\RawrXD_RT_Monitor.asm(165) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\asm\RawrXD_RT_Monitor.asm(166) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\asm\RawrXD_RT_Monitor.asm(192) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\asm\RawrXD_RT_Monitor.asm(193) : warning A4026:.ENDPROLOG found before EH directives

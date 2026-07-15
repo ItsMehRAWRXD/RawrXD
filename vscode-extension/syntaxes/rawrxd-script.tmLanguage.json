@@ -1,0 +1,177 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "RawrXD-Script",
+  "scopeName": "source.rawrxd-script",
+  "fileTypes": [".rxs", ".rawrxd", ".rx"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#functions" },
+    { "include": "#operators" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.rawrxd-script",
+          "begin": "/\\*",
+          "end": "\\*/"
+        },
+        {
+          "name": "comment.line.double-slash.rawrxd-script",
+          "begin": "//",
+          "end": "$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.rawrxd-script",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.rawrxd-script",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.rawrxd-script",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.rawrxd-script",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.template.rawrxd-script",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.rawrxd-script",
+              "match": "\\\\."
+            },
+            {
+              "name": "variable.template-expression.rawrxd-script",
+              "begin": "\\$\\{",
+              "end": "\\}"
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.rawrxd-script",
+          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        },
+        {
+          "name": "constant.numeric.binary.rawrxd-script",
+          "match": "\\b0[bB][01]+\\b"
+        },
+        {
+          "name": "constant.numeric.octal.rawrxd-script",
+          "match": "\\b0[oO][0-7]+\\b"
+        },
+        {
+          "name": "constant.numeric.float.rawrxd-script",
+          "match": "\\b\\d+\\.\\d+([eE][+-]?\\d+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.rawrxd-script",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.rawrxd-script",
+          "match": "\\b(if|else|while|for|break|continue|switch|case|default|try|catch|finally|throw|return|with|debugger)\\b"
+        },
+        {
+          "name": "keyword.declaration.rawrxd-script",
+          "match": "\\b(var|let|const|function|class|extends|super|import|export|from|as|async|await|yield)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.rawrxd-script",
+          "match": "\\b(typeof|instanceof|in|of|void|delete|new)\\b"
+        },
+        {
+          "name": "constant.language.rawrxd-script",
+          "match": "\\b(true|false|null|undefined)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "meta.function.declaration.rawrxd-script",
+          "match": "\\b(function)\\s+([a-zA-Z_$][a-zA-Z0-9_$]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.function.rawrxd-script" },
+            "2": { "name": "entity.name.function.rawrxd-script" }
+          }
+        },
+        {
+          "name": "meta.method.declaration.rawrxd-script",
+          "match": "\\b(async\\s+)?([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*(\\(\\s*\\)|\\([^\\)]*\\))\\s*\\{",
+          "captures": {
+            "1": { "name": "keyword.declaration.async.rawrxd-script" },
+            "2": { "name": "entity.name.function.rawrxd-script" }
+          }
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.rawrxd-script",
+          "match": "(=|\\+=|-=|\\*=|/=|%=|\\^=|&=|\\|=|<<=|>>=|>>>=)"
+        },
+        {
+          "name": "keyword.operator.comparison.rawrxd-script",
+          "match": "(===|!==|==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.arithmetic.rawrxd-script",
+          "match": "(\\+|-|\\*|/|%|\\+\\+|--)"
+        },
+        {
+          "name": "keyword.operator.bitwise.rawrxd-script",
+          "match": "(&|\\||\\^|~|<<|>>|>>>)"
+        },
+        {
+          "name": "keyword.operator.logical.rawrxd-script",
+          "match": "(&&|\\|\\||!)"
+        },
+        {
+          "name": "keyword.operator.ternary.rawrxd-script",
+          "match": "(\\?|:)"
+        },
+        {
+          "name": "keyword.operator.spread.rawrxd-script",
+          "match": "(\\.\\.\\.)"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.readwrite.rawrxd-script",
+          "match": "[a-zA-Z_$][a-zA-Z0-9_$]*"
+        }
+      ]
+    }
+  }
+}

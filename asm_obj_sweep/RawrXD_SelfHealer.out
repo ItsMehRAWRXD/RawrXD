@@ -1,0 +1,46 @@
+ Assembling: D:\rawrxd\RawrXD_SelfHealer.asm
+D:\rawrxd\RawrXD_SelfHealer.asm(88) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(106) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(126) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(134) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(140) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(147) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(153) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(159) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(177) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(182) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(206) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\RawrXD_SelfHealer.asm(207) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\RawrXD_SelfHealer.asm(304) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(308) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(312) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(356) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(368) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(380) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_SelfHealer.asm(83) : error A2006:undefined symbol : quality_pass
+D:\rawrxd\RawrXD_SelfHealer.asm(86) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_SelfHealer.asm(89) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_SelfHealer.asm(90) : error A2006:undefined symbol : retry_exhausted
+D:\rawrxd\RawrXD_SelfHealer.asm(104) : error A2006:undefined symbol : log_ok
+D:\rawrxd\RawrXD_SelfHealer.asm(112) : error A2006:undefined symbol : recover_with_feedback
+D:\rawrxd\RawrXD_SelfHealer.asm(115) : error A2006:undefined symbol : recover_with_grammar_fix
+D:\rawrxd\RawrXD_SelfHealer.asm(118) : error A2006:undefined symbol : recover_with_context_boost
+D:\rawrxd\RawrXD_SelfHealer.asm(121) : error A2006:undefined symbol : recover_with_completion
+D:\rawrxd\RawrXD_SelfHealer.asm(124) : error A2006:undefined symbol : recover_with_temperature
+D:\rawrxd\RawrXD_SelfHealer.asm(132) : error A2006:undefined symbol : attempt_retry
+D:\rawrxd\RawrXD_SelfHealer.asm(138) : error A2006:undefined symbol : attempt_retry
+D:\rawrxd\RawrXD_SelfHealer.asm(145) : error A2006:undefined symbol : attempt_retry
+D:\rawrxd\RawrXD_SelfHealer.asm(151) : error A2006:undefined symbol : attempt_retry
+D:\rawrxd\RawrXD_SelfHealer.asm(156) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_SelfHealer.asm(164) : error A2006:undefined symbol : RawrXD_AgenticInference_ChainOfThought
+D:\rawrxd\RawrXD_SelfHealer.asm(171) : error A2006:undefined symbol : quality_pass
+D:\rawrxd\RawrXD_SelfHealer.asm(174) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_SelfHealer.asm(175) : error A2006:undefined symbol : retry_loop
+D:\rawrxd\RawrXD_SelfHealer.asm(293) : error A2006:undefined symbol : reason_low_quality
+D:\rawrxd\RawrXD_SelfHealer.asm(296) : error A2006:undefined symbol : reason_grammar
+D:\rawrxd\RawrXD_SelfHealer.asm(299) : error A2006:undefined symbol : reason_off_topic
+D:\rawrxd\RawrXD_SelfHealer.asm(350) : error A2006:undefined symbol : use_cache
+D:\rawrxd\RawrXD_SelfHealer.asm(370) : error A2006:undefined symbol : cache_done
+D:\rawrxd\RawrXD_SelfHealer.asm(375) : error A2006:undefined symbol : cache_done
+D:\rawrxd\RawrXD_SelfHealer.asm(378) : error A2006:undefined symbol : cache_loop
+D:\rawrxd\RawrXD_SelfHealer.asm(382) : error A2009:syntax error in expression

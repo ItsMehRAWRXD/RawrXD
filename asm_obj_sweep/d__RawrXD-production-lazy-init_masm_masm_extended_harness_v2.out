@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(107) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(180) : error A2008:syntax error : pConfig
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(291) : error A2008:syntax error : pConfig
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(141) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(163) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(205) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(229) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(285) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_masm_masm_extended_harness_v2.asm(288) : error A2022:instruction operands must be the same size

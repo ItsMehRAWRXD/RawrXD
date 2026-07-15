@@ -1,0 +1,175 @@
+# Prometheus Alert Rules for RawrXD Hotpatch System
+# Version: 1.0.0
+# Groups: hotpatch, security, compliance
+
+groups:
+  # Hotpatch System Alerts
+  - name: hotpatch
+    interval: 30s
+    rules:
+      # High patch failure rate
+      - alert: HotpatchHighFailureRate
+        expr: |
+          (
+            rate(rawrxd_patch_operations_total{status="failure"}[5m])
+            /
+            rate(rawrxd_patch_operations_total[5m])
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "High patch failure rate detected"
+          description: "Patch failure rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+          runbook_url: "https://docs.rawrxd.local/runbooks/emergency-rollback"
+
+      # Patch rollback occurred
+      - alert: HotpatchRollbackDetected
+        expr: increase(rawrxd_patch_rollback_total[1m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Patch rollback detected"
+          description: "A patch rollback was executed on {{ $labels.system }}"
+          action: "Review audit logs and verify system stability"
+
+      # Patch operation taking too long
+      - alert: HotpatchOperationSlow
+        expr: |
+          histogram_quantile(0.95, 
+            rate(rawrxd_patch_operation_duration_seconds_bucket[5m])
+          ) > 300
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Patch operations are slow"
+          description: "95th percentile patch operation time is {{ $value }}s"
+
+      # Backup creation failures
+      - alert: HotpatchBackupFailure
+        expr: rate(rawrxd_backup_creation_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Backup creation is failing"
+          description: "Backup failures detected - patch operations may be at risk"
+
+      # Registry corruption
+      - alert: HotpatchRegistryError
+        expr: rawrxd_registry_corrupted == 1
+        for: 0m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Patch registry is corrupted"
+          description: "Immediate action required - restore from backup"
+
+  # Security Alerts
+  - name: security
+    interval: 30s
+    rules:
+      # RBAC access denied spike
+      - alert: SecurityRBACDeniedSpike
+        expr: |
+          rate(rawrxd_rbac_access_denied_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High rate of RBAC denials"
+          description: "{{ $value }} access denials per second - possible attack or misconfiguration"
+
+      # Audit log write failures
+      - alert: SecurityAuditLogFailure
+        expr: rate(rawrxd_audit_log_write_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Audit log write failures"
+          description: "Cannot write to audit log - compliance violation in progress"
+
+      # Unauthorized patch attempt
+      - alert: SecurityUnauthorizedPatchAttempt
+        expr: increase(rawrxd_unauthorized_patch_attempts_total[1m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Unauthorized patch attempt detected"
+          description: "User {{ $labels.user }} attempted unauthorized patch on {{ $labels.system }}"
+          action: "Review immediately - possible security incident"
+
+      # Compliance score drop
+      - alert: SecurityComplianceScoreDrop
+        expr: |
+          rawrxd_compliance_score < 80
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Compliance score below threshold"
+          description: "Compliance score is {{ $value }}% (required: 80%)"
+
+  # System Health Alerts
+  - name: system
+    interval: 30s
+    rules:
+      # Service down
+      - alert: RawrXDServiceDown
+        expr: up{job=~"rawrxd-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "RawrXD service is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute"
+
+      # High error rate
+      - alert: RawrXDHighErrorRate
+        expr: |
+          rate(rawrxd_errors_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High error rate in RawrXD"
+          description: "Error rate is {{ $value }} errors per second"
+
+      # Memory usage high
+      - alert: RawrXDHighMemoryUsage
+        expr: |
+          (rawrxd_memory_usage_bytes / rawrxd_memory_limit_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # Disk space low
+      - alert: RawrXDLowDiskSpace
+        expr: |
+          (rawrxd_disk_free_bytes / rawrxd_disk_total_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is {{ $value | humanizePercentage }} free"

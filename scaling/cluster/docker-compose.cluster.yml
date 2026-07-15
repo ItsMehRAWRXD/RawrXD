@@ -1,0 +1,229 @@
+# RawrXD Multi-Node Cluster Docker Compose
+# Phase L.2 - Multi-Node Cluster Setup
+# Deploys a 4-node RawrXD cluster with shared storage
+
+version: '3.8'
+
+x-rawrxd-common: &rawrxd-common
+  image: rawrxd/sovereign:latest
+  environment:
+    - RAWRXD_MODE=cluster
+    - RAWRXD_LOG_LEVEL=INFO
+    - RAWRXD_METRICS_ENABLED=true
+    - RAWRXD_CLUSTER_ENABLED=true
+  volumes:
+    - shared_models:/app/models:ro
+    - cluster_data:/app/data
+  networks:
+    - rawrxd-cluster
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 30s
+  restart: unless-stopped
+
+services:
+  # Node 1 - Primary
+  rawrxd-node1:
+    <<: *rawrxd-common
+    container_name: rawrxd-node1
+    hostname: node1.rawrxd.local
+    ports:
+      - "8080:8080"
+      - "7946:7946"
+    environment:
+      - RAWRXD_NODE_ID=node1
+      - RAWRXD_NODE_ROLE=primary
+      - RAWRXD_NODE_ADDRESS=node1.rawrxd.local
+      - RAWRXD_CLUSTER_PORT=7946
+      - RAWRXD_CLUSTER_SEED=true
+      - RAWRXD_GPU_DEVICE=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    labels:
+      - "rawrxd.node.role=primary"
+      - "rawrxd.node.weight=5"
+
+  # Node 2 - Primary
+  rawrxd-node2:
+    <<: *rawrxd-common
+    container_name: rawrxd-node2
+    hostname: node2.rawrxd.local
+    ports:
+      - "8081:8080"
+    environment:
+      - RAWRXD_NODE_ID=node2
+      - RAWRXD_NODE_ROLE=primary
+      - RAWRXD_NODE_ADDRESS=node2.rawrxd.local
+      - RAWRXD_CLUSTER_JOIN=node1.rawrxd.local:7946
+      - RAWRXD_GPU_DEVICE=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    labels:
+      - "rawrxd.node.role=primary"
+      - "rawrxd.node.weight=5"
+    depends_on:
+      rawrxd-node1:
+        condition: service_healthy
+
+  # Node 3 - Backup
+  rawrxd-node3:
+    <<: *rawrxd-common
+    container_name: rawrxd-node3
+    hostname: node3.rawrxd.local
+    ports:
+      - "8082:8080"
+    environment:
+      - RAWRXD_NODE_ID=node3
+      - RAWRXD_NODE_ROLE=backup
+      - RAWRXD_NODE_ADDRESS=node3.rawrxd.local
+      - RAWRXD_CLUSTER_JOIN=node1.rawrxd.local:7946
+      - RAWRXD_GPU_DEVICE=2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    labels:
+      - "rawrxd.node.role=backup"
+      - "rawrxd.node.weight=3"
+    depends_on:
+      rawrxd-node1:
+        condition: service_healthy
+
+  # Node 4 - Backup
+  rawrxd-node4:
+    <<: *rawrxd-common
+    container_name: rawrxd-node4
+    hostname: node4.rawrxd.local
+    ports:
+      - "8083:8080"
+    environment:
+      - RAWRXD_NODE_ID=node4
+      - RAWRXD_NODE_ROLE=backup
+      - RAWRXD_NODE_ADDRESS=node4.rawrxd.local
+      - RAWRXD_CLUSTER_JOIN=node1.rawrxd.local:7946
+      - RAWRXD_GPU_DEVICE=3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    labels:
+      - "rawrxd.node.role=backup"
+      - "rawrxd.node.weight=3"
+    depends_on:
+      rawrxd-node1:
+        condition: service_healthy
+
+  # Load Balancer
+  nginx-lb:
+    image: nginx:alpine
+    container_name: rawrxd-lb
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx_rawrxd.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - rawrxd-cluster
+    depends_on:
+      - rawrxd-node1
+      - rawrxd-node2
+      - rawrxd-node3
+      - rawrxd-node4
+    restart: unless-stopped
+
+  # Cluster Manager
+  cluster-manager:
+    image: rawrxd/cluster-manager:latest
+    container_name: rawrxd-cluster-manager
+    environment:
+      - CLUSTER_NAME=rawrxd-cluster
+      - CLUSTER_NODES=node1.rawrxd.local,node2.rawrxd.local,node3.rawrxd.local,node4.rawrxd.local
+      - HEARTBEAT_INTERVAL=5
+      - FAILOVER_TIMEOUT=30
+    volumes:
+      - cluster_data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - rawrxd-cluster
+    depends_on:
+      - rawrxd-node1
+    restart: unless-stopped
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rawrxd-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - rawrxd-cluster
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rawrxd-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - rawrxd-cluster
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=rawrxd_admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+
+volumes:
+  shared_models:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=nfs-server,rw
+      device: ":/exports/models"
+  cluster_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  rawrxd-cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

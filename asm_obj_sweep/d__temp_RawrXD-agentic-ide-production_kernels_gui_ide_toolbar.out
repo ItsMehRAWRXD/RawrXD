@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(77) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(83) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(84) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(168) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(171) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(90) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(91) : error A2006:undefined symbol : TBSTYLE_BUTTON
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(98) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(99) : error A2006:undefined symbol : TBSTYLE_BUTTON
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(106) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(107) : error A2006:undefined symbol : TBSTYLE_BUTTON
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(114) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(115) : error A2006:undefined symbol : TBSTYLE_SEP
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(122) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(123) : error A2006:undefined symbol : TBSTYLE_BUTTON
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(130) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(131) : error A2006:undefined symbol : TBSTYLE_BUTTON
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(138) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(139) : error A2006:undefined symbol : TBSTYLE_SEP
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(146) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(147) : error A2006:undefined symbol : TBSTYLE_BUTTON
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(154) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(155) : error A2006:undefined symbol : TBSTYLE_BUTTON
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(162) : error A2006:undefined symbol : TBSTATE_ENABLED
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_kernels_gui_ide_toolbar.asm(163) : error A2006:undefined symbol : TBSTYLE_BUTTON

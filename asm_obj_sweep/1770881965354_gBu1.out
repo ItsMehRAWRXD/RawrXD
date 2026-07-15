@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770881965354_gBu1.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770881965354_gBu1.asm(1170) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770881965354_gBu1.asm(1177) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770881965354_gBu1.asm(486) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Camellia256.asm\1770881965354_gBu1.asm(487) : error A2026:constant expected

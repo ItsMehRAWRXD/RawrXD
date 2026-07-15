@@ -1,0 +1,95 @@
+ Assembling: D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(61) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(83) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(291) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(367) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(374) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(385) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(386) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(400) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(411) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(452) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(469) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(475) : error A2008:syntax error : SetFilePointerEx
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(481) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(525) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(531) : error A2008:syntax error : SetFilePointerEx
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(543) : error A2008:syntax error : SetFilePointerEx
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(569) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(596) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(606) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(616) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(622) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(632) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(638) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(667) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(744) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(761) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(790) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(821) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(832) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(842) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(848) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(851) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(873) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(907) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(948) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(991) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1033) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1075) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1120) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1158) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1161) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1162) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1167) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1170) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1171) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(1176) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(306) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(320) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(326) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(332) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(338) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(344) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(388) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(408) : error A2006:undefined symbol : magic
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(414) : error A2006:undefined symbol : magic
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(415) : error A2006:undefined symbol : GGUF_MAGIC
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(419) : error A2006:undefined symbol : version
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(423) : error A2006:undefined symbol : tensor_count
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(590) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(593) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(599) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(607) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(613) : error A2006:undefined symbol : dtype
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(619) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(625) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(629) : error A2006:undefined symbol : shape
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(635) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(676) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(703) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(704) : error A2006:undefined symbol : unknown_layers
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(708) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(709) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(712) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(716) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(717) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(720) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(724) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(725) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(729) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(730) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(760) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(769) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(770) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(771) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(772) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(773) : error A2006:undefined symbol : layer_count
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(800) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(834) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(839) : error A2006:undefined symbol : exec_header
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(881) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(882) : error A2006:undefined symbol : shape
+D:\rawrxd\history\runoff\part_0005\c__Users_HiH8e_OneDrive_Desktop_RawrXD-AnalyzerDistiller-Fixed.asm(896) : error A2006:undefined symbol : param_count

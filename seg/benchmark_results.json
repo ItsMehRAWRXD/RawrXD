@@ -1,0 +1,12 @@
+{
+  "tokens_per_sec": 1.5e+07,
+  "avg_latency_ms": 6.66667e-05,
+  "vs_llamacpp_ratio": 500000,
+  "peak_memory_mb": 5000,
+  "components": {
+    "embedding": {"time_ms": 0.000333333},
+    "attention": {"time_ms": 1574.63},
+    "ffn": {"time_ms": 14732},
+    "sampling": {"time_ms": 201.393}
+  }
+}

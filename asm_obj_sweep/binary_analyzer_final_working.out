@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\binary_analyzer_final_working.asm
+D:\rawrxd\src\binary_analyzer_final_working.asm(15) : fatal error A1000:cannot open file : user32.inc

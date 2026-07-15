@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0006\d__CodexReverseEngine_CodexUltimate.asm
+D:\rawrxd\history\runoff\part_0006\d__CodexReverseEngine_CodexUltimate.asm(24) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0006\d__CodexReverseEngine_CodexUltimate.asm(27) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

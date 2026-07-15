@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(31) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(32) : error A2008:syntax error : server_addr
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(33) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(34) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(35) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(38) : error A2008:syntax error : url_buffer
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(39) : error A2008:syntax error : url_buffer_size
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(40) : error A2008:syntax error : parsed_host
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(41) : error A2008:syntax error : parsed_path
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(42) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(43) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(46) : error A2008:syntax error : download_buffer
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(47) : error A2008:syntax error : download_buffer_size
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(48) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(49) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(52) : error A2008:syntax error : archive_buffer
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(53) : error A2008:syntax error : archive_buffer_size
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(54) : error A2008:syntax error : extracted_files
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(55) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(58) : error A2008:syntax error : project_name
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(59) : error A2008:syntax error : project_path
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(60) : error A2008:syntax error : project_files
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(61) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(64) : error A2008:syntax error : error_message
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(65) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(66) : error A2008:syntax error : last_operation
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(68) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(69) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(70) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(71) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(72) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(73) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(74) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(75) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(76) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(77) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(79) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(80) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(81) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(84) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(85) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(86) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(87) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(90) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(91) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(92) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(93) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(94) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(97) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(99) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(100) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(102) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(103) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(104) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(111) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(112) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(115) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(116) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(117) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(120) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(121) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(122) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(126) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(127) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(130) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(131) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(132) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(134) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(135) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(137) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(138) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(140) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(141) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(142) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(144) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(145) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(146) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(153) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(154) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(157) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(158) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(159) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(162) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(163) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(164) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(167) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(168) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(169) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(171) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(172) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(174) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(175) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(177) : error A2008:syntax error : .
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(178) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(179) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\n0mn0m_url_import_export.asm(181) : fatal error A1012:error count exceeds 100; stopping assembly

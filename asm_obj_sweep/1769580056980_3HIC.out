@@ -1,0 +1,116 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(321) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(323) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(326) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(331) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(356) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(383) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(385) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(387) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(392) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(395) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(398) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(399) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(411) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(445) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(446) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(459) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(463) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(474) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(475) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(499) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(506) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(519) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(541) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(549) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(699) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(704) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(746) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(749) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(791) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(800) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1299) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1305) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1306) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1315) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1364) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1373) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1384) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1406) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1409) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1419) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1421) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1423) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1448) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1451) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1483) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1485) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1494) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1498) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1523) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1524) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1639) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1647) : error A2008:syntax error : CryptDecodeObjectEx
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1659) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1667) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1671) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1672) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1680) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1684) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1685) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1704) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1705) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1708) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1710) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1711) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1713) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1715) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1716) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1719) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1732) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1739) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1743) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1744) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1748) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1754) : error A2008:syntax error : main
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1754) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(553) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(922) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(556) : warning A6004:procedure argument or local not referenced : dwMax
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(753) : warning A6004:procedure argument or local not referenced : hFileOut
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(962) : warning A6004:procedure argument or local not referenced : lpBuffer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1323) : warning A6004:procedure argument or local not referenced : lpOutputPath
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1323) : warning A6004:procedure argument or local not referenced : dwWritten
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1392) : warning A6004:procedure argument or local not referenced : lpFilePath
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1392) : warning A6004:procedure argument or local not referenced : dwHashType
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1392) : warning A6004:procedure argument or local not referenced : bBuffer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1457) : warning A6004:procedure argument or local not referenced : lpFile1
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1457) : warning A6004:procedure argument or local not referenced : lpFile2
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1505) : warning A6004:procedure argument or local not referenced : szFullPath
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1528) : warning A6004:procedure argument or local not referenced : i
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1528) : warning A6004:procedure argument or local not referenced : j
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1528) : warning A6004:procedure argument or local not referenced : dwMatchCount
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1528) : warning A6004:procedure argument or local not referenced : dwRuleCount
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1541) : warning A6004:procedure argument or local not referenced : pRule
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : dwCertEncoding
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : dwContentType
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : dwFormatType
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : szCertName
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : szCertIssuer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : szCertDate
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : stNotBefore
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580056980_3HIC.asm(1752) : warning A6004:procedure argument or local not referenced : stNotAfter

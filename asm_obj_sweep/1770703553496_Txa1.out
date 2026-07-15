@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703553496_Txa1.asm
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703553496_Txa1.asm(927) : error A2006:undefined symbol : CovFusionMode
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703553496_Txa1.asm(1020) : error A2006:undefined symbol : CovFusionMode

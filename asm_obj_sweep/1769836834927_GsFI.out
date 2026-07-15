@@ -1,0 +1,78 @@
+ Assembling: D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(27) : error A2008:syntax error : mask
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(572) : error A2068:instruction prefix not allowed
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(40) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(40) : error A2036:too many initial values for structure
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(41) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(42) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(43) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(44) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(45) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(46) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(47) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(48) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(49) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(50) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(51) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(52) : error A2138:invalid data initializer
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(108) : error A2006:undefined symbol : GetCurrentProcess
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(134) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(135) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(137) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(150) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(151) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(153) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(263) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1078) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1081) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1082) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1084) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1098) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1102) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1144) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1153) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(174) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(235) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(298) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(323) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(359) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(400) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(442) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(456) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(467) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(501) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(512) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(537) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(551) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(612) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(628) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(638) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(699) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(714) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(729) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(749) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(777) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(818) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(850) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(855) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(860) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(879) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(884) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(914) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(925) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(934) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(947) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(962) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(967) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(978) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(983) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1052) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1058) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1066) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1114) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1120) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\deobf\RawrXD_OmegaDeobfuscator.asm\1769836834927_GsFI.asm(1160) : error A2220:Missing .ENDPROLOG

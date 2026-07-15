@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\RawrXD\itsmehrawrxd-master\bare\metal\assembler.asm
+D:\rawrxd\.archive\reconstructed\RawrXD\itsmehrawrxd-master\bare\metal\assembler.asm(8) : error A2008:syntax error : win64
+D:\rawrxd\.archive\reconstructed\RawrXD\itsmehrawrxd-master\bare\metal\assembler.asm(9) : error A2008:syntax error : frame
+D:\rawrxd\.archive\reconstructed\RawrXD\itsmehrawrxd-master\bare\metal\assembler.asm(251) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\RawrXD\itsmehrawrxd-master\bare\metal\assembler.asm(278) : error A2008:syntax error : .
+ ALIGN_FILE(11): Macro Called From
+  D:\rawrxd\.archive\reconstructed\RawrXD\itsmehrawrxd-master\bare\metal\assembler.asm(278): Main Line Code
+D:\rawrxd\.archive\reconstructed\RawrXD\itsmehrawrxd-master\bare\metal\assembler.asm(281) : fatal error A1010:unmatched block nesting : build_dos_header

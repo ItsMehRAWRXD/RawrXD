@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770496346297_e4bH.asm
+D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770496346297_e4bH.asm(99) : error A2008:syntax error : FLAT
+D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770496346297_e4bH.asm(102) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770496346297_e4bH.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770496346297_e4bH.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770496346297_e4bH.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770496346297_e4bH.asm(111) : fatal error A1010:unmatched block nesting : _DATA64

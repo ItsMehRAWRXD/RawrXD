@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(83) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(88) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(44) : error A2006:undefined symbol : test_fail
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(47) : error A2006:undefined symbol : szTestReadFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(51) : error A2006:undefined symbol : test_fail
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(54) : error A2006:undefined symbol : szTestWriteFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(58) : error A2006:undefined symbol : test_fail
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(61) : error A2006:undefined symbol : szTestPlan
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(65) : error A2006:undefined symbol : test_fail
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(68) : error A2006:undefined symbol : szTestStartServer
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(72) : error A2006:undefined symbol : test_fail
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_test_universal_dispatcher.asm(81) : error A2006:undefined symbol : test_done

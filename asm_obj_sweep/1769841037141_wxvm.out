@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm(59) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm(108) : error A2006:undefined symbol : blkOffset
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm(109) : error A2006:undefined symbol : blkSize
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm(110) : error A2006:undefined symbol : Flags
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm(122) : error A2006:undefined symbol : Flags
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm(222) : error A2006:undefined symbol : Flags
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769841037141_wxvm.asm(412) : error A2081:missing operand after unary operator

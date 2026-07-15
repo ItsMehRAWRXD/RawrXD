@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\agentic\tools.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\agentic\tools.asm(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\agentic\tools.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\agentic\tools.asm(179) : error A2008:syntax error : esi
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\agentic\tools.asm(190) : fatal error A1010:unmatched block nesting : StringLength

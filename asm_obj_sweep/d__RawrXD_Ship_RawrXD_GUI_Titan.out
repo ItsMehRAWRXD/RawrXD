@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__RawrXD_Ship_RawrXD_GUI_Titan.asm
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_Ship_RawrXD_GUI_Titan.asm(752) : warning A6004:procedure argument or local not referenced : hWnd
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_Ship_RawrXD_GUI_Titan.asm(752) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_Ship_RawrXD_GUI_Titan.asm(752) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\runoff\part_0011\d__RawrXD_Ship_RawrXD_GUI_Titan.asm(752) : warning A6004:procedure argument or local not referenced : lParam

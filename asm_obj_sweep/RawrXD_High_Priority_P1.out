@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(12) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(13) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(14) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(15) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(16) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(17) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(90) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(375) : error A2005:symbol redefinition : KERNEL_PREFETCH
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(377) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(379) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\agentic\RawrXD_High_Priority_P1.asm(428) : fatal error A1010:unmatched block nesting : KERNEL_PREFETCH

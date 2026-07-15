@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(398) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(429) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(444) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(452) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(460) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(468) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(484) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(511) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(669) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(670) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(445) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(453) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(461) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(469) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(697) : error A2006:undefined symbol : hdd_path
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(702) : error A2006:undefined symbol : hdd_path
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(719) : error A2006:undefined symbol : hdd_file_size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(724) : error A2006:undefined symbol : hdd_file_handle
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(729) : error A2006:undefined symbol : io_completion_port
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(735) : error A2006:undefined symbol : slot_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(740) : error A2006:undefined symbol : slots
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(747) : error A2006:undefined symbol : slot_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(788) : error A2006:undefined symbol : shutdown_event
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(791) : error A2006:undefined symbol : io_thread_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769589562044_FYWJ.asm(808) : error A2006:undefined symbol : io_threads

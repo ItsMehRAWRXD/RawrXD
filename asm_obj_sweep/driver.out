@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm(48) : error A2008:syntax error : mask
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm(69) : error A2008:syntax error : label
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm(220) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm(446) : error A2088:END directive required at end of file
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm(140) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm(147) : error A2006:undefined symbol : IDC_FILE_TREE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\file\tree\driver.asm(247) : error A2022:instruction operands must be the same size

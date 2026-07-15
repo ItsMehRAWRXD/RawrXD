@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246474083_BY8D.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246474083_BY8D.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\terraform.asm\1771246474083_BY8D.asm(246) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246474083_BY8D.asm(359) : fatal error A1010:unmatched block nesting : memcmp

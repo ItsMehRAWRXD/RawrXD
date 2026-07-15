@@ -1,0 +1,43 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(333) : error A2070:invalid instruction operands
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(420) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(423) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(425) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(26) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(34) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(40) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(54) : error A2006:undefined symbol : InitializeCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(99) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(116) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(125) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(131) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(153) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(159) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(164) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(165) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(170) : error A2006:undefined symbol : CopyFileA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(174) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(175) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(184) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(201) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(207) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(212) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(224) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(235) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(254) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(263) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(266) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(279) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(285) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(290) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(302) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(308) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(323) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(339) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(350) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(368) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(371) : error A2006:undefined symbol : GetFileAttributesA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(383) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(384) : error A2206:missing operator in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(389) : error A2006:undefined symbol : CopyFileA
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\session\management.asm(394) : error A2206:missing operator in expression

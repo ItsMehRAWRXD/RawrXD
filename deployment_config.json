@@ -1,0 +1,9 @@
+{
+  "Mode": "Physical",
+  "Description": "Physical 8-node cluster (192.168.1.10-17)",
+  "UpdatedAt": "2026-06-30 20:53:54",
+  "ConfigBasePath": "C:\\Sovereign",
+  "RemoteExecution": true,
+  "NodeCount": 8,
+  "BinaryPath": "C:\\Sovereign\\bin"
+}

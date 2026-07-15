@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(200) : error A2008:syntax error : IF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(204) : error A2008:syntax error : ELSEIF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(208) : error A2008:syntax error : ELSEIF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(212) : error A2008:syntax error : ELSEIF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(216) : error A2008:syntax error : ELSEIF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(221) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(225) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(256) : error A2044:invalid character in file
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(259) : error A2008:syntax error : IF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(261) : error A2008:syntax error : ELSEIF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(263) : error A2008:syntax error : ELSEIF
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(265) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(267) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_MASM_Editor_MLCompletion.asm(270) : error A2008:syntax error : .

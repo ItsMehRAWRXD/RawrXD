@@ -1,0 +1,81 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(354) : error A2005:symbol redefinition : g_infinity_stream
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(356) : error A2005:symbol redefinition : g_task_scheduler
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(358) : error A2005:symbol redefinition : g_conflict_detector
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(466) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(474) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(482) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(490) : error A2006:undefined symbol : status_lock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(718) : error A2006:undefined symbol : hdd_path
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(723) : error A2006:undefined symbol : hdd_path
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(740) : error A2006:undefined symbol : hdd_file_size
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(745) : error A2006:undefined symbol : hdd_file_handle
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(750) : error A2006:undefined symbol : io_completion_port
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(756) : error A2006:undefined symbol : slot_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(761) : error A2006:undefined symbol : slots
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(768) : error A2006:undefined symbol : slot_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(809) : error A2006:undefined symbol : shutdown_event
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(812) : error A2006:undefined symbol : io_thread_count
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(829) : error A2006:undefined symbol : io_threads
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1123) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(582) : warning A4025:ENDP found before .ENDPROLOG : InitCRC32Table
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(582) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(582) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(660) : warning A4025:ENDP found before .ENDPROLOG : Infinity_ClassifyModel
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(675) : warning A4025:ENDP found before .ENDPROLOG : Infinity_GetSlotCount
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(963) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_IOThreadProc
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1048) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_CheckQuadBuffer
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1207) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_RotateBuffers
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1207) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1207) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1238) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_HandleYTfnTrap
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1238) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1238) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1312) : warning A4025:ENDP found before .ENDPROLOG : INFINITY_Shutdown
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1312) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1312) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1421) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1421) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1421) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1504) : warning A4025:ENDP found before .ENDPROLOG : WorkerThreadProc
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1504) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1504) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1567) : warning A4025:ENDP found before .ENDPROLOG : Worker_GetWork
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1567) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1567) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1600) : warning A4025:ENDP found before .ENDPROLOG : Worker_PopLocal
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1600) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1600) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1662) : warning A4025:ENDP found before .ENDPROLOG : Worker_StealFrom
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1662) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1662) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1765) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_SubmitTask
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1765) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1765) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1795) : warning A4025:ENDP found before .ENDPROLOG : Scheduler_PopGlobal
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1795) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1795) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1872) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1872) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1872) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1917) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_RegisterResource
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1917) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(1917) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2034) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_LockResource
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2034) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2034) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2074) : warning A4025:ENDP found before .ENDPROLOG : ConflictDetector_CheckDeadlock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2074) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2074) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2145) : warning A4025:ENDP found before .ENDPROLOG : DFS_Deadlock
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2145) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2145) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2185) : warning A4025:ENDP found before .ENDPROLOG : DeadlockDetectionThread
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2185) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2185) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2308) : warning A4025:ENDP found before .ENDPROLOG : Heartbeat_Initialize
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2308) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2308) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2386) : warning A4025:ENDP found before .ENDPROLOG : HeartbeatSendThread
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2386) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Explicit.asm\1769586973351_hM2z.asm(2386) : error A2220:Missing .ENDPROLOG

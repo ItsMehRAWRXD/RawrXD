@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275879251_UK6B.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275879251_UK6B.asm(521) : error A2006:undefined symbol : RelayUnwind
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275879251_UK6B.asm(490) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275879251_UK6B.asm(523) : error A2006:undefined symbol : EXCEPTION_CONTINUE_EXECUTION
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275879251_UK6B.asm(525) : warning A4025:ENDP found before .ENDPROLOG : RelaySEHHandler
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275879251_UK6B.asm(525) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275879251_UK6B.asm(525) : error A2220:Missing .ENDPROLOG

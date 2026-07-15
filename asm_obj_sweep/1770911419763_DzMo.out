@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(392) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(409) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(417) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(456) : error A2006:undefined symbol : q5k_shift_even
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(458) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(473) : error A2006:undefined symbol : q5k_shift_odd
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(475) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(490) : error A2006:undefined symbol : q5k_shift_even
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(492) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(506) : error A2006:undefined symbol : q5k_shift_odd
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(508) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(728) : error A2006:undefined symbol : q2k_shifts
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(730) : error A2006:undefined symbol : mask_03_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911419763_DzMo.asm(742) : error A2006:undefined symbol : mask_03_dw

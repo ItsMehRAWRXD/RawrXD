@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\kernels\sovereign_avx512_tres.asm
+D:\rawrxd\src\kernels\sovereign_avx512_tres.asm(63) : error A2206:missing operator in expression
+D:\rawrxd\src\kernels\sovereign_avx512_tres.asm(65) : error A2206:missing operator in expression
+D:\rawrxd\src\kernels\sovereign_avx512_tres.asm(143) : error A2206:missing operator in expression

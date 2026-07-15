@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769489408806_X8x4.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769489408806_X8x4.asm(32) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769489408806_X8x4.asm(38) : error A2006:undefined symbol : PropertyId
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769489408806_X8x4.asm(39) : error A2006:undefined symbol : QueryType
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769489408806_X8x4.asm(51) : error A2006:undefined symbol : DeviceIoControl
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769489408806_X8x4.asm(65) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\direct_io\nvme_query.asm\1769489408806_X8x4.asm(75) : error A2006:undefined symbol : CloseHandle

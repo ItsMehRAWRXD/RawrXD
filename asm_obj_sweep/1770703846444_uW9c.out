@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm(5728) : error A2005:symbol redefinition : bbgen_append_entry
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm(5641) : error A2006:undefined symbol : JSON_REPORT_SAFETY
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm(6616) : error A2006:undefined symbol : JSONReportBuffer
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm(6621) : error A2006:undefined symbol : JSONReportBuffer
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm(6673) : error A2006:undefined symbol : JSONReportBuffer
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm(6677) : error A2006:undefined symbol : JSON_REPORT_MAX
+D:\rawrxd\history\all_versions\RawrXD_IDE_unified.asm\1770703846444_uW9c.asm(6830) : error A2006:undefined symbol : JSON_REPORT_SAFETY

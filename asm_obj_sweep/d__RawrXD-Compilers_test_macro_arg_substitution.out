@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(7) : error A2008:syntax error : BITS
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(9) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(10) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(11) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(12) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(14) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(15) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(19) : error A2008:syntax error : test_basic_args
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(22) : error A2008:syntax error : test_arg_count
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(25) : error A2008:syntax error : test_variadic
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(28) : error A2008:syntax error : test_defaults
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(31) : error A2008:syntax error : test_brace_args
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(34) : error A2008:syntax error : test_nested
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(37) : error A2008:syntax error : test_empty_args
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(40) : error A2008:syntax error : test_max_params
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(45) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(50) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(54) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(57) : error A2008:syntax error : rax
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(58) : error A2008:syntax error : rdx
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(59) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(64) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(67) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(69) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(72) : error A2008:syntax error : ARGCOUNT
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(73) : error A2008:syntax error : ARGCOUNT
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(74) : error A2008:syntax error : ARGCOUNT
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(80) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(84) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(86) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(88) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(91) : error A2008:syntax error : rep
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(93) : error A2008:syntax error : rotate
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(94) : error A2008:syntax error : endrep
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(95) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(97) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(98) : error A2008:syntax error : CALL_WITH_ARGS
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(99) : error A2008:syntax error : rax
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(105) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(110) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(112) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(119) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(122) : error A2008:syntax error : PROLOGUE
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(123) : error A2008:syntax error : rax
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(125) : error A2008:syntax error : rcx
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(126) : error A2008:syntax error : rdx
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(127) : error A2008:syntax error : rsi
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(133) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(136) : error A2008:syntax error : integer
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(137) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(141) : error A2008:syntax error : ARRAY_INIT
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(145) : error A2008:syntax error : ARRAY_INIT
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(151) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(153) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(155) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(156) : error A2008:syntax error : INNER
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(158) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(161) : error A2008:syntax error : rax
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(165) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(170) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(173) : error A2008:syntax error : endmacro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(175) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(176) : error A2008:syntax error : rax
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(177) : error A2008:syntax error : rcx
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(178) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(183) : error A2008:syntax error : macro
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(185) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(186) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(187) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(188) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(189) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(190) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(191) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(192) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(193) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_test_macro_arg_substitution.asm(194) : fatal error A1012:error count exceeds 100; stopping assembly

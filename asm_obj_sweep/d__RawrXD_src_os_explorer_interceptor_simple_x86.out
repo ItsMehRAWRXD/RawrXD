@@ -1,0 +1,84 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(20) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(38) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(54) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(64) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(65) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(68) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(81) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(91) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(92) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(96) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(103) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(108) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(109) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(115) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(145) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(158) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(181) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(193) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(197) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(203) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(213) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(217) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(233) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(243) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(247) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(253) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(254) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(281) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(282) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(283) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(286) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(293) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(294) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(301) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(309) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(387) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(36) : error A2006:undefined symbol : g_hInstance
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(39) : error A2006:undefined symbol : DisableThreadLibraryCalls
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(71) : error A2006:undefined symbol : OpenProcess
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(82) : error A2006:undefined symbol : VirtualAllocEx
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(90) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(93) : error A2006:undefined symbol : WriteProcessMemory
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(97) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(104) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(118) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(122) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(128) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(131) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(134) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(159) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(163) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(164) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(167) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(168) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(169) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(170) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(185) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(190) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(191) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(192) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(194) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(206) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(210) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(211) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(212) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(214) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(236) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(240) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(241) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(242) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(244) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(263) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(264) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(280) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(284) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(287) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(325) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(343) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(344) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(56) : warning A6004:procedure argument or local not referenced : lpvReserved
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_os_explorer_interceptor_simple_x86.asm(355) : warning A6004:procedure argument or local not referenced : lpParam

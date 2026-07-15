@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\-15f58ea9\ksZw.asm
+D:\rawrxd\history\-15f58ea9\ksZw.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-15f58ea9\ksZw.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-15f58ea9\ksZw.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\-15f58ea9\ksZw.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\-15f58ea9\ksZw.asm(51) : error A2008:syntax error : width
+D:\rawrxd\history\-15f58ea9\ksZw.asm(133) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\-15f58ea9\ksZw.asm(635) : error A2070:invalid instruction operands
+D:\rawrxd\history\-15f58ea9\ksZw.asm(636) : error A2070:invalid instruction operands
+D:\rawrxd\history\-15f58ea9\ksZw.asm(817) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(818) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(819) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(820) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(821) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(822) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(823) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(824) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(825) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(826) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(827) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(828) : error A2008:syntax error : [
+D:\rawrxd\history\-15f58ea9\ksZw.asm(852) : error A2070:invalid instruction operands
+D:\rawrxd\history\-15f58ea9\ksZw.asm(893) : fatal error A1008:unmatched macro nesting

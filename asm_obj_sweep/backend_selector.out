@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\src\backend_selector.asm
+D:\rawrxd\src\backend_selector.asm(28) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\backend_selector.asm(61) : error A2006:undefined symbol : BACKEND_VULKAN
+D:\rawrxd\src\backend_selector.asm(67) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\src\backend_selector.asm(78) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\src\backend_selector.asm(87) : error A2206:missing operator in expression
+D:\rawrxd\src\backend_selector.asm(91) : error A2206:missing operator in expression
+D:\rawrxd\src\backend_selector.asm(93) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\src\backend_selector.asm(142) : error A2006:undefined symbol : BACKEND_VULKAN
+D:\rawrxd\src\backend_selector.asm(144) : error A2006:undefined symbol : VulkanInferenceEngine_Initialize
+D:\rawrxd\src\backend_selector.asm(147) : error A2006:undefined symbol : BACKEND_VULKAN
+D:\rawrxd\src\backend_selector.asm(204) : error A2006:undefined symbol : BACKEND_VULKAN
+D:\rawrxd\src\backend_selector.asm(225) : error A2006:undefined symbol : FreeLibrary
+D:\rawrxd\src\backend_selector.asm(231) : error A2006:undefined symbol : FreeLibrary
+D:\rawrxd\src\backend_selector.asm(237) : error A2006:undefined symbol : CloseHandle

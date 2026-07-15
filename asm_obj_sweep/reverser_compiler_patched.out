@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\reverser_compiler\reverser_compiler_patched.asm
+D:\rawrxd\src\reverse_engineering\reverser_compiler\reverser_compiler_patched.asm(1) : error A2008:syntax error : global
+D:\rawrxd\src\reverse_engineering\reverser_compiler\reverser_compiler_patched.asm(2) : fatal error A1009:line too long

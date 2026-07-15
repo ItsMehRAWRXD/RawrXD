@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-1ce0daba\3znd.asm
+D:\rawrxd\history\-1ce0daba\3znd.asm(383) : warning A6004:procedure argument or local not referenced : fdwCtrlType
+D:\rawrxd\history\-1ce0daba\3znd.asm(483) : warning A6004:procedure argument or local not referenced : status

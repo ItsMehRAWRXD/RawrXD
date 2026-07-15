@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\rawrxd_lsp_bridge.asm
+D:\rawrxd\src\rawrxd_lsp_bridge.asm(6) : fatal error A1000:cannot open file : macamd64.inc

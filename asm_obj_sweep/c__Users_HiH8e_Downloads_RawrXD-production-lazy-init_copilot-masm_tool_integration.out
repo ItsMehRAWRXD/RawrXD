@@ -1,0 +1,52 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(52) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(56) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(99) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(102) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(114) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(28) : error A2006:undefined symbol : g_toolRegistry
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(30) : error A2006:undefined symbol : Vector_Push
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(45) : error A2006:undefined symbol : JsonExtractString
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(48) : error A2006:undefined symbol : g_toolRegistry
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(50) : error A2006:undefined symbol : ToolRegistry_Find
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(58) : error A2006:undefined symbol : toolFunc
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(64) : error A2006:undefined symbol : JsonExtractObject
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(68) : error A2006:undefined symbol : toolFunc
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(73) : error A2006:undefined symbol : pToolCallId
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(75) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(90) : error A2006:undefined symbol : JsonExtractString
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(94) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(97) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(104) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(107) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(109) : error A2006:undefined symbol : GetFileSizeEx
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(111) : error A2006:undefined symbol : fileSize
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(116) : error A2006:undefined symbol : HEAP_ZERO_MEMORY
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(117) : error A2006:undefined symbol : fileSize
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(118) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(123) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(125) : error A2006:undefined symbol : fileSize
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(127) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(130) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(131) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(134) : error A2006:undefined symbol : resultBuffer
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(137) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(140) : error A2006:undefined symbol : hHeap
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(142) : error A2006:undefined symbol : HeapFree
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(144) : error A2006:undefined symbol : resultBuffer
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(12) : error A2047:empty (null) string
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(79) : warning A6004:procedure argument or local not referenced : toolName
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(79) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(146) : warning A6004:procedure argument or local not referenced : filePath
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(154) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(154) : warning A6004:procedure argument or local not referenced : filePath
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(154) : warning A6004:procedure argument or local not referenced : pContent
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(163) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(163) : warning A6004:procedure argument or local not referenced : pattern
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(163) : warning A6004:procedure argument or local not referenced : path
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(163) : warning A6004:procedure argument or local not referenced : pResults
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(171) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(171) : warning A6004:procedure argument or local not referenced : commandLine
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(171) : warning A6004:procedure argument or local not referenced : pOutput
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(176) : warning A6004:procedure argument or local not referenced : pParams
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_tool_integration.asm(181) : warning A6004:procedure argument or local not referenced : pParams

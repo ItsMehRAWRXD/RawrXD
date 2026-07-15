@@ -1,0 +1,34 @@
+{
+  "benchmark_version": "1.0",
+  "timestamp": "1783621122",
+  "results": {
+    "tokens_per_sec": 14.38,
+    "avg_latency_ms": 69.53,
+    "time_to_first_token_ms": 0.00,
+    "total_time_ms": 8900.12,
+    "tokenize_time_ms": 0.00,
+    "embedding_time_ms": 0.00,
+    "transformer_time_ms": 8900.05,
+    "sampling_time_ms": 0.00,
+    "decode_time_ms": 0.00,
+    "speculative_speedup": 1.00,
+    "acceptance_rate": 0.00,
+    "draft_tokens_generated": 0,
+    "tokens_accepted": 0,
+    "num_tokens_generated": 128
+  },
+  "model_info": {
+    "name": "F:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf",
+    "vocab_size": 32000,
+    "num_layers": 24,
+    "hidden_size": 2048,
+    "num_heads": 32,
+    "num_kv_heads": 32,
+    "context_length": 4096
+  },
+  "hardware": {
+    "avx512_available": false,
+    "avx2_available": true
+  },
+  "generated_text": "*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄÅÇÉÑÖÜáàâäãåç..."
+}

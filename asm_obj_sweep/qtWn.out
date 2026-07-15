@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-1c3ae857\qtWn.asm
+D:\rawrxd\history\-1c3ae857\qtWn.asm(62) : error A2006:undefined symbol : ggml_backend_vk_init
+D:\rawrxd\history\-1c3ae857\qtWn.asm(69) : error A2006:undefined symbol : ggml_backend_cpu_init
+D:\rawrxd\history\-1c3ae857\qtWn.asm(106) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\-1c3ae857\qtWn.asm(148) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\-1c3ae857\qtWn.asm(203) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\-1c3ae857\qtWn.asm(324) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\-1c3ae857\qtWn.asm(374) : error A2006:undefined symbol : ggml_backend_is_gpu

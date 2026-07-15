@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\-1d5b10d8\yITJ.asm
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(13) : error A2008:syntax error : bits
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(14) : error A2008:syntax error : default
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(15) : error A2008:syntax error : section
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(135) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(144) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(145) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(149) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(154) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(155) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(156) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(158) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(159) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(162) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(163) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(164) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(165) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(169) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(170) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(171) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(175) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(176) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(178) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(179) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(180) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(181) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(182) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(183) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(184) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(187) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(188) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(189) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(190) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(191) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(192) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(193) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(194) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(196) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(197) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(198) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(199) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(201) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(202) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(203) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(204) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(205) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(206) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(208) : error A2008:syntax error : section
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(210) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(211) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(212) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(213) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(214) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(215) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(218) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(219) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(220) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(221) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(222) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(225) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(226) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(227) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(230) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(231) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(232) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(235) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(236) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(237) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(238) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(239) : error A2008:syntax error : g_text_size
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(240) : error A2008:syntax error : g_data_size
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(243) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(244) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(245) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(246) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(249) : error A2008:syntax error : g_data_buffer
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(252) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(253) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(254) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\-1d5b10d8\yITJ.asm(257) : fatal error A1012:error count exceeds 100; stopping assembly

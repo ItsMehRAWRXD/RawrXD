@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\ml\helpers.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\ml\helpers.asm(316) : error A2006:undefined symbol : INVALID_HANDLE_VALUE

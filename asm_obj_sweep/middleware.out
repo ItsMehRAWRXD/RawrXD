@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(524) : error A2008:syntax error : name
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(656) : error A2008:syntax error : name
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(983) : error A2084:constant value too large
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(984) : error A2084:constant value too large
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(1418) : error A2009:syntax error in expression
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(1119) : warning A6004:procedure argument or local not referenced : lpParam
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(1420) : warning A6004:procedure argument or local not referenced : hInst
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(1420) : warning A6004:procedure argument or local not referenced : hPrevInst
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(1420) : warning A6004:procedure argument or local not referenced : lpCmdLine
+D:\rawrxd\reconstructed\RawrXD\middleware\rawrxd\middleware.asm(1420) : warning A6004:procedure argument or local not referenced : nCmdShow

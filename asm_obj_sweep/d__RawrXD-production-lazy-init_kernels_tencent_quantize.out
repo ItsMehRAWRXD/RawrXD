@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(60) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(63) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(80) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(81) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(95) : error A2008:syntax error : DQ
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(96) : error A2008:syntax error : DD
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(97) : error A2008:syntax error : DQ
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_kernels_tencent_quantize.asm(100) : fatal error A1010:unmatched block nesting : tencent_quantize_avx512

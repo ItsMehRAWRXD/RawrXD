@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(26) : error A2034:must be in segment block : Tool_GenerateIntegrationTest
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(38) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(42) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(45) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(46) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(49) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(50) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(51) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(59) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(61) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(62) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(63) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(64) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_batch3_testing_tools.asm(65) : fatal error A1010:unmatched block nesting : Tool_GenerateIntegrationTest

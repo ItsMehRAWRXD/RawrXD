@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-2267f472\OCd2.asm
+D:\rawrxd\history\-2267f472\OCd2.asm(70) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\-2267f472\OCd2.asm(70) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\-2267f472\OCd2.asm(70) : warning A6004:procedure argument or local not referenced : lpReserved

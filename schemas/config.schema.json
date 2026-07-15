@@ -1,0 +1,247 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://rawrxd.ai/schemas/config.schema.json",
+  "title": "RawrXD Configuration Schema",
+  "description": "Schema for validating RawrXD Sovereign Inferencer configuration files",
+  "type": "object",
+  "required": ["version", "server"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$",
+      "description": "Configuration version in semver format"
+    },
+    "server": {
+      "type": "object",
+      "required": ["host", "port"],
+      "properties": {
+        "host": {
+          "type": "string",
+          "default": "127.0.0.1"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 65535,
+          "default": 8080
+        },
+        "workers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "default": 4
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 300
+        }
+      }
+    },
+    "inference": {
+      "type": "object",
+      "properties": {
+        "default_model": {
+          "type": "string"
+        },
+        "max_context_length": {
+          "type": "integer",
+          "minimum": 512,
+          "maximum": 131072,
+          "default": 8192
+        },
+        "batch_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 1
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "default": 0.7
+        },
+        "top_p": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.9
+        },
+        "top_k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 40
+        },
+        "repeat_penalty": {
+          "type": "number",
+          "minimum": 1.0,
+          "maximum": 2.0,
+          "default": 1.1
+        }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "properties": {
+        "gpu_acceleration": {
+          "type": "boolean",
+          "default": true
+        },
+        "gpu_layers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "default": 0
+        },
+        "cpu_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "default": 0
+        },
+        "memory_limit_mb": {
+          "type": "integer",
+          "minimum": 512,
+          "maximum": 1048576,
+          "default": 0
+        },
+        "use_mmap": {
+          "type": "boolean",
+          "default": true
+        },
+        "use_mlock": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["trace", "debug", "info", "warn", "error", "fatal"],
+          "default": "info"
+        },
+        "file": {
+          "type": "string"
+        },
+        "max_size_mb": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10240,
+          "default": 100
+        },
+        "max_files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 5
+        },
+        "console": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "api_key": {
+          "type": "string"
+        },
+        "enable_auth": {
+          "type": "boolean",
+          "default": false
+        },
+        "allowed_origins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rate_limit": {
+          "type": "object",
+          "properties": {
+            "requests_per_minute": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 60
+            },
+            "burst_size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 10
+            }
+          }
+        }
+      }
+    },
+    "models": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "default": "./models"
+        },
+        "cache_size_mb": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576,
+          "default": 4096
+        },
+        "auto_load": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "distributed": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "node_id": {
+          "type": "string"
+        },
+        "coordinator_url": {
+          "type": "string"
+        },
+        "heartbeat_interval_sec": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 5
+        }
+      }
+    },
+    "plugins": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "default": "./plugins"
+        },
+        "auto_load": {
+          "type": "boolean",
+          "default": false
+        },
+        "allowed_extensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [".dll", ".so", ".dylib"]
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

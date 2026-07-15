@@ -1,0 +1,58 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(121) : error A2008:syntax error : ptr
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(122) : warning A6006:structure contains no members
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(239) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(240) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(241) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(259) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(264) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1904) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1905) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1906) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1907) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1908) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1909) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1910) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1911) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1914) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1915) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1916) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1917) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1918) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1919) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1920) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1921) : error A2023:instruction operand must have size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(319) : error A2006:undefined symbol : g_InitLock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(326) : error A2006:undefined symbol : g_InitLock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(366) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(369) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(372) : error A2006:undefined symbol : lock_heartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(451) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(502) : error A2006:undefined symbol : g_InitLock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(533) : error A2006:undefined symbol : g_InitLock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(545) : error A2006:undefined symbol : g_InitLock
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(636) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(943) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(991) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1016) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1022) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1135) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1179) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1559) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1579) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1604) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1628) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1673) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1726) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1763) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(1790) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2093) : error A2006:undefined symbol : lock_heartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2106) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2132) : error A2006:undefined symbol : lock_heartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2298) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2343) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2362) : error A2006:undefined symbol : lock_scheduler
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2381) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2400) : error A2006:undefined symbol : lock_conflict
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2419) : error A2006:undefined symbol : lock_heartbeat
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_Titan_Streaming_Orchestrator_Complete.asm(2438) : error A2006:undefined symbol : lock_heartbeat

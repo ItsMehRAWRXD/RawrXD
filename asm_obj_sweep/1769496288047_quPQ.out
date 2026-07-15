@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo_dll.asm\1769496288047_quPQ.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo_dll.asm\1769496288047_quPQ.asm(160) : warning A6004:procedure argument or local not referenced : hInstDLL
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo_dll.asm\1769496288047_quPQ.asm(160) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab_turbo_dll.asm\1769496288047_quPQ.asm(160) : warning A6004:procedure argument or local not referenced : lpvReserved

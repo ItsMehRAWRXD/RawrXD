@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_MetaReverse.asm\1769988180174_7zdA.asm
+D:\rawrxd\history\all_versions\RawrXD_MetaReverse.asm\1769988180174_7zdA.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\RawrXD_MetaReverse.asm\1769988180174_7zdA.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\RawrXD_MetaReverse.asm\1769988180174_7zdA.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\RawrXD_MetaReverse.asm\1769988180174_7zdA.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\RawrXD_MetaReverse.asm\1769988180174_7zdA.asm(22) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\RawrXD_MetaReverse.asm\1769988180174_7zdA.asm(27) : error A2220:Missing .ENDPROLOG

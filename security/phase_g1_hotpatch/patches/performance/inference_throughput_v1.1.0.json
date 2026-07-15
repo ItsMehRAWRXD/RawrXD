@@ -1,0 +1,89 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "perf-optimization-20260713-001",
+  "Version": "1.1.0",
+  "Type": "performance",
+  "Severity": "medium",
+  "Description": "Inference throughput optimization with improved batch scheduling and memory pooling",
+  "Author": "performance-team@rawrxd.ai",
+  "CreatedAt": "2026-07-13T15:00:00Z",
+  "ExpiresAt": "2026-10-13T15:00:00Z",
+  
+  "Patches": [
+    {
+      "System": "swarm",
+      "Target": "loadbalancer",
+      "PatchFile": "patches/perf/swarm_batch_scheduler_v1.1.0.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "agent",
+      "Target": "worker",
+      "PatchFile": "patches/perf/agent_memory_pool_v1.1.0.json",
+      "Priority": 2,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "tools",
+      "Target": "cli",
+      "PatchFile": "patches/perf/cli_async_io_v1.1.0.json",
+      "Priority": 3,
+      "RequiresRestart": false,
+      "BackupRequired": false
+    }
+  ],
+  
+  "Dependencies": [
+    { "System": "swarm", "MinimumVersion": "1.0.0" },
+    { "System": "agent", "MinimumVersion": "1.0.0" },
+    { "System": "tools", "MinimumVersion": "1.0.0" }
+  ],
+  
+  "Conflicts": [
+    { "PatchId": "perf-optimization-*", "Reason": "Multiple performance patches may conflict" }
+  ],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 50,
+    "MinMemoryMB": 256,
+    "ServicesToStop": [],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "powershell -Command 'Write-Host \"Capturing baseline performance metrics...\"'",
+      "powershell -File scripts/benchmark/capture_baseline.ps1 -Duration 60"
+    ],
+    "PostPatchCommands": [
+      "powershell -Command 'Write-Host \"Validating performance improvement...\"'",
+      "powershell -File scripts/benchmark/validate_performance.ps1 -MinImprovementPercent 10"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": true,
+    "MaxRetries": 2,
+    "RetryDelaySeconds": 3,
+    "NotifyOnRollback": ["performance-team@rawrxd.ai"]
+  },
+  
+  "Notifications": {
+    "OnStart": ["performance-team@rawrxd.ai"],
+    "OnSuccess": ["performance-team@rawrxd.ai"],
+    "OnFailure": ["performance-team@rawrxd.ai", "ops@rawrxd.ai"],
+    "OnRollback": ["performance-team@rawrxd.ai", "ops@rawrxd.ai"]
+  },
+  
+  "Metadata": {
+    "ExpectedImprovement": {
+      "ThroughputPercent": 15,
+      "LatencyReductionPercent": 12,
+      "MemoryReductionPercent": 8
+    },
+    "TestingStatus": "benchmarked",
+    "BenchmarkResults": "benchmarks/perf_inference_throughput_v1.1.0.json",
+    "ApprovalRequired": false,
+    "CanRollback": true
+  }
+}

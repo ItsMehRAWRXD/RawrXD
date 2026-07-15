@@ -1,0 +1,25 @@
+{
+  \"deployment_version\": \"2026.06.20-phase17\",
+  \"build_timestamp\": \"2026-06-20T19:18:00Z\",
+  \"git_branch\": \"copilot/vscode-mlyextom-3zgo-phase7a\",
+  \"components\": {
+    \"main_binary\": \"RawrXD-Win32IDE.exe\",
+    \"main_size_mb\": 33.90,
+    \"total_package_mb\": 92.53,
+    \"dll_count\": 7
+  },
+  \"performance\": {
+    \"p95_latency_ms\": 2.580,
+    \"p99_latency_ms\": 3.130,
+    \"acceptance_rate\": 0.905,
+    \"target_met\": true
+  },
+  \"validation\": {
+    \"wire_smoke\": \"PASSED\",
+    \"p95_harness\": \"PASSED\",
+    \"startup_sequence\": \"PASSED\",
+    \"binary_test\": \"PASSED\"
+  },
+  \"status\": \"PRODUCTION_READY\",
+  \"deployment_phase\": 17
+}

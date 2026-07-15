@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(40) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(177) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(223) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(332) : error A2006:undefined symbol : src_path
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(382) : error A2006:undefined symbol : archive_path
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(566) : error A2006:undefined symbol : output_json
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(583) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(591) : error A2006:undefined symbol : lstrcatA
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(597) : error A2006:undefined symbol : lstrcatA
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(603) : error A2006:undefined symbol : lstrcatA
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(609) : error A2006:undefined symbol : lstrcatA
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(615) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(675) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\runoff\part_0023\d__ultra_fix_masm_x64.asm(746) : error A2006:undefined symbol : lstrcatA

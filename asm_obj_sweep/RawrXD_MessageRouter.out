@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\src\RawrXD_MessageRouter.asm
+D:\rawrxd\src\RawrXD_MessageRouter.asm(27) : error A2008:syntax error : IF
+D:\rawrxd\src\RawrXD_MessageRouter.asm(28) : error A2008:syntax error : ParseSlashCommand
+D:\rawrxd\src\RawrXD_MessageRouter.asm(30) : error A2008:syntax error : .
+D:\rawrxd\src\RawrXD_MessageRouter.asm(33) : error A2008:syntax error : StrStrA
+D:\rawrxd\src\RawrXD_MessageRouter.asm(34) : error A2044:invalid character in file
+D:\rawrxd\src\RawrXD_MessageRouter.asm(35) : error A2008:syntax error : DelegateToAgent
+D:\rawrxd\src\RawrXD_MessageRouter.asm(37) : error A2008:syntax error : .
+D:\rawrxd\src\RawrXD_MessageRouter.asm(40) : error A2008:syntax error : QueueInferenceRequest

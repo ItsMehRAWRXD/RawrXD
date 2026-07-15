@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-1f6da155\EA5s.asm
+D:\rawrxd\history\-1f6da155\EA5s.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\-1f6da155\EA5s.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\-1f6da155\EA5s.asm(9) : fatal error A1000:cannot open file : \masm32\include\windows.inc

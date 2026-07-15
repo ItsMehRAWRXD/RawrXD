@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_recursive_descent_parser.asm
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_recursive_descent_parser.asm(5) : fatal error A1000:cannot open file : "Eon-ASM/compilers/eon_token_definitions.asm"

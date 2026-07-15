@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\src\Titan_InferenceCore.asm
+D:\rawrxd\src\Titan_InferenceCore.asm(186) : error A2070:invalid instruction operands
+D:\rawrxd\src\Titan_InferenceCore.asm(220) : error A2070:invalid instruction operands
+D:\rawrxd\src\Titan_InferenceCore.asm(245) : error A2070:invalid instruction operands
+D:\rawrxd\src\Titan_InferenceCore.asm(247) : error A2070:invalid instruction operands
+D:\rawrxd\src\Titan_InferenceCore.asm(249) : error A2070:invalid instruction operands
+D:\rawrxd\src\Titan_InferenceCore.asm(13) : error A2006:undefined symbol : Dequant_Q4_0
+D:\rawrxd\src\Titan_InferenceCore.asm(14) : error A2006:undefined symbol : Dequant_Q2_K
+D:\rawrxd\src\Titan_InferenceCore.asm(15) : error A2006:undefined symbol : RMSNorm
+D:\rawrxd\src\Titan_InferenceCore.asm(16) : error A2006:undefined symbol : SoftMax
+D:\rawrxd\src\Titan_InferenceCore.asm(18) : error A2006:undefined symbol : FFN_SwiGLU
+D:\rawrxd\src\Titan_InferenceCore.asm(154) : error A2206:missing operator in expression
+D:\rawrxd\src\Titan_InferenceCore.asm(170) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\src\Titan_InferenceCore.asm(182) : error A2206:missing operator in expression
+D:\rawrxd\src\Titan_InferenceCore.asm(234) : error A2206:missing operator in expression
+D:\rawrxd\src\Titan_InferenceCore.asm(375) : error A2022:instruction operands must be the same size

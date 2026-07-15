@@ -1,0 +1,33 @@
+ Assembling: D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(92) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(97) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(108) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(123) : error A2008:syntax error : ReadConsoleA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(214) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(234) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(237) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(240) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(261) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(270) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(275) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(312) : error A2001:immediate operand not allowed
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(322) : error A2001:immediate operand not allowed
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(232) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(314) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(112) : warning A6004:procedure argument or local not referenced : arg1
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(112) : warning A6004:procedure argument or local not referenced : arg2
+D:\rawrxd\history\runoff\part_0010\d__rawrxd_OmegaPolyglot_v4_fixed.asm(112) : warning A6004:procedure argument or local not referenced : arg3

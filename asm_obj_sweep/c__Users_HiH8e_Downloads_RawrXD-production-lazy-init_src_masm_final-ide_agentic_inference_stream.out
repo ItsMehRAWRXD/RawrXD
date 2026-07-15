@@ -1,0 +1,53 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(43) : error A2008:syntax error : qword
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(44) : error A2008:syntax error : qword
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(45) : error A2008:syntax error : qword
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(48) : error A2008:syntax error : qword
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(49) : error A2008:syntax error : qword
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(50) : error A2008:syntax error : qword
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(51) : error A2008:syntax error : qword
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(103) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(137) : error A2001:immediate operand not allowed
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(210) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(211) : error A2001:immediate operand not allowed
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(276) : error A2001:immediate operand not allowed
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(347) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(354) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(361) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(368) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(554) : error A2001:immediate operand not allowed
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(563) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(563) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(93) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(118) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(141) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(142) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(146) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(189) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(194) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(198) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(204) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(207) : error A2006:undefined symbol : free
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(215) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(216) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(337) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(343) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(350) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(357) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(364) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(371) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(376) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(396) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(402) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(403) : error A2006:undefined symbol : WAIT_OBJECT_0
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(434) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(435) : error A2006:undefined symbol : output_pane_append
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(454) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(462) : error A2006:undefined symbol : free
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(475) : error A2006:undefined symbol : append_string
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(491) : error A2006:undefined symbol : copy_string
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(502) : error A2006:undefined symbol : InvokeNextToken
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(516) : error A2006:undefined symbol : EM_REPLACESEL
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(519) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(523) : error A2006:undefined symbol : EM_REPLACESEL
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_agentic_inference_stream.asm(526) : error A2006:undefined symbol : SendMessageA

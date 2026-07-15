@@ -1,0 +1,133 @@
+# Sovereign Runtime Production Build Configuration
+# Phase C.1 Batch 2/5: Production Build
+#
+# This CMake configuration builds the complete Sovereign Runtime
+# as a single executable: RawrXD-SovereignRuntime.exe
+#
+# Components:
+#   - SEG (Sovereign Execution Graph)
+#   - InfinitePerfectionEngine
+#   - SovereignSwarm
+#   - InfinitePerfectionTelemetry
+#   - Dashboard Server
+#   - Checkpoint Manager
+
+cmake_minimum_required(VERSION 3.16)
+project(RawrXD-SovereignRuntime VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Compiler flags for production
+if(MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /DNDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /Od /DDEBUG")
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -DDEBUG")
+endif()
+
+# Include directories
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/seg
+    ${CMAKE_SOURCE_DIR}/src/swarm
+    ${CMAKE_SOURCE_DIR}/src/infinite
+    ${CMAKE_SOURCE_DIR}/src/runtime
+)
+
+# SEG Library
+set(SEG_SOURCES
+    src/seg/SovereignExecutionGraph.cpp
+    src/seg/SovereignExecutionGraphBuilder.cpp
+    src/seg/ExecutionPlanner.cpp
+    src/seg/SEGValidationSuite.cpp
+    src/seg/SEGPerformanceBridge.cpp
+)
+
+add_library(seg_lib STATIC ${SEG_SOURCES})
+
+# InfinitePerfectionEngine Library
+set(INFINITE_SOURCES
+    src/infinite/InfinitePerfectionEngine.cpp
+    src/infinite/UnityCycle.cpp
+    src/infinite/HarmonyPipeline.cpp
+)
+
+add_library(infinite_lib STATIC ${INFINITE_SOURCES})
+
+# Swarm Library
+set(SWARM_SOURCES
+    src/swarm/SovereignSwarm.cpp
+    src/swarm/AdaptiveScheduler.cpp
+    src/swarm/InfinitePerfectionTelemetry.cpp
+    src/swarm/InfinitePerfectionTelemetrySQLite.cpp
+    src/swarm/TelemetryDashboardServer.cpp
+)
+
+add_library(swarm_lib STATIC ${SWARM_SOURCES})
+
+# Runtime Library
+set(RUNTIME_SOURCES
+    src/runtime/SovereignRuntimeBootstrap.cpp
+    src/runtime/PerformanceBaseline.cpp
+    src/runtime/CheckpointManager.cpp
+    src/runtime/RuntimeIntegration.cpp
+    src/runtime/SovereignQualification.cpp
+)
+
+add_library(runtime_lib STATIC ${RUNTIME_SOURCES})
+
+# Main Sovereign Runtime Executable
+add_executable(RawrXD-SovereignRuntime
+    src/runtime/main_bootstrap.cpp
+)
+
+target_link_libraries(RawrXD-SovereignRuntime
+    runtime_lib
+    seg_lib
+    infinite_lib
+    swarm_lib
+)
+
+# Qualification Executable
+add_executable(RawrXD-Qualification
+    src/runtime/main_qualification.cpp
+)
+
+target_link_libraries(RawrXD-Qualification
+    runtime_lib
+    seg_lib
+    infinite_lib
+    swarm_lib
+)
+
+# Installation
+install(TARGETS RawrXD-SovereignRuntime RawrXD-Qualification
+    RUNTIME DESTINATION bin
+)
+
+install(FILES
+    docs/SOVEREIGN_RUNTIME_SPEC.md
+    docs/SOVEREIGN_RUNTIME_GUIDE.md
+    DESTINATION docs
+)
+
+# Print configuration summary
+message(STATUS "")
+message(STATUS "Sovereign Runtime Build Configuration")
+message(STATUS "=====================================")
+message(STATUS "Version: ${PROJECT_VERSION}")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "")
+message(STATUS "Components:")
+message(STATUS "  - SEG Library: ${SEG_SOURCES}")
+message(STATUS "  - InfinitePerfectionEngine Library: ${INFINITE_SOURCES}")
+message(STATUS "  - Swarm Library: ${SWARM_SOURCES}")
+message(STATUS "  - Runtime Library: ${RUNTIME_SOURCES}")
+message(STATUS "")
+message(STATUS "Executables:")
+message(STATUS "  - RawrXD-SovereignRuntime (bootstrap)")
+message(STATUS "  - RawrXD-Qualification (qualification suite)")
+message(STATUS "")

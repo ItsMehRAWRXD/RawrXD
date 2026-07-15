@@ -1,0 +1,118 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+
+// Fused Attention Kernel
+// Computes Q×K^T, softmax, and attention output in a single kernel
+// Flash Attention-style algorithm for memory efficiency
+// Target: 2.5x speedup by fusing attention operations
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer QueryBuffer {
+    float16_t data[];
+} query;
+
+layout(set = 0, binding = 1) readonly buffer KeyBuffer {
+    float16_t data[];
+} key;
+
+layout(set = 0, binding = 2) readonly buffer ValueBuffer {
+    float16_t data[];
+} value;
+
+layout(set = 0, binding = 3) writeonly buffer OutputBuffer {
+    float16_t data[];
+} output_buffer;
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint num_heads;
+    uint seq_len;
+    uint head_dim;
+    float scale;  // 1/sqrt(head_dim)
+} params;
+
+// Tile size for shared memory
+const uint TILE_SIZE = 64;
+
+// Shared memory for tiles
+shared float16_t q_tile[TILE_SIZE];
+shared float16_t k_tile[TILE_SIZE];
+shared float16_t v_tile[TILE_SIZE];
+
+// Online softmax variables
+shared float16_t shared_max[TILE_SIZE];
+shared float16_t shared_sum[TILE_SIZE];
+
+void main() {
+    uint local_id = gl_LocalInvocationID.x;
+    uint head_id = gl_WorkGroupID.x;
+    uint seq_idx = gl_WorkGroupID.y;
+    
+    if (seq_idx >= params.seq_len) return;
+    
+    uint head_offset = head_id * params.seq_len * params.head_dim;
+    uint q_offset = head_offset + seq_idx * params.head_dim;
+    
+    // Initialize online softmax
+    float16_t max_val = float16_t(-65504.0);
+    float16_t sum_val = float16_t(0.0);
+    float16_t acc = float16_t(0.0);
+    
+    // Process sequence in tiles
+    for (uint tile_start = 0; tile_start < params.seq_len; tile_start += TILE_SIZE) {
+        uint tile_end = min(tile_start + TILE_SIZE, params.seq_len);
+        
+        // Load Q tile (only once per output row)
+        if (tile_start == 0) {
+            for (uint i = local_id; i < params.head_dim; i += TILE_SIZE) {
+                q_tile[i] = query.data[q_offset + i];
+            }
+        }
+        
+        // Compute Q×K^T for this tile
+        for (uint kv_idx = tile_start; kv_idx < tile_end; kv_idx++) {
+            uint k_offset = head_offset + kv_idx * params.head_dim;
+            
+            // Load K row
+            for (uint i = local_id; i < params.head_dim; i += TILE_SIZE) {
+                k_tile[i] = key.data[k_offset + i];
+            }
+            
+            barrier();
+            
+            // Compute dot product Q·K
+            float16_t dot_prod = float16_t(0.0);
+            for (uint i = 0; i < params.head_dim; i++) {
+                dot_prod += q_tile[i] * k_tile[i];
+            }
+            dot_prod *= float16_t(params.scale);
+            
+            // Online softmax update
+            float16_t new_max = max(max_val, dot_prod);
+            float16_t exp_old = exp(max_val - new_max);
+            float16_t exp_new = exp(dot_prod - new_max);
+            
+            sum_val = sum_val * exp_old + exp_new;
+            
+            // Load V row for weighted accumulation
+            for (uint i = local_id; i < params.head_dim; i += TILE_SIZE) {
+                v_tile[i] = value.data[head_offset + kv_idx * params.head_dim + i];
+            }
+            
+            barrier();
+            
+            // Accumulate attention output
+            for (uint i = 0; i < params.head_dim; i++) {
+                acc = acc * exp_old + v_tile[i] * exp_new;
+            }
+            
+            max_val = new_max;
+        }
+    }
+    
+    // Normalize and write output
+    for (uint i = local_id; i < params.head_dim; i += TILE_SIZE) {
+        output_buffer.data[q_offset + i] = acc / sum_val;
+    }
+}

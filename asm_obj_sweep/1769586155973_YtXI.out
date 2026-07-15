@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(18) : error A2034:must be in segment block : Arena_Create
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(19) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(20) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(24) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(27) : error A2008:syntax error : if
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(28) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(29) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(34) : error A2008:syntax error : HeapAlloc
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(35) : error A2008:syntax error : if
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(38) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(40) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(45) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(46) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(47) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(48) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(51) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(58) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\rawrxd_complete_master_implementation.asm\1769586155973_YtXI.asm(59) : fatal error A1010:unmatched block nesting : Arena_Create

@@ -1,0 +1,325 @@
+# RawrXD Security Policies
+# Phase M.1 - Security Hardening & Compliance
+# Enterprise security policies for RawrXD deployment
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rawrxd-security-policies
+  namespace: rawrxd
+data:
+  # Authentication Policy
+  authentication.policy: |
+    version: "1.0"
+    name: "RawrXD Authentication Policy"
+    description: "Authentication requirements for all RawrXD services"
+    
+    requirements:
+      - id: AUTH-001
+        description: "All API endpoints must require authentication except /health"
+        severity: critical
+        enforcement: mandatory
+        
+      - id: AUTH-002
+        description: "JWT tokens must be signed with RS256 minimum"
+        severity: critical
+        enforcement: mandatory
+        config:
+          allowed_algorithms: ["RS256", "RS384", "RS512", "ES256", "ES384", "ES512"]
+          forbidden_algorithms: ["none", "HS256", "HS384", "HS512"]
+          
+      - id: AUTH-003
+        description: "Token expiration must not exceed 24 hours"
+        severity: high
+        enforcement: mandatory
+        config:
+          max_ttl_hours: 24
+          
+      - id: AUTH-004
+        description: "API keys must be rotated every 90 days"
+        severity: medium
+        enforcement: mandatory
+        config:
+          rotation_days: 90
+          grace_period_days: 7
+
+  # Authorization Policy
+  authorization.policy: |
+    version: "1.0"
+    name: "RawrXD Authorization Policy"
+    description: "Role-based access control for RawrXD"
+    
+    roles:
+      - name: admin
+        description: "Full system access"
+        permissions:
+          - "*:*"
+        
+      - name: operator
+        description: "Operations and monitoring"
+        permissions:
+          - "inference:read"
+          - "inference:write"
+          - "metrics:read"
+          - "logs:read"
+          - "config:read"
+        
+      - name: developer
+        description: "Development access"
+        permissions:
+          - "inference:read"
+          - "inference:write"
+          - "models:read"
+        
+      - name: viewer
+        description: "Read-only access"
+        permissions:
+          - "inference:read"
+          - "metrics:read"
+    
+    default_role: viewer
+    
+    policies:
+      - id: AUTHZ-001
+        description: "Admin actions require MFA"
+        severity: critical
+        enforcement: mandatory
+        conditions:
+          - action: "admin:*"
+            require_mfa: true
+            
+      - id: AUTHZ-002
+        description: "Model deletion requires admin approval"
+        severity: high
+        enforcement: mandatory
+        conditions:
+          - action: "models:delete"
+            require_approval: true
+            approver_role: admin
+
+  # Network Security Policy
+  network.policy: |
+    version: "1.0"
+    name: "RawrXD Network Security Policy"
+    description: "Network segmentation and traffic rules"
+    
+    ingress_rules:
+      - id: NET-001
+        description: "Allow HTTPS only"
+        action: allow
+        protocol: tcp
+        ports: [443]
+        
+      - id: NET-002
+        description: "Block direct database access"
+        action: deny
+        protocol: tcp
+        ports: [5432, 3306, 27017]
+        
+      - id: NET-003
+        description: "Restrict internal API access"
+        action: allow
+        protocol: tcp
+        ports: [8080, 7946]
+        source:
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
+    
+    egress_rules:
+      - id: NET-010
+        description: "Allow HTTPS outbound"
+        action: allow
+        protocol: tcp
+        ports: [443]
+        
+      - id: NET-011
+        description: "Block SMTP"
+        action: deny
+        protocol: tcp
+        ports: [25, 465, 587]
+        
+      - id: NET-012
+        description: "Allow DNS"
+        action: allow
+        protocol: udp
+        ports: [53]
+
+  # Data Protection Policy
+  data.policy: |
+    version: "1.0"
+    name: "RawrXD Data Protection Policy"
+    description: "Data classification and protection requirements"
+    
+    classifications:
+      - level: public
+        description: "Non-sensitive data"
+        encryption_at_rest: optional
+        encryption_in_transit: required
+        
+      - level: internal
+        description: "Internal business data"
+        encryption_at_rest: required
+        encryption_in_transit: required
+        key_rotation_days: 365
+        
+      - level: confidential
+        description: "Sensitive business data"
+        encryption_at_rest: required
+        encryption_in_transit: required
+        key_rotation_days: 90
+        access_logging: required
+        
+      - level: restricted
+        description: "Highly sensitive data"
+        encryption_at_rest: required
+        encryption_in_transit: required
+        key_rotation_days: 30
+        access_logging: required
+        tokenization: required
+    
+    data_types:
+      - type: model_weights
+        classification: confidential
+        
+      - type: inference_requests
+        classification: internal
+        retention_days: 30
+        
+      - type: user_credentials
+        classification: restricted
+        encryption: aes-256-gcm
+        
+      - type: audit_logs
+        classification: confidential
+        retention_days: 2555  # 7 years
+        immutability: true
+
+  # Runtime Security Policy
+  runtime.policy: |
+    version: "1.0"
+    name: "RawrXD Runtime Security Policy"
+    description: "Container and runtime security requirements"
+    
+    container_requirements:
+      - id: RUN-001
+        description: "Run as non-root user"
+        severity: critical
+        enforcement: mandatory
+        spec:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          
+      - id: RUN-002
+        description: "Read-only root filesystem"
+        severity: high
+        enforcement: mandatory
+        spec:
+          readOnlyRootFilesystem: true
+          
+      - id: RUN-003
+        description: "Drop all capabilities"
+        severity: high
+        enforcement: mandatory
+        spec:
+          capabilities:
+            drop: ["ALL"]
+            add: ["NET_BIND_SERVICE"]
+            
+      - id: RUN-004
+        description: "No privilege escalation"
+        severity: critical
+        enforcement: mandatory
+        spec:
+          allowPrivilegeEscalation: false
+          
+      - id: RUN-005
+        description: "Seccomp profile"
+        severity: medium
+        enforcement: mandatory
+        spec:
+          seccompProfile:
+            type: RuntimeDefault
+    
+    resource_limits:
+      - id: RUN-010
+        description: "Memory limits required"
+        severity: high
+        enforcement: mandatory
+        
+      - id: RUN-011
+        description: "CPU limits required"
+        severity: high
+        enforcement: mandatory
+        
+    image_policy:
+      - id: RUN-020
+        description: "Only approved base images"
+        severity: critical
+        enforcement: mandatory
+        allowed_registries:
+          - "registry.rawrxd.local"
+          - "gcr.io"
+          - "registry.k8s.io"
+        forbidden_registries:
+          - "docker.io"
+          - "*.docker.io"
+
+  # Incident Response Policy
+  incident.policy: |
+    version: "1.0"
+    name: "RawrXD Incident Response Policy"
+    description: "Security incident handling procedures"
+    
+    severity_levels:
+      - level: critical
+        description: "System compromise, data breach"
+        response_time_minutes: 15
+        escalation: immediate
+        
+      - level: high
+        description: "Unauthorized access attempt, policy violation"
+        response_time_minutes: 60
+        escalation: within_4_hours
+        
+      - level: medium
+        description: "Suspicious activity, configuration drift"
+        response_time_minutes: 240
+        escalation: within_24_hours
+        
+      - level: low
+        description: "Minor policy violation"
+        response_time_minutes: 1440
+        escalation: next_business_day
+    
+    response_procedures:
+      - phase: detection
+        steps:
+          - "Alert on security event"
+          - "Triage and classify"
+          - "Notify security team"
+          
+      - phase: containment
+        steps:
+          - "Isolate affected systems"
+          - "Preserve evidence"
+          - "Block malicious traffic"
+          
+      - phase: eradication
+        steps:
+          - "Remove threat actor access"
+          - "Patch vulnerabilities"
+          - "Verify system integrity"
+          
+      - phase: recovery
+        steps:
+          - "Restore from clean backups"
+          - "Validate system functionality"
+          - "Monitor for recurrence"
+          
+      - phase: lessons_learned
+        steps:
+          - "Document incident"
+          - "Update policies"
+          - "Conduct post-mortem"

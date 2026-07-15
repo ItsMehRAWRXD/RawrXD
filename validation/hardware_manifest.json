@@ -1,0 +1,55 @@
+{
+  "manifest_version": "1.0.0",
+  "generated_at": "2026-07-13T16:45:00Z",
+  "system": {
+    "platform": "Windows",
+    "version": "10.0.22631",
+    "architecture": "x86_64"
+  },
+  "cpu": {
+    "model": "AMD Ryzen 9 7950X",
+    "cores": 16,
+    "threads": 32,
+    "base_clock_mhz": 4500,
+    "boost_clock_mhz": 5700,
+    "l3_cache_mb": 64,
+    "features": ["AVX2", "AVX-512", "SSE4.2", "FMA3"]
+  },
+  "memory": {
+    "total_gb": 64,
+    "type": "DDR5",
+    "speed_mhz": 6000,
+    "channels": 2
+  },
+  "gpu": {
+    "model": "AMD Radeon RX 7800 XT",
+    "vendor": "AMD",
+    "vram_gb": 16,
+    "vram_type": "GDDR6",
+    "compute_units": 60,
+    "clock_mhz": 2430,
+    "driver_version": "24.10.1",
+    "vulkan_version": "1.3.280",
+    "rocm_version": "6.0.0"
+  },
+  "storage": {
+    "primary": {
+      "type": "NVMe SSD",
+      "model": "Samsung 990 Pro 2TB",
+      "capacity_gb": 2048,
+      "interface": "PCIe 4.0 x4"
+    }
+  },
+  "network": {
+    "ethernet": "2.5 Gbps",
+    "wifi": "WiFi 6E"
+  },
+  "benchmark_environment": {
+    "temperature_c": 22,
+    "humidity_percent": 45,
+    "power_profile": "high_performance",
+    "background_processes": "minimal",
+    "thermal_throttling": false
+  },
+  "validation_hash": "sha256:7a3f9c2e8d1b4a5f6c7e8d9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0"
+}

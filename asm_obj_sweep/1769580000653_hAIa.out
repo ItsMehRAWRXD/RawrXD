@@ -1,0 +1,116 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(321) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(323) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(326) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(331) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(356) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(383) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(385) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(387) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(392) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(395) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(398) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(399) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(411) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(445) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(446) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(459) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(463) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(474) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(475) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(499) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(506) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(519) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(541) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(549) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(699) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(704) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(746) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(749) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(791) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(800) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1299) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1305) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1306) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1315) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1364) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1373) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1384) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1406) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1409) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1419) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1421) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1423) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1446) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1449) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1481) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1483) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1492) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1496) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1521) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1522) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1637) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1645) : error A2008:syntax error : CryptDecodeObjectEx
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1657) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1665) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1669) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1670) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1678) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1682) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1683) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1702) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1703) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1706) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1708) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1709) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1711) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1713) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1714) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1717) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1730) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1737) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1741) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1742) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1746) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1752) : error A2008:syntax error : main
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1752) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(553) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(922) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(556) : warning A6004:procedure argument or local not referenced : dwMax
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(753) : warning A6004:procedure argument or local not referenced : hFileOut
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(962) : warning A6004:procedure argument or local not referenced : lpBuffer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1323) : warning A6004:procedure argument or local not referenced : lpOutputPath
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1323) : warning A6004:procedure argument or local not referenced : dwWritten
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1392) : warning A6004:procedure argument or local not referenced : lpFilePath
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1392) : warning A6004:procedure argument or local not referenced : dwHashType
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1392) : warning A6004:procedure argument or local not referenced : bBuffer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1455) : warning A6004:procedure argument or local not referenced : lpFile1
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1455) : warning A6004:procedure argument or local not referenced : lpFile2
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1503) : warning A6004:procedure argument or local not referenced : szFullPath
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1526) : warning A6004:procedure argument or local not referenced : i
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1526) : warning A6004:procedure argument or local not referenced : j
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1526) : warning A6004:procedure argument or local not referenced : dwMatchCount
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1526) : warning A6004:procedure argument or local not referenced : dwRuleCount
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1539) : warning A6004:procedure argument or local not referenced : pRule
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : dwCertEncoding
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : dwContentType
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : dwFormatType
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : szCertName
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : szCertIssuer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : szCertDate
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : stNotBefore
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769580000653_hAIa.asm(1750) : warning A6004:procedure argument or local not referenced : stNotAfter

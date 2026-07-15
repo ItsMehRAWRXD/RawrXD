@@ -1,0 +1,164 @@
+/*
+ * AVX Instruction Extension for RawrXD Native Assembler
+ * Adds VEX-encoded AVX/AVX2 instructions to enable inference kernel compilation
+ */
+
+/* ============================================================================
+ * AVX INSTRUCTION ADDITIONS
+ * Add these entries to the g_instructions table in rawrxd_native_assembler.c
+ * ============================================================================
+
+/* AVX - VEX-encoded 256-bit floating point */
+{"vmovaps", {0xC5, 0xF8, 0x28}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+{"vmovaps", {0xC5, 0xF8, 0x28}, 3, OP_YMM, OP_MEM256, OP_NONE, 1, -1, 0, 0},
+{"vmovaps", {0xC5, 0xF8, 0x29}, 3, OP_MEM256, OP_YMM, OP_NONE, 1, 0, 0, 0},
+{"vmovups", {0xC5, 0xF8, 0x10}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+{"vmovups", {0xC5, 0xF8, 0x10}, 3, OP_YMM, OP_MEM256, OP_NONE, 1, -1, 0, 0},
+{"vmovups", {0xC5, 0xF8, 0x11}, 3, OP_MEM256, OP_YMM, OP_NONE, 1, 0, 0, 0},
+{"vmovdqu", {0xC5, 0xFA, 0x6F}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+{"vmovdqu", {0xC5, 0xFA, 0x6F}, 3, OP_YMM, OP_MEM256, OP_NONE, 1, -1, 0, 0},
+{"vmovdqu", {0xC5, 0xFA, 0x7F}, 3, OP_MEM256, OP_YMM, OP_NONE, 1, 0, 0, 0},
+
+/* AVX - Floating point arithmetic */
+{"vaddps", {0xC5, 0xF8, 0x58}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vaddps", {0xC5, 0xF8, 0x58}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vsubps", {0xC5, 0xF8, 0x5C}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vsubps", {0xC5, 0xF8, 0x5C}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vmulps", {0xC5, 0xF8, 0x59}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vmulps", {0xC5, 0xF8, 0x59}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vdivps", {0xC5, 0xF8, 0x5E}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vdivps", {0xC5, 0xF8, 0x5E}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vsqrtps", {0xC5, 0xF8, 0x51}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+{"vsqrtps", {0xC5, 0xF8, 0x51}, 3, OP_YMM, OP_MEM256, OP_NONE, 1, -1, 0, 0},
+{"vmaxps", {0xC5, 0xF8, 0x5F}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vminps", {0xC5, 0xF8, 0x5D}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX - Horizontal add */
+{"vhaddps", {0xC5, 0xF8, 0x7C}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vhaddps", {0xC5, 0xF8, 0x7C}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+
+/* AVX - Bitwise operations */
+{"vandps", {0xC5, 0xF8, 0x54}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vandps", {0xC5, 0xF8, 0x54}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vandnps", {0xC5, 0xF8, 0x55}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vorps", {0xC5, 0xF8, 0x56}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vxorps", {0xC5, 0xF8, 0x57}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vxorps", {0xC5, 0xF8, 0x57}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+
+/* AVX - State management */
+{"vzeroupper", {0xC5, 0xF8, 0x77}, 3, OP_NONE, OP_NONE, OP_NONE, 0, -1, 0, 0},
+
+/* AVX2 - Integer operations */
+{"vpxor", {0xC5, 0xF9, 0xEF}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpxor", {0xC5, 0xF9, 0xEF}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vpxor", {0xC5, 0xF9, 0xEF}, 3, OP_XMM, OP_XMM, OP_XMM, 1, -1, 0, 0},
+{"vpxor", {0xC5, 0xF9, 0xEF}, 3, OP_XMM, OP_XMM, OP_MEM128, 1, -1, 0, 0},
+
+/* AVX2 - Pack/Unpack */
+{"vpunpcklwd", {0xC5, 0xF9, 0x61}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpunpcklwd", {0xC5, 0xF9, 0x61}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vpunpckhwd", {0xC5, 0xF9, 0x69}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpunpckhwd", {0xC5, 0xF9, 0x69}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vpunpckldq", {0xC5, 0xF9, 0x62}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpunpckhdq", {0xC5, 0xF9, 0x6A}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX2 - Integer arithmetic */
+{"vpaddw", {0xC5, 0xF9, 0xFD}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpaddd", {0xC5, 0xF9, 0xFE}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpsubw", {0xC5, 0xF9, 0xF9}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpsubd", {0xC5, 0xF9, 0xFA}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX2 - Shift */
+{"vpsrlw", {0xC5, 0xF9, 0xD1}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpsrlw", {0xC5, 0xF9, 0x71}, 3, OP_YMM, OP_IMM8, OP_NONE, 1, 2, 1, 0},
+{"vpsrld", {0xC5, 0xF9, 0xD2}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpsrad", {0xC5, 0xF9, 0xE2}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX2 - Compare */
+{"vpcmpeqw", {0xC5, 0xF9, 0x75}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpcmpeqd", {0xC5, 0xF9, 0x76}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX2 - Blend */
+{"vpblendw", {0xC4, 0xE3, 0x7D, 0x0E}, 4, OP_YMM, OP_YMM, OP_IMM8, 1, -1, 1, 0},
+{"vpblendd", {0xC4, 0xE3, 0x7D, 0x02}, 4, OP_YMM, OP_YMM, OP_IMM8, 1, -1, 1, 0},
+
+/* AVX2 - Broadcast */
+{"vpbroadcastd", {0xC4, 0xE2, 0x7D, 0x58}, 4, OP_YMM, OP_XMM, OP_NONE, 1, -1, 0, 0},
+{"vpbroadcastq", {0xC4, 0xE2, 0x7D, 0x59}, 4, OP_YMM, OP_XMM, OP_NONE, 1, -1, 0, 0},
+{"vbroadcastss", {0xC4, 0xE2, 0x7D, 0x18}, 4, OP_YMM, OP_MEM32, OP_NONE, 1, -1, 0, 0},
+{"vbroadcastsd", {0xC4, 0xE2, 0x7D, 0x19}, 4, OP_YMM, OP_MEM64, OP_NONE, 1, -1, 0, 0},
+
+/* AVX2 - Permute */
+{"vpermd", {0xC4, 0xE2, 0x7D, 0x36}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpermq", {0xC4, 0xE3, 0x7D, 0x00}, 4, OP_YMM, OP_YMM, OP_IMM8, 1, -1, 1, 0},
+{"vpermps", {0xC4, 0xE2, 0x7D, 0x16}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpermpd", {0xC4, 0xE3, 0x7D, 0x01}, 4, OP_YMM, OP_YMM, OP_IMM8, 1, -1, 1, 0},
+
+/* AVX2 - Gather */
+{"vpgatherdd", {0xC4, 0xE2, 0x7D, 0x90}, 4, OP_YMM, OP_MEM32, OP_YMM, 1, -1, 0, 0},
+{"vpgatherqd", {0xC4, 0xE2, 0x7D, 0x91}, 4, OP_XMM, OP_MEM64, OP_XMM, 1, -1, 0, 0},
+
+/* AVX2 - Convert */
+{"vcvtdq2ps", {0xC5, 0xF8, 0x5B}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+{"vcvtdq2ps", {0xC5, 0xF8, 0x5B}, 3, OP_YMM, OP_MEM256, OP_NONE, 1, -1, 0, 0},
+{"vcvtps2dq", {0xC5, 0xFB, 0x5B}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+{"vcvttps2dq", {0xC5, 0xFA, 0x5B}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+
+/* AVX2 - Multiply */
+{"vpmullw", {0xC5, 0xF9, 0xD5}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpmulld", {0xC4, 0xE2, 0x7D, 0x40}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpmulhuw", {0xC5, 0xF9, 0xE4}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpmulhw", {0xC5, 0xF9, 0xE5}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX2 - FMA (Fused Multiply-Add) */
+{"vfmadd213ps", {0xC4, 0xE2, 0x75, 0xA8}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vfmadd231ps", {0xC4, 0xE2, 0x75, 0xB8}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vfmadd132ps", {0xC4, 0xE2, 0x75, 0x98}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vfmsub213ps", {0xC4, 0xE2, 0x75, 0xAA}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vfmsub231ps", {0xC4, 0xE2, 0x75, 0xBA}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vfnmadd213ps", {0xC4, 0xE2, 0x75, 0xAC}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vfnmadd231ps", {0xC4, 0xE2, 0x75, 0xBC}, 4, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX2 - Shuffle */
+{"vpshufd", {0xC5, 0xFA, 0x70}, 3, OP_YMM, OP_YMM, OP_IMM8, 1, -1, 1, 0},
+{"vpshufd", {0xC5, 0xFA, 0x70}, 3, OP_YMM, OP_MEM256, OP_IMM8, 1, -1, 1, 0},
+{"vpshuflw", {0xC5, 0xFA, 0x70}, 3, OP_YMM, OP_YMM, OP_IMM8, 1, -1, 1, 0},
+{"vpshufhw", {0xC5, 0xFB, 0x70}, 3, OP_YMM, OP_YMM, OP_IMM8, 1, -1, 1, 0},
+
+/* AVX2 - Insert/Extract */
+{"vpinsrw", {0xC5, 0xF9, 0xC4}, 3, OP_XMM, OP_XMM, OP_IMM8, 1, -1, 1, 0},
+{"vpextrw", {0xC5, 0xF9, 0xC5}, 3, OP_REG32, OP_XMM, OP_IMM8, 1, -1, 1, 0},
+
+/* AVX2 - Sign extend */
+{"vpmovzxbw", {0xC4, 0xE2, 0x7D, 0x30}, 4, OP_YMM, OP_XMM, OP_NONE, 1, -1, 0, 0},
+{"vpmovzxbw", {0xC4, 0xE2, 0x7D, 0x30}, 4, OP_YMM, OP_MEM128, OP_NONE, 1, -1, 0, 0},
+{"vpmovzxwd", {0xC4, 0xE2, 0x7D, 0x33}, 4, OP_YMM, OP_XMM, OP_NONE, 1, -1, 0, 0},
+{"vpmovzxdq", {0xC4, 0xE2, 0x7D, 0x35}, 4, OP_YMM, OP_XMM, OP_NONE, 1, -1, 0, 0},
+
+/* AVX2 - AND */
+{"vpand", {0xC5, 0xF9, 0xDB}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpand", {0xC5, 0xF9, 0xDB}, 3, OP_YMM, OP_YMM, OP_MEM256, 1, -1, 0, 0},
+{"vpandn", {0xC5, 0xF9, 0xDF}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+{"vpor", {0xC5, 0xF9, 0xEB}, 3, OP_YMM, OP_YMM, OP_YMM, 1, -1, 0, 0},
+
+/* AVX2 - Store */
+{"vmovdqa", {0xC5, 0xF9, 0x6F}, 3, OP_YMM, OP_YMM, OP_NONE, 1, -1, 0, 0},
+{"vmovdqa", {0xC5, 0xF9, 0x7F}, 3, OP_MEM256, OP_YMM, OP_NONE, 1, 0, 0, 0},
+{"vmovntdq", {0xC5, 0xF9, 0xE7}, 3, OP_MEM256, OP_YMM, OP_NONE, 1, 0, 0, 0},
+
+/* ============================================================================
+ * INSTRUCTION TABLE END
+ * ============================================================================
+
+To apply these changes:
+
+1. Open rawrxd_native_assembler.c
+2. Find the g_instructions table (around line 400)
+3. Add these entries before the terminating {NULL, {0}, 0, ...} entry
+4. Recompile the assembler
+5. Test with the failing kernel files
+
+Note: This adds VEX-encoded AVX/AVX2 instructions. EVEX-encoded AVX-512 
+instructions require additional work for mask register support.
+
+*/

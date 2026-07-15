@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769907911675_Jpld.asm
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769907911675_Jpld.asm(220) : error A2005:symbol redefinition : StartPipeServer
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769907911675_Jpld.asm(220) : error A2004:symbol type conflict : StartPipeServer
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769907911675_Jpld.asm(221) : error A2005:symbol redefinition : StopPipeServer
+D:\rawrxd\history\all_versions\src\RawrXD_PipeServer.asm\1769907911675_Jpld.asm(221) : error A2004:symbol type conflict : StopPipeServer

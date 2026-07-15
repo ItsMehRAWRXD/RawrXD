@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(132) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(134) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(144) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(157) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(172) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(178) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(184) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(188) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(198) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(200) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(253) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(262) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(267) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(268) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(271) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(272) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(275) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(276) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(279) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(280) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(291) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(308) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(309) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(310) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(311) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(312) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(313) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(317) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(380) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(389) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(402) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(403) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(404) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(413) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(427) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(429) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(430) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(445) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(458) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(513) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(514) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(535) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(544) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(555) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(572) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(573) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(576) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(577) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(578) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(582) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(601) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(610) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(621) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(630) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(631) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(632) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(635) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(651) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(664) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(671) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(672) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(673) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(674) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(675) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(678) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(701) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(705) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(754) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(756) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(758) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(760) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(762) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(764) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(766) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(768) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(772) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(774) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(776) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(778) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(780) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(782) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(784) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(786) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(791) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(793) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(794) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(798) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(815) : error A2008:syntax error : INVOKE
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(818) : error A2008:syntax error : RVA2FileOffset
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(832) : error A2008:syntax error : if
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(834) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(837) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(840) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(843) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(846) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(848) : error A2008:syntax error : elseif
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(850) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(852) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\omega_professional.asm\1769833995980_ZpwC.asm(854) : fatal error A1012:error count exceeds 100; stopping assembly

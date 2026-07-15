@@ -1,0 +1,62 @@
+ Assembling: D:\rawrxd\TITAN_x64.asm
+D:\rawrxd\TITAN_x64.asm(21) : error A2006:undefined symbol : HANDLE
+D:\rawrxd\TITAN_x64.asm(21) : error A2195:parameter or local cannot have void type
+D:\rawrxd\TITAN_x64.asm(22) : error A2006:undefined symbol : HANDLE
+D:\rawrxd\TITAN_x64.asm(22) : error A2195:parameter or local cannot have void type
+D:\rawrxd\TITAN_x64.asm(22) : error A2129:VARARG parameter must be last parameter
+D:\rawrxd\TITAN_x64.asm(23) : error A2006:undefined symbol : HANDLE
+D:\rawrxd\TITAN_x64.asm(23) : error A2195:parameter or local cannot have void type
+D:\rawrxd\TITAN_x64.asm(23) : error A2129:VARARG parameter must be last parameter
+D:\rawrxd\TITAN_x64.asm(24) : error A2006:undefined symbol : HANDLE
+D:\rawrxd\TITAN_x64.asm(24) : error A2195:parameter or local cannot have void type
+D:\rawrxd\TITAN_x64.asm(28) : error A2008:syntax error : ALIGN
+D:\rawrxd\TITAN_x64.asm(30) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(31) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(32) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(33) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(34) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(36) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(37) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(39) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(40) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(42) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(43) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(45) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(47) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(48) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(49) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(51) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(52) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(53) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(55) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(56) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(57) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(58) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(60) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(61) : error A2034:must be in segment block
+D:\rawrxd\TITAN_x64.asm(91) : error A2006:undefined symbol : g_EditorLength
+D:\rawrxd\TITAN_x64.asm(92) : error A2006:undefined symbol : g_EditorCursor
+D:\rawrxd\TITAN_x64.asm(93) : error A2006:undefined symbol : g_EditorLineCount
+D:\rawrxd\TITAN_x64.asm(94) : error A2006:undefined symbol : g_EditorModified
+D:\rawrxd\TITAN_x64.asm(96) : error A2006:undefined symbol : g_SymbolCount
+D:\rawrxd\TITAN_x64.asm(97) : error A2006:undefined symbol : g_TokenCount
+D:\rawrxd\TITAN_x64.asm(98) : error A2006:undefined symbol : g_ASTCount
+D:\rawrxd\TITAN_x64.asm(100) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_x64.asm(118) : error A2006:undefined symbol : g_EngineRunning
+D:\rawrxd\TITAN_x64.asm(138) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_x64.asm(150) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_x64.asm(161) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_x64.asm(164) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_x64.asm(167) : error A2006:undefined symbol : g_TraceFile
+D:\rawrxd\TITAN_x64.asm(170) : error A2006:undefined symbol : g_JITBuffer
+D:\rawrxd\TITAN_x64.asm(172) : error A2006:undefined symbol : g_ProjectFile
+D:\rawrxd\TITAN_x64.asm(175) : error A2006:undefined symbol : g_EngineRunning
+D:\rawrxd\TITAN_x64.asm(330) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_x64.asm(369) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_x64.asm(378) : error A2006:undefined symbol : g_TraceBuffer
+D:\rawrxd\TITAN_x64.asm(389) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_x64.asm(418) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_x64.asm(427) : error A2006:undefined symbol : g_TraceState
+D:\rawrxd\TITAN_x64.asm(431) : error A2006:undefined symbol : g_TraceBuffer
+D:\rawrxd\TITAN_x64.asm(447) : error A2206:missing operator in expression
+D:\rawrxd\TITAN_x64.asm(454) : error A2006:undefined symbol : g_NF4Lookup

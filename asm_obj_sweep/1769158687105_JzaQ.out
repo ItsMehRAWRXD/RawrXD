@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(16) : error A2048:nondigit in number
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(22) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(25) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(31) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(40) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(41) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(45) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(50) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(51) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(55) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(61) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(63) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(72) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(73) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(81) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(83) : error A2008:syntax error : a
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(93) : error A2008:syntax error : a
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(102) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(112) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(121) : error A2008:syntax error : retateMemory
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(131) : error A2008:syntax error : retemory
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(145) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(153) : error A2008:syntax error : up
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(155) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(159) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(160) : error A2008:syntax error : retalizeCommandBufferPool
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(162) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(165) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(167) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(174) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(176) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(179) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(180) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(181) : error A2008:syntax error : for
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(183) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(184) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(185) : error A2008:syntax error : for
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(186) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(188) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(189) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(190) : error A2008:syntax error : for
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(192) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(195) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(196) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(198) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(201) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(202) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(203) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(204) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(207) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(208) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(210) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(214) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(216) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(217) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(218) : error A2008:syntax error : for
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(219) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(220) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(222) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(223) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(224) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(225) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(226) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(227) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1769158687105_JzaQ.asm(228) : fatal error A1012:error count exceeds 100; stopping assembly

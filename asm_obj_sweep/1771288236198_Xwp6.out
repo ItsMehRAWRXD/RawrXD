@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1771288236198_Xwp6.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1771288236198_Xwp6.asm(273) : error A2006:undefined symbol : g_cached_slab_id
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1771288236198_Xwp6.asm(279) : error A2006:undefined symbol : g_slab_path_buf
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1771288236198_Xwp6.asm(280) : error A2006:undefined symbol : szSlabPathFmt
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1771288236198_Xwp6.asm(285) : error A2006:undefined symbol : g_slab_path_buf
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1771288236198_Xwp6.asm(315) : error A2006:undefined symbol : g_cached_slab_id

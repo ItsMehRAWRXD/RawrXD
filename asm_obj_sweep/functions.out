@@ -1,0 +1,21 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(162) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(169) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(230) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(237) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(279) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(286) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(311) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(318) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(343) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(350) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(375) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(382) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(425) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(432) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(457) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(464) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(489) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(496) : error A2006:undefined symbol : GetModuleHandleA
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(521) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\missing\ui\functions.asm(528) : error A2006:undefined symbol : GetModuleHandleA

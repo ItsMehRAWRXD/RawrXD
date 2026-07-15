@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(229) : error A2006:undefined symbol : select
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(243) : error A2006:undefined symbol : recv
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(248) : error A2006:undefined symbol : WSAGetLastError
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(260) : error A2006:undefined symbol : send
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(265) : error A2006:undefined symbol : WSAGetLastError
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(284) : error A2006:undefined symbol : recv
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(289) : error A2006:undefined symbol : WSAGetLastError
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(301) : error A2006:undefined symbol : send
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(306) : error A2006:undefined symbol : WSAGetLastError
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(320) : error A2006:undefined symbol : closesocket
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275444880_29ZL.asm(322) : error A2006:undefined symbol : closesocket

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Production_System.asm\1769584123484_IFgG.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Production_System.asm\1769584123484_IFgG.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Production_System.asm\1769584123484_IFgG.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Production_System.asm\1769584123484_IFgG.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Production_System.asm\1769584123484_IFgG.asm(15) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Complete_Production_System.asm\1769584123484_IFgG.asm(20) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

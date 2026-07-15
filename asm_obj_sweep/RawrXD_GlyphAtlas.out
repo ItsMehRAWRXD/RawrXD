@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\src\RawrXD_GlyphAtlas.asm
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(7) : error A2008:syntax error : .
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(8) : error A2008:syntax error : .
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(9) : error A2008:syntax error : .
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(51) : error A2008:syntax error : width
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(133) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(635) : error A2070:invalid instruction operands
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(636) : error A2070:invalid instruction operands
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(817) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(818) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(819) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(820) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(821) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(822) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(823) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(824) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(825) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(826) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(827) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(828) : error A2008:syntax error : [
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(852) : error A2070:invalid instruction operands
+D:\rawrxd\src\RawrXD_GlyphAtlas.asm(893) : fatal error A1008:unmatched macro nesting

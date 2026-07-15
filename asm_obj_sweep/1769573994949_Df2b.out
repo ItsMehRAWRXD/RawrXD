@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(15) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(121) : error A2008:syntax error : available
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(144) : error A2008:syntax error : width
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(146) : error A2008:syntax error : dark_mode
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(163) : error A2008:syntax error : telemetry_enabled
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(232) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(235) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(310) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(313) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(333) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(361) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(390) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(414) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(432) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(437) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(501) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(506) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(509) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(521) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(573) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(576) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(598) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(613) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(635) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(680) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(684) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(870) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(876) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(881) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(886) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(923) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(927) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(931) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(938) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(942) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(946) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1007) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1048) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1081) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1089) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1099) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1103) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1131) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1139) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1149) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1152) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1193) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1196) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1265) : error A2005:symbol redefinition : telemetry_server
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1266) : error A2005:symbol redefinition : update_server
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1277) : error A2005:symbol redefinition : crash_dump_filename
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(1286) : error A2008:syntax error : telemetry_lock
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(52) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(54) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(55) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(209) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(210) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(212) : error A2006:undefined symbol : init_crash_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(218) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(219) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(221) : error A2006:undefined symbol : init_crash_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(226) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(227) : error A2006:undefined symbol : SetUnhandledExceptionFilter
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(230) : error A2006:undefined symbol : init_crash_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(260) : error A2006:undefined symbol : GetSystemTimeAsFileTime
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(264) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(268) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(286) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(292) : error A2006:undefined symbol : GetCurrentProcessId
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(293) : error A2006:undefined symbol : GetCurrentProcessId
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(297) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(304) : error A2006:undefined symbol : crash_dump_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(308) : error A2006:undefined symbol : crash_dump_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(331) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(334) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(350) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(353) : error A2006:undefined symbol : crash_upload_failed
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(364) : error A2006:undefined symbol : ExitThread
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(379) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(383) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(388) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(391) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(416) : error A2006:undefined symbol : gen_id_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(429) : error A2006:undefined symbol : gen_id_store
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(435) : error A2006:undefined symbol : gen_id_loop
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(438) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(456) : error A2006:undefined symbol : telemetry_enabled
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(457) : error A2006:undefined symbol : telemetry_skip
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(460) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(461) : error A2006:undefined symbol : EnterCriticalSection
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(466) : error A2006:undefined symbol : telemetry_full
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(469) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(483) : error A2006:undefined symbol : lstrcpyn
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(486) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(489) : error A2006:undefined symbol : lstrcpyn
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(492) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(495) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(496) : error A2006:undefined symbol : LeaveCriticalSection
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(499) : error A2006:undefined symbol : telemetry_done
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(502) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\week5_final_integration.asm\1769573994949_Df2b.asm(503) : fatal error A1012:error count exceeds 100; stopping assembly

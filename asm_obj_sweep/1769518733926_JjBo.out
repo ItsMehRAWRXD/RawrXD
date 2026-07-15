@@ -1,0 +1,30 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(77) : error A2034:must be in segment block : AVX512_NTCopy
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(79) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(80) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(81) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(83) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(84) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(96) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(97) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(98) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(99) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(102) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(103) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(106) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\masm\RawrXD_LazyTensorPager.asm\1769518733926_JjBo.asm(110) : fatal error A1010:unmatched block nesting : AVX512_NTCopy

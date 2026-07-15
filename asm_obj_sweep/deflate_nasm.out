@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(6) : error A2008:syntax error : section
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(7) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(10) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(11) : error A2008:syntax error : integer
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(12) : error A2008:syntax error : integer
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(13) : error A2008:syntax error : integer
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(16) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(19) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(22) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(25) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(27) : error A2008:syntax error : section
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(30) : error A2008:syntax error : section
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(31) : error A2008:syntax error : global
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(32) : error A2008:syntax error : in directive
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(33) : error A2008:syntax error : in directive
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(35) : error A2008:syntax error : define
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(36) : error A2008:syntax error : define
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(37) : error A2008:syntax error : define
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(38) : error A2008:syntax error : define
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(41) : error A2008:syntax error : macro
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(42) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(43) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(44) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(45) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(46) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(47) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(48) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(49) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(50) : error A2008:syntax error : endmacro
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(52) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(54) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(55) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(56) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(57) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(58) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(59) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(60) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(61) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(62) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(65) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(66) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(67) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(68) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(69) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(70) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(72) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(73) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(74) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(75) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(76) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(79) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(80) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(81) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(82) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(85) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(86) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(87) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(88) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(90) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(91) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(93) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(94) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(97) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(98) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(99) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(100) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(101) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(102) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(103) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(104) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(107) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(108) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(109) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(110) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(111) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(112) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(113) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(114) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(115) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(119) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(120) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(123) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(125) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(127) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(128) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(130) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(131) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(132) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(133) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(136) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(137) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(138) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(139) : error A2008:syntax error : .
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(140) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(143) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(144) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(147) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(148) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(149) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(150) : error A2034:must be in segment block
+D:\rawrxd\RawrXD-ModelLoader\kernels\deflate_nasm.asm(153) : fatal error A1012:error count exceeds 100; stopping assembly

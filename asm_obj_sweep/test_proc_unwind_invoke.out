@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\toolchain\from_scratch\phase1_assembler\test_proc_unwind_invoke.asm
+D:\rawrxd\toolchain\from_scratch\phase1_assembler\test_proc_unwind_invoke.asm(6) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\toolchain\from_scratch\phase1_assembler\test_proc_unwind_invoke.asm(7) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\toolchain\from_scratch\phase1_assembler\test_proc_unwind_invoke.asm(8) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\toolchain\from_scratch\phase1_assembler\test_proc_unwind_invoke.asm(9) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\toolchain\from_scratch\phase1_assembler\test_proc_unwind_invoke.asm(10) : error A2008:syntax error : invoke

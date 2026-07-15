@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\-275218bd\8T0w.asm
+D:\rawrxd\history\-275218bd\8T0w.asm(191) : error A2008:syntax error : .
+D:\rawrxd\history\-275218bd\8T0w.asm(192) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\-275218bd\8T0w.asm(347) : error A2070:invalid instruction operands
+D:\rawrxd\history\-275218bd\8T0w.asm(368) : error A2218:AH, BH, CH, or DH may not be used with R8-R15, BPL, DIL, SIL, or SPL
+D:\rawrxd\history\-275218bd\8T0w.asm(684) : error A2005:symbol redefinition : @pa
+D:\rawrxd\history\-275218bd\8T0w.asm(1521) : error A2070:invalid instruction operands
+D:\rawrxd\history\-275218bd\8T0w.asm(1315) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-275218bd\8T0w.asm(1339) : error A2006:undefined symbol : T_KW
+D:\rawrxd\history\-275218bd\8T0w.asm(1410) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-275218bd\8T0w.asm(1444) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-275218bd\8T0w.asm(1484) : error A2006:undefined symbol : K_IN
+D:\rawrxd\history\-275218bd\8T0w.asm(1523) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-275218bd\8T0w.asm(1532) : error A2006:undefined symbol : GetCommandLineA
+D:\rawrxd\history\-275218bd\8T0w.asm(1578) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-275218bd\8T0w.asm(1618) : error A2006:undefined symbol : ExitProcess
+D:\rawrxd\history\-275218bd\8T0w.asm(1621) : error A2006:undefined symbol : ExitProcess

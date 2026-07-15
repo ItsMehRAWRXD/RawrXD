@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(124) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(138) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(140) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(153) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(155) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(232) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(307) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(60) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(61) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_unified_masm_hotpatch.asm(62) : warning A4014:instructions and initialized data not supported in BSS segments

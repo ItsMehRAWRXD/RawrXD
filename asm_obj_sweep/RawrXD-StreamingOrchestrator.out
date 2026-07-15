@@ -1,0 +1,33 @@
+ Assembling: D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(703) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(722) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(731) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(734) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(759) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(766) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(796) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(806) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(929) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1006) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1312) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1333) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1352) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1404) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1425) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1444) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1496) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1517) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1536) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1588) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1609) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1628) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(1950) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2355) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2362) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2364) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2372) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2374) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2419) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2466) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2237) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\asm\RawrXD-StreamingOrchestrator.asm(2249) : error A2022:instruction operands must be the same size

@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(263) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(265) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(268) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(273) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(298) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(325) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(326) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(328) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(333) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(336) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(339) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(340) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(352) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(386) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(387) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(400) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(404) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(415) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(416) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(440) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(447) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(460) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(482) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(490) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(640) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(645) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(687) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(690) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(725) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(734) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(847) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1005) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1226) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1232) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1233) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1242) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1291) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1300) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1311) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1333) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1336) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1345) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1346) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1348) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1371) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1374) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1406) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1408) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1417) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1421) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1446) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1472) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1480) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1481) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1483) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1484) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1493) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1498) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1500) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1501) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1511) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1512) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1513) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1514) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1518) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1531) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1532) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1542) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1543) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1552) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1553) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1579) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1580) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1582) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1584) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1586) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1588) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1627) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1628) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1634) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1635) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1697) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1698) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1711) : error A2005:symbol redefinition : szYaraHeader
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1712) : error A2005:symbol redefinition : szFmtYaraMatch
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1713) : error A2005:symbol redefinition : szFmtYaraString
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1714) : error A2005:symbol redefinition : szFmtYaraSummary
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1715) : error A2005:symbol redefinition : szYaraNoMatch
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1718) : error A2005:symbol redefinition : szRuleMZ
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1719) : error A2005:symbol redefinition : szDescMZ
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1720) : error A2005:symbol redefinition : szRuleUPX
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578758965_bFwi.asm(1721) : fatal error A1012:error count exceeds 100; stopping assembly

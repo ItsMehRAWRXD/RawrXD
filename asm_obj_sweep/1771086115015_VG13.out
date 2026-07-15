@@ -1,0 +1,62 @@
+ Assembling: D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(184) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(253) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(261) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(264) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(273) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(300) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(341) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(352) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(367) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(393) : error A2005:symbol redefinition : str_avx512
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(404) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(416) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(502) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(514) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(619) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(621) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(623) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(629) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(674) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(682) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(744) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(752) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(790) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(802) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(835) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(847) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(885) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(897) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(906) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(918) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(937) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(945) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(955) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(963) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(995) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1007) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1020) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1032) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1063) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1075) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1087) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(494) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(530) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(537) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(544) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(551) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(746) : warning A4025:ENDP found before .ENDPROLOG : MeasureTscFrequency
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(746) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(746) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(792) : warning A4025:ENDP found before .ENDPROLOG : DetectMemoryTopology
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(837) : warning A4025:ENDP found before .ENDPROLOG : InitializeMemoryArenas
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(887) : warning A4025:ENDP found before .ENDPROLOG : ArenaAllocate
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(908) : warning A4025:ENDP found before .ENDPROLOG : InitializeSynchronizationPrimitives
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(939) : warning A4025:ENDP found before .ENDPROLOG : CalibratePerformanceCounters
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(997) : warning A4025:ENDP found before .ENDPROLOG : GetElapsedMicroseconds
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1022) : warning A4025:ENDP found before .ENDPROLOG : InitializeThreadPoolInfrastructure
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1065) : warning A4025:ENDP found before .ENDPROLOG : Phase1LogMessage
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1089) : warning A4025:ENDP found before .ENDPROLOG : PhaseStrLen
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1089) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086115015_VG13.asm(1089) : error A2220:Missing .ENDPROLOG

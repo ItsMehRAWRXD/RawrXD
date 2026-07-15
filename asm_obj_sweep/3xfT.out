@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-20e95202\3xfT.asm
+D:\rawrxd\history\-20e95202\3xfT.asm(360) : error A2070:invalid instruction operands
+D:\rawrxd\history\-20e95202\3xfT.asm(362) : error A2070:invalid instruction operands
+D:\rawrxd\history\-20e95202\3xfT.asm(65) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\-20e95202\3xfT.asm(81) : error A2006:undefined symbol : GetLastError

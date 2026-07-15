@@ -1,0 +1,61 @@
+ Assembling: D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(184) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(253) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(261) : error A2008:syntax error : lock
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(264) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(273) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(300) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(341) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(352) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(367) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(393) : error A2005:symbol redefinition : str_avx512
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(404) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(416) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(501) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(513) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(617) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(619) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(621) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(627) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(672) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(680) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(742) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(750) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(788) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(800) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(833) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(845) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(883) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(895) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(904) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(916) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(935) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(943) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(952) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(960) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(992) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1004) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1017) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1029) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1060) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1072) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1084) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(493) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(528) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(535) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(542) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(549) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(503) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(674) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(744) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(790) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(835) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(885) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(906) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(937) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(954) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(994) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1019) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1062) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\foundation\Phase1_Master.asm\1771086082389_M7eY.asm(1086) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\src\agentic\Final_v2.asm
+D:\rawrxd\src\agentic\Final_v2.asm(663) : error A2005:symbol redefinition : section_name_text
+D:\rawrxd\src\agentic\Final_v2.asm(664) : error A2005:symbol redefinition : section_name_idata
+D:\rawrxd\src\agentic\Final_v2.asm(171) : error A2006:undefined symbol : Emitter_Init
+D:\rawrxd\src\agentic\Final_v2.asm(566) : error A2006:undefined symbol : PeWriter_WriteDosHeader
+D:\rawrxd\src\agentic\Final_v2.asm(574) : error A2006:undefined symbol : PeWriter_WriteNtHeaders
+D:\rawrxd\src\agentic\Final_v2.asm(584) : error A2006:undefined symbol : PeWriter_WriteSectionHeader
+D:\rawrxd\src\agentic\Final_v2.asm(594) : error A2006:undefined symbol : PeWriter_WriteSectionHeader
+D:\rawrxd\src\agentic\Final_v2.asm(643) : error A2006:undefined symbol : PeWriter_AddImportTable

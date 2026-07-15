@@ -1,0 +1,48 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(86) : error A2008:syntax error : type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(91) : error A2008:syntax error : width
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(323) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(323) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(353) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(353) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(383) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(383) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(327) : error A2006:undefined symbol : cbSize
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(328) : error A2006:undefined symbol : style
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(330) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(331) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(332) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(333) : error A2006:undefined symbol : hInstance
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(334) : error A2006:undefined symbol : hIcon
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(335) : error A2006:undefined symbol : hCursor
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(336) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(337) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(339) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(340) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(357) : error A2006:undefined symbol : cbSize
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(358) : error A2006:undefined symbol : style
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(360) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(361) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(362) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(363) : error A2006:undefined symbol : hInstance
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(364) : error A2006:undefined symbol : hIcon
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(365) : error A2006:undefined symbol : hCursor
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(366) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(367) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(369) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(370) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(387) : error A2006:undefined symbol : cbSize
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(388) : error A2006:undefined symbol : style
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(390) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(391) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(392) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(393) : error A2006:undefined symbol : hInstance
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(394) : error A2006:undefined symbol : hIcon
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(395) : error A2006:undefined symbol : hCursor
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(396) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(397) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(399) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(400) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(604) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(607) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\visual\gui\builder.asm(662) : error A2094:operand must be relocatable

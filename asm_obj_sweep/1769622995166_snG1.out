@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(139) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(207) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(156) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(215) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(228) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(252) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(252) : warning A6004:procedure argument or local not referenced : nLayer
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(252) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(262) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(275) : warning A6004:procedure argument or local not referenced : pszText
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(275) : warning A6004:procedure argument or local not referenced : pTokenIds
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(275) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(337) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\Titan_InferenceCore.asm\1769622995166_snG1.asm(355) : error A2220:Missing .ENDPROLOG

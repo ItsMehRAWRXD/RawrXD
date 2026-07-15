@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\Sovereign_Ghost_Ring.asm
+D:\rawrxd\Sovereign_Ghost_Ring.asm(39) : error A2008:syntax error : length
+D:\rawrxd\Sovereign_Ghost_Ring.asm(49) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\Sovereign_Ghost_Ring.asm(52) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\Sovereign_Ghost_Ring.asm(55) : error A2189:invalid combination with segment alignment : 64

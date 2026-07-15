@@ -1,0 +1,83 @@
+; SovereignK.inf - Installation file for Sovereign Kernel Driver
+; Target: AMD RX 7800 XT VRAM Access
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider=%ManufacturerName%
+CatalogFile=SovereignK.cat
+DriverVer=06/26/2026,1.0.0.0
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+SovereignK_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+SovereignK.sys = 1,,
+
+; Manufacturer and Models sections
+[Manufacturer]
+%ManufacturerName%=Standard,NTamd64
+
+[Standard.NTamd64]
+%DeviceDesc%=SovereignK_Device, Root\SovereignK
+
+; Device installation section
+[SovereignK_Device.NT]
+CopyFiles=DriversDir
+
+[DriversDir]
+SovereignK.sys
+
+; Service installation
+[SovereignK_Device.NT.Services]
+AddService = SovereignK, 0x00000002, SovereignK_Service_Inst
+
+[SovereignK_Service_Inst]
+DisplayName    = %ServiceDesc%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\SovereignK.sys
+LoadOrderGroup = Extended Base
+
+; Co-installer (optional, for custom setup)
+[SovereignK_Device.NT.CoInstallers]
+AddReg=SovereignK_Device_CoInstaller_AddReg
+CopyFiles=SovereignK_Device_CoInstaller_CopyFiles
+
+[SovereignK_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01011.dll,WdfCoInstaller"
+
+[SovereignK_Device_CoInstaller_CopyFiles]
+WdfCoInstaller01011.dll
+
+[SourceDisksFiles]
+WdfCoInstaller01011.dll=1
+
+; Registry entries
+[SovereignK_Device.NT.HW]
+AddReg=SovereignK_Device_AddReg
+
+[SovereignK_Device_AddReg]
+HKR,,DeviceCharacteristics,0x10001,0x0100     ; FILE_DEVICE_SECURE_OPEN
+HKR,,Security,,"D:P(A;;GA;;;BA)(A;;GA;;;SY)" ; Admin and System only
+
+; WDF specific
+[SovereignK_Device.NT.Wdf]
+KmdfService = SovereignK, SovereignK_wdfsect
+
+[SovereignK_wdfsect]
+KmdfLibraryVersion = 1.31
+
+; Strings
+[Strings]
+ManufacturerName="RawrXD Technologies"
+ServiceDesc="Sovereign GPU Bridge Driver"
+DeviceDesc="Sovereign VRAM Access Device"
+DiskName="SovereignK Installation Disk"

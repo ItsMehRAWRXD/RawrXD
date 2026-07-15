@@ -1,0 +1,85 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int16 : require
+
+// FP16 Matrix Multiplication for RDNA3
+// C = A * B where A:[M,K], B:[K,N], C:[M,N]
+// Uses 16x16 tiles for WMMA efficiency on RDNA3
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer BufferA {
+    float16_t data[];
+} bufferA;
+
+layout(set = 0, binding = 1) readonly buffer BufferB {
+    float16_t data[];
+} bufferB;
+
+layout(set = 0, binding = 2) writeonly buffer BufferC {
+    float16_t data[];
+} bufferC;
+
+layout(push_constant) uniform PushConstants {
+    uint M;
+    uint N;
+    uint K;
+    uint lda;  // Leading dimension of A
+    uint ldb;  // Leading dimension of B
+    uint ldc;  // Leading dimension of C
+} params;
+
+// Tile size - optimized for RDNA3 WMMA (16x16)
+#define TILE_SIZE 16
+
+shared float16_t tileA[TILE_SIZE][TILE_SIZE];
+shared float16_t tileB[TILE_SIZE][TILE_SIZE];
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    uint col = gl_GlobalInvocationID.y;
+    
+    uint localRow = gl_LocalInvocationID.x;
+    uint localCol = gl_LocalInvocationID.y;
+    
+    float16_t sum = float16_t(0.0);
+    
+    // Loop over tiles
+    uint numTiles = (params.K + TILE_SIZE - 1) / TILE_SIZE;
+    
+    for (uint t = 0; t < numTiles; t++) {
+        // Load tile from A
+        uint aRow = row;
+        uint aCol = t * TILE_SIZE + localCol;
+        if (aRow < params.M && aCol < params.K) {
+            tileA[localRow][localCol] = bufferA.data[aRow * params.lda + aCol];
+        } else {
+            tileA[localRow][localCol] = float16_t(0.0);
+        }
+        
+        // Load tile from B
+        uint bRow = t * TILE_SIZE + localRow;
+        uint bCol = col;
+        if (bRow < params.K && bCol < params.N) {
+            tileB[localRow][localCol] = bufferB.data[bRow * params.ldb + bCol];
+        } else {
+            tileB[localRow][localCol] = float16_t(0.0);
+        }
+        
+        // Synchronize to ensure tiles are loaded
+        barrier();
+        
+        // Compute partial dot product
+        for (uint k = 0; k < TILE_SIZE; k++) {
+            sum += tileA[localRow][k] * tileB[k][localCol];
+        }
+        
+        // Synchronize before loading next tile
+        barrier();
+    }
+    
+    // Write result
+    if (row < params.M && col < params.N) {
+        bufferC.data[row * params.ldc + col] = sum;
+    }
+}

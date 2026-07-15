@@ -1,0 +1,43 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(177) : error A2008:syntax error : KV
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(178) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(179) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(180) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(181) : error A2008:syntax error : KV
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(187) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(188) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(191) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(230) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(287) : error A2008:syntax error : stream_lock
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(298) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(309) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(321) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(408) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(922) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(924) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(933) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(936) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1000) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1476) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1533) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(452) : error A2006:undefined symbol : stream_lock
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(479) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(578) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(668) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(724) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(875) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1016) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1068) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1111) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1182) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1263) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1359) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1387) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1413) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1433) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1453) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1486) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1499) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1553) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_loader_Phase2_Master.asm(1587) : error A2220:Missing .ENDPROLOG

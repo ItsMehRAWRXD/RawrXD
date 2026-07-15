@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_system_init_stubs_clean.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_system_init_stubs_clean.asm(15) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_system_init_stubs_clean.asm(16) : warning A4014:instructions and initialized data not supported in BSS segments

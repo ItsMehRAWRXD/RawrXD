@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\RawrXD_SwarmCoordinator.asm
+D:\rawrxd\RawrXD_SwarmCoordinator.asm(33) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\RawrXD_SwarmCoordinator.asm(43) : fatal error A1010:unmatched block nesting

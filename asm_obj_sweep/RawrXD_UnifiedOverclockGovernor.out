@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\asm\RawrXD_UnifiedOverclockGovernor.asm
+D:\rawrxd\src\asm\RawrXD_UnifiedOverclockGovernor.asm(90) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD_UnifiedOverclockGovernor.asm(90) : error A2039:line too long
+D:\rawrxd\src\asm\RawrXD_UnifiedOverclockGovernor.asm(144) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD_UnifiedOverclockGovernor.asm(146) : fatal error A1010:unmatched block nesting : ReleaseSpinlock

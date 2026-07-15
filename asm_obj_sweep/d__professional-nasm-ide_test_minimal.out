@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(2) : error A2008:syntax error : bits
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(3) : error A2008:syntax error : default
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(5) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(6) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(8) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(10) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(11) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(14) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(15) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(23) : error A2008:syntax error : title
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(28) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_test_minimal.asm(32) : error A2088:END directive required at end of file

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(7) : error A2008:syntax error : BITS
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(8) : error A2008:syntax error : DEFAULT
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(14) : error A2008:syntax error : struc
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(15) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(16) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(17) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(18) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(19) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(20) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(21) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(22) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(23) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(24) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(25) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(26) : error A2008:syntax error : endstruc
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(28) : error A2008:syntax error : struc
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(29) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(30) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(31) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(32) : error A2008:syntax error : .type
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(33) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(34) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(35) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(36) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(37) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(38) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(39) : error A2008:syntax error : endstruc
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(45) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(60) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(61) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(62) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(63) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(64) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(65) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(66) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(67) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(70) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(71) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(72) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(73) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(74) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(75) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(76) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(82) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(84) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(85) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(86) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(87) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(88) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(89) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(95) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(105) : error A2008:syntax error : global
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(106) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(107) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(108) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(109) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(110) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(111) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(112) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(113) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(114) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(117) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(120) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(121) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(124) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(125) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(126) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(129) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(130) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(131) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(134) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(135) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(136) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(137) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(139) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(140) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(141) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(144) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(145) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(146) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(147) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(148) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(150) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(153) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(154) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(155) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(156) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(159) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(160) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(161) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(162) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(165) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(166) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(167) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(168) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(170) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(171) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(172) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(175) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(176) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\model\dampener.asm(177) : fatal error A1012:error count exceeds 100; stopping assembly

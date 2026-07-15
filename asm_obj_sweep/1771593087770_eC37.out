@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(41) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(63) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(40) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(47) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(53) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(62) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(69) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(73) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(80) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(106) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(175) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(221) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(40) : error A2156:constant value out of range
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(223) : warning A4025:ENDP found before .ENDPROLOG : Win32IDE_IsBeaconInitialized
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(223) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\asm\beacon_integration.asm\1771593087770_eC37.asm(223) : error A2220:Missing .ENDPROLOG

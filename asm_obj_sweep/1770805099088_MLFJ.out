@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_MultiWindow_Kernel.asm\1770805099088_MLFJ.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_MultiWindow_Kernel.asm\1770805099088_MLFJ.asm(155) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_MultiWindow_Kernel.asm\1770805099088_MLFJ.asm(1023) : error A2006:undefined symbol : FindWindowState

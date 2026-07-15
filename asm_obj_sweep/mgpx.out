@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-1098d7df\mgpx.asm
+D:\rawrxd\history\-1098d7df\mgpx.asm(295) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1098d7df\mgpx.asm(297) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1098d7df\mgpx.asm(298) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1098d7df\mgpx.asm(300) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1098d7df\mgpx.asm(309) : error A2006:undefined symbol : ui_editor_get_text

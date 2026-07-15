@@ -1,0 +1,78 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(27) : error A2008:syntax error : mask
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(572) : error A2068:instruction prefix not allowed
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(40) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(40) : error A2036:too many initial values for structure
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(41) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(42) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(43) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(44) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(45) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(46) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(47) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(48) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(49) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(50) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(51) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(52) : error A2138:invalid data initializer
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(108) : error A2006:undefined symbol : GetCurrentProcess
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(134) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(135) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(137) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(150) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(151) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(153) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(263) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1078) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1081) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1082) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1084) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1098) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1102) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1144) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1153) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(174) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(235) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(298) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(323) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(359) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(400) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(442) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(456) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(467) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(501) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(512) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(537) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(551) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(612) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(628) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(638) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(699) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(714) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(729) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(749) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(777) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(818) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(850) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(855) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(860) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(879) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(884) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(914) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(925) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(934) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(947) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(962) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(967) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(978) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(983) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1052) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1058) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1066) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1114) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1120) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_deobf_RawrXD_OmegaDeobfuscator.asm(1160) : error A2220:Missing .ENDPROLOG

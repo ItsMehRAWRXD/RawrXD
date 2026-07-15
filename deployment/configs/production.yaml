@@ -1,0 +1,133 @@
+# production.yaml
+# Production Configuration for RawrXD Sovereign v1.0.0
+# Optimized for AMD RX 7800 XT (16GB VRAM)
+
+version: "1.0.0"
+environment: "production"
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  workers: 4
+  max_connections: 100
+  timeout_seconds: 300
+  keep_alive: true
+
+inference:
+  default_model: "llama-3-8b"
+  max_tokens: 4096
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 40
+  repetition_penalty: 1.1
+  batch_size: 512
+  max_batch_wait_ms: 10
+  
+models:
+  directory: "${PROGRAMDATA}/RawrXD/models"
+  preload: ["llama-3-8b"]
+  cache_size_gb: 10
+  
+  llama-3-8b:
+    path: "${PROGRAMDATA}/RawrXD/models/llama-3-8b.gguf"
+    gpu_layers: 33
+    context_length: 8192
+    quantization: "Q4_K_M"
+
+gpu:
+  enabled: true
+  device: 0
+  memory_fraction: 0.9
+  compute_type: "auto"
+
+memory:
+  max_system_gb: 32
+  max_gpu_gb: 14
+  cache_strategy: "lru"
+  clear_on_oom: true
+
+logging:
+  level: "info"
+  file: "${PROGRAMDATA}/RawrXD/logs/service.log"
+  max_size_mb: 100
+  max_files: 10
+  console: false
+  format: "json"
+
+features:
+  autonomous: true
+  hotpatch: true
+  telemetry: true
+  swarm: false
+  chaos: false
+  monitoring: true
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+  
+  health_check:
+    interval_seconds: 30
+    timeout_seconds: 5
+    unhealthy_threshold: 3
+
+security:
+  auth_required: true
+  api_key_header: "X-API-Key"
+  rate_limiting: true
+  requests_per_minute: 100
+  max_request_size_mb: 10
+  allowed_origins: []
+  ssl_enabled: false
+  ssl_cert_path: ""
+  ssl_key_path: ""
+
+recovery:
+  auto_restart: true
+  max_restarts: 5
+  restart_delay_seconds: 10
+  health_check_interval: 30
+  circuit_breaker_threshold: 10
+
+performance:
+  profile: "balanced"
+  # Options: "speed", "balanced", "quality"
+  
+  speed:
+    batch_size: 1024
+    gpu_layers: 33
+    quantization: "Q4_0"
+  
+  balanced:
+    batch_size: 512
+    gpu_layers: 33
+    quantization: "Q4_K_M"
+  
+  quality:
+    batch_size: 256
+    gpu_layers: 33
+    quantization: "Q5_K_M"
+
+# Production-specific settings
+production:
+  debug: false
+  log_level: "info"
+  metrics_enabled: true
+  tracing_enabled: true
+  profiling_enabled: false
+  
+  # Alert thresholds
+  alerts:
+    cpu_threshold: 80
+    memory_threshold: 85
+    latency_threshold_ms: 200
+    error_rate_threshold: 5
+    
+  # Backup settings
+  backup:
+    enabled: true
+    interval_hours: 24
+    retention_days: 7
+    compress: true

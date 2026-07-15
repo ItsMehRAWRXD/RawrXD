@@ -1,0 +1,49 @@
+ Assembling: D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(4) : error A2008:syntax error : .
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(85) : error A2008:syntax error : bP
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(94) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(96) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(102) : error A2008:syntax error : ReadConsoleA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(111) : error A2008:syntax error : ReadConsoleA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(113) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(132) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(136) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(140) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(144) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(151) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(153) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(155) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(159) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(160) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(196) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(202) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(203) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(210) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(211) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(217) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(221) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(228) : error A2008:syntax error : wsprintfA
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(230) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(243) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(244) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(245) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(246) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(247) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(249) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(250) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(251) : error A2070:invalid instruction operands
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(254) : error A2008:syntax error : invoke
+D:\rawrxd\src\reverse_engineering\omega_suite\v3\OmegaProProfessional.asm(262) : fatal error A1009:line too long

@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(252) : error A2177:nested structure improperly initialized
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(286) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(288) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(291) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(296) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(321) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(348) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(349) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(351) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(356) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(359) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(362) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(363) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(375) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(409) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(410) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(423) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(427) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(438) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(439) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(463) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(470) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(483) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(505) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(513) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(663) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(668) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(710) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(713) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(748) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(757) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(870) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1028) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1249) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1255) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1256) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1265) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1314) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1323) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1334) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1356) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1359) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1368) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1369) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1371) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1394) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1397) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1429) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1431) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1440) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1444) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1469) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1495) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1503) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1504) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1506) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1507) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1513) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1516) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1521) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1523) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1524) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1534) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1535) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1536) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1537) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1541) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1554) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1555) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1565) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1566) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1575) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1576) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1602) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1603) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1605) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1607) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1609) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1611) : error A2008:syntax error : lstrcpyA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1631) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1650) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1651) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1657) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1658) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1710) : error A2005:symbol redefinition : MAX_YARA_RULES
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1714) : error A2005:symbol redefinition : YARA_COND_ANY
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1715) : error A2005:symbol redefinition : YARA_COND_ALL
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1719) : error A2163:non-benign structure redefinition: incorrect initializers : YARA_STRING
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1720) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1721) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1722) : error A2161:non-benign structure redefinition: too few labels : YARA_STRING
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769578774255_ZozP.asm(1722) : fatal error A1012:error count exceeds 100; stopping assembly

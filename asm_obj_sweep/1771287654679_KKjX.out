@@ -1,0 +1,90 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(46) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(59) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(72) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(101) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(102) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(116) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(137) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(175) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(591) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(1047) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(189) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(196) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(200) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(202) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(206) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(210) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(213) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(233) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(238) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(264) : error A2006:undefined symbol : vblank_sync
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(282) : error A2006:undefined symbol : ApplyGlitchEffect
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(287) : error A2006:undefined symbol : RenderParticles
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(291) : error A2006:undefined symbol : RenderScanlines
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(327) : error A2006:undefined symbol : SSE4Blur
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(330) : error A2006:undefined symbol : AVX512Blur
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(350) : error A2006:undefined symbol : LINE
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(406) : error A2006:undefined symbol : g_NextBranchId
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(407) : error A2006:undefined symbol : g_NextBranchId
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(411) : error A2006:undefined symbol : g_CurrentBranchId
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(421) : error A2006:undefined symbol : g_CurrentBuffer
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(426) : error A2006:undefined symbol : g_CurrentBranchId
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(456) : error A2006:undefined symbol : g_CurrentBranchId
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(460) : error A2006:undefined symbol : g_BranchListHead
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(472) : error A2006:undefined symbol : g_CurrentBuffer
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(483) : error A2006:undefined symbol : g_MergeViewActive
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(484) : error A2006:undefined symbol : g_MergeSourcePtr
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(485) : error A2006:undefined symbol : g_MergeTargetPtr
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(486) : error A2006:undefined symbol : g_MergeSourceBranch
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(487) : error A2006:undefined symbol : g_MergeTargetBranch
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(516) : error A2006:undefined symbol : g_HexViewActive
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(518) : error A2006:undefined symbol : g_HexViewActive
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(525) : error A2006:undefined symbol : g_HexBytesPerRow
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(526) : error A2006:undefined symbol : g_HexViewWidth
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(529) : error A2006:undefined symbol : g_CursorOffset
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(533) : error A2006:undefined symbol : g_HexTopRow
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(536) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(540) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(543) : error A2006:undefined symbol : g_HexViewActive
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(601) : error A2006:undefined symbol : g_DiffBitmapPtr
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(602) : error A2006:undefined symbol : g_DiffSize
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(603) : error A2006:undefined symbol : g_DiffViewActive
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(604) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(637) : error A2006:undefined symbol : OpenProcess
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(640) : error A2006:undefined symbol : g_AttachedProcess
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(646) : error A2006:undefined symbol : g_MemRegionCount
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(654) : error A2006:undefined symbol : VirtualQueryEx
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(663) : error A2006:undefined symbol : g_MemRegionCount
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(675) : error A2006:undefined symbol : g_MemEditActive
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(676) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(716) : error A2006:undefined symbol : g_DisasmBuffer
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(785) : error A2006:undefined symbol : g_DecompileViewActive
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(786) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(821) : error A2006:undefined symbol : g_GhostCursorCount
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(829) : error A2006:undefined symbol : g_GhostCursors
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(853) : error A2006:undefined symbol : g_ViewDirty
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(224) : warning A4025:ENDP found before .ENDPROLOG : QuantumBufferCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(224) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(247) : warning A4025:ENDP found before .ENDPROLOG : QuantumInsert
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(247) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(311) : warning A4025:ENDP found before .ENDPROLOG : HoloRenderFrame
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(334) : warning A4025:ENDP found before .ENDPROLOG : RenderTextWithGlow
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(378) : warning A4025:ENDP found before .ENDPROLOG : NeuralTokenize
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(869) : warning A4025:ENDP found before .ENDPROLOG : PredictiveShow
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(876) : warning A4025:ENDP found before .ENDPROLOG : SemanticZoom
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(885) : warning A4025:ENDP found before .ENDPROLOG : HeatMapToggle
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(893) : warning A4025:ENDP found before .ENDPROLOG : Minimap3D
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(901) : warning A4025:ENDP found before .ENDPROLOG : VoiceCommand
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(909) : warning A4025:ENDP found before .ENDPROLOG : EyeTrackScroll
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(917) : warning A4025:ENDP found before .ENDPROLOG : HapticType
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(925) : warning A4025:ENDP found before .ENDPROLOG : StressAdapt
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(933) : warning A4025:ENDP found before .ENDPROLOG : AROverlay
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(941) : warning A4025:ENDP found before .ENDPROLOG : DNASequence
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(949) : warning A4025:ENDP found before .ENDPROLOG : TimeTravelDebug
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(957) : warning A4025:ENDP found before .ENDPROLOG : AIPair
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(964) : warning A4025:ENDP found before .ENDPROLOG : QuantumEntangle
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(972) : warning A4025:ENDP found before .ENDPROLOG : SensoryCode
+D:\rawrxd\history\all_versions\src\agentic\monaco\NEON_MONACO_CORE.ASM\1771287654679_KKjX.ASM(980) : warning A4025:ENDP found before .ENDPROLOG : BCIPrep

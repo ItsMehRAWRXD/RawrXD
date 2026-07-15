@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\RawrXD\P2PRelay.asm
+D:\rawrxd\reconstructed\RawrXD\RawrXD\P2PRelay.asm(760) : error A2008:syntax error : /content
+D:\rawrxd\reconstructed\RawrXD\RawrXD\P2PRelay.asm(761) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\reconstructed\RawrXD\RawrXD\P2PRelay.asm(762) : error A2088:END directive required at end of file
+D:\rawrxd\reconstructed\RawrXD\RawrXD\P2PRelay.asm(108) : warning A4014:instructions and initialized data not supported in BSS segments

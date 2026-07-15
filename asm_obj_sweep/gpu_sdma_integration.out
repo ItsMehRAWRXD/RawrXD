@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\asm\gpu_sdma_integration.asm
+D:\rawrxd\src\asm\gpu_sdma_integration.asm(165) : warning A4026:.ENDPROLOG found before EH directives

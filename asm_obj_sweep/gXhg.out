@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-103a804f\gXhg.asm
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-103a804f\gXhg.asm(26) : error A2008:syntax error : WIN64
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-103a804f\gXhg.asm(29) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

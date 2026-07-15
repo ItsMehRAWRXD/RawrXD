@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246587813_DmHr.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246587813_DmHr.asm(325) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\terraform.asm\1771246587813_DmHr.asm(455) : fatal error A1010:unmatched block nesting : memcmp

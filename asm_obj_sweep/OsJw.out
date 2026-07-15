@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\-2753ef9b\OsJw.asm
+D:\rawrxd\history\-2753ef9b\OsJw.asm(46) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(47) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(48) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(49) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(50) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(51) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(52) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(53) : error A2023:instruction operand must have size
+D:\rawrxd\history\-2753ef9b\OsJw.asm(75) : error A2220:Missing .ENDPROLOG

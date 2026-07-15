@@ -1,0 +1,40 @@
+ Assembling: D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(12) : error A2034:must be in segment block : FP32_TO_FP16
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(14) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(15) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(29) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(38) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(39) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(40) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(42) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(46) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(47) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(48) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(49) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(51) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(56) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(58) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\vulkan_masm.asm\1771504304119_Mbah.asm(59) : fatal error A1010:unmatched block nesting : FP32_TO_FP16

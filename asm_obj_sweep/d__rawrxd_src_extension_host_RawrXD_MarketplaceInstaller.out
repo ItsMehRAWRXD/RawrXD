@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_extension_host_RawrXD_MarketplaceInstaller.asm
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_extension_host_RawrXD_MarketplaceInstaller.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_extension_host_RawrXD_MarketplaceInstaller.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_extension_host_RawrXD_MarketplaceInstaller.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_extension_host_RawrXD_MarketplaceInstaller.asm(19) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_extension_host_RawrXD_MarketplaceInstaller.asm(26) : fatal error A1000:cannot open file : user32.inc

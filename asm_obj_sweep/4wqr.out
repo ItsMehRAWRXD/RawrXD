@@ -1,0 +1,32 @@
+ Assembling: D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(186) : error A2005:symbol redefinition : szFeatureHarnessInit
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(187) : error A2005:symbol redefinition : szFeatureToggleSuccess
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(188) : error A2005:symbol redefinition : szFeaturePresetApplied
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(192) : error A2005:symbol redefinition : FeatureHarness
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(193) : error A2005:symbol redefinition : FeatureStatusArray
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(194) : error A2005:symbol redefinition : FeatureCount
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(195) : error A2005:symbol redefinition : FeaturesEnabled
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(196) : error A2005:symbol redefinition : CurrentPreset
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(643) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(664) : error A2070:invalid instruction operands
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(637) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(638) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(641) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(642) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(644) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(646) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(653) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(665) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(675) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(685) : error A2006:undefined symbol : StringFind
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(716) : error A2006:undefined symbol : StringCompare
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(739) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(744) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(822) : error A2006:undefined symbol : StringCompare
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(828) : error A2006:undefined symbol : StringCompare
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(948) : error A2006:undefined symbol : KEY_READ
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(950) : error A2006:undefined symbol : RegOpenKeyExA
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(974) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(984) : error A2006:undefined symbol : RegQueryValueExA
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(1008) : error A2006:undefined symbol : RegCloseKey
+D:\rawrxd\.archived_orphans\extracted_chats\cursor\History\-39948a11\4wqr.asm(1094) : error A2006:undefined symbol : QueryPerformanceFrequency

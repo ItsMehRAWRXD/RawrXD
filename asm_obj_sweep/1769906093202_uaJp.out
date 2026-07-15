@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906093202_uaJp.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906093202_uaJp.asm(245) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906093202_uaJp.asm(575) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906093202_uaJp.asm(599) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906093202_uaJp.asm(682) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906093202_uaJp.asm(689) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769906093202_uaJp.asm(713) : error A2006:undefined symbol : wsprintfA

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Agentic_Router.asm\1769838071298_ysYr.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Agentic_Router.asm\1769838071298_ysYr.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_Agentic_Router.asm\1769838071298_ysYr.asm(22) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Agentic_Router.asm\1769838071298_ysYr.asm(30) : error A2220:Missing .ENDPROLOG

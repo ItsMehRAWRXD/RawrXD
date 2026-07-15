@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_dumpbin_final.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_dumpbin_final.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_dumpbin_final.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_dumpbin_final.asm(18) : fatal error A1000:cannot open file : user32.inc

@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(103) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(104) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(115) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(116) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(187) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(197) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(237) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(239) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(248) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(250) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(309) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(310) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(320) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(321) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(372) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(374) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(383) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(385) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(428) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(429) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(431) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(440) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(441) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\vision_projection_kernel.asm\1770891031904_IRDG.asm(443) : error A2082:cannot mix 16- and 32-bit registers

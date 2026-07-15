@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(366) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(37) : error A2006:undefined symbol : OpenProcess
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(48) : error A2006:undefined symbol : VirtualAllocEx
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(60) : error A2006:undefined symbol : WriteProcessMemory
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(21) : warning A6004:procedure argument or local not referenced : hInstDLL
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(21) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(21) : warning A6004:procedure argument or local not referenced : lpvReserved
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(269) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(278) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(287) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor_simple.asm\1771287855977_sqiX.asm(334) : warning A6004:procedure argument or local not referenced : lpParam

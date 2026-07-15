@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\RawrXD_AutoHeal_GUI.asm
+D:\rawrxd\RawrXD_AutoHeal_GUI.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\RawrXD_AutoHeal_GUI.asm(46) : error A2008:syntax error : invoke
+D:\rawrxd\RawrXD_AutoHeal_GUI.asm(50) : error A2008:syntax error : invoke
+D:\rawrxd\RawrXD_AutoHeal_GUI.asm(57) : error A2008:syntax error : invoke
+D:\rawrxd\RawrXD_AutoHeal_GUI.asm(65) : error A2008:syntax error : invoke

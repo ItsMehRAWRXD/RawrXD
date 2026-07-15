@@ -1,0 +1,38 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(93) : error A2006:undefined symbol : MAX_PATH
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(96) : error A2008:syntax error : cursorPos
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(230) : error A2008:syntax error : ebx
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(231) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(232) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(233) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(234) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(235) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(236) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(237) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(238) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(240) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(241) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(245) : error A2008:syntax error : CreateFont
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(249) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(253) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(256) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(257) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(258) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(261) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(262) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(263) : error A2008:syntax error : FillRect
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(264) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(265) : error A2008:syntax error : DeleteObject
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(286) : error A2008:syntax error : esi
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(288) : error A2008:syntax error : if
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(289) : error A2008:syntax error : wsprintf
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(290) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(291) : error A2008:syntax error : TextOut
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(293) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(299) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(300) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(301) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(305) : error A2008:syntax error : elseif
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(309) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(311) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase1\editor\enhancement.asm(313) : fatal error A1010:unmatched block nesting : LineNumbersWndProc

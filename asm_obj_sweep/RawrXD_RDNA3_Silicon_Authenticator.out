@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\asm\gpu\RawrXD_RDNA3_Silicon_Authenticator.asm
+D:\rawrxd\src\asm\gpu\RawrXD_RDNA3_Silicon_Authenticator.asm(17) : error A2006:undefined symbol : Silicon_PUF_Generate

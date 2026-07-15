@@ -1,0 +1,78 @@
+name: RawrXD Ring Attention Smoke Test
+
+on:
+  push:
+    branches: [ main, develop, feature/ring-attention ]
+    paths:
+      - 'RawrXD_Ring_Attention.asm'
+      - 'RawrXD_Ring_Attention.h'
+      - 'RawrXD_Error_Recovery.asm'
+      - 'RawrXD_Ring_Smoke_Test.asm'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'RawrXD_Ring_Attention.asm'
+      - 'RawrXD_Ring_Attention.h'
+      - 'RawrXD_Error_Recovery.asm'
+      - 'RawrXD_Ring_Smoke_Test.asm'
+
+jobs:
+  smoke-test:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Build and Run Smoke Tests
+      shell: pwsh
+      run: |
+        .\RawrXD_Ring_Smoke_Test_Build.ps1 -CI
+      
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: smoke-test-results
+        path: bin/smoke_test_results.json
+        
+    - name: Check Test Results
+      shell: pwsh
+      run: |
+        $results = Get-Content bin/smoke_test_results.json | ConvertFrom-Json
+        if ($results.test_results.failed -gt 0) {
+          Write-Error "Smoke tests failed: $($results.test_results.failed) failures"
+          exit 1
+        }
+        Write-Host "All smoke tests passed!"
+        
+    - name: Post Metrics to PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const results = JSON.parse(fs.readFileSync('bin/smoke_test_results.json', 'utf8'));
+          
+          const body = `## 🔥 Ring Attention Smoke Test Results
+          
+          | Metric | Value | Status |
+          |--------|-------|--------|
+          | Tests Passed | ${results.test_results.passed}/${results.test_results.total} | ${results.test_results.failed === 0 ? '✅' : '❌'} |
+          | TPS | ${results.metrics.tps?.toFixed(2) || 'N/A'} | ${results.metrics.tps >= 250 ? '✅' : '❌'} |
+          | Protocol Efficiency | ${results.metrics.protocol_efficiency?.toFixed(2) || 'N/A'}% | ${results.metrics.protocol_efficiency >= 85 ? '✅' : '❌'} |
+          | Ring Rotations | ${results.metrics.ring_rotations || 'N/A'} | ✅ |
+          
+          **Build Status:** ${results.build_status}
+          **Timestamp:** ${results.timestamp}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });

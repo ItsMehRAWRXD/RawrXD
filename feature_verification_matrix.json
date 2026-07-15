@@ -1,0 +1,267 @@
+{
+  "features": [
+    {
+      "feature": "Call Hierarchy Prepare",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "CallHierarchy.Prepare",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Type Hierarchy Prepare",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "TypeHierarchy.Prepare",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Execute LSP Command",
+      "actual": "NOT_INVOKED",
+      "category": "CodeActions",
+      "status": "PENDING",
+      "signature": "CodeActions.ExecuteLSPCommand",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Incoming Calls",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "CallHierarchy.IncomingCalls",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Generate Tests",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.GenerateTests",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Query",
+      "actual": "NOT_INVOKED",
+      "category": "CodeActions",
+      "status": "PENDING",
+      "signature": "CodeActions.Query",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Fix Current Error",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Cmd.FixCurrentError",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Fix All",
+      "actual": "NOT_INVOKED",
+      "category": "CodeActions",
+      "status": "PENDING",
+      "signature": "CodeActions.Cmd.FixAll",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Initialize",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Init",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Suggest Refactoring",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.SuggestRefactoring",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Shutdown",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Shutdown",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Organize Imports",
+      "actual": "NOT_INVOKED",
+      "category": "CodeActions",
+      "status": "PENDING",
+      "signature": "CodeActions.Cmd.OrganizeImports",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Generate From Description",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.GenerateFromDescription",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Show UI",
+      "actual": "NOT_INVOKED",
+      "category": "CodeActions",
+      "status": "PENDING",
+      "signature": "CodeActions.ShowUI",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Apply Text Edit",
+      "actual": "NOT_INVOKED",
+      "category": "CodeActions",
+      "status": "PENDING",
+      "signature": "CodeActions.ApplyTextEdit",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Code Review",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Cmd.CodeReview",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Generate From Prompt",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Cmd.GenerateFromPrompt",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Explain Code",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.ExplainCode",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Show Call Hierarchy",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "CallHierarchy.Cmd.Show",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Generate Tests",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Cmd.GenerateTests",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Show Type Hierarchy",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "TypeHierarchy.Cmd.Show",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Subtypes",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "TypeHierarchy.Subtypes",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Outgoing Calls",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "CallHierarchy.OutgoingCalls",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Apply",
+      "actual": "NOT_INVOKED",
+      "category": "CodeActions",
+      "status": "PENDING",
+      "signature": "CodeActions.Apply",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Fix Error",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.FixError",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Refactor Selection",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Cmd.RefactorSelection",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Command: Explain Selection",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.Cmd.ExplainSelection",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Supertypes",
+      "actual": "NOT_INVOKED",
+      "category": "Hierarchy",
+      "status": "PENDING",
+      "signature": "TypeHierarchy.Supertypes",
+      "expected": "STUB"
+    },
+    {
+      "feature": "Code Review",
+      "actual": "NOT_INVOKED",
+      "category": "AI",
+      "status": "PENDING",
+      "signature": "AI.CodeReview",
+      "expected": "STUB"
+    }
+  ],
+  "generatedAt": "2026-06-25 01:24:35",
+  "totalDetected": 0,
+  "totalExpected": 29,
+  "summary": {
+    "mismatch": 0,
+    "completionRate": 0.0,
+    "verified": 0,
+    "totalFeatures": 29,
+    "pending": 29
+  },
+  "binaryPath": "d:\\rawrxd\\build-ninja\\bin\\RawrXD-Win32IDE.exe",
+  "categories": {
+    "CodeActions": {
+      "total": 7,
+      "mismatch": 0,
+      "verified": 0,
+      "pending": 7
+    },
+    "AI": {
+      "total": 14,
+      "mismatch": 0,
+      "verified": 0,
+      "pending": 14
+    },
+    "Hierarchy": {
+      "total": 8,
+      "mismatch": 0,
+      "verified": 0,
+      "pending": 8
+    }
+  }
+}

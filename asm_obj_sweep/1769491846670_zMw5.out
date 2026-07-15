@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(36) : error A2006:undefined symbol : PIPE_ACCESS_DUPLEX
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(37) : error A2006:undefined symbol : PIPE_TYPE_MESSAGE
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(43) : error A2006:undefined symbol : CreateNamedPipeA
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(46) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(52) : error A2006:undefined symbol : ConnectNamedPipe
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(60) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(81) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(85) : error A2006:undefined symbol : FlushFileBuffers
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(87) : error A2006:undefined symbol : DisconnectNamedPipe
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(89) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(95) : error A2006:undefined symbol : Sleep
+D:\rawrxd\history\all_versions\src\thermal\agent_bridge\SovereignAgentBridge.asm\1769491846670_zMw5.asm(98) : error A2220:Missing .ENDPROLOG

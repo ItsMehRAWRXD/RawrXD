@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769901824416_b37B.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769901824416_b37B.asm(20) : error A2008:syntax error : /
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769901824416_b37B.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769901824416_b37B.asm(22) : fatal error A1010:unmatched block nesting : SwarmJob

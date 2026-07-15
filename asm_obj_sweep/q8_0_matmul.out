@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\native\q8_0_matmul.asm
+D:\rawrxd\native\q8_0_matmul.asm(5) : error A2008:syntax error : .
+D:\rawrxd\native\q8_0_matmul.asm(6) : error A2008:syntax error : .
+D:\rawrxd\native\q8_0_matmul.asm(7) : error A2008:syntax error : .
+D:\rawrxd\native\q8_0_matmul.asm(129) : error A2022:instruction operands must be the same size
+D:\rawrxd\native\q8_0_matmul.asm(130) : error A2022:instruction operands must be the same size
+D:\rawrxd\native\q8_0_matmul.asm(131) : error A2022:instruction operands must be the same size
+D:\rawrxd\native\q8_0_matmul.asm(132) : error A2022:instruction operands must be the same size
+D:\rawrxd\native\q8_0_matmul.asm(150) : warning A4025:ENDP found before .ENDPROLOG : q8_0_matmul_avx2
+D:\rawrxd\native\q8_0_matmul.asm(150) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\native\q8_0_matmul.asm(150) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\-2b900d86\qETw.asm
+D:\rawrxd\history\-2b900d86\qETw.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\-2b900d86\qETw.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\-2b900d86\qETw.asm(149) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(150) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(153) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(161) : error A2008:syntax error : GetFileSizeEx
+D:\rawrxd\history\-2b900d86\qETw.asm(165) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(203) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(204) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(208) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(209) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(213) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(216) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(217) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(228) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(242) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(248) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(254) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(260) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(266) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(271) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(285) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(286) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(287) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(290) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\-2b900d86\qETw.asm(299) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(309) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(310) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(315) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(324) : error A2008:syntax error : GetFileSizeEx
+D:\rawrxd\history\-2b900d86\qETw.asm(335) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\-2b900d86\qETw.asm(342) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\-2b900d86\qETw.asm(348) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(349) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(356) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(357) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(362) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(369) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(370) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(371) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(375) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(377) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(381) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(384) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(385) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(386) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(399) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(400) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(403) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\-2b900d86\qETw.asm(412) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(421) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(422) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(427) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\-2b900d86\qETw.asm(436) : error A2008:syntax error : GetFileSizeEx
+D:\rawrxd\history\-2b900d86\qETw.asm(446) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\-2b900d86\qETw.asm(454) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(455) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(465) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(466) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(470) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(472) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(476) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(479) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(480) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(493) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(494) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(495) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(498) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\-2b900d86\qETw.asm(507) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(516) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(517) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(522) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\-2b900d86\qETw.asm(531) : error A2008:syntax error : GetFileSizeEx
+D:\rawrxd\history\-2b900d86\qETw.asm(543) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\-2b900d86\qETw.asm(560) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(561) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(569) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(570) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(571) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(575) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(579) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(582) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(583) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(584) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(598) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(599) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(600) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(603) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\history\-2b900d86\qETw.asm(612) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(621) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(622) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(627) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(636) : error A2008:syntax error : GetFileSizeEx
+D:\rawrxd\history\-2b900d86\qETw.asm(646) : error A2008:syntax error : CreateFileMappingA
+D:\rawrxd\history\-2b900d86\qETw.asm(653) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2b900d86\qETw.asm(665) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(666) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(673) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(674) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(682) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2b900d86\qETw.asm(683) : fatal error A1012:error count exceeds 100; stopping assembly

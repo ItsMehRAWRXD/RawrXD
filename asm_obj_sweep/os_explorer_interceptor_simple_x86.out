@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(6) : error A2008:syntax error : .
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(7) : error A2008:syntax error : .
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(21) : warning A6004:procedure argument or local not referenced : hInstDLL
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(21) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(21) : warning A6004:procedure argument or local not referenced : lpvReserved
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(31) : warning A6004:procedure argument or local not referenced : dwTargetPID
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(73) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(79) : warning A6004:procedure argument or local not referenced : pMessage
+D:\rawrxd\src\os_explorer_interceptor_simple_x86.asm(85) : warning A6004:procedure argument or local not referenced : pMessage

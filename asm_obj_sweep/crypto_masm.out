@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\crypto_masm.asm
+D:\rawrxd\src\crypto_masm.asm(22) : warning A6004:procedure argument or local not referenced : hinstDLL
+D:\rawrxd\src\crypto_masm.asm(22) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\src\crypto_masm.asm(22) : warning A6004:procedure argument or local not referenced : lpReserved

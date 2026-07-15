@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(39) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(132) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(148) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(152) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(192) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(206) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(213) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(239) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(244) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(245) : error A2008:syntax error : db
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(246) : error A2008:syntax error : db
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(295) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(332) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(334) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(370) : error A2008:syntax error : bits
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(371) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(419) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(421) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(422) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(423) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(424) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(425) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(426) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(429) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(430) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(431) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(432) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(433) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(436) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(437) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(438) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(441) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(442) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(443) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(446) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(447) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(448) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(449) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(452) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(453) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(454) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(455) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(458) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(459) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(460) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(463) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(464) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(465) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(467) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(468) : error A2008:syntax error : global
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(469) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(470) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(471) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(472) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(473) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(474) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(475) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(476) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(477) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(478) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(479) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(480) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(481) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(482) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(483) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(484) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(485) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(533) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(547) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(562) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(577) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(581) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(585) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(597) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(656) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(663) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(669) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(673) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(677) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(681) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(685) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(689) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(693) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(696) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(728) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(730) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(742) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(750) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(759) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(773) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(781) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(790) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(796) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(797) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(800) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(812) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(822) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(832) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(878) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(881) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771284953620_jodV.asm(920) : fatal error A1012:error count exceeds 100; stopping assembly

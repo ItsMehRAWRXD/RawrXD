@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\gpu_masm\vulkan\vk_instance.asm\1771284916886_z6R1.asm
+D:\rawrxd\history\all_versions\src\gpu_masm\vulkan\vk_instance.asm\1771284916886_z6R1.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\gpu_masm\vulkan\vk_instance.asm\1771284916886_z6R1.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\gpu_masm\vulkan\vk_instance.asm\1771284916886_z6R1.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\gpu_masm\vulkan\vk_instance.asm\1771284916886_z6R1.asm(14) : fatal error A1000:cannot open file : \masm32\include\windows.inc

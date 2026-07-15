@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-2d6daefa\GeiW.asm
+D:\rawrxd\history\-2d6daefa\GeiW.asm(304) : error A2006:undefined symbol : msgZeroDayUsed
+D:\rawrxd\history\-2d6daefa\GeiW.asm(308) : error A2006:undefined symbol : msgFallbackUsed
+D:\rawrxd\history\-2d6daefa\GeiW.asm(313) : error A2006:undefined symbol : msgPhase6Complex
+D:\rawrxd\history\-2d6daefa\GeiW.asm(316) : error A2006:undefined symbol : msgGoalComplex
+D:\rawrxd\history\-2d6daefa\GeiW.asm(330) : error A2006:undefined symbol : msgGoalComplex
+D:\rawrxd\history\-2d6daefa\GeiW.asm(337) : error A2006:undefined symbol : msgZeroDayUsed
+D:\rawrxd\history\-2d6daefa\GeiW.asm(341) : error A2006:undefined symbol : msgFallbackUsed

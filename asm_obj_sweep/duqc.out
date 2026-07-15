@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\-1eafcaa7\duqc.asm
+D:\rawrxd\history\-1eafcaa7\duqc.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\-1eafcaa7\duqc.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\-1eafcaa7\duqc.asm(326) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(328) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(331) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(336) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(361) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(388) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(389) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(391) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(396) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(399) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(402) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(403) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(415) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(449) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(450) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(463) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(467) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(478) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(479) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(503) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(510) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(523) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(545) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(553) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(703) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1eafcaa7\duqc.asm(708) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1eafcaa7\duqc.asm(750) : error A2008:syntax error : strlen
+D:\rawrxd\history\-1eafcaa7\duqc.asm(753) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(795) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(804) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1303) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1309) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1310) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1319) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1368) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1377) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1388) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1410) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1413) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1423) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1425) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1453) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1456) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1488) : error A2008:syntax error : strcat
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1490) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1499) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1503) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1528) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1529) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1565) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1612) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1613) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1618) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1706) : error A2008:syntax error : pushad
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1714) : error A2008:syntax error : CryptDecodeObjectEx
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1726) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1734) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1738) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1739) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1747) : error A2008:syntax error : CertNameToStrA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1751) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1752) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1771) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1772) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1775) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1777) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1778) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1780) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1782) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1783) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1786) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1793) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1794) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1801) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1812) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1816) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1819) : error A2008:syntax error : invoke
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1826) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1833) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1837) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1838) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1842) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1848) : error A2008:syntax error : main
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1848) : error A2088:END directive required at end of file
+D:\rawrxd\history\-1eafcaa7\duqc.asm(557) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\-1eafcaa7\duqc.asm(926) : error A2009:syntax error in expression
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1796) : error A2006:undefined symbol : ChainPara
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1797) : error A2006:undefined symbol : ChainPara
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1798) : error A2006:undefined symbol : ChainPara
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1799) : error A2006:undefined symbol : ChainPara
+D:\rawrxd\history\-1eafcaa7\duqc.asm(1807) : error A2006:undefined symbol : pChainContext
+D:\rawrxd\history\-1eafcaa7\duqc.asm(557) : fatal error A1012:error count exceeds 100; stopping assembly

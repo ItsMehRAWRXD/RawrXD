@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(136) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(136) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(152) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(152) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(168) : error A2008:syntax error :     ret
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(176) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(191) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(206) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(221) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(221) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(238) : error A2008:syntax error :     ret
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(242) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(257) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(257) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(274) : error A2008:syntax error :     ret
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(341) : error A2006:undefined symbol : g_Pattern_CompletionEngine
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(342) : error A2006:undefined symbol : g_Pattern_ContextAnalyzer
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(343) : error A2006:undefined symbol : g_Pattern_RewriteEngine
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(344) : error A2006:undefined symbol : g_Pattern_ModelRouter
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(345) : error A2006:undefined symbol : g_Pattern_LSPIntegration
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(346) : error A2006:undefined symbol : g_Pattern_PerformanceOptimizer
+D:\rawrxd\history\all_versions\src\genesis.asm\1771484263800_bJ5t.asm(347) : error A2006:undefined symbol : g_Pattern_AdvancedAgent

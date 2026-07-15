@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar_clean.asm\1769488141340_F8NR.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar_clean.asm\1769488141340_F8NR.asm(127) : error A2006:undefined symbol : _fatal_exit
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar_clean.asm\1769488141340_F8NR.asm(151) : error A2006:undefined symbol : _fatal_exit

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\external\rawr_infra\Source\PE-Generator\pe_lint_production.asm
+D:\rawrxd\external\rawr_infra\Source\PE-Generator\pe_lint_production.asm(495) : error A2032:invalid use of register
+D:\rawrxd\external\rawr_infra\Source\PE-Generator\pe_lint_production.asm(578) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\external\rawr_infra\Source\PE-Generator\pe_lint_production.asm(584) : error A2082:cannot mix 16- and 32-bit registers

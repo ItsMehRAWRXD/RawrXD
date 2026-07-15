@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_dlss_abstraction.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_dlss_abstraction.asm(129) : error A2008:syntax error : base_model
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_dlss_abstraction.asm(214) : error A2032:invalid use of register
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_dlss_abstraction.asm(328) : error A2050:real or BCD number not allowed
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_gpu_dlss_abstraction.asm(578) : error A2029:multiple base registers not allowed

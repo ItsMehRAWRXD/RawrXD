@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(304) : error A2006:undefined symbol : @copy_v
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(348) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(365) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(381) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(405) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(475) : error A2006:undefined symbol : pKV
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(708) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(711) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(712) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(728) : error A2006:undefined symbol : PAGE_READONLY
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(740) : error A2006:undefined symbol : FILE_MAP_READ
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(303) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907914873_gqgC.asm(326) : warning A4025:ENDP found before .ENDPROLOG : Attention_Forward_GQA
+
+MASM : fatal error A1016: Internal error

@@ -1,0 +1,81 @@
+ Assembling: D:\rawrxd\gpu_dma_production_final.asm
+D:\rawrxd\gpu_dma_production_final.asm(177) : error A2008:syntax error : rcx
+D:\rawrxd\gpu_dma_production_final.asm(178) : error A2008:syntax error : rdx
+D:\rawrxd\gpu_dma_production_final.asm(180) : error A2008:syntax error : eax
+D:\rawrxd\gpu_dma_production_final.asm(284) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(288) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(324) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(325) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(330) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(331) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(429) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(430) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(431) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(432) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(488) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(490) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(492) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(510) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(511) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(516) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(517) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(577) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(589) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_final.asm(594) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_final.asm(599) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(601) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(606) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(611) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(615) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(619) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(623) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(693) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(694) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(695) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(696) : error A2023:instruction operand must have size
+D:\rawrxd\gpu_dma_production_final.asm(759) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(807) : error A2008:syntax error : eax
+D:\rawrxd\gpu_dma_production_final.asm(842) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(940) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(942) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(944) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(946) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(948) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(953) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(1014) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1016) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1018) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1020) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1022) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1024) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1029) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(1035) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(1036) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(1148) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1150) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1152) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1154) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(1199) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1201) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1203) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\gpu_dma_production_final.asm(1205) : error A2070:invalid instruction operands
+D:\rawrxd\gpu_dma_production_final.asm(1249) : error A2084:constant value too large
+D:\rawrxd\gpu_dma_production_final.asm(591) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_final.asm(596) : error A2022:instruction operands must be the same size
+D:\rawrxd\gpu_dma_production_final.asm(1111) : error A2006:undefined symbol : QueryPerformanceFrequency
+D:\rawrxd\gpu_dma_production_final.asm(1160) : error A2006:undefined symbol : GetVersion
+D:\rawrxd\gpu_dma_production_final.asm(1161) : error A2206:missing operator in expression
+D:\rawrxd\gpu_dma_production_final.asm(1166) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\gpu_dma_production_final.asm(1173) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\gpu_dma_production_final.asm(1212) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\gpu_dma_production_final.asm(477) : warning A6004:procedure argument or local not referenced : operation
+D:\rawrxd\gpu_dma_production_final.asm(989) : warning A6004:procedure argument or local not referenced : dseax
+D:\rawrxd\gpu_dma_production_final.asm(1253) : warning A4025:ENDP found before .ENDPROLOG : Titan_IsDeviceAddress
+D:\rawrxd\gpu_dma_production_final.asm(1253) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\gpu_dma_production_final.asm(1253) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_final.asm(1288) : warning A4025:ENDP found before .ENDPROLOG : Titan_GetGPUStats
+D:\rawrxd\gpu_dma_production_final.asm(1288) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\gpu_dma_production_final.asm(1288) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\gpu_dma_production_final.asm(1306) : warning A4025:ENDP found before .ENDPROLOG : Titan_ResetGPUStats
+D:\rawrxd\gpu_dma_production_final.asm(1306) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\gpu_dma_production_final.asm(1306) : error A2220:Missing .ENDPROLOG

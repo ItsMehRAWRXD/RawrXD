@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\universal_analyzer.asm\1771286086259_XGkX.asm
+D:\rawrxd\history\all_versions\src\universal_analyzer.asm\1771286086259_XGkX.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\universal_analyzer.asm\1771286086259_XGkX.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\universal_analyzer.asm\1771286086259_XGkX.asm(16) : fatal error A1000:cannot open file : user32.inc

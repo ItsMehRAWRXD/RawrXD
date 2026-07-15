@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-1d3e38cc\ivVx.asm
+D:\rawrxd\history\-1d3e38cc\ivVx.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\-1d3e38cc\ivVx.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\-1d3e38cc\ivVx.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\-1d3e38cc\ivVx.asm(21) : error A2008:syntax error : frame
+D:\rawrxd\history\-1d3e38cc\ivVx.asm(28) : fatal error A1000:cannot open file : user32.inc

@@ -1,0 +1,78 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(30) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(30) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(32) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(33) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(36) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(39) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(40) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(41) : error A2008:syntax error : integer
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(49) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(60) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(61) : error A2008:syntax error : integer
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(73) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(94) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(105) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(106) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(112) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(116) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(130) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(134) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(151) : error A2008:syntax error : SetWindowPos
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(167) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(185) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(207) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(214) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(217) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(220) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(221) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(224) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(231) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(46) : error A2006:undefined symbol : WS_EX_TOOLWINDOW
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(52) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(58) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(67) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(70) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(72) : error A2006:undefined symbol : EMPTY_STR
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(75) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(76) : error A2006:undefined symbol : IDC_DIFF_OLD
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(82) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(88) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(91) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(93) : error A2006:undefined symbol : EMPTY_STR
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(96) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(97) : error A2006:undefined symbol : IDC_DIFF_NEW
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(103) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(118) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(119) : error A2006:undefined symbol : IDC_DIFF_ACCEPT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(125) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(136) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(137) : error A2006:undefined symbol : IDC_DIFF_REJECT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(143) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(147) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(164) : error A2006:undefined symbol : GetWindowTextLengthA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(169) : error A2006:undefined symbol : HEAP_ZERO_MEMORY
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(170) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(176) : error A2006:undefined symbol : GetWindowTextA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(181) : error A2006:undefined symbol : Diff_ComputeLines
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(184) : error A2006:undefined symbol : numDifferences
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(187) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(188) : error A2006:undefined symbol : startPos
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(189) : error A2006:undefined symbol : endPos
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(190) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(192) : error A2006:undefined symbol : EM_SETCHARFORMAT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(193) : error A2006:undefined symbol : SCF_SELECTION
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(194) : error A2006:undefined symbol : redFormat
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(195) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(198) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(199) : error A2006:undefined symbol : startPos
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(200) : error A2006:undefined symbol : endPos
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(201) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(203) : error A2006:undefined symbol : EM_SETCHARFORMAT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(204) : error A2006:undefined symbol : SCF_SELECTION
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(205) : error A2006:undefined symbol : greenFormat
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(206) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(218) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(154) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(210) : warning A6004:procedure argument or local not referenced : hOldDC
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_diff_engine.asm(210) : warning A6004:procedure argument or local not referenced : hNewDC

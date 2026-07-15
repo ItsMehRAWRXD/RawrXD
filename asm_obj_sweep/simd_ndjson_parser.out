@@ -1,0 +1,80 @@
+ Assembling: D:\rawrxd\src\asm\simd_ndjson_parser.asm
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(19) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(63) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(67) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(73) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(85) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(93) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(116) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(142) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(148) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(154) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(160) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(166) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(172) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(181) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(190) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(199) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(225) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(229) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(241) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(250) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(259) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(276) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(280) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(286) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(317) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(326) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(338) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(368) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(373) : error A2008:syntax error : .
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(62) : error A2206:missing operator in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(69) : error A2006:undefined symbol : not_found
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(79) : error A2006:undefined symbol : found_marker
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(83) : error A2006:undefined symbol : search_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(95) : error A2006:undefined symbol : extract_overflow
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(98) : error A2006:undefined symbol : extract_unterminated
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(100) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(104) : error A2006:undefined symbol : extract_done
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(108) : error A2006:undefined symbol : handle_escape
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(111) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(114) : error A2006:undefined symbol : extract_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(120) : error A2006:undefined symbol : extract_unterminated
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(122) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(126) : error A2006:undefined symbol : escape_newline
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(128) : error A2006:undefined symbol : escape_carriage_return
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(130) : error A2006:undefined symbol : escape_tab
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(132) : error A2006:undefined symbol : escape_quote
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(134) : error A2006:undefined symbol : escape_backslash
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(137) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(140) : error A2006:undefined symbol : extract_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(143) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(146) : error A2006:undefined symbol : extract_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(149) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(152) : error A2006:undefined symbol : extract_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(155) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(158) : error A2006:undefined symbol : extract_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(161) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(164) : error A2006:undefined symbol : extract_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(167) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(170) : error A2006:undefined symbol : extract_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(224) : error A2206:missing operator in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(231) : error A2006:undefined symbol : done_not_found
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(237) : error A2006:undefined symbol : search_final_bytes
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(245) : error A2006:undefined symbol : done_found
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(248) : error A2006:undefined symbol : search_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(254) : error A2206:missing operator in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(261) : error A2006:undefined symbol : done_found
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(264) : error A2006:undefined symbol : done_not_found
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(266) : error A2029:multiple base registers not allowed
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(267) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(270) : error A2006:undefined symbol : final_match
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(274) : error A2006:undefined symbol : search_final_bytes
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(278) : error A2006:undefined symbol : final_loop
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(319) : error A2006:undefined symbol : parse_complete
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(328) : error A2006:undefined symbol : parse_complete
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(330) : error A2009:syntax error in expression
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(332) : error A2006:undefined symbol : found_newline
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(336) : error A2006:undefined symbol : find_newline
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(350) : error A2006:undefined symbol : next_line
+D:\rawrxd\src\asm\simd_ndjson_parser.asm(371) : error A2006:undefined symbol : line_loop

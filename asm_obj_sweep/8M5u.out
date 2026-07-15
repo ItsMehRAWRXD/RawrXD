@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-1fe0956\8M5u.asm
+D:\rawrxd\history\-1fe0956\8M5u.asm(39) : error A2008:syntax error : macro
+D:\rawrxd\history\-1fe0956\8M5u.asm(40) : error A2034:must be in segment block
+D:\rawrxd\history\-1fe0956\8M5u.asm(41) : error A2034:must be in segment block
+D:\rawrxd\history\-1fe0956\8M5u.asm(42) : error A2034:must be in segment block
+D:\rawrxd\history\-1fe0956\8M5u.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\-1fe0956\8M5u.asm(44) : fatal error A1008:unmatched macro nesting

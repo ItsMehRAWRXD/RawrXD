@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907181193_mE6k.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907181193_mE6k.asm(52) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907181193_mE6k.asm(617) : error A2006:undefined symbol : CreateFileA

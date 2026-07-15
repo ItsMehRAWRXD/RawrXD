@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275090225_eR6C.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275090225_eR6C.asm(33) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\RawrXD_NetworkRelay.asm\1771275090225_eR6C.asm(36) : warning A4014:instructions and initialized data not supported in BSS segments

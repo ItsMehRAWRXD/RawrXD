@@ -1,0 +1,64 @@
+ Assembling: D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(42) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(55) : error A2008:syntax error : length
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(68) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(97) : error A2008:syntax error : offset
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(98) : error A2008:syntax error : length
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(112) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(133) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(171) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(625) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(185) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(192) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(195) : error A2006:undefined symbol : QuantumPieceAlloc
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(196) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(198) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(201) : error A2006:undefined symbol : TemporalLogCreate
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(202) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(205) : error A2006:undefined symbol : PredictiveEngineInit
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(206) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(209) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(229) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(234) : error A2006:undefined symbol : QUANTUM_BUFFER
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(235) : error A2006:undefined symbol : PredictiveWarmCache
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(240) : error A2006:undefined symbol : SpawnSemanticAnalysis
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(260) : error A2006:undefined symbol : vblank_sync
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(278) : error A2006:undefined symbol : ApplyGlitchEffect
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(283) : error A2006:undefined symbol : RenderParticles
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(287) : error A2006:undefined symbol : RenderScanlines
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(323) : error A2006:undefined symbol : SSE4Blur
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(326) : error A2006:undefined symbol : AVX512Blur
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(346) : error A2006:undefined symbol : LINE
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(347) : error A2006:undefined symbol : HashMapLookup
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(353) : error A2006:undefined symbol : FastRegexTokenize
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(358) : error A2006:undefined symbol : SemanticEnhanceTokens
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(363) : error A2006:undefined symbol : NeuralPredictTokens
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(368) : error A2006:undefined symbol : CacheTokensWithConfidence
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(220) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(243) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(307) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(330) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(374) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(387) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(397) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(408) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(415) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(423) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(430) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(437) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(447) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(454) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(463) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(471) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(479) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(487) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(495) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(503) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(511) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(519) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(527) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(535) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(542) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(550) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\NEON_MONACO_CORE.ASM(558) : error A2220:Missing .ENDPROLOG

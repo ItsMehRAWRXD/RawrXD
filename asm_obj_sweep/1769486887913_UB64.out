@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar.asm\1769486887913_UB64.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar.asm\1769486887913_UB64.asm(340) : error A2005:symbol redefinition : _log_bare_fail
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar.asm\1769486887913_UB64.asm(339) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar.asm\1769486887913_UB64.asm(343) : error A2006:undefined symbol : _retry_wait
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_sidecar.asm\1769486887913_UB64.asm(350) : error A2006:undefined symbol : _retry_wait

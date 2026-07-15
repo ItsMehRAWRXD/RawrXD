@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_gguf_memory_map.asm\1766358323223_dqOA.asm
+D:\rawrxd\history\all_versions\pifabric_gguf_memory_map.asm\1766358323223_dqOA.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_gguf_memory_map.asm\1766358323223_dqOA.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_gguf_memory_map.asm\1766358323223_dqOA.asm(16) : error A2008:syntax error : esi
+D:\rawrxd\history\all_versions\pifabric_gguf_memory_map.asm\1766358323223_dqOA.asm(20) : fatal error A1010:unmatched block nesting : GGUF_MemoryMap_Load

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_meta_agent_system_integration.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_meta_agent_system_integration.asm(70) : error A2006:undefined symbol : TRUE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_meta_agent_system_integration.asm(80) : error A2006:undefined symbol : TRUE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_meta_agent_system_integration.asm(105) : error A2006:undefined symbol : TRUE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_meta_agent_system_integration.asm(139) : error A2006:undefined symbol : TRUE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_meta_agent_system_integration.asm(165) : error A2006:undefined symbol : TRUE

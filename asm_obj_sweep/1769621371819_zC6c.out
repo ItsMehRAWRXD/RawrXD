@@ -1,0 +1,51 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(4) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(41) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(47) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(55) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(58) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(67) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(71) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(74) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(75) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(104) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(105) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(109) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(112) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(118) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(137) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(146) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(147) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(148) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(157) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(160) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(162) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(165) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(173) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(176) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(179) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(184) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(202) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(212) : error A2008:syntax error : ics
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(213) : error A2008:syntax error : wc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(214) : error A2008:syntax error : msg
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(215) : error A2008:syntax error : rc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(45) : error A2006:undefined symbol : ics
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(46) : error A2006:undefined symbol : ics
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(50) : error A2006:undefined symbol : wc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(51) : error A2006:undefined symbol : wc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(52) : error A2006:undefined symbol : wc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(53) : error A2006:undefined symbol : wc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(54) : error A2006:undefined symbol : wc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(86) : error A2006:undefined symbol : WM_CREATE
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(88) : error A2006:undefined symbol : WM_SIZE
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(90) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(92) : error A2006:undefined symbol : WM_TIMER
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(94) : error A2006:undefined symbol : WM_USER
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(96) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(174) : error A2006:undefined symbol : rc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(177) : error A2006:undefined symbol : rc
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(191) : warning A6004:procedure argument or local not referenced : hWnd
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(191) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(191) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\history\all_versions\Ship\RawrXD_GUI.asm\1769621371819_zC6c.asm(191) : warning A6004:procedure argument or local not referenced : lParam

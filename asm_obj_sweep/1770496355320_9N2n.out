@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(51) : error A2008:syntax error : FLAT
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(55) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(56) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(58) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(61) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(62) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(63) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(64) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(65) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(69) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(70) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(72) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770496355320_9N2n.asm(78) : fatal error A1010:unmatched block nesting : _DATA64

@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(126) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(724) : error A2006:undefined symbol : __imp_RtlGenRandom
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(111) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(112) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(121) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(122) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(123) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(555) : warning A4025:ENDP found before .ENDPROLOG : QuicParseVariableInt
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(555) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(555) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(736) : warning A4025:ENDP found before .ENDPROLOG : DTLS13_InitContext
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(736) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_P2PRelay_Final.asm(736) : error A2220:Missing .ENDPROLOG

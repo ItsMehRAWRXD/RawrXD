@@ -1,0 +1,62 @@
+ Assembling: D:\rawrxd\RawrXD_CursorTracker.asm
+D:\rawrxd\RawrXD_CursorTracker.asm(76) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(108) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(143) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(153) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(159) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(169) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(203) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(213) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(218) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(228) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(248) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_CursorTracker.asm(272) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(282) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(346) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(358) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(361) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(365) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(426) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(487) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(504) : error A2070:invalid instruction operands
+D:\rawrxd\RawrXD_CursorTracker.asm(534) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(567) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_CursorTracker.asm(35) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(36) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(37) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(38) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(39) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(40) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(41) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(42) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(63) : error A2006:undefined symbol : AlreadyAtStart
+D:\rawrxd\RawrXD_CursorTracker.asm(95) : error A2006:undefined symbol : AlreadyAtEnd
+D:\rawrxd\RawrXD_CursorTracker.asm(127) : error A2006:undefined symbol : AlreadyAtTop
+D:\rawrxd\RawrXD_CursorTracker.asm(144) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_CursorTracker.asm(146) : error A2006:undefined symbol : LineEnd
+D:\rawrxd\RawrXD_CursorTracker.asm(148) : error A2006:undefined symbol : LineEnd
+D:\rawrxd\RawrXD_CursorTracker.asm(151) : error A2006:undefined symbol : CountLineLen
+D:\rawrxd\RawrXD_CursorTracker.asm(156) : error A2006:undefined symbol : ColumnOK
+D:\rawrxd\RawrXD_CursorTracker.asm(189) : error A2006:undefined symbol : AlreadyAtBottom
+D:\rawrxd\RawrXD_CursorTracker.asm(204) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_CursorTracker.asm(206) : error A2006:undefined symbol : LineEnd2
+D:\rawrxd\RawrXD_CursorTracker.asm(208) : error A2006:undefined symbol : LineEnd2
+D:\rawrxd\RawrXD_CursorTracker.asm(211) : error A2006:undefined symbol : CountLineLen2
+D:\rawrxd\RawrXD_CursorTracker.asm(215) : error A2006:undefined symbol : ColumnOK2
+D:\rawrxd\RawrXD_CursorTracker.asm(273) : error A2029:multiple base registers not allowed
+D:\rawrxd\RawrXD_CursorTracker.asm(275) : error A2006:undefined symbol : AtLineEnd
+D:\rawrxd\RawrXD_CursorTracker.asm(277) : error A2006:undefined symbol : AtLineEnd
+D:\rawrxd\RawrXD_CursorTracker.asm(280) : error A2006:undefined symbol : FindLineEnd
+D:\rawrxd\RawrXD_CursorTracker.asm(301) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(302) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(303) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(348) : error A2006:undefined symbol : ReachedPos
+D:\rawrxd\RawrXD_CursorTracker.asm(352) : error A2006:undefined symbol : NotNL
+D:\rawrxd\RawrXD_CursorTracker.asm(356) : error A2006:undefined symbol : NextScan
+D:\rawrxd\RawrXD_CursorTracker.asm(363) : error A2006:undefined symbol : ScanToPos
+D:\rawrxd\RawrXD_CursorTracker.asm(401) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(402) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_CursorTracker.asm(421) : error A2006:undefined symbol : NoSelection
+D:\rawrxd\RawrXD_CursorTracker.asm(478) : error A2006:undefined symbol : UpdateTimer
+D:\rawrxd\RawrXD_CursorTracker.asm(521) : error A2006:undefined symbol : AtTop
+D:\rawrxd\RawrXD_CursorTracker.asm(554) : error A2006:undefined symbol : AtBottom

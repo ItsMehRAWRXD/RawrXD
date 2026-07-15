@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-23c6a00a\uDf6.asm
+D:\rawrxd\history\-23c6a00a\uDf6.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\-23c6a00a\uDf6.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\-23c6a00a\uDf6.asm(8) : fatal error A1000:cannot open file : \masm32\include\windows.inc

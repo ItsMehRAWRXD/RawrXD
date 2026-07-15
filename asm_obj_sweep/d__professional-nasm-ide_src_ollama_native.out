@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(1) : error A2008:syntax error : BITS
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(7) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(13) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(20) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(21) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(22) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(23) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(24) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(25) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(26) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(27) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(28) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(29) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(30) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(31) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(33) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(34) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(35) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(36) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(37) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(38) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(39) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(40) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(41) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(42) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(43) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(44) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(45) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(46) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(47) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(48) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(49) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(50) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(51) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(52) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(53) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(55) : error A2008:syntax error : struc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(56) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(57) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(58) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(59) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(60) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(61) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(62) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(63) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(64) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(65) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(66) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(67) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(68) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(69) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(70) : error A2008:syntax error : endstruc
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(76) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(77) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(78) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(79) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(80) : error A2008:syntax error : define
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(86) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(90) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(92) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(93) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(96) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(97) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(98) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(99) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(100) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(101) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(112) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(122) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(126) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(131) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(144) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(150) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0009\d__professional-nasm-ide_src_ollama_native.asm(153) : fatal error A1012:error count exceeds 100; stopping assembly

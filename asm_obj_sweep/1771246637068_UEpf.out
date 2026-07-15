@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(559) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(1737) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(1738) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(1742) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(1743) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(1754) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(2151) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(2152) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\terraform.asm\1771246637068_UEpf.asm(2162) : fatal error A1010:unmatched block nesting : write_file

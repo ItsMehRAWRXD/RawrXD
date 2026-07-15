@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_macro_substitution_engine.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_macro_substitution_engine.asm(17) : error A2034:must be in segment block : ParseMacroArguments
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_macro_substitution_engine.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_macro_substitution_engine.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_macro_substitution_engine.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_macro_substitution_engine.asm(21) : fatal error A1010:unmatched block nesting : ParseMacroArguments

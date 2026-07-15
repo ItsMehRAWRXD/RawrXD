@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716746721_FK7m.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716746721_FK7m.asm(71) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716746721_FK7m.asm(71) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_v2_FIXED.asm\1769716746721_FK7m.asm(71) : warning A6004:procedure argument or local not referenced : lpReserved

@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(36) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(37) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(44) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(213) : error A2008:syntax error : esi
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(215) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(216) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\tool\dispatcher\simple.asm(265) : fatal error A1010:unmatched block nesting : ToolDispatcher_Execute

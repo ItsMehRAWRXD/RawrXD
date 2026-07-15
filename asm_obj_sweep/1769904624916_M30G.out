@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769904624916_M30G.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769904624916_M30G.asm(123) : fatal error A1010:unmatched block nesting : SwarmWorkerProc

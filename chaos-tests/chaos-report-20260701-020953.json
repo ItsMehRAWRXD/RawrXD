@@ -1,0 +1,6 @@
+{
+    "scenario":  "node-failure",
+    "timestamp":  "2026-07-01T02:09:48.2769273-04:00",
+    "reason":  "No nodes found",
+    "passed":  false
+}

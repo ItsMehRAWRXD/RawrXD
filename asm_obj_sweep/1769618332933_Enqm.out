@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(188) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(251) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(258) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(262) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(268) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(270) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(272) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(274) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(276) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(277) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(238) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(245) : error A2006:undefined symbol : p_start
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(247) : error A2006:undefined symbol : j_start
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(249) : error A2006:undefined symbol : c_start
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(250) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(254) : error A2006:undefined symbol : ps
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(256) : error A2006:undefined symbol : py
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(257) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(260) : error A2006:undefined symbol : js
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(261) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(265) : error A2006:undefined symbol : cpp
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(266) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(269) : error A2006:undefined symbol : copy
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(271) : error A2006:undefined symbol : copy
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(273) : error A2006:undefined symbol : copy
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618332933_Enqm.asm(275) : error A2006:undefined symbol : copy

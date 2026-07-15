@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditor_EditOps.asm
+D:\rawrxd\RawrXD_TextEditor_EditOps.asm(44) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_TextEditor_EditOps.asm(45) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\RawrXD_TextEditor_EditOps.asm(73) : fatal error A1010:unmatched block nesting : EditOps_InsertChar

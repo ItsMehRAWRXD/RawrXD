@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_test.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_test.asm(1) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_test.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_test.asm(5) : fatal error A1000:cannot open file : \masm32\include\windows.inc

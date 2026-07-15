@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\hjpD.asm
+D:\rawrxd\history\-29b34fd4\hjpD.asm(45) : error A2008:syntax error : TransferQueue
+D:\rawrxd\history\-29b34fd4\hjpD.asm(441) : error A2005:symbol redefinition : fDefragThreshold
+D:\rawrxd\history\-29b34fd4\hjpD.asm(329) : error A2006:undefined symbol : TransferQueue
+D:\rawrxd\history\-29b34fd4\hjpD.asm(333) : error A2081:missing operand after unary operator

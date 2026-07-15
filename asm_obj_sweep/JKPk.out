@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-1ec43a2c\JKPk.asm
+D:\rawrxd\history\-1ec43a2c\JKPk.asm(5773) : error A2005:symbol redefinition : bbgen_append_entry
+D:\rawrxd\history\-1ec43a2c\JKPk.asm(1041) : error A2006:undefined symbol : DynTraceMode
+D:\rawrxd\history\-1ec43a2c\JKPk.asm(1139) : error A2006:undefined symbol : DynTraceMode
+D:\rawrxd\history\-1ec43a2c\JKPk.asm(4795) : error A2006:undefined symbol : bbcov_found_int3
+D:\rawrxd\history\-1ec43a2c\JKPk.asm(4925) : error A2006:undefined symbol : bbcov_jcc_near_skip_target
+D:\rawrxd\history\-1ec43a2c\JKPk.asm(4927) : error A2006:undefined symbol : bbcov_jcc_near_skip_target
+D:\rawrxd\history\-1ec43a2c\JKPk.asm(5592) : error A2006:undefined symbol : bbval_check_padding

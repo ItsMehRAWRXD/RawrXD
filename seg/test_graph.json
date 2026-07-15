@@ -1,0 +1,396 @@
+{
+  "id": 1783938870051,
+  "name": "TestGraph",
+  "nodes": [
+    {
+      "id": 1,
+      "name": "RunUnityCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [11],
+      "outputs": [2, 36]
+    },
+    {
+      "id": 2,
+      "name": "RunIntegrationCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [15, 1],
+      "outputs": [3, 36]
+    },
+    {
+      "id": 3,
+      "name": "RunSynthesisCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [19, 2],
+      "outputs": [4, 36]
+    },
+    {
+      "id": 4,
+      "name": "RunConvergenceCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [23, 3],
+      "outputs": [5, 36]
+    },
+    {
+      "id": 5,
+      "name": "RunCoherenceCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [27, 4],
+      "outputs": [6, 36]
+    },
+    {
+      "id": 6,
+      "name": "RunHarmonyCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [31, 5],
+      "outputs": [7, 36]
+    },
+    {
+      "id": 7,
+      "name": "RunBalanceCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [35, 6],
+      "outputs": [36]
+    },
+    {
+      "id": 8,
+      "name": "ComputeOrderTopology",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 9,
+      "name": "DiffuseCapabilities",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 10,
+      "name": "EmergeRoles",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 11,
+      "name": "AlignSubstrate",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [1]
+    },
+    {
+      "id": 12,
+      "name": "AmplifyPatterns",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 13,
+      "name": "StabilizeResonance",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 14,
+      "name": "CoupleHarmonics",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 15,
+      "name": "ReinforceTopology",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [2]
+    },
+    {
+      "id": 16,
+      "name": "ScaleAmplification",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 17,
+      "name": "BoostValuePatterns",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 18,
+      "name": "SuppressNoisePatterns",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 19,
+      "name": "AdaptToSubstrateLoad",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [3]
+    },
+    {
+      "id": 20,
+      "name": "DetectCrossPatterns",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 21,
+      "name": "BuildIntegrationLinks",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 22,
+      "name": "StabilizeMultiFlows",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 23,
+      "name": "CoupleUnitySwarm",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [4]
+    },
+    {
+      "id": 24,
+      "name": "AlignToSharedGoals",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 25,
+      "name": "EstablishFeedbackLoops",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 26,
+      "name": "ConvergeToAttractors",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 27,
+      "name": "OptimizeConvergenceRate",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [5]
+    },
+    {
+      "id": 28,
+      "name": "SynchronizePhases",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 29,
+      "name": "BalanceAmplitudes",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 30,
+      "name": "LockResonances",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 31,
+      "name": "ReinforceCoherence",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [6]
+    },
+    {
+      "id": 32,
+      "name": "AchievePerfectUnity",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 33,
+      "name": "BalanceAbsolute",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 34,
+      "name": "AchieveInfiniteResonance",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": []
+    },
+    {
+      "id": 35,
+      "name": "CompleteUnityCycle",
+      "type": 1,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [7]
+    },
+    {
+      "id": 36,
+      "name": "Telemetry_AutoDiscovery",
+      "type": 4,
+      "state": 0,
+      "dependencies": [7, 5, 4, 6, 2, 3, 1],
+      "outputs": []
+    }
+  ],
+  "edges": [
+    {
+      "id": 1,
+      "sourceId": 35,
+      "targetId": 7
+    },
+    {
+      "id": 2,
+      "sourceId": 27,
+      "targetId": 5
+    },
+    {
+      "id": 3,
+      "sourceId": 23,
+      "targetId": 4
+    },
+    {
+      "id": 4,
+      "sourceId": 31,
+      "targetId": 6
+    },
+    {
+      "id": 5,
+      "sourceId": 15,
+      "targetId": 2
+    },
+    {
+      "id": 6,
+      "sourceId": 19,
+      "targetId": 3
+    },
+    {
+      "id": 7,
+      "sourceId": 11,
+      "targetId": 1
+    },
+    {
+      "id": 8,
+      "sourceId": 1,
+      "targetId": 2
+    },
+    {
+      "id": 9,
+      "sourceId": 2,
+      "targetId": 3
+    },
+    {
+      "id": 10,
+      "sourceId": 3,
+      "targetId": 4
+    },
+    {
+      "id": 11,
+      "sourceId": 4,
+      "targetId": 5
+    },
+    {
+      "id": 12,
+      "sourceId": 5,
+      "targetId": 6
+    },
+    {
+      "id": 13,
+      "sourceId": 6,
+      "targetId": 7
+    },
+    {
+      "id": 14,
+      "sourceId": 7,
+      "targetId": 36
+    },
+    {
+      "id": 15,
+      "sourceId": 5,
+      "targetId": 36
+    },
+    {
+      "id": 16,
+      "sourceId": 4,
+      "targetId": 36
+    },
+    {
+      "id": 17,
+      "sourceId": 6,
+      "targetId": 36
+    },
+    {
+      "id": 18,
+      "sourceId": 2,
+      "targetId": 36
+    },
+    {
+      "id": 19,
+      "sourceId": 3,
+      "targetId": 36
+    },
+    {
+      "id": 20,
+      "sourceId": 1,
+      "targetId": 36
+    }
+  ]
+}

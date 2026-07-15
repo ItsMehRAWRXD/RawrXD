@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(131) : error A2039:line too long
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(383) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(405) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(817) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(218) : error A2006:undefined symbol : RawrXD_Run
+D:\rawrxd\history\all_versions\src\RawrXD_Final_Integration.asm\1769990429235_ks6w.asm(355) : error A2006:undefined symbol : g_component_registry

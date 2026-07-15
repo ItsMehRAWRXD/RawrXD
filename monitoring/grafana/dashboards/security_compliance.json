@@ -1,0 +1,109 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "rawrxd-security-compliance",
+    "title": "RawrXD Security & Compliance",
+    "tags": ["security", "compliance", "audit"],
+    "timezone": "UTC",
+    "schemaVersion": 36,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Compliance Score Trend",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rawrxd_compliance_score",
+            "legendFormat": "Compliance Score"
+          }
+        ],
+        "yAxes": [{"min": 0, "max": 100}],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Security Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(rawrxd_unauthorized_patch_attempts_total[5m])",
+            "legendFormat": "Unauthorized Attempts"
+          },
+          {
+            "expr": "rate(rawrxd_audit_log_write_failures_total[5m])",
+            "legendFormat": "Audit Log Failures"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "RBAC Statistics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(rawrxd_rbac_access_allowed_total[1h]))",
+            "legendFormat": "Access Granted (1h)"
+          },
+          {
+            "expr": "sum(rate(rawrxd_rbac_access_denied_total[1h]))",
+            "legendFormat": "Access Denied (1h)"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Registry Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rawrxd_registry_corrupted",
+            "legendFormat": "Registry Corrupted"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "Healthy"}}, "type": "value", "text": "Healthy"},
+              {"options": {"1": {"text": "CORRUPTED"}}, "type": "value", "text": "CORRUPTED"}
+            ],
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "red", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Patch Distribution by System",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "rawrxd_patches_applied",
+            "legendFormat": "{{system}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12}
+      },
+      {
+        "id": 6,
+        "title": "Rollback Reasons",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "rawrxd_patch_rollback_total",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 12}
+      }
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_tool_generate_api_docs.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_tool_generate_api_docs.asm(75) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_tool_generate_api_docs.asm(82) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_pure_tool_generate_api_docs.asm(92) : error A2006:undefined symbol : lstrlenA

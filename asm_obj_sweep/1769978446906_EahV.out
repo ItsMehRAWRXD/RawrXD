@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769978446906_EahV.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769978446906_EahV.asm(836) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769978446906_EahV.asm(864) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769978446906_EahV.asm(868) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769978446906_EahV.asm(612) : error A2022:instruction operands must be the same size

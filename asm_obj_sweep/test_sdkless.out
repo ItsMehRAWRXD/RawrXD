@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(2) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(3) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(4) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(5) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(6) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(10) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(11) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(12) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(13) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(14) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(15) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(16) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(17) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(18) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(19) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(20) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_sdkless.asm(20) : error A2088:END directive required at end of file

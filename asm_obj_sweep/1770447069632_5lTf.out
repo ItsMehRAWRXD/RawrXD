@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770447069632_5lTf.asm
+D:\rawrxd\history\all_versions\src\asm\FlashAttention_AVX512.asm\1770447069632_5lTf.asm(100) : error A2189:invalid combination with segment alignment : 64

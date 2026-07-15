@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_pro.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_pro.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_pro.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_pro.asm(11) : error A2041:string or text literal too long
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_pro.asm(14) : fatal error A1000:cannot open file : \masm32\include\windows.inc

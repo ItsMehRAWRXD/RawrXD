@@ -1,0 +1,37 @@
+ Assembling: D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(225) : error A2008:syntax error : Dr0
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(226) : error A2008:syntax error : Dr1
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(227) : error A2008:syntax error : Dr2
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(228) : error A2008:syntax error : Dr3
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(229) : error A2008:syntax error : Dr6
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(230) : error A2008:syntax error : Dr7
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(231) : error A2008:syntax error : Rax
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(232) : error A2008:syntax error : Rcx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(233) : error A2008:syntax error : Rdx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(234) : error A2008:syntax error : Rbx
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(235) : error A2008:syntax error : Rsp
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(236) : error A2008:syntax error : Rbp
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(237) : error A2008:syntax error : Rsi
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(238) : error A2008:syntax error : Rdi
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(239) : error A2008:syntax error : R8
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(240) : error A2008:syntax error : R9
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(241) : error A2008:syntax error : R10
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(242) : error A2008:syntax error : R11
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(243) : error A2008:syntax error : R12
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(244) : error A2008:syntax error : R13
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(245) : error A2008:syntax error : R14
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(246) : error A2008:syntax error : R15
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(399) : error A2006:undefined symbol : @@lvl_warn
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(656) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(809) : error A2006:undefined symbol : rip
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(338) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(504) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(575) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(623) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(632) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(644) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(661) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(775) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(791) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\win32app\Win32IDE_Sidebar_Pure.asm\1771528208880_MaCl.asm(835) : error A2220:Missing .ENDPROLOG

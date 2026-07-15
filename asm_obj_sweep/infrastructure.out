@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase3\debug\infrastructure.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase3\debug\infrastructure.asm(97) : error A2008:syntax error : context
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase3\debug\infrastructure.asm(154) : error A2008:syntax error : ebx
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\phase3\debug\infrastructure.asm(177) : fatal error A1010:unmatched block nesting : DAP_Initialize

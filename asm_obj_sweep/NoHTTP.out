@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(106) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(108) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(117) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(122) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(134) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(147) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(161) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(163) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(177) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(184) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(187) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(96) : error A2006:undefined symbol : g_pLogits
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(97) : error A2006:undefined symbol : g_VocabSize
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(115) : error A2006:undefined symbol : g_pLogits
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(116) : error A2006:undefined symbol : g_VocabSize
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(171) : error A2006:undefined symbol : g_pLogits
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(172) : error A2006:undefined symbol : g_VocabSize
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(198) : error A2006:undefined symbol : g_pRingBuffer
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(199) : error A2006:undefined symbol : g_BufferIndex
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(207) : error A2006:undefined symbol : g_BufferIndex
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(274) : error A2006:undefined symbol : g_pInputBuffer
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(283) : error A2006:undefined symbol : g_pPromptString
+D:\rawrxd\reconstructed\Stash House\RawrXD-Main\src\Titan\Streaming\Orchestrator\NoHTTP.asm(333) : warning A6004:procedure argument or local not referenced : pszPrompt

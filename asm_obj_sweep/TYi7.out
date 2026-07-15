@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\TYi7.asm
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(2740) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4045) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4047) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4050) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4052) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4054) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4056) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4058) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4060) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4062) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4091) : error A2005:symbol redefinition : szEaseIn
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4092) : error A2005:symbol redefinition : szEaseOut
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4093) : error A2005:symbol redefinition : szEaseInOut
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4096) : error A2088:END directive required at end of file
+D:\rawrxd\history\-1bd1bafa\TYi7.asm(4096) : fatal error A1010:unmatched block nesting : gui_apply_style

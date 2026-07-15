@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\src\agentic\gpu_dma_tail.asm
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(1) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(2) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(3) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(4) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(5) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(6) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(7) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(8) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(9) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(10) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(11) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(12) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(13) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\gpu_dma_tail.asm(14) : fatal error A1010:unmatched block nesting : readPowerDraw_asm

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_search.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_search.asm(59) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_search.asm(60) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_search.asm(61) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_search.asm(77) : error A2008:syntax error : length
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_masm_ide_src_text_search.asm(115) : fatal error A1010:unmatched block nesting : Search_SetPattern

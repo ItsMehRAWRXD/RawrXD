@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_RawrXD_Agentic_Router.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_RawrXD_Agentic_Router.asm(68) : error A2006:undefined symbol : g_agent_route_table
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_RawrXD_Agentic_Router.asm(69) : error A2006:undefined symbol : g_agent_count
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_RawrXD_Agentic_Router.asm(70) : error A2006:undefined symbol : g_max_agents
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_RawrXD_Agentic_Router.asm(71) : error A2006:undefined symbol : g_router_initialized
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_RawrXD_Agentic_Router.asm(81) : error A2006:undefined symbol : g_agent_count

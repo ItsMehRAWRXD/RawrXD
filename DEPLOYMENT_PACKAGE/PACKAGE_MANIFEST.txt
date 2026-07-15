@@ -1,0 +1,31 @@
+# Sovereign Engine Deployment Package
+## Ready for 192.168.1.10-17
+
+### Package Contents
+- **DEPLOY.bat** - One-click deployment (Run as Administrator)
+- **deploy_staging_cluster_fixed.ps1** - Main deployment script
+- **start_swarm.ps1** - Launch the 8-node swarm
+- **stop_swarm.ps1** - Emergency stop
+- **monitor_cluster.ps1** - Real-time dashboard
+- **integration_test_full.ps1** - Validation suite
+- **stress_test_4k.ps1** - 4K context stress test
+- **toggle_deployment_mode.ps1** - Mode switcher
+
+### Quick Start
+1. Extract to `C:\Sovereign\` on head node (192.168.1.10)
+2. Run `DEPLOY.bat` as Administrator
+3. Monitor with: `.\monitor_cluster.ps1 -Continuous`
+
+### Expected Performance
+- **Throughput:** 50,000+ tokens/sec
+- **Ring Rotation:** <10ms/hop
+- **P99 Latency:** <100ms
+- **Weight Drift:** σ<0.001
+
+### ASM Foundation ✅
+- Phase 11: Error Recovery - VALIDATED
+- Phase 22: Thread Pool - VALIDATED
+- Phase 23: Ring Attention - VALIDATED
+- Integration: 5/5 tests PASSED
+
+**Status: READY FOR PRODUCTION DEPLOYMENT**

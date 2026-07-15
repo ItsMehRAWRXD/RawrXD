@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900808390_VvP8.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900808390_VvP8.asm(201) : warning A4025:ENDP found before .ENDPROLOG : RawrXD_GetMetrics
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900808390_VvP8.asm(201) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769900808390_VvP8.asm(201) : error A2220:Missing .ENDPROLOG

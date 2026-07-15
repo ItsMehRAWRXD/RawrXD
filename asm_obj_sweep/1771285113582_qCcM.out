@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\binary_analyzer_proper.asm\1771285113582_qCcM.asm
+D:\rawrxd\history\all_versions\src\binary_analyzer_proper.asm\1771285113582_qCcM.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\binary_analyzer_proper.asm\1771285113582_qCcM.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\binary_analyzer_proper.asm\1771285113582_qCcM.asm(16) : fatal error A1000:cannot open file : user32.inc

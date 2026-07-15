@@ -1,0 +1,57 @@
+ Assembling: D:\rawrxd\history\-2c7a0a9\DB3C.asm
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(24) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(24) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(26) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(27) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(30) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(33) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(34) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(35) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(45) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(47) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(48) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(52) : error A2008:syntax error : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(55) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(57) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(58) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(62) : error A2008:syntax error : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(65) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(68) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(70) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(71) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(77) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(79) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(80) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(86) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(98) : error A2008:syntax error : SetWindowPos
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(110) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(113) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(119) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(122) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(126) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(127) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(128) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(130) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(131) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(132) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(139) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(142) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(145) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(146) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(149) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(156) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(41) : error A2006:undefined symbol : right
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(42) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(89) : error A2006:undefined symbol : GetClientRect
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(91) : error A2006:undefined symbol : right
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(94) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(115) : error A2006:undefined symbol : HEAP_ZERO_MEMORY
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(116) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(125) : error A2006:undefined symbol : numDifferences
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(143) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(101) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(135) : warning A6004:procedure argument or local not referenced : hOld
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(135) : warning A6004:procedure argument or local not referenced : hNew
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(135) : warning A6004:procedure argument or local not referenced : pNewText
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(135) : warning A6004:procedure argument or local not referenced : hOldDC
+D:\rawrxd\history\-2c7a0a9\DB3C.asm(135) : warning A6004:procedure argument or local not referenced : hNewDC

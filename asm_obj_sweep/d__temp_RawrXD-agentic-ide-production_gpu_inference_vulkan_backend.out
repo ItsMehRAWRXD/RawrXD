@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm(62) : error A2006:undefined symbol : ggml_backend_vk_init
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm(69) : error A2006:undefined symbol : ggml_backend_cpu_init
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm(106) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm(148) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm(203) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm(324) : error A2006:undefined symbol : ggml_backend_is_gpu
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gpu_inference_vulkan_backend.asm(374) : error A2006:undefined symbol : ggml_backend_is_gpu

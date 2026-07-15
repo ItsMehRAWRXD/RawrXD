@@ -1,0 +1,39 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(80) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(81) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(82) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(83) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(84) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(85) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(86) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(87) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(88) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(89) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(90) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(91) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(92) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(93) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(94) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(95) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(96) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(97) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(98) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(99) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(100) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(103) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(104) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(105) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(106) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(107) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(108) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(110) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(116) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(117) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(120) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(121) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(124) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(128) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(129) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\Eon-ASM\compilers\eon_lexer_core.asm(132) : fatal error A1009:line too long

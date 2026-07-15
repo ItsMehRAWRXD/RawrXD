@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\-1ee7567c\kfbU.asm
+D:\rawrxd\history\-1ee7567c\kfbU.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\-1ee7567c\kfbU.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\-1ee7567c\kfbU.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\-1ee7567c\kfbU.asm(87) : error A2008:syntax error : size
+D:\rawrxd\history\-1ee7567c\kfbU.asm(101) : error A2008:syntax error : size
+D:\rawrxd\history\-1ee7567c\kfbU.asm(102) : error A2008:syntax error : type
+D:\rawrxd\history\-1ee7567c\kfbU.asm(135) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-1ee7567c\kfbU.asm(142) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-1ee7567c\kfbU.asm(371) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ee7567c\kfbU.asm(377) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ee7567c\kfbU.asm(378) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\-1ee7567c\kfbU.asm(381) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\-1ee7567c\kfbU.asm(392) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ee7567c\kfbU.asm(393) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ee7567c\kfbU.asm(398) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\-1ee7567c\kfbU.asm(399) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\-1ee7567c\kfbU.asm(841) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1ee7567c\kfbU.asm(331) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1ee7567c\kfbU.asm(454) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1ee7567c\kfbU.asm(455) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1ee7567c\kfbU.asm(548) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1ee7567c\kfbU.asm(549) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1ee7567c\kfbU.asm(750) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1ee7567c\kfbU.asm(940) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1ee7567c\kfbU.asm(997) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1ee7567c\kfbU.asm(437) : warning A6004:procedure argument or local not referenced : local_size

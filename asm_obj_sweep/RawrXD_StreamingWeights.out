@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\asm\RawrXD_StreamingWeights.asm
+D:\rawrxd\src\asm\RawrXD_StreamingWeights.asm(781) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\asm\RawrXD_StreamingWeights.asm(783) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\src\asm\RawrXD_StreamingWeights.asm(784) : warning A4026:.ENDPROLOG found before EH directives

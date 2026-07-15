@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\-2d2eb013\T5gI.asm
+D:\rawrxd\history\-2d2eb013\T5gI.asm(25) : error A2006:undefined symbol : g_route_table
+D:\rawrxd\history\-2d2eb013\T5gI.asm(26) : error A2006:undefined symbol : g_route_count
+D:\rawrxd\history\-2d2eb013\T5gI.asm(27) : error A2006:undefined symbol : g_max_routes
+D:\rawrxd\history\-2d2eb013\T5gI.asm(36) : error A2006:undefined symbol : g_route_count
+D:\rawrxd\history\-2d2eb013\T5gI.asm(40) : error A2006:undefined symbol : g_router_start_tick
+D:\rawrxd\history\-2d2eb013\T5gI.asm(62) : error A2006:undefined symbol : g_route_table
+D:\rawrxd\history\-2d2eb013\T5gI.asm(66) : error A2006:undefined symbol : g_route_count
+D:\rawrxd\history\-2d2eb013\T5gI.asm(73) : error A2006:undefined symbol : g_route_count
+D:\rawrxd\history\-2d2eb013\T5gI.asm(77) : error A2006:undefined symbol : g_route_table
+D:\rawrxd\history\-2d2eb013\T5gI.asm(110) : error A2006:undefined symbol : g_route_count
+D:\rawrxd\history\-2d2eb013\T5gI.asm(115) : error A2006:undefined symbol : g_router_start_tick
+D:\rawrxd\history\-2d2eb013\T5gI.asm(119) : error A2006:undefined symbol : g_route_table
+D:\rawrxd\history\-2d2eb013\T5gI.asm(123) : error A2006:undefined symbol : g_route_count
+D:\rawrxd\history\-2d2eb013\T5gI.asm(140) : error A2006:undefined symbol : g_route_count

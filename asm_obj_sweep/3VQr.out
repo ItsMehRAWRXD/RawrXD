@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-13ec2827\3VQr.asm
+D:\rawrxd\history\-13ec2827\3VQr.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\-13ec2827\3VQr.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-13ec2827\3VQr.asm(6) : fatal error A1000:cannot open file : gguf_loader_interface.inc

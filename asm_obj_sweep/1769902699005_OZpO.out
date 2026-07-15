@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769902699005_OZpO.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769902699005_OZpO.asm(194) : error A2005:symbol redefinition : SwarmWorkerProc
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769902699005_OZpO.asm(196) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\RawrXD_Swarm_Orchestrator.asm\1769902699005_OZpO.asm(212) : fatal error A1010:unmatched block nesting : SwarmWorkerProc

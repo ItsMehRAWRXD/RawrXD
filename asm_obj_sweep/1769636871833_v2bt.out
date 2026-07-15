@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm(168) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm(35) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm(101) : warning A6004:procedure argument or local not referenced : hModule
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm(101) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm(101) : warning A6004:procedure argument or local not referenced : lpReserved
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm(188) : warning A6004:procedure argument or local not referenced : pCtx
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769636871833_v2bt.asm(188) : warning A6004:procedure argument or local not referenced : pFilePath

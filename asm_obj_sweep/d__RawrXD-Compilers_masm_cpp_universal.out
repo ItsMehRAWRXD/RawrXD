@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_masm_cpp_universal.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_masm_cpp_universal.asm(71) : error A2008:syntax error : win64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_masm_cpp_universal.asm(83) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_masm_cpp_universal.asm(91) : fatal error A1010:unmatched block nesting : alloc

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\RawrXD_ZeroTransformer.asm
+D:\rawrxd\src\RawrXD_ZeroTransformer.asm(4) : fatal error A1000:cannot open file : RawrXD_AVX512_MatrixMul.asm

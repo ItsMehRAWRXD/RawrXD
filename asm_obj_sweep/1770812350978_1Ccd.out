@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_SocketResponder.asm\1770812350978_1Ccd.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SocketResponder.asm\1770812350978_1Ccd.asm(127) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SocketResponder.asm\1770812350978_1Ccd.asm(134) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SocketResponder.asm\1770812350978_1Ccd.asm(149) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SocketResponder.asm\1770812350978_1Ccd.asm(166) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SocketResponder.asm\1770812350978_1Ccd.asm(171) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\RawrXD_SocketResponder.asm\1770812350978_1Ccd.asm(183) : error A2189:invalid combination with segment alignment : 64

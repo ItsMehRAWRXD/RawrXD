@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(11) : error A2008:syntax error : test_self_hosted_results
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(12) : error A2008:syntax error : test_self_hosted_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(13) : error A2008:syntax error : test_self_hosted_passed
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(14) : error A2008:syntax error : test_self_hosted_failed
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(15) : error A2008:syntax error : test_self_hosted_skipped
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(16) : error A2008:syntax error : test_self_hosted_total_time
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(40) : error A2008:syntax error : test_self_hosting_iterations
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(41) : error A2008:syntax error : test_self_hosting_depths
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(42) : error A2008:syntax error : test_self_hosting_times
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(43) : error A2008:syntax error : test_self_hosting_successes
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(44) : error A2008:syntax error : test_self_hosting_failures
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(45) : error A2008:syntax error : test_self_hosting_improvements
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(48) : error A2008:syntax error : tests_self_hosted_run
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(49) : error A2008:syntax error : tests_self_hosted_passed_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(50) : error A2008:syntax error : tests_self_hosted_failed_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(51) : error A2008:syntax error : tests_self_hosted_skipped_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(52) : error A2008:syntax error : tests_self_hosted_total_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(53) : error A2008:syntax error : test_self_hosted_execution_time
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(54) : error A2008:syntax error : test_self_hosted_memory_usage
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(55) : error A2008:syntax error : test_self_hosted_error_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(56) : error A2008:syntax error : test_self_hosted_warning_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(57) : error A2008:syntax error : test_self_hosted_bootstrap_success_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(58) : error A2008:syntax error : test_self_hosted_bootstrap_failure_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(59) : error A2008:syntax error : test_self_hosted_self_compilation_success_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(60) : error A2008:syntax error : test_self_hosted_self_compilation_failure_count
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(62) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(63) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(64) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(65) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(66) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(67) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(68) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(69) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(70) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(71) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(72) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(73) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(74) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(75) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(76) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(77) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(78) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(79) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(80) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(81) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(82) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(83) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(84) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(85) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(86) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(87) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(88) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(89) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(90) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(91) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(92) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(93) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(94) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(95) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(96) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(97) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(98) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(99) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(102) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(103) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(104) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(107) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(108) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(109) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(110) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(113) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(114) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(115) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(116) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(117) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(120) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(121) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(122) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(123) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(124) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(126) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(127) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(128) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(129) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(130) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(131) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(132) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(135) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(136) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(137) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(140) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(141) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(142) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(144) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(145) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(146) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_self_hosted_compiler.asm(148) : fatal error A1012:error count exceeds 100; stopping assembly

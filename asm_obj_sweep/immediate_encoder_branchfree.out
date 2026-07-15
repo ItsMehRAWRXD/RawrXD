@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(51) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(56) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(61) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(109) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(123) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(127) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(131) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(135) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(139) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(143) : error A2008:syntax error : .
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(32) : error A2006:undefined symbol : fits_1
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(38) : error A2006:undefined symbol : fits_2
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(44) : error A2006:undefined symbol : fits_4
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(105) : error A2006:undefined symbol : batch_done
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(111) : error A2006:undefined symbol : batch_done
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(117) : error A2006:undefined symbol : batch_size_1
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(119) : error A2006:undefined symbol : batch_size_2
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(121) : error A2006:undefined symbol : batch_size_4
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(125) : error A2006:undefined symbol : batch_next
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(129) : error A2006:undefined symbol : batch_next
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(133) : error A2006:undefined symbol : batch_next
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(137) : error A2006:undefined symbol : batch_next
+D:\rawrxd\src\agentic\kernels\immediate_encoder_branchfree.asm(141) : error A2006:undefined symbol : batch_loop

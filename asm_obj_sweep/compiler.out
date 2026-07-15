@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(13) : error A2008:syntax error : bits
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(14) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(16) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(17) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(18) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(116) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(117) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(118) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(119) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(120) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(121) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(122) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(123) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(125) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(126) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(127) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(128) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(129) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(130) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(131) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(132) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(133) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(136) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(137) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(138) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(139) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(140) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(141) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(142) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(143) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(146) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(147) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(148) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(149) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(150) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(153) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(154) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(155) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(156) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(159) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(160) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(161) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(162) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(163) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(164) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(165) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(166) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(167) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(168) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(171) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(172) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(173) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(174) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(175) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(176) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(177) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(178) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(180) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(182) : error A2008:syntax error : g_input_filename
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(183) : error A2008:syntax error : g_output_filename
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(184) : error A2008:syntax error : g_current_stage
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(185) : error A2008:syntax error : g_error_code
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(186) : error A2008:syntax error : g_error_line
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(187) : error A2008:syntax error : g_error_column
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(190) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(191) : error A2008:syntax error : g_source_size
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(192) : error A2008:syntax error : g_source_pos
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(193) : error A2008:syntax error : g_current_line
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(194) : error A2008:syntax error : g_current_column
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(197) : error A2008:syntax error : g_tokens
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(198) : error A2008:syntax error : g_token_count
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(199) : error A2008:syntax error : g_current_token
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(202) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(203) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(204) : error A2008:syntax error : g_ast_root
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(207) : error A2008:syntax error : g_symbols
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(208) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(209) : error A2008:syntax error : g_current_section
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(210) : error A2008:syntax error : g_current_offset
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(213) : error A2008:syntax error : g_machine_code
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(214) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(215) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(216) : error A2008:syntax error : g_relocations
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(219) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(220) : error A2008:syntax error : g_pe_size
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(221) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(224) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(225) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(226) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(228) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(229) : error A2008:syntax error : global
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(230) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(231) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(232) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(233) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(234) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(235) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(236) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(237) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(238) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\RawrXD\src\masm\MASM\solo\compiler.asm(239) : fatal error A1012:error count exceeds 100; stopping assembly

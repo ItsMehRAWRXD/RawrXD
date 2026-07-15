@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\asm\SovereignAttention.asm
+D:\rawrxd\src\asm\SovereignAttention.asm(480) : error A2152:coprocessor register cannot be first operand
+D:\rawrxd\src\asm\SovereignAttention.asm(329) : error A2050:real or BCD number not allowed

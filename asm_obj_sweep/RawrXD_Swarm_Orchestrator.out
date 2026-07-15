@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\src\RawrXD_Swarm_Orchestrator.asm
+D:\rawrxd\src\RawrXD_Swarm_Orchestrator.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\src\RawrXD_Swarm_Orchestrator.asm(15) : error A2034:must be in segment block : InferenceEngine_Submit
+D:\rawrxd\src\RawrXD_Swarm_Orchestrator.asm(16) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_Swarm_Orchestrator.asm(17) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_Swarm_Orchestrator.asm(18) : fatal error A1010:unmatched block nesting : InferenceEngine_Submit

@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(124) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(129) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(132) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(202) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(205) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(234) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(237) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(276) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(312) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(329) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(71) : error A2006:undefined symbol : read_fail
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(79) : error A2006:undefined symbol : close_fail
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(89) : error A2006:undefined symbol : close_fail
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(103) : error A2006:undefined symbol : free_fail
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(175) : error A2006:undefined symbol : write_fail
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(189) : error A2006:undefined symbol : close_write_fail
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(227) : error A2006:undefined symbol : delete_ok
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(232) : error A2006:undefined symbol : delete_done
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(265) : error A2006:undefined symbol : create_fail
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(309) : error A2006:undefined symbol : search_done
+D:\rawrxd\history\runoff\part_0022\d__temp_RawrXD-q8-wire_RawrXD-ModelLoader_kernels_editor_agentic_file_ops.asm(323) : error A2006:undefined symbol : search_loop

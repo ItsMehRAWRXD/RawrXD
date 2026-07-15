@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(87) : error A2189:invalid combination with segment alignment : 128
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(420) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(422) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(524) : error A2006:undefined symbol : GetCurrentProcess
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(527) : error A2006:undefined symbol : SetPriorityClass
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(534) : error A2006:undefined symbol : AvSetMmThreadCharacteristicsA
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(540) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(563) : error A2006:undefined symbol : NtSetTimerResolution
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(572) : error A2006:undefined symbol : CreateIoCompletionPort
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(149) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(173) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(215) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(293) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(410) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(436) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(467) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(511) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_MetaReverse.asm\1769621218308_7Z6U.asm(580) : error A2220:Missing .ENDPROLOG

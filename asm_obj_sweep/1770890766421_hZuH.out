@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_Pyre_Compute.asm\1770890766421_hZuH.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Pyre_Compute.asm\1770890766421_hZuH.asm(35) : error A2006:undefined symbol : BF800000h
+D:\rawrxd\history\all_versions\src\asm\RawrXD_Pyre_Compute.asm\1770890766421_hZuH.asm(36) : error A2006:undefined symbol : FF800000h

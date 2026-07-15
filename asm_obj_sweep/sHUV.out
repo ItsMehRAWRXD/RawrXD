@@ -1,0 +1,91 @@
+ Assembling: D:\rawrxd\history\-113506bd\sHUV.asm
+D:\rawrxd\history\-113506bd\sHUV.asm(153) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(157) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(158) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\-113506bd\sHUV.asm(159) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(171) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(179) : error A2008:syntax error : integer
+D:\rawrxd\history\-113506bd\sHUV.asm(181) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(183) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(184) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(185) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(186) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(188) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(189) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(190) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(191) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(201) : error A2008:syntax error : integer
+D:\rawrxd\history\-113506bd\sHUV.asm(203) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(205) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(206) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(207) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(208) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(218) : error A2008:syntax error : integer
+D:\rawrxd\history\-113506bd\sHUV.asm(220) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(222) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(223) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(224) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(225) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(227) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(228) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(229) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(230) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(232) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(233) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(234) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(235) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(245) : error A2008:syntax error : integer
+D:\rawrxd\history\-113506bd\sHUV.asm(247) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(249) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(250) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(251) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(252) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(254) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(255) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(256) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(257) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(267) : error A2008:syntax error : integer
+D:\rawrxd\history\-113506bd\sHUV.asm(269) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(271) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(272) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(273) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(274) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(276) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(277) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(278) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(279) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(289) : error A2008:syntax error : integer
+D:\rawrxd\history\-113506bd\sHUV.asm(291) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(293) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(294) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(295) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(296) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(298) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(299) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(300) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(301) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(311) : error A2008:syntax error : integer
+D:\rawrxd\history\-113506bd\sHUV.asm(313) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(315) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(316) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(317) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(318) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(320) : error A2008:syntax error : invoke
+D:\rawrxd\history\-113506bd\sHUV.asm(321) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(322) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(323) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(325) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\-113506bd\sHUV.asm(326) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(327) : error A2008:syntax error : lstrcatA
+D:\rawrxd\history\-113506bd\sHUV.asm(328) : error A2008:syntax error : WriteFileStr
+D:\rawrxd\history\-113506bd\sHUV.asm(165) : warning A6004:procedure argument or local not referenced : path
+D:\rawrxd\history\-113506bd\sHUV.asm(165) : warning A6004:procedure argument or local not referenced : content
+D:\rawrxd\history\-113506bd\sHUV.asm(165) : warning A6004:procedure argument or local not referenced : bw
+D:\rawrxd\history\-113506bd\sHUV.asm(173) : warning A6004:procedure argument or local not referenced : path
+D:\rawrxd\history\-113506bd\sHUV.asm(195) : warning A6004:procedure argument or local not referenced : targetPath
+D:\rawrxd\history\-113506bd\sHUV.asm(212) : warning A6004:procedure argument or local not referenced : targetPath
+D:\rawrxd\history\-113506bd\sHUV.asm(239) : warning A6004:procedure argument or local not referenced : targetPath
+D:\rawrxd\history\-113506bd\sHUV.asm(261) : warning A6004:procedure argument or local not referenced : targetPath
+D:\rawrxd\history\-113506bd\sHUV.asm(283) : warning A6004:procedure argument or local not referenced : targetPath
+D:\rawrxd\history\-113506bd\sHUV.asm(305) : warning A6004:procedure argument or local not referenced : targetPath
+D:\rawrxd\history\-113506bd\sHUV.asm(332) : warning A6004:procedure argument or local not referenced : targetPath

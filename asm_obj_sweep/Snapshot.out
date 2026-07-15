@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(2) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(3) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(21) : error A2008:syntax error : addr
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(22) : error A2008:syntax error : size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(30) : error A2177:nested structure improperly initialized
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(40) : error A2008:syntax error : addr
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(49) : error A2008:syntax error : addr
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\pifabric\memory\snapshot.asm(57) : fatal error A1010:unmatched block nesting : MemorySnapshot_Take

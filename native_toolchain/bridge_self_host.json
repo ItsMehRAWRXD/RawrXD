@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "source": "codex_native_bridge",
+    "architecture": "x64",
+    "syntax": "intel",
+    "generated_by": "SelfHostingBootstrap-v1"
+  },
+  "instructions": [
+    {"address": "0x1000", "bytes": "4883EC28", "mnemonic": "sub", "operands": "rsp, 0x28", "comment": "Allocate shadow space"},
+    {"address": "0x1004", "bytes": "48895C2420", "mnemonic": "mov", "operands": "[rsp + 0x20], rbx", "comment": "Save RBX"},
+    {"address": "0x1009", "bytes": "48896C2428", "mnemonic": "mov", "operands": "[rsp + 0x28], rbp", "comment": "Save RBP"},
+    {"address": "0x100E", "bytes": "488D6C2428", "mnemonic": "lea", "operands": "rbp, [rsp + 0x28]", "comment": "Set frame pointer"},
+    {"address": "0x1013", "bytes": "4883EC30", "mnemonic": "sub", "operands": "rsp, 0x30", "comment": "Local stack space"},
+    {"address": "0x1017", "bytes": "488D0D42000000", "mnemonic": "lea", "operands": "rcx, [rip + 0x42]", "comment": "Load string address"},
+    {"address": "0x101E", "bytes": "E800000000", "mnemonic": "call", "operands": "printf", "comment": "Call printf"},
+    {"address": "0x1023", "bytes": "4883C430", "mnemonic": "add", "operands": "rsp, 0x30", "comment": "Restore stack"},
+    {"address": "0x1027", "bytes": "488B5C2420", "mnemonic": "mov", "operands": "rbx, [rsp + 0x20]", "comment": "Restore RBX"},
+    {"address": "0x102C", "bytes": "488B6C2428", "mnemonic": "mov", "operands": "rbp, [rsp + 0x28]", "comment": "Restore RBP"},
+    {"address": "0x1031", "bytes": "4883C428", "mnemonic": "add", "operands": "rsp, 0x28", "comment": "Deallocate shadow space"},
+    {"address": "0x1035", "bytes": "C3", "mnemonic": "ret", "operands": "", "comment": "Return"},
+    {"address": "0x1036", "bytes": "", "mnemonic": "bridge_main", "operands": "", "is_label": 1, "comment": "Entry point"}
+  ],
+  "data_sections": [
+    {
+      "name": ".rdata",
+      "alignment": 16,
+      "entries": [
+        {"label": "msg_bridge", "type": "ascii", "value": "Self-hosting bridge test\\n", "null_terminated": true}
+      ]
+    }
+  ]
+}

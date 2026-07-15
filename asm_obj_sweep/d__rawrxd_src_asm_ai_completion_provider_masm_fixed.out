@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(25) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(114) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(115) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(119) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(150) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(155) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(206) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(214) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_ai_completion_provider_masm_fixed.asm(218) : error A2070:invalid instruction operands

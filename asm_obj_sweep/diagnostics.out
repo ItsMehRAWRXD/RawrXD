@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\masm\diagnostics.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\masm\diagnostics.asm(4) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\masm\diagnostics.asm(5) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\masm\diagnostics.asm(8) : fatal error A1000:cannot open file : \\masm32\\include\\masm32rt.inc

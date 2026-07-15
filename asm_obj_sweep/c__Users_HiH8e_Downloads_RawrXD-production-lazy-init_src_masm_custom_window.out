@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(34) : error A2008:syntax error : width
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(44) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(186) : error A2008:syntax error : title
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(178) : error A2006:undefined symbol : sys_alloc_memory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(184) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(195) : error A2006:undefined symbol : sys_alloc_memory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(237) : error A2006:undefined symbol : sys_free_memory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(265) : error A2006:undefined symbol : sys_free_memory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(297) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(390) : error A2006:undefined symbol : sys_alloc_memory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(394) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(420) : error A2006:undefined symbol : sys_alloc_memory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(424) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(477) : error A2006:undefined symbol : sys_free_memory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(485) : error A2006:undefined symbol : sys_sleep
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_custom_window.asm(554) : error A2081:missing operand after unary operator

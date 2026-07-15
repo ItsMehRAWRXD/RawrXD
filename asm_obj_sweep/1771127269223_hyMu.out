@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(30) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(31) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(32) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(33) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(53) : error A2006:undefined symbol : asm_ai_guided_search
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(54) : error A2006:undefined symbol : asm_avx512_pattern_search
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(55) : error A2006:undefined symbol : asm_parallel_multi_search
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(56) : error A2006:undefined symbol : asm_crypto_verify_patch
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(57) : error A2006:undefined symbol : asm_detect_byte_conflicts
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(58) : error A2006:undefined symbol : asm_ml_optimize_patch_order
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(59) : error A2006:undefined symbol : asm_autonomous_pattern_classify
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(60) : error A2006:undefined symbol : asm_simd_bulk_pattern_search
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127269223_hyMu.asm(61) : error A2006:undefined symbol : asm_quantum_safe_search

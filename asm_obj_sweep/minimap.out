@@ -1,0 +1,31 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(120) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(120) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(157) : error A2006:undefined symbol : RECT
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(157) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(512) : error A2006:undefined symbol : PAINTSTRUCT
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(512) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(513) : error A2006:undefined symbol : RECT
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(513) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(531) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(555) : error A2006:undefined symbol : RECT
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(555) : error A2195:parameter or local cannot have void type
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(610) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(611) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(643) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(125) : error A2006:undefined symbol : cbSize
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(126) : error A2006:undefined symbol : style
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(128) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(129) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(130) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(131) : error A2006:undefined symbol : hInstance
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(132) : error A2006:undefined symbol : hIcon
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(133) : error A2006:undefined symbol : hCursor
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(134) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(135) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(137) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(138) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(172) : error A2006:undefined symbol : right
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(185) : error A2006:undefined symbol : bottom
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(196) : error A2006:undefined symbol : bottom
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\masm\code\minimap.asm(549) : warning A6004:procedure argument or local not referenced : rect

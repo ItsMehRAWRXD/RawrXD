@@ -1,0 +1,34 @@
+groups:
+  - name: sovereign_engine
+    rules:
+      - alert: NodeDown
+        expr: up{job=~"sovereign-.*"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sovereign node {{ \.instance }} is down"
+          
+      - alert: HighLatency
+        expr: sovereign_ring_rotation_ms > 100
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High ring rotation latency on {{ \.instance }}"
+          
+      - alert: WeightDrift
+        expr: sovereign_weight_drift > 0.001
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Weight drift detected on {{ \.instance }}"
+          
+      - alert: LowThroughput
+        expr: sovereign_tokens_per_second < 30000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low throughput on {{ \.instance }}"

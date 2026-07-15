@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(41) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(42) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(180) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(225) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(150) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(154) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(159) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(176) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(178) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(179) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(199) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(203) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(207) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(210) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(212) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(214) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(234) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(270) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(282) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(316) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(319) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(320) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(340) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(243) : warning A6004:procedure argument or local not referenced : header
+D:\rawrxd\history\runoff\part_0019\d__temp_RawrXD-agentic-ide-production_bench-all_gguf_loader_engine.asm(356) : warning A6004:procedure argument or local not referenced : token_idx

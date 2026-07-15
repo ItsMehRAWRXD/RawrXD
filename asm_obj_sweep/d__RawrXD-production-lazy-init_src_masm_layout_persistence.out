@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(143) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(165) : error A2006:undefined symbol : GetWindowRect
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(325) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(329) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(364) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(373) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(384) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_layout_persistence.asm(391) : error A2006:undefined symbol : CloseHandle

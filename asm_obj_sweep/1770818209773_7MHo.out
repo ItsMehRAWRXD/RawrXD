@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(188) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(291) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(410) : error A2008:syntax error : name
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(598) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(602) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(606) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(143) : error A2036:too many initial values for structure
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(147) : error A2036:too many initial values for structure
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OllamaTuner.asm\1770818209773_7MHo.asm(151) : error A2036:too many initial values for structure

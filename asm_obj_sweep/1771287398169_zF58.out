@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\RawrXD_Compiler_Engine_Complete.asm\1771287398169_zF58.asm
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Compiler_Engine_Complete.asm\1771287398169_zF58.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Compiler_Engine_Complete.asm\1771287398169_zF58.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Compiler_Engine_Complete.asm\1771287398169_zF58.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Compiler_Engine_Complete.asm\1771287398169_zF58.asm(17) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\RawrXD_Compiler_Engine_Complete.asm\1771287398169_zF58.asm(22) : fatal error A1000:cannot open file : \masm32\include\windows.inc

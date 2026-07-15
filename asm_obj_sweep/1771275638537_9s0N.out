@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_NetworkSniper.asm\1771275638537_9s0N.asm
+D:\rawrxd\history\all_versions\RawrXD_NetworkSniper.asm\1771275638537_9s0N.asm(23) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\RawrXD_NetworkSniper.asm\1771275638537_9s0N.asm(90) : error A2006:undefined symbol : RelayEngine_RunBiDirectional
+D:\rawrxd\history\all_versions\RawrXD_NetworkSniper.asm\1771275638537_9s0N.asm(295) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\RawrXD_NetworkSniper.asm\1771275638537_9s0N.asm(39) : warning A4014:instructions and initialized data not supported in BSS segments

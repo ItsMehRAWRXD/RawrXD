@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(448) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(538) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(551) : error A2006:undefined symbol : WM_UNDO
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(560) : error A2006:undefined symbol : WM_REDO
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(569) : error A2006:undefined symbol : WM_CUT
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(578) : error A2006:undefined symbol : WM_COPY
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(587) : error A2006:undefined symbol : WM_PASTE
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(596) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(622) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(633) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(644) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(652) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(876) : error A2006:undefined symbol : szInitialDir
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(880) : error A2006:undefined symbol : szOpenTitle
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(890) : error A2006:undefined symbol : szDefExt
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(960) : error A2006:undefined symbol : szInitialDir
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(963) : error A2006:undefined symbol : szSaveTitle
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(972) : error A2006:undefined symbol : szDefExt
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(1075) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(1092) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(228) : error A2047:empty (null) string
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(1097) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(1097) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\menu\handlers.asm(1097) : warning A6004:procedure argument or local not referenced : lParam

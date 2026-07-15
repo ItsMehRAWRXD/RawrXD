@@ -1,0 +1,171 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "rawrxd-hotpatch-overview",
+    "title": "RawrXD Hotpatch System - Overview",
+    "tags": ["hotpatch", "security", "overview"],
+    "timezone": "UTC",
+    "schemaVersion": 36,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Patch Success Rate (5m)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(rawrxd_patch_operations_total{status=\"success\"}[5m]) / rate(rawrxd_patch_operations_total[5m])",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.95},
+                {"color": "green", "value": 0.99}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Compliance Score",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "rawrxd_compliance_score",
+            "legendFormat": "Compliance"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 80},
+                {"color": "green", "value": 95}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Active Patches",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rawrxd_patches_applied)",
+            "legendFormat": "Applied"
+          },
+          {
+            "expr": "sum(rawrxd_patches_rolled_back)",
+            "legendFormat": "Rolled Back"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "System Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=~\"rawrxd-.*\"}",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "DOWN"}}, "type": "value", "text": "DOWN"},
+              {"options": {"1": {"text": "UP"}}, "type": "value", "text": "UP"}
+            ],
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Patch Operations Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(rawrxd_patch_operations_total[1m])",
+            "legendFormat": "{{operation}} - {{status}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Patch Operation Duration (p95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(rawrxd_patch_operation_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95 Duration"
+          }
+        ],
+        "yAxes": [{"format": "s"}],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "RBAC Access Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(rawrxd_rbac_access_allowed_total[5m])",
+            "legendFormat": "Allowed"
+          },
+          {
+            "expr": "rate(rawrxd_rbac_access_denied_total[5m])",
+            "legendFormat": "Denied"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "Audit Log Activity",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(rawrxd_audit_log_entries_total[5m])",
+            "legendFormat": "{{event_type}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
+      },
+      {
+        "id": 9,
+        "title": "Recent Alerts",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "ALERTS{alertstate=\"firing\"}",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 20}
+      }
+    ]
+  }
+}

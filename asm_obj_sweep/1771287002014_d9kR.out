@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\os_explorer_interceptor.asm\1771287002014_d9kR.asm
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor.asm\1771287002014_d9kR.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor.asm\1771287002014_d9kR.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor.asm\1771287002014_d9kR.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor.asm\1771287002014_d9kR.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\os_explorer_interceptor.asm\1771287002014_d9kR.asm(20) : fatal error A1000:cannot open file : \masm32\include\windows.inc

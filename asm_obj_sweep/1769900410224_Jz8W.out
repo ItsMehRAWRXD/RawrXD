@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769900410224_Jz8W.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769900410224_Jz8W.asm(104) : error A2006:undefined symbol
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769900410224_Jz8W.asm(34) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769900410224_Jz8W.asm(55) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769900410224_Jz8W.asm(83) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Model_StateMachine.asm\1769900410224_Jz8W.asm(113) : error A2220:Missing .ENDPROLOG

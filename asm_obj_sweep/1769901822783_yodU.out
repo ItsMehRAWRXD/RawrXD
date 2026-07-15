@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(50) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(50) : error A2065:expected : )
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(54) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(54) : error A2065:expected : )
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(101) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(102) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(103) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(114) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(164) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(207) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(324) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(357) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(447) : error A2006:undefined symbol : TransferQueue
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(528) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(581) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(582) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(610) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(632) : error A2006:undefined symbol : TransferQueue
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(635) : error A2006:undefined symbol : OpType
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(640) : error A2006:undefined symbol : OpSize
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(682) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(689) : error A2006:undefined symbol : Blocks
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901822783_yodU.asm(757) : error A2006:undefined symbol : Blocks

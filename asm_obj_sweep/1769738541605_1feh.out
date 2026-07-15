@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_HttpChatServer.asm\1769738541605_1feh.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_HttpChatServer.asm\1769738541605_1feh.asm(9) : error A2008:syntax error : FRAME
+D:\rawrxd\history\all_versions\src\masm\RawrXD_HttpChatServer.asm\1769738541605_1feh.asm(1505) : error A2022:instruction operands must be the same size

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\-187a41e5\Ur8y.asm
+D:\rawrxd\history\-187a41e5\Ur8y.asm(6) : error A2008:syntax error : define
+D:\rawrxd\history\-187a41e5\Ur8y.asm(7) : error A2008:syntax error : define
+D:\rawrxd\history\-187a41e5\Ur8y.asm(8) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-187a41e5\Ur8y.asm(9) : error A2008:syntax error : define
+D:\rawrxd\history\-187a41e5\Ur8y.asm(11) : error A2008:syntax error : in directive
+D:\rawrxd\history\-187a41e5\Ur8y.asm(13) : error A2008:syntax error : section
+D:\rawrxd\history\-187a41e5\Ur8y.asm(14) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(15) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(18) : error A2008:syntax error : section
+D:\rawrxd\history\-187a41e5\Ur8y.asm(20) : error A2008:syntax error : global
+D:\rawrxd\history\-187a41e5\Ur8y.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(29) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(35) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(36) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(37) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(38) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(41) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(42) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(43) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(44) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(47) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(48) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(49) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(51) : error A2008:syntax error : .
+D:\rawrxd\history\-187a41e5\Ur8y.asm(52) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(54) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(57) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(58) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(59) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(62) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(63) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(64) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(65) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(67) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(68) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(72) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(73) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(76) : error A2008:syntax error : .
+D:\rawrxd\history\-187a41e5\Ur8y.asm(79) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(80) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(81) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(84) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(88) : error A2008:syntax error : .
+D:\rawrxd\history\-187a41e5\Ur8y.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(90) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(93) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(95) : error A2008:syntax error : .
+D:\rawrxd\history\-187a41e5\Ur8y.asm(97) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(98) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(99) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(105) : error A2008:syntax error : global
+D:\rawrxd\history\-187a41e5\Ur8y.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(122) : error A2008:syntax error : .
+D:\rawrxd\history\-187a41e5\Ur8y.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(135) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\-187a41e5\Ur8y.asm(145) : fatal error A1012:error count exceeds 100; stopping assembly

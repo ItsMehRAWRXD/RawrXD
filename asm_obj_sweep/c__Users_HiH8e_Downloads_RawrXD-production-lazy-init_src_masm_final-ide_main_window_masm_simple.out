@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(93) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(464) : error A2006:undefined symbol : MSG
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(464) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(326) : error A2006:undefined symbol : SW_SHOWNORMAL
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(327) : error A2006:undefined symbol : ShowWindow
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(329) : error A2006:undefined symbol : UpdateWindow
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(455) : error A2006:undefined symbol : PostQuitMessage
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(471) : error A2006:undefined symbol : GetMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(476) : error A2006:undefined symbol : TranslateMessage
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(478) : error A2006:undefined symbol : DispatchMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(482) : error A2006:undefined symbol : wParam
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(508) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(519) : error A2006:undefined symbol : DestroyWindow
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(525) : error A2006:undefined symbol : PostQuitMessage
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_main_window_masm_simple.asm(438) : warning A6004:procedure argument or local not referenced : pMessage

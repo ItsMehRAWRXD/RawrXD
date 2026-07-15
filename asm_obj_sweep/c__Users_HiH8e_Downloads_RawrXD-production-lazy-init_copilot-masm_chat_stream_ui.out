@@ -1,0 +1,79 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(38) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(39) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(51) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(53) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(54) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(58) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(68) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(71) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(76) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(78) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(82) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(84) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(94) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(100) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(101) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(109) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(111) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(126) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(131) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(133) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(136) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(139) : error A2008:syntax error : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(152) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(155) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(161) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(164) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(165) : error A2008:syntax error : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(166) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(171) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(177) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(177) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(192) : error A2008:syntax error : DrawTypingDots
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(194) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(204) : error A2008:syntax error : if
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(209) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(228) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(246) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(259) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(263) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(276) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(278) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(284) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(287) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(60) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(67) : error A2006:undefined symbol : RtlCopyMemory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(73) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(74) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(86) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(93) : error A2006:undefined symbol : RtlCopyMemory
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(97) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(98) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(104) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(116) : error A2006:undefined symbol : WM_USER
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(119) : error A2006:undefined symbol : PostMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(180) : error A2006:undefined symbol : GetDC
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(184) : error A2006:undefined symbol : GetClientRect
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(188) : error A2006:undefined symbol : right
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(190) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(206) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(211) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(212) : error A2006:undefined symbol : IDC_THINKING_BOX
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(218) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(229) : error A2006:undefined symbol : FIXED_PITCH
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(230) : error A2006:undefined symbol : DEFAULT_QUALITY
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(231) : error A2006:undefined symbol : CLIP_DEFAULT_PRECIS
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(232) : error A2006:undefined symbol : OUT_DEFAULT_PRECIS
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(233) : error A2006:undefined symbol : DEFAULT_CHARSET
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(238) : error A2006:undefined symbol : CreateFontA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(244) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(251) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(261) : error A2006:undefined symbol : DestroyWindow
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(21) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(31) : error A2047:empty (null) string
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(128) : warning A6004:procedure argument or local not referenced : pToken
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(128) : warning A6004:procedure argument or local not referenced : tokenLen
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(157) : warning A6004:procedure argument or local not referenced : pModelName
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(173) : warning A6004:procedure argument or local not referenced : success
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_copilot-masm_chat_stream_ui.asm(270) : warning A6004:procedure argument or local not referenced : enabled

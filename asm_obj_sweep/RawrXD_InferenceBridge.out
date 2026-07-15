@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\RawrXD_InferenceBridge.asm
+D:\rawrxd\RawrXD_InferenceBridge.asm(37) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_InferenceBridge.asm(38) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_InferenceBridge.asm(39) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_InferenceBridge.asm(84) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_InferenceBridge.asm(97) : error A2008:syntax error : PUSHNONVOL
+D:\rawrxd\RawrXD_InferenceBridge.asm(45) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(46) : error A2006:undefined symbol : RequestBusy
+D:\rawrxd\RawrXD_InferenceBridge.asm(48) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(58) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(61) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(67) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(68) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(72) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(73) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(82) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_InferenceBridge.asm(113) : error A2006:undefined symbol : TextBuffer_InsertString
+D:\rawrxd\RawrXD_InferenceBridge.asm(116) : error A2009:syntax error in expression

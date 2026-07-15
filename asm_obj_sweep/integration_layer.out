@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\integration_layer.asm
+D:\rawrxd\integration_layer.asm(12) : error A2008:syntax error : frame
+D:\rawrxd\integration_layer.asm(101) : error A2063:can ALIGN only to power of 2 : 7
+D:\rawrxd\integration_layer.asm(114) : error A2063:can ALIGN only to power of 2 : 7
+D:\rawrxd\integration_layer.asm(161) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\integration_layer.asm(485) : error A2070:invalid instruction operands
+D:\rawrxd\integration_layer.asm(214) : error A2206:missing operator in expression
+D:\rawrxd\integration_layer.asm(432) : error A2206:missing operator in expression
+D:\rawrxd\integration_layer.asm(469) : error A2206:missing operator in expression
+D:\rawrxd\integration_layer.asm(510) : error A2022:instruction operands must be the same size
+D:\rawrxd\integration_layer.asm(812) : error A2006:undefined symbol : T_EOF
+D:\rawrxd\integration_layer.asm(814) : error A2006:undefined symbol : K_FN
+D:\rawrxd\integration_layer.asm(124) : error A2206:missing operator in expression

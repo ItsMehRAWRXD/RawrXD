@@ -1,0 +1,78 @@
+ Assembling: D:\rawrxd\history\-2c7a0a9\UXpY.asm
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(30) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(30) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(32) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(33) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(36) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(39) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(40) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(41) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(49) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(60) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(61) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(73) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(94) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(105) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(106) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(112) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(116) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(130) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(134) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(151) : error A2008:syntax error : SetWindowPos
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(167) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(185) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(207) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(214) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(217) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(220) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(221) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(224) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(231) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(46) : error A2006:undefined symbol : WS_EX_TOOLWINDOW
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(52) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(58) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(67) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(70) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(72) : error A2006:undefined symbol : EMPTY_STR
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(75) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(76) : error A2006:undefined symbol : IDC_DIFF_OLD
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(82) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(88) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(91) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(93) : error A2006:undefined symbol : EMPTY_STR
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(96) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(97) : error A2006:undefined symbol : IDC_DIFF_NEW
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(103) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(118) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(119) : error A2006:undefined symbol : IDC_DIFF_ACCEPT
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(125) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(136) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(137) : error A2006:undefined symbol : IDC_DIFF_REJECT
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(143) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(147) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(164) : error A2006:undefined symbol : GetWindowTextLengthA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(169) : error A2006:undefined symbol : HEAP_ZERO_MEMORY
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(170) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(176) : error A2006:undefined symbol : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(181) : error A2006:undefined symbol : Diff_ComputeLines
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(184) : error A2006:undefined symbol : numDifferences
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(187) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(188) : error A2006:undefined symbol : startPos
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(189) : error A2006:undefined symbol : endPos
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(190) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(192) : error A2006:undefined symbol : EM_SETCHARFORMAT
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(193) : error A2006:undefined symbol : SCF_SELECTION
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(194) : error A2006:undefined symbol : redFormat
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(195) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(198) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(199) : error A2006:undefined symbol : startPos
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(200) : error A2006:undefined symbol : endPos
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(201) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(203) : error A2006:undefined symbol : EM_SETCHARFORMAT
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(204) : error A2006:undefined symbol : SCF_SELECTION
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(205) : error A2006:undefined symbol : greenFormat
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(206) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(218) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(154) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(210) : warning A6004:procedure argument or local not referenced : hOldDC
+D:\rawrxd\history\-2c7a0a9\UXpY.asm(210) : warning A6004:procedure argument or local not referenced : hNewDC

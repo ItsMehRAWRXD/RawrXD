@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771127531089_dlxt.asm
+D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771127531089_dlxt.asm(47) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\src\asm\ai_completion_provider_masm.asm\1771127531089_dlxt.asm(47) : fatal error A1009:line too long

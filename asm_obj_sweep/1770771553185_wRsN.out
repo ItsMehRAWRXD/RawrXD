@@ -1,0 +1,87 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(60) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(82) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(366) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(384) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(386) : error A2008:syntax error : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(399) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(451) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(568) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(666) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(743) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(760) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(789) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(820) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(832) : error A2008:syntax error : CREATE_ALWAYS
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(872) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(906) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(947) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(990) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1032) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1074) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1119) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1157) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1161) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1161): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1166) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1170) : error A2008:syntax error : addr
+ invoke(30): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1170): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1175) : error A2111:conflicting parameter definition
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1208) : error A2005:symbol redefinition : strcpy_s
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1209) : error A2005:symbol redefinition : sprintf_s
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1211) : error A2005:symbol redefinition : lstrlenA
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1212) : error A2005:symbol redefinition : SetFilePointerEx
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(305) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(319) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(325) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(331) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(337) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(343) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(407) : error A2006:undefined symbol : magic
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(413) : error A2006:undefined symbol : magic
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(414) : error A2006:undefined symbol : GGUF_MAGIC
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(418) : error A2006:undefined symbol : version
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(422) : error A2006:undefined symbol : tensor_count
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(589) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(592) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(598) : error A2006:undefined symbol : name_len
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(606) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(612) : error A2006:undefined symbol : dtype
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(618) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(624) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(628) : error A2006:undefined symbol : shape
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(634) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(675) : error A2006:undefined symbol : name_ptr
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(702) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(703) : error A2006:undefined symbol : unknown_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(707) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(708) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(711) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(715) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(716) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(719) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(723) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(724) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(728) : error A2006:undefined symbol : pattern_type
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(729) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(759) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(768) : error A2006:undefined symbol : ffn_blocks
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(769) : error A2006:undefined symbol : attn_heads
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(770) : error A2006:undefined symbol : embed_tokens
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(771) : error A2006:undefined symbol : norm_layers
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(772) : error A2006:undefined symbol : layer_count
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(799) : error A2006:undefined symbol : total_params
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(838) : error A2006:undefined symbol : exec_header
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(880) : error A2006:undefined symbol : shape_rank
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(881) : error A2006:undefined symbol : shape
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(895) : error A2006:undefined symbol : param_count
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1161) : error A2022:instruction operands must be the same size
+ invoke(18): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1161): Main Line Code
+D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1170) : error A2022:instruction operands must be the same size
+ invoke(18): Macro Called From
+  D:\rawrxd\history\all_versions\src\asm\RawrXD-AnalyzerDistiller.asm\1770771553185_wRsN.asm(1170): Main Line Code

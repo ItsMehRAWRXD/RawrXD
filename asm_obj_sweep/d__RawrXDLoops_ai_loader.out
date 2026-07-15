@@ -1,0 +1,44 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(52) : error A2006:undefined symbol : g_bModelLoading
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(53) : error A2006:undefined symbol : loading_busy
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(55) : error A2006:undefined symbol : g_bModelLoading
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(75) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(80) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(87) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(106) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(109) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(121) : error A2006:undefined symbol : g_bModelLoading
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(131) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(137) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(144) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(156) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(186) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(198) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(199) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(200) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(203) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(207) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(221) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(222) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(223) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(226) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(230) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(251) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(326) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(330) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(332) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(334) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(336) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(338) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(340) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(358) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(361) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(362) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(366) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(367) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(368) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(377) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(426) : error A2006:undefined symbol : g_CurrentModel
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_ai_loader.asm(440) : warning A6004:procedure argument or local not referenced : pContext

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__Everything_Pure-MASM-Compiler-Project_src_core_runtime.asm
+D:\rawrxd\history\runoff\part_0024\e__Everything_Pure-MASM-Compiler-Project_src_core_runtime.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__Everything_Pure-MASM-Compiler-Project_src_core_runtime.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__Everything_Pure-MASM-Compiler-Project_src_core_runtime.asm(9) : fatal error A1000:cannot open file : \masm32\include\windows.inc

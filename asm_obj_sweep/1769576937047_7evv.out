@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\omega_polyglot_v3.asm\1769576937047_7evv.asm
+D:\rawrxd\history\all_versions\omega_polyglot_v3.asm\1769576937047_7evv.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\omega_polyglot_v3.asm\1769576937047_7evv.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\omega_polyglot_v3.asm\1769576937047_7evv.asm(20) : fatal error A1000:cannot open file : \masm32\include\windows.inc

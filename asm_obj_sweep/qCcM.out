@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-162878ea\qCcM.asm
+D:\rawrxd\history\-162878ea\qCcM.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\-162878ea\qCcM.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-162878ea\qCcM.asm(16) : fatal error A1000:cannot open file : user32.inc

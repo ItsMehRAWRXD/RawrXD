@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127030536_3xfT.asm
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127030536_3xfT.asm(360) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127030536_3xfT.asm(362) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127030536_3xfT.asm(65) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\all_versions\src\asm\ai_agent_masm_core.asm\1771127030536_3xfT.asm(81) : error A2006:undefined symbol : GetLastError

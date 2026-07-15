@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(40) : error A2008:syntax error : lock
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(41) : error A2008:syntax error : rep
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(276) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(308) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(340) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(379) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(448) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(501) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(553) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(595) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(637) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(681) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(715) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(746) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(881) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(911) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(925) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD-Compilers\RawrXD\x64\Encoder.asm(953) : error A2220:Missing .ENDPROLOG

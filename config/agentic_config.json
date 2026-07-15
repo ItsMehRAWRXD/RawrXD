@@ -1,0 +1,81 @@
+{
+  "system": {
+    "name": "RawrXD Agentic System",
+    "version": "1.0.0",
+    "build_date": "2026-07-08"
+  },
+  "ollama": {
+    "host": "localhost",
+    "port": 11434,
+    "default_model": "deepseek-r1:8b",
+    "timeout_ms": 30000,
+    "streaming": true
+  },
+  "models": {
+    "deepseek-r1:8b": {
+      "name": "deepseek-r1:8b",
+      "size_gb": 5.2,
+      "quantization": "Q4_K_M",
+      "context_length": 131072,
+      "embedding_length": 4096,
+      "family": "qwen3",
+      "capabilities": ["completion", "thinking"],
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "top_k": 40,
+      "num_predict": -1
+    },
+    "gemma3:27b": {
+      "name": "gemma3:27b",
+      "size_gb": 17.4,
+      "quantization": "Q4_K_M",
+      "context_length": 8192,
+      "embedding_length": 4608,
+      "family": "gemma3",
+      "capabilities": ["completion"],
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "top_k": 40,
+      "num_predict": -1
+    },
+    "nemotron-3-super:latest": {
+      "name": "nemotron-3-super:latest",
+      "size_gb": 86.8,
+      "quantization": "Q4_K_M",
+      "context_length": 262144,
+      "embedding_length": 4096,
+      "family": "nemotron_h_moe",
+      "capabilities": ["completion", "tools", "thinking"],
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "top_k": 40,
+      "num_predict": -1
+    }
+  },
+  "streaming": {
+    "buffer_size": 8192,
+    "token_timeout_ms": 2000,
+    "max_retries": 3,
+    "backpressure_high": 200,
+    "backpressure_low": 50,
+    "stall_detection_ms": 5000
+  },
+  "performance": {
+    "target_tokens_per_second": 50,
+    "target_latency_ms": 20,
+    "enable_profiling": false,
+    "log_level": "info"
+  },
+  "toolchain": {
+    "path": "d:\\rawrxd\\compilers\\native_toolchain",
+    "assembler": "rawrxd_native_assembler.exe",
+    "linker": "rawrxd_native_linker.exe",
+    "librarian": "rawrxd_native_librarian.exe",
+    "rc": "rawrxd_native_rc.exe"
+  },
+  "tests": {
+    "auto_build": true,
+    "verbose": false,
+    "timeout_seconds": 60
+  }
+}

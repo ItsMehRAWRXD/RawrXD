@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\binary_analyzer_working.asm\1771285116914_Dynm.asm
+D:\rawrxd\history\all_versions\src\binary_analyzer_working.asm\1771285116914_Dynm.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\binary_analyzer_working.asm\1771285116914_Dynm.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\binary_analyzer_working.asm\1771285116914_Dynm.asm(16) : fatal error A1000:cannot open file : user32.inc

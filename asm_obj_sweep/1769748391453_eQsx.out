@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769748391453_eQsx.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769748391453_eQsx.asm(560) : error A2006:undefined symbol : CompareRawUrlPath
+D:\rawrxd\history\all_versions\src\masm\RawrXD_NativeHttpServer.asm\1769748391453_eQsx.asm(568) : error A2006:undefined symbol : CompareRawUrlPath

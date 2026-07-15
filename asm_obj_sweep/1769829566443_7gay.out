@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\interconnect\RawrXD_HTTP_Router.asm\1769829566443_7gay.asm
+D:\rawrxd\history\all_versions\interconnect\RawrXD_HTTP_Router.asm\1769829566443_7gay.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\interconnect\RawrXD_HTTP_Router.asm\1769829566443_7gay.asm(11) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

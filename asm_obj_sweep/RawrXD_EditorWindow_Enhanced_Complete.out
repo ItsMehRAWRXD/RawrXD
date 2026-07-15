@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\RawrXD_EditorWindow_Enhanced_Complete.asm
+D:\rawrxd\RawrXD_EditorWindow_Enhanced_Complete.asm(355) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_EditorWindow_Enhanced_Complete.asm(374) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Enhanced_Complete.asm(377) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_EditorWindow_Enhanced_Complete.asm(379) : fatal error A1010:unmatched block nesting : FileIO_Read

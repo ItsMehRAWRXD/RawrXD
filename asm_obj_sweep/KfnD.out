@@ -1,0 +1,56 @@
+ Assembling: D:\rawrxd\history\-1fb924a\KfnD.asm
+D:\rawrxd\history\-1fb924a\KfnD.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-1fb924a\KfnD.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-1fb924a\KfnD.asm(130) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(150) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(155) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(169) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(170) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(171) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(191) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(192) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(193) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(206) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(207) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(208) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(213) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(214) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(215) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(228) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(229) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(232) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(246) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(259) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(260) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(265) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(266) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(278) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(282) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(283) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(291) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(296) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(301) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(308) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(314) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(319) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(330) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(335) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(336) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(340) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(350) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(351) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(365) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(366) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(378) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(379) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(398) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(406) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(425) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(426) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(432) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(433) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1fb924a\KfnD.asm(198) : error A2009:syntax error in expression
+D:\rawrxd\history\-1fb924a\KfnD.asm(281) : error A2006:undefined symbol : MODEL_SOURCE_LOCAL
+D:\rawrxd\history\-1fb924a\KfnD.asm(292) : error A2006:undefined symbol : HotPatch_CacheModel
+D:\rawrxd\history\-1fb924a\KfnD.asm(297) : error A2006:undefined symbol : HotPatch_WarmupModel
+D:\rawrxd\history\-1fb924a\KfnD.asm(268) : warning A6004:procedure argument or local not referenced : lpQuery

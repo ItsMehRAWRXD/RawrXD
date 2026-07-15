@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(39) : error A2008:syntax error : lock
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(40) : error A2008:syntax error : rep
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(262) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(294) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(326) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(365) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(434) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(487) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(539) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(581) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(623) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(667) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(701) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(732) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(867) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(897) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(911) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_RawrXD_x64_Encoder.asm(939) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\exec\write.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\exec\write.asm(35) : error A2008:syntax error : WriteExecOutput
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\exec\write.asm(35) : error A2088:END directive required at end of file

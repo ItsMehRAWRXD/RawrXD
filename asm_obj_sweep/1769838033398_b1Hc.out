@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769838033398_b1Hc.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769838033398_b1Hc.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769838033398_b1Hc.asm(145) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769838033398_b1Hc.asm(164) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769838033398_b1Hc.asm(180) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Complete_Interconnect.asm\1769838033398_b1Hc.asm(202) : error A2220:Missing .ENDPROLOG

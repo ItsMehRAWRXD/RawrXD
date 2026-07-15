@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-2815cd5c\tzcm.asm
+D:\rawrxd\history\-2815cd5c\tzcm.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\-2815cd5c\tzcm.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-2815cd5c\tzcm.asm(10) : fatal error A1000:cannot open file : \masm32\include\windows.inc

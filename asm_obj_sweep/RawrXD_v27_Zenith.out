@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\src\RawrXD_v27_Zenith.asm
+D:\rawrxd\src\RawrXD_v27_Zenith.asm(19) : error A2006:undefined symbol : SwarmV27_History_Folder
+D:\rawrxd\src\RawrXD_v27_Zenith.asm(22) : error A2006:undefined symbol : SwarmV27_Holographic_Synthesis
+D:\rawrxd\src\RawrXD_v27_Zenith.asm(23) : error A2006:undefined symbol : SwarmV27_Meta_Learning_Hook
+D:\rawrxd\src\RawrXD_v27_Zenith.asm(11) : error A2206:missing operator in expression
+D:\rawrxd\src\RawrXD_v27_Zenith.asm(13) : error A2206:missing operator in expression

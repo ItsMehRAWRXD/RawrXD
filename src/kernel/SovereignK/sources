@@ -1,0 +1,24 @@
+TARGETNAME=SovereignK
+TARGETTYPE=DRIVER
+
+KMDF_VERSION_MAJOR=1
+
+INCLUDES=.
+
+SOURCES=SovereignK.c \
+        BarMapping.c \
+        HostMemory.c \
+        DmaTransfer.c \
+        Utils.c
+
+# Compiler flags
+MSC_WARNING_LEVEL=/W4 /WX-
+
+# Linker flags
+LINKER_FLAGS=/INTEGRITYCHECK
+
+# Target OS version
+TARGETOS=win10
+
+# Architecture (set by build environment)
+# AMD64, X86, ARM, ARM64

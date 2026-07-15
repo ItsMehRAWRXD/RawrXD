@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\inflate_deflate_asm.asm
+D:\rawrxd\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\inflate_deflate_asm.asm(4) : error A2034:must be in segment block : AsmInflate
+D:\rawrxd\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\inflate_deflate_asm.asm(6) : error A2034:must be in segment block
+D:\rawrxd\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\inflate_deflate_asm.asm(7) : error A2034:must be in segment block
+D:\rawrxd\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\inflate_deflate_asm.asm(8) : fatal error A1010:unmatched block nesting : AsmInflate

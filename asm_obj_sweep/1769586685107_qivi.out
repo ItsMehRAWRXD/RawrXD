@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(883) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(987) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(1097) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(1252) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(1500) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(1515) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(1926) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\RawrXD_GPU_DMA_Expanded_Final.asm\1769586685107_qivi.asm(1943) : fatal error A1010:unmatched block nesting : malloc_internal

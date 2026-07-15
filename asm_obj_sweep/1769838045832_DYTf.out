@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769838045832_DYTf.asm
+D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769838045832_DYTf.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769838045832_DYTf.asm(25) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769838045832_DYTf.asm(32) : error A2220:Missing .ENDPROLOG

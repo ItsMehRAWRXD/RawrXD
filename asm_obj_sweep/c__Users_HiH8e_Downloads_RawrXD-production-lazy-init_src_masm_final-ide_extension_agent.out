@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(54) : error A2008:syntax error : char_format
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(230) : error A2006:undefined symbol : CHARFORMAT2
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(231) : error A2006:undefined symbol : CHARFORMAT2
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(232) : error A2006:undefined symbol : CHARFORMAT2
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(236) : error A2006:undefined symbol : WM_GETTEXTLENGTH
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(267) : error A2006:undefined symbol : FINDTEXTA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(268) : error A2006:undefined symbol : FINDTEXTA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(269) : error A2006:undefined symbol : FINDTEXTA
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(272) : error A2006:undefined symbol : EM_FINDTEXT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(285) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(298) : error A2006:undefined symbol : EM_SETCHARFORMAT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(299) : error A2006:undefined symbol : SCF_SELECTION
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(320) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(377) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(380) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(381) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_extension_agent.asm(386) : error A2006:undefined symbol : INVALID_HANDLE_VALUE

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\UniversalHotpatch.asm
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\UniversalHotpatch.asm(15) : error A2008:syntax error : WIN64
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\UniversalHotpatch.asm(603) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\UniversalHotpatch.asm(669) : error A2006:undefined symbol : gets_s

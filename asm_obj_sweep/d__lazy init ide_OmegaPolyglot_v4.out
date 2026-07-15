@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(226) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(228) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(234) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(243) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(263) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(292) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(296) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(300) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(303) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(308) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(310) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(314) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(315) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(321) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(336) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(339) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(389) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(409) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(413) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(418) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(419) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(424) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(425) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(431) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(432) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(434) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(443) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(444) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(445) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(446) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(447) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(448) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(449) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(450) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(451) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(454) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(461) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(474) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(476) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(483) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(485) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(486) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(494) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(503) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(506) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(507) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(511) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(512) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(532) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(534) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(544) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(548) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(552) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(578) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(580) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(581) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(597) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(611) : error A2008:syntax error : ENT
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(619) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(620) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(637) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(639) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(645) : error A2008:syntax error : RVAToOffset
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(656) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(657) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(667) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(669) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(676) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(677) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(687) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(688) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(692) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(725) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(726) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(736) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(738) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(792) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(793) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(803) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(811) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(812) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(835) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(837) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(855) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(858) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(861) : error A2008:syntax error : HD
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(864) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(867) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(870) : error A2008:syntax error : DIS
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(880) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(882) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaPolyglot_v4.asm(885) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769987502725_zErR.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769987502725_zErR.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769987502725_zErR.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769987502725_zErR.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769987502725_zErR.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769987502725_zErR.asm(14) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

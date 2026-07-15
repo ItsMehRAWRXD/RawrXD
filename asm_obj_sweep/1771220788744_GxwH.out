@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(13) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(228) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(229) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(230) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(231) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(241) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(242) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(243) : error A2006:undefined symbol : r32d
+D:\rawrxd\history\all_versions\src\asm\RawrXD_OverclockGov_Pure.asm\1771220788744_GxwH.asm(244) : error A2006:undefined symbol : r32d

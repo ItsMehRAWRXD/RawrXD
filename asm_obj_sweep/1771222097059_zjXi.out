@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222097059_zjXi.asm
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222097059_zjXi.asm(790) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222097059_zjXi.asm(804) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222097059_zjXi.asm(816) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\Code_Pattern_Reconstructor.asm\1771222097059_zjXi.asm(729) : error A2022:instruction operands must be the same size

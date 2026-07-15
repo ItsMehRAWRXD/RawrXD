@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(227) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(234) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(241) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(271) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(300) : error A2006:undefined symbol : memcpy
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(429) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(436) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(443) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(450) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(457) : error A2006:undefined symbol : malloc
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(478) : error A2006:undefined symbol : free
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(487) : error A2006:undefined symbol : free
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(496) : error A2006:undefined symbol : free
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(505) : error A2006:undefined symbol : free
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(514) : error A2006:undefined symbol : free
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(71) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(71) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_NativeModelBridge_PRODUCTION.asm\1769716376199_qaCv.asm(71) : warning A6004:procedure argument or local not referenced : lpReserved

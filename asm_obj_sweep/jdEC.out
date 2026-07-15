@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-29b34fd4\jdEC.asm
+D:\rawrxd\history\-29b34fd4\jdEC.asm(636) : error A2006:undefined symbol : OpType
+D:\rawrxd\history\-29b34fd4\jdEC.asm(641) : error A2006:undefined symbol : OpSize

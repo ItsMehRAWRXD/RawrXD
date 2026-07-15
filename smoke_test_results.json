@@ -1,0 +1,180 @@
+﻿{
+    "startTime":  "2026-06-25 02:18:18",
+    "skippedTests":  0,
+    "failedTests":  2,
+    "passedTests":  19,
+    "testSuites":  [
+                       {
+                           "details":  "Size: 47258624 bytes",
+                           "timestamp":  "2026-06-25 02:18:18",
+                           "suite":  "Phase 1",
+                           "duration":  21.6353,
+                           "test":  "Binary Existence",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Exit code: -1073740940",
+                           "timestamp":  "2026-06-25 02:18:21",
+                           "suite":  "Phase 1",
+                           "duration":  3046.6998000000003,
+                           "test":  "Process Launch",
+                           "status":  "FAIL"
+                       },
+                       {
+                           "details":  "Found 1 crash(es) in last 2 minutes",
+                           "timestamp":  "2026-06-25 02:18:21",
+                           "suite":  "Phase 1",
+                           "duration":  62.759600000000006,
+                           "test":  "No Recent Crashes",
+                           "status":  "FAIL"
+                       },
+                       {
+                           "details":  "Log entries: 20",
+                           "timestamp":  "2026-06-25 02:18:23",
+                           "suite":  "Phase 1",
+                           "duration":  2006.9232000000002,
+                           "test":  "Log File Creation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Memory: 81.63 MB (under 500MB threshold)",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 2",
+                           "duration":  9.1093000000000011,
+                           "test":  "Memory Usage",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Threads: 14",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 2",
+                           "duration":  3.011,
+                           "test":  "Thread Creation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Handles: 331",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 2",
+                           "duration":  0,
+                           "test":  "Handle Creation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 2 LSP files",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 3",
+                           "duration":  1.5153,
+                           "test":  "LSP Source Files",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Semantic tokens found in LSP client",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 3",
+                           "duration":  1.5118,
+                           "test":  "Semantic Tokens Implementation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 5/5 AI functions",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 4",
+                           "duration":  1.5131000000000001,
+                           "test":  "AI Functions Implementation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 5/5 providers",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 4",
+                           "duration":  1.5153,
+                           "test":  "Multi-Provider Router",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Async threading implementation found",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 4",
+                           "duration":  0,
+                           "test":  "Async Worker Thread",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 3/3 functions",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 5",
+                           "duration":  0,
+                           "test":  "Code Actions Implementation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "LSP codeAction protocol found",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 5",
+                           "duration":  0,
+                           "test":  "LSP Code Action Protocol",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 4/4 functions",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 6",
+                           "duration":  1.5131000000000001,
+                           "test":  "Hierarchy Implementation",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "LSP hierarchy protocol found",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 6",
+                           "duration":  0,
+                           "test":  "LSP Hierarchy Protocol",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 2/2 DAP files",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 7",
+                           "duration":  1.7745000000000002,
+                           "test":  "DAP Source Files",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Production files in CMakeLists.txt",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 8",
+                           "duration":  17.8656,
+                           "test":  "CMakeLists Production Files",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "No stub files in CMakeLists.txt",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 8",
+                           "duration":  4.529,
+                           "test":  "No Stub Files in Build",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 1 VEH file(s)",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 9",
+                           "duration":  1.5088000000000001,
+                           "test":  "VEH Handler Files",
+                           "status":  "PASS"
+                       },
+                       {
+                           "details":  "Found 2 security file(s)",
+                           "timestamp":  "2026-06-25 02:18:26",
+                           "suite":  "Phase 9",
+                           "duration":  0,
+                           "test":  "Security Framework",
+                           "status":  "PASS"
+                       }
+                   ],
+    "endTime":  "2026-06-25 02:18:26",
+    "passRate":  90.48,
+    "totalTests":  21,
+    "binaryPath":  "d:\\rawrxd\\build-ninja\\bin\\RawrXD-Win32IDE.exe"
+}

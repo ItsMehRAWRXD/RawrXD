@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "timestamp": 1784044411,
+  "policy": {
+      "name": "latency_optimized",
+      "memory_weight": 0.15,
+      "bandwidth_weight": 0.15,
+      "latency_weight": 0.5,
+      "thermal_weight": 0.1,
+      "compute_weight": 0.1,
+      "residency_weight": 0.1,
+      "migration_threshold": 0.3,
+      "replication_factor": 1,
+      "enable_prefetch": true,
+      "prefetch_distance": 1048576
+    },
+  "metrics": {
+      "decisions_per_second": 0,
+      "avg_decision_latency_ms": -nan(ind),
+      "success_rate": 0.95,
+      "total_migrations": 0,
+      "total_prefetches": 0,
+      "throughput_improvement": 0
+    },
+  "decisions": [
+  ]
+}

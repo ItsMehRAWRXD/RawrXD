@@ -1,0 +1,30 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(37) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(273) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(295) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(325) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(348) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(385) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(408) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(431) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(436) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(509) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(589) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(611) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(668) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(772) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(781) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(938) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(941) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(1878) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(1984) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2059) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2149) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2306) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2356) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2433) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2437) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2516) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2657) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2692) : error A2006:undefined symbol : Phase1LogFormat
+D:\rawrxd\history\runoff\part_0024\e__Phase3_Master_Complete.asm(2966) : error A2006:undefined symbol : Phase1LogFormat

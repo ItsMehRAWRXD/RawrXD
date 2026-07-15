@@ -1,0 +1,70 @@
+//=============================================================================
+// RawrXD Manual DAP Protocol Test
+// Feed this raw DAP messages via stdin to test the protocol layer
+// Usage: DAPServer.exe < test_messages.txt
+// Or: echo "Content-Length: 123\r\n\r\n{...}" | DAPServer.exe
+//=============================================================================
+
+// Test Message 1: Initialize Request
+Content-Length: 56
+
+{"type":"request","seq":1,"command":"initialize","arguments":{}}
+
+// Expected Response: Initialize response with capabilities
+// {"type":"response","seq":1,"request_seq":1,"success":true,"command":"initialize","body":{...}}
+
+// Test Message 2: Launch Request (adjust path as needed)
+Content-Length: 156
+
+{"type":"request","seq":2,"command":"launch","arguments":{"program":"C:\\Windows\\System32\\notepad.exe","args":[],"cwd":"C:\\Windows\\System32"}}
+
+// Expected Response: Launch success or failure
+// {"type":"response","seq":2,"request_seq":2,"success":true,"command":"launch"}
+
+// Test Message 3: Set Breakpoints
+Content-Length: 145
+
+{"type":"request","seq":3,"command":"setBreakpoints","arguments":{"source":{"path":"test.cpp"},"breakpoints":[{"line":10},{"line":20}]}}
+
+// Expected Response: Breakpoints set confirmation
+// {"type":"response","seq":3,"request_seq":3,"success":true,"command":"setBreakpoints","body":{"breakpoints":[]}}
+
+// Test Message 4: Configuration Done
+Content-Length: 66
+
+{"type":"request","seq":4,"command":"configurationDone","arguments":{}}
+
+// Expected Response: Configuration done confirmation
+// {"type":"response","seq":4,"request_seq":4,"success":true,"command":"configurationDone"}
+
+// Test Message 5: Continue
+Content-Length: 75
+
+{"type":"request","seq":5,"command":"continue","arguments":{"threadId":1,"singleThread":false}}
+
+// Expected Response: Continue confirmation
+// {"type":"response","seq":5,"request_seq":5,"success":true,"command":"continue","body":{"allThreadsContinued":true}}
+
+// Test Message 6: Stack Trace (after stopped event)
+Content-Length: 76
+
+{"type":"request","seq":6,"command":"stackTrace","arguments":{"threadId":1,"startFrame":0,"levels":20}}
+
+// Expected Response: Stack frames
+// {"type":"response","seq":6,"request_seq":6,"success":true,"command":"stackTrace","body":{"stackFrames":[...]}}
+
+// Test Message 7: Threads
+Content-Length: 48
+
+{"type":"request","seq":7,"command":"threads","arguments":{}}
+
+// Expected Response: Thread list
+// {"type":"response","seq":7,"request_seq":7,"success":true,"command":"threads","body":{"threads":[{"id":1,"name":"Main Thread"}]}}
+
+// Test Message 8: Disconnect
+Content-Length: 54
+
+{"type":"request","seq":8,"command":"disconnect","arguments":{}}
+
+// Expected Response: Disconnect confirmation, then server exits
+// {"type":"response","seq":8,"request_seq":8,"success":true,"command":"disconnect"}

@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633210302_FiDo.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633210302_FiDo.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633210302_FiDo.asm(126) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633210302_FiDo.asm(148) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633210302_FiDo.asm(148) : error A2006:undefined symbol : RunLocalModel

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_hotpatch_system.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_final-ide_hotpatch_system.asm(185) : error A2006:undefined symbol : GetTickCount

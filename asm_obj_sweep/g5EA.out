@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\g5EA.asm
+D:\rawrxd\history\-1bd1bafa\g5EA.asm(490) : error A2005:symbol redefinition : szLayoutGrid
+D:\rawrxd\history\-1bd1bafa\g5EA.asm(491) : error A2005:symbol redefinition : szLayoutFlex
+D:\rawrxd\history\-1bd1bafa\g5EA.asm(492) : error A2005:symbol redefinition : szLayoutStack
+D:\rawrxd\history\-1bd1bafa\g5EA.asm(493) : error A2005:symbol redefinition : szLayoutAbsolute
+D:\rawrxd\history\-1bd1bafa\g5EA.asm(1697) : error A2008:syntax error
+D:\rawrxd\history\-1bd1bafa\g5EA.asm(1717) : error A2008:syntax error : [
+D:\rawrxd\history\-1bd1bafa\g5EA.asm(1749) : fatal error A1010:unmatched block nesting : parse_hex_color

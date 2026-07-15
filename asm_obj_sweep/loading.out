@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\tests\test\real\model\loading.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\tests\test\real\model\loading.asm(10) : fatal error A1000:cannot open file : d:\RawrXD-production-lazy-init\masm\masm_master_include.asm

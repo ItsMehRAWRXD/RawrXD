@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\Ship\RawrXD_NativeModelBridge_TEST.asm
+D:\rawrxd\Ship\RawrXD_NativeModelBridge_TEST.asm(118) : error A2206:missing operator in expression
+D:\rawrxd\Ship\RawrXD_NativeModelBridge_TEST.asm(70) : warning A6004:procedure argument or local not referenced : hInstance
+D:\rawrxd\Ship\RawrXD_NativeModelBridge_TEST.asm(70) : warning A6004:procedure argument or local not referenced : dwReason
+D:\rawrxd\Ship\RawrXD_NativeModelBridge_TEST.asm(70) : warning A6004:procedure argument or local not referenced : lpReserved

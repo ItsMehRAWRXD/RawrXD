@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278578349_gOxD.asm
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278578349_gOxD.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278578349_gOxD.asm(12) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278578349_gOxD.asm(18) : fatal error A1000:cannot open file : \masm32\include\windows.inc

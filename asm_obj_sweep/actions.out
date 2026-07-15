@@ -1,0 +1,12 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(11) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(20) : error A2008:syntax error : SetLayeredWindowAttributes
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(23) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(24) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(25) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(26) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(28) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(45) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(43) : error A2009:syntax error in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(51) : warning A6004:procedure argument or local not referenced : lpText
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\quick\actions.asm(51) : warning A6004:procedure argument or local not referenced : cmdId

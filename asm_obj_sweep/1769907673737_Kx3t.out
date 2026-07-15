@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907673737_Kx3t.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907673737_Kx3t.asm(674) : error A2006:undefined symbol : pKVCache
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907673737_Kx3t.asm(717) : error A2006:undefined symbol : pKVCache
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907673737_Kx3t.asm(722) : error A2006:undefined symbol : pKVCache
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907673737_Kx3t.asm(743) : warning A4025:ENDP found before .ENDPROLOG : KVCache_Append
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907673737_Kx3t.asm(743) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907673737_Kx3t.asm(743) : error A2220:Missing .ENDPROLOG

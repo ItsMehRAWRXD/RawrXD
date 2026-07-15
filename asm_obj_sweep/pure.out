@@ -1,0 +1,42 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(229) : error A2008:syntax error : Dr0
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(230) : error A2008:syntax error : Dr1
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(231) : error A2008:syntax error : Dr2
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(232) : error A2008:syntax error : Dr3
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(233) : error A2008:syntax error : Dr6
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(234) : error A2008:syntax error : Dr7
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(235) : error A2008:syntax error : Rax
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(236) : error A2008:syntax error : Rcx
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(237) : error A2008:syntax error : Rdx
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(238) : error A2008:syntax error : Rbx
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(239) : error A2008:syntax error : Rsp
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(240) : error A2008:syntax error : Rbp
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(241) : error A2008:syntax error : Rsi
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(242) : error A2008:syntax error : Rdi
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(243) : error A2008:syntax error : R8
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(244) : error A2008:syntax error : R9
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(245) : error A2008:syntax error : R10
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(246) : error A2008:syntax error : R11
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(247) : error A2008:syntax error : R12
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(248) : error A2008:syntax error : R13
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(249) : error A2008:syntax error : R14
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(250) : error A2008:syntax error : R15
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(333) : error A2008:syntax error : ngths
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(415) : error A2006:undefined symbol : @@lvl_warn
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(672) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(825) : error A2006:undefined symbol : rip
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(354) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_strlen
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(354) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(520) : warning A4025:ENDP found before .ENDPROLOG : Logger_Write
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(520) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(591) : warning A4025:ENDP found before .ENDPROLOG : DebugEngine_Create
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(639) : warning A4025:ENDP found before .ENDPROLOG : DebugEngine_Step
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(648) : warning A4025:ENDP found before .ENDPROLOG : DebugEngine_Detach
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(660) : warning A4025:ENDP found before .ENDPROLOG : TreeView_PopulateAsync
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(677) : warning A4025:ENDP found before .ENDPROLOG : Theme_SetDarkMode
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(791) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_WndProc
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(807) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_Init
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(851) : warning A4025:ENDP found before .ENDPROLOG : Sidebar_Create
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(851) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\reconstructed\RawrXD\src\win32app\Win32IDE\Sidebar\Pure.asm(851) : error A2220:Missing .ENDPROLOG

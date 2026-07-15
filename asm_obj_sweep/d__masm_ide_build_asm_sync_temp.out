@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__masm_ide_build_asm_sync_temp.asm
+D:\rawrxd\history\runoff\part_0008\d__masm_ide_build_asm_sync_temp.asm(390) : fatal error A1010:unmatched block nesting : asm_event_destroy

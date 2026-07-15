@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(119) : error A2161:non-benign structure redefinition: too few labels : IMAGE_DATA_DIRECTORY
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(158) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(161) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(162) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(163) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(164) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(165) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(166) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(167) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(168) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(169) : error A2161:non-benign structure redefinition: too few labels : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(169) : error A2163:non-benign structure redefinition: incorrect initializers : IMAGE_SECTION_HEADER
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(239) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(241) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(244) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(249) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(274) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(301) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(302) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(304) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(309) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(312) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(315) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(316) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(328) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(362) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(363) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(376) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(380) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(391) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(392) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(416) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(423) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(436) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(458) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(466) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(616) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(621) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(658) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(663) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(666) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(674) : error A2008:syntax error : MAX_PATH
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(701) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(710) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(823) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(981) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1199) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1201) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1207) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1208) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1217) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1262) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1263) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1266) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1275) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1286) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1303) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1304) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1308) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1311) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1320) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1321) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1323) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1346) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1349) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1363) : error A2008:syntax error
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1364) : error A2008:syntax error : MAX_PATH
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1365) : error A2008:syntax error : MAX_PATH
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1381) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1383) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1392) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1396) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1405) : error A2008:syntax error : main
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(1405) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(470) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(662) : error A2006:undefined symbol : lpBuffer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(677) : error A2006:undefined symbol : szTemp
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(684) : error A2006:undefined symbol : szTemp
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(690) : error A2006:undefined symbol : szTemp
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(806) : error A2006:undefined symbol : pFileBuffer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(809) : error A2006:undefined symbol : pNtHeaders
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(826) : error A2006:undefined symbol : pFileBuffer
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(829) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(851) : error A2006:undefined symbol : PatternCount
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(852) : error A2006:undefined symbol : PatternDBVersion
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(867) : error A2006:undefined symbol : Stats
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(877) : error A2006:undefined symbol : DisasmContext
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(878) : error A2006:undefined symbol : DisasmContext
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(879) : error A2006:undefined symbol : DisasmContext
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(880) : error A2006:undefined symbol : DisasmContext
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(922) : error A2006:undefined symbol : DisasmContext
+D:\rawrxd\history\all_versions\src\dumpbin_final.asm\1769577578071_6qQx.asm(926) : fatal error A1012:error count exceeds 100; stopping assembly

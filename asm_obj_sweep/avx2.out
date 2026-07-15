@@ -1,0 +1,42 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(8) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(9) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(48) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(59) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(331) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(459) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(192) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(319) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(359) : error A2006:undefined symbol : QueryPerformanceCounter
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(421) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(437) : error A2006:undefined symbol : vec_state_string
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(438) : error A2006:undefined symbol : vec_state_comment
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(441) : error A2006:undefined symbol : vec_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(482) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(497) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(504) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(521) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(525) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(531) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(538) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(546) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(554) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(556) : error A2006:undefined symbol : current_state
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(607) : error A2006:undefined symbol : QueryPerformanceFrequency
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(142) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(225) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(263) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(294) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(299) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(376) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(412) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(445) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(463) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(568) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(597) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(619) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(663) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(671) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\rawrxd\Lexer\AVX2.asm(679) : error A2220:Missing .ENDPROLOG

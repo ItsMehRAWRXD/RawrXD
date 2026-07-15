@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_masm_interconnect_RawrXD_Complete_Interconnect.asm
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_masm_interconnect_RawrXD_Complete_Interconnect.asm(1) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_masm_interconnect_RawrXD_Complete_Interconnect.asm(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0013\d__rawrxd_src_masm_interconnect_RawrXD_Complete_Interconnect.asm(14) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\tests\masm\hello.asm
+D:\rawrxd\tests\masm\hello.asm(12) : error A2008:syntax error : in directive
+D:\rawrxd\tests\masm\hello.asm(13) : error A2008:syntax error : in directive
+D:\rawrxd\tests\masm\hello.asm(14) : error A2008:syntax error : in directive
+D:\rawrxd\tests\masm\hello.asm(46) : error A2008:syntax error : .
+D:\rawrxd\tests\masm\hello.asm(49) : error A2008:syntax error : .
+D:\rawrxd\tests\masm\hello.asm(58) : error A2008:syntax error : main
+D:\rawrxd\tests\masm\hello.asm(58) : error A2088:END directive required at end of file
+D:\rawrxd\tests\masm\hello.asm(26) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\tests\masm\hello.asm(28) : error A2006:undefined symbol : error
+D:\rawrxd\tests\masm\hello.asm(37) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\tests\masm\hello.asm(40) : error A2006:undefined symbol : error
+D:\rawrxd\tests\masm\hello.asm(44) : error A2006:undefined symbol : exit
+D:\rawrxd\tests\masm\hello.asm(52) : error A2006:undefined symbol : ExitProcess

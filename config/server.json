@@ -1,0 +1,89 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "threads": 16,
+    "request_timeout_ms": 60000,
+    "max_request_size_mb": 10,
+    "enable_cors": true
+  },
+  "model": {
+    "path": "./models/llama-7b.gguf",
+    "name": "llama-7b",
+    "context_length": 4096,
+    "batch_size": 32,
+    "max_batch_total_tokens": 32768,
+    "auto_reload": true
+  },
+  "optimization": {
+    "flash_attention": true,
+    "speculative_decoding": {
+      "enabled": true,
+      "draft_model_path": "./models/llama-7b-draft.gguf",
+      "num_draft_tokens": 4,
+      "acceptance_threshold": 0.6
+    },
+    "continuous_batching": {
+      "enabled": true,
+      "max_waiting_tokens": 20,
+      "max_waiting_time_ms": 100
+    },
+    "quantization": {
+      "enabled": true,
+      "type": "Q4_K",
+      "kv_cache_quantization": "Q8_0"
+    },
+    "kernel_fusion": {
+      "enabled": true,
+      "patterns": ["linear_gelu", "qkv_projection", "attention_softmax", "residual_layernorm", "ffn_up_gate", "rms_norm"]
+    }
+  },
+  "kv_cache": {
+    "type": "paged",
+    "page_size": 256,
+    "max_cache_size_mb": 8192,
+    "eviction_policy": "lru"
+  },
+  "sampling": {
+    "default_temperature": 0.7,
+    "default_top_p": 0.9,
+    "default_top_k": 40,
+    "default_repetition_penalty": 1.0,
+    "seed": null
+  },
+  "distributed": {
+    "enabled": false,
+    "tensor_parallel": 1,
+    "pipeline_parallel": 1,
+    "master_addr": "localhost",
+    "master_port": 29500,
+    "world_size": 1,
+    "rank": 0
+  },
+  "monitoring": {
+    "prometheus_port": 9090,
+    "metrics_path": "/metrics",
+    "log_level": "INFO",
+    "log_format": "json",
+    "enable_tracing": true,
+    "trace_sample_rate": 0.1,
+    "health_check_interval_ms": 30000
+  },
+  "rate_limiting": {
+    "enabled": true,
+    "strategy": "token_bucket",
+    "default_requests_per_minute": 60,
+    "burst_size": 10
+  },
+  "ab_testing": {
+    "enabled": false,
+    "tests": []
+  },
+  "security": {
+    "api_key_required": false,
+    "max_prompt_length": 8192,
+    "max_completion_tokens": 2048,
+    "blocked_tokens": [],
+    "content_filter": false
+  }
+}

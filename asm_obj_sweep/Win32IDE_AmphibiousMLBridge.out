@@ -1,0 +1,28 @@
+ Assembling: D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(143) : error A2008:syntax error : .
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(211) : error A2008:syntax error : .
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(318) : error A2008:syntax error : .
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(339) : error A2008:syntax error : .
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(346) : error A2008:syntax error : .
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(379) : error A2008:syntax error : .
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(379) : error A2088:END directive required at end of file
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(29) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(30) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(31) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(57) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(123) : error A2006:undefined symbol : EM_SETSEL
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(130) : error A2006:undefined symbol : EM_REPLACESEL
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(137) : error A2006:undefined symbol : stream_continue
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(140) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(178) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(184) : error A2006:undefined symbol : telemetry_failed
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(240) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(258) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(264) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(276) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(304) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(312) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(314) : error A2016:expression expected
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(322) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(342) : error A2006:undefined symbol : copy_done
+D:\rawrxd\Win32IDE_AmphibiousMLBridge.asm(345) : error A2006:undefined symbol : copy_loop

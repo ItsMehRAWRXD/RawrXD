@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(43) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(46) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(47) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(49) : error A2006:undefined symbol : CreateFileW
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(50) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(56) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(59) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(60) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(62) : error A2006:undefined symbol : CreateFileW
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(63) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(69) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(71) : error A2006:undefined symbol : HEAP_ZERO_MEMORY
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(73) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(84) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(96) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(103) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(108) : error A2006:undefined symbol : HeapFree
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(112) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\digestion\RawrXD_DigestionEngine.asm\1771284819394_jDRv.asm(116) : error A2006:undefined symbol : CloseHandle

@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(73) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(495) : error A2008:syntax error : main
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(495) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(326) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(389) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(87) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(102) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(116) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(126) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(136) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(146) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(182) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(193) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(231) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(264) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(301) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(308) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(315) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(391) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(416) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_encoder_host_final.asm(493) : error A2220:Missing .ENDPROLOG

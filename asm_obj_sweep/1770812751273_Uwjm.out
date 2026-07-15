@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(496) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(500) : error A2006:undefined symbol : HeapFree
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1557) : error A2006:undefined symbol : ExitThread
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1620) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1626) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1650) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1666) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1672) : error A2006:undefined symbol : HeapFree
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1831) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1837) : error A2006:undefined symbol : HeapFree
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1848) : error A2006:undefined symbol : ExitThread
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1973) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(1979) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(2066) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(2086) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\history\all_versions\src\asm\RawrXD_TridentBeacon.asm\1770812751273_Uwjm.asm(2092) : error A2006:undefined symbol : HeapFree

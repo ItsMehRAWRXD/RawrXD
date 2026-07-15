@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\reconstructed\Compute_Kernel_DMA_Complete.asm
+D:\rawrxd\history\reconstructed\Compute_Kernel_DMA_Complete.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\reconstructed\Compute_Kernel_DMA_Complete.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\reconstructed\Compute_Kernel_DMA_Complete.asm(18) : error A2008:syntax error : frame
+D:\rawrxd\history\reconstructed\Compute_Kernel_DMA_Complete.asm(19) : error A2008:syntax error : win64
+D:\rawrxd\history\reconstructed\Compute_Kernel_DMA_Complete.asm(20) : error A2008:syntax error : align
+D:\rawrxd\history\reconstructed\Compute_Kernel_DMA_Complete.asm(25) : fatal error A1000:cannot open file : \masm64\include64\windows.inc

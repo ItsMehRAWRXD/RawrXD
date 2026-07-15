@@ -1,0 +1,28 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(30) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(31) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(32) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(33) : error A2008:syntax error : define
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(68) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(76) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(180) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(185) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(190) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(195) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(203) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(207) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(211) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(215) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(231) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(245) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(252) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(255) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(266) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(271) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(273) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(275) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(277) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(279) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(281) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(282) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\asm\byte_search.asm\1771127303714_dVuL.asm(345) : fatal error A1010:unmatched block nesting : find_pattern_asm
