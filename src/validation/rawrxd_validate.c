@@ -396,34 +396,55 @@ int rawrxd_validate_main(int argc, char** argv) {
         return 1;
     }
     
+    // Create report
+    rawrxd_validation_report* report = rawrxd_validate_create_report();
+    if (!report) {
+        fprintf(stderr, "Failed to create validation report\n");
+        rawrxd_shutdown();
+        return 1;
+    }
+    
     // Run validation suites
     printf("Running validation suites...\n\n");
     
     // Kernel suite
-    printf("[SUITE] Kernel Validation\n");
     rawrxd_test_suite* kernel_suite = rawrxd_validate_kernel_suite();
     if (kernel_suite) {
-        printf("  Passed: %u/%u tests in %.2f ms\n\n", 
-               kernel_suite->passed, kernel_suite->passed, kernel_suite->total_time_ms);
+        rawrxd_validate_add_suite_to_report(report, kernel_suite);
         rawrxd_free(kernel_suite, sizeof(*kernel_suite));
     }
     
-    // TODO: Add more suites
-    // - GGUF validation
-    // - Inference validation  
-    // - Stress validation
-    // - Memory validation
+    // GGUF suite (if model provided)
+    rawrxd_test_suite* gguf_suite = rawrxd_validate_gguf_suite(model_path);
+    if (gguf_suite) {
+        rawrxd_validate_add_suite_to_report(report, gguf_suite);
+        rawrxd_free(gguf_suite, sizeof(*gguf_suite));
+    }
     
-    printf("\n");
-    printf("════════════════════════════════════════════════════════════════\n");
-    printf("Validation Summary\n");
-    printf("════════════════════════════════════════════════════════════════\n");
-    printf("Status: PARTIAL (kernel tests only)\n");
-    printf("\n");
-    printf("Note: Full validation requires test models.\n");
-    printf("      Provide a model with: -m <model.gguf>\n");
-    printf("\n");
+    // Stress suite
+    rawrxd_test_suite* stress_suite = rawrxd_validate_stress_suite(model_path);
+    if (stress_suite) {
+        rawrxd_validate_add_suite_to_report(report, stress_suite);
+        rawrxd_free(stress_suite, sizeof(*stress_suite));
+    }
     
+    // Print and export report
+    rawrxd_validate_print_report(report);
+    
+    if (output_path) {
+        // Export JSON
+        char json_path[512];
+        snprintf(json_path, sizeof(json_path), "%s.json", output_path);
+        rawrxd_validate_export_json(report, json_path);
+        
+        // Export HTML
+        char html_path[512];
+        snprintf(html_path, sizeof(html_path), "%s.html", output_path);
+        rawrxd_validate_export_html(report, html_path);
+    }
+    
+    int exit_code = (report->failed_tests > 0) ? 1 : 0;
+    rawrxd_validate_free_report(report);
     rawrxd_shutdown();
-    return 0;
+    return exit_code;
 }

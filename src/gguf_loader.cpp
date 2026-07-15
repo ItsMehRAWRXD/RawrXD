@@ -134,8 +134,37 @@ bool GGUFLoader::ParseMetadata() {
         
         // Parse value based on type
         std::string value_str;
-        if (!ParseMetadataValue(value_type, value_str)) {
-            return false;
+        
+        // Special handling for tokenizer.ggml.tokens array
+        if (key == "tokenizer.ggml.tokens" && value_type == GGUFValueType::ARRAY) {
+            // Read array type and count
+            uint32_t arr_type = 0;
+            uint64_t arr_count = 0;
+            if (!ReadValue(arr_type)) return false;
+            if (!ReadValue(arr_count)) return false;
+            
+            // Only process if it's a string array
+            if (static_cast<GGUFValueType>(arr_type) == GGUFValueType::STRING) {
+                metadata_.tokens.clear();
+                metadata_.tokens.reserve(static_cast<size_t>(arr_count));
+                for (uint64_t j = 0; j < arr_count; ++j) {
+                    std::string token;
+                    if (!ReadString(token)) return false;
+                    metadata_.tokens.push_back(token);
+                }
+                value_str = "[vocabulary:" + std::to_string(arr_count) + "]";
+            } else {
+                // Skip non-string arrays
+                size_t item_size = GetValueTypeSize(static_cast<GGUFValueType>(arr_type));
+                if (item_size > 0) {
+                    file_.seekg(static_cast<std::streamoff>(arr_count * item_size), std::ios::cur);
+                }
+                value_str = "[array:" + std::to_string(arr_count) + "]";
+            }
+        } else {
+            if (!ParseMetadataValue(value_type, value_str)) {
+                return false;
+            }
         }
         
         metadata_.properties[key] = value_str;

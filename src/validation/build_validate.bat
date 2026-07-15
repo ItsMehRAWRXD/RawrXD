@@ -33,15 +33,39 @@ echo Building validation harness...
 set CFLAGS=/c /O2 /W4 /DNDEBUG /nologo /Fo%OUTDIR%\
 
 REM Compile validation modules
+echo Compiling validation modules...
+
 cl.exe %CFLAGS% /I..\core rawrxd_validate.c
 if errorlevel 1 (
     echo ERROR: Failed to compile rawrxd_validate.c
     exit /b 1
 )
 
+cl.exe %CFLAGS% /I..\core rawrxd_validate_gguf.c
+if errorlevel 1 (
+    echo ERROR: Failed to compile rawrxd_validate_gguf.c
+    exit /b 1
+)
+
+cl.exe %CFLAGS% /I..\core rawrxd_validate_stress.c
+if errorlevel 1 (
+    echo ERROR: Failed to compile rawrxd_validate_stress.c
+    exit /b 1
+)
+
+cl.exe %CFLAGS% /I..\core rawrxd_validate_report.c
+if errorlevel 1 (
+    echo ERROR: Failed to compile rawrxd_validate_report.c
+    exit /b 1
+)
+
 REM Link with core library
 echo Linking...
-link.exe /nologo /out:%OUTDIR%\rawrxd_validate.exe %OUTDIR%\rawrxd_validate.obj ^
+link.exe /nologo /out:%OUTDIR%\rawrxd_validate.exe ^
+    %OUTDIR%\rawrxd_validate.obj ^
+    %OUTDIR%\rawrxd_validate_gguf.obj ^
+    %OUTDIR%\rawrxd_validate_stress.obj ^
+    %OUTDIR%\rawrxd_validate_report.obj ^
     ..\..\build-core\rawrxd_core.lib kernel32.lib user32.lib
 
 if errorlevel 1 (

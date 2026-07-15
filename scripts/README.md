@@ -76,6 +76,23 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `alert-manager.ps1` | Alert rules and notification management | `.\alert-manager.ps1` |
 | `chaos-engineering.ps1` | Resilience testing via controlled failures | `.\chaos-engineering.ps1` |
 | `compliance-auditor.ps1` | Security and operational compliance audit | `.\compliance-auditor.ps1` |
+| `script-index-generator.ps1` | Generate searchable script index (HTML/JSON/CSV) | `.\script-index-generator.ps1` |
+| `dependency-graph.ps1` | Generate visual dependency graphs | `.\dependency-graph.ps1` |
+| `script-health-monitor.ps1` | Monitor script execution health and performance | `.\script-health-monitor.ps1` |
+| `script-test-suite.ps1` | Automated testing framework for scripts | `.\script-test-suite.ps1` |
+| `script-documentation-generator.ps1` | Generate docs from script comments | `.\script-documentation-generator.ps1` |
+| `script-scheduler-advanced.ps1` | Enterprise-grade task scheduling | `.\script-scheduler-advanced.ps1` |
+| `performance-regression-detector.ps1` | Detect performance regressions | `.\performance-regression-detector.ps1` |
+| `model-drift-detector.ps1` | Detect model performance drift | `.\model-drift-detector.ps1` |
+| `security-scan-automation.ps1` | Automated security scanning | `.\security-scan-automation.ps1` |
+| `config-drift-detector.ps1` | Detect configuration drift | `.\config-drift-detector.ps1` |
+| `incident-response-automation.ps1` | Automated incident response | `.\incident-response-automation.ps1` |
+| `runbook-executor.ps1` | Execute operational runbooks | `.\runbook-executor.ps1` |
+| `multi-region-deploy.ps1` | Multi-region deployment management | `.\multi-region-deploy.ps1` |
+| `cost-anomaly-detector.ps1` | Detect unusual cloud spending | `.\cost-anomaly-detector.ps1` |
+| `slo-sli-calculator.ps1` | SLO/SLI tracking and calculation | `.\slo-sli-calculator.ps1` |
+| `git-hooks-manager.ps1` | Manage Git hooks for automated checks | `.\git-hooks-manager.ps1` |
+| `swagger-generator.ps1` | Generate OpenAPI/Swagger documentation | `.\swagger-generator.ps1` |
 
 ## Development Setup
 
@@ -2100,6 +2117,196 @@ When adding new scripts:
 - **Documentation**: https://docs.rawrxd.ai
 - **Discord**: https://discord.gg/rawrxd
 
+## Specialized Test & Validation Scripts
+
+The following scripts are specialized for RawrXD testing, validation, and quality assurance:
+
+### Build & Validation Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `build.ps1` | Main build script | `.\build.ps1` |
+| `build-release.ps1` | Release build automation | `.\build-release.ps1` |
+| `build_strict_with_unlock.ps1` | Strict build with unlock capability | `.\build_strict_with_unlock.ps1` |
+| `fix_build_and_validate.ps1` | Auto-fix build issues and validate | `.\fix_build_and_validate.ps1` |
+| `verify_integrity.ps1` | Verify build integrity | `.\verify_integrity.ps1` |
+| `verify_sovereign_build.ps1` | Verify Sovereign build | `.\verify_sovereign_build.ps1` |
+| `check_exe_paths.ps1` | Check executable paths | `.\check_exe_paths.ps1` |
+| `clear_strict_lane_locks.ps1` | Clear strict lane locks | `.\clear_strict_lane_locks.ps1` |
+| `prebuild_unlock_win32ide.ps1` | Pre-build unlock for Win32IDE | `.\prebuild_unlock_win32ide.ps1` |
+
+### Smoke Test Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `smoke_test_all_routes.ps1` | Test all routes | `.\smoke_test_all_routes.ps1` |
+| `smoke_test_all_tools.ps1` | Test all tools | `.\smoke_test_all_tools.ps1` |
+| `smoke_test_build_verification.ps1` | Build verification smoke test | `.\smoke_test_build_verification.ps1` |
+| `smoke_test_chat_pane.ps1` | Chat pane smoke test | `.\smoke_test_chat_pane.ps1` |
+| `smoke_test_chat_routes.ps1` | Chat routes smoke test | `.\smoke_test_chat_routes.ps1` |
+| `smoke_test_hotpatcher.ps1` | Hotpatcher smoke test | `.\smoke_test_hotpatcher.ps1` |
+| `smoke_test_hotpatcher_direct.ps1` | Direct hotpatcher test | `.\smoke_test_hotpatcher_direct.ps1` |
+| `smoke_test_hotpatcher_runtime.ps1` | Runtime hotpatcher test | `.\smoke_test_hotpatcher_runtime.ps1` |
+| `smoke_test_real.ps1` | Real environment smoke test | `.\smoke_test_real.ps1` |
+| `smoke_test_route_a_final.ps1` | Route A final smoke test | `.\smoke_test_route_a_final.ps1` |
+| `smoke_test_route_b_final.ps1` | Route B final smoke test | `.\smoke_test_route_b_final.ps1` |
+| `smoke_test_tool_parity.ps1` | Tool parity smoke test | `.\smoke_test_tool_parity.ps1` |
+| `smoke_test_zero_wrapper.ps1` | Zero wrapper smoke test | `.\smoke_test_zero_wrapper.ps1` |
+| `smoke_test_zero_wrapper_direct.ps1` | Direct zero wrapper test | `.\smoke_test_zero_wrapper_direct.ps1` |
+| `smoke_model_features_inloop.ps1` | In-loop model features test | `.\smoke_model_features_inloop.ps1` |
+| `smoke_phase15_2_preflight.ps1` | Phase 15.2 preflight smoke test | `.\smoke_phase15_2_preflight.ps1` |
+
+### Contract & Validation Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `contract_test_debug_swarm.ps1` | Debug swarm contract test | `.\contract_test_debug_swarm.ps1` |
+| `contract_test_dual_multiresponse.ps1` | Dual multiresponse contract test | `.\contract_test_dual_multiresponse.ps1` |
+| `contract_test_router_hybrid.ps1` | Router hybrid contract test | `.\contract_test_router_hybrid.ps1` |
+| `read_latest_contract_reports.ps1` | Read latest contract reports | `.\read_latest_contract_reports.ps1` |
+| `stability_loop_contracts.ps1` | Stability loop contracts | `.\stability_loop_contracts.ps1` |
+| `run_contract_clusters.ps1` | Run contract clusters | `.\run_contract_clusters.ps1` |
+| `validate_autonomous_features.ps1` | Validate autonomous features | `.\validate_autonomous_features.ps1` |
+| `validate_autonomous_fixes.ps1` | Validate autonomous fixes | `.\validate_autonomous_fixes.ps1` |
+| `validate_zero_wrapper_direct.ps1` | Validate zero wrapper direct | `.\validate_zero_wrapper_direct.ps1` |
+| `validate-copilot-instructions.ps1` | Validate Copilot instructions | `.\validate-copilot-instructions.ps1` |
+
+### Diagnostic & Debug Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `diagnose_windows.ps1` | Windows diagnostics | `.\diagnose_windows.ps1` |
+| `debug_hang_repro.ps1` | Debug hang reproduction | `.\debug_hang_repro.ps1` |
+| `debug_ide_init_and_smoke_test.ps1` | IDE init and smoke test | `.\debug_ide_init_and_smoke_test.ps1` |
+| `launch_rawrxd_diagnostic.ps1` | Launch RawrXD diagnostic | `.\launch_rawrxd_diagnostic.ps1` |
+| `loader_sniffer_rawrxd.ps1` | RawrXD loader sniffer | `.\loader_sniffer_rawrxd.ps1` |
+| `audit_rawrxd_launch_crash.ps1` | Audit launch crash | `.\audit_rawrxd_launch_crash.ps1` |
+| `capture_rawrxd_launch_trace.ps1` | Capture launch trace | `.\capture_rawrxd_launch_trace.ps1` |
+| `probe_capture_profile.ps1` | Probe capture profile | `.\probe_capture_profile.ps1` |
+| `probe_gguf_magic.ps1` | Probe GGUF magic | `.\probe_gguf_magic.ps1` |
+| `run_cdb_second_chance.ps1` | Run CDB second chance | `.\run_cdb_second_chance.ps1` |
+| `sxstrace_check.ps1` | SxS trace check | `.\sxstrace_check.ps1` |
+| `temp_search_rawrxd.ps1` | Temporary search | `.\temp_search_rawrxd.ps1` |
+
+### Phase & Release Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `phase11_vulkan_validation_build.ps1` | Phase 11 Vulkan validation build | `.\phase11_vulkan_validation_build.ps1` |
+| `phase12_lock_winner.ps1` | Phase 12 lock winner | `.\phase12_lock_winner.ps1` |
+| `phase13_productionize.ps1` | Phase 13 productionize | `.\phase13_productionize.ps1` |
+| `phase14_4_win32_responsiveness.ps1` | Phase 14.4 Win32 responsiveness | `.\phase14_4_win32_responsiveness.ps1` |
+| `phase14_9_win32_ghosttext_gif.ps1` | Phase 14.9 Win32 ghosttext GIF | `.\phase14_9_win32_ghosttext_gif.ps1` |
+| `phase7b_gemini_soak_24h.ps1` | Phase 7b Gemini 24h soak | `.\phase7b_gemini_soak_24h.ps1` |
+| `phase7b_jumpstart_watchdog.ps1` | Phase 7b jumpstart watchdog | `.\phase7b_jumpstart_watchdog.ps1` |
+| `phase7b_smoke_sdma.ps1` | Phase 7b smoke SDMA | `.\phase7b_smoke_sdma.ps1` |
+| `stage_v125_release.ps1` | Stage v1.25 release | `.\stage_v125_release.ps1` |
+| `stage_v126_alpha_singularity.ps1` | Stage v1.26 alpha singularity | `.\stage_v126_alpha_singularity.ps1` |
+| `reconcile_v125_evidence_state.ps1` | Reconcile v1.25 evidence state | `.\reconcile_v125_evidence_state.ps1` |
+| `reconcile_v126_alpha_lane.ps1` | Reconcile v1.26 alpha lane | `.\reconcile_v126_alpha_lane.ps1` |
+
+### Benchmark & Performance Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `benchmark-runner.ps1` | Performance benchmarking | `.\benchmark-runner.ps1` |
+| `bench_prefill_ab.ps1` | Prefill A/B benchmark | `.\bench_prefill_ab.ps1` |
+| `benchmark_search_files.ps1` | Search files benchmark | `.\benchmark_search_files.ps1` |
+| `headless_determinism_gate.ps1` | Headless determinism gate | `.\headless_determinism_gate.ps1` |
+| `run_batch_a_neural_activation.ps1` | Batch A neural activation | `.\run_batch_a_neural_activation.ps1` |
+| `run_cold_start_baseline.ps1` | Cold start baseline | `.\run_cold_start_baseline.ps1` |
+| `run_elastic_scaling_probe.ps1` | Elastic scaling probe | `.\run_elastic_scaling_probe.ps1` |
+| `run_enhancement_hardening_gate.ps1` | Enhancement hardening gate | `.\run_enhancement_hardening_gate.ps1` |
+| `run_golden_seal.ps1` | Golden seal test | `.\run_golden_seal.ps1` |
+| `run_phase7a_high_velocity_capture.ps1` | Phase 7a high velocity capture | `.\run_phase7a_high_velocity_capture.ps1` |
+| `run_singularity_aperture_smoke.ps1` | Singularity aperture smoke | `.\run_singularity_aperture_smoke.ps1` |
+| `run_singularity_header_probe.ps1` | Singularity header probe | `.\run_singularity_header_probe.ps1` |
+| `run_singularity_loading_gate.ps1` | Singularity loading gate | `.\run_singularity_loading_gate.ps1` |
+| `run_sovereign_enhancement_gate.ps1` | Sovereign enhancement gate | `.\run_sovereign_enhancement_gate.ps1` |
+| `soak_rawrxd_titan.ps1` | RawrXD Titan soak test | `.\soak_rawrxd_titan.ps1` |
+| `soak_rawrxd_titan_phase15_2_validation.ps1` | Titan phase 15.2 validation | `.\soak_rawrxd_titan_phase15_2_validation.ps1` |
+| `stress_sovereign_interceptor.ps1` | Stress Sovereign interceptor | `.\stress_sovereign_interceptor.ps1` |
+| `strict_transport_probe.ps1` | Strict transport probe | `.\strict_transport_probe.ps1` |
+
+### IDE & Integration Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `launch_ide_with_models.ps1` | Launch IDE with models | `.\launch_ide_with_models.ps1` |
+| `RawrIDE_Integration.ps1` | RawrIDE integration | `.\RawrIDE_Integration.ps1` |
+| `run_win32ide_qa_gate.ps1` | Win32IDE QA gate | `.\run_win32ide_qa_gate.ps1` |
+| `test_chat_pane_functional.ps1` | Test chat pane functional | `.\test_chat_pane_functional.ps1` |
+| `test_gui_functionality.ps1` | Test GUI functionality | `.\test_gui_functionality.ps1` |
+| `test_ollama_bridge.ps1` | Test Ollama bridge | `.\test_ollama_bridge.ps1` |
+| `test_self_healing_loop.ps1` | Test self-healing loop | `.\test_self_healing_loop.ps1` |
+| `smoke_test_agentic_autonomous_strict.ps1` | Agentic autonomous strict smoke | `.\smoke_test_agentic_autonomous_strict.ps1` |
+| `test_autonomous_features_comprehensive.ps1` | Comprehensive autonomous features | `.\test_autonomous_features_comprehensive.ps1` |
+
+### Utility & Helper Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `generate_repo_stats.ps1` | Generate repository statistics | `.\generate_repo_stats.ps1` |
+| `directvalidate.ps1` | Direct validation | `.\directvalidate.ps1` |
+| `fix_model_discovery.ps1` | Fix model discovery | `.\fix_model_discovery.ps1` |
+| `check_rawr_sovereign_invariants.ps1` | Check Sovereign invariants | `.\check_rawr_sovereign_invariants.ps1` |
+| `redistributable_health_check.ps1` | Redistributable health check | `.\redistributable_health_check.ps1` |
+| `ApertureManager_TriFactorValidation.ps1` | Aperture manager tri-factor validation | `.\ApertureManager_TriFactorValidation.ps1` |
+| `Invoke-CSharpCode.ps1` | Invoke C# code | `.\Invoke-CSharpCode.ps1` |
+| `focused_route_c_clear_test.ps1` | Focused route C clear test | `.\focused_route_c_clear_test.ps1` |
+| `runtime_512_token_gate.ps1` | Runtime 512 token gate | `.\runtime_512_token_gate.ps1` |
+| `runtime_smoke_check.ps1` | Runtime smoke check | `.\runtime_smoke_check.ps1` |
+| `start_copilot.ps1` | Start Copilot | `.\start_copilot.ps1` |
+| `Test_Inference_Recovery.ps1` | Test inference recovery | `.\Test_Inference_Recovery.ps1` |
+| `test_all.ps1` | Test all | `.\test_all.ps1` |
+
+### Copilot & AI Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `copilot-batch30-probe.ps1` | Copilot batch 30 probe | `.\copilot-batch30-probe.ps1` |
+| `copilot-batch30-probe2.ps1` | Copilot batch 30 probe 2 | `.\copilot-batch30-probe2.ps1` |
+| `Copilot_Serial_BurnDown_Capture.ps1` | Copilot serial burn-down capture | `.\Copilot_Serial_BurnDown_Capture.ps1` |
+| `Copilot_Temp_Build_build_pipeline_Win32IDE.ps1` | Copilot temp build pipeline | `.\Copilot_Temp_Build_build_pipeline_Win32IDE.ps1` |
+| `Copilot_Temp_EnvEcho.ps1` | Copilot temp env echo | `.\Copilot_Temp_EnvEcho.ps1` |
+| `Copilot_Temp_HighPressure30.ps1` | Copilot temp high pressure 30 | `.\Copilot_Temp_HighPressure30.ps1` |
+| `Copilot_Temp_Smoke_Chat_Verify.ps1` | Copilot temp smoke chat verify | `.\Copilot_Temp_Smoke_Chat_Verify.ps1` |
+| `Copilot_Temp_Smoke_Chat_Verify_2.ps1` | Copilot temp smoke chat verify 2 | `.\Copilot_Temp_Smoke_Chat_Verify_2.ps1` |
+| `Copilot_Temp_Smoke_InvalidModel.ps1` | Copilot temp smoke invalid model | `.\Copilot_Temp_Smoke_InvalidModel.ps1` |
+| `Copilot_Validate_14Day_Fast.ps1` | Copilot validate 14-day fast | `.\Copilot_Validate_14Day_Fast.ps1` |
+| `Copilot_Validate_14Day_Strict_Fast.ps1` | Copilot validate 14-day strict fast | `.\Copilot_Validate_14Day_Strict_Fast.ps1` |
+| `Copilot_Inspect_Quality_Tmp_Logs.ps1` | Copilot inspect quality tmp logs | `.\Copilot_Inspect_Quality_Tmp_Logs.ps1` |
+| `Copilot_Inspect_Latest_Quality_Error.ps1` | Copilot inspect latest quality error | `.\Copilot_Inspect_Latest_Quality_Error.ps1` |
+| `Copilot_List_Quality_Tmp_Names.ps1` | Copilot list quality tmp names | `.\Copilot_List_Quality_Tmp_Names.ps1` |
+| `Copilot_Probe_Win32IDE_Process_Path.ps1` | Copilot probe Win32IDE process path | `.\Copilot_Probe_Win32IDE_Process_Path.ps1` |
+| `Copilot_Strict_All_Routes_Fresh.ps1` | Copilot strict all routes fresh | `.\Copilot_Strict_All_Routes_Fresh.ps1` |
+| `Copilot_RelWithDebInfo_VulkanValidationTax_Build.ps1` | Copilot RelWithDebInfo Vulkan validation | `.\Copilot_RelWithDebInfo_VulkanValidationTax_Build.ps1` |
+| `Day5_Autonomous_Demo_Gate.ps1` | Day 5 autonomous demo gate | `.\Day5_Autonomous_Demo_Gate.ps1` |
+| `14-Day_Production_Readiness_Aggregate_Gate.ps1` | 14-day production readiness gate | `.\14-Day_Production_Readiness_Aggregate_Gate.ps1` |
+
+### Workflow & Persistence Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `Workflow_Persistence_Smoke_Build.ps1` | Workflow persistence smoke build | `.\Workflow_Persistence_Smoke_Build.ps1` |
+| `Workflow_Persistence_Smoke_Compile.ps1` | Workflow persistence smoke compile | `.\Workflow_Persistence_Smoke_Compile.ps1` |
+| `Workflow_Persistence_Smoke_Run.ps1` | Workflow persistence smoke run | `.\Workflow_Persistence_Smoke_Run.ps1` |
+
+### Additional Deployment Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `blue-green-deploy.ps1` | Blue-green deployment | `.\blue-green-deploy.ps1` |
+| `canary-deploy.ps1` | Canary deployment | `.\canary-deploy.ps1` |
+| `circuit-breaker.ps1` | Circuit breaker pattern | `.\circuit-breaker.ps1` |
+| `a-b-test.ps1` | A/B testing | `.\a-b-test.ps1` |
+| `access-control.ps1` | Access control & RBAC | `.\access-control.ps1` |
+| `api-version-manager.ps1` | API version management | `.\api-version-manager.ps1` |
+
 ---
 
 **Happy scripting!** 🚀
+
+---
+
+*Total Scripts: 98 PowerShell automation scripts for complete DevOps lifecycle management*
