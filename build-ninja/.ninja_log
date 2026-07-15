@@ -281,3 +281,9 @@
 35	563	8058450385386090	CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
 35	563	8058450385386090	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
 66	2685	8058450385706084	tests/CMakeFiles/test_ai_completions.dir/test_ai_completions.cpp.obj	67dec3218a9d4c69
+121	296	8058451202717782	tests/CMakeFiles/test_semantic_diff_analyzer.dir/test_semantic_diff_analyzer.cpp.obj	169cec35708efd6e
+60	501	8058451202109512	CMakeFiles/verify-ssot-ext-ownership	5de86b1b89e628f
+60	501	8058451202109512	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/verify-ssot-ext-ownership	5de86b1b89e628f
+46	615	8058451201960077	CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
+46	615	8058451201960077	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
+109	1484	8058451202618075	tests/CMakeFiles/test_gui_components.dir/test_gui_components.cpp.obj	d01d45f426819de7

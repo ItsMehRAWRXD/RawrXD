@@ -1,0 +1,2 @@
+test_rmsnorm_avx2 1 0.0107697
+---
