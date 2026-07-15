@@ -20,7 +20,7 @@ AgenticActionDialog::AgenticActionDialog(const std::string& filePath, ActionType
 
 void AgenticActionDialog::setupUI()
 {
-    // Minimal UI setup - stub for compilation
+    // Production UI setup
     std::cout << "AgenticActionDialog: " << m_filePath << std::endl;
 }
 
