@@ -292,17 +292,7 @@ void Win32IDE::createActivityBarUI(HWND hwndParent)
     m_sidebarWidth = 260;
 }
 
-void Win32IDE::updateActivityBarState()
-{
-    // Repaint all activity bar buttons to reflect current state
-    for (int i = 0; i < 7; i++)
-    {
-        if (m_activityBarButtons[i])
-        {
-            InvalidateRect(m_activityBarButtons[i], nullptr, TRUE);
-        }
-    }
-}
+// NOTE: updateActivityBarState() is defined in Win32IDE.cpp to avoid duplicate symbols
 
 LRESULT CALLBACK Win32IDE::ActivityBarButtonProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

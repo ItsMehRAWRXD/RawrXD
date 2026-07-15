@@ -150,75 +150,7 @@ static void scanExtensions()
 // ============================================================================
 // CREATE EXTENSIONS VIEW
 // ============================================================================
-
-void Win32IDE::createExtensionsView(HWND hwndParent)
-{
-    HWND parent = hwndParent ? hwndParent : m_hwndSidebar;
-    if (!parent)
-        return;
-
-    int w = m_sidebarWidth - 10;
-    int y = 5;
-
-    // ── Search bar ─────────────────────────────────────────────────────────
-    CreateWindowExA(0, "STATIC", "Extensions", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, y, 80, 16, parent, nullptr,
-                    m_hInstance, nullptr);
-    y += 18;
-
-    m_hwndExtensionSearch =
-        CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 5, y, w, 22,
-                        parent, (HMENU)(UINT_PTR)IDC_EXT_SEARCH, m_hInstance, nullptr);
-    SendMessageA(m_hwndExtensionSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search installed extensions...");
-    y += 26;
-
-    // ── Action buttons ─────────────────────────────────────────────────────
-    int bw = (w - 15) / 4;
-    CreateWindowExA(0, "BUTTON", "Install", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, y, bw, 22, parent,
-                    (HMENU)(UINT_PTR)IDM_EXT_INSTALL, m_hInstance, nullptr);
-    CreateWindowExA(0, "BUTTON", "Enable", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5 + bw + 5, y, bw, 22, parent,
-                    (HMENU)(UINT_PTR)IDM_EXT_ENABLE, m_hInstance, nullptr);
-    CreateWindowExA(0, "BUTTON", "Disable", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5 + 2 * (bw + 5), y, bw, 22, parent,
-                    (HMENU)(UINT_PTR)IDM_EXT_DISABLE, m_hInstance, nullptr);
-    CreateWindowExA(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5 + 3 * (bw + 5), y, bw, 22, parent,
-                    (HMENU)(UINT_PTR)IDM_EXT_UNINSTALL, m_hInstance, nullptr);
-    y += 26;
-
-    // ── Extensions ListView ────────────────────────────────────────────────
-    m_hwndExtensionsList = CreateWindowExA(WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
-                                           WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS, 5, y,
-                                           w, 280, parent, (HMENU)(UINT_PTR)IDC_EXT_LIST, m_hInstance, nullptr);
-
-    ListView_SetExtendedListViewStyle(m_hwndExtensionsList,
-                                      LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_GRIDLINES);
-
-    LVCOLUMNA col = {};
-    col.mask = LVCF_TEXT | LVCF_WIDTH;
-
-    col.pszText = (LPSTR) "Name";
-    col.cx = 130;
-    ListView_InsertColumn(m_hwndExtensionsList, 0, &col);
-
-    col.pszText = (LPSTR) "Version";
-    col.cx = 60;
-    ListView_InsertColumn(m_hwndExtensionsList, 1, &col);
-
-    col.pszText = (LPSTR) "State";
-    col.cx = 60;
-    ListView_InsertColumn(m_hwndExtensionsList, 2, &col);
-    y += 284;
-
-    // ── Info panel ─────────────────────────────────────────────────────────
-    CreateWindowExA(0, "STATIC", "Details:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, y, 60, 14, parent, nullptr,
-                    m_hInstance, nullptr);
-    y += 16;
-
-    m_hwndExtensionDetails = CreateWindowExA(
-        WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL,
-        5, y, w, 80, parent, (HMENU)(UINT_PTR)IDC_EXT_INFO, m_hInstance, nullptr);
-
-    // Load extensions
-    loadInstalledExtensions();
-}
+// NOTE: createExtensionsView() is defined in Win32IDE.cpp to avoid duplicate symbol linker errors.
 
 // ============================================================================
 // LOAD / REFRESH EXTENSIONS
