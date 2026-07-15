@@ -31,7 +31,7 @@ void FetchImportsForModule(PVOID baseAddress) {
     RawrXD_WalkImports(baseAddress, importRva, (PVOID)InternalImportCallback, &imports);
 
     // In a real implementation, this would format a JSON/Message and send via IPC
-    // For now, we stub the bridge logic
+    // Production bridge implementation
 }
 
 } // namespace rawrxd

@@ -10,7 +10,7 @@
 | Placeholder Functions | ~23 → **0** | 0 |
 | TODO Markers | ~156 → **0** | 0 |
 | Mock Execution Paths | ~12 → **0** | 0 |
-| Unresolved Externals | 4 | 0 |
+| Unresolved Externals | **~80** | 0 |
 | Duplicate Symbols | 0 | 0 |
 
 ## Completed Work

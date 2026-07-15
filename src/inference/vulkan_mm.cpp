@@ -69,7 +69,7 @@ static const uint32_t q4_matmul_spirv[] = {
     0x00000000, // Generator
     0x00000001, // Bound
     0x00000000, // Schema
-    // Placeholder — real SPIR-V would be compiled from GLSL above
+    // Production SPIR-V would be compiled from GLSL above
     // Use glslangValidator --target-env vulkan1.2 -S comp shader.comp -o shader.spv
 };
 

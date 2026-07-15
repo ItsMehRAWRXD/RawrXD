@@ -22,7 +22,7 @@ echo     Status: READY
 
 echo.
 echo [2/4] Running final smoke test...
-call run_smoke_tests.bat >nul 2>&1
+call d:\rawrxd-ci-bootstrap\run_smoke_tests.bat >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo     WARNING: Smoke test had issues, continuing...
 ) else (

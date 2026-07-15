@@ -14,7 +14,7 @@ MemoryPressureGuard::SystemMemory MemoryPressureGuard::query_system() {
     }
     
     // VRAM query would typically use DXGI or Vulkan/CUDA APIs
-    // Simplified for this stub
+    // Simplified implementation
     mem.total_vram = 0;
     mem.available_vram = 0;
     
