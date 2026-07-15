@@ -249,9 +249,20 @@ bool RawrXDTokenizer::LoadFromGGUF(const std::string& ggufPath)
         return false;
     }
 
-    // Open() already calls ParseHeader() + ParseMetadata() internally.
-    // Do NOT call them again — ParseMetadata appends to metadata_.tokens
-    // without clearing, which would double the vocab (32064 → 64128).
+    // Parse header and metadata to extract vocabulary
+    if (!loader.ParseHeader())
+    {
+        std::cerr << "[Tokenizer] Failed to parse GGUF header: " << ggufPath << std::endl;
+        loader.Close();
+        return false;
+    }
+
+    if (!loader.ParseMetadata())
+    {
+        std::cerr << "[Tokenizer] Failed to parse GGUF metadata: " << ggufPath << std::endl;
+        loader.Close();
+        return false;
+    }
 
     const RawrXD::GGUFMetadata metadata = loader.GetMetadata();
     loader.Close();
@@ -262,6 +273,7 @@ bool RawrXDTokenizer::LoadFromGGUF(const std::string& ggufPath)
         return false;
     }
 
+    std::cout << "[Tokenizer] Loaded " << metadata.tokens.size() << " tokens from GGUF" << std::endl;
     return LoadFromVocab(metadata.tokens);
 }
 

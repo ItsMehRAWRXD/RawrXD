@@ -93,6 +93,9 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `slo-sli-calculator.ps1` | SLO/SLI tracking and calculation | `.\slo-sli-calculator.ps1` |
 | `git-hooks-manager.ps1` | Manage Git hooks for automated checks | `.\git-hooks-manager.ps1` |
 | `swagger-generator.ps1` | Generate OpenAPI/Swagger documentation | `.\swagger-generator.ps1` |
+| `script-dashboard-generator.ps1` | Generate interactive HTML dashboard | `.\script-dashboard-generator.ps1` |
+| `api-rate-limiter.ps1` | API rate limiting with token bucket | `.\api-rate-limiter.ps1` |
+| `maintenance-window-manager.ps1` | Schedule and manage maintenance windows | `.\maintenance-window-manager.ps1` |
 
 ## Development Setup
 
