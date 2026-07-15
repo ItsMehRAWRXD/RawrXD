@@ -120,7 +120,7 @@ float* load_tensor(const char* path, size_t* num_elements) {
         return nullptr;
     }
     
-    float* data = (float*)aligned_alloc(64, (*num_elements) * sizeof(float));
+    float* data = (float*)_aligned_malloc((*num_elements) * sizeof(float), 64);
     if (!data) {
         fprintf(stderr, "Failed to allocate %zu elements\n", *num_elements);
         fclose(f);
