@@ -84,7 +84,26 @@ void rmsnorm_avx2(const float* input, float* output, int dim, float eps) {
     }
 }
 
-/* Benchmark function */
+/* High-resolution timer for Windows */
+#ifdef _WIN32
+    #include <windows.h>
+    static inline double get_time_ms() {
+        LARGE_INTEGER freq, count;
+        QueryPerformanceFrequency(&freq);
+        QueryPerformanceCounter(&count);
+        return (double)count.QuadPart * 1000.0 / (double)freq.QuadPart;
+    }
+#else
+    #include <time.h>
+    static inline double get_time_ms() {
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        return ts.tv_sec * 1000.0 + ts.tv_nsec / 1e6;
+    }
+#endif
+
+/* Benchmark function - only compiled for standalone benchmark */
+#ifdef RMSNORM_AVX2_STANDALONE_BENCHMARK
 double benchmark_rmsnorm_avx2(int dim, int iterations) {
     float* input = (float*)aligned_malloc(dim * sizeof(float), 32);
     float* output = (float*)aligned_malloc(dim * sizeof(float), 32);
@@ -103,19 +122,19 @@ double benchmark_rmsnorm_avx2(int dim, int iterations) {
     float eps = 1e-6f;
     
     /* Warmup */
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
         rmsnorm_avx2(input, output, dim, eps);
     }
     
     /* Benchmark */
-    clock_t start = clock();
+    double start = get_time_ms();
     
     for (int iter = 0; iter < iterations; iter++) {
         rmsnorm_avx2(input, output, dim, eps);
     }
     
-    clock_t end = clock();
-    double time_ms = ((double)(end - start)) / CLOCKS_PER_SEC * 1000.0;
+    double end = get_time_ms();
+    double time_ms = end - start;
     
     /* Calculate M ops/sec */
     double ops = dim * 4.0 * iterations; /* approx ops per rmsnorm */
@@ -154,3 +173,4 @@ int main() {
     
     return 0;
 }
+#endif /* RMSNORM_AVX2_STANDALONE_BENCHMARK */

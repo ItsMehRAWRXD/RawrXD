@@ -1,23 +1,10 @@
 /*
- * RawrXD AVX2 Optimized Softmax
+ * RawrXD AVX2 Optimized Softmax (Library Version)
  * High-performance softmax using AVX2 intrinsics
  */
 
 #include <immintrin.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <math.h>
-
-#ifdef _WIN32
-    #include <windows.h>
-    #define aligned_malloc(size, align) _aligned_malloc(size, align)
-    #define aligned_free(ptr) _aligned_free(ptr)
-#else
-    #define aligned_malloc(size, align) aligned_alloc(align, size)
-    #define aligned_free(ptr) free(ptr)
-#endif
 
 /* Fast approximate exp using polynomial approximation */
 static inline __m256 fast_exp_ps(__m256 x) {
@@ -114,104 +101,18 @@ void softmax_avx2(const float* input, float* output, int dim) {
         sum += exp_val;
     }
     
-    /* Normalize by sum */
-    __m256 sum_broadcast = _mm256_set1_ps(sum);
-    
+    /* Normalize by sum using AVX2 */
+    __m256 sum_inv_vec = _mm256_set1_ps(1.0f / sum);
     i = 0;
     for (; i <= dim - 8; i += 8) {
         __m256 vec = _mm256_loadu_ps(&output[i]);
-        vec = _mm256_div_ps(vec, sum_broadcast);
+        vec = _mm256_mul_ps(vec, sum_inv_vec);
         _mm256_storeu_ps(&output[i], vec);
     }
     
     /* Handle remainder */
+    float sum_inv = 1.0f / sum;
     for (; i < dim; i++) {
-        output[i] /= sum;
+        output[i] *= sum_inv;
     }
-}
-
-/* High-resolution timer for Windows */
-#ifdef _WIN32
-    static inline double get_time_ms() {
-        LARGE_INTEGER freq, count;
-        QueryPerformanceFrequency(&freq);
-        QueryPerformanceCounter(&count);
-        return (double)count.QuadPart * 1000.0 / (double)freq.QuadPart;
-    }
-#else
-    #include <time.h>
-    static inline double get_time_ms() {
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        return ts.tv_sec * 1000.0 + ts.tv_nsec / 1e6;
-    }
-#endif
-
-/* Benchmark function */
-double benchmark_softmax_avx2(int dim, int iterations) {
-    float* input = (float*)aligned_malloc(dim * sizeof(float), 32);
-    float* output = (float*)aligned_malloc(dim * sizeof(float), 32);
-    
-    if (!input || !output) {
-        aligned_free(input);
-        aligned_free(output);
-        return 0.0;
-    }
-    
-    /* Initialize with random values */
-    for (int i = 0; i < dim; i++) {
-        input[i] = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
-    }
-    
-    /* Warmup */
-    for (int i = 0; i < 100; i++) {
-        softmax_avx2(input, output, dim);
-    }
-    
-    /* Benchmark */
-    double start = get_time_ms();
-    
-    for (int iter = 0; iter < iterations; iter++) {
-        softmax_avx2(input, output, dim);
-    }
-    
-    double end = get_time_ms();
-    double time_ms = end - start;
-    
-    /* Calculate M ops/sec */
-    double ops = dim * 10.0 * iterations; /* approx ops per softmax */
-    double mops = (ops / (time_ms / 1000.0)) / 1e6;
-    
-    aligned_free(input);
-    aligned_free(output);
-    
-    return mops;
-}
-
-int main() {
-    printf("RawrXD AVX2 Softmax Benchmark\n");
-    printf("=============================\n\n");
-    
-    srand((unsigned int)time(NULL));
-    
-    /* Benchmark different sizes */
-    int sizes[] = {1024, 2048, 4096, 8192, 32000};
-    int iterations[] = {1000, 500, 250, 100, 50};
-    
-    printf("Size    Iterations    M ops/s     Time (ms)\n");
-    printf("-------------------------------------------\n");
-    
-    for (int i = 0; i < 5; i++) {
-        int dim = sizes[i];
-        int iter = iterations[i];
-        
-        double mops = benchmark_softmax_avx2(dim, iter);
-        double time_ms = (dim * 10.0 * iter) / (mops * 1e6) * 1000.0;
-        
-        printf("%-7d %-13d %-11.2f %.2f\n", dim, iter, mops, time_ms);
-    }
-    
-    printf("\n✓ AVX2 Softmax benchmark complete\n");
-    
-    return 0;
 }

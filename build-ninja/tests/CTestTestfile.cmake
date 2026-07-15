@@ -50,3 +50,5 @@ add_test([=[test_model_loader_streamer_smoke]=] "D:/rawrxd-ci-bootstrap/build-ni
 set_tests_properties([=[test_model_loader_streamer_smoke]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd-ci-bootstrap/tests/CMakeLists.txt;352;add_test;D:/rawrxd-ci-bootstrap/tests/CMakeLists.txt;0;")
 add_test([=[smoke_core]=] "D:/rawrxd-ci-bootstrap/build-ninja/tests/smoke_core.exe")
 set_tests_properties([=[smoke_core]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd-ci-bootstrap/tests/CMakeLists.txt;363;add_test;D:/rawrxd-ci-bootstrap/tests/CMakeLists.txt;0;")
+add_test([=[test_rmsnorm_avx2]=] "D:/rawrxd-ci-bootstrap/build-ninja/tests/test_rmsnorm_avx2.exe")
+set_tests_properties([=[test_rmsnorm_avx2]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd-ci-bootstrap/tests/CMakeLists.txt;384;add_test;D:/rawrxd-ci-bootstrap/tests/CMakeLists.txt;0;")

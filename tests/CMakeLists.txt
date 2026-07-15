@@ -363,3 +363,24 @@ if(NOT TARGET smoke_core AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke_core.cpp"
     add_test(NAME smoke_core COMMAND smoke_core)
     message(STATUS "  ✓ Added smoke_core (minimal validation)")
 endif()
+
+# AVX2 RMSNorm Kernel Test (C-based, no C++ runtime)
+if(NOT TARGET test_rmsnorm_avx2 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/kernels/test_rmsnorm_avx2.c")
+    add_executable(test_rmsnorm_avx2
+        kernels/test_rmsnorm_avx2.c
+        ${CMAKE_SOURCE_DIR}/src/kernels/rmsnorm_avx2_lib.c
+    )
+    target_include_directories(test_rmsnorm_avx2 PRIVATE ${CMAKE_SOURCE_DIR}/src/kernels)
+    set_target_properties(test_rmsnorm_avx2 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        C_STANDARD 11
+    )
+    # Enable AVX2 instruction set
+    if(MSVC)
+        target_compile_options(test_rmsnorm_avx2 PRIVATE /arch:AVX2)
+    else()
+        target_compile_options(test_rmsnorm_avx2 PRIVATE -mavx2 -mfma)
+    endif()
+    add_test(NAME test_rmsnorm_avx2 COMMAND test_rmsnorm_avx2)
+    message(STATUS "  ✓ Added test_rmsnorm_avx2 (AVX2 kernel validation)")
+endif()
