@@ -2619,6 +2619,8 @@ endif()
 # RawrCodex.asm uses ADDR32 relocations — require /LARGEADDRESSAWARE:NO
 if(MSVC)
     target_link_options(RawrEngine PRIVATE /LARGEADDRESSAWARE:NO)
+    # Do NOT set /ENTRY - let CMake/MSVC use default entry point
+    # /ENTRY bypasses CRT initialization which causes _purecall unresolved
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         set(_RAWR_ENGINE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrEngine.map")
         set(_RAWR_ENGINE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrEngine.map")
