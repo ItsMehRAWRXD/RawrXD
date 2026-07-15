@@ -3055,7 +3055,6 @@ extern "C"
         out[12] = g_neuralState.sampleRateHz;
         return 0;
     }
-    #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     int asm_omega_implement_generate(const void* requirementBlob, void* outArtifact)
     {
         if (!requirementBlob || !outArtifact)
@@ -3333,7 +3332,6 @@ extern "C"
         out[1] = crc;
         return 0;
     }
-    #endif
 
     int asm_perf_get_slot_count_v2()
     {
