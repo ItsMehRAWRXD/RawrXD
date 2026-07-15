@@ -25,6 +25,7 @@ HWND g_hWndMain = nullptr;
 HWND g_hWndEditor = nullptr;
 HWND g_hWndStatusBar = nullptr;
 HWND g_hWndOutput = nullptr;
+HWND g_hWndProject = nullptr;
 HINSTANCE g_hInstance = nullptr;
 
 // Current project path

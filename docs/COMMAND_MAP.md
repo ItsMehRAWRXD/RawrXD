@@ -446,6 +446,16 @@ Proof baseline: --agentic-smoke
 | 407 | ai.fixErrors | handleAIFixErrors | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 408 | ai.optimizeCode | handleAIOptimizeCode | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 409 | ai.modelSelect | handleAIModelSelect | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 420 | codex.complete | handleCodexComplete | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 421 | codex.stream | handleCodexStream | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 422 | codex.explain | handleCodexExplain | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 423 | codex.refactor | handleCodexRefactor | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 424 | codex.completeLine | handleCodexCompleteLine | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 425 | codex.completeBlock | handleCodexCompleteBlock | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 426 | codex.generateTests | handleCodexGenerateTests | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 427 | codex.generateDocs | handleCodexGenerateDocs | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 428 | codex.fixErrors | handleCodexFixErrors | AIMode | yes | 0 | Registry wired + unified dispatch path |
+| 429 | codex.optimize | handleCodexOptimize | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 501 | tools.commandPalette | handleToolsCommandPalette | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 502 | tools.settings | handleToolsSettings | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 503 | tools.extensions | handleToolsExtensions | Tools | yes | 0 | Registry wired + unified dispatch path |

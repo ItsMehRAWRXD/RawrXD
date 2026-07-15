@@ -4265,6 +4265,8 @@ if(WIN32)
         src/flow_control/phase_latency_tracker.cpp
         src/backend/agentic_tools.cpp
         src/backend/ollama_client.cpp
+        src/ollama_client.cpp
+        src/agentic_model_streamer_bridge.cpp
         src/tools/file_ops.cpp
         src/tools/git_client.cpp
 
