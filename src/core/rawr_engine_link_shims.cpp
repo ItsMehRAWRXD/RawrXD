@@ -27,7 +27,16 @@
 #include <string>
 #include <vector>
 
-extern "C" void RawrXD_Native_Log(const char* fmt, ...);
+extern "C" void RawrXD_Native_Log(const char* fmt, ...) {
+    // Stub implementation - logs to stderr
+    if (fmt) {
+        va_list args;
+        va_start(args, fmt);
+        vfprintf(stderr, fmt, args);
+        va_end(args);
+        fprintf(stderr, "\n");
+    }
+}
 
 namespace
 {

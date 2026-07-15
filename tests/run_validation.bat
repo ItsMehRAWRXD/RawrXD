@@ -37,6 +37,8 @@ if /i "%CATEGORY%"=="all" (
     call :run_category "transformer" "Transformer Tests"
     call :run_category "sampler" "Sampler Tests"
     call :run_category "integration" "Integration Tests"
+    call :run_category "regression" "Regression Tests"
+    call :run_category "performance" "Performance Tests"
 ) else (
     call :run_category "%CATEGORY%" "%CATEGORY% Tests"
 )

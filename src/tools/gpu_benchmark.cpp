@@ -14,6 +14,7 @@
 
 #include "gguf_d3d12_bridge.h"
 #include "RawrXD_Interfaces.h"
+#include "gguf_loader.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -277,10 +278,11 @@ void RunFlashAttentionParityTest(int seq_len) {
     bridge.Initialize(device.Get(), cmdQueue.Get());
 
     Microsoft::WRL::ComPtr<ID3D12Resource> bufQ, bufK, bufV, bufOut;
-    bridge.CreateBuffer("q_buf", size * sizeof(float), &bufQ, Q_cpu.data());
-    bridge.CreateBuffer("k_buf", size * sizeof(float), &bufK, K_cpu.data());
-    bridge.CreateBuffer("v_buf", size * sizeof(float), &bufV, V_cpu.data());
-    bridge.CreateBuffer("o_buf", size * sizeof(float), &bufOut, nullptr);
+    bridge.UploadTensor(Q_cpu.data(), size * sizeof(float), GGMLType::F32, bufQ);
+    bridge.UploadTensor(K_cpu.data(), size * sizeof(float), GGMLType::F32, bufK);
+    bridge.UploadTensor(V_cpu.data(), size * sizeof(float), GGMLType::F32, bufV);
+    // Output buffer created via UploadTensor with null data
+    bridge.UploadTensor(nullptr, size * sizeof(float), GGMLType::F32, bufOut);
 
     auto start_gpu = std::chrono::high_resolution_clock::now();
     if (!bridge.DispatchFlashAttention(bufQ.Get(), bufK.Get(), bufV.Get(), bufOut.Get(), seq_len, head_dim, n_heads)) {

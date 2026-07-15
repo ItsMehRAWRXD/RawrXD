@@ -1,4 +1,4 @@
-#include \"flash_attention.h\"
+#include "flash_attention.h"
 #include <vector>
 #include <cstdint>
 #include <cmath>
@@ -26,7 +26,7 @@ static inline void softmax_inplace(float* x, int size) {
     }
 }
 
-extern \"C\" {
+extern "C" {
     void flash_attention(float* q, float* k, float* v, int batch_size, int seq_len, int head_size, int num_heads, float* output) {
         const int block_size = 64;  // Tile size for memory efficiency
         const float scale = 1.0f / sqrtf(static_cast<float>(head_size));

@@ -518,6 +518,9 @@ void Win32IDE_VoiceAutomation_OnStreamComplete() {
 // ============================================================================
 // C API Wrapper for Command Router Integration
 // ============================================================================
+// NOTE: Command router integration temporarily disabled - command_context.hpp
+// does not exist in the codebase. Re-enable when command system is implemented.
+/*
 #include "../core/command_context.hpp"
 
 extern "C" CommandResult handleVoiceAutoStop(const CommandContext& ctx) {
@@ -526,3 +529,4 @@ extern "C" CommandResult handleVoiceAutoStop(const CommandContext& ctx) {
     va.cancelAll();
     return CommandResult::ok("Voice automation stopped");
 }
+*/

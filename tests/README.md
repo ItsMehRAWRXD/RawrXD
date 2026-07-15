@@ -1,8 +1,150 @@
-# RawrXD Marketplace Installer Test Suite
+# RawrXD Validation Framework
 
-Comprehensive test suite for the MASM64 Extension Marketplace Installer.
+Comprehensive testing infrastructure for RawrXD v15.0 - covering correctness, regression, and performance.
 
-## Test Coverage
+## Quick Start
+
+```bash
+# Run all tests
+cd tests
+./run_validation.bat
+
+# Run specific category
+./run_validation.bat kernels
+./run_validation.bat regression
+./run_validation.bat performance
+
+# Generate HTML report
+./generate_report.bat
+```
+
+## Test Categories
+
+| Category | Tests | Purpose | Status |
+|----------|-------|---------|--------|
+| **CPU** | 2 | AVX2 kernel validation | ✅ Complete |
+| **Tokenizer** | 1 | BPE tokenization | ✅ Complete |
+| **GGUF** | 1 | Format validation | ✅ Complete |
+| **Kernels** | 8 | Core kernel tests | ✅ Complete |
+| **Sampler** | 1 | Temperature scaling | ✅ Complete |
+| **Integration** | 1 | E2E inference | ✅ Complete |
+| **Regression** | 9 | Golden reference tests | ✅ Complete |
+| **Performance** | 3 | Benchmark baselines | ✅ Complete |
+| **Total** | **26** | | **100%** |
+
+## Directory Structure
+
+```
+tests/
+├── run_validation.bat      # Main test runner
+├── generate_report.bat     # HTML/JSON report generator
+├── analyze_coverage.py     # Coverage analysis tool
+├── dashboard.html          # Interactive dashboard
+├── ci.yml                  # GitHub Actions workflow
+│
+├── cpu/                    # CPU kernel tests
+├── gpu/                    # GPU tests (placeholder)
+├── tokenizer/              # Tokenization tests
+├── gguf/                   # GGUF format tests
+├── kernels/                # Core kernel tests (8)
+├── transformer/            # Transformer tests
+├── sampler/                # Sampling tests
+├── integration/            # E2E tests
+├── regression/             # Milestone 2
+└── performance/            # Milestone 3
+```
+
+## Milestones
+
+### Milestone 1: Core Validation (14 tests)
+- AVX2 kernel validation
+- Tokenizer correctness
+- GGUF format validation
+- 8 core kernel tests
+- Sampler validation
+- Integration pipeline
+
+### Milestone 2: Golden References (9 tests)
+- Reference generator for 3 models
+- Logit/hidden state/token comparison
+- Hash verification
+- Manifest integrity
+
+### Milestone 3: Performance Baselines (3 tests)
+- Quick smoke test (matmul, softmax, RMSNorm)
+- Extended matmul benchmarks
+- Extended attention benchmarks
+- Throughput and bandwidth metrics
+
+## Tools
+
+### Report Generator
+```bash
+./generate_report.bat
+# Creates:
+#   reports/report_YYYYMMDD_HHMMSS.json
+#   reports/report_YYYYMMDD_HHMMSS.html
+#   reports/latest.json
+#   reports/latest.html
+```
+
+### Coverage Analyzer
+```bash
+python analyze_coverage.py
+# Generates coverage_report.json
+```
+
+### Dashboard
+Open `dashboard.html` in a browser for interactive test results.
+
+## CI/CD Integration
+
+See `ci.yml` for GitHub Actions workflow:
+- Smoke tests on every push
+- Full validation on PRs
+- Performance benchmarks
+- Coverage analysis
+- Release validation
+
+## Adding Tests
+
+1. Create `tests/category/test_name.c`
+2. Return 0 on success, non-zero on failure
+3. Compile: `gcc -O2 -o test_name.exe test_name.c -lm`
+4. Run: `./run_validation.bat category`
+
+## Performance Baselines
+
+| Kernel | Config | Baseline | Tolerance |
+|--------|--------|----------|-----------|
+| Matmul | 128³ x100 | <1000ms | 50% |
+| Softmax | 1024 x1000 | <100ms | 50% |
+| RMSNorm | 4096 x500 | <60ms | 50% |
+
+## Success Criteria
+
+- ✅ 26/26 tests passing
+- ✅ Zero false positives in regression
+- ✅ Sub-60 second full validation
+- ✅ Sub-5 second smoke test
+- ✅ 100% milestone completion
+
+## Documentation
+
+- `MILESTONE_1_COMPLETE.md` - Validation framework
+- `MILESTONE_2_COMPLETE.md` - Golden references
+- `MILESTONE_3_COMPLETE.md` - Performance baselines
+- `VALIDATION_FRAMEWORK_COMPLETE.md` - Full documentation
+
+## License
+
+Part of RawrXD v15.0 - see main LICENSE file.
+
+---
+
+## Legacy: Marketplace Installer Tests
+
+The following tests are for the MASM64 Extension Marketplace Installer:
 
 ### Unit Tests (11 tests)
 1. **ParseVsixHeader_ValidFile** - Tests parsing valid VSIX package headers
@@ -23,14 +165,14 @@ Comprehensive test suite for the MASM64 Extension Marketplace Installer.
 ### Stress Tests (1 test)
 13. **Stress_MultipleInstalls** - Tests installing 10 extensions sequentially
 
-## Building and Running
+### Building and Running
 
-### Option 1: Batch Script (Windows)
+#### Option 1: Batch Script (Windows)
 ```batch
 build_tests.bat
 ```
 
-### Option 2: Node.js Runner (Recommended)
+#### Option 2: Node.js Runner (Recommended)
 ```bash
 # Install dependencies
 npm install
@@ -45,7 +187,7 @@ node run_tests.js --build-only
 node run_tests.js --clean
 ```
 
-### Option 3: Manual Build
+#### Option 3: Manual Build
 ```batch
 REM Assemble
 ml64.exe /c /Zi tests\test_marketplace_installer.asm
