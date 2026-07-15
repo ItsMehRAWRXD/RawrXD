@@ -1476,3 +1476,7 @@
 103452	133791	8058461236342603	CMakeFiles/RawrXD_Gold.dir/src/core/ssot_handlers_ext.cpp.obj	3a70f4a78ff94b32
 88	1782	8058461982861934	CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
 88	1782	8058461982861934	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
+88	1184	8058464119582432	CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
+88	1184	8058464119582432	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
+1185	1420	8058464130548540	CMakeFiles/RawrXD_Gold.dir/src/core/ssot_beacon.cpp.obj	b7e0b0c180340ebe
+1194	2945	8058464130636685	CMakeFiles/RawrXD_Gold.dir/src/gold_stubs/gold_link_stubs.cpp.obj	c89ffd7271aa3626

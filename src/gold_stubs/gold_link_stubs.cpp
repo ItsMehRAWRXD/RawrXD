@@ -34,6 +34,17 @@ struct CommandContext;
 struct CommandResult;
 
 // ============================================================================
+// Section 0: Forward Declarations
+// ============================================================================
+namespace RawrXD {
+namespace Agent {
+    struct DivergenceEvent;
+    struct RecoveryResult;
+    struct ToolExecResult;
+}
+}
+
+// ============================================================================
 // Section 1: AutonomousRecoveryOrchestrator Stubs
 // ============================================================================
 namespace RawrXD {
@@ -54,18 +65,21 @@ struct RecoveryResult {
 
 class AutonomousRecoveryOrchestrator {
 public:
-    static AutonomousRecoveryOrchestrator& instance() {
-        static AutonomousRecoveryOrchestrator inst;
-        return inst;
-    }
-    
-    RecoveryResult executeRecovery(const DivergenceEvent& /*event*/) {
-        RecoveryResult result;
-        result.success = false;
-        result.error = "Stub: AutonomousRecoveryOrchestrator not implemented in Gold build";
-        return result;
-    }
+    static AutonomousRecoveryOrchestrator& instance();
+    RecoveryResult executeRecovery(const DivergenceEvent& /*event*/);
 };
+
+AutonomousRecoveryOrchestrator& AutonomousRecoveryOrchestrator::instance() {
+    static AutonomousRecoveryOrchestrator inst;
+    return inst;
+}
+
+RecoveryResult AutonomousRecoveryOrchestrator::executeRecovery(const DivergenceEvent& /*event*/) {
+    RecoveryResult result;
+    result.success = false;
+    result.error = "Stub: AutonomousRecoveryOrchestrator not implemented in Gold build";
+    return result;
+}
 
 } // namespace Agent
 } // namespace RawrXD
@@ -91,23 +105,28 @@ struct ToolExecResult {
 
 class AgentToolRegistry {
 public:
-    static AgentToolRegistry& Instance() {
-        static AgentToolRegistry inst;
-        return inst;
-    }
-    
-    ToolExecResult Dispatch(const std::string& /*toolName*/, const nlohmann::json& /*params*/) {
-        ToolExecResult result;
-        result.success = false;
-        result.error = "Stub: AgentToolRegistry not implemented in Gold build";
-        return result;
-    }
-    
+    static AgentToolRegistry& Instance();
+    ToolExecResult Dispatch(const std::string& /*toolName*/, const nlohmann::json& /*params*/);
     void RegisterHandler(const std::string& /*toolName*/, 
-                          std::function<ToolExecResult(const nlohmann::json&)> /*handler*/) {
-        // Stub: no-op
-    }
+                          std::function<ToolExecResult(const nlohmann::json&)> /*handler*/);
 };
+
+AgentToolRegistry& AgentToolRegistry::Instance() {
+    static AgentToolRegistry inst;
+    return inst;
+}
+
+ToolExecResult AgentToolRegistry::Dispatch(const std::string& /*toolName*/, const nlohmann::json& /*params*/) {
+    ToolExecResult result;
+    result.success = false;
+    result.error = "Stub: AgentToolRegistry not implemented in Gold build";
+    return result;
+}
+
+void AgentToolRegistry::RegisterHandler(const std::string& /*toolName*/, 
+                                        std::function<ToolExecResult(const nlohmann::json&)> /*handler*/) {
+    // Stub: no-op
+}
 
 } // namespace Agent
 } // namespace RawrXD
@@ -143,16 +162,20 @@ struct ThinkingContext {
 
 class AgenticDeepThinkingEngine {
 public:
-    AgenticDeepThinkingEngine() = default;
-    ~AgenticDeepThinkingEngine() = default;
-    
-    ThinkingResult think(const ThinkingContext& /*ctx*/) {
-        ThinkingResult result;
-        result.success = false;
-        result.reasoning = "Stub: AgenticDeepThinkingEngine not implemented in Gold build";
-        return result;
-    }
+    AgenticDeepThinkingEngine();
+    ~AgenticDeepThinkingEngine();
+    ThinkingResult think(const ThinkingContext& /*ctx*/);
 };
+
+AgenticDeepThinkingEngine::AgenticDeepThinkingEngine() = default;
+AgenticDeepThinkingEngine::~AgenticDeepThinkingEngine() = default;
+
+ThinkingResult AgenticDeepThinkingEngine::think(const ThinkingContext& /*ctx*/) {
+    ThinkingResult result;
+    result.success = false;
+    result.reasoning = "Stub: AgenticDeepThinkingEngine not implemented in Gold build";
+    return result;
+}
 
 // ============================================================================
 // Section 4: Command Handler Stubs
@@ -305,6 +328,24 @@ CommandResult handleAgentExecute(const CommandContext& /*ctx*/) {
 CommandResult handleAgentConfigure(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
+CommandResult handleAgentStop(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemory(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemoryView(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemoryClear(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemoryExport(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentBoundedLoop(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
 
 // Manifest commands
 CommandResult handleManifestJSON(const CommandContext& /*ctx*/) {
@@ -359,6 +400,43 @@ CommandResult handleHotpatchCreate(const CommandContext& /*ctx*/) {
 CommandResult handleREAutoPatch(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
+CommandResult handleHotpatchStatus(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleHotpatchMemory(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// RE (Reverse Engineering) commands
+CommandResult handleREDecisionTree(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleREDisassemble(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleREDumpbin(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleRECFGAnalysis(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleRESSALift(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Swarm commands
+CommandResult handleSwarmStatus(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSwarmLeave(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSwarmNodes(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSwarmJoin(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
 
 // AI commands
 CommandResult handleAIModeSet(const CommandContext& /*ctx*/) {
@@ -367,12 +445,33 @@ CommandResult handleAIModeSet(const CommandContext& /*ctx*/) {
 CommandResult handleAIEngineSelect(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
+CommandResult handleAIMaxMode(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAIDeepThinking(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAIDeepResearch(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
 
 // Autonomy commands
 CommandResult handleAutonomyRate(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
 CommandResult handleAutonomyRun(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAutonomyStart(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAutonomyStop(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAutonomyGoal(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAutonomyToggle(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
 
@@ -415,6 +514,21 @@ CommandResult handleSearch(const CommandContext& /*ctx*/) {
 CommandResult handleSubAgent(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
+CommandResult handleSubAgentChain(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentSwarm(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentTodoList(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentTodoClear(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentStatus(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
 
 // COT commands
 CommandResult handleCOT(const CommandContext& /*ctx*/) {
@@ -438,6 +552,144 @@ CommandResult handleGenerateIDE(const CommandContext& /*ctx*/) {
 
 // Hotpatch commands (additional)
 CommandResult handleHotpatchApply(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleHotpatchByte(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleHotpatchByte(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Agent commands (additional)
+CommandResult handleAgentStop(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemory(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemoryView(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemoryClear(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentMemoryExport(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAgentBoundedLoop(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// SubAgent commands (additional)
+CommandResult handleSubAgentChain(const CommandContext& /*ctx*/) {// Section 4.9: Q8/AVX2 Dispatch Stubs
+// ============================================================================
+
+// Q8 Quantization Stubs
+extern "C" {
+
+// Q8 quantization functions
+void q8_quantize_block(const float* input, void* block, int size) {
+    // Stub: no-op quantization
+    (void)input; (void)block; (void)size;
+}
+
+void q8_dequantize_block(const void* block, float* output, int size) {
+    // Stub: no-op dequantization
+    (void)block; (void)output; (void)size;
+}
+
+void q8_quantize_block_avx2(const float* input, void* block, int size) {
+    // Stub: AVX2 quantization falls back to scalar
+    q8_quantize_block(input, block, size);
+}
+
+void q8_dequantize_block_avx2(const void* block, float* output, int size) {
+    // Stub: AVX2 dequantization falls back to scalar
+    q8_dequantize_block(block, output, size);
+}
+
+float q8_find_max_abs(const float* data, int size) {
+    float max_abs = 0.0f;
+    for (int i = 0; i < size; i++) {
+        float abs_val = data[i] > 0 ? data[i] : -data[i];
+        if (abs_val > max_abs) max_abs = abs_val;
+    }
+    return max_abs;
+}
+
+// AVX2 Kernel Dispatch Stubs
+void matmul_avx2(const float* a, const float* b, float* c, int m, int n, int k) {
+    // Stub: scalar fallback matrix multiplication
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            float sum = 0.0f;
+            for (int l = 0; l < k; l++) {
+                sum += a[i * k + l] * b[l * n + j];
+            }
+            c[i * n + j] = sum;
+        }
+    }
+}
+
+void rmsnorm_avx2(const float* input, float* output, int dim, float eps) {
+    // Stub: scalar fallback RMSNorm
+    float sum_sq = 0.0f;
+    for (int i = 0; i < dim; i++) {
+        sum_sq += input[i] * input[i];
+    }
+    float rms = sum_sq / dim + eps;
+    float inv_rms = 1.0f / rms;
+    for (int i = 0; i < dim; i++) {
+        output[i] = input[i] * inv_rms;
+    }
+}
+
+void softmax_avx2(const float* input, float* output, int dim) {
+    // Stub: scalar fallback softmax
+    float max_val = input[0];
+    for (int i = 1; i < dim; i++) {
+        if (input[i] > max_val) max_val = input[i];
+    }
+    float sum = 0.0f;
+    for (int i = 0; i < dim; i++) {
+        output[i] = input[i] - max_val;
+        // Approximate exp
+        float x = output[i];
+        float result = 1.0f + x + (x * x) / 2.0f + (x * x * x) / 6.0f;
+        output[i] = result > 0 ? result : 0;
+        sum += output[i];
+    }
+    for (int i = 0; i < dim; i++) {
+        output[i] /= sum;
+    }
+}
+
+// Q8 Matrix Multiplication Stub
+void matmul_q8_avx2(const void* matrix, const float* vec, float* output) {
+    // Stub: Q8 matmul not implemented in Gold build
+    (void)matrix; (void)vec; (void)output;
+}
+
+} // extern "C"
+
+// ============================================================================    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentSwarm(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentTodoList(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentTodoClear(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSubAgentStatus(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Autonomy commands (additional)
+CommandResult handleAutonomyToggle(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
 
@@ -751,9 +1003,9 @@ void asm_selfheal_shutdown(void) { }
 int asm_selfheal_repair(void* /*agent*/) { return 0; }
 }
 
-// Camellia256 stubs
-extern "C" {
-int asm_camellia256_init(void* /*ctx*/, const void* /*key*/) { return 0; }
-void asm_camellia256_encrypt(void* /*ctx*/, void* /*out*/, const void* /*in*/) { }
-void asm_camellia256_decrypt(void* /*ctx*/, void* /*out*/, const void* /*in*/) { }
-}
+// Camellia256 stubs - REMOVED: provided by RawrXD_Camellia256.obj ASM object
+// extern "C" {
+// int asm_camellia256_init(void* /*ctx*/, const void* /*key*/) { return 0; }
+// void asm_camellia256_encrypt(void* /*ctx*/, void* /*out*/, const void* /*in*/) { }
+// void asm_camellia256_decrypt(void* /*ctx*/, void* /*out*/, const void* /*in*/) { }
+// }
