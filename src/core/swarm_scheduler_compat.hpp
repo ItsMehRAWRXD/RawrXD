@@ -1,13 +1,14 @@
 #pragma once
 
 // Compatibility layer for C++23 features on older compilers
+// NOTE: We define these in a custom namespace, NOT in std:: (undefined behavior)
 
-#if defined(_MSC_VER) && _MSC_VER < 1930
-// MSVC < 19.30 doesn't have std::expected
 #include <optional>
 #include <variant>
 
-namespace std {
+namespace RawrXD {
+namespace Compat {
+
     template<typename E>
     class unexpected {
     public:
@@ -57,8 +58,12 @@ namespace std {
         std::optional<E> m_error;
     };
 }
-#else
-// Use standard library versions
-#include <expected>
-#include <optional>
-#endif
+}
+
+// Alias for convenience
+namespace std {
+    // Import into std:: only if not already available
+    #if __cplusplus < 202302L && !(defined(_MSVC_LANG) && _MSVC_LANG >= 202302L)
+    // Don't define in std:: - use RawrXD::Compat instead
+    #endif
+}

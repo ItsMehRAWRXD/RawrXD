@@ -31,8 +31,24 @@ class RawrXDModelLoader;
 #if __cplusplus >= 202302L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202302L)
 #include <expected>
 #include <optional>
+namespace RawrXD {
+namespace Swarm {
+    template<typename T, typename E>
+    using expected = std::expected<T, E>;
+    template<typename E>
+    using unexpected = std::unexpected<E>;
+}
+}
 #else
 #include "swarm_scheduler_compat.hpp"
+namespace RawrXD {
+namespace Swarm {
+    template<typename T, typename E>
+    using expected = RawrXD::Compat::expected<T, E>;
+    template<typename E>
+    using unexpected = RawrXD::Compat::unexpected<E>;
+}
+}
 #endif
 
 namespace RawrXD
@@ -41,7 +57,7 @@ namespace Swarm
 {
 
 // ---------------------------------------------------------------------------
-// Errors — stable contract for std::expected
+// Errors — stable contract for RawrXD::Swarm::expected
 // ---------------------------------------------------------------------------
 enum class SchedulerError : std::uint8_t
 {
@@ -262,12 +278,12 @@ class ISwarmMemoryBackend
   public:
     virtual ~ISwarmMemoryBackend() = default;
     /// Pin or map a byte range for active compute; release when slice evicted.
-    [[nodiscard]] virtual std::expected<void, SchedulerError> pinRange(std::uint32_t modelIndex, std::uint64_t offset,
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> pinRange(std::uint32_t modelIndex, std::uint64_t offset,
                                                                        std::uint64_t size) = 0;
     virtual void unpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size) = 0;
 
     /// Warm a second mapping without unmapping the compute window (loader dual-window). Default: NotImplemented.
-    [[nodiscard]] virtual std::expected<void, SchedulerError> prefetchPinRange(std::uint32_t modelIndex,
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> prefetchPinRange(std::uint32_t modelIndex,
                                                                                std::uint64_t offset,
                                                                                std::uint64_t size);
     virtual void prefetchUnpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size);
@@ -301,14 +317,14 @@ class WorkingSet
     [[nodiscard]] std::size_t currentBytes() const { return m_currentBytes; }
     [[nodiscard]] const std::vector<ResidentSlice>& residents() const { return m_residents; }
 
-    [[nodiscard]] std::expected<void, SchedulerError> tryAdmit(std::uint64_t sliceBytes)
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> tryAdmit(std::uint64_t sliceBytes)
     {
         if (sliceBytes == 0)
-            return std::unexpected(SchedulerError::InvalidArgument);
+            return RawrXD::Swarm::unexpected(SchedulerError::InvalidArgument);
         if (m_currentBytes + sliceBytes > m_maxBytes)
-            return std::unexpected(SchedulerError::WorkingSetFull);
+            return RawrXD::Swarm::unexpected(SchedulerError::WorkingSetFull);
         if (m_residents.size() >= m_maxLayers)
-            return std::unexpected(SchedulerError::WorkingSetFull);
+            return RawrXD::Swarm::unexpected(SchedulerError::WorkingSetFull);
         return {};
     }
 
@@ -433,18 +449,18 @@ class ISwarmScheduler
   public:
     virtual ~ISwarmScheduler() = default;
 
-    [[nodiscard]] virtual std::expected<void, SchedulerError> configure(const SchedulerConfig& cfg) = 0;
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> configure(const SchedulerConfig& cfg) = 0;
     /// Plan for one forward segment: ordered slices (e.g. per-layer for 600B streaming).
-    [[nodiscard]] virtual std::expected<void, SchedulerError> submitPlan(std::vector<ModelSlice> plan) = 0;
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> submitPlan(std::vector<ModelSlice> plan) = 0;
     /// Run admission + prefetch hints for the submitted plan (stub: NotImplemented).
-    [[nodiscard]] virtual std::expected<void, SchedulerError> executePlan() = 0;
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> executePlan() = 0;
     /// Synchronize with transformer step begin (for LRU touch + prefetch pump).
-    [[nodiscard]] virtual std::expected<void, SchedulerError> onLayerComputeStarted(std::uint32_t modelIndex,
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> onLayerComputeStarted(std::uint32_t modelIndex,
                                                                                     std::uint32_t layerIndex) = 0;
-    [[nodiscard]] virtual std::expected<void, SchedulerError> onLayerComputeFinished(std::uint32_t modelIndex,
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> onLayerComputeFinished(std::uint32_t modelIndex,
                                                                                      std::uint32_t layerIndex) = 0;
-    [[nodiscard]] virtual std::expected<void, SchedulerError> prefetchPump() = 0;
-    [[nodiscard]] virtual std::expected<void, SchedulerError> pruneWorkingSet() = 0;
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> prefetchPump() = 0;
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> pruneWorkingSet() = 0;
 
     [[nodiscard]] virtual const WorkingSet& workingSet() const = 0;
     [[nodiscard]] virtual std::uint64_t sequence() const = 0;
@@ -459,18 +475,18 @@ class ISwarmScheduler
     [[nodiscard]] virtual std::size_t submittedPlanRowCount() const { return 0; }
 
     /// Pin one plan row by index (use with `SwarmPlanSliceIndex::indicesFor`). Holds scheduler lock.
-    [[nodiscard]] virtual std::expected<void, SchedulerError> pinPlanRow(std::size_t planRowIndex)
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> pinPlanRow(std::size_t planRowIndex)
     {
         (void)planRowIndex;
-        return std::unexpected(SchedulerError::NotImplemented);
+        return RawrXD::Swarm::unexpected(SchedulerError::NotImplemented);
     }
 
     /// Pin several rows in one lock acquisition (gating: static + top‑K experts).
     /// Duplicate row indices in one call are merged: one hold per distinct plan row (symmetric with `unpinPlanRows`).
-    [[nodiscard]] virtual std::expected<void, SchedulerError> pinPlanRows(std::span<const std::size_t> planRowIndices)
+    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> pinPlanRows(std::span<const std::size_t> planRowIndices)
     {
         (void)planRowIndices;
-        return std::unexpected(SchedulerError::NotImplemented);
+        return RawrXD::Swarm::unexpected(SchedulerError::NotImplemented);
     }
 
     /// Wait until the whole batch is admitted and compute-pinned, or until timeout.
@@ -529,23 +545,23 @@ class SwarmScheduler final : public ISwarmScheduler
     SwarmScheduler(std::shared_ptr<ISwarmMemoryBackend> backend, std::unique_ptr<IPrefetchQueue> prefetchQueue,
                    std::unique_ptr<IEvictionPolicy> eviction);
 
-    [[nodiscard]] std::expected<void, SchedulerError> configure(const SchedulerConfig& cfg) override;
-    [[nodiscard]] std::expected<void, SchedulerError> submitPlan(std::vector<ModelSlice> plan) override;
-    [[nodiscard]] std::expected<void, SchedulerError> executePlan() override;
-    [[nodiscard]] std::expected<void, SchedulerError> onLayerComputeStarted(std::uint32_t modelIndex,
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> configure(const SchedulerConfig& cfg) override;
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> submitPlan(std::vector<ModelSlice> plan) override;
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> executePlan() override;
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> onLayerComputeStarted(std::uint32_t modelIndex,
                                                                             std::uint32_t layerIndex) override;
-    [[nodiscard]] std::expected<void, SchedulerError> onLayerComputeFinished(std::uint32_t modelIndex,
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> onLayerComputeFinished(std::uint32_t modelIndex,
                                                                              std::uint32_t layerIndex) override;
-    [[nodiscard]] std::expected<void, SchedulerError> prefetchPump() override;
-    [[nodiscard]] std::expected<void, SchedulerError> pruneWorkingSet() override;
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> prefetchPump() override;
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> pruneWorkingSet() override;
 
     void onForwardTokenStepBegin() override;
 
     [[nodiscard]] SwarmPlanSliceIndex planSliceIndexSnapshot() const override;
 
     [[nodiscard]] std::size_t submittedPlanRowCount() const override;
-    [[nodiscard]] std::expected<void, SchedulerError> pinPlanRow(std::size_t planRowIndex) override;
-    [[nodiscard]] std::expected<void, SchedulerError> pinPlanRows(std::span<const std::size_t> planRowIndices) override;
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> pinPlanRow(std::size_t planRowIndex) override;
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> pinPlanRows(std::span<const std::size_t> planRowIndices) override;
     [[nodiscard]] bool pinPlanRowsBlocking(std::span<const std::size_t> planRowIndices,
                                            std::uint32_t timeoutMs) override;
     void unpinPlanRows(std::span<const std::size_t> planRowIndices) override;
@@ -567,7 +583,7 @@ class SwarmScheduler final : public ISwarmScheduler
     [[nodiscard]] SwarmRuntimeStats runtimeStats() const;
 
   private:
-    [[nodiscard]] std::expected<void, SchedulerError> admitOrEvictAndPin_(const ModelSlice& slice);
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> admitOrEvictAndPin_(const ModelSlice& slice);
     void touchResidentForLayer_(std::uint32_t modelIndex, std::uint32_t layerIndex);
     void markFinishedForLayer_(std::uint32_t modelIndex, std::uint32_t layerIndex);
     void enqueuePrefetchAroundHead_(std::uint32_t modelIndex, std::uint32_t layerIndex);
@@ -578,9 +594,9 @@ class SwarmScheduler final : public ISwarmScheduler
     void unpinAllResidents_();
     void rollbackNewAdmits_(const std::vector<ModelSliceId>& ids);
     /// Admit + hold + expert hints for \p uniqueRows (already validated, each index at most once, stable order).
-    [[nodiscard]] std::expected<void, SchedulerError> pinPlanRowsBatchUniqueLocked_(
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> pinPlanRowsBatchUniqueLocked_(
         const std::vector<std::size_t>& uniqueRows);
-    [[nodiscard]] std::expected<void, SchedulerError> pruneWorkingSetUnlocked_();
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> pruneWorkingSetUnlocked_();
     void prefetchIoThreadMain_();
     void startPrefetchIoThread_();
     void stopPrefetchIoThread_();
@@ -677,10 +693,10 @@ class RawrXDModelLoaderMemoryBackend final : public ISwarmMemoryBackend
   public:
     explicit RawrXDModelLoaderMemoryBackend(RawrXDModelLoader* loader);
 
-    [[nodiscard]] std::expected<void, SchedulerError> pinRange(std::uint32_t modelIndex, std::uint64_t offset,
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> pinRange(std::uint32_t modelIndex, std::uint64_t offset,
                                                                std::uint64_t size) override;
     void unpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size) override;
-    [[nodiscard]] std::expected<void, SchedulerError> prefetchPinRange(std::uint32_t modelIndex, std::uint64_t offset,
+    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> prefetchPinRange(std::uint32_t modelIndex, std::uint64_t offset,
                                                                        std::uint64_t size) override;
     void prefetchUnpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size) override;
     void resetPrefetchPins() override;
