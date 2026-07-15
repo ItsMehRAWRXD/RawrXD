@@ -11846,6 +11846,175 @@ build bin\silu_accuracy_test.exe: CXX_EXECUTABLE_LINKER__silu_accuracy_test_Rele
   TARGET_PDB = bin\silu_accuracy_test.pdb
   TARGET_SUPPORT_DIR = src\validation\CMakeFiles\silu_accuracy_test.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target q4_0_differential_test
+
+
+#############################################
+# Order-only phony target for q4_0_differential_test
+
+build cmake_object_order_depends_target_q4_0_differential_test: phony || cmake_object_order_depends_target_telemetry_masm_kernels
+
+build src\validation\CMakeFiles\q4_0_differential_test.dir\q4_0_differential_test.cpp.obj: CXX_COMPILER__q4_0_differential_test_unscanned_Release D$:\rawrxd-ci-bootstrap\src\validation\q4_0_differential_test.cpp || cmake_object_order_depends_target_q4_0_differential_test
+  CONFIG = Release
+  DEFINES = -DHAS_AVX512=1 -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd-ci-bootstrap\src\validation -ID:\rawrxd-ci-bootstrap\src\validation\kernels -ID:\rawrxd-ci-bootstrap\src\validation\kernels\.. -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = src\validation\CMakeFiles\q4_0_differential_test.dir
+  OBJECT_FILE_DIR = src\validation\CMakeFiles\q4_0_differential_test.dir
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\q4_0_differential_test.dir\
+  TARGET_PDB = bin\q4_0_differential_test.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\q4_0_differential_test.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target q4_0_differential_test
+
+
+#############################################
+# Link the executable bin\q4_0_differential_test.exe
+
+build bin\q4_0_differential_test.exe: CXX_EXECUTABLE_LINKER__q4_0_differential_test_Release src\validation\CMakeFiles\q4_0_differential_test.dir\q4_0_differential_test.cpp.obj | src\validation\kernels\telemetry_masm_kernels.lib || src\validation\kernels\telemetry_masm_kernels.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = src\validation\kernels\telemetry_masm_kernels.lib  kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = src\validation\CMakeFiles\q4_0_differential_test.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\q4_0_differential_test.dir\
+  TARGET_FILE = bin\q4_0_differential_test.exe
+  TARGET_IMPLIB = src\validation\q4_0_differential_test.lib
+  TARGET_PDB = bin\q4_0_differential_test.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\q4_0_differential_test.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target q4_0_optimized_bench
+
+
+#############################################
+# Order-only phony target for q4_0_optimized_bench
+
+build cmake_object_order_depends_target_q4_0_optimized_bench: phony || cmake_object_order_depends_target_telemetry_masm_kernels
+
+build src\validation\CMakeFiles\q4_0_optimized_bench.dir\q4_0_optimized_bench.cpp.obj: CXX_COMPILER__q4_0_optimized_bench_unscanned_Release D$:\rawrxd-ci-bootstrap\src\validation\q4_0_optimized_bench.cpp || cmake_object_order_depends_target_q4_0_optimized_bench
+  CONFIG = Release
+  DEFINES = -DHAS_AVX512=1 -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd-ci-bootstrap\src\validation -ID:\rawrxd-ci-bootstrap\src\validation\kernels -ID:\rawrxd-ci-bootstrap\src\validation\kernels\.. -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = src\validation\CMakeFiles\q4_0_optimized_bench.dir
+  OBJECT_FILE_DIR = src\validation\CMakeFiles\q4_0_optimized_bench.dir
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\q4_0_optimized_bench.dir\
+  TARGET_PDB = bin\q4_0_optimized_bench.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\q4_0_optimized_bench.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target q4_0_optimized_bench
+
+
+#############################################
+# Link the executable bin\q4_0_optimized_bench.exe
+
+build bin\q4_0_optimized_bench.exe: CXX_EXECUTABLE_LINKER__q4_0_optimized_bench_Release src\validation\CMakeFiles\q4_0_optimized_bench.dir\q4_0_optimized_bench.cpp.obj | src\validation\kernels\telemetry_masm_kernels.lib || src\validation\kernels\telemetry_masm_kernels.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = src\validation\kernels\telemetry_masm_kernels.lib  kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = src\validation\CMakeFiles\q4_0_optimized_bench.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\q4_0_optimized_bench.dir\
+  TARGET_FILE = bin\q4_0_optimized_bench.exe
+  TARGET_IMPLIB = src\validation\q4_0_optimized_bench.lib
+  TARGET_PDB = bin\q4_0_optimized_bench.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\q4_0_optimized_bench.dir
+
+# =============================================================================
+# Object build statements for STATIC_LIBRARY target rawr_re_framework
+
+
+#############################################
+# Order-only phony target for rawr_re_framework
+
+build cmake_object_order_depends_target_rawr_re_framework: phony || .
+
+build src\validation\CMakeFiles\rawr_re_framework.dir\__\re\src\rawr_arch.cpp.obj: CXX_COMPILER__rawr_re_framework_unscanned_Release D$:\rawrxd-ci-bootstrap\src\re\src\rawr_arch.cpp || cmake_object_order_depends_target_rawr_re_framework
+  CONFIG = Release
+  DEFINES = -DHAS_AVX512=1 -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd-ci-bootstrap\src\validation\..\re\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = src\validation\CMakeFiles\rawr_re_framework.dir
+  OBJECT_FILE_DIR = src\validation\CMakeFiles\rawr_re_framework.dir\__\re\src
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\rawr_re_framework.dir\
+  TARGET_PDB = src\validation\rawr_re_framework.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\rawr_re_framework.dir
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target rawr_re_framework
+
+
+#############################################
+# Link the static library src\validation\rawr_re_framework.lib
+
+build src\validation\rawr_re_framework.lib: CXX_STATIC_LIBRARY_LINKER__rawr_re_framework_Release src\validation\CMakeFiles\rawr_re_framework.dir\__\re\src\rawr_arch.cpp.obj
+  CONFIG = Release
+  LANGUAGE_COMPILE_FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64
+  OBJECT_DIR = src\validation\CMakeFiles\rawr_re_framework.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\rawr_re_framework.dir\
+  TARGET_FILE = src\validation\rawr_re_framework.lib
+  TARGET_PDB = src\validation\rawr_re_framework.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\rawr_re_framework.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target re_framework_test
+
+
+#############################################
+# Order-only phony target for re_framework_test
+
+build cmake_object_order_depends_target_re_framework_test: phony || cmake_object_order_depends_target_rawr_re_framework
+
+build src\validation\CMakeFiles\re_framework_test.dir\__\re\test\re_framework_test.cpp.obj: CXX_COMPILER__re_framework_test_unscanned_Release D$:\rawrxd-ci-bootstrap\src\re\test\re_framework_test.cpp || cmake_object_order_depends_target_re_framework_test
+  CONFIG = Release
+  DEFINES = -DHAS_AVX512=1 -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /arch:AVX512 /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd-ci-bootstrap\src\validation\..\re\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = src\validation\CMakeFiles\re_framework_test.dir
+  OBJECT_FILE_DIR = src\validation\CMakeFiles\re_framework_test.dir\__\re\test
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\re_framework_test.dir\
+  TARGET_PDB = bin\re_framework_test.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\re_framework_test.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target re_framework_test
+
+
+#############################################
+# Link the executable bin\re_framework_test.exe
+
+build bin\re_framework_test.exe: CXX_EXECUTABLE_LINKER__re_framework_test_Release src\validation\CMakeFiles\re_framework_test.dir\__\re\test\re_framework_test.cpp.obj | src\validation\rawr_re_framework.lib || src\validation\rawr_re_framework.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = src\validation\rawr_re_framework.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = src\validation\CMakeFiles\re_framework_test.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = src\validation\CMakeFiles\re_framework_test.dir\
+  TARGET_FILE = bin\re_framework_test.exe
+  TARGET_IMPLIB = src\validation\re_framework_test.lib
+  TARGET_PDB = bin\re_framework_test.pdb
+  TARGET_SUPPORT_DIR = src\validation\CMakeFiles\re_framework_test.dir
+
 
 #############################################
 # Utility command for test
@@ -11936,7 +12105,7 @@ build src\validation\install\strip: phony src\validation\CMakeFiles\install\stri
 #############################################
 # Order-only phony target for telemetry_masm_kernels
 
-build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512_fixed.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
+build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
 
 build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj: CXX_COMPILER__telemetry_masm_kernels_unscanned_Release D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm_kernels_dummy.cpp || cmake_object_order_depends_target_telemetry_masm_kernels
   CONFIG = Release
@@ -11957,7 +12126,7 @@ build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_
 #############################################
 # Link the static library src\validation\kernels\telemetry_masm_kernels.lib
 
-build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512_fixed.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
+build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
   CONFIG = Release
   LANGUAGE_COMPILE_FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64
@@ -12092,15 +12261,6 @@ build src\validation\kernels\install\strip: phony src\validation\kernels\CMakeFi
 
 
 #############################################
-# Custom command for src\validation\kernels\silu_activation_avx512_fixed.obj
-
-build src\validation\kernels\silu_activation_avx512_fixed.obj | ${cmake_ninja_workdir}src\validation\kernels\silu_activation_avx512_fixed.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\silu_activation_avx512_fixed.asm
-  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd-ci-bootstrap\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512_fixed.obj D:/rawrxd-ci-bootstrap/src/validation/kernels/masm/silu_activation_avx512_fixed.asm"
-  DESC = [MASM] Assembling masm/silu_activation_avx512_fixed.asm -> D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/silu_activation_avx512_fixed.obj
-  restat = 1
-
-
-#############################################
 # Custom command for src\validation\kernels\silu_activation_avx512_fixed_v2.obj
 
 build src\validation\kernels\silu_activation_avx512_fixed_v2.obj | ${cmake_ninja_workdir}src\validation\kernels\silu_activation_avx512_fixed_v2.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\silu_activation_avx512_fixed_v2.asm
@@ -12187,6 +12347,24 @@ build src\validation\kernels\abi_integrity_test.obj | ${cmake_ninja_workdir}src\
 build src\validation\kernels\abi_integrity_simple.obj | ${cmake_ninja_workdir}src\validation\kernels\abi_integrity_simple.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\abi_integrity_simple.asm
   COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd-ci-bootstrap\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/abi_integrity_simple.obj D:/rawrxd-ci-bootstrap/src/validation/kernels/masm/abi_integrity_simple.asm"
   DESC = [MASM] Assembling masm/abi_integrity_simple.asm -> D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/abi_integrity_simple.obj
+  restat = 1
+
+
+#############################################
+# Custom command for src\validation\kernels\q4_0_dequant.obj
+
+build src\validation\kernels\q4_0_dequant.obj | ${cmake_ninja_workdir}src\validation\kernels\q4_0_dequant.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\q4_0_dequant.asm
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd-ci-bootstrap\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/q4_0_dequant.obj D:/rawrxd-ci-bootstrap/src/validation/kernels/masm/q4_0_dequant.asm"
+  DESC = [MASM] Assembling masm/q4_0_dequant.asm -> D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/q4_0_dequant.obj
+  restat = 1
+
+
+#############################################
+# Custom command for src\validation\kernels\q4_0_dequant_optimized.obj
+
+build src\validation\kernels\q4_0_dequant_optimized.obj | ${cmake_ninja_workdir}src\validation\kernels\q4_0_dequant_optimized.obj: CUSTOM_COMMAND D$:\rawrxd-ci-bootstrap\src\validation\kernels\masm\q4_0_dequant_optimized.asm
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd-ci-bootstrap\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/q4_0_dequant_optimized.obj D:/rawrxd-ci-bootstrap/src/validation/kernels/masm/q4_0_dequant_optimized.asm"
+  DESC = [MASM] Assembling masm/q4_0_dequant_optimized.asm -> D:/rawrxd-ci-bootstrap/build-ninja/src/validation/kernels/q4_0_dequant_optimized.obj
   restat = 1
 
 # =============================================================================
@@ -12312,11 +12490,27 @@ build moe_grouped_gemm_bench: phony tests\moe_grouped_gemm_bench.exe
 
 build moe_grouped_gemm_bench.exe: phony tests\moe_grouped_gemm_bench.exe
 
+build q4_0_differential_test: phony bin\q4_0_differential_test.exe
+
+build q4_0_differential_test.exe: phony bin\q4_0_differential_test.exe
+
+build q4_0_optimized_bench: phony bin\q4_0_optimized_bench.exe
+
+build q4_0_optimized_bench.exe: phony bin\q4_0_optimized_bench.exe
+
+build rawr_re_framework: phony src\validation\rawr_re_framework.lib
+
+build rawr_re_framework.lib: phony src\validation\rawr_re_framework.lib
+
 build rawrxd-monaco-gen: phony bin\rawrxd-monaco-gen.exe
 
 build rawrxd-monaco-gen.exe: phony bin\rawrxd-monaco-gen.exe
 
 build re_deobfuscator: phony src\reverse_engineering\re_deobfuscator
+
+build re_framework_test: phony bin\re_framework_test.exe
+
+build re_framework_test.exe: phony bin\re_framework_test.exe
 
 build re_model_reverse: phony src\reverse_engineering\re_model_reverse
 
@@ -12473,7 +12667,7 @@ build src\tools\all: phony bin\RawrXD_KeyGen.exe bin\simple_gpu_test.exe bin\rea
 #############################################
 # Folder: D:/rawrxd-ci-bootstrap/build-ninja/src/validation
 
-build src\validation\all: phony bin\model_stack_validation.exe bin\telemetry_validation.exe bin\abi_integrity_test.exe bin\zero_assembly_test.exe src\validation\engine_factory.lib bin\model_stack_validation_real.exe bin\ab_test_runner.exe bin\test_masm_linkage.exe bin\kernel_differential_benchmark.exe bin\silu_accuracy_test.exe src\validation\kernels\all
+build src\validation\all: phony bin\model_stack_validation.exe bin\telemetry_validation.exe bin\abi_integrity_test.exe bin\zero_assembly_test.exe src\validation\engine_factory.lib bin\model_stack_validation_real.exe bin\ab_test_runner.exe bin\test_masm_linkage.exe bin\kernel_differential_benchmark.exe bin\silu_accuracy_test.exe bin\q4_0_differential_test.exe bin\q4_0_optimized_bench.exe src\validation\rawr_re_framework.lib bin\re_framework_test.exe src\validation\kernels\all
 
 # =============================================================================
 

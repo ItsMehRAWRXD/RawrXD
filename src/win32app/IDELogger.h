@@ -2,6 +2,9 @@
 
 #pragma once
 
+// Mark that full IDELogger is included
+#define IDELOGGER_FULL_INCLUDED
+
 #include <string>
 #include <fstream>
 #include <mutex>

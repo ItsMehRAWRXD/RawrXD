@@ -1,5 +1,13 @@
 // Minimal logger shim to satisfy CLI/engine builds when full IDE logger is absent.
 #pragma once
+
+// If the full IDELogger from win32app is already included, skip this shim
+#ifdef IDELOGGER_FULL_INCLUDED
+// Full IDELogger already present, skip minimal shim
+#else
+
+#define IDELOGGER_MINIMAL_SHIM
+
 #include <string>
 #include <cstdio>
 #include <cstdarg>
@@ -52,14 +60,17 @@ private:
 };
 
 // Convenience macros for logging
+#ifndef LOG_TRACE
 #define LOG_TRACE(msg) IDELogger::getInstance().trace(__FUNCTION__, msg)
 #define LOG_DEBUG(msg) IDELogger::getInstance().debug(__FUNCTION__, msg)
 #define LOG_INFO(msg) IDELogger::getInstance().info(__FUNCTION__, msg)
 #define LOG_WARNING(msg) IDELogger::getInstance().warning(__FUNCTION__, msg)
 #define LOG_ERROR(msg) IDELogger::getInstance().error(__FUNCTION__, msg)
 #define LOG_CRITICAL(msg) IDELogger::getInstance().critical(__FUNCTION__, msg)
+#endif
 
 // Variadic logging macros for printf-style formatting
+#endif // IDELOGGER_MINIMAL_SHIM
 #define LOG_TRACE_FMT(fmt, ...) IDELogger::getInstance().trace(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__))
 #define LOG_DEBUG_FMT(fmt, ...) IDELogger::getInstance().debug(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__))
 #define LOG_INFO_FMT(fmt, ...) IDELogger::getInstance().info(__FUNCTION__, formatLogMessage(fmt, ##__VA_ARGS__))

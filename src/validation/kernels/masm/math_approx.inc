@@ -125,6 +125,7 @@ ENDM
 ; -----------------------------------------------------------------------------
 FAST_EXP MACRO dst, src, tmp1, tmp2, tmp3
     ; Convert base e to base 2: e^x = 2^(x * log2(e))
+    ; Note: LOG2E constant must be defined in .data section via MATH_CONSTANTS macro
     vmulps dst, src, YMMWORD PTR [LOG2E]  ; dst = x * log2(e)
     
     ; Compute 2^(x * log2(e))

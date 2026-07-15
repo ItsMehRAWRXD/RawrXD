@@ -149,11 +149,34 @@ int MASM_RMSNorm_Forward_AVX2(void* input, void* output, void* weights, size_t s
 int MASM_RMSNorm_Forward_AVX2_Fast(void* input, void* output, void* weights, size_t size);
 
 // ============================================================================
-// Q4_0 Dequantization Kernels (Placeholder)
+// Q4_0 Dequantization Kernels
 // ============================================================================
 
 int MASM_Q4_0_Dequantize_AVX512(void* data, size_t data_size);
 int MASM_Q4_0_Dequantize_AVX512_Fast(void* data, size_t data_size);
+int MASM_Q4_0_Dequantize(const void* input, float* output, size_t num_blocks);
+
+// ============================================================================
+// MASM_Q4_0_Dequantize_Optimized
+// ============================================================================
+// Optimized Q4_0 dequantization with:
+//   - Constant hoisting (load once, use many)
+//   - 2x loop unrolling (process 2 blocks per iteration)
+//   - Coalesced loads (8-byte loads instead of 4-byte)
+//
+// Parameters:
+//   input      - Pointer to Q4_0 blocks (18 bytes each)
+//   output     - Pointer to float buffer (16 floats per block)
+//   num_blocks - Number of Q4_0 blocks to dequantize
+//
+// Returns:
+//   0 on success, non-zero on error
+//
+// Performance:
+//   - Target: 10,000+ M elements/sec (vs 7,500 baseline)
+//   - Processes 2 blocks per iteration to amortize loop overhead
+// ============================================================================
+int MASM_Q4_0_Dequantize_Optimized(const void* input, float* output, size_t num_blocks);
 
 // ============================================================================
 // Q8_0 Dequantization Kernels (Placeholder)

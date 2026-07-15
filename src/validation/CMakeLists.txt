@@ -499,6 +499,89 @@ endif()
 
 message(STATUS "SiLU accuracy comparison test: silu_accuracy_test")
 
+# ============================================================================
+# Q4_0 DEQUANTIZATION DIFFERENTIAL TEST
+# Comprehensive validation of Q4_0 MASM kernel
+# ============================================================================
+
+add_executable(q4_0_differential_test
+    q4_0_differential_test.cpp
+)
+
+target_include_directories(q4_0_differential_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
+target_include_directories(q4_0_differential_test SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+target_link_directories(q4_0_differential_test PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+target_link_libraries(q4_0_differential_test PRIVATE
+    telemetry_masm_kernels
+    kernel32
+    user32
+)
+
+if(MSVC)
+    set_property(TARGET q4_0_differential_test PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_compile_options(q4_0_differential_test PRIVATE /arch:AVX512)
+endif()
+
+message(STATUS "Q4_0 differential test: q4_0_differential_test")
+
+# ============================================================================
+# Q4_0 Optimized Benchmark
+# ============================================================================
+
+add_executable(q4_0_optimized_bench
+    q4_0_optimized_bench.cpp
+)
+
+target_include_directories(q4_0_optimized_bench PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+)
+
+target_include_directories(q4_0_optimized_bench SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+target_link_directories(q4_0_optimized_bench PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+target_link_libraries(q4_0_optimized_bench PRIVATE
+    telemetry_masm_kernels
+    kernel32
+    user32
+)
+
+if(MSVC)
+    set_property(TARGET q4_0_optimized_bench PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_compile_options(q4_0_optimized_bench PRIVATE /arch:AVX512)
+endif()
+
+message(STATUS "Q4_0 optimized benchmark: q4_0_optimized_bench")
+
 # AVX-512 support
 if(ENABLE_AVX512)
     if(MSVC)
@@ -507,6 +590,123 @@ if(ENABLE_AVX512)
 endif()
 
 message(STATUS "A/B test runner target: ab_test_runner")
+
+# ============================================================================
+# Multi-Architecture RE Framework (Capstone/Keystone/Unicorn)
+# ============================================================================
+
+# Find Capstone
+find_path(CAPSTONE_INCLUDE_DIR capstone/capstone.h
+    PATHS
+        ${CMAKE_SOURCE_DIR}/../third_party/capstone/include
+        "C:/Program Files/Capstone/include"
+        "C:/vcpkg/installed/x64-windows/include"
+)
+find_library(CAPSTONE_LIBRARY capstone
+    PATHS
+        ${CMAKE_SOURCE_DIR}/../third_party/capstone
+        "C:/Program Files/Capstone/lib"
+        "C:/vcpkg/installed/x64-windows/lib"
+)
+
+# Find Keystone
+find_path(KEYSTONE_INCLUDE_DIR keystone/keystone.h
+    PATHS
+        ${CMAKE_SOURCE_DIR}/../third_party/keystone/include
+        "C:/Program Files/Keystone/include"
+        "C:/vcpkg/installed/x64-windows/include"
+)
+find_library(KEYSTONE_LIBRARY keystone
+    PATHS
+        ${CMAKE_SOURCE_DIR}/../third_party/keystone
+        "C:/Program Files/Keystone/lib"
+        "C:/vcpkg/installed/x64-windows/lib"
+)
+
+# Find Unicorn
+find_path(UNICORN_INCLUDE_DIR unicorn/unicorn.h
+    PATHS
+        ${CMAKE_SOURCE_DIR}/../third_party/unicorn/include
+        "C:/Program Files/Unicorn/include"
+        "C:/vcpkg/installed/x64-windows/include"
+)
+find_library(UNICORN_LIBRARY unicorn
+    PATHS
+        ${CMAKE_SOURCE_DIR}/../third_party/unicorn
+        "C:/Program Files/Unicorn/lib"
+        "C:/vcpkg/installed/x64-windows/lib"
+)
+
+# RE Framework library
+set(RE_FRAMEWORK_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../re/src/rawr_arch.cpp
+)
+set(RE_FRAMEWORK_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/../re/include/rawr_arch.hpp
+)
+
+if(CAPSTONE_INCLUDE_DIR AND CAPSTONE_LIBRARY)
+    list(APPEND RE_FRAMEWORK_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../re/src/rawr_disasm.cpp)
+    list(APPEND RE_FRAMEWORK_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../re/include/rawr_disasm.hpp)
+    message(STATUS "RE Framework: Capstone found - disassembly enabled")
+else()
+    message(STATUS "RE Framework: Capstone NOT found - disassembly disabled")
+endif()
+
+if(KEYSTONE_INCLUDE_DIR AND KEYSTONE_LIBRARY)
+    list(APPEND RE_FRAMEWORK_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../re/src/rawr_asm.cpp)
+    list(APPEND RE_FRAMEWORK_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../re/include/rawr_asm.hpp)
+    message(STATUS "RE Framework: Keystone found - assembly enabled")
+else()
+    message(STATUS "RE Framework: Keystone NOT found - assembly disabled")
+endif()
+
+if(UNICORN_INCLUDE_DIR AND UNICORN_LIBRARY)
+    list(APPEND RE_FRAMEWORK_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../re/src/rawr_emu.cpp)
+    list(APPEND RE_FRAMEWORK_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../re/include/rawr_emu.hpp)
+    message(STATUS "RE Framework: Unicorn found - emulation enabled")
+else()
+    message(STATUS "RE Framework: Unicorn NOT found - emulation disabled")
+endif()
+
+if(RE_FRAMEWORK_SOURCES)
+    add_library(rawr_re_framework STATIC ${RE_FRAMEWORK_SOURCES})
+    target_include_directories(rawr_re_framework PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/../re/include
+    )
+    
+    if(CAPSTONE_INCLUDE_DIR AND CAPSTONE_LIBRARY)
+        target_include_directories(rawr_re_framework PRIVATE ${CAPSTONE_INCLUDE_DIR})
+        target_link_libraries(rawr_re_framework PUBLIC ${CAPSTONE_LIBRARY})
+        target_compile_definitions(rawr_re_framework PRIVATE HAS_CAPSTONE)
+    endif()
+    
+    if(KEYSTONE_INCLUDE_DIR AND KEYSTONE_LIBRARY)
+        target_include_directories(rawr_re_framework PRIVATE ${KEYSTONE_INCLUDE_DIR})
+        target_link_libraries(rawr_re_framework PUBLIC ${KEYSTONE_LIBRARY})
+        target_compile_definitions(rawr_re_framework PRIVATE HAS_KEYSTONE)
+    endif()
+    
+    if(UNICORN_INCLUDE_DIR AND UNICORN_LIBRARY)
+        target_include_directories(rawr_re_framework PRIVATE ${UNICORN_INCLUDE_DIR})
+        target_link_libraries(rawr_re_framework PUBLIC ${UNICORN_LIBRARY})
+        target_compile_definitions(rawr_re_framework PRIVATE HAS_UNICORN)
+    endif()
+    
+    message(STATUS "RE Framework library: rawr_re_framework")
+    
+    # RE Framework test
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../re/test/re_framework_test.cpp)
+        add_executable(re_framework_test ${CMAKE_CURRENT_SOURCE_DIR}/../re/test/re_framework_test.cpp)
+        target_link_libraries(re_framework_test PRIVATE rawr_re_framework)
+        if(MSVC)
+            target_compile_options(re_framework_test PRIVATE /W4)
+        endif()
+        message(STATUS "RE Framework test: re_framework_test")
+    endif()
+else()
+    message(STATUS "RE Framework: No engines found - framework disabled")
+endif()
 
 # Add MASM kernels subdirectory
 add_subdirectory(kernels)

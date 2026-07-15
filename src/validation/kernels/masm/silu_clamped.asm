@@ -9,7 +9,13 @@
 
 OPTION CASEMAP:NONE
 
+; Include math approximation macros
+INCLUDE math_approx.inc
+
 .const
+; Define math constants for FAST_RECIP
+MATH_CONSTANTS
+
 ALIGN 16
 ; Clamp boundaries
 g_neg4      REAL4 -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0
@@ -126,8 +132,9 @@ process_loop:
     vaddps ymm6, ymm5, ymm13           ; ymm6 = 1 + exp(-x)
     
     ; Compute x / (1 + exp(-x)) = SiLU(x)
-    ; Use reciprocal multiplication for speed
-    vrcpps ymm7, ymm6                  ; ymm7 ≈ 1 / (1 + exp(-x))
+    ; Use FAST_RECIP macro with Newton-Raphson refinement for accuracy
+    ; rcp = 1 / (1 + exp(-x)) with ~1e-6 precision
+    FAST_RECIP ymm7, ymm6, ymm2, ymm3  ; ymm7 = 1 / (1 + exp(-x))
     vmulps ymm0, ymm0, ymm7            ; ymm0 = x / (1 + exp(-x))
     
     ; Store result
