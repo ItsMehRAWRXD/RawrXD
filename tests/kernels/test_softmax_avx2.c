@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 /* Reference scalar softmax for validation */
 void softmax_scalar(const float* input, float* output, int dim) {

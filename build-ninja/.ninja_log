@@ -275,3 +275,9 @@
 12741	15087	8058450244749721	CMakeFiles/RawrEngine.dir/src/core/agent_memory_indexer.cpp.obj	58bc6d67ccc40ed8
 26	309	8058450286579520	tests/CMakeFiles/test_rmsnorm_avx2.dir/__/src/kernels/rmsnorm_avx2_lib.c.obj	d760037c309ab1c
 309	495	8058450289405103	tests/test_rmsnorm_avx2.exe	abe3de81178923bd
+55	227	8058450385580702	src/reverse_engineering/RawrXD-RE-Library.lib	98e53b3a7af491c3
+46	479	8058450385487731	CMakeFiles/verify-ssot-ext-ownership	5de86b1b89e628f
+46	479	8058450385487731	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/verify-ssot-ext-ownership	5de86b1b89e628f
+35	563	8058450385386090	CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
+35	563	8058450385386090	D:/rawrxd-ci-bootstrap/build-ninja/CMakeFiles/regen-ssot-beacons	cdd6cf475cddd206
+66	2685	8058450385706084	tests/CMakeFiles/test_ai_completions.dir/test_ai_completions.cpp.obj	67dec3218a9d4c69
