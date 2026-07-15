@@ -1471,3 +1471,9 @@
 637	7269	8058529397502674	CMakeFiles/RawrEngine.dir/src/agent/telemetry_collector.cpp.obj	718c9c4e3ef2235e
 676	7445	8058529397896349	CMakeFiles/RawrEngine.dir/src/agentic/DiskRecoveryToolHandler.cpp.obj	e266dbd9e67368d7
 682	7794	8058529397957002	CMakeFiles/RawrEngine.dir/src/win32app/agentic_bridge_headless.cpp.obj	2892926ae45ccc2
+128	12293	8058529573514773	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Logger.cpp.obj	6401f5fe1d92164c
+75	12544	8058529572984244	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Debugger.cpp.obj	e39f2b0477eb1e95
+83	12808	8058529573075260	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_AutonomousDebugger.cpp.obj	dfe849343a0675f3
+98	15311	8058529573211489	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Annotations.cpp.obj	92efeb485fae4516
+68	16098	8058529572908157	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Sidebar.cpp.obj	223183e1ffac61e0
+109	16349	8058529573332896	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_ReverseEngineering.cpp.obj	6a7649cc83a90e5

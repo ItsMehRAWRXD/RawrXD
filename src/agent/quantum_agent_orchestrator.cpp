@@ -1726,7 +1726,7 @@ bool TimeoutAdjuster::loadHistory(const std::string& path) {
         if (!f.is_open()) return false;
         std::string jsonText((std::istreambuf_iterator<char>(f)),
                              std::istreambuf_iterator<char>());
-        nlohmann::json j = nlohmann::json::parse(jsonText, nullptr, false);
+        nlohmann::json j = nlohmann::json::parse(jsonText);
         if (!j.is_array()) return false;
 
         m_impl->history_.clear();
@@ -1782,24 +1782,24 @@ bool TimeoutAdjuster::saveHistory(const std::string& path) {
             int64_t epochMs = std::chrono::duration_cast<std::chrono::milliseconds>(
                 h.timestamp.time_since_epoch()).count();
 
-            nlohmann::json item = {
-                {"taskType",         h.taskType},
-                {"actualDurationMs", h.actualDurationMs},
-                {"timeoutUsed",      h.timeoutUsed},
-                {"timedOut",         h.timedOut},
-                {"mode",             static_cast<int>(h.mode)},
-                {"timestampEpochMs", epochMs},
-                {"complexity", {
-                    {"fileCount",                   h.complexity.fileCount},
-                    {"lineCount",                   h.complexity.lineCount},
-                    {"functionCount",               h.complexity.functionCount},
-                    {"dependencyDepth",              h.complexity.dependencyDepth},
-                    {"requiresRefactoring",         h.complexity.requiresRefactoring},
-                    {"requiresArchitectureChange",  h.complexity.requiresArchitectureChange},
-                    {"requiresMultiFileEdits",      h.complexity.requiresMultiFileEdits},
-                    {"estimatedComplexity",         h.complexity.estimatedComplexity}
-                }}
-            };
+            nlohmann::json complexityObj;
+            complexityObj["fileCount"] = h.complexity.fileCount;
+            complexityObj["lineCount"] = h.complexity.lineCount;
+            complexityObj["functionCount"] = h.complexity.functionCount;
+            complexityObj["dependencyDepth"] = h.complexity.dependencyDepth;
+            complexityObj["requiresRefactoring"] = h.complexity.requiresRefactoring;
+            complexityObj["requiresArchitectureChange"] = h.complexity.requiresArchitectureChange;
+            complexityObj["requiresMultiFileEdits"] = h.complexity.requiresMultiFileEdits;
+            complexityObj["estimatedComplexity"] = h.complexity.estimatedComplexity;
+
+            nlohmann::json item;
+            item["taskType"] = h.taskType;
+            item["actualDurationMs"] = h.actualDurationMs;
+            item["timeoutUsed"] = h.timeoutUsed;
+            item["timedOut"] = h.timedOut;
+            item["mode"] = static_cast<int>(h.mode);
+            item["timestampEpochMs"] = epochMs;
+            item["complexity"] = complexityObj;
             j.push_back(std::move(item));
         }
 

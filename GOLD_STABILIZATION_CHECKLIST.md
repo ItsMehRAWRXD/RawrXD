@@ -26,10 +26,10 @@
 ### Phase 1: Link Integrity [IN PROGRESS]
 - [x] Resolve CoTFallbackSystem symbols
 - [x] Remove duplicate symbol definitions
-- [ ] Resolve Pyre kernel symbols (asm_pyre_*)
-- [ ] Resolve native_log symbol
-- [ ] Resolve find_pattern_asm symbol
-- [ ] Final link verification
+- [x] Resolve Pyre kernel symbols (asm_pyre_*) - IMPLEMENTED in src/runtime/pyre_kernels_avx2.cpp
+- [x] Resolve native_log symbol - IMPLEMENTED in src/runtime/native_log.cpp
+- [x] Resolve find_pattern_asm symbol - IMPLEMENTED in src/runtime/pattern_scanner.cpp
+- [ ] Final link verification (blocked by ollama_client.cpp/model_invoker.cpp JSON errors)
 
 ### Phase 2: Runtime Implementation [PENDING]
 - [ ] Replace asm_pyre_gemm_fp32 stub with AVX2/AVX-512 implementation
