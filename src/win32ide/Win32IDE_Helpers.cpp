@@ -20,12 +20,12 @@
 #undef CreateFont
 #define CreateFont CreateFontW
 
-// External globals from main Win32IDE
-extern HWND g_hWndMain;
-extern HWND g_hWndEditor;
-extern HWND g_hWndStatusBar;
-extern HWND g_hWndOutput;
-extern HINSTANCE g_hInstance;
+// External globals from main Win32IDE - DEFINITIONS (not just extern declarations)
+HWND g_hWndMain = nullptr;
+HWND g_hWndEditor = nullptr;
+HWND g_hWndStatusBar = nullptr;
+HWND g_hWndOutput = nullptr;
+HINSTANCE g_hInstance = nullptr;
 
 // Current project path
 static std::wstring g_currentProjectPath;

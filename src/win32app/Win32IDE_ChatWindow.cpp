@@ -23,7 +23,6 @@
 #include "../chatpanel.h"
 
 #pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "riched20.lib")
 
 namespace RawrXD {
 namespace UI {

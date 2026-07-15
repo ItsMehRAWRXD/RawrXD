@@ -17,7 +17,6 @@
 #include <richedit.h>
 
 #pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "riched20.lib")
 
 //==============================================================================
 // Internal State

@@ -8,13 +8,13 @@
 namespace RawrXD {
 namespace Integration {
 
-// Toolchain paths
-const wchar_t* TOOLCHAIN_PATH = L"D:/rawrxd/native_toolchain";
-const wchar_t* COMPILER_PATH = L"D:/rawrxd/native_toolchain/universal_compiler.exe";
-const wchar_t* ASSEMBLER_PATH = L"D:/rawrxd/native_toolchain/minimal_assembler_v7.exe";
-const wchar_t* LINKER_PATH = L"D:/rawrxd/native_toolchain/linker_fixed.exe";
-const wchar_t* ANALYZER_PATH = L"D:/rawrxd/native_toolchain/analyze_pe.ps1";
-const wchar_t* PATCHER_PATH = L"D:/rawrxd/native_toolchain/binary_patch_pipeline.c";
+// Toolchain paths (declarations - definitions in Integration_Wiring.cpp)
+extern const wchar_t* TOOLCHAIN_PATH;
+extern const wchar_t* COMPILER_PATH;
+extern const wchar_t* ASSEMBLER_PATH;
+extern const wchar_t* LINKER_PATH;
+extern const wchar_t* ANALYZER_PATH;
+extern const wchar_t* PATCHER_PATH;
 
 // Build system integration
 class BuildSystem {

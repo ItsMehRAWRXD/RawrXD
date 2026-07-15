@@ -10,6 +10,14 @@
 namespace RawrXD {
 namespace Integration {
 
+// Toolchain path definitions
+const wchar_t* TOOLCHAIN_PATH = L"D:/rawrxd/native_toolchain";
+const wchar_t* COMPILER_PATH = L"D:/rawrxd/native_toolchain/universal_compiler.exe";
+const wchar_t* ASSEMBLER_PATH = L"D:/rawrxd/native_toolchain/minimal_assembler_v7.exe";
+const wchar_t* LINKER_PATH = L"D:/rawrxd/native_toolchain/linker_fixed.exe";
+const wchar_t* ANALYZER_PATH = L"D:/rawrxd/native_toolchain/analyze_pe.ps1";
+const wchar_t* PATCHER_PATH = L"D:/rawrxd/native_toolchain/binary_patch_pipeline.c";
+
 bool BuildSystem::CompileFile(const wchar_t* sourceFile, const wchar_t* outputFile) {
     std::wstringstream cmd;
     cmd << L"\"" << COMPILER_PATH << L"\" \"" << sourceFile << L"\"";

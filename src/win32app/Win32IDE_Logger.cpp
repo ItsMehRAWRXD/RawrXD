@@ -148,6 +148,30 @@ void Win32IDE::logError(const std::string& functionName, const std::string& erro
     logMessage("ERROR", functionName + ": " + error);
 }
 
+// =============================================================================
+// MISSING IMPLEMENTATIONS - Added to resolve linker errors
+// =============================================================================
+
+void Win32IDE::SetStatusBarText(int part, const std::wstring& text) {
+    // Implementation - update status bar if available
+    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar)) {
+        SendMessage(m_hwndStatusBar, SB_SETTEXT, part, (LPARAM)text.c_str());
+        InvalidateRect(m_hwndStatusBar, nullptr, FALSE);
+    }
+}
+
+void Win32IDE::ShowError(const std::string& msg) {
+    logMessage("ERROR", msg);
+    // Also show message box if main window is available
+    if (m_hwndMain && IsWindow(m_hwndMain)) {
+        MessageBoxA(m_hwndMain, msg.c_str(), "RawrXD IDE Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void Win32IDE::LogMessage(const std::string& msg) {
+    logMessage("INFO", msg);
+}
+
 void Win32IDE::logWarning(const std::string& functionName, const std::string& warning) {
     logMessage("WARNING", functionName + ": " + warning);
 }
