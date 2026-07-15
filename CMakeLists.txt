@@ -1749,7 +1749,7 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/speciator_engine.cpp
     src/core/self_host_engine.cpp
     src/core/hardware_synthesizer.cpp
-    src/ui/entry_point.cpp
+    # src/ui/entry_point.cpp  # Removed - conflicts with minimal_gold_main.cpp
     src/ui/webview2_bridge.cpp
     src/ui/RawrXD_MainLoop.cpp
     src/ui/debugger_core.cpp

@@ -3189,20 +3189,165 @@ void ConflictDetector_Initialize(void) {}
 void Heartbeat_Initialize(void) {}
 void Heartbeat_Shutdown(void) {}
 
-// Memory privilege stub
-int RawrXD_EnableSeLockMemoryPrivilege(void) { return 0; }
+// Memory privilege stub - defined in model_streamer_x64.asm.obj
+// int RawrXD_EnableSeLockMemoryPrivilege(void) { return 0; }
 
-// Memory mapping stub
-void* RawrXD_MapModelView2MB(const char* path) { (void)path; return nullptr; }
+// Memory mapping stub - defined in model_streamer_x64.asm.obj
+// void* RawrXD_MapModelView2MB(const char* path) { (void)path; return nullptr; }
 
-// Flash attention telemetry counters
-extern "C" int g_FlashAttnCalls = 0;
-extern "C" int g_FlashAttnTiles = 0;
+// Flash attention telemetry counters - defined in rawr_globals.asm.obj
+// extern "C" int g_FlashAttnCalls = 0;
+// extern "C" int g_FlashAttnTiles = 0;
 
-// UTC counter stub
-void UTC_IncrementCounter(const char* name) { (void)name; }
+// UTC counter stub - defined in RawrXD_Telemetry_Kernel.asm.obj
+// void UTC_IncrementCounter(const char* name) { (void)name; }
 
-// Agent loop counter
-extern "C" int g_Counter_AgentLoop = 0;
+// Agent loop counter - defined in rawr_globals.asm.obj
+// extern "C" int g_Counter_AgentLoop = 0;
 
 } // extern "C"
+
+// ============================================================================
+// Command Handler Stubs for RawrEngine.exe
+// ============================================================================
+// These command handlers are referenced by unified_command_dispatch.cpp
+
+#include <string>
+#include <vector>
+
+struct CommandContext {
+    std::string command;
+    std::vector<std::string> args;
+};
+
+struct CommandResult {
+    bool success = false;
+    std::string output;
+    int exitCode = 0;
+};
+
+CommandResult HandleMeshBrain(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "MeshBrain stub", 0}; }
+CommandResult HandleSpeciatorEngine(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "SpeciatorEngine stub", 0}; }
+CommandResult HandleNeuralBridge(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "NeuralBridge stub", 0}; }
+CommandResult HandleSelfHostEngine(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "SelfHostEngine stub", 0}; }
+CommandResult HandleHardwareSynthesizer(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "HardwareSynthesizer stub", 0}; }
+CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "TranscendenceCoordinator stub", 0}; }
+CommandResult HandleVulkanRenderer(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VulkanRenderer stub", 0}; }
+CommandResult HandleOSExplorerInterceptor(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "OSExplorerInterceptor stub", 0}; }
+CommandResult HandleMCPHooks(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "MCPHooks stub", 0}; }
+CommandResult HandleIOCPFileWatcher(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "IOCPFileWatcher stub", 0}; }
+CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "IDEDiagnosticAutoHealer stub", 0}; }
+
+// VSCode Extension handlers
+CommandResult handleVscExtReload(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtReload stub", 0}; }
+CommandResult handleVscExtListCommands(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtListCommands stub", 0}; }
+CommandResult handleVscExtListProviders(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtListProviders stub", 0}; }
+CommandResult handleVscExtDiagnostics(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtDiagnostics stub", 0}; }
+CommandResult handleVscExtExtensions(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtExtensions stub", 0}; }
+CommandResult handleVscExtStats(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtStats stub", 0}; }
+CommandResult handleVscExtLoadNative(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtLoadNative stub", 0}; }
+CommandResult handleVscExtDeactivateAll(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtDeactivateAll stub", 0}; }
+CommandResult handleVscExtExportConfig(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtExportConfig stub", 0}; }
+
+// Additional handlers
+CommandResult HandleCursorParityBridge(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "CursorParityBridge stub", 0}; }
+CommandResult HandleOmegaOrchestrator(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "OmegaOrchestrator stub", 0}; }
+
+// AI feature handlers
+CommandResult handleAIInlineComplete(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIInlineComplete stub", 0}; }
+CommandResult handleAIChatMode(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIChatMode stub", 0}; }
+CommandResult handleAIExplainCode(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIExplainCode stub", 0}; }
+CommandResult handleAIRefactor(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIRefactor stub", 0}; }
+CommandResult handleAIGenerateTests(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIGenerateTests stub", 0}; }
+CommandResult handleAIGenerateDocs(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIGenerateDocs stub", 0}; }
+CommandResult handleAIFixErrors(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIFixErrors stub", 0}; }
+CommandResult handleAIOptimizeCode(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIOptimizeCode stub", 0}; }
+CommandResult handleAIModelSelect(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AIModelSelect stub", 0}; }
+CommandResult handleVscExtStatus(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtStatus stub", 0}; }
+CommandResult HandleConsentPrompt(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "ConsentPrompt stub", 0}; }
+
+// NativeGGUFMetadata
+struct NativeGGUFMetadata {
+    std::string key;
+    std::string value;
+};
+
+// NativeGGUFTensorInfo
+struct NativeGGUFTensorInfo {
+    std::string name;
+    std::vector<uint64_t> shape;
+    uint32_t type = 0;
+    uint64_t offset = 0;
+};
+
+// NativeGGUFLoader full stub
+class NativeGGUFLoader {
+    std::vector<NativeGGUFTensorInfo> tensors_;
+    std::vector<NativeGGUFMetadata> metadata_;
+    bool isOpen_ = false;
+public:
+    NativeGGUFLoader() = default;
+    ~NativeGGUFLoader() = default;
+    bool Open(const std::string& path) { (void)path; isOpen_ = true; return true; }
+    void Close() { isOpen_ = false; }
+    bool ParseHeader() { return true; }
+    bool ParseMetadata() { return true; }
+    bool ParseTensorInfo() { return true; }
+    bool IsMemoryMapped() const { return false; }
+    uint64_t GetMappedSize() const { return 0; }
+    const std::vector<NativeGGUFTensorInfo>& GetTensors() const { return tensors_; }
+    const std::vector<NativeGGUFMetadata>& GetMetadata() const { return metadata_; }
+};
+
+// Force instantiation to satisfy linker
+template class std::vector<NativeGGUFMetadata>;
+template class std::allocator<NativeGGUFMetadata>;
+template class std::vector<NativeGGUFTensorInfo>;
+template class std::allocator<NativeGGUFTensorInfo>;
+
+// Additional handlers
+CommandResult HandleAutonomousAgent(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AutonomousAgent stub", 0}; }
+
+// PatchResult and direct I/O stubs
+struct PatchResult {
+    bool success = false;
+    int errorCode = 0;
+};
+
+PatchResult direct_read(const char* path, uint64_t offset, uint64_t size, void* buffer, uint64_t* bytesRead) {
+    (void)path; (void)offset; (void)size; (void)buffer;
+    if (bytesRead) *bytesRead = 0;
+    return PatchResult{false, -1};
+}
+
+// Byte search stub
+struct ByteSearchResultEnhanced {
+    bool found = false;
+    uint64_t position = 0;
+    uint64_t matchLength = 0;
+};
+
+ByteSearchResultEnhanced direct_search(const char* text, const unsigned char* pattern, uint64_t patternLen) {
+    (void)text; (void)pattern; (void)patternLen;
+    return ByteSearchResultEnhanced{false, 0, 0};
+}
+
+// GPUDispatchGate stub
+namespace RawrXD {
+class GPUDispatchGate {
+public:
+    GPUDispatchGate() = default;
+    ~GPUDispatchGate() = default;
+    bool Initialize() { return false; }
+    bool MatVecQ4(const float*, const float*, float*, unsigned int, unsigned int, bool) { return false; }
+};
+}
+
+// Quantization stubs
+extern "C" {
+void Quant_DequantQ4_0(const void*, float*, int, int) {}
+void Quant_DequantQ8_0(const void*, float*, int, int) {}
+void KQuant_DequantizeQ4_K(const void*, float*, int) {}
+void KQuant_DequantizeQ6_K(const void*, float*, int) {}
+void KQuant_DequantizeF16(const void*, float*, int) {}
+}
