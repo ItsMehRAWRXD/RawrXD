@@ -125,7 +125,7 @@ double benchmark_matmul_avx2(int dim, int iterations) {
     double ops = 2.0 * dim * dim * dim * iterations;
     double gops = (ops / (time_ms / 1000.0)) / 1e9;
     
-    free(A); free(B); free(C);
+    aligned_free(A); aligned_free(B); aligned_free(C);
     
     return gops;
 }
@@ -138,7 +138,11 @@ int main() {
     
     /* Check AVX2 support */
     int cpuInfo[4];
+    #ifdef _WIN32
     __cpuid(cpuInfo, 1);
+    #else
+    __cpuid(1, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+    #endif
     int hasAVX2 = (cpuInfo[2] & (1 << 28)) != 0;
     
     if (!hasAVX2) {
