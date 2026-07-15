@@ -1449,6 +1449,9 @@ if(NOT RAWR_ENGINE_LANE_B)
     endif()
 endif()
 
+# Set MSVC runtime library for RawrEngine
+set_property(TARGET RawrEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 # Win32 system libraries (same as Gold)
 if(WIN32)
     target_link_libraries(RawrEngine PRIVATE
