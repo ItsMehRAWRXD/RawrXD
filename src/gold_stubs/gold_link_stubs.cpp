@@ -306,6 +306,52 @@ CommandResult handleAgentConfigure(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
 
+// Manifest commands
+CommandResult handleManifestJSON(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleManifestMarkdown(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleManifestSelfTest(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Help commands (additional)
+CommandResult handleHelpDocs(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleHelpShortcuts(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Voice commands
+CommandResult handleVoiceTranscribe(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Server commands
+CommandResult handleServerStart(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleServerStop(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleServerStatus(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Settings commands
+CommandResult handleSettingsOpen(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSettingsExport(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleSettingsImport(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
 // ============================================================================
 // Section 5: ASM Watchdog Stubs (C linkage)
 // ============================================================================
@@ -366,6 +412,135 @@ public:
         return report;
     }
 };
+
+// ============================================================================
+// Section 5.6: BackendOrchestrator Stub
+// ============================================================================
+namespace RawrXD {
+
+struct InferRequest {
+    std::string model;
+    std::string prompt;
+    int maxTokens = 1024;
+    nlohmann::json toJson() const {
+        nlohmann::json j;
+        j["model"] = model;
+        j["prompt"] = prompt;
+        j["maxTokens"] = maxTokens;
+        return j;
+    }
+};
+
+class BackendOrchestrator {
+public:
+    bool RunInference(const InferRequest& /*req*/) {
+        return true; // Stub: success
+    }
+};
+
+} // namespace RawrXD
+
+// Global ASM symbols needed by agentic_deep_thinking_kernels.asm.obj
+extern "C" {
+void* g_hHeap = nullptr;
+void BeaconSend(void) { }
+bool RunInference(void* /*req*/) { return true; }
+}
+
+// ============================================================================
+// Section 5.7: UpdateSignatureVerifier Stub
+// ============================================================================
+namespace RawrXD {
+namespace Update {
+
+struct SignatureResult {
+    bool valid = false;
+    std::string error;
+    nlohmann::json toJson() const {
+        nlohmann::json j;
+        j["valid"] = valid;
+        j["error"] = error;
+        return j;
+    }
+};
+
+class UpdateSignatureVerifier {
+public:
+    static UpdateSignatureVerifier& instance() {
+        static UpdateSignatureVerifier inst;
+        return inst;
+    }
+    
+    SignatureResult verifyAuthenticode(const wchar_t* /*path*/) {
+        SignatureResult result;
+        result.valid = true;
+        return result;
+    }
+};
+
+} // namespace Update
+} // namespace RawrXD
+
+// ============================================================================
+// Section 5.8: PerfTelemetry Stub
+// ============================================================================
+namespace RawrXD {
+namespace Perf {
+
+struct PerfResult {
+    bool success = false;
+    std::string error;
+    nlohmann::json toJson() const {
+        nlohmann::json j;
+        j["success"] = success;
+        j["error"] = error;
+        return j;
+    }
+};
+
+class PerfTelemetry {
+public:
+    static PerfTelemetry& instance() {
+        static PerfTelemetry inst;
+        return inst;
+    }
+    
+    PerfResult initialize() {
+        PerfResult result;
+        result.success = true;
+        return result;
+    }
+    
+    void captureBaseline() {
+        // Stub: no-op
+    }
+    
+    std::string getDiagnostics() const {
+        return "{}"; // Stub: empty JSON
+    }
+};
+
+} // namespace Perf
+} // namespace RawrXD
+
+// ============================================================================
+// Section 5.9: Neural Bridge ASM Stubs
+// ============================================================================
+extern "C" {
+int asm_neural_init(void) { return 0; }
+void asm_neural_shutdown(void) { }
+int asm_neural_acquire_eeg(void* /*buffer*/, int /*samples*/) { return 0; }
+int asm_neural_fft_decompose(void* /*in*/, void* /*out*/, int /*n*/) { return 0; }
+int asm_neural_extract_csp(void* /*data*/, void* /*features*/) { return 0; }
+int asm_neural_classify_intent(void* /*features*/, int /*classCount*/) { return 0; }
+int asm_neural_detect_event(void* /*stream*/, void* /*event*/) { return 0; }
+int asm_neural_encode_command(void* /*cmd*/, void* /*packet*/) { return 0; }
+int asm_neural_gen_phosphene(void* /*pattern*/, int /*x*/, int /*y*/) { return 0; }
+int asm_neural_haptic_pulse(int /*intensity*/, int /*duration*/) { return 0; }
+int asm_neural_calibrate(void* /*profile*/) { return 0; }
+int asm_neural_adapt(void* /*weights*/) { return 0; }
+int asm_neural_get_stats(void* /*out*/) { return 0; }
+}
 
 // ============================================================================
 // Section 6: Additional stubs for excluded files
