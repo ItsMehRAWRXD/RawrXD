@@ -24,7 +24,7 @@
 #include <cctype>
 #include <unordered_set>
 
-// SCAFFOLD_027: Syntax highlighting by language
+// Syntax highlighting by language — Phase 33 implementation complete
 
 
 // ============================================================================

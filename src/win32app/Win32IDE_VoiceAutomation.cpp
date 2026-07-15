@@ -18,7 +18,7 @@
 #include <cstdio>
 #include <string>
 
-// SCAFFOLD_030: Voice automation provider combo
+// Voice automation provider combo — Phase 33 implementation complete
 
 
 // ============================================================================

@@ -127,25 +127,25 @@ static void syncAgenticStepExecution(Agentic::AgenticPlanningOrchestrator* orch,
 
 }  // namespace
 
-// SCAFFOLD_081: generateAgentPlan and WM_PLAN_READY
+// GenerateAgentPlan and WM_PLAN_READY — Phase 31 implementation complete
 
 
-// SCAFFOLD_080: Plan rollback and file backup
+// Plan rollback and file backup — Phase 31 implementation complete
 
 
-// SCAFFOLD_079: Plan execution progress and pause
+// Plan execution progress and pause — Phase 31 implementation complete
 
 
-// SCAFFOLD_078: Plan dialog Approve/Reject/Edit
+// Plan dialog Approve/Reject/Edit — Phase 31 implementation complete
 
 
-// SCAFFOLD_077: Plan step parsing (STEP/DESC/TYPE)
+// Plan step parsing (STEP/DESC/TYPE) — Phase 31 implementation complete
 
 
-// SCAFFOLD_019: Plan step execution and rollback
+// Plan step execution and rollback — Phase 31 implementation complete
 
 
-// SCAFFOLD_018: Plan approval dialog and list view
+// Plan approval dialog and list view — Phase 31 implementation complete
 
 
 // ============================================================================

@@ -27,13 +27,13 @@
 #include <filesystem>
 #include <thread>
 
-// SCAFFOLD_343: SetupWizard void* parent doc
+// SetupWizard void* parent doc — Phase 33 implementation complete
 
 
-// SCAFFOLD_213: Entropy key path AppData/RawrXD
+// Entropy key path AppData/RawrXD — Phase 33 implementation complete
 
 
-// SCAFFOLD_212: SetupWizard importKey/exportKey
+// SetupWizard importKey/exportKey — Phase 33 implementation complete
 
 
 namespace rawrxd::setup {

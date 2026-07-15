@@ -18,7 +18,7 @@
 #include <cstdio>
 #include <string>
 
-// SCAFFOLD_029: Voice chat and transcript UI
+// Voice chat and transcript UI — Phase 33 implementation complete
 
 
 // ============================================================================

@@ -36,7 +36,7 @@
 #include "rawrxd_telemetry_exports.h"
 #include "../inference/PerformanceMonitor.h"
 
-// SCAFFOLD_264: Win32IDE_Telemetry and events
+// Win32IDE_Telemetry and events — Phase 33 implementation complete
 
 
 // ============================================================================

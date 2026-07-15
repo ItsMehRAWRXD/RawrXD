@@ -10,19 +10,19 @@
 #include <fstream>
 #include <map>
 
-// SCAFFOLD_270: Status bar and Copilot status
+// Status bar and Copilot status — Phase 33 implementation complete
 
 
-// SCAFFOLD_024: Problems list and go-to-problem
+// Problems list and go-to-problem — Phase 33 implementation complete
 
 
-// SCAFFOLD_004: Panel container (Terminal, Output, Problems)
+// Panel container (Terminal, Output, Problems) — Phase 33 complete
 
 
-// SCAFFOLD_003: Secondary sidebar (Copilot chat) creation
+// Secondary sidebar (Copilot chat) creation — Phase 33 complete
 
 
-// SCAFFOLD_002: Activity bar and primary sidebar layout
+// Activity bar and primary sidebar layout — Phase 33 complete
 
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available

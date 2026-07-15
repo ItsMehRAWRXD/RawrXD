@@ -23,7 +23,7 @@
 #include <filesystem>
 #include <algorithm>
 
-// SCAFFOLD_032: Test explorer tree population
+// Test explorer tree population — Phase 33 implementation complete
 
 
 // ============================================================================

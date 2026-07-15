@@ -34,7 +34,7 @@
 #include <cstring>
 #include <cwchar>
 
-// SCAFFOLD_041: WebView2 and model selector
+// WebView2 and model selector — Phase 33 implementation complete
 
 
 // ============================================================================

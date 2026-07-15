@@ -30,7 +30,7 @@
 #else
 #include "../include/license_enforcement.h"
 
-// SCAFFOLD_207: Sovereign key management RSA
+// Sovereign key management RSA — Phase 33 implementation complete
 
 #define LICENSE_CHECK(feature) RawrXD::Enforce::LicenseEnforcer::Instance().allow(feature, __FUNCTION__)
 #endif

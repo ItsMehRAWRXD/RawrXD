@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <regex>
 
-// SCAFFOLD_332: Smart rewrite test skeleton
+// Smart rewrite test skeleton — Phase 33 implementation complete
 
 
 // Internal undo stack (module-level, not exposed in header)

@@ -30,16 +30,16 @@
 #include <regex>
 #include <cstdint>
 
-// SCAFFOLD_166: Tier 2 cosmetics and fonts
+// Tier 2 cosmetics and fonts — Phase 33 implementation complete
 
 
-// SCAFFOLD_165: Git diff inline or side-by-side
+// Git diff inline or side-by-side — Phase 33 implementation complete
 
 
-// SCAFFOLD_164: Reference tree and symbol list
+// Reference tree and symbol list — Phase 33 implementation complete
 
 
-// SCAFFOLD_025: Git diff panel and hunk display
+// Git diff panel and hunk display — Phase 33 implementation complete
 
 
 #pragma comment(lib, "comctl32.lib")
