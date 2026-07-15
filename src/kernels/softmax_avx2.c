@@ -19,42 +19,11 @@
     #define aligned_free(ptr) free(ptr)
 #endif
 
-/* Fast approximate exp using polynomial approximation */
-static inline __m256 fast_exp_ps(__m256 x) {
-    /* Clamp to avoid overflow/underflow */
-    __m256 max_val = _mm256_set1_ps(88.0f);
-    __m256 min_val = _mm256_set1_ps(-88.0f);
-    x = _mm256_max_ps(x, min_val);
-    x = _mm256_min_ps(x, max_val);
-    
-    /* Coefficients for exp(x) approximation */
-    const float c1 = 1.0f / 120.0f;
-    const float c2 = 1.0f / 24.0f;
-    const float c3 = 1.0f / 6.0f;
-    const float c4 = 1.0f / 2.0f;
-    const float c5 = 1.0f;
-    
-    __m256 c1_vec = _mm256_set1_ps(c1);
-    __m256 c2_vec = _mm256_set1_ps(c2);
-    __m256 c3_vec = _mm256_set1_ps(c3);
-    __m256 c4_vec = _mm256_set1_ps(c4);
-    __m256 c5_vec = _mm256_set1_ps(c5);
-    __m256 one = _mm256_set1_ps(1.0f);
-    
-    /* Taylor series: 1 + x + x^2/2! + x^3/3! + x^4/4! + x^5/5! */
-    __m256 x2 = _mm256_mul_ps(x, x);
-    __m256 x3 = _mm256_mul_ps(x2, x);
-    __m256 x4 = _mm256_mul_ps(x3, x);
-    __m256 x5 = _mm256_mul_ps(x4, x);
-    
-    __m256 result = one;
-    result = _mm256_add_ps(result, _mm256_mul_ps(x, c5_vec));
-    result = _mm256_add_ps(result, _mm256_mul_ps(x2, c4_vec));
-    result = _mm256_add_ps(result, _mm256_mul_ps(x3, c3_vec));
-    result = _mm256_add_ps(result, _mm256_mul_ps(x4, c2_vec));
-    result = _mm256_add_ps(result, _mm256_mul_ps(x5, c1_vec));
-    
-    return result;
+/* Process 8 exp values using standard expf for accuracy */
+static inline void exp8_ps(const float* x, float* result) {
+    for (int i = 0; i < 8; i++) {
+        result[i] = expf(x[i]);
+    }
 }
 
 /* AVX2 softmax - find max, subtract, exp, normalize */
@@ -94,7 +63,11 @@ void softmax_avx2(const float* input, float* output, int dim) {
     for (; i <= dim - 8; i += 8) {
         __m256 vec = _mm256_loadu_ps(&input[i]);
         __m256 shifted = _mm256_sub_ps(vec, max_broadcast);
-        __m256 exp_val = fast_exp_ps(shifted);
+        float shifted_arr[8];
+        _mm256_storeu_ps(shifted_arr, shifted);
+        float exp_arr[8];
+        exp8_ps(shifted_arr, exp_arr);
+        __m256 exp_val = _mm256_loadu_ps(exp_arr);
         _mm256_storeu_ps(&output[i], exp_val);
         sum_vec = _mm256_add_ps(sum_vec, exp_val);
     }
