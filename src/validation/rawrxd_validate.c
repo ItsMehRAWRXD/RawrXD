@@ -330,6 +330,32 @@ static rawrxd_test_result test_memory_allocator(void) {
     }
 }
 
+rawrxd_test_suite* rawrxd_validate_unit_suite(void) {
+    rawrxd_test_suite* suite = rawrxd_alloc(sizeof(rawrxd_test_suite));
+    if (!suite) return NULL;
+    
+    memset(suite, 0, sizeof(*suite));
+    suite->name = "Unit Validation";
+    
+    printf("\n[SUITE] %s\n", suite->name);
+    
+    rawrxd_timer t = rawrxd_timer_start();
+    
+    // Run unit tests
+    rawrxd_test_result result = test_memory_allocator();
+    suite->total++;
+    if (result == RAWRXD_TEST_PASS) suite->passed++;
+    else if (result == RAWRXD_TEST_FAIL) suite->failed++;
+    else suite->skipped++;
+    
+    suite->total_time_ms = rawrxd_timer_elapsed_ms(&t);
+    
+    printf("  Summary: %u/%u passed, %u failed, %u skipped (%.2f ms)\n\n",
+           suite->passed, suite->total, suite->failed, suite->skipped, suite->total_time_ms);
+    
+    return suite;
+}
+
 rawrxd_test_suite* rawrxd_validate_kernel_suite(void) {
     rawrxd_test_suite* suite = rawrxd_alloc(sizeof(rawrxd_test_suite));
     if (!suite) return NULL;
@@ -337,17 +363,22 @@ rawrxd_test_suite* rawrxd_validate_kernel_suite(void) {
     memset(suite, 0, sizeof(*suite));
     suite->name = "Kernel Validation";
     
+    printf("\n[SUITE] %s\n", suite->name);
+    
     // Run tests
     rawrxd_timer t = rawrxd_timer_start();
     
-    test_kernel_rms_norm();
-    suite->passed++;
+    rawrxd_test_result results[2];
+    results[0] = test_kernel_rms_norm();
+    results[1] = test_kernel_q4_0();
     
-    test_kernel_q4_0();
-    suite->passed++;
-    
-    test_memory_allocator();
-    suite->passed++;
+    // Count results
+    for (int i = 0; i < 2; i++) {
+        suite->total++;
+        if (results[i] == RAWRXD_TEST_PASS) suite->passed++;
+        else if (results[i] == RAWRXD_TEST_FAIL) suite->failed++;
+        else suite->skipped++;
+    }
     
     suite->total_time_ms = rawrxd_timer_elapsed_ms(&t);
     
@@ -407,11 +438,25 @@ int rawrxd_validate_main(int argc, char** argv) {
     // Run validation suites
     printf("Running validation suites...\n\n");
     
-    // Kernel suite
+    // Unit suite (memory, math, strings)
+    rawrxd_test_suite* unit_suite = rawrxd_validate_unit_suite();
+    if (unit_suite) {
+        rawrxd_validate_add_suite_to_report(report, unit_suite);
+        rawrxd_free(unit_suite, sizeof(*unit_suite));
+    }
+    
+    // Kernel suite (basic kernels)
     rawrxd_test_suite* kernel_suite = rawrxd_validate_kernel_suite();
     if (kernel_suite) {
         rawrxd_validate_add_suite_to_report(report, kernel_suite);
         rawrxd_free(kernel_suite, sizeof(*kernel_suite));
+    }
+    
+    // Extended kernel suite (advanced kernels)
+    rawrxd_test_suite* ext_kernel_suite = rawrxd_validate_extended_kernel_suite();
+    if (ext_kernel_suite) {
+        rawrxd_validate_add_suite_to_report(report, ext_kernel_suite);
+        rawrxd_free(ext_kernel_suite, sizeof(*ext_kernel_suite));
     }
     
     // GGUF suite (if model provided)
@@ -419,6 +464,13 @@ int rawrxd_validate_main(int argc, char** argv) {
     if (gguf_suite) {
         rawrxd_validate_add_suite_to_report(report, gguf_suite);
         rawrxd_free(gguf_suite, sizeof(*gguf_suite));
+    }
+    
+    // Inference suite (if model provided)
+    rawrxd_test_suite* inference_suite = rawrxd_validate_inference_suite(model_path);
+    if (inference_suite) {
+        rawrxd_validate_add_suite_to_report(report, inference_suite);
+        rawrxd_free(inference_suite, sizeof(*inference_suite));
     }
     
     // Stress suite

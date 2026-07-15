@@ -1,0 +1,69 @@
+#version 450
+
+// Matrix multiplication compute shader
+// C = A @ B (A: m x k, B: k x n, C: m x n)
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer BufferA {
+    float a_data[];
+};
+
+layout(std430, binding = 1) readonly buffer BufferB {
+    float b_data[];
+};
+
+layout(std430, binding = 2) writeonly buffer BufferC {
+    float c_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint m;
+    uint n;
+    uint k;
+};
+
+shared float shared_a[16][16];
+shared float shared_b[16][16];
+
+void main() {
+    uint row = gl_GlobalInvocationID.y;
+    uint col = gl_GlobalInvocationID.x;
+    
+    uint local_row = gl_LocalInvocationID.y;
+    uint local_col = gl_LocalInvocationID.x;
+    
+    if (row >= m || col >= n) return;
+    
+    float sum = 0.0;
+    
+    // Tiled matrix multiplication
+    for (uint tile = 0; tile < (k + 15) / 16; tile++) {
+        // Load tile into shared memory
+        uint a_col = tile * 16 + local_col;
+        uint b_row = tile * 16 + local_row;
+        
+        if (a_col < k) {
+            shared_a[local_row][local_col] = a_data[row * k + a_col];
+        } else {
+            shared_a[local_row][local_col] = 0.0;
+        }
+        
+        if (b_row < k) {
+            shared_b[local_row][local_col] = b_data[b_row * n + col];
+        } else {
+            shared_b[local_row][local_col] = 0.0;
+        }
+        
+        barrier();
+        
+        // Compute partial sum
+        for (uint i = 0; i < 16; i++) {
+            sum += shared_a[local_row][i] * shared_b[i][local_col];
+        }
+        
+        barrier();
+    }
+    
+    c_data[row * n + col] = sum;
+}

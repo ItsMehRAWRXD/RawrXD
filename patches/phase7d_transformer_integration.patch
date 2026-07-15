@@ -1,0 +1,206 @@
+--- a/src/inference/transformer_forward.cpp
++++ b/src/inference/transformer_forward.cpp
+@@ -15,6 +15,10 @@
+ #include "inference/kv_cache_manager.hpp"
+ #include "inference/sampler.hpp"
+ 
++// Phase 7D: Real Model Integration - Checkpoint Hooks
++#include "integration/gguf_checkpoint_hooks.hpp"
++using namespace RawrXD::Integration;
++
+ namespace RawrXD {
+ namespace Inference {
+ 
+@@ -45,6 +49,12 @@ bool TransformerForward::Initialize(const char* model_path) {
+         return false;
+     }
+     
++    // Phase 7D: Initialize checkpoint context
++    #ifdef RAWRXD_ENABLE_CHECKPOINTS
++    checkpoint_ctx_ = std::make_unique<GGUFCheckpointContext>();
++    GGUFCheckpoint_Init(checkpoint_ctx_.get(), model_path, model_version_.c_str(), "tiered_memory");
++    #endif
++    
+     return true;
+ }
+ 
+@@ -85,6 +95,12 @@ std::vector<int32_t> TransformerForward::Generate(
+     // Hash prompt for verification
+     uint64_t prompt_hash = HashPrompt(prompt);
+     
++    // Phase 7D: Record prompt hash in checkpoint context
++    #ifdef RAWRXD_ENABLE_CHECKPOINTS
++    if (checkpoint_ctx_) {
++        checkpoint_ctx_->prompt_hash = prompt_hash;
++    }
++    #endif
++    
+     std::vector<int32_t> generated_tokens;
+     generated_tokens.reserve(max_tokens);
+     
+@@ -95,6 +111,15 @@ std::vector<int32_t> TransformerForward::Generate(
+         // Forward pass
+         float* logits = ForwardPass(embeddings.data(), seq_len);
+         
++        // Phase 7D: Checkpoint logits before sampling
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++            RAWRXD_CHECKPOINT_LOGITS(checkpoint_ctx_, logits, vocab_size_, pos);
++        }
++        #endif
++        
+         // Sample next token
+         int32_t next_token = sampler_->Sample(logits, vocab_size_, temperature, top_p, top_k);
+         
++        // Phase 7D: Checkpoint sampler state
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++            RAWRXD_CHECKPOINT_SAMPLER(checkpoint_ctx_, next_token, temperature, top_p, top_k, pos);
++        }
++        #endif
++        
+         generated_tokens.push_back(next_token);
+         
+         // Check for end-of-sequence
+@@ -106,6 +131,15 @@ std::vector<int32_t> TransformerForward::Generate(
+         seq_len = 1;  // After first token, we only process one token at a time
+     }
+     
++    // Phase 7D: Export proof at end of generation
++    #ifdef RAWRXD_ENABLE_CHECKPOINTS
++    if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++        std::string proof_path = "inference_" + std::to_string(prompt_hash) + ".rawrproof";
++        GGUFCheckpoint_ExportProof(checkpoint_ctx_.get(), proof_path.c_str());
++        printf("[Phase7D] Proof exported to: %s\n", proof_path.c_str());
++    }
++    #endif
++    
+     return generated_tokens;
+ }
+ 
+@@ -125,6 +159,12 @@ float* TransformerForward::ForwardPass(const float* input_embeddings, size_t seq
+     // Compute embeddings
+     ComputeEmbeddings(input_embeddings, embeddings_out, seq_len);
+     
++    // Phase 7D: Checkpoint embeddings
++    #ifdef RAWRXD_ENABLE_CHECKPOINTS
++    if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++        RAWRXD_CHECKPOINT_EMBEDDING(checkpoint_ctx_, embeddings_out, seq_len, hidden_dim_);
++    }
++    #endif
++    
+     // Transformer layers
+     float* layer_input = embeddings_out;
+     float* layer_output = temp_buffer_;
+@@ -132,6 +172,12 @@ float* TransformerForward::ForwardPass(const float* input_embeddings, size_t seq
+     for (uint32_t layer = 0; layer < num_layers_; layer++) {
++        // Phase 7D: Begin layer tracking
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_) {
++            GGUFCheckpoint_BeginLayer(checkpoint_ctx_.get(), layer);
++        }
++        #endif
++        
+         // Pre-attention RMSNorm
+         RMSNorm(layer_input, rmsnorm_weights_[layer], layer_output, seq_len, hidden_dim_, rmsnorm_eps_);
+         
++        // Phase 7D: Checkpoint post-RMSNorm
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++            RAWRXD_CHECKPOINT_RMSNORM(checkpoint_ctx_, layer_output, seq_len, hidden_dim_, layer);
++        }
++        #endif
++        
+         // Attention
+         float* q = temp_buffer_ + seq_len * hidden_dim_;
+         float* k = q + seq_len * hidden_dim_;
+@@ -141,6 +187,12 @@ float* TransformerForward::ForwardPass(const float* input_embeddings, size_t seq
+         ComputeAttention(q, k, v, attn_out, seq_len, num_heads_, head_dim_);
+         
++        // Phase 7D: Checkpoint attention output
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++            RAWRXD_CHECKPOINT_ATTENTION(checkpoint_ctx_, attn_out, seq_len, hidden_dim_, layer);
++        }
++        #endif
++        
+         // Update KV cache
+         kv_cache_->Update(k, v, seq_len, layer);
+         
++        // Phase 7D: Checkpoint KV cache
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++            float* k_cache = kv_cache_->GetK(layer);
++            float* v_cache = kv_cache_->GetV(layer);
++            size_t kv_len = kv_cache_->GetSeqLen(layer);
++            RAWRXD_CHECKPOINT_KV_CACHE(checkpoint_ctx_, k_cache, v_cache, kv_len, head_dim_, layer);
++        }
++        #endif
++        
+         // Residual connection
+         AddResidual(layer_input, attn_out, seq_len * hidden_dim_);
+         
+@@ -148,9 +200,21 @@ float* TransformerForward::ForwardPass(const float* input_embeddings, size_t seq
+         RMSNorm(attn_out, ffn_rmsnorm_weights_[layer], layer_output, seq_len, hidden_dim_, rmsnorm_eps_);
+         FeedForward(layer_output, ffn_up_weights_[layer], ffn_down_weights_[layer], layer_input, seq_len, hidden_dim_, ffn_dim_);
+         
++        // Phase 7D: Checkpoint FFN output
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++            RAWRXD_CHECKPOINT_FFN(checkpoint_ctx_, layer_input, seq_len, hidden_dim_, layer);
++        }
++        #endif
++        
+         // Swap buffers
+         std::swap(layer_input, layer_output);
++        
++        // Phase 7D: End layer tracking
++        #ifdef RAWRXD_ENABLE_CHECKPOINTS
++        if (checkpoint_ctx_) {
++            GGUFCheckpoint_EndLayer(checkpoint_ctx_.get());
++        }
++        #endif
+     }
+     
+     // Final RMSNorm
+@@ -165,6 +229,15 @@ float* TransformerForward::ForwardPass(const float* input_embeddings, size_t seq
+     // Compute logits
+     ComputeLogits(final_hidden, logits_weights_, logits_out, seq_len, hidden_dim_, vocab_size_);
+     
++    // Phase 7D: Checkpoint final logits
++    #ifdef RAWRXD_ENABLE_CHECKPOINTS
++    if (checkpoint_ctx_ && checkpoint_ctx_->checkpoint_mgr) {
++        // Note: Logits checkpointed in Generate() after this returns
++        // This is just for completeness if we want intermediate checkpoint
++        RAWRXD_CHECKPOINT_LOGITS(checkpoint_ctx_, logits_out, vocab_size_, 0);
++    }
++    #endif
++    
+     return logits_out;
+ }
+ 
+--- a/src/inference/transformer_forward.hpp
++++ b/src/inference/transformer_forward.hpp
+@@ -12,6 +12,10 @@
+ #include <cstdint>
+ #include <vector>
+ #include <memory>
++#ifdef RAWRXD_ENABLE_CHECKPOINTS
++#include "integration/gguf_checkpoint_hooks.hpp"
++using namespace RawrXD::Integration;
++#endif
+ 
+ namespace RawrXD {
+ namespace Inference {
+@@ -65,6 +69,11 @@ private:
+     float* temp_buffer_ = nullptr;
+     size_t temp_buffer_size_ = 0;
+     
++    // Phase 7D: Checkpoint context
++    #ifdef RAWRXD_ENABLE_CHECKPOINTS
++    std::unique_ptr<GGUFCheckpointContext> checkpoint_ctx_;
++    #endif
++    
+     bool AllocateBuffers(size_t max_seq_len);
+     void FreeBuffers();
+     

@@ -126,10 +126,12 @@ bool Tokenizer::LoadFromGGUF(const std::string& gguf_path) {
     vocab_.eos_id = 2;
     vocab_.pad_id = 3;
     
-    // Add tokens to vocab
-    for (size_t i = 0; i < vocab_tokens.size(); ++i) {
-        vocab_.id_to_token[static_cast<TokenId>(i)] = vocab_tokens[i];
-        vocab_.token_to_id[vocab_tokens[i]] = static_cast<TokenId>(i);
+    // Add tokens to vocab (limit to prevent memory issues)
+    size_t max_tokens = std::min(vocab_tokens.size(), size_t(32000));
+    for (size_t i = 0; i < max_tokens; ++i) {
+        TokenId id = static_cast<TokenId>(i);
+        vocab_.id_to_token[id] = vocab_tokens[i];
+        vocab_.token_to_id[vocab_tokens[i]] = id;
     }
     
     // Add merge rules

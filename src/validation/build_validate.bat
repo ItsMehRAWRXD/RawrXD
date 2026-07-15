@@ -59,6 +59,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
+cl.exe %CFLAGS% /I..\core rawrxd_validate_kernels.c
+if errorlevel 1 (
+    echo ERROR: Failed to compile rawrxd_validate_kernels.c
+    exit /b 1
+)
+
+cl.exe %CFLAGS% /I..\core rawrxd_validate_inference.c
+if errorlevel 1 (
+    echo ERROR: Failed to compile rawrxd_validate_inference.c
+    exit /b 1
+)
+
 REM Link with core library
 echo Linking...
 link.exe /nologo /out:%OUTDIR%\rawrxd_validate.exe ^
@@ -66,6 +78,8 @@ link.exe /nologo /out:%OUTDIR%\rawrxd_validate.exe ^
     %OUTDIR%\rawrxd_validate_gguf.obj ^
     %OUTDIR%\rawrxd_validate_stress.obj ^
     %OUTDIR%\rawrxd_validate_report.obj ^
+    %OUTDIR%\rawrxd_validate_kernels.obj ^
+    %OUTDIR%\rawrxd_validate_inference.obj ^
     ..\..\build-core\rawrxd_core.lib kernel32.lib user32.lib
 
 if errorlevel 1 (

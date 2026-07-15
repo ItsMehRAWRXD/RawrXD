@@ -1,0 +1,91 @@
+=====================================================================
+RawrXD Phase 7D: Real Model Inference
+=====================================================================
+
+Model: ..\models\test-model.gguf
+  Version: 3
+  Tensors: 2
+  KV pairs: 5
+
+Model hash: 6C3A9EA68D09251E
+
+[GGUFCheckpoint] Initialized for model: ..\models\test-model.gguf
+[GGUFCheckpoint] Model hash: 0x5C6FAAA337EA3CB3
+Checkpoint context:
+  Enabled: YES
+  Model hash: 0x5C6FAAA337EA3CB3
+
+Header hash: 0x1556F65BDD4575E3
+
+Inference:
+  Prompt: "The capital of France is"
+  Seed: 42
+  Tokens: 50
+
+Generating tokens:
+  [0] Token 42
+  [1] Token 1379
+  [2] Token 2716
+  [3] Token 4053
+  [4] Token 5390
+  [5] Token 6727
+  [6] Token 8064
+  [7] Token 9401
+  [8] Token 10738
+  [9] Token 12075
+  [10] Token 13412
+  [11] Token 14749
+  [12] Token 16086
+  [13] Token 17423
+  [14] Token 18760
+  [15] Token 20097
+  [16] Token 21434
+  [17] Token 22771
+  [18] Token 24108
+  [19] Token 25445
+  [20] Token 26782
+  [21] Token 28119
+  [22] Token 29456
+  [23] Token 30793
+  [24] Token 32130
+  [25] Token 33467
+  [26] Token 34804
+  [27] Token 36141
+  [28] Token 37478
+  [29] Token 38815
+  [30] Token 40152
+  [31] Token 41489
+  [32] Token 42826
+  [33] Token 44163
+  [34] Token 45500
+  [35] Token 46837
+  [36] Token 48174
+  [37] Token 49511
+  [38] Token 848
+  [39] Token 2185
+  [40] Token 3522
+  [41] Token 4859
+  [42] Token 6196
+  [43] Token 7533
+  [44] Token 8870
+  [45] Token 10207
+  [46] Token 11544
+  [47] Token 12881
+  [48] Token 14218
+  [49] Token 15555
+
+Inference complete.
+
+Exporting proof to: D:\rawrxd\scripts\..\audit_output\run_20260714_163208\inference.rawrproof
+[GGUFCheckpoint] Proof exported to: D:\rawrxd\scripts\..\audit_output\run_20260714_163208\inference.rawrproof
+  Proof size: 132 bytes
+  Proof exported successfully.
+
+Statistics:
+  Tensors hashed: 0
+  Bytes hashed: 0
+  Hash time: 0.00 ms
+
+=====================================================================
+Complete
+=====================================================================

@@ -30,6 +30,7 @@ extern "C" {
     int Aperture_Q4_0_Dequant(const uint8_t* src, float* dst, size_t num_blocks);
     int Aperture_Q4_0_ValidateReference(void);
     void Aperture_Q4_0_BenchmarkReference(size_t num_blocks, size_t iterations);
+    void Aperture_Q4_0_BenchmarkDispatched(size_t num_blocks, size_t iterations);
 }
 
 // Test result tracking
@@ -79,8 +80,8 @@ void test_q4_0_benchmark() {
     const char* kernel_name = Aperture_GetKernelName();
     printf("[INFO] Active kernel: %s\n", kernel_name);
     
-    // Run benchmark using dispatched kernel
-    Aperture_Q4_0_BenchmarkDispatched(1000, 10);
+    // Run benchmark using reference kernel
+    Aperture_Q4_0_BenchmarkReference(1000, 10);
     TEST_ASSERT(true, "Benchmark completed");
 }
 

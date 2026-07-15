@@ -148,6 +148,19 @@ RAWRXD_EXPORT rawrxd_kernel_validation* rawrxd_validate_kernel_q8_0_mat_vec(u64 
 
 // Full kernel suite
 RAWRXD_EXPORT rawrxd_test_suite* rawrxd_validate_kernel_suite(void);
+RAWRXD_EXPORT rawrxd_test_suite* rawrxd_validate_extended_kernel_suite(void);
+
+// Extended reference implementations
+RAWRXD_EXPORT void rawrxd_ref_gelu(f32* x, u32 n);
+RAWRXD_EXPORT void rawrxd_ref_layer_norm(f32* output, const f32* input, u32 size, f32 eps);
+RAWRXD_EXPORT void rawrxd_ref_rope(f32* q, f32* k, u32 n_heads, u32 head_dim, u32 pos);
+RAWRXD_EXPORT void rawrxd_ref_q4_k_mat_vec(const void* mat, const f32* vec, f32* out, u64 nrows, u64 ncols);
+RAWRXD_EXPORT void rawrxd_ref_q6_k_mat_vec(const void* mat, const f32* vec, f32* out, u64 nrows, u64 ncols);
+
+// Extended kernel validation
+RAWRXD_EXPORT rawrxd_kernel_validation* rawrxd_validate_kernel_gelu(u32 n);
+RAWRXD_EXPORT rawrxd_kernel_validation* rawrxd_validate_kernel_q4_k_mat_vec(u64 nrows, u64 ncols);
+RAWRXD_EXPORT rawrxd_kernel_validation* rawrxd_validate_kernel_q6_k_mat_vec(u64 nrows, u64 ncols);
 
 //=============================================================================
 // End-to-End Inference Validation
@@ -200,6 +213,12 @@ RAWRXD_EXPORT rawrxd_inference_validation* rawrxd_validate_inference(
 RAWRXD_EXPORT rawrxd_test_result rawrxd_validate_inference_tiny(void);
 RAWRXD_EXPORT rawrxd_test_result rawrxd_validate_inference_small(void);
 RAWRXD_EXPORT rawrxd_test_result rawrxd_validate_inference_medium(void);
+
+// Full inference suite
+RAWRXD_EXPORT rawrxd_test_suite* rawrxd_validate_inference_suite(const char* model_path);
+
+// Unit tests
+RAWRXD_EXPORT rawrxd_test_suite* rawrxd_validate_unit_suite(void);
 
 //=============================================================================
 // Stress Validation

@@ -1,0 +1,107 @@
+#version 450
+
+// Multi-head Attention compute shader
+// Attention(Q, K, V) = softmax(Q @ K^T / sqrt(d_k)) @ V
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer QueryBuffer {
+    float query_data[];
+};
+
+layout(std430, binding = 1) readonly buffer KeyBuffer {
+    float key_data[];
+};
+
+layout(std430, binding = 2) readonly buffer ValueBuffer {
+    float value_data[];
+};
+
+layout(std430, binding = 3) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint n_heads;
+    uint seq_len;
+    uint head_dim;
+};
+
+shared float shared_scores[64];
+shared float shared_max[64];
+shared float shared_sum[64];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint head = global_id / seq_len;
+    uint seq = global_id % seq_len;
+    
+    if (head >= n_heads) return;
+    
+    uint local_id = gl_LocalInvocationID.x;
+    
+    float scale = 1.0 / sqrt(float(head_dim));
+    
+    // Compute attention scores for this position
+    float max_score = -1e30;
+    
+    for (uint pos = 0; pos < seq_len; pos++) {
+        float dot = 0.0;
+        for (uint d = 0; d < head_dim; d++) {
+            uint q_idx = head * seq_len * head_dim + seq * head_dim + d;
+            uint k_idx = head * seq_len * head_dim + pos * head_dim + d;
+            dot += query_data[q_idx] * key_data[k_idx];
+        }
+        
+        float score = dot * scale;
+        shared_scores[pos] = score;
+        max_score = max(max_score, score);
+    }
+    
+    shared_max[local_id] = max_score;
+    barrier();
+    
+    // Parallel max reduction
+    for (uint stride = 32; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_max[local_id] = max(shared_max[local_id], shared_max[local_id + stride]);
+        }
+        barrier();
+    }
+    
+    float global_max = shared_max[0];
+    
+    // Compute softmax
+    float sum_exp = 0.0;
+    for (uint pos = 0; pos < seq_len; pos++) {
+        float exp_score = exp(shared_scores[pos] - global_max);
+        shared_scores[pos] = exp_score;
+        sum_exp += exp_score;
+    }
+    
+    shared_sum[local_id] = sum_exp;
+    barrier();
+    
+    // Parallel sum reduction
+    for (uint stride = 32; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_sum[local_id] += shared_sum[local_id + stride];
+        }
+        barrier();
+    }
+    
+    float global_sum = shared_sum[0];
+    
+    // Normalize and compute weighted sum of values
+    for (uint d = 0; d < head_dim; d++) {
+        float weighted_sum = 0.0;
+        for (uint pos = 0; pos < seq_len; pos++) {
+            float weight = shared_scores[pos] / global_sum;
+            uint v_idx = head * seq_len * head_dim + pos * head_dim + d;
+            weighted_sum += weight * value_data[v_idx];
+        }
+        
+        uint out_idx = head * seq_len * head_dim + seq * head_dim + d;
+        output_data[out_idx] = weighted_sum;
+    }
+}
