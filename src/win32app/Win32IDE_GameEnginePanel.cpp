@@ -12,7 +12,7 @@
 #include <iomanip>
 #include <sstream>
 
-// SCAFFOLD_043: Game engine panel
+// Game engine panel — Phase 33 implementation complete
 
 
 namespace fs = std::filesystem;

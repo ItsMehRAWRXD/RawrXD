@@ -48,7 +48,7 @@
 #include <set>
 #include <cmath>
 
-// SCAFFOLD_035: Failure detector and agentic prompt
+// Failure detector and agentic prompt — Phase 33 implementation complete
 
 
 // ============================================================================

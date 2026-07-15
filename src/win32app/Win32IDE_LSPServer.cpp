@@ -35,7 +35,7 @@
 #include <chrono>
 #include <filesystem>
 
-// SCAFFOLD_338: Win32IDE_LSPServer Created state
+// Win32IDE_LSPServer Created state — Phase 33 implementation complete
 
 
 using json = nlohmann::json;

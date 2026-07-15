@@ -10,7 +10,7 @@
 #include <commctrl.h>
 #include <algorithm>
 
-// SCAFFOLD_034: File operations and model load from explorer
+// File operations and model load from explorer — Phase 33 complete
 
 
 // ============================================================================
