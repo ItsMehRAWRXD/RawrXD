@@ -1477,3 +1477,9 @@
 98	15311	8058529573211489	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Annotations.cpp.obj	92efeb485fae4516
 68	16098	8058529572908157	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Sidebar.cpp.obj	223183e1ffac61e0
 109	16349	8058529573332896	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_ReverseEngineering.cpp.obj	6a7649cc83a90e5
+41	121	8058533099218680	tests/CMakeFiles/test_softmax_avx2.dir/__/src/kernels/softmax_avx2_lib.c.obj	6146cb2efe51cb6b
+37	134	8058533099173330	tests/CMakeFiles/test_softmax_avx2.dir/kernels/test_softmax_avx2.c.obj	c4220888da7019a2
+23	224	8058533099036788	tests/CMakeFiles/test_rmsnorm_avx2.dir/kernels/test_rmsnorm_avx2.c.obj	70c0545fa682804
+31	227	8058533099112785	tests/CMakeFiles/test_rmsnorm_avx2.dir/__/src/kernels/rmsnorm_avx2_lib.c.obj	d760037c309ab1c
+134	269	8058533100144607	tests/test_softmax_avx2.exe	9accd08197ce3e2e
+227	347	8058533101081261	tests/test_rmsnorm_avx2.exe	abe3de81178923bd

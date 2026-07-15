@@ -1,4 +1,4 @@
-test_rmsnorm_avx2 5 0.00319562
+test_rmsnorm_avx2 6 0.00403465
 test_ai_completions 0 0
 test_llm_connectivity 0 0
 test_tool_registry 0 0
@@ -22,5 +22,5 @@ test_production_regression 0 0
 test_instructions_provider 0 0
 test_model_loader_streamer_smoke 0 0
 smoke_core 1 0.010945
-test_softmax_avx2 2 0.00486715
+test_softmax_avx2 3 0.0113368
 ---
