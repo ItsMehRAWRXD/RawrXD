@@ -7,8 +7,10 @@
 
 #include "Win32IDE.h"
 #include "IDELogger.h"
+#include "resource.h"
 #include <windows.h>
 #include <shellapi.h>
+#include <commdlg.h>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -17,6 +19,9 @@
 #include <future>
 
 #pragma comment(lib, "shell32.lib")
+
+// OutputSeverity is defined inside Win32IDE class - use fully qualified name
+using OutputSeverity = Win32IDE::OutputSeverity;
 
 // ============================================================================
 // CLI Tool Paths
@@ -522,42 +527,6 @@ void Win32IDE::BuildCLIMenu(HMENU hMenu) {
         }
     }
 }
-
-// ============================================================================
-// C API for external integration
-// ============================================================================
-
-extern "C" {
-
-__declspec(dllexport) void Win32IDE_InitCLIIntegration(HWND hwnd) {
-    Win32IDE* ide = Win32IDE::GetInstance();
-    if (ide) {
-        ide->InitializeCLIIntegration();
-    }
-}
-
-__declspec(dllexport) void Win32IDE_CompileWithCLI(HWND hwnd) {
-    Win32IDE* ide = Win32IDE::GetInstance();
-    if (ide) {
-        ide->CompileCurrentFileWithCLI();
-    }
-}
-
-__declspec(dllexport) void Win32IDE_BuildWithCLI(HWND hwnd) {
-    Win32IDE* ide = Win32IDE::GetInstance();
-    if (ide) {
-        ide->BuildProjectWithCLI();
-    }
-}
-
-__declspec(dllexport) void Win32IDE_RunCIPipeline(HWND hwnd) {
-    Win32IDE* ide = Win32IDE::GetInstance();
-    if (ide) {
-        ide->RunCIPipeline();
-    }
-}
-
-} // extern "C"
 
 // ============================================================================
 // Implementation functions for Win32IDE_Commands.cpp integration

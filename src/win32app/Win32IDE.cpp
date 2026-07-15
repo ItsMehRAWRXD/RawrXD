@@ -3934,7 +3934,7 @@ void Win32IDE::setSidebarView(SidebarView view)
 
         case SidebarView::SourceControl:
             if (!m_hwndGitPanel)
-                createSourceControlView();
+                createSourceControlView(m_hwndSidebar);
             if (m_hwndGitPanel)
                 ShowWindow(m_hwndGitPanel, SW_SHOW);
             m_activeActivityBarButton = 2;
@@ -3942,7 +3942,7 @@ void Win32IDE::setSidebarView(SidebarView view)
 
         case SidebarView::RunDebug:
             if (!m_hwndDebugPanel)
-                createRunDebugView();
+                createRunDebugView(m_hwndSidebar);
             if (m_hwndDebugPanel)
                 ShowWindow(m_hwndDebugPanel, SW_SHOW);
             m_activeActivityBarButton = 3;
@@ -3950,7 +3950,7 @@ void Win32IDE::setSidebarView(SidebarView view)
 
         case SidebarView::Extensions:
             if (!m_hwndExtensionsPanel)
-                createExtensionsView();
+                createExtensionsView(m_hwndSidebar);
             if (m_hwndExtensionsPanel)
                 ShowWindow(m_hwndExtensionsPanel, SW_SHOW);
             m_activeActivityBarButton = 4;
@@ -3970,8 +3970,8 @@ void Win32IDE::setSidebarView(SidebarView view)
     int viewIndex = static_cast<int>(view) - 1;
     if (viewIndex >= 0 && viewIndex < 6 && m_hwndStatusBar)
     {
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0,
-                    (LPARAM)(L"Sidebar: " + std::wstring(viewNames[viewIndex])));
+        std::wstring statusText = std::wstring(L"Sidebar: ") + viewNames[viewIndex];
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)statusText.c_str());
     }
 
     LOG_INFO("Sidebar view switched to: " + std::to_string(static_cast<int>(view)));
@@ -4843,27 +4843,6 @@ void Win32IDE::syncRepository()
             appendToOutput("Pull failed\n", "Output", OutputSeverity::Error);
         }
     });
-}
-
-std::string Win32IDE::findGitRepositoryRoot()
-{
-    std::string currentDir = m_projectRoot;
-    if (currentDir.empty())
-        currentDir = m_currentDirectory;
-    if (currentDir.empty())
-        currentDir = ".";
-
-    std::filesystem::path path(currentDir);
-    while (!path.empty() && path != path.parent_path())
-    {
-        if (std::filesystem::exists(path / ".git"))
-        {
-            return path.string();
-        }
-        path = path.parent_path();
-    }
-
-    return "";
 }
 
 void Win32IDE::newFile()
@@ -20937,13 +20916,6 @@ void Win32IDE::updateLayout()
              " secondary=" + std::to_string(m_secondarySidebarWidth));
 }
 
-void Win32IDE::toggleSidebar()
-{
-    m_sidebarVisible = !m_sidebarVisible;
-    updateLayout();
-    LOG_INFO(m_sidebarVisible ? "Sidebar shown" : "Sidebar hidden");
-}
-
 void Win32IDE::toggleSecondarySidebar()
 {
     m_secondarySidebarVisible = !m_secondarySidebarVisible;
@@ -21038,4 +21010,92 @@ std::string Win32IDE::getConfigDirectory()
         return wideToUtf8(wpath);
     }
     return ".";
+}
+
+void Win32IDE::goToLine(int line)
+{
+    if (!m_hwndEditor || line < 1)
+        return;
+
+    // RichEdit control uses 0-based line index
+    int lineIndex = line - 1;
+    
+    // Get the character index for the start of the line
+    int charIndex = (int)SendMessage(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    if (charIndex >= 0)
+    {
+        // Set the selection to that position
+        SendMessage(m_hwndEditor, EM_SETSEL, charIndex, charIndex);
+        // Scroll to make the line visible
+        SendMessage(m_hwndEditor, EM_SCROLLCARET, 0, 0);
+    }
+}
+
+void Win32IDE::resizeEditor()
+{
+    if (!m_hwndMain || !m_hwndEditor)
+        return;
+
+    RECT rcMain;
+    GetClientRect(m_hwndMain, &rcMain);
+    
+    int mainWidth = rcMain.right - rcMain.left;
+    int mainHeight = rcMain.bottom - rcMain.top;
+    
+    // Calculate sidebar width
+    int sidebarWidth = m_sidebarVisible ? m_sidebarWidth : 0;
+    if (m_sidebarVisible && m_hwndActivityBar)
+        sidebarWidth += 48; // Activity bar width
+    
+    // Calculate secondary sidebar
+    int secondarySidebarWidth = m_secondarySidebarVisible ? m_secondarySidebarWidth : 0;
+    
+    // Calculate bottom panel height
+    int bottomPanelHeight = m_bottomPanelVisible ? m_bottomPanelHeight : 0;
+    
+    // Editor position
+    int editorLeft = sidebarWidth + 4;
+    int editorWidth = mainWidth - sidebarWidth - secondarySidebarWidth - 8;
+    int editorHeight = mainHeight - bottomPanelHeight - 30; // 30 for title bar
+    
+    SetWindowPos(m_hwndEditor, nullptr,
+                 editorLeft, 30, editorWidth, editorHeight,
+                 SWP_NOZORDER);
+}
+
+std::string Win32IDE::findGitRepositoryRoot(const std::string& startPath)
+{
+    std::filesystem::path currentPath = startPath;
+    if (currentPath.empty())
+        currentPath = std::filesystem::current_path();
+    
+    // If startPath is a file, get its directory
+    if (std::filesystem::is_regular_file(currentPath))
+        currentPath = currentPath.parent_path();
+    
+    // Walk up the directory tree looking for .git
+    while (!currentPath.empty() && currentPath.has_parent_path())
+    {
+        std::filesystem::path gitPath = currentPath / ".git";
+        if (std::filesystem::exists(gitPath))
+        {
+            return currentPath.string();
+        }
+        currentPath = currentPath.parent_path();
+    }
+    
+    return "";
+}
+
+void Win32IDE::executePowerShellCommandAsync(const std::string& command, std::function<void(const std::string&, bool)> callback)
+{
+    // Launch PowerShell command in background with optional callback
+    std::thread([command, callback]() {
+        std::string fullCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"" + command + "\"";
+        int result = std::system(fullCmd.c_str());
+        if (callback)
+        {
+            callback("", result == 0);
+        }
+    }).detach();
 }

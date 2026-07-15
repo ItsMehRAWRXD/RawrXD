@@ -28,6 +28,8 @@
 #define ID_FILE_EXIT            1005
 #define ID_FILE_CLOSE           1006
 #define ID_FILE_BROWSER_LIST    1010
+#define IDM_FILE_LOAD_MODEL     1030  // Load GGUF model (was 1020, changed to avoid conflict)
+#define IDM_REFRESH_MODELS      1031  // Refresh model list
 
 // --- Edit menu (2001–2099) ---------------------------------------------------
 #define ID_EDIT_UNDO            2001
@@ -66,12 +68,18 @@
 
 // --- Build menu (7001–7099) --------------------------------------------------
 #define ID_BUILD_COMPILE        7001
+#define IDM_BUILD_COMPILE       7001  // Alias for menu command
 #define ID_BUILD_BUILD          7002
+#define IDM_BUILD_BUILD         7002  // Alias for menu command
 #define ID_BUILD_REBUILD        7003
+#define IDM_BUILD_REBUILD       7003  // Alias for menu command
 #define ID_BUILD_CLEAN          7004
+#define IDM_BUILD_CLEAN         7004  // Alias for menu command
 #define ID_BUILD_RUN            7005
 #define IDM_BUILD_RUN           7005  // Alias for menu command
 #define ID_BUILD_DEBUG          7006
+#define IDM_BUILD_DEBUG         7006  // Alias for menu command
+#define IDM_BUILD_SOLUTION      ID_BUILD_BUILD  // Alias for solution build
 
 // --- Tools menu (8001–8099) --------------------------------------------------
 #define ID_TOOLS_OPTIONS        8001

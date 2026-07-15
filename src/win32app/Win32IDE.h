@@ -570,7 +570,22 @@ class Win32IDE
     // Compile-fix shims for code added in the Unified Command Router merge.
     // Definitions live in Win32IDE_Core.cpp.
     void SetStatusBarText(int part, const std::wstring& text);
+    void SetStatusBarText(const std::string& text) { SetStatusBarText(0, std::wstring(text.begin(), text.end())); }
     void AppendChatMessage(const std::string& msg);
+    void ShowError(const std::string& msg);
+    void LogMessage(const std::string& msg);
+    
+    // CLI Integration methods
+    void InitializeCLIIntegration();
+    void CompileCurrentFileWithCLI();
+    void BuildProjectWithCLI();
+    void RunCIPipeline();
+    void ScanModelsWithCLI();
+    void PullModelWithCLI(const std::string& model);
+    void RunBenchmarkWithCLI();
+    void LoadModelWithCLI(const std::string& modelPath);
+    void handleCLICommand(int commandId);
+    void BuildCLIMenu(HMENU hMenu);
     // Public wrapper so free static command-handlers can dismiss ghost text
     // without violating private access on dismissGhostText().
     void dismissGhostTextPublic() { dismissGhostText(); }
@@ -864,6 +879,10 @@ class Win32IDE
     void saveRecentFiles();
     void clearRecentFiles();
     std::string getFileDialogPath(bool isSave = false);
+    void goToLine(int line);
+    void resizeEditor();
+    std::string findGitRepositoryRoot(const std::string& startPath = "");
+    void executePowerShellCommandAsync(const std::string& command, std::function<void(const std::string&, bool)> callback = nullptr);
 
     // GGUF Model operations
     bool loadGGUFModel(const std::string& filepath);
@@ -2625,6 +2644,10 @@ class Win32IDE
     std::unique_ptr<RawrXD::IRenderer> m_renderer;
     bool m_rendererReady;
 
+    // Bottom panel (output/terminal panel)
+    int m_bottomPanelHeight = 200;  // Default height in pixels
+    bool m_bottomPanelVisible = true;
+
     // Search and Replace state
     std::string m_lastSearchText;
     std::string m_lastReplaceText;
@@ -2663,6 +2686,8 @@ class Win32IDE
     HWND m_hwndSearchStatus = nullptr;
     std::vector<std::string> m_searchResults;
     bool m_searchInProgress;
+    std::string m_searchIncludePattern;
+    std::string m_searchExcludePattern;
 
     // Source Control View (extends existing Git)
     HWND m_hwndSCMFileList;
