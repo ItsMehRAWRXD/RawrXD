@@ -352,6 +352,95 @@ CommandResult handleSettingsImport(const CommandContext& /*ctx*/) {
     CommandResult r; r.success = true; return r;
 }
 
+// Hotpatch commands
+CommandResult handleHotpatchCreate(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleREAutoPatch(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// AI commands
+CommandResult handleAIModeSet(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAIEngineSelect(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Autonomy commands
+CommandResult handleAutonomyRate(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleAutonomyRun(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Voice commands (additional)
+CommandResult handleVoiceInit(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleVoiceSpeak(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleVoiceDevices(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleVoiceMetrics(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleVoiceStatus(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+CommandResult handleVoiceMode(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Profile commands
+CommandResult handleProfile(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Analyze commands
+CommandResult handleAnalyze(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Search commands
+CommandResult handleSearch(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// SubAgent commands
+CommandResult handleSubAgent(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// COT commands
+CommandResult handleCOT(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Status commands
+CommandResult handleStatus(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Help commands (additional)
+CommandResult handleHelp(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Generate IDE commands
+CommandResult handleGenerateIDE(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
+// Hotpatch commands (additional)
+CommandResult handleHotpatchApply(const CommandContext& /*ctx*/) {
+    CommandResult r; r.success = true; return r;
+}
+
 // ============================================================================
 // Section 5: ASM Watchdog Stubs (C linkage)
 // ============================================================================
