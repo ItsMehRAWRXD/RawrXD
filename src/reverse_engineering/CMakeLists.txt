@@ -41,6 +41,9 @@ set(RE_CPP_HEADERS
 
 add_library(RawrXD-RE-Library STATIC ${RE_CPP_SOURCES})
 
+# Set MSVC runtime library to match RawrEngine (static CRT)
+set_property(TARGET RawrXD-RE-Library PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 target_include_directories(RawrXD-RE-Library PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/pe_tools
