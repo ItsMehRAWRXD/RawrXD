@@ -166,10 +166,9 @@ bool OllamaClient::chat(const OllamaChatRequest& request,
 }
 
 std::vector<float> OllamaClient::embeddings(const std::string& model, const std::string& prompt) {
-    json request_json = {
-        {"model", model},
-        {"prompt", prompt}
-    };
+    json request_json;
+    request_json["model"] = model;
+    request_json["prompt"] = prompt;
     
     std::string json_body = request_json.dump();
     std::string response = makePostRequest("/api/embeddings", json_body);
@@ -189,11 +188,10 @@ std::vector<float> OllamaClient::embeddings(const std::string& model, const std:
 }
 
 std::string OllamaClient::createGenerateRequestJson(const OllamaGenerateRequest& req) {
-    json j = {
-        {"model", req.model},
-        {"prompt", req.prompt},
-        {"stream", req.stream}
-    };
+    json j;
+    j["model"] = req.model;
+    j["prompt"] = req.prompt;
+    j["stream"] = req.stream;
     
     if (!req.options.empty()) {
         json options = json::object();
@@ -207,11 +205,10 @@ std::string OllamaClient::createGenerateRequestJson(const OllamaGenerateRequest&
 }
 
 std::string OllamaClient::createChatRequestJson(const OllamaChatRequest& req) {
-    json j = {
-        {"model", req.model},
-        {"stream", req.stream},
-        {"messages", json::array()}
-    };
+    json j;
+    j["model"] = req.model;
+    j["stream"] = req.stream;
+    j["messages"] = json::array();
     
     for (const auto& msg : req.messages) {
         j["messages"].push_back({
