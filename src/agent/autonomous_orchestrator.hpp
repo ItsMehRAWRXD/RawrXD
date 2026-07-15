@@ -369,6 +369,11 @@ public:
     /// Get recommendations for improving execution
     json getOptimizationRecommendations() const;
 
+    // ---- Plan Parsing ----
+    /// Parse a JSON plan (from LLM response) into executable TodoItems
+    /// Expected format: {"steps": [{"title": "...", "description": "...", "targetFile": "...", ...}]}
+    std::vector<TodoItem> ParsePlanFromJSON(const std::string& jsonStr);
+
 private:
     // ---- Internal Execution ----
     void executionLoop();

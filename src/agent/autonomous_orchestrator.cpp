@@ -1330,4 +1330,70 @@ float AutonomousOrchestrator::estimateTaskComplexity(const TodoItem& todo) const
     return complexity;
 }
 
+// ============================================================================
+// ParsePlanFromJSON — Parse LLM response into executable TodoItems
+// ============================================================================
+std::vector<TodoItem> AutonomousOrchestrator::ParsePlanFromJSON(const std::string& jsonStr) {
+    std::vector<TodoItem> todos;
+    
+    try {
+        json j = json::parse(jsonStr);
+        
+        // Handle {"steps": [...]} format
+        if (j.contains("steps") && j["steps"].is_array()) {
+            const auto& steps = j["steps"];
+            for (size_t i = 0; i < steps.size(); ++i) {
+                const auto& step = steps[i];
+                TodoItem todo;
+                todo.id = m_nextTodoId.fetch_add(1);
+                todo.title = step.value("title", "Step " + std::to_string(i + 1));
+                todo.description = step.value("description", "");
+                todo.category = step.value("category", "task");
+                todo.targetFile = step.value("targetFile", "");
+                
+                if (step.contains("relatedFiles") && step["relatedFiles"].is_array()) {
+                    todo.relatedFiles = step["relatedFiles"].get<std::vector<std::string>>();
+                }
+                
+                todo.priority = step.value("priority", 5);
+                todo.complexity = step.value("complexity", 5);
+                todo.estimatedIterations = step.value("estimatedIterations", 1);
+                todo.estimatedTimeSeconds = step.value("estimatedTimeSeconds", 60);
+                
+                // Handle dependencies
+                if (step.contains("dependsOn") && step["dependsOn"].is_array()) {
+                    // Dependencies will be resolved after all todos are created
+                    // For now, store them as blockedBy references
+                    for (const auto& dep : step["dependsOn"]) {
+                        if (dep.is_number()) {
+                            todo.blockedBy.push_back(dep.get<uint64_t>());
+                        }
+                    }
+                }
+                
+                todos.push_back(std::move(todo));
+            }
+        }
+        // Handle {"todos": [...]} format
+        else if (j.contains("todos") && j["todos"].is_array()) {
+            const auto& items = j["todos"];
+            for (const auto& item : items) {
+                todos.push_back(TodoItem::fromJSON(item));
+            }
+        }
+        // Handle flat array format
+        else if (j.is_array()) {
+            for (const auto& item : j) {
+                todos.push_back(TodoItem::fromJSON(item));
+            }
+        }
+    } catch (const json::exception& e) {
+        // JSON parsing failed - return empty vector
+        // Caller should check for empty result
+        (void)e;
+    }
+    
+    return todos;
+}
+
 } // namespace RawrXD
