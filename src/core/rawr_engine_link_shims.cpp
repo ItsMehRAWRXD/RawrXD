@@ -3266,44 +3266,13 @@ CommandResult handleAIModelSelect(const CommandContext& ctx) { (void)ctx; return
 CommandResult handleVscExtStatus(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "VscExtStatus stub", 0}; }
 CommandResult HandleConsentPrompt(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "ConsentPrompt stub", 0}; }
 
-// NativeGGUFMetadata
-struct NativeGGUFMetadata {
-    std::string key;
-    std::string value;
-};
-
-// NativeGGUFTensorInfo
-struct NativeGGUFTensorInfo {
-    std::string name;
-    std::vector<uint64_t> shape;
-    uint32_t type = 0;
-    uint64_t offset = 0;
-};
-
-// NativeGGUFLoader full stub
-class NativeGGUFLoader {
-    std::vector<NativeGGUFTensorInfo> tensors_;
-    std::vector<NativeGGUFMetadata> metadata_;
-    bool isOpen_ = false;
-public:
-    NativeGGUFLoader() = default;
-    ~NativeGGUFLoader() = default;
-    bool Open(const std::string& path) { (void)path; isOpen_ = true; return true; }
-    void Close() { isOpen_ = false; }
-    bool ParseHeader() { return true; }
-    bool ParseMetadata() { return true; }
-    bool ParseTensorInfo() { return true; }
-    bool IsMemoryMapped() const { return false; }
-    uint64_t GetMappedSize() const { return 0; }
-    const std::vector<NativeGGUFTensorInfo>& GetTensors() const { return tensors_; }
-    const std::vector<NativeGGUFMetadata>& GetMetadata() const { return metadata_; }
-};
-
-// Force instantiation to satisfy linker
-template class std::vector<NativeGGUFMetadata>;
-template class std::allocator<NativeGGUFMetadata>;
-template class std::vector<NativeGGUFTensorInfo>;
-template class std::allocator<NativeGGUFTensorInfo>;
+// NativeGGUFLoader is defined in native_gguf_loader_production.cpp
+// Forward declarations only here
+namespace RawrXD {
+namespace NativeGGUF {
+class NativeGGUFLoader;
+}
+}
 
 // Additional handlers
 CommandResult HandleAutonomousAgent(const CommandContext& ctx) { (void)ctx; return CommandResult{true, "AutonomousAgent stub", 0}; }
