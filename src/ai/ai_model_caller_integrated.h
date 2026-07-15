@@ -32,10 +32,10 @@ extern "C" {
  */
 InferenceResult GenerateCompletion(
     const std::string& prompt,
-    int max_new_tokens = 128,
-    float temperature = 0.8f,
-    int top_k = 40,
-    float top_p = 0.95f
+    int max_new_tokens,
+    float temperature,
+    int top_k,
+    float top_p
 );
 
 /**
@@ -51,8 +51,8 @@ InferenceResult GenerateCompletion(
 void GenerateCompletionStreaming(
     const std::string& prompt,
     std::function<void(const std::string& token_text, bool is_last)> callback,
-    int max_new_tokens = 128,
-    float temperature = 0.8f
+    int max_new_tokens,
+    float temperature
 );
 
 /**
