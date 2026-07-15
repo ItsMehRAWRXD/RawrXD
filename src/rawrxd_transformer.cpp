@@ -2,6 +2,10 @@
 #include "core/moe_expert_accumulation.hpp"
 #include "core/swarm_scheduler.hpp"
 #include "logging/Logger.h"
+
+// RawrXD validation hooks for llama.cpp parity testing
+#include "../tests/inference_validation/harness/runtime_hooks.hpp"
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -1272,6 +1276,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     if (tokens.empty())
         return {};
 
+    // Initialize validation dumping (no-op if RAWRXD_ENABLE_VALIDATION not defined)
+    RAWRXD_VALIDATION_INIT("rawrxd_output.bin");
+
     // Available physical memory in MB (cheap syscall, used for OOM diagnosis)
     auto AvailPhysMB = []() -> size_t
     {
@@ -1539,6 +1546,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             }
             RMSNorm_AVX512(x.data(), x.data(), attn_norm, dim, config.rms_norm_eps);
 
+            // Validation hook: RMSNorm output
+            RAWRXD_VALIDATION_DUMP_RMS_NORM(x.data(), dim, l);
+
             const std::string wq_name = prefix + "attn_q.weight";
             const std::string wk_name = prefix + "attn_k.weight";
             const std::string wv_name = prefix + "attn_v.weight";
@@ -1652,6 +1662,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 if (!std::isfinite(x[i]))
                     x[i] = 0.0f;
             }
+
+            // Validation hook: Attention output (after residual)
+            RAWRXD_VALIDATION_DUMP_ATTN_OUT(x.data(), dim, l);
 
             // --- FFN (SwiGLU) ---
             residual = x;
@@ -1838,6 +1851,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                     x[i] = 0.0f;
             }
 
+            // Validation hook: FFN output (after residual)
+            RAWRXD_VALIDATION_DUMP_FFN(x.data(), dim, l);
+
             if (m_swarmScheduler)
             {
                 if (!layerPinnedPlanRows.empty())
@@ -1882,6 +1898,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         if (!std::isfinite(logits[i]))
             logits[i] = -std::numeric_limits<float>::max();
     }
+
+    // Validation hook: Final logits
+    RAWRXD_VALIDATION_DUMP_LOGITS(logits.data(), config.vocab_size);
+
+    // Close validation dumping
+    RAWRXD_VALIDATION_CLOSE();
 
     return logits;
 }
