@@ -703,25 +703,30 @@ struct PerfResult {
 
 class PerfTelemetry {
 public:
-    static PerfTelemetry& instance() {
-        static PerfTelemetry inst;
-        return inst;
-    }
-    
-    PerfResult initialize() {
-        PerfResult result;
-        result.success = true;
-        return result;
-    }
-    
-    void captureBaseline() {
-        // Stub: no-op
-    }
-    
-    std::string getDiagnostics() const {
-        return "{}"; // Stub: empty JSON
-    }
+    static PerfTelemetry& instance();
+    PerfResult initialize();
+    void captureBaseline();
+    std::string getDiagnostics() const;
 };
+
+PerfTelemetry& PerfTelemetry::instance() {
+    static PerfTelemetry inst;
+    return inst;
+}
+
+PerfResult PerfTelemetry::initialize() {
+    PerfResult result;
+    result.success = true;
+    return result;
+}
+
+void PerfTelemetry::captureBaseline() {
+    // Stub: no-op
+}
+
+std::string PerfTelemetry::getDiagnostics() const {
+    return "{}"; // Stub: empty JSON
+}
 
 } // namespace Perf
 } // namespace RawrXD

@@ -1459,6 +1459,10 @@ if(WIN32)
         winhttp ws2_32 ntdll advapi32 crypt32 opengl32 wininet gdi32 user32 bcrypt
         d3d12 dxgi dxcore
     )
+    # Link static CRT libraries explicitly for static runtime
+    target_link_libraries(RawrEngine PRIVATE
+        libcmt.lib libcpmt.lib libvcruntime.lib libucrt.lib
+    )
     if(NOT MSVC)
         target_link_libraries(RawrEngine PRIVATE gomp)
     endif()
