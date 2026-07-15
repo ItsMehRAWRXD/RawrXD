@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-07-15T13:43:14.314497",
+  "benchmarks": {},
+  "recommendations": [
+    {
+      "kernel": "matmul",
+      "priority": "CRITICAL",
+      "issue": "Performance below 1 GOPS",
+      "suggestions": [
+        "Enable compiler optimizations (-O3 -march=native)",
+        "Use AVX2 intrinsics for vectorization",
+        "Implement cache blocking (tiling)",
+        "Consider using BLAS library (OpenBLAS, MKL)",
+        "Profile memory access patterns"
+      ]
+    },
+    {
+      "kernel": "softmax",
+      "priority": "CRITICAL",
+      "issue": "Performance below 100M ops/sec",
+      "suggestions": [
+        "Vectorize with AVX2 (_mm256_* intrinsics)",
+        "Use fast approximations for exp()",
+        "Consider numerical stability optimizations",
+        "Batch processing for multiple vectors"
+      ]
+    },
+    {
+      "kernel": "rmsnorm",
+      "priority": "CRITICAL",
+      "issue": "Performance below 100M ops/sec",
+      "suggestions": [
+        "Vectorize sum of squares with AVX2",
+        "Use fast reciprocal square root",
+        "Fuse operations to reduce memory passes",
+        "Consider in-place computation"
+      ]
+    }
+  ],
+  "summary": {
+    "total_recommendations": 3,
+    "critical": 3,
+    "high": 0,
+    "medium": 0
+  }
+}
