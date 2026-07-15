@@ -14,7 +14,7 @@ namespace rawrxd::router {
 // Internal Implementation
 // ═══════════════════════════════════════════════════════════════════════════════
 
-struct BackendState {
+struct BackendStateInternal {
     BackendInfo info;
     std::vector<std::chrono::microseconds> recent_latencies;
     std::atomic<uint64_t> success_count{0};
@@ -25,7 +25,7 @@ struct BackendState {
 
 class RouterImpl {
 public:
-    std::map<BackendId, std::unique_ptr<BackendState>> backends_;
+    std::map<BackendId, std::unique_ptr<BackendStateInternal>> backends_;
     mutable std::mutex mutex_;
     
     // Configuration
@@ -59,7 +59,7 @@ bool CapabilityRouter::RegisterBackend(const BackendInfo& info) {
         return false; // Already exists
     }
     
-    auto state = std::make_unique<BackendState>();
+    auto state = std::make_unique<BackendStateInternal>();
     state->info = info;
     impl_->backends_[info.id] = std::move(state);
     
@@ -162,26 +162,26 @@ std::optional<RoutingDecision> CapabilityRouter::RouteWithStrategy(
         
         switch (strategy) {
             case RoutingStrategy::LatencyOptimized:
-                score = 1.0f / (1.0f + state->info.avg_latency.count() / 1000.0f);
+                score = 1.0f / (1.0f + state.info.avg_latency.count() / 1000.0f);
                 break;
                 
             case RoutingStrategy::ThroughputOptimized:
-                score = (1.0f - state->info.current_load) * state->info.max_batch_size;
+                score = (1.0f - state.info.current_load) * state.info.max_batch_size;
                 break;
                 
             case RoutingStrategy::CostOptimized:
-                score = 1.0f / (1.0f + state->info.cost_per_token);
+                score = 1.0f / (1.0f + state.info.cost_per_token);
                 break;
                 
             case RoutingStrategy::ReliabilityOptimized:
-                score = state->info.success_rate;
+                score = state.info.success_rate;
                 break;
         }
         
         // Apply composite scoring
-        float latency_score = 1.0f / (1.0f + state->info.avg_latency.count() / 1000.0f);
-        float cost_score = 1.0f / (1.0f + state->info.cost_per_token);
-        float reliability_score = state->info.success_rate;
+        float latency_score = 1.0f / (1.0f + state.info.avg_latency.count() / 1000.0f);
+        float cost_score = 1.0f / (1.0f + state.info.cost_per_token);
+        float reliability_score = state.info.success_rate;
         
         score = impl_->latency_weight_ * latency_score +
                 impl_->cost_weight_ * cost_score +
@@ -234,7 +234,7 @@ std::optional<RoutingDecision> CapabilityRouter::RouteWithStrategy(
     impl_->total_routing_time_us_ += duration.count();
     
     auto& state = *impl_->backends_[decision.backend];
-    state.route_count_++;
+    state.route_count++;
     
     return decision;
 }
@@ -289,16 +289,16 @@ void CapabilityRouter::ReportOutcome(BackendId backend, bool success) {
     auto it = impl_->backends_.find(backend);
     if (it != impl_->backends_.end()) {
         if (success) {
-            it->second->success_count_++;
+            it->second->success_count++;
         } else {
-            it->second->failure_count_++;
+            it->second->failure_count++;
         }
         
         // Update success rate
-        uint64_t total = it->second->success_count_ + it->second->failure_count_;
+        uint64_t total = it->second->success_count + it->second->failure_count;
         if (total > 0) {
             it->second->info.success_rate = 
-                static_cast<float>(it->second->success_count_) / total;
+                static_cast<float>(it->second->success_count) / total;
         }
     }
 }

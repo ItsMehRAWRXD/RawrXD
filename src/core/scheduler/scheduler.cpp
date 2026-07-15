@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <numeric>
 #include <queue>
 #include <vector>
 
@@ -27,10 +28,10 @@ struct NodeState {
 };
 
 struct TypeState {
-    TokenCredits available_credits;
-    TokenCredits total_credits;
-    TokenCredits credit_limit;
-    TimeSlice time_slice_limit;
+    TokenCredits available_credits{0};
+    TokenCredits total_credits{0};
+    TokenCredits credit_limit{0};
+    TimeSlice time_slice_limit{0};
     std::chrono::milliseconds latency_slo{100};
     size_t max_queue_depth{1000};
     
@@ -38,14 +39,50 @@ struct TypeState {
     std::atomic<uint64_t> allocation_count{0};
     std::atomic<uint64_t> rejection_count{0};
     std::vector<std::chrono::microseconds> recent_latencies;
-    std::mutex latency_mutex;
+    mutable std::mutex latency_mutex;
+    
+    TypeState() = default;
+    
+    // Custom move constructor
+    TypeState(TypeState&& other) noexcept
+        : available_credits(other.available_credits)
+        , total_credits(other.total_credits)
+        , credit_limit(other.credit_limit)
+        , time_slice_limit(other.time_slice_limit)
+        , latency_slo(other.latency_slo)
+        , max_queue_depth(other.max_queue_depth)
+        , allocation_count(other.allocation_count.load())
+        , rejection_count(other.rejection_count.load())
+        , recent_latencies(std::move(other.recent_latencies))
+    {}
+    
+    // Custom move assignment
+    TypeState& operator=(TypeState&& other) noexcept {
+        if (this != &other) {
+            available_credits = other.available_credits;
+            total_credits = other.total_credits;
+            credit_limit = other.credit_limit;
+            time_slice_limit = other.time_slice_limit;
+            latency_slo = other.latency_slo;
+            max_queue_depth = other.max_queue_depth;
+            allocation_count.store(other.allocation_count.load());
+            rejection_count.store(other.rejection_count.load());
+            recent_latencies = std::move(other.recent_latencies);
+            // mutex is not moved, just left in default state
+        }
+        return *this;
+    }
+    
+    // Disable copy
+    TypeState(const TypeState&) = delete;
+    TypeState& operator=(const TypeState&) = delete;
 };
 
 class SchedulerImpl {
 public:
     SchedulerImpl() = default;
     
-    std::map<NodeType, TypeState> type_states_;
+    std::map<NodeType, std::unique_ptr<TypeState>> type_states_;
     std::map<NodeId, NodeState> node_states_;
     
     // Priority queue: lower priority value = higher priority
@@ -77,12 +114,12 @@ public:
 CreditBasedScheduler::CreditBasedScheduler() 
     : impl_(std::make_unique<SchedulerImpl>()) {
     
-    // Initialize default type states
-    impl_->type_states_[NodeType::Inference] = TypeState{};
-    impl_->type_states_[NodeType::Embedding] = TypeState{};
-    impl_->type_states_[NodeType::Tokenization] = TypeState{};
-    impl_->type_states_[NodeType::Detokenization] = TypeState{};
-    impl_->type_states_[NodeType::Scheduling] = TypeState{};
+    // Initialize default type states using emplace
+    impl_->type_states_.emplace(NodeType::Inference, std::make_unique<TypeState>());
+    impl_->type_states_.emplace(NodeType::Embedding, std::make_unique<TypeState>());
+    impl_->type_states_.emplace(NodeType::Tokenization, std::make_unique<TypeState>());
+    impl_->type_states_.emplace(NodeType::Detokenization, std::make_unique<TypeState>());
+    impl_->type_states_.emplace(NodeType::Scheduling, std::make_unique<TypeState>());
 }
 
 CreditBasedScheduler::~CreditBasedScheduler() = default;
@@ -99,7 +136,7 @@ std::optional<CreditAllocation> CreditBasedScheduler::AllocateCredits(
         return std::nullopt;
     }
     
-    auto& state = it->second;
+    auto& state = *it->second;
     
     // Check global pressure
     if (impl_->total_active_nodes_.load() >= SchedulerImpl::MAX_TOTAL_ACTIVE) {
@@ -136,9 +173,9 @@ void CreditBasedScheduler::ReplenishCredits(NodeType type, TokenCredits amount) 
     
     auto it = impl_->type_states_.find(type);
     if (it != impl_->type_states_.end()) {
-        it->second.available_credits = std::min(
-            it->second.available_credits + amount,
-            it->second.credit_limit
+        it->second->available_credits = std::min(
+            it->second->available_credits + amount,
+            it->second->credit_limit
         );
     }
 }
@@ -148,9 +185,9 @@ void CreditBasedScheduler::ReturnCredits(NodeType type, TokenCredits amount) {
     
     auto it = impl_->type_states_.find(type);
     if (it != impl_->type_states_.end()) {
-        it->second.available_credits = std::min(
-            it->second.available_credits + amount,
-            it->second.credit_limit
+        it->second->available_credits = std::min(
+            it->second->available_credits + amount,
+            it->second->credit_limit
         );
     }
 }
@@ -169,7 +206,7 @@ std::optional<TimeAllocation> CreditBasedScheduler::AllocateTimeSlice(
     }
     
     auto& node = it->second;
-    auto& type_state = impl_->type_states_[node.type];
+    auto& type_state = *impl_->type_states_[node.type];
     
     // Limit time slice
     TimeSlice granted = std::min(requested, type_state.time_slice_limit);
@@ -219,7 +256,7 @@ void CreditBasedScheduler::YieldTimeSlice(NodeId id) {
 bool CreditBasedScheduler::Enqueue(NodeId id, NodeType type, Priority prio) {
     std::lock_guard<std::mutex> lock(impl_->mutex_);
     
-    auto& type_state = impl_->type_states_[type];
+    auto& type_state = *impl_->type_states_[type];
     
     // Check queue depth limit
     if (impl_->total_queue_depth_.load() >= type_state.max_queue_depth) {
@@ -273,18 +310,18 @@ QueueMetrics CreditBasedScheduler::GetQueueMetrics(NodeType type) const {
     
     auto it = impl_->type_states_.find(type);
     if (it != impl_->type_states_.end()) {
-        metrics.max_depth = it->second.max_queue_depth;
+        metrics.max_depth = it->second->max_queue_depth;
         
-        std::lock_guard<std::mutex> latency_lock(it->second.latency_mutex);
-        if (!it->second.recent_latencies.empty()) {
+        std::lock_guard<std::mutex> latency_lock(it->second->latency_mutex);
+        if (!it->second->recent_latencies.empty()) {
             auto sum = std::chrono::microseconds::zero();
-            for (const auto& lat : it->second.recent_latencies) {
+            for (const auto& lat : it->second->recent_latencies) {
                 sum += lat;
             }
-            metrics.avg_wait_time = sum / it->second.recent_latencies.size();
+            metrics.avg_wait_time = sum / it->second->recent_latencies.size();
             
             // Simple p99 (not exact but fast)
-            auto sorted = it->second.recent_latencies;
+            auto sorted = it->second->recent_latencies;
             std::sort(sorted.begin(), sorted.end());
             size_t p99_idx = sorted.size() * 99 / 100;
             metrics.p99_wait_time = sorted[p99_idx];
@@ -302,7 +339,7 @@ void CreditBasedScheduler::SetLatencySLO(NodeType type, std::chrono::millisecond
     
     auto it = impl_->type_states_.find(type);
     if (it != impl_->type_states_.end()) {
-        it->second.latency_slo = target;
+        it->second->latency_slo = target;
     }
 }
 
@@ -314,17 +351,17 @@ bool CreditBasedScheduler::IsSLOMet(NodeType type) const {
         return true;
     }
     
-    std::lock_guard<std::mutex> latency_lock(it->second.latency_mutex);
-    if (it->second.recent_latencies.empty()) {
+    std::lock_guard<std::mutex> latency_lock(it->second->latency_mutex);
+    if (it->second->recent_latencies.empty()) {
         return true;
     }
     
-    auto avg = std::accumulate(it->second.recent_latencies.begin(),
-                                it->second.recent_latencies.end(),
+    auto avg = std::accumulate(it->second->recent_latencies.begin(),
+                                it->second->recent_latencies.end(),
                                 std::chrono::microseconds::zero()) / 
-               it->second.recent_latencies.size();
+               it->second->recent_latencies.size();
     
-    return avg <= it->second.latency_slo;
+    return avg <= it->second->latency_slo;
 }
 
 std::chrono::microseconds CreditBasedScheduler::GetCurrentLatency(NodeType type) const {
@@ -335,16 +372,16 @@ std::chrono::microseconds CreditBasedScheduler::GetCurrentLatency(NodeType type)
         return std::chrono::microseconds::zero();
     }
     
-    std::lock_guard<std::mutex> latency_lock(it->second.latency_mutex);
-    if (it->second.recent_latencies.empty()) {
+    std::lock_guard<std::mutex> latency_lock(it->second->latency_mutex);
+    if (it->second->recent_latencies.empty()) {
         return std::chrono::microseconds::zero();
     }
     
     auto sum = std::chrono::microseconds::zero();
-    for (const auto& lat : it->second.recent_latencies) {
+    for (const auto& lat : it->second->recent_latencies) {
         sum += lat;
     }
-    return sum / it->second.recent_latencies.size();
+    return sum / it->second->recent_latencies.size();
 }
 
 bool CreditBasedScheduler::IsUnderPressure() const {
@@ -375,7 +412,8 @@ CreditBasedScheduler::Statistics CreditBasedScheduler::GetStatistics() const {
     double total_latency = 0.0;
     size_t latency_count = 0;
     
-    for (const auto& [type, state] : impl_->type_states_) {
+    for (const auto& [type, state_ptr] : impl_->type_states_) {
+        auto& state = *state_ptr;
         std::lock_guard<std::mutex> lock(state.latency_mutex);
         for (const auto& lat : state.recent_latencies) {
             total_latency += lat.count();
@@ -401,7 +439,7 @@ void CreditBasedScheduler::SetMaxQueueDepth(NodeType type, size_t max_depth) {
     
     auto it = impl_->type_states_.find(type);
     if (it != impl_->type_states_.end()) {
-        it->second.max_queue_depth = max_depth;
+        it->second->max_queue_depth = max_depth;
     }
 }
 
@@ -410,9 +448,9 @@ void CreditBasedScheduler::SetCreditLimit(NodeType type, TokenCredits limit) {
     
     auto it = impl_->type_states_.find(type);
     if (it != impl_->type_states_.end()) {
-        it->second.credit_limit = limit;
-        it->second.total_credits = limit;
-        it->second.available_credits = limit;
+        it->second->credit_limit = limit;
+        it->second->total_credits = limit;
+        it->second->available_credits = limit;
     }
 }
 
@@ -421,7 +459,7 @@ void CreditBasedScheduler::SetTimeSliceLimit(NodeType type, TimeSlice limit) {
     
     auto it = impl_->type_states_.find(type);
     if (it != impl_->type_states_.end()) {
-        it->second.time_slice_limit = limit;
+        it->second->time_slice_limit = limit;
     }
 }
 

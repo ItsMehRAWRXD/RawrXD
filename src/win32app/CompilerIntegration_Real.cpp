@@ -14,6 +14,7 @@
 #include "../compiler/CompilerRegistry.hpp"
 #include <windows.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <string>
 #include <vector>
 #include <functional>
@@ -98,6 +99,9 @@ public:
     // Error navigation
     void GotoNextError();
     void GotoPreviousError();
+    
+    // Compiler list access
+    std::vector<Compiler::CompilerInfo> GetAvailableCompilers() const { return detected_compilers_; }
     
 private:
     // Build thread

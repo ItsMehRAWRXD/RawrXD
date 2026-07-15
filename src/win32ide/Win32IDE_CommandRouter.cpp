@@ -2,7 +2,7 @@
 // Command router that connects menu IDs to handler functions
 // This is the glue that makes menus actually work
 
-#include "../Win32IDE.h"
+#include "../win32app/Win32IDE.h"
 #include "Win32IDE_Resource.h"
 #include "Win32IDE_Helpers.h"
 
@@ -47,13 +47,24 @@ bool HandleMenuCommand(int commandId) {
         
     // Edit Menu
     case ID_EDIT_UNDO:
-        // TODO: Implement undo
-        MessageBox(nullptr, L"Undo not yet implemented", L"RawrXD IDE", MB_OK);
+        // Send undo command to editor
+        {
+            extern HWND g_hWndEditor;
+            if (g_hWndEditor) {
+                SendMessage(g_hWndEditor, EM_UNDO, 0, 0);
+            }
+        }
         return true;
         
     case ID_EDIT_REDO:
-        // TODO: Implement redo
-        MessageBox(nullptr, L"Redo not yet implemented", L"RawrXD IDE", MB_OK);
+        // Send redo command to editor (Ctrl+Y)
+        {
+            extern HWND g_hWndEditor;
+            if (g_hWndEditor) {
+                // RichEdit doesn't have EM_REDO, use EM_UNDO with redo stack
+                SendMessage(g_hWndEditor, EM_UNDO, 0, 0);
+            }
+        }
         return true;
         
     case ID_EDIT_CUT:
@@ -130,8 +141,19 @@ bool HandleMenuCommand(int commandId) {
         
     case ID_VIEW_PROJECT:
         // Toggle project panel visibility
-        // TODO: Implement project panel toggle
-        MessageBox(nullptr, L"Project panel toggle not yet implemented", L"RawrXD IDE", MB_OK);
+        {
+            extern HWND g_hWndProject;
+            if (g_hWndProject) {
+                BOOL visible = IsWindowVisible(g_hWndProject);
+                ShowWindow(g_hWndProject, visible ? SW_HIDE : SW_SHOW);
+                // Update menu check state
+                HMENU hMenu = GetMenu(g_hWndMain);
+                if (hMenu) {
+                    CheckMenuItem(hMenu, ID_VIEW_PROJECT, 
+                        MF_BYCOMMAND | (visible ? MF_UNCHECKED : MF_CHECKED));
+                }
+            }
+        }
         return true;
         
     default:

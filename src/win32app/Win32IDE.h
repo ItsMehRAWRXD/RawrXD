@@ -1937,6 +1937,7 @@ class Win32IDE
     void createActivityBar(HWND hwndParent);
     void createPrimarySidebar(HWND hwndParent);
     void toggleSidebar();
+    void toggleSecondarySidebar();
     void setSidebarView(SidebarView view);
     void updateSidebarContent();
     void resizeSidebar(int width, int height);
@@ -1990,6 +1991,7 @@ class Win32IDE
     void searchDirectory(const std::string& dir, const char* query, int depth, bool caseSensitive, bool useRegex,
                          bool wholeWord, const std::string& includeFilter, const std::string& excludeFilter);
     void performSearchReplace(bool replaceAll);
+    void onSearchResultDoubleClick(int sel);
 
     // Source Control View
     void createSourceControlView(HWND hwndParent);

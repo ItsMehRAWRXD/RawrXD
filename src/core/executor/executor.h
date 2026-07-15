@@ -117,19 +117,10 @@ struct ExecutionResult {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Checkpoint State
+// Checkpoint State (forward declaration only - methods defined after NodeExecutor)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-struct Checkpoint {
-    NodeId node_id;
-    std::string path;
-    std::chrono::steady_clock::time_point timestamp;
-    ExecutionState state;
-    size_t memory_size;
-    
-    bool IsValid() const;
-    bool Restore(NodeExecutor& executor);
-};
+struct Checkpoint;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Progress Callback
@@ -262,6 +253,21 @@ public:
 
 private:
     std::unique_ptr<ExecutorImpl> impl_;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Checkpoint State (defined after NodeExecutor class)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+struct Checkpoint {
+    NodeId node_id;
+    std::string path;
+    std::chrono::steady_clock::time_point timestamp;
+    ExecutionState state;
+    size_t memory_size;
+    
+    bool IsValid() const { return !path.empty() && memory_size > 0; }
+    bool Restore(NodeExecutor& executor);
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

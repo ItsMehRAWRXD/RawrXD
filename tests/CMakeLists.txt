@@ -244,6 +244,34 @@ if(NOT TARGET test_extreme_memory_optimizer AND EXISTS "${CMAKE_CURRENT_SOURCE_D
     message(STATUS "  ✓ Added test_extreme_memory_optimizer")
 endif()
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 1: Inference Correctness Harness
+# Bit-exact validation comparing RawrXD vs llama.cpp
+# ═════════════════════════════════════════════════════════════════════════════
+if(NOT TARGET InferenceCorrectnessHarness AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/inference_correctness_harness.cpp")
+    add_executable(InferenceCorrectnessHarness
+        inference_correctness_harness.cpp
+    )
+    target_include_directories(InferenceCorrectnessHarness PRIVATE 
+        ${CMAKE_SOURCE_DIR}/include 
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    set_target_properties(InferenceCorrectnessHarness PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    
+    # Register tests with CTest
+    add_test(NAME InferenceCorrectness_Basic COMMAND InferenceCorrectnessHarness)
+    set_tests_properties(InferenceCorrectness_Basic PROPERTIES
+        LABELS "correctness;phase1"
+        TIMEOUT 300
+    )
+    
+    message(STATUS "  ✓ Added InferenceCorrectnessHarness (Phase 1)")
+endif()
+
 # Quality corrector smoke test
 if(NOT TARGET test_quality_corrector AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke/test_quality_corrector.cpp")
     add_executable(test_quality_corrector

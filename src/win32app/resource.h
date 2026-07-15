@@ -70,6 +70,7 @@
 #define ID_BUILD_REBUILD        7003
 #define ID_BUILD_CLEAN          7004
 #define ID_BUILD_RUN            7005
+#define IDM_BUILD_RUN           7005  // Alias for menu command
 #define ID_BUILD_DEBUG          7006
 
 // --- Tools menu (8001–8099) --------------------------------------------------
@@ -156,5 +157,14 @@
 #define IDC_AGENT_DIFF_PANEL          13001
 #define IDC_LSP_STATUS                13002
 #define ID_AGENT_APPLY_FIX            13003
+
+// --- Activity Bar Control IDs (13100–13199) -------------------------------
+#define IDC_ACTBAR_EXPLORER         13100
+#define IDC_ACTBAR_SEARCH           13101
+#define IDC_ACTBAR_SCM              13102
+#define IDC_ACTBAR_DEBUG            13103
+#define IDC_ACTBAR_EXTENSIONS       13104
+#define IDC_ACTBAR_SETTINGS         13105
+#define IDC_ACTBAR_ACCOUNTS         13106
 
 #endif // RAWRXD_RESOURCE_H

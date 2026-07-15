@@ -82,12 +82,11 @@ std::optional<MemoryAllocation> NodeExecutor::AllocateMemory(
     
     // Simple allocation (in production, use proper memory pool)
     void* ptr = nullptr;
-    if (device_memory) {
-        // GPU allocation would go here
-        ptr = aligned_alloc(alignment, size);
-    } else {
-        ptr = aligned_alloc(alignment, size);
-    }
+#ifdef _WIN32
+    ptr = _aligned_malloc(size, alignment);
+#else
+    ptr = aligned_alloc(alignment, size);
+#endif
     
     if (!ptr) {
         return std::nullopt;

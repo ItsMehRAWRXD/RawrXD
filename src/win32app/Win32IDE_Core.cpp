@@ -182,6 +182,63 @@ extern void MultiFileSearchWidget_ShowDialog(void* ctx);
 // AI workers: process main-thread invoke queue every message (avoids queue buildup).
 extern void AIWorkersProcessInvokeQueue();
 
+// Utility: Convert wide string to UTF-8
+static std::string wideToUtf8(const wchar_t* wstr)
+{
+    if (!wstr || !wstr[0])
+        return std::string();
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nullptr, 0, nullptr, nullptr);
+    if (size_needed <= 0)
+        return std::string();
+    std::string result(size_needed - 1, 0);  // -1 to exclude null terminator
+    WideCharToMultiByte(CP_UTF8, 0, wstr, -1, &result[0], size_needed, nullptr, nullptr);
+    return result;
+}
+
+// Handle double-click on search result
+void Win32IDE::onSearchResultDoubleClick(int sel)
+{
+    if (sel < 0 || !m_hwndSearchResults)
+        return;
+
+    // Get the result text
+    wchar_t buffer[512];
+    int len = (int)SendMessageW(m_hwndSearchResults, LB_GETTEXT, sel, (LPARAM)buffer);
+    if (len <= 0 || len >= 512)
+        return;
+    buffer[len] = L'\0';
+
+    // Parse the result format: "filepath:line:column: preview text"
+    std::wstring resultStr(buffer);
+
+    // Find first colon (separator between path and line number)
+    size_t colonPos = resultStr.find(L':');
+    if (colonPos == std::wstring::npos)
+        return;
+
+    std::wstring filePath = resultStr.substr(0, colonPos);
+
+    // Find second colon (separator between line and column)
+    size_t colonPos2 = resultStr.find(L':', colonPos + 1);
+    if (colonPos2 == std::wstring::npos)
+        return;
+
+    // Extract line number
+    std::wstring lineStr = resultStr.substr(colonPos + 1, colonPos2 - colonPos - 1);
+    int lineNum = _wtoi(lineStr.c_str());
+    if (lineNum <= 0)
+        lineNum = 1;
+
+    // Convert to UTF-8 and open the file
+    std::string utf8Path = wideToUtf8(filePath.c_str());
+    openFile(utf8Path);
+
+    // Navigate to the line in the editor
+    if (m_editor && lineNum > 0)
+    {
+        m_editor->GoToLine(lineNum - 1);  // 0-based line index
+    }
+}
 
 void Win32IDE::syncSpeculativeInferenceFromConfig()
 {
