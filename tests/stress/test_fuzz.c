@@ -247,7 +247,136 @@ int run_fuzz_test(fuzz_stats_t *stats) {
         int size_rmsnorm = 128 + (rng_next(&rng) % 4096);
         int size_gelu = 64 + (rng_next(&rng) % 512);
         
-        /* Run fuzz tests */
+/* Fuzz attention with random inputs */
+int fuzz_attention(rng_t *rng, int seq_len, int head_dim) {
+    size_t size = seq_len * head_dim * sizeof(float);
+    float *Q = (float*)malloc(size);
+    float *K = (float*)malloc(size);
+    float *V = (float*)malloc(size);
+    float *output = (float*)malloc(size);
+    float *scores = (float*)malloc(seq_len * seq_len * sizeof(float));
+    
+    if (!Q || !K || !V || !output || !scores) {
+        free(Q); free(K); free(V); free(output); free(scores);
+        return -1;
+    }
+    
+    /* Generate edge case inputs */
+    for (int i = 0; i < seq_len * head_dim; i++) {
+        Q[i] = rng_edge_float(rng);
+        K[i] = rng_edge_float(rng);
+        V[i] = rng_edge_float(rng);
+    }
+    
+    /* Attention: Q @ K^T / sqrt(dim) */
+    float scale = 1.0f / sqrtf((float)head_dim);
+    
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < seq_len; j++) {
+            float sum = 0.0f;
+            for (int k = 0; k < head_dim; k++) {
+                float q = Q[i * head_dim + k];
+                float k_val = K[j * head_dim + k];
+                if (!isnan(q) && !isinf(q) && !isnan(k_val) && !isinf(k_val)) {
+                    sum += q * k_val * scale;
+                }
+            }
+            scores[i * seq_len + j] = sum;
+        }
+    }
+    
+    /* Softmax on scores */
+    for (int i = 0; i < seq_len; i++) {
+        float max_val = -INFINITY;
+        for (int j = 0; j < seq_len; j++) {
+            float s = scores[i * seq_len + j];
+            if (!isnan(s) && !isinf(s) && s > max_val) {
+                max_val = s;
+            }
+        }
+        
+        float sum = 0.0f;
+        for (int j = 0; j < seq_len; j++) {
+            float s = scores[i * seq_len + j];
+            if (!isnan(s) && !isinf(s)) {
+                scores[i * seq_len + j] = expf(s - max_val);
+                sum += scores[i * seq_len + j];
+            }
+        }
+        
+        if (sum > 0 && !isinf(sum)) {
+            for (int j = 0; j < seq_len; j++) {
+                scores[i * seq_len + j] /= sum;
+            }
+        }
+    }
+    
+    /* Attention @ V */
+    for (int i = 0; i < seq_len; i++) {
+        for (int k = 0; k < head_dim; k++) {
+            float sum = 0.0f;
+            for (int j = 0; j < seq_len; j++) {
+                float s = scores[i * seq_len + j];
+                float v = V[j * head_dim + k];
+                if (!isnan(s) && !isinf(s) && !isnan(v) && !isinf(v)) {
+                    sum += s * v;
+                }
+            }
+            output[i * head_dim + k] = sum;
+        }
+    }
+    
+    free(Q); free(K); free(V); free(output); free(scores);
+    return 0;
+}
+
+/* Fuzz RoPE with random inputs */
+int fuzz_rope(rng_t *rng, int n, int head_dim) {
+    float *x = (float*)malloc(n * sizeof(float));
+    
+    if (!x) {
+        free(x);
+        return -1;
+    }
+    
+    /* Generate edge case inputs */
+    for (int i = 0; i < n; i++) {
+        x[i] = rng_edge_float(rng);
+    }
+    
+    /* Apply RoPE */
+    for (int i = 0; i < n; i += 2) {
+        int idx = i % head_dim;
+        float theta = powf(10000.0f, -2.0f * (idx / 2) / head_dim);
+        float angle = i * theta;
+        
+        float x0 = x[i];
+        float x1 = (i + 1 < n) ? x[i + 1] : 0.0f;
+        
+        float cos_t = cosf(angle);
+        float sin_t = sinf(angle);
+        
+        /* Handle edge cases */
+        if (isnan(x0) || isinf(x0) || isnan(x1) || isinf(x1)) {
+            /* Propagate NaN/Inf */
+            continue;
+        }
+        
+        if (isnan(cos_t) || isinf(cos_t) || isnan(sin_t) || isinf(sin_t)) {
+            /* Angle overflow - clamp */
+            cos_t = (cos_t > 0) ? 1.0f : -1.0f;
+            sin_t = 0.0f;
+        }
+        
+        x[i] = x0 * cos_t - x1 * sin_t;
+        if (i + 1 < n) {
+            x[i + 1] = x0 * sin_t + x1 * cos_t;
+        }
+    }
+    
+    free(x);
+    return 0;
+}
         result |= fuzz_softmax(&rng, size_softmax);
         result |= fuzz_rmsnorm(&rng, size_rmsnorm);
         result |= fuzz_gelu(&rng, size_gelu);
