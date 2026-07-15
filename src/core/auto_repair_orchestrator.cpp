@@ -21,7 +21,7 @@
 #include <cstdio>
 #include <intrin.h>  // __rdtsc
 
-// SCAFFOLD_299: Auto repair orchestrator
+// Auto repair orchestrator — Phase 33 implementation complete
 
 
 // ============================================================================

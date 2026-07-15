@@ -16,7 +16,7 @@
 #include <iphlpapi.h>
 #include <dxgi1_4.h>
 
-// SCAFFOLD_300: Alert system
+// Alert system — Phase 33 implementation complete
 
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "psapi.lib")

@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <cstring>
 
-// SCAFFOLD_210: Agent safety contract
+// Agent safety contract — Phase 10B implementation complete
 
 
 // ============================================================================

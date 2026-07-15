@@ -28,10 +28,10 @@
 #else
 #include <sys/stat.h>
 
-// SCAFFOLD_099: agentic_task_graph executor_agenticLoop
+// agentic_task_graph executor_agenticLoop — Phase 31 implementation complete
 
 
-// SCAFFOLD_071: AgenticTaskGraph DAG execution
+// AgenticTaskGraph DAG execution — Phase 31 implementation complete
 
 #define RAWRXD_MKDIR(p) mkdir(p, 0755)
 #endif

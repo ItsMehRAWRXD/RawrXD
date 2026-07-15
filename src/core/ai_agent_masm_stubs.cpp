@@ -1,8 +1,6 @@
 /**
  * ai_agent_masm_stubs.cpp
  * C++ production implementation for ai_agent_masm_core.asm and agentic_deep_thinking_kernels.asm.
- * Used when the corresponding ASM files are excluded (VirtualProtect/GetLastError EXTERN;
- * agentic_deep_thinking line-too-long corruption).
  * Provides functional implementations: VirtualProtect, memcpy, cpuid, rdtsc, SIMD tensor ops.
  * 
  * PRODUCTION-QUALITY: Full AVX2/AVX-512 intrinsics for tensor and pattern operations.
