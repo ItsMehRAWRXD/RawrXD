@@ -140,7 +140,7 @@ void AgentOrchestrator::ProcessTaskQueue()
 void AgentOrchestrator::ExecuteTask(const std::string& id, const nlohmann::json& payload)
 {
     // run_tool: delegate to ToolRegistry for LLM-style tool execution
-    if (payload.contains("action") && payload["action"] == "run_tool")
+    if (payload.contains("action") && payload["action"].get<std::string>() == "run_tool")
     {
         std::string name = extractToolNameFromPayload(payload);
         if (name.empty()) {
@@ -162,7 +162,7 @@ void AgentOrchestrator::ExecuteTask(const std::string& id, const nlohmann::json&
         return;
     }
     // prompt: one-shot user message (log; extend with m_client->chat for real one-shot reply if needed)
-    if (payload.contains("action") && payload["action"] == "prompt" && payload.contains("text"))
+    if (payload.contains("action") && payload["action"].get<std::string>() == "prompt" && payload.contains("text"))
     {
         std::string text = payload["text"].get<std::string>();
         nlohmann::json promptData;
@@ -173,12 +173,17 @@ void AgentOrchestrator::ExecuteTask(const std::string& id, const nlohmann::json&
     }
 
     // mesh_sync: handoff to Titan Sovereign Link (MASM64) when implemented
-    if (payload.contains("action") && payload["action"] == "mesh_sync")
+    if (payload.contains("action") && payload["action"].get<std::string>() == "mesh_sync")
     {
-        GetObservability().logInfo(kComponent, "ExecuteTask mesh_sync (no-op)", {{"task_id", id}});
+        nlohmann::json meshData;
+        meshData["task_id"] = id;
+        GetObservability().logInfo(kComponent, "ExecuteTask mesh_sync (no-op)", meshData);
         return;
     }
-    GetObservability().logInfo(kComponent, "ExecuteTask unhandled", {{"task_id", id}, {"payload", payload}});
+    nlohmann::json unhandledData;
+    unhandledData["task_id"] = id;
+    unhandledData["payload"] = payload;
+    GetObservability().logInfo(kComponent, "ExecuteTask unhandled", unhandledData);
 }
 
 }  // namespace Agent
@@ -758,11 +763,10 @@ void AgentOrchestrator::SubmitCoordinatedTask(const std::string& taskDescription
     if (!m_advancedCoordinator) {
         GetObservability().logWarn(kComponent, "Advanced coordination not enabled, using basic dispatch");
         // Fallback to basic task dispatch
-        nlohmann::json payload = {
-            {"action", "coordinated_task"},
-            {"description", taskDescription},
-            {"specialization", specialization}
-        };
+        nlohmann::json payload;
+        payload["action"] = "coordinated_task";
+        payload["description"] = taskDescription;
+        payload["specialization"] = specialization;
         DispatchTask("coordinated_" + std::to_string(rand()), payload);
         return;
     }
@@ -772,19 +776,17 @@ void AgentOrchestrator::SubmitCoordinatedTask(const std::string& taskDescription
     task->id = "coord_" + GenerateSessionId();
     task->description = taskDescription;
     task->specialization = specialization;
-    task->parameters = nlohmann::json{
-        {"description", taskDescription},
-        {"specialization", specialization},
-        {"coordinated", true}
-    };
+    task->parameters = nlohmann::json::object();
+    task->parameters["description"] = taskDescription;
+    task->parameters["specialization"] = specialization;
+    task->parameters["coordinated"] = true;
 
     // Submit to advanced coordinator
     m_advancedCoordinator->submitTask(task, priority);
 
-    GetObservability().logInfo(kComponent, "Coordinated task submitted",
-                               nlohmann::json::object({
-                                   {"task_id", task->id},
-                                   {"specialization", specialization},
-                                   {"priority", static_cast<int>(priority)}
-                               }));
+    nlohmann::json logData;
+    logData["task_id"] = task->id;
+    logData["specialization"] = specialization;
+    logData["priority"] = static_cast<int>(priority);
+    GetObservability().logInfo(kComponent, "Coordinated task submitted", logData);
 }

@@ -2940,8 +2940,14 @@ void Win32IDE::handleToolsCommand(int commandId)
                 break;
             }
 
-            nlohmann::json j = nlohmann::json::parse(response, nullptr, false);
-            if (j.is_discarded() || !j.contains("result") || !j["result"].is_array())
+            nlohmann::json j;
+            try {
+                j = nlohmann::json::parse(response);
+            } catch (...) {
+                appendToOutput("[SemanticSearch] Invalid JSON response.", "General", OutputSeverity::Warning);
+                break;
+            }
+            if (!j.contains("result") || !j["result"].is_array())
             {
                 appendToOutput("[SemanticSearch] Invalid symbol response.", "General", OutputSeverity::Warning);
                 break;
