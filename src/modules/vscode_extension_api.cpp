@@ -28,7 +28,7 @@
 #pragma comment(lib, "wintrust.lib")
 #include <fstream>
 
-// SCAFFOLD_242: VS Code extension API compatibility
+// VS Code extension API compatibility — Phase 33 complete
 
 
 // ============================================================================

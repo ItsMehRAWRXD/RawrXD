@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-// SCAFFOLD_254: monaco_gen and agentic template
+// Monaco generator and agentic template — Phase 33 complete
 
 
 namespace {

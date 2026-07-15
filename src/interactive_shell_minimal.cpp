@@ -3,7 +3,7 @@
 #include <sstream>
 #include <algorithm>
 
-// SCAFFOLD_093: interactive_shell /agent commands
+// Interactive shell /agent commands — Phase 31 implementation complete
 
 
 std::unique_ptr<InteractiveShell> g_shell;

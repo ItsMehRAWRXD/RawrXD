@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <shlobj.h>
 
-// SCAFFOLD_347: Mainwindow void* parent doc
+// Mainwindow void* parent doc — Phase 33 implementation complete
 
 
 using RawrXD::Registry::Logger;

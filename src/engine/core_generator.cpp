@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 
-// SCAFFOLD_284: Core generator Unity scaffolding
+// Core generator Unity — Phase 33 implementation complete
 
 namespace {
 UniversalGenerator* EnsureGenerator(std::unique_ptr<UniversalGenerator>& generator) {

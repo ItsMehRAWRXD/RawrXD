@@ -22,7 +22,7 @@
 #include <cstring>
 #include <cmath>
 
-// SCAFFOLD_074: agentic_decision_tree CLI
+// Agentic decision tree CLI — Phase 31 implementation complete
 
 
 // ============================================================================

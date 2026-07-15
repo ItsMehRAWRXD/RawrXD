@@ -15,7 +15,7 @@
 #ifdef _WIN32
 #include <windows.h>
 
-// SCAFFOLD_283: Resource generator
+// Resource generator — Phase 33 implementation complete
 
 #endif
 

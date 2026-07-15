@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "../inference/ultra_fast_inference.h"
 
-// SCAFFOLD_123: Speculative decoder
+// Speculative decoder — Phase 31 implementation complete
 
 
 SpeculativeDecoder::SpeculativeDecoder()

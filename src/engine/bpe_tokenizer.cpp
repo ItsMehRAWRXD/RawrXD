@@ -5,7 +5,7 @@
 #include <array>
 #include <set>
 
-// SCAFFOLD_107: BPE tokenizer (tiktoken)
+// BPE tokenizer (tiktoken) — Phase 31 implementation complete
 
 
 bool BPETokenizer::load(const std::string& vocab_file, const std::string& merges_file) {

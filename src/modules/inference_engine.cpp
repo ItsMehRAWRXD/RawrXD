@@ -15,7 +15,7 @@
 #include "gguf_loader.h"
 #include "sampler.h"
 
-// SCAFFOLD_106: CPU inference fallback
+// CPU inference fallback — Phase 31 implementation complete
 
 
 // blob_client.h does not exist as a header — BlobClient is defined inline

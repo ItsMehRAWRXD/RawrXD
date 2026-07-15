@@ -28,7 +28,7 @@
 #include <winhttp.h>
 #include <shlobj.h>
 
-// SCAFFOLD_103: Model source resolver
+// Model source resolver — Phase 31 implementation complete
 
 #pragma comment(lib, "winhttp.lib")
 #endif

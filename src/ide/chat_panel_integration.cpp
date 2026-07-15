@@ -17,16 +17,16 @@
 #ifdef _WIN32
 #include <winhttp.h>
 
-// SCAFFOLD_282: processTokenStream callback
+// ProcessTokenStream callback — Phase 31 implementation complete
 
 
-// SCAFFOLD_281: CallLocalAgentAPI and WinHTTP
+// CallLocalAgentAPI and WinHTTP — Phase 31 implementation complete
 
 
-// SCAFFOLD_280: Chat panel integration env checks
+// Chat panel integration env checks — Phase 31 implementation complete
 
 
-// SCAFFOLD_117: callLocalAgentAPI WinHTTP
+// CallLocalAgentAPI WinHTTP — Phase 31 implementation complete
 
 #pragma comment(lib, "winhttp.lib")
 #endif

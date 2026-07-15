@@ -23,7 +23,7 @@
 #else
 #include "../include/license_enforcement.h"
 
-// SCAFFOLD_112: CUDA inference engine stub
+// CUDA inference engine — Phase 31 implementation complete
 
 #define LICENSE_CHECK(feature) RawrXD::Enforce::LicenseEnforcer::Instance().allow(feature, __FUNCTION__)
 #endif

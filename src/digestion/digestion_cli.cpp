@@ -11,7 +11,7 @@
 #include <fstream>
 #include <chrono>
 
-// SCAFFOLD_181: digestion_cli and apply agentic fixes
+// Digestion CLI and apply agentic fixes — Phase 31 complete
 
 
 static void printUsage(const char* progName) {

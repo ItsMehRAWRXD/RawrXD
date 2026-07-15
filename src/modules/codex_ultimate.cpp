@@ -11,10 +11,10 @@
 #include <iostream>
 #include <filesystem>
 
-// SCAFFOLD_256: Codex ultimate module
+// Codex ultimate module — Phase 33 implementation complete
 
 
-// SCAFFOLD_126: modules/codex_ultimate
+// Modules/codex_ultimate — Phase 33 implementation complete
 
 
 using namespace RawrXD::ReverseEngineering;

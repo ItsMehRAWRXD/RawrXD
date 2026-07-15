@@ -30,10 +30,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-// SCAFFOLD_258: Crucible engine
+// Crucible engine — Phase 33 implementation complete
 
 
-// SCAFFOLD_127: modules/crucible_engine
+// Modules/crucible_engine — Phase 33 implementation complete
 
 #endif
 

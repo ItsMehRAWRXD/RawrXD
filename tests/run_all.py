@@ -102,7 +102,7 @@ class TestRunner:
         start_time = time.time()
         
         returncode, stdout, stderr = self.run_command(
-            ['.\regression\test_regression.exe'],
+            ['.\\regression\\test_regression.exe'],
             timeout=60
         )
         
@@ -128,7 +128,7 @@ class TestRunner:
         start_time = time.time()
         
         returncode, stdout, stderr = self.run_command(
-            ['.\performance\test_perf_quick.exe'],
+            ['.\\performance\\test_perf_quick.exe'],
             timeout=120
         )
         
@@ -151,7 +151,7 @@ class TestRunner:
         start_time = time.time()
         
         returncode, stdout, stderr = self.run_command(
-            ['.\stress\test_stress_kernels.exe'],
+            ['.\\stress\\test_stress_kernels.exe'],
             timeout=300
         )
         

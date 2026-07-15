@@ -3,9 +3,11 @@
  * Milestone 3: Performance Baselines
  */
 
+#define _GNU_SOURCE
 #include "perf_common.h"
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define HEAD_DIM 128
 #define NUM_HEADS 32
@@ -120,9 +122,14 @@ void optimized_attention(const float* Q, const float* K, const float* V,
         for (; j <= seq_len - 16; j += 16) {
             __m512 vs = _mm512_loadu_ps(&scores[i * seq_len + j]);
             __m512 vshifted = _mm512_sub_ps(vs, v_max);
-            __m512 vexp = _mm512_exp_ps(vshifted);
-            _mm512_storeu_ps(&scores[i * seq_len + j], vexp);
-            vsum = _mm512_add_ps(vsum, vexp);
+            /* Store for scalar exp processing */
+            _mm512_storeu_ps(&scores[i * seq_len + j], vshifted);
+        }
+        
+        /* Scalar exp for numerical accuracy */
+        for (j = 0; j < seq_len; j++) {
+            scores[i * seq_len + j] = expf(scores[i * seq_len + j]);
+            sum += scores[i * seq_len + j];
         }
         
         float sum = _mm512_reduce_add_ps(vsum);

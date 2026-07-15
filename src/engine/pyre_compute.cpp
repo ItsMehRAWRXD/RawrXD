@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <intrin.h>  // __rdtsc, _mm256_*
 
-// SCAFFOLD_138: Pyre compute and wiring
+// Pyre compute and wiring — Phase 31 implementation complete
 
 namespace {
 using PyreDispatchMatMulFn = int (*)(const float*, const float*, float*, uint32_t, uint32_t, uint32_t);

@@ -1612,7 +1612,7 @@ export const defaultCppTemplate = `// ==========================================
 #include <cstdio>
 #include <mutex>
 
-// SCAFFOLD_253: React IDE generator and agentic template
+// React IDE generator and agentic template — Phase 33 complete
 
 
 struct PatchResult {

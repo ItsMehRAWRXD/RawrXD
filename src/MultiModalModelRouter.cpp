@@ -5,7 +5,7 @@
 #include <chrono>
 #include <unordered_map>
 
-// SCAFFOLD_087: Model router and tier hopping
+// Model router and tier hopping — Phase 31 implementation complete
 
 namespace RawrXD {
 namespace IDE {

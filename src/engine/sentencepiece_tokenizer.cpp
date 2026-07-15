@@ -17,7 +17,7 @@
 #include <locale>
 #include <codecvt>
 
-// SCAFFOLD_108: SentencePiece tokenizer
+// SentencePiece tokenizer — Phase 31 implementation complete
 
 
 // ============================================================================

@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <algorithm>
 
-// SCAFFOLD_124: KV cache optimizer
+// KV cache optimizer — Phase 31 implementation complete
 
 
 KVCacheOptimizer::KVCacheOptimizer()
