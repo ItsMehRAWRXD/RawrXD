@@ -1,0 +1,162 @@
+diff --git a/llama.cpp b/llama.cpp
+index 1234..5678 100644
+--- a/llama.cpp
++++ b/llama.cpp
+@@ -50,6 +50,12 @@
+ #include <algorithm>
+ #include <initializer_list>
+ 
++// RawrXD validation instrumentation
++#ifdef RAWRXD_VALIDATION_MODE
++#include <cstdio>
++#include <cstring>
++#endif
++
+ // TODO: replace with ggml_common
+ //
+ #if defined(_MSC_VER)
+@@ -100,6 +106,75 @@ static std::string format(const char * fmt, ...) {
+     return std::string(buf.data(), size);
+ }
+ 
++// RawrXD validation: Dump tensor to file for comparison
++#ifdef RAWRXD_VALIDATION_MODE
++struct RawrXDValidationDumper {
++    FILE* fp = nullptr;
++    int layer_idx = 0;
++    const char* model_name = nullptr;
++    
++    void init(const char* name) {
++        model_name = name;
++        char filename[256];
++        snprintf(filename, sizeof(filename), "rawrxd_ref_%s.bin", name);
++        fp = fopen(filename, "wb");
++        if (fp) {
++            // Write header: magic + version
++            const uint32_t magic = 0x52414452; // "RADR"
++            const uint32_t version = 1;
++            fwrite(&magic, sizeof(magic), 1, fp);
++            fwrite(&version, sizeof(version), 1, fp);
++        }
++    }
++    
++    void dump_tensor(const char* name, const float* data, size_t n_elements, 
++                     const int* shape, int n_dims) {
++        if (!fp) return;
++        
++        // Write record header
++        uint16_t name_len = strlen(name);
++        fwrite(&layer_idx, sizeof(layer_idx), 1, fp);
++        fwrite(&name_len, sizeof(name_len), 1, fp);
++        fwrite(name, 1, name_len, fp);
++        fwrite(&n_dims, sizeof(n_dims), 1, fp);
++        fwrite(shape, sizeof(int), n_dims, fp);
++        fwrite(&n_elements, sizeof(n_elements), 1, fp);
++        fwrite(data, sizeof(float), n_elements, fp);
++    }
++    
++    void dump_layer_norm(const float* data, size_t n_elements, int layer) {
++        layer_idx = layer;
++        int shape[1] = { (int)n_elements };
++        dump_tensor("rms_norm", data, n_elements, shape, 1);
++    }
++    
++    void dump_attention_qkv(const float* q, const float* k, const float* v,
++                            size_t head_dim, int n_heads, int layer) {
++        layer_idx = layer;
++        int shape[2] = { n_heads, (int)head_dim };
++        dump_tensor("attn_q", q, n_heads * head_dim, shape, 2);
++        dump_tensor("attn_k", k, n_heads * head_dim, shape, 2);
++        dump_tensor("attn_v", v, n_heads * head_dim, shape, 2);
++    }
++    
++    void dump_attention_output(const float* data, size_t n_elements, int layer) {
++        layer_idx = layer;
++        int shape[1] = { (int)n_elements };
++        dump_tensor("attn_out", data, n_elements, shape, 1);
++    }
++    
++    void dump_ffn(const float* data, size_t n_elements, int layer) {
++        layer_idx = layer;
++        int shape[1] = { (int)n_elements };
++        dump_tensor("ffn_out", data, n_elements, shape, 1);
++    }
++    
++    void dump_logits(const float* logits, size_t vocab_size) {
++        int shape[1] = { (int)vocab_size };
++        dump_tensor("logits", logits, vocab_size, shape, 1);
++    }
++    
++    void close() {
++        if (fp) { fclose(fp); fp = nullptr; }
++    }
++};
++
++static RawrXDValidationDumper g_rawrxd_dumper;
++#endif // RAWRXD_VALIDATION_MODE
++
+ //
+ // helpers
+ //
+@@ -2000,6 +2075,13 @@ static struct llama_model_params llama_model_params_from_json(const json & json) {
+ static void llama_model_load(const std::string & fname, llama_model & model) {
+     // ... existing code ...
++    
++#ifdef RAWRXD_VALIDATION_MODE
++    // Initialize validation dumper
++    const char* model_name = model.name.c_str();
++    g_rawrxd_dumper.init(model_name);
++    LLAMA_LOG_INFO("RawrXD validation mode: dumping reference tensors to rawrxd_ref_%s.bin\n", model_name);
++#endif
+ }
+ 
+ //
+@@ -3500,6 +3582,15 @@ static void llama_forward_layer(
+     // RMSNorm
+     ggml_tensor* cur = ggml_rms_norm(ctx, inp, hparams.rms_norm_eps);
+     
++#ifdef RAWRXD_VALIDATION_MODE
++    // Dump pre-normalization input
++    {
++        std::vector<float> buf(ggml_nelements(inp));
++        ggml_backend_tensor_get(inp, buf.data(), 0, buf.size() * sizeof(float));
++        g_rawrxd_dumper.dump_layer_norm(buf.data(), buf.size(), il);
++    }
++#endif
++    
+     // Attention
+     // ... existing attention code ...
+     
+@@ -3510,6 +3601,15 @@ static void llama_forward_layer(
+     // FFN
+     // ... existing FFN code ...
+     
++#ifdef RAWRXD_VALIDATION_MODE
++    // Dump layer output
++    {
++        std::vector<float> buf(ggml_nelements(cur));
++        ggml_backend_tensor_get(cur, buf.data(), 0, buf.size() * sizeof(float));
++        g_rawrxd_dumper.dump_ffn(buf.data(), buf.size(), il);
++    }
++#endif
++
+     return cur;
+ }
+ 
+@@ -3520,6 +3620,15 @@ static void llama_compute_logits(
+     // Compute final logits
+     // ... existing code ...
+     
++#ifdef RAWRXD_VALIDATION_MODE
++    // Dump final logits
++    {
++        std::vector<float> buf(ggml_nelements(logits));
++        ggml_backend_tensor_get(logits, buf.data(), 0, buf.size() * sizeof(float));
++        g_rawrxd_dumper.dump_logits(buf.data(), buf.size());
++        g_rawrxd_dumper.close();
++    }
++#endif
++
+     return logits;
+ }
+ 
