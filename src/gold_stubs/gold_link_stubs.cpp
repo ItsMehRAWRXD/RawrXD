@@ -122,34 +122,34 @@ void AgentToolRegistry::RegisterHandler(const std::string& /*toolName*/,
 // ============================================================================
 // Section 3: AgenticDeepThinkingEngine Stubs
 // ============================================================================
-struct ThinkingResult {
-    bool success = false;
-    std::string output;
-    std::string reasoning;
-    nlohmann::json toJson() const {
-        nlohmann::json j;
-        j["success"] = success;
-        j["output"] = output;
-        j["reasoning"] = reasoning;
-        return j;
-    }
-};
-
-struct ThinkingContext {
-    std::string prompt;
-    std::string model;
-    int maxTokens = 1024;
-    nlohmann::json toJson() const {
-        nlohmann::json j;
-        j["prompt"] = prompt;
-        j["model"] = model;
-        j["maxTokens"] = maxTokens;
-        return j;
-    }
-};
-
 class AgenticDeepThinkingEngine {
 public:
+    struct ThinkingResult {
+        bool success = false;
+        std::string output;
+        std::string reasoning;
+        nlohmann::json toJson() const {
+            nlohmann::json j;
+            j["success"] = success;
+            j["output"] = output;
+            j["reasoning"] = reasoning;
+            return j;
+        }
+    };
+
+    struct ThinkingContext {
+        std::string prompt;
+        std::string model;
+        int maxTokens = 1024;
+        nlohmann::json toJson() const {
+            nlohmann::json j;
+            j["prompt"] = prompt;
+            j["model"] = model;
+            j["maxTokens"] = maxTokens;
+            return j;
+        }
+    };
+
     AgenticDeepThinkingEngine();
     ~AgenticDeepThinkingEngine();
     ThinkingResult think(const ThinkingContext& ctx);
@@ -158,7 +158,7 @@ public:
 AgenticDeepThinkingEngine::AgenticDeepThinkingEngine() {}
 AgenticDeepThinkingEngine::~AgenticDeepThinkingEngine() {}
 
-ThinkingResult AgenticDeepThinkingEngine::think(const ThinkingContext& /*ctx*/) {
+AgenticDeepThinkingEngine::ThinkingResult AgenticDeepThinkingEngine::think(const ThinkingContext& /*ctx*/) {
     ThinkingResult result;
     result.success = false;
     result.reasoning = "Stub: AgenticDeepThinkingEngine not implemented in Gold build";

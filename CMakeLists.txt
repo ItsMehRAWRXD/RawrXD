@@ -1317,8 +1317,9 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
 
-    # Headless-safe production command handlers for SSOT/unified dispatch.
-    src/core/rawrengine_command_handlers.cpp
+    # NOTE: rawrengine_command_handlers.cpp removed - depends on SelfHostEngine,
+    # SpeciatorEngine, TranscendenceCoordinator which are excluded from RawrEngine
+    # src/core/rawrengine_command_handlers.cpp
 )
 
 list(REMOVE_DUPLICATES RAWR_ENGINE_SOURCES)
