@@ -1618,6 +1618,12 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     src/modules/vscode_extension_api.cpp
     src/core/js_extension_host.cpp
 )
+
+# Add Gold stub implementations for excluded files
+list(APPEND GOLD_UNDERSCORE_SOURCES
+    src/gold_stubs/gold_link_stubs.cpp
+)
+
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
 if(WIN32)

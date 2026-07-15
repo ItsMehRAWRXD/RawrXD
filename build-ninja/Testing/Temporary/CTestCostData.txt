@@ -1,4 +1,4 @@
-test_rmsnorm_avx2 3 0.00222933
+test_rmsnorm_avx2 4 0.0142773
 test_ai_completions 0 0
 test_llm_connectivity 0 0
 test_tool_registry 0 0
