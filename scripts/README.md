@@ -96,6 +96,32 @@ This directory contains automation scripts and utilities for the RawrXD Vision &
 | `script-dashboard-generator.ps1` | Generate interactive HTML dashboard | `.\script-dashboard-generator.ps1` |
 | `api-rate-limiter.ps1` | API rate limiting with token bucket | `.\api-rate-limiter.ps1` |
 | `maintenance-window-manager.ps1` | Schedule and manage maintenance windows | `.\maintenance-window-manager.ps1` |
+| `api-key-rotator.ps1` | Automated API key rotation | `.\api-key-rotator.ps1` |
+| `log-correlation-analyzer.ps1` | Correlate logs across services | `.\log-correlation-analyzer.ps1` |
+| `backup-verifier.ps1` | Verify backup integrity | `.\backup-verifier.ps1` |
+| `ssl-cert-monitor.ps1` | Monitor SSL certificate expiration | `.\ssl-cert-monitor.ps1` |
+| `feature-toggle-dashboard.ps1` | Feature flag management dashboard | `.\feature-toggle-dashboard.ps1` |
+| `chaos-test-runner.ps1` | Chaos engineering experiments | `.\chaos-test-runner.ps1` |
+| `compliance-report-generator.ps1` | Generate compliance reports (SOC2, ISO27001, GDPR) | `.\compliance-report-generator.ps1` |
+| `data-migration-validator.ps1` | Validate data migration integrity | `.\data-migration-validator.ps1` |
+| `service-discovery-manager.ps1` | Service registration and discovery | `.\service-discovery-manager.ps1` |
+| `api-gateway-configurator.ps1` | Configure API gateway routes and policies | `.\api-gateway-configurator.ps1` |
+| `database-migration-runner.ps1` | Database migrations with rollback support | `.\database-migration-runner.ps1` |
+| `secrets-rotation-manager.ps1` | Automated secrets rotation | `.\secrets-rotation-manager.ps1` |
+| `load-test-orchestrator.ps1` | Distributed load testing orchestration | `.\load-test-orchestrator.ps1` |
+| `event-driven-automation.ps1` | Event-driven automation rules | `.\event-driven-automation.ps1` |
+| `infrastructure-scanner.ps1` | Security and compliance scanning | `.\infrastructure-scanner.ps1` |
+| `disaster-recovery-validator.ps1` | DR procedure validation | `.\disaster-recovery-validator.ps1` |
+| `performance-baseline-manager.ps1` | Performance baseline tracking | `.\performance-baseline-manager.ps1` |
+| `multi-env-config-manager.ps1` | Multi-environment config management | `.\multi-env-config-manager.ps1` |
+| `api-contract-validator.ps1` | API contract validation | `.\api-contract-validator.ps1` |
+| `dependency-vulnerability-scanner.ps1` | Dependency vulnerability scanning | `.\dependency-vulnerability-scanner.ps1` |
+| `log-anomaly-detector.ps1` | Log anomaly detection | `.\log-anomaly-detector.ps1` |
+| `release-notes-generator.ps1` | Automated release notes generation | `.\release-notes-generator.ps1` |
+| `zero-downtime-deploy.ps1` | Zero-downtime deployment orchestration | `.\zero-downtime-deploy.ps1` |
+| `ssl-tls-configurator.ps1` | SSL/TLS configuration and certificate management | `.\ssl-tls-configurator.ps1` |
+| `container-registry-manager.ps1` | Container image management and cleanup | `.\container-registry-manager.ps1` |
+| `network-policy-validator.ps1` | Kubernetes network policy validation | `.\network-policy-validator.ps1` |
 
 ## Development Setup
 
