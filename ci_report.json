@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-07-15T17:07:30.041665",
-  "duration_seconds": 0.42627429962158203,
+  "timestamp": "2026-07-15T19:29:13.048556",
+  "duration_seconds": 0.47780418395996094,
   "total_stages": 7,
   "passed": true,
-  "failed": 1,
+  "failed": 0,
   "stages": [
     {
       "name": "Build Validation",
@@ -15,7 +15,7 @@
     },
     {
       "name": "Regression Tests",
-      "passed": false
+      "passed": true
     },
     {
       "name": "Performance Tests",

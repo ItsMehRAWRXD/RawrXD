@@ -1,0 +1,16 @@
+CreateFontA
+DwmSetWindowAttribute
+recv
+send
+SetBkMode
+SetTextColor
+TextOutA
+WinHttpAddRequestHeaders
+WinHttpCloseHandle
+WinHttpConnect
+WinHttpOpen
+WinHttpOpenRequest
+WinHttpQueryDataAvailable
+WinHttpReadData
+WinHttpReceiveResponse
+WinHttpSendRequest

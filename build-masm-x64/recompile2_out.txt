@@ -1,0 +1,17 @@
+ Assembling: d:\rawrxd\src\asm\win32ide_main.asm
+d:\rawrxd\src\asm\win32ide_main.asm(157) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(159) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(161) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(162) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(214) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(216) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(218) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(219) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(247) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(249) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(251) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(252) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(376) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(378) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(380) : error A2221:Missing Frame in proc, no unwind code will be generated.
+d:\rawrxd\src\asm\win32ide_main.asm(381) : error A2221:Missing Frame in proc, no unwind code will be generated.

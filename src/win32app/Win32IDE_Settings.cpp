@@ -133,10 +133,10 @@ void WSSR_ConfigRecovery(SovereignConfig& config)
 // JSON Serialization Helpers
 void to_json(nlohmann::json& j, const TabState& ts)
 {
-    j = nlohmann::json{{"file_path", wideToUtf8(ts.file_path)},
-                       {"cursor_line", ts.cursor_line},
-                       {"cursor_column", ts.cursor_column},
-                       {"is_dirty", ts.is_dirty}};
+    j["file_path"] = wideToUtf8(ts.file_path);
+    j["cursor_line"] = ts.cursor_line;
+    j["cursor_column"] = ts.cursor_column;
+    j["is_dirty"] = ts.is_dirty;
 }
 
 void from_json(const nlohmann::json& j, TabState& ts)
@@ -150,18 +150,19 @@ void from_json(const nlohmann::json& j, TabState& ts)
 
 void to_json(nlohmann::json& j, const SovereignConfig& config)
 {
-    j = nlohmann::json{{"recent_files", nlohmann::json::array()},
-                       {"keybindings", nlohmann::json::object()},
-                       {"extension_path", wideToUtf8(config.extension_path)},
-                       {"theme", static_cast<int>(config.theme)},
-                       {"open_tabs", nlohmann::json::array()},
-                       {"active_tab_index", config.active_tab_index},
-                       {"max_memory_mb", config.max_memory_mb},
-                       {"target_fps", config.target_fps},
-                       {"enable_vector7_autogen", config.enable_vector7_autogen},
-                       {"model_prefetch_enabled", config.model_prefetch_enabled},
-                       {"model_workingset_lock_enabled", config.model_workingset_lock_enabled},
-                       {"silence_privilege_warnings", config.silence_privilege_warnings}};
+    j = nlohmann::json::object();
+    j["recent_files"] = nlohmann::json::array();
+    j["keybindings"] = nlohmann::json::object();
+    j["extension_path"] = wideToUtf8(config.extension_path);
+    j["theme"] = static_cast<int>(config.theme);
+    j["open_tabs"] = nlohmann::json::array();
+    j["active_tab_index"] = config.active_tab_index;
+    j["max_memory_mb"] = config.max_memory_mb;
+    j["target_fps"] = config.target_fps;
+    j["enable_vector7_autogen"] = config.enable_vector7_autogen;
+    j["model_prefetch_enabled"] = config.model_prefetch_enabled;
+    j["model_workingset_lock_enabled"] = config.model_workingset_lock_enabled;
+    j["silence_privilege_warnings"] = config.silence_privilege_warnings;
 
     for (const auto& rf : config.recent_files)
     {

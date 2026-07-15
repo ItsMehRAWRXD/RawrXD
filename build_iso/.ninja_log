@@ -1,0 +1,7 @@
+# ninja log v6
+64	81	8047382416723667	CMakeFiles/rawrxd.dir/src/masm/cli_history.asm.obj	2e77b344b5b023c0
+70	99	8047382416784436	CMakeFiles/rawrxd.dir/src/masm/RawrXD_PipeServer_v2.asm.obj	3259c101a2f96068
+85	236	8047382416946201	CMakeFiles/rawrxd.dir/src/res/Resource.rc.res	2198e6c42dd83fc6
+53	293	8047382416647995	CMakeFiles/rawrxd.dir/src/cli/cli_stream.cpp.obj	f5542b4b65c3d67c
+45	323	8047382416542104	CMakeFiles/rawrxd.dir/src/cli/cli_main.cpp.obj	6afdeaa4da16b14b
+327	462	8047382419350042	bin/rawrxd-cli.exe	d1247ff3958ead7a

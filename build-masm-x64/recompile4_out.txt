@@ -1,0 +1,2 @@
+ Assembling: d:\rawrxd\src\asm\win32ide_main.asm
+d:\rawrxd\src\asm\win32ide_main.asm(305) : warning A4026:.ENDPROLOG found before EH directives

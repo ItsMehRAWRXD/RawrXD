@@ -1,0 +1,42 @@
+====================================================
+ RawrXD Production Regression Test Suite
+ Spec: tools.instructions.md §4
+====================================================
+
+=== Observability (agentic_observability) ===
+  [TEST] singleton_instance                                 PASS
+  [TEST] log_callback_fires                                 PASS
+  [TEST] log_error_level                                    PASS
+  [TEST] log_critical_level                                 PASS
+  [TEST] increment_counter                                  PASS
+  [TEST] set_gauge                                          PASS
+  [TEST] record_histogram                                   PASS
+  [TEST] tracing_start_end_span                             PASS
+  [TEST] timing_guard_raii                                  PASS
+
+=== Agentic Error Handler ===
+  [TEST] construct_handler                                  PASS
+  [TEST] record_error                                       PASS
+  [TEST] record_multiple_errors                             PASS
+  [TEST] execute_recovery                                   PASS
+  [TEST] classify_error                                     PASS
+  [TEST] retryable_check                                    PASS
+  [TEST] error_statistics_json                              PASS
+  [TEST] recent_errors                                      PASS
+  [TEST] error_rate                                         PASS
+  [TEST] handle_exception                                   PASS
+
+=== Agentic Loop State ===
+  [TEST] construct_loop_state                               PASS
+  [TEST] start_iteration                                    PASS
+  [TEST] record_decision                                    PASS
+  [TEST] end_iteration                                      PASS
+  [TEST] multiple_iterations                                PASS
+  [TEST] failed_iteration                                   PASS
+  [TEST] take_snapshot                                      PASS
+  [TEST] serialize_deserialize                              PASS
+  [TEST] set_and_get_goal                                   PASS
+  [TEST] progress_tracking                                  PASS
+  [TEST] decision_confidence                                PASS
+  [TEST] memory_operations                                  PASS
+  [TEST] constraints                                        EXITCODE=0 

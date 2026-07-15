@@ -108,7 +108,10 @@ nlohmann::json extractToolArgsFromPayload(const nlohmann::json& payload)
 void AgentOrchestrator::DispatchTask(const std::string& task_id, const nlohmann::json& payload)
 {
     auto& obs = GetObservability();
-    obs.logInfo(kComponent, "Dispatching task", {{"task_id", task_id}, {"payload", payload}});
+    nlohmann::json logData;
+    logData["task_id"] = task_id;
+    logData["payload"] = payload;
+    obs.logInfo(kComponent, "Dispatching task", logData);
 
     std::lock_guard<std::mutex> lock(m_mutex);
     m_taskQueue.push({task_id, payload, std::chrono::system_clock::now()});
@@ -141,24 +144,31 @@ void AgentOrchestrator::ExecuteTask(const std::string& id, const nlohmann::json&
     {
         std::string name = extractToolNameFromPayload(payload);
         if (name.empty()) {
-            GetObservability().logWarn(kComponent, "ExecuteTask run_tool missing tool name",
-                                       {{"task_id", id}, {"payload", payload}});
+            nlohmann::json warnData;
+            warnData["task_id"] = id;
+            warnData["payload"] = payload;
+            GetObservability().logWarn(kComponent, "ExecuteTask run_tool missing tool name", warnData);
             return;
         }
 
         json args = extractToolArgsFromPayload(payload);
         ToolExecResult res = m_registry.Dispatch(name, args);
         (void)res;
-        GetObservability().logInfo(kComponent, "ExecuteTask run_tool completed",
-                                   {{"task_id", id}, {"tool", name}, {"success", res.success}});
+        nlohmann::json infoData;
+        infoData["task_id"] = id;
+        infoData["tool"] = name;
+        infoData["success"] = res.success;
+        GetObservability().logInfo(kComponent, "ExecuteTask run_tool completed", infoData);
         return;
     }
     // prompt: one-shot user message (log; extend with m_client->chat for real one-shot reply if needed)
     if (payload.contains("action") && payload["action"] == "prompt" && payload.contains("text"))
     {
         std::string text = payload["text"].get<std::string>();
-        GetObservability().logInfo(kComponent, "ExecuteTask prompt",
-                                   {{"task_id", id}, {"text_len", static_cast<int>(text.size())}});
+        nlohmann::json promptData;
+        promptData["task_id"] = id;
+        promptData["text_len"] = static_cast<int>(text.size());
+        GetObservability().logInfo(kComponent, "ExecuteTask prompt", promptData);
         return;
     }
 

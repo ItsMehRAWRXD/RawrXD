@@ -1,0 +1,8 @@
+ Assembling: d:\rawrxd\src\asm\vision_projection_kernel.asm
+d:\rawrxd\src\asm\vision_projection_kernel.asm(158) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\vision_projection_kernel.asm(166) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\vision_projection_kernel.asm(195) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\vision_projection_kernel.asm(247) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\vision_projection_kernel.asm(363) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\vision_projection_kernel.asm(424) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\vision_projection_kernel.asm(519) : error A2220:Missing .ENDPROLOG

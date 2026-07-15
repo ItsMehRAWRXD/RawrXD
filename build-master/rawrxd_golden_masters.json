@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "timestamp": 1783126942,
+  "masterCount": 25,
+  "masters": [
+    {
+      "testName": "control_jmp_eq",
+      "category": "control_flow",
+      "fingerprint": "361B8098BDA14C9E19620FCCD21EB46E",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Conditional jump on equality"
+    },
+    {
+      "testName": "arithmetic_add",
+      "category": "arithmetic",
+      "fingerprint": "1C9B8098924CCC9E6A1316B599F103D5",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Addition: 10 + 20 = 30"
+    },
+    {
+      "testName": "arithmetic_sub",
+      "category": "arithmetic",
+      "fingerprint": "1D1B809893264C9E6A0CCD8C99EE20AC",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Subtraction: 50 - 20 = 30"
+    },
+    {
+      "testName": "control_jmp_uncond",
+      "category": "control_flow",
+      "fingerprint": "6FCD97CB6B9A45EA8131C209F48EC527",
+      "expectedEventCount": 4,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Unconditional jump"
+    },
+    {
+      "testName": "arithmetic_neg",
+      "category": "arithmetic",
+      "fingerprint": "F14D95D33D7EC5EAE12EF20993A2D943",
+      "expectedEventCount": 4,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Negation: -42"
+    },
+    {
+      "testName": "arithmetic_mul",
+      "category": "arithmetic",
+      "fingerprint": "1D9B809893FFCC9E6A141C6399F6CA27",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Multiplication: 5 * 6 = 30"
+    },
+    {
+      "testName": "arithmetic_div",
+      "category": "arithmetic",
+      "fingerprint": "1E1B809894D94C9E6A0DD33A99F3E6FE",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Division: 100 / 4 = 25"
+    },
+    {
+      "testName": "arithmetic_mod",
+      "category": "arithmetic",
+      "fingerprint": "1A9B80988EE6CC9E69F9F21199E57731",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Modulo: 17 % 5 = 2"
+    },
+    {
+      "testName": "arithmetic_dec",
+      "category": "arithmetic",
+      "fingerprint": "F24D95D33F31C5EAB8698A0F6C575EB8",
+      "expectedEventCount": 4,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Decrement: 43-- = 42"
+    },
+    {
+      "testName": "arithmetic_inc",
+      "category": "arithmetic",
+      "fingerprint": "F2CD95D3400B45EAB86A0CE66C5A41E1",
+      "expectedEventCount": 4,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Increment: 41++ = 42"
+    },
+    {
+      "testName": "control_if_true",
+      "category": "control_flow",
+      "fingerprint": "C49B85F2829B4C9E8DD3F7336117DDB8",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "If statement with true condition"
+    },
+    {
+      "testName": "control_if_false",
+      "category": "control_flow",
+      "fingerprint": "401B829BDB334C9E2C7C6B87A2F9F7DC",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "If statement with false condition"
+    },
+    {
+      "testName": "control_loop_count",
+      "category": "control_flow",
+      "fingerprint": "0D7FDB48306E5F4EBF652ED5BD93A392",
+      "expectedEventCount": 7,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "For loop counting to 3"
+    },
+    {
+      "testName": "compare_eq",
+      "category": "comparison",
+      "fingerprint": "2C9B8098AD7CCC9E1902C0B7D1ED9EB5",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Equality: 5 == 5"
+    },
+    {
+      "testName": "compare_neq",
+      "category": "comparison",
+      "fingerprint": "2D1B8098AE564C9E69FC72AC9991BB8C",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Inequality: 5 != 3"
+    },
+    {
+      "testName": "compare_lt",
+      "category": "comparison",
+      "fingerprint": "2D9B8098AF2FCC9E6A03C183999A6507",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Less than: 3 < 5"
+    },
+    {
+      "testName": "compare_gt",
+      "category": "comparison",
+      "fingerprint": "2A9B8098AA16CC9E69E9973199891211",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Greater than: 7 > 5"
+    },
+    {
+      "testName": "memory_array_access",
+      "category": "memory",
+      "fingerprint": "DFCD95D31FC245EAA98A6244FF2468F5",
+      "expectedEventCount": 6,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Array index access"
+    },
+    {
+      "testName": "compare_strict_eq",
+      "category": "comparison",
+      "fingerprint": "2B9B8098ABC9CC9E18EAA1C1D1E7D863",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Strict equality: 5 === 5"
+    },
+    {
+      "testName": "bitwise_and",
+      "category": "bitwise",
+      "fingerprint": "249B80989FE4CC9E6A77A9459A1F3665",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Bitwise AND: 0b1100 & 0b1010"
+    },
+    {
+      "testName": "bitwise_or",
+      "category": "bitwise",
+      "fingerprint": "251B8098A0BE4C9E6A71601C9A1C533C",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Bitwise OR: 0b1100 | 0b1010"
+    },
+    {
+      "testName": "bitwise_xor",
+      "category": "bitwise",
+      "fingerprint": "259B8098A197CC9E6A78AEF39A24FCB7",
+      "expectedEventCount": 5,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Bitwise XOR: 0b1100 ^ 0b1010"
+    },
+    {
+      "testName": "bitwise_not",
+      "category": "bitwise",
+      "fingerprint": "F84D95D34963C5EAE16E778F93CB4581",
+      "expectedEventCount": 4,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Bitwise NOT: ~0b1111"
+    },
+    {
+      "testName": "memory_read",
+      "category": "memory",
+      "fingerprint": "DFCD95D31FC245EA248A672CFDCF68F5",
+      "expectedEventCount": 6,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Memory read operation"
+    },
+    {
+      "testName": "memory_write",
+      "category": "memory",
+      "fingerprint": "DFCD95D31FC245EA2488F5987DCF68F5",
+      "expectedEventCount": 6,
+      "tolerancePercent": 0,
+      "timestamp": 1783126942,
+      "description": "Memory write operation"
+    }
+  ]
+}

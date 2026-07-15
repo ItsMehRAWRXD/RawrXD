@@ -1,0 +1,101 @@
+LIBRARY RawrXD_Unified
+EXPORTS
+    ; Input Handler exports
+    Input_Init
+    Input_QueueEvent
+    Input_ProcessEvents
+    Input_OnChar
+    Input_OnKeyDown
+    Input_GetStats
+    Input_ResetStats
+    Input_GetBufferState
+    Input_SetBufferPointer
+    
+    ; Memory exports
+    asm_malloc
+    asm_free
+    asm_realloc
+    asm_memcpy
+    asm_get_process_heap
+    asm_heap_alloc
+    asm_heap_free
+    asm_memory_stats
+    
+    ; Debug Event Ring exports
+    DbgEvent_Init
+    DbgEvent_Push
+    DbgEvent_Pop
+    DbgEvent_Peek
+    DbgEvent_GetCount
+    DbgEvent_Clear
+    DbgEvent_WalkStack
+    DbgEvent_GetStats
+    
+    ; IDE Debug Bridge exports
+    IDE_DebugInit
+    IDE_DebugPoll
+    IDE_DebugGetCurrentLine
+    IDE_DebugGetCurrentAddress
+    IDE_DebugGetState
+    IDE_DebugGetCallStack
+    IDE_DebugSetBreakpoint
+    IDE_DebugClearBreakpoint
+    IDE_DebugGetBreakpoints
+    IDE_DebugContinue
+    
+    ; Unified Debugger exports
+    Dbg_Init
+    Dbg_Detach
+    Dbg_IsAddressWritable
+    Dbg_MakeWritable
+    Dbg_ReadMemory
+    Dbg_WriteMemory
+    Dbg_InjectINT3
+    Dbg_RestoreINT3
+    Dbg_SetHardwareBreakpoint
+    Dbg_ClearHardwareBreakpoint
+    
+    ; Syntax Highlight exports
+    Syntax_Init
+    Syntax_Shutdown
+    Syntax_ScanLine
+    Syntax_ScanAll
+    Syntax_InvalidateLine
+    Syntax_GetTokenAt
+    Syntax_GetLineTokens
+    Syntax_AddKeyword
+    Syntax_LoadKeywords
+    Syntax_GetStats
+    
+    ; WndProc Input Bridge exports
+    WndProcInputBridge_Initialize
+    WndProcInputBridge_WndProc
+    WndProcInputBridge_ProcessIdle
+    WndProcInputBridge_GetEditorBuffer
+    WndProcInputBridge_SubclassWindow
+    
+    ; Editor exports
+    Editor_InsertChar
+    Editor_DeleteChar
+    Editor_MoveCursor
+    Editor_InsertNewline
+    Editor_Backspace
+    Editor_Render
+    Editor_Initialize
+    Editor_Init
+    Editor_Shutdown
+    Editor_PushInput
+    Editor_PopInput
+    Editor_PeekInput
+    Editor_GetInputCount
+    Editor_InsertLine
+    Editor_DeleteLine
+    Editor_GetCursorPos
+    Editor_SetCursorPos
+    Editor_GetLineCount
+    Editor_GetLineLength
+    Editor_GetLineText
+    Editor_GetStats
+    
+    ; DLL Entry Point
+    DllMain

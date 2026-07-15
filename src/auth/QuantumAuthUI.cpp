@@ -57,7 +57,7 @@ json KeyMetadata::toJson() const
     obj["isRevoked"] = isRevoked;
     obj["revocationReason"] = revocationReason;
     obj["revocationDate"] = revocationDate;
-    obj["customMetadata"] = customMetadata;
+    obj["customMetadata"] = json(customMetadata);
     return obj;
 }
 

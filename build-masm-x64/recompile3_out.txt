@@ -1,0 +1,6 @@
+ Assembling: d:\rawrxd\src\asm\win32ide_main.asm
+d:\rawrxd\src\asm\win32ide_main.asm(202) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\win32ide_main.asm(231) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\win32ide_main.asm(349) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\win32ide_main.asm(359) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\asm\win32ide_main.asm(376) : error A2220:Missing .ENDPROLOG

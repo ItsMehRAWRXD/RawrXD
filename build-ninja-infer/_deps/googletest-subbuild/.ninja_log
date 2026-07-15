@@ -1,0 +1,21 @@
+# ninja log v6
+45	2209	8053908357958165	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-download	f903e9ced7a47459
+2452	2504	8053908360899704	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-done	c15f79a35a0c20ef
+2452	2504	8053908360899704	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-done	c15f79a35a0c20ef
+1	44	8053908336300066	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-mkdir	225f2fe84d781ef9
+1	44	8053908336300066	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-mkdir	225f2fe84d781ef9
+2294	2332	8053908359173509	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-configure	9a6ad9fdb186f093
+2252	2294	8053908358800867	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-patch	f0f1814ca2b1cb0e
+2252	2294	8053908358800867	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-patch	f0f1814ca2b1cb0e
+2210	2251	8053908358374332	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-update	f2912dd0e17105ec
+2332	2371	8053908359575129	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-build	3b56ba721be879d7
+2210	2251	8053908358374332	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-update	f2912dd0e17105ec
+45	2209	8053908357958165	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-download	f903e9ced7a47459
+2371	2410	8053908359963074	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-install	695944c8cf0f579f
+2410	2452	8053908360379522	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-test	6d5e731a953a4710
+2452	2504	8053908360899704	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/CMakeFiles/googletest-populate-complete	c15f79a35a0c20ef
+2294	2332	8053908359173509	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-configure	9a6ad9fdb186f093
+2371	2410	8053908359963074	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-install	695944c8cf0f579f
+2332	2371	8053908359575129	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-build	3b56ba721be879d7
+2410	2452	8053908360379522	D:/rawrxd/build-ninja-infer/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-test	6d5e731a953a4710
+2452	2504	8053908360899704	CMakeFiles/googletest-populate-complete	c15f79a35a0c20ef

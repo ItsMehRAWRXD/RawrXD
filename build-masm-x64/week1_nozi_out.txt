@@ -1,0 +1,9 @@
+ Assembling: d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(996) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(1119) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(1552) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(2099) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(2533) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(2660) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(2856) : error A2220:Missing .ENDPROLOG
+d:\rawrxd\src\agentic\week1\WEEK1_COMPLETE.asm(2910) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,1055 @@
+Microsoft (R) Incremental Linker Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+D:\rawrxd\build-masm-x64\obj\adaptive_timer.obj 
+D:\rawrxd\build-masm-x64\obj\address_hotpatch_backend_masm64.obj 
+D:\rawrxd\build-masm-x64\obj\address_hotpatch_kernel_masm64.obj 
+D:\rawrxd\build-masm-x64\obj\address_hotpatch_masm64.obj 
+D:\rawrxd\build-masm-x64\obj\Advanced_Code_Deobfuscator.obj 
+D:\rawrxd\build-masm-x64\obj\agent_autonomy_dispatch.obj 
+D:\rawrxd\build-masm-x64\obj\agent_client_evict.obj 
+D:\rawrxd\build-masm-x64\obj\agent_client_watch.obj 
+D:\rawrxd\build-masm-x64\obj\agent_metrics_dump.obj 
+D:\rawrxd\build-masm-x64\obj\agent_tools.obj 
+D:\rawrxd\build-masm-x64\obj\agent.obj 
+D:\rawrxd\build-masm-x64\obj\agentic_deep_thinking_kernels_fixed.obj 
+D:\rawrxd\build-masm-x64\obj\agentic_deep_thinking_kernels.obj 
+D:\rawrxd\build-masm-x64\obj\agentic_puppeteer_byte_ops_fixed.obj 
+D:\rawrxd\build-masm-x64\obj\agentic_puppeteer_byte_ops.obj 
+D:\rawrxd\build-masm-x64\obj\agenticide_main.obj 
+D:\rawrxd\build-masm-x64\obj\ai_agent_masm_core.obj 
+D:\rawrxd\build-masm-x64\obj\ai_completion_provider_masm_fixed.obj 
+D:\rawrxd\build-masm-x64\obj\ai_completion_provider_masm.obj 
+D:\rawrxd\build-masm-x64\obj\aperture_dispatch_avx512_win64.obj 
+D:\rawrxd\build-masm-x64\obj\asm_globals.obj 
+D:\rawrxd\build-masm-x64\obj\ast_indexer.obj 
+D:\rawrxd\build-masm-x64\obj\async_pager.obj 
+D:\rawrxd\build-masm-x64\obj\audit_ring_flush.obj 
+D:\rawrxd\build-masm-x64\obj\avx512_matmul.obj 
+D:\rawrxd\build-masm-x64\obj\BareMetal_PE_Writer.obj 
+D:\rawrxd\build-masm-x64\obj\batch_decoder.obj 
+D:\rawrxd\build-masm-x64\obj\batch_resolver_driver.obj 
+D:\rawrxd\build-masm-x64\obj\beacon_integration.obj 
+D:\rawrxd\build-masm-x64\obj\beacon.obj 
+D:\rawrxd\build-masm-x64\obj\bridge.obj 
+D:\rawrxd\build-masm-x64\obj\byte_search.obj 
+D:\rawrxd\build-masm-x64\obj\Code_Pattern_Reconstructor.obj 
+D:\rawrxd\build-masm-x64\obj\crypto_masm.obj 
+D:\rawrxd\build-masm-x64\obj\cursor_always_local.obj 
+D:\rawrxd\build-masm-x64\obj\cursor_host_replacement.obj 
+D:\rawrxd\build-masm-x64\obj\custom_zlib.obj 
+D:\rawrxd\build-masm-x64\obj\dap.obj 
+D:\rawrxd\build-masm-x64\obj\deflate_brutal_masm.obj 
+D:\rawrxd\build-masm-x64\obj\dequant_q6k_avx512.obj 
+D:\rawrxd\build-masm-x64\obj\dequant_simd.obj 
+D:\rawrxd\build-masm-x64\obj\diff_engine.obj 
+D:\rawrxd\build-masm-x64\obj\DirectML_Bridge.obj 
+D:\rawrxd\build-masm-x64\obj\disk_recovery_scsi.obj 
+D:\rawrxd\build-masm-x64\obj\editor_bridge.obj 
+D:\rawrxd\build-masm-x64\obj\ExtensionHost_MASM_ProcessBroker.obj 
+D:\rawrxd\build-masm-x64\obj\exthost.obj 
+D:\rawrxd\build-masm-x64\obj\feature_dispatch_bridge.obj 
+D:\rawrxd\build-masm-x64\obj\FlashAttention_AVX512.obj 
+D:\rawrxd\build-masm-x64\obj\Full_Reset.obj 
+D:\rawrxd\build-masm-x64\obj\genesis_masm64.obj 
+D:\rawrxd\build-masm-x64\obj\GenesisP0_AiBackendBridge.obj 
+D:\rawrxd\build-masm-x64\obj\GenesisP0_BuildOrchestrator.obj 
+D:\rawrxd\build-masm-x64\obj\GenesisP0_ExtensionHost.obj 
+D:\rawrxd\build-masm-x64\obj\GenesisP0_SelfHosting.obj 
+D:\rawrxd\build-masm-x64\obj\GenesisP0_VulkanCompute.obj 
+D:\rawrxd\build-masm-x64\obj\GenesisP0_WhiteScreenGuard.obj 
+D:\rawrxd\build-masm-x64\obj\gguf_dump.obj 
+D:\rawrxd\build-masm-x64\obj\gguf_parser.obj 
+D:\rawrxd\build-masm-x64\obj\gguf_weight_mapping.obj 
+D:\rawrxd\build-masm-x64\obj\ghost_paging_v2.obj 
+D:\rawrxd\build-masm-x64\obj\ghost_paging.obj 
+D:\rawrxd\build-masm-x64\obj\ghost_text_ranker.obj 
+D:\rawrxd\build-masm-x64\obj\goal_stack.obj 
+D:\rawrxd\build-masm-x64\obj\GPU_DirectDispatch.obj 
+D:\rawrxd\build-masm-x64\obj\gpu_dma_complete_reverse_engineered.obj 
+D:\rawrxd\build-masm-x64\obj\gpu_requantize_rocm.obj 
+D:\rawrxd\build-masm-x64\obj\gpu_sdma_integration.obj 
+D:\rawrxd\build-masm-x64\obj\gui_dispatch_bridge.obj 
+D:\rawrxd\build-masm-x64\obj\heal_build.obj 
+D:\rawrxd\build-masm-x64\obj\hierarchical_quant.obj 
+D:\rawrxd\build-masm-x64\obj\hyper_150tps.obj 
+D:\rawrxd\build-masm-x64\obj\identity_gate.obj 
+D:\rawrxd\build-masm-x64\obj\inference_core.obj 
+D:\rawrxd\build-masm-x64\obj\inference_gguf_loader.obj 
+D:\rawrxd\build-masm-x64\obj\inference_kernels.obj 
+D:\rawrxd\build-masm-x64\obj\inference_router.obj 
+D:\rawrxd\build-masm-x64\obj\inference.obj 
+D:\rawrxd\build-masm-x64\obj\iq2m_dequant_kernel.obj 
+D:\rawrxd\build-masm-x64\obj\k_header_verify_fast.obj 
+D:\rawrxd\build-masm-x64\obj\k_swap_aperture_win32_v126.obj 
+D:\rawrxd\build-masm-x64\obj\k_swap_aperture_win32.obj 
+D:\rawrxd\build-masm-x64\obj\kernel_affinity.obj 
+D:\rawrxd\build-masm-x64\obj\kernel_fma_unroll.obj 
+D:\rawrxd\build-masm-x64\obj\kernel_polymorph_engine.obj 
+D:\rawrxd\build-masm-x64\obj\kernel_vnni.obj 
+D:\rawrxd\build-masm-x64\obj\kv_accum_avx512.obj 
+D:\rawrxd\build-masm-x64\obj\kv_cache_mgr.obj 
+D:\rawrxd\build-masm-x64\obj\kv_cache.obj 
+D:\rawrxd\build-masm-x64\obj\language_terraformer.obj 
+D:\rawrxd\build-masm-x64\obj\live_hotpatcher.obj 
+D:\rawrxd\build-masm-x64\obj\lsp_jsonrpc.obj 
+D:\rawrxd\build-masm-x64\obj\lsp.obj 
+D:\rawrxd\build-masm-x64\obj\main_bootstrap.obj 
+D:\rawrxd\build-masm-x64\obj\main.obj 
+D:\rawrxd\build-masm-x64\obj\MASM_STACK_ALIGNMENT_AUDIT_REPORT.obj 
+D:\rawrxd\build-masm-x64\obj\memory_patch.obj 
+D:\rawrxd\build-masm-x64\obj\mesh.obj 
+D:\rawrxd\build-masm-x64\obj\mmap_loader.obj 
+D:\rawrxd\build-masm-x64\obj\model_bridge_x64.obj 
+D:\rawrxd\build-masm-x64\obj\model_invoker.obj 
+D:\rawrxd\build-masm-x64\obj\model_loader.obj 
+D:\rawrxd\build-masm-x64\obj\model_streamer_x64.obj 
+D:\rawrxd\build-masm-x64\obj\model-llm-harvester.obj 
+D:\rawrxd\build-masm-x64\obj\monolithic_sovereign.obj 
+D:\rawrxd\build-masm-x64\obj\multi_gpu_consensus.obj 
+D:\rawrxd\build-masm-x64\obj\mxcsr_determinism.obj 
+D:\rawrxd\build-masm-x64\obj\native_speed_kernels.obj 
+D:\rawrxd\build-masm-x64\obj\NativeInferenceClient.obj 
+D:\rawrxd\build-masm-x64\obj\NativeIO_Core.obj 
+D:\rawrxd\build-masm-x64\obj\node_heartbeat.obj 
+D:\rawrxd\build-masm-x64\obj\nvme_oracle_service.obj 
+D:\rawrxd\build-masm-x64\obj\nvme_query.obj 
+D:\rawrxd\build-masm-x64\obj\nvme_service.obj 
+D:\rawrxd\build-masm-x64\obj\obsidian_recovery.obj 
+D:\rawrxd\build-masm-x64\obj\ollama_client.obj 
+D:\rawrxd\build-masm-x64\obj\ollama_http_client.obj 
+D:\rawrxd\build-masm-x64\obj\ollama_sovereign_proxy.obj 
+D:\rawrxd\build-masm-x64\obj\os_explorer_interceptor_simple.obj 
+D:\rawrxd\build-masm-x64\obj\p2p_shard_replicate.obj 
+D:\rawrxd\build-masm-x64\obj\pci_scanner.obj 
+D:\rawrxd\build-masm-x64\obj\pe_writer.obj 
+D:\rawrxd\build-masm-x64\obj\pocket_lab_turbo_dll.obj 
+D:\rawrxd\build-masm-x64\obj\pocket_lab_turbo.obj 
+D:\rawrxd\build-masm-x64\obj\pocket_lab.obj 
+D:\rawrxd\build-masm-x64\obj\pqc_key_manager.obj 
+D:\rawrxd\build-masm-x64\obj\product_runtime.obj 
+D:\rawrxd\build-masm-x64\obj\quadbuffer_prefetch.obj 
+D:\rawrxd\build-masm-x64\obj\quant_avx2.obj 
+D:\rawrxd\build-masm-x64\obj\quantum_auth.obj 
+D:\rawrxd\build-masm-x64\obj\quantum_autonomous_todo_masm.obj 
+D:\rawrxd\build-masm-x64\obj\quantum_beaconism_backend_minimal.obj 
+D:\rawrxd\build-masm-x64\obj\quantum_beaconism_backend.obj 
+D:\rawrxd\build-masm-x64\obj\rawr_aperture_bypass_simple.obj 
+D:\rawrxd\build-masm-x64\obj\rawr_aperture_bypass.obj 
+D:\rawrxd\build-masm-x64\obj\rawr_cpu_features.obj 
+D:\rawrxd\build-masm-x64\obj\rawr_globals.obj 
+D:\rawrxd\build-masm-x64\obj\rawr_linear_allocator.obj 
+D:\rawrxd\build-masm-x64\obj\RAWR_PROFILER_CORE.obj 
+D:\rawrxd\build-masm-x64\obj\rawr_rbtree.obj 
+D:\rawrxd\build-masm-x64\obj\RawrCodex.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_120B_MoE_Singularity.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AgentHost.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Agentic_Planner.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AgenticMemorySystem.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AgenticOrchestrator.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AgenticShellBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AgentToolExecutor.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_audit.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AuditSystem_Pure.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AVX512_Dequant_BPE.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AVX512_PatternEngine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AVX512_Production.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AVX512_Real.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AVX512_SIMD.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_AVX512_VectorSearch.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_BitPlane_Transcoder.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_BounceTPS.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Camellia256_Auth.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Circular_SDMA.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_CodebaseAuditSystem.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ConPTY_Renderer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ContextBuffer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_CopilotGapCloser.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_cot_dll_entry.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_cot_engine.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_cot_phase39.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DataBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DDR5_Saturation_Streamer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Debug_Engine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Detour_MASM.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DirectionlessLoader.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Disasm_Kernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DiskKernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DiskRecoveryAgent.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Distributed_Inference.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_dominance.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_dual_engine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DualAgent_Orchestrator.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DualEngine_Pure.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DualEngine_QuantumBeacon.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_DynamicPromptEngine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Emitter_v1.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh1_TieredMemoryOrchestrator.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh2_DynamicQuantizationHotpatcher.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh3_SpeculativeDecodingEngine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh4_KVCacheCompression.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh5_ContinuousBatching.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh6_MoEExpertRouting.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh7_AsyncStreamingLoader.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enh8_ThermalAwareThrottling.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancement1_ZMMQuadrant.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancement2_AperturePrefetch.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancement3_ZeroStoreDequant.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancement4_RegTranspose.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancement5_AmortizedSoftmax.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancement6_BranchlessMask.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancement7_NonTemporalWrite.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancements_201_207.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancements_208_214.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancements_215_221.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancements_222_228.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancements_229_235.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Enhancements_236_242.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_EnterpriseLicense.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ExtensionBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ExtensionRuntimeBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Gate_260_266.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GGUF_GraphInterpreter.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GGUF_Vulkan_Loader.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_git_native.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GOLD_INFERENCE.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GOLD.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_governor.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GPT120B_PhysicalStress.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GPU_Memory_FIXED.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GSIHash.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_GUI_IDE.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_HardwareSynthesizer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Hotpatch_Kernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Hotpatcher.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_HotPatchTPS.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_HttpClient_Real.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_HttpClient.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_IDE_unified.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_IDE_Validator.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Ignition_Pulse_199.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Inference_AVX512.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_InferenceTransport.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_IPC_Dispatcher.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_JSON_SIMD.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_JsonPlanParser.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_KAIROS.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_KFD_Sovereign_Interface.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_KQuant_Dequant.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_KQuant_Kernel.obj 
+D:\rawrxd\build-masm-x64\obj\RAWRXD_KV_APERTURE.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_kv_cache.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_KVCache_Rolling.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Lexer_AVX2.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_License_Shield.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_link.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_LSP_AI_Bridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_LSP_Core.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_LSP_Handshake_Ext.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_LSP_SymbolIndex.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_lsp.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_MarketplaceBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_MCPServer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Measure_Instrumentation.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_MemorySystem.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Mesh_Stress.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_MeshConsensus.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_MetaReverse.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ModelInjection_Stack.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ModelMetadata_Hotpatch.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ModuleEngine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_MonacoCore.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Monolithic_PE_Emitter_Clean.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Monolithic_PE_Emitter_Final.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Monolithic_PE_Emitter.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_multi_file_composer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_MultiWindow_Kernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NanoDiskBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NanoQuant_Engine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NanoQuant_Streaming.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Native_Core.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Native_Explorer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Native_UI.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NativeHost.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NativeModelBridge_Complete.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NDJSON_AVX2.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Neural_Heatmap_ASM.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NeuralMeshSync.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NLShell.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_NtWrite_Link.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_observability.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_OllamaTuner.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Omega_Agentic.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_OMEGA_Seven_Stack.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Omega_Singularity.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_OmegaDeobfuscator.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_OmegaOrchestrator.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Omnipotent_Omniscience_200.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Omnipotent_Seal_143.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_OverclockGov_Pure.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Overdrive_150TPS.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Parallel_Loader.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PatternBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PDBKernel_v2.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PDBKernel_v3.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PDBKernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PE_Exporter.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PE_Importer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PE_Writer.obj 
+D:\rawrxd\build-masm-x64\obj\RAWRXD_PE32_EMITTER_MONOLITHIC.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_PE64_IAT_Fabricator_v224.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Performance_253_259.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Performance_Ignition_150.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Phase1_CoreUX.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_phase8_stress.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_preflight.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_profiler.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Prometheus_Exporter.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Pyre_Compute.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_QuadBuffer_Streamer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_QuantKernels_Full.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_quantum_beaconism.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Quantum_Sovereignty_136.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_QueryEngine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_QueryFusion_AVX512.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RBTree.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_3x_Expander.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_3X_Virtualizer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Elastic_Manifest.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_GDS_Neural_Link.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_HugePage_Expander.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_MicroSequencer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_MMIO_Recon.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Neural_Entropy_Shield.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Power_Sovereign.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Shadow_Pager.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Sovereign_Codec.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Speculative_Preload.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Telemetry_Refiner.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RDNA3_Trap_Handler.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RefProvider.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RiskEngine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RouterBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_RT_Monitor.obj 
+D:\rawrxd\build-masm-x64\obj\RAWRXD_SAMPLER_AVX512.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_scc.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Scheduler.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SelfHost_Engine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SelfPatch_Agent.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SelfPatch_Engine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Seven_Stack_Final.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ShellIntegration.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Sidebar_x64.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SidebarCore.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Silicon_PUF_Signer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SIMD_CRDT.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SIMDClassifier.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Singularity_Core_178.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh1_DynamicSwapAperture.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh2_DemandPagedKV.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh3_StreamingDequant.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh4_SparseVirtualization.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh5_ZeroCopyManifest.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh6_WriteBackEviction.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh7_SpeculativeSwarmChain.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SingularityEnh8_HeaderOnlyLoader.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SlolorisStreamLoader.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_smoke_check.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Snapshot.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SocketResponder.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SourceEdit_Kernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Sovereign_MinimalEntry_v224.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_sovereign_mode.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Sovereign_Monolith.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Sovereign_Router_v239.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Sovereign_Router.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SovereignEnhancements_Entry.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SovereignTokenizerCore.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Speculative_270_276.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_speculative_hub.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Standalone_Inference.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Streaming_QuadBuffer.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_StreamingWeights.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_StubDetector.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_StubSweepBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Swarm_Consensus.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Swarm_Link.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Swarm_Network.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Swarm_Orchestrator.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Swarm_v23.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SwarmLink.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_SymbolTable_Hash.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Telemetry_Audit_194.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Telemetry_Kernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Tensor_Distributor.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_TerminalCapture.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_TerminalPipe.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Tiered_120B_Ignition.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_titan_dispatcher.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Titan_Kernel.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Titan_MetaReverse.obj 
+D:\rawrxd\build-masm-x64\obj\RAWRXD_TITAN_ULTIMATE_GODSOURCE.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Titan.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Tokenizer_Full.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Tokenizer.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_tokenizers.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_tool_moat.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_ToolEngine.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_TPSBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Transcendence_164.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Transcendence_v2_171.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_TransformerKernel_Zero.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_TridentBeacon_GPU.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_TridentBeacon.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_TubiVideoBackend.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_ui_dispatcher.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_UnbraidPipeline.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_Unified_Memory_Executor.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_UnifiedDebugger.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_UTF8_Sanitizer.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_ux.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_vector_index.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_VectorIndex.obj 
+D:\rawrxd\build-masm-x64\obj\rawrxd_vision_encoder.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_VulkanBridge.obj 
+D:\rawrxd\build-masm-x64\obj\RawrXD_WidgetEngine.obj 
+D:\rawrxd\build-masm-x64\obj\react_loop.obj 
+D:\rawrxd\build-masm-x64\obj\requantize_q4km_to_q2k_avx512.obj 
+D:\rawrxd\build-masm-x64\obj\request_patch.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_ast.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_bytecode_gen.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_compiler.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_lexer.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_parser.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_platform.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_runtime.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_syscalls.obj 
+D:\rawrxd\build-masm-x64\obj\reverser_vtable.obj 
+D:\rawrxd\build-masm-x64\obj\rtp_agent_loop.obj 
+D:\rawrxd\build-masm-x64\obj\rtp_protocol.obj 
+D:\rawrxd\build-masm-x64\obj\rtp_result_encoder.obj 
+D:\rawrxd\build-masm-x64\obj\rtp_stream_parser.obj 
+D:\rawrxd\build-masm-x64\obj\rtp_tool_handlers.obj 
+D:\rawrxd\build-masm-x64\obj\runtime_masquerade.obj 
+D:\rawrxd\build-masm-x64\obj\sdma_ring_allocator.obj 
+D:\rawrxd\build-masm-x64\obj\sdma_scheduler.obj 
+D:\rawrxd\build-masm-x64\obj\security_identity.obj 
+D:\rawrxd\build-masm-x64\obj\SEH_wrapper.obj 
+D:\rawrxd\build-masm-x64\obj\shard_router_hot_path.obj 
+D:\rawrxd\build-masm-x64\obj\simd_consistency_check.obj 
+D:\rawrxd\build-masm-x64\obj\simd_kernels.obj 
+D:\rawrxd\build-masm-x64\obj\slot_ring.obj 
+D:\rawrxd\build-masm-x64\obj\soft_throttle_dispatch.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_expert_gating.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_fp8_quantizer_avx2.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_fp8_quantizer.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_fused_decode_fp8.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_kernels.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_macros_smoke.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_memory_mapper.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_spinlock.obj 
+D:\rawrxd\build-masm-x64\obj\sovereign_stress_governor.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignAgentBridge.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignFP8_Kernels.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignInferenceLoop.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignMesh_PQC.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignSpeculativeEngine.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignStandaloneEngine.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignTelemetry_x64.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignThermalDemo.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignThermalDemoHUD.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignThermalHUD.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignThermalStressOrchestrator.obj 
+D:\rawrxd\build-masm-x64\obj\SovereignTokenizer.obj 
+D:\rawrxd\build-masm-x64\obj\startup_trace_masm64.obj 
+D:\rawrxd\build-masm-x64\obj\stream_bench.obj 
+D:\rawrxd\build-masm-x64\obj\stream_loader.obj 
+D:\rawrxd\build-masm-x64\obj\stream_token.obj 
+D:\rawrxd\build-masm-x64\obj\stress_harness.obj 
+D:\rawrxd\build-masm-x64\obj\swarm_consensus.obj 
+D:\rawrxd\build-masm-x64\obj\swarm_coordinator.obj 
+D:\rawrxd\build-masm-x64\obj\swarm_lb_hotpath.obj 
+D:\rawrxd\build-masm-x64\obj\swarm_network.obj 
+D:\rawrxd\build-masm-x64\obj\swarm_tensor_stream.obj 
+D:\rawrxd\build-masm-x64\obj\swarm.obj 
+D:\rawrxd\build-masm-x64\obj\swarmlink_v2_consensus.obj 
+D:\rawrxd\build-masm-x64\obj\swarmlink_v2.obj 
+D:\rawrxd\build-masm-x64\obj\tasks.obj 
+D:\rawrxd\build-masm-x64\obj\terminal_pipe_engine.obj 
+D:\rawrxd\build-masm-x64\obj\Titan_MoE_SparseGather.obj 
+D:\rawrxd\build-masm-x64\obj\Titan_Stage3_Clean.obj 
+D:\rawrxd\build-masm-x64\obj\Titan_Stage3_Final.obj 
+D:\rawrxd\build-masm-x64\obj\Titan_Streaming_Orchestrator_Fixed.obj 
+D:\rawrxd\build-masm-x64\obj\Titan_Streaming_Orchestrator_NoHTTP.obj 
+D:\rawrxd\build-masm-x64\obj\token_queue_dequeue.obj 
+D:\rawrxd\build-masm-x64\obj\tokenizer_masm.obj 
+D:\rawrxd\build-masm-x64\obj\transformer_block.obj 
+D:\rawrxd\build-masm-x64\obj\ui_bridge.obj 
+D:\rawrxd\build-masm-x64\obj\ui.obj 
+D:\rawrxd\build-masm-x64\obj\ums_micro_scheduler.obj 
+D:\rawrxd\build-masm-x64\obj\unresolved_asm_stubs.obj 
+D:\rawrxd\build-masm-x64\obj\vector_index_avx512.obj 
+D:\rawrxd\build-masm-x64\obj\vision_projection_kernel.obj 
+D:\rawrxd\build-masm-x64\obj\voice_processor_masm.obj 
+D:\rawrxd\build-masm-x64\obj\vram_pressure_monitor.obj 
+D:\rawrxd\build-masm-x64\obj\vulkan_compute.obj 
+D:\rawrxd\build-masm-x64\obj\vulkan_secure_submit.obj 
+D:\rawrxd\build-masm-x64\obj\VulkanKernel_DispatchRaw.obj 
+D:\rawrxd\build-masm-x64\obj\webview2_masm64_dispatcher.obj 
+D:\rawrxd\build-masm-x64\obj\webview2.obj 
+D:\rawrxd\build-masm-x64\obj\WEEK1_COMPLETE.obj 
+D:\rawrxd\build-masm-x64\obj\win32ide_main.obj 
+D:\rawrxd\build-masm-x64\obj\Win32IDE_Sidebar_Core.obj 
+D:\rawrxd\build-masm-x64\obj\Win32IDE_Sidebar_minimal.obj 
+D:\rawrxd\build-masm-x64\obj\Win32IDE_Sidebar_Pure_Minimal.obj 
+D:\rawrxd\build-masm-x64\obj\Win32IDE_Sidebar_Pure_Simple.obj 
+D:\rawrxd\build-masm-x64\obj\Win32IDE_Sidebar_Pure.obj 
+D:\rawrxd\build-masm-x64\obj\Win32IDE_Sidebar.obj 
+D:\rawrxd\build-masm-x64\obj\wom_commit.obj 
+D:\rawrxd\build-masm-x64\obj\work_steal.obj 
+D:\rawrxd\build-masm-x64\obj\zerocopy_ring_bridge.obj 
+address_hotpatch_masm64.obj : warning LNK4006: rawrxd_addr_memcpy_asm already defined in address_hotpatch_backend_masm64.obj; second definition ignored
+address_hotpatch_masm64.obj : warning LNK4006: rawrxd_addr_patch_apply_asm already defined in address_hotpatch_backend_masm64.obj; second definition ignored
+address_hotpatch_masm64.obj : warning LNK4006: rawrxd_addr_patch_revert_asm already defined in address_hotpatch_backend_masm64.obj; second definition ignored
+address_hotpatch_masm64.obj : warning LNK4006: rawrxd_addr_patch_diag_get_asm already defined in address_hotpatch_backend_masm64.obj; second definition ignored
+address_hotpatch_masm64.obj : warning LNK4006: rawrxd_addr_patch_diag_reset_asm already defined in address_hotpatch_backend_masm64.obj; second definition ignored
+agent_client_watch.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+agent_metrics_dump.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+BareMetal_PE_Writer.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+batch_resolver_driver.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+beacon.obj : warning LNK4006: BeaconSend already defined in asm_globals.obj; second definition ignored
+beacon.obj : warning LNK4006: BeaconRecv already defined in asm_globals.obj; second definition ignored
+beacon.obj : warning LNK4006: TryBeaconRecv already defined in asm_globals.obj; second definition ignored
+beacon.obj : warning LNK4006: RegisterAgent already defined in asm_globals.obj; second definition ignored
+editor_bridge.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+genesis_masm64.obj : warning LNK4006: WriteMsg already defined in batch_resolver_driver.obj; second definition ignored
+gguf_dump.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+ghost_paging_v2.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+inference.obj : warning LNK4006: RunInference already defined in asm_globals.obj; second definition ignored
+k_swap_aperture_win32.obj : warning LNK4006: k_swap_aperture_init already defined in k_swap_aperture_win32_v126.obj; second definition ignored
+k_swap_aperture_win32.obj : warning LNK4006: k_swap_aperture_map_chunk already defined in k_swap_aperture_win32_v126.obj; second definition ignored
+k_swap_aperture_win32.obj : warning LNK4006: k_swap_aperture_unmap_chunk already defined in k_swap_aperture_win32_v126.obj; second definition ignored
+main_bootstrap.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+main.obj : warning LNK4006: g_hInstance already defined in asm_globals.obj; second definition ignored
+main.obj : warning LNK4006: g_hHeap already defined in asm_globals.obj; second definition ignored
+main.obj : warning LNK4006: WinMain already defined in agenticide_main.obj; second definition ignored
+model_loader.obj : warning LNK4006: HotSwapModel already defined in asm_globals.obj; second definition ignored
+model-llm-harvester.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+NativeIO_Core.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+nvme_service.obj : warning LNK4006: InitMMF already defined in nvme_oracle_service.obj; second definition ignored
+nvme_service.obj : warning LNK4006: ServiceMain already defined in nvme_oracle_service.obj; second definition ignored
+nvme_service.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+ollama_sovereign_proxy.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+os_explorer_interceptor_simple.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+pocket_lab_turbo.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+pocket_lab_turbo.obj : warning LNK4006: PrintStr already defined in ollama_sovereign_proxy.obj; second definition ignored
+pocket_lab.obj : warning LNK4006: DetectTier already defined in pocket_lab_turbo.obj; second definition ignored
+pocket_lab.obj : warning LNK4006: InitMMF already defined in nvme_oracle_service.obj; second definition ignored
+product_runtime.obj : warning LNK4006: strcpy already defined in cursor_always_local.obj; second definition ignored
+product_runtime.obj : warning LNK4006: strcmp already defined in cursor_always_local.obj; second definition ignored
+product_runtime.obj : warning LNK4006: malloc already defined in cursor_always_local.obj; second definition ignored
+quadbuffer_prefetch.obj : warning LNK4006: rawrxd_prefetch_tensor_async already defined in monolithic_sovereign.obj; second definition ignored
+quantum_beaconism_backend_minimal.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+quantum_beaconism_backend_minimal.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+quantum_beaconism_backend_minimal.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+quantum_beaconism_backend.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+quantum_beaconism_backend.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+quantum_beaconism_backend.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+quantum_beaconism_backend.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+quantum_beaconism_backend.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+quantum_beaconism_backend.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrAllocateHugePages already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrPinMemory already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrUnpinMemory already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrPrefetchMemory already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrSetThreadAffinityToNUMA0 already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrFlushCacheLines already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrMemoryBarrier already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+rawr_aperture_bypass.obj : warning LNK4006: RawrLargePagesAvailable already defined in rawr_aperture_bypass_simple.obj; second definition ignored
+RawrXD_AgentToolExecutor.obj : warning LNK4006: WndProc already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+rawrxd_audit.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_audit.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_audit.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_audit.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_audit.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_audit.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+RawrXD_AVX512_Production.obj : warning LNK4006: InitializePatternEngine already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_AVX512_Production.obj : warning LNK4006: ShutdownPatternEngine already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_AVX512_Production.obj : warning LNK4006: GetPatternStats already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_AVX512_Production.obj : warning LNK4006: ClassifyPattern already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_AVX512_SIMD.obj : warning LNK4006: InitializePatternEngine already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_AVX512_SIMD.obj : warning LNK4006: ShutdownPatternEngine already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_AVX512_SIMD.obj : warning LNK4006: GetPatternStats already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_AVX512_SIMD.obj : warning LNK4006: GetEngineInfo already defined in RawrXD_AVX512_Production.obj; second definition ignored
+RawrXD_AVX512_SIMD.obj : warning LNK4006: ClassifyPattern already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+rawrxd_cot_dll_entry.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+RawrXD_DiskRecoveryAgent.obj : warning LNK4006: ConsolePrint already defined in ghost_paging_v2.obj; second definition ignored
+rawrxd_dual_engine.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_dual_engine.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_dual_engine.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_dual_engine.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_dual_engine.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_dual_engine.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+RawrXD_Emitter_v1.obj : warning LNK4006: Emit_Byte already defined in pe_writer.obj; second definition ignored
+RawrXD_GOLD.obj : warning LNK4006: MainWndProc already defined in RawrXD_GOLD_INFERENCE.obj; second definition ignored
+RawrXD_GOLD.obj : warning LNK4006: Core_SpawnNativeUI already defined in RawrXD_GOLD_INFERENCE.obj; second definition ignored
+rawrxd_governor.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_governor.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_governor.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_governor.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_governor.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_governor.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+RawrXD_HttpClient_Real.obj : warning LNK4006: _StrLen already defined in agent_tools.obj; second definition ignored
+RawrXD_HttpClient_Real.obj : warning LNK4006: _StrCopy already defined in agent_tools.obj; second definition ignored
+RawrXD_IDE_unified.obj : warning LNK4006: CopyString already defined in RawrCodex.obj; second definition ignored
+RawrXD_IDE_unified.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Clean.obj : warning LNK4006: PeWriter_Init already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Clean.obj : warning LNK4006: Emitter_Init already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Clean.obj : warning LNK4006: Emitter_EmitByte already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Clean.obj : warning LNK4006: PeWriter_AddImportTable already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Clean.obj : warning LNK4006: PeWriter_WriteDosHeader already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Clean.obj : warning LNK4006: PeWriter_WriteNtHeaders already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: PeWriter_Init already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: Emitter_Init already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: Emitter_EmitByte already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: PeWriter_WriteDosHeader already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: PeWriter_WriteNtHeaders already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: PeWriter_WriteSectionHeader already defined in RawrXD_Monolithic_PE_Emitter_Clean.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter_Final.obj : warning LNK4006: PeWriter_AddImportTable already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: PeWriter_Init already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: PeWriter_AddImportTable already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: PeWriter_WriteDosHeader already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: PeWriter_WriteNtHeaders already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: PeWriter_WriteSectionHeader already defined in RawrXD_Monolithic_PE_Emitter_Clean.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: Emitter_Init already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: Emitter_EmitByte already defined in Full_Reset.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: PeWriter_FinalizeToFile already defined in RawrXD_Monolithic_PE_Emitter_Final.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: AssembleBufferToX64 already defined in pe_writer.obj; second definition ignored
+RawrXD_Monolithic_PE_Emitter.obj : warning LNK4006: PeWriter_CreateMinimalExe already defined in RawrXD_Monolithic_PE_Emitter_Final.obj; second definition ignored
+RawrXD_NanoDiskBridge.obj : warning LNK4006: ConsolePrint already defined in ghost_paging_v2.obj; second definition ignored
+RawrXD_NanoDiskBridge.obj : warning LNK4006: PrintU64 already defined in RawrXD_DiskRecoveryAgent.obj; second definition ignored
+RawrXD_Native_UI.obj : warning LNK4006: MainWndProc already defined in RawrXD_GOLD_INFERENCE.obj; second definition ignored
+RawrXD_NativeHost.obj : warning LNK4006: PrintString already defined in gguf_dump.obj; second definition ignored
+RawrXD_NativeHost.obj : warning LNK4006: ClassifyPattern already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_NativeHost.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_NativeModelBridge_Complete.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+RawrXD_Overdrive_150TPS.obj : warning LNK4006: SwarmV150_VNNI_Dequant_Core already defined in kernel_vnni.obj; second definition ignored
+RawrXD_Overdrive_150TPS.obj : warning LNK4006: SwarmV150_Core_Affinity_Lock already defined in kernel_affinity.obj; second definition ignored
+RawrXD_Overdrive_150TPS.obj : warning LNK4006: SwarmV150_AVX512_FMA_Unroll already defined in kernel_fma_unroll.obj; second definition ignored
+RawrXD_PatternBridge.obj : warning LNK4006: DetectAVX512 already defined in RawrXD_AVX512_SIMD.obj; second definition ignored
+RawrXD_PatternBridge.obj : warning LNK4006: ScanAVX512 already defined in RawrXD_AVX512_SIMD.obj; second definition ignored
+RawrXD_PatternBridge.obj : warning LNK4006: ClassifyPattern already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_PatternBridge.obj : warning LNK4006: InitializePatternEngine already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_PatternBridge.obj : warning LNK4006: ShutdownPatternEngine already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_PatternBridge.obj : warning LNK4006: GetPatternStats already defined in RawrXD_AVX512_PatternEngine.obj; second definition ignored
+RawrXD_PatternBridge.obj : warning LNK4006: DllMain already defined in crypto_masm.obj; second definition ignored
+RawrXD_PDBKernel_v3.obj : warning LNK4006: rawrxd_find_export already defined in RawrXD_PDBKernel_v2.obj; second definition ignored
+RawrXD_PE_Writer.obj : warning LNK4006: Emit_FunctionEpilogue already defined in pe_writer.obj; second definition ignored
+RAWRXD_PE32_EMITTER_MONOLITHIC.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_PE64_IAT_Fabricator_v224.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+rawrxd_phase8_stress.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+rawrxd_profiler.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_QuantKernels_Full.obj : warning LNK4006: Dequant_Q4_0 already defined in dequant_simd.obj; second definition ignored
+RawrXD_QuantKernels_Full.obj : warning LNK4006: Dequant_Q4_1 already defined in dequant_simd.obj; second definition ignored
+RawrXD_QuantKernels_Full.obj : warning LNK4006: Dequant_Q8_0 already defined in dequant_simd.obj; second definition ignored
+rawrxd_quantum_beaconism.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_quantum_beaconism.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_quantum_beaconism.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_quantum_beaconism.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_quantum_beaconism.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_quantum_beaconism.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+RawrXD_RBTree.obj : warning LNK4006: RB_LeftRotate already defined in rawr_rbtree.obj; second definition ignored
+RawrXD_RBTree.obj : warning LNK4006: RB_RightRotate already defined in rawr_rbtree.obj; second definition ignored
+RawrXD_RBTree.obj : warning LNK4006: RB_InsertFixup already defined in rawr_rbtree.obj; second definition ignored
+RawrXD_RDNA3_Trap_Handler.obj : warning LNK4006: RDNA3_Sovereign_Page_Fault already defined in RawrXD_RDNA3_Shadow_Pager.obj; second definition ignored
+rawrxd_scc.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_scc.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_scc.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+rawrxd_scc.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_scc.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_scc.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+rawrxd_smoke_check.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_Sovereign_MinimalEntry_v224.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_Sovereign_Monolith.obj : warning LNK4006: MemZero already defined in RawrXD_LSP_Handshake_Ext.obj; second definition ignored
+RawrXD_Sovereign_Monolith.obj : warning LNK4006: MemCopy already defined in RawrXD_LSP_Handshake_Ext.obj; second definition ignored
+RawrXD_Sovereign_Monolith.obj : warning LNK4006: StrLenA already defined in ollama_sovereign_proxy.obj; second definition ignored
+RawrXD_Sovereign_Monolith.obj : warning LNK4006: IntToStr already defined in RawrXD_LSP_Handshake_Ext.obj; second definition ignored
+RawrXD_Sovereign_Monolith.obj : warning LNK4006: WndProc already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+RawrXD_Sovereign_Monolith.obj : warning LNK4006: WinMain already defined in agenticide_main.obj; second definition ignored
+RawrXD_Sovereign_Router.obj : warning LNK4006: SwarmV240_Placement_Guard already defined in RawrXD_Sovereign_Router_v239.obj; second definition ignored
+RawrXD_Standalone_Inference.obj : warning LNK4006: SoftMax already defined in RawrXD_NativeModelBridge_Complete.obj; second definition ignored
+RawrXD_StreamingWeights.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+RawrXD_StreamingWeights.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+RawrXD_StreamingWeights.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+RawrXD_StreamingWeights.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+RawrXD_StreamingWeights.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+RawrXD_StreamingWeights.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_EventFire_ExtensionActivated_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_EventFire_ExtensionDeactivated_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_EventListener_DisposeInternal_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Extension_CleanupLanguageClients_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Extension_CleanupWebviews_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Extension_GetCurrent_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Extension_ValidateCapabilities_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionContext_Create_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionHostBridge_ProcessMessages_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionHostBridge_RegisterWebview_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionHostBridge_SendMessage_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionHostBridge_SendNotification_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionHostBridge_SendRequest_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionManifest_FromJson_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionModule_Load_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ExtensionStorage_GetPath_MASM already defined in RawrXD_ExtensionBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_GetArray_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_GetArrayField_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_GetInt_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_GetObjectField_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_GetObjectKeys_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_GetString_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_GetStringField_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_HasField_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_ParseFile_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_ParseObject_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Json_ParseString_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_JsonObject_Create_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_LSP_Handshake_Sequence_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_LSP_JsonRpc_BuildNotification_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_LSP_Transport_Write_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_LspClient_ForwardMessage_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Marketplace_DownloadExtension_MASM already defined in RawrXD_MarketplaceBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ModelBridge_GetProfile_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ModelBridge_Init_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ModelBridge_LoadModel_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ModelBridge_UnloadModel_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_ModelBridge_ValidateLoad_MASM already defined in RawrXD_DataBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Observable_Create_ActiveTextEditor_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Observable_Create_VisibleTextEditors_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_Observable_Create_WorkspaceFolders_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_OutputChannel_Append_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_OutputChannel_AppendLine_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_OutputChannel_Create_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_OutputChannel_CreateAPI_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+RawrXD_StubSweepBridge.obj : warning LNK4006: RawrXD_WebviewPanel_CreateAPI_MASM already defined in RawrXD_ExtensionRuntimeBridge.obj; second definition ignored
+rawrxd_titan_dispatcher.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_Titan_MetaReverse.obj : warning LNK4006: GetKernel32Base already defined in RawrXD_IDE_unified.obj; second definition ignored
+RAWRXD_TITAN_ULTIMATE_GODSOURCE.obj : warning LNK4006: Emit_FunctionPrologue already defined in pe_writer.obj; second definition ignored
+RAWRXD_TITAN_ULTIMATE_GODSOURCE.obj : warning LNK4006: Emit_FunctionEpilogue already defined in pe_writer.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: Math_InitTables already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: RMSNorm_F32_AVX512 already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: SoftMax_F32 already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: Attention_Forward_GQA already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: FeedForward_SwiGLU already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: Titan_RunInferenceStep already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: Titan_LoadModel already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: Titan_InferenceThread already defined in RawrXD_GUI_IDE.obj; second definition ignored
+RawrXD_Titan.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+RawrXD_TransformerKernel_Zero.obj : warning LNK4006: VecDot_Q4_0_Q8_0 already defined in RawrXD_QuantKernels_Full.obj; second definition ignored
+RawrXD_TransformerKernel_Zero.obj : warning LNK4006: Tokenizer_Encode already defined in RawrXD_Tokenizer_Full.obj; second definition ignored
+RawrXD_TransformerKernel_Zero.obj : warning LNK4006: Tokenizer_Decode already defined in RawrXD_Tokenizer_Full.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_ReadMemory already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_WriteMemory already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_InjectINT3 already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_RestoreINT3 already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_SetHardwareBreakpoint already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_ClearHardwareBreakpoint already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_EnableSingleStep already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_DisableSingleStep already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_CaptureContext already defined in RawrXD_Debug_Engine.obj; second definition ignored
+RawrXD_UnifiedDebugger.obj : warning LNK4006: Dbg_WalkStack already defined in RawrXD_Debug_Engine.obj; second definition ignored
+runtime_masquerade.obj : warning LNK4006: RegisterAgent already defined in asm_globals.obj; second definition ignored
+runtime_masquerade.obj : warning LNK4006: TryBeaconRecv already defined in asm_globals.obj; second definition ignored
+runtime_masquerade.obj : warning LNK4006: HotSwapModel already defined in asm_globals.obj; second definition ignored
+runtime_masquerade.obj : warning LNK4006: RunInference already defined in asm_globals.obj; second definition ignored
+runtime_masquerade.obj : warning LNK4006: BeaconRecv already defined in asm_globals.obj; second definition ignored
+runtime_masquerade.obj : warning LNK4006: g_hInstance already defined in asm_globals.obj; second definition ignored
+runtime_masquerade.obj : warning LNK4006: g_hHeap already defined in asm_globals.obj; second definition ignored
+simd_kernels.obj : warning LNK4006: FlashAttention_Forward already defined in FlashAttention_AVX512.obj; second definition ignored
+sovereign_macros_smoke.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+sovereign_stress_governor.obj : warning LNK4006: ConsolePrint already defined in ghost_paging_v2.obj; second definition ignored
+sovereign_stress_governor.obj : warning LNK4006: IntToStr already defined in RawrXD_LSP_Handshake_Ext.obj; second definition ignored
+sovereign_stress_governor.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+SovereignFP8_Kernels.obj : warning LNK4006: SovereignQuantizeE4M3 already defined in sovereign_fp8_quantizer.obj; second definition ignored
+SovereignFP8_Kernels.obj : warning LNK4006: SovereignQuantizeE5M2 already defined in sovereign_fp8_quantizer.obj; second definition ignored
+SovereignFP8_Kernels.obj : warning LNK4006: SovereignDoubleBufferInit already defined in sovereign_fp8_quantizer.obj; second definition ignored
+SovereignFP8_Kernels.obj : warning LNK4006: SovereignDoubleBufferSwap already defined in sovereign_fp8_quantizer.obj; second definition ignored
+SovereignFP8_Kernels.obj : warning LNK4006: SovereignGPUFlush already defined in sovereign_fp8_quantizer.obj; second definition ignored
+SovereignThermalDemo.obj : warning LNK4006: PrintString already defined in gguf_dump.obj; second definition ignored
+SovereignThermalDemo.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+SovereignThermalDemoHUD.obj : warning LNK4006: InitMMF already defined in nvme_oracle_service.obj; second definition ignored
+SovereignThermalDemoHUD.obj : warning LNK4006: WndProc already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+SovereignThermalDemoHUD.obj : warning LNK4006: WinMain already defined in agenticide_main.obj; second definition ignored
+SovereignThermalDemoHUD.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+SovereignThermalHUD.obj : warning LNK4006: InitMMF already defined in nvme_oracle_service.obj; second definition ignored
+SovereignThermalHUD.obj : warning LNK4006: WndProc already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+SovereignThermalHUD.obj : warning LNK4006: WinMain already defined in agenticide_main.obj; second definition ignored
+SovereignThermalStressOrchestrator.obj : warning LNK4006: PrintString already defined in gguf_dump.obj; second definition ignored
+stress_harness.obj : warning LNK4006: g_hInstance already defined in asm_globals.obj; second definition ignored
+stress_harness.obj : warning LNK4006: g_hHeap already defined in asm_globals.obj; second definition ignored
+stress_harness.obj : warning LNK4006: WinMainCRTStartup already defined in main.obj; second definition ignored
+swarm_coordinator.obj : warning LNK4006: WorkerThreadProc already defined in RawrXD_MultiWindow_Kernel.obj; second definition ignored
+swarm.obj : warning LNK4006: Swarm_Init already defined in RawrXD_DualAgent_Orchestrator.obj; second definition ignored
+swarm.obj : warning LNK4006: Swarm_Shutdown already defined in RawrXD_DualAgent_Orchestrator.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: PeWriter_Init already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: Emitter_Init already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: Emitter_EmitByte already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: PeWriter_WriteDosHeader already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: PeWriter_WriteNtHeaders already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: PeWriter_WriteSectionHeader already defined in RawrXD_Monolithic_PE_Emitter_Clean.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: PeWriter_AddImportTable already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: PeWriter_FinalizeToFile already defined in RawrXD_Monolithic_PE_Emitter_Final.obj; second definition ignored
+Titan_Stage3_Clean.obj : warning LNK4006: PeWriter_CreateMinimalExe already defined in RawrXD_Monolithic_PE_Emitter_Final.obj; second definition ignored
+Titan_Stage3_Final.obj : warning LNK4006: PeWriter_Init already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Final.obj : warning LNK4006: Emitter_Init already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Final.obj : warning LNK4006: Emitter_EmitByte already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Final.obj : warning LNK4006: PeWriter_AddImportTable already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Final.obj : warning LNK4006: PeWriter_WriteDosHeader already defined in Full_Reset.obj; second definition ignored
+Titan_Stage3_Final.obj : warning LNK4006: PeWriter_WriteNtHeaders already defined in Full_Reset.obj; second definition ignored
+transformer_block.obj : warning LNK4006: MultiHeadAttention already defined in RawrXD_Standalone_Inference.obj; second definition ignored
+ui.obj : warning LNK4006: g_textBuf already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_totalChars already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_cursorLine already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_cursorCol already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_ghostTextBuffer already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_rlhfAcceptCount already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_candidateCount already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_lineOff already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_rlhfRejectCount already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: hMainWnd already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_ghostTextLen already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_ghostActive already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_peSize already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_candidateLens already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_ghostLineCount already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_candidates already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_inferencePending already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_candidateScores already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_peBuffer already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: g_bestCandidate already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: UIMainLoop already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: WndProc already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: RebuildLineTable already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: GetCurLineLen already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: PositionCaret already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: EnsureCursorVisible already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: UpdateScrollBar already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: FormatLineNum already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: Bridge_OnSuggestionReady already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: ScoreCandidate already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: PruneCandidates already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: CreateEditorPane already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: DeleteSelection already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: UndoPush already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: UI_OnTokenStream already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: GetEditorSelectionBuffer already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+ui.obj : warning LNK4006: ExportEditorBufferToPE already defined in RawrXD_Agentic_Planner.obj; second definition ignored
+vision_projection_kernel.obj : warning LNK4006: Titan_ExecuteComputeKernel already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+vision_projection_kernel.obj : warning LNK4006: Titan_PerformCopy already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+vision_projection_kernel.obj : warning LNK4006: Titan_PerformDMA already defined in gpu_dma_complete_reverse_engineered.obj; second definition ignored
+vision_projection_kernel.obj : warning LNK4006: Titan_InitializeDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+vision_projection_kernel.obj : warning LNK4006: Titan_ShutdownDMA already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+vision_projection_kernel.obj : warning LNK4006: Titan_GetDMAStats already defined in quantum_beaconism_backend_minimal.obj; second definition ignored
+WEEK1_COMPLETE.obj : warning LNK4006: MemZero already defined in RawrXD_LSP_Handshake_Ext.obj; second definition ignored
+WEEK1_COMPLETE.obj : warning LNK4006: MemCopy already defined in RawrXD_LSP_Handshake_Ext.obj; second definition ignored
+WEEK1_COMPLETE.obj : warning LNK4006: WorkerThreadProc already defined in RawrXD_MultiWindow_Kernel.obj; second definition ignored
+WEEK1_COMPLETE.obj : warning LNK4006: SubmitTask already defined in RawrXD_MultiWindow_Kernel.obj; second definition ignored
+win32ide_main.obj : warning LNK4006: EnsureDpiAwareness already defined in agenticide_main.obj; second definition ignored
+win32ide_main.obj : warning LNK4006: WinMain already defined in agenticide_main.obj; second definition ignored
+Win32IDE_Sidebar_Pure_Simple.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+Win32IDE_Sidebar_Pure.obj : warning LNK4006: Logger_Write already defined in Win32IDE_Sidebar_Pure_Minimal.obj; second definition ignored
+Win32IDE_Sidebar_Pure.obj : warning LNK4006: DebugEngine_Create already defined in Win32IDE_Sidebar_Pure_Minimal.obj; second definition ignored
+Win32IDE_Sidebar_Pure.obj : warning LNK4006: DebugEngine_Step already defined in Win32IDE_Sidebar_Pure_Minimal.obj; second definition ignored
+Win32IDE_Sidebar_Pure.obj : warning LNK4006: Theme_SetDarkMode already defined in Win32IDE_Sidebar_Pure_Minimal.obj; second definition ignored
+Win32IDE_Sidebar.obj : warning LNK4006: main already defined in agent_client_evict.obj; second definition ignored
+kernel32.lib(KERNEL32.dll) : warning LNK4006: __imp_ExitProcess already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+kernel32.lib(KERNEL32.dll) : warning LNK4006: __imp_GetModuleHandleA already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+kernel32.lib(KERNEL32.dll) : warning LNK4006: __imp_GetProcAddress already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+kernel32.lib(KERNEL32.dll) : warning LNK4006: __imp_LoadLibraryA already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+kernel32.lib(KERNEL32.dll) : warning LNK4006: RtlZeroMemory already defined in RawrXD_Unified_Memory_Executor.obj; second definition ignored
+user32.lib(USER32.dll) : warning LNK4006: __imp_RegisterClassExA already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+user32.lib(USER32.dll) : warning LNK4006: __imp_CreateWindowExA already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+user32.lib(USER32.dll) : warning LNK4006: __imp_DefWindowProcA already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+user32.lib(USER32.dll) : warning LNK4006: __imp_MessageBoxA already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+gdi32.lib(GDI32.dll) : warning LNK4006: __imp_SelectObject already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+gdi32.lib(GDI32.dll) : warning LNK4006: __imp_DeleteObject already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+gdi32.lib(GDI32.dll) : warning LNK4006: __imp_CreateSolidBrush already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+gdi32.lib(GDI32.dll) : warning LNK4006: __imp_CreatePen already defined in RawrXD_PE64_IAT_Fabricator_v224.obj; second definition ignored
+   Creating library d:\rawrxd\build-masm-x64\RawrXD_x64_IDE.lib and object d:\rawrxd\build-masm-x64\RawrXD_x64_IDE.exp
+agenticide_main.obj : error LNK2019: unresolved external symbol InitCommonControlsEx referenced in function WinMain
+RawrXD_GOLD.obj : error LNK2001: unresolved external symbol InitCommonControlsEx
+win32ide_main.obj : error LNK2001: unresolved external symbol InitCommonControlsEx
+agenticide_main.obj : error LNK2019: unresolved external symbol asm_orchestrator_init referenced in function WinMain
+agenticide_main.obj : error LNK2019: unresolved external symbol asm_orchestrator_dispatch referenced in function AgenticIDE_WndProc
+agenticide_main.obj : error LNK2019: unresolved external symbol asm_orchestrator_shutdown referenced in function AgenticIDE_WndProc
+agenticide_main.obj : error LNK2019: unresolved external symbol asm_orchestrator_drain_queue referenced in function AgenticIDE_WndProc
+agenticide_main.obj : error LNK2019: unresolved external symbol asm_orchestrator_queue_async referenced in function AgenticIDE_QueueTask
+ai_completion_provider_masm.obj : error LNK2019: unresolved external symbol RawrXD_InferenceEngine_Init referenced in function RawrXD_AICompletionProvider_Init
+RawrXD_AgenticOrchestrator.obj : error LNK2001: unresolved external symbol RawrXD_InferenceEngine_Init
+ai_completion_provider_masm.obj : error LNK2019: unresolved external symbol RawrXD_InferenceEngine_Run referenced in function RawrXD_AICompletionProvider_Complete
+RawrXD_AgenticOrchestrator.obj : error LNK2001: unresolved external symbol RawrXD_InferenceEngine_Run
+ai_completion_provider_masm.obj : error LNK2019: unresolved external symbol RawrXD_InferenceEngine_Tokenize referenced in function RawrXD_AICompletionProvider_Complete
+ai_completion_provider_masm.obj : error LNK2019: unresolved external symbol RawrXD_InferenceEngine_Detokenize referenced in function RawrXD_AICompletionProvider_Complete
+ai_completion_provider_masm.obj : error LNK2019: unresolved external symbol RawrXD_AgenticMemorySystem_Alloc referenced in function RawrXD_AICompletionProvider_Init
+RawrXD_AgenticOrchestrator.obj : error LNK2001: unresolved external symbol RawrXD_AgenticMemorySystem_Alloc
+ai_completion_provider_masm.obj : error LNK2019: unresolved external symbol RawrXD_AgenticMemorySystem_Free referenced in function RawrXD_AICompletionProvider_Cleanup
+RawrXD_AgenticOrchestrator.obj : error LNK2001: unresolved external symbol RawrXD_AgenticMemorySystem_Free
+batch_resolver_driver.obj : error LNK2019: unresolved external symbol PEWriter_CreateExecutable referenced in function main
+batch_resolver_driver.obj : error LNK2019: unresolved external symbol SymbolBatchResolver_AddBatch referenced in function main
+batch_resolver_driver.obj : error LNK2001: unresolved external symbol SymbolBatchResolver_AddAll
+batch_resolver_driver.obj : error LNK2019: unresolved external symbol PEWriter_AddCode referenced in function main
+batch_resolver_driver.obj : error LNK2019: unresolved external symbol PEWriter_WriteFile referenced in function main
+crypto_masm.obj : error LNK2019: unresolved external symbol UACBypass_Impl referenced in function UACBypass
+feature_dispatch_bridge.obj : error LNK2019: unresolved external symbol rawrxd_dispatch_feature referenced in function masm_dispatch_feature
+feature_dispatch_bridge.obj : error LNK2019: unresolved external symbol rawrxd_dispatch_command referenced in function masm_dispatch_command
+gui_dispatch_bridge.obj : error LNK2001: unresolved external symbol rawrxd_dispatch_command
+feature_dispatch_bridge.obj : error LNK2019: unresolved external symbol rawrxd_dispatch_cli referenced in function masm_dispatch_cli
+feature_dispatch_bridge.obj : error LNK2019: unresolved external symbol rawrxd_get_feature_count referenced in function masm_get_feature_count
+gui_dispatch_bridge.obj : error LNK2001: unresolved external symbol rawrxd_get_feature_count
+ghost_paging.obj : error LNK2019: unresolved external symbol LoadTensorBlock referenced in function GhostDispatchToken
+ghost_paging.obj : error LNK2019: unresolved external symbol DispatchComputeStage referenced in function GhostDispatchToken
+GPU_DirectDispatch.obj : error LNK2019: unresolved external symbol "public: struct VkDevice_T * __cdecl RawrXD::GPU::VulkanContext::device(void)" (?device@VulkanContext@GPU@RawrXD@@QEAAPEAUVkDevice_T@@XZ) referenced in function GPUDD_Init
+GPU_DirectDispatch.obj : error LNK2019: unresolved external symbol "public: struct VkQueue_T * __cdecl RawrXD::GPU::VulkanContext::computeQueue(void)" (?computeQueue@VulkanContext@GPU@RawrXD@@QEAAPEAUVkQueue_T@@XZ) referenced in function GPUDD_Init
+GPU_DirectDispatch.obj : error LNK2019: unresolved external symbol "public: unsigned int __cdecl RawrXD::GPU::VulkanContext::queueFamilyIndex(void)" (?queueFamilyIndex@VulkanContext@GPU@RawrXD@@QEAAIXZ) referenced in function GPUDD_Init
+GPU_DirectDispatch.obj : error LNK2019: unresolved external symbol "public: unsigned int __cdecl RawrXD::GPU::VulkanContext::findMemoryType(unsigned int,long)" (?findMemoryType@VulkanContext@GPU@RawrXD@@QEAAIIJ@Z) referenced in function GPUDD_CreateBuffer
+k_swap_aperture_win32_v126.obj : error LNK2019: unresolved external symbol VirtualAlloc2 referenced in function k_swap_aperture_init
+k_swap_aperture_win32.obj : error LNK2001: unresolved external symbol VirtualAlloc2
+k_swap_aperture_win32_v126.obj : error LNK2001: unresolved external symbol MapViewOfFile3
+k_swap_aperture_win32.obj : error LNK2001: unresolved external symbol MapViewOfFile3
+k_swap_aperture_win32_v126.obj : error LNK2001: unresolved external symbol UnmapViewOfFile2
+k_swap_aperture_win32.obj : error LNK2001: unresolved external symbol UnmapViewOfFile2
+main.obj : error LNK2019: unresolved external symbol Test_Init referenced in function WinMain
+stream_bench.obj : error LNK2001: unresolved external symbol Test_Init
+main.obj : error LNK2019: unresolved external symbol StressTest_Run referenced in function WinMain
+stream_bench.obj : error LNK2001: unresolved external symbol StressTest_Run
+stress_harness.obj : error LNK2001: unresolved external symbol StressTest_Run
+main.obj : error LNK2019: unresolved external symbol StressTest_LogStats referenced in function WinMain
+stream_bench.obj : error LNK2001: unresolved external symbol StressTest_LogStats
+stress_harness.obj : error LNK2001: unresolved external symbol StressTest_LogStats
+main.obj : error LNK2019: unresolved external symbol CommandLineToArgvW referenced in function ParseCommandLine
+main.obj : error LNK2019: unresolved external symbol RawrXD_RunExternalTestsW referenced in function WinMain
+main.obj : error LNK2001: unresolved external symbol Dbg_Attach
+main.obj : error LNK2001: unresolved external symbol Dbg_IsWritable
+main.obj : error LNK2001: unresolved external symbol Dbg_SetHWBP
+model_invoker.obj : error LNK2019: unresolved external symbol masm_ai_tensor_simd_process referenced in function ModelInvoker_Invoke
+NativeInferenceClient.obj : error LNK2001: unresolved external symbol masm_ai_tensor_simd_process
+node_heartbeat.obj : error LNK2019: unresolved external symbol g_last_zmm_heartbeat referenced in function rawrxd_emit_heartbeat
+ollama_http_client.obj : error LNK2001: unresolved external symbol inet_aton
+quantum_beaconism_backend_minimal.obj : error LNK2001: unresolved external symbol Titan_ResetDMAStats
+quantum_beaconism_backend.obj : error LNK2019: unresolved external symbol rawr_ssot_owner_for_hash referenced in function SSOT_HasCppOwner
+quantum_beaconism_backend.obj : error LNK2019: unresolved external symbol rawr_ssot_active_owner referenced in function SSOT_GetActiveOwner
+RawrXD_Agentic_Planner.obj : error LNK2019: unresolved external symbol GetSaveFileNameW referenced in function WndProc
+ui.obj : error LNK2001: unresolved external symbol GetSaveFileNameW
+RawrXD_Agentic_Planner.obj : error LNK2001: unresolved external symbol GetOpenFileNameW
+ui.obj : error LNK2001: unresolved external symbol GetOpenFileNameW
+RawrXD_Agentic_Planner.obj : error LNK2019: unresolved external symbol ShellExecuteA referenced in function ExportEditorBufferToPE
+RawrXD_IDE_unified.obj : error LNK2001: unresolved external symbol ShellExecuteA
+ui.obj : error LNK2001: unresolved external symbol ShellExecuteA
+RawrXD_AgenticOrchestrator.obj : error LNK2019: unresolved external symbol RawrXD_AgenticToolExecutor_Init referenced in function RawrXD_AgenticOrchestrator_Init
+RawrXD_AgenticOrchestrator.obj : error LNK2019: unresolved external symbol RawrXD_AgenticToolExecutor_Execute referenced in function RawrXD_AgenticOrchestrator_ProcessTasks
+RawrXD_AgenticOrchestrator.obj : error LNK2019: unresolved external symbol RawrXD_AgenticDeepThinking_Init referenced in function RawrXD_AgenticOrchestrator_Init
+RawrXD_AgenticShellBridge.obj : error LNK2019: unresolved external symbol InternetOpenA referenced in function AgenticShell_Init
+RawrXD_AgenticShellBridge.obj : error LNK2019: unresolved external symbol InternetConnectA referenced in function AgenticShell_Init
+RawrXD_AgenticShellBridge.obj : error LNK2019: unresolved external symbol HttpOpenRequestA referenced in function as_PostToOllama
+RawrXD_AgenticShellBridge.obj : error LNK2019: unresolved external symbol HttpSendRequestA referenced in function as_PostToOllama
+RawrXD_AgenticShellBridge.obj : error LNK2019: unresolved external symbol InternetReadFile referenced in function as_PostToOllama
+RawrXD_AgenticShellBridge.obj : error LNK2019: unresolved external symbol InternetCloseHandle referenced in function AgenticShell_Init
+RawrXD_Debug_Engine.obj : error LNK2019: unresolved external symbol memcmp referenced in function Dbg_MemoryScan
+RawrXD_Distributed_Inference.obj : error LNK2019: unresolved external symbol Initialize_Sovereign_APIs referenced in function DistributedInference_Initialize
+RawrXD_Distributed_Inference.obj : error LNK2019: unresolved external symbol pVirtualAlloc referenced in function Initialize_CPU_Device
+RawrXD_GOLD.obj : error LNK2001: unresolved external symbol CreateStatusWindowA
+RawrXD_GPU_Memory_FIXED.obj : error LNK2019: unresolved external symbol Spinlock_Acquire referenced in function Vram_Defragment
+RawrXD_Swarm_Orchestrator.obj : error LNK2001: unresolved external symbol Spinlock_Acquire
+RawrXD_GPU_Memory_FIXED.obj : error LNK2019: unresolved external symbol Spinlock_Release referenced in function Vram_Defragment
+RawrXD_Swarm_Orchestrator.obj : error LNK2001: unresolved external symbol Spinlock_Release
+RawrXD_Inference_AVX512.obj : error LNK2019: unresolved external symbol Apply_RMSNorm referenced in function InferenceCore_GenerateToken
+RawrXD_Inference_AVX512.obj : error LNK2019: unresolved external symbol Apply_RoPE_Direct referenced in function InferenceCore_GenerateToken
+RawrXD_Inference_AVX512.obj : error LNK2019: unresolved external symbol Compute_MHA_Parallel referenced in function InferenceCore_GenerateToken
+RawrXD_Inference_AVX512.obj : error LNK2019: unresolved external symbol Apply_FFN_SwiGLU referenced in function InferenceCore_GenerateToken
+RawrXD_Inference_AVX512.obj : error LNK2019: unresolved external symbol Sample_Logits_TopP referenced in function InferenceCore_GenerateToken
+RawrXD_IPC_Dispatcher.obj : error LNK2019: unresolved external symbol RawrXD_Disasm_HandleReq referenced in function RawrXD_DispatchIPC
+RawrXD_IPC_Dispatcher.obj : error LNK2019: unresolved external symbol RawrXD_Symbol_HandleReq referenced in function RawrXD_DispatchIPC
+RawrXD_IPC_Dispatcher.obj : error LNK2019: unresolved external symbol RawrXD_Module_HandleReq referenced in function RawrXD_DispatchIPC
+RawrXD_LSP_Core.obj : error LNK2019: unresolved external symbol RawrXD_Marketplace_ResolveSymbol referenced in function LSP_Internal_Dispatch
+RawrXD_LSP_Core.obj : error LNK2019: unresolved external symbol RawrXD_UI_Push_Notify referenced in function LSP_Shim_ShowMessage
+RawrXD_LSP_Core.obj : error LNK2019: unresolved external symbol RawrXD_JSON_Stringify referenced in function LSP_Transport_Write
+RawrXD_LSP_Core.obj : error LNK2019: unresolved external symbol RawrXD_Calc_ContentLength referenced in function LSP_Transport_Write
+RawrXD_LSP_Handshake_Ext.obj : error LNK2001: unresolved external symbol LSP_JsonRpc_BuildNotification
+RawrXD_NanoDiskBridge.obj : error LNK2019: unresolved external symbol NanoQuant_QuantizeTensor referenced in function NanoDisk_Callback
+RawrXD_NanoDiskBridge.obj : error LNK2019: unresolved external symbol NanoQuant_GetCompressionRatio referenced in function NanoDisk_Callback
+RawrXD_Native_UI.obj : error LNK2019: unresolved external symbol Dock_Initialize referenced in function Core_InitializeUI
+RawrXD_Native_UI.obj : error LNK2019: unresolved external symbol Dock_GetHostWindow referenced in function Core_InitializeUI
+RawrXD_Native_UI.obj : error LNK2001: unresolved external symbol Dock_UpdateSize
+RawrXD_Native_UI.obj : error LNK2019: unresolved external symbol Dock_RegisterPanels referenced in function Core_InitializeUI
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_mailbox_data_seq referenced in function RawrXD_Omega_Singularity
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_mailbox_consumed_seq referenced in function RawrXD_Omega_Singularity
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_mailbox_frame_ready referenced in function RawrXD_Omega_Singularity
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_completion_fence referenced in function RawrXD_Omega_Singularity
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_last_doorbell_addr referenced in function RawrXD_Omega_Singularity
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_last_doorbell_value referenced in function RawrXD_Omega_Singularity
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_last_doorbell_emit_seq referenced in function RawrXD_Omega_Singularity
+RawrXD_Omega_Singularity.obj : error LNK2019: unresolved external symbol g_rawrxd_omega_probe_early_return referenced in function RawrXD_Omega_Singularity
+RawrXD_Phase1_CoreUX.obj : error LNK2019: unresolved external symbol Editor_GetCursorPixelPos referenced in function GhostText_OnTyping
+RawrXD_Phase1_CoreUX.obj : error LNK2019: unresolved external symbol Editor_GetLinePrefixA referenced in function GhostText_OnTyping
+RawrXD_Phase1_CoreUX.obj : error LNK2019: unresolved external symbol Editor_InsertTextA referenced in function GhostText_WndProc
+RawrXD_RouterBridge.obj : error LNK2019: unresolved external symbol AccelRouter_Create referenced in function Router_FastInit
+RawrXD_RouterBridge.obj : error LNK2019: unresolved external symbol AccelRouter_Init referenced in function Router_FastInit
+RawrXD_RouterBridge.obj : error LNK2019: unresolved external symbol AccelRouter_Shutdown referenced in function Router_FastShutdown
+RawrXD_RouterBridge.obj : error LNK2019: unresolved external symbol AccelRouter_Submit referenced in function Router_FastSubmit
+RawrXD_RouterBridge.obj : error LNK2019: unresolved external symbol AccelRouter_GetActiveBackend referenced in function Router_FastInit
+RawrXD_RouterBridge.obj : error LNK2019: unresolved external symbol AccelRouter_ForceBackend referenced in function Router_FastForceBackend
+RawrXD_RouterBridge.obj : error LNK2019: unresolved external symbol AccelRouter_IsBackendAvailable referenced in function Router_FastIsAvailable
+RawrXD_RouterBridge.obj : error LNK2001: unresolved external symbol AccelRouter_GetStatsJson
+RawrXD_SidebarCore.obj : error LNK2019: unresolved external symbol SetWindowThemeW referenced in function ForceDarkMode
+RawrXD_Swarm_Orchestrator.obj : error LNK2019: unresolved external symbol ModelState_AcquireInstance referenced in function Swarm_WorkerThread
+RawrXD_Swarm_Orchestrator.obj : error LNK2019: unresolved external symbol InferenceEngine_Submit referenced in function Swarm_WorkerThread
+RAWRXD_TITAN_ULTIMATE_GODSOURCE.obj : error LNK2019: unresolved external symbol SimpleDetokenize referenced in function AI_Detokenize
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_Init referenced in function VkBridge_Init
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_LoadShader referenced in function VkBridge_LoadMatMulShader
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_CreatePipeline referenced in function VkBridge_LoadMatMulShader
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_AllocBuffer referenced in function VkBridge_AllocBuffer
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKERNEL_TYPE_COPYToDevice referenced in function VkBridge_CopyToDevice
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKERNEL_TYPE_COPYToHost referenced in function VkBridge_CopyToHost
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_DispatchMatMul referenced in function VkBridge_DispatchMatMul
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_DispatchFlashAttn referenced in function VkBridge_DispatchFlashAttn
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_HotswapShader referenced in function VkBridge_HotswapShader
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_GetStats referenced in function VkBridge_GetStats
+RawrXD_VulkanBridge.obj : error LNK2019: unresolved external symbol VulkanKernel_Cleanup referenced in function VkBridge_Cleanup
+sdma_scheduler.obj : error LNK2019: unresolved external symbol g_sdma_work_queue_head referenced in function sdma_scheduler_entry
+sdma_scheduler.obj : error LNK2019: unresolved external symbol g_sdma_work_queue_tail referenced in function sdma_scheduler_entry
+sdma_scheduler.obj : error LNK2019: unresolved external symbol g_tsc_freq_500ns referenced in function sdma_scheduler_entry
+sdma_scheduler.obj : error LNK2019: unresolved external symbol g_ssot_full_beacon referenced in function sdma_scheduler_entry
+SovereignSpeculativeEngine.obj : error LNK2019: unresolved external symbol GetLlamaBridge referenced in function SpecEngine_Initialize
+SovereignSpeculativeEngine.obj : error LNK2019: unresolved external symbol "public: bool __cdecl LlamaNativeBridge::Initialize(wchar_t const *)" (?Initialize@LlamaNativeBridge@@QEAA_NPEB_W@Z) referenced in function SpecEngine_Initialize
+SovereignSpeculativeEngine.obj : error LNK2019: unresolved external symbol "public: bool __cdecl LlamaNativeBridge::LoadModel(wchar_t const *,int,long)" (?LoadModel@LlamaNativeBridge@@QEAA_NPEB_WHJ@Z) referenced in function SpecEngine_Initialize
+SovereignSpeculativeEngine.obj : error LNK2019: unresolved external symbol "public: void __cdecl LlamaNativeBridge::UnloadModel(void)" (?UnloadModel@LlamaNativeBridge@@QEAAXXZ) referenced in function SpecEngine_Unload
+SovereignSpeculativeEngine.obj : error LNK2019: unresolved external symbol "public: void __cdecl LlamaNativeBridge::Shutdown(void)" (?Shutdown@LlamaNativeBridge@@QEAAXXZ) referenced in function SpecEngine_Unload
+SovereignSpeculativeEngine.obj : error LNK2001: unresolved external symbol "public: bool __cdecl LlamaNativeBridge::IsModelLoaded(void)const " (?IsModelLoaded@LlamaNativeBridge@@QEBA_NXZ)
+SovereignSpeculativeEngine.obj : error LNK2019: unresolved external symbol "public: void __cdecl LlamaNativeBridge::ClearKVCache(void)" (?ClearKVCache@LlamaNativeBridge@@QEAAXXZ) referenced in function SpecEngine_ClearKVCache
+SovereignSpeculativeEngine.obj : error LNK2019: unresolved external symbol "public: struct LlamaNativeBridge::GenerationResult __cdecl LlamaNativeBridge::Generate(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,int,float,float,float)" (?Generate@LlamaNativeBridge@@QEAA?AUGenerationResult@1@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HMMM@Z) referenced in function SpecEngine_Infer_Speculative
+SovereignSpeculativeEngine.obj : error LNK2001: unresolved external symbol "public: char const * __cdecl LlamaNativeBridge::GetLastError(void)const " (?GetLastError@LlamaNativeBridge@@QEBAPEBDXZ)
+stream_bench.obj : error LNK2001: unresolved external symbol Test_AddNode
+stream_bench.obj : error LNK2001: unresolved external symbol Test_Discover
+stream_bench.obj : error LNK2001: unresolved external symbol Test_Run
+stream_bench.obj : error LNK2001: unresolved external symbol Test_GetResults
+Titan_Streaming_Orchestrator_NoHTTP.obj : error LNK2019: unresolved external symbol Titan_RunInference referenced in function NativeInferenceThread
+Titan_Streaming_Orchestrator_NoHTTP.obj : error LNK2019: unresolved external symbol GGUF_LoadFile referenced in function Titan_BeginStreamingInference_Native
+ui_bridge.obj : error LNK2019: unresolved external symbol QuantumOrchestrator_ExecuteTaskAuto referenced in function UIBridge_GenerateFeature
+ui_bridge.obj : error LNK2019: unresolved external symbol ExecutionResult_GetDetail referenced in function UIBridge_GenerateFeature
+ui_bridge.obj : error LNK2019: unresolved external symbol MultiFileSessionTracker_CreateSession referenced in function UIBridge_GenerateFeature
+ui_bridge.obj : error LNK2019: unresolved external symbol MultiFileSessionTracker_StageEdit referenced in function UIBridge_GenerateFeature
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkCreateInstance referenced in function VulkanCompute_Initialize
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkDestroyInstance referenced in function VulkanCompute_Shutdown
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkEnumeratePhysicalDevices referenced in function VulkanCompute_SelectPhysicalDevice
+vulkan_compute.obj : error LNK2001: unresolved external symbol vkGetPhysicalDeviceQueueFamilyProperties
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkCreateDevice referenced in function VulkanCompute_CreateLogicalDevice
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkDestroyDevice referenced in function VulkanCompute_Shutdown
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkGetDeviceQueue referenced in function VulkanCompute_CreateLogicalDevice
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkCreateCommandPool referenced in function VulkanCompute_InitializeCommandBufferPool
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkDestroyCommandPool referenced in function VulkanCompute_InitializeCommandBufferPool
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkAllocateCommandBuffers referenced in function VulkanCompute_AcquireCommandBuffer
+vulkan_compute.obj : error LNK2001: unresolved external symbol vkFreeCommandBuffers
+vulkan_compute.obj : error LNK2019: unresolved external symbol vkDeviceWaitIdle referenced in function VulkanCompute_Shutdown
+VulkanKernel_DispatchRaw.obj : error LNK2019: unresolved external symbol VulkanKernel_DispatchRaw_Impl referenced in function VulkanKernel_DispatchRaw_Asm
+d:\rawrxd\build-masm-x64\RawrXD_x64_IDE.exe : warning LNK4088: image being generated due to /FORCE option; image may not run
+legacy_stdio_wide_specifiers.lib(legacy_stdio_wide_specifiers.obj) : warning LNK4210: .CRT section exists; there may be unhandled static initializers or terminators
+win32ide_main.obj : fatal error LNK1223: invalid or corrupt file: file contains invalid .pdata contributions

@@ -51,7 +51,7 @@ public:
     json(const json& other) { *this = other; }
     json(json&& other) noexcept { *this = std::move(other); }
 
-    // Object constructor from initializer_list of pairs
+    // Object constructor from initializer_list of pairs (preferred for {{key, val}, ...} syntax)
     json(const std::initializer_list<std::pair<std::string, json>>& init) : m_type(value_t::object) {
         for (const auto& [key, value] : init) {
             m_object[key] = value;
@@ -59,10 +59,33 @@ public:
     }
 
     // Array constructor from initializer_list of json
+    // Use json::array() factory for explicit array creation to avoid ambiguity
     json(const std::initializer_list<json>& init) : m_type(value_t::array) {
         for (const auto& item : init) {
             m_array.push_back(item);
         }
+    }
+
+    // Helper to create json object from braced-init-list without ambiguity
+    // Usage: json j = json::object({{key, val}, ...});
+    static json make_object(std::initializer_list<std::pair<std::string, json>> init) {
+        json j;
+        j.m_type = value_t::object;
+        for (const auto& [key, value] : init) {
+            j.m_object[key] = value;
+        }
+        return j;
+    }
+
+    // Helper to create json array from braced-init-list without ambiguity  
+    // Usage: json j = json::array({val1, val2, ...});
+    static json make_array(std::initializer_list<json> init) {
+        json j;
+        j.m_type = value_t::array;
+        for (const auto& item : init) {
+            j.m_array.push_back(item);
+        }
+        return j;
     }
 
     ~json() = default;
@@ -177,6 +200,34 @@ public:
         if (it != m_object.end()) return it->second;
         static json null_val;
         return null_val;
+    }
+
+    // at() method for nlohmann compatibility (throws if key not found)
+    json& at(const std::string& key) {
+        if (m_type != value_t::object) throw std::runtime_error("Cannot access non-object as object");
+        auto it = m_object.find(key);
+        if (it == m_object.end()) throw std::out_of_range("Key not found: " + key);
+        return it->second;
+    }
+
+    const json& at(const std::string& key) const {
+        if (m_type != value_t::object) throw std::runtime_error("Cannot access non-object as object");
+        auto it = m_object.find(key);
+        if (it == m_object.end()) throw std::out_of_range("Key not found: " + key);
+        return it->second;
+    }
+
+    // Array at() method
+    json& at(size_t idx) {
+        if (m_type != value_t::array) throw std::runtime_error("Cannot access non-array as array");
+        if (idx >= m_array.size()) throw std::out_of_range("Array index out of range");
+        return m_array[idx];
+    }
+
+    const json& at(size_t idx) const {
+        if (m_type != value_t::array) throw std::runtime_error("Cannot access non-array as array");
+        if (idx >= m_array.size()) throw std::out_of_range("Array index out of range");
+        return m_array[idx];
     }
 
     // Array access
