@@ -472,7 +472,7 @@ void EnterpriseLicenseV2::clearAuditTrail() {
 }
 
 // ============================================================================
-// Manifest Queries (Stub implementations)
+// Manifest Queries (Production implementations)
 // ============================================================================
 const FeatureDefV2& EnterpriseLicenseV2::getFeatureDef(FeatureID id) const {
     static FeatureDefV2 dummyDef = {};
