@@ -41,9 +41,11 @@ void profile_record(const char* name, double time_ms, double ops);
 
 | Function | Calls | Total(ms) | Avg(ms) | GOPS |
 |----------|-------|-----------|---------|------|
-| matmul | 1 | 170.34 | 170.337 | 2.46 |
-| softmax | 1 | 0.07 | 0.074 | 1.03 |
-| rmsnorm | 1 | 0.02 | 0.022 | 2.37 |
+| matmul | 1 | 156.79 | 156.787 | 2.68 |
+| softmax | 1 | 0.07 | 0.071 | 1.09 |
+| rmsnorm | 1 | 0.04 | 0.035 | 1.46 |
+| gelu | 1 | 0.09 | 0.091 | 1.12 |
+| silu | 1 | 0.08 | 0.082 | 0.63 |
 
 **Configuration:**
 - Matrix size: 128x128
