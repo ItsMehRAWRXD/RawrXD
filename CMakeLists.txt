@@ -270,8 +270,8 @@ endif()
 # CXX standard set above (MSVC 23, others 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Dynamic link MSVC runtime — better compatibility with prebuilt libraries
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+# Static link MSVC runtime — required for RawrEngine and Gold builds
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
 
