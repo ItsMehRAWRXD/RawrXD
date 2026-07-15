@@ -1,0 +1,281 @@
+{
+  "name": "RawrXD Validation Framework",
+  "version": "15.0.0-dev",
+  "description": "Comprehensive testing infrastructure for RawrXD",
+  "configuration": {
+    "parallel_workers": 4,
+    "timeout_seconds": 300,
+    "debounce_seconds": 2,
+    "report_format": ["json", "html"],
+    "coverage_threshold": 80
+  },
+  "categories": {
+    "cpu": {
+      "description": "CPU kernel validation",
+      "tests": [
+        {
+          "name": "test_avx2_rmsnorm",
+          "file": "cpu/test_avx2_rmsnorm.exe",
+          "timeout": 30,
+          "critical": true
+        },
+        {
+          "name": "test_avx2_softmax",
+          "file": "cpu/test_avx2_softmax.exe",
+          "timeout": 30,
+          "critical": true
+        }
+      ]
+    },
+    "tokenizer": {
+      "description": "BPE tokenization validation",
+      "tests": [
+        {
+          "name": "test_bpe_tokenizer",
+          "file": "tokenizer/test_bpe_tokenizer.exe",
+          "timeout": 30,
+          "critical": true
+        }
+      ]
+    },
+    "gguf": {
+      "description": "GGUF format validation",
+      "tests": [
+        {
+          "name": "test_gguf_magic",
+          "file": "gguf/test_gguf_magic.exe",
+          "timeout": 30,
+          "critical": true
+        }
+      ]
+    },
+    "kernels": {
+      "description": "Core kernel tests",
+      "tests": [
+        {
+          "name": "test_attention",
+          "file": "kernels/test_attention.exe",
+          "timeout": 60,
+          "critical": true
+        },
+        {
+          "name": "test_gelu_activation",
+          "file": "kernels/test_gelu_activation.exe",
+          "timeout": 30,
+          "critical": true
+        },
+        {
+          "name": "test_layer_norm",
+          "file": "kernels/test_layer_norm.exe",
+          "timeout": 30,
+          "critical": true
+        },
+        {
+          "name": "test_matmul",
+          "file": "kernels/test_matmul.exe",
+          "timeout": 60,
+          "critical": true
+        },
+        {
+          "name": "test_rms_norm",
+          "file": "kernels/test_rms_norm.exe",
+          "timeout": 30,
+          "critical": true
+        },
+        {
+          "name": "test_rope",
+          "file": "kernels/test_rope.exe",
+          "timeout": 30,
+          "critical": true
+        },
+        {
+          "name": "test_silu_activation",
+          "file": "kernels/test_silu_activation.exe",
+          "timeout": 30,
+          "critical": true
+        },
+        {
+          "name": "test_softmax",
+          "file": "kernels/test_softmax.exe",
+          "timeout": 30,
+          "critical": true
+        }
+      ]
+    },
+    "sampler": {
+      "description": "Sampling tests",
+      "tests": [
+        {
+          "name": "test_temperature",
+          "file": "sampler/test_temperature.exe",
+          "timeout": 30,
+          "critical": true
+        }
+      ]
+    },
+    "integration": {
+      "description": "End-to-end integration tests",
+      "tests": [
+        {
+          "name": "test_inference_pipeline",
+          "file": "integration/test_inference_pipeline.exe",
+          "timeout": 120,
+          "critical": true
+        }
+      ]
+    },
+    "regression": {
+      "description": "Golden reference regression tests",
+      "tests": [
+        {
+          "name": "test_regression",
+          "file": "regression/test_regression.exe",
+          "timeout": 120,
+          "critical": true,
+          "subtests": [
+            "tinyllama_logits",
+            "tinyllama_hidden_states",
+            "tinyllama_tokens",
+            "tinyllama_hashes",
+            "tinyllama_manifest",
+            "phi3_logits",
+            "phi3_hidden_states",
+            "phi3_tokens",
+            "phi3_hashes",
+            "phi3_manifest",
+            "ministral_logits",
+            "ministral_hidden_states",
+            "ministral_tokens",
+            "ministral_hashes",
+            "ministral_manifest"
+          ]
+        }
+      ]
+    },
+    "performance": {
+      "description": "Performance baseline tests",
+      "tests": [
+        {
+          "name": "test_perf_quick",
+          "file": "performance/test_perf_quick.exe",
+          "timeout": 300,
+          "critical": false,
+          "baselines": {
+            "matmul_128": {
+              "max_ms": 1000,
+              "min_gops": 5.0
+            },
+            "softmax_1024": {
+              "max_ms": 100,
+              "min_ops_per_sec": 200000
+            },
+            "rmsnorm_4096": {
+              "max_ms": 60,
+              "min_ops_per_sec": 150000
+            }
+          }
+        }
+      ]
+    }
+  },
+  "milestones": {
+    "milestone_1": {
+      "name": "Core Validation",
+      "description": "Kernel correctness and functionality",
+      "categories": ["cpu", "tokenizer", "gguf", "kernels", "sampler", "integration"],
+      "test_count": 14,
+      "status": "complete"
+    },
+    "milestone_2": {
+      "name": "Golden References",
+      "description": "Regression testing with reference data",
+      "categories": ["regression"],
+      "test_count": 9,
+      "status": "complete"
+    },
+    "milestone_3": {
+      "name": "Performance Baselines",
+      "description": "Performance benchmarking and tracking",
+      "categories": ["performance"],
+      "test_count": 3,
+      "status": "complete"
+    }
+  },
+  "tools": {
+    "run_validation": {
+      "file": "run_validation.bat",
+      "description": "Main test runner (sequential)"
+    },
+    "run_parallel": {
+      "file": "run_parallel.py",
+      "description": "Parallel test runner"
+    },
+    "watch_and_test": {
+      "file": "watch_and_test.py",
+      "description": "File watcher for continuous testing"
+    },
+    "compare_results": {
+      "file": "compare_results.py",
+      "description": "Compare results against baselines"
+    },
+    "generate_report": {
+      "file": "generate_report.bat",
+      "description": "Generate HTML/JSON reports"
+    },
+    "analyze_coverage": {
+      "file": "analyze_coverage.py",
+      "description": "Coverage analysis tool"
+    },
+    "dashboard": {
+      "file": "dashboard.html",
+      "description": "Interactive web dashboard"
+    }
+  },
+  "ci_cd": {
+    "github_actions": {
+      "workflow": "ci.yml",
+      "triggers": ["push", "pull_request"],
+      "jobs": [
+        "smoke-test",
+        "kernel-tests",
+        "regression-tests",
+        "performance-tests",
+        "coverage-analysis",
+        "generate-report"
+      ]
+    }
+  },
+  "performance_baselines": {
+    "matmul_128": {
+      "config": "128x128x128 x100",
+      "baseline_ms": 650,
+      "baseline_gops": 6.5,
+      "tolerance_percent": 50
+    },
+    "softmax_1024": {
+      "config": "1024 elements x1000",
+      "baseline_ms": 50,
+      "baseline_ops_per_sec": 395000,
+      "tolerance_percent": 50
+    },
+    "rmsnorm_4096": {
+      "config": "4096 elements x500",
+      "baseline_ms": 30,
+      "baseline_ops_per_sec": 219000,
+      "tolerance_percent": 50
+    }
+  },
+  "success_criteria": {
+    "test_pass_rate": 100,
+    "false_positive_rate": 0,
+    "max_full_validation_seconds": 60,
+    "max_smoke_test_seconds": 5,
+    "min_coverage_percent": 80
+  },
+  "metadata": {
+    "created": "2026-07-15",
+    "updated": "2026-07-15",
+    "author": "RawrXD Team",
+    "license": "MIT"
+  }
+}

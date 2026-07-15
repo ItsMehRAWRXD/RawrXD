@@ -184,6 +184,44 @@ double profiled_rmsnorm(double* input, double* output, int dim, int iterations) 
     return time_ms;
 }
 
+/* Profiled GELU activation */
+double profiled_gelu(double* input, double* output, int dim, int iterations) {
+    double start = get_time_ms();
+    
+    for (int iter = 0; iter < iterations; iter++) {
+        for (int i = 0; i < dim; i++) {
+            double x = input[i];
+            output[i] = 0.5 * x * (1.0 + tanh(0.7978845608 * (x + 0.044715 * x * x * x)));
+        }
+    }
+    
+    double end = get_time_ms();
+    double time_ms = end - start;
+    double ops = dim * 8.0 * iterations;
+    
+    profile_record("gelu", time_ms, ops);
+    return time_ms;
+}
+
+/* Profiled SiLU activation */
+double profiled_silu(double* input, double* output, int dim, int iterations) {
+    double start = get_time_ms();
+    
+    for (int iter = 0; iter < iterations; iter++) {
+        for (int i = 0; i < dim; i++) {
+            double x = input[i];
+            output[i] = x / (1.0 + exp(-x));
+        }
+    }
+    
+    double end = get_time_ms();
+    double time_ms = end - start;
+    double ops = dim * 4.0 * iterations;
+    
+    profile_record("silu", time_ms, ops);
+    return time_ms;
+}
+
 int main() {
     printf("RawrXD Performance Profiler\n");
     printf("==========================\n\n");

@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-07-15T12:05:47.865116",
+  "version": "15.0.0-dev",
+  "suites": {
+    "unit": {
+      "total": 0,
+      "passed": 0,
+      "failed": 0,
+      "time": 0.1842207908630371
+    },
+    "regression": {
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "time": 0.012138128280639648
+    },
+    "performance": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "time": 0.05463218688964844
+    },
+    "stress": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "time": 0.6368668079376221
+    }
+  },
+  "summary": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "time": 0.8878579139709473,
+    "success_rate": 100.0
+  }
+}
