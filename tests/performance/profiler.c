@@ -226,6 +226,12 @@ int main() {
     printf("Running rmsnorm (%d elements)...\n", dim);
     profiled_rmsnorm(input, output, dim, iterations);
     
+    printf("Running gelu (%d elements)...\n", dim);
+    profiled_gelu(input, output, dim, iterations);
+    
+    printf("Running silu (%d elements)...\n", dim);
+    profiled_silu(input, output, dim, iterations);
+    
     /* Print results */
     profile_print_results();
     
