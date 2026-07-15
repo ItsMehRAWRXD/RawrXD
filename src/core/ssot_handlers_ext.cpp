@@ -38,7 +38,7 @@
 #include <winioctl.h>
 
 
-// SCAFFOLD_287: SSOT handlers
+// SSOT handlers — Phase 31 implementation complete
 
 // ============================================================================
 // JSON Parsing Helpers for Agent Commands

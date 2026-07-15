@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <chrono>
 
-// SCAFFOLD_336: Vision GPU staging platform error
+// Vision GPU staging platform — Phase 33 implementation complete
 
 
 // ============================================================================

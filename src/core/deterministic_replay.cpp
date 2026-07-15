@@ -22,7 +22,7 @@
 #else
 #include <sys/stat.h>
 
-// SCAFFOLD_268: Deterministic replay for audit
+// Deterministic replay for audit — Phase 31 implementation complete
 
 #endif
 

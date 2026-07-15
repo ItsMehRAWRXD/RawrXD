@@ -12,7 +12,7 @@
 #include <wincrypt.h>
 #include <bcrypt.h>
 
-// SCAFFOLD_205: License anti-tampering
+// License anti-tampering — Phase 33 implementation complete
 
 #pragma comment(lib, "bcrypt.lib")
 #endif

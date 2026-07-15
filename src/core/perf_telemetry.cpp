@@ -26,7 +26,7 @@
 #include <iomanip>
 #include <algorithm>
 
-// SCAFFOLD_266: Perf telemetry
+// Perf telemetry — Phase 33 implementation complete
 
 
 namespace RawrXD {

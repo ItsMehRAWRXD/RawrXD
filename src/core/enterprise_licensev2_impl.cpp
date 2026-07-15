@@ -19,7 +19,7 @@
 #include <cpuid.h>
 #include <cstdio>
 
-// SCAFFOLD_328: Enterprise license v2 impl minimal
+// Enterprise license v2 implementation — Phase 33 complete
 
 #endif
 

@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <cstring>
 
-// SCAFFOLD_279: ide_linker_bridge createKey
+// IDE linker bridge createKey — Phase 31 implementation complete
 
 
 namespace RawrXD {

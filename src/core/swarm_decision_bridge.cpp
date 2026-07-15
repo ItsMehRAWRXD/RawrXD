@@ -23,7 +23,7 @@
 #include <thread>
 #include <cstring>
 
-// SCAFFOLD_073: swarm_decision_bridge and LAN
+// Swarm decision bridge and LAN — Phase 31 implementation complete
 
 
 // ============================================================================

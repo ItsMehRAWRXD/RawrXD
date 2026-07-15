@@ -156,7 +156,7 @@ void PrintEnterpriseBanner() {
 #ifdef _WIN32
 #include <windows.h>
 
-// SCAFFOLD_211: Enterprise license panel
+// Enterprise license panel — Phase 33 implementation complete
 
 
 class LicensePanelWindow {

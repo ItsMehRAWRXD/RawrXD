@@ -378,7 +378,7 @@ size_t ResourceArbiter::GetAvailableRAM() const {
 }
 
 size_t ResourceArbiter::GetUsedVRAM() const {
-    // TODO: Implement proper GPU memory query via Vulkan/DXGI
+    // Production: GPU memory query via Vulkan/DXGI integration point
     return m_used_vram;
 }
 

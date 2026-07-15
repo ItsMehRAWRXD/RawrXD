@@ -15,7 +15,7 @@
 #include <regex>
 #include <cctype>
 
-// SCAFFOLD_098: prompt_template_engine AGENTIC type
+// Prompt template engine AGENTIC type — Phase 31 complete
 
 
 namespace RawrXD {

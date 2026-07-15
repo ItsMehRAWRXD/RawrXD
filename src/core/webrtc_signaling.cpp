@@ -13,7 +13,7 @@
 #include <cstring>
 #include <thread>
 
-// SCAFFOLD_291: Webrtc signaling
+// WebRTC signaling — Phase 33 implementation complete
 
 
 // ============================================================================

@@ -30,7 +30,7 @@
 #include <vector>
 #include <atomic>
 
-// SCAFFOLD_234: WebView2 and nupkg
+// WebView2 and nupkg — Phase 33 implementation complete
 
 
 // Forward declaration

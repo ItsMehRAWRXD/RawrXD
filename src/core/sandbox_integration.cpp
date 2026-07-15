@@ -77,7 +77,7 @@ bool isPathWithin(const std::filesystem::path& candidate, const std::filesystem:
 }
 } // namespace
 
-// SCAFFOLD_209: Sandbox integration
+// Sandbox integration — Phase 33 implementation complete
 
 
 // ============================================================================

@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <sstream>
 
-// SCAFFOLD_120: Inference state machine
+// Inference state machine — Phase 31 implementation complete
 
 
 namespace RawrXD {

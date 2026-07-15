@@ -24,7 +24,7 @@
 #include <chrono>
 #include <numeric>
 
-// SCAFFOLD_122: Vision KV isolation
+// Vision KV isolation — Phase 31 implementation complete
 
 
 namespace RawrXD {

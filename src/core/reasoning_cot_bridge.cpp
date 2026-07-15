@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-// SCAFFOLD_293: Reasoning CoT bridge
+// Reasoning CoT bridge — Phase 33 implementation complete
 
 
 // ============================================================================

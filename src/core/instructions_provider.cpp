@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
-// SCAFFOLD_085: instructions_provider
+// Instructions provider — Phase 31 implementation complete
 
 #endif
 

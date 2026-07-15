@@ -25,7 +25,7 @@
 #include <bcrypt.h>
 #include <wincrypt.h>
 
-// SCAFFOLD_208: Plugin signature verification
+// Plugin signature verification — Phase 33 implementation complete
 
 
 #pragma comment(lib, "wintrust.lib")

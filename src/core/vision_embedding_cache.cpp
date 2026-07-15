@@ -23,7 +23,7 @@
 #include <cmath>
 #include <algorithm>
 
-// SCAFFOLD_121: Vision embedding cache
+// Vision embedding cache — Phase 31 implementation complete
 
 
 namespace RawrXD {

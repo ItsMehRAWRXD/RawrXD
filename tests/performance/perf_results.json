@@ -28,3 +28,63 @@
   "operations": 107374182400,
   "iterations": 50
 },
+{
+  "test": "matmul_128x128x128",
+  "elapsed_ms": 1114.016300,
+  "throughput_gops": 3.765029,
+  "bandwidth_gbps": 0.164365,
+  "tokens_per_sec": 0.000000,
+  "bytes_processed": 196608000,
+  "operations": 4194304000,
+  "iterations": 1000
+},
+{
+  "test": "matmul_512x512x512",
+  "elapsed_ms": 12026.057400,
+  "throughput_gops": 2.232115,
+  "bandwidth_gbps": 0.024361,
+  "tokens_per_sec": 0.000000,
+  "bytes_processed": 314572800,
+  "operations": 26843545600,
+  "iterations": 100
+},
+{
+  "test": "matmul_1024x1024x1024",
+  "elapsed_ms": 26161.622400,
+  "throughput_gops": 4.104263,
+  "bandwidth_gbps": 0.022397,
+  "tokens_per_sec": 0.000000,
+  "bytes_processed": 629145600,
+  "operations": 107374182400,
+  "iterations": 50
+},
+{
+  "test": "matmul_128x128x128",
+  "elapsed_ms": 1074.618100,
+  "throughput_gops": 3.903065,
+  "bandwidth_gbps": 0.170391,
+  "tokens_per_sec": 0.000000,
+  "bytes_processed": 196608000,
+  "operations": 4194304000,
+  "iterations": 1000
+},
+{
+  "test": "matmul_512x512x512",
+  "elapsed_ms": 5185.895000,
+  "throughput_gops": 5.176261,
+  "bandwidth_gbps": 0.056493,
+  "tokens_per_sec": 0.000000,
+  "bytes_processed": 314572800,
+  "operations": 26843545600,
+  "iterations": 100
+},
+{
+  "test": "matmul_1024x1024x1024",
+  "elapsed_ms": 29812.731800,
+  "throughput_gops": 3.601622,
+  "bandwidth_gbps": 0.019654,
+  "tokens_per_sec": 0.000000,
+  "bytes_processed": 629145600,
+  "operations": 107374182400,
+  "iterations": 50
+},
