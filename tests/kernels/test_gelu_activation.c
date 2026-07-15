@@ -28,10 +28,47 @@ void gelu_vector_ref(const f32* x, f32* out, int n) {
     }
 }
 
+#include <immintrin.h>
+
 void gelu_vector_opt(const f32* x, f32* out, int n) {
-    /* Optimized GELU */
-    /* TODO: Implement AVX-512 version */
-    gelu_vector_ref(x, out, n);
+    /* AVX-512 GELU: x * Φ(x) where Φ is standard normal CDF */
+    const __m512 vhalf = _mm512_set1_ps(0.5f);
+    const __m512 vone = _mm512_set1_ps(1.0f);
+    const __m512 sqrt_2_over_pi = _mm512_set1_ps(0.7978845608f);
+    const __m512 coeff = _mm512_set1_ps(0.044715f);
+    
+    int i = 0;
+    for (; i <= n - 16; i += 16) {
+        __m512 vx = _mm512_loadu_ps(&x[i]);
+        
+        /* x^3 */
+        __m512 vx2 = _mm512_mul_ps(vx, vx);
+        __m512 vx3 = _mm512_mul_ps(vx2, vx);
+        
+        /* sqrt(2/π) * (x + 0.044715 * x^3) */
+        __m512 vinner = _mm512_fmadd_ps(coeff, vx3, vx);
+        vinner = _mm512_mul_ps(sqrt_2_over_pi, vinner);
+        
+        /* tanh approximation using sigmoid: tanh(x) ≈ 2*sigmoid(2x) - 1 */
+        /* For simplicity, using direct tanh via exp */
+        __m512 vexp_pos = _mm512_exp_ps(vinner);
+        __m512 vexp_neg = _mm512_exp_ps(_mm512_sub_ps(_mm512_setzero_ps(), vinner));
+        __m512 vtanh = _mm512_div_ps(
+            _mm512_sub_ps(vexp_pos, vexp_neg),
+            _mm512_add_ps(vexp_pos, vexp_neg)
+        );
+        
+        /* 0.5 * x * (1 + tanh(inner)) */
+        __m512 vresult = _mm512_mul_ps(vhalf, vx);
+        vresult = _mm512_mul_ps(vresult, _mm512_add_ps(vone, vtanh));
+        
+        _mm512_storeu_ps(&out[i], vresult);
+    }
+    
+    /* Scalar fallback */
+    for (; i < n; i++) {
+        out[i] = gelu_ref(x[i]);
+    }
 }
 
 f32 compute_max_error(const f32* ref, const f32* opt, int n) {

@@ -25,10 +25,43 @@ void rms_norm_ref(const f32* x, f32* out, int n, f32 eps) {
     }
 }
 
+#include <immintrin.h>
+
 void rms_norm_opt(const f32* x, f32* out, int n, f32 eps) {
-    /* Optimized RMS normalization */
-    /* TODO: Implement AVX-512 version */
-    rms_norm_ref(x, out, n, eps);
+    /* AVX-512 RMS Normalization */
+    const __m512 vzero = _mm512_setzero_ps();
+    const __m512 veps = _mm512_set1_ps(eps);
+    
+    /* Step 1: Compute sum of squares */
+    __m512 vsum_sq = vzero;
+    int i = 0;
+    for (; i <= n - 16; i += 16) {
+        __m512 vx = _mm512_loadu_ps(&x[i]);
+        vsum_sq = _mm512_fmadd_ps(vx, vx, vsum_sq);
+    }
+    
+    /* Horizontal sum reduction */
+    float sum_sq = _mm512_reduce_add_ps(vsum_sq);
+    for (; i < n; i++) sum_sq += x[i] * x[i];
+    
+    /* Step 2: Compute RMS and scale */
+    float rms = sqrtf(sum_sq / n + eps);
+    float scale = 1.0f / rms;
+    
+    __m512 vscale = _mm512_set1_ps(scale);
+    
+    /* Step 3: Normalize */
+    i = 0;
+    for (; i <= n - 16; i += 16) {
+        __m512 vx = _mm512_loadu_ps(&x[i]);
+        __m512 vout = _mm512_mul_ps(vx, vscale);
+        _mm512_storeu_ps(&out[i], vout);
+    }
+    
+    /* Scalar fallback */
+    for (; i < n; i++) {
+        out[i] = x[i] * scale;
+    }
 }
 
 f32 compute_max_error(const f32* ref, const f32* opt, int n) {

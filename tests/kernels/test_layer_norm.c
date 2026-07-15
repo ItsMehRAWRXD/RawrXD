@@ -36,10 +36,60 @@ void layer_norm_ref(const f32* x, f32* out, int n, f32 eps) {
     }
 }
 
+#include <immintrin.h>
+
 void layer_norm_opt(const f32* x, f32* out, int n, f32 eps) {
-    /* Optimized Layer Normalization */
-    /* TODO: Implement AVX-512 version */
-    layer_norm_ref(x, out, n, eps);
+    /* AVX-512 Layer Normalization */
+    const __m512 vzero = _mm512_setzero_ps();
+    const __m512 veps = _mm512_set1_ps(eps);
+    
+    /* Step 1: Compute mean */
+    __m512 vsum = vzero;
+    int i = 0;
+    for (; i <= n - 16; i += 16) {
+        __m512 vx = _mm512_loadu_ps(&x[i]);
+        vsum = _mm512_add_ps(vsum, vx);
+    }
+    
+    /* Horizontal sum reduction */
+    float sum = _mm512_reduce_add_ps(vsum);
+    for (; i < n; i++) sum += x[i];
+    float mean = sum / n;
+    
+    __m512 vmean = _mm512_set1_ps(mean);
+    
+    /* Step 2: Compute variance */
+    __m512 vvar_sum = vzero;
+    i = 0;
+    for (; i <= n - 16; i += 16) {
+        __m512 vx = _mm512_loadu_ps(&x[i]);
+        __m512 vdiff = _mm512_sub_ps(vx, vmean);
+        vvar_sum = _mm512_fmadd_ps(vdiff, vdiff, vvar_sum);
+    }
+    
+    float var_sum = _mm512_reduce_add_ps(vvar_sum);
+    for (; i < n; i++) {
+        float diff = x[i] - mean;
+        var_sum += diff * diff;
+    }
+    float var = var_sum / n;
+    float scale = 1.0f / sqrtf(var + eps);
+    
+    __m512 vscale = _mm512_set1_ps(scale);
+    __m512 vmean_broadcast = _mm512_set1_ps(mean);
+    
+    /* Step 3: Normalize */
+    i = 0;
+    for (; i <= n - 16; i += 16) {
+        __m512 vx = _mm512_loadu_ps(&x[i]);
+        __m512 vnorm = _mm512_mul_ps(_mm512_sub_ps(vx, vmean_broadcast), vscale);
+        _mm512_storeu_ps(&out[i], vnorm);
+    }
+    
+    /* Scalar fallback */
+    for (; i < n; i++) {
+        out[i] = (x[i] - mean) * scale;
+    }
 }
 
 f32 compute_max_error(const f32* ref, const f32* opt, int n) {
