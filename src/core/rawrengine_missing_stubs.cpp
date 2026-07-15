@@ -78,17 +78,39 @@ void INFINITY_Shutdown(void) {}
 // Scheduler
 void Scheduler_Initialize(void) {}
 void Scheduler_Shutdown(void) {}
+void Scheduler_SubmitTask(void) {}
+void Scheduler_WaitForTask(void) {}
 
 // ConflictDetector
 void ConflictDetector_Initialize(void) {}
+void ConflictDetector_RegisterResource(void) {}
+void ConflictDetector_LockResource(void) {}
+void ConflictDetector_UnlockResource(void) {}
 
 // Heartbeat
 void Heartbeat_Initialize(void) {}
 void Heartbeat_Shutdown(void) {}
+void Heartbeat_AddNode(void) {}
 
 // Memory
 int RawrXD_EnableSeLockMemoryPrivilege(void) { return 0; }
 void* RawrXD_MapModelView2MB(const char* path) { (void)path; return nullptr; }
+
+// GPU DMA
+void GPU_SubmitDMATransfer(void) {}
+void GPU_WaitForDMA(void) {}
+void* AllocateDMABuffer(void) { return nullptr; }
+
+// Tensor
+void Tensor_QuantizedMatMul(void) {}
+
+// Timing
+uint64_t GetHighResTick(void) { return 0; }
+double TicksToMicroseconds(uint64_t ticks) { (void)ticks; return 0.0; }
+double TicksToMilliseconds(uint64_t ticks) { (void)ticks; return 0.0; }
+
+// CRC32
+uint32_t CalculateCRC32(const void* data, size_t len) { (void)data; (void)len; return 0; }
 
 // Flash attention counters
 int g_FlashAttnCalls = 0;
@@ -105,6 +127,10 @@ int g_Counter_AgentLoop = 0;
 int g_Counter_MemPatches = 0;
 int g_Counter_Errors = 0;
 int g_Counter_Inference = 0;
+int g_Counter_FlushOps = 0;
+int g_Counter_ScsiFails = 0;
+int g_Counter_BytePatches = 0;
+int g_Counter_ServerPatches = 0;
 
 // Flash attention
 void FlashAttention_Init(void) {}

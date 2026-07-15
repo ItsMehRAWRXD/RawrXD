@@ -1572,7 +1572,7 @@ else()
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
 endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/rawr_engine_link_shims.cpp)
+    list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/rawrengine_missing_stubs.cpp)
     # Gold strict mode: enforce single-owner policy for SO_/AD_ symbol families.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
         src/core/streaming_orchestrator.cpp
@@ -3832,9 +3832,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(APPEND WIN32IDE_SOURCES src/core/local_parity_bridge.cpp)
     if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         if(MSVC)
-            # Link closure: rawr_engine_link_shims.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
+            # Link closure: rawrengine_missing_stubs.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
             set(_RAWRXD_WIN32IDE_FALLBACK_UNITS
-                src/core/rawr_engine_link_shims.cpp
+                src/core/rawrengine_missing_stubs.cpp
                 src/core/cot_fallback_system.cpp
                 src/core/model_loader_fallbacks.cpp
                 src/core/rawrxd_native_log_impl.cpp
