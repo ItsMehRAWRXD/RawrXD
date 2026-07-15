@@ -1477,6 +1477,8 @@ endif()
 list(APPEND GOLD_UNDERSCORE_SOURCES src/core/ignite_800b.cpp)
 # Transcendence coordinator required by rawrengine_command_handlers.cpp
 list(APPEND GOLD_UNDERSCORE_SOURCES src/core/transcendence_coordinator.cpp)
+# CoT fallback system required by unified_hotpatch_manager.cpp
+list(APPEND GOLD_UNDERSCORE_SOURCES src/core/cot_fallback_system.cpp)
 if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(APPEND GOLD_UNDERSCORE_SOURCES src/core/rawr_engine_link_shims.cpp)
 endif()

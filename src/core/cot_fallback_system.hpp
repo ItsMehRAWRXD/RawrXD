@@ -205,11 +205,13 @@ public:
     const Stats& getStats() const { return m_stats; }
     void resetStats();
 
-private:
-    CoTFallbackSystem();
+public:
+    CoTFallbackSystem();  // Public for stub implementation
     ~CoTFallbackSystem() = default;
     CoTFallbackSystem(const CoTFallbackSystem&) = delete;
     CoTFallbackSystem& operator=(const CoTFallbackSystem&) = delete;
+
+private:
 
     // ---- Circuit Breaker Logic ----
     void updateCircuitBreaker();
