@@ -1019,7 +1019,7 @@ set(SOURCES
 
     # Link shims for Win32IDE symbols (required by vscode_extension_api when Win32IDE is not built)
     # NOTE: This is NOT a stub - it provides real implementations for Win32IDE methods
-    src/core/rawr_engine_link_shims.cpp
+    src/core/rawrengine_missing_stubs.cpp
 
     # Phase 50: Enterprise Hardening — Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     src/core/update_signature.cpp
@@ -1444,7 +1444,7 @@ if(NOT RAWR_ENGINE_LANE_B)
         src/agentic/AgentOllamaClient.cpp
     )
     if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        target_sources(RawrEngine PRIVATE src/core/rawr_engine_link_shims.cpp)
+        target_sources(RawrEngine PRIVATE src/core/rawrengine_missing_stubs.cpp)
     endif()
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT" OR RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
         target_sources(RawrEngine PRIVATE src/core/auto_feature_stub_impl.cpp)
