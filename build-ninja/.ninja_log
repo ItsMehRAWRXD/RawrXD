@@ -1294,3 +1294,6 @@
 95242	107782	8058504240648672	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_SubAgent.cpp.obj	ee39e7398b185e0e
 99846	108262	8058504286693071	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_AgentPanel.cpp.obj	9e1ea760b1d691d0
 107531	108293	8058504363541170	CMakeFiles/RawrXD-Win32IDE.dir/src/llm_adapter/gguf_k_quants.cpp.obj	5ed83999c8ef9b04
+76	4287	8058505072142553	CMakeFiles/RawrXD-Win32IDE.dir/src/config/IDEConfig.cpp.obj	305bdff58792197
+120	4459	8058505072597270	CMakeFiles/RawrXD-Win32IDE.dir/src/agentic/BoundedAgentLoop.cpp.obj	8eabb0312d62af2
+94	4810	8058505072324372	CMakeFiles/RawrXD-Win32IDE.dir/src/auth/QuantumAuthUI.cpp.obj	99201d737d253183

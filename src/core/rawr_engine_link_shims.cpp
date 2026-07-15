@@ -3166,3 +3166,43 @@ int main()
     return slots > 0 ? 0 : 1;
 }
 #endif
+
+// ============================================================================
+// RawrEngine.exe Missing Symbol Stubs
+// ============================================================================
+// These stubs are required to link RawrEngine.exe
+
+extern "C" {
+
+// INFINITY subsystem stubs
+void INFINITY_Initialize(void) {}
+void INFINITY_Shutdown(void) {}
+
+// Scheduler stubs
+void Scheduler_Initialize(void) {}
+void Scheduler_Shutdown(void) {}
+
+// ConflictDetector stubs
+void ConflictDetector_Initialize(void) {}
+
+// Heartbeat stubs
+void Heartbeat_Initialize(void) {}
+void Heartbeat_Shutdown(void) {}
+
+// Memory privilege stub
+int RawrXD_EnableSeLockMemoryPrivilege(void) { return 0; }
+
+// Memory mapping stub
+void* RawrXD_MapModelView2MB(const char* path) { (void)path; return nullptr; }
+
+// Flash attention telemetry counters
+extern "C" int g_FlashAttnCalls = 0;
+extern "C" int g_FlashAttnTiles = 0;
+
+// UTC counter stub
+void UTC_IncrementCounter(const char* name) { (void)name; }
+
+// Agent loop counter
+extern "C" int g_Counter_AgentLoop = 0;
+
+} // extern "C"
