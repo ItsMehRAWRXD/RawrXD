@@ -7,6 +7,7 @@
 #include "reference_loader.hpp"
 #include <cstdio>
 #include <cstring>
+#include <cstdint>
 
 namespace rawrxd {
 namespace validation {

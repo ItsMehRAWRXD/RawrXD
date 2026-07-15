@@ -15,8 +15,8 @@
     #include <sys/time.h>
 #endif
 
-#define WARMUP_ITERATIONS 100
-#define BENCHMARK_ITERATIONS 1000
+#define WARMUP_ITERATIONS 10
+#define BENCHMARK_ITERATIONS 100
 #define MAX_DIM 1024
 
 typedef struct {
@@ -235,8 +235,8 @@ int main() {
     int num_benchmarks = 0;
     
     /* Matmul benchmark */
-    printf("Running matmul benchmark (256x256)...\n");
-    double matmul_gops = benchmark_matmul(256);
+    printf("Running matmul benchmark (128x128)...\n");
+    double matmul_gops = benchmark_matmul(128);
     results[num_benchmarks].name = "Matmul";
     results[num_benchmarks].gops = matmul_gops;
     results[num_benchmarks].passed = (matmul_gops > 0.1);

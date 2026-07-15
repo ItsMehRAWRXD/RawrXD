@@ -1456,6 +1456,13 @@ if(WIN32)
         winhttp ws2_32 ntdll advapi32 crypt32 opengl32 wininet gdi32 user32 bcrypt
         d3d12 dxgi dxcore
     )
+    if(MSVC)
+        # RawrEngine is a console application with main() entry point
+        # Use dynamic CRT (/MD) to avoid static CRT initialization issues
+        set_target_properties(RawrEngine PROPERTIES
+            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:DebugDLL>"
+        )
+    endif()
     if(NOT MSVC)
         target_link_libraries(RawrEngine PRIVATE gomp)
     endif()

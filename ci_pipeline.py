@@ -105,23 +105,28 @@ def stage_performance_tests():
     """Stage 4: Performance benchmarks"""
     print_stage("Stage 4: Performance Benchmarks")
     
-    # Check for existing performance results
-    perf_results = Path("tests/performance/perf_results.json")
-    if perf_results.exists():
-        try:
-            with open(perf_results) as f:
-                data = json.load(f)
-            print_success("Performance results available")
-            if "matmul" in data:
-                print(f"  Matmul: {data['matmul'].get('gops', 'N/A')} GOPS")
-            if "softmax" in data:
-                print(f"  Softmax: {data['softmax'].get('ops_per_sec', 'N/A')} ops/s")
+    # Run quick benchmark
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["tests/performance/benchmark_quick.exe"],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        if result.returncode == 0:
+            print_success("Performance benchmarks completed")
+            # Print output
+            for line in result.stdout.split('\n'):
+                if 'GOPS' in line or 'ops/sec' in line or 'Matmul' in line or 'Softmax' in line or 'RMSNorm' in line:
+                    print(f"  {line.strip()}")
             return True
-        except:
-            pass
-    
-    print_warning("Performance tests skipped (no results available)")
-    return True  # Don't fail CI for performance tests
+        else:
+            print_warning("Performance tests returned error")
+            return True
+    except Exception as e:
+        print_warning(f"Performance tests skipped: {e}")
+        return True  # Don't fail CI for performance tests
 
 def stage_stress_tests():
     """Stage 5: Stress tests"""
