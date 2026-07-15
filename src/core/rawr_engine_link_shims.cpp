@@ -27,16 +27,9 @@
 #include <string>
 #include <vector>
 
-extern "C" void RawrXD_Native_Log(const char* fmt, ...) {
-    // Production implementation - logs to stderr
-    if (fmt) {
-        va_list args;
-        va_start(args, fmt);
-        vfprintf(stderr, fmt, args);
-        va_end(args);
-        fprintf(stderr, "\n");
-    }
-}
+// Forward declaration - RawrXD_Native_Log is defined in rawrxd_native_log_impl.cpp
+extern "C" void RawrXD_Native_Log(const char* fmt, ...);
+// (more complete implementation with OutputDebugStringA)
 
 namespace
 {

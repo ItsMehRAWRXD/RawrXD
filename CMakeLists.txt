@@ -270,8 +270,8 @@ endif()
 # CXX standard set above (MSVC 23, others 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Static link MSVC runtime — no vcruntime140.dll dependency
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# Dynamic link MSVC runtime — better compatibility with prebuilt libraries
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
 
@@ -1456,13 +1456,6 @@ if(WIN32)
         winhttp ws2_32 ntdll advapi32 crypt32 opengl32 wininet gdi32 user32 bcrypt
         d3d12 dxgi dxcore
     )
-    if(MSVC)
-        # RawrEngine is a console application with main() entry point
-        # Use dynamic CRT (/MD) to avoid static CRT initialization issues
-        set_target_properties(RawrEngine PROPERTIES
-            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:DebugDLL>"
-        )
-    endif()
     if(NOT MSVC)
         target_link_libraries(RawrEngine PRIVATE gomp)
     endif()
@@ -4537,7 +4530,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         CXX_STANDARD 23
         CXX_STANDARD_REQUIRED ON
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     # RawrCodex.asm uses ADDR32 relocations — /LARGEADDRESSAWARE:NO already set in MAP block above
 
@@ -4590,7 +4582,6 @@ if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypas
         OUTPUT_NAME RawrXD-Crypto
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 else()
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -4627,7 +4618,6 @@ if(RAWR_ASAN AND MSVC)
     add_compile_options(/fsanitize=address)
     # ASAN requires /Zi debug info and dynamic CRT
     add_compile_options(/Zi)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 elseif(RAWR_ASAN AND NOT MSVC)
     message(STATUS "[CI] AddressSanitizer ENABLED (-fsanitize=address)")
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
