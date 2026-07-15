@@ -50,15 +50,16 @@ void softmax(f32* x, int n) {
 int main(void) {
     printf("[%s] Starting...\n", TEST_NAME);
     
-    /* Create uniform logits */
+    /* Create non-uniform logits for meaningful temperature test */
     f32* logits = malloc(VOCAB_SIZE * sizeof(f32));
     if (!logits) {
         printf("[%s] FAIL: Memory allocation failed\n", TEST_NAME);
         return 1;
     }
     
+    /* Create peaked distribution: first token has highest logit */
     for (int i = 0; i < VOCAB_SIZE; i++) {
-        logits[i] = 0.0f;
+        logits[i] = (VOCAB_SIZE - i) / 100.0f; /* Decreasing values */
     }
     
     /* Test 1: Temperature = 1.0 (no change) */
