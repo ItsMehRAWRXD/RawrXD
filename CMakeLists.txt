@@ -2557,6 +2557,8 @@ if(MSVC)
         src/ggml/ggml_nanoquant.cpp
         src/agentic/agent_tool_quantize.cpp
     )
+    # Set MSVC runtime library to match RawrEngine (static CRT)
+    set_property(TARGET RawrXD_NanoQuant PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     target_include_directories(RawrXD_NanoQuant PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -2719,6 +2721,8 @@ list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
 )
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
+# Set MSVC runtime library to match RawrEngine (static CRT)
+set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
     src/inference/inference_standalone_main.cpp
@@ -4285,6 +4289,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
 
         add_library(quickjs_static STATIC ${QUICKJS_SOURCES})
+        # Set MSVC runtime library to match RawrEngine (static CRT)
+        set_property(TARGET quickjs_static PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
         set_target_properties(quickjs_static PROPERTIES
             C_STANDARD 11
             C_STANDARD_REQUIRED ON
