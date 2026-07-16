@@ -597,6 +597,9 @@ set(SOURCES
 
     # T4: Autonomous Recovery Orchestrator (FailureClass → recovery → verify → commit)
     src/agentic/autonomous_recovery_orchestrator.cpp
+    
+    # T4.5: Agentic Deep Thinking Engine — Autonomous monitoring, recovery, and orchestration
+    src/agentic/AgenticDeepThinkingEngine.cpp
 
     # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
     src/agentic/AgentOrchestrator.cpp
@@ -1210,6 +1213,8 @@ endif()
 set(RAWR_ENGINE_SOURCES ${SOURCES})
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
+    src/lsp/RawrXD_LSPServer.cpp
+    src/lsp/lsp_hotpatch_bridge.cpp
 )
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
@@ -3013,6 +3018,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # T4: Autonomous Recovery Orchestrator (FailureClass → recovery → verify → commit)
         src/agentic/autonomous_recovery_orchestrator.cpp
+        
+        # T4.5: Agentic Deep Thinking Engine — Autonomous monitoring, recovery, and orchestration
+        src/agentic/AgenticDeepThinkingEngine.cpp
 
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
         src/agentic/AgentOrchestrator.cpp
@@ -3835,6 +3843,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             # Link closure: rawrengine_missing_stubs.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
             set(_RAWRXD_WIN32IDE_FALLBACK_UNITS
                 src/core/rawrengine_missing_stubs.cpp
+                src/core/json_instantiations.cpp
                 src/core/cot_fallback_system.cpp
                 src/core/model_loader_fallbacks.cpp
                 src/core/rawrxd_native_log_impl.cpp
@@ -4271,6 +4280,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     )
     if(RAWR_HAS_MASM)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE HAS_BRUTAL_GZIP_MASM=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_MASM_GLOBALS_LINKED=1)
     endif()
 
     # =========================================================================

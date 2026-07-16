@@ -15,6 +15,7 @@
 
 #include "autonomous_recovery_orchestrator.hpp"
 #include "DeterministicReplayEngine.h"
+#include "agentic/AgenticDeepThinkingEngine.hpp"
 
 // Core integration points
 #include "../agent/agent_self_repair.hpp"
@@ -140,7 +141,7 @@ RecoveryResult AutonomousRecoveryOrchestrator::executeRecovery(
 
     // ---- Select strategy based on FailureClass ----
     RecoveryStrategy strategy = selectStrategy(div.classification);
-    if (strategy == RecoveryStrategy::None) {
+    if (strategy == RecoveryStrategy::NONE) {
         auto r = RecoveryResult::error("No recovery strategy for Unknown classification", -3);
         r.failureClass = div.classification;
         r.preRecovery = preSnap;
@@ -260,7 +261,7 @@ RecoveryStrategy AutonomousRecoveryOrchestrator::selectStrategy(
         if (m_config.enableFunctionRedirect) {
             return RecoveryStrategy::HotpatchRedirect;
         }
-        return RecoveryStrategy::None;
+        return RecoveryStrategy::NONE;
 
     case FailureClass::OOM:
         return RecoveryStrategy::ReduceBatchSize;
@@ -279,7 +280,7 @@ RecoveryStrategy AutonomousRecoveryOrchestrator::selectStrategy(
 
     case FailureClass::Unknown:
     default:
-        return RecoveryStrategy::None;
+        return RecoveryStrategy::NONE;
     }
 }
 

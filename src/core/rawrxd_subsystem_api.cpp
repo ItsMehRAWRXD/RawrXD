@@ -59,6 +59,28 @@ extern "C" {
     void DiskRecovery_GetStats(void* ctx, uint64_t* outGood, uint64_t* outBad, uint64_t* outCurrent, uint64_t* outTotal);
 }
 
+// Stub implementations for modes not available in this build
+extern "C" {
+    void CompileMode(void) { }
+    void EncryptMode(void) { }
+    void InjectMode(void) { }
+    void UACBypassMode(void) { }
+    void PersistenceMode(void) { }
+    void SideloadMode(void) { }
+    void AVScanMode(void) { }
+    void EntropyMode(void) { }
+    void StubGenMode(void) { }
+    void TraceEngineMode(void) { }
+    void AgenticMode(void) { }
+    void BasicBlockCovMode(void) { }
+    void CovFusionMode(void) { }
+    void DynTraceMode(void) { }
+    void AgentTraceMode(void) { }
+    void GapFuzzMode(void) { }
+    void IntelPTMode(void) { }
+    void DiffCovMode(void) { }
+}
+
 // ---- Library Module Linkage (C ABI) ----
 // These resolve to MASM .obj when RAWR_HAS_MASM=1, else to stub .cpp
 #include "analyzer_distiller.h"

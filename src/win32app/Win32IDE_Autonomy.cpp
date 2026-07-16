@@ -1,5 +1,6 @@
 #include "Win32IDE_Autonomy.h"
 #include "IDEConfig.h"
+#include "agentic/AgenticDeepThinkingEngine.hpp"
 #include <sstream>
 
 // AutonomyManager executeAction — Phase 31 implementation complete
@@ -18,7 +19,10 @@ AutonomyManager::AutonomyManager(AgenticBridge* bridge)
     // been called yet.  Win32IDE replaces this via setOutputCallback([this]{appendToOutput}).
     m_onOutput = [](const std::string& /*msg*/) {};
     m_windowStart = std::chrono::steady_clock::now();
-    LOG_INFO("AutonomyManager constructed");
+    
+    // Initialize the Deep Thinking Engine
+    RawrXD::Agent::AgenticDeepThinkingEngine::instance().initialize();
+    LOG_INFO("AutonomyManager constructed with Deep Thinking Engine");
 }
 
 AutonomyManager::~AutonomyManager()
@@ -51,17 +55,25 @@ void AutonomyManager::stop()
 
 void AutonomyManager::enableAutoLoop(bool enable)
 {
+    auto& deepEngine = RawrXD::Agent::AgenticDeepThinkingEngine::instance();
+    
     if (enable && !m_autoLoop.load())
     {
         if (!m_running.load())
             start();
         m_autoLoop.store(true);
         m_loopThread = std::thread([this] { loop(); });
-        LOG_INFO("Autonomy auto loop enabled");
+        
+        // Start Deep Thinking Engine monitoring
+        deepEngine.startMonitoring();
+        LOG_INFO("Autonomy auto loop enabled with Deep Thinking monitoring");
     }
     else if (!enable && m_autoLoop.load())
     {
         m_autoLoop.store(false);
+        
+        // Stop Deep Thinking Engine monitoring
+        deepEngine.stopMonitoring();
         LOG_INFO("Autonomy auto loop disabled");
     }
 }
@@ -225,15 +237,35 @@ void AutonomyManager::executeAction(const std::string& action)
         return;
     }
     METRICS.increment("autonomy.actions_executed");
+    
+    // Get Deep Thinking Engine instance for monitoring
+    auto& deepEngine = RawrXD::Agent::AgenticDeepThinkingEngine::instance();
+    
+    // Record action execution event
+    deepEngine.recordEvent(
+        RawrXD::Agent::EventType::TOOL_DISPATCHED,
+        "AutonomyManager",
+        "Executing action: " + action.substr(0, 50)
+    );
+    
     if (!m_bridge || !m_bridge->IsInitialized())
     {
         LOG_WARNING("Bridge not initialized; cannot execute action: " + action);
+        
+        // Record bridge failure event
+        deepEngine.recordEvent(
+            RawrXD::Agent::EventType::ASSERTION_FAILURE,
+            "AutonomyManager",
+            "Agentic bridge not ready"
+        );
+        
         // m_onOutput is always callable (initialised to no-op in ctor; replaced by
         // setOutputCallback so the message reaches the IDE output panel).
         m_onOutput("[Autonomy] Agentic bridge not ready — load a model (File → Load Model). Deferred: " + action +
                    "\n");
         return;
     }
+    
     // Differentiate tool vs prompt
     if (action.rfind("tool:", 0) == 0)
     {
@@ -245,6 +277,13 @@ void AutonomyManager::executeAction(const std::string& action)
         {
             addObservation("TOOL_DISPATCH:" + toolCall + " => " + toolResult);
             LOG_INFO("Autonomy dispatched subagent tool: " + toolCall);
+            
+            // Record successful tool dispatch
+            deepEngine.recordEvent(
+                RawrXD::Agent::EventType::TOOL_COMPLETED,
+                "AutonomyManager",
+                "Tool completed: " + toolCall.substr(0, 30)
+            );
             return;
         }
 
@@ -263,6 +302,19 @@ void AutonomyManager::executeAction(const std::string& action)
     else if (action.rfind("prompt:", 0) == 0)
     {
         std::string prompt = action.substr(7);
+        
+        // Use Deep Thinking Engine for complex prompts
+        RawrXD::Agent::ThinkingContext ctx;
+        ctx.prompt = prompt;
+        ctx.model = "autonomy";
+        ctx.maxTokens = 1024;
+        ctx.enableReasoning = true;
+        
+        auto thinkingResult = deepEngine.think(ctx);
+        if (thinkingResult.success && !thinkingResult.reasoning.empty()) {
+            LOG_INFO("Deep Thinking reasoning: " + thinkingResult.reasoning.substr(0, 100));
+        }
+        
         auto resp = m_bridge->ExecuteAgentCommand(prompt);
 
         // Check if the model's answer contains tool calls

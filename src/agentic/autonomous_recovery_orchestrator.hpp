@@ -36,18 +36,17 @@
 #include <functional>
 
 #include "DeterministicReplayEngine.h"
+#include "agentic/AgenticDeepThinkingEngine.hpp"
 
 // Forward declarations — avoid circular includes
-namespace RawrXD { namespace Safety {
-    class HotpatchTelemetrySafety;
-    struct SafePatchResult;
-} }
+namespace RawrXD {
+    namespace PDB {
+        class GSIHashTable;
+    }
+}
 
-namespace RawrXD { namespace PDB {
-    class GSIHashTable;
-} }
-
-class AgentSelfRepair;
+// Core integration points
+#include "../agent/agent_self_repair.hpp"
 struct PatchResult;
 struct LivePatchUnit;
 
@@ -76,33 +75,6 @@ struct SourceLocation {
 };
 
 // ============================================================================
-// RecoveryStrategy — What the orchestrator will attempt for each FailureClass
-// ============================================================================
-enum class RecoveryStrategy : uint8_t {
-    None                = 0,    // No recovery (Unknown classification)
-    HotpatchRedirect    = 1,    // Redirect function to known-good fallback
-    BatchRollback       = 2,    // Rollback all recent hotpatches
-    ReduceBatchSize     = 3,    // OOM mitigation: shrink inference batch
-    FreezeHotpatching   = 4,    // HotpatchCascade: disable patching for cooldown
-    SourceEdit          = 5,    // T4: LLM-generate fix → atomic replace → verify
-    SwapKVToDisk        = 6,    // OOM mitigation: evict KV-cache to NanoDisk
-    FullRollbackAndHalt = 7     // Critical: revert everything, stop execution
-};
-
-inline const char* RecoveryStrategyString(RecoveryStrategy s) {
-    switch (s) {
-        case RecoveryStrategy::HotpatchRedirect:    return "hotpatch_redirect";
-        case RecoveryStrategy::BatchRollback:       return "batch_rollback";
-        case RecoveryStrategy::ReduceBatchSize:     return "reduce_batch_size";
-        case RecoveryStrategy::FreezeHotpatching:   return "freeze_hotpatching";
-        case RecoveryStrategy::SourceEdit:          return "source_edit";
-        case RecoveryStrategy::SwapKVToDisk:        return "swap_kv_to_disk";
-        case RecoveryStrategy::FullRollbackAndHalt: return "full_rollback_and_halt";
-        default:                                     return "none";
-    }
-}
-
-// ============================================================================
 // RecoveryResult — Outcome of an autonomous recovery attempt
 // ============================================================================
 struct RecoveryResult {
@@ -110,7 +82,7 @@ struct RecoveryResult {
     const char*         detail;
     int                 errorCode;
 
-    RecoveryStrategy    strategy;
+    RawrXD::Agent::RecoveryStrategy    strategy;
     FailureClass        failureClass;
     SourceLocation      sourceLocation;     // Symbolized addr (if applicable)
     TelemetrySnapshot   preRecovery;        // Counter state before recovery
@@ -144,7 +116,7 @@ struct RecoveryResult {
         return j;
     }
 
-    static RecoveryResult ok(const char* msg, RecoveryStrategy strat) {
+    static RecoveryResult ok(const char* msg, RawrXD::Agent::RecoveryStrategy strat) {
         RecoveryResult r{};
         r.success       = true;
         r.detail        = msg;
@@ -160,7 +132,7 @@ struct RecoveryResult {
         r.success       = false;
         r.detail        = msg;
         r.errorCode     = code;
-        r.strategy      = RecoveryStrategy::None;
+        r.strategy      = RawrXD::Agent::RecoveryStrategy::NONE;
         r.verifyPassed  = false;
         r.gitCommitted  = false;
         return r;
@@ -173,7 +145,7 @@ struct RecoveryResult {
 struct RecoveryEvent {
     uint64_t            timestampMs;
     FailureClass        failureClass;
-    RecoveryStrategy    strategyAttempted;
+    RawrXD::Agent::RecoveryStrategy    strategyAttempted;
     bool                success;
     std::string         detail;
     SourceLocation      location;
@@ -280,7 +252,7 @@ public:
     RecoveryResult executeRecovery(const DivergenceEvent& div);
 
     // ---- Strategy selection ----
-    RecoveryStrategy selectStrategy(FailureClass fc) const;
+    RawrXD::Agent::RecoveryStrategy selectStrategy(FailureClass fc) const;
 
     // ---- Individual recovery strategies ----
     RecoveryResult recoverLogicDrift(const DivergenceEvent& div);
