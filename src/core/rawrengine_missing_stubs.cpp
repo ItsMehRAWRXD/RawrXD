@@ -81,7 +81,7 @@ void KQuant_DequantizeF16(const void* src, float* dst, int n) {
 // ============================================================================
 extern "C" {
 void asm_gguf_loader_close(void) {}
-void asm_spengine_cpu_optimize(void) {}
+// void asm_spengine_cpu_optimize(void) {}  // Duplicate - defined in unlinked_symbols_batch_012.cpp
 void asm_lsp_bridge_shutdown(void) {}
 
 // Mode variables - declared as extern (defined in unlinked_symbols_batch_*.cpp)
@@ -133,10 +133,10 @@ void asm_hwsynth_gen_jtag_header(void) {}
 void asm_hwsynth_get_stats(void) {}
 void asm_hwsynth_shutdown(void) {}
 
-// Performance telemetry stubs
-void asm_perf_init(void) {}
-void asm_perf_read_slot(void) {}
-void asm_perf_reset_slot(void) {}
+// Performance telemetry stubs - duplicates defined in unlinked_symbols_batch_001.cpp
+// void asm_perf_init(void) {}
+// void asm_perf_read_slot(void) {}
+// void asm_perf_reset_slot(void) {}
 
 // SelfPatch agent stubs
 void asm_apply_memory_patch(void) {}
@@ -152,32 +152,31 @@ void SO_PrintMetrics(void) {}
 void asm_hotpatch_flush_icache(void) {}
 void asm_hotpatch_atomic_swap(void) {}
 
-// Snapshot stubs
-void asm_snapshot_restore(void) {}
-void asm_snapshot_verify(void) {}
-void asm_snapshot_discard(void) {}
+// Snapshot stubs - duplicates defined in unlinked_symbols_batch_004.cpp
+// void asm_snapshot_restore(void) {}
+// void asm_snapshot_verify(void) {}
+// void asm_snapshot_discard(void) {}
 
-// Pyre compute stubs
-void asm_pyre_gemm_fp32(void) {}
-void asm_pyre_gemv_fp32(void) {}
-void asm_pyre_rmsnorm(void) {}
-void asm_pyre_silu(void) {}
-void asm_pyre_softmax(void) {}
-void asm_pyre_rope(void) {}
-void asm_pyre_add_fp32(void) {}
-void asm_pyre_mul_fp32(void) {}
-void asm_pyre_embedding_lookup(void) {}
+// Pyre compute stubs - duplicates defined in unlinked_symbols_batch_002.cpp
+// void asm_pyre_gemm_fp32(void) {}
+// void asm_pyre_gemv_fp32(void) {}
+// void asm_pyre_rmsnorm(void) {}
+// void asm_pyre_silu(void) {}
+// void asm_pyre_softmax(void) {}
+// void asm_pyre_rope(void) {}
+// void asm_pyre_add_fp32(void) {}
+// void asm_pyre_mul_fp32(void) {}
+// void asm_pyre_embedding_lookup(void) {}
 
 // Camellia256 stubs
 void asm_camellia256_auth_encrypt_file(void) {}
 void asm_camellia256_auth_decrypt_file(void) {}
 
-// Watchdog stubs
-void asm_watchdog_init(void) {}
-void asm_watchdog_verify(void) {}
-void asm_watchdog_get_baseline(void) {}
-void asm_watchdog_get_status(void) {}
-void asm_watchdog_shutdown(void) {}
+// Watchdog stubs - duplicates defined in unlinked_symbols_batch_*.cpp
+// void asm_watchdog_init(void) {}  // Duplicate - unlinked_symbols_batch_004.cpp
+// void asm_watchdog_get_baseline(void) {}  // Duplicate - unlinked_symbols_batch_005.cpp
+// void asm_watchdog_get_status(void) {}  // Duplicate - unlinked_symbols_batch_005.cpp
+// void asm_watchdog_shutdown(void) {}  // Duplicate - unlinked_symbols_batch_001.cpp
 
 // Pattern search stub
 void find_pattern_asm(void) {}
@@ -191,13 +190,13 @@ void asm_hotpatch_restore_prologue(void) {}
 void asm_hotpatch_verify_prologue(void) {}
 void asm_hotpatch_get_stats(void) {}
 
-// Snapshot stubs
-void asm_snapshot_capture(void) {}
-void asm_snapshot_get_stats(void) {}
+// Snapshot stubs - duplicates defined in unlinked_symbols_batch_004.cpp
+// void asm_snapshot_capture(void) {}
+// void asm_snapshot_get_stats(void) {}
 
-// Performance stubs
-void asm_perf_begin(void) {}
-void asm_perf_end(void) {}
+// Performance stubs - duplicates defined in unlinked_symbols_batch_001.cpp
+// void asm_perf_begin(void) {}
+// void asm_perf_end(void) {}
 
 // Mesh brain stubs
 void asm_mesh_init(void) {}
@@ -217,17 +216,8 @@ void asm_mesh_topology_active_count(void) {}
 void asm_mesh_get_stats(void) {}
 void asm_mesh_shutdown(void) {}
 
-// Speciator engine stubs
-void asm_speciator_init(void) {}
-void asm_speciator_create_isolate(void) {}
-void asm_speciator_destroy_isolate(void) {}
-void asm_speciator_enter_isolate(void) {}
-void asm_speciator_exit_isolate(void) {}
-void asm_speciator_checkpoint(void) {}
-void asm_speciator_rollback(void) {}
-void asm_speciator_verify_integrity(void) {}
-void asm_speciator_get_stats(void) {}
-void asm_speciator_shutdown(void) {}
+// Speciator engine stubs - duplicates defined in unlinked_symbols_batch_*.cpp
+// void asm_speciator_shutdown(void) {}  // Duplicate - unlinked_symbols_batch_001.cpp
 
 // Transcendence stubs
 void asm_transcendence_init(void) {}
@@ -238,12 +228,12 @@ void asm_transcendence_get_result(void) {}
 void asm_transcendence_get_stats(void) {}
 void asm_transcendence_shutdown(void) {}
 
-// Neural bridge stubs
-void asm_neural_init(void) {}
-void asm_neural_forward(void) {}
-void asm_neural_backward(void) {}
-void asm_neural_get_stats(void) {}
-void asm_neural_shutdown(void) {}
+// Neural bridge stubs - duplicates defined in unlinked_symbols_batch_*.cpp
+// void asm_neural_init(void) {}  // Duplicate - unlinked_symbols_batch_008.cpp
+// void asm_neural_forward(void) {}
+// void asm_neural_backward(void) {}
+// void asm_neural_get_stats(void) {}
+// void asm_neural_shutdown(void) {}  // Duplicate - unlinked_symbols_batch_001.cpp
 
 // MCP hooks stubs
 void asm_mcp_init(void) {}
@@ -345,28 +335,29 @@ void asm_hwsynth_generate(void) {}
 void asm_hwsynth_synthesize(void) {}
 void asm_hwsynth_profile_dataflow(void) {}
 
-// Speciator engine stubs
-void asm_speciator_create_genome(void) {}
-void asm_speciator_evaluate(void) {}
-void asm_speciator_crossover(void) {}
-void asm_speciator_mutate(void) {}
-void asm_speciator_select(void) {}
-void asm_speciator_speciate(void) {}
-void asm_speciator_gen_variant(void) {}
-void asm_speciator_compete(void) {}
-void asm_speciator_migrate(void) {}
+// Speciator engine stubs - duplicates defined in unlinked_symbols_batch_007.cpp
+// void asm_speciator_create_genome(void) {}
+// void asm_speciator_evaluate(void) {}
+// void asm_speciator_crossover(void) {}
+// void asm_speciator_mutate(void) {}
+// void asm_speciator_select(void) {}
+// void asm_speciator_speciate(void) {}
+// void asm_speciator_gen_variant(void) {}
+// void asm_speciator_compete(void) {}
+// void asm_speciator_migrate(void) {}
 
 // Neural bridge stubs
-void asm_neural_acquire_eeg(void) {}
-void asm_neural_fft_decompose(void) {}
-void asm_neural_extract_csp(void) {}
-void asm_neural_classify_intent(void) {}
-void asm_neural_detect_event(void) {}
-void asm_neural_encode_command(void) {}
-void asm_neural_gen_phosphene(void) {}
-void asm_neural_haptic_pulse(void) {}
-void asm_neural_calibrate(void) {}
-void asm_neural_adapt(void) {}
+// Neural bridge stubs - duplicates defined in unlinked_symbols_batch_008.cpp
+// void asm_neural_acquire_eeg(void) {}
+// void asm_neural_fft_decompose(void) {}
+// void asm_neural_extract_csp(void) {}
+// void asm_neural_classify_intent(void) {}
+// void asm_neural_detect_event(void) {}
+// void asm_neural_encode_command(void) {}
+// void asm_neural_gen_phosphene(void) {}
+// void asm_neural_haptic_pulse(void) {}
+// void asm_neural_calibrate(void) {}
+// void asm_neural_adapt(void) {}
 }
 
 // LSPHotpatchBridge stubs

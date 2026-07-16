@@ -597,6 +597,9 @@ set(SOURCES
 
     # T4: Autonomous Recovery Orchestrator (FailureClass → recovery → verify → commit)
     src/agentic/autonomous_recovery_orchestrator.cpp
+
+    # CoT Fallback System (required by unified_hotpatch_manager.cpp)
+    src/core/cot_fallback_system.cpp
     
     # T4.5: Agentic Deep Thinking Engine — Autonomous monitoring, recovery, and orchestration
     src/agentic/AgenticDeepThinkingEngine.cpp
@@ -1010,19 +1013,19 @@ set(SOURCES
     src/core/unlinked_symbols_batch_006.cpp
     src/core/unlinked_symbols_batch_007.cpp
     src/core/unlinked_symbols_batch_008.cpp
-    src/core/unlinked_symbols_batch_009.cpp
-    src/core/unlinked_symbols_batch_010.cpp
+    # src/core/unlinked_symbols_batch_009.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
+    # src/core/unlinked_symbols_batch_010.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/core/unlinked_symbols_batch_011.cpp
     src/core/unlinked_symbols_batch_012.cpp
     # src/core/unlinked_symbols_batch_013.cpp  # excluded: duplicate symbols with RawrXD_AgenticOrchestrator.asm
 
-    # Streaming orchestrator and analyzer distiller (required by rawrxd_subsystem_api)
-    src/core/streaming_orchestrator.cpp
-    src/core/analyzer_distiller.cpp
+    # Streaming orchestrator and analyzer distiller removed - symbols provided by unlinked_symbols_batch_*.cpp
+    # src/core/streaming_orchestrator.cpp
+    # src/core/analyzer_distiller.cpp
 
     # Link shims for Win32IDE symbols (required by vscode_extension_api when Win32IDE is not built)
-    # NOTE: This is NOT a stub - it provides real implementations for Win32IDE methods
-    src/core/rawrengine_missing_stubs.cpp
+    # NOTE: rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
+    # src/core/rawrengine_missing_stubs.cpp
 
     # Phase 50: Enterprise Hardening — Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     src/core/update_signature.cpp
@@ -1215,6 +1218,9 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
     src/lsp/RawrXD_LSPServer.cpp
     src/lsp/lsp_hotpatch_bridge.cpp
+    # Remove streaming_orchestrator.cpp and analyzer_distiller.cpp - symbols provided by unlinked_symbols_batch_*.cpp
+    src/core/streaming_orchestrator.cpp
+    src/core/analyzer_distiller.cpp
 )
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
@@ -1262,8 +1268,9 @@ elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES
         src/core/ssot_handlers_ext_runtime_minimal.cpp
         src/core/ssot_handlers_ext_isolated.cpp
+        src/core/ssot_handlers.cpp
     )
-    # AUTO lane uses `auto_feature_registry.cpp` + unified dispatch; do not also link EXT handlers.
+    # AUTO lane uses `auto_feature_registry.cpp` + unified dispatch; do not also link EXT handlers or ssot_handlers.cpp.
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES
         src/core/ssot_handlers_ext.cpp
         src/core/ssot_handlers_ext_dedicated.cpp
@@ -1321,7 +1328,8 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/ConfigurationValidator.cpp
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
-    src/core/rawrengine_missing_stubs.cpp
+    # src/core/rawrengine_missing_stubs.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
+    src/link_stubs/rawrengine_link_closure.cpp  # Re-added to resolve link errors
 
     # NOTE: rawrengine_command_handlers.cpp removed - depends on SelfHostEngine,
     # SpeciatorEngine, TranscendenceCoordinator which are excluded from RawrEngine
@@ -1358,7 +1366,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/js_extension_host_headless_impl.cpp
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
-    src/core/rawrxd_native_log_impl.cpp
+    # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
 )
 
 # =============================================================================
@@ -1447,10 +1455,13 @@ if(NOT RAWR_ENGINE_LANE_B)
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
         src/agentic/AgentOllamaClient.cpp
+        src/core/command_handlers_lsp.cpp
+        src/core/command_handlers_asm.cpp
+        src/core/command_handlers_hybrid.cpp
+        src/core/command_handlers_comprehensive.cpp
+        # src/core/asm_symbols_stub.cpp  # Removed - has compile errors and duplicates symbols
     )
-    if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        target_sources(RawrEngine PRIVATE src/core/rawrengine_missing_stubs.cpp)
-    endif()
+    # rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT" OR RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
         target_sources(RawrEngine PRIVATE src/core/auto_feature_stub_impl.cpp)
     endif()
@@ -3843,7 +3854,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         if(MSVC)
             # Link closure: fallbacks for Win32IDE (rawrengine_missing_stubs.cpp is already in RawrEngine)
             set(_RAWRXD_WIN32IDE_FALLBACK_UNITS
-                src/core/asm_symbols_stub.cpp
+                # src/core/asm_symbols_stub.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
                 src/core/json_instantiations.cpp
                 src/core/cot_fallback_system.cpp
                 src/core/model_loader_fallbacks.cpp
