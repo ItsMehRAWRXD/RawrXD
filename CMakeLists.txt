@@ -1,10 +1,32 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Force Windows SDK version BEFORE any project() or compiler checks
-# This MUST be set before project() to affect the VS generator
+# Auto-detect Windows SDK version
 if(WIN32)
-    set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version for VS generator" FORCE)
-    set(CMAKE_SYSTEM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version" FORCE)
+    # Try to find available Windows SDK versions
+    set(_SDK_VERSIONS "10.0.22621.0" "10.0.26100.0" "10.0.22000.0" "10.0.19041.0")
+    set(_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
+    
+    if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
+        set(_SDK_ROOT "D:/Program Files (x86)/Windows Kits/10")
+    endif()
+    
+    set(_FOUND_SDK "")
+    foreach(_VER ${_SDK_VERSIONS})
+        if(EXISTS "${_SDK_ROOT}/Include/${_VER}/um/windows.h")
+            set(_FOUND_SDK ${_VER})
+            message(STATUS "[SDK] Found Windows SDK ${_VER}")
+            break()
+        endif()
+    endforeach()
+    
+    if(_FOUND_SDK)
+        set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "${_FOUND_SDK}" CACHE STRING "Windows SDK version" FORCE)
+        set(CMAKE_SYSTEM_VERSION "${_FOUND_SDK}" CACHE STRING "Windows SDK version" FORCE)
+    else()
+        message(WARNING "[SDK] No Windows SDK found, using default")
+        set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0" CACHE STRING "Windows SDK version" FORCE)
+        set(CMAKE_SYSTEM_VERSION "10.0" CACHE STRING "Windows SDK version" FORCE)
+    endif()
 endif()
 
 # =============================================================================
@@ -1358,6 +1380,8 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     src/core/rawrxd_native_log_impl.cpp
+    src/core/subsystem_registry.cpp
+    src/core/command_handlers.cpp
     src/link_stubs/rawrengine_link_stubs_v2.cpp
     src/link_stubs/tier1_handlers_stubs.cpp
     src/link_stubs/gpudispatchgate_stubs.cpp

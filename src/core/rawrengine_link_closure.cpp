@@ -1,5 +1,5 @@
-// RawrEngine Missing Symbol Stubs
-// This file provides stub implementations for symbols missing in RawrEngine build
+// RawrEngine Missing Symbol Stubs - Minimal
+// This file provides stub implementations ONLY for symbols not defined elsewhere
 
 #include <cstdint>
 #include <cstddef>
@@ -7,7 +7,7 @@
 #include <string>
 
 // ============================================================================
-// Command handlers
+// Command handlers - ONLY those not in feature_handlers.cpp or auto_feature_registry.cpp
 // ============================================================================
 struct CommandContext {
     std::string command;
@@ -267,17 +267,7 @@ PatchResult search_and_patch_bytes(const char* path,
     return PatchResult{false, -1};
 }
 
-// CoTFallbackSystem
-class CoTFallbackSystem {
-public:
-    static CoTFallbackSystem& instance() {
-        static CoTFallbackSystem inst;
-        return inst;
-    }
-    PatchResult disableCoT(const std::string&) { return PatchResult{false, -1}; }
-    PatchResult enableCoT() { return PatchResult{false, -1}; }
-    bool isCoTAvailable() const { return false; }
-};
+// CoTFallbackSystem - REMOVED: defined in cot_fallback_system.cpp
 
 // GPUDispatchGate
 namespace RawrXD {
