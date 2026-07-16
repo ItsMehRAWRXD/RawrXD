@@ -528,7 +528,7 @@ set(SOURCES
     src/core/confidence_gate.cpp
     src/core/deterministic_replay.cpp
     src/core/execution_governor.cpp
-    src/core/multi_response_engine.cpp
+    # src/core/multi_response_engine.cpp - Header-only implementation in multi_response_engine.h
     src/core/streaming_engine_registry.cpp
     src/core/flash_attention.cpp
     src/core/gpu_backend_bridge.cpp
@@ -1261,10 +1261,11 @@ elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
         src/core/ssot_handlers_ext_runtime_minimal.cpp
         src/core/ssot_handlers_ext_isolated.cpp
     )
-    # AUTO lane uses `auto_feature_registry.cpp` + unified dispatch; do not also link EXT handlers.
+    # AUTO lane uses `auto_feature_registry.cpp` + unified dispatch; do not also link EXT handlers or ssot_handlers.cpp.
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES
         src/core/ssot_handlers_ext.cpp
         src/core/ssot_handlers_ext_dedicated.cpp
+        src/core/ssot_handlers.cpp
     )
 elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
     set(_RAWR_SSOT_STUBS 1)
@@ -1358,6 +1359,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/camellia256_bridge.cpp
     src/core/rawrxd_native_log_impl.cpp
     src/link_stubs/rawrengine_link_stubs_v2.cpp
+    src/link_stubs/tier1_handlers_stubs.cpp
 )
 
 # =============================================================================
