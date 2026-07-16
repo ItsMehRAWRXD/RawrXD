@@ -20,13 +20,11 @@ extern "C"
     
     // QuadBuffer stubs
     void* asm_quadbuf_init(size_t size) { (void)size; return nullptr; }
-    void asm_quadbuf_shutdown(void) {}
     void asm_quadbuf_push(const void* data, size_t len) { (void)data; (void)len; }
     size_t asm_quadbuf_pull(void* buf, size_t maxLen) { (void)buf; (void)maxLen; return 0; }
     
     // Self-Patch Engine stubs
     void asm_spengine_init(void) {}
-    void asm_spengine_shutdown(void) {}
     int asm_spengine_apply_patch(const void* patch, size_t len) { (void)patch; (void)len; return -1; }
     int asm_spengine_verify_integrity(void) { return 0; }
     
@@ -111,80 +109,5 @@ extern "C"
         (void)target; (void)backup; (void)len; return 0; 
     }
     void* asm_hotpatch_get_stats(void) { return nullptr; }
-    
-    // Additional missing symbols from latest build
-    void* asm_snapshot_capture(void) { return nullptr; }
-    void* asm_snapshot_get_stats(void) { return nullptr; }
-    
-    // asm_perf_* symbols
-    void asm_perf_init(void) {}
-    void asm_perf_begin(int slot) { (void)slot; }
-    void asm_perf_end(int slot) { (void)slot; }
-    uint64_t asm_perf_read_slot(int slot) { (void)slot; return 0; }
-    void asm_perf_reset_slot(int slot) { (void)slot; }
-    
-    // asm_mesh_* symbols (mesh_brain.cpp)
-    void* asm_mesh_init(void) { return nullptr; }
-    void asm_mesh_shutdown(void* ctx) { (void)ctx; }
-    void asm_mesh_crdt_merge(void* ctx, const void* data, size_t len) { (void)ctx; (void)data; (void)len; }
-    void* asm_mesh_crdt_delta(void* ctx) { (void)ctx; return nullptr; }
-    int asm_mesh_zkp_generate(void* ctx, void* proof) { (void)ctx; (void)proof; return -1; }
-    int asm_mesh_zkp_verify(void* ctx, const void* proof) { (void)ctx; (void)proof; return -1; }
-    uint64_t asm_mesh_dht_xor_distance(const void* a, const void* b) { (void)a; (void)b; return 0; }
-    void* asm_mesh_dht_find_closest(void* ctx, const void* target) { (void)ctx; (void)target; return nullptr; }
-    void asm_mesh_fedavg_aggregate(void* ctx, const void** updates, size_t count) { (void)ctx; (void)updates; (void)count; }
-    void asm_mesh_gossip_disseminate(void* ctx, const void* msg, size_t len) { (void)ctx; (void)msg; (void)len; }
-    uint64_t asm_mesh_shard_hash(const void* data, size_t len) { (void)data; (void)len; return 0; }
-    uint64_t asm_mesh_shard_bitfield(void* ctx, int shard_id) { (void)ctx; (void)shard_id; return 0; }
-    int asm_mesh_quorum_vote(void* ctx, int proposal_id) { (void)ctx; (void)proposal_id; return -1; }
-    void asm_mesh_topology_update(void* ctx) { (void)ctx; }
-    int asm_mesh_topology_active_count(void* ctx) { (void)ctx; return 0; }
-    void* asm_mesh_get_stats(void* ctx) { (void)ctx; return nullptr; }
-    
-    // asm_speciator_* symbols (speciator_engine.cpp)
-    void* asm_speciator_init(void) { return nullptr; }
-    void asm_speciator_shutdown(void* ctx) { (void)ctx; }
-    void* asm_speciator_create_genome(void* ctx, size_t size) { (void)ctx; (void)size; return nullptr; }
-    double asm_speciator_evaluate(void* ctx, void* genome) { (void)ctx; (void)genome; return 0.0; }
-    void* asm_speciator_crossover(void* ctx, void* a, void* b) { (void)ctx; (void)a; (void)b; return nullptr; }
-    void asm_speciator_mutate(void* ctx, void* genome, double rate) { (void)ctx; (void)genome; (void)rate; }
-    void* asm_speciator_select(void* ctx, void** population, size_t count) { (void)ctx; (void)population; (void)count; return nullptr; }
-    void asm_speciator_speciate(void* ctx, void** population, size_t count) { (void)ctx; (void)population; (void)count; }
-    void* asm_speciator_gen_variant(void* ctx, void* genome, int type) { (void)ctx; (void)genome; (void)type; return nullptr; }
-    void asm_speciator_compete(void* ctx, void** population, size_t count) { (void)ctx; (void)population; (void)count; }
-    void asm_speciator_migrate(void* ctx, void* genome, int target) { (void)ctx; (void)genome; (void)target; }
-    void* asm_speciator_get_stats(void* ctx) { (void)ctx; return nullptr; }
-    
-    // asm_neural_* symbols (neural_bridge.cpp)
-    void* asm_neural_init(void) { return nullptr; }
-    void asm_neural_shutdown(void* ctx) { (void)ctx; }
-    int asm_neural_acquire_eeg(void* ctx, void* buffer, size_t len) { (void)ctx; (void)buffer; (void)len; return -1; }
-    void asm_neural_fft_decompose(void* ctx, void* signal, void* spectrum) { (void)ctx; (void)signal; (void)spectrum; }
-    void asm_neural_extract_csp(void* ctx, void* features) { (void)ctx; (void)features; }
-    int asm_neural_classify_intent(void* ctx, const void* features) { (void)ctx; (void)features; return -1; }
-    int asm_neural_detect_event(void* ctx, const void* signal) { (void)ctx; (void)signal; return -1; }
-    void* asm_neural_encode_command(void* ctx, int intent) { (void)ctx; (void)intent; return nullptr; }
-    void asm_neural_gen_phosphene(void* ctx, int x, int y, int intensity) { (void)ctx; (void)x; (void)y; (void)intensity; }
-    void asm_neural_haptic_pulse(void* ctx, int pattern) { (void)ctx; (void)pattern; }
-    void asm_neural_calibrate(void* ctx) { (void)ctx; }
-    void asm_neural_adapt(void* ctx, const void* feedback) { (void)ctx; (void)feedback; }
-    void* asm_neural_get_stats(void* ctx) { (void)ctx; return nullptr; }
-    
-    // asm_hwsynth_* symbols (hardware_synthesizer.cpp)
-    void* asm_hwsynth_init(void) { return nullptr; }
-    void asm_hwsynth_shutdown(void* ctx) { (void)ctx; }
-    void asm_hwsynth_profile_dataflow(void* ctx, const void* graph) { (void)ctx; (void)graph; }
-    void* asm_hwsynth_gen_gemm_spec(void* ctx, int m, int n, int k) { (void)ctx; (void)m; (void)n; (void)k; return nullptr; }
-    void asm_hwsynth_analyze_memhier(void* ctx, const void* access_pattern) { (void)ctx; (void)access_pattern; }
-    double asm_hwsynth_predict_perf(void* ctx, const void* config) { (void)ctx; (void)config; return 0.0; }
-    void asm_hwsynth_est_resources(void* ctx, const void* spec, void* resources) { (void)ctx; (void)spec; (void)resources; }
-    void* asm_hwsynth_gen_jtag_header(void* ctx) { (void)ctx; return nullptr; }
-    void* asm_hwsynth_get_stats(void* ctx) { (void)ctx; return nullptr; }
-    
-    // asm_spengine_cpu_optimize
-    int asm_spengine_cpu_optimize(void) { return 0; }
-    
-    // asm_apply_memory_patch
-    int asm_apply_memory_patch(void* target, const void* patch, size_t len) { (void)target; (void)patch; (void)len; return -1; }
     
 } // extern "C"
