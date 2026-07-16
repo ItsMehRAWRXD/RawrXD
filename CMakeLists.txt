@@ -1555,6 +1555,8 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/autonomous_recovery_orches
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/AgentOrchestrator\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/ToolRegistry\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_deep_thinking_engine\\.cpp$")
+# Exclude rawrengine_missing_stubs.cpp - it duplicates symbols from ASM files
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/rawrengine_missing_stubs\\.cpp$")
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES

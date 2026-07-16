@@ -999,3 +999,162 @@ void* g_hHeap = nullptr;
 void BeaconSend(void) { }
 bool RunInference(void* /*req*/) { return true; }
 }
+
+// ============================================================================
+// Section 7: MultiResponseEngine Stubs
+// ============================================================================
+
+enum ResponseTemplateId {
+    RESPONSE_TEMPLATE_DEFAULT = 0,
+    RESPONSE_TEMPLATE_CHAT,
+    RESPONSE_TEMPLATE_CODE,
+    RESPONSE_TEMPLATE_MARKDOWN,
+    RESPONSE_TEMPLATE_JSON,
+    RESPONSE_TEMPLATE_COUNT
+};
+
+struct ResponseTemplate {
+    ResponseTemplateId id;
+    std::string name;
+    std::string description;
+    bool enabled = true;
+};
+
+struct GeneratedResponse {
+    std::string content;
+    std::string model;
+    int tokens = 0;
+    double latencyMs = 0.0;
+};
+
+struct MultiResponseSession {
+    unsigned __int64 id = 0;
+    std::string model;
+    int maxTokens = 1024;
+    std::string prompt;
+    bool active = false;
+};
+
+struct MultiResponseResult {
+    bool success = false;
+    std::string error;
+    unsigned __int64 sessionId = 0;
+};
+
+struct MultiResponseStats {
+    int totalSessions = 0;
+    int activeSessions = 0;
+    double avgLatencyMs = 0.0;
+};
+
+class MultiResponseEngine {
+public:
+    MultiResponseEngine();
+    ~MultiResponseEngine();
+    
+    MultiResponseResult initialize();
+    const ResponseTemplate& getTemplate(ResponseTemplateId id) const;
+    void setTemplateEnabled(ResponseTemplateId id, bool enabled);
+    std::vector<ResponseTemplate> getAllTemplates() const;
+    
+    unsigned __int64 startSession(const std::string& model, int maxTokens, const std::string& prompt);
+    MultiResponseResult generateAll(unsigned __int64 sessionId,
+        void (*onResponse)(const GeneratedResponse&, void*),
+        void* responseContext,
+        void (*onSessionUpdate)(const MultiResponseSession&, void*),
+        void* sessionContext);
+    MultiResponseResult setPreference(unsigned __int64 sessionId, int preference, const std::string& value);
+    const MultiResponseSession* getLatestSession() const;
+    MultiResponseStats getStats() const;
+    std::string getRecommendedTemplate() const;
+    
+private:
+    std::vector<ResponseTemplate> templates_;
+    std::vector<MultiResponseSession> sessions_;
+    MultiResponseSession* latestSession_ = nullptr;
+};
+
+MultiResponseEngine::MultiResponseEngine() {
+    templates_.resize(RESPONSE_TEMPLATE_COUNT);
+    for (int i = 0; i < RESPONSE_TEMPLATE_COUNT; i++) {
+        templates_[i].id = static_cast<ResponseTemplateId>(i);
+        templates_[i].enabled = true;
+    }
+    templates_[RESPONSE_TEMPLATE_DEFAULT].name = "default";
+    templates_[RESPONSE_TEMPLATE_CHAT].name = "chat";
+    templates_[RESPONSE_TEMPLATE_CODE].name = "code";
+    templates_[RESPONSE_TEMPLATE_MARKDOWN].name = "markdown";
+    templates_[RESPONSE_TEMPLATE_JSON].name = "json";
+}
+
+MultiResponseEngine::~MultiResponseEngine() {}
+
+MultiResponseResult MultiResponseEngine::initialize() {
+    MultiResponseResult result;
+    result.success = true;
+    return result;
+}
+
+const ResponseTemplate& MultiResponseEngine::getTemplate(ResponseTemplateId id) const {
+    static ResponseTemplate empty;
+    if (id >= 0 && id < RESPONSE_TEMPLATE_COUNT) {
+        return templates_[id];
+    }
+    return empty;
+}
+
+void MultiResponseEngine::setTemplateEnabled(ResponseTemplateId id, bool enabled) {
+    if (id >= 0 && id < RESPONSE_TEMPLATE_COUNT) {
+        templates_[id].enabled = enabled;
+    }
+}
+
+std::vector<ResponseTemplate> MultiResponseEngine::getAllTemplates() const {
+    return templates_;
+}
+
+unsigned __int64 MultiResponseEngine::startSession(const std::string& model, int maxTokens, const std::string& prompt) {
+    MultiResponseSession session;
+    session.id = sessions_.size() + 1;
+    session.model = model;
+    session.maxTokens = maxTokens;
+    session.prompt = prompt;
+    session.active = true;
+    sessions_.push_back(session);
+    latestSession_ = &sessions_.back();
+    return session.id;
+}
+
+MultiResponseResult MultiResponseEngine::generateAll(unsigned __int64 sessionId,
+    void (*onResponse)(const GeneratedResponse&, void*),
+    void* responseContext,
+    void (*onSessionUpdate)(const MultiResponseSession&, void*),
+    void* sessionContext) {
+    (void)sessionId; (void)onResponse; (void)responseContext;
+    (void)onSessionUpdate; (void)sessionContext;
+    MultiResponseResult result;
+    result.success = true;
+    return result;
+}
+
+MultiResponseResult MultiResponseEngine::setPreference(unsigned __int64 sessionId, int preference, const std::string& value) {
+    (void)sessionId; (void)preference; (void)value;
+    MultiResponseResult result;
+    result.success = true;
+    return result;
+}
+
+const MultiResponseSession* MultiResponseEngine::getLatestSession() const {
+    return latestSession_;
+}
+
+MultiResponseStats MultiResponseEngine::getStats() const {
+    MultiResponseStats stats;
+    stats.totalSessions = static_cast<int>(sessions_.size());
+    stats.activeSessions = stats.totalSessions;
+    return stats;
+}
+
+std::string MultiResponseEngine::getRecommendedTemplate() const {
+    return "default";
+}
