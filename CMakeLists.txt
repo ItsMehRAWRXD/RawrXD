@@ -4895,6 +4895,22 @@ target_include_directories(test_gpu_memory_allocator PRIVATE
 )
 message(STATUS "[Test] test_gpu_memory_allocator target added (validates multi-GPU memory management)")
 
+# HIP RDNA3 Kernel Optimization Test (Priority 5: Mission 2)
+add_executable(test_hip_rdna3_kernels
+    src/test/test_hip_rdna3_kernels.cpp
+)
+set_target_properties(test_hip_rdna3_kernels PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME test_hip_rdna3_kernels
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(test_hip_rdna3_kernels PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+message(STATUS "[Test] test_hip_rdna3_kernels target added (validates RDNA3 kernel optimizations)")
+
 # Autonomous Agentic Pipeline unit test (Task 5 — buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
