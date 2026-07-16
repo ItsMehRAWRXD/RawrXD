@@ -157,4 +157,127 @@ CommandResult handleSystemInfo(const CommandContext& ctx);
 CommandResult handleSystemHealth(const CommandContext& ctx);
 CommandResult handleSystemRestart(const CommandContext& ctx);
 
+// =============================================================================
+// Tier1 Split Handlers (Batch 1)
+// =============================================================================
+CommandResult handleTier1SplitHorizontal(const CommandContext& ctx);
+CommandResult handleTier1SplitVertical(const CommandContext& ctx);
+CommandResult handleTier1SplitGrid(const CommandContext& ctx);
+CommandResult handleTier1SplitClose(const CommandContext& ctx);
+CommandResult handleTier1SplitFocusNext(const CommandContext& ctx);
+CommandResult handleTier1SplitFocusPrev(const CommandContext& ctx);
+CommandResult handleTier1AutoUpdateCheck(const CommandContext& ctx);
+CommandResult handleTier1UpdateDismiss(const CommandContext& ctx);
+
+// =============================================================================
+// LSP Additional Handlers (Batch 1)
+// =============================================================================
+CommandResult handleLspStartAll(const CommandContext& ctx);
+CommandResult handleLspStopAll(const CommandContext& ctx);
+CommandResult handleLspConfigure(const CommandContext& ctx);
+CommandResult handleLspSaveConfig(const CommandContext& ctx);
+
+// =============================================================================
+// ASM Info Handlers (Batch 1)
+// =============================================================================
+CommandResult handleAsmInstructionInfo(const CommandContext& ctx);
+CommandResult handleAsmRegisterInfo(const CommandContext& ctx);
+CommandResult handleAsmMemoryMap(const CommandContext& ctx);
+
+// =============================================================================
+// Multi-Response Additional Handlers (Batch 1)
+// =============================================================================
+CommandResult handleMultiRespShowHistory(const CommandContext& ctx);
+CommandResult handleMultiRespExport(const CommandContext& ctx);
+CommandResult handleMultiRespImport(const CommandContext& ctx);
+
+// =============================================================================
+// Governance Additional Handlers (Batch 1)
+// =============================================================================
+CommandResult handleGovPause(const CommandContext& ctx);
+CommandResult handleGovResume(const CommandContext& ctx);
+CommandResult handleGovConfigure(const CommandContext& ctx);
+
+// =============================================================================
+// Safety Additional Handlers (Batch 2)
+// =============================================================================
+CommandResult handleSafetyEnable(const CommandContext& ctx);
+CommandResult handleSafetyDisable(const CommandContext& ctx);
+CommandResult handleSafetyConfigure(const CommandContext& ctx);
+
+// =============================================================================
+// Replay Additional Handlers (Batch 2)
+// =============================================================================
+CommandResult handleReplayLoad(const CommandContext& ctx);
+CommandResult handleReplaySave(const CommandContext& ctx);
+CommandResult handleReplaySeek(const CommandContext& ctx);
+CommandResult handleReplayStepForward(const CommandContext& ctx);
+CommandResult handleReplayStepBack(const CommandContext& ctx);
+
+// =============================================================================
+// Tier1 Additional Handlers (Batch 2)
+// =============================================================================
+CommandResult handleTier1Configure(const CommandContext& ctx);
+CommandResult handleTier1Reset(const CommandContext& ctx);
+CommandResult handleTier1Optimize(const CommandContext& ctx);
+
+// =============================================================================
+// LSP Additional Handlers (Batch 2)
+// =============================================================================
+CommandResult handleLspRestart(const CommandContext& ctx);
+CommandResult handleLspLog(const CommandContext& ctx);
+
+// =============================================================================
+// ASM Additional Handlers (Batch 2)
+// =============================================================================
+CommandResult handleAsmOptimize(const CommandContext& ctx);
+CommandResult handleAsmValidate(const CommandContext& ctx);
+
+// =============================================================================
+// AI Feature Additional Handlers (Batch 2)
+// =============================================================================
+CommandResult handleAIFeatureConfigure(const CommandContext& ctx);
+CommandResult handleAIFeatureList(const CommandContext& ctx);
+
+// =============================================================================
+// VSCode Extension Additional Handlers (Batch 2)
+// =============================================================================
+CommandResult handleVSCodeExtList(const CommandContext& ctx);
+CommandResult handleVSCodeExtEnable(const CommandContext& ctx);
+CommandResult handleVSCodeExtDisable(const CommandContext& ctx);
+
+// =============================================================================
+// Model Additional Handlers (Batch 3)
+// =============================================================================
+CommandResult handleModelList(const CommandContext& ctx);
+CommandResult handleModelConfigure(const CommandContext& ctx);
+CommandResult handleModelValidate(const CommandContext& ctx);
+
+// =============================================================================
+// Inference Additional Handlers (Batch 3)
+// =============================================================================
+CommandResult handleInferenceConfigure(const CommandContext& ctx);
+CommandResult handleInferencePause(const CommandContext& ctx);
+CommandResult handleInferenceResume(const CommandContext& ctx);
+
+// =============================================================================
+// Agentic Additional Handlers (Batch 3)
+// =============================================================================
+CommandResult handleAgenticConfigure(const CommandContext& ctx);
+CommandResult handleAgenticPause(const CommandContext& ctx);
+CommandResult handleAgenticResume(const CommandContext& ctx);
+
+// =============================================================================
+// Security Additional Handlers (Batch 3)
+// =============================================================================
+CommandResult handleSecurityConfigure(const CommandContext& ctx);
+CommandResult handleSecurityEnable(const CommandContext& ctx);
+CommandResult handleSecurityDisable(const CommandContext& ctx);
+
+// =============================================================================
+// Telemetry Additional Handlers (Batch 3)
+// =============================================================================
+CommandResult handleTelemetryConfigure(const CommandContext& ctx);
+CommandResult handleTelemetryClear(const CommandContext& ctx);
+
 } // namespace RawrXD
