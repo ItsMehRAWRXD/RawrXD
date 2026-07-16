@@ -351,4 +351,49 @@ CommandResult handleReplayRename(const CommandContext& ctx);
 CommandResult handleReplayExport(const CommandContext& ctx);
 CommandResult handleReplayImport(const CommandContext& ctx);
 
+// =============================================================================
+// Tier1 Extended Handlers (Batch 6)
+// =============================================================================
+CommandResult handleTier1List(const CommandContext& ctx);
+CommandResult handleTier1Add(const CommandContext& ctx);
+CommandResult handleTier1Remove(const CommandContext& ctx);
+CommandResult handleTier1Update(const CommandContext& ctx);
+CommandResult handleTier1Validate(const CommandContext& ctx);
+
+// =============================================================================
+// LSP Extended Handlers (Batch 6)
+// =============================================================================
+CommandResult handleLspList(const CommandContext& ctx);
+CommandResult handleLspAdd(const CommandContext& ctx);
+CommandResult handleLspRemove(const CommandContext& ctx);
+CommandResult handleLspUpdate(const CommandContext& ctx);
+CommandResult handleLspValidate(const CommandContext& ctx);
+
+// =============================================================================
+// ASM Extended Handlers (Batch 6)
+// =============================================================================
+CommandResult handleAsmList(const CommandContext& ctx);
+CommandResult handleAsmAdd(const CommandContext& ctx);
+CommandResult handleAsmRemove(const CommandContext& ctx);
+CommandResult handleAsmUpdate(const CommandContext& ctx);
+CommandResult handleAsmValidate(const CommandContext& ctx);
+
+// =============================================================================
+// AI Feature Extended Handlers (Batch 6)
+// =============================================================================
+CommandResult handleAIList(const CommandContext& ctx);
+CommandResult handleAIAdd(const CommandContext& ctx);
+CommandResult handleAIRemove(const CommandContext& ctx);
+CommandResult handleAIUpdate(const CommandContext& ctx);
+CommandResult handleAIValidate(const CommandContext& ctx);
+
+// =============================================================================
+// VSCode Extension Extended Handlers (Batch 6)
+// =============================================================================
+CommandResult handleVSCodeList(const CommandContext& ctx);
+CommandResult handleVSCodeAdd(const CommandContext& ctx);
+CommandResult handleVSCodeRemove(const CommandContext& ctx);
+CommandResult handleVSCodeUpdate(const CommandContext& ctx);
+CommandResult handleVSCodeValidate(const CommandContext& ctx);
+
 } // namespace RawrXD
