@@ -1360,6 +1360,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/rawrxd_native_log_impl.cpp
     src/link_stubs/rawrengine_link_stubs_v2.cpp
     src/link_stubs/tier1_handlers_stubs.cpp
+    src/link_stubs/gpudispatchgate_stubs.cpp
 )
 
 # =============================================================================
@@ -4221,6 +4222,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/link_stubs/speciator_asm_stubs.cpp
         src/link_stubs/neural_bridge_asm_stubs.cpp
         src/link_stubs/hardware_synth_asm_stubs.cpp
+        src/link_stubs/gpudispatchgate_stubs.cpp
     )
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
