@@ -7,24 +7,10 @@
 
 // Minimal implementations for missing symbols
 extern "C" {
-    void RawrXD_Native_Log(const char* msg) {
-        OutputDebugStringA(msg);
-        OutputDebugStringA("\n");
-    }
+    // Note: Pyre kernels and pattern scanner are now implemented in runtime files
+    // (pyre_kernels_avx2.cpp and pattern_scanner.cpp)
     
-    // Pyre compute stubs
-    int asm_pyre_gemm_fp32(void* a, void* b, void* c, int m, int n, int k) { return 0; }
-    int asm_pyre_gemv_fp32(void* a, void* x, void* y, int m, int k) { return 0; }
-    int asm_pyre_rmsnorm(void* x, void* w, void* y, int n, float eps) { return 0; }
-    int asm_pyre_silu(void* x, int n) { return 0; }
-    int asm_pyre_softmax(void* x, int n) { return 0; }
-    int asm_pyre_rope(void* q, void* k, int head_dim, int n_heads, int pos, float theta) { return 0; }
-    int asm_pyre_add_fp32(void* a, void* b, void* c, int n) { return 0; }
-    int asm_pyre_mul_fp32(void* a, void* b, void* c, int n) { return 0; }
-    int asm_pyre_embedding_lookup(void* embed, int* tokens, void* out, int n, int dim) { return 0; }
-    
-    // Hotpatch stubs
-    int find_pattern_asm(const char* data, unsigned char* pattern, size_t len) { return -1; }
+    // Hotpatch stub - memory patch apply
     int asm_apply_memory_patch(void* addr, void* data, size_t len) { return 0; }
 }
 

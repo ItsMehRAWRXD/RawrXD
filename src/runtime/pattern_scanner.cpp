@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include <immintrin.h>
+#include <intrin.h>  // For __cpuid, __cpuidex, _BitScanForward
 #include <windows.h>
 #include <cstdint>
 #include <cstddef>
@@ -127,7 +128,8 @@ static const uint8_t* SSE42Search(const uint8_t* data, size_t dataLen,
             
             // Check last byte for each potential match
             while (firstMask != 0) {
-                int bit = __builtin_ctz(firstMask);
+                unsigned long bit;
+                _BitScanForward(&bit, firstMask);
                 if (p + bit + patternLen - 1 <= end &&
                     p[bit + patternLen - 1] == lastByte) {
                     // Full pattern check
@@ -180,7 +182,8 @@ static const uint8_t* AVX2Search(const uint8_t* data, size_t dataLen,
             
             // Check last byte for each potential match
             while (firstMask != 0) {
-                int bit = __builtin_ctz(firstMask);
+                unsigned long bit;
+                _BitScanForward(&bit, firstMask);
                 if (p + bit + patternLen - 1 <= end &&
                     p[bit + patternLen - 1] == lastByte) {
                     // Full pattern check

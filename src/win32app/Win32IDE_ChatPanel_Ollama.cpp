@@ -210,15 +210,13 @@ void Win32IDE::sendChatMessageToOllama(const std::string& message,
     if (maxTokens < 32) maxTokens = 512;
     
     // Build request body
-    json requestBody = {
-        {"model", modelName},
-        {"prompt", message},
-        {"stream", true},
-        {"options", {
-            {"num_predict", maxTokens},
-            {"temperature", 0.7}
-        }}
-    };
+    json requestBody = json::object();
+    requestBody["model"] = modelName;
+    requestBody["prompt"] = message;
+    requestBody["stream"] = true;
+    requestBody["options"] = json::object();
+    requestBody["options"]["num_predict"] = maxTokens;
+    requestBody["options"]["temperature"] = 0.7;
     
     std::string requestJson = requestBody.dump();
     

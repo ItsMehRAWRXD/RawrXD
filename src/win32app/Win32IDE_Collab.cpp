@@ -19,7 +19,7 @@ static HWND s_hwndStatus = nullptr;
 static HWND s_hwndJoinUrl = nullptr;
 static HWND s_hwndStartBtn = nullptr;
 static HWND s_hwndStopBtn = nullptr;
-static WebSocketHub s_collabHub;
+static RawrXD::WebSocketHub s_collabHub;
 static bool s_collabClassRegistered = false;
 
 // CRDT buffer for collaborative text editing

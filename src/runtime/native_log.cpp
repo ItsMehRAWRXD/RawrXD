@@ -2,7 +2,7 @@
 // native_log.cpp — Production Native Logging with Ring Buffer
 // ============================================================================
 // Zero-allocation, high-performance logging for Gold runtime
-// Features: Lock-free ring buffer, ETW integration, structured JSON output
+// Features: Lock-free ring buffer, structured JSON output
 // ============================================================================
 
 #include <windows.h>
@@ -10,10 +10,6 @@
 #include <cstddef>
 #include <atomic>
 #include <cstring>
-
-// ETW Provider GUID: {A4B4C4D4-E4F4-4444-8888-123456789ABC}
-static const GUID RawrXDLogProviderGuid = 
-    { 0xA4B4C4D4, 0xE4F4, 0x4444, { 0x88, 0x88, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC } };
 
 // Log levels
 enum class LogLevel : uint8_t {
@@ -45,35 +41,10 @@ struct LogRingBuffer {
     alignas(64) std::atomic<uint64_t> writeSeq{0};   // Next write sequence
     alignas(64) std::atomic<uint64_t> readSeq{0};    // Next read sequence
     alignas(64) std::atomic<bool> initialized{false};
-    alignas(64) std::atomic<bool> etwEnabled{false};
-    
-    // ETW handle
-    TRACEHANDLE etwRegHandle{0};
-    TRACEHANDLE etwSessionHandle{0};
 };
 
 static LogRingBuffer g_logBuffer;
 static double g_qpcFrequency = 0.0;
-
-// ETW levels
-static const uint8_t ETW_LEVEL_VERBOSE = 5;
-static const uint8_t ETW_LEVEL_INFO = 4;
-static const uint8_t ETW_LEVEL_WARNING = 3;
-static const uint8_t ETW_LEVEL_ERROR = 2;
-static const uint8_t ETW_LEVEL_FATAL = 1;
-
-// Convert LogLevel to ETW level
-static uint8_t LogLevelToEtw(LogLevel level) {
-    switch (level) {
-        case LogLevel::Verbose: return ETW_LEVEL_VERBOSE;
-        case LogLevel::Debug: return ETW_LEVEL_VERBOSE;
-        case LogLevel::Info: return ETW_LEVEL_INFO;
-        case LogLevel::Warning: return ETW_LEVEL_WARNING;
-        case LogLevel::Error: return ETW_LEVEL_ERROR;
-        case LogLevel::Fatal: return ETW_LEVEL_FATAL;
-        default: return ETW_LEVEL_INFO;
-    }
-}
 
 // Initialize QPC frequency
 static void InitQpcFrequency() {
@@ -87,26 +58,6 @@ static uint64_t GetTimestamp() {
     LARGE_INTEGER qpc;
     QueryPerformanceCounter(&qpc);
     return static_cast<uint64_t>(qpc.QuadPart * g_qpcFrequency);
-}
-
-// ETW write callback
-static ULONG WINAPI EtwCallback(
-    TRACEHANDLE SessionHandle,
-    uint32_t EventCode,
-    TRACE_EVENT_CONTEXT* Context,
-    uint32_t Reserved
-) {
-    (void)Context;
-    (void)Reserved;
-    
-    if (EventCode == 0) { // Enable
-        g_logBuffer.etwSessionHandle = SessionHandle;
-        g_logBuffer.etwEnabled.store(true, std::memory_order_release);
-    } else if (EventCode == 1) { // Disable
-        g_logBuffer.etwEnabled.store(false, std::memory_order_release);
-        g_logBuffer.etwSessionHandle = 0;
-    }
-    return ERROR_SUCCESS;
 }
 
 // ============================================================================
@@ -128,22 +79,6 @@ int RawrXD_Native_Log_Init(void) {
         g_logBuffer.entries[i].sequence.store(0, std::memory_order_relaxed);
     }
     
-    // Register ETW provider
-    #pragma warning(push)
-    #pragma warning(disable: 6387) // Disable SAL warning for EventRegister
-    ULONG result = EventRegister(
-        &RawrXDLogProviderGuid,
-        EtwCallback,
-        nullptr,
-        &g_logBuffer.etwRegHandle
-    );
-    #pragma warning(pop)
-    
-    if (result != ERROR_SUCCESS) {
-        // ETW registration failed, but logging still works via ring buffer
-        g_logBuffer.etwRegHandle = 0;
-    }
-    
     return 0;
 }
 
@@ -151,12 +86,6 @@ int RawrXD_Native_Log_Init(void) {
 void RawrXD_Native_Log_Shutdown(void) {
     if (!g_logBuffer.initialized.load(std::memory_order_acquire)) {
         return;
-    }
-    
-    // Unregister ETW
-    if (g_logBuffer.etwRegHandle != 0) {
-        EventUnregister(g_logBuffer.etwRegHandle);
-        g_logBuffer.etwRegHandle = 0;
     }
     
     g_logBuffer.initialized.store(false, std::memory_order_release);
@@ -200,26 +129,6 @@ void RawrXD_Native_Log_Write(int level, const char* message, size_t len) {
     
     // Publish entry
     entry.sequence.store(seq + 1, std::memory_order_release);
-    
-    // ETW output if enabled
-    if (g_logBuffer.etwEnabled.load(std::memory_order_acquire) && g_logBuffer.etwRegHandle != 0) {
-        // Prepare ETW event
-        EVENT_DESCRIPTOR descriptor;
-        EventDescCreate(&descriptor, 
-            0x1, // Event ID
-            0x0, // Version
-            0x0, // Channel
-            LogLevelToEtw(entry.level),
-            0x0, // Task
-            0x0  // Opcode
-        );
-        
-        EVENT_DATA_DESCRIPTOR dataDesc[2];
-        EventDataDescCreate(&dataDesc[0], &entry.level, sizeof(uint8_t));
-        EventDataDescCreate(&dataDesc[1], entry.message, static_cast<ULONG>(len + 1));
-        
-        EventWrite(g_logBuffer.etwRegHandle, &descriptor, 2, dataDesc);
-    }
 }
 
 // Flush log buffer to output

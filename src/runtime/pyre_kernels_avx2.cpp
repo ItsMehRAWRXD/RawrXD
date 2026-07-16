@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include <immintrin.h>
+#include <intrin.h>  // For __cpuid, __cpuidex
 #include <cstdint>
 #include <cstddef>
 #include <cmath>

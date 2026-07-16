@@ -108,7 +108,10 @@ nlohmann::json extractToolArgsFromPayload(const nlohmann::json& payload)
 void AgentOrchestrator::DispatchTask(const std::string& task_id, const nlohmann::json& payload)
 {
     auto& obs = GetObservability();
-    obs.logInfo(kComponent, "Dispatching task", {{"task_id", task_id}, {"payload", payload}});
+    nlohmann::json dispatchMeta = nlohmann::json::object();
+    dispatchMeta["task_id"] = task_id;
+    dispatchMeta["payload"] = payload;
+    obs.logInfo(kComponent, "Dispatching task", dispatchMeta);
 
     std::lock_guard<std::mutex> lock(m_mutex);
     m_taskQueue.push({task_id, payload, std::chrono::system_clock::now()});
@@ -137,38 +140,50 @@ void AgentOrchestrator::ProcessTaskQueue()
 void AgentOrchestrator::ExecuteTask(const std::string& id, const nlohmann::json& payload)
 {
     // run_tool: delegate to ToolRegistry for LLM-style tool execution
-    if (payload.contains("action") && payload["action"] == "run_tool")
+    if (payload.contains("action") && payload["action"].get<std::string>() == "run_tool")
     {
         std::string name = extractToolNameFromPayload(payload);
         if (name.empty()) {
-            GetObservability().logWarn(kComponent, "ExecuteTask run_tool missing tool name",
-                                       {{"task_id", id}, {"payload", payload}});
+            nlohmann::json warnMeta = nlohmann::json::object();
+        warnMeta["task_id"] = id;
+        warnMeta["payload"] = payload;
+        GetObservability().logWarn(kComponent, "ExecuteTask run_tool missing tool name", warnMeta);
             return;
         }
 
         json args = extractToolArgsFromPayload(payload);
         ToolExecResult res = m_registry.Dispatch(name, args);
         (void)res;
-        GetObservability().logInfo(kComponent, "ExecuteTask run_tool completed",
-                                   {{"task_id", id}, {"tool", name}, {"success", res.success}});
+        nlohmann::json infoMeta = nlohmann::json::object();
+        infoMeta["task_id"] = id;
+        infoMeta["tool"] = name;
+        infoMeta["success"] = res.success;
+        GetObservability().logInfo(kComponent, "ExecuteTask run_tool completed", infoMeta);
         return;
     }
     // prompt: one-shot user message (log; extend with m_client->chat for real one-shot reply if needed)
-    if (payload.contains("action") && payload["action"] == "prompt" && payload.contains("text"))
+    if (payload.contains("action") && payload["action"].get<std::string>() == "prompt" && payload.contains("text"))
     {
         std::string text = payload["text"].get<std::string>();
-        GetObservability().logInfo(kComponent, "ExecuteTask prompt",
-                                   {{"task_id", id}, {"text_len", static_cast<int>(text.size())}});
+        nlohmann::json promptMeta = nlohmann::json::object();
+        promptMeta["task_id"] = id;
+        promptMeta["text_len"] = static_cast<int>(text.size());
+        GetObservability().logInfo(kComponent, "ExecuteTask prompt", promptMeta);
         return;
     }
 
     // mesh_sync: handoff to Titan Sovereign Link (MASM64) when implemented
-    if (payload.contains("action") && payload["action"] == "mesh_sync")
+    if (payload.contains("action") && payload["action"].get<std::string>() == "mesh_sync")
     {
-        GetObservability().logInfo(kComponent, "ExecuteTask mesh_sync (no-op)", {{"task_id", id}});
+        nlohmann::json meshMeta = nlohmann::json::object();
+        meshMeta["task_id"] = id;
+        GetObservability().logInfo(kComponent, "ExecuteTask mesh_sync (no-op)", meshMeta);
         return;
     }
-    GetObservability().logInfo(kComponent, "ExecuteTask unhandled", {{"task_id", id}, {"payload", payload}});
+    nlohmann::json unhandledMeta = nlohmann::json::object();
+    unhandledMeta["task_id"] = id;
+    unhandledMeta["payload"] = payload;
+    GetObservability().logInfo(kComponent, "ExecuteTask unhandled", unhandledMeta);
 }
 
 }  // namespace Agent
@@ -721,12 +736,11 @@ void AgentOrchestrator::EnableAdvancedCoordination(const Agentic::ScalingPolicy&
     if (m_advancedCoordinator) {
         bool success = m_advancedCoordinator->initialize(scaling, redundancy);
         if (success) {
-            GetObservability().logInfo(kComponent, "Advanced Agent Coordination enabled",
-                                       nlohmann::json::object({
-                                           {"min_agents", scaling.minAgents},
-                                           {"max_agents", scaling.maxAgents},
-                                           {"replication_factor", redundancy.replicationFactor}
-                                       }));
+            nlohmann::json coordMeta = nlohmann::json::object();
+        coordMeta["min_agents"] = scaling.minAgents;
+        coordMeta["max_agents"] = scaling.maxAgents;
+        coordMeta["replication_factor"] = redundancy.replicationFactor;
+        GetObservability().logInfo(kComponent, "Advanced Agent Coordination enabled", coordMeta);
         } else {
             GetObservability().logError(kComponent, "Failed to initialize Advanced Agent Coordination");
         }
@@ -748,11 +762,10 @@ void AgentOrchestrator::SubmitCoordinatedTask(const std::string& taskDescription
     if (!m_advancedCoordinator) {
         GetObservability().logWarn(kComponent, "Advanced coordination not enabled, using basic dispatch");
         // Fallback to basic task dispatch
-        nlohmann::json payload = {
-            {"action", "coordinated_task"},
-            {"description", taskDescription},
-            {"specialization", specialization}
-        };
+        nlohmann::json payload = nlohmann::json::object();
+        payload["action"] = "coordinated_task";
+        payload["description"] = taskDescription;
+        payload["specialization"] = specialization;
         DispatchTask("coordinated_" + std::to_string(rand()), payload);
         return;
     }
@@ -762,19 +775,17 @@ void AgentOrchestrator::SubmitCoordinatedTask(const std::string& taskDescription
     task->id = "coord_" + GenerateSessionId();
     task->description = taskDescription;
     task->specialization = specialization;
-    task->parameters = nlohmann::json{
-        {"description", taskDescription},
-        {"specialization", specialization},
-        {"coordinated", true}
-    };
+    task->parameters = nlohmann::json::object();
+    task->parameters["description"] = taskDescription;
+    task->parameters["specialization"] = specialization;
+    task->parameters["coordinated"] = true;
 
     // Submit to advanced coordinator
     m_advancedCoordinator->submitTask(task, priority);
 
-    GetObservability().logInfo(kComponent, "Coordinated task submitted",
-                               nlohmann::json::object({
-                                   {"task_id", task->id},
-                                   {"specialization", specialization},
-                                   {"priority", static_cast<int>(priority)}
-                               }));
+    nlohmann::json submitMeta = nlohmann::json::object();
+    submitMeta["task_id"] = task->id;
+    submitMeta["specialization"] = specialization;
+    submitMeta["priority"] = static_cast<int>(priority);
+    GetObservability().logInfo(kComponent, "Coordinated task submitted", submitMeta);
 }

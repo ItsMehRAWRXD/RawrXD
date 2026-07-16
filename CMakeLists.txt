@@ -1624,6 +1624,7 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     src/modules/vscode_extension_api.cpp
     src/core/js_extension_host.cpp
     src/ui/entry_point.cpp
+    src/core/rawrengine_link_closure.cpp
 )
 
 # Add Gold stub implementations for excluded files
@@ -3841,7 +3842,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         if(MSVC)
             # Link closure: rawrengine_link_closure.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
             set(_RAWRXD_WIN32IDE_FALLBACK_UNITS
-                src/core/rawrengine_link_closure.cpp
                 src/core/cot_fallback_system.cpp
                 src/core/model_loader_fallbacks.cpp
                 src/core/rawrxd_native_log_impl.cpp
@@ -3873,6 +3873,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
         src/win32app/sovereign_gpu_link_stubs.cpp
+        src/win32app/masm_bridge_link_stubs.cpp
     )
 
     set(WIN32IDE_EXTRA_ASM "")

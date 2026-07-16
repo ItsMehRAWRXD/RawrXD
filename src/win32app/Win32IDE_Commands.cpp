@@ -48,6 +48,17 @@
 #include <set>
 #include <sstream>
 
+// Helper for safe JSON parsing (compatible with nlohmann::json version)
+static nlohmann::json safeJsonParse(const std::string& text, bool* ok = nullptr) {
+    try {
+        nlohmann::json j = nlohmann::json::parse(text);
+        if (ok) *ok = true;
+        return j;
+    } catch (...) {
+        if (ok) *ok = false;
+        return nlohmann::json();
+    }
+}
 
 // Command registry and dispatch
 
@@ -2940,8 +2951,8 @@ void Win32IDE::handleToolsCommand(int commandId)
                 break;
             }
 
-            nlohmann::json j = nlohmann::json::parse(response, nullptr, false);
-            if (j.is_discarded() || !j.contains("result") || !j["result"].is_array())
+            nlohmann::json j = safeJsonParse(response);
+            if (j.is_null() || j.empty() || !j.contains("result") || !j["result"].is_array())
             {
                 appendToOutput("[SemanticSearch] Invalid symbol response.", "General", OutputSeverity::Warning);
                 break;
@@ -3214,8 +3225,8 @@ void Win32IDE::handleToolsCommand(int commandId)
                 break;
             }
 
-            nlohmann::json args = nlohmann::json::parse(argText, nullptr, false);
-            if (args.is_discarded())
+            nlohmann::json args = safeJsonParse(argText);
+            if (args.is_null() || args.empty())
             {
                 args = nlohmann::json::object();
                 args["input"] = argText;
@@ -3428,8 +3439,8 @@ void Win32IDE::handleToolsCommand(int commandId)
             std::string promptName = (sp == std::string::npos) ? raw : raw.substr(0, sp);
             std::string argText = (sp == std::string::npos) ? "{}" : raw.substr(sp + 1);
 
-            nlohmann::json args = nlohmann::json::parse(argText, nullptr, false);
-            if (args.is_discarded())
+            nlohmann::json args = safeJsonParse(argText);
+            if (args.is_null() || args.empty())
                 args = nlohmann::json::object();
 
             nlohmann::json req;
@@ -4067,7 +4078,7 @@ void Win32IDE::handleToolsCommand(int commandId)
 
             std::ifstream in(tasksPath, std::ios::binary);
             std::string raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-            nlohmann::json j = nlohmann::json::parse(raw, nullptr, false);
+            nlohmann::json j = safeJsonParse(raw);
             if (j.is_discarded() || !j.contains("tasks") || !j["tasks"].is_array())
             {
                 appendToOutput("[VSCodeTasks] Invalid tasks.json format.", "General", OutputSeverity::Warning);
@@ -4104,7 +4115,7 @@ void Win32IDE::handleToolsCommand(int commandId)
 
             std::ifstream in(tasksPath, std::ios::binary);
             std::string raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-            nlohmann::json j = nlohmann::json::parse(raw, nullptr, false);
+            nlohmann::json j = safeJsonParse(raw);
             if (j.is_discarded() || !j.contains("tasks") || !j["tasks"].is_array() || j["tasks"].empty())
             {
                 appendToOutput("[VSCodeTaskRun] Invalid or empty tasks.json.", "General", OutputSeverity::Warning);
@@ -4184,7 +4195,7 @@ void Win32IDE::handleToolsCommand(int commandId)
 
             std::ifstream in(launchPath, std::ios::binary);
             std::string raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-            nlohmann::json j = nlohmann::json::parse(raw, nullptr, false);
+            nlohmann::json j = safeJsonParse(raw);
             if (j.is_discarded() || !j.contains("configurations") || !j["configurations"].is_array())
             {
                 appendToOutput("[VSCodeLaunch] Invalid launch.json format.", "General", OutputSeverity::Warning);
@@ -4221,7 +4232,7 @@ void Win32IDE::handleToolsCommand(int commandId)
 
             std::ifstream in(launchPath, std::ios::binary);
             std::string raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-            nlohmann::json j = nlohmann::json::parse(raw, nullptr, false);
+            nlohmann::json j = safeJsonParse(raw);
             if (j.is_discarded() || !j.contains("configurations") || !j["configurations"].is_array() ||
                 j["configurations"].empty())
             {
@@ -4542,7 +4553,7 @@ void Win32IDE::handleToolsCommand(int commandId)
 
             // Parse LSP results
             std::vector<std::string> resultLines;
-            nlohmann::json j = nlohmann::json::parse(lspResp, nullptr, false);
+            nlohmann::json j = safeJsonParse(lspResp);
             if (!j.is_discarded() && j.contains("result") && j["result"].is_array())
             {
                 for (const auto& item : j["result"])
@@ -4618,7 +4629,7 @@ void Win32IDE::handleToolsCommand(int commandId)
                         break;
                     Sleep(20);
                 }
-                nlohmann::json j = nlohmann::json::parse(resp, nullptr, false);
+                nlohmann::json j = safeJsonParse(resp);
                 if (!j.is_discarded() && j.contains("result"))
                     symbolGraph = j["result"];
             }
@@ -5230,8 +5241,8 @@ void Win32IDE::handleToolsCommand(int commandId)
                     }
                     const auto& entry = g_mcpToolHistory[idx];
 
-                    nlohmann::json args = nlohmann::json::parse(entry.argsJson, nullptr, false);
-                    if (args.is_discarded())
+                    nlohmann::json args = safeJsonParse(entry.argsJson);
+                    if (args.is_null() || args.empty())
                         args = nlohmann::json::object();
 
                     nlohmann::json req;
@@ -5255,8 +5266,8 @@ void Win32IDE::handleToolsCommand(int commandId)
                 std::string toolName = (sp == std::string::npos) ? action : action.substr(0, sp);
                 std::string argText = (sp == std::string::npos) ? "{}" : action.substr(sp + 1);
 
-                nlohmann::json args = nlohmann::json::parse(argText, nullptr, false);
-                if (args.is_discarded())
+                nlohmann::json args = safeJsonParse(argText);
+                if (args.is_null() || args.empty())
                 {
                     args = nlohmann::json::object();
                     args["input"] = argText;
@@ -9103,7 +9114,7 @@ void Win32IDE::handleToolsCommand(int commandId)
             {
                 std::ifstream in(tooling, std::ios::binary);
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                nlohmann::json src = nlohmann::json::parse(text, nullptr, false);
+                nlohmann::json src = safeJsonParse(text);
                 if (!src.is_discarded() && src.contains("matrix") && src["matrix"].is_object())
                 {
                     j["capabilities"] = src["matrix"];
@@ -9323,7 +9334,7 @@ void Win32IDE::handleToolsCommand(int commandId)
             {
                 std::ifstream in(failFast, std::ios::binary);
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                nlohmann::json ff = nlohmann::json::parse(text, nullptr, false);
+                nlohmann::json ff = safeJsonParse(text);
                 if (!ff.is_discarded() && ff.contains("gates") && ff["gates"].is_array())
                 {
                     for (const auto& gate : ff["gates"])
@@ -9386,7 +9397,7 @@ void Win32IDE::handleToolsCommand(int commandId)
             {
                 std::ifstream in(matrixPath, std::ios::binary);
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                nlohmann::json src = nlohmann::json::parse(text, nullptr, false);
+                nlohmann::json src = safeJsonParse(text);
                 if (!src.is_discarded() && src.contains("matrix") && src["matrix"].is_object())
                 {
                     j["matrix"] = src["matrix"];
@@ -9757,7 +9768,7 @@ void Win32IDE::handleToolsCommand(int commandId)
                 if (!in.is_open())
                     return false;
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                out = nlohmann::json::parse(text, nullptr, false);
+                out = safeJsonParse(text);
                 return !out.is_discarded();
             };
 
@@ -9852,8 +9863,8 @@ void Win32IDE::handleToolsCommand(int commandId)
                     break;
                 }
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                scorecard = nlohmann::json::parse(text, nullptr, false);
-                if (scorecard.is_discarded())
+                scorecard = safeJsonParse(text);
+                if (scorecard.is_null() || scorecard.empty())
                 {
                     appendToOutput("[RTPLedger] Scorecard JSON parse failed.", "General", OutputSeverity::Error);
                     break;
@@ -9865,7 +9876,7 @@ void Win32IDE::handleToolsCommand(int commandId)
             {
                 std::ifstream in(ledgerPath, std::ios::binary);
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                ledger = nlohmann::json::parse(text, nullptr, false);
+                ledger = safeJsonParse(text);
             }
             if (ledger.is_discarded() || !ledger.is_object())
             {
@@ -9967,7 +9978,7 @@ void Win32IDE::handleToolsCommand(int commandId)
                 if (!in.is_open())
                     return false;
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                out = nlohmann::json::parse(text, nullptr, false);
+                out = safeJsonParse(text);
                 return !out.is_discarded();
             };
 
@@ -10057,7 +10068,7 @@ void Win32IDE::handleToolsCommand(int commandId)
                 if (!in.is_open())
                     return false;
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                out = nlohmann::json::parse(text, nullptr, false);
+                out = safeJsonParse(text);
                 return !out.is_discarded();
             };
 
@@ -10176,8 +10187,8 @@ void Win32IDE::handleToolsCommand(int commandId)
                     break;
                 }
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                gate = nlohmann::json::parse(text, nullptr, false);
-                if (gate.is_discarded())
+                gate = safeJsonParse(text);
+                if (gate.is_null() || gate.empty())
                 {
                     appendToOutput("[RTPReleaseReport] Gate JSON parse failed.", "General", OutputSeverity::Error);
                     break;
@@ -10295,8 +10306,8 @@ void Win32IDE::handleToolsCommand(int commandId)
                     break;
                 }
                 std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                gate = nlohmann::json::parse(text, nullptr, false);
-                if (gate.is_discarded())
+                gate = safeJsonParse(text);
+                if (gate.is_null() || gate.empty())
                 {
                     appendToOutput("[RTPExecSummary] Gate JSON parse failed.", "General", OutputSeverity::Error);
                     break;

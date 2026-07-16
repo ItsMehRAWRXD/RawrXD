@@ -67,6 +67,8 @@ std::string sha1Base64(const std::string& in) {
 
 } // namespace
 
+namespace RawrXD {
+
 WebSocketHub::~WebSocketHub() {
     stopServer();
 }
@@ -265,3 +267,5 @@ void WebSocketHub::broadcastMessage(const std::string& messageJson) {
     for (void* c : m_clients)
         sendTextToClient(c, messageJson);
 }
+
+} // namespace RawrXD
