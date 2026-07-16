@@ -280,4 +280,39 @@ CommandResult handleSecurityDisable(const CommandContext& ctx);
 CommandResult handleTelemetryConfigure(const CommandContext& ctx);
 CommandResult handleTelemetryClear(const CommandContext& ctx);
 
+// =============================================================================
+// Debug Additional Handlers (Batch 4)
+// =============================================================================
+CommandResult handleDebugStepOver(const CommandContext& ctx);
+CommandResult handleDebugStepInto(const CommandContext& ctx);
+CommandResult handleDebugStepOut(const CommandContext& ctx);
+CommandResult handleDebugContinue(const CommandContext& ctx);
+CommandResult handleDebugStop(const CommandContext& ctx);
+
+// =============================================================================
+// Build Additional Handlers (Batch 4)
+// =============================================================================
+CommandResult handleBuildConfigure(const CommandContext& ctx);
+CommandResult handleBuildCompile(const CommandContext& ctx);
+CommandResult handleBuildLink(const CommandContext& ctx);
+CommandResult handleBuildPackage(const CommandContext& ctx);
+CommandResult handleBuildDeploy(const CommandContext& ctx);
+
+// =============================================================================
+// Test Additional Handlers (Batch 4)
+// =============================================================================
+CommandResult handleTestConfigure(const CommandContext& ctx);
+CommandResult handleTestList(const CommandContext& ctx);
+CommandResult handleTestDebug(const CommandContext& ctx);
+CommandResult handleTestProfile(const CommandContext& ctx);
+
+// =============================================================================
+// System Additional Handlers (Batch 4)
+// =============================================================================
+CommandResult handleSystemConfigure(const CommandContext& ctx);
+CommandResult handleSystemShutdown(const CommandContext& ctx);
+CommandResult handleSystemUpdate(const CommandContext& ctx);
+CommandResult handleSystemBackup(const CommandContext& ctx);
+CommandResult handleSystemRestore(const CommandContext& ctx);
+
 } // namespace RawrXD
