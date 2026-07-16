@@ -908,6 +908,9 @@ set(SOURCES
     # GPU Backend — Vulkan/CUDA/CPU fallback chain (fprintf logging)
     src/gpu/gpu_backend.cpp
 
+    # Multi-GPU Scheduler — AMD AI PRO R9700 + RX 7800 XT capability-based scheduling
+    src/gpu/multi_gpu_scheduler.cpp
+
     # KV-Cache Optimizer — sliding-window eviction, std::chrono timing
     src/gpu/kv_cache_optimizer.cpp
 
@@ -4205,6 +4208,18 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/runtime/pattern_scanner.cpp
     )
 
+    # Link stubs for unresolved externals
+    list(APPEND WIN32IDE_SOURCES
+        src/link_stubs/mode_variables_stubs.cpp
+        src/link_stubs/sovereign_stubs.cpp
+        src/link_stubs/watchdog_asm_stubs.cpp
+        src/link_stubs/hotpatch_asm_stubs.cpp
+        src/link_stubs/mesh_brain_asm_stubs.cpp
+        src/link_stubs/speciator_asm_stubs.cpp
+        src/link_stubs/neural_bridge_asm_stubs.cpp
+        src/link_stubs/hardware_synth_asm_stubs.cpp
+    )
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
@@ -4845,6 +4860,24 @@ target_compile_definitions(test_deep_thinking_engine PRIVATE
     RAWRXD_HAS_REAL_DEEP_THINKING_ENGINE=1
 )
 message(STATUS "[Test] test_deep_thinking_engine target added (validates AgenticDeepThinkingEngine think() + telemetry)")
+
+# Multi-GPU Scheduler Test (Priority 3: Mission 2)
+add_executable(test_multi_gpu_scheduler
+    src/test/test_multi_gpu_scheduler.cpp
+    src/gpu/multi_gpu_scheduler.cpp
+)
+set_target_properties(test_multi_gpu_scheduler PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME test_multi_gpu_scheduler
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(test_multi_gpu_scheduler PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/gpu
+    ${CMAKE_SOURCE_DIR}/include
+)
+message(STATUS "[Test] test_multi_gpu_scheduler target added (validates AMD AI PRO R9700 + RX 7800 XT scheduling)")
 
 # Autonomous Agentic Pipeline unit test (Task 5 — buildable)
 if(WIN32)
