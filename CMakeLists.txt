@@ -1357,6 +1357,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     src/core/rawrxd_native_log_impl.cpp
+    src/link_stubs/rawrengine_link_stubs_v2.cpp
 )
 
 # =============================================================================
