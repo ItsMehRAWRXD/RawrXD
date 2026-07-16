@@ -88,7 +88,11 @@ KeyMetadata KeyMetadata::fromJson(const json& obj)
     if(obj.contains("revocationReason")) meta.revocationReason = obj["revocationReason"].get<std::string>();
     if(obj.contains("revocationDate")) meta.revocationDate = obj["revocationDate"].get<int64_t>();
     
-    if(obj.contains("customMetadata")) meta.customMetadata = obj["customMetadata"].get<std::map<std::string, json>>();
+    if(obj.contains("customMetadata") && obj["customMetadata"].is_object()) {
+        for (auto it = obj["customMetadata"].begin(); it != obj["customMetadata"].end(); ++it) {
+            meta.customMetadata[it.key()] = it.value();
+        }
+    }
     
     return meta;
 }

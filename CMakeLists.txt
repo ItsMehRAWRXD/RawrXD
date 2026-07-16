@@ -3873,7 +3873,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
         src/win32app/sovereign_gpu_link_stubs.cpp
-        src/win32app/masm_bridge_link_stubs.cpp
+        src/win32app/masm_bridge_fallbacks.cpp
     )
 
     set(WIN32IDE_EXTRA_ASM "")
