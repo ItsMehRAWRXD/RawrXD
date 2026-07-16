@@ -279,8 +279,13 @@ private:
         try {
             std::string raw((std::istreambuf_iterator<char>(file)),
                             std::istreambuf_iterator<char>());
-            json j = json::parse(raw, nullptr, false);
-            if (j.is_discarded()) {
+            json j;
+            try {
+                j = json::parse(raw);
+            } catch (...) {
+                j = json::object();
+            }
+            if (j.is_null() || j.empty()) {
                 return false;
             }
 
@@ -346,8 +351,13 @@ private:
         try {
             std::string raw((std::istreambuf_iterator<char>(file)),
                             std::istreambuf_iterator<char>());
-            json j = json::parse(raw, nullptr, false);
-            if (j.is_discarded()) {
+            json j;
+            try {
+                j = json::parse(raw);
+            } catch (...) {
+                j = json::object();
+            }
+            if (j.is_null() || j.empty()) {
                 return false;
             }
             if (!j.contains("configurations") || !j["configurations"].is_array()) {
@@ -793,8 +803,13 @@ private:
                     if (sf.is_open()) {
                         std::string raw((std::istreambuf_iterator<char>(sf)),
                                          std::istreambuf_iterator<char>());
-                        auto j = nlohmann::json::parse(raw, nullptr, false);
-                        if (!j.is_discarded() && j.contains(settingKey)) {
+                        nlohmann::json j;
+                        try {
+                            j = nlohmann::json::parse(raw);
+                        } catch (...) {
+                            j = nlohmann::json::object();
+                        }
+                        if (!j.is_null() && !j.empty() && j.contains(settingKey)) {
                             if (j[settingKey].is_string())
                                 settingVal = j[settingKey].get<std::string>();
                             else
@@ -823,8 +838,13 @@ private:
                     if (tf.is_open()) {
                         std::string raw((std::istreambuf_iterator<char>(tf)),
                                          std::istreambuf_iterator<char>());
-                        auto j = nlohmann::json::parse(raw, nullptr, false);
-                        if (!j.is_discarded() && j.contains("inputs") && j["inputs"].is_array()) {
+                        nlohmann::json j;
+                        try {
+                            j = nlohmann::json::parse(raw);
+                        } catch (...) {
+                            j = nlohmann::json::object();
+                        }
+                        if (!j.is_null() && !j.empty() && j.contains("inputs") && j["inputs"].is_array()) {
                             for (const auto& inp : j["inputs"]) {
                                 if (inp.value("id", "") == inputId) {
                                     inputVal = inp.value("default", "");

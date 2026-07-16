@@ -134,7 +134,10 @@ SwarmResult SwarmOrchestrator::synthesizeConsensus(const std::vector<std::string
 }
 
 nlohmann::json SwarmOrchestrator::getStatus() const {
-    return {{"active", true}, {"tasks_executed", m_totalTasksExecuted.load()}};
+    nlohmann::json j;
+    j["active"] = true;
+    j["tasks_executed"] = m_totalTasksExecuted.load();
+    return j;
 }
 
 }

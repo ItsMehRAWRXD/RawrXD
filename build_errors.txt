@@ -1,0 +1,1154 @@
+[1/1] RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked; Linking CXX executable bin\RawrXD-Win32IDE.exe
+FAILED: bin/RawrXD-Win32IDE.exe 
+C:\WINDOWS\system32\cmd.exe /C "C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.exe D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.pdb && cd D:\rawrxd\build-ninja" && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1951 --intdir=CMakeFiles\RawrXD-Win32IDE.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\mt.exe --manifests  -- C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp  /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE:NO /DEBUG:FULL /MAP:D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO && C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.map D:/rawrxd/build-ninja/RawrXD-Win32IDE.map""
+LINK: command "C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE:NO /DEBUG:FULL /MAP:D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO" failed (exit code 1169) with the following output:
+   Creating library RawrXD-Win32IDE.lib and object RawrXD-Win32IDE.exp
+
+LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+
+main_win32.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+HeadlessIDE.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quantum_agent_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quantum_autonomous_todo_system.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quantum_multi_model_agent_cycling.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quantum_dynamic_time_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quantum_missing_impl.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quantum_production_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RawrXD_MainLoop.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+webview2_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+debugger_core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32SwarmBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+SwarmIATRegistration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+UnifiedModelMetadata.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+subagent_core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+SubAgentManager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RobustOllamaParser.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ErrorRecoveryManager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+speculative_decoder_v2.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+MemoryPressureGuard.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+brutal_gzip.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gzip_brutal_inflate.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_CoreRuntimeSpine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Commands.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_VSCodeUI.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+WindowManager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+EditorOperations.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RouterOperations.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Watchdog.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SyntaxHighlight.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_VisionEncoder.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Themes.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_StreamingUX.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Sidebar.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Debugger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AutonomousDebugger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Annotations.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ReverseEngineering.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Logger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgenticBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+FullAgenticIDE.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgenticPlanningOrchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgenticIOCPBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgentCommands.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_TabManager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Settings.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AutonomousCommunicator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgenticComposerUX.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ContextMentionParser.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_UnifiedTelemetry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Autonomy.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PowerShell.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PowerShellPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Session.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_FileOps.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_DecompilerView.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_NativePipeline.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ModelAnatomy.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RawrXD_AutonomousAgenticPipeline.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RawrXD_AgentCoordinator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_FeatureManifest.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_GhostText.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_OutlinePanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_RenamePreview.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Tier2Cosmetics.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Tier1Cosmetics.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Breadcrumbs.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PlanExecutor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_planning_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+failure_intelligence_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_orchestrator_integration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_audit_sink.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+change_impact_analyzer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgenticPlanningPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_FailureDetector.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_FailureIntelligence.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LocalServer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_BackendSwitcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AIBackend.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LLMRouter.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LSPClient.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PeekOverlay.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_CaretAnimation.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgentOllamaClient.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ModelDiscovery.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SwarmModelSelector.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AsmSemantic.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LSP_AI_Bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_MultiResponse.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ExecutionGovernor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LayerEviction.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SemanticIndexShim.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SubAgent.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgentHistory.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgentPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_DiskRecovery.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32TerminalManager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+TransparentRenderer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+win32_plugin_loader.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Plugins.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_HandleExtensionCommand.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+IDEConfig.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+QuantBackend.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+GGUFRunner.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gguf_k_quants.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+QuantumAuthUI.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgentToolHandlers.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+BoundedAgentLoop.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+OllamaProvider.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+DiffEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+DeterministicReplayEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_recovery_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgenticDeepThinkingEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgentOrchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+OrchestratorBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgenticNavigator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ToolRegistry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RawrXD_AgentLoop.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_executor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+FIMPromptBuilder.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sdma_coordinator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_observability.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_subsystem_api.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+runtime_core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+tool_registry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+telemetry_collector.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+auto_repair_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_memory_indexer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_transaction.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_workflow_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+symbol_graph_indexer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+semantic_code_search.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+multi_file_reasoning.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+workspace_embeddings.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+repo_refactor_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+DiskRecoveryAgent.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+DiskRecoveryAgent.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+DiskRecoveryToolHandler.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_history.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_policy.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_explainability.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ErrorReporter.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Logger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+InputSanitizer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ConfigurationValidator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+PerformanceMonitor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_inference.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_model_loader.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_transformer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_tokenizer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_sampler.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+engine_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+cpu_inference_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+swarm_scheduler.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gguf_swarm_plan_builder.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+memory_core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+hot_patcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+streaming_gguf_loader.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Diagnostics.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gguf_loader.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gguf_vocab_resolver.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_source_resolver.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+compression_interface.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+inference_kernels.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+transformer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+bpe_tokenizer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sampler.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+core_generator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+pyre_compute.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+streaming_engine_registry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gpu_backend_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+enterprise_license.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+enterprise_licensev2_impl.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+enterprise_devunlock_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+monolithic_heap_globals.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+license_validator_manifest.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+license_anti_tampering.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+camellia256_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+watchdog_service.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+flash_attention.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+execution_scheduler.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+execution_governor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+multi_gpu.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_safety_contract.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+deterministic_replay.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+confidence_gate.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+layer_offload_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+native_speed_layer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+local_ai_core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+native_inference_pipeline.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+70b_gguf_hotpatch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+governor_throttling.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+swarm_coordinator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+swarm_worker.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SwarmPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_DualAgentPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+native_debugger_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+native_debugger_symbols.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_NativeDebugPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_memory_hotpatch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+byte_level_hotpatcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+unified_hotpatch_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+proxy_hotpatcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_bruteforce_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gguf_server_hotpatch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+pt_driver_contract.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+shadow_page_detour.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sentinel_watchdog.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_HotpatchPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_hotpatch_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+llm_http_client.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_invoker.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+planner.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+meta_planner.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+eval_framework.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_subagent.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_failure_detector.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_deep_thinking_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_puppeteer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+cloud_api_client.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+local_reasoning_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_self_repair.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agent_self_healing_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vsix_loader_win32.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+codex_ultimate.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vscode_extension_api.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_VSCodeExtAPI.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+swarm_decision_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+universal_model_hotpatcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+production_release.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quantum_safe_transport.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+adaptive_pipeline_parallel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+universal_model_merger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+webrtc_signaling.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gpu_kernel_autotuner.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sandbox_integration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+amd_gpu_accelerator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+unified_memory_executor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_runtime_gate.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+intel_gpu_accelerator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+arm64_gpu_accelerator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+cerebras_wse_accelerator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+accelerator_router.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+pdb_gsi_hash.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+pdb_reference_provider.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_WebView2.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgenticBrowserLayer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgenticBrowser.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_MonacoThemes.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RawrXD_LSPServer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LSPServer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+lsp_hotpatch_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+hotpatch_symbol_provider.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gguf_diagnostic_provider.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+MonacoCoreEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+WebView2EditorEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RichEditEditorEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+EditorEngineFactory.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_EditorEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+pdb_native.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+pdb_lsp_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PDBSymbols.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+feature_registry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+menu_auditor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+auto_discovery.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AuditDashboard.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+final_gauntlet.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Gauntlet.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+voice_chat.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+voice_automation.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_VoiceChat.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_VoiceAutomation.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+shortcut_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+backup_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+alert_system.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_QuickWins.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+feature_registration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+feature_handlers.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+intent_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_training_pipeline.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_trainer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AgentOllamaClient.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Logger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AdvancedAgentCoordinator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_agentic_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+native_gguf_loader_link_impl.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+compression.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ssot_handlers.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ssot_handlers_ext_isolated.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+v280_link_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ssot_validation.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+unified_command_dispatch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+startup_phase_registry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrengine_command_handlers.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+jsonrpc_parser.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+swarm_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+chain_of_thought_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Telemetry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+mcp_integration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_MCP.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_FlightRecorder.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quickjs_extension_host.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quickjs_vscode_bindings.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_state_mmf.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+js_extension_host.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+extension_polyfill_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vulkan_compute.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+live_binary_patcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+deterministic_swarm.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+input_guard_slicer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_agent_coordinator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+production_config_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_task_graph.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+embedding_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vector_index.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vision_encoder.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vision_token_gate.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vision_embedding_cache.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vision_kv_isolation.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vision_quantized_encoder.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vision_gpu_staging.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+extension_marketplace.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rbac_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_loop_state.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+transaction_journal.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+instructions_provider.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Instructions.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+unity_engine_integration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+unreal_engine_integration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+game_engine_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_GameEnginePanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+crucible_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_CruciblePanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+copilot_gap_closer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_CopilotGapPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+distributed_pipeline_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PipelinePanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+hotpatch_control_plane.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_HotpatchCtrlPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+static_analysis_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+code_linter.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+diagnostic_consumer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_StaticAnalysisPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ProblemsPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_BuildRunner.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SecurityScans.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+problems_panel_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+problems_aggregator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+secrets_scanner.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sast_rule_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+dependency_audit.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AgentStreamingBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+semantic_code_intelligence.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SemanticPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+enterprise_telemetry_compliance.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_TelemetryPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Tier3Polish.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Tier3Cosmetics.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Tier5Cosmetics.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_CrashReporter.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ColorPicker.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_EmojiSupport.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ShortcutEditor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_TelemetryDashboard.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_MarketplacePanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Collab.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_IRCBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_IRCBridgeCommands.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+websocket_hub.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_TestExplorerTree.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_NetworkPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+omega_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+omega_asm_native_kernel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+mesh_brain.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+speciator_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+neural_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+self_host_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+hardware_synthesizer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+transcendence_coordinator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+integrated_runtime.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+reasoning_profile.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+VulkanRenderer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+OSExplorerInterceptor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_MCPHooks.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+TodoManager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+IocpFileWatcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+IDEDiagnosticAutoHealer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ConsentPrompt.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+AutonomousAgent.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+chat_message_renderer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+tool_action_status.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+chat_panel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+crash_containment.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+patch_rollback_ledger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quant_hysteresis.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+perf_telemetry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+update_signature.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+cursor_github_parity_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+swarm_reconciliation.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quickjs_sandbox.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+plugin_signature.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+auto_update_system.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_verification_loop.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_background_daemon.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+knowledge_graph_core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+swarm_conflict_resolver.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_debugger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_communicator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+UnifiedTelemetryCore.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+telemetry_export.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_composer_ux.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+context_mention_parser.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+vision_encoder.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+refactoring_plugin.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+language_plugin.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+semantic_index.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+resource_generator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_CursorParity.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_GUILayoutHotpatch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Tasks.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_GitPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Refactor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SearchPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_FuzzySearch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_Minimap.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_DiffView.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SettingsGUI.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_CodeLens.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_InlayHints.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_HoverTooltips.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ProvableAgent.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AIReverseEngineering.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AirgappedEnterprise.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_FlagshipFeatures.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+project_context.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+universal_model_router.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_registry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_name_utils.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+checkpoint_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+agentic_autonomous_config.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+enterprise_feature_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+context_deterioration_hotpatch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+interpretability_panel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+real_time_completion_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+LanguageServerIntegration.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+interpretability_panel_enhanced.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+feature_registry_panel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_feature_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_intelligence_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+plan_orchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+tool_registry_advanced.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+lsp_client.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+intelligent_codebase_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ai_model_caller.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+hybrid_cloud_manager.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+benchmark_menu_widget.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+benchmark_runner.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+feature_registry_panel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+monaco_settings_dialog.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RAWRXD_ThermalDashboard.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+VSCodeMarketplaceAPI.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+multi_file_search.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+license_manager_panel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+logger.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LicenseCreator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+license_enforcement.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+feature_flags_runtime.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PeekView.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AutoSave.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_TerminalSplit.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SnippetEngine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_MultiCursor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+local_parity_bridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrengine_missing_stubs.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleAutonomousAgent(struct CommandContext const &)" (?HandleAutonomousAgent@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleChatMessageRenderer(struct CommandContext const &)" (?HandleChatMessageRenderer@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleChatPanel(struct CommandContext const &)" (?HandleChatPanel@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleConsentPrompt(struct CommandContext const &)" (?HandleConsentPrompt@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleCursorParityBridge(struct CommandContext const &)" (?HandleCursorParityBridge@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleHardwareSynthesizer(struct CommandContext const &)" (?HandleHardwareSynthesizer@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleIDEDiagnosticAutoHealer(struct CommandContext const &)" (?HandleIDEDiagnosticAutoHealer@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleIOCPFileWatcher(struct CommandContext const &)" (?HandleIOCPFileWatcher@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleMCPHooks(struct CommandContext const &)" (?HandleMCPHooks@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleMeshBrain(struct CommandContext const &)" (?HandleMeshBrain@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleNeuralBridge(struct CommandContext const &)" (?HandleNeuralBridge@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleOSExplorerInterceptor(struct CommandContext const &)" (?HandleOSExplorerInterceptor@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleOmegaOrchestrator(struct CommandContext const &)" (?HandleOmegaOrchestrator@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandlePerfTelemetry(struct CommandContext const &)" (?HandlePerfTelemetry@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandlePluginSignature(struct CommandContext const &)" (?HandlePluginSignature@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleSelfHostEngine(struct CommandContext const &)" (?HandleSelfHostEngine@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleSpeciatorEngine(struct CommandContext const &)" (?HandleSpeciatorEngine@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleToolActionStatus(struct CommandContext const &)" (?HandleToolActionStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleTranscendenceCoordinator(struct CommandContext const &)" (?HandleTranscendenceCoordinator@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleUpdateSignature(struct CommandContext const &)" (?HandleUpdateSignature@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl HandleVulkanRenderer(struct CommandContext const &)" (?HandleVulkanRenderer@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in rawrengine_command_handlers.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIChatMode(struct CommandContext const &)" (?handleAIChatMode@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIExplainCode(struct CommandContext const &)" (?handleAIExplainCode@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIFixErrors(struct CommandContext const &)" (?handleAIFixErrors@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIGenerateDocs(struct CommandContext const &)" (?handleAIGenerateDocs@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIGenerateTests(struct CommandContext const &)" (?handleAIGenerateTests@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIInlineComplete(struct CommandContext const &)" (?handleAIInlineComplete@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIModelSelect(struct CommandContext const &)" (?handleAIModelSelect@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIOptimizeCode(struct CommandContext const &)" (?handleAIOptimizeCode@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleAIRefactor(struct CommandContext const &)" (?handleAIRefactor@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtDeactivateAll(struct CommandContext const &)" (?handleVscExtDeactivateAll@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtDiagnostics(struct CommandContext const &)" (?handleVscExtDiagnostics@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtExportConfig(struct CommandContext const &)" (?handleVscExtExportConfig@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtExtensions(struct CommandContext const &)" (?handleVscExtExtensions@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtListCommands(struct CommandContext const &)" (?handleVscExtListCommands@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtListProviders(struct CommandContext const &)" (?handleVscExtListProviders@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtLoadNative(struct CommandContext const &)" (?handleVscExtLoadNative@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtReload(struct CommandContext const &)" (?handleVscExtReload@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtStats(struct CommandContext const &)" (?handleVscExtStats@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+rawrengine_missing_stubs.cpp.obj : error LNK2005: "struct CommandResult __cdecl handleVscExtStatus(struct CommandContext const &)" (?handleVscExtStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) already defined in ssot_handlers_ext_isolated.cpp.obj
+
+json_instantiations.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+cot_fallback_system.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+model_loader_fallbacks.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rawrxd_native_log_impl.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ggufrunner_link_fallbacks.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gpu_dispatch_gate_win32ide_fallback.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+gpu_dispatch_gate_win32ide_fallback.cpp.obj : error LNK2005: "public: __cdecl RawrXD::GPUDispatchGate::GPUDispatchGate(void)" (??0GPUDispatchGate@RawrXD@@QEAA@XZ) already defined in rawrengine_missing_stubs.cpp.obj
+
+gpu_dispatch_gate_win32ide_fallback.cpp.obj : error LNK2005: "public: __cdecl RawrXD::GPUDispatchGate::~GPUDispatchGate(void)" (??1GPUDispatchGate@RawrXD@@QEAA@XZ) already defined in rawrengine_missing_stubs.cpp.obj
+
+gpu_dispatch_gate_win32ide_fallback.cpp.obj : error LNK2005: "public: bool __cdecl RawrXD::GPUDispatchGate::Initialize(void)" (?Initialize@GPUDispatchGate@RawrXD@@QEAA_NXZ) already defined in rawrengine_missing_stubs.cpp.obj
+
+gpu_dispatch_gate_win32ide_fallback.cpp.obj : error LNK2005: "public: bool __cdecl RawrXD::GPUDispatchGate::MatVecQ4(float const *,float const *,float *,unsigned int,unsigned int,bool)" (?MatVecQ4@GPUDispatchGate@RawrXD@@QEAA_NPEBM0PEAMII_N@Z) already defined in rawrengine_missing_stubs.cpp.obj
+
+gguf_d3d12_bridge_link_fallback.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+collab_cursor_fallbacks.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+rtp_protocol_fallback.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+quickjs_node_shims.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ai_workers_queue.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ImportBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ExportBridge.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+embedded_terminal.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sovereign_gpu_link_stubs.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+ai_agent_masm_core_impl.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_TranscendencePanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_AutonomousAgent.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ChatMessageRenderer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ToolActionStatus.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ChatPanel.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ChatPanel_Ollama.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_VulkanRenderer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_OSExplorerInterceptor.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_IOCPFileWatcher.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_IDEDiagnosticAutoHealer.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ConsentPrompt.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PerfTelemetry.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_UpdateSignature.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_PluginSignature.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_EnterpriseStressTests.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_SQLite3Core.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_TelemetryExport.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_RefactoringPlugin.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_LanguagePlugin.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+Win32IDE_ResourceGenerator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+RuntimeSurfaceModule.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+GenerationStopwatch.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+UnifiedMemoryPool.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+InferenceProfiler.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+BackendOrchestrator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sdma_scheduler.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+sdma_ring_allocator.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+autonomous_workflow_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+workspace_reasoning_profiles.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+reasoning_schema_versioning.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+
+safe_refactor_engine.cpp.obj : warning LNK4204: 'D:\rawrxd\build-ninja\bin\RawrXD-Win32IDE.pdb' is missing debugging information for referencing module; linking object as if no debug info
+
+
+bin\RawrXD-Win32IDE.exe : fatal error LNK1169: one or more multiply defined symbols found
+
+
+ninja: build stopped: subcommand failed.

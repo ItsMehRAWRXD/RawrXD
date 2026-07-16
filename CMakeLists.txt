@@ -2890,6 +2890,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/ErrorRecoveryManager.cpp
         src/gpu/speculative_decoder_v2.cpp
         src/inference/MemoryPressureGuard.cpp
+        src/inference/gpu_dispatch_gate.cpp
         src/codec/brutal_gzip.cpp
         src/codec/gzip_brutal_inflate.cpp
     )
@@ -3840,15 +3841,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(APPEND WIN32IDE_SOURCES src/core/local_parity_bridge.cpp)
     if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         if(MSVC)
-            # Link closure: rawrengine_missing_stubs.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
+            # Link closure: fallbacks for Win32IDE (rawrengine_missing_stubs.cpp is already in RawrEngine)
             set(_RAWRXD_WIN32IDE_FALLBACK_UNITS
-                src/core/rawrengine_missing_stubs.cpp
+                src/core/asm_symbols_stub.cpp
                 src/core/json_instantiations.cpp
                 src/core/cot_fallback_system.cpp
                 src/core/model_loader_fallbacks.cpp
                 src/core/rawrxd_native_log_impl.cpp
                 src/llm_adapter/ggufrunner_link_fallbacks.cpp
-                src/inference/gpu_dispatch_gate_win32ide_fallback.cpp
                 src/inference/gguf_d3d12_bridge_link_fallback.cpp
                 src/win32app/collab_cursor_fallbacks.cpp
                 src/win32app/rtp_protocol_fallback.cpp
@@ -4493,7 +4493,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         Threads::Threads
         comctl32 comdlg32 shell32 ole32 oleaut32 uuid
         shlwapi psapi dbghelp winhttp ws2_32 winmm gdi32 user32 ntdll
-        d2d1 dwrite d3d11 dcomp d3dcompiler dwmapi
+        d2d1 dwrite d3d11 d3d12 dcomp d3dcompiler dwmapi
         dxgi
         advapi32 crypt32 bcrypt wintrust
         opengl32 wininet

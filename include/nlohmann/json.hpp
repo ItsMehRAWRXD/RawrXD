@@ -137,6 +137,7 @@ public:
     bool is_number_integer() const { return m_type == value_t::number && m_number == std::floor(m_number); }
     bool is_number_float() const { return m_type == value_t::number && m_number != std::floor(m_number); }
     bool is_boolean() const { return m_type == value_t::boolean; }
+    bool is_discarded() const { return false; }  // For nlohmann compatibility - we don't discard values
 
     // Exception type alias (compatibility with real nlohmann/json)
     using exception = std::runtime_error;
@@ -443,6 +444,22 @@ public:
         size_t pos = 0;
         skip_whitespace(str, pos);
         return parse_value(str, pos);
+    }
+
+    // nlohmann-compatible parse with callback and allow_exceptions (3-arg version)
+    template<typename ParserCallback>
+    static json parse(const std::string& str, ParserCallback&& cb, bool allow_exceptions = true) {
+        (void)cb;  // Callback not used in minimal implementation
+        try {
+            size_t pos = 0;
+            skip_whitespace(str, pos);
+            return parse_value(str, pos);
+        } catch (...) {
+            if (allow_exceptions) {
+                throw;
+            }
+            return json();  // Return null on parse failure if exceptions disabled
+        }
     }
 
     // Factory methods (legacy names)
@@ -761,6 +778,55 @@ template<>
 inline std::vector<json> json::get<std::vector<json>>() const {
     if (m_type == value_t::array) return m_array;
     throw std::runtime_error("Cannot get array from this JSON type");
+}
+
+template<>
+inline unsigned long json::get<unsigned long>() const {
+    if (m_type == value_t::number) return static_cast<unsigned long>(m_number);
+    throw std::runtime_error("Cannot get unsigned long from this JSON type");
+}
+
+template<>
+inline std::vector<std::string> json::get<std::vector<std::string>>() const {
+    if (m_type != value_t::array) throw std::runtime_error("Cannot get vector<string> from non-array JSON type");
+    std::vector<std::string> result;
+    result.reserve(m_array.size());
+    for (const auto& item : m_array) {
+        result.push_back(item.get<std::string>());
+    }
+    return result;
+}
+
+template<>
+inline std::map<std::string, double> json::get<std::map<std::string, double>>() const {
+    if (m_type != value_t::object) throw std::runtime_error("Cannot get map<string,double> from non-object JSON type");
+    std::map<std::string, double> result;
+    for (const auto& [key, value] : m_object) {
+        result[key] = value.get<double>();
+    }
+    return result;
+}
+
+template<>
+inline unsigned int json::get<unsigned int>() const {
+    if (m_type == value_t::number) return static_cast<unsigned int>(m_number);
+    throw std::runtime_error("Cannot get unsigned int from this JSON type");
+}
+
+template<>
+inline std::map<std::string, json> json::get<std::map<std::string, json>>() const {
+    if (m_type != value_t::object) throw std::runtime_error("Cannot get map<string,json> from non-object JSON type");
+    return m_object;
+}
+
+template<>
+inline std::map<std::string, std::string> json::get<std::map<std::string, std::string>>() const {
+    if (m_type != value_t::object) throw std::runtime_error("Cannot get map<string,string> from non-object JSON type");
+    std::map<std::string, std::string> result;
+    for (const auto& [key, value] : m_object) {
+        result[key] = value.get<std::string>();
+    }
+    return result;
 }
 
 } // namespace nlohmann

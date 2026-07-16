@@ -206,7 +206,9 @@ void from_json(const nlohmann::json& j, SovereignConfig& config)
     config.open_tabs.clear();
     for (const auto& tab : j.at("open_tabs"))
     {
-        config.open_tabs.push_back(tab.get<TabState>());
+        TabState ts;
+        from_json(tab, ts);
+        config.open_tabs.push_back(std::move(ts));
     }
 
     config.active_tab_index = j.at("active_tab_index").get<uint32_t>();

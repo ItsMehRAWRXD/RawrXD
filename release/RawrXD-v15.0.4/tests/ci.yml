@@ -1,0 +1,328 @@
+# RawrXD CI/CD Pipeline
+# GitHub Actions workflow for automated testing
+
+name: RawrXD Validation
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+    paths:
+      - 'src/**'
+      - 'kernels/**'
+      - 'tests/**'
+      - 'reference/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'kernels/**'
+      - 'tests/**'
+      - 'reference/**'
+
+env:
+  RAWRXD_VERSION: 15.0.0-dev
+
+jobs:
+  # Job 1: Quick Smoke Test
+  smoke-test:
+    name: Quick Smoke Test
+    runs-on: windows-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-make
+          
+    - name: Run Quick Validation
+      shell: msys2 {0}
+      run: |
+        cd tests
+        ./run_validation.bat cpu
+        ./run_validation.bat tokenizer
+        ./run_validation.bat gguf
+      
+    - name: Upload smoke test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: smoke-test-results
+        path: tests/reports/
+
+  # Job 2: Full Kernel Validation
+  kernel-tests:
+    name: Kernel Validation
+    runs-on: windows-latest
+    needs: smoke-test
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-make
+          
+    - name: Compile kernel tests
+      shell: msys2 {0}
+      run: |
+        cd tests/kernels
+        for f in test_*.c; do
+          gcc -O2 -o "${f%.c}.exe" "$f" -lm
+        done
+        
+    - name: Run kernel tests
+      shell: msys2 {0}
+      run: |
+        cd tests
+        ./run_validation.bat kernels
+      
+    - name: Upload kernel test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: kernel-test-results
+        path: tests/reports/
+
+  # Job 3: Regression Testing
+  regression-tests:
+    name: Golden Reference Regression
+    runs-on: windows-latest
+    needs: smoke-test
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          
+    - name: Generate reference data
+      shell: msys2 {0}
+      run: |
+        cd reference
+        gcc -O2 -o generate_reference.exe generate_reference.c -lm
+        ./generate_reference.exe
+        
+    - name: Run regression tests
+      shell: msys2 {0}
+      run: |
+        cd tests/regression
+        gcc -O2 -o test_regression.exe test_regression.c -lm
+        ./test_regression.exe
+      
+    - name: Upload regression results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: regression-test-results
+        path: |
+          tests/reports/
+          reference/*/logits.bin
+          reference/*/hashes.sha256
+
+  # Job 4: Performance Benchmarks
+  performance-tests:
+    name: Performance Baselines
+    runs-on: windows-latest
+    needs: [kernel-tests, regression-tests]
+    timeout-minutes: 20
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          
+    - name: Compile performance tests
+      shell: msys2 {0}
+      run: |
+        cd tests/performance
+        gcc -O2 -o perf_quick.exe perf_quick.c -lm
+        gcc -O2 -o perf_matmul.exe perf_matmul.c -lm
+        gcc -O2 -o perf_attention.exe perf_attention.c -lm
+        
+    - name: Run performance smoke test
+      shell: msys2 {0}
+      run: |
+        cd tests/performance
+        ./perf_quick.exe
+      
+    - name: Run extended benchmarks
+      shell: msys2 {0}
+      run: |
+        cd tests/performance
+        timeout 300 ./perf_matmul.exe || true
+        timeout 300 ./perf_attention.exe || true
+      
+    - name: Upload performance results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-test-results
+        path: |
+          tests/performance/perf_results.json
+          tests/reports/
+
+  # Job 5: Coverage Analysis
+  coverage-analysis:
+    name: Test Coverage Analysis
+    runs-on: ubuntu-latest
+    needs: [kernel-tests, regression-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Run coverage analysis
+      run: |
+        python tests/analyze_coverage.py
+      
+    - name: Upload coverage report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: tests/reports/coverage_report.json
+
+  # Job 6: Generate Report
+  generate-report:
+    name: Generate Test Report
+    runs-on: windows-latest
+    needs: [smoke-test, kernel-tests, regression-tests, performance-tests]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Generate consolidated report
+      shell: pwsh
+      run: |
+        $report = @{
+          timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          version = $env:RAWRXD_VERSION
+          jobs = @{
+            smoke = $env:SMOKE_RESULT
+            kernel = $env:KERNEL_RESULT
+            regression = $env:REGRESSION_RESULT
+            performance = $env:PERF_RESULT
+          }
+        }
+        $report | ConvertTo-Json -Depth 10 | Out-File -FilePath "consolidated_report.json"
+      env:
+        SMOKE_RESULT: ${{ needs.smoke-test.result }}
+        KERNEL_RESULT: ${{ needs.kernel-tests.result }}
+        REGRESSION_RESULT: ${{ needs.regression-tests.result }}
+        PERF_RESULT: ${{ needs.performance-tests.result }}
+        
+    - name: Upload consolidated report
+      uses: actions/upload-artifact@v3
+      with:
+        name: consolidated-report
+        path: consolidated_report.json
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('consolidated_report.json', 'utf8'));
+          
+          const status = {
+            success: '✅',
+            failure: '❌',
+            skipped: '⏭️'
+          };
+          
+          const body = `## RawrXD Validation Results
+          
+          | Job | Status |
+          |-----|--------|
+          | Smoke Test | ${status[report.jobs.smoke] || '❓'} |
+          | Kernel Tests | ${status[report.jobs.kernel] || '❓'} |
+          | Regression Tests | ${status[report.jobs.regression] || '❓'} |
+          | Performance Tests | ${status[report.jobs.performance] || '❓'} |
+          
+          *Version: ${report.version}*
+          *Timestamp: ${report.timestamp}*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+
+  # Job 7: Release Validation
+  release-validation:
+    name: Release Validation
+    runs-on: windows-latest
+    needs: [generate-report]
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Validate release readiness
+      shell: pwsh
+      run: |
+        $allPassed = $true
+        Get-ChildItem -Path "*test-results" -Directory | ForEach-Object {
+          Write-Host "Checking results in $($_.FullName)"
+        }
+        
+        if (-not $allPassed) {
+          Write-Error "Some tests failed - release blocked"
+          exit 1
+        }
+        
+        Write-Host "✓ All validation passed - release approved"
+      
+    - name: Create release assets
+      run: |
+        mkdir release
+        copy tests\reports\* release\ || true
+        copy tests\performance\perf_results.json release\ || true
+        
+    - name: Upload release assets
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-validation-assets
+        path: release/

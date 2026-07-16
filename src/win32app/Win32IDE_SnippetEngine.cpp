@@ -329,8 +329,12 @@ void Win32IDE::loadSnippetsFromJson(const std::string& filePath, const std::stri
     try {
         std::string content((std::istreambuf_iterator<char>(ifs)),
                              std::istreambuf_iterator<char>());
-        nlohmann::json root = nlohmann::json::parse(content, nullptr, false);
-        if (root.is_discarded()) return;
+        nlohmann::json root;
+        try {
+            root = nlohmann::json::parse(content);
+        } catch (...) {
+            return;
+        }
 
         for (auto& [name, value] : root.items()) {
             if (!value.is_object()) continue;

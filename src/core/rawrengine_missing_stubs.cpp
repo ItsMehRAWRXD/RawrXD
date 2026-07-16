@@ -12,6 +12,9 @@
 // Include the actual PatchResult definition
 #include "patch_result.hpp"
 
+// Include GPUDispatchGate header for method stubs
+#include "gpu_dispatch_gate.h"
+
 // ============================================================================
 // C-linkage stubs
 // ============================================================================
@@ -438,3 +441,57 @@ namespace RawrXD {
         return true;
     }
 }
+
+// ============================================================================
+// Command Handler Stubs (Transcendence Systems)
+// ============================================================================
+#include "core/shared_feature_dispatch.h"
+
+CommandResult HandleCursorParityBridge(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("CursorParityBridge stub"); }
+CommandResult HandleOmegaOrchestrator(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("OmegaOrchestrator stub"); }
+CommandResult HandleMeshBrain(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("MeshBrain stub"); }
+CommandResult HandleSpeciatorEngine(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("SpeciatorEngine stub"); }
+CommandResult HandleNeuralBridge(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("NeuralBridge stub"); }
+CommandResult HandleSelfHostEngine(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("SelfHostEngine stub"); }
+CommandResult HandleHardwareSynthesizer(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("HardwareSynthesizer stub"); }
+CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("TranscendenceCoordinator stub"); }
+CommandResult HandleVulkanRenderer(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VulkanRenderer stub"); }
+CommandResult HandleOSExplorerInterceptor(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("OSExplorerInterceptor stub"); }
+CommandResult HandleMCPHooks(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("MCPHooks stub"); }
+CommandResult HandleIOCPFileWatcher(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("IOCPFileWatcher stub"); }
+CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("IDEDiagnosticAutoHealer stub"); }
+CommandResult HandleConsentPrompt(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("ConsentPrompt stub"); }
+CommandResult HandleAutonomousAgent(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AutonomousAgent stub"); }
+CommandResult HandleChatMessageRenderer(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("ChatMessageRenderer stub"); }
+CommandResult HandleToolActionStatus(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("ToolActionStatus stub"); }
+CommandResult HandleChatPanel(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("ChatPanel stub"); }
+CommandResult HandlePerfTelemetry(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("PerfTelemetry stub"); }
+CommandResult HandleUpdateSignature(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("UpdateSignature stub"); }
+CommandResult HandlePluginSignature(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("PluginSignature stub"); }
+
+// ============================================================================
+// AI Feature Handler Stubs
+// ============================================================================
+CommandResult handleAIInlineComplete(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIInlineComplete stub"); }
+CommandResult handleAIChatMode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIChatMode stub"); }
+CommandResult handleAIExplainCode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIExplainCode stub"); }
+CommandResult handleAIRefactor(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIRefactor stub"); }
+CommandResult handleAIGenerateTests(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIGenerateTests stub"); }
+CommandResult handleAIGenerateDocs(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIGenerateDocs stub"); }
+CommandResult handleAIFixErrors(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIFixErrors stub"); }
+CommandResult handleAIOptimizeCode(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIOptimizeCode stub"); }
+CommandResult handleAIModelSelect(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("AIModelSelect stub"); }
+
+// ============================================================================
+// VSCode Extension Handler Stubs
+// ============================================================================
+CommandResult handleVscExtStatus(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtStatus stub"); }
+CommandResult handleVscExtReload(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtReload stub"); }
+CommandResult handleVscExtListCommands(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtListCommands stub"); }
+CommandResult handleVscExtListProviders(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtListProviders stub"); }
+CommandResult handleVscExtDiagnostics(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtDiagnostics stub"); }
+CommandResult handleVscExtExtensions(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtExtensions stub"); }
+CommandResult handleVscExtStats(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtStats stub"); }
+CommandResult handleVscExtLoadNative(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtLoadNative stub"); }
+CommandResult handleVscExtDeactivateAll(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtDeactivateAll stub"); }
+CommandResult handleVscExtExportConfig(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("VscExtExportConfig stub"); }

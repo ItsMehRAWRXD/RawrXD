@@ -1,0 +1,229 @@
+{
+  "total": 20,
+  "passed": 19,
+  "failed": 1,
+  "results": [
+    {
+      "category": "gguf",
+      "test": "test_gguf_magic",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\gguf\\test_gguf_magic.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 12.68625259399414,
+      "stdout": "[GGUF Magic] Starting...\n[GGUF Magic] Magic number: 0x46554747 (valid)\n[GGUF Magic] Version: 3 (valid)\n[GGUF Magic] Byte order: Little-endian (correct)\n[GGUF Magic] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.050181"
+    },
+    {
+      "category": "cpu",
+      "test": "test_avx2_rmsnorm",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\cpu\\test_avx2_rmsnorm.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 14.754295349121094,
+      "stdout": "[AVX2 RMSNorm] Starting...\n[AVX2 RMSNorm] Max error: 0.000000e+00\n[AVX2 RMSNorm] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.050801"
+    },
+    {
+      "category": "tokenizer",
+      "test": "test_bpe_tokenizer",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\tokenizer\\test_bpe_tokenizer.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 13.80300521850586,
+      "stdout": "[BPE Tokenizer] Starting...\n[BPE Tokenizer] Test 1: 'hello world' -> 2 tokens\n[BPE Tokenizer] Test 2: '123 456' -> 2 tokens\n[BPE Tokenizer] Test 3: Empty string -> 0 tokens\n[BPE Tokenizer] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.050801"
+    },
+    {
+      "category": "cpu",
+      "test": "test_avx2_softmax",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\cpu\\test_avx2_softmax.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 13.80300521850586,
+      "stdout": "[AVX2 Softmax] Starting...\n[AVX2 Softmax] Max error: 0.000000e+00\n[AVX2 Softmax] Probability sum: 0.999866 (should be ~1.0)\n[AVX2 Softmax] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.050801"
+    },
+    {
+      "category": "kernels",
+      "test": "test_layer_norm",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_layer_norm.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 11.592864990234375,
+      "stdout": "[Layer Normalization] Starting...\n[Layer Normalization] Max error: 0.000000e+00\n[Layer Normalization] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.062394"
+    },
+    {
+      "category": "kernels",
+      "test": "test_gelu_activation",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_gelu_activation.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 11.592864990234375,
+      "stdout": "[GELU Activation] Starting...\n[GELU Activation] Max error: 0.000000e+00\n[GELU Activation] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.062394"
+    },
+    {
+      "category": "kernels",
+      "test": "test_attention",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_attention.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 15.125751495361328,
+      "stdout": "[Self-Attention] Starting...\n[Self-Attention] Max error: 0.000000e+00\n[Self-Attention] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.065306"
+    },
+    {
+      "category": "kernels",
+      "test": "test_rms_norm",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_rms_norm.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 10.199785232543945,
+      "stdout": "[RMS Normalization] Starting...\n[RMS Normalization] Max error: 0.000000e+00\n[RMS Normalization] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.072594"
+    },
+    {
+      "category": "kernels",
+      "test": "test_rmsnorm_avx2",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_rmsnorm_avx2.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 10.199785232543945,
+      "stdout": "RMSNorm AVX2 Kernel Test Suite\n==============================\n\n\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551           RMSNorm AVX2 Test Results                            \u2551\n\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563\n\u2551 Test                                       Status    Max Error \u2551\n\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563\n\u2551 Basic small (dim=8)                      \u2713 PASS     0.00e+00 \u2551\n\u2551 Standard dim (4096)                      \u2713 PASS     1.91e-06 \u2551\n\u2551 All zeros                                \u2713 PASS     0.00e+00 \u2551\n\u2551 All ones                                 \u2713 PASS     0.00e+00 \u2551\n\u2551 Non-multiple of 8 (dim=100)              \u2713 PASS     0.00e+00 \u2551\n\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563\n\u2551 Total: 5 | Passed: 5 | Failed: 0                              \u2551\n\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d\n\nPerformance (dim=4096): 0.000 ms\n\n\u2713 All tests passed!\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.072594"
+    },
+    {
+      "category": "kernels",
+      "test": "test_rope",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_rope.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 10.309696197509766,
+      "stdout": "[RoPE] Starting...\n[RoPE] Max error: 0.000000e+00\n[RoPE] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.075616"
+    },
+    {
+      "category": "kernels",
+      "test": "test_silu_activation",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_silu_activation.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 10.461568832397461,
+      "stdout": "[SiLU Activation] Starting...\n[SiLU Activation] Computing reference (scalar)...\n[SiLU Activation] Computing optimized (AVX-512)...\n[SiLU Activation] Comparing results...\n  Max error at index 1764: ref=-2.772496e-01, opt=-2.772501e-01\n  Max relative error: 2.445103e-06\n[SiLU Activation] Max absolute error: 5.662441e-07\n[SiLU Activation] PASS (error < 1e-5)\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.083055"
+    },
+    {
+      "category": "kernels",
+      "test": "test_softmax_avx2",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_softmax_avx2.exe",
+      "status": "FAIL",
+      "returncode": 1,
+      "elapsed_ms": 10.683059692382812,
+      "stdout": "Softmax AVX2 Kernel Test Suite\n==============================\n\n\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551           Softmax AVX2 Test Results                            \u2551\n\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563\n\u2551 Test                                     Status   Max Error    \u2551\n\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563\n\u2551 Basic small (dim=8)                      \u2717 FAIL 1.18e+00 \u2551\n\u2551 Standard dim (4096)                      \u2717 FAIL 1.98e-03 \u2551\n\u2551 All zeros                                \u2713 PASS 0.00e+00 \u2551\n\u2551 All same value                           \u2713 PASS 0.00e+00 \u2551\n\u2551 Large positive values                    \u2717 FAIL 6.32e-01 \u2551\n\u2551 Large negative values                    \u2717 FAIL 6.32e-01 \u2551\n\u2551 Mixed +/- values                         \u2717 FAIL 3.13e-02 \u2551\n\u2551 Non-multiple of 8 (dim=100)              \u2717 FAIL 9.53e-02 \u2551\n\u2551 Large vocab (32000)                      \u2717 FAIL 1.61e-04 \u2551\n\u2551 Single spike                             \u2717 FAIL 1.",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.086299"
+    },
+    {
+      "category": "kernels",
+      "test": "test_matmul",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_matmul.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 39.026737213134766,
+      "stdout": "[Matrix Multiplication] Starting...\n[Matrix Multiplication] Max error: 0.000000e+00\n[Matrix Multiplication] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.089828"
+    },
+    {
+      "category": "sampler",
+      "test": "test_temperature",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\sampler\\test_temperature.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 10.338544845581055,
+      "stdout": "[Temperature Scaling] Starting...\n[Temperature Scaling] T=1.0 entropy: 5.604677\n[Temperature Scaling] T=0.5 entropy: 4.912034\n[Temperature Scaling] T=2.0 entropy: 6.257651\n[Temperature Scaling] PASS\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.093394"
+    },
+    {
+      "category": "integration",
+      "test": "test_inference_pipeline",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\integration\\test_inference_pipeline.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 12.746334075927734,
+      "stdout": "[Inference Pipeline] Starting...\n[Inference Pipeline] Testing 4-layer architecture: Scheduler \u2192 Router \u2192 Executor \u2192 Policy\n\n[Inference Pipeline] Registered 2 backends\n[Inference Pipeline] Registered inference kernel\n\n[Inference Pipeline] Test 1: Simple inference pipeline\n  [Pipeline] Step 1: Scheduled (credits=1000)\n  [Pipeline] Step 2: Routed to CPU_Backend (confidence=0.95)\n  [Pipeline] Step 3: Executed (time=0 us, mem=8 bytes)\n  [Pipeline] Step 4: Observed (latency=0.00 ms)\n\n  Result: 'Generated text for: hello world'\n  Tokens: in=2, out=2\n  Latency: 0.00 ms\n\n[Inference Pipeline] Test 2: Policy recommendation based on traces\n  Recommended backend: CPU_Backend (confidence=0.95)\n\n[Inference Pipeline] Test 3: Multiple inferences\n  [Pipeline] Step 1: Scheduled (credits=1000)\n  [Pipeline] Step 2: Routed to CPU_Backend (confidence=0.95)\n  [Pipeline] Step 3: Executed (time=0 us, mem=8 bytes)\n  [Pipeline] Step 4: Observed (latency=0.00 ms)\n  Inference 1: OK (0.00 ms)\n  [Pipeline] Step 1: Sc",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.106140"
+    },
+    {
+      "category": "kernels",
+      "test": "test_softmax",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\kernels\\test_softmax.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 33.54644775390625,
+      "stdout": "[Softmax] Starting...\n[Softmax] Max error: 0.000000e+00\n[Softmax] Reference: 9.64 ms (1.33 GB/s)\n[Softmax] Optimized: 7.90 ms (1.62 GB/s)\n[Softmax] Speedup: 1.22x\n[Softmax] PASS (sum=0.999866)\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.106140"
+    },
+    {
+      "category": "integration",
+      "test": "test_binary_validation",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\integration\\test_binary_validation.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 33.23197364807129,
+      "stdout": "RawrXD Binary Validation Test\n=============================\nChecking: ..\\..\\RawrXD.exe\n\n\n  [TEST] Executable Exists\n    \u2713 Executable found\n\n  [TEST] Executable Runs\n    Could not start process (may not be built)\n\n  [TEST] Executable Size\n    \u2713 File size OK: 0.57 MB\n\n  [TEST] Dependencies\n    \u2713 Valid PE executable\n\n=============================\nBinary Validation Summary\n=============================\nTests passed: 4\nTests failed: 0\nTotal tests:  4\n\n\u2713 BINARY VALIDATION PASSED\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.119531"
+    },
+    {
+      "category": "regression",
+      "test": "test_regression",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\regression\\test_regression.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 19.45185661315918,
+      "stdout": "RawrXD Regression Test Suite\n==============================\nComparing current outputs against golden references\n\n\nTesting tinyllama...\n  \u2713 logits PASSED: max error 4.768372e-07\n  \u2713 hidden_states PASSED: max error 2.980232e-08\n  \u2713 tokens PASSED\n  Result: 3/3 tests passed\n\nTesting phi3...\n  \u2713 logits PASSED: max error 4.768372e-07\n  \u2713 hidden_states PASSED: max error 2.980232e-08\n  \u2713 tokens PASSED\n  Result: 3/3 tests passed\n\nTesting ministral...\n  \u2713 logits PASSED: max error 4.768372e-07\n  \u2713 hidden_states PASSED: max error 2.980232e-08\n  \u2713 tokens PASSED\n  Result: 3/3 tests passed\n\nTesting tinyllama hash verification...\n  \u2713 Hash file valid (64 hex chars)\n\nTesting phi3 hash verification...\n  \u2713 Hash file valid (64 hex chars)\n\nTesting ministral hash verification...\n  \u2713 Hash file valid (64 hex chars)\n\nTesting tinyllama manifest...\n  \u2713 Manifest contains required fields (model, files)\n\nTesting phi3 manifest...\n  \u2713 Manifest contains required fields (model, files)\n\nTesting ministral manifest...\n  \u2713 ",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.125592"
+    },
+    {
+      "category": "performance",
+      "test": "test_perf_quick",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\performance\\test_perf_quick.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 70.14012336730957,
+      "stdout": "RawrXD Quick Performance Smoke Test\n====================================\n\nMatmul 128x128x128 (x100):\n  Elapsed: 47.960 ms\n  Throughput: 8.745 GOPS\n  \u2713 PASS (within tolerance)\n\nSoftmax 1024 elements (x1000):\n  Elapsed: 3.731 ms\n  Throughput: 268010.29 ops/sec\n  \u2713 PASS (within tolerance)\n\nRMSNorm 4096 elements (x500):\n  Elapsed: 2.608 ms\n  Throughput: 191681.04 ops/sec\n  \u2713 PASS (within tolerance)\n\n====================================\nPerformance Smoke Test Summary\n====================================\nTests passed: 3\nTests failed: 0\nTotal tests:  3\n\n\u2713 ALL PERFORMANCE TESTS PASSED\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:39.177192"
+    },
+    {
+      "category": "integration",
+      "test": "test_inference_e2e",
+      "path": "D:\\rawrxd-ci-bootstrap\\tests\\integration\\test_inference_e2e.exe",
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_ms": 5610.200643539429,
+      "stdout": "RawrXD Inference E2E Test\n=========================\n\n  [TEST] Model Initialization\n    \u2713 Model initialized (4 layers, 4096 hidden)\n\n  [TEST] Tokenization\n    Tokenized to 6 tokens\n    Roundtrip: 'tok19111 tok2572 tok17948 tok3561 tok19111 tok12182'\n    \u2713 Tokenization successful\n\n  [TEST] Forward Pass\n    Hidden state sum: -0.0083\n    \u2713 Forward pass successful\n\n  [TEST] Token Generation\n    Prompt: 'the cat' (2 tokens)\n    Generated: 'tok19111 tok2572 tok22436 tok23456 tok8392 tok12052 tok18844'\n    Tokens: 7, Time: 996.00 ms\n    \u2713 Generation successful\n\n=========================\nE2E Test Summary\n=========================\nPassed: 4\nFailed: 0\nTotal:  4\n\n\u2713 ALL E2E TESTS PASSED\n",
+      "stderr": "",
+      "timestamp": "2026-07-15T14:57:44.700028"
+    }
+  ],
+  "timestamp": "2026-07-15T14:57:44.700028",
+  "duration_ms": 5973.8945960998535
+}

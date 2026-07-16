@@ -1,0 +1,498 @@
+# Phase J.1/5: API Documentation
+# OpenAPI 3.0 specification for RawrXD Sovereign AI Runtime API
+
+openapi: 3.0.3
+info:
+  title: RawrXD Sovereign AI Runtime API
+  description: |
+    Production-grade inference API with stability envelope, intelligent operations,
+    and hotpatch support. Optimized for AMD RX 7800 XT and compatible GPUs.
+  version: 1.0.0
+  contact:
+    name: RawrXD Team
+    url: https://github.com/ItsMehRAWRXD/RawrXD
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.rawrxd.ai/v1
+    description: Production server
+
+tags:
+  - name: Inference
+    description: Model inference endpoints
+  - name: Models
+    description: Model management
+  - name: System
+    description: System status and metrics
+  - name: Hotpatch
+    description: Runtime hotpatch management
+  - name: Stability
+    description: Stability envelope controls
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns service health status
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /ready:
+    get:
+      summary: Readiness check
+      description: Returns service readiness status
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessStatus'
+
+  /v1/completions:
+    post:
+      summary: Generate completions
+      description: Generate text completions using loaded model
+      tags:
+        - Inference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequest'
+      responses:
+        '200':
+          description: Completion generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/chat/completions:
+    post:
+      summary: Chat completions
+      description: Generate chat completions with message history
+      tags:
+        - Inference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+      responses:
+        '200':
+          description: Chat completion generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+
+  /v1/models:
+    get:
+      summary: List models
+      description: List all available models
+      tags:
+        - Models
+      responses:
+        '200':
+          description: List of models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelList'
+
+  /v1/models/{model_id}:
+    get:
+      summary: Get model info
+      description: Get information about a specific model
+      tags:
+        - Models
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Model information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInfo'
+        '404':
+          description: Model not found
+
+  /v1/metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns Prometheus-compatible metrics
+      tags:
+        - System
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /v1/hotpatch:
+    get:
+      summary: List hotpatches
+      description: List all applied hotpatches
+      tags:
+        - Hotpatch
+      responses:
+        '200':
+          description: List of hotpatches
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotpatchList'
+
+  /v1/hotpatch/apply:
+    post:
+      summary: Apply hotpatch
+      description: Apply a runtime hotpatch
+      tags:
+        - Hotpatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HotpatchRequest'
+      responses:
+        '200':
+          description: Hotpatch applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotpatchResponse'
+
+  /v1/hotpatch/rollback:
+    post:
+      summary: Rollback hotpatch
+      description: Rollback to previous version
+      tags:
+        - Hotpatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackRequest'
+      responses:
+        '200':
+          description: Rollback successful
+
+  /v1/stability/status:
+    get:
+      summary: Stability status
+      description: Get current stability metrics
+      tags:
+        - Stability
+      responses:
+        '200':
+          description: Stability status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StabilityStatus'
+
+  /v1/stability/rollback:
+    post:
+      summary: Trigger stability rollback
+      description: Manually trigger stability envelope rollback
+      tags:
+        - Stability
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StabilityRollbackRequest'
+      responses:
+        '200':
+          description: Rollback triggered
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+
+    ReadinessStatus:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        checks:
+          type: object
+          properties:
+            model_loaded:
+              type: boolean
+            gpu_ready:
+              type: boolean
+            stability_envelope:
+              type: boolean
+
+    CompletionRequest:
+      type: object
+      required:
+        - model
+        - prompt
+      properties:
+        model:
+          type: string
+          description: Model ID to use
+        prompt:
+          type: string
+          description: Input prompt
+        max_tokens:
+          type: integer
+          default: 256
+          maximum: 4096
+        temperature:
+          type: number
+          default: 0.7
+          minimum: 0.0
+          maximum: 2.0
+        top_p:
+          type: number
+          default: 1.0
+          minimum: 0.0
+          maximum: 1.0
+        stream:
+          type: boolean
+          default: false
+
+    CompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              index:
+                type: integer
+              logprobs:
+                type: object
+              finish_reason:
+                type: string
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            completion_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    ChatCompletionRequest:
+      type: object
+      required:
+        - model
+        - messages
+      properties:
+        model:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [system, user, assistant]
+              content:
+                type: string
+        max_tokens:
+          type: integer
+          default: 256
+        temperature:
+          type: number
+          default: 0.7
+
+    ChatCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: object
+                properties:
+                  role:
+                    type: string
+                  content:
+                    type: string
+              finish_reason:
+                type: string
+
+    ModelList:
+      type: object
+      properties:
+        object:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelInfo'
+
+    ModelInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        created:
+          type: integer
+        owned_by:
+          type: string
+        parameters:
+          type: integer
+        quantization:
+          type: string
+
+    HotpatchList:
+      type: object
+      properties:
+        patches:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              version:
+                type: string
+              applied_at:
+                type: string
+              status:
+                type: string
+
+    HotpatchRequest:
+      type: object
+      required:
+        - patch_id
+      properties:
+        patch_id:
+          type: string
+        safety_check:
+          type: boolean
+          default: true
+
+    HotpatchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        patch_id:
+          type: string
+        deployment_time_ms:
+          type: number
+
+    RollbackRequest:
+      type: object
+      properties:
+        patch_id:
+          type: string
+        reason:
+          type: string
+
+    StabilityStatus:
+      type: object
+      properties:
+        score:
+          type: number
+        active_faults:
+          type: integer
+        oscillation_detected:
+          type: boolean
+        last_rollback:
+          type: string
+          format: date-time
+
+    StabilityRollbackRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            code:
+              type: string

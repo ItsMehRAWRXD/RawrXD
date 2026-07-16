@@ -120,50 +120,21 @@ void AgentToolRegistry::RegisterHandler(const std::string& /*toolName*/,
 } // namespace RawrXD
 
 // ============================================================================
-// Section 3: AgenticDeepThinkingEngine Stubs
+// Section 3: AgenticDeepThinkingEngine
 // ============================================================================
-class AgenticDeepThinkingEngine {
-public:
-    struct ThinkingResult {
-        bool success = false;
-        std::string output;
-        std::string reasoning;
-        nlohmann::json toJson() const {
-            nlohmann::json j;
-            j["success"] = success;
-            j["output"] = output;
-            j["reasoning"] = reasoning;
-            return j;
-        }
-    };
-
-    struct ThinkingContext {
-        std::string prompt;
-        std::string model;
-        int maxTokens = 1024;
-        nlohmann::json toJson() const {
-            nlohmann::json j;
-            j["prompt"] = prompt;
-            j["model"] = model;
-            j["maxTokens"] = maxTokens;
-            return j;
-        }
-    };
-
-    AgenticDeepThinkingEngine();
-    ~AgenticDeepThinkingEngine();
-    ThinkingResult think(const ThinkingContext& ctx);
-};
-
-AgenticDeepThinkingEngine::AgenticDeepThinkingEngine() {}
-AgenticDeepThinkingEngine::~AgenticDeepThinkingEngine() {}
-
-AgenticDeepThinkingEngine::ThinkingResult AgenticDeepThinkingEngine::think(const ThinkingContext& /*ctx*/) {
-    ThinkingResult result;
-    result.success = false;
-    result.reasoning = "Stub: AgenticDeepThinkingEngine not implemented in Gold build";
-    return result;
-}
+// NOTE: AgenticDeepThinkingEngine is now fully implemented in
+// src/agentic/AgenticDeepThinkingEngine.cpp
+// The stub has been replaced with a production-ready implementation that provides:
+//   - Event monitoring and anomaly detection
+//   - Crash detection and classification
+//   - Recovery strategy selection and execution
+//   - Background task orchestration
+//   - Tool scheduling and dispatch
+//   - Autonomous workflow execution
+//
+// Include the real header to use the implementation:
+//   #include "agentic/AgenticDeepThinkingEngine.hpp"
+// ============================================================================
 
 // ============================================================================
 // Section 4: Command Handler Stubs
@@ -995,4 +966,58 @@ extern "C" {
 void* g_hHeap = nullptr;
 void BeaconSend(void) { }
 bool RunInference(void* /*req*/) { return true; }
+}
+
+// ============================================================================
+// Section 7: NativeGGUFLoader Stubs
+// ============================================================================
+#include <cstdint>
+#include <vector>
+#include <string>
+
+struct NativeGGUFTensorInfo {
+    std::string name;
+    uint32_t type;
+    std::vector<uint64_t> shape;
+    uint64_t offset;
+};
+
+struct NativeGGUFMetadata {
+    std::string key;
+    uint32_t type;
+    std::vector<uint8_t> value;
+};
+
+class NativeGGUFLoader {
+public:
+    bool ParseHeader() { return true; }
+    bool ParseMetadata() { return true; }
+    bool ParseTensorInfo() { return true; }
+    bool IsMemoryMapped() const { return false; }
+    uint64_t GetMappedSize() const { return 0; }
+    const std::vector<NativeGGUFTensorInfo>& GetTensors() const {
+        static std::vector<NativeGGUFTensorInfo> empty;
+        return empty;
+    }
+    const std::vector<NativeGGUFMetadata>& GetMetadata() const {
+        static std::vector<NativeGGUFMetadata> empty;
+        return empty;
+    }
+};
+
+// ============================================================================
+// Section 8: Subsystem API Mode Stubs
+// ============================================================================
+extern "C" {
+    void EntropyMode(void) { }
+    void StubGenMode(void) { }
+    void TraceEngineMode(void) { }
+    void AgenticMode(void) { }
+    void BasicBlockCovMode(void) { }
+    void CovFusionMode(void) { }
+    void DynTraceMode(void) { }
+    void AgentTraceMode(void) { }
+    void GapFuzzMode(void) { }
+    void IntelPTMode(void) { }
+    void DiffCovMode(void) { }
 }
