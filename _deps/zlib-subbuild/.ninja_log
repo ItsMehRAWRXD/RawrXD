@@ -1,0 +1,21 @@
+# ninja log v6
+1580	1630	8058793520582197	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-build	9986184f3c7cefef
+1	50	8058793504795742	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-mkdir	9ad1d230d3d7fb6d
+1728	1788	8058793522165171	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-done	47303ca2be7f8595
+1534	1580	8058793520076602	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-configure	44c87783898d56c
+1534	1580	8058793520076602	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-configure	44c87783898d56c
+1481	1534	8058793519609516	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-patch	ec66b970620083f
+1481	1534	8058793519609516	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-patch	ec66b970620083f
+1728	1788	8058793522165171	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-done	47303ca2be7f8595
+1728	1788	8058793522165171	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/CMakeFiles/zlib-populate-complete	47303ca2be7f8595
+50	1433	8058793518592824	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-download	fb77dcd772b11d32
+1676	1728	8058793521564824	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-test	c39ae6e017d5f4aa
+1676	1728	8058793521564824	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-test	c39ae6e017d5f4aa
+1630	1676	8058793521058387	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-install	cb47bc66d50a829a
+1580	1630	8058793520582197	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-build	9986184f3c7cefef
+1	50	8058793504795742	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-mkdir	9ad1d230d3d7fb6d
+50	1433	8058793518592824	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-download	fb77dcd772b11d32
+1433	1481	8058793519097866	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-update	9fa45fc0cc22131f
+1433	1481	8058793519097866	D:/rawrxd-ci-bootstrap/_deps/zlib-subbuild/zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-update	9fa45fc0cc22131f
+1728	1788	8058793522165171	CMakeFiles/zlib-populate-complete	47303ca2be7f8595
+1630	1676	8058793521058387	zlib-populate-prefix/src/zlib-populate-stamp/zlib-populate-install	cb47bc66d50a829a

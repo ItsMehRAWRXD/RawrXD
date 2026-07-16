@@ -4879,6 +4879,22 @@ target_include_directories(test_multi_gpu_scheduler PRIVATE
 )
 message(STATUS "[Test] test_multi_gpu_scheduler target added (validates AMD AI PRO R9700 + RX 7800 XT scheduling)")
 
+# GPU Memory Allocator Test (Priority 4: Mission 2)
+add_executable(test_gpu_memory_allocator
+    src/test/test_gpu_memory_allocator.cpp
+)
+set_target_properties(test_gpu_memory_allocator PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME test_gpu_memory_allocator
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(test_gpu_memory_allocator PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+message(STATUS "[Test] test_gpu_memory_allocator target added (validates multi-GPU memory management)")
+
 # Autonomous Agentic Pipeline unit test (Task 5 — buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
