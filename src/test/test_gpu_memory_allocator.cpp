@@ -43,6 +43,7 @@ public:
     // Initialize with device count
     bool initialize(uint32_t deviceCount = 1) {
         m_deviceCount = deviceCount;
+        m_deviceAllocated.resize(deviceCount, 0); // Resize to match device count
         m_initialized = true;
         return true;
     }
@@ -54,9 +55,11 @@ public:
         block.deviceId = deviceId;
         block.isAllocated = true;
         
-        // Track allocation
+        // Track allocation (only for GPU devices, not CPU/system)
         m_totalAllocated += size;
-        m_deviceAllocated[deviceId] += size;
+        if (deviceId < m_deviceAllocated.size()) {
+            m_deviceAllocated[deviceId] += size;
+        }
         m_allocations.push_back(block);
         
         return block;
@@ -133,7 +136,7 @@ private:
     uint32_t m_deviceCount = 1;
     size_t m_totalAllocated = 0;
     uint32_t m_defragCount = 0;
-    std::vector<size_t> m_deviceAllocated = {0, 0}; // Per-device tracking
+    std::vector<size_t> m_deviceAllocated; // Per-device tracking, resized in initialize()
     std::vector<GPUMemoryBlock> m_allocations;
 };
 
