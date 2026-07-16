@@ -122,6 +122,8 @@ void AgentToolRegistry::RegisterHandler(const std::string& /*toolName*/,
 // ============================================================================
 // Section 3: AgenticDeepThinkingEngine Stubs
 // ============================================================================
+// Only provide stubs if real implementation is not included
+#ifndef RAWRXD_HAS_REAL_DEEP_THINKING_ENGINE
 class AgenticDeepThinkingEngine {
 public:
     struct ThinkingResult {
@@ -164,6 +166,7 @@ AgenticDeepThinkingEngine::ThinkingResult AgenticDeepThinkingEngine::think(const
     result.reasoning = "Stub: AgenticDeepThinkingEngine not implemented in Gold build";
     return result;
 }
+#endif // RAWRXD_HAS_REAL_DEEP_THINKING_ENGINE
 
 // ============================================================================
 // Section 4: Command Handler Stubs

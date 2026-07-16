@@ -1639,6 +1639,21 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/runtime/pattern_scanner.cpp
 )
 
+# Add real AgenticDeepThinkingEngine implementation (Phase 1: Mission 2)
+list(APPEND GOLD_UNDERSCORE_SOURCES
+    src/agent/agentic_deep_thinking_engine.cpp
+    src/agent/agentic_failure_detector.cpp
+    src/agent/agentic_puppeteer.cpp
+    src/agent/telemetry_collector.cpp
+    src/agent/quantum_autonomous_todo_system.cpp
+    src/agent/quantum_dynamic_time_manager.cpp
+)
+
+# Add MASM bridge fallbacks for ASM symbols referenced by agent code
+list(APPEND GOLD_UNDERSCORE_SOURCES
+    src/win32app/masm_bridge_fallbacks.cpp
+)
+
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
 if(WIN32)
@@ -1676,6 +1691,7 @@ target_link_libraries(RawrXD_Gold PRIVATE Threads::Threads)
 target_compile_definitions(RawrXD_Gold PRIVATE
     RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     RAWRXD_GOLD_BUILD=1
+    RAWRXD_HAS_REAL_DEEP_THINKING_ENGINE=1
     RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=${_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS}
     RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
@@ -4805,6 +4821,30 @@ target_include_directories(RawrXD-InferenceRoutingTest PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)")
+
+# Deep Thinking Engine Integration Test (Priority 2: Mission 2)
+# Minimal test validating core think() behavior and telemetry capture
+add_executable(test_deep_thinking_engine
+    src/test/test_deep_thinking_engine.cpp
+    src/win32app/masm_bridge_fallbacks.cpp
+)
+set_target_properties(test_deep_thinking_engine PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME test_deep_thinking_engine
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(test_deep_thinking_engine PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/agent
+    ${CMAKE_SOURCE_DIR}/src/agentic
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_compile_definitions(test_deep_thinking_engine PRIVATE
+    RAWRXD_HAS_REAL_DEEP_THINKING_ENGINE=1
+)
+message(STATUS "[Test] test_deep_thinking_engine target added (validates AgenticDeepThinkingEngine think() + telemetry)")
 
 # Autonomous Agentic Pipeline unit test (Task 5 — buildable)
 if(WIN32)
