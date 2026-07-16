@@ -315,4 +315,40 @@ CommandResult handleSystemUpdate(const CommandContext& ctx);
 CommandResult handleSystemBackup(const CommandContext& ctx);
 CommandResult handleSystemRestore(const CommandContext& ctx);
 
+// =============================================================================
+// Multi-Response Extended Handlers (Batch 5)
+// =============================================================================
+CommandResult handleMultiRespFilter(const CommandContext& ctx);
+CommandResult handleMultiRespSort(const CommandContext& ctx);
+CommandResult handleMultiRespSearch(const CommandContext& ctx);
+CommandResult handleMultiRespDelete(const CommandContext& ctx);
+CommandResult handleMultiRespArchive(const CommandContext& ctx);
+
+// =============================================================================
+// Governance Extended Handlers (Batch 5)
+// =============================================================================
+CommandResult handleGovList(const CommandContext& ctx);
+CommandResult handleGovAdd(const CommandContext& ctx);
+CommandResult handleGovRemove(const CommandContext& ctx);
+CommandResult handleGovUpdate(const CommandContext& ctx);
+CommandResult handleGovValidate(const CommandContext& ctx);
+
+// =============================================================================
+// Safety Extended Handlers (Batch 5)
+// =============================================================================
+CommandResult handleSafetyList(const CommandContext& ctx);
+CommandResult handleSafetyAdd(const CommandContext& ctx);
+CommandResult handleSafetyRemove(const CommandContext& ctx);
+CommandResult handleSafetyUpdate(const CommandContext& ctx);
+CommandResult handleSafetyAudit(const CommandContext& ctx);
+
+// =============================================================================
+// Replay Extended Handlers (Batch 5)
+// =============================================================================
+CommandResult handleReplayList(const CommandContext& ctx);
+CommandResult handleReplayDelete(const CommandContext& ctx);
+CommandResult handleReplayRename(const CommandContext& ctx);
+CommandResult handleReplayExport(const CommandContext& ctx);
+CommandResult handleReplayImport(const CommandContext& ctx);
+
 } // namespace RawrXD

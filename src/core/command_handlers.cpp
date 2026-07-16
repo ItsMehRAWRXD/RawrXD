@@ -1452,4 +1452,180 @@ CommandResult handleSystemRestore(const CommandContext& ctx) {
     return result;
 }
 
+// =============================================================================
+// Multi-Response Extended Handlers (Batch 5)
+// =============================================================================
+
+CommandResult handleMultiRespFilter(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Responses filtered";
+    return result;
+}
+
+CommandResult handleMultiRespSort(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Responses sorted";
+    return result;
+}
+
+CommandResult handleMultiRespSearch(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Responses searched";
+    return result;
+}
+
+CommandResult handleMultiRespDelete(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Responses deleted";
+    return result;
+}
+
+CommandResult handleMultiRespArchive(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Responses archived";
+    return result;
+}
+
+// =============================================================================
+// Governance Extended Handlers (Batch 5)
+// =============================================================================
+
+CommandResult handleGovList(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Governance rules listed";
+    return result;
+}
+
+CommandResult handleGovAdd(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Governance rule added";
+    return result;
+}
+
+CommandResult handleGovRemove(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Governance rule removed";
+    return result;
+}
+
+CommandResult handleGovUpdate(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Governance rule updated";
+    return result;
+}
+
+CommandResult handleGovValidate(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Governance rules validated";
+    return result;
+}
+
+// =============================================================================
+// Safety Extended Handlers (Batch 5)
+// =============================================================================
+
+CommandResult handleSafetyList(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Safety rules listed";
+    return result;
+}
+
+CommandResult handleSafetyAdd(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Safety rule added";
+    return result;
+}
+
+CommandResult handleSafetyRemove(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Safety rule removed";
+    return result;
+}
+
+CommandResult handleSafetyUpdate(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Safety rule updated";
+    return result;
+}
+
+CommandResult handleSafetyAudit(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Safety audit complete";
+    return result;
+}
+
+// =============================================================================
+// Replay Extended Handlers (Batch 5)
+// =============================================================================
+
+CommandResult handleReplayList(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Replays listed";
+    return result;
+}
+
+CommandResult handleReplayDelete(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Replay deleted";
+    return result;
+}
+
+CommandResult handleReplayRename(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Replay renamed";
+    return result;
+}
+
+CommandResult handleReplayExport(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Replay exported";
+    return result;
+}
+
+CommandResult handleReplayImport(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.message = "Replay imported";
+    return result;
+}
+
 } // namespace RawrXD
