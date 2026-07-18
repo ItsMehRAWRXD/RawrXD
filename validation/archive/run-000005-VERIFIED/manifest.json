@@ -1,0 +1,59 @@
+{
+  "schema_version": "2.0.0",
+  "evidence_format": "rawrxd-val-019-v2",
+  "validation_framework": "VAL-019",
+
+  "run_metadata": {
+    "id": "run-000006",
+    "timestamp": "2026-07-18T23:00:00Z",
+    "state": "ARCHIVED",
+    "previous_run": "run-000005",
+    "next_run": null,
+    "description": "Immutable archive of run-000005-VERIFIED evidence"
+  },
+
+  "archive_metadata": {
+    "source_run": "run-000005-VERIFIED",
+    "archive_policy": "append-only",
+    "immutable": true,
+    "preservation_timestamp": "2026-07-18T23:00:00Z",
+    "verification_hash": "209e1ca5deeaee96b8b5149d602b5ac641f968a07b047c19c2dde45239521a26",
+    "seal_timestamp": "2026-07-18T22:45:00Z"
+  },
+
+  "preserved_evidence": {
+    "source_commit": "857610125",
+    "validation_run": "run-000004",
+    "verification_run": "run-000005",
+    "stages": ["embedding", "rmsnorm"],
+    "acceptance_gates_passed": 6,
+    "acceptance_gates_total": 6,
+    "overall_result": "PASS"
+  },
+
+  "access_policy": {
+    "read": "public",
+    "write": "none",
+    "verification": "SHA256 chain",
+    "mutation_detection": "enabled"
+  },
+
+  "lifecycle_complete": {
+    "designed": true,
+    "implemented": true,
+    "built": true,
+    "executed": true,
+    "validated": true,
+    "verified": true,
+    "archived": true
+  },
+
+  "notes": [
+    "ARCHIVED state: Evidence permanently preserved",
+    "Source: run-000005-VERIFIED",
+    "Immutability: FROZEN",
+    "Verification: SHA256 chain intact",
+    "Available for: regression testing, audit, reference",
+    "Next: VAL-020.1 Transformer Block Verification"
+  ]
+}

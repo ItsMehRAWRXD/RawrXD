@@ -5235,6 +5235,51 @@ if(WIN32)
     endif()
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-019.2: Isolated Execution Environment
+    # ═══════════════════════════════════════════════════════════════════
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/val019/isolated_execution_environment.cpp")
+        add_library(val019_isolated_execution
+            src/val019/isolated_execution_environment.cpp
+            src/val019/execution_runner.cpp
+            src/val016/val016_repair_policy.cpp
+            src/val016/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val019_isolated_execution PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+            ${CMAKE_SOURCE_DIR}/src/val019
+        )
+        message(STATUS "[VAL-019.2] Isolated execution environment library added")
+    endif()
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-020: Failure Recovery Demonstration
+    # ═══════════════════════════════════════════════════════════════════
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val019/test_val020_failure_recovery_demo.cpp")
+        add_executable(val020_failure_recovery_demo
+            tests/val019/test_val020_failure_recovery_demo.cpp
+        )
+        target_include_directories(val020_failure_recovery_demo PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+            ${CMAKE_SOURCE_DIR}/src/val019
+        )
+        target_link_libraries(val020_failure_recovery_demo PRIVATE
+            val019_isolated_execution
+            kernel32
+            user32
+        )
+        set_target_properties(val020_failure_recovery_demo PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[VAL-020] Failure recovery demonstration target added")
+    endif()
+
+    # ═══════════════════════════════════════════════════════════════════
     # VAL-019: Real Execution Bridge Test
     # ═══════════════════════════════════════════════════════════════════
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val019/test_real_execution_bridge.cpp")

@@ -422,8 +422,8 @@ FailureRecoveryDemonstrator::demonstrateCompileErrorRecovery() {
         VAL016::VAL016RepairOrchestrator repairOrchestrator;
         auto repairSession = repairOrchestrator.repair(execResult, 3);
         
-        result.diagnosis = repairSession.diagnosis.failureType;
-        result.repairStrategy = repairSession.plan.strategy;
+        result.diagnosis = repairSession.diagnosis.failureCategory;
+        result.repairStrategy = repairSession.plan.description;
         result.repairAttempts = static_cast<int>(repairSession.attempts.size());
         result.lifecycleStates.push_back("DIAGNOSED");
         

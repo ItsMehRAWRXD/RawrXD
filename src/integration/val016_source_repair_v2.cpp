@@ -545,7 +545,7 @@ public:
         std::filesystem::create_directories(basePath_ + "/repair");
         nlohmann::json j;
         j["classification"] = classification.description;
-        j["confidence"] = static_cast<double>(classification.confidence);
+        j["confidence"] = classification.confidence;
         j["reason"] = classification.reason;
         j["patch"] = patch.toJson();
         std::ofstream file(basePath_ + "/repair/repair_plan.json");

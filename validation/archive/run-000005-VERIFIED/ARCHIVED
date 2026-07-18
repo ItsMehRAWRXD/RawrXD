@@ -1,0 +1,42 @@
+# ARCHIVED STATE
+# Schema Version: 2.0.0
+# Evidence Format: rawrxd-val-019-v2
+
+RUN_ID: run-000006
+SOURCE_RUN: run-000005-VERIFIED
+TIMESTAMP: 2026-07-18T23:00:00Z
+STATE: ARCHIVED
+
+ARCHIVE POLICY:
+  Type: append-only
+  Mutation: prohibited
+  Deletion: prohibited
+  Append: permitted (new runs only)
+
+IMMUTABILITY:
+  Status: FROZEN
+  Verification Hash: 209e1ca5deeaee96b8b5149d602b5ac641f968a07b047c19c2dde45239521a26
+  Seal Timestamp: 2026-07-18T22:45:00Z
+  Archive Timestamp: 2026-07-18T23:00:00Z
+
+PRESERVATION:
+  Source: validation/runs/run-000005-VERIFIED/
+  Artifacts: All evidence from run-000004-VALIDATED
+  Chain: Complete (source -> binary -> execution -> validation -> seal -> archive)
+
+ACCESS:
+  Read: Public
+  Write: None (append-only)
+  Verification: SHA256 chain
+
+NOTES:
+  - This archive entry is immutable
+  - Any modification breaks the hash chain
+  - Future runs must reference this state
+  - Evidence is permanently preserved
+  - Available for regression testing
+  - Audit trail complete
+
+LIFECYCLE COMPLETE:
+  [DESIGNED]====>[IMPLEMENTED]====>[BUILT]====>[EXECUTED]====>[VALIDATED]====>[VERIFIED]====>[ARCHIVED]
+       ✅              ✅              ✅              ✅              ✅              ✅              ✅
