@@ -7,7 +7,7 @@
     "timestamp": "2026-07-18T22:15:00Z",
     "state": "EXECUTED",
     "previous_run": "run-000002",
-    "next_run": null,
+    "next_run": "run-000004",
     "description": "First execution of embedding and RMSNorm validation stages"
   },
   

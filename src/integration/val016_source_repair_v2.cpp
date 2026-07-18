@@ -122,7 +122,7 @@ struct RepairPatch {
         j["offset"] = offset;
         j["before"] = before;
         j["after"] = after;
-        j["confidence"] = static_cast<double>(confidence);
+        j["confidence"] = confidence;
         j["reason"] = reason;
         return j;
     }

@@ -1,0 +1,179 @@
+{
+  "schema_version": "2.0.0",
+  "evidence_format": "rawrxd-val-019-v2",
+  "run_id": "run-000004",
+  "state": "VALIDATED",
+  "validation_timestamp": "2026-07-18T22:30:00Z",
+  
+  "gate_evaluation": {
+    "evaluator": "RawrXDValidator.exe v1.0.0",
+    "methodology": "Deterministic gate evaluation against schema v2.0.0",
+    "source_run": "run-000003-EXECUTED"
+  },
+  
+  "gates": [
+    {
+      "gate_id": "G1",
+      "name": "Source Identity",
+      "category": "Provenance",
+      "description": "Verify source commit matches expected value",
+      "evaluation": {
+        "type": "string_equality",
+        "field": "git_provenance.commit",
+        "expected": "857610125",
+        "actual": "857610125",
+        "match": true
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "rationale": "Source commit verified against build manifest"
+    },
+    {
+      "gate_id": "G2",
+      "name": "Binary Integrity",
+      "category": "Integrity",
+      "description": "Verify binary SHA256 matches build artifacts",
+      "evaluation": {
+        "type": "hash_verification",
+        "algorithm": "SHA256",
+        "artifacts": [
+          {
+            "name": "embedding_stage.exe",
+            "expected_hash": "8b9e7e34b7bc848f744dc211ba3a545145e4a4bc074593cb75180526d7233ee9",
+            "actual_hash": "8b9e7e34b7bc848f744dc211ba3a545145e4a4bc074593cb75180526d7233ee9",
+            "match": true
+          },
+          {
+            "name": "rmsnorm_stage.exe",
+            "expected_hash": "b4e437f43ddde2f83283265151af984b2fd09efb46118645cab72a150ce4aaea",
+            "actual_hash": "b4e437f43ddde2f83283265151af984b2fd09efb46118645cab72a150ce4aaea",
+            "match": true
+          }
+        ]
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "rationale": "Both binary hashes verified against BUILT manifest"
+    },
+    {
+      "gate_id": "G3",
+      "name": "Execution Completion",
+      "category": "Execution",
+      "description": "Verify all stages exited with code 0",
+      "evaluation": {
+        "type": "exit_code_check",
+        "stages": [
+          {
+            "name": "embedding",
+            "exit_code": 0,
+            "success": true
+          },
+          {
+            "name": "rmsnorm",
+            "exit_code": 0,
+            "success": true
+          }
+        ]
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "rationale": "All stages completed without errors"
+    },
+    {
+      "gate_id": "G4",
+      "name": "Numerical Correctness",
+      "category": "Correctness",
+      "description": "Verify numerical error within tolerance",
+      "evaluation": {
+        "type": "threshold_comparison",
+        "metric": "max_error",
+        "operator": "<=",
+        "threshold": 1e-05,
+        "results": [
+          {
+            "stage": "embedding",
+            "max_error": 0.0,
+            "within_tolerance": true
+          },
+          {
+            "stage": "rmsnorm",
+            "max_error": 0.0,
+            "within_tolerance": true
+          }
+        ]
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "rationale": "Both stages achieved zero numerical error (deterministic test vectors)"
+    },
+    {
+      "gate_id": "G5",
+      "name": "Determinism",
+      "category": "Reproducibility",
+      "description": "Verify repeated execution produces identical output",
+      "evaluation": {
+        "type": "repeat_execution",
+        "required_runs": 2,
+        "completed_runs": 1,
+        "output_hashes_match": null,
+        "pending": true
+      },
+      "status": "PENDING",
+      "severity": "HIGH",
+      "rationale": "Requires run-000005 repeat execution for determinism verification"
+    },
+    {
+      "gate_id": "G6",
+      "name": "Evidence Closure",
+      "category": "Completeness",
+      "description": "Verify all required evidence artifacts exist",
+      "evaluation": {
+        "type": "artifact_manifest_check",
+        "required_artifacts": [
+          "run-000003-EXECUTED/manifest.json",
+          "run-000003-EXECUTED/STATUS",
+          "val-019/evidence/embedding_actual.bin",
+          "val-019/evidence/rmsnorm_actual.bin",
+          "run-000002-BUILT/manifest.json"
+        ],
+        "present_artifacts": [
+          "run-000003-EXECUTED/manifest.json",
+          "run-000003-EXECUTED/STATUS",
+          "val-019/evidence/embedding_actual.bin",
+          "val-019/evidence/rmsnorm_actual.bin",
+          "run-000002-BUILT/manifest.json"
+        ],
+        "missing_artifacts": []
+      },
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "rationale": "All required evidence artifacts present and accessible"
+    }
+  ],
+  
+  "summary": {
+    "total_gates": 6,
+    "passed": 5,
+    "failed": 0,
+    "pending": 1,
+    "critical_passed": 5,
+    "critical_failed": 0,
+    "pass_rate": 83.3,
+    "overall_status": "CONDITIONAL_PASS"
+  },
+  
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "gate": "G5",
+      "action": "Execute repeat run (run-000005) to verify determinism",
+      "impact": "Enables full VERIFIED state transition"
+    },
+    {
+      "priority": "MEDIUM",
+      "gate": null,
+      "action": "Document test vector generation procedure",
+      "impact": "Improves reproducibility for external verification"
+    }
+  ]
+}

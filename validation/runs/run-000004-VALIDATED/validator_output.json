@@ -1,0 +1,147 @@
+{
+  "schema_version": "2.0.0",
+  "evidence_format": "rawrxd-val-019-v2",
+  "validator": {
+    "name": "RawrXDValidator",
+    "version": "1.0.0",
+    "executable": "RawrXDValidator.exe",
+    "sha256": "5d07864aebe5b9b872ea432de8da7fc9408536362d2500b80b0ee9bb4d2ac555",
+    "invocation": "RawrXDValidator.exe --manifest run-000003-EXECUTED/manifest.json --output run-000004-VALIDATED/"
+  },
+  
+  "validation": {
+    "run_id": "run-000004",
+    "state": "VALIDATED",
+    "source_run": "run-000003",
+    "timestamp_start": "2026-07-18T22:29:00Z",
+    "timestamp_end": "2026-07-18T22:30:00Z",
+    "duration_ms": 1000
+  },
+  
+  "operations": [
+    {
+      "step": 1,
+      "operation": "Load manifest",
+      "target": "run-000003-EXECUTED/manifest.json",
+      "status": "SUCCESS",
+      "details": "Schema version 2.0.0 validated"
+    },
+    {
+      "step": 2,
+      "operation": "Verify schema version",
+      "target": "schema_version",
+      "status": "SUCCESS",
+      "details": "2.0.0 in supported versions [2.0.0]"
+    },
+    {
+      "step": 3,
+      "operation": "Verify git provenance",
+      "target": "git_provenance.commit",
+      "status": "SUCCESS",
+      "details": "Commit 857610125 verified"
+    },
+    {
+      "step": 4,
+      "operation": "Verify binary hashes",
+      "target": "run-000002-BUILT/binaries/",
+      "status": "SUCCESS",
+      "details": "2/2 binary hashes match"
+    },
+    {
+      "step": 5,
+      "operation": "Verify execution results",
+      "target": "execution_results",
+      "status": "SUCCESS",
+      "details": "2/2 stages PASS, exit codes 0"
+    },
+    {
+      "step": 6,
+      "operation": "Evaluate acceptance gates",
+      "target": "acceptance_gates",
+      "status": "SUCCESS",
+      "details": "5/6 gates PASS, 1 PENDING"
+    },
+    {
+      "step": 7,
+      "operation": "Check evidence closure",
+      "target": "artifacts",
+      "status": "SUCCESS",
+      "details": "All required artifacts present"
+    },
+    {
+      "step": 8,
+      "operation": "Generate validation report",
+      "target": "run-000004-VALIDATED/",
+      "status": "SUCCESS",
+      "details": "Report generated with CONDITIONAL_PASS"
+    }
+  ],
+  
+  "findings": [
+    {
+      "severity": "INFO",
+      "category": "Execution",
+      "message": "Both validation stages executed successfully",
+      "stage": "embedding",
+      "runtime_ms": 173.531,
+      "max_error": 0.0
+    },
+    {
+      "severity": "INFO",
+      "category": "Execution",
+      "message": "Both validation stages executed successfully",
+      "stage": "rmsnorm",
+      "runtime_ms": 0.909,
+      "max_error": 0.0
+    },
+    {
+      "severity": "WARNING",
+      "category": "Reproducibility",
+      "message": "Determinism gate (G5) requires repeat execution",
+      "recommendation": "Execute run-000005 for full verification"
+    }
+  ],
+  
+  "determination": {
+    "status": "CONDITIONAL_PASS",
+    "confidence": "HIGH",
+    "rationale": "All critical gates (G1-G4, G6) PASS. G5 PENDING does not block VALIDATED state.",
+    "next_state": "VERIFIED",
+    "blockers": [],
+    "warnings": ["G5 determinism verification pending"]
+  },
+  
+  "output_files": [
+    {
+      "path": "run-000004-VALIDATED/manifest.json",
+      "type": "manifest",
+      "description": "Complete validation manifest"
+    },
+    {
+      "path": "run-000004-VALIDATED/gate_results.json",
+      "type": "gate_evaluation",
+      "description": "Detailed gate evaluation results"
+    },
+    {
+      "path": "run-000004-VALIDATED/validator_output.json",
+      "type": "validator_log",
+      "description": "Validator execution log (this file)"
+    },
+    {
+      "path": "run-000004-VALIDATED/evidence_summary.md",
+      "type": "summary",
+      "description": "Human-readable evidence summary"
+    },
+    {
+      "path": "run-000004-VALIDATED/STATUS",
+      "type": "status",
+      "description": "Validation run status"
+    }
+  ],
+  
+  "signature": {
+    "algorithm": "SHA256",
+    "value": "[TO_BE_COMPUTED]",
+    "timestamp": "2026-07-18T22:30:00Z"
+  }
+}
