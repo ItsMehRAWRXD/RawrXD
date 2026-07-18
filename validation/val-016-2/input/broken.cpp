@@ -1,7 +1,4 @@
-// VAL-016.2: Broken source with missing semicolon
-// This file is intentionally defective for repair demonstration
-
+// VAL-016.2: Broken file with missing semicolon
 int main() {
-    int x = 42
-    return 0;
+    return 0
 }

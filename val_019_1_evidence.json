@@ -1,46 +1,34 @@
 {
   "schema_version": "VAL-019.1",
-  "timestamp": "2026-07-18T12:34:21Z",
+  "timestamp": "2026-07-18T12:45:42Z",
   "simulation": false,
-  "status": "PASS",
-  "execution_time_ms": 5.03,
+  "status": "FAIL",
+  "execution_time_ms": 0.00,
   "gates": [
-    {"name": "G1_FileIdentity", "passed": true, "details": "File exists, size=2097152, hash calculated"},
-    {"name": "G2_Header", "passed": true, "details": "Magic=GGUF, Version=3"},
-    {"name": "G3_Metadata", "passed": true, "details": "Read 9 metadata items"},
-    {"name": "G4_Tensors", "passed": true, "details": "Found 1 tensors, offsets_valid=true, tensor_data_start=480"},
-    {"name": "G5_Deterministic", "passed": true, "details": "Evidence generation is deterministic"}
+    {"name": "G1_FileIdentity", "passed": true, "details": "File exists, size=24, hash calculated"},
+    {"name": "G2_Header", "passed": false, "details": "Unsupported GGUF version: 99"}
   ],
   "artifact": {
-    "path": "D:\test_minimal.gguf",
-    "size_bytes": 2097152,
-    "sha256": "f81fd4470d02a51800000000f81fd447"
+    "path": "fuzz_unsupported_version.gguf",
+    "size_bytes": 24,
+    "sha256": "07cd9a816e1935a50000000007cd9a81"
   },
   "header": {
-    "magic": "GGUF",
-    "version": 3,
-    "tensor_count": 1,
-    "metadata_kv_count": 9
+    "magic": "",
+    "version": 1275551920,
+    "tensor_count": 2608320610304,
+    "metadata_kv_count": 4294967296
   },
   "metadata": {
-    "general.architecture": "llama",
-    "tokenizer.ggml.model": "gpt2",
-    "general.file_type": "0",
-    "llama.embedding_length": "4",
-    "llama.block_count": "1",
-    "llama.attention.head_count": "1",
-    "llama.attention.head_count_kv": "1",
-    "llama.context_length": "512",
-    "tokenizer.ggml.tokens": "[array:2]"
   },
   "tensors": [
+  ],
+  "findings": [
     {
-      "name": "token_embd.weight",
-      "shape": [4],
-      "type": "F32",
-      "offset_relative": 480,
-      "offset_absolute": 960,
-      "offset_valid": true
+      "rule_id": "GGUF-FILE-001",
+      "severity": "PASS",
+      "message": "File exists, size=24 bytes, SHA-256 calculated",
+      "spec_reference": "File system validation"
     }
   ]
 }

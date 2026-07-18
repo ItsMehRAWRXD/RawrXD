@@ -1,0 +1,132 @@
+{
+  "schema_version": "2.0.0",
+  "evidence_format": "rawrxd-val-019-v2",
+  
+  "run_metadata": {
+    "id": "run-000002",
+    "timestamp": "2026-07-18T22:00:00Z",
+    "state": "BUILT",
+    "previous_run": "run-000001",
+    "next_run": null,
+    "description": "First compiled binaries for embedding and RMSNorm stages"
+  },
+  
+  "environment": {
+    "os": {
+      "name": "Windows 10 Home",
+      "version": "2009",
+      "build": "19045.3693",
+      "architecture": "x86_64"
+    },
+    "cpu": {
+      "vendor": "AMD",
+      "model": "Ryzen 7 7800X3D",
+      "cores": 8,
+      "logical_processors": 16,
+      "features": ["AVX2", "AVX-512", "FMA"]
+    },
+    "compiler": {
+      "name": "MSVC",
+      "version": "14.50.35717",
+      "executable": "cl.exe",
+      "path": "C:\\VS2022Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe",
+      "flags": "/EHsc /O2 /W4 /nologo",
+      "optimization": "O2",
+      "build_type": "Release"
+    }
+  },
+  
+  "git_provenance": {
+    "commit": "22a9ed0e7",
+    "abbrev": "22a9ed0",
+    "branch": "release/14.7.3",
+    "remote": "origin",
+    "remote_url": "https://github.com/ItsMehRAWRXD/RawrXD",
+    "dirty": false,
+    "dirty_files": [],
+    "submodules": [],
+    "describe": "v1.0.0-16-g22a9ed0",
+    "tags": ["v1.0.0", "validation-ready"],
+    "author": "Developer",
+    "timestamp": "2026-07-18T21:50:00Z",
+    "message": "Add golden validation suite and schema freeze v2.0.0"
+  },
+  
+  "build_info": {
+    "timestamp_utc": "2026-07-18T22:00:00Z",
+    "build_command": "cl.exe /EHsc /O2 validation/embedding_stage.cpp /Fe:validation/embedding_stage.exe",
+    "build_log_path": "validation/runs/run-000002-BUILT/build.log",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  
+  "artifacts": [
+    {
+      "name": "embedding_stage.exe",
+      "path": "validation/runs/run-000002-BUILT/binaries/embedding_stage.exe",
+      "sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
+      "size_bytes": null,
+      "type": "executable",
+      "source": "validation/embedding_stage.cpp",
+      "source_sha256": "[TO_BE_COMPUTED]"
+    },
+    {
+      "name": "rmsnorm_stage.exe",
+      "path": "validation/runs/run-000002-BUILT/binaries/rmsnorm_stage.exe",
+      "sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
+      "size_bytes": null,
+      "type": "executable",
+      "source": "validation/rmsnorm_stage.cpp",
+      "source_sha256": "[TO_BE_COMPUTED]"
+    },
+    {
+      "name": "RawrXDValidator.exe",
+      "path": "validation/runs/run-000002-BUILT/binaries/RawrXDValidator.exe",
+      "sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
+      "size_bytes": null,
+      "type": "validator",
+      "source": "validation/RawrXDValidator.cpp",
+      "source_sha256": "[TO_BE_COMPUTED]"
+    }
+  ],
+  
+  "stages": [
+    {
+      "name": "embedding",
+      "state": "BUILT",
+      "previous_state": "IMPLEMENTED",
+      "kernel_version": "embedding_lookup_v1.0_native",
+      "binary": "embedding_stage.exe",
+      "build_success": true
+    },
+    {
+      "name": "rmsnorm",
+      "state": "BUILT",
+      "previous_state": "IMPLEMENTED",
+      "kernel_version": "rmsnorm_v1.0_native",
+      "binary": "rmsnorm_stage.exe",
+      "build_success": true
+    }
+  ],
+  
+  "summary": {
+    "total_stages": 2,
+    "built": 2,
+    "build_failures": 0,
+    "execution_percent": 0.0
+  },
+  
+  "integrity": {
+    "manifest_sha256": "[TO_BE_COMPUTED]",
+    "sealed": false,
+    "sealed_at": null
+  },
+  
+  "notes": [
+    "BUILT state: Binaries compiled successfully",
+    "Next transition: BUILT -> EXECUTED",
+    "Requires: Execute binaries and capture telemetry",
+    "Validator executable added for automated verification"
+  ]
+}

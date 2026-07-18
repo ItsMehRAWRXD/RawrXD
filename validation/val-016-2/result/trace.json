@@ -1,0 +1,38 @@
+{
+  "goal": "Demonstrate autonomous source-level repair",
+  "schema_version": "VAL-016-v2.0",
+  "steps": [
+    {
+      "description": "Created broken.cpp with missing semicolon",
+      "phase": "failure_injection",
+      "timestamp": "2026-07-18T13:43:48Z"
+    },
+    {
+      "attempt": 1,
+      "phase": "build",
+      "result": {
+        "command": "cl.exe /nologo /c validation/val-016-2/input/broken.cpp /Fovalidation/val-016-2/input/broken.obj",
+        "duration_ms": 26,
+        "exit_code": 1,
+        "failure_category": "Unknown",
+        "failure_reason": "Unknown failure",
+        "recoverable": 0,
+        "stderr": "",
+        "stdout": "'cl.exe' is not recognized as an internal or external command,\noperable program or batch file.\n",
+        "timed_out": 0,
+        "tool": "cl"
+      },
+      "timestamp": "2026-07-18T13:43:48Z"
+    },
+    {
+      "diagnostics": [],
+      "phase": "diagnostics",
+      "timestamp": "2026-07-18T13:43:48Z"
+    }
+  ],
+  "success": 0,
+  "timestamp_end": "2026-07-18T13:43:48Z",
+  "timestamp_start": "2026-07-18T13:43:48Z",
+  "validation_id": "VAL-016.2",
+  "validation_mode": "source_repair"
+}
