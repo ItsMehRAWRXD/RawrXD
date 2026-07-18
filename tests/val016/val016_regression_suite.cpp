@@ -205,14 +205,16 @@ TestResult runRegressionTest(const RegressionTest& test, const std::string& test
         buildResult.executedAt = std::chrono::system_clock::now();
         failure.buildResult = buildResult;
         
-        if (!test.shouldBuildSucceed) {
+        // Populate test result if this is a test failure scenario
+        if (test.expectedTestFailure != TestFailureReason::None) {
             DetailedTestResult testResult;
             testResult.executionMode = failure.mode;
             testResult.executorSuccess = true;
-            testResult.environmentReady = false;
+            testResult.environmentReady = true;
             testResult.allTestsPassed = false;
             testResult.failureReason = test.expectedTestFailure;
-            testResult.executedAt = std::chrono::system_clock::now();
+            testResult.exitCode = 1;
+            testResult.stderrLog = "Test failed: assertion error";
             failure.testResult = testResult;
         }
         failure.completedAt = std::chrono::system_clock::now();
