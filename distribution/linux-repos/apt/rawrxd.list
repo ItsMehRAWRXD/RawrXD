@@ -1,0 +1,6 @@
+# rawrxd.list
+# Phase H.2 Batch 4/5: APT Repository Configuration
+# Installation: sudo cp rawrxd.list /etc/apt/sources.list.d/
+
+# RawrXD Sovereign AI Runtime Repository
+deb [arch=amd64 signed-by=/usr/share/keyrings/rawrxd-archive-keyring.gpg] https://apt.rawrxd.ai stable main

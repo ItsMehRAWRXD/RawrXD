@@ -1,0 +1,88 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "config-update-{timestamp}",
+  "Version": "1.0.0",
+  "Type": "configuration",
+  "Severity": "low",
+  "Description": "Configuration update for new feature flags and tuning parameters",
+  "Author": "config-team@rawrxd.ai",
+  "CreatedAt": "{iso_timestamp}",
+  "ExpiresAt": "{iso_timestamp_plus_180d}",
+  
+  "Patches": [
+    {
+      "System": "swarm",
+      "Target": "config",
+      "PatchFile": "patches/config/swarm_config_v1.1.0.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "agent",
+      "Target": "config",
+      "PatchFile": "patches/config/agent_config_v1.1.0.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "tools",
+      "Target": "config",
+      "PatchFile": "patches/config/tools_config_v1.1.0.json",
+      "Priority": 2,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    }
+  ],
+  
+  "Dependencies": [
+    { "System": "swarm", "MinimumVersion": "1.0.0" },
+    { "System": "agent", "MinimumVersion": "1.0.0" },
+    { "System": "tools", "MinimumVersion": "1.0.0" }
+  ],
+  
+  "Conflicts": [
+    { "PatchId": "config-update-*", "Reason": "Multiple config updates should be batched" }
+  ],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 10,
+    "MinMemoryMB": 128,
+    "ServicesToStop": [],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "echo 'Backing up current configuration...'",
+      "powershell -File scripts/config/backup_config.ps1"
+    ],
+    "PostPatchCommands": [
+      "echo 'Validating configuration...'",
+      "powershell -File scripts/config/validate_config.ps1"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": true,
+    "MaxRetries": 1,
+    "RetryDelaySeconds": 1,
+    "NotifyOnRollback": ["config-team@rawrxd.ai"]
+  },
+  
+  "Notifications": {
+    "OnStart": [],
+    "OnSuccess": ["config-team@rawrxd.ai"],
+    "OnFailure": ["config-team@rawrxd.ai"],
+    "OnRollback": ["config-team@rawrxd.ai", "ops@rawrxd.ai"]
+  },
+  
+  "Metadata": {
+    "ConfigChanges": [
+      { "Key": "swarm.max_workers", "OldValue": "10", "NewValue": "20" },
+      { "Key": "agent.timeout_seconds", "OldValue": "30", "NewValue": "60" },
+      { "Key": "tools.cache_enabled", "OldValue": "false", "NewValue": "true" }
+    ],
+    "TestingStatus": "validated",
+    "ApprovalRequired": false,
+    "CanRollback": true
+  }
+}

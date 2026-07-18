@@ -1,0 +1,246 @@
+name: Security Gates
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: string
+      patch_bundle:
+        description: 'Path to patch bundle'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      patch_bundle:
+        description: 'Path to patch bundle'
+        required: true
+        type: string
+
+env:
+  RAWRXD_HOME: ${{ github.workspace }}
+
+jobs:
+  rbac-check:
+    name: RBAC Authorization Check
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Check RBAC permissions
+        shell: pwsh
+        run: |
+          $userId = "${{ github.actor }}"
+          $environment = "${{ github.event.inputs.environment }}"
+          
+          Write-Host "Checking RBAC permissions for user: $userId"
+          Write-Host "Target environment: $environment"
+          
+          # Initialize RBAC if needed
+          $rbacManager = "security/phase_h_enterprise_security/rbac/rbac_manager.ps1"
+          if (Test-Path $rbacManager) {
+            # Check if user has patch-admin or super-admin role
+            $hasPermission = & $rbacManager -Action "check-permission" -UserId $userId -Resource "swarm" -Permission "apply"
+            
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "RBAC check failed. User '$userId' does not have required permissions."
+              exit 1
+            }
+            
+            Write-Host "✅ RBAC check passed" -ForegroundColor Green
+          }
+          else {
+            Write-Warning "RBAC manager not found. Skipping RBAC check."
+          }
+
+  audit-log:
+    name: Audit Logging
+    runs-on: windows-latest
+    needs: rbac-check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log deployment attempt
+        shell: pwsh
+        run: |
+          $auditLogger = "security/phase_h_enterprise_security/audit/audit_logger.ps1"
+          if (Test-Path $auditLogger) {
+            $details = @{
+              workflow = "security-gates"
+              environment = "${{ github.event.inputs.environment }}"
+              patch_bundle = "${{ github.event.inputs.patch_bundle }}"
+              triggered_by = "${{ github.actor }}"
+              run_id = "${{ github.run_id }}"
+            } | ConvertTo-Json -Compress
+            
+            & $auditLogger -EventType "auth" -Action "deployment_attempt" -UserId "${{ github.actor }}" -Details $details -Severity "info"
+            Write-Host "✅ Audit entry created" -ForegroundColor Green
+          }
+
+  compliance-check:
+    name: Compliance Validation
+    runs-on: windows-latest
+    needs: rbac-check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Run compliance check
+        shell: pwsh
+        run: |
+          $complianceChecker = "security/phase_h_enterprise_security/compliance/compliance_checker.ps1"
+          if (Test-Path $complianceChecker) {
+            & $complianceChecker -Standard "ALL" -OutputFormat "json" -GenerateReport
+            
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Compliance check failed. System is not compliant."
+              exit 1
+            }
+            
+            Write-Host "✅ Compliance check passed" -ForegroundColor Green
+          }
+          else {
+            Write-Warning "Compliance checker not found. Skipping compliance check."
+          }
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance_report_*.html
+          retention-days: 30
+
+  patch-validation:
+    name: Patch Bundle Validation
+    runs-on: windows-latest
+    needs: rbac-check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate patch bundle
+        shell: pwsh
+        run: |
+          $patchBundle = "${{ github.event.inputs.patch_bundle }}"
+          
+          if (-not (Test-Path $patchBundle)) {
+            Write-Error "Patch bundle not found: $patchBundle"
+            exit 1
+          }
+          
+          try {
+            $patch = Get-Content $patchBundle -Raw | ConvertFrom-Json
+            
+            # Check required fields
+            $requiredFields = @("BundleId", "Version", "Type", "Severity", "Author")
+            foreach ($field in $requiredFields) {
+              if (-not $patch.$field) {
+                Write-Error "Missing required field: $field"
+                exit 1
+              }
+            }
+            
+            # Check for critical patches
+            if ($patch.Severity -eq "critical" -and -not $patch.Metadata.ApprovedBy) {
+              Write-Error "Critical patch requires approval (Metadata.ApprovedBy)"
+              exit 1
+            }
+            
+            Write-Host "✅ Patch bundle validation passed" -ForegroundColor Green
+          }
+          catch {
+            Write-Error "Invalid patch bundle JSON: $_"
+            exit 1
+          }
+
+  security-wrapper-test:
+    name: Security Wrapper Test
+    runs-on: windows-latest
+    needs: [rbac-check, audit-log, compliance-check, patch-validation]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test security wrapper
+        shell: pwsh
+        run: |
+          $securityWrapper = "security/integration/security_wrapper.ps1"
+          if (Test-Path $securityWrapper) {
+            # Test with a sample operation
+            & $securityWrapper -Operation "validate" -System "swarm" -UserId "system" -SkipAudit
+            
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Security wrapper test failed"
+              exit 1
+            }
+            
+            Write-Host "✅ Security wrapper test passed" -ForegroundColor Green
+          }
+          else {
+            Write-Warning "Security wrapper not found. Skipping test."
+          }
+
+  approval-gate:
+    name: Production Approval
+    runs-on: windows-latest
+    needs: [rbac-check, audit-log, compliance-check, patch-validation, security-wrapper-test]
+    if: github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://rawrxd.ai
+    steps:
+      - name: Await approval
+        shell: pwsh
+        run: |
+          Write-Host "⏳ Production deployment approved" -ForegroundColor Green
+          Write-Host "User: ${{ github.actor }}" -ForegroundColor Gray
+          Write-Host "Environment: production" -ForegroundColor Gray
+          Write-Host "Patch Bundle: ${{ github.event.inputs.patch_bundle }}" -ForegroundColor Gray
+
+  final-audit:
+    name: Final Audit Entry
+    runs-on: windows-latest
+    needs: [rbac-check, audit-log, compliance-check, patch-validation, security-wrapper-test, approval-gate]
+    if: always()
+    steps:
+      - name: Log deployment result
+        shell: pwsh
+        run: |
+          $auditLogger = "security/phase_h_enterprise_security/audit/audit_logger.ps1"
+          if (Test-Path $auditLogger) {
+            $result = if ("${{ needs.approval-gate.result }}" -eq "success" -or "${{ needs.security-wrapper-test.result }}" -eq "success") { "success" } else { "failure" }
+            $severity = if ($result -eq "success") { "info" } else { "error" }
+            
+            $details = @{
+              workflow = "security-gates"
+              environment = "${{ github.event.inputs.environment }}"
+              patch_bundle = "${{ github.event.inputs.patch_bundle }}"
+              triggered_by = "${{ github.actor }}"
+              run_id = "${{ github.run_id }}"
+              result = $result
+            } | ConvertTo-Json -Compress
+            
+            & $auditLogger -EventType "auth" -Action "deployment_complete" -UserId "${{ github.actor }}" -Details $details -Severity $severity
+            Write-Host "✅ Final audit entry created" -ForegroundColor Green
+          }

@@ -1,120 +1,87 @@
-[1/3] Building CXX object CMakeFiles\RawrXD-MemoryBench.dir\src\memory\memory_system_bench.cpp.obj
-FAILED: CMakeFiles/RawrXD-MemoryBench.dir/src/memory/memory_system_bench.cpp.obj 
-C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\cl.exe  /nologo /TP -DNOMINMAX -DRAWRXD_MASM_CORE_NATIVE_BRIDGE=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -Id:\rawrxd\include -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:IC:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\include -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /EHsc /W3 /arch:AVX2 /std:c++20 /O2 /showIncludes /FoCMakeFiles\RawrXD-MemoryBench.dir\src\memory\memory_system_bench.cpp.obj /FdCMakeFiles\RawrXD-MemoryBench.dir\ /FS -c D:\rawrxd\src\memory\memory_system_bench.cpp
-D:\rawrxd\src\memory\memory_oracle.h(405): error C2556: 'RawrXD::Memory::OracleAggregateMetrics RawrXD::Memory::MemoryOrchestrator::getMetrics(void) const': overloaded function differs only by return type from 'std::shared_ptr<RawrXD::Memory::MemoryOracleMetrics> RawrXD::Memory::MemoryOrchestrator::getMetrics(void) const'
-D:\rawrxd\src\memory\memory_oracle.h(308): note: see declaration of 'RawrXD::Memory::MemoryOrchestrator::getMetrics'
-D:\rawrxd\src\memory\memory_oracle.h(405): error C2371: 'RawrXD::Memory::MemoryOrchestrator::getMetrics': redefinition; different basic types
-D:\rawrxd\src\memory\memory_oracle.h(308): note: see declaration of 'RawrXD::Memory::MemoryOrchestrator::getMetrics'
-D:\rawrxd\src\memory\memory_oracle.h(406): error C2059: syntax error: 'return'
-D:\rawrxd\src\memory\memory_oracle.h(406): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\memory_oracle.h(409): error C2888: 'std::vector<RawrXD::Memory::WeightAdjustment,std::allocator<RawrXD::Memory::WeightAdjustment>>': symbol cannot be defined within namespace 'Memory'
-D:\rawrxd\src\memory\memory_oracle.h(409): error C2146: syntax error: missing ';' before identifier 'suggestWeightAdjustments'
-D:\rawrxd\src\memory\memory_oracle.h(409): error C2270: 'suggestWeightAdjustments': modifiers not allowed on nonmember functions
-D:\rawrxd\src\memory\memory_oracle.h(409): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-D:\rawrxd\src\memory\memory_oracle.h(410): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(410): warning C4508: 'RawrXD::Memory::suggestWeightAdjustments': function should return a value; 'void' return type assumed
-D:\rawrxd\src\memory\memory_oracle.h(411): error C2617: 'RawrXD::Memory::suggestWeightAdjustments': inconsistent return statement
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'RawrXD::Memory::suggestWeightAdjustments'
-D:\rawrxd\src\memory\memory_oracle.h(260): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(261): error C2065: 'm_ahzp': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(262): error C2065: 'm_governor': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(266): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(274): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(283): error C2275: 'RawrXD::Memory::StrategyRecommendation': expected an expression instead of a type
-D:\rawrxd\src\memory\memory_oracle.h(283): error C2065: 'recommendations': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(288): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(288): error C2065: 'recommendations': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(289): error C2065: 'm_governor': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(289): error C3536: 'result': cannot be used before it is initialized
-D:\rawrxd\src\memory\memory_oracle.h(289): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(296): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(297): error C2065: 'm_governor': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(297): error C3536: 'result': cannot be used before it is initialized
-D:\rawrxd\src\memory\memory_oracle.h(297): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(305): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(317): error C2065: 'm_ahzp': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(326): error C2065: 'm_ahzp': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(327): error C3536: 'actions': cannot be used before it is initialized
-D:\rawrxd\src\memory\memory_oracle.h(340): error C2065: 'm_csmd': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(341): error C2065: 'm_csmd': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(344): error C3536: 'existing': cannot be used before it is initialized
-D:\rawrxd\src\memory\memory_oracle.h(346): error C2065: 'm_metrics': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(348): error C2065: 'm_metrics': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(358): error C2065: 'm_csmd': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(363): error C3536: 'entry': cannot be used before it is initialized
-D:\rawrxd\src\memory\memory_oracle.h(367): error C2065: 'm_csmd': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(375): error C2065: 'm_smb': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(379): error C2065: 'm_smb': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(383): error C2065: 'm_smb': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(387): error C2065: 'm_smb': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(389): error C3536: 'result': cannot be used before it is initialized
-D:\rawrxd\src\memory\memory_oracle.h(398): error C2065: 'm_smb': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(413): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-D:\rawrxd\src\memory\memory_oracle.h(413): error C2751: 'std::vector': the name of a function parameter cannot be qualified
-D:\rawrxd\src\memory\memory_oracle.h(413): error C2143: syntax error: missing ',' before '<'
-D:\rawrxd\src\memory\memory_oracle.h(414): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(414): error C2065: 'adjustments': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(418): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(421): error C2270: 'getPredictionAccuracy': modifiers not allowed on nonmember functions
-D:\rawrxd\src\memory\memory_oracle.h(422): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(426): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(434): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(438): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(442): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(446): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(454): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(458): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(462): error C2065: 'm_oracle': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(466): error C2065: 'm_governor': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(469): error C2270: 'getGovernorConfig': modifiers not allowed on nonmember functions
-D:\rawrxd\src\memory\memory_oracle.h(470): error C2065: 'm_governor': undeclared identifier
-D:\rawrxd\src\memory\memory_oracle.h(473): error C2059: syntax error: 'private'
-D:\rawrxd\src\memory\memory_oracle.h(478): error C2178: 'm_governor' cannot be declared with 'mutable' specifier
-D:\rawrxd\src\memory\memory_oracle.h(481): error C2059: syntax error: '}'
-D:\rawrxd\src\memory\memory_oracle.h(481): error C2143: syntax error: missing ';' before '}'
-D:\rawrxd\src\memory\memory_morph_controller.h(8): error C2143: syntax error: missing ';' before '{'
-D:\rawrxd\src\memory\memory_morph_controller.h(8): error C2447: '{': missing function header (old-style formal list?)
-D:\rawrxd\src\memory\layer_offload_scheduler.h(34): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\layer_offload_scheduler.h(34): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\layer_offload_scheduler.h(34): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\layer_offload_scheduler.h(43): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\layer_offload_scheduler.h(43): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\layer_offload_scheduler.h(43): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\tensor_compression_pool.h(17): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\tensor_compression_pool.h(17): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\tensor_compression_pool.h(17): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\tensor_compression_pool.h(42): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\tensor_compression_pool.h(42): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\tensor_compression_pool.h(42): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\tensor_compression_pool.h(48): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\tensor_compression_pool.h(48): error C2838: 'vector': illegal qualified name in member declaration
-D:\rawrxd\src\memory\tensor_compression_pool.h(48): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\tensor_compression_pool.h(50): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\tensor_compression_pool.h(50): error C2838: 'vector': illegal qualified name in member declaration
-D:\rawrxd\src\memory\tensor_compression_pool.h(50): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\gradient_checkpoint_manager.h(29): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\gradient_checkpoint_manager.h(29): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\gradient_checkpoint_manager.h(29): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\gradient_checkpoint_manager.h(42): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\gradient_checkpoint_manager.h(42): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\gradient_checkpoint_manager.h(42): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\sliding_window_kv_eviction.h(25): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\sliding_window_kv_eviction.h(25): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\sliding_window_kv_eviction.h(25): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\sliding_window_kv_eviction.h(33): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\sliding_window_kv_eviction.h(33): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\sliding_window_kv_eviction.h(33): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\execution_path_memory_folding.h(25): error C2143: syntax error: missing ';' before '<'
-D:\rawrxd\src\memory\execution_path_memory_folding.h(25): error C2886: 'std::vector': symbol cannot be used in a member using-declaration
-D:\rawrxd\src\memory\memory_oracle.h(409): note: see declaration of 'std::vector'
-D:\rawrxd\src\memory\execution_path_memory_folding.h(25): error C2238: unexpected token(s) preceding ';'
-D:\rawrxd\src\memory\execution_path_memory_folding.h(25): fatal error C1003: error count exceeds 100; stopping compilation
-ninja: build stopped: subcommand failed.
+============================================
+Building SovereignCLI with Swarm Command
+============================================
+
+[1/5] Compiling SovereignCLI.cpp...
+SovereignCLI.cpp
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1006): error C2011: 'InfinitePerfection::QuintessenceField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(993): note: see declaration of 'InfinitePerfection::QuintessenceField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1409): error C2011: 'InfinitePerfection::WisdomField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(460): note: see declaration of 'InfinitePerfection::WisdomField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1760): error C2011: 'InfinitePerfection::AbsoluteField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(552): note: see declaration of 'InfinitePerfection::AbsoluteField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1929): error C2011: 'InfinitePerfection::SourceField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1188): note: see declaration of 'InfinitePerfection::SourceField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1942): error C2011: 'InfinitePerfection::OriginField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(811): note: see declaration of 'InfinitePerfection::OriginField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1955): error C2011: 'InfinitePerfection::GenesisField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(629): note: see declaration of 'InfinitePerfection::GenesisField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(1994): error C2011: 'InfinitePerfection::ApexField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(785): note: see declaration of 'InfinitePerfection::ApexField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2007): error C2011: 'InfinitePerfection::ZenithField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(798): note: see declaration of 'InfinitePerfection::ZenithField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2020): error C2011: 'InfinitePerfection::PinnacleField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(954): note: see declaration of 'InfinitePerfection::PinnacleField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2033): error C2011: 'InfinitePerfection::SummitField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(967): note: see declaration of 'InfinitePerfection::SummitField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2046): error C2011: 'InfinitePerfection::PeakField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(980): note: see declaration of 'InfinitePerfection::PeakField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2112): error C2011: 'InfinitePerfection::UnityField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(604): note: see declaration of 'InfinitePerfection::UnityField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2182): error C2011: 'InfinitePerfection::ConvergenceField': 'struct' type redefinition
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(759): note: see declaration of 'InfinitePerfection::ConvergenceField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2712): error C2535: 'InfinitePerfection::WisdomField InfinitePerfection::InfinitePerfectionEngine::ComputeWisdom(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2424): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeWisdom'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2713): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunWisdomCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2425): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunWisdomCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2820): error C2535: 'InfinitePerfection::AbsoluteField InfinitePerfection::InfinitePerfectionEngine::ComputeAbsolute(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2452): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeAbsolute'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2821): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunAbsoluteCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2453): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunAbsoluteCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2868): error C2535: 'InfinitePerfection::SourceField InfinitePerfection::InfinitePerfectionEngine::ComputeSource(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2644): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeSource'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2869): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunSourceCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2645): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunSourceCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2872): error C2535: 'InfinitePerfection::OriginField InfinitePerfection::InfinitePerfectionEngine::ComputeOrigin(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2532): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeOrigin'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2873): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunOriginCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2533): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunOriginCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2876): error C2535: 'InfinitePerfection::GenesisField InfinitePerfection::InfinitePerfectionEngine::ComputeGenesis(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2476): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeGenesis'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2877): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunGenesisCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2477): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunGenesisCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2888): error C2535: 'InfinitePerfection::ApexField InfinitePerfection::InfinitePerfectionEngine::ComputeApex(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2524): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeApex'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2889): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunApexCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2525): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunApexCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2892): error C2535: 'InfinitePerfection::ZenithField InfinitePerfection::InfinitePerfectionEngine::ComputeZenith(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2528): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeZenith'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2893): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunZenithCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2529): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunZenithCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2896): error C2535: 'InfinitePerfection::PinnacleField InfinitePerfection::InfinitePerfectionEngine::ComputePinnacle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2576): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputePinnacle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2897): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunPinnacleCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2577): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunPinnacleCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2900): error C2535: 'InfinitePerfection::SummitField InfinitePerfection::InfinitePerfectionEngine::ComputeSummit(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2580): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeSummit'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2901): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunSummitCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2581): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunSummitCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2904): error C2535: 'InfinitePerfection::PeakField InfinitePerfection::InfinitePerfectionEngine::ComputePeak(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2584): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputePeak'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2905): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunPeakCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2585): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunPeakCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2925): error C2535: 'InfinitePerfection::UnityField InfinitePerfection::InfinitePerfectionEngine::ComputeUnity(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2468): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeUnity'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2926): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunUnityCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2469): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunUnityCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2965): error C2535: 'InfinitePerfection::ConvergenceField InfinitePerfection::InfinitePerfectionEngine::ComputeConvergence(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2516): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::ComputeConvergence'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2966): error C2535: 'void InfinitePerfection::InfinitePerfectionEngine::RunConvergenceCycle(void)': member function already defined or declared
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(2517): note: see declaration of 'InfinitePerfection::InfinitePerfectionEngine::RunConvergenceCycle'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(3028): error C2079: 'InfinitePerfection::InfinitePerfectionEngine::unityField_' uses undefined struct 'InfinitePerfection::UnityField'
+d:\rawrxd\src\swarm\../infinite/InfinitePerfectionEngine.hpp(3043): error C2079: 'InfinitePerfection::InfinitePerfectionEngine::convergenceField_' uses undefined struct 'InfinitePerfection::ConvergenceField'
+d:\rawrxd\src\cli\../swarm/SovereignSwarm.hpp(4): fatal error C1083: Cannot open include file: '../model/ModelRegistry.hpp': No such file or directory
+
+============================================
+Build failed
+============================================

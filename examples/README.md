@@ -44,7 +44,69 @@ cl.exe /EHsc /std:c++17 advanced_integration_example.cpp rawrxd_encoder.lib
 
 ## Examples Included
 
-### 1. `advanced_integration_example.cpp`
+### SDK Examples
+
+#### 1. `hello_runtime/` - Getting Started
+Basic runtime initialization and model loading.
+```bash
+cd hello_runtime && mkdir build && cd build
+cmake .. && cmake --build .
+./hello_runtime_example
+```
+
+#### 2. `custom_plugin/` - Plugin Development
+Creating custom inference plugins.
+```bash
+cd custom_plugin && mkdir build && cd build
+cmake .. && cmake --build .
+./custom_plugin_example
+```
+
+#### 3. `custom_model_adapter/` - Model Adapters
+Implementing custom model format support.
+```bash
+cd custom_model_adapter && mkdir build && cd build
+cmake .. && cmake --build .
+./custom_model_adapter_example
+```
+
+#### 4. `distributed_cluster/` - Distributed Inference
+Multi-node cluster with automatic discovery.
+```bash
+cd distributed_cluster && mkdir build && cd build
+cmake .. && cmake --build .
+
+# Terminal 1: Coordinator
+./distributed_cluster_example coordinator
+
+# Terminal 2: Worker
+./distributed_cluster_example node-2 localhost:7945
+```
+
+#### 5. `tool_calling/` - Agentic Tools
+Implementing custom tools for agentic framework.
+```bash
+cd tool_calling && mkdir build && cd build
+cmake .. && cmake --build .
+./tool_calling_example
+```
+
+#### 6. `telemetry_dashboard/` - Monitoring
+Real-time metrics collection and visualization.
+```bash
+cd telemetry_dashboard && mkdir build && cd build
+cmake .. && cmake --build .
+
+# Console dashboard
+./telemetry_dashboard
+
+# Web dashboard
+./telemetry_dashboard --web --port 8080
+```
+
+### Integration Examples
+
+#### `advanced_integration_example.cpp`
 
 **Comprehensive demonstration featuring:**
 - X64 instruction building class

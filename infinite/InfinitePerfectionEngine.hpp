@@ -2585,6 +2585,7 @@ public:
     
     void Initialize();
     void Shutdown();
+    bool IsInitialized() const { return initialized_; }
     
     // InfinitePerfection CRUD
     std::string CreateInfinitePerfection(const std::string& name);
@@ -3358,6 +3359,8 @@ private:
     ~InfinitePerfectionEngine();
     
     std::string GenerateId() const;
+    
+    bool initialized_ = false;
     
     mutable std::mutex mutex_;
     std::map<std::string, std::shared_ptr<InfinitePerfection>> infinitePerfections_;

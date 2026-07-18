@@ -1,0 +1,288 @@
+# RawrXD Linkerd Service Mesh Configuration
+# Phase L.4 - Service Mesh Integration (Alternative to Istio)
+# Lightweight service mesh for RawrXD cluster
+
+# Linkerd installation namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: linkerd
+  annotations:
+    linkerd.io/inject: disabled
+
+---
+# Linkerd control plane configuration
+apiVersion: linkerd.io/v1alpha2
+kind: LinkerdControlPlane
+metadata:
+  name: linkerd-control-plane
+  namespace: linkerd
+spec:
+  controlPlaneReplicas: 2
+  controllerLogLevel: info
+  identity:
+    issuer:
+      tls:
+        crtPEM: |
+          # Certificate data here
+        keyPEM: |
+          # Key data here
+  proxy:
+    resources:
+      cpu:
+        limit: 1000m
+        request: 100m
+      memory:
+        limit: 512Mi
+        request: 128Mi
+    logLevel: warn,linkerd=info
+    enableExternalProfiles: true
+  destination:
+    resources:
+      cpu:
+        limit: 2000m
+        request: 500m
+      memory:
+        limit: 2Gi
+        request: 512Mi
+
+---
+# RawrXD namespace with Linkerd injection
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rawrxd
+  annotations:
+    linkerd.io/inject: enabled
+  labels:
+    linkerd.io/inject: enabled
+    config.linkerd.io/proxy-cpu-request: 100m
+    config.linkerd.io/proxy-memory-request: 128Mi
+    config.linkerd.io/proxy-cpu-limit: 1000m
+    config.linkerd.io/proxy-memory-limit: 512Mi
+
+---
+# Traffic Split for canary deployments
+apiVersion: split.smi-spec.io/v1alpha4
+kind: TrafficSplit
+metadata:
+  name: rawrxd-canary
+  namespace: rawrxd
+spec:
+  service: rawrxd-lb
+  backends:
+    - service: rawrxd-stable
+      weight: 90
+    - service: rawrxd-canary
+      weight: 10
+
+---
+# HTTPRouteGroup for traffic routing
+apiVersion: specs.smi-spec.io/v1alpha4
+kind: HTTPRouteGroup
+metadata:
+  name: rawrxd-routes
+  namespace: rawrxd
+spec:
+  matches:
+    - name: health
+      pathRegex: /health
+      methods: ["GET"]
+    - name: api
+      pathRegex: /v1/.*
+      methods: ["GET", "POST"]
+    - name: streaming
+      pathRegex: /v1/completions/stream
+      methods: ["POST"]
+    - name: admin
+      pathRegex: /admin/.*
+      methods: ["GET", "POST", "DELETE"]
+
+---
+# TrafficTarget for access control
+apiVersion: access.smi-spec.io/v1alpha3
+kind: TrafficTarget
+metadata:
+  name: rawrxd-api-access
+  namespace: rawrxd
+spec:
+  destination:
+    kind: ServiceAccount
+    name: rawrxd-service
+    namespace: rawrxd
+  rules:
+    - kind: HTTPRouteGroup
+      name: rawrxd-routes
+      matches:
+        - health
+        - api
+        - streaming
+  sources:
+    - kind: ServiceAccount
+      name: default
+      namespace: default
+    - kind: ServiceAccount
+      name: monitoring
+      namespace: monitoring
+
+---
+# TrafficTarget for admin access
+apiVersion: access.smi-spec.io/v1alpha3
+kind: TrafficTarget
+metadata:
+  name: rawrxd-admin-access
+  namespace: rawrxd
+spec:
+  destination:
+    kind: ServiceAccount
+    name: rawrxd-service
+    namespace: rawrxd
+  rules:
+    - kind: HTTPRouteGroup
+      name: rawrxd-routes
+      matches:
+        - admin
+  sources:
+    - kind: ServiceAccount
+      name: admin-service
+      namespace: admin
+
+---
+# Retry policy
+apiVersion: policy.linkerd.io/v1beta1
+kind: Retry
+metadata:
+  name: rawrxd-retries
+  namespace: rawrxd
+spec:
+  targetRef:
+    group: core
+    kind: Service
+    name: rawrxd-lb
+  http:
+    maxRetries: 3
+    perTryTimeout: 60s
+    retryOn:
+      - gateway-error
+      - connect-failure
+      - refused-stream
+      - unavailable
+      - cancelled
+      - deadline-exceeded
+      - internal
+      - resource-exhausted
+
+---
+# Timeout policy
+apiVersion: policy.linkerd.io/v1beta1
+kind: Timeout
+metadata:
+  name: rawrxd-timeouts
+  namespace: rawrxd
+spec:
+  targetRef:
+    group: core
+    kind: Service
+    name: rawrxd-lb
+  http:
+    requestTimeout: 300s
+    idleTimeout: 300s
+
+---
+# Server authorization policy
+apiVersion: policy.linkerd.io/v1beta1
+kind: ServerAuthorization
+metadata:
+  name: rawrxd-authz
+  namespace: rawrxd
+spec:
+  server:
+    name: rawrxd-server
+  requiredAuthenticationRefs:
+    - name: rawrxd-mesh-tls
+      kind: MeshTLSAuthentication
+
+---
+# Mesh TLS authentication
+apiVersion: policy.linkerd.io/v1beta1
+kind: MeshTLSAuthentication
+metadata:
+  name: rawrxd-mesh-tls
+  namespace: rawrxd
+spec:
+  identities:
+    - "*.rawrxd.serviceaccount.identity.linkerd.cluster.local"
+
+---
+# Rate limiting with Server
+apiVersion: policy.linkerd.io/v1beta1
+kind: Server
+metadata:
+  name: rawrxd-rate-limited
+  namespace: rawrxd
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rawrxd
+  port: 8080
+  proxyProtocol: HTTP/2
+
+---
+# Circuit breaker configuration
+apiVersion: policy.linkerd.io/v1beta1
+kind: CircuitBreaker
+metadata:
+  name: rawrxd-circuit-breaker
+  namespace: rawrxd
+spec:
+  targetRef:
+    group: core
+    kind: Service
+    name: rawrxd-lb
+  failureThreshold: 5
+  successThreshold: 2
+  interval: 10s
+  timeout: 30s
+
+---
+# Grafana dashboard ConfigMap for Linkerd metrics
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linkerd-grafana-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  rawrxd-linkerd-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "RawrXD Linkerd Mesh",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "targets": [
+              {
+                "expr": "sum(rate(response_total{namespace=\"rawrxd\"}[5m])) by (classification)"
+              }
+            ]
+          },
+          {
+            "title": "Latency P99",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.99, sum(rate(response_latency_ms_bucket{namespace=\"rawrxd\"}[5m])) by (le))"
+              }
+            ]
+          },
+          {
+            "title": "Success Rate",
+            "targets": [
+              {
+                "expr": "sum(rate(response_total{namespace=\"rawrxd\",classification=\"success\"}[5m])) / sum(rate(response_total{namespace=\"rawrxd\"}[5m]))"
+              }
+            ]
+          }
+        ]
+      }
+    }

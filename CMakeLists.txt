@@ -7483,6 +7483,31 @@ else()
     message(STATUS "SwarmSmokeTest skipped in strict production strip mode (uses swarm_smoke_stubs.cpp)")
 endif()
 
+# InfinitePerfectionEngine Smoke Test (manual)
+# Comprehensive execution verification for all 149 batches (92-256)
+if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+    add_executable(InfinitePerfectionEngine_SmokeTest EXCLUDE_FROM_ALL
+        tests/InfinitePerfectionEngine_SmokeTest.cpp
+        infinite/InfinitePerfectionEngine.cpp
+    )
+    target_include_directories(InfinitePerfectionEngine_SmokeTest PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/infinite
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+    )
+    target_link_libraries(InfinitePerfectionEngine_SmokeTest PRIVATE
+        Threads::Threads
+    )
+    set_target_properties(InfinitePerfectionEngine_SmokeTest PROPERTIES
+        FOLDER "Tests/InfinitePerfection"
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+    )
+    message(STATUS "  ✓ Configured InfinitePerfectionEngine_SmokeTest")
+else()
+    message(STATUS "InfinitePerfectionEngine_SmokeTest skipped in strict production strip mode")
+endif()
+
 # Runtime truth probe (manual): validates MCP stdio transport, NL shell scoring,
 # and vector kernel behavior with direct in-process calls.
 if(MSVC AND RAWR_HAS_MASM)
@@ -9665,3 +9690,26 @@ set_target_properties(test_quantized_ops PROPERTIES
 )
 
 message(STATUS "[Quantization] Operations test: test_quantized_ops")
+
+# Phase A.1: Learning Simulator Test
+add_executable(test_simulator EXCLUDE_FROM_ALL
+    src/swarm/test_simulator.cpp
+    src/swarm/LearningSimulator.cpp
+    src/swarm/SovereignSwarm.cpp
+)
+target_include_directories(test_simulator PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/swarm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/infinite
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_compile_features(test_simulator PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(test_simulator PRIVATE /EHsc /W2 /O2)
+endif()
+target_link_libraries(test_simulator PRIVATE Threads::Threads)
+set_target_properties(test_simulator PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+message(STATUS "[Phase A.1] Learning Simulator test: test_simulator")

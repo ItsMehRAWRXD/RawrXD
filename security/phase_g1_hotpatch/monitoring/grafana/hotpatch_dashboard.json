@@ -1,0 +1,303 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "RawrXD Hotpatch System",
+    "tags": ["hotpatch", "rawrxd", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "system",
+          "type": "query",
+          "query": "label_values(hotpatch_active_patches, system)",
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Patch Events",
+          "datasource": "Prometheus",
+          "expr": "changes(hotpatch_applied_total[1m]) > 0",
+          "tagKeys": "system,type",
+          "textFormat": "Patch {{type}} applied to {{system}}"
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Patches",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(hotpatch_active_patches)",
+            "legendFormat": "Total"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds",
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 10},
+                  {"color": "red", "value": 20}
+                ]
+              }
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Patches Applied (1h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(hotpatch_applied_total[1h])",
+            "legendFormat": "{{system}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "fixed", "fixedColor": "green"},
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Failed Patches (1h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(hotpatch_failed_total[1h])",
+            "legendFormat": "{{system}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds",
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 3}
+                ]
+              }
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Rollbacks (1h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(hotpatch_rollback_total[1h])",
+            "legendFormat": "{{system}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds",
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 2}
+                ]
+              }
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Active Patches by System",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "hotpatch_active_patches",
+            "legendFormat": "{{system}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "pointSize": 5,
+              "showPoints": "auto"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Patch Application Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(hotpatch_applied_total[5m])",
+            "legendFormat": "{{system}} - {{type}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "fillOpacity": 10
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "Patch Duration Distribution",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "rate(hotpatch_duration_seconds_bucket[5m])",
+            "format": "heatmap",
+            "legendFormat": "{{le}}"
+          }
+        ],
+        "dataFormat": "tsbuckets",
+        "heatmap": {},
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "System Health Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "hotpatch_system_health",
+            "legendFormat": "{{system}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds",
+              "thresholds": {
+                "steps": [
+                  {"color": "red", "value": 0},
+                  {"color": "green", "value": 1}
+                ]
+              }
+            },
+            "mappings": [
+              {"options": {"0": {"text": "Unhealthy"}}, "type": "value"},
+              {"options": {"1": {"text": "Healthy"}}, "type": "value"}
+            ]
+          }
+        },
+        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 12}
+      },
+      {
+        "id": 9,
+        "title": "Patches by Severity",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (severity) (hotpatch_applied_total)",
+            "legendFormat": "{{severity}}"
+          }
+        ],
+        "options": {
+          "pieType": "donut",
+          "legend": {"displayMode": "table", "placement": "right"}
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic",
+              "fixed": {
+                "critical": "red",
+                "high": "orange",
+                "medium": "yellow",
+                "low": "green"
+              }
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 16}
+      },
+      {
+        "id": 10,
+        "title": "Patch Success Rate (24h)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "sum(rate(hotpatch_applied_total[24h])) / (sum(rate(hotpatch_applied_total[24h])) + sum(rate(hotpatch_failed_total[24h])))",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "color": {
+              "mode": "thresholds",
+              "thresholds": {
+                "steps": [
+                  {"color": "red", "value": 0},
+                  {"color": "yellow", "value": 0.95},
+                  {"color": "green", "value": 0.99}
+                ]
+              }
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 16}
+      },
+      {
+        "id": 11,
+        "title": "Recent Patch Events",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{job=\"hotpatch\"} |= \"applied\" or \"failed\" or \"rollback\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "wrapLogMessage": true,
+          "sortOrder": "Descending"
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+      }
+    ]
+  }
+}

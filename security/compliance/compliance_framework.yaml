@@ -1,0 +1,321 @@
+# RawrXD Compliance Framework
+# Phase M.3 - Compliance Frameworks
+# SOC 2, ISO 27001, GDPR, and HIPAA compliance mappings
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rawrxd-compliance-framework
+  namespace: rawrxd
+data:
+  # SOC 2 Type II Controls
+  soc2.controls: |
+    version: "1.0"
+    framework: "SOC 2 Type II"
+    trust_service_criteria:
+      - category: security
+        description: "Protection against unauthorized access"
+        controls:
+          - id: CC6.1
+            description: "Logical access security"
+            rawrxd_implementation:
+              - "RBAC with role-based permissions"
+              - "JWT authentication with RS256"
+              - "API key rotation every 90 days"
+            evidence:
+              - "security/policies/security_policies.yaml"
+              - "security/secrets/secrets_manager.ps1"
+            
+          - id: CC6.2
+            description: "Access removal"
+            rawrxd_implementation:
+              - "Automated access revocation on termination"
+              - "Session timeout after 24 hours"
+            evidence:
+              - "security/audit/access_logs.ps1"
+              
+          - id: CC6.3
+            description: "Access restoration"
+            rawrxd_implementation:
+              - "Backup admin accounts"
+              - "Emergency access procedures"
+            evidence:
+              - "operations/OPERATIONS_GUIDE.md"
+      
+      - category: availability
+        description: "System availability"
+        controls:
+          - id: A1.2
+            description: "System monitoring"
+            rawrxd_implementation:
+              - "Prometheus metrics collection"
+              - "Grafana dashboards"
+              - "99.9% uptime SLA"
+            evidence:
+              - "operations/live-monitoring/dashboard.ps1"
+              - "monitoring/prometheus.yml"
+              
+          - id: A1.3
+            description: "Incident response"
+            rawrxd_implementation:
+              - "Automated alerting"
+              - "Incident runbooks"
+              - "24/7 on-call rotation"
+            evidence:
+              - "operations/maintenance/daily_maintenance.ps1"
+      
+      - category: processing_integrity
+        description: "Complete and accurate processing"
+        controls:
+          - id: PI1.3
+            description: "Data validation"
+            rawrxd_implementation:
+              - "Input validation on all API endpoints"
+              - "Schema validation for requests"
+            evidence:
+              - "src/api/validation.hpp"
+              
+      - category: confidentiality
+        description: "Confidential information protection"
+        controls:
+          - id: C1.1
+            description: "Encryption at rest"
+            rawrxd_implementation:
+              - "AES-256-GCM for data at rest"
+              - "Encrypted model storage"
+            evidence:
+              - "security/secrets/encryption_config.yaml"
+              
+          - id: C1.2
+            description: "Encryption in transit"
+            rawrxd_implementation:
+              - "TLS 1.3 for all connections"
+              - "mTLS for internal services"
+            evidence:
+              - "scaling/service-mesh/istio_config.yaml"
+
+  # ISO 27001 Controls
+  iso27001.controls: |
+    version: "1.0"
+    framework: "ISO/IEC 27001:2022"
+    controls:
+      - id: A.5.1
+        category: "Information security policies"
+        description: "Policies for information security"
+        rawrxd_implementation:
+          - "security/policies/security_policies.yaml"
+          - "Annual policy review process"
+        evidence:
+          - "security/policies/"
+          
+      - id: A.5.7
+        category: "Threat intelligence"
+        description: "Threat intelligence"
+        rawrxd_implementation:
+          - "Vulnerability scanning"
+          - "Dependency security monitoring"
+        evidence:
+          - "security/scanning/vulnerability_scanner.ps1"
+          
+      - id: A.5.15
+        category: "Access control"
+        description: "Access control"
+        rawrxd_implementation:
+          - "RBAC implementation"
+          - "Principle of least privilege"
+        evidence:
+          - "security/policies/security_policies.yaml"
+          
+      - id: A.5.23
+        category: "Cloud services"
+        description: "Cloud service security"
+        rawrxd_implementation:
+          - "CSP security baseline"
+          - "Shared responsibility model"
+        evidence:
+          - "cloud-hosting/terraform/security.tf"
+          
+      - id: A.5.24
+        category: "Planning"
+        description: "Information security planning"
+        rawrxd_implementation:
+          - "Security roadmap"
+          - "Risk assessment process"
+        evidence:
+          - "docs/security-roadmap.md"
+          
+      - id: A.5.29
+        category: "Incident management"
+        description: "Information security incident management"
+        rawrxd_implementation:
+          - "Incident response procedures"
+          - "Security event logging"
+        evidence:
+          - "security/audit/incident_response.ps1"
+          
+      - id: A.5.36
+        category: "Compliance"
+        description: "Compliance with policies and standards"
+        rawrxd_implementation:
+          - "Policy enforcement automation"
+          - "Compliance monitoring"
+        evidence:
+          - "security/policies/policy_enforcer.ps1"
+          - "security/compliance/compliance_checker.ps1"
+
+  # GDPR Compliance
+  gdpr.controls: |
+    version: "1.0"
+    framework: "GDPR"
+    articles:
+      - id: Article_5
+        description: "Principles relating to processing"
+        requirements:
+          - "Lawfulness, fairness, transparency"
+          - "Purpose limitation"
+          - "Data minimization"
+          - "Accuracy"
+          - "Storage limitation"
+          - "Integrity and confidentiality"
+        rawrxd_implementation:
+          - "Data classification system"
+          - "Retention policies"
+          - "Encryption at rest and in transit"
+        evidence:
+          - "security/policies/data_classification.yaml"
+          - "security/compliance/retention_policy.yaml"
+          
+      - id: Article_17
+        description: "Right to erasure (right to be forgotten)"
+        rawrxd_implementation:
+          - "Data deletion API"
+          - "Automated data purging"
+          - "Audit trail of deletions"
+        evidence:
+          - "src/api/data_deletion.hpp"
+          - "security/audit/deletion_logs.ps1"
+          
+      - id: Article_25
+        description: "Data protection by design and default"
+        rawrxd_implementation:
+          - "Privacy-first architecture"
+          - "Default minimal data collection"
+          - "Pseudonymization support"
+        evidence:
+          - "docs/privacy-design.md"
+          
+      - id: Article_30
+        description: "Records of processing activities"
+        rawrxd_implementation:
+          - "Data processing inventory"
+          - "Automated documentation"
+        evidence:
+          - "security/compliance/processing_activities.md"
+          
+      - id: Article_32
+        description: "Security of processing"
+        rawrxd_implementation:
+          - "Encryption"
+          - "Access controls"
+          - "Regular security testing"
+        evidence:
+          - "security/policies/security_policies.yaml"
+          - "security/scanning/penetration_tests/"
+
+  # HIPAA Compliance (if applicable)
+  hipaa.controls: |
+    version: "1.0"
+    framework: "HIPAA Security Rule"
+    safeguards:
+      - category: Administrative
+        controls:
+          - id: 164.308(a)(1)
+            description: "Security Management Process"
+            implementation:
+              - "Risk analysis"
+              - "Risk management"
+              - "Sanction policy"
+              - "Information system activity review"
+              
+          - id: 164.308(a)(3)
+            description: "Workforce Security"
+            implementation:
+              - "Authorization procedures"
+              - "Clearance procedures"
+              - "Termination procedures"
+              
+          - id: 164.308(a)(6)
+            description: "Security Incident Procedures"
+            implementation:
+              - "Incident response"
+              - "Breach notification"
+      
+      - category: Physical
+        controls:
+          - id: 164.310(a)(1)
+            description: "Facility Access Controls"
+            implementation:
+              - "Access controls"
+              - "Workstation use"
+              - "Device and media controls"
+      
+      - category: Technical
+        controls:
+          - id: 164.312(a)(1)
+            description: "Access Control"
+            implementation:
+              - "Unique user identification"
+              - "Emergency access"
+              - "Automatic logoff"
+              - "Encryption"
+              
+          - id: 164.312(b)
+            description: "Audit Controls"
+            implementation:
+              - "Audit logging"
+              - "Audit review"
+              
+          - id: 164.312(c)(1)
+            description: "Integrity"
+            implementation:
+              - "Mechanisms to authenticate ePHI"
+              
+          - id: 164.312(d)
+            description: "Person or Entity Authentication"
+            implementation:
+              - "Authentication procedures"
+              
+          - id: 164.312(e)(1)
+            description: "Transmission Security"
+            implementation:
+              - "Integrity controls"
+              - "Encryption"
+
+  # Evidence Collection Schedule
+  evidence.schedule: |
+    daily:
+      - "Access logs review"
+      - "Security alerts"
+      - "System health checks"
+      
+    weekly:
+      - "Vulnerability scan"
+      - "Policy compliance check"
+      - "Backup verification"
+      
+    monthly:
+      - "Access review"
+      - "Security metrics report"
+      - "Incident review"
+      
+    quarterly:
+      - "Risk assessment"
+      - "Policy review"
+      - "Penetration test"
+      - "Compliance audit"
+      
+    annually:
+      - "Full security audit"
+      - "Compliance certification"
+      - "Business continuity test"
+      - "Disaster recovery drill"

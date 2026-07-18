@@ -1,0 +1,395 @@
+# Phase D.4 Batch 2/5: Helm Values
+# Default values for sovereign-distributed
+# Copyright (c) 2026 RawrXD Team
+
+# Global configuration
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: "fast-ssd"
+  
+# Sovereign Node configuration
+sovereign:
+  # Node identity
+  nodeId: ""
+  datacenter: "us-east-1"
+  rack: "rack-1"
+  version: "1.0.0"
+  
+  # Scaling configuration
+  replicas: 3
+  
+  # Resource allocation
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+  
+  # Consensus configuration
+  consensus:
+    requireUnanimous: true
+    timeoutMs: 5000
+    quorumRatio: 0.66
+    heartbeatIntervalMs: 1000
+  
+  # Replication configuration
+  replication:
+    consistency: "bounded"  # eventual, session, bounded, strong
+    strategy: "quorum"      # primary-backup, multi-master, quorum, state-machine
+    factor: 3
+    maxStalenessMs: 100
+    syncIntervalMs: 50
+  
+  # Rollback configuration
+  rollback:
+    prepareTimeoutMs: 5000
+    executeTimeoutMs: 30000
+    verifyTimeoutMs: 10000
+    maxCheckpoints: 10
+  
+  # Storage configuration
+  storage:
+    enabled: true
+    size: "10Gi"
+    storageClass: ""
+    accessMode: "ReadWriteOnce"
+    checkpoints: true
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8080
+    annotations: {}
+    
+    # Load balancer configuration (if type: LoadBalancer)
+    loadBalancer:
+      enabled: false
+      sourceRanges: []
+      annotations: {}
+  
+  # Security configuration
+  security:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    
+    # TLS configuration
+    tls:
+      enabled: true
+      certManager:
+        enabled: true
+        issuer: "sovereign-issuer"
+      secretName: "sovereign-tls"
+  
+  # Pod disruption budget
+  pdb:
+    enabled: true
+    minAvailable: 2
+    maxUnavailable: 1
+  
+  # Affinity rules
+  affinity:
+    podAntiAffinity:
+      enabled: true
+      type: "preferred"  # preferred or required
+    nodeAffinity:
+      enabled: false
+      type: "preferred"
+      key: "node-type"
+      values:
+        - "sovereign"
+  
+  # Tolerations
+  tolerations: []
+  # - key: "dedicated"
+  #   operator: "Equal"
+  #   value: "sovereign"
+  #   effect: "NoSchedule"
+  
+  # Node selector
+  nodeSelector: {}
+  
+  # Topology spread constraints
+  topologySpreadConstraints:
+    enabled: true
+    maxSkew: 1
+    topologyKey: "topology.kubernetes.io/zone"
+    whenUnsatisfiable: "ScheduleAnyway"
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+    interval: "30s"
+    scrapeTimeout: "10s"
+    
+    # ServiceMonitor configuration
+    serviceMonitor:
+      enabled: true
+      namespace: ""
+      labels: {}
+      interval: ""
+      scrapeTimeout: ""
+      relabelings: []
+      metricRelabelings: []
+  
+  grafana:
+    enabled: true
+    dashboards:
+      enabled: true
+      label: "grafana_dashboard"
+      folder: "Sovereign"
+      
+    datasources:
+      enabled: true
+      label: "grafana_datasource"
+  
+  # Alerting rules
+  alerting:
+    enabled: true
+    rules:
+      - alert: SovereignNodeDown
+        expr: up{job="sovereign-node"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sovereign node is down"
+          
+      - alert: SovereignNoQuorum
+        expr: sovereign_cluster_quorum == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sovereign cluster has no quorum"
+          
+      - alert: SovereignHighLatency
+        expr: sovereign_consensus_latency_ms > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sovereign consensus latency is high"
+
+# Service Mesh configuration
+serviceMesh:
+  enabled: true
+  
+  istio:
+    enabled: true
+    
+    # mTLS configuration
+    mtls:
+      enabled: true
+      mode: "STRICT"  # STRICT, PERMISSIVE, DISABLED
+    
+    # Traffic management
+    traffic:
+      loadBalancer:
+        simple: "LEAST_CONN"
+      
+      # Circuit breaker
+      circuitBreaker:
+        enabled: true
+        consecutiveErrors: 5
+        interval: "30s"
+        baseEjectionTime: "30s"
+        maxEjectionPercent: 50
+      
+      # Retry policy
+      retries:
+        enabled: true
+        attempts: 3
+        perTryTimeout: "2s"
+        retryOn: "gateway-error,connect-failure,refused-stream"
+      
+      # Timeout
+      timeout: "10s"
+    
+    # Rate limiting
+    rateLimit:
+      enabled: true
+      requestsPerSecond: 1000
+      burstSize: 1500
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true
+  
+  hpa:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+          - type: Percent
+            value: 10
+            periodSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
+        policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+          - type: Pods
+            value: 4
+            periodSeconds: 15
+        selectPolicy: Max
+  
+  # Vertical Pod Autoscaler
+  vpa:
+    enabled: false
+    updateMode: "Auto"  # Off, Initial, Recreate, Auto
+    resourcePolicy:
+      minAllowed:
+        cpu: "100m"
+        memory: "256Mi"
+      maxAllowed:
+        cpu: "4000m"
+        memory: "8Gi"
+      controlledResources:
+        - "cpu"
+        - "memory"
+
+# Backup configuration
+backup:
+  enabled: true
+  
+  # Velero backup
+  velero:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    ttl: "720h0m0s"  # 30 days
+    
+    # Volume snapshot
+    volumeSnapshot:
+      enabled: true
+      storageLocation: "default"
+  
+  # Checkpoint backup
+  checkpoints:
+    enabled: true
+    interval: "1h"
+    retention: "24h"
+    storage:
+      type: "s3"  # s3, gcs, azure
+      bucket: "sovereign-checkpoints"
+      region: "us-east-1"
+      path: "backups/checkpoints"
+
+# Multi-cluster federation
+federation:
+  enabled: false
+  
+  clusters:
+    - name: "cluster-east"
+      endpoint: "https://cluster-east.example.com"
+      region: "us-east-1"
+      weight: 1
+    - name: "cluster-west"
+      endpoint: "https://cluster-west.example.com"
+      region: "us-west-2"
+      weight: 1
+  
+  mode: "active-active"  # active-active, active-passive
+  
+  # Service mesh federation
+  mesh:
+    enabled: true
+    trustDomain: "rawrxd.io"
+    
+# Network policies
+networkPolicy:
+  enabled: true
+  
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9090
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sovereign-node
+      ports:
+        - protocol: TCP
+          port: 7946
+  
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sovereign-node
+      ports:
+        - protocol: TCP
+          port: 7946
+
+# Pod security policy (deprecated, use Pod Security Standards)
+podSecurityPolicy:
+  enabled: false
+
+# Pod Security Standards
+podSecurityStandard:
+  enabled: true
+  level: "restricted"  # privileged, baseline, restricted
+  version: "latest"
+
+# RBAC configuration
+rbac:
+  create: true
+  
+  # Service account
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+    automountServiceAccountToken: true
+
+# Testing configuration
+testing:
+  enabled: false
+  
+  # Chaos engineering
+  chaos:
+    enabled: false
+    experiments:
+      - name: "pod-failure"
+        enabled: true
+        duration: "5m"
+        interval: "1h"
+      - name: "network-latency"
+        enabled: true
+        duration: "2m"
+        latency: "100ms"
+        interval: "2h"
+
+# Development mode
+devMode:
+  enabled: false
+  debug: false
+  profiling: false
+  
+  # Hot reload
+  hotReload:
+    enabled: false
+    syncInterval: "1s"

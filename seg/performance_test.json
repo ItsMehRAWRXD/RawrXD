@@ -1,0 +1,28 @@
+{
+  "performance_snapshot": {
+    "captured_at": "183355960",
+    "inference": {
+      "latest_prompt_tps": 1000,
+      "latest_generation_tps": 200,
+      "avg_prompt_tps": 1000,
+      "avg_generation_tps": 200
+    },
+    "cycles": {
+      "avg_duration_ms": 0,
+      "avg_convergence_delta": 0,
+      "success_rate": 0
+    },
+    "graph": {
+      "build_ms": 0,
+      "plan_generation_ms": 0,
+      "execution_ms": 0,
+      "parallel_efficiency": 0
+    },
+    "scheduler_scores": {
+      "throughput": 0.12,
+      "convergence": 0,
+      "reliability": 0,
+      "resource_efficiency": 0
+    }
+  }
+}

@@ -18,6 +18,11 @@
 #include <cstdint>
 #include <cstddef>
 
+// Define MAX_PATH if not already defined (Windows compatibility)
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

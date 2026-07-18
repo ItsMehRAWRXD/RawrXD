@@ -1,0 +1,79 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "feature-flag-20260713-001",
+  "Version": "1.1.0",
+  "Type": "feature",
+  "Severity": "low",
+  "Description": "Enable beta GPU offloading feature for 10% of users",
+  "Author": "feature-team@rawrxd.ai",
+  "CreatedAt": "2026-07-13T16:00:00Z",
+  "ExpiresAt": "2026-08-13T16:00:00Z",
+  
+  "Patches": [
+    {
+      "System": "swarm",
+      "Target": "config",
+      "PatchFile": "patches/features/swarm_gpu_offload_v1.1.0.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "agent",
+      "Target": "config",
+      "PatchFile": "patches/features/agent_gpu_offload_v1.1.0.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    }
+  ],
+  
+  "Dependencies": [
+    { "System": "swarm", "MinimumVersion": "1.1.0" },
+    { "System": "agent", "MinimumVersion": "1.1.0" }
+  ],
+  
+  "Conflicts": [
+    { "PatchId": "feature-flag-*", "Reason": "Feature flag patches should be coordinated" }
+  ],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 10,
+    "MinMemoryMB": 128,
+    "ServicesToStop": [],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "powershell -Command 'Write-Host \"Checking GPU offloading prerequisites...\"'",
+      "powershell -File scripts/features/check_gpu_prerequisites.ps1"
+    ],
+    "PostPatchCommands": [
+      "powershell -Command 'Write-Host \"Validating feature flag activation...\"'",
+      "powershell -File scripts/features/validate_gpu_offload.ps1"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": true,
+    "MaxRetries": 1,
+    "RetryDelaySeconds": 1,
+    "NotifyOnRollback": ["feature-team@rawrxd.ai"]
+  },
+  
+  "Notifications": {
+    "OnStart": ["feature-team@rawrxd.ai"],
+    "OnSuccess": ["feature-team@rawrxd.ai"],
+    "OnFailure": ["feature-team@rawrxd.ai", "ops@rawrxd.ai"],
+    "OnRollback": ["feature-team@rawrxd.ai", "ops@rawrxd.ai"]
+  },
+  
+  "Metadata": {
+    "FeatureName": "gpu_offloading",
+    "FeatureDescription": "Offload tensor operations to GPU for improved inference performance",
+    "RolloutPercentage": 10,
+    "TargetAudience": "beta_users",
+    "TestingStatus": "validated",
+    "ApprovalRequired": true,
+    "ApprovedBy": "",
+    "ApprovalTimestamp": ""
+  }
+}

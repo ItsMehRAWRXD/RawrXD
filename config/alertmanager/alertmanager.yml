@@ -1,0 +1,123 @@
+# Phase H.5/5: Alerting & SRE - Alertmanager Configuration
+# Alert routing and notification for RawrXD Sovereign AI Runtime
+
+global:
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@rawrxd.ai'
+  smtp_auth_username: ''
+  smtp_auth_password: ''
+  
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+  opsgenie_api_url: 'https://api.opsgenie.com/v2/alerts'
+  
+  resolve_timeout: 5m
+
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Inhibition rules - prevent alert spam
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal:
+      - alertname
+      - instance
+
+# Route tree - alert routing logic
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  
+  routes:
+    # Critical alerts -> PagerDuty + Slack
+    - match:
+        severity: critical
+      receiver: 'pagerduty-critical'
+      continue: true
+    
+    # Warning alerts -> Slack only
+    - match:
+        severity: warning
+      receiver: 'slack-warnings'
+      continue: true
+    
+    # Stability alerts -> dedicated channel
+    - match:
+        category: stability
+      receiver: 'slack-stability'
+      group_by: ['alertname']
+    
+    # Performance alerts -> dedicated channel
+    - match:
+        category: performance
+      receiver: 'slack-performance'
+      group_by: ['alertname']
+
+# Receivers - notification endpoints
+receivers:
+  - name: 'default'
+    slack_configs:
+      - channel: '#alerts'
+        title: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+
+  - name: 'pagerduty-critical'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        description: '{{ .GroupLabels.alertname }}: {{ .GroupLabels.instance }}'
+        severity: critical
+        details:
+          firing: '{{ template "pagerduty.default.instances" .Alerts.Firing }}'
+          resolved: '{{ template "pagerduty.default.instances" .Alerts.Resolved }}'
+
+  - name: 'opsgenie-critical'
+    opsgenie_configs:
+      - api_key: '${OPSGENIE_API_KEY}'
+        message: '{{ .GroupLabels.alertname }}: {{ .GroupLabels.instance }}'
+        description: '{{ .CommonAnnotations.description }}'
+        priority: P1
+        tags: 'rawrxd,critical,{{ .GroupLabels.cluster }}'
+
+  - name: 'slack-warnings'
+    slack_configs:
+      - channel: '#warnings'
+        title: '⚠️ {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: 'warning'
+        send_resolved: true
+
+  - name: 'slack-stability'
+    slack_configs:
+      - channel: '#stability-alerts'
+        title: '🔧 {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: '{{ if eq .CommonLabels.severity "critical" }}danger{{ else }}warning{{ end }}'
+        send_resolved: true
+
+  - name: 'slack-performance'
+    slack_configs:
+      - channel: '#performance-alerts'
+        title: '📊 {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: 'warning'
+        send_resolved: true
+
+  - name: 'email-oncall'
+    email_configs:
+      - to: 'oncall@rawrxd.ai'
+        subject: '[RawrXD Alert] {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt }}
+          {{ end }}

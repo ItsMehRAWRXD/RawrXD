@@ -1,0 +1,154 @@
+# Phase H.2/5: Container Packaging - RawrXD C++ Runtime
+# Multi-stage build for RawrXD Sovereign AI Runtime
+# Supports: AMD64, ARM64 (via buildx)
+
+# ============================================================================
+# Stage 1: Base Dependencies
+# ============================================================================
+FROM ubuntu:22.04 AS base
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    ninja-build \
+    git \
+    git-lfs \
+    python3 \
+    python3-pip \
+    wget \
+    curl \
+    ca-certificates \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# Stage 2: Vulkan SDK
+# ============================================================================
+FROM base AS vulkan
+
+ARG VULKAN_SDK_VERSION=1.3.275.0
+
+RUN wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | apt-key add - && \
+    wget -qO /etc/apt/sources.list.d/lunarg-vulkan-${VULKAN_SDK_VERSION}-jammy.list \
+    https://packages.lunarg.com/vulkan/${VULKAN_SDK_VERSION}/lunarg-vulkan-${VULKAN_SDK_VERSION}-jammy.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends vulkan-sdk && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV VULKAN_SDK=/usr
+
+# ============================================================================
+# Stage 3: Build
+# ============================================================================
+FROM vulkan AS builder
+
+WORKDIR /build
+
+# Copy source code
+COPY . .
+
+# Initialize submodules
+RUN git submodule update --init --recursive
+
+# Configure build
+RUN cmake -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/rawrxd \
+    -DRAWRXD_BUILD_TESTS=OFF \
+    -DRAWRXD_BUILD_BENCHMARKS=OFF \
+    -DRAWRXD_ENABLE_VULKAN=ON \
+    -DRAWRXD_ENABLE_CUDA=OFF \
+    -DRAWRXD_ENABLE_MASM=OFF
+
+# Build
+RUN cmake --build build --parallel $(nproc)
+
+# Install
+RUN cmake --install build --prefix /opt/rawrxd
+
+# ============================================================================
+# Stage 4: Runtime
+# ============================================================================
+FROM ubuntu:22.04 AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libvulkan1 \
+    vulkan-tools \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r rawrxd && useradd -r -g rawrxd -s /bin/false rawrxd
+
+# Copy built artifacts
+COPY --from=builder /opt/rawrxd /opt/rawrxd
+
+# Set up environment
+ENV PATH=/opt/rawrxd/bin:${PATH}
+ENV LD_LIBRARY_PATH=/opt/rawrxd/lib:${LD_LIBRARY_PATH}
+ENV RAWRXD_HOME=/var/lib/rawrxd
+
+# Create data directory
+RUN mkdir -p /var/lib/rawrxd && chown rawrxd:rawrxd /var/lib/rawrxd
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD rawrxd --version || exit 1
+
+# Switch to non-root user
+USER rawrxd
+
+# Expose ports
+EXPOSE 8080 8081
+
+# Default command
+ENTRYPOINT ["rawrxd"]
+CMD ["--help"]
+
+# ============================================================================
+# Stage 5: CUDA Runtime (for NVIDIA GPU support)
+# ============================================================================
+FROM nvidia/cuda:12.4.0-runtime-ubuntu22.04 AS cuda-runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libvulkan1 \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r rawrxd && useradd -r -g rawrxd -s /bin/false rawrxd
+
+# Copy built artifacts
+COPY --from=builder /opt/rawrxd /opt/rawrxd
+
+# Set up environment
+ENV PATH=/opt/rawrxd/bin:${PATH}
+ENV LD_LIBRARY_PATH=/opt/rawrxd/lib:${LD_LIBRARY_PATH}
+ENV RAWRXD_HOME=/var/lib/rawrxd
+
+# Create data directory
+RUN mkdir -p /var/lib/rawrxd && chown rawrxd:rawrxd /var/lib/rawrxd
+
+# NVIDIA runtime settings
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+USER rawrxd
+
+EXPOSE 8080 8081
+
+ENTRYPOINT ["rawrxd"]
+CMD ["--help"]

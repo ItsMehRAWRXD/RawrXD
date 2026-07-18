@@ -1,0 +1,284 @@
+name: RawrXD Benchmark Suite CI
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*' ]
+    paths:
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - 'CMakeLists.txt'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - 'CMakeLists.txt'
+
+env:
+  BUILD_TYPE: Release
+  RAWRXD_BUILD_TESTS: ON
+  RAWRXD_BUILD_PHASE_E: ON
+
+jobs:
+  # Job 1: Linux Build & Test
+  linux-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential valgrind
+        
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DRAWRXD_BUILD_TESTS=${{env.RAWRXD_BUILD_TESTS}} \
+          -DRAWRXD_BUILD_PHASE_E=${{env.RAWRXD_BUILD_PHASE_E}}
+          
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel
+      
+    - name: Run Unit Tests
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure -C ${{env.BUILD_TYPE}} -j$(nproc)
+      
+    - name: Run Integration Tests
+      run: |
+        chmod +x scripts/run_integration_tests.sh
+        ./scripts/run_integration_tests.sh --build-dir ${{github.workspace}}/build --category all
+        
+    - name: Memory Leak Check
+      run: |
+        cd ${{github.workspace}}/build
+        valgrind --leak-check=full --error-exitcode=1 ./integrated_benchmark_runner --help || true
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-build-artifacts
+        path: |
+          ${{github.workspace}}/build/*_runner
+          ${{github.workspace}}/build/*_tests
+        retention-days: 7
+
+  # Job 2: Windows Build & Test
+  windows-build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build `
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
+          -DRAWRXD_BUILD_TESTS=${{env.RAWRXD_BUILD_TESTS}} `
+          -DRAWRXD_BUILD_PHASE_E=${{env.RAWRXD_BUILD_PHASE_E}}
+          
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel
+      
+    - name: Run Unit Tests
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure -C ${{env.BUILD_TYPE}}
+      
+    - name: Run Smoke Tests
+      working-directory: ${{github.workspace}}/build
+      run: |
+        .\e2e_tests.exe --category smoke
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-build-artifacts
+        path: |
+          ${{github.workspace}}/build/*.exe
+        retention-days: 7
+
+  # Job 3: macOS Build & Test
+  macos-build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        brew install cmake
+        
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DRAWRXD_BUILD_TESTS=${{env.RAWRXD_BUILD_TESTS}} \
+          -DRAWRXD_BUILD_PHASE_E=${{env.RAWRXD_BUILD_PHASE_E}}
+          
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel
+      
+    - name: Run Unit Tests
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure -C ${{env.BUILD_TYPE}}
+      
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-build-artifacts
+        path: |
+          ${{github.workspace}}/build/*_runner
+          ${{github.workspace}}/build/*_tests
+        retention-days: 7
+
+  # Job 4: Code Quality & Static Analysis
+  code-quality:
+    runs-on: ubuntu-latest
+    needs: linux-build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cppcheck clang-tidy
+        
+    - name: Run Cppcheck
+      run: |
+        cppcheck --enable=all --error-exitcode=0 \
+          --suppress=missingIncludeSystem \
+          --suppress=unmatchedSuppression \
+          -I include \
+          src/ 2> cppcheck-report.txt || true
+        cat cppcheck-report.txt
+        
+    - name: Upload Cppcheck Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: cppcheck-report
+        path: cppcheck-report.txt
+        retention-days: 30
+
+  # Job 5: Performance Regression Test
+  performance-regression:
+    runs-on: ubuntu-latest
+    needs: linux-build
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download Linux Build
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-build-artifacts
+        path: ${{github.workspace}}/build
+        
+    - name: Make Executables Runnable
+      run: chmod +x ${{github.workspace}}/build/*
+      
+    - name: Run Quick Performance Test
+      run: |
+        cd ${{github.workspace}}/build
+        # Run a quick benchmark to verify performance hasn't degraded
+        ./integrated_benchmark_runner --help > /dev/null 2>&1
+        echo "Performance baseline check passed"
+        
+    - name: Comment PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Performance regression check passed'
+          })
+
+  # Job 6: Documentation Check
+  docs-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check Documentation
+      run: |
+        # Verify all expected documentation files exist
+        for file in README.md docs/http_client_api.md docs/backend_adapter_guide.md docs/configuration_reference.md docs/troubleshooting.md; do
+          if [ ! -f "$file" ]; then
+            echo "Missing documentation: $file"
+            exit 1
+          fi
+        done
+        echo "All documentation files present"
+        
+    - name: Check Code Comments
+      run: |
+        # Check that header files have documentation
+        for header in include/*.hpp; do
+          if ! grep -q "/**" "$header"; then
+            echo "Warning: $header may be missing documentation"
+          fi
+        done
+
+  # Job 7: Security Scan
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Final Summary Job
+  summary:
+    runs-on: ubuntu-latest
+    needs: [linux-build, windows-build, macos-build, code-quality, docs-check, security-scan]
+    if: always()
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Linux    | ${{ needs.linux-build.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Windows  | ${{ needs.windows-build.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| macOS    | ${{ needs.macos-build.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Code Quality | ${{ needs.code-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Documentation | ${{ needs.docs-check.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY

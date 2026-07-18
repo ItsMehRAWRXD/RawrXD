@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- rawrxd.nuspec -->
+<!-- Phase H.2 Batch 2/5: Chocolatey Package Specification -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>rawrxd</id>
+    <version>1.0.0</version>
+    <title>RawrXD Sovereign</title>
+    <authors>RawrXD Team</authors>
+    <owners>ItsMehRAWRXD</owners>
+    <licenseUrl>https://github.com/ItsMehRAWRXD/RawrXD/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://rawrxd.ai</projectUrl>
+    <iconUrl>https://rawrxd.ai/assets/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description><![CDATA[
+# RawrXD Sovereign
+
+Production-grade AI inference runtime with autonomous capabilities.
+
+## Features
+
+- **Autonomous Operation**: Self-healing, self-optimizing AI runtime
+- **Hotpatch MASM**: Zero-downtime kernel updates (2-5ms deployment)
+- **Chaos Engineering**: Validated resilience under failure conditions
+- **Intelligent Ops**: Predictive analytics and anomaly detection
+- **Multi-Platform**: Windows, macOS, Linux support
+
+## Installation
+
+```powershell
+choco install rawrxd
+```
+
+## Configuration
+
+Edit `%PROGRAMDATA%\RawrXD\config\rawrxd.yaml` after installation.
+
+## Documentation
+
+https://docs.rawrxd.ai
+    ]]></description>
+    <summary>Sovereign AI runtime with autonomous capabilities</summary>
+    <releaseNotes>https://github.com/ItsMehRAWRXD/RawrXD/releases/tag/v1.0.0</releaseNotes>
+    <copyright>Copyright 2026 RawrXD AI</copyright>
+    <tags>ai inference llm machine-learning autonomous sovereign runtime production admin</tags>
+    <projectSourceUrl>https://github.com/ItsMehRAWRXD/RawrXD</projectSourceUrl>
+    <docsUrl>https://docs.rawrxd.ai</docsUrl>
+    <bugTrackerUrl>https://github.com/ItsMehRAWRXD/RawrXD/issues</bugTrackerUrl>
+    <packageSourceUrl>https://github.com/ItsMehRAWRXD/RawrXD/tree/main/distribution/chocolatey</packageSourceUrl>
+    <dependencies>
+      <dependency id="vcredist140" version="14.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
