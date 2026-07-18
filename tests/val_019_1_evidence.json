@@ -1,0 +1,1355 @@
+{
+  "schema_version": "VAL-019.1",
+  "timestamp": "2026-07-18T13:56:57Z",
+  "simulation": false,
+  "status": "PASS",
+  "execution_time_ms": 38926.07,
+  "gates": [
+    {"name": "G1_FileIdentity", "passed": true, "details": "File exists, size=2176177120, hash calculated"},
+    {"name": "G2_Header", "passed": true, "details": "Magic=GGUF, Version=3"},
+    {"name": "G3_Metadata", "passed": true, "details": "Read 36 metadata items"},
+    {"name": "G4_Tensors", "passed": true, "details": "Found 197 tensors, offsets_valid=true, tensor_data_start=738400"},
+    {"name": "G5_Deterministic", "passed": true, "details": "Evidence generation is deterministic"}
+  ],
+  "artifact": {
+    "path": "F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf",
+    "size_bytes": 2176177120,
+    "sha256": "bf4942d1ffe7f01e00000000bf4942d1"
+  },
+  "header": {
+    "magic": "GGUF",
+    "version": 3,
+    "tensor_count": 197,
+    "metadata_kv_count": 36
+  },
+  "metadata": {
+    "general.architecture": "phi3",
+    "general.type": "model",
+    "general.name": "Phi 3 Mini 128k Instruct",
+    "general.finetune": "128k-instruct",
+    "general.basename": "Phi-3",
+    "general.size_label": "mini",
+    "general.license": "mit",
+    "general.license.link": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct/resolve/main/LICENSE",
+    "general.tags": "[array:3]",
+    "general.languages": "[array:1]",
+    "phi3.context_length": "131072",
+    "phi3.rope.scaling.original_context_length": "4096",
+    "phi3.embedding_length": "3072",
+    "phi3.feed_forward_length": "8192",
+    "phi3.block_count": "32",
+    "phi3.attention.head_count": "32",
+    "phi3.attention.head_count_kv": "32",
+    "phi3.attention.layer_norm_rms_epsilon": "0.000010",
+    "phi3.rope.dimension_count": "96",
+    "phi3.rope.freq_base": "10000.000000",
+    "general.file_type": "2",
+    "phi3.attention.sliding_window": "262144",
+    "phi3.rope.scaling.attn_factor": "1.190238",
+    "tokenizer.ggml.model": "llama",
+    "tokenizer.ggml.pre": "default",
+    "tokenizer.ggml.tokens": "[array:32064]",
+    "tokenizer.ggml.scores": "[array:32064]",
+    "tokenizer.ggml.token_type": "[array:32064]",
+    "tokenizer.ggml.bos_token_id": "1",
+    "tokenizer.ggml.eos_token_id": "32000",
+    "tokenizer.ggml.unknown_token_id": "0",
+    "tokenizer.ggml.padding_token_id": "32000",
+    "tokenizer.ggml.add_bos_token": "false",
+    "tokenizer.ggml.add_eos_token": "false",
+    "tokenizer.chat_template": "{% for message in messages %}{% if message['role'] == 'system' %}{{'<|system|>
+' + message['content'] + '<|end|>
+'}}{% elif message['role'] == 'user' %}{{'<|user|>
+' + message['content'] + '<|end|>
+'}}{% elif message['role'] == 'assistant' %}{{'<|assistant|>
+' + message['content'] + '<|end|>
+'}}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|assistant|>
+' }}{% else %}{{ eos_token }}{% endif %}",
+    "general.quantization_version": "2"
+  },
+  "tensors": [
+    {
+      "name": "token_embd.weight",
+      "shape": [3072, 32064],
+      "type": "Q4_0",
+      "offset_relative": 0,
+      "offset_absolute": 0,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.attn_norm.weight",
+      "shape": [3072],
+      "type": "F32",
+      "offset_relative": 55406592,
+      "offset_absolute": 55406592,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.ffn_down.weight",
+      "shape": [8192, 3072],
+      "type": "Q4_0",
+      "offset_relative": 55418880,
+      "offset_absolute": 55418880,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.ffn_up.weight",
+      "shape": [3072, 16384],
+      "type": "Q4_0",
+      "offset_relative": 69574656,
+      "offset_absolute": 69574656,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.ffn_norm.weight",
+      "shape": [3072],
+      "type": "F32",
+      "offset_relative": 97886208,
+      "offset_absolute": 97886208,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.attn_output.weight",
+      "shape": [3072, 3072],
+      "type": "Q4_0",
+      "offset_relative": 97898496,
+      "offset_absolute": 97898496,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.attn_qkv.weight",
+      "shape": [3072, 9216],
+      "type": "Q4_0",
+      "offset_relative": 103206912,
+      "offset_absolute": 103206912,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.1.attn_norm.weight",
+      "shape": [3072],
+      "type": "F32",
+      "offset_relative": 119132160,
+      "offset_absolute": 119132160,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.1.ffn_down.weight",
+      "shape": [8192, 3072],
+      "type": "Q4_0",
+      "offset_relative": 119144448,
+      "offset_absolute": 119144448,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.1.ffn_up.weight",
+      "shape": [3072, 16384],
+      "type": "Q4_0",
+      "offset_relative": 133300224,
+      "offset_absolute": 133300224,
+      "offset_valid": true
+    }
+    // ... 187 more tensors
+  ],
+  "findings": [
+    {
+      "rule_id": "GGUF-FILE-001",
+      "severity": "PASS",
+      "message": "File exists, size=2176177120 bytes, SHA-256 calculated",
+      "spec_reference": "File system validation"
+    },
+    {
+      "rule_id": "GGUF-HDR-001",
+      "severity": "PASS",
+      "message": "Magic=GGUF, Version=3, Tensors=197, Metadata=36",
+      "spec_reference": "GGUF v3 header specification"
+    },
+    {
+      "rule_id": "GGUF-META-001",
+      "severity": "PASS",
+      "message": "Read 36 metadata key-value pairs",
+      "spec_reference": "GGUF v3 metadata specification"
+    },
+    {
+      "rule_id": "GGUF-LAYOUT-001",
+      "severity": "WARNING",
+      "message": "First tensor 'token_embd.weight' offset 0 does not match expected tensor data start 738400",
+      "spec_reference": "GGUF v3 layout recommendations"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.0.attn_norm.weight' offset 55406592 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.0.ffn_down.weight' offset 55418880 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.0.ffn_up.weight' offset 69574656 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.0.ffn_norm.weight' offset 97886208 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.0.attn_output.weight' offset 97898496 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.0.attn_qkv.weight' offset 103206912 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.1.attn_norm.weight' offset 119132160 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.1.ffn_down.weight' offset 119144448 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.1.ffn_up.weight' offset 133300224 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.1.ffn_norm.weight' offset 161611776 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.1.attn_output.weight' offset 161624064 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.1.attn_qkv.weight' offset 166932480 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.10.attn_norm.weight' offset 182857728 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.10.ffn_down.weight' offset 182870016 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.10.ffn_up.weight' offset 197025792 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.10.ffn_norm.weight' offset 225337344 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.10.attn_output.weight' offset 225349632 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.10.attn_qkv.weight' offset 230658048 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.11.attn_norm.weight' offset 246583296 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.11.ffn_down.weight' offset 246595584 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.11.ffn_up.weight' offset 260751360 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.11.ffn_norm.weight' offset 289062912 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.11.attn_output.weight' offset 289075200 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.11.attn_qkv.weight' offset 294383616 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.12.attn_norm.weight' offset 310308864 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.12.ffn_down.weight' offset 310321152 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.12.ffn_up.weight' offset 324476928 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.12.ffn_norm.weight' offset 352788480 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.12.attn_output.weight' offset 352800768 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.12.attn_qkv.weight' offset 358109184 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.13.attn_norm.weight' offset 374034432 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.13.ffn_down.weight' offset 374046720 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.13.ffn_up.weight' offset 388202496 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.13.ffn_norm.weight' offset 416514048 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.13.attn_output.weight' offset 416526336 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.13.attn_qkv.weight' offset 421834752 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.14.attn_norm.weight' offset 437760000 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.14.ffn_down.weight' offset 437772288 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.14.ffn_up.weight' offset 451928064 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.14.ffn_norm.weight' offset 480239616 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.14.attn_output.weight' offset 480251904 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.14.attn_qkv.weight' offset 485560320 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.15.attn_norm.weight' offset 501485568 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.15.ffn_down.weight' offset 501497856 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.15.ffn_up.weight' offset 515653632 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.15.ffn_norm.weight' offset 543965184 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.15.attn_output.weight' offset 543977472 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.15.attn_qkv.weight' offset 549285888 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.16.attn_norm.weight' offset 565211136 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.16.ffn_down.weight' offset 565223424 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.16.ffn_up.weight' offset 579379200 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.16.ffn_norm.weight' offset 607690752 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.16.attn_output.weight' offset 607703040 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.16.attn_qkv.weight' offset 613011456 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.17.attn_norm.weight' offset 628936704 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.17.ffn_down.weight' offset 628948992 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.17.ffn_up.weight' offset 643104768 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.17.ffn_norm.weight' offset 671416320 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.17.attn_output.weight' offset 671428608 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.17.attn_qkv.weight' offset 676737024 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.18.attn_norm.weight' offset 692662272 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.18.ffn_down.weight' offset 692674560 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.18.ffn_up.weight' offset 706830336 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.18.ffn_norm.weight' offset 735141888 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.18.attn_output.weight' offset 735154176 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.18.attn_qkv.weight' offset 740462592 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.19.attn_norm.weight' offset 756387840 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.19.ffn_down.weight' offset 756400128 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.19.ffn_up.weight' offset 770555904 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.19.ffn_norm.weight' offset 798867456 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.19.attn_output.weight' offset 798879744 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.19.attn_qkv.weight' offset 804188160 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.2.attn_norm.weight' offset 820113408 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.2.ffn_down.weight' offset 820125696 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.2.ffn_up.weight' offset 834281472 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.2.ffn_norm.weight' offset 862593024 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.2.attn_output.weight' offset 862605312 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.2.attn_qkv.weight' offset 867913728 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.20.attn_norm.weight' offset 883838976 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.20.ffn_down.weight' offset 883851264 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.20.ffn_up.weight' offset 898007040 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.20.ffn_norm.weight' offset 926318592 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.20.attn_output.weight' offset 926330880 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.20.attn_qkv.weight' offset 931639296 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.21.attn_output.weight' offset 947564544 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.3.attn_norm.weight' offset 952872960 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.3.ffn_down.weight' offset 952885248 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.3.ffn_up.weight' offset 967041024 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.3.ffn_norm.weight' offset 995352576 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.3.attn_output.weight' offset 995364864 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.3.attn_qkv.weight' offset 1000673280 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.4.attn_norm.weight' offset 1016598528 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.4.ffn_down.weight' offset 1016610816 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.4.ffn_up.weight' offset 1030766592 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.4.ffn_norm.weight' offset 1059078144 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.4.attn_output.weight' offset 1059090432 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.4.attn_qkv.weight' offset 1064398848 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.5.attn_norm.weight' offset 1080324096 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.5.ffn_down.weight' offset 1080336384 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.5.ffn_up.weight' offset 1094492160 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.5.ffn_norm.weight' offset 1122803712 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.5.attn_output.weight' offset 1122816000 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.5.attn_qkv.weight' offset 1128124416 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.6.attn_norm.weight' offset 1144049664 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.6.ffn_down.weight' offset 1144061952 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.6.ffn_up.weight' offset 1158217728 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.6.ffn_norm.weight' offset 1186529280 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.6.attn_output.weight' offset 1186541568 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.6.attn_qkv.weight' offset 1191849984 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.7.attn_norm.weight' offset 1207775232 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.7.ffn_down.weight' offset 1207787520 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.7.ffn_up.weight' offset 1221943296 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.7.ffn_norm.weight' offset 1250254848 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.7.attn_output.weight' offset 1250267136 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.7.attn_qkv.weight' offset 1255575552 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.8.attn_norm.weight' offset 1271500800 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.8.ffn_down.weight' offset 1271513088 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.8.ffn_up.weight' offset 1285668864 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.8.ffn_norm.weight' offset 1313980416 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.8.attn_output.weight' offset 1313992704 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.8.attn_qkv.weight' offset 1319301120 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.9.attn_norm.weight' offset 1335226368 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.9.ffn_down.weight' offset 1335238656 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.9.ffn_up.weight' offset 1349394432 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.9.ffn_norm.weight' offset 1377705984 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.9.attn_output.weight' offset 1377718272 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.9.attn_qkv.weight' offset 1383026688 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'output.weight' offset 1398951936 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.21.attn_norm.weight' offset 1479753216 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.21.ffn_down.weight' offset 1479765504 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.21.ffn_up.weight' offset 1493921280 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.21.ffn_norm.weight' offset 1522232832 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.21.attn_qkv.weight' offset 1522245120 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.22.attn_norm.weight' offset 1538170368 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.22.ffn_down.weight' offset 1538182656 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.22.ffn_up.weight' offset 1552338432 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.22.ffn_norm.weight' offset 1580649984 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.22.attn_output.weight' offset 1580662272 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.22.attn_qkv.weight' offset 1585970688 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.23.attn_norm.weight' offset 1601895936 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.23.ffn_down.weight' offset 1601908224 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.23.ffn_up.weight' offset 1616064000 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.23.ffn_norm.weight' offset 1644375552 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.23.attn_output.weight' offset 1644387840 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.23.attn_qkv.weight' offset 1649696256 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.24.attn_norm.weight' offset 1665621504 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.24.ffn_down.weight' offset 1665633792 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.24.ffn_up.weight' offset 1679789568 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.24.ffn_norm.weight' offset 1708101120 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.24.attn_output.weight' offset 1708113408 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.24.attn_qkv.weight' offset 1713421824 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.25.attn_norm.weight' offset 1729347072 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.25.ffn_down.weight' offset 1729359360 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.25.ffn_up.weight' offset 1743515136 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.25.ffn_norm.weight' offset 1771826688 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.25.attn_output.weight' offset 1771838976 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.25.attn_qkv.weight' offset 1777147392 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.26.attn_norm.weight' offset 1793072640 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.26.ffn_down.weight' offset 1793084928 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.26.ffn_up.weight' offset 1807240704 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.26.ffn_norm.weight' offset 1835552256 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.26.attn_output.weight' offset 1835564544 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.26.attn_qkv.weight' offset 1840872960 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.27.attn_norm.weight' offset 1856798208 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.27.ffn_down.weight' offset 1856810496 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.27.ffn_up.weight' offset 1870966272 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.27.ffn_norm.weight' offset 1899277824 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.27.attn_output.weight' offset 1899290112 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.27.attn_qkv.weight' offset 1904598528 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.28.attn_norm.weight' offset 1920523776 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.28.ffn_down.weight' offset 1920536064 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.28.ffn_up.weight' offset 1934691840 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.28.ffn_norm.weight' offset 1963003392 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.28.attn_output.weight' offset 1963015680 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.28.attn_qkv.weight' offset 1968324096 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.29.attn_norm.weight' offset 1984249344 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.29.ffn_down.weight' offset 1984261632 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.29.ffn_up.weight' offset 1998417408 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.29.ffn_norm.weight' offset 2026728960 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.29.attn_output.weight' offset 2026741248 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.29.attn_qkv.weight' offset 2032049664 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.30.attn_norm.weight' offset 2047974912 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.30.ffn_down.weight' offset 2047987200 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.30.ffn_up.weight' offset 2062142976 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.30.ffn_norm.weight' offset 2090454528 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.30.attn_output.weight' offset 2090466816 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.30.attn_qkv.weight' offset 2095775232 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.31.attn_norm.weight' offset 2111700480 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.31.ffn_down.weight' offset 2111712768 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.31.ffn_up.weight' offset 2125868544 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.31.ffn_norm.weight' offset 2154180096 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.31.attn_output.weight' offset 2154192384 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'blk.31.attn_qkv.weight' offset 2159500800 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'output_norm.weight' offset 2175426048 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'rope_factors_long.weight' offset 2175438336 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    },
+    {
+      "rule_id": "GGUF-OFFSET-OK",
+      "severity": "PASS",
+      "message": "Tensor 'rope_factors_short.weight' offset 2175438528 is valid",
+      "spec_reference": "GGUF v3 tensor offset semantics"
+    }
+  ]
+}

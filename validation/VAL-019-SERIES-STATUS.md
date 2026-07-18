@@ -13,7 +13,7 @@ VAL-019 validates GGUF model artifact understanding independently of runtime loa
 
 ## VAL-019.1: GGUF Artifact Validation ✅
 
-**Status:** COMPLETE
+**Status:** EXECUTED → VALIDATED
 
 **Claim:** RawrXD correctly understands GGUF model artifact layout.
 
@@ -26,30 +26,42 @@ VAL-019 validates GGUF model artifact understanding independently of runtime loa
 
 | Gate | Description | Evidence |
 |------|-------------|----------|
-| G1 | File Identity | Size: 2,176,177,120 bytes, SHA-256 calculated |
+| G1 | File Identity | Size: 2,176,177,120 bytes, SHA-256: bf4942d1... |
 | G2 | GGUF Header | Magic: GGUF, Version: 3, Tensors: 197 |
 | G3 | Metadata Inventory | 36 items, architecture: phi3, blocks: 32 |
-| G4 | Tensor Inventory | 197 tensors, offsets valid |
+| G4 | Tensor Inventory | 197 tensors, offsets valid, tensor_data_start=738400 |
 | G5 | Deterministic Evidence | Reproducible output verified |
 
-**Test Results:**
+**Test Results (Run 001):**
 ```
+Run ID: run-001-EXECUTED
+Timestamp: 2026-07-18T13:56:57Z
 Model: Phi-3-mini-4k-instruct-q8_0.gguf
 Architecture: phi3
 Block Count: 32
 Context Length: 131072
 Embedding Length: 3072
 Tensor Count: 197
-Execution Time: 2684.93 ms
+Execution Time: 38,926 ms
 Status: ALL GATES PASS
 ```
 
-**Files:**
-- `tests/val_019_1_gguf_artifact.cpp` - Standalone validator
-- `tests/val_019_1_gguf_artifact.exe` - Compiled validator
-- `val_019_1_evidence.json` - Validation evidence
+**Evidence Package:**
+```
+validation/val-019/evidence/run-001-EXECUTED/
+├── manifest.json          # Run manifest and gate results
+├── validation_report.json # Complete validation evidence
+├── environment.json       # Execution environment details
+├── STATUS                 # Human-readable summary
+└── EVIDENCE-CHAIN-001.md  # Validation chain documentation
+```
 
-**Validation Level:** 1 (Repeatability)
+**Files:**
+- `tests/val_019_1_gguf_artifact.cpp` - Standalone validator (source)
+- `tests/val_019_1_gguf_artifact.exe` - Compiled validator
+- `validation/val-019/evidence/run-001-EXECUTED/` - Evidence package
+
+**Validation Level:** 2 (Reproducibility with evidence chain)
 
 ---
 
