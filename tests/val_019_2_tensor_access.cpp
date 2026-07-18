@@ -525,6 +525,52 @@ private:
         std::cout << "    Hypothesis: If first tensor offset is 0, offsets are RELATIVE to tensor_data_start" << std::endl;
         std::cout << "    First tensor offset is: " << tensors[0].offset << " (" << (tensors[0].offset == 0 ? "CONFIRMS relative" : "INCONCLUSIVE") << ")" << std::endl;
         std::cout << std::endl;
+        
+        // NEW: Sort tensors by offset to check for overlaps
+        std::cout << "  === TENSOR OFFSET SORTING ANALYSIS ===" << std::endl;
+        std::vector<TensorDescriptor> sorted_tensors = tensors;
+        std::sort(sorted_tensors.begin(), sorted_tensors.end(), 
+            [](const TensorDescriptor& a, const TensorDescriptor& b) {
+                return a.offset < b.offset;
+            });
+        
+        std::cout << "    Last 10 tensors sorted by relative offset:" << std::endl;
+        for (size_t i = sorted_tensors.size() > 10 ? sorted_tensors.size() - 10 : 0; i < sorted_tensors.size(); i++) {
+            const auto& t = sorted_tensors[i];
+            uint64_t end = t.absolute_offset + t.size;
+            std::cout << "      [" << t.name << "] rel=" << t.offset << " abs=" << t.absolute_offset 
+                      << " size=" << t.size << " end=" << end << " valid=" << (end <= file_size) << std::endl;
+        }
+        
+        // Check for overlaps
+        std::cout << std::endl << "    Checking for overlaps (sorted by offset):" << std::endl;
+        bool has_overlap = false;
+        for (size_t i = 1; i < sorted_tensors.size(); i++) {
+            const auto& prev = sorted_tensors[i-1];
+            const auto& curr = sorted_tensors[i];
+            uint64_t prev_end = prev.absolute_offset + prev.size;
+            if (curr.absolute_offset < prev_end) {
+                std::cout << "      OVERLAP: " << prev.name << " ends at " << prev_end 
+                          << " but " << curr.name << " starts at " << curr.absolute_offset << std::endl;
+                has_overlap = true;
+            }
+        }
+        if (!has_overlap) {
+            std::cout << "      No overlaps detected" << std::endl;
+        }
+        
+        // Check if tensor table is sorted by offset
+        bool is_sorted = true;
+        for (size_t i = 1; i < tensors.size(); i++) {
+            if (tensors[i].offset < tensors[i-1].offset) {
+                is_sorted = false;
+                break;
+            }
+        }
+        std::cout << std::endl << "    Tensor table is sorted by offset: " << (is_sorted ? "YES" : "NO") << std::endl;
+        std::cout << "  === END SORTING ANALYSIS ===" << std::endl;
+        
+        std::cout << std::endl;
         std::cout << "  === END FORMAT VERIFICATION ===" << std::endl;
         
         bool passed = (invalid == 0);
