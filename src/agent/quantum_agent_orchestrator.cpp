@@ -1782,24 +1782,21 @@ bool TimeoutAdjuster::saveHistory(const std::string& path) {
             int64_t epochMs = std::chrono::duration_cast<std::chrono::milliseconds>(
                 h.timestamp.time_since_epoch()).count();
 
-            nlohmann::json item = {
-                {"taskType",         h.taskType},
-                {"actualDurationMs", h.actualDurationMs},
-                {"timeoutUsed",      h.timeoutUsed},
-                {"timedOut",         h.timedOut},
-                {"mode",             static_cast<int>(h.mode)},
-                {"timestampEpochMs", epochMs},
-                {"complexity", {
-                    {"fileCount",                   h.complexity.fileCount},
-                    {"lineCount",                   h.complexity.lineCount},
-                    {"functionCount",               h.complexity.functionCount},
-                    {"dependencyDepth",              h.complexity.dependencyDepth},
-                    {"requiresRefactoring",         h.complexity.requiresRefactoring},
-                    {"requiresArchitectureChange",  h.complexity.requiresArchitectureChange},
-                    {"requiresMultiFileEdits",      h.complexity.requiresMultiFileEdits},
-                    {"estimatedComplexity",         h.complexity.estimatedComplexity}
-                }}
-            };
+            nlohmann::json item;
+            item["taskType"] = h.taskType;
+            item["actualDurationMs"] = h.actualDurationMs;
+            item["timeoutUsed"] = h.timeoutUsed;
+            item["timedOut"] = h.timedOut;
+            item["mode"] = static_cast<int>(h.mode);
+            item["timestampEpochMs"] = epochMs;
+            item["complexity"]["fileCount"] = h.complexity.fileCount;
+            item["complexity"]["lineCount"] = h.complexity.lineCount;
+            item["complexity"]["functionCount"] = h.complexity.functionCount;
+            item["complexity"]["dependencyDepth"] = h.complexity.dependencyDepth;
+            item["complexity"]["requiresRefactoring"] = h.complexity.requiresRefactoring;
+            item["complexity"]["requiresArchitectureChange"] = h.complexity.requiresArchitectureChange;
+            item["complexity"]["requiresMultiFileEdits"] = h.complexity.requiresMultiFileEdits;
+            item["complexity"]["estimatedComplexity"] = h.complexity.estimatedComplexity;
             j.push_back(std::move(item));
         }
 

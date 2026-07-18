@@ -13,23 +13,48 @@ namespace transformer {
 // SPIRV Loader
 // ============================================================================
 std::vector<uint32_t> SPIRVLoader::LoadFile(const std::string& path) {
+    std::cout << "[SPIRV] Opening: " << path << std::endl;
+    
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         std::cerr << "[SPIRV] Failed to open: " << path << std::endl;
         return {};
     }
     
-    size_t size = file.tellg();
-    file.seekg(0, std::ios::beg);
+    std::streampos size_pos = file.tellg();
+    if (size_pos == std::streampos(-1)) {
+        std::cerr << "[SPIRV] Failed to get file size: " << path << std::endl;
+        return {};
+    }
+    
+    size_t size = static_cast<size_t>(size_pos);
+    std::cout << "[SPIRV] File size: " << size << " bytes" << std::endl;
+    
+    if (size == 0) {
+        std::cerr << "[SPIRV] Empty file: " << path << std::endl;
+        return {};
+    }
     
     if (size % sizeof(uint32_t) != 0) {
         std::cerr << "[SPIRV] Invalid SPIR-V file size: " << size << std::endl;
         return {};
     }
     
+    file.seekg(0, std::ios::beg);
+    if (!file.good()) {
+        std::cerr << "[SPIRV] Failed to seek: " << path << std::endl;
+        return {};
+    }
+    
     std::vector<uint32_t> code(size / sizeof(uint32_t));
     file.read(reinterpret_cast<char*>(code.data()), size);
     
+    if (!file.good()) {
+        std::cerr << "[SPIRV] Failed to read: " << path << std::endl;
+        return {};
+    }
+    
+    std::cout << "[SPIRV] Loaded " << code.size() << " words from: " << path << std::endl;
     return code;
 }
 
@@ -66,20 +91,33 @@ VulkanShaderPipeline::~VulkanShaderPipeline() {
 bool VulkanShaderPipeline::Initialize(const std::vector<uint32_t>& spirv_code,
                                        const ShaderPipelineConfig& config,
                                        VkShaderStageFlagBits stage) {
+    std::cout << "[VulkanShaderPipeline] Initializing..." << std::endl;
+    
     if (!SPIRVLoader::Validate(spirv_code)) {
+        std::cerr << "[VulkanShaderPipeline] SPIR-V validation failed" << std::endl;
         return false;
     }
+    std::cout << "[VulkanShaderPipeline] SPIR-V validated" << std::endl;
     
     // Create shader module
+    std::cout << "[VulkanShaderPipeline] Creating shader module..." << std::endl;
     module_ = CreateShaderModule(spirv_code);
     if (module_ == VK_NULL_HANDLE) {
+        std::cerr << "[VulkanShaderPipeline] Failed to create shader module" << std::endl;
         return false;
     }
+    std::cout << "[VulkanShaderPipeline] Shader module created" << std::endl;
     
     // Create pipeline cache
+    std::cout << "[VulkanShaderPipeline] Creating pipeline cache..." << std::endl;
     VkPipelineCacheCreateInfo cache_info = {};
     cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    vkCreatePipelineCache(device_, &cache_info, nullptr, &cache_);
+    VkResult result = vkCreatePipelineCache(device_, &cache_info, nullptr, &cache_);
+    if (result != VK_SUCCESS) {
+        std::cerr << "[VulkanShaderPipeline] Failed to create pipeline cache: " << result << std::endl;
+        return false;
+    }
+    std::cout << "[VulkanShaderPipeline] Pipeline cache created" << std::endl;
     
     // Shader stage info
     VkPipelineShaderStageCreateInfo stage_info = {};
@@ -94,11 +132,13 @@ bool VulkanShaderPipeline::Initialize(const std::vector<uint32_t>& spirv_code,
     pipeline_info.stage = stage_info;
     pipeline_info.layout = layout_;
     
-    VkResult result = vkCreateComputePipelines(device_, cache_, 1, &pipeline_info, nullptr, &pipeline_);
+    std::cout << "[VulkanShaderPipeline] Creating compute pipeline..." << std::endl;
+    result = vkCreateComputePipelines(device_, cache_, 1, &pipeline_info, nullptr, &pipeline_);
     if (result != VK_SUCCESS) {
         std::cerr << "[Vulkan] Failed to create compute pipeline: " << result << std::endl;
         return false;
     }
+    std::cout << "[VulkanShaderPipeline] Compute pipeline created successfully" << std::endl;
     
     return true;
 }
@@ -162,9 +202,12 @@ bool RDNA3ShaderManager::LoadRawrXDShaders(const std::string& shader_dir) {
         std::cerr << "[RDNA3] Failed to load RMSNorm shader" << std::endl;
     }
     
-    // Load MatMul shader
-    if (!LoadPipeline(matmul_pipeline_, shader_dir + "/matmul_fp16.spv", VK_SHADER_STAGE_COMPUTE_BIT)) {
-        std::cerr << "[RDNA3] Failed to load MatMul shader" << std::endl;
+    // Load MatMul shader (use optimized version)
+    if (!LoadPipeline(matmul_pipeline_, shader_dir + "/matmul_fp16_optimized.spv", VK_SHADER_STAGE_COMPUTE_BIT)) {
+        // Fallback to basic version
+        if (!LoadPipeline(matmul_pipeline_, shader_dir + "/matmul_fp16.spv", VK_SHADER_STAGE_COMPUTE_BIT)) {
+            std::cerr << "[RDNA3] Failed to load MatMul shader" << std::endl;
+        }
     }
     
     // Load Softmax shader
@@ -177,8 +220,8 @@ bool RDNA3ShaderManager::LoadRawrXDShaders(const std::string& shader_dir) {
         std::cerr << "[RDNA3] Failed to load Flash Attention shader" << std::endl;
     }
     
-    // Load Q4K GEMM shader
-    if (!LoadPipeline(q4k_gemm_pipeline_, shader_dir + "/fused_q4k_tile_gemm.spv", VK_SHADER_STAGE_COMPUTE_BIT)) {
+    // Load Q4K GEMM shader (use SG variant)
+    if (!LoadPipeline(q4k_gemm_pipeline_, shader_dir + "/fused_q4k_q8_1_sg_v1.spv", VK_SHADER_STAGE_COMPUTE_BIT)) {
         std::cerr << "[RDNA3] Failed to load Q4K GEMM shader" << std::endl;
     }
     

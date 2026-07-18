@@ -2885,35 +2885,33 @@ void Win32IDE::InitializeAnnotationOverlay()
                 fprintf(stderr, "[AgentBridge] Test injection ENTER\n");
                 
                 // Create test LSP notification
-                nlohmann::json testNotification = {
-                    {"jsonrpc", "2.0"},
-                    {"method", "textDocument/publishDiagnostics"},
-                    {"params", {
-                        {"uri", "file:///test.cpp"},
-                        {"diagnostics", nlohmann::json::array({
-                            {
-                                {"range", {
-                                    {"start", {{"line", 4}, {"character", 0}}},
-                                    {"end", {{"line", 4}, {"character", 10}}}
-                                }},
-                                {"severity", 1},
-                                {"code", "E0001"},
-                                {"message", "AgentBridge: Undefined variable 'foo'"},
-                                {"source", "clangd"}
-                            },
-                            {
-                                {"range", {
-                                    {"start", {{"line", 11}, {"character", 5}}},
-                                    {"end", {{"line", 11}, {"character", 20}}}
-                                }},
-                                {"severity", 2},
-                                {"code", "W0023"},
-                                {"message", "AgentBridge: Unused parameter 'bar'"},
-                                {"source", "clangd"}
-                            }
-                        })}
-                    }}
-                };
+                nlohmann::json testNotification;
+                testNotification["jsonrpc"] = "2.0";
+                testNotification["method"] = "textDocument/publishDiagnostics";
+                testNotification["params"]["uri"] = "file:///test.cpp";
+                testNotification["params"]["diagnostics"] = nlohmann::json::array();
+                
+                nlohmann::json diag1;
+                diag1["range"]["start"]["line"] = 4;
+                diag1["range"]["start"]["character"] = 0;
+                diag1["range"]["end"]["line"] = 4;
+                diag1["range"]["end"]["character"] = 10;
+                diag1["severity"] = 1;
+                diag1["code"] = "E0001";
+                diag1["message"] = "AgentBridge: Undefined variable 'foo'";
+                diag1["source"] = "clangd";
+                testNotification["params"]["diagnostics"].push_back(diag1);
+                
+                nlohmann::json diag2;
+                diag2["range"]["start"]["line"] = 11;
+                diag2["range"]["start"]["character"] = 5;
+                diag2["range"]["end"]["line"] = 11;
+                diag2["range"]["end"]["character"] = 20;
+                diag2["severity"] = 2;
+                diag2["code"] = "W0023";
+                diag2["message"] = "AgentBridge: Unused parameter 'bar'";
+                diag2["source"] = "clangd";
+                testNotification["params"]["diagnostics"].push_back(diag2);
                 
                 if (m_agentBridgeConnection)
                 {

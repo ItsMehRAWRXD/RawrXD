@@ -360,5 +360,14 @@ bool OptimizedTransformerModel::Forward(
     return true;
 }
 
+size_t OptimizedTransformerModel::GetMemoryUsage() const {
+    size_t total = embedding_buf_.size() + output_buf_.size() + logits_buf_.size();
+    total *= sizeof(float);
+    for (const auto& layer : layers_) {
+        total += layer.GetMemoryUsage();
+    }
+    return total;
+}
+
 } // namespace Runtime
 } // namespace RawrXD

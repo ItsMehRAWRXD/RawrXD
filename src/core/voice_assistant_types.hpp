@@ -26,13 +26,13 @@ struct ScopeInfo {
     
     // For JSON serialization
     nlohmann::json to_json() const {
-        return {
-            {"type", type},
-            {"name", name},
-            {"filePath", filePath},
-            {"lineNumber", lineNumber},
-            {"column", column}
-        };
+        nlohmann::json j;
+        j["type"] = type;
+        j["name"] = name;
+        j["filePath"] = filePath;
+        j["lineNumber"] = lineNumber;
+        j["column"] = column;
+        return j;
     }
     
     // Implicit conversion to nlohmann::json
@@ -52,15 +52,15 @@ struct Symbol {
     
     // For JSON serialization
     nlohmann::json to_json() const {
-        return {
-            {"name", name},
-            {"type", type},
-            {"filePath", filePath},
-            {"lineNumber", lineNumber},
-            {"line", line},
-            {"signature", signature},
-            {"confidence", confidence}
-        };
+        nlohmann::json j;
+        j["name"] = name;
+        j["type"] = type;
+        j["filePath"] = filePath;
+        j["lineNumber"] = lineNumber;
+        j["line"] = line;
+        j["signature"] = signature;
+        j["confidence"] = confidence;
+        return j;
     }
 };
 

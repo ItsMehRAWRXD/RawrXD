@@ -1,11 +1,14 @@
 #define _CRT_SECURE_NO_DEPRECATE // Disables "unsafe" warnings on Windows
 #define _USE_MATH_DEFINES // For M_PI on MSVC
 
+// Include public headers first
+#include "ggml.h"
 #include "ggml-backend.h"
+
+// Then internal implementation headers
 #include "ggml-impl.h"
 #include "ggml-threading.h"
 #include "ggml-cpu.h"
-#include "ggml.h"
 
 // FIXME: required here for quantization functions
 #include "ggml-quants.h"

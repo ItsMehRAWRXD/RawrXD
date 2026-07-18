@@ -17,6 +17,7 @@
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
 #include "ExtensionHost.h"
+#include "MainWindowSimple.h"
 #ifndef CP_UNICODE
 #define CP_UNICODE 1200
 #endif

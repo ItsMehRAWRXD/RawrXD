@@ -235,6 +235,7 @@ set_target_properties(ggml-base PROPERTIES
 )
 
 target_include_directories(ggml-base PRIVATE .)
+target_compile_definitions(ggml-base PRIVATE GGML_RXD_BUILD)
 if (GGML_BACKEND_DL)
     target_compile_definitions(ggml-base PUBLIC GGML_BACKEND_DL)
 endif()

@@ -96,8 +96,10 @@ std::string AgenticToolExecutor::toolToString(AgenticTool tool) const {
 		case AgenticTool::GIT_DIFF: return "git_diff";
 		case AgenticTool::GIT_STASH_SAVE: return "git_stash_save";
 		case AgenticTool::GIT_STASH_POP: return "git_stash_pop";
-		case AgenticTool::GIT_FETCH: return "git_fetch";	case AgenticTool::TOGGLE_SPLIT_ANSWERS: return "toggle_split_answers";
-	case AgenticTool::GET_SPLIT_ANSWERS: return "get_split_answers";		default: return "unknown";
+		case AgenticTool::GIT_FETCH: return "git_fetch";
+		case AgenticTool::TOGGLE_SPLIT_ANSWERS: return "toggle_split_answers";
+		case AgenticTool::GET_SPLIT_ANSWERS: return "get_split_answers";
+		default: return "unknown";
 	}
 }
 
@@ -275,6 +277,10 @@ ToolResult AgenticToolExecutor::executeTool(AgenticTool tool, const std::string&
 		case AgenticTool::GET_SPLIT_ANSWERS:
 			result = ToolResult::Ok("get_split_answers", std::string(m_split_answers ? "true" : "false"));
 			break;
+		case AgenticTool::HOTPATCH_STATUS: result = executeHotpatchStatus(params); break;
+		case AgenticTool::LIST_HOTPATCHES: result = executeListHotpatches(params); break;
+		case AgenticTool::APPLY_HOTPATCH: result = executeApplyHotpatch(params); break;
+		case AgenticTool::REVERT_HOTPATCH: result = executeRevertHotpatch(params); break;
 		default: return ToolResult::Fail("unknown", "Unknown agentic tool name");
 	}
 	m_stats.total_tool_calls++;
