@@ -484,7 +484,7 @@ public:
     void recordConfidenceGate(float confidence, const std::string& action) {
         nlohmann::json step;
         step["phase"] = "confidence_gate";
-        step["confidence"] = confidence;
+        step["confidence"] = static_cast<double>(confidence);
         step["action"] = action;
         step["timestamp"] = getTimestamp();
         trace_["steps"].push_back(step);
