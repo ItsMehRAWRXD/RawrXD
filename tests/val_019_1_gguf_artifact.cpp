@@ -388,7 +388,8 @@ struct Evidence {
         std::string name;
         std::vector<uint64_t> shape;
         std::string type;
-        uint64_t offset;
+        uint64_t offset;            // Relative offset from tensor data section start (as stored in GGUF)
+        uint64_t absolute_offset;   // Absolute file offset (computed)
         bool offset_valid;
     };
     std::vector<Tensor> tensors;
@@ -453,7 +454,8 @@ struct Evidence {
             }
             json << "],\n";
             json << "      \"type\": \"" << tensors[i].type << "\",\n";
-            json << "      \"offset\": " << tensors[i].offset << ",\n";
+            json << "      \"offset_relative\": " << tensors[i].offset << ",\n";
+            json << "      \"offset_absolute\": " << tensors[i].absolute_offset << ",\n";
             json << "      \"offset_valid\": " << (tensors[i].offset_valid ? "true" : "false") << "\n";
             json << "    }";
             if (i < tensor_limit - 1) json << ",";
@@ -694,66 +696,85 @@ int main(int argc, char** argv) {
     }
     
     // ═══════════════════════════════════════════════════════════════════
-    // Comprehensive Tensor Offset Validation
+    // Comprehensive Tensor Offset Validation (GGUF v3 Spec)
+    // 
+    // GGUF stores tensor offsets as RELATIVE to the tensor data section start,
+    // not as absolute file offsets. The tensor data section begins at the
+    // first 32-byte aligned offset after the tensor info descriptors.
     // ═══════════════════════════════════════════════════════════════════
     bool all_offsets_valid = true;
     std::string offset_error;
     
-    // Calculate tensor data start (after tensor info descriptors)
-    // Tensor info ends at current file position
+    // Calculate tensor data section start (after tensor info descriptors)
     std::streampos tensor_info_end = reader.file_position();
-    uint64_t tensor_data_start = static_cast<uint64_t>(tensor_info_end);
+    uint64_t tensor_data_section_start = static_cast<uint64_t>(tensor_info_end);
     
-    // GGUF alignment: tensor data starts at 32-byte boundary after tensor info
+    // GGUF v3: tensor data section starts at 32-byte aligned offset
     uint64_t alignment = 32;
-    uint64_t aligned_data_start = (tensor_data_start + alignment - 1) & ~(alignment - 1);
+    uint64_t aligned_data_start = (tensor_data_section_start + alignment - 1) & ~(alignment - 1);
     
-    // Calculate tensor sizes and validate
+    // Calculate tensor sizes and absolute file offsets
     std::vector<uint64_t> tensor_sizes;
+    std::vector<uint64_t> absolute_offsets;
     tensor_sizes.reserve(tensors.size());
+    absolute_offsets.reserve(tensors.size());
     
     for (size_t i = 0; i < tensors.size(); ++i) {
         const auto& ti = tensors[i];
         uint64_t size = calculate_tensor_size(ti.shape, ti.type);
         tensor_sizes.push_back(size);
         
+        // Convert relative offset to absolute file offset
+        // GGUF spec: absolute_offset = aligned_data_start + relative_offset
+        uint64_t absolute_offset = aligned_data_start + ti.offset;
+        absolute_offsets.push_back(absolute_offset);
+        
         Evidence::Tensor et;
         et.name = ti.name;
         et.shape = ti.shape;
         et.type = ggml_type_to_string(ti.type);
-        et.offset = ti.offset;
+        et.offset = ti.offset;  // Store relative offset (as in file)
+        et.absolute_offset = absolute_offset;  // Store computed absolute offset
         
-        // Check 1: Offset must be within file bounds
-        if (ti.offset >= file_size) {
+        // GGUF-OFFSET-001: Relative offset must be within reasonable bounds
+        // (tensor data section size should be < file size)
+        if (ti.offset > file_size) {
             et.offset_valid = false;
             all_offsets_valid = false;
             if (offset_error.empty()) {
-                offset_error = "Tensor '" + ti.name + "' offset " + std::to_string(ti.offset) + 
-                              " exceeds file size " + std::to_string(file_size);
+                offset_error = "GGUF-OFFSET-001: Tensor '" + ti.name + "' relative offset " + 
+                              std::to_string(ti.offset) + " exceeds file size " + std::to_string(file_size);
             }
         }
-        // Check 2: Tensor data must fit within file
-        else if (ti.offset + size > file_size) {
+        // GGUF-OFFSET-002: Absolute offset must be within file bounds
+        else if (absolute_offset >= file_size) {
             et.offset_valid = false;
             all_offsets_valid = false;
             if (offset_error.empty()) {
-                offset_error = "Tensor '" + ti.name + "' (size " + std::to_string(size) + 
-                              ") extends beyond file at offset " + std::to_string(ti.offset);
+                offset_error = "GGUF-OFFSET-002: Tensor '" + ti.name + "' absolute offset " + 
+                              std::to_string(absolute_offset) + " (relative " + std::to_string(ti.offset) + 
+                              ") exceeds file size " + std::to_string(file_size);
             }
         }
-        // Check 3: Offset should be aligned to 32 bytes (GGUF spec)
-        else if (ti.offset % alignment != 0) {
+        // GGUF-OFFSET-003: Tensor data must fit within file
+        else if (absolute_offset + size > file_size) {
             et.offset_valid = false;
             all_offsets_valid = false;
             if (offset_error.empty()) {
-                offset_error = "Tensor '" + ti.name + "' offset " + std::to_string(ti.offset) + 
-                              " is not aligned to " + std::to_string(alignment) + " bytes";
+                offset_error = "GGUF-OFFSET-003: Tensor '" + ti.name + "' (size " + 
+                              std::to_string(size) + ") extends beyond file at absolute offset " + 
+                              std::to_string(absolute_offset);
             }
         }
-        // Check 4: First tensor offset should match aligned data start
-        else if (i == 0 && ti.offset != aligned_data_start) {
-            // This is a warning, not a failure - some GGUF files may have different alignment
-            // But we'll note it in the details
+        // GGUF-ALIGN-001: Absolute offset should be aligned to 32 bytes
+        else if (absolute_offset % alignment != 0) {
+            et.offset_valid = false;
+            all_offsets_valid = false;
+            if (offset_error.empty()) {
+                offset_error = "GGUF-ALIGN-001: Tensor '" + ti.name + "' absolute offset " + 
+                              std::to_string(absolute_offset) + " is not aligned to " + 
+                              std::to_string(alignment) + " bytes";
+            }
         }
         else {
             et.offset_valid = true;
@@ -762,19 +783,18 @@ int main(int argc, char** argv) {
         evidence.tensors.push_back(std::move(et));
     }
     
-    // Check 5: Tensor offsets should be monotonically increasing
-    // (not strictly required by spec, but good for validation)
+    // GGUF-OVERLAP-001: Check for tensor payload overlaps
     for (size_t i = 1; i < tensors.size(); ++i) {
-        uint64_t prev_end = tensors[i-1].offset + tensor_sizes[i-1];
-        uint64_t curr_start = tensors[i].offset;
+        uint64_t prev_abs_end = absolute_offsets[i-1] + tensor_sizes[i-1];
+        uint64_t curr_abs_start = absolute_offsets[i];
         
-        // Check for overlap
-        if (curr_start < prev_end) {
+        if (curr_abs_start < prev_abs_end) {
             all_offsets_valid = false;
             if (offset_error.empty()) {
-                offset_error = "Tensor overlap detected: '" + tensors[i-1].name + "' ends at " + 
-                              std::to_string(prev_end) + ", '" + tensors[i].name + "' starts at " + 
-                              std::to_string(curr_start);
+                offset_error = "GGUF-OVERLAP-001: Tensor overlap detected: '" + 
+                              tensors[i-1].name + "' ends at absolute offset " + 
+                              std::to_string(prev_abs_end) + ", '" + tensors[i].name + 
+                              "' starts at absolute offset " + std::to_string(curr_abs_start);
             }
             evidence.tensors[i].offset_valid = false;
             evidence.tensors[i-1].offset_valid = false;
@@ -793,7 +813,8 @@ int main(int argc, char** argv) {
     
     gate_g4.passed = true;
     gate_g4.details = "Found " + std::to_string(tensors.size()) + " tensors, offsets_valid=" 
-                      + (all_offsets_valid ? "true" : "false");
+                      + (all_offsets_valid ? "true" : "false") +
+                      ", tensor_data_start=" + std::to_string(aligned_data_start);
     evidence.gates.push_back(gate_g4);
     
     std::cout << "  PASS: " << gate_g4.details << std::endl;

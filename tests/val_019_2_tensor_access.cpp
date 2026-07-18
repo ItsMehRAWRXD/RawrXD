@@ -428,15 +428,16 @@ private:
             std::cout << std::endl;
             std::cout << "  === INVALID TENSOR DETAILS ===" << std::endl;
             for (const auto& t : invalid_tensors) {
-                uint64_t end_offset = t.offset + t.size;
+                uint64_t end_offset = t.absolute_offset + t.size;  // FIXED: Use absolute_offset
                 std::cout << "  Tensor: " << t.name << std::endl;
                 std::cout << "    Type: " << GGMLTypeToString(t.type) << std::endl;
                 std::cout << "    Shape: " << ShapeToString(t.shape) << std::endl;
-                std::cout << "    Offset: " << t.offset << std::endl;
+                std::cout << "    Relative offset: " << t.offset << std::endl;
+                std::cout << "    Absolute offset: " << t.absolute_offset << std::endl;
                 std::cout << "    Size: " << t.size << std::endl;
                 std::cout << "    End Offset: " << end_offset << std::endl;
                 std::cout << "    File Size: " << file_size << std::endl;
-                std::cout << "    Overflow: " << (end_offset - file_size) << " bytes" << std::endl;
+                std::cout << "    Overflow: " << (end_offset > file_size ? end_offset - file_size : 0) << " bytes" << std::endl;
                 std::cout << std::endl;
             }
             std::cout << "  === END DIAGNOSTIC ===" << std::endl;
@@ -448,19 +449,19 @@ private:
         std::cout << "  First 3 tensors:" << std::endl;
         for (size_t i = 0; i < std::min(size_t(3), tensors.size()); i++) {
             const auto& t = tensors[i];
-            uint64_t end = t.offset + t.size;
+            uint64_t end = t.absolute_offset + t.size;  // FIXED: Use absolute_offset
             std::cout << "    " << t.name << std::endl;
-            std::cout << "      offset=" << t.offset << " size=" << t.size 
-                      << " end=" << end << " valid=" << (end <= file_size) << std::endl;
+            std::cout << "      rel_offset=" << t.offset << " abs_offset=" << t.absolute_offset 
+                      << " size=" << t.size << " end=" << end << " valid=" << (end <= file_size) << std::endl;
         }
         
         std::cout << "  Last 3 tensors:" << std::endl;
         for (size_t i = tensors.size() > 3 ? tensors.size() - 3 : 0; i < tensors.size(); i++) {
             const auto& t = tensors[i];
-            uint64_t end = t.offset + t.size;
+            uint64_t end = t.absolute_offset + t.size;  // FIXED: Use absolute_offset
             std::cout << "    " << t.name << std::endl;
-            std::cout << "      offset=" << t.offset << " size=" << t.size 
-                      << " end=" << end << " valid=" << (end <= file_size) << std::endl;
+            std::cout << "      rel_offset=" << t.offset << " abs_offset=" << t.absolute_offset 
+                      << " size=" << t.size << " end=" << end << " valid=" << (end <= file_size) << std::endl;
         }
         std::cout << "  === END SAMPLE ===" << std::endl;
         
@@ -470,7 +471,7 @@ private:
         size_t start_idx = tensors.size() > 5 ? tensors.size() - 5 : 0;
         for (size_t i = start_idx; i < tensors.size(); i++) {
             const auto& t = tensors[i];
-            uint64_t end_offset = t.offset + t.size;
+            uint64_t end_offset = t.absolute_offset + t.size;  // FIXED: Use absolute_offset
             uint64_t num_elements = 1;
             for (auto dim : t.shape) num_elements *= dim;
             
@@ -481,6 +482,7 @@ private:
             std::cout << "    Shape: [" << ShapeToString(t.shape) << "]" << std::endl;
             std::cout << "    Element count: " << num_elements << std::endl;
             std::cout << "    Stored offset (relative): " << t.offset << std::endl;
+            std::cout << "    Tensor data section start: " << tensor_data_start << std::endl;
             std::cout << "    Computed absolute offset: " << t.absolute_offset << std::endl;
             std::cout << "    Calculated size: " << t.calculated_size << " bytes" << std::endl;
             std::cout << "    Computed end offset: " << end_offset << std::endl;
@@ -492,15 +494,38 @@ private:
             if (t.type == GGMLType::Q4_0) {
                 size_t blocks = num_elements / 32;
                 size_t block_size = 32 + 2; // 32 nibbles + 2 bytes scale
-                std::cout << "    Size calc (Q4_0): " << blocks << " blocks * " << block_size << " bytes/block = " << (blocks * block_size) << std::endl;
+                size_t expected_size = blocks * block_size;
+                std::cout << "    Size calc (Q4_0): " << blocks << " blocks * " << block_size << " bytes/block = " << expected_size << std::endl;
+                std::cout << "    Size check: expected=" << expected_size << " calculated=" << t.calculated_size << " match=" << (expected_size == t.calculated_size ? "YES" : "NO") << std::endl;
             } else if (t.type == GGMLType::Q8_0) {
                 size_t blocks = num_elements / 32;
                 size_t block_size = 32 + 4; // 32 bytes + 4 bytes scale
-                std::cout << "    Size calc (Q8_0): " << blocks << " blocks * " << block_size << " bytes/block = " << (blocks * block_size) << std::endl;
+                size_t expected_size = blocks * block_size;
+                std::cout << "    Size calc (Q8_0): " << blocks << " blocks * " << block_size << " bytes/block = " << expected_size << std::endl;
+                std::cout << "    Size check: expected=" << expected_size << " calculated=" << t.calculated_size << " match=" << (expected_size == t.calculated_size ? "YES" : "NO") << std::endl;
             }
         }
         std::cout << std::endl;
         std::cout << "  === END DETAILED ANALYSIS ===" << std::endl;
+        
+        // NEW: Cross-check with llama.cpp logic
+        std::cout << std::endl;
+        std::cout << "  === GGUF FORMAT VERIFICATION ===" << std::endl;
+        std::cout << "    File: " << filepath << std::endl;
+        std::cout << "    File size: " << file_size << " bytes (" << (file_size / (1024.0*1024.0)) << " MB)" << std::endl;
+        std::cout << "    Tensor count: " << tensors.size() << std::endl;
+        std::cout << "    Tensor data section start: " << tensor_data_start << std::endl;
+        std::cout << std::endl;
+        std::cout << "    Offset interpretation test:" << std::endl;
+        std::cout << "      First tensor offset (relative): " << tensors[0].offset << std::endl;
+        std::cout << "      First tensor absolute offset: " << tensors[0].absolute_offset << std::endl;
+        std::cout << "      Expected if relative: tensor_data_start + " << tensors[0].offset << " = " << (tensor_data_start + tensors[0].offset) << std::endl;
+        std::cout << "      Match: " << (tensors[0].absolute_offset == (tensor_data_start + tensors[0].offset) ? "YES" : "NO") << std::endl;
+        std::cout << std::endl;
+        std::cout << "    Hypothesis: If first tensor offset is 0, offsets are RELATIVE to tensor_data_start" << std::endl;
+        std::cout << "    First tensor offset is: " << tensors[0].offset << " (" << (tensors[0].offset == 0 ? "CONFIRMS relative" : "INCONCLUSIVE") << ")" << std::endl;
+        std::cout << std::endl;
+        std::cout << "  === END FORMAT VERIFICATION ===" << std::endl;
         
         bool passed = (invalid == 0);
         std::cout << std::endl;
