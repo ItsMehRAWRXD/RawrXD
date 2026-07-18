@@ -19,6 +19,7 @@ include_directories(
 
 # Source files
 set(DISTRIBUTED_SOURCES
+    RawrXD_RPC.cpp
     SovereignNodeDiscovery.cpp
     SovereignConsensusEngine.cpp
     SovereignDistributedRollback.cpp
@@ -33,12 +34,29 @@ target_link_libraries(sovereign_distributed
     Threads::Threads
 )
 
-# Compiler options
+# Compiler options - configuration-specific to avoid /RTC1 + /O2 conflict
 if(MSVC)
-    target_compile_options(sovereign_distributed PRIVATE /W4 /O2)
+    target_compile_options(sovereign_distributed PRIVATE /W4)
+    # Only add /O2 for non-Debug configurations (CMake adds /RTC1 for Debug)
+    target_compile_options(sovereign_distributed PRIVATE $<$<NOT:$<CONFIG:Debug>>:/O2>)
 else()
-    target_compile_options(sovereign_distributed PRIVATE -Wall -Wextra -O3)
+    target_compile_options(sovereign_distributed PRIVATE -Wall -Wextra)
+    target_compile_options(sovereign_distributed PRIVATE $<$<NOT:$<CONFIG:Debug>>:-O3>)
 endif()
+
+# RPC unit tests
+add_executable(test_rpc
+    test_rpc.cpp
+)
+
+target_link_libraries(test_rpc
+    sovereign_distributed
+    Threads::Threads
+)
+
+# Enable CTest
+enable_testing()
+add_test(NAME RPCUnitTests COMMAND test_rpc)
 
 # Testing executable
 add_executable(distributed_tests
