@@ -5235,6 +5235,34 @@ if(WIN32)
     endif()
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-019: Real Execution Bridge Test
+    # ═══════════════════════════════════════════════════════════════════
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val019/test_real_execution_bridge.cpp")
+        add_executable(val019_real_execution_bridge_test
+            tests/val019/test_real_execution_bridge.cpp
+            src/val019/execution_runner.cpp
+            src/val019/val019_autonomous_execution.cpp
+            src/val016/val016_repair_policy.cpp
+            src/val016/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val019_real_execution_bridge_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+            ${CMAKE_SOURCE_DIR}/src/val019
+        )
+        target_link_libraries(val019_real_execution_bridge_test PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val019_real_execution_bridge_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[VAL-019] Real execution bridge test target added")
+    endif()
+
+    # ═══════════════════════════════════════════════════════════════════
     # VAL-019: Autonomous Execution Framework Test
     # ═══════════════════════════════════════════════════════════════════
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val019/val019_autonomous_execution_test.cpp")

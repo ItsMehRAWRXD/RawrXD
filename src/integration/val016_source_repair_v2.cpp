@@ -113,7 +113,7 @@ struct RepairPatch {
     size_t offset;
     std::string before;
     std::string after;
-    float confidence;
+    double confidence;
     std::string reason;
     
     nlohmann::json toJson() const {
@@ -186,7 +186,7 @@ enum class RepairType {
 struct RepairClassification {
     RepairType type;
     std::string description;
-    float confidence;
+    double confidence;
     std::string reason;
 };
 

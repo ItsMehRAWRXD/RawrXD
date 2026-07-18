@@ -515,7 +515,6 @@ VAL014::ExecutionResult TestExecutorResult::toExecutionResult(const ExecutionCon
     VAL012::DetailedTestResult testResult;
     testResult.executionMode = result.mode;
     testResult.executorSuccess = true;
-    testResult.buildSuccess = true;
     testResult.allTestsPassed = success;
     testResult.failureReason = failureReason;
     testResult.failureDetails = failureDetails;
@@ -598,8 +597,11 @@ RealBuildExecutor::PipelineResult RealBuildExecutor::executePipeline(
         pipeline.repairAttempts = static_cast<int>(repairSession.attempts.size());
         
         // Save repair evidence
-        runner_.generateEvidenceArtifact(evidenceDir, "repair_session", 
-                                         repairSession.toJson());
+        val012::json repairJson;
+        repairJson["session_id"] = repairSession.sessionId;
+        repairJson["success"] = repairSession.success;
+        repairJson["error"] = repairSession.errorMessage;
+        runner_.generateEvidenceArtifact(evidenceDir, "repair_session", repairJson);
         
         if (repairSession.success) {
             std::cout << "[VAL-019] Repair succeeded, rebuilding..." << std::endl;
@@ -641,8 +643,11 @@ RealBuildExecutor::PipelineResult RealBuildExecutor::executePipeline(
             auto repairSession = repairOrchestrator.repair(testResult, 3);
             pipeline.repairAttempts += static_cast<int>(repairSession.attempts.size());
             
-            runner_.generateEvidenceArtifact(evidenceDir, "repair_session_test", 
-                                           repairSession.toJson());
+            val012::json repairJson2;
+            repairJson2["session_id"] = repairSession.sessionId;
+            repairJson2["success"] = repairSession.success;
+            repairJson2["error"] = repairSession.errorMessage;
+            runner_.generateEvidenceArtifact(evidenceDir, "repair_session_test", repairJson2);
             
             if (repairSession.success) {
                 std::cout << "[VAL-019] Repair succeeded, retesting..." << std::endl;
