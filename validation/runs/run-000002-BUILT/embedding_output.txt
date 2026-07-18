@@ -1,0 +1,42 @@
+========================================
+[ERROR] Cannot open: val-019/vectors/embedding_input.bin
+  VAL-019: Embedding Stage Validation
+========================================
+
+[CONFIG] Input:  val-019/vectors/embedding_input.bin
+[CONFIG] Expected: val-019/vectors/embedding_expected.bin
+[CONFIG] Output:   val-019/evidence/embedding_actual.bin
+[CONFIG] Tolerance: 1e-05
+
+----------------------------------------
+RESULT: FAIL
+----------------------------------------
+Input checksum:  
+Output checksum: 
+Max error:       6.951918e-310
+Runtime:         0.000 ms
+Backend:         native
+Kernel:          embedding_lookup_v1.0_native
+Error:           Failed to load input tokens
+
+----------------------------------------
+Evidence JSON:
+----------------------------------------
+{
+  "stage": "embedding",
+  "status": "FAIL",
+  "input_checksum": "",
+  "output_checksum": "",
+  "max_error": 0.000,
+  "runtime_ms": 0.000,
+  "tolerance": 0.000,
+  "implementation": {
+    "backend": "native",
+    "kernel": "embedding_lookup_v1.0_native",
+    "commit": "8473df6ea611e082ace66b9876fb17bccebf259d"
+  },
+  "reference": {
+    "source": "llama.cpp",
+    "version": "b1559"
+  }
+}

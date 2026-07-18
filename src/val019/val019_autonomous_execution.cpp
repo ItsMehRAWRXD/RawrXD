@@ -404,7 +404,6 @@ bool AutonomousExecutor::executeRepairPhase(ExecutionContext& ctx) {
         failure.buildResult = buildResult;
         
         VAL012::DetailedTestResult testResult;
-        testResult.buildSuccess = true;
         testResult.allTestsPassed = false;
         testResult.failureReason = VAL012::TestFailureReason::TestsFailed;
         testResult.failureDetails = "Test failure from VAL-019";
@@ -415,12 +414,10 @@ bool AutonomousExecutor::executeRepairPhase(ExecutionContext& ctx) {
     failure.completedAt = std::chrono::system_clock::now();
     
     // Invoke VAL-016 repair
-    VAL016::RepairSession session;
-    session.executionId = ctx.request.taskId;
-    session.failure = failure;
-    
-    bool repairSuccess = impl_->repairOrchestrator_.repair(session);
+    VAL016::RepairSession session = impl_->repairOrchestrator_.repair(failure, 3);
     ctx.repairHistory.push_back(session);
+    
+    bool repairSuccess = session.success;
     
     if (repairSuccess) {
         std::cout << "  Repair succeeded\n";

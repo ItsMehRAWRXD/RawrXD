@@ -31,6 +31,11 @@ struct Tensor {
     T& at(size_t b, size_t s, size_t h) {
         return data[(b * shape[1] + s) * shape[2] + h];
     }
+    
+    // Const access element at indices
+    const T& at(size_t b, size_t s, size_t h) const {
+        return data[(b * shape[1] + s) * shape[2] + h];
+    }
 };
 
 struct RMSNormResult {

@@ -21,6 +21,11 @@
 
 #pragma comment(lib, "bcrypt.lib")
 
+// Define NT_SUCCESS macro if not available
+#ifndef NT_SUCCESS
+#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+#endif
+
 // Schema version this validator supports
 const char* SUPPORTED_SCHEMA_VERSION = "2.0.0";
 const char* EVIDENCE_FORMAT = "rawrxd-val-019-v2";

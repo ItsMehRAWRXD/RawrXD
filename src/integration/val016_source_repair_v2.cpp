@@ -122,7 +122,7 @@ struct RepairPatch {
         j["offset"] = offset;
         j["before"] = before;
         j["after"] = after;
-        j["confidence"] = confidence;
+        j["confidence"] = static_cast<double>(confidence);
         j["reason"] = reason;
         return j;
     }
@@ -250,25 +250,38 @@ public:
                             std::istreambuf_iterator<char>());
         file.close();
         
-        // Find the line
+        // Find the line(s)
         std::istringstream stream(content);
         std::string line;
+        std::string prevLine;
         int currentLine = 1;
         size_t offset = 0;
+        size_t prevOffset = 0;
         
         while (std::getline(stream, line)) {
             if (currentLine == diag.line) {
                 break;
             }
+            prevOffset = offset;
+            prevLine = line;
             offset += line.length() + 1; // +1 for newline
             currentLine++;
         }
         
         switch (classification.type) {
             case RepairType::INSERT_SEMICOLON:
-                patch.before = line;
-                patch.after = line + ";";
-                patch.offset = offset + line.length();
+                // For missing semicolon, the error is reported on the line AFTER the missing semicolon
+                // We need to add semicolon to the PREVIOUS line
+                if (diag.line > 1 && !prevLine.empty()) {
+                    patch.before = prevLine;
+                    patch.after = prevLine + ";";
+                    patch.offset = prevOffset + prevLine.length();
+                } else {
+                    // Fallback to current line
+                    patch.before = line;
+                    patch.after = line + ";";
+                    patch.offset = offset + line.length();
+                }
                 break;
                 
             case RepairType::INSERT_BRACE:
@@ -293,21 +306,32 @@ public:
         std::string content((std::istreambuf_iterator<char>(inFile)),
                             std::istreambuf_iterator<char>());
         inFile.close();
-        
+
         // Apply patch
         size_t pos = content.find(patch.before);
         if (pos == std::string::npos) {
             return false;
         }
-        
+
         content.replace(pos, patch.before.length(), patch.after);
-        
+
         // Write back
         std::ofstream outFile(filePath);
         outFile << content;
         outFile.close();
-        
+
         return true;
+    }
+
+    bool validatePatch(const RepairPatch& patch, const std::string& filePath) {
+        // Read file
+        std::ifstream inFile(filePath);
+        std::string content((std::istreambuf_iterator<char>(inFile)),
+                            std::istreambuf_iterator<char>());
+        inFile.close();
+
+        // Check if 'before' text exists in file
+        return content.find(patch.before) != std::string::npos;
     }
 };
 
@@ -451,12 +475,21 @@ public:
         nlohmann::json step;
         step["phase"] = "repair_plan";
         step["classification"] = classification.description;
-        step["confidence"] = classification.confidence;
+        step["confidence"] = static_cast<double>(classification.confidence);
         step["patch"] = patch.toJson();
         step["timestamp"] = getTimestamp();
         trace_["steps"].push_back(step);
     }
-    
+
+    void recordConfidenceGate(float confidence, const std::string& action) {
+        nlohmann::json step;
+        step["phase"] = "confidence_gate";
+        step["confidence"] = confidence;
+        step["action"] = action;
+        step["timestamp"] = getTimestamp();
+        trace_["steps"].push_back(step);
+    }
+
     void recordPatchApplied(const RepairPatch& patch, bool success) {
         nlohmann::json step;
         step["phase"] = "patch_applied";
@@ -677,8 +710,53 @@ public:
         std::cout << "    After: '" << patch.after << "'\n";
         std::cout << "    Confidence: " << patch.confidence << "\n";
         
-        // STEP 6: Apply patch
-        std::cout << "\n[STEP 6] Apply Patch\n";
+        // STEP 5b: Confidence Gate
+        std::cout << "\n[STEP 5b] Confidence Gate\n";
+        enum class ConfidenceAction { AUTO_APPLY, REQUIRE_APPROVAL, REJECT };
+        ConfidenceAction action;
+        std::string actionReason;
+        
+        if (patch.confidence >= 0.95f) {
+            action = ConfidenceAction::AUTO_APPLY;
+            actionReason = "High confidence (>= 0.95) - auto-apply";
+        } else if (patch.confidence >= 0.75f) {
+            action = ConfidenceAction::REQUIRE_APPROVAL;
+            actionReason = "Medium confidence (0.75-0.95) - requires approval";
+        } else {
+            action = ConfidenceAction::REJECT;
+            actionReason = "Low confidence (< 0.75) - reject";
+        }
+        
+        std::cout << "  Action: " << actionReason << "\n";
+        recorder_.recordConfidenceGate(patch.confidence, actionReason);
+        
+        if (action == ConfidenceAction::REJECT) {
+            std::cout << "  Patch rejected due to low confidence.\n";
+            recorder_.endTrace(false);
+            recorder_.saveTrace();
+            recorder_.generateCompletionJson("validation/val-016-2/result/completion.json", 1, false);
+            return false;
+        }
+        
+        // For demo purposes, auto-approve medium confidence
+        if (action == ConfidenceAction::REQUIRE_APPROVAL) {
+            std::cout << "  (Demo: Auto-approving medium confidence patch)\n";
+        }
+        
+        // STEP 6: Pre-apply Validation
+        std::cout << "\n[STEP 6] Pre-apply Validation\n";
+        bool patchValid = patchGen_.validatePatch(patch, brokenFile);
+        if (!patchValid) {
+            std::cout << "  Patch validation failed - 'before' text not found in file.\n";
+            recorder_.endTrace(false);
+            recorder_.saveTrace();
+            recorder_.generateCompletionJson("validation/val-016-2/result/completion.json", 1, false);
+            return false;
+        }
+        std::cout << "  Patch validated - 'before' text found in file.\n";
+
+        // STEP 7: Apply patch
+        std::cout << "\n[STEP 7] Apply Patch\n";
         bool patchApplied = patchGen_.applyPatch(patch, brokenFile);
         recorder_.recordPatchApplied(patch, patchApplied);
         
@@ -691,17 +769,17 @@ public:
         }
         std::cout << "  Patch applied successfully.\n";
         
-        // STEP 7: Rebuild
-        std::cout << "\n[STEP 7] Rebuild\n";
+        // STEP 8: Rebuild
+        std::cout << "\n[STEP 8] Rebuild\n";
         ExecutionResult retryAttempt = executor_.execute("cl", buildCmd);
         attemptCount_++;
         recorder_.recordBuildAttempt(retryAttempt, attemptCount_);
         recorder_.saveBuildAttempt(retryAttempt, "retry_attempt.json");
-        
+
         std::cout << "  Retry exit code: " << retryAttempt.exitCode << "\n";
-        
-        // STEP 8: Verification
-        std::cout << "\n[STEP 8] Verification\n";
+
+        // STEP 9: Verification
+        std::cout << "\n[STEP 9] Verification\n";
         bool verificationSuccess = (retryAttempt.exitCode == 0);
         recorder_.recordVerification(retryAttempt, verificationSuccess);
         

@@ -7,7 +7,7 @@
     "timestamp": "2026-07-18T22:00:00Z",
     "state": "BUILT",
     "previous_run": "run-000001",
-    "next_run": null,
+    "next_run": "run-000003",
     "description": "First compiled binaries for embedding and RMSNorm stages"
   },
   
@@ -26,11 +26,11 @@
       "features": ["AVX2", "AVX-512", "FMA"]
     },
     "compiler": {
-      "name": "MSVC",
-      "version": "14.50.35717",
-      "executable": "cl.exe",
-      "path": "C:\\VS2022Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe",
-      "flags": "/EHsc /O2 /W4 /nologo",
+      "name": "GCC",
+      "version": "15.2.0",
+      "executable": "g++.exe",
+      "path": "C:\\mingw64\\bin\\g++.exe",
+      "flags": "-O2 -std=c++17",
       "optimization": "O2",
       "build_type": "Release"
     }
@@ -65,29 +65,29 @@
     {
       "name": "embedding_stage.exe",
       "path": "validation/runs/run-000002-BUILT/binaries/embedding_stage.exe",
-      "sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
-      "size_bytes": null,
+      "sha256": "8b9e7e34b7bc848f744dc211ba3a545145e4a4bc074593cb75180526d7233ee9",
+      "size_bytes": 92877,
       "type": "executable",
       "source": "validation/embedding_stage.cpp",
-      "source_sha256": "[TO_BE_COMPUTED]"
+      "source_sha256": "[TO_BE_COMPUTED_FROM_SOURCE]"
     },
     {
       "name": "rmsnorm_stage.exe",
       "path": "validation/runs/run-000002-BUILT/binaries/rmsnorm_stage.exe",
-      "sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
-      "size_bytes": null,
+      "sha256": "b4e437f43ddde2f83283265151af984b2fd09efb46118645cab72a150ce4aaea",
+      "size_bytes": 92941,
       "type": "executable",
       "source": "validation/rmsnorm_stage.cpp",
-      "source_sha256": "[TO_BE_COMPUTED]"
+      "source_sha256": "[TO_BE_COMPUTED_FROM_SOURCE]"
     },
     {
       "name": "RawrXDValidator.exe",
       "path": "validation/runs/run-000002-BUILT/binaries/RawrXDValidator.exe",
-      "sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
-      "size_bytes": null,
+      "sha256": "5d07864aebe5b9b872ea432de8da7fc9408536362d2500b80b0ee9bb4d2ac555",
+      "size_bytes": 147004,
       "type": "validator",
       "source": "validation/RawrXDValidator.cpp",
-      "source_sha256": "[TO_BE_COMPUTED]"
+      "source_sha256": "[TO_BE_COMPUTED_FROM_SOURCE]"
     }
   ],
   

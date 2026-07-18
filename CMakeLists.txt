@@ -5234,6 +5234,33 @@ if(WIN32)
         message(STATUS "[VAL-019.1] GGUF artifact validator added")
     endif()
 
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-019: Autonomous Execution Framework Test
+    # ═══════════════════════════════════════════════════════════════════
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val019/val019_autonomous_execution_test.cpp")
+        add_executable(val019_autonomous_execution_test
+            tests/val019/val019_autonomous_execution_test.cpp
+            src/val019/val019_autonomous_execution.cpp
+            src/val016/val016_repair_policy.cpp
+            src/val016/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val019_autonomous_execution_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+            ${CMAKE_SOURCE_DIR}/src/val019
+        )
+        target_link_libraries(val019_autonomous_execution_test PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val019_autonomous_execution_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[VAL-019] Autonomous execution test target added")
+    endif()
+
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         add_executable(RawrXD-AutoFixCLI
             src/app/cli_entrypoint.cpp
