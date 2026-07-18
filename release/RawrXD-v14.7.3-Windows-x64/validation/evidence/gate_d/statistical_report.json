@@ -1,0 +1,50 @@
+{
+  "softmax": {
+    "error": {
+      "mean": null,
+      "max": null
+    },
+    "speedup": {
+      "Mean": 0,
+      "Max": 0,
+      "StdDev": 0,
+      "P95": 0,
+      "Median": 0,
+      "Count": 0,
+      "P5": 0,
+      "Min": 0
+    },
+    "target": {
+      "maxError": 0.001,
+      "minSpeedup": 2.0
+    },
+    "pass": false
+  },
+  "metadata": {
+    "iterations": 100,
+    "timestamp": "2026-07-17T18:52:53Z",
+    "platform": "Windows 11 x64",
+    "cpu": "AMD Ryzen (AVX2)"
+  },
+  "rmsnorm": {
+    "error": {
+      "mean": null,
+      "max": null
+    },
+    "speedup": {
+      "Mean": 0,
+      "Max": 0,
+      "StdDev": 0,
+      "P95": 0,
+      "Median": 0,
+      "Count": 0,
+      "P5": 0,
+      "Min": 0
+    },
+    "target": {
+      "maxError": 1E-05,
+      "minSpeedup": 3.0
+    },
+    "pass": false
+  }
+}

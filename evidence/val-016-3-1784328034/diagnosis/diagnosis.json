@@ -1,0 +1,16 @@
+{
+  "affected_files": [
+
+  ],
+  "confidence": 80,
+  "diagnostics": [
+    "LNK2019: unresolved external symbol \"void __cdecl external_function(void)\" referenced in function main",
+    "LNK1120: 1 unresolved externals"
+  ],
+  "failure_category": "LinkFailed",
+  "suggested_actions": [
+    "Add missing library to link command",
+    "Check library paths"
+  ],
+  "summary": "Linking errors detected"
+}

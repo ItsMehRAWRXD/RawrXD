@@ -1,0 +1,49 @@
+{
+  "git_commit": true,
+  "build_date": "2026-07-17T18:56:27Z",
+  "platform": "Windows 11 x64",
+  "compiler": "MSVC 14.51.36231",
+  "git_branch": true,
+  "validation_summary": {
+    "gate_b": "PASS",
+    "gate_d": "PASS",
+    "tests_passed": 41,
+    "gate_c": "PASS",
+    "tests_total": 41,
+    "gate_a": "PASS"
+  },
+  "artifacts": [
+    {
+      "sha256": "D3A71ABEC6FC6976241D38A8977EF25A6B3A7CBE346C17CED681113EE8628A17",
+      "size": 216576,
+      "type": "executable",
+      "path": "bin\\distributed_tests.exe"
+    },
+    {
+      "sha256": "284B43DCD453DB2A268254D161406E82C92B6FF62643AE4414D5093646C5DC49",
+      "size": 4099584,
+      "type": "executable",
+      "path": "bin\\RawrEngine.exe"
+    },
+    {
+      "sha256": "A72C2387EB8A3887476FD4A410A2095F5205FFEA59E9E6D5486CC38B6DE3CE06",
+      "size": 327168,
+      "type": "executable",
+      "path": "bin\\RawrXD-Benchmark.exe"
+    },
+    {
+      "sha256": "BCAFCEFC009BEF09395F415E4D751611A6FBD371439FEC9A8E2F98EE0ADCDDAB",
+      "size": 206336,
+      "type": "executable",
+      "path": "bin\\RawrXD-KVBenchmark.exe"
+    },
+    {
+      "sha256": "3FD537EF07EBA3B171ED1EC33E597A8052E4B79B07A1EB238BA0A4A4E9A6EA0C",
+      "size": 503296,
+      "type": "executable",
+      "path": "bin\\RawrXD-TpsSmoke.exe"
+    }
+  ],
+  "version": "14.7.3",
+  "sdk": "10.0.22621.0"
+}

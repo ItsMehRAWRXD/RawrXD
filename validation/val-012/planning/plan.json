@@ -1,0 +1,35 @@
+[
+  {
+    "description": "Analyze tokenizer bounds",
+    "inputs": {
+      "pattern": "MAX_TOKEN_LENGTH"
+    },
+    "step": 1,
+    "tool": "search"
+  },
+  {
+    "description": "Modify bounds check",
+    "inputs": {
+      "change": "off-by-one fix",
+      "file": "src/tokenizer.cpp"
+    },
+    "step": 2,
+    "tool": "file_modify"
+  },
+  {
+    "description": "Build project",
+    "inputs": {
+      "target": "RawrEngine"
+    },
+    "step": 3,
+    "tool": "build"
+  },
+  {
+    "description": "Run tokenizer tests",
+    "inputs": {
+      "group": "tokenizer"
+    },
+    "step": 4,
+    "tool": "test"
+  }
+]

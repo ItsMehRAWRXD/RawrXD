@@ -1,0 +1,55 @@
+{
+  "gate_status": {
+    "D": "PASS",
+    "C": "PASS",
+    "B": "PASS",
+    "E": "IN_PROGRESS",
+    "A": "PASS"
+  },
+  "validation_date": "2026-07-17T18:56:27Z",
+  "validator": "automated",
+  "val_entries": [
+    {
+      "name": "RPC Foundation",
+      "id": "VAL-001",
+      "status": "PASS",
+      "passed": 16,
+      "tests": 16
+    },
+    {
+      "name": "RMSNorm AVX2",
+      "id": "VAL-013",
+      "status": "PASS",
+      "passed": 5,
+      "tests": 5
+    },
+    {
+      "name": "Basic Profiler",
+      "id": "VAL-015",
+      "status": "PASS",
+      "passed": 1,
+      "tests": 1
+    },
+    {
+      "name": "Core Smoke",
+      "id": "VAL-016",
+      "status": "PASS",
+      "passed": 5,
+      "tests": 5
+    },
+    {
+      "name": "GGUF Minimal",
+      "id": "VAL-017",
+      "status": "PASS",
+      "passed": 4,
+      "tests": 4
+    },
+    {
+      "name": "Gate D Kernels",
+      "id": "VAL-018",
+      "status": "PASS",
+      "passed": 2,
+      "tests": 2
+    }
+  ]
+}

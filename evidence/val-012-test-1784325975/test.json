@@ -1,0 +1,6 @@
+{
+  "failed": 0,
+  "log": "Running tests...\nTest 1: PASSED\nTest 2: PASSED\n...\nAll tests passed.",
+  "passed": 47,
+  "total": 47
+}

@@ -1,0 +1,29 @@
+{
+  "environment": {
+    "architecture": "x64",
+    "compiler": "MSVC",
+    "generator": "Ninja",
+    "os": "Windows",
+    "platform": "windows-x64"
+  },
+  "execution": {
+    "arguments": [],
+    "command": "cmake --build validation/val-016-1/test_build 2>&1",
+    "duration_ms": 31,
+    "exit_code": 1,
+    "timed_out": 0,
+    "tool": "cmake"
+  },
+  "failure": {
+    "category": "BuildDirectoryMissing",
+    "details": "",
+    "recoverable": 1
+  },
+  "output": {
+    "stderr": "",
+    "stdout": "Error: D:/rawrxd-ci-bootstrap/validation/val-016-1/test_build is not a directory\n"
+  },
+  "schema_version": "1.0",
+  "validation_id": "VAL-016.1",
+  "validation_mode": "repair"
+}

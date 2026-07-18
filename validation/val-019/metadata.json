@@ -1,0 +1,104 @@
+{
+  "version": "VAL-019",
+  "description": "Golden vector validation for transformer execution chain",
+  "baseline": "8473df6ea611e082ace66b9876fb17bccebf259d",
+  "created": "2026-07-17T21:35:00Z",
+  "stages": [
+    {
+      "name": "GGUF",
+      "status": "completed",
+      "input": "vectors/gguf_input.bin",
+      "expected_output": "vectors/gguf_expected.bin",
+      "tolerance": 0.0,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "Tokenizer",
+      "status": "completed",
+      "input": "vectors/tokenizer_input.txt",
+      "expected_output": "vectors/tokenizer_expected.bin",
+      "tolerance": 0.0,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "Embedding",
+      "status": "pending",
+      "input": "vectors/embedding_input.bin",
+      "expected_output": "vectors/embedding_expected.bin",
+      "tolerance": 1e-5,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "RMSNorm",
+      "status": "pending",
+      "input": "vectors/rmsnorm_input.bin",
+      "expected_output": "vectors/rmsnorm_expected.bin",
+      "tolerance": 1e-5,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "QKV",
+      "status": "pending",
+      "input": "vectors/qkv_input.bin",
+      "expected_output": "vectors/qkv_expected.bin",
+      "tolerance": 1e-4,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "RoPE",
+      "status": "pending",
+      "input": "vectors/rope_input.bin",
+      "expected_output": "vectors/rope_expected.bin",
+      "tolerance": 1e-4,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "Attention",
+      "status": "pending",
+      "input": "vectors/attention_input.bin",
+      "expected_output": "vectors/attention_expected.bin",
+      "tolerance": 1e-3,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "FFN",
+      "status": "pending",
+      "input": "vectors/ffn_input.bin",
+      "expected_output": "vectors/ffn_expected.bin",
+      "tolerance": 1e-3,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "KV_Cache",
+      "status": "pending",
+      "input": "vectors/kvcache_input.bin",
+      "expected_output": "vectors/kvcache_expected.bin",
+      "tolerance": 1e-5,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "Logits",
+      "status": "pending",
+      "input": "vectors/logits_input.bin",
+      "expected_output": "vectors/logits_expected.bin",
+      "tolerance": 1e-4,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "Sampling",
+      "status": "pending",
+      "input": "vectors/sampling_input.bin",
+      "expected_output": "vectors/sampling_expected.bin",
+      "tolerance": 0.0,
+      "checksum_expected": "sha256:TBD"
+    },
+    {
+      "name": "Streaming",
+      "status": "pending",
+      "input": "vectors/streaming_input.bin",
+      "expected_output": "vectors/streaming_expected.bin",
+      "tolerance": 0.0,
+      "checksum_expected": "sha256:TBD"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "failure": "TestsFailed",
+  "repair_applied": "// Fixed test logic:\n// Changed: return a - b;\n// To:      return a + b;\n",
+  "retry_success": true,
+  "state_history": [
+    {
+      "state": "Detected",
+      "timestamp": 1784330208
+    },
+    {
+      "state": "Diagnosed",
+      "timestamp": 1784330208
+    },
+    {
+      "state": "Planned",
+      "timestamp": 1784330208
+    },
+    {
+      "state": "Applied",
+      "timestamp": 1784330208
+    },
+    {
+      "state": "Verified",
+      "timestamp": 1784330208
+    }
+  ],
+  "success": true
+}

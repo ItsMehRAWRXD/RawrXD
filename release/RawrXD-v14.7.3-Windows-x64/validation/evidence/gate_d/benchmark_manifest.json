@@ -1,0 +1,79 @@
+{
+  "manifest_version": "1.0",
+  "benchmark_date": "2026-07-17T00:00:00Z",
+  "benchmark_suite": "RawrXD Performance Validation",
+  "gate": "D",
+  
+  "binary": {
+    "name": "RawrXD-Benchmark.exe",
+    "path": "bin/RawrXD-Benchmark.exe",
+    "sha256": "F0E9FAD17D3EC6BEE457682211FA94F40B2017620EB3C9D561F9430C3F392...",
+    "size_bytes": 327168,
+    "build_timestamp": "2026-07-17T12:57:00Z"
+  },
+  
+  "build_configuration": {
+    "type": "Release",
+    "optimizations": "/O2 /Ob2",
+    "crt": "Static (/MT)",
+    "architecture": "x64",
+    "cpp_standard": "C++20",
+    "simd": "AVX2/AVX-512",
+    "compiler": "MSVC 14.51.36231",
+    "cmake": "3.20+",
+    "generator": "Ninja"
+  },
+  
+  "protocol": {
+    "warmup_iterations": 10,
+    "measurement_iterations": 100,
+    "outlier_discard_percent": 5,
+    "inter_run_delay_seconds": 1,
+    "confidence_level": 0.95
+  },
+  
+  "validations": [
+    {
+      "id": "VAL-005",
+      "name": "GPU Benchmark",
+      "status": "executed",
+      "metrics": ["TTFT", "TPS", "throughput_gb_s", "gpu_utilization"]
+    },
+    {
+      "id": "VAL-009",
+      "name": "Telemetry Validation",
+      "status": "executed",
+      "metrics": ["cycles", "time_ms", "cycles_per_byte", "bandwidth_gb_s", "speedup"]
+    },
+    {
+      "id": "VAL-011",
+      "name": "Flash Attention Kernel",
+      "status": "built",
+      "metrics": ["build_time_ms", "binary_size_bytes"]
+    }
+  ],
+  
+  "git": {
+    "repository": "ItsMehRAWRXD/RawrXD",
+    "branch": "copilot/vscode-mlyextom-3zgo-phase7a",
+    "commit": "<commit_hash>",
+    "dirty": false
+  },
+  
+  "environment": {
+    "os": "Windows 11 Pro",
+    "os_version": "23H2",
+    "os_build": "22631.xxxx",
+    "cpu": "AMD Ryzen (AVX-512 capable)",
+    "gpu": "AMD Radeon RX 7800 XT",
+    "gpu_driver": "Adrenalin 24.x",
+    "ram_gb": 32,
+    "ram_speed_mhz": 6000
+  },
+  
+  "notes": [
+    "Initial benchmark run - methodology draft",
+    "Single run only - statistical validation pending",
+    "Hardware disclosure complete"
+  ]
+}

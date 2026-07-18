@@ -1,0 +1,16 @@
+{
+  "build_succeeded": true,
+  "evidence_path": "evidence/val-012-test-1784325975",
+  "files_modified": [
+    "src/cli/parser.cpp",
+    "src/cli/version.h"
+  ],
+  "goal_id": "4e3c289526481cce7144a506fc1d07d4",
+  "steps_completed": 4,
+  "success": true,
+  "summary": "Task completed successfully",
+  "tests_failed": 0,
+  "tests_passed": 47,
+  "total_duration_ms": 2,
+  "total_steps": 4
+}

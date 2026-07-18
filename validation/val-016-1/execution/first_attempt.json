@@ -1,0 +1,12 @@
+{
+  "command": "cmd /c cd val016_test_build_dir 2>&1",
+  "duration_ms": 29,
+  "exit_code": 1,
+  "failure_category": "EnvironmentMissing",
+  "failure_reason": "Required file or directory missing",
+  "recoverable": 1,
+  "stderr": "",
+  "stdout": "The system cannot find the path specified.\n",
+  "timed_out": 0,
+  "tool": "cmd"
+}

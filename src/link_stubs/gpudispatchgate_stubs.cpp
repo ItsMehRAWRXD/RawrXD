@@ -25,8 +25,7 @@ public:
     }
 };
 
-// Explicit instantiations to ensure symbols are exported
-template class GPUDispatchGate;
+// GPUDispatchGate is not a template - no explicit instantiation needed
 
 } // namespace RawrXD
 

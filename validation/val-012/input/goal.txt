@@ -1,0 +1,21 @@
+# VAL-012 Input Goal
+# Date: 2026-07-17
+# Status: Ready for processing
+
+## Goal Statement
+Fix the off-by-one error in the tokenizer bounds check that causes
+access violation when processing input at exactly MAX_TOKEN_LENGTH.
+
+## Success Criteria
+1. Tokenizer handles input of exactly MAX_TOKEN_LENGTH without crash
+2. Tokenizer handles input of MAX_TOKEN_LENGTH + 1 with graceful error
+3. Existing tests continue to pass
+4. Build succeeds without warnings
+
+## Scope
+Single file modification to demonstrate closed-loop autonomous repair.
+
+## Deferred (VAL-013+)
+- Multi-file refactoring
+- Performance optimization
+- Edge case enumeration beyond bounds

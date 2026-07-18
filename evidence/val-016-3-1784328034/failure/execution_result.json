@@ -1,0 +1,45 @@
+{
+  "build_result": {
+    "artifacts": [
+
+    ],
+    "build_success": false,
+    "duration_ms": 0,
+    "environment_ready": true,
+    "executed_at": 1784328034,
+    "execution": {
+      "mode": "real",
+      "reason": "Link failure test"
+    },
+    "executor_success": true,
+    "exit_code": 1,
+    "failure_details": "Linking failed with undefined references",
+    "failure_reason": "LinkFailed",
+    "stderr": "test_source.obj : error LNK2019: unresolved external symbol \"void __cdecl external_function(void)\" referenced in function main\ntest_source.exe : fatal error LNK1120: 1 unresolved externals\n",
+    "stdout": "",
+    "toolchain": {
+      "build_type": "",
+      "cmake_version": "",
+      "compiler": "",
+      "compiler_version": "",
+      "ninja_version": "",
+      "target_architecture": "",
+      "tool": ""
+    },
+    "working_directory": "val016_3_test"
+  },
+  "completed_at": 1784328034,
+  "environment_details": "",
+  "environment_ready": true,
+  "execution_id": "val016-3-test",
+  "hostname": "",
+  "mode": {
+    "mode": "real",
+    "reason": "Link failure test"
+  },
+  "overall_success": false,
+  "primary_failure_reason": "LinkFailed",
+  "started_at": 1784328034,
+  "user": "",
+  "validation_id": "VAL-016.3"
+}

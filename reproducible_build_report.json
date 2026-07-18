@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-07-17T19:20:47Z",
+  "source_dir": "D:\\rawrxd-ci-bootstrap",
+  "overall_status": "READY",
+  "test_dir": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\RawrXD_ReproTest",
+  "steps": [
+    {
+      "name": "Clean Test Directory",
+      "details": "Created C:\\Users\\HiH8e\\AppData\\Local\\Temp\\RawrXD_ReproTest",
+      "status": "PASS"
+    },
+    {
+      "name": "Copy Source",
+      "details": "Copied source to C:\\Users\\HiH8e\\AppData\\Local\\Temp\\RawrXD_ReproTest",
+      "status": "PASS"
+    },
+    {
+      "name": "CMake Configure",
+      "details": "Configured with Ninja generator",
+      "status": "PASS"
+    },
+    {
+      "name": "Build",
+      "details": "Built 0 executables",
+      "status": "PASS"
+    },
+    {
+      "name": "Run Tests",
+      "details": "All tests passed",
+      "status": "PASS"
+    },
+    {
+      "name": "Gate D Artifacts",
+      "details": "Gate D executable not found at expected path",
+      "status": "WARN"
+    }
+  ]
+}

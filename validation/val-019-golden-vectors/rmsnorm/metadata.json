@@ -1,0 +1,99 @@
+{
+  "_schema": "Golden Vector v1.1 (Executable)",
+  "operator": "rmsnorm",
+  "description": "Root Mean Square Layer Normalization",
+  "version": "1.0",
+  
+  "tensor_spec": {
+    "input": {
+      "shape": [1, 4096],
+      "dtype": "float32",
+      "layout": "row_major",
+      "file": "input.bin",
+      "sha256": "a91b..."
+    },
+    "weight": {
+      "shape": [4096],
+      "dtype": "float32",
+      "layout": "contiguous",
+      "file": "weight.bin",
+      "sha256": "b42c..."
+    },
+    "output": {
+      "shape": [1, 4096],
+      "dtype": "float32",
+      "layout": "row_major",
+      "file": "expected.bin",
+      "sha256": "c53d..."
+    }
+  },
+  
+  "parameters": {
+    "epsilon": 1e-5,
+    "axis": -1
+  },
+  
+  "reference": {
+    "implementation": "numpy",
+    "code": "x * weight / sqrt(mean(x^2) + epsilon)",
+    "version": "1.24.0"
+  },
+  
+  "comparison": {
+    "metric": "max_absolute_error",
+    "threshold": 1e-5,
+    "rtol": 1e-5,
+    "atol": 1e-6,
+    "description": "RawrXD output must match reference within threshold"
+  },
+  
+  "invariants": [
+    {
+      "check": "shape_match",
+      "description": "output.shape == input.shape"
+    },
+    {
+      "check": "finite_values",
+      "description": "all(isfinite(output))"
+    },
+    {
+      "check": "unit_variance",
+      "description": "mean(output^2) approx 1.0 (with weight=1)",
+      "tolerance": 0.01
+    }
+  ],
+  
+  "validation_flow": {
+    "step_1": "Load input.bin and weight.bin",
+    "step_2": "Execute RawrXD RMSNorm kernel",
+    "step_3": "Load expected.bin (reference output)",
+    "step_4": "Compute max_absolute_error",
+    "step_5": "Verify error < threshold",
+    "step_6": "Verify invariants",
+    "step_7": "Emit PASS/FAIL evidence"
+  },
+  
+  "test_cases": [
+    {
+      "name": "standard_4096",
+      "description": "Standard LLaMA hidden size",
+      "input_range": [-10, 10],
+      "weight": "ones",
+      "priority": "required"
+    },
+    {
+      "name": "small_values",
+      "description": "Near-zero inputs (numerical stability)",
+      "input_range": [-1e-8, 1e-8],
+      "weight": "ones",
+      "priority": "required"
+    },
+    {
+      "name": "large_values",
+      "description": "Large magnitude inputs",
+      "input_range": [-1000, 1000],
+      "weight": "ones",
+      "priority": "optional"
+    }
+  ]
+}

@@ -7,7 +7,7 @@ endif()
 
 # RawrXD KeyGen — RSA-4096 Key Authority & License Signer (unlock 800B kernel / enterprise)
 # Build: standalone Win32 CLI; no Qt/engine deps. Use for --genkey, --hwid, --issue, --sign.
-add_executable(RawrXD_KeyGen WIN32
+add_executable(RawrXD_KeyGen
     RawrXD_KeyGen.cpp
 )
 target_link_libraries(RawrXD_KeyGen PRIVATE advapi32 crypt32)

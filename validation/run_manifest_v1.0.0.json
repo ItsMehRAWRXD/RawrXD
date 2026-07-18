@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_format": "rawrxd-val-019",
+  
+  "validation_run": {
+    "id": "VAL019-2026-07-18-001",
+    "timestamp": "2026-07-18T00:00:00Z",
+    "status": "IMPLEMENTED",
+    "description": "First synthetic vector validation run - NOT YET EXECUTED",
+    "previous_run": null
+  },
+  
+  "environment": {
+    "os": {
+      "name": "Windows 10 Home",
+      "version": "2009",
+      "build": "19045.3693",
+      "architecture": "x86_64"
+    },
+    "cpu": {
+      "vendor": "AMD",
+      "model": "Ryzen 7 7800X3D",
+      "cores": 8,
+      "logical_processors": 16,
+      "features": ["AVX2", "AVX-512", "FMA"]
+    },
+    "gpu": {
+      "vendor": "AMD",
+      "model": "Radeon RX 7800 XT",
+      "vram_gb": 16
+    },
+    "memory": {
+      "total_gb": 192
+    },
+    "compiler": {
+      "name": "MSVC",
+      "version": "14.50.35717",
+      "path": "C:\\VS2022Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe",
+      "flags": "/EHsc /O2 /W4 /nologo",
+      "build_type": "Release"
+    }
+  },
+  
+  "artifacts": {
+    "embedding_stage": {
+      "source": "validation/embedding_stage.cpp",
+      "source_sha256": "[TO_BE_COMPUTED]",
+      "binary_path": "validation/embedding_stage.exe",
+      "binary_sha256": "NOT_YET_BUILT",
+      "build_timestamp": null,
+      "status": "IMPLEMENTED"
+    },
+    "rmsnorm_stage": {
+      "source": "validation/rmsnorm_stage.cpp",
+      "source_sha256": "[TO_BE_COMPUTED]",
+      "binary_path": "validation/rmsnorm_stage.exe",
+      "binary_sha256": "NOT_YET_BUILT",
+      "build_timestamp": null,
+      "status": "IMPLEMENTED"
+    }
+  },
+  
+  "vectors": {
+    "mode": "synthetic",
+    "source_gguf": null,
+    "source_gguf_sha256": null,
+    "generation_seed": 42,
+    "embedding_input": {
+      "path": "validation/val-019/vectors/embedding_input.bin",
+      "sha256": "sha256:4f6addc9659d6fb90fe94b6688a79f2a1fa8d36ec43f8f3e1d9b6528c448a384",
+      "shape": [5],
+      "dtype": "int32",
+      "size_bytes": 20
+    },
+    "embedding_expected": {
+      "path": "validation/val-019/vectors/embedding_expected.bin",
+      "sha256": "sha256:51246bdd5446d14aa906f60bd996cb2e85d4e3f3f226aa1f33ee0c6a7ad9ec7b",
+      "shape": [5, 4096],
+      "dtype": "float32",
+      "size_bytes": 81920,
+      "generation": {
+        "method": "deterministic_seeded",
+        "seed": 42,
+        "source": "generate_embedding_golden.py",
+        "timestamp": "2026-07-17T21:40:00Z"
+      }
+    },
+    "rmsnorm_input": {
+      "path": "validation/val-019/vectors/rmsnorm_input.bin",
+      "sha256": "sha256:8dd3270ad9fb70b291f2454d6d0a7417a933015465d83234a4dba51f40e57d70",
+      "shape": [1, 10, 4096],
+      "dtype": "float32",
+      "size_bytes": 163840
+    },
+    "rmsnorm_expected": {
+      "path": "validation/val-019/vectors/rmsnorm_expected.bin",
+      "sha256": "sha256:5f81351e13359ee3864b481d10c63df824b88ab015cc2347019df93ae055be43",
+      "shape": [1, 10, 4096],
+      "dtype": "float32",
+      "size_bytes": 163840,
+      "generation": {
+        "method": "deterministic_seeded",
+        "seed": 42,
+        "source": "generate_golden_vectors.py",
+        "timestamp": "2026-07-17T21:40:00Z"
+      }
+    }
+  },
+  
+  "stages": [
+    {
+      "name": "embedding",
+      "state": "IMPLEMENTED",
+      "implemented": true,
+      "executed": false,
+      "verified": false,
+      "kernel_version": "embedding_lookup_v1.0_native",
+      "tolerance": 1e-5,
+      "acceptance_criteria": {
+        "max_error": { "threshold": 1e-5, "actual": null, "passed": null },
+        "shape_match": { "expected": [5, 4096], "actual": null, "passed": null },
+        "nan_check": { "max_allowed": 0, "actual": null, "passed": null },
+        "inf_check": { "max_allowed": 0, "actual": null, "passed": null },
+        "determinism": { "method": "seeded", "seed": 42, "passed": null }
+      },
+      "evidence_path": null,
+      "evidence_sha256": null,
+      "execution": null
+    },
+    {
+      "name": "rmsnorm",
+      "state": "IMPLEMENTED",
+      "implemented": true,
+      "executed": false,
+      "verified": false,
+      "kernel_version": "rmsnorm_v1.0_native",
+      "tolerance": 1e-5,
+      "acceptance_criteria": {
+        "max_error": { "threshold": 1e-5, "actual": null, "passed": null },
+        "shape_match": { "expected": [1, 10, 4096], "actual": null, "passed": null },
+        "nan_check": { "max_allowed": 0, "actual": null, "passed": null },
+        "inf_check": { "max_allowed": 0, "actual": null, "passed": null },
+        "determinism": { "method": "seeded", "seed": 42, "passed": null },
+        "rms_range": { "min_expected": 0.1, "max_expected": 10.0, "actual_min": null, "actual_max": null, "passed": null }
+      },
+      "evidence_path": null,
+      "evidence_sha256": null,
+      "execution": null
+    }
+  ],
+  
+  "summary": {
+    "total_stages": 2,
+    "implemented": 2,
+    "executed": 0,
+    "verified": 0,
+    "execution_percent": 0.0
+  },
+  
+  "deterministic": true,
+  "reproducible": false,
+  "notes": [
+    "This manifest describes the INTENDED validation run.",
+    "Binaries have NOT been built yet.",
+    "Evidence has NOT been collected yet.",
+    "Execute execute_val019.ps1 to populate this manifest with actual results.",
+    "Current state: IMPLEMENTED (source exists, awaiting build and execution)"
+  ]
+}

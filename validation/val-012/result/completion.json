@@ -1,0 +1,12 @@
+{
+  "artifacts_produced": 1,
+  "evidence_path": "validation/val-012",
+  "goal": "Fix tokenizer off-by-one error",
+  "notes": "First system-level proof of Planner \uffffffe2\uffffff86\uffffff92 Executor \uffffffe2\uffffff86\uffffff92 Build \uffffffe2\uffffff86\uffffff92 Test \uffffffe2\uffffff86\uffffff92 Evidence",
+  "status": "FAIL",
+  "steps_executed": 4,
+  "timestamp": "2026-07-17T21:45:46Z",
+  "title": "Closed-Loop Autonomous Task Demonstration",
+  "validation_id": "VAL-012",
+  "verification_level": "V"
+}

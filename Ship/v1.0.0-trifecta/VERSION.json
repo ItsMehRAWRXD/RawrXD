@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0",
+  "codename": "trifecta",
+  "tag": "v1.0.0-trifecta-complete",
+  "commit": "c6b8e37fd",
+  "date": "2026-07-16T06:36:00Z",
+  "binaries": [
+    {
+      "name": "RawrEngine.exe",
+      "path": "bin/RawrEngine.exe",
+      "size": 4087808,
+      "size_mb": 3.90,
+      "sha256": "139517CBA64E443FB91E1DAF482C11D23EC459D02B97A916CE6D2FA8FF605A18",
+      "purpose": "Headless inference server",
+      "features": ["HTTP API", "JSON-RPC", "Docker-ready"]
+    },
+    {
+      "name": "RawrXD_Gold.exe",
+      "path": "bin/RawrXD_Gold.exe",
+      "size": 6421504,
+      "size_mb": 6.12,
+      "sha256": "21F3773B7FA0A8E12B567DA71B8324E9760E24F96B1691954856F77431CAF9CC",
+      "purpose": "Optimized inference runtime",
+      "features": ["RDNA3 GPU", "AVX512", "Flash Attention v2"]
+    },
+    {
+      "name": "RawrXD-Win32IDE.exe",
+      "path": "bin/RawrXD-Win32IDE.exe",
+      "size": 46659072,
+      "size_mb": 44.50,
+      "sha256": "E22F222DB17724E0F032CB5AFC1E99A8DAB3C30D2F0C39124D82961F0FCC3689",
+      "purpose": "Full GUI IDE",
+      "features": ["Monaco Editor", "LSP", "Debugging", "Extensions"]
+    }
+  ],
+  "total_size_mb": 54.52,
+  "archive": {
+    "name": "RawrXD-Trifecta-v1.0.0.zip",
+    "sha256": "D8853B2DEC08AF07561252CD4F8A74DD54B32E36132E1A86DF5A6E84197D807F",
+    "size": 16460468,
+    "size_mb": 15.70
+  },
+  "build": {
+    "toolchain": "MSVC 14.51.36231",
+    "cmake": "3.20+",
+    "ninja": "1.10+",
+    "windows_sdk": "10.0.22621.0"
+  },
+  "requirements": {
+    "os": "Windows 10 (1903+) or Windows 11",
+    "cpu": "x64 with AVX2 (AVX512 recommended)",
+    "ram": "8GB minimum, 16GB+ recommended",
+    "gpu": "Optional: RDNA3 for acceleration"
+  }
+}

@@ -1,0 +1,240 @@
+[
+  {
+    "event": "STATE_TRANSITION",
+    "input": "",
+    "metadata": {
+      "from": "IDLE",
+      "to": "GOAL_RECEIVED"
+    },
+    "output": "",
+    "state": "GOAL_RECEIVED",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "GOAL_RECEIVED",
+    "input": "",
+    "metadata": {
+      "description": "Add --version command",
+      "goal_id": "0de668f8e33bff01f6a294f76622cc72"
+    },
+    "output": "",
+    "state": "GOAL_RECEIVED",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "goal",
+    "metadata": {
+      "from": "GOAL_RECEIVED",
+      "to": "PLANNING"
+    },
+    "output": "plan",
+    "state": "PLANNING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "PLAN_CREATED",
+    "input": "",
+    "metadata": {
+      "steps": 4
+    },
+    "output": "",
+    "state": "PLANNING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "plan",
+    "metadata": {
+      "from": "PLANNING",
+      "to": "EXECUTING"
+    },
+    "output": "changes",
+    "state": "EXECUTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "CHANGES_APPLIED",
+    "input": "",
+    "metadata": {
+      "files": 2
+    },
+    "output": "",
+    "state": "EXECUTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "changes",
+    "metadata": {
+      "from": "EXECUTING",
+      "to": "BUILDING"
+    },
+    "output": "build",
+    "state": "BUILDING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "BUILD_COMPLETED",
+    "input": "",
+    "metadata": {
+      "duration_ms": 0,
+      "success": true
+    },
+    "output": "",
+    "state": "BUILDING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "build",
+    "metadata": {
+      "from": "BUILDING",
+      "to": "TESTING"
+    },
+    "output": "tests",
+    "state": "TESTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "TESTS_COMPLETED",
+    "input": "",
+    "metadata": {
+      "failed": 0,
+      "passed": 47
+    },
+    "output": "",
+    "state": "TESTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "test_result",
+    "metadata": {
+      "from": "TESTING",
+      "to": "COMPLETED"
+    },
+    "output": "success",
+    "state": "COMPLETED",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "",
+    "metadata": {
+      "from": "COMPLETED",
+      "to": "GOAL_RECEIVED"
+    },
+    "output": "",
+    "state": "GOAL_RECEIVED",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "GOAL_RECEIVED",
+    "input": "",
+    "metadata": {
+      "description": "Add --version command",
+      "goal_id": "0f9d5ee713fa1d0576a7e68e198560a4"
+    },
+    "output": "",
+    "state": "GOAL_RECEIVED",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "goal",
+    "metadata": {
+      "from": "GOAL_RECEIVED",
+      "to": "PLANNING"
+    },
+    "output": "plan",
+    "state": "PLANNING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "PLAN_CREATED",
+    "input": "",
+    "metadata": {
+      "steps": 4
+    },
+    "output": "",
+    "state": "PLANNING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "plan",
+    "metadata": {
+      "from": "PLANNING",
+      "to": "EXECUTING"
+    },
+    "output": "changes",
+    "state": "EXECUTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "CHANGES_APPLIED",
+    "input": "",
+    "metadata": {
+      "files": 4
+    },
+    "output": "",
+    "state": "EXECUTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "changes",
+    "metadata": {
+      "from": "EXECUTING",
+      "to": "BUILDING"
+    },
+    "output": "build",
+    "state": "BUILDING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "BUILD_COMPLETED",
+    "input": "",
+    "metadata": {
+      "duration_ms": 0,
+      "success": true
+    },
+    "output": "",
+    "state": "BUILDING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "build",
+    "metadata": {
+      "from": "BUILDING",
+      "to": "TESTING"
+    },
+    "output": "tests",
+    "state": "TESTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "TESTS_COMPLETED",
+    "input": "",
+    "metadata": {
+      "failed": 0,
+      "passed": 47
+    },
+    "output": "",
+    "state": "TESTING",
+    "timestamp": 1784325421
+  },
+  {
+    "event": "STATE_TRANSITION",
+    "input": "test_result",
+    "metadata": {
+      "from": "TESTING",
+      "to": "COMPLETED"
+    },
+    "output": "success",
+    "state": "COMPLETED",
+    "timestamp": 1784325421
+  }
+]

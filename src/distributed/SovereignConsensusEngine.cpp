@@ -93,12 +93,17 @@ std::string SafetyCommit::ToJson() const {
     oss << "{";
     oss << "\"proposal_id\":\"" << proposal_id << "\",";
     oss << "\"final_decision\":" << static_cast<int>(final_decision) << ",";
-    oss << "\"participating_nodes\":" << participating_nodes << ",";
+    oss << "\"participating_nodes\":[";
+    for (size_t i = 0; i < participating_nodes.size(); ++i) {
+        if (i > 0) oss << ",";
+        oss << "\"" << participating_nodes[i] << "\"";
+    }
+    oss << "],";
     oss << "\"votes_for\":" << votes_for << ",";
     oss << "\"votes_against\":" << votes_against << ",";
     oss << "\"committed\":" << (committed ? "true" : "false") << ",";
     oss << "\"timestamp\":" << std::chrono::duration_cast<std::chrono::milliseconds>(
-        timestamp.time_since_epoch()).count();
+        committed_at.time_since_epoch()).count();
     oss << "}";
     return oss.str();
 }
@@ -170,7 +175,12 @@ SafetyCommit ConsensusEngine::Propose(const SafetyProposal& proposal) {
     
     commit.votes_for = votes_for;
     commit.votes_against = votes_against;
-    commit.participating_nodes = votes.size();
+    commit.participating_node_count = static_cast<int>(votes.size());
+    
+    // Populate participating node IDs
+    for (const auto& vote : votes) {
+        commit.participating_nodes.push_back(vote.voter_node);
+    }
     
     // Determine outcome
     int quorum_size = topology->GetQuorumSize();
@@ -278,6 +288,15 @@ bool ConsensusEngine::IsCommitted(const std::string& proposal_id) const {
 
 void ConsensusEngine::OnCommit(std::function<void(const SafetyCommit&)> callback) {
     on_commit_ = callback;
+}
+
+SafetyProposal ConsensusEngine::GetProposal(const std::string& proposal_id) const {
+    std::lock_guard<std::mutex> lock(proposals_mutex_);
+    auto it = proposals_.find(proposal_id);
+    if (it != proposals_.end()) {
+        return it->second;
+    }
+    return {};
 }
 
 ConsensusEngine::Stats ConsensusEngine::GetStats() const {
@@ -464,15 +483,8 @@ void DistributedSafetyGate::OnConsensusCommit(const SafetyCommit& commit) {
     cached.timestamp = commit.timestamp;
     cached.proposal_id = commit.proposal_id;
     
-    // Extract operation_id from proposal
-    SafetyProposal proposal;
-    {
-        std::lock_guard<std::mutex> plock(proposals_mutex_);
-        auto it = proposals_.find(commit.proposal_id);
-        if (it != proposals_.end()) {
-            proposal = it->second;
-        }
-    }
+    // Extract operation_id from proposal via consensus engine
+    SafetyProposal proposal = consensus_->GetProposal(commit.proposal_id);
     
     if (!proposal.operation_id.empty()) {
         decision_cache_[proposal.operation_id] = cached;

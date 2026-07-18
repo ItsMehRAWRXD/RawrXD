@@ -1,0 +1,75 @@
+{
+  "build_result": {
+    "artifacts": [
+
+    ],
+    "build_success": true,
+    "duration_ms": 0,
+    "environment_ready": true,
+    "executed_at": 1784330208,
+    "execution": {
+      "mode": "real",
+      "reason": "Test failure demonstration"
+    },
+    "executor_success": true,
+    "exit_code": 0,
+    "failure_details": "",
+    "failure_reason": "None",
+    "stderr": "",
+    "stdout": "Build successful.\n",
+    "toolchain": {
+      "build_type": "",
+      "cmake_version": "",
+      "compiler": "",
+      "compiler_version": "",
+      "ninja_version": "",
+      "target_architecture": "",
+      "tool": ""
+    },
+    "working_directory": "val016_4_test"
+  },
+  "completed_at": 1784330208,
+  "environment_details": "",
+  "environment_ready": true,
+  "execution_id": "val016-4-test",
+  "hostname": "",
+  "mode": {
+    "mode": "real",
+    "reason": "Test failure demonstration"
+  },
+  "overall_success": false,
+  "primary_failure_reason": "TestsFailed",
+  "started_at": 1784330208,
+  "test_result": {
+    "all_tests_passed": false,
+    "duration_ms": 0,
+    "environment_ready": false,
+    "executed_at": 1784330208,
+    "execution": {
+      "mode": "real",
+      "reason": "Test failure demonstration"
+    },
+    "executor_success": true,
+    "exit_code": 1,
+    "failed": 0,
+    "failure_details": "Assertion failed: result == 8",
+    "failure_reason": "TestsFailed",
+    "framework": {
+      "executable": "",
+      "framework": "",
+      "framework_version": ""
+    },
+    "passed": 0,
+    "skipped": 0,
+    "stderr": "Running test...\nAssertion failed: result == 8, file test_source.cpp, line 12\nExpected: 8\nActual: 2\n",
+    "stdout": "",
+    "test_cases": [
+
+    ],
+    "timed_out": false,
+    "timeout_ms": 300000,
+    "total": 0
+  },
+  "user": "",
+  "validation_id": "VAL-016.4"
+}

@@ -1,0 +1,72 @@
+{
+  "artifacts": [
+    {
+      "name": "changes.patch",
+      "path": "validation/val-012/execution/changes.patch",
+      "timestamp": "2026-07-17T21:45:46Z"
+    }
+  ],
+  "goal": "Fix tokenizer off-by-one error",
+  "plan": [
+    {
+      "description": "Analyze tokenizer bounds",
+      "inputs": {
+        "pattern": "MAX_TOKEN_LENGTH"
+      },
+      "step": 1,
+      "tool": "search"
+    },
+    {
+      "description": "Modify bounds check",
+      "inputs": {
+        "change": "off-by-one fix",
+        "file": "src/tokenizer.cpp"
+      },
+      "step": 2,
+      "tool": "file_modify"
+    },
+    {
+      "description": "Build project",
+      "inputs": {
+        "target": "RawrEngine"
+      },
+      "step": 3,
+      "tool": "build"
+    },
+    {
+      "description": "Run tokenizer tests",
+      "inputs": {
+        "group": "tokenizer"
+      },
+      "step": 4,
+      "tool": "test"
+    }
+  ],
+  "steps": [
+    {
+      "status": "generated",
+      "step": "plan",
+      "timestamp": "2026-07-17T21:45:46Z"
+    },
+    {
+      "message": "Build completed successfully",
+      "status": "success",
+      "step": "build",
+      "timestamp": "2026-07-17T21:45:46Z"
+    },
+    {
+      "message": "All tests passed",
+      "status": "success",
+      "step": "test",
+      "timestamp": "2026-07-17T21:45:46Z"
+    },
+    {
+      "status": "updated",
+      "step": "memory",
+      "timestamp": "2026-07-17T21:45:46Z"
+    }
+  ],
+  "success": 1,
+  "timestamp_end": "2026-07-17T21:45:46Z",
+  "timestamp_start": "2026-07-17T21:45:46Z"
+}

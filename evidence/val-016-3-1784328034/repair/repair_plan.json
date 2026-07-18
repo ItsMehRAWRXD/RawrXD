@@ -1,0 +1,9 @@
+{
+  "action": "FixLinkError",
+  "confidence": 80,
+  "description": "Fix linking errors by adding missing libraries",
+  "files_to_modify": [
+
+  ],
+  "suggested_patch": "// Add missing libraries to CMakeLists.txt or link command"
+}

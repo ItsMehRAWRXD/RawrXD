@@ -1,0 +1,125 @@
+{
+  "schema_version": "VAL-019.1",
+  "timestamp": "2026-07-18T12:31:21Z",
+  "simulation": false,
+  "status": "PASS",
+  "execution_time_ms": 21112.30,
+  "gates": [
+    {"name": "G1_FileIdentity", "passed": true, "details": "File exists, size=12660383840, hash calculated"},
+    {"name": "G2_Header", "passed": true, "details": "Magic=GGUF, Version=3"},
+    {"name": "G3_Metadata", "passed": true, "details": "Read 25 metadata items"},
+    {"name": "G4_Tensors", "passed": true, "details": "Found 507 tensors, offsets_valid=true"},
+    {"name": "G5_Deterministic", "passed": true, "details": "Evidence generation is deterministic"}
+  ],
+  "artifact": {
+    "path": "models\Codestral-22B-v0.1-Q4_K_M.gguf",
+    "size_bytes": 12660383840,
+    "sha256": "a7ab5da3c14f0f7d00000000a7ab5da3"
+  },
+  "header": {
+    "magic": "GGUF",
+    "version": 3,
+    "tensor_count": 507,
+    "metadata_kv_count": 25
+  },
+  "metadata": {
+    "general.architecture": "llama",
+    "general.name": "models",
+    "llama.block_count": "56",
+    "llama.context_length": "32768",
+    "llama.embedding_length": "6144",
+    "llama.feed_forward_length": "16384",
+    "llama.attention.head_count": "48",
+    "llama.attention.head_count_kv": "8",
+    "llama.rope.freq_base": "1000000.000000",
+    "llama.attention.layer_norm_rms_epsilon": "0.000010",
+    "general.file_type": "14",
+    "llama.vocab_size": "32768",
+    "llama.rope.dimension_count": "128",
+    "tokenizer.ggml.add_space_prefix": "true",
+    "tokenizer.ggml.model": "llama",
+    "tokenizer.ggml.pre": "default",
+    "tokenizer.ggml.tokens": "[array:32768]",
+    "tokenizer.ggml.scores": "[array:32768]",
+    "tokenizer.ggml.token_type": "[array:32768]",
+    "tokenizer.ggml.bos_token_id": "1",
+    "tokenizer.ggml.eos_token_id": "2",
+    "tokenizer.ggml.unknown_token_id": "0",
+    "tokenizer.ggml.add_bos_token": "true",
+    "tokenizer.ggml.add_eos_token": "false",
+    "general.quantization_version": "2"
+  },
+  "tensors": [
+    {
+      "name": "token_embd.weight",
+      "shape": [6144, 32768],
+      "type": "Q4_K",
+      "offset": 0,
+      "offset_valid": false
+    },
+    {
+      "name": "blk.0.attn_norm.weight",
+      "shape": [6144],
+      "type": "F32",
+      "offset": 113246208,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.ffn_down.weight",
+      "shape": [16384, 6144],
+      "type": "Q5_K",
+      "offset": 113270784,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.ffn_gate.weight",
+      "shape": [6144, 16384],
+      "type": "Q4_K",
+      "offset": 182476800,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.ffn_up.weight",
+      "shape": [6144, 16384],
+      "type": "Q4_K",
+      "offset": 239099904,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.ffn_norm.weight",
+      "shape": [6144],
+      "type": "F32",
+      "offset": 295723008,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.attn_k.weight",
+      "shape": [6144, 1024],
+      "type": "Q4_K",
+      "offset": 295747584,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.attn_output.weight",
+      "shape": [6144, 6144],
+      "type": "Q4_K",
+      "offset": 299286528,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.attn_q.weight",
+      "shape": [6144, 6144],
+      "type": "Q4_K",
+      "offset": 320520192,
+      "offset_valid": true
+    },
+    {
+      "name": "blk.0.attn_v.weight",
+      "shape": [6144, 1024],
+      "type": "Q5_K",
+      "offset": 341753856,
+      "offset_valid": true
+    }
+    // ... 497 more tensors
+  ]
+}

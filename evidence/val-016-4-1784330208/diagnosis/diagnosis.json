@@ -1,0 +1,15 @@
+{
+  "affected_files": [
+
+  ],
+  "confidence": 90,
+  "diagnostics": [
+
+  ],
+  "failure_category": "TestsFailed",
+  "suggested_actions": [
+    "Debug failed tests",
+    "Check test assertions"
+  ],
+  "summary": "Some tests failed"
+}

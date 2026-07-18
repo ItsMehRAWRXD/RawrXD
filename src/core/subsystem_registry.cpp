@@ -17,9 +17,11 @@ SubsystemRegistry::SubsystemRegistry() {
 }
 
 SubsystemRegistry::~SubsystemRegistry() {
-    // Shutdown all subsystems in reverse order of initialization
+    // Shutdown all subsystems
     std::lock_guard<std::mutex> lock(g_registryMutex);
-    for (auto it = m_subsystems.rbegin(); it != m_subsystems.rend(); ++it) {
+    // Note: unordered_map doesn't support reverse iteration
+    // Shutdown in arbitrary order - subsystems should handle dependencies
+    for (auto it = m_subsystems.begin(); it != m_subsystems.end(); ++it) {
         if (it->second.state == SubsystemState::RUNNING) {
             shutdownSubsystem(it->first);
         }

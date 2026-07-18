@@ -1,0 +1,7 @@
+{
+  "validation_passed": true,
+  "model_path": "F:\\OllamaModels\\BigDaddyG-Q2_K-CHEETAH.gguf",
+  "timestamp": "2026-07-17T19:22:17",
+  "backend": "RawrXD_Native_StreamingGGUFLoader",
+  "simulation": false
+}

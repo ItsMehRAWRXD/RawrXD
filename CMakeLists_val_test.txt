@@ -1,0 +1,23 @@
+# Validation test for VAL-011: LSP Bridge Link Closure
+# Add this to the main CMakeLists.txt or build separately
+
+cmake_minimum_required(VERSION 3.20)
+project(ValLSPBridge LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Validation executable
+add_executable(val_lsp_bridge
+    validation_lsp_bridge_fix.cpp
+)
+
+target_include_directories(val_lsp_bridge PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lsp
+)
+
+# Link against the same libraries as RawrEngine
+# (This ensures we're testing with the same ABI)

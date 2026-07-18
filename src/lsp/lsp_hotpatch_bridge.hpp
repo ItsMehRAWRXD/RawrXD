@@ -28,8 +28,8 @@
 #include <atomic>
 #include <functional>
 
-// Forward declarations
-struct PatchResult;
+// Include PatchResult from patch_result.hpp (global scope with std::string fields)
+#include "patch_result.hpp"
 
 namespace RawrXD {
     namespace LSPServer {

@@ -1,0 +1,62 @@
+{
+  "events": [
+    {
+      "phase": "INIT",
+      "status": "VAL-018.2 starting",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "OPEN",
+      "status": "Opening GGUF file",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "OPEN",
+      "status": "SUCCESS",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "HEADER",
+      "status": "Parsing GGUF header",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "HEADER",
+      "status": "SUCCESS",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "METADATA",
+      "status": "Parsing metadata",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "METADATA",
+      "status": "SUCCESS",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "TENSORS",
+      "status": "Extracting tensor table",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "TENSORS",
+      "status": "SUCCESS",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "VALIDATION",
+      "status": "Validating tensor offsets",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "VALIDATION",
+      "status": "SUCCESS",
+      "timestamp": "2026-07-17T19:22:17"
+    },
+    {
+      "phase": "COMPLETE",
+      "status": "VAL-018.2 validation successful",
+      "timestamp": "2026-07-17T19:22:17"
+    }

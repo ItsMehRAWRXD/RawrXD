@@ -8,6 +8,8 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <atomic>
+#include <thread>
 #include <chrono>
 
 namespace Sovereign {
@@ -34,12 +36,22 @@ enum class RollbackState {
     CANCELLED = 6
 };
 
+// Rollback phases for internal state tracking
+enum class RollbackPhase {
+    PREPARE = 0,
+    EXECUTE = 1,
+    VERIFY = 2,
+    COMPLETE = 3,
+    FAILED = 4
+};
+
 struct RollbackCheckpoint {
     std::string checkpoint_id;
     std::string node_id;
     int64_t sequence_number = 0;
     std::chrono::steady_clock::time_point timestamp;
     std::string state_hash;  // Cryptographic hash of state
+    std::string checksum;
     std::map<std::string, std::string> metadata;
     
     std::string ToJson() const;
@@ -47,11 +59,14 @@ struct RollbackCheckpoint {
 
 struct RollbackOperation {
     std::string rollback_id;
+    std::string operation_id;
     std::string trigger_node;
+    std::string initiator_node;
     RollbackScope scope = RollbackScope::LOCAL;
     RollbackState state = RollbackState::PENDING;
     
     std::string target_checkpoint_id;
+    std::string target_checkpoint;
     std::vector<std::string> affected_nodes;
     std::map<std::string, RollbackCheckpoint> node_checkpoints;
     
@@ -70,12 +85,26 @@ struct RollbackResult {
     std::string rollback_id;
     bool success = false;
     RollbackState final_state = RollbackState::FAILED;
+    RollbackState final_phase = RollbackState::FAILED;
     std::vector<std::string> successful_nodes;
     std::vector<std::string> failed_nodes;
     std::map<std::string, std::string> node_errors;
     int64_t total_duration_ms = 0;
+    int completed_nodes = 0;
+    int duration_ms = 0;
+    std::string error_message;
+    std::map<std::string, bool> node_results;
     
     std::string ToJson() const;
+    static std::string PhaseToString(RollbackState phase);
+};
+
+// Internal rollback context for coordinator
+struct RollbackContext {
+    RollbackOperation operation;
+    RollbackPhase current_phase = RollbackPhase::PREPARE;
+    std::chrono::steady_clock::time_point start_time;
+    std::map<std::string, bool> node_results;
 };
 
 // ============================================================================
@@ -105,8 +134,8 @@ public:
     bool CreateCheckpoint(const std::string& node_id, 
                           const RollbackCheckpoint& checkpoint);
     bool DeleteCheckpoint(const std::string& checkpoint_id);
-    std::vector<RollbackCheckpoint> GetCheckpoints(const std::string& node_id);
-    RollbackCheckpoint GetLatestCheckpoint(const std::string& node_id);
+    std::vector<RollbackCheckpoint> GetCheckpoints(const std::string& node_id) const;
+    RollbackCheckpoint GetLatestCheckpoint(const std::string& node_id) const;
     
     // Rollback operations
     std::string InitiateRollback(const RollbackOperation& operation);
@@ -146,11 +175,17 @@ private:
     std::thread coordinator_thread_;
     std::atomic<int64_t> total_rollback_time_ms_{0};
     std::atomic<int> rollback_count_{0};
-    std::atomic<int> checkpoints_created_{0};
-    std::atomic<int> checkpoints_deleted_{0};
     
-    // Implementation
+    mutable std::mutex results_mutex_;
+    std::map<std::string, RollbackResult> results_;
+    
+    // Helper methods
+    std::string GenerateRollbackId();
     void CoordinatorLoop();
+    bool ExecutePhasePrepare(RollbackContext& context);
+    bool ExecutePhaseExecute(RollbackContext& context);
+    bool ExecutePhaseVerify(RollbackContext& context);
+    
     bool ExecutePhase(const std::string& rollback_id, RollbackState phase);
     bool PreparePhase(const std::string& rollback_id);
     bool ExecutePhaseImpl(const std::string& rollback_id);

@@ -7,7 +7,10 @@
 #include "SovereignNodeDiscovery.hpp"
 #include <vector>
 #include <map>
+#include <set>
 #include <memory>
+#include <atomic>
+#include <thread>
 #include <functional>
 
 namespace Sovereign {
@@ -135,10 +138,13 @@ private:
     
     std::thread sync_thread_;
     std::atomic<int64_t> total_replication_latency_us_{0};
-    std::atomic<int64_t> replication_count_{0};
-    std::atomic<int64_t> bytes_transferred_{0};
     
-    // Implementation
+    // Replication helpers
+    bool IsPrimary() const;
+    void ReplicateToBackups(const ReplicatedState& state);
+    void ReplicateToAllNodes(const ReplicatedState& state);
+    void ReplicateToQuorum(const ReplicatedState& state);
+    void AppendToLog(const ReplicatedState& state);
     void SyncLoop();
     bool ReplicateToNode(const std::string& node_id, 
                          const ReplicatedState& state);

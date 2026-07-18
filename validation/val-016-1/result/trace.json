@@ -1,0 +1,117 @@
+{
+  "goal": "Demonstrate autonomous environment repair loop",
+  "schema_version": "VAL-016-v1.0",
+  "steps": [
+    {
+      "description": "Deleted build directory to simulate environment failure",
+      "phase": "failure_injection",
+      "timestamp": "2026-07-17T22:35:27Z"
+    },
+    {
+      "attempt": 1,
+      "phase": "execution",
+      "result": {
+        "command": "cmd /c cd val016_test_build_dir 2>&1",
+        "duration_ms": 29,
+        "exit_code": 1,
+        "failure_category": "EnvironmentMissing",
+        "failure_reason": "Required file or directory missing",
+        "recoverable": 1,
+        "stderr": "",
+        "stdout": "The system cannot find the path specified.\n",
+        "timed_out": 0,
+        "tool": "cmd"
+      },
+      "timestamp": "2026-07-17T22:35:27Z"
+    },
+    {
+      "failure_category": "EnvironmentMissing",
+      "failure_reason": "Required file or directory missing",
+      "phase": "diagnosis",
+      "recoverable": 1,
+      "timestamp": "2026-07-17T22:35:27Z"
+    },
+    {
+      "phase": "repair_planning",
+      "plan": {
+        "overall_confidence": 0,
+        "plan_id": "repair-37868577882700",
+        "steps": [
+          {
+            "action": "CreateDirectory",
+            "confidence": 0,
+            "description": "Create missing build directory",
+            "reason": "Build directory missing - deterministic fix",
+            "step_number": 1,
+            "target": "build"
+          }
+        ],
+        "target_failure": "EnvironmentMissing"
+      },
+      "timestamp": "2026-07-17T22:35:27Z"
+    },
+    {
+      "phase": "repair_execution",
+      "result": {
+        "command": "",
+        "duration_ms": 0,
+        "exit_code": 0,
+        "failure_category": "None",
+        "failure_reason": "",
+        "recoverable": 1,
+        "stderr": "",
+        "stdout": "Directory created: build",
+        "timed_out": 160,
+        "tool": "repair"
+      },
+      "step": {
+        "action": "CreateDirectory",
+        "confidence": 0,
+        "description": "Create missing build directory",
+        "reason": "Build directory missing - deterministic fix",
+        "step_number": 1,
+        "target": "build"
+      },
+      "timestamp": "2026-07-17T22:35:27Z"
+    },
+    {
+      "attempt": 2,
+      "phase": "execution",
+      "result": {
+        "command": "cmd /c cd build 2>&1",
+        "duration_ms": 27,
+        "exit_code": 0,
+        "failure_category": "None",
+        "failure_reason": "",
+        "recoverable": 0,
+        "stderr": "",
+        "stdout": "",
+        "timed_out": 0,
+        "tool": "cmd"
+      },
+      "timestamp": "2026-07-17T22:35:27Z"
+    },
+    {
+      "phase": "verification",
+      "result": {
+        "command": "cmd /c cd build 2>&1",
+        "duration_ms": 27,
+        "exit_code": 0,
+        "failure_category": "None",
+        "failure_reason": "",
+        "recoverable": 0,
+        "stderr": "",
+        "stdout": "",
+        "timed_out": 0,
+        "tool": "cmd"
+      },
+      "success": 1,
+      "timestamp": "2026-07-17T22:35:27Z"
+    }
+  ],
+  "success": 1,
+  "timestamp_end": "2026-07-17T22:35:27Z",
+  "timestamp_start": "2026-07-17T22:35:27Z",
+  "validation_id": "VAL-016.1",
+  "validation_mode": "repair"
+}

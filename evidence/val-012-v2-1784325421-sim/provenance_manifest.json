@@ -1,0 +1,20 @@
+{
+  "artifacts": [
+    "val012_test.exe",
+    "completion.json"
+  ],
+  "build": {
+    "exit_code": 0,
+    "mode": "simulated",
+    "tool": "cmake+ninja"
+  },
+  "evidence_version": 2,
+  "mode": "simulated",
+  "status": "passed",
+  "tests": {
+    "failed": 0,
+    "mode": "simulated",
+    "passed": 0
+  },
+  "validation_id": "VAL-012"
+}

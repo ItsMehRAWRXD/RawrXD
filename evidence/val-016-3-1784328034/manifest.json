@@ -1,0 +1,14 @@
+{
+  "files": [
+    "failure/execution_result.json",
+    "failure/linker_output.log",
+    "diagnosis/diagnosis.json",
+    "repair/repair_plan.json",
+    "repair/repair_attempts.json",
+    "repair/patch.diff",
+    "verification/rebuild.log",
+    "result/completion.json"
+  ],
+  "timestamp": 1784328034,
+  "validation_id": "VAL-016.3"
+}

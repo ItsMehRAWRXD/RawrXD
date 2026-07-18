@@ -1,0 +1,181 @@
+{
+  "validation_suite": "VAL-019",
+  "description": "Golden vector validation for transformer execution chain",
+  "version": "1.0.0",
+  "baseline_commit": "8473df6ea611e082ace66b9876fb17bccebf259d",
+  "created": "2026-07-17T21:35:00Z",
+  "stages": [
+    {
+      "name": "GGUF",
+      "status": "completed",
+      "val_ref": "val-018-3",
+      "input": "test_data/tiny_model.gguf",
+      "expected_checksum": "sha256:a1b2c3d4e5f6...",
+      "tolerance": 0.0
+    },
+    {
+      "name": "Tokenizer",
+      "status": "completed",
+      "val_ref": "val-018-3",
+      "input": "test_data/sample_prompt.txt",
+      "expected_checksum": "sha256:tokenized_output_hash...",
+      "tolerance": 0.0
+    },
+    {
+      "name": "Embedding",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\Embedding_input.bin",
+      "expected_output": "tensors\\expected\\Embedding_output.bin",
+      "expected_checksum": "sha256:fc725312266d8e1d38121648bef134aab8d01e86142b8b285164feabac2ffe46",
+      "tolerance": 1e-05,
+      "shape": [
+        1,
+        10,
+        4096
+      ],
+      "dtype": "float32",
+      "input_checksum": "sha256:70177f62c1f5d29de3b728965e271839e82e0707a8c1bcf2559f12af1306a090"
+    },
+    {
+      "name": "RMSNorm",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\RMSNorm_input.bin",
+      "expected_output": "tensors\\expected\\RMSNorm_output.bin",
+      "expected_checksum": "sha256:965839ca8c25329b8223df5ff48e3513d266209a60fbf66ca9d4220e78f56e52",
+      "tolerance": 1e-05,
+      "shape": [
+        1,
+        10,
+        4096
+      ],
+      "dtype": "float32",
+      "input_checksum": "sha256:a59828a3541a4efd554036d0d697e026bf4f52bd4461e37dd09de4a316fe7b2a"
+    },
+    {
+      "name": "QKV",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\QKV_input.bin",
+      "expected_output": "tensors\\expected\\QKV_output.bin",
+      "expected_checksum": "sha256:283aaf52725f0fd33d2122e9a9ffe611fdfb3a6bfe7d3519106c13ae9bd2dfb5",
+      "tolerance": 0.0001,
+      "shape": [
+        1,
+        10,
+        12288
+      ],
+      "dtype": "float32",
+      "input_checksum": "sha256:a59828a3541a4efd554036d0d697e026bf4f52bd4461e37dd09de4a316fe7b2a"
+    },
+    {
+      "name": "RoPE",
+      "status": "pending",
+      "val_ref": null,
+      "input": "val-019/tensors/input/rope_input.bin",
+      "expected_output": "val-019/tensors/expected/rope_output.bin",
+      "expected_checksum": "TBD",
+      "tolerance": 1e-05,
+      "shape": [
+        1,
+        10,
+        4096
+      ],
+      "dtype": "float32"
+    },
+    {
+      "name": "Attention",
+      "status": "pending",
+      "val_ref": null,
+      "input": "val-019/tensors/input/attention_input.bin",
+      "expected_output": "val-019/tensors/expected/attention_output.bin",
+      "expected_checksum": "TBD",
+      "tolerance": 0.001,
+      "shape": [
+        1,
+        10,
+        4096
+      ],
+      "dtype": "float32"
+    },
+    {
+      "name": "FFN",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\FFN_input.bin",
+      "expected_output": "tensors\\expected\\FFN_output.bin",
+      "expected_checksum": "sha256:91a60023fa46fcee62e2ef7ca361f1037623246e8ba34f37d08e5c0ae37f955e",
+      "tolerance": 0.001,
+      "shape": [
+        1,
+        10,
+        4096
+      ],
+      "dtype": "float32",
+      "input_checksum": "sha256:a59828a3541a4efd554036d0d697e026bf4f52bd4461e37dd09de4a316fe7b2a"
+    },
+    {
+      "name": "KV_Cache",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\KV_Cache_input.bin",
+      "expected_output": "tensors\\expected\\KV_Cache_output.bin",
+      "expected_checksum": "sha256:fdaf5c0fffd783aae5b3ca800680bba32f4bc48b4c2b6ebba10db8091264e101",
+      "tolerance": 0.0,
+      "shape": [
+        32,
+        2,
+        10,
+        128
+      ],
+      "dtype": "float32",
+      "input_checksum": "sha256:9c190a7ce2345356c17a9075c8b8c68b836a7cf7abfb45d18d7d4a3b4fc61cb0"
+    },
+    {
+      "name": "Logits",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\Logits_input.bin",
+      "expected_output": "tensors\\expected\\Logits_output.bin",
+      "expected_checksum": "sha256:31ae74e9b308dfa99b8172515f76c074dec1d83af1570b70fab197aca2af57b7",
+      "tolerance": 0.01,
+      "shape": [
+        1,
+        10,
+        32000
+      ],
+      "dtype": "float32",
+      "input_checksum": "sha256:a59828a3541a4efd554036d0d697e026bf4f52bd4461e37dd09de4a316fe7b2a"
+    },
+    {
+      "name": "Sampling",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\Sampling_input.bin",
+      "expected_output": "tensors\\expected\\Sampling_output.bin",
+      "expected_checksum": "sha256:6dc1c43796be5e95c13885f67cf33835e4ff555078240174da6792cd512de168",
+      "tolerance": 0.0,
+      "shape": [
+        1
+      ],
+      "dtype": "int32",
+      "input_checksum": "sha256:e092c4548b6b6d2a690de434d6bfc42ce99a1d403e6d41010b4dd0f6697b424b"
+    },
+    {
+      "name": "Streaming",
+      "status": "ready",
+      "val_ref": null,
+      "input": "tensors\\input\\Streaming_input.bin",
+      "expected_output": "tensors\\expected\\Streaming_output.bin",
+      "expected_checksum": "sha256:21a6b8f6987e6b65928c58865d7339fd206cb3fb85b9fb0926bf0816b17f6abe",
+      "tolerance": 0.0,
+      "shape": [
+        1,
+        100
+      ],
+      "dtype": "int32",
+      "input_checksum": "sha256:22e65432cf99f8934a11fde13204bd964ab3dbd7983b733cb3f774abcf259242"
+    }
+  ]
+}

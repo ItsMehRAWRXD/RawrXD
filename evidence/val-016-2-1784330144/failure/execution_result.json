@@ -1,0 +1,45 @@
+{
+  "build_result": {
+    "artifacts": [
+
+    ],
+    "build_success": false,
+    "duration_ms": 0,
+    "environment_ready": true,
+    "executed_at": 1784330144,
+    "execution": {
+      "mode": "real",
+      "reason": "Compile failure test"
+    },
+    "executor_success": true,
+    "exit_code": 1,
+    "failure_details": "Compilation failed with errors",
+    "failure_reason": "CompileFailed",
+    "stderr": "test_source.cpp:5:13: error: 'undefined_variable' was not declared in this scope\n    int x = undefined_variable;\n            ^~~~~~~~~~~~~~~~~~\ntest_source.cpp:8:14: error: expected ';' before 'int'\n    int y = 42\n             ^\n              ;\n",
+    "stdout": "",
+    "toolchain": {
+      "build_type": "",
+      "cmake_version": "",
+      "compiler": "",
+      "compiler_version": "",
+      "ninja_version": "",
+      "target_architecture": "",
+      "tool": ""
+    },
+    "working_directory": "val016_2_test"
+  },
+  "completed_at": 1784330144,
+  "environment_details": "",
+  "environment_ready": true,
+  "execution_id": "val016-2-test",
+  "hostname": "",
+  "mode": {
+    "mode": "real",
+    "reason": "Compile failure test"
+  },
+  "overall_success": false,
+  "primary_failure_reason": "CompileFailed",
+  "started_at": 1784330144,
+  "user": "",
+  "validation_id": "VAL-016.2"
+}

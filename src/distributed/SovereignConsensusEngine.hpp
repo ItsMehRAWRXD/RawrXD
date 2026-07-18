@@ -9,6 +9,9 @@
 #include <map>
 #include <chrono>
 #include <mutex>
+#include <atomic>
+#include <thread>
+#include <future>
 #include <condition_variable>
 
 namespace Sovereign {
@@ -26,13 +29,25 @@ enum class SafetyDecision {
     ESCALATE = 4     // Require human review
 };
 
+enum class SafetyPriority {
+    LOW = 0,
+    NORMAL = 1,
+    HIGH = 2,
+    CRITICAL = 3
+};
+
 struct SafetyProposal {
     std::string proposal_id;
     std::string operation_id;
     std::string node_id;
+    std::string proposer_node;
     SafetyDecision proposed_action;
+    SafetyDecision proposed_decision;
+    SafetyPriority priority = SafetyPriority::NORMAL;
     std::string rationale;
+    std::string context;
     std::map<std::string, double> metrics;
+    std::vector<std::string> affected_nodes;
     std::chrono::steady_clock::time_point timestamp;
     int term = 0;
     
@@ -43,9 +58,13 @@ struct SafetyProposal {
 struct SafetyVote {
     std::string proposal_id;
     std::string node_id;
+    std::string voter_node;
     bool approve = false;
+    bool vote = false;
     SafetyDecision alternative;
     std::string reason;
+    std::string rationale;
+    std::chrono::steady_clock::time_point timestamp;
     int term = 0;
     
     std::string ToJson() const;
@@ -56,8 +75,12 @@ struct SafetyCommit {
     SafetyDecision final_decision;
     int votes_for = 0;
     int votes_against = 0;
+    bool committed = false;
     std::vector<std::string> participating_nodes;
     std::chrono::steady_clock::time_point committed_at;
+    std::chrono::steady_clock::time_point timestamp;
+    std::string rationale;
+    int participating_node_count = 0;
     
     std::string ToJson() const;
 };
@@ -84,14 +107,20 @@ public:
     void Shutdown();
     
     // Proposal lifecycle
-    std::string Propose(const SafetyProposal& proposal);
-    bool Vote(const std::string& proposal_id, const SafetyVote& vote);
-    SafetyCommit GetResult(const std::string& proposal_id, int timeout_ms = 5000);
+    SafetyCommit Propose(const SafetyProposal& proposal);
+    SafetyVote Vote(const SafetyProposal& proposal);
+    SafetyCommit GetCommit(const std::string& proposal_id) const;
     
     // Query
-    bool IsCommitted(const std::string& proposal_id);
+    bool IsCommitted(const std::string& proposal_id) const;
     SafetyDecision GetDecision(const std::string& proposal_id);
     std::vector<SafetyCommit> GetRecentCommits(int count = 100);
+    
+    // Callbacks
+    void OnCommit(std::function<void(const SafetyCommit&)> callback);
+    
+    // Get proposal by ID (for DistributedSafetyGate)
+    SafetyProposal GetProposal(const std::string& proposal_id) const;
     
     // Statistics
     struct Stats {
@@ -101,6 +130,9 @@ public:
         int timeouts = 0;
         double avg_consensus_time_ms = 0.0;
         int current_pending = 0;
+        int proposals_initiated = 0;
+        int commits_reached = 0;
+        int commits_failed = 0;
     };
     Stats GetStats() const;
     
@@ -109,33 +141,35 @@ private:
     std::shared_ptr<NodeDiscovery> discovery_;
     std::atomic<bool> running_{false};
     
-    struct PendingProposal {
-        SafetyProposal proposal;
-        std::map<std::string, SafetyVote> votes;
-        std::chrono::steady_clock::time_point deadline;
-        std::promise<SafetyCommit> result_promise;
-    };
-    
     mutable std::mutex proposals_mutex_;
-    std::map<std::string, std::unique_ptr<PendingProposal>> pending_;
-    std::vector<SafetyCommit> committed_;
+    std::map<std::string, SafetyProposal> proposals_;
+    mutable std::mutex commits_mutex_;
+    std::map<std::string, SafetyCommit> commits_;
+    std::atomic<double> avg_consensus_time_ms_{0.0};
+    std::function<void(const SafetyCommit&)> on_commit_;
     
-    std::thread worker_thread_;
-    std::atomic<int64_t> total_consensus_time_ms_{0};
+    std::thread vote_thread_;
+    
+    // Vote collection
+    mutable std::mutex votes_mutex_;
+    std::map<std::string, std::vector<SafetyVote>> pending_votes_;
     std::atomic<int> consensus_count_{0};
     
     // Implementation
-    void WorkerLoop();
-    void ProcessProposal(const std::string& proposal_id);
-    bool CheckConsensus(const PendingProposal& pending);
-    SafetyCommit Finalize(const std::string& proposal_id, 
-                          const PendingProposal& pending);
-    void BroadcastCommit(const SafetyCommit& commit);
-    void CleanupExpired();
-    
-    // Network
-    bool SendVoteRequest(const std::string& node_id, const SafetyProposal& proposal);
-    void SendCommitNotification(const std::string& node_id, const SafetyCommit& commit);
+    void VoteCollectionLoop();
+    void BroadcastProposal(const SafetyProposal& proposal);
+    std::vector<SafetyVote> CollectVotes(const std::string& proposal_id, int timeout_ms);
+    bool HasRecentCheckpoint() const;
+};
+
+// ============================================================================
+// Safety Context
+// ============================================================================
+
+struct SafetyContext {
+    std::string operation_id;
+    SafetyPriority priority = SafetyPriority::NORMAL;
+    std::string description;
 };
 
 // ============================================================================
@@ -149,39 +183,51 @@ public:
         int local_timeout_ms = 100;
         int distributed_timeout_ms = 5000;
         bool require_distributed_for_critical = true;
+        int cache_duration_ms = 5000;
     };
     
     explicit DistributedSafetyGate(const Config& config);
+    ~DistributedSafetyGate();
     
-    bool Initialize(std::shared_ptr<ConsensusEngine> consensus);
+    bool Initialize(std::shared_ptr<ConsensusEngine> consensus,
+                    std::shared_ptr<NodeDiscovery> discovery);
     void Shutdown();
     
     // Safety check with distributed consensus
-    SafetyDecision Check(const SafetyProposal& proposal);
+    SafetyDecision CheckSafety(const SafetyContext& context);
     
     // Fast path for non-critical operations
-    SafetyDecision CheckLocal(const SafetyProposal& proposal);
+    SafetyDecision CheckLocalSafety(const SafetyContext& context);
     
-    // Statistics
-    struct Stats {
-        int total_checks = 0;
-        int local_approvals = 0;
-        int distributed_checks = 0;
-        int distributed_approvals = 0;
-        int rollbacks_triggered = 0;
-        double avg_decision_time_ms = 0.0;
-    };
-    Stats GetStats() const;
+    // Evaluate safety based on context
+    SafetyDecision EvaluateSafety(const SafetyContext& context);
+    
+    // Check if safe to proceed (cached)
+    bool IsSafeToProceed(const std::string& operation_id);
+    
+    // Invalidate cached decision
+    void InvalidateCache(const std::string& operation_id);
+    
+    // Generate unique proposal ID
+    static std::string GenerateProposalId();
     
 private:
     Config config_;
     std::shared_ptr<ConsensusEngine> consensus_;
-    std::atomic<int> total_checks_{0};
-    std::atomic<int> local_approvals_{0};
-    std::atomic<int> distributed_checks_{0};
-    std::atomic<int> distributed_approvals_{0};
-    std::atomic<int> rollbacks_{0};
-    std::atomic<int64_t> total_decision_time_us_{0};
+    std::shared_ptr<NodeDiscovery> discovery_;
+    
+    struct CachedDecision {
+        SafetyDecision decision;
+        std::chrono::steady_clock::time_point timestamp;
+        std::string proposal_id;
+    };
+    
+    mutable std::mutex cache_mutex_;
+    std::map<std::string, CachedDecision> decision_cache_;
+    
+    std::function<void(SafetyDecision, const SafetyCommit&)> on_decision_;
+    
+    void OnConsensusCommit(const SafetyCommit& commit);
 };
 
 } // namespace Distributed

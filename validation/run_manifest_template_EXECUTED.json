@@ -1,0 +1,187 @@
+{
+  "_comment": "TEMPLATE - This is what a COMPLETED validation run manifest looks like",
+  "_status": "NOT_POPULATED - Execute pipeline to generate real values",
+  
+  "validation_run": {
+    "id": "VAL019-2026-07-18-001",
+    "timestamp": "2026-07-18T21:30:00Z",
+    "status": "COMPLETED",
+    "description": "Synthetic vector validation - embedding and rmsnorm stages",
+    "deterministic": true,
+    "reproducible": true
+  },
+  
+  "environment": {
+    "git_commit": "8473df6ea611e082ace66b9876fb17bccebf259d",
+    "git_branch": "copilot/vscode-mlyextom-3zgo-phase7a",
+    "git_repo": "https://github.com/ItsMehRAWRXD/RawrXD",
+    "compiler": {
+      "name": "MSVC",
+      "version": "14.50.35717",
+      "path": "C:\\VS2022Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe",
+      "flags": "/EHsc /O2 /W4"
+    },
+    "os": {
+      "name": "Windows 10 Home",
+      "version": "2009",
+      "build": "19045.3693"
+    },
+    "hardware": {
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "cpu_cores": 8,
+      "cpu_logical": 16,
+      "gpu": "AMD Radeon RX 7800 XT",
+      "gpu_vram_gb": 16,
+      "memory_total_gb": 192
+    }
+  },
+  
+  "artifacts": {
+    "embedding_stage": {
+      "source": "validation/embedding_stage.cpp",
+      "source_sha256": "[TO_BE_COMPUTED]",
+      "binary_path": "validation/embedding_stage.exe",
+      "binary_sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
+      "build_timestamp": "2026-07-18T21:25:00Z",
+      "status": "BUILT_AND_EXECUTED"
+    },
+    "rmsnorm_stage": {
+      "source": "validation/rmsnorm_stage.cpp",
+      "source_sha256": "[TO_BE_COMPUTED]",
+      "binary_path": "validation/rmsnorm_stage.exe",
+      "binary_sha256": "[TO_BE_COMPUTED_AFTER_BUILD]",
+      "build_timestamp": "2026-07-18T21:26:00Z",
+      "status": "BUILT_AND_EXECUTED"
+    }
+  },
+  
+  "vectors": {
+    "mode": "synthetic",
+    "source_gguf": null,
+    "source_gguf_sha256": null,
+    "generation_seed": 42,
+    "embedding_input": {
+      "path": "validation/val-019/vectors/embedding_input.bin",
+      "sha256": "sha256:4f6addc9659d6fb90fe94b6688a79f2a1fa8d36ec43f8f3e1d9b6528c448a384",
+      "shape": [5],
+      "dtype": "int32",
+      "size_bytes": 20
+    },
+    "embedding_expected": {
+      "path": "validation/val-019/vectors/embedding_expected.bin",
+      "sha256": "sha256:51246bdd5446d14aa906f60bd996cb2e85d4e3f3f226aa1f33ee0c6a7ad9ec7b",
+      "shape": [5, 4096],
+      "dtype": "float32",
+      "size_bytes": 81920,
+      "generation": {
+        "method": "deterministic_seeded",
+        "seed": 42,
+        "source": "generate_embedding_golden.py",
+        "timestamp": "2026-07-17T21:40:00Z"
+      }
+    },
+    "rmsnorm_input": {
+      "path": "validation/val-019/vectors/rmsnorm_input.bin",
+      "sha256": "sha256:8dd3270ad9fb70b291f2454d6d0a7417a933015465d83234a4dba51f40e57d70",
+      "shape": [1, 10, 4096],
+      "dtype": "float32",
+      "size_bytes": 163840
+    },
+    "rmsnorm_expected": {
+      "path": "validation/val-019/vectors/rmsnorm_expected.bin",
+      "sha256": "sha256:5f81351e13359ee3864b481d10c63df824b88ab015cc2347019df93ae055be43",
+      "shape": [1, 10, 4096],
+      "dtype": "float32",
+      "size_bytes": 163840,
+      "generation": {
+        "method": "deterministic_seeded",
+        "seed": 42,
+        "source": "generate_golden_vectors.py",
+        "timestamp": "2026-07-17T21:40:00Z"
+      }
+    }
+  },
+  
+  "stages": [
+    {
+      "name": "embedding",
+      "status": "PASS",
+      "kernel_version": "embedding_lookup_v1.0_native",
+      "tolerance": 1e-5,
+      "input_path": "validation/val-019/vectors/embedding_input.bin",
+      "input_sha256": "sha256:4f6addc9659d6fb90fe94b6688a79f2a1fa8d36ec43f8f3e1d9b6528c448a384",
+      "expected_path": "validation/val-019/vectors/embedding_expected.bin",
+      "expected_sha256": "sha256:51246bdd5446d14aa906f60bd996cb2e85d4e3f3f226aa1f33ee0c6a7ad9ec7b",
+      "actual_path": "validation/val-019/evidence/embedding_actual.bin",
+      "actual_sha256": "[TO_BE_COMPUTED_AFTER_EXECUTION]",
+      "evidence_path": "validation/val-019/evidence/embedding_evidence.json",
+      "evidence_sha256": "[TO_BE_COMPUTED_AFTER_EXECUTION]",
+      "result": {
+        "max_error": 0.0,
+        "runtime_ms": 0.5,
+        "input_checksum": "sha256:4f6addc9659d6fb90fe94b6688a79f2a1fa8d36ec43f8f3e1d9b6528c448a384",
+        "output_checksum": "sha256:51246bdd5446d14aa906f60bd996cb2e85d4e3f3f226aa1f33ee0c6a7ad9ec7b"
+      },
+      "execution_timestamp": "2026-07-18T21:28:00Z"
+    },
+    {
+      "name": "rmsnorm",
+      "status": "PASS",
+      "kernel_version": "rmsnorm_v1.0_native",
+      "tolerance": 1e-5,
+      "input_path": "validation/val-019/vectors/rmsnorm_input.bin",
+      "input_sha256": "sha256:8dd3270ad9fb70b291f2454d6d0a7417a933015465d83234a4dba51f40e57d70",
+      "expected_path": "validation/val-019/vectors/rmsnorm_expected.bin",
+      "expected_sha256": "sha256:5f81351e13359ee3864b481d10c63df824b88ab015cc2347019df93ae055be43",
+      "actual_path": "validation/val-019/evidence/rmsnorm_actual.bin",
+      "actual_sha256": "[TO_BE_COMPUTED_AFTER_EXECUTION]",
+      "evidence_path": "validation/val-019/evidence/rmsnorm_evidence.json",
+      "evidence_sha256": "[TO_BE_COMPUTED_AFTER_EXECUTION]",
+      "result": {
+        "max_error": 1e-7,
+        "runtime_ms": 0.8,
+        "mean_rms": 1.0,
+        "min_rms": 0.99,
+        "max_rms": 1.01,
+        "invariants": {
+          "has_nan": false,
+          "has_inf": false,
+          "output_shape_matches": true,
+          "rms_range_valid": true,
+          "nan_count": 0,
+          "inf_count": 0
+        }
+      },
+      "execution_timestamp": "2026-07-18T21:29:00Z"
+    }
+  ],
+  
+  "summary": {
+    "total_stages": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "execution_percent": 100.0,
+    "total_runtime_ms": 1.3
+  },
+  
+  "provenance_chain": {
+    "git_commit": "8473df6ea611e082ace66b9876fb17bccebf259d",
+    "embedding_binary_sha256": "[TO_BE_COMPUTED]",
+    "rmsnorm_binary_sha256": "[TO_BE_COMPUTED]",
+    "compiler_version": "MSVC 14.50.35717",
+    "golden_vectors_sha256": {
+      "embedding_input": "sha256:4f6addc9659d6fb90fe94b6688a79f2a1fa8d36ec43f8f3e1d9b6528c448a384",
+      "embedding_expected": "sha256:51246bdd5446d14aa906f60bd996cb2e85d4e3f3f226aa1f33ee0c6a7ad9ec7b",
+      "rmsnorm_input": "sha256:8dd3270ad9fb70b291f2454d6d0a7417a933015465d83234a4dba51f40e57d70",
+      "rmsnorm_expected": "sha256:5f81351e13359ee3864b481d10c63df824b88ab015cc2347019df93ae055be43"
+    },
+    "evidence_sha256": "[TO_BE_COMPUTED]"
+  },
+  
+  "notes": [
+    "This is a TEMPLATE showing the structure of a completed validation run.",
+    "Execute the pipeline to populate with actual values.",
+    "All '[TO_BE_COMPUTED]' fields will be filled in by the execution pipeline."
+  ]
+}

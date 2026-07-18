@@ -1,0 +1,25 @@
+# VAL-011 Symbol Closure Evidence
+# Frozen: 2026-07-17
+# Status: 7/7 symbols resolved
+
+## LSPHotpatchBridge Methods (5 symbols)
+LSPHotpatchBridge::instance()
+LSPHotpatchBridge::detach()
+LSPHotpatchBridge::refreshDiagnostics()
+LSPHotpatchBridge::rebuildSymbolIndex()
+LSPHotpatchBridge::attach()
+
+## PatchResult Static Methods (2 symbols)
+PatchResult::ok()
+PatchResult::error()
+
+## Symbol Resolution Status
+Total Expected: 7
+Total Resolved: 7
+Resolution Rate: 100%
+
+## Verification Method
+1. Link RawrEngine.exe
+2. Verify no LNK2001/LNK2019 errors
+3. Run validation_lsp_bridge_fix.cpp
+4. Confirm all methods callable

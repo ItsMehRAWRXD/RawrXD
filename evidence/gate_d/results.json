@@ -1,0 +1,156 @@
+{
+  "results_version": "1.0",
+  "benchmark_date": "2026-07-17T00:00:00Z",
+  "gate": "D",
+  
+  "executed_validations": [
+    {
+      "id": "VAL-009",
+      "name": "Telemetry Validation",
+      "status": "completed",
+      "timestamp": "2026-07-17T00:00:00Z",
+      
+      "differential_results": [
+        {
+          "kernel": "SiLU Activation",
+          "size": 4096,
+          "scalar_cycles": 59834,
+          "masm_cycles": 7916,
+          "speedup": 7.56,
+          "max_error": 1.43e-06,
+          "status": "PASS"
+        },
+        {
+          "kernel": "RMS Normalization",
+          "size": 4096,
+          "scalar_cycles": 12542,
+          "masm_cycles": 8072,
+          "speedup": 1.55,
+          "max_error": 2.38e-07,
+          "status": "PASS"
+        },
+        {
+          "kernel": "Softmax",
+          "size": 4096,
+          "scalar_cycles": 62926,
+          "masm_cycles": 44483,
+          "speedup": 1.41,
+          "max_error": 0.0,
+          "status": "PASS"
+        }
+      ],
+      
+      "kernel_telemetry": [
+        {
+          "name": "Q4_0 Dequantize",
+          "cycles": 222894,
+          "time_ms": 0.053,
+          "cycles_per_byte": 54.42,
+          "bandwidth_gb_s": 0.07,
+          "aligned": true
+        },
+        {
+          "name": "Q8_0 Dequantize",
+          "cycles": 151620,
+          "time_ms": 0.036
+        },
+        {
+          "name": "Attention Softmax",
+          "cycles": 206640,
+          "time_ms": 0.049
+        },
+        {
+          "name": "RMS Normalization",
+          "cycles": 148302,
+          "time_ms": 0.035
+        },
+        {
+          "name": "SiLU Activation",
+          "cycles": 169512,
+          "time_ms": 0.040
+        }
+      ],
+      
+      "summary": {
+        "total_executions": 15,
+        "success_rate": 1.0,
+        "average_cycles": 9059,
+        "average_time_ms": 0.003
+      }
+    },
+    
+    {
+      "id": "VAL-005",
+      "name": "GPU Benchmark",
+      "status": "executed",
+      "timestamp": "2026-07-17T00:00:00Z",
+      
+      "gpu_detected": "AMD Radeon RX 7800 XT",
+      "shader_compilation": "completed",
+      "reported_tps": 784000,
+      
+      "notes": [
+        "Single run - statistical validation pending",
+        "Workload: 16MB KV cache",
+        "Measurement method: Internal timer",
+        "Warmup: None",
+        "Variance: Not captured"
+      ]
+    },
+    
+    {
+      "id": "VAL-011",
+      "name": "Flash Attention Kernel",
+      "status": "built",
+      "timestamp": "2026-07-17T12:57:00Z",
+      
+      "build_info": {
+        "binary_size_bytes": 327168,
+        "sha256": "F0E9FAD17D3EC6BEE457682211FA94F40B2017620EB3C9D561F9430C3F392...",
+        "fix_applied": "Changed __restrict__ to __restrict in flash_attention.h:21"
+      },
+      
+      "runtime_status": "partial",
+      "runtime_notes": [
+        "Binary executes",
+        "GPU dispatch fails due to runtime configuration",
+        "Separate from build validation"
+      ]
+    }
+  ],
+  
+  "statistical_summary": {
+    "total_validations": 3,
+    "completed": 2,
+    "partial": 1,
+    "failed": 0,
+    
+    "speedups_observed": {
+      "SiLU": 7.56,
+      "RMSNorm": 1.55,
+      "Softmax": 1.41
+    },
+    
+    "max_errors": {
+      "SiLU": 1.43e-06,
+      "RMSNorm": 2.38e-07,
+      "Softmax": 0.0
+    }
+  },
+  
+  "limitations": [
+    "Single run only - no variance captured",
+    "No warmup protocol implemented",
+    "No confidence intervals calculated",
+    "Hardware temperature not monitored",
+    "No baseline comparison available"
+  ],
+  
+  "next_steps": [
+    "Implement warmup protocol",
+    "Run 100 iterations for statistical significance",
+    "Calculate 95% confidence intervals",
+    "Establish baseline on reference hardware",
+    "Add thermal monitoring"
+  ]
+}

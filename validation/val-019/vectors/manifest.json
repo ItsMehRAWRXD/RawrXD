@@ -1,0 +1,164 @@
+{
+  "version": "VAL-019",
+  "generated": "2026-07-17T21:40:00Z",
+  "model": "synthetic",
+  "vectors": [
+    {
+      "name": "Embedding",
+      "input_shape": [
+        5
+      ],
+      "output_shape": [
+        5,
+        4096
+      ],
+      "input_checksum": "sha256:4f6addc9659d6fb90fe94b6688a79f2a1fa8d36ec43f8f3e1d9b6528c448a384",
+      "output_checksum": "sha256:6004101313ca3188b769b5b2c662b78e6cce7282f4e4b6ec15af334863a99adf",
+      "tolerance": 1e-05
+    },
+    {
+      "name": "RMSNorm",
+      "input_shape": [
+        1,
+        10,
+        4096
+      ],
+      "output_shape": [
+        1,
+        10,
+        4096
+      ],
+      "input_checksum": "sha256:8dd3270ad9fb70b291f2454d6d0a7417a933015465d83234a4dba51f40e57d70",
+      "output_checksum": "sha256:5f81351e13359ee3864b481d10c63df824b88ab015cc2347019df93ae055be43",
+      "tolerance": 1e-05
+    },
+    {
+      "name": "QKV",
+      "input_shape": [
+        1,
+        10,
+        4096
+      ],
+      "output_shape": [
+        1,
+        10,
+        12288
+      ],
+      "input_checksum": "sha256:1df0a469e5fff1717afc24abd02c391ad765c0377e0ba24a9c0e953d686a5318",
+      "output_checksum": "sha256:44d0f962a3e506aa59bf9361088dc4ff342d998db056e3ae7f4614a72fdf3455",
+      "tolerance": 0.0001
+    },
+    {
+      "name": "RoPE",
+      "input_shape": [
+        1,
+        64,
+        10,
+        128
+      ],
+      "output_shape": [
+        1,
+        64,
+        10,
+        128
+      ],
+      "input_checksum": "sha256:58c1ec2ff87f0150223852a5a27ee821d892dd7fac30465e000ff7ad7192e8c8",
+      "output_checksum": "sha256:58c1ec2ff87f0150223852a5a27ee821d892dd7fac30465e000ff7ad7192e8c8",
+      "tolerance": 0.0001
+    },
+    {
+      "name": "Attention",
+      "input_shape": [
+        1,
+        96,
+        10,
+        128
+      ],
+      "output_shape": [
+        1,
+        10,
+        4096
+      ],
+      "input_checksum": "sha256:5a184769c7884bd48c834de028dce62c0840aa3049ca9ea2b767daa7f169e5e4",
+      "output_checksum": "sha256:93ee37c0c6cb6605b1438fdcdfa9d99c1cfd5389b382e3fa0cca38a12536b68d",
+      "tolerance": 0.001
+    },
+    {
+      "name": "FFN",
+      "input_shape": [
+        1,
+        10,
+        4096
+      ],
+      "output_shape": [
+        1,
+        10,
+        4096
+      ],
+      "input_checksum": "sha256:5910d27c783983790a8e7c909ade277924978db7ffe77b0e00a34ec24bda2e83",
+      "output_checksum": "sha256:93864790f1b9f3814a7ccc38dd4787c005e9580c0331d2f0a177b63fd357f7b6",
+      "tolerance": 0.001
+    },
+    {
+      "name": "KV_Cache",
+      "input_shape": [
+        1,
+        64,
+        10,
+        128
+      ],
+      "output_shape": [
+        1,
+        64,
+        10,
+        128
+      ],
+      "input_checksum": "sha256:ff94862e50352c9a2a96e59adb9af0bfb26b08d86fe4eecf62b8821b9d47158d",
+      "output_checksum": "sha256:ff94862e50352c9a2a96e59adb9af0bfb26b08d86fe4eecf62b8821b9d47158d",
+      "tolerance": 1e-05
+    },
+    {
+      "name": "Logits",
+      "input_shape": [
+        1,
+        10,
+        4096
+      ],
+      "output_shape": [
+        1,
+        10,
+        32000
+      ],
+      "input_checksum": "sha256:233b6672ae8853054e3fe80ea621995c519b0711a9526d0f98f655619cb91ab8",
+      "output_checksum": "sha256:9ae0c7a5b3bece176933688655af3f323e6cf50d16b1d3c51b6ef9170bc86933",
+      "tolerance": 0.0001
+    },
+    {
+      "name": "Sampling",
+      "input_shape": [
+        1,
+        32000
+      ],
+      "output_shape": [
+        1,
+        1
+      ],
+      "input_checksum": "sha256:14150d91cf76276ff77c16a9e4b9b80fd80a1a52612334a2f8cab3b40f7369f8",
+      "output_checksum": "sha256:74e639b8fbb8a0ffc050c1983c417d8affc689ed9f7a064ff4e95d3bcf51be26",
+      "tolerance": 0.0
+    },
+    {
+      "name": "Streaming",
+      "input_shape": [
+        1,
+        1
+      ],
+      "output_shape": [
+        5
+      ],
+      "input_checksum": "sha256:e8a4b2ee7ede79a3afb332b5b6cc3d952a65fd8cffb897f5d18016577c33d7cc",
+      "output_checksum": "sha256:185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969",
+      "tolerance": 0.0
+    }
+  ]
+}

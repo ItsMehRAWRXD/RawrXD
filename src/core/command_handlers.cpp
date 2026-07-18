@@ -3,564 +3,42 @@
 // =============================================================================
 
 #include "command_handlers.hpp"
-#include <chrono>
-#include <iostream>
 
-namespace RawrXD {
+// Auto-generated handler implementations (global namespace)
 
 // =============================================================================
-// Multi-Response Handlers
+// Missing Tier1 Handler Stubs
 // =============================================================================
 
-CommandResult handleMultiRespShowPrefs(const CommandContext& ctx) {
+CommandResult handleTier1SettingsGUI(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Preferences displayed";
+    result.detail = "handleTier1SettingsGUI executed";
     return result;
 }
 
-CommandResult handleMultiRespShowLatest(const CommandContext& ctx) {
+CommandResult handleTier1WelcomePage(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Latest response displayed";
+    result.detail = "handleTier1WelcomePage executed";
     return result;
 }
 
-CommandResult handleMultiRespShowStatus(const CommandContext& ctx) {
+CommandResult handleTier1FileIconTheme(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Status: OK";
+    result.detail = "handleTier1FileIconTheme executed";
     return result;
 }
 
-CommandResult handleMultiRespClearHistory(const CommandContext& ctx) {
+CommandResult handleTier1TabDragToggle(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "History cleared";
-    return result;
-}
-
-CommandResult handleMultiRespApplyPreferred(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Preferred settings applied";
-    return result;
-}
-
-// =============================================================================
-// Governance Handlers
-// =============================================================================
-
-CommandResult handleGovStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Governance: Active";
-    return result;
-}
-
-CommandResult handleGovSubmitCommand(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Command submitted to governance";
-    return result;
-}
-
-CommandResult handleGovKillAll(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "All processes terminated";
-    return result;
-}
-
-CommandResult handleGovTaskList(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Task list retrieved";
-    return result;
-}
-
-// =============================================================================
-// Safety Handlers
-// =============================================================================
-
-CommandResult handleSafetyStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Safety systems: Nominal";
-    return result;
-}
-
-CommandResult handleSafetyResetBudget(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Safety budget reset";
-    return result;
-}
-
-CommandResult handleSafetyShowViolations(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "No violations found";
-    return result;
-}
-
-// =============================================================================
-// Replay Handlers
-// =============================================================================
-
-CommandResult handleReplayStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay: Ready";
-    return result;
-}
-
-CommandResult handleReplayStart(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay started";
-    return result;
-}
-
-CommandResult handleReplayStop(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay stopped";
-    return result;
-}
-
-CommandResult handleReplayPause(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay paused";
-    return result;
-}
-
-CommandResult handleReplayResume(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay resumed";
-    return result;
-}
-
-// =============================================================================
-// Tier 1 Handlers
-// =============================================================================
-
-CommandResult handleTier1Status(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier 1: Operational";
-    return result;
-}
-
-CommandResult handleTier1Initialize(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier 1 initialized";
-    return result;
-}
-
-CommandResult handleTier1Shutdown(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier 1 shutdown complete";
-    return result;
-}
-
-// =============================================================================
-// LSP Handlers
-// =============================================================================
-
-CommandResult handleLspInitialize(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "LSP server initialized";
-    return result;
-}
-
-CommandResult handleLspShutdown(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "LSP server shutdown";
-    return result;
-}
-
-CommandResult handleLspStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "LSP: Running";
-    return result;
-}
-
-// =============================================================================
-// ASM Handlers
-// =============================================================================
-
-CommandResult handleAsmAssemble(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Assembly complete";
-    return result;
-}
-
-CommandResult handleAsmDisassemble(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Disassembly complete";
-    return result;
-}
-
-CommandResult handleAsmLink(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Linking complete";
-    return result;
-}
-
-// =============================================================================
-// AI Feature Handlers
-// =============================================================================
-
-CommandResult handleAIFeatureEnable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "AI features enabled";
-    return result;
-}
-
-CommandResult handleAIFeatureDisable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "AI features disabled";
-    return result;
-}
-
-CommandResult handleAIFeatureStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "AI features: Active";
-    return result;
-}
-
-// =============================================================================
-// VSCode Extension Handlers
-// =============================================================================
-
-CommandResult handleVSCodeExtInstall(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extension installed";
-    return result;
-}
-
-CommandResult handleVSCodeExtUninstall(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extension uninstalled";
-    return result;
-}
-
-CommandResult handleVSCodeExtUpdate(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extension updated";
-    return result;
-}
-
-// =============================================================================
-// Model Handlers
-// =============================================================================
-
-CommandResult handleModelLoad(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Model loaded successfully";
-    return result;
-}
-
-CommandResult handleModelUnload(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Model unloaded";
-    return result;
-}
-
-CommandResult handleModelStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Model: Ready";
-    return result;
-}
-
-// =============================================================================
-// Inference Handlers
-// =============================================================================
-
-CommandResult handleInferenceStart(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference started";
-    return result;
-}
-
-CommandResult handleInferenceStop(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference stopped";
-    return result;
-}
-
-CommandResult handleInferenceStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference: Idle";
-    return result;
-}
-
-// =============================================================================
-// Agentic Handlers
-// =============================================================================
-
-CommandResult handleAgenticStart(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic system started";
-    return result;
-}
-
-CommandResult handleAgenticStop(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic system stopped";
-    return result;
-}
-
-CommandResult handleAgenticStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic: Ready";
-    return result;
-}
-
-// =============================================================================
-// Security Handlers
-// =============================================================================
-
-CommandResult handleSecurityAudit(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Security audit complete";
-    return result;
-}
-
-CommandResult handleSecurityValidate(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Security validation passed";
-    return result;
-}
-
-CommandResult handleSecuritySanitize(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Input sanitized";
-    return result;
-}
-
-// =============================================================================
-// Telemetry Handlers
-// =============================================================================
-
-CommandResult handleTelemetryStart(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Telemetry collection started";
-    return result;
-}
-
-CommandResult handleTelemetryStop(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Telemetry collection stopped";
-    return result;
-}
-
-CommandResult handleTelemetryExport(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Telemetry exported";
-    return result;
-}
-
-// =============================================================================
-// Debug Handlers
-// =============================================================================
-
-CommandResult handleDebugAttach(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Debugger attached";
-    return result;
-}
-
-CommandResult handleDebugDetach(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Debugger detached";
-    return result;
-}
-
-CommandResult handleDebugBreakpoint(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Breakpoint set";
-    return result;
-}
-
-// =============================================================================
-// Build Handlers
-// =============================================================================
-
-CommandResult handleBuildStart(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Build started";
-    return result;
-}
-
-CommandResult handleBuildClean(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Build cleaned";
-    return result;
-}
-
-CommandResult handleBuildStatus(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Build: Complete";
-    return result;
-}
-
-// =============================================================================
-// Test Handlers
-// =============================================================================
-
-CommandResult handleTestRun(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tests executed";
-    return result;
-}
-
-CommandResult handleTestCoverage(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Coverage report generated";
-    return result;
-}
-
-CommandResult handleTestBenchmark(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Benchmark complete";
-    return result;
-}
-
-// =============================================================================
-// System Handlers
-// =============================================================================
-
-CommandResult handleSystemInfo(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "System information retrieved";
-    return result;
-}
-
-CommandResult handleSystemHealth(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "System health: Good";
-    return result;
-}
-
-CommandResult handleSystemRestart(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "System restart initiated";
-    return result;
-}
-
-// =============================================================================
-// Tier1 Split Handlers
-// =============================================================================
-
-CommandResult handleTier1SplitHorizontal(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier1 split horizontal";
+    result.detail = "handleTier1TabDragToggle executed";
     return result;
 }
 
@@ -568,7 +46,15 @@ CommandResult handleTier1SplitVertical(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 split vertical";
+    result.detail = "handleTier1SplitVertical executed";
+    return result;
+}
+
+CommandResult handleTier1SplitHorizontal(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTier1SplitHorizontal executed";
     return result;
 }
 
@@ -576,7 +62,7 @@ CommandResult handleTier1SplitGrid(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 split grid";
+    result.detail = "handleTier1SplitGrid executed";
     return result;
 }
 
@@ -584,7 +70,7 @@ CommandResult handleTier1SplitClose(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 split closed";
+    result.detail = "handleTier1SplitClose executed";
     return result;
 }
 
@@ -592,15 +78,7 @@ CommandResult handleTier1SplitFocusNext(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 focus next";
-    return result;
-}
-
-CommandResult handleTier1SplitFocusPrev(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier1 focus previous";
+    result.detail = "handleTier1SplitFocusNext executed";
     return result;
 }
 
@@ -608,7 +86,7 @@ CommandResult handleTier1AutoUpdateCheck(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Auto update check complete";
+    result.detail = "handleTier1AutoUpdateCheck executed";
     return result;
 }
 
@@ -616,55 +94,1526 @@ CommandResult handleTier1UpdateDismiss(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Update dismissed";
+    result.detail = "handleTier1UpdateDismiss executed";
     return result;
 }
 
+
 // =============================================================================
-// LSP Handlers
+// Auto-generated Missing Handler Stubs (Batch 1)
 // =============================================================================
 
-CommandResult handleLspStartAll(const CommandContext& ctx) {
+CommandResult handleAICtx128K(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP servers started";
+    result.detail = "handleAICtx128K executed";
     return result;
 }
 
-CommandResult handleLspStopAll(const CommandContext& ctx) {
+CommandResult handleAICtx1M(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP servers stopped";
+    result.detail = "handleAICtx1M executed";
     return result;
 }
 
-CommandResult handleLspConfigure(const CommandContext& ctx) {
+CommandResult handleAICtx256K(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP configured";
+    result.detail = "handleAICtx256K executed";
     return result;
 }
 
-CommandResult handleLspSaveConfig(const CommandContext& ctx) {
+CommandResult handleAICtx32K(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP config saved";
+    result.detail = "handleAICtx32K executed";
     return result;
 }
+
+CommandResult handleAICtx4K(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAICtx4K executed";
+    return result;
+}
+
+CommandResult handleAICtx512K(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAICtx512K executed";
+    return result;
+}
+
+CommandResult handleAICtx64K(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAICtx64K executed";
+    return result;
+}
+
+CommandResult handleAINoRefusal(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAINoRefusal executed";
+    return result;
+}
+
+CommandResult handleAsmCallGraph(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmCallGraph executed";
+    return result;
+}
+
+CommandResult handleAsmDataFlow(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmDataFlow executed";
+    return result;
+}
+
+CommandResult handleAsmFindRefs(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmFindRefs executed";
+    return result;
+}
+
+CommandResult handleAsmGoto(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmGoto executed";
+    return result;
+}
+
+CommandResult handleAsmParse(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmParse executed";
+    return result;
+}
+
+CommandResult handleAsmSections(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmSections executed";
+    return result;
+}
+
+CommandResult handleAsmSymbolTable(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmSymbolTable executed";
+    return result;
+}
+
+CommandResult handleAuditDashboard(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAuditDashboard executed";
+    return result;
+}
+
+CommandResult handleBackendConfigure(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendConfigure executed";
+    return result;
+}
+
+CommandResult handleBackendHealthCheck(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendHealthCheck executed";
+    return result;
+}
+
+CommandResult handleBackendSaveConfigs(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendSaveConfigs executed";
+    return result;
+}
+
+CommandResult handleBackendSetApiKey(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendSetApiKey executed";
+    return result;
+}
+
+CommandResult handleBackendShowStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendShowStatus executed";
+    return result;
+}
+
+CommandResult handleBackendShowSwitcher(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendShowSwitcher executed";
+    return result;
+}
+
+CommandResult handleBackendSwitchClaude(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendSwitchClaude executed";
+    return result;
+}
+
+CommandResult handleBackendSwitchGemini(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendSwitchGemini executed";
+    return result;
+}
+
+CommandResult handleBackendSwitchLocal(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendSwitchLocal executed";
+    return result;
+}
+
+CommandResult handleBackendSwitchOllama(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendSwitchOllama executed";
+    return result;
+}
+
+CommandResult handleBackendSwitchOpenAI(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBackendSwitchOpenAI executed";
+    return result;
+}
+
+CommandResult handleBeaconFullBeacon(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBeaconFullBeacon executed";
+    return result;
+}
+
+CommandResult handleBeaconHalfPulse(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBeaconHalfPulse executed";
+    return result;
+}
+
+CommandResult handleBeaconStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleBeaconStatus executed";
+    return result;
+}
+
+
+
+CommandResult handleDbgAddBp(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgAddBp executed";
+    return result;
+}
+
+CommandResult handleDbgAddWatch(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgAddWatch executed";
+    return result;
+}
+
+CommandResult handleDbgAttach(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgAttach executed";
+    return result;
+}
+
+CommandResult handleDbgBreak(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgBreak executed";
+    return result;
+}
+
+CommandResult handleDbgClearBps(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgClearBps executed";
+    return result;
+}
+
+CommandResult handleDbgDetach(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgDetach executed";
+    return result;
+}
+
+CommandResult handleDbgDisasm(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgDisasm executed";
+    return result;
+}
+
+CommandResult handleDbgEnableBp(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgEnableBp executed";
+    return result;
+}
+
+CommandResult handleDbgEvaluate(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgEvaluate executed";
+    return result;
+}
+
+CommandResult handleDbgGo(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgGo executed";
+    return result;
+}
+
+CommandResult handleDbgKill(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgKill executed";
+    return result;
+}
+
+CommandResult handleDbgLaunch(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgLaunch executed";
+    return result;
+}
+
+CommandResult handleDbgListBps(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgListBps executed";
+    return result;
+}
+
+CommandResult handleDbgMemory(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgMemory executed";
+    return result;
+}
+
+CommandResult handleDbgModules(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgModules executed";
+    return result;
+}
+
+CommandResult handleDbgRegisters(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgRegisters executed";
+    return result;
+}
+
+CommandResult handleDbgRemoveBp(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgRemoveBp executed";
+    return result;
+}
+
+CommandResult handleDbgRemoveWatch(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgRemoveWatch executed";
+    return result;
+}
+
+CommandResult handleDbgSearchMemory(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgSearchMemory executed";
+    return result;
+}
+
+CommandResult handleDbgSetRegister(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgSetRegister executed";
+    return result;
+}
+
+CommandResult handleDbgStack(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgStack executed";
+    return result;
+}
+
+CommandResult handleDbgStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgStatus executed";
+    return result;
+}
+
+CommandResult handleDbgStepInto(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgStepInto executed";
+    return result;
+}
+
+CommandResult handleDbgStepOut(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgStepOut executed";
+    return result;
+}
+
+CommandResult handleDbgStepOver(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgStepOver executed";
+    return result;
+}
+
+CommandResult handleDbgSwitchThread(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgSwitchThread executed";
+    return result;
+}
+
+CommandResult handleDbgSymbolPath(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgSymbolPath executed";
+    return result;
+}
+
+CommandResult handleDbgThreads(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDbgThreads executed";
+    return result;
+}
+
+CommandResult handleDiskListDrives(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDiskListDrives executed";
+    return result;
+}
+
+CommandResult handleDiskScanPartitions(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleDiskScanPartitions executed";
+    return result;
+}
+
+CommandResult handleEditClipboardHist(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleEditClipboardHist executed";
+    return result;
+}
+
+CommandResult handleEditorCycle(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleEditorCycle executed";
+    return result;
+}
+
+CommandResult handleEditorMonacoCore(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleEditorMonacoCore executed";
+    return result;
+}
+
+CommandResult handleEditorRichEdit(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleEditorRichEdit executed";
+    return result;
+}
+
+CommandResult handleEditorStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleEditorStatus executed";
+    return result;
+}
+
+CommandResult handleEditorWebView2(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleEditorWebView2 executed";
+    return result;
+}
+
+CommandResult handleEmbeddingEncode(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleEmbeddingEncode executed";
+    return result;
+}
+
+CommandResult handleFileAutoSave(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleFileAutoSave executed";
+    return result;
+}
+
+CommandResult handleGovernorSetPowerLevel(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleGovernorSetPowerLevel executed";
+    return result;
+}
+
+CommandResult handleGovernorStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleGovernorStatus executed";
+    return result;
+}
+
+CommandResult handleHelpCmdRef(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleHelpCmdRef executed";
+    return result;
+}
+
+CommandResult handleHelpPsDocs(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleHelpPsDocs executed";
+    return result;
+}
+
+CommandResult handleHotpatchEventLog(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleHotpatchEventLog executed";
+    return result;
+}
+
+CommandResult handleHotpatchMemRevert(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleHotpatchMemRevert executed";
+    return result;
+}
+
+CommandResult handleHotpatchProxyStats(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleHotpatchProxyStats executed";
+    return result;
+}
+
+CommandResult handleLspClearDiag(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspClearDiag executed";
+    return result;
+}
+
+CommandResult handleLspDiagnostics(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspDiagnostics executed";
+    return result;
+}
+
+CommandResult handleLspFindRefs(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspFindRefs executed";
+    return result;
+}
+
+CommandResult handleLspGotoDef(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspGotoDef executed";
+    return result;
+}
+
+CommandResult handleLspHover(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspHover executed";
+    return result;
+}
+
+CommandResult handleLspRename(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspRename executed";
+    return result;
+}
+
+CommandResult handleLspRestart(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspRestart executed";
+    return result;
+}
+
+CommandResult handleLspSrvConfig(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvConfig executed";
+    return result;
+}
+
+CommandResult handleLspSrvExportSymbols(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvExportSymbols executed";
+    return result;
+}
+
+CommandResult handleLspSrvLaunchStdio(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvLaunchStdio executed";
+    return result;
+}
+
+CommandResult handleLspSrvPublishDiag(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvPublishDiag executed";
+    return result;
+}
+
+CommandResult handleLspSrvReindex(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvReindex executed";
+    return result;
+}
+
+CommandResult handleLspSrvStart(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvStart executed";
+    return result;
+}
+
+CommandResult handleLspSrvStats(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvStats executed";
+    return result;
+}
+
+CommandResult handleLspSrvStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvStatus executed";
+    return result;
+}
+
+CommandResult handleLspSrvStop(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSrvStop executed";
+    return result;
+}
+
+CommandResult handleLspStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspStatus executed";
+    return result;
+}
+
+CommandResult handleLspSymbolInfo(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleLspSymbolInfo executed";
+    return result;
+}
+
+CommandResult handleMarketplaceInstall(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMarketplaceInstall executed";
+    return result;
+}
+
+CommandResult handleMarketplaceList(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMarketplaceList executed";
+    return result;
+}
+
+CommandResult handleModelFinetune(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleModelFinetune executed";
+    return result;
+}
+
+CommandResult handleModelList(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleModelList executed";
+    return result;
+}
+
+CommandResult handleModelLoad(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleModelLoad executed";
+    return result;
+}
+
+
 
 // =============================================================================
-// ASM Info Handlers
+// Auto-generated Missing Handler Stubs (Batch 2)
 // =============================================================================
+
+CommandResult handleModelQuantize(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleModelQuantize executed";
+    return result;
+}
+
+CommandResult handleModelUnload(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleModelUnload executed";
+    return result;
+}
+
+CommandResult handleMonacoDevtools(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMonacoDevtools executed";
+    return result;
+}
+
+CommandResult handleMonacoReload(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMonacoReload executed";
+    return result;
+}
+
+CommandResult handleMonacoSyncTheme(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMonacoSyncTheme executed";
+    return result;
+}
+
+CommandResult handleMonacoToggle(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMonacoToggle executed";
+    return result;
+}
+
+CommandResult handleMonacoZoomIn(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMonacoZoomIn executed";
+    return result;
+}
+
+CommandResult handleMonacoZoomOut(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMonacoZoomOut executed";
+    return result;
+}
+
+CommandResult handleMultiRespSetMax(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleMultiRespSetMax executed";
+    return result;
+}
+
+CommandResult handlePluginConfigure(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginConfigure executed";
+    return result;
+}
+
+CommandResult handlePluginLoad(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginLoad executed";
+    return result;
+}
+
+CommandResult handlePluginRefresh(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginRefresh executed";
+    return result;
+}
+
+CommandResult handlePluginScanDir(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginScanDir executed";
+    return result;
+}
+
+CommandResult handlePluginShowPanel(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginShowPanel executed";
+    return result;
+}
+
+CommandResult handlePluginShowStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginShowStatus executed";
+    return result;
+}
+
+CommandResult handlePluginToggleHotload(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginToggleHotload executed";
+    return result;
+}
+
+CommandResult handlePluginUnload(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginUnload executed";
+    return result;
+}
+
+CommandResult handlePluginUnloadAll(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePluginUnloadAll executed";
+    return result;
+}
+
+CommandResult handlePromptClassifyContext(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handlePromptClassifyContext executed";
+    return result;
+}
+
+CommandResult handleQwAlertDismiss(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleQwAlertDismiss executed";
+    return result;
+}
+
+CommandResult handleQwAlertHistory(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleQwAlertHistory executed";
+    return result;
+}
+
+CommandResult handleQwAlertMonitor(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleQwAlertMonitor executed";
+    return result;
+}
+
+CommandResult handleRECompare(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRECompare executed";
+    return result;
+}
+
+CommandResult handleRECompile(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRECompile executed";
+    return result;
+}
+
+CommandResult handleREDataFlow(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREDataFlow executed";
+    return result;
+}
+
+CommandResult handleREDecompClose(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREDecompClose executed";
+    return result;
+}
+
+CommandResult handleREDecompilerView(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREDecompilerView executed";
+    return result;
+}
+
+CommandResult handleREDecompRename(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREDecompRename executed";
+    return result;
+}
+
+CommandResult handleREDecompSync(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREDecompSync executed";
+    return result;
+}
+
+CommandResult handleREDemangle(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREDemangle executed";
+    return result;
+}
+
+CommandResult handleREDetectVulns(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREDetectVulns executed";
+    return result;
+}
+
+CommandResult handleREExportGhidra(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREExportGhidra executed";
+    return result;
+}
+
+CommandResult handleREExportIDA(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREExportIDA executed";
+    return result;
+}
+
+CommandResult handleREFunctions(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleREFunctions executed";
+    return result;
+}
+
+CommandResult handleRELicenseInfo(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRELicenseInfo executed";
+    return result;
+}
+
+
+
+CommandResult handleReplayShowLast(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleReplayShowLast executed";
+    return result;
+}
+
+
+
+CommandResult handleRETypeRecovery(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRETypeRecovery executed";
+    return result;
+}
+
+CommandResult handleRevengDecompile(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRevengDecompile executed";
+    return result;
+}
+
+CommandResult handleRevengDisassemble(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRevengDisassemble executed";
+    return result;
+}
+
+CommandResult handleRevengFindVulnerabilities(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRevengFindVulnerabilities executed";
+    return result;
+}
+
+CommandResult handleRouterCapabilities(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRouterCapabilities executed";
+    return result;
+}
+
+CommandResult handleRouterDecision(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRouterDecision executed";
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CommandResult handleRouterStatus(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleRouterStatus executed";
+    return result;
+}
+
+
+
+CommandResult handleSafetyRollbackLast(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSafetyRollbackLast executed";
+    return result;
+}
+
+CommandResult handleSwarmBlacklist(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSwarmBlacklist executed";
+    return result;
+}
+
+CommandResult handleSwarmConfig(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSwarmConfig executed";
+    return result;
+}
+
+CommandResult handleSwarmDiscovery(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSwarmDiscovery executed";
+    return result;
+}
+
+CommandResult handleSwarmEvents(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSwarmEvents executed";
+    return result;
+}
+
+CommandResult handleSwarmFitness(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSwarmFitness executed";
+    return result;
+}
+
+CommandResult handleSwarmStats(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSwarmStats executed";
+    return result;
+}
+
+CommandResult handleSwarmTaskGraph(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleSwarmTaskGraph executed";
+    return result;
+}
+
+CommandResult handleTelemetryDashboard(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTelemetryDashboard executed";
+    return result;
+}
+
+CommandResult handleThemeCatppuccin(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeCatppuccin executed";
+    return result;
+}
+
+CommandResult handleThemeCrimson(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeCrimson executed";
+    return result;
+}
+
+CommandResult handleThemeCyberpunk(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeCyberpunk executed";
+    return result;
+}
+
+CommandResult handleThemeGruvbox(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeGruvbox executed";
+    return result;
+}
+
+CommandResult handleThemeOneDark(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeOneDark executed";
+    return result;
+}
+
+CommandResult handleThemeSolDark(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeSolDark executed";
+    return result;
+}
+
+CommandResult handleThemeSolLight(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeSolLight executed";
+    return result;
+}
+
+CommandResult handleThemeSynthwave(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeSynthwave executed";
+    return result;
+}
+
+CommandResult handleThemeTokyo(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleThemeTokyo executed";
+    return result;
+}
+
+CommandResult handleTier1BreadcrumbsToggle(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTier1BreadcrumbsToggle executed";
+    return result;
+}
+
+CommandResult handleTier1FuzzyPalette(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTier1FuzzyPalette executed";
+    return result;
+}
+
+CommandResult handleTier1MinimapEnhanced(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTier1MinimapEnhanced executed";
+    return result;
+}
+
+CommandResult handleTier1SmoothScrollToggle(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTier1SmoothScrollToggle executed";
+    return result;
+}
+
+CommandResult handleTrans100(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTrans100 executed";
+    return result;
+}
+
+CommandResult handleTrans40(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTrans40 executed";
+    return result;
+}
+
+CommandResult handleTrans50(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTrans50 executed";
+    return result;
+}
+
+CommandResult handleTrans60(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTrans60 executed";
+    return result;
+}
+
+CommandResult handleTrans70(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTrans70 executed";
+    return result;
+}
+
+CommandResult handleTrans80(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTrans80 executed";
+    return result;
+}
+
+CommandResult handleTrans90(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTrans90 executed";
+    return result;
+}
+
+CommandResult handleTransCustom(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTransCustom executed";
+    return result;
+}
+
+CommandResult handleTransToggle(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleTransToggle executed";
+    return result;
+}
+
+CommandResult handleUnityAttach(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleUnityAttach executed";
+    return result;
+}
+
+CommandResult handleUnityInit(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleUnityInit executed";
+    return result;
+}
+
+CommandResult handleUnrealAttach(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleUnrealAttach executed";
+    return result;
+}
+
+CommandResult handleUnrealInit(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleUnrealInit executed";
+    return result;
+}
+
+
+
+// =============================================================================
+// Final Missing Handler Stubs
+// =============================================================================
+
+CommandResult handleViewStreamingLoader(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleViewStreamingLoader executed";
+    return result;
+}
+
+CommandResult handleViewVulkanRenderer(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleViewVulkanRenderer executed";
+    return result;
+}
+
+CommandResult handleVoicePTT(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleVoicePTT executed";
+    return result;
+}
+
+CommandResult handleVisionAnalyzeImage(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleVisionAnalyzeImage executed";
+    return result;
+}
+
+
+
+// =============================================================================
+// Auto-generated Missing Handler Stubs (Remaining)
+// =============================================================================
+
+CommandResult handleAsmAnalyzeBlock(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmAnalyzeBlock executed";
+    return result;
+}
+
+CommandResult handleAsmClearSymbols(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmClearSymbols executed";
+    return result;
+}
+
+CommandResult handleAsmDetectConvention(const CommandContext& ctx) {
+    (void)ctx;
+    CommandResult result;
+    result.success = true;
+    result.detail = "handleAsmDetectConvention executed";
+    return result;
+}
 
 CommandResult handleAsmInstructionInfo(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Instruction info displayed";
+    result.detail = "handleAsmInstructionInfo executed";
     return result;
 }
 
@@ -672,1180 +1621,472 @@ CommandResult handleAsmRegisterInfo(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Register info displayed";
+    result.detail = "handleAsmRegisterInfo executed";
     return result;
 }
 
-CommandResult handleAsmMemoryMap(const CommandContext& ctx) {
+CommandResult handleConfidenceSetPolicy(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Memory map displayed";
+    result.detail = "handleConfidenceSetPolicy executed";
     return result;
 }
 
-// =============================================================================
-// Multi-Response Additional Handlers
-// =============================================================================
-
-CommandResult handleMultiRespShowHistory(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "History displayed";
-    return result;
-}
-
-CommandResult handleMultiRespExport(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Responses exported";
-    return result;
-}
-
-CommandResult handleMultiRespImport(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Responses imported";
-    return result;
-}
-
-// =============================================================================
-// Governance Additional Handlers
-// =============================================================================
-
-CommandResult handleGovPause(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Governance paused";
-    return result;
-}
-
-CommandResult handleGovResume(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Governance resumed";
-    return result;
-}
-
-CommandResult handleGovConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Governance configured";
-    return result;
-}
-
-// =============================================================================
-// Safety Additional Handlers
-// =============================================================================
-
-CommandResult handleSafetyEnable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Safety systems enabled";
-    return result;
-}
-
-CommandResult handleSafetyDisable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Safety systems disabled";
-    return result;
-}
-
-CommandResult handleSafetyConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Safety systems configured";
-    return result;
-}
-
-// =============================================================================
-// Replay Additional Handlers
-// =============================================================================
-
-CommandResult handleReplayLoad(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay loaded";
-    return result;
-}
-
-CommandResult handleReplaySave(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay saved";
-    return result;
-}
-
-CommandResult handleReplaySeek(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay seek complete";
-    return result;
-}
-
-CommandResult handleReplayStepForward(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay stepped forward";
-    return result;
-}
-
-CommandResult handleReplayStepBack(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Replay stepped back";
-    return result;
-}
-
-// =============================================================================
-// Tier1 Additional Handlers
-// =============================================================================
-
-CommandResult handleTier1Configure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier1 configured";
-    return result;
-}
-
-CommandResult handleTier1Reset(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier1 reset";
-    return result;
-}
-
-CommandResult handleTier1Optimize(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tier1 optimized";
-    return result;
-}
-
-// =============================================================================
-// LSP Additional Handlers
-// =============================================================================
-
-CommandResult handleLspRestart(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "LSP restarted";
-    return result;
-}
-
-CommandResult handleLspLog(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "LSP log displayed";
-    return result;
-}
-
-// =============================================================================
-// ASM Additional Handlers
-// =============================================================================
-
-CommandResult handleAsmOptimize(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Assembly optimized";
-    return result;
-}
-
-CommandResult handleAsmValidate(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Assembly validated";
-    return result;
-}
-
-// =============================================================================
-// AI Feature Additional Handlers
-// =============================================================================
-
-CommandResult handleAIFeatureConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "AI features configured";
-    return result;
-}
-
-CommandResult handleAIFeatureList(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "AI features listed";
-    return result;
-}
-
-// =============================================================================
-// VSCode Extension Additional Handlers
-// =============================================================================
-
-CommandResult handleVSCodeExtList(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extensions listed";
-    return result;
-}
-
-CommandResult handleVSCodeExtEnable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extension enabled";
-    return result;
-}
-
-CommandResult handleVSCodeExtDisable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extension disabled";
-    return result;
-}
-
-// =============================================================================
-// Model Additional Handlers
-// =============================================================================
-
-CommandResult handleModelList(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Models listed";
-    return result;
-}
-
-CommandResult handleModelConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Model configured";
-    return result;
-}
-
-// =============================================================================
-// Inference Additional Handlers
-// =============================================================================
-
-CommandResult handleInferenceConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference configured";
-    return result;
-}
-
-CommandResult handleInferenceReset(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference reset";
-    return result;
-}
-
-// =============================================================================
-// Agentic Additional Handlers
-// =============================================================================
-
-CommandResult handleAgenticConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic system configured";
-    return result;
-}
-
-CommandResult handleAgenticReset(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic system reset";
-    return result;
-}
-
-// =============================================================================
-// Security Additional Handlers
-// =============================================================================
-
-CommandResult handleSecurityConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Security configured";
-    return result;
-}
-
-CommandResult handleSecurityReset(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Security reset";
-    return result;
-}
-
-// =============================================================================
-// Telemetry Additional Handlers
-// =============================================================================
-
-CommandResult handleTelemetryConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Telemetry configured";
-    return result;
-}
-
-CommandResult handleTelemetryReset(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Telemetry reset";
-    return result;
-}
-
-// =============================================================================
-// Debug Additional Handlers
-// =============================================================================
-
-CommandResult handleDebugConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Debug configured";
-    return result;
-}
-
-CommandResult handleDebugStepOver(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Step over";
-    return result;
-}
-
-CommandResult handleDebugStepInto(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Step into";
-    return result;
-}
-
-CommandResult handleDebugStepOut(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Step out";
-    return result;
-}
-
-// =============================================================================
-// Build Additional Handlers
-// =============================================================================
-
-CommandResult handleBuildConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Build configured";
-    return result;
-}
-
-CommandResult handleBuildStop(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Build stopped";
-    return result;
-}
-
-// =============================================================================
-// Test Additional Handlers
-// =============================================================================
-
-CommandResult handleTestConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Tests configured";
-    return result;
-}
-
-CommandResult handleTestDebug(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Test debug started";
-    return result;
-}
-
-// =============================================================================
-// System Additional Handlers
-// =============================================================================
-
-CommandResult handleSystemConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "System configured";
-    return result;
-}
-
-CommandResult handleSystemShutdown(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "System shutdown";
-    return result;
-}
-
-// =============================================================================
-// VSCode Extension Additional Handlers (Batch 3 - Implementations)
-// =============================================================================
-
-CommandResult handleVSCodeExtList(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extensions listed";
-    return result;
-}
-
-CommandResult handleVSCodeExtEnable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extension enabled";
-    return result;
-}
-
-CommandResult handleVSCodeExtDisable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extension disabled";
-    return result;
-}
-
-// =============================================================================
-// Model Additional Handlers (Batch 3)
-// =============================================================================
-
-CommandResult handleModelList(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Models listed";
-    return result;
-}
-
-CommandResult handleModelConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Model configured";
-    return result;
-}
-
-CommandResult handleModelValidate(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Model validated";
-    return result;
-}
-
-// =============================================================================
-// Inference Additional Handlers (Batch 3)
-// =============================================================================
-
-CommandResult handleInferenceConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference configured";
-    return result;
-}
-
-CommandResult handleInferencePause(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference paused";
-    return result;
-}
-
-CommandResult handleInferenceResume(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Inference resumed";
-    return result;
-}
-
-// =============================================================================
-// Agentic Additional Handlers (Batch 3)
-// =============================================================================
-
-CommandResult handleAgenticConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic system configured";
-    return result;
-}
-
-CommandResult handleAgenticPause(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic system paused";
-    return result;
-}
-
-CommandResult handleAgenticResume(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Agentic system resumed";
-    return result;
-}
-
-// =============================================================================
-// Security Additional Handlers (Batch 3)
-// =============================================================================
-
-CommandResult handleSecurityConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Security configured";
-    return result;
-}
-
-CommandResult handleSecurityEnable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Security enabled";
-    return result;
-}
-
-CommandResult handleSecurityDisable(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Security disabled";
-    return result;
-}
-
-// =============================================================================
-// Telemetry Additional Handlers (Batch 3)
-// =============================================================================
-
-CommandResult handleTelemetryConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Telemetry configured";
-    return result;
-}
-
-CommandResult handleTelemetryClear(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Telemetry cleared";
-    return result;
-}
-
-// =============================================================================
-// Debug Additional Handlers (Batch 4)
-// =============================================================================
-
-CommandResult handleDebugStepOver(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Debug step over";
-    return result;
-}
-
-CommandResult handleDebugStepInto(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Debug step into";
-    return result;
-}
-
-CommandResult handleDebugStepOut(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Debug step out";
-    return result;
-}
-
-CommandResult handleDebugContinue(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Debug continue";
-    return result;
-}
-
-CommandResult handleDebugStop(const CommandContext& ctx) {
+CommandResult handleConfidenceStatus(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Debug stop";
+    result.detail = "handleConfidenceStatus executed";
     return result;
 }
 
-// =============================================================================
-// Build Additional Handlers (Batch 4)
-// =============================================================================
-
-CommandResult handleBuildConfigure(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Build configured";
-    return result;
-}
-
-CommandResult handleBuildCompile(const CommandContext& ctx) {
+CommandResult handleGovKillAll(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Build compile complete";
+    result.detail = "handleGovKillAll executed";
     return result;
 }
 
-CommandResult handleBuildLink(const CommandContext& ctx) {
+CommandResult handleGovStatus(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Build link complete";
+    result.detail = "handleGovStatus executed";
     return result;
 }
 
-CommandResult handleBuildPackage(const CommandContext& ctx) {
+CommandResult handleGovSubmitCommand(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Build package complete";
+    result.detail = "handleGovSubmitCommand executed";
     return result;
 }
-
-CommandResult handleBuildDeploy(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "Build deploy complete";
-    return result;
-}
-
-// =============================================================================
-// Test Additional Handlers (Batch 4)
-// =============================================================================
 
-CommandResult handleTestConfigure(const CommandContext& ctx) {
+CommandResult handleGovTaskList(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Test configured";
+    result.detail = "handleGovTaskList executed";
     return result;
 }
 
-CommandResult handleTestList(const CommandContext& ctx) {
+CommandResult handleHybridAnalyzeFile(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tests listed";
+    result.detail = "handleHybridAnalyzeFile executed";
     return result;
 }
 
-CommandResult handleTestDebug(const CommandContext& ctx) {
+CommandResult handleHybridAnnotateDiag(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Test debug started";
+    result.detail = "handleHybridAnnotateDiag executed";
     return result;
 }
 
-CommandResult handleTestProfile(const CommandContext& ctx) {
+CommandResult handleHybridAutoProfile(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Test profiling complete";
+    result.detail = "handleHybridAutoProfile executed";
     return result;
 }
 
-// =============================================================================
-// System Additional Handlers (Batch 4)
-// =============================================================================
-
-CommandResult handleSystemConfigure(const CommandContext& ctx) {
+CommandResult handleHybridComplete(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "System configured";
+    result.detail = "handleHybridComplete executed";
     return result;
 }
 
-CommandResult handleSystemShutdown(const CommandContext& ctx) {
+CommandResult handleHybridCorrectionLoop(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "System shutdown";
+    result.detail = "handleHybridCorrectionLoop executed";
     return result;
 }
 
-CommandResult handleSystemUpdate(const CommandContext& ctx) {
+CommandResult handleHybridDiagnostics(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "System update complete";
+    result.detail = "handleHybridDiagnostics executed";
     return result;
 }
 
-CommandResult handleSystemBackup(const CommandContext& ctx) {
+CommandResult handleHybridExplainSymbol(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "System backup complete";
+    result.detail = "handleHybridExplainSymbol executed";
     return result;
 }
 
-CommandResult handleSystemRestore(const CommandContext& ctx) {
+CommandResult handleHybridSemanticPrefetch(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "System restore complete";
+    result.detail = "handleHybridSemanticPrefetch executed";
     return result;
 }
 
-// =============================================================================
-// Multi-Response Extended Handlers (Batch 5)
-// =============================================================================
-
-CommandResult handleMultiRespFilter(const CommandContext& ctx) {
+CommandResult handleHybridSmartRename(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Responses filtered";
+    result.detail = "handleHybridSmartRename executed";
     return result;
 }
 
-CommandResult handleMultiRespSort(const CommandContext& ctx) {
+CommandResult handleHybridStatus(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Responses sorted";
+    result.detail = "handleHybridStatus executed";
     return result;
 }
 
-CommandResult handleMultiRespSearch(const CommandContext& ctx) {
+CommandResult handleHybridStreamAnalyze(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Responses searched";
+    result.detail = "handleHybridStreamAnalyze executed";
     return result;
 }
 
-CommandResult handleMultiRespDelete(const CommandContext& ctx) {
+CommandResult handleHybridSymbolUsage(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Responses deleted";
+    result.detail = "handleHybridSymbolUsage executed";
     return result;
 }
 
-CommandResult handleMultiRespArchive(const CommandContext& ctx) {
+CommandResult handleLspConfigure(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Responses archived";
+    result.detail = "handleLspConfigure executed";
     return result;
 }
-
-// =============================================================================
-// Governance Extended Handlers (Batch 5)
-// =============================================================================
 
-CommandResult handleGovList(const CommandContext& ctx) {
+CommandResult handleLspSaveConfig(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Governance rules listed";
+    result.detail = "handleLspSaveConfig executed";
     return result;
 }
 
-CommandResult handleGovAdd(const CommandContext& ctx) {
+CommandResult handleLspStartAll(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Governance rule added";
+    result.detail = "handleLspStartAll executed";
     return result;
 }
 
-CommandResult handleGovRemove(const CommandContext& ctx) {
+CommandResult handleLspStopAll(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Governance rule removed";
+    result.detail = "handleLspStopAll executed";
     return result;
 }
 
-CommandResult handleGovUpdate(const CommandContext& ctx) {
+CommandResult handleMultiRespApplyPreferred(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Governance rule updated";
+    result.detail = "handleMultiRespApplyPreferred executed";
     return result;
 }
 
-CommandResult handleGovValidate(const CommandContext& ctx) {
+CommandResult handleMultiRespClearHistory(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Governance rules validated";
+    result.detail = "handleMultiRespClearHistory executed";
     return result;
 }
 
-// =============================================================================
-// Safety Extended Handlers (Batch 5)
-// =============================================================================
-
-CommandResult handleSafetyList(const CommandContext& ctx) {
+CommandResult handleMultiRespCompare(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Safety rules listed";
+    result.detail = "handleMultiRespCompare executed";
     return result;
 }
 
-CommandResult handleSafetyAdd(const CommandContext& ctx) {
+CommandResult handleMultiRespGenerate(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Safety rule added";
+    result.detail = "handleMultiRespGenerate executed";
     return result;
 }
 
-CommandResult handleSafetyRemove(const CommandContext& ctx) {
+CommandResult handleMultiRespSelectPreferred(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Safety rule removed";
+    result.detail = "handleMultiRespSelectPreferred executed";
     return result;
 }
 
-CommandResult handleSafetyUpdate(const CommandContext& ctx) {
+CommandResult handleMultiRespShowLatest(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Safety rule updated";
+    result.detail = "handleMultiRespShowLatest executed";
     return result;
 }
 
-CommandResult handleSafetyAudit(const CommandContext& ctx) {
+CommandResult handleMultiRespShowPrefs(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Safety audit complete";
+    result.detail = "handleMultiRespShowPrefs executed";
     return result;
 }
-
-// =============================================================================
-// Replay Extended Handlers (Batch 5)
-// =============================================================================
 
-CommandResult handleReplayList(const CommandContext& ctx) {
+CommandResult handleMultiRespShowStats(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Replays listed";
+    result.detail = "handleMultiRespShowStats executed";
     return result;
 }
 
-CommandResult handleReplayDelete(const CommandContext& ctx) {
+CommandResult handleMultiRespShowStatus(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Replay deleted";
+    result.detail = "handleMultiRespShowStatus executed";
     return result;
 }
 
-CommandResult handleReplayRename(const CommandContext& ctx) {
+CommandResult handleMultiRespShowTemplates(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Replay renamed";
+    result.detail = "handleMultiRespShowTemplates executed";
     return result;
 }
 
-CommandResult handleReplayExport(const CommandContext& ctx) {
+CommandResult handleMultiRespToggleTemplate(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Replay exported";
+    result.detail = "handleMultiRespToggleTemplate executed";
     return result;
 }
 
-CommandResult handleReplayImport(const CommandContext& ctx) {
+CommandResult handleReplayCheckpoint(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Replay imported";
+    result.detail = "handleReplayCheckpoint executed";
     return result;
 }
 
-// =============================================================================
-// Tier1 Extended Handlers (Batch 6)
-// =============================================================================
-
-CommandResult handleTier1List(const CommandContext& ctx) {
+CommandResult handleReplayExportSession(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 items listed";
+    result.detail = "handleReplayExportSession executed";
     return result;
 }
 
-CommandResult handleTier1Add(const CommandContext& ctx) {
+CommandResult handleReplayStatus(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 item added";
+    result.detail = "handleReplayStatus executed";
     return result;
 }
 
-CommandResult handleTier1Remove(const CommandContext& ctx) {
+CommandResult handleRERecursiveDisasm(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 item removed";
+    result.detail = "handleRERecursiveDisasm executed";
     return result;
 }
 
-CommandResult handleTier1Update(const CommandContext& ctx) {
+CommandResult handleRouterDisable(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 item updated";
+    result.detail = "handleRouterDisable executed";
     return result;
 }
 
-CommandResult handleTier1Validate(const CommandContext& ctx) {
+CommandResult handleRouterEnable(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Tier1 items validated";
+    result.detail = "handleRouterEnable executed";
     return result;
 }
-
-// =============================================================================
-// LSP Extended Handlers (Batch 6)
-// =============================================================================
 
-CommandResult handleLspList(const CommandContext& ctx) {
+CommandResult handleRouterEnsembleDisable(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP servers listed";
+    result.detail = "handleRouterEnsembleDisable executed";
     return result;
 }
 
-CommandResult handleLspAdd(const CommandContext& ctx) {
+CommandResult handleRouterEnsembleEnable(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP server added";
+    result.detail = "handleRouterEnsembleEnable executed";
     return result;
 }
 
-CommandResult handleLspRemove(const CommandContext& ctx) {
+CommandResult handleRouterEnsembleStatus(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP server removed";
+    result.detail = "handleRouterEnsembleStatus executed";
     return result;
 }
 
-CommandResult handleLspUpdate(const CommandContext& ctx) {
+CommandResult handleRouterFallbacks(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP server updated";
+    result.detail = "handleRouterFallbacks executed";
     return result;
 }
 
-CommandResult handleLspValidate(const CommandContext& ctx) {
+CommandResult handleRouterPinTask(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "LSP configuration validated";
+    result.detail = "handleRouterPinTask executed";
     return result;
 }
 
-// =============================================================================
-// ASM Extended Handlers (Batch 6)
-// =============================================================================
-
-CommandResult handleAsmList(const CommandContext& ctx) {
+CommandResult handleRouterResetStats(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Assembly files listed";
+    result.detail = "handleRouterResetStats executed";
     return result;
 }
 
-CommandResult handleAsmAdd(const CommandContext& ctx) {
+CommandResult handleRouterRoutePrompt(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Assembly file added";
+    result.detail = "handleRouterRoutePrompt executed";
     return result;
 }
 
-CommandResult handleAsmRemove(const CommandContext& ctx) {
+CommandResult handleRouterSaveConfig(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Assembly file removed";
+    result.detail = "handleRouterSaveConfig executed";
     return result;
 }
 
-CommandResult handleAsmUpdate(const CommandContext& ctx) {
+CommandResult handleRouterSetPolicy(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Assembly file updated";
+    result.detail = "handleRouterSetPolicy executed";
     return result;
 }
 
-CommandResult handleAsmValidate(const CommandContext& ctx) {
+CommandResult handleRouterShowCostStats(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "Assembly validated";
+    result.detail = "handleRouterShowCostStats executed";
     return result;
 }
-
-// =============================================================================
-// AI Feature Extended Handlers (Batch 6)
-// =============================================================================
 
-CommandResult handleAIList(const CommandContext& ctx) {
+CommandResult handleRouterShowHeatmap(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "AI features listed";
+    result.detail = "handleRouterShowHeatmap executed";
     return result;
 }
 
-CommandResult handleAIAdd(const CommandContext& ctx) {
+CommandResult handleRouterShowPins(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "AI feature added";
+    result.detail = "handleRouterShowPins executed";
     return result;
 }
 
-CommandResult handleAIRemove(const CommandContext& ctx) {
+CommandResult handleRouterSimulate(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "AI feature removed";
+    result.detail = "handleRouterSimulate executed";
     return result;
 }
 
-CommandResult handleAIUpdate(const CommandContext& ctx) {
+CommandResult handleRouterSimulateLast(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "AI feature updated";
+    result.detail = "handleRouterSimulateLast executed";
     return result;
 }
 
-CommandResult handleAIValidate(const CommandContext& ctx) {
+CommandResult handleRouterUnpinTask(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "AI features validated";
+    result.detail = "handleRouterUnpinTask executed";
     return result;
 }
 
-// =============================================================================
-// VSCode Extension Extended Handlers (Batch 6)
-// =============================================================================
-
-CommandResult handleVSCodeList(const CommandContext& ctx) {
+CommandResult handleRouterWhyBackend(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "VSCode extensions listed";
+    result.detail = "handleRouterWhyBackend executed";
     return result;
 }
 
-CommandResult handleVSCodeAdd(const CommandContext& ctx) {
+CommandResult handleSafetyResetBudget(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "VSCode extension added";
+    result.detail = "handleSafetyResetBudget executed";
     return result;
 }
 
-CommandResult handleVSCodeRemove(const CommandContext& ctx) {
+CommandResult handleSafetyShowViolations(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "VSCode extension removed";
+    result.detail = "handleSafetyShowViolations executed";
     return result;
 }
 
-CommandResult handleVSCodeUpdate(const CommandContext& ctx) {
+CommandResult handleSafetyStatus(const CommandContext& ctx) {
     (void)ctx;
     CommandResult result;
     result.success = true;
-    result.message = "VSCode extension updated";
+    result.detail = "handleSafetyStatus executed";
     return result;
 }
 
-CommandResult handleVSCodeValidate(const CommandContext& ctx) {
-    (void)ctx;
-    CommandResult result;
-    result.success = true;
-    result.message = "VSCode extensions validated";
-    return result;
-}
 
-} // namespace RawrXD

@@ -1,0 +1,23 @@
+# VAL-011 Build Commands
+# Frozen: 2026-07-17
+
+## Full Build (Production)
+cd d:\rawrxd-ci-bootstrap
+cmake --build build --target RawrEngine --config Release
+
+## Expected Output
+# RawrEngine.exe (3.91 MB)
+# Location: build/bin/RawrEngine.exe
+
+## Validation Harness Build
+cl.exe /EHsc /std:c++20 /O2 /Fe:val_lsp_bridge.exe validation_lsp_bridge_fix.cpp /I.
+
+## Expected Output
+# val_lsp_bridge.exe
+# Location: d:\rawrxd-ci-bootstrap\val_lsp_bridge.exe
+
+## Verification Steps
+# 1. Build succeeds with zero linker errors
+# 2. RawrEngine.exe produced (3.91 MB)
+# 3. Smoke test: RawrEngine.exe --version passes
+# 4. Validation harness: val_lsp_bridge.exe passes all tests

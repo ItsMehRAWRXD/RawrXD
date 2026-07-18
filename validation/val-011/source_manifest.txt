@@ -1,0 +1,26 @@
+# VAL-011 Source Manifest
+# Frozen: 2026-07-17
+# Purpose: Reproducible validation of LSP Bridge Link Closure
+
+## Primary Source Files
+src/core/patch_result.hpp
+src/lsp/lsp_hotpatch_bridge.hpp
+src/core/rawrengine_link_closure.cpp
+
+## Validation Harness
+validation_lsp_bridge_fix.cpp
+
+## Documentation
+VAL-011_LSP_Bridge_Link_Closure.md
+VALIDATION_INDEX.md
+
+## Build System
+cmake/CMakeLists.txt
+build/ (generated)
+
+## Tool Versions
+CMake: 4.2+
+Ninja: 1.10+
+MSVC: 14.51.36231
+Windows SDK: 10.0.22621.0
+C++ Standard: C++20

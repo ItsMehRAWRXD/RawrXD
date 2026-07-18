@@ -1,0 +1,12 @@
+{
+  "command": "cmd /c cd build 2>&1",
+  "duration_ms": 27,
+  "exit_code": 0,
+  "failure_category": "None",
+  "failure_reason": "",
+  "recoverable": 0,
+  "stderr": "",
+  "stdout": "",
+  "timed_out": 0,
+  "tool": "cmd"
+}

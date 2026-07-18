@@ -1,0 +1,9 @@
+{
+  "action": "FixCompileError",
+  "confidence": 85,
+  "description": "Fix compilation errors in affected files",
+  "files_to_modify": [
+    "test_source.cpp"
+  ],
+  "suggested_patch": "// Fix compilation errors\n// test_source.cpp:5:13: error: 'undefined_variable' was not declared in this scope\n// test_source.cpp:8:14: error: expected ';' before 'int'\n"
+}

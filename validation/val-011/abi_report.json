@@ -1,0 +1,48 @@
+{
+  "validation_id": "VAL-011",
+  "validation_date": "2026-07-17",
+  "component": "LSP Bridge Link Closure",
+  "abi_version": "1.0",
+  "patch_result": {
+    "sizeof": 56,
+    "alignof": 8,
+    "standard_layout": true,
+    "trivially_copyable": false,
+    "field_offsets": {
+      "success": 0,
+      "detail": 8,
+      "message": 40,
+      "errorCode": 72,
+      "elapsedMs": 80
+    },
+    "compile_time_assertions": {
+      "size_min": 48,
+      "size_max": 80,
+      "align_min": 4,
+      "align_max": 16
+    }
+  },
+  "fingerprint": {
+    "algorithm": "xor_mix",
+    "computed_at": "compile_time",
+    "fields": [
+      "sizeof(PatchResult)",
+      "alignof(PatchResult)",
+      "offsetof(success)",
+      "offsetof(detail)",
+      "offsetof(message)",
+      "offsetof(errorCode)",
+      "offsetof(elapsedMs)",
+      "sizeof(bool)",
+      "sizeof(std::string)",
+      "sizeof(int64_t)"
+    ]
+  },
+  "cross_tu_consistency": {
+    "tu1": "rawrengine_link_closure.cpp",
+    "tu2": "auto_feature_registry.cpp",
+    "tu3": "unified_hotpatch_manager.cpp",
+    "status": "verified"
+  },
+  "status": "complete"
+}

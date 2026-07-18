@@ -1,0 +1,26 @@
+{
+  "artifacts_produced": 1,
+  "binary_sha256": "PLACEHOLDER_BINARY_SHA256",
+  "duration_ms": 58,
+  "environment": {
+    "architecture": "x64",
+    "compiler": "MSVC",
+    "compiler_version": "1951.195136246",
+    "generator": "Ninja",
+    "os": "Windows"
+  },
+  "evidence_path": "validation/val-014",
+  "exit_code": 0,
+  "git_commit": "PLACEHOLDER_GIT_COMMIT_SHA",
+  "goal": "Build and test with real toolchain",
+  "notes": "Real compiler/test invocation with exit code capture and failure categorization",
+  "scenario": "Build and test with actual toolchain",
+  "schema_version": "VAL-014-v1.0",
+  "status": "PASS",
+  "steps_executed": 4,
+  "timestamp_utc": "2026-07-17T22:07:20Z",
+  "title": "Real Toolchain Integration Demonstration",
+  "validation_id": "VAL-014",
+  "validation_mode": "regression",
+  "verification_level": "R"
+}

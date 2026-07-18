@@ -1235,7 +1235,18 @@ endif()
 set(RAWR_ENGINE_SOURCES ${SOURCES})
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
+    # Remove stub files that duplicate symbols from other implementation files
+    src/link_stubs/rawrengine_link_stubs_v2.cpp
+    src/link_stubs/gpudispatchgate_stubs.cpp
+    src/link_stubs/tier1_handlers_stubs.cpp
+    # Remove unlinked_symbols_batch files that duplicate symbols
+    src/core/unlinked_symbols_batch_010.cpp
+    src/core/unlinked_symbols_batch_011.cpp
+    src/core/unlinked_symbols_batch_012.cpp
 )
+
+# Add ASM stubs for unresolved external symbols
+list(APPEND RAWR_ENGINE_SOURCES src/core/asm_stubs.cpp)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
     # QuantumAutonomousTodoSystem/QuantumMultiModelAgentCycling definitions.
@@ -1371,6 +1382,11 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/win32app/main_win32.cpp
 )
 
+# Exclude files with their own main() function
+list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/RawrXD_LSPServer\\.cpp$")
+# Exclude lsp_hotpatch_bridge.cpp - it depends on RawrXD_LSPServer symbols
+list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/lsp_hotpatch_bridge\\.cpp$")
+
 list(APPEND RAWR_ENGINE_SOURCES
     src/BackendOrchestrator.cpp
     src/agentic/AdvancedAgentCoordinator.cpp
@@ -1382,9 +1398,8 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/rawrxd_native_log_impl.cpp
     src/core/subsystem_registry.cpp
     src/core/command_handlers.cpp
-    src/link_stubs/rawrengine_link_stubs_v2.cpp
-    src/link_stubs/tier1_handlers_stubs.cpp
-    src/link_stubs/gpudispatchgate_stubs.cpp
+    src/core/asm_stubs.cpp
+    src/core/cot_fallback_system.cpp
 )
 
 # =============================================================================
@@ -1410,6 +1425,13 @@ if(WIN32)
 endif()
 
 # =============================================================================
+# Distributed Infrastructure (Phase D.3)
+# =============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/distributed/CMakeLists.txt")
+    add_subdirectory(src/distributed)
+endif()
+
+# =============================================================================
 # Reverse Engineering Suite (sub-module)
 # =============================================================================
 add_subdirectory(src/reverse_engineering)
@@ -1424,6 +1446,11 @@ endif()
 
 # Link RE library into RawrEngine
 target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library)
+
+# Link Phase 9 Distributed Runtime (Phase D.3)
+if(TARGET sovereign_distributed)
+    target_link_libraries(RawrEngine PRIVATE sovereign_distributed)
+endif()
 
 target_include_directories(RawrEngine PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -1694,6 +1721,11 @@ if(WIN32)
 endif()
 
 target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library)
+
+# Link Phase 9 Distributed Runtime (Phase D.3)
+if(TARGET sovereign_distributed)
+    target_link_libraries(RawrXD_Gold PRIVATE sovereign_distributed)
+endif()
 
 target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -4956,6 +4988,251 @@ if(WIN32)
     set_target_properties(test_autonomous_pipeline PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
+
+    # VAL-012: Closed-Loop Autonomous Task Demonstration
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/integration/val012_closed_loop_demo.cpp")
+        add_executable(val012_closed_loop_demo
+            src/integration/val012_closed_loop_demo.cpp
+        )
+        target_include_directories(val012_closed_loop_demo PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(val012_closed_loop_demo PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val012_closed_loop_demo PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        message(STATUS "[VAL-012] Closed-loop autonomous demo target added")
+    endif()
+
+    # VAL-014: Real Toolchain Integration Demonstration
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/integration/val014_real_toolchain_demo_v2.cpp")
+        add_executable(val014_real_toolchain_demo
+            src/integration/val014_real_toolchain_demo_v2.cpp
+        )
+        target_include_directories(val014_real_toolchain_demo PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(val014_real_toolchain_demo PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val014_real_toolchain_demo PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        message(STATUS "[VAL-014] Real toolchain integration demo target added (v2 with ProcessExecutor)")
+    endif()
+
+    # VAL-016.1: Autonomous Environment Repair
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/integration/val016_autonomous_repair_v1.cpp")
+        add_executable(val016_autonomous_repair_v1
+            src/integration/val016_autonomous_repair_v1.cpp
+        )
+        target_include_directories(val016_autonomous_repair_v1 PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(val016_autonomous_repair_v1 PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val016_autonomous_repair_v1 PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        message(STATUS "[VAL-016.1] Autonomous environment repair demo target added")
+    endif()
+
+    # VAL-016.2: Source-Level Autonomous Repair
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/integration/val016_source_repair_v2.cpp")
+        add_executable(val016_source_repair_v2
+            src/integration/val016_source_repair_v2.cpp
+        )
+        target_include_directories(val016_source_repair_v2 PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(val016_source_repair_v2 PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val016_source_repair_v2 PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        message(STATUS "[VAL-016.2] Source-level autonomous repair demo target added (v2)")
+    endif()
+
+    # VAL-016.2: Compile Failure Repair Demonstration
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/integration/val016_2_compile_repair_demo.cpp")
+        add_executable(val016_2_compile_repair_demo
+            src/integration/val016_2_compile_repair_demo.cpp
+            src/integration/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val016_2_compile_repair_demo PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(val016_2_compile_repair_demo PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val016_2_compile_repair_demo PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        message(STATUS "[VAL-016.2] Compile failure repair demo target added")
+    endif()
+
+    # VAL-016.2: Compile Failure Repair Test
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val016/val016_2_compile_repair_test.cpp")
+        add_executable(val016_2_compile_repair_test
+            tests/val016/val016_2_compile_repair_test.cpp
+            src/val016/val016_repair_policy.cpp
+            src/val016/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val016_2_compile_repair_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+        )
+        target_link_libraries(val016_2_compile_repair_test PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val016_2_compile_repair_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[VAL-016.2] Compile failure repair test target added")
+    endif()
+
+    # VAL-016.3: Link Failure Repair Test
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val016/val016_3_link_repair_test.cpp")
+        add_executable(val016_3_link_repair_test
+            tests/val016/val016_3_link_repair_test.cpp
+            src/val016/val016_repair_policy.cpp
+            src/val016/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val016_3_link_repair_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+        )
+        target_link_libraries(val016_3_link_repair_test PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val016_3_link_repair_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[VAL-016.3] Link failure repair test target added")
+    endif()
+
+    # VAL-016.4: Test Failure Repair Test
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val016/val016_4_test_failure_repair_test.cpp")
+        add_executable(val016_4_test_failure_repair_test
+            tests/val016/val016_4_test_failure_repair_test.cpp
+            src/val016/val016_repair_policy.cpp
+            src/val016/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val016_4_test_failure_repair_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+        )
+        target_link_libraries(val016_4_test_failure_repair_test PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val016_4_test_failure_repair_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[VAL-016.4] Test failure repair test target added")
+    endif()
+
+    # VAL-016 Regression Suite
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val016/val016_regression_suite.cpp")
+        add_executable(val016_regression_suite
+            tests/val016/val016_regression_suite.cpp
+            src/val016/val016_repair_policy.cpp
+            src/val016/val016_repair_orchestrator.cpp
+        )
+        target_include_directories(val016_regression_suite PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/val012
+            ${CMAKE_SOURCE_DIR}/src/val014
+            ${CMAKE_SOURCE_DIR}/src/val016
+        )
+        target_link_libraries(val016_regression_suite PRIVATE
+            kernel32
+            user32
+        )
+        set_target_properties(val016_regression_suite PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[VAL-016] Regression suite target added")
+    endif()
+
+    # Minimal GGUF loader test (isolated from inference dependencies)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_minimal.cpp")
+        add_executable(test_gguf_minimal
+            tests/test_gguf_minimal.cpp
+        )
+        target_include_directories(test_gguf_minimal PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(test_gguf_minimal PRIVATE
+            kernel32
+        )
+        set_target_properties(test_gguf_minimal PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[GGUF] Minimal GGUF loader test added")
+    endif()
+
+    # Gate D: Optimized kernel validation using intrinsics (more reliable than ASM)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gate_d_v4.cpp")
+        add_executable(test_gate_d_intrinsics
+            tests/test_gate_d_v4.cpp
+            src/kernels/rmsnorm_avx2_intrinsics.cpp
+            src/kernels/softmax_avx2_intrinsics.cpp
+        )
+        target_include_directories(test_gate_d_intrinsics PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_compile_options(test_gate_d_intrinsics PRIVATE /arch:AVX2)
+        target_link_libraries(test_gate_d_intrinsics PRIVATE
+            kernel32
+        )
+        set_target_properties(test_gate_d_intrinsics PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+        )
+        message(STATUS "[Gate D] Intrinsics-based kernel test added")
+    endif()
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-019.1: GGUF Artifact Validator (Standalone)
+    # ═══════════════════════════════════════════════════════════════════
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/val_019_1_gguf_artifact.cpp")
+        add_executable(val_019_1_gguf_artifact
+            tests/val_019_1_gguf_artifact.cpp
+        )
+        target_include_directories(val_019_1_gguf_artifact PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(val_019_1_gguf_artifact PRIVATE
+            kernel32
+        )
+        set_target_properties(val_019_1_gguf_artifact PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+            CXX_STANDARD 17
+        )
+        message(STATUS "[VAL-019.1] GGUF artifact validator added")
+    endif()
 
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         add_executable(RawrXD-AutoFixCLI

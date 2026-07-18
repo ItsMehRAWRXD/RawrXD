@@ -18,10 +18,10 @@ namespace RawrXD::Kernels {
 // ----------------------------------------------------------------------------
 template<int HEAD_DIM>
 void flash_attention_2(
-    float* __restrict__ output,       // [n_heads, HEAD_DIM]
-    const float* __restrict__ q,      // [n_heads, HEAD_DIM]
-    const float* __restrict__ k_cache,// [seq_len, kv_n_heads, HEAD_DIM]
-    const float* __restrict__ v_cache,// [seq_len, kv_n_heads, HEAD_DIM]
+    float* __restrict output,       // [n_heads, HEAD_DIM]
+    const float* __restrict q,      // [n_heads, HEAD_DIM]
+    const float* __restrict k_cache,// [seq_len, kv_n_heads, HEAD_DIM]
+    const float* __restrict v_cache,// [seq_len, kv_n_heads, HEAD_DIM]
     size_t n_heads,
     size_t seq_len,
     float  scale,

@@ -1,0 +1,68 @@
+{
+  "hardware_fingerprint": "RAWRXD-PHASE11-20260717",
+  "capture_date": "2026-07-17T00:00:00Z",
+  
+  "cpu": {
+    "vendor": "AMD",
+    "family": "Ryzen",
+    "model": "7950X (assumed)",
+    "cores": 16,
+    "threads": 32,
+    "base_clock_mhz": 4500,
+    "boost_clock_mhz": 5700,
+    "features": ["AVX2", "AVX-512", "FMA3", "BMI2"],
+    "l1_cache_kb": 1024,
+    "l2_cache_mb": 16,
+    "l3_cache_mb": 64
+  },
+  
+  "gpu": {
+    "vendor": "AMD",
+    "model": "Radeon RX 7800 XT",
+    "architecture": "RDNA3",
+    "vram_gb": 16,
+    "vram_type": "GDDR6",
+    "compute_units": 60,
+    "ray_accelerators": 60,
+    "driver_version": "Adrenalin 24.x",
+    "driver_date": "2024-05-15",
+    "vulkan_version": "1.4.328.1"
+  },
+  
+  "memory": {
+    "total_gb": 32,
+    "type": "DDR5",
+    "speed_mhz": 6000,
+    "channels": 2,
+    "timings": "CL30-38-38-96 (assumed)"
+  },
+  
+  "storage": {
+    "primary_type": "NVMe SSD",
+    "interface": "PCIe Gen4",
+    "read_speed_mbps": 7000,
+    "write_speed_mbps": 5500
+  },
+  
+  "platform": {
+    "os": "Windows 11 Pro",
+    "version": "23H2",
+    "build": "22631.xxxx",
+    "sdk_version": "10.0.22621.0",
+    "power_plan": "High Performance (assumed)",
+    "virtualization": "Enabled (assumed)"
+  },
+  
+  "environment": {
+    "ambient_temp_celsius": "unknown",
+    "cooling": "unknown",
+    "background_apps": "minimized",
+    "power_saving": "disabled"
+  },
+  
+  "notes": [
+    "Hardware configuration based on build environment",
+    "Some values assumed from typical RX 7800 XT system",
+    "Complete hardware disclosure requires systeminfo / dxdiag capture"
+  ]
+}

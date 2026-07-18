@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- RawrXD MSI Installer - Phase 8 Task 16 -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="RawrXD" 
+           Language="1033" 
+           Version="1.1.0" 
+           Manufacturer="RawrXD Team" 
+           UpgradeCode="12345678-1234-1234-1234-123456789012">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Platform="x64" />
+    
+    <MajorUpgrade DowngradeErrorMessage="A newer version of RawrXD is already installed." />
+    
+    <MediaTemplate EmbedCab="yes" />
+    
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="RawrXD" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="StartMenuComponents" />
+    </Feature>
+    
+    <!-- Installation Directory -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="RawrXD">
+          <Directory Id="BINFOLDER" Name="bin" />
+          <Directory Id="DOCSFOLDER" Name="docs" />
+        </Directory>
+      </Directory>
+      
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="RawrXD" />
+      </Directory>
+    </Directory>
+    
+    <!-- Components -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Main Executables -->
+      <Component Id="RawrXD_Main.exe" Guid="*">
+        <File Id="RawrXD_Main.exe" 
+              Source="$(var.BuildDir)\RawrXD_Main.exe" 
+              KeyPath="yes" />
+      </Component>
+      
+      <Component Id="RawrXD_Win32IDE.exe" Guid="*">
+        <File Id="RawrXD_Win32IDE.exe" 
+              Source="$(var.BuildDir)\RawrXD-Win32IDE.exe" />
+      </Component>
+      
+      <Component Id="RawrEngine.exe" Guid="*">
+        <File Id="RawrEngine.exe" 
+              Source="$(var.BuildDir)\RawrEngine.exe" />
+      </Component>
+      
+      <!-- DLLs -->
+      <Component Id="VulkanDLL" Guid="*">
+        <File Id="vulkan-1.dll" 
+              Source="$(var.BuildDir)\vulkan-1.dll" />
+      </Component>
+      
+      <!-- Documentation -->
+      <Component Id="README.md" Guid="*">
+        <File Id="README.md" 
+              Source="$(var.SourceDir)\docs\README.md" />
+      </Component>
+      
+      <Component Id="LICENSE" Guid="*">
+        <File Id="LICENSE" 
+              Source="$(var.SourceDir)\LICENSE" />
+      </Component>
+      
+      <!-- Registry Entries -->
+      <Component Id="RegistryEntries" Guid="*">
+        <RegistryKey Root="HKLM" 
+                     Key="Software\RawrXD">
+          <RegistryValue Name="InstallDir" 
+                         Type="string" 
+                         Value="[INSTALLFOLDER]" 
+                         KeyPath="yes" />
+          <RegistryValue Name="Version" 
+                         Type="string" 
+                         Value="1.1.0" />
+        </RegistryKey>
+      </Component>
+      
+      <!-- Environment Variable -->
+      <Component Id="EnvironmentVariable" Guid="*">
+        <Environment Id="RAWRXD_HOME" 
+                     Name="RAWRXD_HOME" 
+                     Value="[INSTALLFOLDER]" 
+                     Permanent="no" 
+                     Part="all" 
+                     Action="set" 
+                     System="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- Start Menu Components -->
+    <ComponentGroup Id="StartMenuComponents" Directory="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="*">
+        <Shortcut Id="RawrXDStartMenu" 
+                  Name="RawrXD" 
+                  Description="RawrXD AI Inference Engine"
+                  Target="[INSTALLFOLDER]RawrXD_Win32IDE.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RawrXD.exe" />
+        <Shortcut Id="UninstallProduct" 
+                  Name="Uninstall RawrXD" 
+                  Target="[System64Folder]msiexec.exe"
+                  Arguments="/x [ProductCode]" 
+                  Description="Uninstalls RawrXD" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\RawrXD" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <!-- UI -->
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+    <!-- License -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SourceDir)\docs\LICENSE.rtf" />
+    
+    <!-- Icon -->
+    <Icon Id="RawrXD.exe" SourceFile="$(var.SourceDir)\resources\icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RawrXD.exe" />
+    
+    <!-- Custom Actions -->
+    <CustomAction Id="CheckVulkan" 
+                  BinaryKey="CustomActions" 
+                  DllEntry="CheckVulkanSupport" 
+                  Execute="immediate" 
+                  Return="check" />
+    
+    <InstallExecuteSequence>
+      <Custom Action="CheckVulkan" After="InstallInitialize">
+        <![CDATA[NOT Installed]]>
+      </Custom>
+    </InstallExecuteSequence>
+    
+  </Product>
+</Wix>

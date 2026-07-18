@@ -1,0 +1,113 @@
+{
+  "validation_run": {
+    "id": "VAL019-2026-07-18-001",
+    "timestamp": "2026-07-18T00:00:00Z",
+    "status": "PENDING_EXECUTION",
+    "description": "First synthetic vector validation run - NOT YET EXECUTED"
+  },
+  "environment": {
+    "git_commit": "8473df6ea611e082ace66b9876fb17bccebf259d",
+    "git_branch": "copilot/vscode-mlyextom-3zgo-phase7a",
+    "git_repo": "https://github.com/ItsMehRAWRXD/RawrXD",
+    "compiler": {
+      "name": "MSVC",
+      "version": "14.50.35717",
+      "path": "C:\\VS2022Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe"
+    },
+    "os": {
+      "name": "Windows 10 Home",
+      "version": "2009"
+    },
+    "hardware": {
+      "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+      "cpu_cores": 8,
+      "cpu_logical": 16,
+      "gpu": "AMD Radeon RX 7800 XT",
+      "gpu_vram_gb": 16,
+      "memory_total_gb": 192
+    }
+  },
+  "artifacts": {
+    "embedding_stage": {
+      "source": "validation/embedding_stage.cpp",
+      "binary_path": "validation/embedding_stage.exe",
+      "binary_sha256": "NOT_YET_BUILT",
+      "build_timestamp": null,
+      "status": "SOURCE_ONLY"
+    },
+    "rmsnorm_stage": {
+      "source": "validation/rmsnorm_stage.cpp",
+      "binary_path": "validation/rmsnorm_stage.exe",
+      "binary_sha256": "NOT_YET_BUILT",
+      "build_timestamp": null,
+      "status": "SOURCE_ONLY"
+    }
+  },
+  "vectors": {
+    "mode": "synthetic",
+    "source_gguf": null,
+    "source_gguf_sha256": null,
+    "embedding_input": {
+      "path": "validation/val-019/vectors/embedding_input.bin",
+      "sha256": "sha256:4f6addc9659d6fb90fe94b6688a79f2a1fa8d36ec43f8f3e1d9b6528c448a384",
+      "shape": [5],
+      "dtype": "int32"
+    },
+    "embedding_expected": {
+      "path": "validation/val-019/vectors/embedding_expected.bin",
+      "sha256": "sha256:51246bdd5446d14aa906f60bd996cb2e85d4e3f3f226aa1f33ee0c6a7ad9ec7b",
+      "shape": [5, 4096],
+      "dtype": "float32",
+      "generation": {
+        "method": "deterministic_seeded",
+        "seed": 42,
+        "source": "generate_embedding_golden.py"
+      }
+    },
+    "rmsnorm_input": {
+      "path": "validation/val-019/vectors/rmsnorm_input.bin",
+      "sha256": "sha256:8dd3270ad9fb70b291f2454d6d0a7417a933015465d83234a4dba51f40e57d70",
+      "shape": [1, 10, 4096],
+      "dtype": "float32"
+    },
+    "rmsnorm_expected": {
+      "path": "validation/val-019/vectors/rmsnorm_expected.bin",
+      "sha256": "sha256:5f81351e13359ee3864b481d10c63df824b88ab015cc2347019df93ae055be43",
+      "shape": [1, 10, 4096],
+      "dtype": "float32",
+      "generation": {
+        "method": "deterministic_seeded",
+        "seed": 42,
+        "source": "generate_golden_vectors.py"
+      }
+    }
+  },
+  "stages": [
+    {
+      "name": "embedding",
+      "status": "NOT_EXECUTED",
+      "kernel_version": "embedding_lookup_v1.0_native",
+      "tolerance": 1e-5,
+      "evidence_path": null,
+      "evidence_sha256": null,
+      "result": null
+    },
+    {
+      "name": "rmsnorm",
+      "status": "NOT_EXECUTED",
+      "kernel_version": "rmsnorm_v1.0_native",
+      "tolerance": 1e-5,
+      "evidence_path": null,
+      "evidence_sha256": null,
+      "result": null
+    }
+  ],
+  "deterministic": true,
+  "reproducible": false,
+  "notes": [
+    "This manifest describes the INTENDED validation run.",
+    "Binaries have NOT been built yet.",
+    "Evidence has NOT been collected yet.",
+    "Execute execute_val019.ps1 to populate this manifest with actual results."
+  ]
+}

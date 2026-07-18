@@ -1,0 +1,29 @@
+{
+  "artifacts": [
+
+  ],
+  "build_success": false,
+  "duration_ms": 5,
+  "environment_ready": false,
+  "executed_at": 1784325975,
+  "execution": {
+    "mode": "real",
+    "reason": "Test execution"
+  },
+  "executor_success": true,
+  "exit_code": -1,
+  "failure_details": "Build directory does not exist",
+  "failure_reason": "BuildDirectoryMissing",
+  "stderr": "",
+  "stdout": "",
+  "toolchain": {
+    "build_type": "",
+    "cmake_version": "3.20.0",
+    "compiler": "",
+    "compiler_version": "",
+    "ninja_version": "",
+    "target_architecture": "",
+    "tool": "cmake+ninja"
+  },
+  "working_directory": "test_dir"
+}

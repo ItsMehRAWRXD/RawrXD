@@ -5,6 +5,14 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <atomic>
+
+// Forward declarations for LSPHotpatchBridge
+namespace RawrXD { namespace LSPServer { class RawrXDLSPServer; } }
+struct HotpatchEvent;
+
+// Include global PatchResult (with std::string fields) - this is what other files expect
+#include "patch_result.hpp"
 
 // ============================================================================
 // Command handlers - ONLY those not in feature_handlers.cpp or auto_feature_registry.cpp
@@ -217,23 +225,39 @@ void KQuant_DequantizeF16(const void* src, float* dst, int n) {
     (void)src; (void)dst; (void)n;
 }
 
+// Subsystem mode stubs (needed by rawrxd_subsystem_api.cpp)
+void CompileMode(void) {}
+void EncryptMode(void) {}
+void UACBypassMode(void) {}
+void AVScanMode(void) {}
+void EntropyMode(void) {}
+void StubGenMode(void) {}
+void TraceEngineMode(void) {}
+void AgenticMode(void) {}
+void GapFuzzMode(void) {}
+
+// Missing function for update_signature.cpp
+void asm_spengine_cpu_optimize(void) {}
+
+// ExportPrometheus - used by replay_telemetry_fusion.cpp
+uint64_t ExportPrometheus(char* buffer) {
+    (void)buffer;
+    return 0;
+}
+
 } // extern "C"
 
 // ============================================================================
 // C++ stubs
 // ============================================================================
 
-// PatchResult
-struct PatchResult {
-    bool success = false;
-    int errorCode = 0;
-};
-
+// Global PatchResult versions (for unified_hotpatch_manager.cpp, etc.)
+// Note: PatchResult is already included at top of file
 PatchResult direct_read(const char* path, uint64_t offset, uint64_t size,
                         void* buffer, uint64_t* bytesRead) {
     (void)path; (void)offset; (void)size; (void)buffer;
     if (bytesRead) *bytesRead = 0;
-    return PatchResult{false, -1};
+    return PatchResult::error("stub", -1);
 }
 
 // Byte search
@@ -257,29 +281,34 @@ struct BytePatchEnhanced {
 
 PatchResult patch_bytes(const char* path, const BytePatchEnhanced& patch) {
     (void)path; (void)patch;
-    return PatchResult{false, -1};
+    return PatchResult::error("stub", -1);
 }
 
 PatchResult search_and_patch_bytes(const char* path,
                                    const std::vector<uint8_t>& pattern,
                                    const std::vector<uint8_t>& replacement) {
     (void)path; (void)pattern; (void)replacement;
-    return PatchResult{false, -1};
+    return PatchResult::error("stub", -1);
 }
 
 // CoTFallbackSystem - REMOVED: defined in cot_fallback_system.cpp
 
-// GPUDispatchGate
+// GPUDispatchGate - out-of-line definitions for quantum_agent_orchestrator.cpp
 namespace RawrXD {
 class GPUDispatchGate {
 public:
-    GPUDispatchGate() = default;
-    ~GPUDispatchGate() = default;
-    bool Initialize() { return false; }
-    bool MatVecQ4(const float*, const float*, float*, unsigned int, unsigned int, bool) {
-        return false;
-    }
+    GPUDispatchGate();
+    ~GPUDispatchGate();
+    bool Initialize();
+    bool MatVecQ4(const float*, const float*, float*, unsigned int, unsigned int, bool);
 };
+
+GPUDispatchGate::GPUDispatchGate() {}
+GPUDispatchGate::~GPUDispatchGate() {}
+bool GPUDispatchGate::Initialize() { return false; }
+bool GPUDispatchGate::MatVecQ4(const float*, const float*, float*, unsigned int, unsigned int, bool) {
+    return false;
+}
 }
 
 // NativeGGUFLoader
@@ -331,5 +360,37 @@ std::vector<uint8_t> compress(const std::vector<uint8_t>& input) {
 }
 }
 
-// ExportPrometheus
-void ExportPrometheus(const char*) {}
+// ============================================================================
+// LSPHotpatchBridge stub implementation - out-of-line definitions
+// ============================================================================
+
+// Include the header to get the class declaration
+#include "../lsp/lsp_hotpatch_bridge.hpp"
+
+// Out-of-line definitions for LSPHotpatchBridge methods
+LSPHotpatchBridge::LSPHotpatchBridge() {}
+LSPHotpatchBridge::~LSPHotpatchBridge() {}
+
+LSPHotpatchBridge& LSPHotpatchBridge::instance() {
+    static LSPHotpatchBridge inst;
+    return inst;
+}
+
+PatchResult LSPHotpatchBridge::attach(RawrXD::LSPServer::RawrXDLSPServer* server) {
+    (void)server;
+    return PatchResult::ok("stub");
+}
+
+PatchResult LSPHotpatchBridge::detach() {
+    return PatchResult::ok("stub");
+}
+
+PatchResult LSPHotpatchBridge::refreshDiagnostics() {
+    return PatchResult::ok("stub");
+}
+
+PatchResult LSPHotpatchBridge::rebuildSymbolIndex() {
+    return PatchResult::ok("stub");
+}
+
+void LSPHotpatchBridge::onHotpatchEvent(const struct HotpatchEvent*, void*) {}

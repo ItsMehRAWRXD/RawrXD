@@ -1,0 +1,197 @@
+{
+  "version": "1.0",
+  "truncation": null,
+  "padding": null,
+  "added_tokens": [
+    {
+      "id": 0,
+      "content": "<pad>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    },
+    {
+      "id": 1,
+      "content": "<s>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    },
+    {
+      "id": 2,
+      "content": "</s>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    },
+    {
+      "id": 3,
+      "content": "<unk>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    }
+  ],
+  "normalizer": {
+    "type": "Sequence",
+    "normalizers": [
+      {
+        "type": "Prepend",
+        "prepend": "Ġ"
+      },
+      {
+        "type": "Lowercase"
+      }
+    ]
+  },
+  "pre_tokenizer": {
+    "type": "ByteLevel",
+    "add_prefix_space": false,
+    "trim_offsets": true,
+    "use_regex": true
+  },
+  "post_processor": {
+    "type": "TemplateProcessing",
+    "single": [
+      {
+        "SpecialToken": {
+          "id": "<s>",
+          "type_id": 0
+        }
+      },
+      {
+        "Sequence": {
+          "id": "A",
+          "type_id": 0
+        }
+      }
+    ],
+    "pair": [
+      {
+        "SpecialToken": {
+          "id": "<s>",
+          "type_id": 0
+        }
+      },
+      {
+        "Sequence": {
+          "id": "A",
+          "type_id": 0
+        }
+      },
+      {
+        "SpecialToken": {
+          "id": "</s>",
+          "type_id": 0
+        }
+      },
+      {
+        "Sequence": {
+          "id": "B",
+          "type_id": 0
+        }
+      }
+    ],
+    "special_tokens": {
+      "<s>": {
+        "id": "<s>",
+        "ids": [1],
+        "tokens": ["<s>"]
+      },
+      "</s>": {
+        "id": "</s>",
+        "ids": [2],
+        "tokens": ["</s>"]
+      }
+    }
+  },
+  "decoder": {
+    "type": "ByteLevel",
+    "add_prefix_space": false,
+    "trim_offsets": true,
+    "use_regex": true
+  },
+  "model": {
+    "type": "BPE",
+    "dropout": null,
+    "unk_token": "<unk>",
+    "continuing_subword_prefix": null,
+    "end_of_word_suffix": null,
+    "fuse_unk": false,
+    "byte_fallback": false,
+    "vocab": {
+      "<pad>": 0,
+      "<s>": 1,
+      "</s>": 2,
+      "<unk>": 3,
+      "H": 4,
+      "He": 5,
+      "Hel": 6,
+      "Hell": 7,
+      "Hello": 8,
+      "e": 9,
+      "el": 10,
+      "ell": 11,
+      "ello": 12,
+      "l": 13,
+      "ll": 14,
+      "llo": 15,
+      "lo": 16,
+      "o": 17,
+      "Ġ": 18,
+      "ĠH": 19,
+      "ĠHe": 20,
+      "ĠHel": 21,
+      "ĠHell": 22,
+      "ĠHello": 23,
+      "W": 24,
+      "Wo": 25,
+      "Wor": 26,
+      "Worl": 27,
+      "World": 28,
+      "o": 29,
+      "or": 30,
+      "orl": 31,
+      "orld": 32,
+      "r": 33,
+      "rl": 34,
+      "rld": 35,
+      "l": 36,
+      "ld": 37,
+      "d": 38,
+      "ĠW": 39,
+      "ĠWo": 40,
+      "ĠWor": 41,
+      "ĠWorl": 42,
+      "ĠWorld": 43
+    },
+    "merges": [
+      "H e",
+      "He l",
+      "Hel l",
+      "Hell o",
+      "Ġ H",
+      "ĠH e",
+      "ĠHe l",
+      "ĠHel l",
+      "ĠHell o",
+      "W o",
+      "Wo r",
+      "Wor l",
+      "Worl d",
+      "Ġ W",
+      "ĠW o",
+      "ĠWo r",
+      "ĠWor l",
+      "ĠWorl d"
+    ]
+  }
+}

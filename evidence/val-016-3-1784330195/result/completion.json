@@ -1,0 +1,28 @@
+{
+  "failure": "LinkFailed",
+  "repair_applied": "// Fixed link errors:\n// Added missing function definition for external_function()\n",
+  "retry_success": false,
+  "state_history": [
+    {
+      "state": "Detected",
+      "timestamp": 1784330195
+    },
+    {
+      "state": "Diagnosed",
+      "timestamp": 1784330195
+    },
+    {
+      "state": "Planned",
+      "timestamp": 1784330195
+    },
+    {
+      "state": "Applied",
+      "timestamp": 1784330195
+    },
+    {
+      "state": "Verified",
+      "timestamp": 1784330195
+    }
+  ],
+  "success": false
+}

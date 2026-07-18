@@ -1,0 +1,45 @@
+{
+  "build_result": {
+    "artifacts": [
+
+    ],
+    "build_success": false,
+    "duration_ms": 0,
+    "environment_ready": false,
+    "executed_at": 1784326456,
+    "execution": {
+      "mode": "real",
+      "reason": "Environment check failed"
+    },
+    "executor_success": true,
+    "exit_code": -1,
+    "failure_details": "Build environment not ready: No CMakeCache.txt or build.ninja found;",
+    "failure_reason": "BuildDirectoryMissing",
+    "stderr": "",
+    "stdout": "",
+    "toolchain": {
+      "build_type": "",
+      "cmake_version": "4.2.0",
+      "compiler": "MSVC",
+      "compiler_version": "unknown",
+      "ninja_version": "1.12.0",
+      "target_architecture": "x86_64-windows-msvc",
+      "tool": "cmake+ninja"
+    },
+    "working_directory": "build-val012-simple"
+  },
+  "completed_at": 1784326457,
+  "environment_details": "Build environment not ready: No CMakeCache.txt or build.ninja found;",
+  "environment_ready": false,
+  "execution_id": "val014-29ff3c78c5690e88",
+  "hostname": "FCUKED",
+  "mode": {
+    "mode": "real",
+    "reason": "Environment check failed"
+  },
+  "overall_success": false,
+  "primary_failure_reason": "BuildDirectoryMissing",
+  "started_at": 1784326456,
+  "user": "HiH8e",
+  "validation_id": "VAL-014"
+}

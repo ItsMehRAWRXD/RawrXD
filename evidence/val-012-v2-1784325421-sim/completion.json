@@ -1,0 +1,58 @@
+{
+  "build_details": {
+    "artifacts": [
+
+    ],
+    "duration_ms": 0,
+    "exit_code": -1,
+    "provenance": {
+      "build_type": "",
+      "cmake_version": "",
+      "compiler": "",
+      "compiler_version": "",
+      "mode": "real",
+      "ninja_version": "",
+      "target_architecture": "",
+      "tool": "cmake+ninja"
+    },
+    "stderr": "",
+    "stdout": "",
+    "success": false
+  },
+  "build_succeeded": false,
+  "evidence_path": "evidence/val-012-v2-1784325421-sim",
+  "evidence_version": 2,
+  "files_modified": [
+    "src/cli/parser.cpp",
+    "src/cli/version.h"
+  ],
+  "goal_id": "0de668f8e33bff01f6a294f76622cc72",
+  "steps_completed": 4,
+  "success": true,
+  "summary": "Real execution completed successfully",
+  "test_details": {
+    "duration_ms": 0,
+    "failed": 0,
+    "passed": 0,
+    "provenance": {
+      "executed_at": 0,
+      "framework": "",
+      "framework_version": "",
+      "mode": "real",
+      "test_executable": ""
+    },
+    "skipped": 0,
+    "stderr": "",
+    "stdout": "",
+    "success": false,
+    "test_cases": [
+
+    ],
+    "total": 0
+  },
+  "tests_failed": 0,
+  "tests_passed": 0,
+  "total_duration_ms": 5,
+  "total_steps": 4,
+  "validation_id": "VAL-012"
+}

@@ -1,0 +1,152 @@
+{
+  "_schema": "VAL-018 Evidence Package v1.1",
+  "_description": "Template for consistent evidence across all VAL-018 validation stages",
+  
+  "validation_id": "VAL-018.X",
+  "component": "ComponentName",
+  "description": "What this validation proves",
+  "timestamp": "2026-07-17T21:30:00",
+  "backend": "RawrXD_Native_Component",
+  "simulation": false,
+  
+  "validation_level": {
+    "achieved": 1,
+    "description": "Repeatability - Same input produces same checksum",
+    "levels": {
+      "1": "Repeatability - Deterministic output",
+      "2": "Correctness - Matches algorithm specification", 
+      "3": "Compatibility - Matches reference implementation"
+    }
+  },
+  
+  "implementation": {
+    "commit": "abc123def456",
+    "build_type": "Release",
+    "compiler": "MSVC 19.40",
+    "target_arch": "x64 AVX2",
+    "build_timestamp": "2026-07-17T20:00:00",
+    "binary_sha256": "hash_of_executable"
+  },
+  
+  "environment": {
+    "os": "Windows 11 23H2",
+    "cpu": "AMD Ryzen 9 7950X",
+    "cpu_features": ["AVX2", "AVX-512", "FMA"],
+    "gpu": "NVIDIA RTX 4090",
+    "gpu_driver": "551.23",
+    "ram_gb": 128,
+    "environment_variables": {
+      "RAWRXD_BACKEND": "native",
+      "OMP_NUM_THREADS": "16"
+    }
+  },
+  
+  "input": {
+    "description": "Description of input data",
+    "source": "path/to/input or 'generated'",
+    "shape": [1, 2, 3],
+    "dtype": "float32",
+    "size_bytes": 1234,
+    "checksum": "sha256_or_custom_hash",
+    "format": "binary|json|text"
+  },
+  
+  "expected": {
+    "structural_properties": [
+      "output_shape matches input_shape[0] x embedding_dim",
+      "dtype matches input_dtype",
+      "values within expected range"
+    ],
+    "invariants": [
+      "property_that_must_hold",
+      "another_invariant"
+    ],
+    "reference_checksum": "expected_hash_if_level_2_or_3"
+  },
+  
+  "execution": {
+    "trace": [
+      {
+        "phase": "INIT",
+        "status": "Component initialized",
+        "timestamp": "2026-07-17T21:30:00.000"
+      },
+      {
+        "phase": "LOAD",
+        "status": "Input loaded",
+        "timestamp": "2026-07-17T21:30:00.100"
+      },
+      {
+        "phase": "EXECUTE",
+        "status": "Component executed",
+        "timestamp": "2026-07-17T21:30:00.200"
+      },
+      {
+        "phase": "VALIDATE",
+        "status": "Output validated",
+        "timestamp": "2026-07-17T21:30:00.300"
+      }
+    ],
+    "timing_ms": 100.0,
+    "memory_peak_mb": 256.0,
+    "exit_code": 0
+  },
+  
+  "actual": {
+    "output_shape": [1, 2, 3],
+    "output_dtype": "float32",
+    "output_size_bytes": 1234,
+    "output_checksum": "deterministic_hash_of_output",
+    "deterministic": true,
+    "notes": "Any observations about the output"
+  },
+  
+  "validation": {
+    "passed": true,
+    "acceptance_criteria": {
+      "simulation_false": true,
+      "exit_code_zero": true,
+      "checksum_matches": true,
+      "criteria_satisfied": true,
+      "evidence_json_written": true,
+      "execution_trace_present": true
+    },
+    "criteria": [
+      {
+        "check": "Output shape matches expected",
+        "passed": true,
+        "details": "Shape [1,2,3] matches expected"
+      },
+      {
+        "check": "Output checksum is deterministic",
+        "passed": true,
+        "details": "Same checksum on re-run"
+      },
+      {
+        "check": "Output values within range",
+        "passed": true,
+        "details": "All values in [-1, 1]"
+      }
+    ],
+    "failures": []
+  },
+  
+  "artifacts": {
+    "input": "model/input_tensor.bin",
+    "output": "execution/output_tensor.bin",
+    "trace": "execution/trace.json",
+    "timing": "execution/timing.json",
+    "result": "result/completion.json",
+    "hashes": {
+      "stdout_sha256": "hash_of_stdout_capture",
+      "output_sha256": "hash_of_output_file",
+      "trace_sha256": "hash_of_trace_json"
+    }
+  },
+  
+  "next_steps": {
+    "for_level_2": "Compare against reference implementation",
+    "for_level_3": "Validate against production model output",
+    "blockers": ["List any blockers for next level"]
+  }
+}

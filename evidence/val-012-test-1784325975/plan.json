@@ -1,0 +1,9 @@
+{
+  "goal_id": "4e3c289526481cce7144a506fc1d07d4",
+  "steps": [
+    "Locate CLI argument parser",
+    "Add --version flag handler",
+    "Add version output function",
+    "Update help text"
+  ]
+}

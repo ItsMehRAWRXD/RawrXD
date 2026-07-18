@@ -31,9 +31,6 @@ public:
         boolean
     };
 
-    // Exception type alias for compatibility with real nlohmann/json
-    using exception = std::runtime_error;
-
     // Constructors
     json() : m_type(value_t::null) {}
     json(std::nullptr_t) : m_type(value_t::null) {}

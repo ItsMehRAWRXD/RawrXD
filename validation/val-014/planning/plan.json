@@ -1,0 +1,26 @@
+[
+  {
+    "description": "Produce code changes",
+    "inputs": {
+      "file": "src/tokenizer.cpp"
+    },
+    "step": 1,
+    "tool": "file_modify"
+  },
+  {
+    "description": "Build with real compiler",
+    "inputs": {
+      "target": "RawrEngine"
+    },
+    "step": 2,
+    "tool": "cmake_build"
+  },
+  {
+    "description": "Run real tests",
+    "inputs": {
+      "pattern": "tokenizer"
+    },
+    "step": 3,
+    "tool": "ctest"
+  }
+]

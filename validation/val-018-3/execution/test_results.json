@@ -1,0 +1,14 @@
+{
+
+  "simulation": false,
+  "backend": "RawrXD_Native_BPETokenizer",
+  "tests": [
+
+    {"checksum": "47339","input": "Hello","name": "Level 1 - Hello","passed": "true","token_count": "4","token_ids": "1,18,8,2"},
+    {"checksum": "42027850502196","input": "Hello world","name": "Level 1 - Hello world","passed": "true","token_count": "10","token_ids": "1,18,8,18,3,29,33,36,38,2"},
+    {"checksum": "43576430736","input": "こんにちは","name": "Level 2 - Japanese","passed": "true","token_count": "8","token_ids": "1,18,3,3,3,3,3,2"},
+    {"checksum": "1462737","input": "你好","name": "Level 2 - Chinese","passed": "true","token_count": "5","token_ids": "1,18,3,3,2"},
+    {"checksum": "47184","input": "🙂","name": "Level 2 - Emoji","passed": "true","token_count": "4","token_ids": "1,18,3,2"},
+    {"checksum": "10414629015055014369","input": "The quick brown fox jumps over the lazy dog.","name": "Level 3 - Quick brown fox","passed": "true","token_count": "47","token_ids": "1,18,3,3,9,18,3,3,3,3,3,18,3,33,29,3,3,18,3,29,3,18,3,3,3,3,3,18,29,3,9,33,18,3,3,9,18,36,3,3,3,18,38,29,3,3,2"}
+  ]
+}

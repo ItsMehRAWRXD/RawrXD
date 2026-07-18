@@ -1,0 +1,21 @@
+# VAL-011 Binary Hashes
+# Frozen: 2026-07-17
+# Note: Rebuild will produce different hashes; use for reference only
+
+## Primary Output
+# File: build/bin/RawrEngine.exe
+# Size: 3.91 MB (4,096,000 bytes approx)
+# Type: PE32+ executable (x64)
+
+## Validation Harness
+# File: val_lsp_bridge.exe
+# Size: ~500 KB
+# Type: PE32+ executable (x64)
+
+## Hash Verification (if available)
+# SHA256: <computed at build time>
+# MD5: <computed at build time>
+
+## Reproduction Note
+# To verify: rebuild and compare ABI fingerprint
+# ABI fingerprint is stable across rebuilds

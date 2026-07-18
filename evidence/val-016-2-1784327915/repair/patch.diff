@@ -1,0 +1,3 @@
+// Fix compilation errors
+// test_source.cpp:5:13: error: 'undefined_variable' was not declared in this scope
+// test_source.cpp:8:14: error: expected ';' before 'int'

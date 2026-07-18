@@ -1,0 +1,7 @@
+{
+  "model_path": "simulation",
+  "max_tokens": 10,
+  "backend": "simulation",
+  "timestamp": "2026-07-17T19:11:19.277676",
+  "mode": "SIMULATION"
+}

@@ -1,0 +1,28 @@
+{
+  "failure": "CompileFailed",
+  "repair_applied": "// Fixed compilation errors:\n// 1. Added variable declaration\n// 2. Added missing semicolon\n",
+  "retry_success": false,
+  "state_history": [
+    {
+      "state": "Detected",
+      "timestamp": 1784330144
+    },
+    {
+      "state": "Diagnosed",
+      "timestamp": 1784330144
+    },
+    {
+      "state": "Planned",
+      "timestamp": 1784330144
+    },
+    {
+      "state": "Applied",
+      "timestamp": 1784330144
+    },
+    {
+      "state": "Verified",
+      "timestamp": 1784330144
+    }
+  ],
+  "success": false
+}

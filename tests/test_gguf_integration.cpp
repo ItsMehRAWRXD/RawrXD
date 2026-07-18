@@ -13,7 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "../src/gguf_loader.h"
+// Use the local gguf_loader.h from build tree, not the system one
+#include "gguf_loader.h"
 #include "inference_engine.h"
 #include "cpu_inference_engine.h"
 

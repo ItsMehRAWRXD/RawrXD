@@ -1,0 +1,1766 @@
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+    ❌ FAILED: Cannot open GGUF file
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x23e682aa040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 96222
+      Time: 0.023 ms
+      Cycles/Byte: 23.49
+      Bandwidth: 0.17 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 31206
+      Time: 0.007 ms
+    Attention Softmax:
+      Cycles: 45024
+      Time: 0.011 ms
+    RMS Normalization:
+      Cycles: 35280
+      Time: 0.008 ms
+    SiLU Activation:
+      Cycles: 35910
+      Time: 0.009 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 3366
+      MASM cycles:   560
+      Speedup:      6.01x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 827
+      MASM cycles:   835
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 4170
+      MASM cycles:   4285
+      Speedup:      0.97x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 4791
+      MASM cycles:   914
+      Speedup:      5.24x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1578
+      MASM cycles:   1586
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5211
+      MASM cycles:   5205
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 10152
+      MASM cycles:   1786
+      Speedup:      5.68x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3105
+      MASM cycles:   1815
+      Speedup:      1.71x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 10362
+      MASM cycles:   10346
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 18886
+      MASM cycles:   3609
+      Speedup:      5.23x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6203
+      MASM cycles:   3076
+      Speedup:      2.02x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 24799
+      MASM cycles:   21856
+      Speedup:      1.13x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 39942
+      MASM cycles:   7226
+      Speedup:      5.53x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12392
+      MASM cycles:   5643
+      Speedup:      2.20x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 45486
+      MASM cycles:   46502
+      Speedup:      0.98x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.682467e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+    ❌ FAILED: Cannot open GGUF file
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x2193b27a040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 78960
+      Time: 0.019 ms
+      Cycles/Byte: 19.28
+      Bandwidth: 0.20 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 32424
+      Time: 0.008 ms
+    Attention Softmax:
+      Cycles: 42252
+      Time: 0.010 ms
+    RMS Normalization:
+      Cycles: 30492
+      Time: 0.007 ms
+    SiLU Activation:
+      Cycles: 168588
+      Time: 0.040 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 2794
+      MASM cycles:   496
+      Speedup:      5.63x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 822
+      MASM cycles:   831
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 2663
+      MASM cycles:   4110
+      Speedup:      0.65x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 5831
+      MASM cycles:   977
+      Speedup:      5.97x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1576
+      MASM cycles:   1583
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5299
+      MASM cycles:   5530
+      Speedup:      0.96x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 9891
+      MASM cycles:   1948
+      Speedup:      5.08x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3096
+      MASM cycles:   1804
+      Speedup:      1.72x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 10558
+      MASM cycles:   11574
+      Speedup:      0.91x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 18474
+      MASM cycles:   3411
+      Speedup:      5.42x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6114
+      MASM cycles:   2814
+      Speedup:      2.17x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 21239
+      MASM cycles:   21025
+      Speedup:      1.01x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 38971
+      MASM cycles:   8517
+      Speedup:      4.58x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12391
+      MASM cycles:   5566
+      Speedup:      2.23x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 41555
+      MASM cycles:   41170
+      Speedup:      1.01x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.423067e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+    ❌ FAILED: Cannot open GGUF file
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x2c09dafa040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 68166
+      Time: 0.016 ms
+      Cycles/Byte: 16.64
+      Bandwidth: 0.24 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 29526
+      Time: 0.007 ms
+    Attention Softmax:
+      Cycles: 43890
+      Time: 0.010 ms
+    RMS Normalization:
+      Cycles: 30282
+      Time: 0.007 ms
+    SiLU Activation:
+      Cycles: 35658
+      Time: 0.009 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 2355
+      MASM cycles:   495
+      Speedup:      4.76x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 823
+      MASM cycles:   830
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 2634
+      MASM cycles:   2622
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 5103
+      MASM cycles:   911
+      Speedup:      5.60x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1584
+      MASM cycles:   1592
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5212
+      MASM cycles:   5200
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 9257
+      MASM cycles:   1753
+      Speedup:      5.28x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3096
+      MASM cycles:   1786
+      Speedup:      1.73x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 16704
+      MASM cycles:   10927
+      Speedup:      1.53x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 26481
+      MASM cycles:   3431
+      Speedup:      7.72x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6118
+      MASM cycles:   2871
+      Speedup:      2.13x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 21013
+      MASM cycles:   20983
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 37834
+      MASM cycles:   6858
+      Speedup:      5.52x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12177
+      MASM cycles:   5655
+      Speedup:      2.15x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 48639
+      MASM cycles:   42427
+      Speedup:      1.15x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.222467e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+    ❌ FAILED: Cannot open GGUF file
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x1ec9e03a040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 88158
+      Time: 0.021 ms
+      Cycles/Byte: 21.52
+      Bandwidth: 0.18 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 31416
+      Time: 0.008 ms
+    Attention Softmax:
+      Cycles: 60144
+      Time: 0.014 ms
+    RMS Normalization:
+      Cycles: 71484
+      Time: 0.017 ms
+    SiLU Activation:
+      Cycles: 88536
+      Time: 0.021 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+    ❌ FAILED: Cannot open GGUF file
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x270ac20a040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 90342
+      Time: 0.022 ms
+      Cycles/Byte: 22.06
+      Bandwidth: 0.18 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 43050
+      Time: 0.010 ms
+    Attention Softmax:
+      Cycles: 69048
+      Time: 0.017 ms
+    RMS Normalization:
+      Cycles: 38136
+      Time: 0.009 ms
+    SiLU Activation:
+      Cycles: 63630
+      Time: 0.015 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 2828
+      MASM cycles:   503
+      Speedup:      5.62x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 831
+      MASM cycles:   833
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 2628
+      MASM cycles:   2641
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 4661
+      MASM cycles:   923
+      Speedup:      5.05x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1822
+      MASM cycles:   1602
+      Speedup:      1.14x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5391
+      MASM cycles:   5297
+      Speedup:      1.02x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 9346
+      MASM cycles:   1745
+      Speedup:      5.36x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3089
+      MASM cycles:   1859
+      Speedup:      1.66x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 10992
+      MASM cycles:   11068
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 18723
+      MASM cycles:   3442
+      Speedup:      5.44x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6264
+      MASM cycles:   2852
+      Speedup:      2.20x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 21072
+      MASM cycles:   20846
+      Speedup:      1.01x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 45594
+      MASM cycles:   7819
+      Speedup:      5.83x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12252
+      MASM cycles:   6232
+      Speedup:      1.97x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 41804
+      MASM cycles:   42310
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.330800e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    ❌ FAILED: Cannot open GGUF file
+    Address: 0x240cac1a040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 63882
+      Time: 0.015 ms
+      Cycles/Byte: 15.60
+      Bandwidth: 0.25 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 30282
+      Time: 0.007 ms
+    Attention Softmax:
+      Cycles: 43890
+      Time: 0.010 ms
+    RMS Normalization:
+      Cycles: 30408
+      Time: 0.007 ms
+    SiLU Activation:
+      Cycles: 36330
+      Time: 0.009 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 2367
+      MASM cycles:   666
+      Speedup:      3.56x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 816
+      MASM cycles:   1071
+      Speedup:      0.76x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 2631
+      MASM cycles:   2635
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 4665
+      MASM cycles:   919
+      Speedup:      5.08x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1578
+      MASM cycles:   1590
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5789
+      MASM cycles:   5214
+      Speedup:      1.11x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 9466
+      MASM cycles:   1785
+      Speedup:      5.30x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3092
+      MASM cycles:   1816
+      Speedup:      1.70x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 10550
+      MASM cycles:   10800
+      Speedup:      0.98x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 27083
+      MASM cycles:   3439
+      Speedup:      7.87x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6141
+      MASM cycles:   2834
+      Speedup:      2.17x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 20710
+      MASM cycles:   20989
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 37048
+      MASM cycles:   6762
+      Speedup:      5.48x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12171
+      MASM cycles:   5594
+      Speedup:      2.18x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 49400
+      MASM cycles:   42096
+      Speedup:      1.17x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.213400e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+    ❌ FAILED: Cannot open GGUF file
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x147ff4fa040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 67326
+      Time: 0.016 ms
+      Cycles/Byte: 16.44
+      Bandwidth: 0.24 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 30366
+      Time: 0.007 ms
+    Attention Softmax:
+      Cycles: 43848
+      Time: 0.010 ms
+    RMS Normalization:
+      Cycles: 30912
+      Time: 0.007 ms
+    SiLU Activation:
+      Cycles: 36750
+      Time: 0.009 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 2387
+      MASM cycles:   495
+      Speedup:      4.83x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 824
+      MASM cycles:   829
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 2650
+      MASM cycles:   2649
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 4683
+      MASM cycles:   917
+      Speedup:      5.11x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1580
+      MASM cycles:   1589
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5553
+      MASM cycles:   5302
+      Speedup:      1.05x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 9428
+      MASM cycles:   1761
+      Speedup:      5.35x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3113
+      MASM cycles:   1837
+      Speedup:      1.70x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 10599
+      MASM cycles:   10719
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 19346
+      MASM cycles:   3507
+      Speedup:      5.52x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6178
+      MASM cycles:   2839
+      Speedup:      2.18x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 21336
+      MASM cycles:   20921
+      Speedup:      1.02x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 39772
+      MASM cycles:   6796
+      Speedup:      5.85x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12233
+      MASM cycles:   5526
+      Speedup:      2.21x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 42016
+      MASM cycles:   42562
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.216067e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+    ❌ FAILED: Cannot open GGUF file
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x22bd18aa040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 61530
+      Time: 0.015 ms
+      Cycles/Byte: 15.02
+      Bandwidth: 0.26 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 29694
+      Time: 0.007 ms
+    Attention Softmax:
+      Cycles: 43176
+      Time: 0.010 ms
+    RMS Normalization:
+      Cycles: 31416
+      Time: 0.008 ms
+    SiLU Activation:
+      Cycles: 36540
+      Time: 0.009 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 2398
+      MASM cycles:   508
+      Speedup:      4.72x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 833
+      MASM cycles:   840
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 2668
+      MASM cycles:   2669
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 4741
+      MASM cycles:   991
+      Speedup:      4.78x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1594
+      MASM cycles:   1601
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5273
+      MASM cycles:   5266
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 9321
+      MASM cycles:   1764
+      Speedup:      5.28x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3121
+      MASM cycles:   1807
+      Speedup:      1.73x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 10439
+      MASM cycles:   10652
+      Speedup:      0.98x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 18608
+      MASM cycles:   3447
+      Speedup:      5.40x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6190
+      MASM cycles:   2866
+      Speedup:      2.16x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 21234
+      MASM cycles:   20951
+      Speedup:      1.01x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 43499
+      MASM cycles:   6915
+      Speedup:      6.29x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12308
+      MASM cycles:   5485
+      Speedup:      2.24x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 42810
+      MASM cycles:   42134
+      Speedup:      1.02x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.192667e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+    ❌ FAILED: Cannot open GGUF file
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x2a7679aa040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 62538
+      Time: 0.015 ms
+      Cycles/Byte: 15.27
+      Bandwidth: 0.26 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 29652
+      Time: 0.007 ms
+    Attention Softmax:
+      Cycles: 43680
+      Time: 0.010 ms
+    RMS Normalization:
+      Cycles: 30786
+      Time: 0.007 ms
+    SiLU Activation:
+      Cycles: 36750
+      Time: 0.009 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+
+============================================================================
+RawrXD Model Stack Integration Validation Harness (Telemetry-Enhanced)
+============================================================================
+
+Configuration:
+  Model path: test_model.gguf
+  AVX-512: Enabled
+  Telemetry: Enabled
+  Execution Mode: Scalar_CPP
+
+[Phase 1] Resource Injection
+  Model path: test_model.gguf
+  Step 1.1: Opening GGUF file...
+
+[Phase 2] Buffer Setup (AVX-512 Alignment)
+  Step 2.1: Creating aligned buffer...
+  Step 2.2: Verifying AVX-512 alignment...
+    ❌ FAILED: Cannot open GGUF file
+    ✅ Buffer aligned correctly (AVX-512 ready)
+    Address: 0x27dbffea040
+    Alignment: 64-byte boundary ✓
+  Step 2.3: Initializing buffer with test data...
+    ✅ Buffer initialized with test data
+  Step 2.4: Verifying memory layout...
+    ✅ Memory layout verified
+  ✅ Phase 2 complete (0 ms)
+
+[Phase 3] Execution Trace (AVX-512 Kernel Simulation with Telemetry)
+  Step 3.1: Checking AVX-512 support...
+    AVX-512F:  ✓
+    AVX-512DQ: ✓
+    AVX-512BW: ✓
+    AVX-512VL: ✓
+    ✅ AVX-512 support detected
+  Step 3.2: Creating aligned input/output buffers...
+    ✅ Buffers created and initialized
+  Step 3.3: Testing kernels with telemetry...
+    Q4_0 Dequantize:
+      Cycles: 60942
+      Time: 0.015 ms
+      Cycles/Byte: 14.88
+      Bandwidth: 0.26 GB/s
+      Aligned: ✓
+    Q8_0 Dequantize:
+      Cycles: 29610
+      Time: 0.007 ms
+    Attention Softmax:
+      Cycles: 41874
+      Time: 0.010 ms
+    RMS Normalization:
+      Cycles: 29862
+      Time: 0.007 ms
+    SiLU Activation:
+      Cycles: 53256
+      Time: 0.013 ms
+  Step 3.4: Verifying no exceptions...
+    ✅ No exceptions detected
+  ✅ Phase 3 complete (0 ms)
+
+[Phase 4] Integrity Check (Output Validation)
+  Step 4.1: Creating test input...
+    ✅ Test input created
+  Step 4.2: Creating expected output...
+    ✅ Expected output created
+  Step 4.3: Computing actual output...
+    ✅ Actual output computed
+  Step 4.4: Comparing outputs...
+    Average deviation: 0.000
+    Match percentage: 100.000%
+  Step 4.5: Verifying parity...
+    ✅ Parity verified (deviation < 5%)
+  ✅ Phase 4 complete (0 ms)
+
+[Phase 5] Differential Testing (Scalar vs MASM)
+  Running differential tests across multiple sizes...
+
+  --- Testing size: 256 floats ---
+    SiLU Activation:
+      Scalar cycles: 2512
+      MASM cycles:   496
+      Speedup:      5.06x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 821
+      MASM cycles:   832
+      Speedup:      0.99x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 2637
+      MASM cycles:   2639
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 512 floats ---
+    SiLU Activation:
+      Scalar cycles: 4659
+      MASM cycles:   913
+      Speedup:      5.10x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 1577
+      MASM cycles:   1584
+      Speedup:      1.00x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 5781
+      MASM cycles:   7381
+      Speedup:      0.78x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 1024 floats ---
+    SiLU Activation:
+      Scalar cycles: 9778
+      MASM cycles:   1875
+      Speedup:      5.22x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 3200
+      MASM cycles:   2195
+      Speedup:      1.46x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 11953
+      MASM cycles:   12509
+      Speedup:      0.96x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 2048 floats ---
+    SiLU Activation:
+      Scalar cycles: 20356
+      MASM cycles:   3506
+      Speedup:      5.81x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 6152
+      MASM cycles:   3486
+      Speedup:      1.76x
+      Max error:     1.192093e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 21600
+      MASM cycles:   20695
+      Speedup:      1.04x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  --- Testing size: 4096 floats ---
+    SiLU Activation:
+      Scalar cycles: 37115
+      MASM cycles:   6827
+      Speedup:      5.44x
+      Max error:     1.430511e-06
+      Status:       ✅ PASS
+    RMS Normalization:
+      Scalar cycles: 12204
+      MASM cycles:   6928
+      Speedup:      1.76x
+      Max error:     2.384186e-07
+      Status:       ✅ PASS
+    Softmax:
+      Scalar cycles: 42539
+      MASM cycles:   47393
+      Speedup:      0.90x
+      Max error:     0.000000e+00
+      Status:       ✅ PASS
+
+  ✅ Phase 5 complete
+
+============================================================================
+Validation Summary
+============================================================================
+  Resource Injection: ❌ FAIL (0 ms)
+    Error: FAILED: Cannot open GGUF file
+  Buffer Setup: ✅ PASS (0 ms)
+  Execution Trace: ✅ PASS (0 ms)
+  Integrity Check: ✅ PASS (0 ms)
+
+============================================================================
+Telemetry Summary
+============================================================================
+  Total executions: 15
+  Success rate: 1.000000e+02%
+  Average cycles: 7.950067e+03
+  Average time: 0.002 ms
+  Average bandwidth: 0.00 GB/s
+  Total bytes processed: 0
+
+============================================================================
+❌ Some validation phases failed. See details above.
+============================================================================
+

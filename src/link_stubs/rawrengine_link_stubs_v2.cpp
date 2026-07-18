@@ -112,14 +112,14 @@ extern "C" void KQuant_DequantizeF16(const void*, float*, int) {}
 // Vulkan kernel dispatch
 extern "C" void VulkanKernel_DispatchRaw_Asm() {}
 
-// CPU feature detection
-extern "C" int rawr_cpu_has_avx2 = 1;
+// CPU feature detection - defined in rawrengine_link_closure.cpp
+// extern "C" int rawr_cpu_has_avx2 = 1;
 
-// AVX512 flags
-extern "C" int g_HasAVX512F = 1;
+// AVX512 flags - defined in rawrengine_link_closure.cpp
+// extern "C" int g_HasAVX512F = 1;
 
-// Enterprise license
-extern "C" int g_800B_Unlocked = 1;
+// Enterprise license - defined in rawrengine_link_closure.cpp
+// extern "C" int g_800B_Unlocked = 1;
 
 // LSPHotpatchBridge implementation
 class LSPHotpatchBridge {

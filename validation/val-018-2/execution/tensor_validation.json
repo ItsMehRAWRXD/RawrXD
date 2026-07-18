@@ -1,0 +1,29 @@
+{
+  "validated_tensors": 723,
+  "missing": 0,
+  "offset_errors": 0,
+  "tensor_offsets_valid": true,
+  "quantization_types_recognized": true,
+  "tensor_types": [
+    {
+      "count": "161",
+      "type": "F32"
+    },
+    {
+      "count": "321",
+      "type": "Q2_K"
+    },
+    {
+      "count": "160",
+      "type": "Q3_K"
+    },
+    {
+      "count": "80",
+      "type": "Q5_K"
+    },
+    {
+      "count": "1",
+      "type": "Q6_K"
+    }
+  ]
+}

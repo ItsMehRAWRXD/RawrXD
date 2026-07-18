@@ -1,0 +1,14 @@
+{
+
+  "validation_id": "VAL-019.2",
+  "description": "Tensor Access Correctness",
+  "timestamp": "2026-07-18T08:27:56",
+  "simulation": false,
+  "all_passed": false,
+  "tensor_samples": [
+
+    {"bytes": "104656896","descriptor_sha256": "1cd2bf09622632e2b735c2a195781962","name": "token_embd.weight","offset": "0","payload_sha256": "039f7cb324b1a4a333fb1a41a7d8e773","shape": "[3072,32064]","type": "2"},
+    {"bytes": "12288","descriptor_sha256": "dcaf3b671114d70259c5ccc418b7d94a","name": "blk.0.attn_norm.weight","offset": "55406592","payload_sha256": "ba03838fa940e3ed11e27ee09901cd6b","shape": "[3072]","type": "0"},
+    {"bytes": "55406592","descriptor_sha256": "b2605b327a91393c2b8eb811c2108444","name": "output.weight","offset": "1398951936","payload_sha256": "b9f75b128f6da1dd4ad4ff983972dc67","shape": "[3072,32064]","type": "14"}
+  ]
+}

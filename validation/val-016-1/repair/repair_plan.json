@@ -1,0 +1,15 @@
+{
+  "overall_confidence": 0,
+  "plan_id": "repair-37868577882700",
+  "steps": [
+    {
+      "action": "CreateDirectory",
+      "confidence": 0,
+      "description": "Create missing build directory",
+      "reason": "Build directory missing - deterministic fix",
+      "step_number": 1,
+      "target": "build"
+    }
+  ],
+  "target_failure": "EnvironmentMissing"
+}

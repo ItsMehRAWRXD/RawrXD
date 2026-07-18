@@ -5,10 +5,26 @@
 #pragma once
 
 #include <string>
+#include <sstream>
+#include <iomanip>
+#include <random>
+#include <algorithm>
 #include <vector>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <atomic>
+#include <thread>
+#include <chrono>
+#include <functional>
+
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <atomic>
+#include <thread>
 #include <chrono>
 #include <functional>
 
@@ -40,6 +56,8 @@ struct NodeIdentity {
     int port = 0;
     std::string datacenter;
     std::string rack;
+    std::string version;
+    std::vector<std::string> capabilities;
     
     std::string ToJson() const;
     static NodeIdentity FromJson(const std::string& json);
@@ -72,18 +90,36 @@ struct NodeStatus {
 // Cluster Topology
 // ============================================================================
 
-struct ClusterTopology {
-    std::string cluster_id;
-    std::string leader_id;
-    std::map<std::string, NodeStatus> nodes;
+class ClusterTopology {
+public:
+    // Node management
+    bool AddNode(const NodeIdentity& node);
+    bool RemoveNode(const std::string& node_id);
     
-    int QuorumSize() const { return (nodes.size() / 2) + 1; }
-    int HealthyNodes() const;
-    std::vector<std::string> GetVotingMembers() const;
-    bool HasLeader() const { return !leader_id.empty(); }
+    // Health queries
+    std::vector<NodeIdentity> GetHealthyNodes() const;
+    int GetQuorumSize() const;
+    bool HasQuorum() const;
     
+    // Leader management
+    void SetLeader(const std::string& node_id);
+    std::string GetLeader() const;
+    bool IsLeader(const std::string& node_id) const;
+    
+    // Health updates
+    void UpdateHealth(const std::string& node_id, NodeHealth health);
+    NodeHealth GetHealth(const std::string& node_id) const;
+    
+    // Serialization
     std::string ToJson() const;
-    static ClusterTopology FromJson(const std::string& json);
+    
+private:
+    mutable std::mutex mutex_;
+    std::vector<NodeIdentity> nodes_;
+    std::map<std::string, NodeHealth> node_health_;
+    std::map<std::string, std::chrono::steady_clock::time_point> last_heartbeat_;
+    std::string leader_id_;
+    int version_ = 0;
 };
 
 // ============================================================================
@@ -92,6 +128,7 @@ struct ClusterTopology {
 
 enum class DiscoveryMethod {
     STATIC_LIST = 0,      // Pre-configured node list
+    STATIC = 0,           // Alias for STATIC_LIST
     MULTICAST = 1,        // UDP multicast (LAN)
     CONSUL = 2,           // HashiCorp Consul
     KUBERNETES = 3,       // K8s service discovery
@@ -105,6 +142,7 @@ public:
         NodeIdentity self;
         DiscoveryMethod method = DiscoveryMethod::STATIC_LIST;
         std::vector<NodeIdentity> seed_nodes;
+        std::vector<NodeIdentity> static_nodes;  // Alias for seed_nodes
         int heartbeat_interval_ms = 1000;
         int heartbeat_timeout_ms = 5000;
         int election_timeout_ms = 10000;
@@ -126,11 +164,15 @@ public:
     void UpdateStatus(const NodeStatus& status);
     
     // Topology access
-    ClusterTopology GetTopology() const;
+    std::shared_ptr<ClusterTopology> GetTopology() const;
     NodeStatus GetNode(const std::string& node_id) const;
-    std::vector<NodeStatus> GetHealthyNodes() const;
+    std::vector<NodeIdentity> GetAllNodes() const;
+    std::vector<NodeIdentity> GetNodesInDatacenter(const std::string& datacenter) const;
+    std::vector<NodeIdentity> GetNodesInRack(const std::string& rack) const;
     std::string GetLeaderId() const;
     bool IsLeader() const;
+    bool ForceElection();
+    bool ElectLeader();
     
     // Callbacks
     using TopologyChangeCallback = std::function<void(const ClusterTopology&)>;
@@ -145,19 +187,26 @@ public:
     // Manual operations
     bool AddNode(const NodeIdentity& node);
     bool RemoveNode(const std::string& node_id);
-    bool ForceElection();
+    void StepDown();
+    void OnLeaderElected(std::function<void()> callback);
+    void OnNodeJoined(std::function<void(const NodeIdentity&)> callback);
+    void OnNodeLeft(std::function<void(const NodeIdentity&)> callback);
     
 private:
+    std::function<void()> on_leader_elected_;
+    std::function<void(const NodeIdentity&)> on_node_joined_;
+    std::function<void(const NodeIdentity&)> on_node_left_;
     Config config_;
     std::atomic<bool> initialized_{false};
     std::atomic<bool> running_{false};
     
     mutable std::mutex topology_mutex_;
-    ClusterTopology topology_;
+    std::shared_ptr<ClusterTopology> topology_;
     NodeStatus self_status_;
     
     std::thread heartbeat_thread_;
     std::thread election_thread_;
+    std::thread discovery_thread_;
     
     TopologyChangeCallback on_topology_change_;
     LeaderChangeCallback on_leader_change_;
@@ -170,6 +219,12 @@ private:
     void StartElection();
     void BecomeLeader();
     void BecomeFollower(const std::string& leader_id);
+    void MulticastDiscovery();
+    void ConsulDiscovery();
+    void KubernetesDiscovery();
+    std::string GenerateNodeId();
+    void SendHeartbeat(const NodeIdentity& node);
+    void CheckStaleNodes();
     
     // Network
     bool SendHeartbeat(const std::string& node_id);
@@ -181,27 +236,39 @@ private:
 // Service Registry
 // ============================================================================
 
+enum class ServiceStatus {
+    HEALTHY = 0,
+    DEGRADED = 1,
+    UNHEALTHY = 2
+};
+
+struct ServiceInfo {
+    std::string service_name;
+    std::string instance_id;
+    std::string node_id;
+    std::string endpoint;
+    ServiceStatus status = ServiceStatus::HEALTHY;
+    std::map<std::string, std::string> metadata;
+    int64_t ttl_ms = 30000;
+    std::chrono::steady_clock::time_point registered_at;
+};
+
 class ServiceRegistry {
 public:
-    struct Service {
-        std::string name;
-        std::string node_id;
-        std::string endpoint;
-        std::map<std::string, std::string> metadata;
-        int64_t ttl_ms = 30000;
-        std::chrono::steady_clock::time_point registered_at;
-    };
+    ServiceRegistry() = default;
+    explicit ServiceRegistry(std::shared_ptr<NodeDiscovery> discovery);
     
-    bool Register(const Service& service);
-    bool Deregister(const std::string& service_name, const std::string& node_id);
-    std::vector<Service> Discover(const std::string& service_name);
-    std::vector<Service> DiscoverHealthy(const std::string& service_name);
+    bool RegisterService(const ServiceInfo& service);
+    bool DeregisterService(const std::string& service_name, const std::string& instance_id);
+    std::vector<ServiceInfo> DiscoverService(const std::string& service_name) const;
+    ServiceInfo GetHealthyInstance(const std::string& service_name) const;
     
     void CleanupExpired();
     
 private:
-    std::mutex mutex_;
-    std::map<std::string, std::vector<Service>> services_;
+    mutable std::mutex services_mutex_;
+    std::map<std::string, std::vector<ServiceInfo>> services_;
+    std::shared_ptr<NodeDiscovery> discovery_;
 };
 
 } // namespace Distributed

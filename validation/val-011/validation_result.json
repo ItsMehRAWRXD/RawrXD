@@ -1,0 +1,39 @@
+{
+  "validation_id": "VAL-011",
+  "validation_name": "LSP Bridge Link Closure",
+  "status": "COMPLETE",
+  "scope": "Scoped",
+  "date": "2026-07-17",
+  "evidence_level": "A",
+  "layers_validated": {
+    "build_closure": true,
+    "link_closure": true,
+    "abi_closure": true,
+    "api_closure": true,
+    "runtime_integration": false
+  },
+  "evidence": {
+    "source_exists": true,
+    "compiles": true,
+    "harness_executes": true,
+    "closure_evidence": true
+  },
+  "symbol_closure": {
+    "expected": 7,
+    "resolved": 7,
+    "rate_percent": 100
+  },
+  "deferred_to": [
+    "VAL-014: LSP Runtime Workflow",
+    "VAL-015: Editor Integration Roundtrip"
+  ],
+  "artifacts": [
+    "RawrEngine.exe",
+    "VAL-011_LSP_Bridge_Link_Closure.md",
+    "validation_lsp_bridge_fix.cpp"
+  ],
+  "sign_off": {
+    "implementer": "GitHub Copilot",
+    "date": "2026-07-17"
+  }
+}

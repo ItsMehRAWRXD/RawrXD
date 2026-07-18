@@ -118,7 +118,7 @@ private:
     std::atomic<bool> running_{false};
     
     // Subsystems
-    std::unique_ptr<NodeDiscovery> discovery_;
+    std::shared_ptr<NodeDiscovery> discovery_;
     std::unique_ptr<ConsensusEngine> consensus_;
     std::unique_ptr<DistributedRollbackCoordinator> rollback_;
     std::unique_ptr<StateReplicationEngine> replication_;

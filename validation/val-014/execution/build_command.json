@@ -1,0 +1,7 @@
+{
+  "command": "cmake --version",
+  "duration_ms": 42,
+  "exit_code": 0,
+  "failure_category": "success",
+  "timestamp": "2026-07-17T22:07:20Z"
+}

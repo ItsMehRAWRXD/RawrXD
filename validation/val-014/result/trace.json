@@ -1,0 +1,84 @@
+{
+  "artifacts": [
+    {
+      "name": "changes.patch",
+      "path": "validation/val-014/execution/changes.patch",
+      "sha256": "",
+      "timestamp": "2026-07-17T22:07:20Z"
+    }
+  ],
+  "environment": {
+    "architecture": "x64",
+    "compiler": "MSVC",
+    "compiler_version": "1951.195136246",
+    "generator": "Ninja",
+    "os": "Windows"
+  },
+  "goal": "Build and test with real toolchain",
+  "plan": [
+    {
+      "description": "Produce code changes",
+      "inputs": {
+        "file": "src/tokenizer.cpp"
+      },
+      "step": 1,
+      "tool": "file_modify"
+    },
+    {
+      "description": "Build with real compiler",
+      "inputs": {
+        "target": "RawrEngine"
+      },
+      "step": 2,
+      "tool": "cmake_build"
+    },
+    {
+      "description": "Run real tests",
+      "inputs": {
+        "pattern": "tokenizer"
+      },
+      "step": 3,
+      "tool": "ctest"
+    }
+  ],
+  "schema_version": "VAL-014-v1.0",
+  "steps": [
+    {
+      "status": "generated",
+      "step": "plan",
+      "timestamp": "2026-07-17T22:07:20Z"
+    },
+    {
+      "command": "cmake --version",
+      "duration_ms": 42,
+      "exit_code": 0,
+      "failure_category": "success",
+      "status": "success",
+      "stdout_preview": "cmake version 4.2.0\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "step": "build",
+      "timed_out": 0,
+      "timestamp": "2026-07-17T22:07:20Z"
+    },
+    {
+      "command": "echo 'Test placeholder'",
+      "duration_ms": 12,
+      "exit_code": 0,
+      "failure_category": "success",
+      "status": "success",
+      "stdout_preview": "'Test placeholder' \n",
+      "step": "test",
+      "timed_out": 0,
+      "timestamp": "2026-07-17T22:07:20Z"
+    },
+    {
+      "status": "updated",
+      "step": "memory",
+      "timestamp": "2026-07-17T22:07:20Z"
+    }
+  ],
+  "success": 1,
+  "timestamp_end": "2026-07-17T22:07:20Z",
+  "timestamp_start": "2026-07-17T22:07:20Z",
+  "validation_id": "VAL-014",
+  "validation_mode": "regression"
+}

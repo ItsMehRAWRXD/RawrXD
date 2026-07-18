@@ -1,0 +1,72 @@
+# VAL-019 Preflight Baseline Checkpoint
+# Generated: 2026-07-17
+# Purpose: Freeze validation state for reproducibility
+
+baseline:
+  name: VAL-019-preflight
+  timestamp: "2026-07-17T21:30:00Z"
+  
+  commit:
+    sha: "8473df6ea611e082ace66b9876fb17bccebf259d"
+    branch: "copilot/vscode-mlyextom-3zgo-phase7a"
+    repository: "https://github.com/ItsMehRAWRXD/RawrXD"
+    
+  compiler:
+    name: "MSVC"
+    version: "14.50.35717"
+    path: "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\cl.exe"
+    
+  os:
+    name: "Windows 10 Home"
+    version: "2009"
+    
+  cpu:
+    name: "AMD Ryzen 7 7800X3D 8-Core Processor"
+    cores: 8
+    logical_processors: 16
+    
+  gpu:
+    primary:
+      name: "AMD Radeon RX 7800 XT"
+      vram_gb: 16
+    integrated:
+      name: "AMD Radeon Graphics"
+      vram_gb: 0.5
+      
+  memory:
+    total_gb: 192
+    
+  binaries:
+    rawrxd_win32ide:
+      path: "build-ninja-final/src/win32app/RawrXD-Win32IDE.exe"
+      sha256: "TBD - run: Get-FileHash build-ninja-final/src/win32app/RawrXD-Win32IDE.exe -Algorithm SHA256"
+    rawrxd_main:
+      path: "build-ninja-final/src/RawrXD_Main.exe"
+      sha256: "TBD"
+      
+  validation:
+    execution_path_percent: 21
+    inference_claim: false
+    stages_completed:
+      - GGUF
+      - Tokenizer
+    stages_pending:
+      - Embedding
+      - RMSNorm
+      - QKV
+      - RoPE
+      - Attention
+      - FFN
+      - KV_Cache
+      - Logits
+      - Sampling
+      - Streaming
+      
+  build_flags:
+    cmake: "-DCMAKE_BUILD_TYPE=Release -DGGML_VULKAN=ON -DGGML_NATIVE=ON"
+    ninja: "-j16"
+    
+  notes: |
+    This baseline represents the state after pushing VAL-018-3 tokenizer
+    validation. Next phase is completing the execution chain through
+    streaming with golden vector verification.

@@ -1,0 +1,16 @@
+{
+  "affected_files": [
+    "test_source.cpp"
+  ],
+  "confidence": 85,
+  "diagnostics": [
+    "test_source.cpp:5:13: error: 'undefined_variable' was not declared in this scope",
+    "test_source.cpp:8:14: error: expected ';' before 'int'"
+  ],
+  "failure_category": "CompileFailed",
+  "suggested_actions": [
+    "Add missing include or declaration",
+    "Fix syntax error"
+  ],
+  "summary": "Compilation errors detected"
+}

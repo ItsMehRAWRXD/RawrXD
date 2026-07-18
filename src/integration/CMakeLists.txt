@@ -68,10 +68,38 @@ target_link_libraries(RawrXD-Runtime-Test
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# VAL-012: Closed-Loop Autonomous Task Demonstration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+add_executable(VAL012-ClosedLoop-Demo
+    val012_closed_loop_demo.cpp
+    evidence_recorder.cpp
+)
+
+target_include_directories(VAL012-ClosedLoop-Demo
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+)
+
+# Link against nlohmann_json if available
+find_package(nlohmann_json QUIET)
+if(nlohmann_json_FOUND)
+    target_link_libraries(VAL012-ClosedLoop-Demo PRIVATE nlohmann_json::nlohmann_json)
+else()
+    # Header-only fallback - assume json.hpp is in include path
+    target_include_directories(VAL012-ClosedLoop-Demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+endif()
+
+set_target_properties(VAL012-ClosedLoop-Demo PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Installation
 # ═══════════════════════════════════════════════════════════════════════════════
 
-install(TARGETS RawrXD-Runtime RawrXD-Runtime-Test
+install(TARGETS RawrXD-Runtime RawrXD-Runtime-Test VAL012-ClosedLoop-Demo
     EXPORT RawrXD-Runtime-targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -86,3 +114,4 @@ message(STATUS "RawrXD-Runtime configured:")
 message(STATUS "  Version: ${PROJECT_VERSION}")
 message(STATUS "  C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "  Dependencies: Scheduler, Router, Executor, Policy")
+message(STATUS "  VAL-012 Demo: VAL012-ClosedLoop-Demo")

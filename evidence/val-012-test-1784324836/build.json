@@ -1,0 +1,6 @@
+{
+  "duration_ms": 0,
+  "exit_code": 0,
+  "log": "[cmake] Configuring...\n[cmake] Building...\n[ninja] Linking...\nBuild succeeded.",
+  "success": true
+}

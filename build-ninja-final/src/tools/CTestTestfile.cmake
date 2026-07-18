@@ -1,7 +1,6 @@
 # CMake generated Testfile for 
-# Source directory: D:/rawrxd/src/tools
-# Build directory: D:/rawrxd/build-ninja-final/src/tools
+# Source directory: D:/rawrxd-ci-bootstrap/src/tools
+# Build directory: D:/rawrxd-ci-bootstrap/build-ninja-final/src/tools
 # 
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
-subdirs("gguf_profile_test")

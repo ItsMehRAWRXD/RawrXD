@@ -16,17 +16,52 @@ This directory contains validation frameworks to prove RawrXD produces **correct
 
 ---
 
+## Current Status: VAL-019
+
+**Baseline:** `8473df6ea611e082ace66b9876fb17bccebf259d`  
+**Date:** 2026-07-17
+
+### Quick Start
+
+```powershell
+# Run full validation
+.\run_validation.ps1
+
+# Or manually:
+cl.exe /EHsc /O2 val_runner.cpp /Fe:val_runner.exe
+.\val_runner.exe val-019/metadata.json val-019/evidence/report.json
+```
+
+### Validation Stages
+
+| Stage | Status | Input | Output | Tolerance |
+|-------|--------|-------|--------|-----------|
+| GGUF | ✅ Complete | Binary | Binary | 0.0 |
+| Tokenizer | ✅ Complete | Text | Tokens | 0.0 |
+| Embedding | ⬜ Pending | Tokens | Vectors | 1e-5 |
+| RMSNorm | ⬜ Pending | Vectors | Vectors | 1e-5 |
+| QKV | ⬜ Pending | Vectors | Q,K,V | 1e-4 |
+| RoPE | ⬜ Pending | Q,K | Rotated | 1e-4 |
+| Attention | ⬜ Pending | Q,K,V | Context | 1e-3 |
+| FFN | ⬜ Pending | Vectors | Vectors | 1e-3 |
+| KV Cache | ⬜ Pending | K,V | Stored | 1e-5 |
+| Logits | ⬜ Pending | Hidden | Logits | 1e-4 |
+| Sampling | ⬜ Pending | Logits | Token | 0.0 |
+| Streaming | ⬜ Pending | Token | Output | 0.0 |
+
+---
+
 ## Validation Frameworks
 
-### 1. Golden Model Regression (`golden_model_test.py`)
+### 1. VAL-019 Runner (`val_runner.cpp`)
 
-Tests end-to-end inference against known-good outputs.
+Automated validation harness for transformer execution chain.
 
 **What it tests:**
-- Token generation matches expected sequence
-- Logits hash matches reference
-- Determinism (same input → same output)
-- Perplexity on test corpus
+- Each stage produces expected output
+- Checksum verification
+- Performance telemetry
+- Evidence generation
 
 **Usage:**
 ```bash

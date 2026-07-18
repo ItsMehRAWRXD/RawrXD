@@ -35,6 +35,10 @@ std::string NodeIdentity::ToJson() const {
     return oss.str();
 }
 
+bool NodeStatus::IsResponsive() const {
+    return health == NodeHealth::HEALTHY || health == NodeHealth::DEGRADED;
+}
+
 NodeIdentity NodeIdentity::FromJson(const std::string& json) {
     NodeIdentity identity;
     // Simple JSON parsing - production would use proper JSON library
@@ -146,7 +150,8 @@ bool ClusterTopology::HasQuorum() const {
             healthy_count++;
         }
     }
-    return healthy_count >= GetQuorumSize();
+    int quorum_size = (healthy_count / 2) + 1;
+    return healthy_count >= quorum_size;
 }
 
 void ClusterTopology::SetLeader(const std::string& node_id) {
@@ -277,7 +282,14 @@ std::shared_ptr<ClusterTopology> NodeDiscovery::GetTopology() const {
 }
 
 std::vector<NodeIdentity> NodeDiscovery::GetAllNodes() const {
-    return topology_->GetHealthyNodes();
+    auto all_nodes = topology_->GetHealthyNodes();
+    std::vector<NodeIdentity> result;
+    for (const auto& node : all_nodes) {
+        if (node.node_id != config_.self.node_id) {
+            result.push_back(node);
+        }
+    }
+    return result;
 }
 
 std::vector<NodeIdentity> NodeDiscovery::GetNodesInDatacenter(
@@ -285,7 +297,7 @@ std::vector<NodeIdentity> NodeDiscovery::GetNodesInDatacenter(
     std::vector<NodeIdentity> result;
     auto nodes = topology_->GetHealthyNodes();
     for (const auto& node : nodes) {
-        if (node.datacenter == datacenter) {
+        if (node.node_id != config_.self.node_id && node.datacenter == datacenter) {
             result.push_back(node);
         }
     }
@@ -297,7 +309,7 @@ std::vector<NodeIdentity> NodeDiscovery::GetNodesInRack(
     std::vector<NodeIdentity> result;
     auto nodes = topology_->GetHealthyNodes();
     for (const auto& node : nodes) {
-        if (node.rack == rack) {
+        if (node.node_id != config_.self.node_id && node.rack == rack) {
             result.push_back(node);
         }
     }
@@ -350,6 +362,14 @@ void NodeDiscovery::OnNodeJoined(std::function<void(const NodeIdentity&)> callba
 
 void NodeDiscovery::OnNodeLeft(std::function<void(const NodeIdentity&)> callback) {
     on_node_left_ = callback;
+}
+
+bool NodeDiscovery::AddNode(const NodeIdentity& node) {
+    return topology_->AddNode(node);
+}
+
+bool NodeDiscovery::RemoveNode(const std::string& node_id) {
+    return topology_->RemoveNode(node_id);
 }
 
 void NodeDiscovery::HeartbeatLoop() {

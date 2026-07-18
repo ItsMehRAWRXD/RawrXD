@@ -1,0 +1,9 @@
+{
+
+  "input_text": "Hello",
+  "token_count": 4,
+  "vocab_size": 44,
+  "simulation": false,
+  "token_ids": "1,18,8,2",
+  "checksum": "47339"
+}
