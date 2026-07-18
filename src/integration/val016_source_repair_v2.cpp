@@ -195,7 +195,7 @@ public:
     RepairClassification classify(const CompilerDiagnostic& diag) {
         RepairClassification classification;
         classification.type = RepairType::UNKNOWN;
-        classification.confidence = 0.0f;
+        classification.confidence = 0.0;
         
         // Missing semicolon pattern
         if (diag.errorCode == "C2143" || diag.errorCode == "C2144") {
@@ -203,7 +203,7 @@ public:
                 diag.message.find(";") != std::string::npos) {
                 classification.type = RepairType::INSERT_SEMICOLON;
                 classification.description = "Insert missing semicolon";
-                classification.confidence = 0.98f;
+                classification.confidence = 0.98;
                 classification.reason = "MSVC C2143: syntax error - missing ';' detected";
             }
         }
@@ -213,7 +213,7 @@ public:
                 diag.message.find("}") != std::string::npos) {
                 classification.type = RepairType::INSERT_BRACE;
                 classification.description = "Insert missing brace";
-                classification.confidence = 0.95f;
+                classification.confidence = 0.95;
                 classification.reason = "Brace mismatch detected";
             }
         }
@@ -222,7 +222,7 @@ public:
             if (diag.message.find("cannot open") != std::string::npos) {
                 classification.type = RepairType::ADD_INCLUDE;
                 classification.description = "Add missing include";
-                classification.confidence = 0.90f;
+                classification.confidence = 0.90;
                 classification.reason = "Header file not found";
             }
         }

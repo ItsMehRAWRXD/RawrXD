@@ -25,6 +25,10 @@ using namespace RawrXD::VAL012;
 
 // Create a minimal test project
 bool createTestProject(const std::string& dir) {
+    // Clean up any existing directory
+    if (std::filesystem::exists(dir)) {
+        std::filesystem::remove_all(dir);
+    }
     std::filesystem::create_directories(dir);
     std::filesystem::create_directories(dir + "/src");
     
@@ -37,6 +41,7 @@ bool createTestProject(const std::string& dir) {
     cmake << "add_executable(test_app src/main.cpp)\n";
     cmake << "enable_testing()\n";
     cmake << "add_test(NAME simple_test COMMAND test_app)\n";
+    cmake.close();
     return true;
 }
 
@@ -70,7 +75,15 @@ bool testRealBuildExecution() {
     std::cout << "================================\n";
     
     std::string testDir = "val019_test_build";
-    std::string buildDir = testDir + "/build";
+    std::string buildDir = "val019_test_build_build";  // Separate build dir
+    
+    // Clean up any existing directories
+    if (std::filesystem::exists(testDir)) {
+        std::filesystem::remove_all(testDir);
+    }
+    if (std::filesystem::exists(buildDir)) {
+        std::filesystem::remove_all(buildDir);
+    }
     
     // Setup
     if (!createTestProject(testDir)) {
@@ -87,12 +100,13 @@ bool testRealBuildExecution() {
     ExecutionRunner runner;
     ExecutionConfig config;
     config.workingDirectory = testDir;
-    config.buildDirectory = "build";
+    config.buildDirectory = buildDir;
     
     auto configureOutput = runner.executeConfigure(config);
     if (configureOutput.exitCode != 0) {
         std::cout << "✗ Configure failed:\n" << configureOutput.stderrLog << "\n";
         std::filesystem::remove_all(testDir);
+        std::filesystem::remove_all(buildDir);
         return false;
     }
     std::cout << "✓ Configure succeeded\n";
@@ -110,6 +124,7 @@ bool testRealBuildExecution() {
     
     // Cleanup
     std::filesystem::remove_all(testDir);
+    std::filesystem::remove_all(buildDir);
     
     return buildResult.success;
 }
