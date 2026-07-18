@@ -147,8 +147,8 @@ public:
     std::vector<CompilerDiagnostic> parseMSVC(const std::string& output) {
         std::vector<CompilerDiagnostic> diagnostics;
         
-        // MSVC error pattern: file(line,col): error code: message
-        std::regex msvcPattern(R"xx((.+?)\((\d+),(\d+)\):\s*(error|warning)\s+(\w+):\s*(.+?)$)xx");
+        // MSVC error pattern: file(line,col) or file(line): error code: message
+        std::regex msvcPattern(R"--((.+?)\((\d+)(?:,(\d+))?\):\s*(error|warning)\s+(\w+):\s*(.+?)$)--");
         std::smatch match;
         
         std::istringstream stream(output);
@@ -159,7 +159,7 @@ public:
                 diag.compiler = "MSVC";
                 diag.file = match[1].str();
                 diag.line = std::stoi(match[2].str());
-                diag.column = std::stoi(match[3].str());
+                diag.column = match[3].matched ? std::stoi(match[3].str()) : 0;
                 diag.severity = (match[4].str() == "error") ? DiagnosticSeverity::ERROR : DiagnosticSeverity::WARNING;
                 diag.errorCode = match[5].str();
                 diag.message = match[6].str();
