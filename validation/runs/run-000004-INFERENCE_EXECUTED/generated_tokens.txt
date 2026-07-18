@@ -1,0 +1,3 @@
+Input: Hello
+Output token: 24690
+Execution time: 529 ms
