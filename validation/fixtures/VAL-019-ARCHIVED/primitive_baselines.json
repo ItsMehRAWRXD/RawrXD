@@ -1,0 +1,93 @@
+{
+  "schema_version": "2.0.0",
+  "evidence_format": "rawrxd-val-019-v2",
+  "fixture_type": "primitive_baselines",
+  "source_run": "run-000006-ARCHIVED",
+  "frozen_at": "2026-07-18T23:00:00Z",
+  "immutable": true,
+
+  "baselines": [
+    {
+      "primitive": "embedding",
+      "kernel_version": "embedding_lookup_v1.0_native",
+      "input_spec": {
+        "tokens": [1, 2, 3, 4, 5],
+        "batch_size": 1,
+        "seq_len": 5,
+        "vocab_size": 32000,
+        "hidden_dim": 4096
+      },
+      "output_spec": {
+        "shape": [1, 5, 4096],
+        "dtype": "float32",
+        "elements": 20480,
+        "sha256": "80d4c3bb66e41f3bc710cc3b38e828bb05a77cbbaf80c5bb1ee46fbbd4a81abc",
+        "bytes": 81920
+      },
+      "determinism": {
+        "seed": 42,
+        "repeatable": true,
+        "runs_verified": 3
+      },
+      "performance": {
+        "runtime_ms": 173.531,
+        "tolerance_ms": 10.0
+      },
+      "numerical": {
+        "max_error": 0.0,
+        "tolerance": 1e-05,
+        "reference_source": "llama.cpp",
+        "reference_version": "b1559"
+      }
+    },
+    {
+      "primitive": "rmsnorm",
+      "kernel_version": "rmsnorm_v1.0_native",
+      "input_spec": {
+        "shape": [1, 10, 4096],
+        "dtype": "float32",
+        "elements": 40960,
+        "epsilon": 1e-06
+      },
+      "output_spec": {
+        "shape": [1, 10, 4096],
+        "dtype": "float32",
+        "elements": 40960,
+        "sha256": "f874933f7b27fcbed148563f8090333ffcbac73f2881cd3f7f0040be65e999bf",
+        "bytes": 163840
+      },
+      "determinism": {
+        "seed": 42,
+        "repeatable": true,
+        "runs_verified": 3
+      },
+      "performance": {
+        "runtime_ms": 0.909,
+        "tolerance_ms": 0.5
+      },
+      "numerical": {
+        "max_error": 0.0,
+        "tolerance": 1e-05,
+        "mean_rms": 0.020,
+        "min_rms": 0.020,
+        "max_rms": 0.020
+      }
+    }
+  ],
+
+  "usage_policy": {
+    "immutable": true,
+    "mutation_prohibited": true,
+    "regeneration_prohibited": true,
+    "reference_only": true,
+    "VAL_020_1_consumer": true
+  },
+
+  "notes": [
+    "These baselines are frozen from VAL-019 ARCHIVED state",
+    "VAL-020.1 must consume these as immutable fixtures",
+    "Any kernel regression must create new baseline, not modify these",
+    "Determinism verified with 3 repeat executions",
+    "Reference: llama.cpp b1559"
+  ]
+}

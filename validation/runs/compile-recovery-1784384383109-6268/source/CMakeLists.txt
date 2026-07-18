@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(TestProject CXX)
+set(CMAKE_CXX_STANDARD 20)
+add_executable(test_app main.cpp)
+enable_testing()
+add_test(NAME simple_test COMMAND test_app)
