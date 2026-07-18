@@ -1,0 +1,21 @@
+{
+
+  "schema_version": "VAL-023.1",
+  "results": [
+{
+
+      "backend": "cpu",
+      "tokens_generated": 128,
+      "execution_time_ms": 2450,
+      "tokens_per_second": 52.244896,
+      "checksum": "865958d8c47a80f2e76d63b2d7b70e5e"
+    },{
+
+      "backend": "vulkan",
+      "tokens_generated": 128,
+      "execution_time_ms": 680,
+      "tokens_per_second": 188.235291,
+      "checksum": "865958d8c47a80f2e76d63b2d7b70e5e"
+    }
+  ]
+}

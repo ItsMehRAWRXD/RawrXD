@@ -1,0 +1,11 @@
+{
+
+  "schema_version": "VAL-023.1",
+  "speedups": [
+{
+
+      "backend": "vulkan",
+      "vs_cpu": 3.602941
+    }
+  ]
+}
