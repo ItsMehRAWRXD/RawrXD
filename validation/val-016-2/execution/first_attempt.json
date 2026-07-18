@@ -1,6 +1,6 @@
 {
   "command": "cl.exe /nologo /c validation/val-016-2/input/broken.cpp /Fovalidation/val-016-2/input/broken.obj",
-  "duration_ms": 26,
+  "duration_ms": 46,
   "exit_code": 1,
   "failure_category": "Unknown",
   "failure_reason": "Unknown failure",

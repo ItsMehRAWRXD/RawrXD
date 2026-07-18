@@ -94,6 +94,10 @@ tmp/
 temp/
 *.tmp
 
+# Generated evidence (large, regenerated per-run)
+evidence/
+val016_regression/
+
 # Python
 __pycache__/
 *.pyc

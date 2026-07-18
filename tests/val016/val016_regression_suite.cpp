@@ -418,7 +418,7 @@ int main() {
     std::cout << "  Total:  " << tests.size() << "\n";
     std::cout << "  Passed: " << passed << "\n";
     std::cout << "  Failed: " << failed << "\n";
-    std::cout << "  Coverage: " << report["coverage"].get<double>() << "%\n\n";
+    std::cout << "  Coverage: " << report["coverage"].get_float() << "%\n\n";
     
     // Coverage by category
     std::cout << "Coverage by Category:\n";

@@ -608,7 +608,9 @@ public:
         
         // STEP 2: Initial build attempt (will fail)
         std::cout << "\n[STEP 2] Initial Build Attempt\n";
-        std::string buildCmd = "cl.exe /nologo /c " + brokenFile + " /Fo" + inputDir + "/broken.obj";
+        // Use full path to cl.exe
+        std::string clPath = "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\cl.exe";
+        std::string buildCmd = "\"" + clPath + "\" /nologo /c " + brokenFile + " /Fo" + inputDir + "/broken.obj";
         ExecutionResult firstAttempt = executor_.execute("cl", buildCmd);
         attemptCount_++;
         recorder_.recordBuildAttempt(firstAttempt, attemptCount_);
