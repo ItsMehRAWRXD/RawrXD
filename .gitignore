@@ -98,6 +98,11 @@ temp/
 evidence/
 val016_regression/
 
+# VAL-016 execution artifacts (generated per-run)
+validation/val-016-2/execution/
+validation/val-016-2/repair/
+validation/val-016-2/result/
+
 # Python
 __pycache__/
 *.pyc
