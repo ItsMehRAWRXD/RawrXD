@@ -5371,6 +5371,27 @@ set_target_properties(TestSovereignBridge PROPERTIES
 )
 message(STATUS "[Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)")
 
+# ============================================================================
+# Debugger Stress Tests
+# ============================================================================
+add_executable(stress_target EXCLUDE_FROM_ALL
+    src/debug/stress_target.cpp
+)
+target_compile_features(stress_target PRIVATE cxx_std_17)
+set_target_properties(stress_target PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+add_executable(stress_memory EXCLUDE_FROM_ALL
+    src/debug/stress_memory.cpp
+)
+target_compile_features(stress_memory PRIVATE cxx_std_17)
+set_target_properties(stress_memory PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Test] Debugger stress tests: stress_target, stress_memory")
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/tools/CMakeLists.txt")
     add_subdirectory(src/tools)
 endif()
