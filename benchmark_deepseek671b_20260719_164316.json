@@ -1,0 +1,59 @@
+{
+  "ModelSizeGB": 376.71,
+  "TestDate": "2026-07-19 16:43:16",
+  "Model": "DeepSeek-V3.1 671B",
+  "Configuration": {
+    "WarmupPasses": 1,
+    "BenchmarkPasses": 3,
+    "TestTokens": 128
+  },
+  "Results": [
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.38,
+        "Success": true,
+        "SequentialReadSpeed": 5477.98,
+        "LoadTime": 0.195136
+      },
+      "Timestamp": "2026-07-19 16:43:15",
+      "Run": 1,
+      "Inference": {
+        "Success": false,
+        "Error": "Exception calling \"Read\" with \"3\" argument(s): \"Value cannot be null. (Parameter 'buffer')\""
+      }
+    },
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.26,
+        "Success": true,
+        "SequentialReadSpeed": 6185.95,
+        "LoadTime": 0.1721894
+      },
+      "Timestamp": "2026-07-19 16:43:15",
+      "Run": 2,
+      "Inference": {
+        "Success": false,
+        "Error": "Exception calling \"Read\" with \"3\" argument(s): \"Value cannot be null. (Parameter 'buffer')\""
+      }
+    },
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.28,
+        "Success": true,
+        "SequentialReadSpeed": 6553.8,
+        "LoadTime": 0.162619
+      },
+      "Timestamp": "2026-07-19 16:43:15",
+      "Run": 3,
+      "Inference": {
+        "Success": false,
+        "Error": "Exception calling \"Read\" with \"3\" argument(s): \"Value cannot be null. (Parameter 'buffer')\""
+      }
+    }
+  ],
+  "SystemInfo": {
+    "RAM_GB": 64.0,
+    "CPU": "AMD Ryzen 7 7800X3D 8-Core Processor           ",
+    "Cores": 8
+  }
+}

@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build
+      shell: cmd
+      run: build.bat
+      
+    - name: Run Smoke Tests
+      shell: cmd
+      run: |
+        cd tests
+        smoke_test.bat
+        
+  test-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc nasm
+        
+    - name: Build
+      run: make
+      
+    - name: Run Tests
+      run: |
+        cd tests
+        chmod +x smoke_test.sh
+        ./smoke_test.sh

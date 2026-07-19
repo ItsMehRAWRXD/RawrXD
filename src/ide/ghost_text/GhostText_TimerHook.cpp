@@ -1,16 +1,18 @@
 // GhostText_TimerHook.cpp
 // Win32 Message Loop Integration for Ghost Text Debounce Timer
-// Integrates with existing Win32IDE_Main.cpp
+// Optimized for 301+ tokens/sec backend - 150ms debounce
 
 #include <windows.h>
 #include <cstdio>
 #include <cstring>
+#include "../RawrXD_IDE_Win32.h"
+#include "../SovereignInferenceBridge.h"
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 constexpr UINT GHOST_TEXT_TIMER_ID = 0xBEEF;      // Unique timer ID
-constexpr UINT DEBOUNCE_DELAY_MS = 300;           // 300ms debounce (Copilot-style)
+constexpr UINT DEBOUNCE_DELAY_MS = 150;           // 150ms debounce (tuned for fast backend)
 
 // ============================================================================
 // EXTERNAL BRIDGE FUNCTIONS (from Bridge_Mock_Suggestion.asm)

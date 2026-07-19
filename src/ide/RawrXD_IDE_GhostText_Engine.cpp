@@ -12,107 +12,9 @@
 //   Editor Paint ← GhostTextOverlay ← Suggestion Response
 // ============================================================================
 
-#include <windows.h>
-#include <cstdio>
-#include <cstring>
-#include <string>
-#include <vector>
-#include <atomic>
-#include <chrono>
-
-// ============================================================================
-// GHOST TEXT ENGINE — Native Implementation (no VS Code API)
-// ============================================================================
-
-struct GhostSuggestion {
-    std::string text;           // The suggested text
-    int triggerLine;            // Line where suggestion was triggered
-    int triggerCol;             // Column where suggestion starts
-    bool isMultiLine;           // Does suggestion contain newlines?
-    DWORD timestamp;            // When suggestion was received
-    float confidence;           // 0.0-1.0 confidence score
-    bool visible;               // Currently showing?
-};
-
-class GhostTextEngine {
-public:
-    GhostTextEngine(HWND hwndEditor) : m_hwnd(hwndEditor), m_active(false), m_lastRequest(0) {}
-    
-    // Called when user types — requests suggestion asynchronously
-    void onTextChanged(const char* buffer, int cursorLine, int cursorCol) {
-        // Debounce: don't request on every keystroke
-        DWORD now = GetTickCount();
-        if (now - m_lastRequest < 150) return; // 150ms debounce
-        m_lastRequest = now;
-        
-        // Extract context (previous 5 lines + current line prefix)
-        std::string context = extractContext(buffer, cursorLine, cursorCol);
-        
-        // Async request to inference engine
-        requestSuggestion(context, cursorLine, cursorCol);
-    }
-    
-    // Called when suggestion arrives from model
-    void onSuggestionReceived(const std::string& text, int line, int col, float confidence) {
-        if (confidence < 0.3f) { // Threshold for showing
-            hideSuggestion();
-            return;
-        }
-        
-        m_current.text = text;
-        m_current.triggerLine = line;
-        m_current.triggerCol = col;
-        m_current.isMultiLine = (text.find('\n') != std::string::npos);
-        m_current.timestamp = GetTickCount();
-        m_current.confidence = confidence;
-        m_current.visible = true;
-        m_active = true;
-        
-        // Invalidate editor region to trigger paint
-        invalidateGhostRegion();
-    }
-    
-    // Accept suggestion (Tab key)
-    bool acceptSuggestion(std::string& outText) {
-        if (!m_active || !m_current.visible) return false;
-        outText = m_current.text;
-        hideSuggestion();
-        return true;
-    }
-    
-    // Partial accept — word by word (Ctrl+Right)
-    bool acceptPartial(std::string& outText) {
-        if (!m_active || !m_current.visible) return false;
-        
-        // Find next word boundary
-        size_t pos = 0;
-        while (pos < m_current.text.size() && m_current.text[pos] == ' ') ++pos;
-        while (pos < m_current.text.size() && m_current.text[pos] != ' ' && m_current.text[pos] != '\n') ++pos;
-        
-        outText = m_current.text.substr(0, pos);
-        m_current.text = m_current.text.substr(pos);
-        m_current.triggerCol += (int)outText.size(); // Adjust for partial
-        
-        if (m_current.text.empty()) hideSuggestion();
-        else invalidateGhostRegion();
-        
-        return true;
-    }
-    
-    // Dismiss suggestion (Esc or typing mismatch)
-    void hideSuggestion() {
-        if (!m_active) return;
-        m_active = false;
-        m_current.visible = false;
-        invalidateGhostRegion();
-    }
-    
-    // Check if suggestion should be dismissed (user typed something else)
-    void checkDismiss(const char* currentLine, int cursorCol) {
-        if (!m_active) return;
-        
-        // If cursor moved before trigger point, dismiss
-        if (cursorCol < m_current.triggerCol) {
+// This file now just includes the implementation from the new location
+// for backward compatibility with existing build scripts
+#include "RawrXD_IDE_GhostText_Engine_Implementation.cpp"
             hideSuggestion();
             return;
         }
@@ -194,6 +96,8 @@ private:
     GhostSuggestion m_current;
     bool m_active;
     DWORD m_lastRequest;
+    RawrXD::IDE::SovereignBridge* m_bridge;
+    std::atomic<bool> m_requestInFlight{false};
     
     std::string extractContext(const char* buffer, int cursorLine, int cursorCol) {
         // Simple context extraction — last 5 lines + current line prefix
@@ -217,12 +121,76 @@ private:
     }
     
     void requestSuggestion(const std::string& context, int line, int col) {
-        // TODO: Wire to your inference engine
-        // This would call into your LLM client or local model
-        // For now, simulate with a placeholder
+        // Prevent multiple concurrent requests
+        if (m_requestInFlight.exchange(true)) {
+            return;
+        }
         
-        // Async callback would call onSuggestionReceived()
-        // Example: m_inferenceClient->completeAsync(context, callback);
+        // Check if Sovereign Runtime is available
+        if (!m_bridge || !m_bridge->IsRuntimeAvailable()) {
+            m_requestInFlight = false;
+            return;
+        }
+        
+        // Launch async inference request
+        // Capture by value for thread safety
+        std::thread inferenceThread([this, context, line, col]() {
+            // Configure for code completion
+            RawrXD::IDE::SovereignConfig config;
+            config.maxTokens = 64;           // Short completions
+            config.autonomous = false;       // Direct inference, no agent loop
+            config.validate = false;         // Skip validation for speed
+            config.timeoutMs = 5000;         // 5 second timeout for UX
+            
+            // Build FIM (Fill-In-Middle) style prompt for code completion
+            // Format: <PRE> prefix <SUF> suffix <MID>
+            std::string fimPrompt = "<PRE> " + context + " <SUF> <MID>";
+            
+            // Execute inference
+            RawrXD::IDE::SovereignResult result = m_bridge->Validate(fimPrompt, config);
+            
+            if (result.IsSuccess() && !result.output.empty()) {
+                // Parse the completion from output
+                std::string completion = result.output;
+                
+                // Clean up the completion - extract just the generated code
+                // Remove any trailing newlines or prompt artifacts
+                while (!completion.empty() && 
+                       (completion.back() == '\n' || completion.back() == '\r')) {
+                    completion.pop_back();
+                }
+                
+                // Calculate confidence based on output quality
+                float confidence = 0.5f;
+                if (completion.length() > 0 && completion.length() < 256) {
+                    confidence = 0.7f;  // Good length
+                }
+                if (result.exitCode == 0) {
+                    confidence += 0.2f;  // Clean exit
+                }
+                
+                // Post result back to UI thread
+                // Use PostMessage for thread-safe UI update
+                struct GhostResult {
+                    std::string text;
+                    int line;
+                    int col;
+                    float confidence;
+                };
+                
+                GhostResult* gr = new GhostResult{completion, line, col, confidence};
+                PostMessage(m_hwnd, WM_USER + 0x1000, (WPARAM)gr, 0);
+            }
+            
+            m_requestInFlight = false;
+        });
+        
+        inferenceThread.detach();
+    }
+    
+    // Handle async inference result (called from UI thread via PostMessage)
+    void handleInferenceResult(const std::string& text, int line, int col, float confidence) {
+        onSuggestionReceived(text, line, col, confidence);
     }
     
     void invalidateGhostRegion() {
@@ -249,6 +217,29 @@ struct EditorData {
 };
 
 // Message handlers to add:
+
+// Custom message for async inference results
+#define WM_GHOST_SUGGESTION (WM_USER + 0x1000)
+
+// Message handler for ghost text messages
+LRESULT HandleGhostTextMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, EditorData* ed) {
+    if (msg == WM_GHOST_SUGGESTION && ed->ghostEngine) {
+        // Unpack the result
+        struct GhostResult {
+            std::string text;
+            int line;
+            int col;
+            float confidence;
+        };
+        GhostResult* gr = (GhostResult*)wParam;
+        if (gr) {
+            ed->ghostEngine->onSuggestionReceived(gr->text, gr->line, gr->col, gr->confidence);
+            delete gr;
+        }
+        return 0;
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
 
 LRESULT HandleEditorKeyDown(HWND hwnd, WPARAM wParam, LPARAM lParam, EditorData* ed) {
     switch (wParam) {

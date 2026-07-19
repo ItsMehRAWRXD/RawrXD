@@ -1,7 +1,9 @@
 #include "ide_completion.h"
+#include "cpu_inference_engine.h"
 #include <thread>
 #include <mutex>
 #include <queue>
+#include <sstream>
 
 namespace IDECompletion {
 
@@ -13,6 +15,8 @@ static std::queue<PopupContext> g_pending_requests;
 static bool g_engine_ready = false;
 static bool g_thread_running = false;
 static HWND g_popup_hwnd = NULL;
+static std::shared_ptr<RawrXD::CPUInferenceEngine> g_inference_engine = nullptr;
+static std::string g_last_suggestion;
 
 //==============================================================================
 // COMPLETION POPUP WINDOW
@@ -40,11 +44,33 @@ LRESULT CALLBACK CompletionPopupProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             SelectObject(hdc, hOldPen);
             DeleteObject(hPen);
             
-            // Draw text (would be populated from popup context)
-            WCHAR szText[] = L"Suggestion from Ollama...";
-            SetTextColor(hdc, RGB(0, 0, 0));
-            SetBkMode(hdc, TRANSPARENT);
-            TextOutW(hdc, 5, 5, szText, wcslen(szText));
+            // Draw suggestion text
+            std::string suggestion;
+            {
+                std::lock_guard<std::mutex> lock(g_state_mutex);
+                suggestion = g_last_suggestion;
+            }
+            
+            if (!suggestion.empty()) {
+                // Convert to wide string for display
+                int wideLen = MultiByteToWideChar(CP_UTF8, 0, suggestion.c_str(), -1, NULL, 0);
+                if (wideLen > 0) {
+                    std::wstring wideText(wideLen, 0);
+                    MultiByteToWideChar(CP_UTF8, 0, suggestion.c_str(), -1, &wideText[0], wideLen);
+                    
+                    SetTextColor(hdc, RGB(0, 0, 0));
+                    SetBkMode(hdc, TRANSPARENT);
+                    
+                    // Draw with word wrap
+                    RECT textRect = {5, 5, ps.rcPaint.right - 5, ps.rcPaint.bottom - 5};
+                    DrawTextW(hdc, wideText.c_str(), -1, &textRect, DT_LEFT | DT_TOP | DT_WORDBREAK);
+                }
+            } else {
+                WCHAR szText[] = L"Loading suggestion...";
+                SetTextColor(hdc, RGB(100, 100, 100));
+                SetBkMode(hdc, TRANSPARENT);
+                TextOutW(hdc, 5, 5, szText, wcslen(szText));
+            }
             
             EndPaint(hwnd, &ps);
             break;
@@ -76,19 +102,54 @@ void CompletionWorkerThread() {
             g_pending_requests.pop();
         }
 
-        // Query Ollama API
-        OllamaIntegration::CompletionRequest req;
-        req.model = g_current_model;
-        req.prompt = ctx.current_line;
-        req.temperature = 0.7f;
-        req.num_predict = 128;  // Short suggestions
-        req.stream = false;
+        // Use RawrXD native inference engine
+        if (!g_inference_engine || !g_inference_engine->IsModelLoaded()) {
+            continue;  // No model loaded, skip
+        }
 
-        OllamaIntegration::CompletionResponse response = OllamaIntegration::QueryCompletion(req);
+        // Build completion prompt
+        std::string prompt = ctx.current_line;
+        if (prompt.empty()) {
+            continue;
+        }
 
-        if (response.success && !response.text.empty()) {
+        // Tokenize the prompt
+        auto input_tokens = g_inference_engine->Tokenize(prompt);
+        if (input_tokens.empty()) {
+            continue;
+        }
+
+        // Generate completion using native streaming API
+        std::ostringstream completion_stream;
+        std::atomic<bool> generation_complete{false};
+
+        g_inference_engine->GenerateStreaming(
+            input_tokens,
+            64,  // Short suggestions for IDE completion
+            [&completion_stream](const std::string& token) {
+                completion_stream << token;
+            },
+            [&generation_complete]() {
+                generation_complete = true;
+            }
+        );
+
+        // Wait for generation to complete (with timeout)
+        int timeout_ms = 5000;
+        while (!generation_complete && timeout_ms > 0) {
+            Sleep(10);
+            timeout_ms -= 10;
+        }
+
+        std::string suggestion = completion_stream.str();
+        if (!suggestion.empty()) {
+            // Store suggestion for popup display
+            {
+                std::lock_guard<std::mutex> lock(g_state_mutex);
+                g_last_suggestion = suggestion;
+            }
             // Show popup with suggestion
-            ShowCompletionPopup(ctx, response.text);
+            ShowCompletionPopup(ctx, suggestion);
         }
     }
 }
@@ -102,17 +163,49 @@ void InitializeCompletionEngine(const std::string& default_model) {
 
     g_current_model = default_model;
 
-    // Check if Ollama is available
-    g_engine_ready = OllamaIntegration::IsOllamaAvailable();
+    // Get RawrXD native inference engine (shared instance)
+    g_inference_engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+    
+    // Engine is ready if it exists (model loading is separate)
+    g_engine_ready = (g_inference_engine != nullptr);
 
     if (!g_engine_ready) {
-        // Try to connect later
         return;
     }
 
     // Start background worker thread
     g_thread_running = true;
     g_completion_thread = std::thread(CompletionWorkerThread);
+}
+
+// Alternative: Initialize with a specific model path
+void InitializeCompletionEngineWithModel(const std::string& model_path) {
+    std::lock_guard<std::mutex> lock(g_state_mutex);
+
+    // Get or create the shared inference engine
+    g_inference_engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+    
+    if (!g_inference_engine) {
+        g_engine_ready = false;
+        return;
+    }
+
+    // Load the model if path provided
+    if (!model_path.empty()) {
+        if (!g_inference_engine->IsModelLoaded()) {
+            g_engine_ready = g_inference_engine->LoadModel(model_path);
+        } else {
+            g_engine_ready = true;  // Model already loaded
+        }
+    } else {
+        g_engine_ready = g_inference_engine->IsModelLoaded();
+    }
+
+    // Start background worker thread if not already running
+    if (g_engine_ready && !g_thread_running) {
+        g_thread_running = true;
+        g_completion_thread = std::thread(CompletionWorkerThread);
+    }
 }
 
 void RequestCompletion(const PopupContext& ctx) {

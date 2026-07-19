@@ -495,6 +495,13 @@ std::vector<StackFrame> DebugSession::GetCallStack(uint32_t maxFrames) {
     return frames;
 }
 
+std::vector<LocalVariable> DebugSession::GetLocalVariables(uint32_t frameNumber) {
+    (void)frameNumber;
+    // TODO: Implement local variable enumeration via debug symbols
+    // This requires parsing PDB/DWARF symbols for stack frame layout
+    return {};
+}
+
 std::vector<RegisterValue> DebugSession::GetRegisters() {
     std::vector<RegisterValue> regs;
     

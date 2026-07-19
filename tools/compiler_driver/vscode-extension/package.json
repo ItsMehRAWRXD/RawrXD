@@ -1,0 +1,125 @@
+{
+  "name": "rawrxd-compiler",
+  "displayName": "RAWRXD Compiler",
+  "description": "Unified compiler driver for C, Assembly, and C# - Zero dependency",
+  "version": "1.0.0",
+  "publisher": "rawrxd",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers",
+    "Compilers"
+  ],
+  "keywords": [
+    "compiler",
+    "c",
+    "assembly",
+    "csharp",
+    "rawrxd",
+    "zero-dependency"
+  ],
+  "activationEvents": [
+    "onLanguage:c",
+    "onLanguage:asm",
+    "onLanguage:csharp",
+    "onCommand:rawrxd.compile"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rawrxd.compile",
+        "title": "RAWRXD: Compile Current File",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rawrxd.compileProject",
+        "title": "RAWRXD: Build Project"
+      },
+      {
+        "command": "rawrxd.clean",
+        "title": "RAWRXD: Clean Build"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceExtname == .c || resourceExtname == .asm || resourceExtname == .cs",
+          "command": "rawrxd.compile",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "rawrxd.compile",
+          "when": "editorLangId == c || editorLangId == asm || editorLangId == csharp"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "rawrxd.compile",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "RAWRXD Compiler",
+      "properties": {
+        "rawrxd.compilerPath": {
+          "type": "string",
+          "default": "rawrxd-compiler",
+          "description": "Path to the RAWRXD compiler driver executable"
+        },
+        "rawrxd.optimize": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable optimization by default"
+        },
+        "rawrxd.debugInfo": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include debug information"
+        },
+        "rawrxd.verbose": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable verbose output"
+        }
+      }
+    },
+    "problemMatchers": [
+      {
+        "name": "rawrxd",
+        "pattern": {
+          "regexp": "^(.*)\\((\\d+),(\\d+)\\):\\s*(error|warning|info)\\s*(\\w+):\\s*(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "code": 5,
+          "message": 6
+        }
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "rawrxd",
+        "required": ["command"],
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The command to execute"
+          },
+          "args": {
+            "type": "array",
+            "description": "Command arguments"
+          }
+        }
+      }
+    ]
+  }
+}

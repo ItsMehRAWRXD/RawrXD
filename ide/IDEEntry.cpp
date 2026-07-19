@@ -59,6 +59,12 @@
 #include "ide/GalacticPanel.hpp"
 #include "ide/CosmicWebPanel.hpp"
 #include "ide/SuperclusterGovernancePanel.hpp"
+#include "ide/CompilerPanel.hpp"
+#include "ide/EditorPanel.hpp"
+#include "ide/FileExplorerPanel.hpp"
+#include "ide/FileDialog.hpp"
+#include "ide/Clipboard.hpp"
+#include "ide/MonacoEditorPanel.hpp"
 #include "sovereign/AutoRecovery.hpp"
 #include "tests/FabricStressTester.hpp"
 
@@ -68,6 +74,8 @@ void IDEEntry::Init() {
     DockingLayout::Init();
     PanelState::Init();
     StatusBar::Init();
+    FileDialog::Init();
+    Clipboard::Init();
     
     // Initialize all panels
     SovereignSelfCheckPanel::Init();
@@ -125,6 +133,16 @@ void IDEEntry::Init() {
     GalacticPanel::Init();
     CosmicWebPanel::Init();
     SuperclusterGovernancePanel::Init();
+    IDE::CompilerPanel::Init();
+    EditorPanel::Init();
+    FileExplorerPanel::Init();
+    MonacoEditorPanel::Init();
+    
+    // Connect File Explorer to Editor
+    FileExplorerPanel::SetFileOpenCallback([](const std::string& path) {
+        EditorPanel::OpenFile(path.c_str());
+        MonacoEditorPanel::OpenFile(path.c_str());
+    });
 
     // Initialize sovereign systems
     AutoRecovery::Init();
@@ -186,6 +204,11 @@ void IDEEntry::Init() {
     HotkeySystem::Register("Ctrl+Shift+F25", [](){ GalacticPanel::Toggle(); });
     HotkeySystem::Register("Ctrl+Shift+F26", [](){ CosmicWebPanel::Toggle(); });
     HotkeySystem::Register("Ctrl+Shift+F27", [](){ SuperclusterGovernancePanel::Toggle(); });
+    HotkeySystem::Register("F7", [](){ IDE::CompilerPanel::Toggle(); });
+    HotkeySystem::Register("Ctrl+Shift+E", [](){ FileExplorerPanel::Toggle(); });
+    HotkeySystem::Register("Ctrl+N", [](){ EditorPanel::OpenFile(""); });
+    HotkeySystem::Register("Ctrl+O", [](){ EditorPanel::OpenFile(nullptr); });
+    HotkeySystem::Register("Ctrl+S", [](){ EditorPanel::SaveCurrentFile(); });
 
     // Register panels in docking layout
     DockingLayout::Add(SovereignSelfCheckPanel::Id(), DockingLayout::Right);
@@ -243,6 +266,10 @@ void IDEEntry::Init() {
     DockingLayout::Add(GalacticPanel::Id(), DockingLayout::Right);
     DockingLayout::Add(CosmicWebPanel::Id(), DockingLayout::Right);
     DockingLayout::Add(SuperclusterGovernancePanel::Id(), DockingLayout::Right);
+    DockingLayout::Add(IDE::CompilerPanel::Id(), DockingLayout::Bottom);
+    DockingLayout::Add(EditorPanel::Id(), DockingLayout::Center);
+    DockingLayout::Add(FileExplorerPanel::Id(), DockingLayout::Left);
+    DockingLayout::Add(MonacoEditorPanel::Id(), DockingLayout::Center);
 
     // Apply layout
     DockingLayout::Apply();
@@ -311,6 +338,10 @@ void IDEEntry::Render() {
     if (PanelState::IsVisible(GalacticPanel::Id())) GalacticPanel::Render();
     if (PanelState::IsVisible(CosmicWebPanel::Id())) CosmicWebPanel::Render();
     if (PanelState::IsVisible(SuperclusterGovernancePanel::Id())) SuperclusterGovernancePanel::Render();
+    if (PanelState::IsVisible(IDE::CompilerPanel::Id())) IDE::CompilerPanel::Render();
+    if (PanelState::IsVisible(EditorPanel::Id())) EditorPanel::Render();
+    if (PanelState::IsVisible(FileExplorerPanel::Id())) FileExplorerPanel::Render();
+    if (PanelState::IsVisible(MonacoEditorPanel::Id())) MonacoEditorPanel::Render();
 
     // Run auto-recovery check
     AutoRecovery::CheckAndRecover();
@@ -318,5 +349,8 @@ void IDEEntry::Render() {
 
 void IDEEntry::Shutdown() {
     // Cleanup in reverse order
+    FileExplorerPanel::Shutdown();
+    EditorPanel::Shutdown();
+    IDE::CompilerPanel::Shutdown();
     HotkeySystem::Shutdown();
 }

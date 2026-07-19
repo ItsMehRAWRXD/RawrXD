@@ -43,6 +43,11 @@
 #define IDM_VIEW_FULLSCREEN     2404
 #define IDM_VIEW_DARK_THEME     2405
 #define IDM_VIEW_LIGHT_THEME    2406
+#define IDM_VIEW_LINE_NUMBERS   2407
+#define IDM_VIEW_WORD_WRAP      2408
+
+#define IDM_FILE_RECENT_BASE    2600
+#define IDM_FILE_RECENT_CLEAR   2699
 
 #define IDM_HELP_ABOUT          2501
 #define IDM_HELP_DOCS           2502
@@ -62,6 +67,12 @@ BEGIN
     BEGIN
         MENUITEM "&New\tCtrl+N",            IDM_FILE_NEW
         MENUITEM "&Open...\tCtrl+O",        IDM_FILE_OPEN
+        POPUP "Open &Recent"
+        BEGIN
+            MENUITEM "(No recent files)", IDM_FILE_RECENT_BASE
+            MENUITEM SEPARATOR
+            MENUITEM "&Clear Recent Files", IDM_FILE_RECENT_CLEAR
+        END
         MENUITEM SEPARATOR
         MENUITEM "&Save\tCtrl+S",           IDM_FILE_SAVE
         MENUITEM "Save &As...\tCtrl+Shift+S", IDM_FILE_SAVEAS
@@ -92,6 +103,9 @@ BEGIN
         MENUITEM "File &Browser\tCtrl+E",   IDM_VIEW_FILEBROWSER
         MENUITEM "&Output Panel\tCtrl+`",   IDM_VIEW_OUTPUT
         MENUITEM "&Widget Panel",           IDM_VIEW_WIDGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Line Numbers",           IDM_VIEW_LINE_NUMBERS
+        MENUITEM "&Word Wrap\tAlt+Z",        IDM_VIEW_WORD_WRAP
         MENUITEM SEPARATOR
         MENUITEM "&Fullscreen\tF11",        IDM_VIEW_FULLSCREEN
         MENUITEM SEPARATOR
@@ -154,6 +168,7 @@ BEGIN
     "E",        IDM_VIEW_FILEBROWSER, VIRTKEY, CONTROL
     VK_OEM_3,   IDM_VIEW_OUTPUT,    VIRTKEY, CONTROL     /* Ctrl+` */
     VK_F11,     IDM_VIEW_FULLSCREEN, VIRTKEY
+    "Z",        IDM_VIEW_WORD_WRAP, VIRTKEY, ALT
 END
 
 /* ── Version info ───────────────────────────────────────────────────────── */

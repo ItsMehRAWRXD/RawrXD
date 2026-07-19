@@ -1,0 +1,8 @@
+.data
+msg db 'RawrXD',0
+
+.code
+main proc
+    ret
+main endp
+end

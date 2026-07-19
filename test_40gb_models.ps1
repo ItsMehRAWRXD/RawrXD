@@ -13,7 +13,8 @@
 #>
 
 param(
-    [string]$ModelPath = "D:\OllamaModels\BigDaddyG-NO-REFUSE-Q4_K_M.gguf",
+    [string]$ModelPath = "",
+    [string]$ModelDir = "D:\",
     [int]$TestTokens = 100,
     [int]$WarmupPasses = 2,
     [string]$OutputDir = "D:\RawrXD\test_40gb_models"
@@ -23,11 +24,31 @@ param(
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
-$Models = @(
-    "D:\OllamaModels\BigDaddyG-F32-FROM-Q4.gguf",
-    "D:\OllamaModels\BigDaddyG-NO-REFUSE-Q4_K_M.gguf",
-    "D:\OllamaModels\BigDaddyG-UNLEASHED-Q4_K_M.gguf"
-)
+# Auto-discover models if none specified
+$Models = @()
+
+if ($ModelPath -and (Test-Path $ModelPath)) {
+    # Use explicitly provided model
+    $Models = @($ModelPath)
+    Write-Host "Using specified model: $ModelPath" -ForegroundColor Green
+}
+else {
+    # Auto-discover all GGUF files in ModelDir
+    Write-Host "Auto-discovering GGUF models in $ModelDir..." -ForegroundColor Cyan
+    $discovered = Get-ChildItem -Path $ModelDir -Filter "*.gguf" -Recurse -ErrorAction SilentlyContinue | 
+        Select-Object -ExpandProperty FullName
+    
+    if ($discovered) {
+        $Models = $discovered
+        Write-Host "Found $($Models.Count) model(s):" -ForegroundColor Green
+        $Models | ForEach-Object { Write-Host "  - $_" -ForegroundColor Gray }
+    }
+    else {
+        Write-Host "No GGUF models found. Searched: $ModelDir" -ForegroundColor Yellow
+        Write-Host "Usage: .\test_40gb_models.ps1 -ModelPath 'D:\path\to\model.gguf'" -ForegroundColor Yellow
+        Write-Host "   or: .\test_40gb_models.ps1 -ModelDir 'D:\Models'" -ForegroundColor Yellow
+    }
+}
 
 # Create output directory
 if (-not (Test-Path $OutputDir)) {

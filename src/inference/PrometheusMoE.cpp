@@ -51,6 +51,24 @@ PrometheusMoE::~PrometheusMoE() {
 
 MoEConfig PrometheusMoE::Probe(const std::string& ggufPath) {
     MoEConfig cfg;
+    
+    // Initialize all fields to safe defaults
+    cfg.isMoE = false;
+    cfg.numLayers = 0;
+    cfg.numExperts = 0;
+    cfg.expertsPerToken = 0;
+    cfg.numSharedExperts = 0;
+    cfg.hiddenDim = 0;
+    cfg.intermediateDim = 0;
+    cfg.numHeads = 0;
+    cfg.numKVHeads = 0;
+    cfg.headDim = 0;
+    cfg.vocabSize = 0;
+    cfg.topK = 2;
+    cfg.totalParams = 0;
+    cfg.activeParams = 0;
+    cfg.modelSizeBytes = 0;
+    cfg.kvCacheBytes = 0;
 
     std::ifstream file(ggufPath, std::ios::binary);
     if (!file.is_open()) return cfg;
@@ -73,6 +91,13 @@ MoEConfig PrometheusMoE::Probe(const std::string& ggufPath) {
         // Read key length + key
         uint64_t keyLen = 0;
         file.read(reinterpret_cast<char*>(&keyLen), 8);
+        
+        // Sanity check: key length should be reasonable (max 1024 chars)
+        if (keyLen == 0 || keyLen > 1024) {
+            // Skip this entry - invalid key length
+            break;
+        }
+        
         std::string key(keyLen, '\0');
         file.read(key.data(), keyLen);
 
@@ -126,27 +151,27 @@ MoEConfig PrometheusMoE::Probe(const std::string& ggufPath) {
 
         int64_t val = ReadValue(file, valType);
 
-        // Check for MoE keys
-        if (key == "llama.expert_count") {
+        // Check for MoE keys (support both llama.* and deepseek2.* naming)
+        if (key == "llama.expert_count" || key == "deepseek2.expert_count") {
             cfg.isMoE = true;
             cfg.numExperts = static_cast<uint32_t>(val);
-        } else if (key == "llama.expert_used_count") {
+        } else if (key == "llama.expert_used_count" || key == "deepseek2.expert_used_count") {
             cfg.expertsPerToken = static_cast<uint32_t>(val);
-        } else if (key == "llama.expert_shared_count") {
+        } else if (key == "llama.expert_shared_count" || key == "deepseek2.expert_shared_count") {
             cfg.numSharedExperts = static_cast<uint32_t>(val);
-        } else if (key == "llama.block_count" || key == "llama.num_hidden_layers") {
+        } else if (key == "llama.block_count" || key == "llama.num_hidden_layers" || key == "deepseek2.block_count") {
             cfg.numLayers = static_cast<uint32_t>(val);
-        } else if (key == "llama.embedding_length" || key == "llama.hidden_size") {
+        } else if (key == "llama.embedding_length" || key == "llama.hidden_size" || key == "deepseek2.embedding_length") {
             cfg.hiddenDim = static_cast<uint32_t>(val);
-        } else if (key == "llama.feed_forward_length" || key == "llama.intermediate_size") {
+        } else if (key == "llama.feed_forward_length" || key == "llama.intermediate_size" || key == "deepseek2.feed_forward_length" || key == "deepseek2.expert_feed_forward_length") {
             cfg.intermediateDim = static_cast<uint32_t>(val);
-        } else if (key == "llama.attention.head_count") {
+        } else if (key == "llama.attention.head_count" || key == "deepseek2.attention.head_count") {
             cfg.numHeads = static_cast<uint32_t>(val);
-        } else if (key == "llama.attention.head_count_kv") {
+        } else if (key == "llama.attention.head_count_kv" || key == "deepseek2.attention.head_count_kv") {
             cfg.numKVHeads = static_cast<uint32_t>(val);
-        } else if (key == "llama.attention.key_length" || key == "llama.head_dim") {
+        } else if (key == "llama.attention.key_length" || key == "llama.head_dim" || key == "deepseek2.attention.key_length") {
             cfg.headDim = static_cast<uint32_t>(val);
-        } else if (key == "llama.vocab_size") {
+        } else if (key == "llama.vocab_size" || key == "deepseek2.vocab_size") {
             cfg.vocabSize = static_cast<uint32_t>(val);
         }
     }
@@ -408,6 +433,14 @@ void PrometheusMoE::Unmap() {
 
 void PrometheusMoE::BuildRoutingTables() {
     if (!mmapBase_ || config_.numLayers == 0) return;
+    
+    // Safety check: don't allocate if not a valid MoE config
+    if (!config_.IsValid()) return;
+    
+    // Safety check: limit allocation size to prevent bad_alloc
+    if (config_.numLayers > 1000 || config_.numExperts > 1000 || config_.hiddenDim > 100000) {
+        return; // Sanity check failed - values are unreasonable
+    }
 
     routerWeights_.resize(config_.numLayers);
 

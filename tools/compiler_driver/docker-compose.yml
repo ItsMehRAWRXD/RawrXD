@@ -1,0 +1,58 @@
+# RAWRXD Compiler Driver - Docker Compose
+# For containerized development and testing
+
+version: '3.8'
+
+services:
+  # Main compiler service
+  compiler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rawrxd-compiler:latest
+    container_name: rawrxd-compiler
+    volumes:
+      - ./workspace:/workspace
+      - ./examples:/examples:ro
+    working_dir: /workspace
+    command: --help
+
+  # Development environment
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rawrxd-compiler:dev
+    container_name: rawrxd-compiler-dev
+    volumes:
+      - .:/src
+      - ./workspace:/workspace
+    working_dir: /src
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+
+  # Test runner
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rawrxd-compiler:test
+    container_name: rawrxd-compiler-test
+    volumes:
+      - ./tests:/tests:ro
+      - ./examples:/examples:ro
+    working_dir: /tests
+    command: >
+      sh -c "
+        echo 'Running tests...' &&
+        rawrxd-compiler compile /examples/hello.c -o /tmp/hello &&
+        echo 'C compilation: OK' &&
+        rawrxd-compiler compile /examples/hello.asm -o /tmp/hello_asm &&
+        echo 'Assembly compilation: OK' &&
+        echo 'All tests passed!'
+      "
+
+# Named volumes
+volumes:
+  workspace:

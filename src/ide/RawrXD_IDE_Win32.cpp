@@ -3378,6 +3378,16 @@ void RawrXD_IDE_GhostText_OnKeystroke(RawrXD_IDE* ide) {
     
     if (ide->ghostTimerActive) {
         OutputDebugStringA("[GhostText] Debounce timer reset\n");
+        
+        /* Telemetry: Log keystroke timing */
+        WCHAR msg[128];
+        StringCchPrintfW(msg, 128, L"[Telemetry] Keystroke: version=%u\r\n", 
+                         (uint32_t)InterlockedCompareExchange(&ide->editorVersion, 0, 0));
+        /* Only log every 10th keystroke to avoid spam */
+        static int keystrokeCount = 0;
+        if (++keystrokeCount % 10 == 0) {
+            RawrXD_IDE_OutputAppend(ide, msg);
+        }
     }
 }
 
@@ -3423,26 +3433,31 @@ void RawrXD_IDE_GhostText_RequestInference(RawrXD_IDE* ide, const InferenceConte
     /* Validate we have context to send */
     if (ctx->length == 0) return;
     
-    /* Log the request */
+    /* Log the request with telemetry */
     WCHAR msg[256];
     StringCchPrintfW(msg, 256, L"[GhostText] Requesting inference (version=%u, len=%zu)\r\n", 
                      ctx->version, ctx->length);
     RawrXD_IDE_OutputAppend(ide, msg);
     
-    /* Call SovereignBridge with the versioned context */
-    SIB_CompletionRequest request = {0};
-    StringCchCopyW(request.prompt, SIB_MAX_PROMPT_LEN, (LPCWSTR)ctx->buffer);
-    request.maxTokens = 128;
-    request.temperature = 0.7f;
-    request.topP = 0.9f;
-    request.topK = 40;
-    request.streamTokens = TRUE;
-    request.userData = ide;
+    /* Telemetry: Context extraction timing */
+    DWORD extractStart = GetTickCount();
     
-    SIB_Status status = SIB_RequestCompletion(&request, RawrXD_IDE_OnSovereignToken);
-    if (status != SIB_OK) {
+    /* Call Deep2 bridge with versioned context */
+    extern "C" BOOL SovereignBridge_RequestCompletion(uint32_t version, const char* context, size_t contextLen);
+    SovereignBridge_RequestCompletion(ctx->version, ctx->buffer, ctx->length);
+    
+    DWORD extractEnd = GetTickCount();
+    float extractMs = (float)(extractEnd - extractStart);
+    
+    /* Log extraction latency */
+    StringCchPrintfW(msg, 256, L"[Telemetry] Context extraction: %.2f ms\r\n", extractMs);
+    RawrXD_IDE_OutputAppend(ide, msg);
+    
+    /* Call Deep2 bridge with versioned context */
+    extern "C" BOOL SovereignBridge_RequestCompletion(uint32_t version, const char* context, size_t contextLen);
+    if (!SovereignBridge_RequestCompletion(ctx->version, ctx->buffer, ctx->length)) {
         WCHAR err[256];
-        StringCchPrintfW(err, 256, L"[Sovereign] Request failed: %s\r\n", SIB_GetLastError());
+        StringCchPrintfW(err, 256, L"[Sovereign] Request failed: Bridge not initialized\r\n");
         RawrXD_IDE_OutputAppend(ide, err);
     }
 }
@@ -3494,6 +3509,13 @@ void RawrXD_IDE_GhostText_OnCompletionReady(RawrXD_IDE* ide, CompletionResult* r
     ide->completion.active = TRUE;
     ide->completion.ghostVisible = TRUE;
     StringCchCopyW(ide->completion.suggestion, 4096, result->text);
+    
+    /* Telemetry: Log completion metrics */
+    WCHAR metrics[512];
+    StringCchPrintfW(metrics, 512, 
+        L"[Telemetry] Completion: version=%u, latency=%.1fms, tps=%.1f, confidence=%.2f\r\n",
+        result->version, result->latencyMs, result->tps, result->confidence);
+    RawrXD_IDE_OutputAppend(ide, metrics);
     
     /* 3. Trigger ghost text paint */
     InvalidateRect(ide->hWndEditor, NULL, FALSE);
@@ -3990,11 +4012,12 @@ void RawrXD_IDE_UpdateDebugPanels(RawrXD_IDE* ide, DebugStatePayload* payload) {
         DebuggerTelemetry telem = GetDebuggerTelemetry();
         WCHAR telemMsg[512];
         StringCchPrintfW(telemMsg, 512,
-            L"[Telemetry] Submitted: %lld, Rendered: %lld, Dropped: %lld, Latency: %lldms\r\n",
+            L"[Telemetry] Seq: %llu, Submitted: %lld, Rendered: %lld, Dropped: %lld, Gaps: %lld\r\n",
+            payload->sequenceNumber,
             telem.framesSubmitted,
             telem.framesRendered,
             telem.framesDropped,
-            telem.maxRenderLatencyMs);
+            telem.sequenceGaps);
         RawrXD_IDE_OutputAppend(ide, telemMsg);
     }
     
@@ -4025,6 +4048,9 @@ void RawrXD_IDE_ShowDebugTelemetry(RawrXD_IDE* ide) {
         L"Arena High Water:   %lld bytes\r\n"
         L"Max Parse Time:     %lld us\r\n"
         L"Max Render Time:    %lld us\r\n"
+        L"Last Seq Submitted: %lld\r\n"
+        L"Last Seq Rendered:  %lld\r\n"
+        L"Sequence Gaps:      %lld (coalesced)\r\n"
         L"=========================\r\n",
         telem.framesSubmitted,
         telem.framesRendered,
@@ -4033,7 +4059,10 @@ void RawrXD_IDE_ShowDebugTelemetry(RawrXD_IDE* ide) {
         telem.maxRenderLatencyMs,
         telem.arenaHighWaterMark,
         telem.parseTimeUs,
-        telem.renderTimeUs);
+        telem.renderTimeUs,
+        telem.lastSubmittedSequence,
+        telem.lastRenderedSequence,
+        telem.sequenceGaps);
     
     RawrXD_IDE_OutputAppend(ide, msg);
 }

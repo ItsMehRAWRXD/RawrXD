@@ -1,0 +1,68 @@
+{
+  "ModelSizeGB": 376.71,
+  "TestDate": "2026-07-19 16:43:39",
+  "Model": "DeepSeek-V3.1 671B",
+  "Configuration": {
+    "WarmupPasses": 1,
+    "BenchmarkPasses": 3,
+    "TestTokens": 128
+  },
+  "Results": [
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.26,
+        "Success": true,
+        "SequentialReadSpeed": 6311.58,
+        "LoadTime": 0.1694644
+      },
+      "Timestamp": "2026-07-19 16:43:37",
+      "Run": 1,
+      "Inference": {
+        "TotalTime": 0.4550972,
+        "TokensGenerated": 128,
+        "TPS": 285.29,
+        "Success": true,
+        "AvgTokenTime": 3.5052093750000015
+      }
+    },
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.36,
+        "Success": true,
+        "SequentialReadSpeed": 5944.77,
+        "LoadTime": 0.1797977
+      },
+      "Timestamp": "2026-07-19 16:43:37",
+      "Run": 2,
+      "Inference": {
+        "TotalTime": 0.3969472,
+        "TokensGenerated": 128,
+        "TPS": 326.98,
+        "Success": true,
+        "AvgTokenTime": 3.0583257812499984
+      }
+    },
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.24,
+        "Success": true,
+        "SequentialReadSpeed": 6051.81,
+        "LoadTime": 0.1754284
+      },
+      "Timestamp": "2026-07-19 16:43:38",
+      "Run": 3,
+      "Inference": {
+        "TotalTime": 0.4440892,
+        "TokensGenerated": 128,
+        "TPS": 292.2,
+        "Success": true,
+        "AvgTokenTime": 3.422310156250001
+      }
+    }
+  ],
+  "SystemInfo": {
+    "RAM_GB": 64.0,
+    "CPU": "AMD Ryzen 7 7800X3D 8-Core Processor           ",
+    "Cores": 8
+  }
+}

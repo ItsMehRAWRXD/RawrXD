@@ -1,0 +1,99 @@
+# RAWRXD Compiler Driver - Git Attributes
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.c text eol=lf
+*.h text eol=lf
+*.cpp text eol=lf
+*.hpp text eol=lf
+*.cs text eol=lf
+*.asm text eol=lf
+*.s text eol=lf
+*.nasm text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sh text eol=lf
+*.mk text eol=lf
+Makefile text eol=lf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+*.rst text eol=lf
+
+# Config files
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+
+# Scripts
+*.py text eol=lf
+*.rb text eol=lf
+*.pl text eol=lf
+*.lua text eol=lf
+
+# Web
+*.html text eol=lf
+*.css text eol=lf
+
+# Binary files
+*.exe binary
+*.dll binary
+*.lib binary
+*.so binary
+*.dylib binary
+*.a binary
+*.o binary
+*.obj binary
+*.pdb binary
+*.ilk binary
+
+# Archives
+*.zip binary
+*.tar binary
+*.tar.gz binary
+*.tar.bz2 binary
+*.7z binary
+*.rar binary
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+
+# Fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+
+# Documents
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+
+# Diff behavior
+*.c diff=cpp
+*.h diff=cpp
+*.cpp diff=cpp
+*.hpp diff=cpp
+*.cs diff=csharp
+*.md diff=markdown

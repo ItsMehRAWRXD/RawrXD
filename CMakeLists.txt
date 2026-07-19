@@ -391,9 +391,9 @@ if(RAWR_HAS_MASM)
         # src/asm/RawrXD_CopilotGapCloser.asm   # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/native_speed_kernels.asm      # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/DirectML_Bridge.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/RawrXD_Hotpatch_Kernel.asm    # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/RawrXD_Snapshot.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/RawrXD_Pyre_Compute.asm       # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
+        # src/asm/RawrXD_Hotpatch_Kernel.asm    # handled separately below
+        # src/asm/RawrXD_Snapshot.asm           # handled separately below
+        # src/asm/RawrXD_Pyre_Compute.asm       # handled separately below
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
         # src/asm/RawrXD_DualEngine_QuantumBeacon.asm  # excluded: MASM build errors (undefined symbols / unwind prolog issues)
@@ -405,6 +405,7 @@ if(RAWR_HAS_MASM)
         src/asm/Advanced_Code_Deobfuscator.asm
         src/asm/Code_Pattern_Reconstructor.asm
         src/asm/agentic_deep_thinking_kernels.asm
+        src/asm/RawrXD_MissingSymbols.asm
         # src/asm/byte_search.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
         # src/asm/memory_patch.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
         # src/x64/rawrxd_quantum_beaconism.asm  # excluded: MASM syntax errors (scaffold file)
@@ -603,6 +604,15 @@ set(SOURCES
     
     # T4.5: Agentic Deep Thinking Engine — Autonomous monitoring, recovery, and orchestration
     src/agentic/AgenticDeepThinkingEngine.cpp
+
+    # T4.6: Validation Fault Injection and Recovery Telemetry (Mission 2.1-2.3)
+    validation/fault_injection/FaultInjector.cpp
+    validation/fault_injection/WorkerCrashInjector.cpp
+    validation/fault_injection/MemoryPressureInjector.cpp
+    validation/fault_injection/ServiceKillInjector.cpp
+    validation/fault_injection/StateCorruptionInjector.cpp
+    validation/fault_injection/ExceptionStormInjector.cpp
+    validation/recovery_telemetry/RecoveryTelemetry.cpp
 
     # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
     src/agentic/AgentOrchestrator.cpp
@@ -2962,6 +2972,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
+        src/ide/SovereignSharedMemoryBridge.cpp
         src/win32app/Win32IDE_OutlinePanel.cpp
         src/win32app/Win32IDE_RenamePreview.cpp
         src/win32app/Win32IDE_Tier2Cosmetics.cpp
@@ -5116,6 +5127,86 @@ endif()
 message(STATUS "[AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)")
 
 # ============================================================================
+# Golden Recovery Tests (Mission 2.3: Validation Framework)
+# ============================================================================
+add_executable(RawrXD-GoldenRecoveryTests EXCLUDE_FROM_ALL
+    tests/autonomy/recovery/GoldenRecoveryTests.cpp
+    validation/fault_injection/FaultInjector.cpp
+    validation/fault_injection/WorkerCrashInjector.cpp
+    validation/fault_injection/MemoryPressureInjector.cpp
+    validation/fault_injection/ServiceKillInjector.cpp
+    validation/fault_injection/StateCorruptionInjector.cpp
+    validation/fault_injection/ExceptionStormInjector.cpp
+    validation/recovery_telemetry/RecoveryTelemetry.cpp
+)
+
+target_include_directories(RawrXD-GoldenRecoveryTests PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/agentic
+    ${CMAKE_SOURCE_DIR}/validation/fault_injection
+    ${CMAKE_SOURCE_DIR}/validation/recovery_telemetry
+)
+
+target_compile_features(RawrXD-GoldenRecoveryTests PRIVATE cxx_std_17)
+
+if(WIN32)
+    target_link_libraries(RawrXD-GoldenRecoveryTests PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(RawrXD-GoldenRecoveryTests PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(RawrXD-GoldenRecoveryTests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)")
+
+# ============================================================================
+# RawrXD Sovereign Runtime v1.0-ALPHA (War Room: One Binary, One Command, One Evidence Bundle)
+# ============================================================================
+# Only add sovereign runtime if CLI version not already defined
+if(NOT TARGET rawrxd)
+    add_executable(rawrxd
+        src/sovereign/rawrxd.cpp
+        src/sovereign/ExecutionContract.cpp
+    )
+
+target_include_directories(rawrxd PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/sovereign
+)
+
+target_compile_features(rawrxd PRIVATE cxx_std_17)
+
+if(WIN32)
+    target_link_libraries(rawrxd PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(rawrxd PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(rawrxd PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+    set_target_properties(rawrxd PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
+    message(STATUS "[SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)")
+    message(STATUS "[SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]")
+else()
+    message(STATUS "[SovereignRuntime] Skipped - target 'rawrxd' already defined by CLI build")
+endif()
+
+# ============================================================================
 # Native Address Resolver Utility (deterministic, no PowerShell dependency)
 # ============================================================================
 option(RAWRXD_BUILD_ADDRESS_RESOLVER_NATIVE "Build native crash address resolver utility" ON)
@@ -5257,6 +5348,28 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt")
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# ============================================================================
+# Sovereign Bridge Test Harness
+# ============================================================================
+add_executable(TestSovereignBridge EXCLUDE_FROM_ALL
+    src/ide/test_sovereign_bridge.cpp
+    src/ide/SovereignSharedMemoryBridge.cpp
+)
+target_compile_features(TestSovereignBridge PRIVATE cxx_std_17)
+target_include_directories(TestSovereignBridge PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/ide
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(WIN32)
+    target_link_libraries(TestSovereignBridge PRIVATE)
+endif()
+set_target_properties(TestSovereignBridge PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+message(STATUS "[Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)")
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/tools/CMakeLists.txt")
     add_subdirectory(src/tools)
