@@ -84,21 +84,27 @@ Ghost text render (<16ms)
 [GhostText] Stale completion discarded
 ```
 
-### 4. Benchmark Summary (Ctrl+B)
+### 4. Benchmark Summary (Ctrl+B) - LIVE from runtime state
 ```
 [SovereignBridge] [BenchmarkSummary]
-  Model: llama-3.2-8b-Q4_K_M.gguf
-  Quantization: Q4_K_M
-  Backend: Deep2
-  Kernel: Sovereign_Q4KM_AVX512
+  Model: llama-3.2-8b-Q4_K_M.gguf           <- LIVE from g_runtime.modelName
+  Quantization: Q4_K_M                       <- LIVE from g_runtime.quantization
+  Backend: Deep2                             <- LIVE from g_runtime.backendName
+  Kernel: Sovereign_Q4KM_AVX512              <- LIVE from g_runtime.kernelName
   TotalRequests: 47
   TotalTokens: 523
   AvgLatencyMs: 42.15
   AvgTokensPerRequest: 11.1
-  Hardware: Ryzen CPU
-  ContextLength: 8192
-  MaxTokens: 64
-  Temperature: 0.70
+  CPU: AMD Ryzen 9 7950X 16-Core Processor   <- LIVE from registry
+  Cores: 16                                  <- LIVE from SYSTEM_INFO
+  Threads: 32
+  AVX2: YES                                  <- LIVE from Deep2_HasAVX2()
+  AVX512: YES                                <- LIVE from Deep2_HasAVX512()
+  TotalRAM: 131072 MB                        <- LIVE from GlobalMemoryStatusEx
+[SovereignBridge] [Memory]                   <- LIVE from GetProcessMemoryInfo
+  ModelMB: 5120
+  PeakWorkingSetMB: 6120
+  CurrentWorkingSetMB: 5847
 [SovereignBridge] [EndBenchmarkSummary]
 ```
 
@@ -151,32 +157,60 @@ Ghost text render (<16ms)
 
 ## Reproducible Benchmark
 
-To generate a reproducible benchmark report:
+### Cold vs Warm Benchmarks
+
+| Phase | Description | Target |
+|-------|-------------|--------|
+| **Cold Start** | First inference after model load | <500ms first token |
+| **Warm** | Subsequent completions | <100ms first token |
+
+**Cold Start Sequence:**
+```
+[SovereignBridge] Loading model: D:\models\llama-3.2-8b-Q4_K_M.gguf
+[SovereignBridge] Model loaded: llama-3.2-8b-Q4_K_M.gguf
+[SovereignBridge] Quantization: Q4_K_M
+[SovereignBridge] Layers: 33
+[SovereignBridge] [Memory] ModelMB: 5120
+[SovereignBridge] First request (cold): latency=450ms
+[SovereignBridge] Second request (warm): latency=42ms
+```
+
+### Procedure
 
 1. **Environment**
-   - Model: llama-3.2-8b-Q4_K_M.gguf
-   - Hardware: Ryzen CPU (AVX2/AVX512)
-   - Context: 8192 tokens
+   - Model: llama-3.2-8b-Q4_K_M.gguf (or actual loaded model)
+   - Hardware: Detected at runtime from CPUID/registry
+   - Context: From GGUF metadata
    - Max generation: 64 tokens
 
-2. **Procedure**
+2. **Cold Start Test**
    - Launch IDE
+   - Load model via `SovereignBridge_LoadModel()`
+   - Type first prompt
+   - Measure: Model load time + first token latency
+
+3. **Warm Test**
    - Type 50 different code prompts
    - Vary typing speed (normal vs rapid)
    - Press Ctrl+B to output summary
 
-3. **Metrics Captured**
-   - Total requests
-   - Total tokens generated
+4. **Metrics Captured (LIVE)**
+   - Model name from GGUF filename
+   - Quantization from filename pattern
+   - Layers/context from model metadata
+   - CPU from registry
+   - RAM from GlobalMemoryStatusEx
+   - Working set from GetProcessMemoryInfo
+   - Total requests/tokens
    - Average latency per request
-   - Average tokens per request
    - Cancellation rate
    - Stale completion rate
 
-4. **Evidence Package**
-   - Debug log with all `[SovereignBridge]` traces
-   - Benchmark summary output
-   - Screenshot of ghost text rendering
+5. **Evidence Package**
+   - Debug log with `[SovereignRuntime]` identity stamp
+   - `[HardwareFingerprint]` from live detection
+   - `[Memory]` telemetry from process info
+   - `[BenchmarkSummary]` with all live metrics
 
 ## Success Criteria
 
