@@ -35,17 +35,20 @@ void STEL_EndInference(BOOL success, float confidence);
  * GHOSTTEXT TELEMETRY INTEGRATION
  *=========================================================================*/
 
-/* Called when GhostText suggestion is generated */
+/* Called when GhostText suggestion is generated (begins correlation flow) */
 void STEL_GhostTextGenerated(const std::string& text, const WCHAR* filePath, float confidence);
 
-/* Called when GhostText suggestion is accepted */
+/* Called when GhostText suggestion is accepted (ends correlation flow) */
 void STEL_GhostTextAccepted(uint32_t acceptedLines);
 
-/* Called when GhostText suggestion is rejected */
+/* Called when GhostText suggestion is rejected (ends correlation flow) */
 void STEL_GhostTextRejected(void);
 
-/* Called when GhostText suggestion expires (timeout) */
+/* Called when GhostText suggestion expires (ends correlation flow) */
 void STEL_GhostTextExpired(void);
+
+/* Check if current request should be sampled */
+BOOL STEL_ShouldSampleCurrentRequest(void);
 
 /*===========================================================================
  * MEMORY TELEMETRY INTEGRATION

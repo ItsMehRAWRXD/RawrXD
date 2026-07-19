@@ -146,12 +146,18 @@ Status bar format:
 
 ## Export Formats
 
-### JSON Export
+### JSON Export (Schema Version 1)
 ```json
 {
-  "version": 1,
+  "schemaVersion": 1,
+  "runtimeVersion": "14.7.3",
   "sessionId": "1234567890",
   "durationSeconds": 3600,
+  "telemetryConfig": {
+    "enabled": true,
+    "sampleRate": 100,
+    "correlationEnabled": true
+  },
   "inference": {
     "totalInferences": 1523,
     "totalTokensGenerated": 48736,
@@ -186,9 +192,90 @@ Status bar format:
 - [x] JSON export functionality
 - [x] Runtime overlay string generation
 - [x] Privacy-first design (no code content)
+- [x] **Schema versioning** (`schemaVersion` field)
+- [x] **Sampling controls** (configurable sample rate 0-100%)
+- [x] **Correlation IDs** (end-to-end flow tracking)
 - [ ] IDE status bar integration (VAL-028)
 - [ ] Adaptive debounce implementation (VAL-028)
 - [ ] CSV export for analysis (future)
+
+## Hardening Features (VAL-027.1)
+
+### Schema Versioning
+
+Every event and export includes schema version for backward compatibility:
+
+```cpp
+#define STEL_SCHEMA_VERSION 1
+#define STEL_RUNTIME_VERSION L"14.7.3"
+
+struct STEL_InferenceEvent {
+    uint32_t schemaVersion;      // STEL_SCHEMA_VERSION
+    WCHAR runtimeVersion[16];    // STEL_RUNTIME_VERSION
+    // ...
+};
+```
+
+**Benefit**: Old reports remain parseable; new fields can be added safely.
+
+### Sampling Controls
+
+Configurable sampling for long-running sessions:
+
+```cpp
+STEL_Config config = {};
+config.enabled = TRUE;
+config.sampleRate = 10;              // Sample 10% of events
+config.exportIntervalMinutes = 30;   // Auto-export every 30 min
+config.enableCorrelation = TRUE;
+config.enableMemoryTracking = TRUE;
+config.memorySnapshotIntervalSec = 60;
+
+STEL_InitializeWithConfig(&config);
+```
+
+**Benefit**: Multi-day IDE sessions remain lightweight.
+
+### Correlation IDs
+
+End-to-end flow tracking for complete UX latency:
+
+```
+GhostText Request #session-counter
+    |
+    +-- FLOW_BEGIN
+    |
+    +-- GHOSTTEXT_GENERATED
+    |
+    +-- INFERENCE_START
+    |
+    +-- FIRST_TOKEN
+    |
+    +-- INFERENCE_COMPLETE
+    |
+    +-- GHOSTTEXT_ACCEPTED
+    |
+    +-- FLOW_END (endToEndLatencyMs = 1847ms)
+```
+
+**Benefit**: Measure what users actually experience: keystroke → useful suggestion.
+
+### Configuration API
+
+```cpp
+// Get current config
+STEL_Config config;
+STEL_GetConfig(&config);
+
+// Modify sampling
+config.sampleRate = 50;  // Reduce to 50%
+STEL_SetConfig(&config);
+
+// Check if should sample
+if (STEL_ShouldSample()) {
+    // Record expensive metrics
+}
+```
 
 ## Performance Impact
 
@@ -196,10 +283,12 @@ Status bar format:
 |-----------|----------|-------|
 | Event recording | ~50ns | Lock-free atomic operations |
 | Histogram update | ~100ns | Simple bucket increment |
+| Sampling check | ~10ns | Counter modulo |
+| Correlation begin | ~100ns | UUID generation |
 | Memory snapshot | ~1ms | Called every 30 seconds |
 | JSON export | ~10ms | Only on session end |
 
-**Total overhead: <0.1% of inference time**
+**Total overhead: <0.1% of inference time (with 100% sampling)**
 
 ## Next Steps
 
