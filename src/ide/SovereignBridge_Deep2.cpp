@@ -69,6 +69,90 @@ static std::string IntToStr(int val) {
 }
 
 /*=============================================================================
+ * RUNTIME STATE - Live from actual execution
+ *===========================================================================*/
+struct RuntimeState {
+    // Model metadata (populated from GGUF)
+    char    modelName[256]      = {0};
+    char    modelFile[256]      = {0};
+    char    quantization[16]    = {0};
+    int     numLayers           = 0;
+    int     contextLength       = 0;
+    size_t  modelSizeBytes      = 0;
+    bool    modelLoaded         = false;
+    
+    // Hardware fingerprint
+    char    cpuName[64]         = {0};
+    int     cpuCores            = 0;
+    int     cpuThreads          = 0;
+    bool    hasAVX2             = false;
+    bool    hasAVX512           = false;
+    bool    hasFMA              = false;
+    uint64_t totalRAM           = 0;
+    
+    // Memory telemetry
+    size_t  peakWorkingSet      = 0;
+    size_t  currentWorkingSet   = 0;
+    size_t  modelWorkingSet     = 0;
+    size_t  kvCacheSize         = 0;
+    
+    // Kernel dispatch
+    char    kernelName[64]      = {0};
+    char    backendName[32]     = {0};
+    
+    // Timing
+    DWORD   initTime            = 0;
+    DWORD   firstTokenTime      = 0;
+};
+
+static RuntimeState g_runtime;
+
+/*=============================================================================
+ * HARDWARE FINGERPRINTING
+ *===========================================================================*/
+static void DetectHardware(void) {
+    // CPU Name from registry
+    HKEY hKey;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, 
+        "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+        0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        DWORD size = sizeof(g_runtime.cpuName);
+        RegQueryValueExA(hKey, "ProcessorNameString", nullptr, nullptr, 
+                        (LPBYTE)g_runtime.cpuName, &size);
+        RegCloseKey(hKey);
+    }
+    
+    // CPU Cores/Threads
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    g_runtime.cpuCores = sysInfo.dwNumberOfProcessors;
+    g_runtime.cpuThreads = sysInfo.dwNumberOfProcessors;
+    
+    // Total RAM
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    if (GlobalMemoryStatusEx(&memStatus)) {
+        g_runtime.totalRAM = memStatus.ullTotalPhys;
+    }
+    
+    // ISA Support
+    g_runtime.hasAVX2 = Deep2_HasAVX2() != 0;
+    g_runtime.hasAVX512 = Deep2_HasAVX512() != 0;
+    // FMA detection would require CPUID
+    g_runtime.hasFMA = g_runtime.hasAVX2; // AVX2 implies FMA
+}
+
+static void UpdateMemoryTelemetry(void) {
+    PROCESS_MEMORY_COUNTERS memCounters;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &memCounters, sizeof(memCounters))) {
+        g_runtime.currentWorkingSet = memCounters.WorkingSetSize;
+        if (g_runtime.currentWorkingSet > g_runtime.peakWorkingSet) {
+            g_runtime.peakWorkingSet = g_runtime.currentWorkingSet;
+        }
+    }
+}
+
+/*=============================================================================
  * BRIDGE CONFIGURATION
  *===========================================================================*/
 static constexpr int   MAX_COMPLETION_TOKENS = 64;      // Max tokens per completion
