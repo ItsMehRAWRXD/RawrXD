@@ -6,13 +6,14 @@ REM ============================================================================
 setlocal enabledelayedexpansion
 
 REM Tool paths
-set ML64=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe
-set CL=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\cl.exe
-set LINK=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe
+set VSROOT=C:\Program Files\Microsoft Visual Studio\18\Enterprise
+set ML64="%VSROOT%\VC\Tools\MSVC\14.51.36231\bin\Hostx64\x64\ml64.exe"
+set CL="%VSROOT%\VC\Tools\MSVC\14.51.36231\bin\Hostx64\x64\cl.exe"
+set LINK="%VSROOT%\VC\Tools\MSVC\14.51.36231\bin\Hostx64\x64\link.exe"
 
 REM Include paths
-set INCLUDE=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt
-set LIB=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64
+set INCLUDE=%VSROOT%\VC\Tools\MSVC\14.51.36231\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt
+set LIB=%VSROOT%\VC\Tools\MSVC\14.51.36231\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64
 
 REM Directories
 set SRC_DIR=d:\RawrXD\src\runtime
@@ -30,27 +31,27 @@ echo.
 
 REM Compile server implementation
 echo [1/4] Compiling SovereignSharedMemoryServer.cpp...
-"%CL%" /c /W4 /EHsc /O2 /nologo /Zi /Fo"%OBJ_DIR%\SovereignSharedMemoryServer.obj" /I"d:\RawrXD\src" "%SRC_DIR%\SovereignSharedMemoryServer.cpp"
+%CL% /c /W4 /EHsc /O2 /nologo /Zi /Fo"%OBJ_DIR%\SovereignSharedMemoryServer.obj" /I"d:\RawrXD\src" "%SRC_DIR%\SovereignSharedMemoryServer.cpp"
 if errorlevel 1 goto :error
 
 REM Compile main executable
 echo [2/4] Compiling SovereignRuntimeMain.cpp...
-"%CL%" /c /W4 /EHsc /O2 /nologo /Zi /Fo"%OBJ_DIR%\SovereignRuntimeMain.obj" /I"d:\RawrXD\src" "%SRC_DIR%\SovereignRuntimeMain.cpp"
+%CL% /c /W4 /EHsc /O2 /nologo /Zi /Fo"%OBJ_DIR%\SovereignRuntimeMain.obj" /I"d:\RawrXD\src" "%SRC_DIR%\SovereignRuntimeMain.cpp"
 if errorlevel 1 goto :error
 
 REM Compile test client
 echo [3/4] Compiling SovereignRuntimeTestClient.cpp...
-"%CL%" /c /W4 /EHsc /O2 /nologo /Zi /Fo"%OBJ_DIR%\SovereignRuntimeTestClient.obj" /I"d:\RawrXD\src" "%SRC_DIR%\SovereignRuntimeTestClient.cpp"
+%CL% /c /W4 /EHsc /O2 /nologo /Zi /Fo"%OBJ_DIR%\SovereignRuntimeTestClient.obj" /I"d:\RawrXD\src" "%SRC_DIR%\SovereignRuntimeTestClient.cpp"
 if errorlevel 1 goto :error
 
 REM Link runtime server executable
 echo [4/4] Linking SovereignRuntime.exe...
-"%LINK%" /SUBSYSTEM:CONSOLE /OUT:"%OUT_DIR%\SovereignRuntime.exe" /NODEFAULTLIB:libcpmt.lib kernel32.lib user32.lib "%OBJ_DIR%\SovereignSharedMemoryServer.obj" "%OBJ_DIR%\SovereignRuntimeMain.obj"
+%LINK% /SUBSYSTEM:CONSOLE /OUT:"%OUT_DIR%\SovereignRuntime.exe" kernel32.lib user32.lib libcmt.lib "%OBJ_DIR%\SovereignSharedMemoryServer.obj" "%OBJ_DIR%\SovereignRuntimeMain.obj"
 if errorlevel 1 goto :error
 
 REM Link test client executable
-echo [4/4] Linking SovereignRuntimeTestClient.exe...
-"%LINK%" /SUBSYSTEM:CONSOLE /OUT:"%OUT_DIR%\SovereignRuntimeTestClient.exe" /NODEFAULTLIB:libcpmt.lib kernel32.lib user32.lib "%OBJ_DIR%\SovereignSharedMemoryServer.obj" "%OBJ_DIR%\SovereignRuntimeTestClient.obj"
+echo [5/5] Linking SovereignRuntimeTestClient.exe...
+%LINK% /SUBSYSTEM:CONSOLE /OUT:"%OUT_DIR%\SovereignRuntimeTestClient.exe" kernel32.lib user32.lib libcmt.lib "%OBJ_DIR%\SovereignSharedMemoryServer.obj" "%OBJ_DIR%\SovereignRuntimeTestClient.obj"
 if errorlevel 1 goto :error
 
 echo.

@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <signal.h>
+#include <conio.h>
 
 RawrXD::Runtime::SovereignSharedMemoryServer* g_server = nullptr;
 

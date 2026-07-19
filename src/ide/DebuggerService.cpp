@@ -4,6 +4,7 @@
  *===========================================================================*/
 
 #include "DebuggerService.h"
+#include "DebugAgentBridge.h"
 #include "../debugger/SovereignCDB_Engine.h"
 #include <windows.h>
 #include <dbghelp.h>
