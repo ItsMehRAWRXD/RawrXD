@@ -32,6 +32,23 @@ void DebugBridge::Shutdown() {
 void DebugBridge::PostEvent(DebugBridgeEvent* event) {
     // This is called from the BACKEND THREAD
     // We must use PostMessage to marshal to the UI thread
+    
+    // Assign sequence number and timestamp
+    event->sequence = ++m_sequenceCounter;
+    event->submitTimestamp = GetTickCount64();
+    
+    // Record in telemetry
+    m_telemetry.RecordSubmit(event->sequence);
+    
+    // Check if we should coalesce (drop stale events)
+    if (ShouldCoalesceEvent(event)) {
+        m_telemetry.RecordDrop();
+        delete event->registers;
+        delete[] event->callStack;
+        delete event;
+        return;
+    }
+    
     if (m_hUIWindow && IsWindow(m_hUIWindow)) {
         // Pass event pointer as LPARAM - UI thread will own deletion
         PostMessage(m_hUIWindow, WM_APP_DEBUG_EVENT, 
@@ -42,9 +59,36 @@ void DebugBridge::PostEvent(DebugBridgeEvent* event) {
     }
 }
 
+bool DebugBridge::ShouldCoalesceEvent(DebugBridgeEvent* newEvent) {
+    // Coalescing strategy: if UI is more than 10 events behind,
+    // drop non-critical events (single step, output, etc.)
+    uint64_t gaps = m_telemetry.GetSequenceGaps();
+    
+    if (gaps > 10) {
+        // UI is falling behind - coalesce non-critical events
+        switch (newEvent->type) {
+            case DebugBridgeEventType::SingleStep:
+            case DebugBridgeEventType::OutputDebugString:
+                return true; // Drop these events
+            default:
+                break;
+        }
+    }
+    
+    return false;
+}
+
 void DebugBridge::ProcessEvent(DebugBridgeEvent* event) {
     // This is called from the UI THREAD
     // Safe to touch UI here
+    
+    // Record render timestamp and calculate state age
+    event->renderTimestamp = GetTickCount64();
+    uint64_t stateAgeMs = event->GetStateAgeMs();
+    
+    // Update telemetry
+    m_telemetry.RecordRender(event->sequence, stateAgeMs);
+    
     if (m_eventCallback) {
         m_eventCallback(event);
     }
@@ -76,6 +120,33 @@ void DebugBridge::ProcessEvent(DebugBridgeEvent* event) {
     delete event->registers;
     delete[] event->callStack;
     delete event;
+}
+
+void DebugBridge::LogTelemetrySummary() {
+    uint64_t submitted = m_telemetry.submittedSequence.load();
+    uint64_t rendered = m_telemetry.renderedSequence.load();
+    uint64_t gaps = m_telemetry.GetSequenceGaps();
+    uint64_t dropped = m_telemetry.droppedEvents.load();
+    uint64_t total = m_telemetry.totalEvents.load();
+    uint64_t lastAge = m_telemetry.lastStateAgeMs.load();
+    uint64_t maxAge = m_telemetry.maxStateAgeMs.load();
+    uint64_t arena = m_telemetry.arenaHighWater.load();
+    
+    char buffer[512];
+    snprintf(buffer, sizeof(buffer),
+        "[DebugTelemetry] Submitted: %llu | Rendered: %llu | Gaps: %llu | "
+        "Dropped: %llu | Total: %llu | LastAge: %llums | MaxAge: %llums | Arena: %llu",
+        (unsigned long long)submitted,
+        (unsigned long long)rendered,
+        (unsigned long long)gaps,
+        (unsigned long long)dropped,
+        (unsigned long long)total,
+        (unsigned long long)lastAge,
+        (unsigned long long)maxAge,
+        (unsigned long long)arena);
+    
+    OutputDebugStringA(buffer);
+    OutputDebugStringA("\n");
 }
 
 void DebugBridge::SetEventCallback(EventCallback callback) {

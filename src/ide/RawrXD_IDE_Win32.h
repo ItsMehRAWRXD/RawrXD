@@ -70,6 +70,10 @@
 #define WM_APP_COMPLETION_READY     (WM_APP + 101)
 #define WM_APP_DEBUG_STATE_UPDATE   (WM_APP + 102)
 
+/* ── Debugger Messages ───────────────────────────────────────────────────── */
+#define WM_DEBUG_EVENT              (WM_USER + 100)
+#define WM_DEBUG_UPDATE             (WM_USER + 101)
+
 /* ── Menu IDs ───────────────────────────────────────────────────────────── */
 /* File: 1000-1099 */
 #define IDM_FILE_NEW                1001

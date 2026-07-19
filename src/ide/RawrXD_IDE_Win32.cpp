@@ -10,6 +10,7 @@
  * Compile: cl /W4 /O2 /DUNICODE /D_UNICODE RawrXD_IDE_Win32.cpp
  *               /link user32.lib gdi32.lib comctl32.lib comdlg32.lib
  *                     shell32.lib shlwapi.lib advapi32.lib ole32.lib
+ *                     dbghelp.lib synchronization.lib
  *
  * (C) RawrXD Project — ZERO external dependencies
  *===========================================================================*/
@@ -19,6 +20,7 @@
 #include "IDEDebuggerTypes.h"
 #include "RawrXD_IDE_GhostText_Engine.hpp"
 #include "SovereignInferenceBridge.h"
+#include "IDE_DebuggerIntegration.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -383,6 +385,15 @@ BOOL RawrXD_IDE_Init(RawrXD_IDE* ide, HINSTANCE hInst) {
     } else {
         RawrXD_IDE_OutputAppend(ide, L"[Sovereign] Bridge init failed (using stub)\r\n");
         OutputDebugStringA("[RawrXD] SovereignInferenceBridge initialization failed\n");
+    }
+
+    /* Initialize Debugger Subsystem */
+    if (RawrXD::IDE_InitDebugger(ide->hWndMain)) {
+        RawrXD_IDE_OutputAppend(ide, L"[Debugger] SovereignCDB_Engine initialized\r\n");
+        OutputDebugStringA("[RawrXD] Debugger subsystem initialized\n");
+    } else {
+        RawrXD_IDE_OutputAppend(ide, L"[Debugger] Failed to initialize\r\n");
+        OutputDebugStringA("[RawrXD] Debugger initialization failed\n");
     }
 
     return TRUE;
@@ -879,9 +890,26 @@ LRESULT CALLBACK RawrXD_IDE_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
         }
         return 0;
 
+    case WM_DEBUG_EVENT:
+        /* Debugger event from SovereignCDB_Engine */
+        RawrXD::IDE_HandleDebugEvent(wParam, lParam);
+        return 0;
+
+    case WM_DEBUG_UPDATE:
+        /* Update debug UI panels */
+        RawrXD::IDE_UpdateDebugUI();
+        return 0;
+
     case WM_KEYDOWN:
     {
-        /* Route to GhostTextEngine first - it handles Tab, Esc, Ctrl+Right */
+        /* Route debug keys first (F5, F9, F10, F11, etc.) */
+        bool ctrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+        bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+        if (RawrXD::IDE_HandleDebugKeys((int)wParam, ctrl, shift)) {
+            return 0; /* Consumed by debugger */
+        }
+
+        /* Route to GhostTextEngine - it handles Tab, Esc, Ctrl+Right */
         if (ide->ghostEngine && ide->ghostEngine->HandleKey(wParam)) {
             return 0; /* Consumed by GhostTextEngine */
         }
@@ -923,6 +951,14 @@ LRESULT CALLBACK RawrXD_IDE_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
         /* F12 - Ghost Text Smoke Test */
         if (wParam == VK_F12) {
             RawrXD_IDE_TestGhostText(ide);
+            return 0;
+        }
+        
+        /* Ctrl+B - Output Benchmark Summary */
+        if (wParam == 'B' && ctrl) {
+            extern "C" void SovereignBridge_OutputBenchmarkSummary(void);
+            SovereignBridge_OutputBenchmarkSummary();
+            RawrXD_IDE_OutputAppend(ide, L"[Benchmark] Summary output to debug log\r\n");
             return 0;
         }
 
@@ -1409,6 +1445,11 @@ void RawrXD_IDE_OnCommand(RawrXD_IDE* ide, WORD cmdId, WORD notifyCode, HWND hCt
     case IDM_FILE_RECENT_CLEAR: RawrXD_IDE_ClearRecentFiles(ide); break;
 
     default:
+        /* Route to DebuggerService for any unhandled debug commands */
+        if (RawrXD::IDE_HandleDebugCommand(cmdId)) {
+            return; /* Handled by debugger service */
+        }
+        
         /* Handle dynamic recent file IDs (9000-9009) */
         if (cmdId >= IDM_FILE_RECENT_BASE && cmdId < IDM_FILE_RECENT_BASE + MAX_RECENT_FILES) {
             int idx = cmdId - IDM_FILE_RECENT_BASE;
@@ -1477,6 +1518,10 @@ void RawrXD_IDE_OnDestroy(RawrXD_IDE* ide) {
         ide->ghostEngine = nullptr;
         OutputDebugStringA("[RawrXD] GhostTextEngine shutdown complete\n");
     }
+
+    /* Shutdown Debugger Subsystem */
+    RawrXD::IDE_ShutdownDebugger();
+    OutputDebugStringA("[RawrXD] Debugger subsystem shutdown complete\n");
 
     PostQuitMessage(0);
 }
