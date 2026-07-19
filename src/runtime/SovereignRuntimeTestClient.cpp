@@ -65,11 +65,9 @@ int main(int argc, char* argv[]) {
         RawrXD::Runtime::SovereignRequest req = {};
         req.requestId = testNum;
         req.timestamp = GetTickCount64();
+        req.version = 1;
         req.maxTokens = 32;
         req.temperature = 0.7f;
-        req.topP = 0.9f;
-        req.topK = 40;
-        req.stream = FALSE;
         
         snprintf(req.prompt, sizeof(req.prompt), 
                 "Test prompt number %d: Hello, world!", testNum);

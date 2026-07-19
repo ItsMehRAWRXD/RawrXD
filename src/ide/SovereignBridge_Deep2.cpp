@@ -607,11 +607,14 @@ extern "C" __declspec(dllexport) const char* SovereignBridge_GetStatus(void) {
  * Call this after a test session to get reproducible metrics
  */
 extern "C" __declspec(dllexport) void SovereignBridge_OutputBenchmarkSummary(void) {
+    // Update memory telemetry before output
+    UpdateMemoryTelemetry();
+    
     TraceBridge("[BenchmarkSummary]");
-    TraceBridge("  Model: llama-3.2-8b-Q4_K_M.gguf");
-    TraceBridge("  Quantization: Q4_K_M");
-    TraceBridge("  Backend: Deep2");
-    TraceBridge("  Kernel: Sovereign_Q4KM_AVX512");
+    TraceBridgeF("  Model: %s", g_runtime.modelLoaded ? g_runtime.modelName : "NOT_LOADED");
+    TraceBridgeF("  Quantization: %s", g_runtime.quantization);
+    TraceBridgeF("  Backend: %s", g_runtime.backendName);
+    TraceBridgeF("  Kernel: %s", g_runtime.kernelName);
     
     uint64_t totalReqs = g_bridge.totalRequests.load();
     uint64_t totalToks = g_bridge.totalTokens.load();
@@ -626,10 +629,24 @@ extern "C" __declspec(dllexport) void SovereignBridge_OutputBenchmarkSummary(voi
         TraceBridgeF("  AvgTokensPerRequest: %.1f", avgTokens);
     }
     
-    TraceBridge("  Hardware: Ryzen CPU");
-    TraceBridge("  ContextLength: 8192");
-    TraceBridge("  MaxTokens: 64");
-    TraceBridge("  Temperature: 0.70");
+    // Hardware from live detection
+    TraceBridgeF("  CPU: %s", g_runtime.cpuName);
+    TraceBridgeF("  Cores: %d", g_runtime.cpuCores);
+    TraceBridgeF("  Threads: %d", g_runtime.cpuThreads);
+    TraceBridgeF("  AVX2: %s", g_runtime.hasAVX2 ? "YES" : "NO");
+    TraceBridgeF("  AVX512: %s", g_runtime.hasAVX512 ? "YES" : "NO");
+    TraceBridgeF("  TotalRAM: %llu MB", (unsigned long long)(g_runtime.totalRAM / (1024*1024)));
+    
+    // Memory telemetry
+    TraceBridge("[Memory]");
+    TraceBridgeF("  ModelMB: %llu", (unsigned long long)(g_runtime.modelSizeBytes / (1024*1024)));
+    TraceBridgeF("  PeakWorkingSetMB: %llu", (unsigned long long)(g_runtime.peakWorkingSet / (1024*1024)));
+    TraceBridgeF("  CurrentWorkingSetMB: %llu", (unsigned long long)(g_runtime.currentWorkingSet / (1024*1024)));
+    
+    // Configuration
+    TraceBridgeF("  ContextLength: %d", g_runtime.contextLength);
+    TraceBridgeF("  MaxTokens: %d", MAX_COMPLETION_TOKENS);
+    TraceBridgeF("  Temperature: %.2f", DEFAULT_TEMPERATURE);
     TraceBridge("[EndBenchmarkSummary]");
 }
 
