@@ -167,11 +167,25 @@ function Analyze-Results {
     $submissionRate = if ($duration -gt 0) { $submissionDelta / $duration } else { 0 }
     $renderRate = if ($duration -gt 0) { $renderDelta / $duration } else { 0 }
     
+    # Calculate latency percentiles
+    $sortedLastAge = $Samples | Select-Object -ExpandProperty LastAge | Sort-Object
+    $p50Index = [math]::Floor($sortedLastAge.Count * 0.50)
+    $p95Index = [math]::Floor($sortedLastAge.Count * 0.95)
+    $p99Index = [math]::Floor($sortedLastAge.Count * 0.99)
+    
+    $p50Latency = if ($sortedLastAge.Count -gt 0) { $sortedLastAge[$p50Index] } else { 0 }
+    $p95Latency = if ($sortedLastAge.Count -gt 0) { $sortedLastAge[$p95Index] } else { 0 }
+    $p99Latency = if ($sortedLastAge.Count -gt 0) { $sortedLastAge[$p99Index] } else { 0 }
+    
     $maxLastAge = ($Samples | Measure-Object -Property LastAge -Maximum).Maximum
     $maxMaxAge = ($Samples | Measure-Object -Property MaxAge -Maximum).Maximum
     $finalArena = $lastSample.Arena
     $initialArena = $firstSample.Arena
     $arenaGrowth = if ($initialArena -gt 0) { (($finalArena - $initialArena) / $initialArena) * 100 } else { 0 }
+    
+    # Arena normalization: bytes per 1000 events
+    $totalEvents = $lastSample.Total - $firstSample.Total
+    $arenaPer1000 = if ($totalEvents -gt 0) { ($finalArena / $totalEvents) * 1000 } else { 0 }
     
     $avgDropRate = ($Samples | ForEach-Object { 
         if ($_.Total -gt 0) { ($_.Dropped / $_.Total) * 100 } else { 0 }
@@ -182,10 +196,14 @@ function Analyze-Results {
         Duration = $duration
         AvgSubmissionRate = $submissionRate
         AvgRenderRate = $renderRate
+        P50Latency = $p50Latency
+        P95Latency = $p95Latency
+        P99Latency = $p99Latency
         MaxLastAge = $maxLastAge
         MaxMaxAge = $maxMaxAge
         FinalArena = $finalArena
         ArenaGrowth = $arenaGrowth
+        ArenaPer1000Events = $arenaPer1000
         AvgDropRate = $avgDropRate
     }
 }
@@ -198,6 +216,7 @@ function Test-Thresholds {
     $passFail = @{
         Latency = "PASS"
         MaxLatency = "PASS"
+        P99Latency = "PASS"
         ArenaGrowth = "PASS"
         DropRate = "PASS"
     }
@@ -218,6 +237,15 @@ function Test-Thresholds {
         Write-Metric "MaxAge Threshold" "$($Summary.MaxMaxAge)ms <= ${MaxLatencyThresholdMs}ms" "PASS"
     }
     
+    # Test P99 latency threshold (250ms)
+    $p99Threshold = 250
+    if ($Summary.P99Latency -gt $p99Threshold) {
+        Write-Metric "P99 Latency" "$($Summary.P99Latency)ms > ${p99Threshold}ms" "WARN"
+        $passFail.P99Latency = "WARN"
+    } else {
+        Write-Metric "P99 Latency" "$($Summary.P99Latency)ms <= ${p99Threshold}ms" "PASS"
+    }
+    
     # Test arena growth
     if ($Summary.ArenaGrowth -gt $ArenaGrowthThresholdPercent) {
         Write-Metric "Arena Growth" "$([math]::Round($Summary.ArenaGrowth, 2))% > ${ArenaGrowthThresholdPercent}%" "WARN"
@@ -225,6 +253,9 @@ function Test-Thresholds {
     } else {
         Write-Metric "Arena Growth" "$([math]::Round($Summary.ArenaGrowth, 2))% <= ${ArenaGrowthThresholdPercent}%" "PASS"
     }
+    
+    # Report arena per 1000 events
+    Write-Metric "Arena/1000 Events" "$([math]::Round($Summary.ArenaPer1000Events, 2)) bytes" "INFO"
     
     # Test drop rate (high is OK, but let's report it)
     Write-Metric "Avg Drop Rate" "$([math]::Round($Summary.AvgDropRate, 2))%" "INFO"
@@ -249,9 +280,13 @@ function Generate-Report {
 
 | Metric | Value | Threshold | Status |
 |--------|-------|-----------|--------|
+| P50 Latency | $($Results.Summary.P50Latency)ms | <20ms | $(if ($Results.Summary.P50Latency -lt 20) { "PASS" } else { "WARN" }) |
+| P95 Latency | $($Results.Summary.P95Latency)ms | <100ms | $(if ($Results.Summary.P95Latency -lt 100) { "PASS" } else { "WARN" }) |
+| P99 Latency | $($Results.Summary.P99Latency)ms | <250ms | $($Results.PassFail.P99Latency) |
 | Max LastAge | $($Results.Summary.MaxLastAge)ms | ${LatencyThresholdMs}ms | $($Results.PassFail.Latency) |
 | Max MaxAge | $($Results.Summary.MaxMaxAge)ms | ${MaxLatencyThresholdMs}ms | $($Results.PassFail.MaxLatency) |
 | Arena Growth | $([math]::Round($Results.Summary.ArenaGrowth, 2))% | ${ArenaGrowthThresholdPercent}% | $($Results.PassFail.ArenaGrowth) |
+| Arena/1000 Events | $([math]::Round($Results.Summary.ArenaPer1000Events, 2)) bytes | N/A | INFO |
 | Avg Drop Rate | $([math]::Round($Results.Summary.AvgDropRate, 2))% | N/A | INFO |
 
 ## Detailed Metrics
@@ -261,14 +296,18 @@ function Generate-Report {
 - **Render Rate:** $([math]::Round($Results.Summary.AvgRenderRate, 2)) events/sec
 - **Sample Count:** $($Results.Summary.SampleCount)
 
-### Latency Analysis
-- **Max LastAge:** $($Results.Summary.MaxLastAge)ms
-- **Max MaxAge:** $($Results.Summary.MaxMaxAge)ms
-- **Target LastAge:** < ${LatencyThresholdMs}ms
+### Latency Analysis (Percentiles)
+| Percentile | Latency | Target | Status |
+|------------|---------|--------|--------|
+| P50 | $($Results.Summary.P50Latency)ms | <20ms | $(if ($Results.Summary.P50Latency -lt 20) { "✅" } else { "⚠️" }) |
+| P95 | $($Results.Summary.P95Latency)ms | <100ms | $(if ($Results.Summary.P95Latency -lt 100) { "✅" } else { "⚠️" }) |
+| P99 | $($Results.Summary.P99Latency)ms | <250ms | $(if ($Results.Summary.P99Latency -lt 250) { "✅" } else { "⚠️" }) |
+| Max | $($Results.Summary.MaxMaxAge)ms | <500ms | $(if ($Results.Summary.MaxMaxAge -lt 500) { "✅" } else { "❌" }) |
 
 ### Memory Stability
 - **Final Arena:** $([math]::Round($Results.Summary.FinalArena / 1MB, 2)) MB
 - **Arena Growth:** $([math]::Round($Results.Summary.ArenaGrowth, 2))%
+- **Arena per 1000 Events:** $([math]::Round($Results.Summary.ArenaPer1000Events, 2)) bytes
 - **Target Growth:** < ${ArenaGrowthThresholdPercent}%
 
 ## Interpretation

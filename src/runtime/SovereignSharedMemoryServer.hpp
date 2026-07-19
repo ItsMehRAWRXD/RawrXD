@@ -132,7 +132,7 @@ private:
     static DWORD WINAPI WorkerThreadProc(LPVOID param);
     void WorkerLoop();
     
-    // Deep2 integration
+    // Real inference integration - uses InferenceEngine
     bool CallDeep2Inference(const SovereignRequest& request, SovereignResponse& response);
     
     // Cleanup

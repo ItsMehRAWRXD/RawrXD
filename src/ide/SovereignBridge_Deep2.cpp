@@ -17,6 +17,10 @@
 #include <thread>
 #include <atomic>
 #include <memory>
+#include <ctime>
+
+// GGUF Metadata Parser for audit-grade model verification
+#include "GGUFMetadataParser.h"
 
 // Forward declarations for Deep2/CPUInference engine
 namespace CPUInference {
@@ -103,9 +107,69 @@ struct RuntimeState {
     // Timing
     DWORD   initTime            = 0;
     DWORD   firstTokenTime      = 0;
+    
+    // GGUF Metadata (audit-grade)
+    GGUFMetadata ggufMetadata;
+    char    modelHash[65]       = {0};      // SHA256 of model file
 };
 
 static RuntimeState g_runtime;
+
+/*=============================================================================
+ * BENCHMARK RUN EVIDENCE PACKAGE
+ * Unique ID + Timestamp + Full telemetry
+ *===========================================================================*/
+struct BenchmarkRun {
+    char        runId[64]           = {0};      // VAL-XXX-YYYYMMDD-HHMMSS-XXXX
+    char        timestamp[32]       = {0};      // ISO 8601 format
+    char        runtimeVersion[32]  = {0};      // RawrXD version
+    
+    // Model evidence
+    char        modelPath[512]      = {0};
+    char        modelHash[65]       = {0};      // SHA256
+    char        architecture[64]    = {0};
+    char        quantization[32]    = {0};
+    uint32_t    layers              = 0;
+    uint32_t    contextLength       = 0;
+    
+    // Hardware evidence
+    char        cpuName[128]        = {0};
+    char        kernelName[64]      = {0};
+    bool        hasAVX2             = false;
+    bool        hasAVX512           = false;
+    uint64_t    totalRAM            = 0;
+    
+    // Telemetry
+    uint64_t    totalRequests       = 0;
+    uint64_t    totalTokens         = 0;
+    float       avgLatencyMs        = 0.0f;
+    float       avgTokensPerRequest = 0.0f;
+    size_t      peakWorkingSetMB    = 0;
+    size_t      currentWorkingSetMB = 0;
+};
+
+static void GenerateRunId(char* outId, size_t bufferSize) {
+    // Format: VAL-XXX-YYYYMMDD-HHMMSS-XXXX
+    SYSTEMTIME st;
+    GetSystemTime(&st);
+    
+    // Generate random suffix
+    uint32_t randomSuffix = (uint32_t)(GetTickCount() ^ (uintptr_t)&st);
+    
+    snprintf(outId, bufferSize, "VAL-%03d-%04d%02d%02d-%02d%02d%02d-%04X",
+             (int)(g_bridge.totalRequests.load() % 1000),
+             st.wYear, st.wMonth, st.wDay,
+             st.wHour, st.wMinute, st.wSecond,
+             randomSuffix & 0xFFFF);
+}
+
+static void GetISOTimestamp(char* outTimestamp, size_t bufferSize) {
+    SYSTEMTIME st;
+    GetSystemTime(&st);
+    snprintf(outTimestamp, bufferSize, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+             st.wYear, st.wMonth, st.wDay,
+             st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+}
 
 /*=============================================================================
  * HARDWARE FINGERPRINTING
@@ -316,12 +380,27 @@ static void SovereignBridge_WorkerThread(void) {
 }
 
 /*=============================================================================
- * MODEL LOADING - Live from GGUF
+ * MODEL LOADING - Audit-grade from GGUF metadata
  *===========================================================================*/
 extern "C" __declspec(dllexport) BOOL SovereignBridge_LoadModel(const char* modelPath) {
     if (!modelPath) return FALSE;
     
     TraceBridgeF("Loading model: %s", modelPath);
+    
+    // Parse actual GGUF metadata (audit-grade)
+    if (!GGUF_ParseMetadata(modelPath, &g_runtime.ggufMetadata)) {
+        TraceBridgeF("WARNING: Failed to parse GGUF metadata: %s", g_runtime.ggufMetadata.errorMsg);
+        // Continue with filename-based fallback
+    }
+    
+    // Compute SHA256 hash for model verification
+    TraceBridge("Computing SHA256 hash...");
+    if (ComputeFileSHA256(modelPath, g_runtime.modelHash, sizeof(g_runtime.modelHash))) {
+        TraceBridgeF("SHA256: %.16s...", g_runtime.modelHash); // First 16 chars
+    } else {
+        TraceBridge("WARNING: Failed to compute SHA256 hash");
+        strcpy_s(g_runtime.modelHash, sizeof(g_runtime.modelHash), "COMPUTE_FAILED");
+    }
     
     // Store model file path
     strncpy_s(g_runtime.modelFile, sizeof(g_runtime.modelFile), modelPath, _TRUNCATE);
@@ -332,40 +411,70 @@ extern "C" __declspec(dllexport) BOOL SovereignBridge_LoadModel(const char* mode
     const char* filename = lastSlash > lastBack ? lastSlash + 1 : (lastBack ? lastBack + 1 : modelPath);
     strncpy_s(g_runtime.modelName, sizeof(g_runtime.modelName), filename, _TRUNCATE);
     
-    // Detect quantization from filename
-    if (strstr(filename, "Q4_K_M")) {
-        strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q4_K_M");
-    } else if (strstr(filename, "Q4_0")) {
-        strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q4_0");
-    } else if (strstr(filename, "Q8_0")) {
-        strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q8_0");
+    // Use GGUF metadata if available, otherwise fall back to filename detection
+    if (g_runtime.ggufMetadata.valid) {
+        // Audit-grade: Use actual GGUF metadata
+        if (g_runtime.ggufMetadata.architecture[0]) {
+            strncpy_s(g_runtime.ggufMetadata.modelName, sizeof(g_runtime.ggufMetadata.modelName),
+                     g_runtime.modelName, _TRUNCATE);
+        }
+        
+        g_runtime.numLayers = g_runtime.ggufMetadata.blockCount;
+        g_runtime.contextLength = g_runtime.ggufMetadata.contextLength;
+        strncpy_s(g_runtime.quantization, sizeof(g_runtime.quantization),
+                 g_runtime.ggufMetadata.quantization, _TRUNCATE);
+        
+        TraceBridge("[ModelMetadata] Source: GGUF Header (audit-grade)");
+        TraceBridgeF("  Architecture: %s", g_runtime.ggufMetadata.architecture);
+        TraceBridgeF("  Layers: %u", g_runtime.ggufMetadata.blockCount);
+        TraceBridgeF("  Embedding: %u", g_runtime.ggufMetadata.embeddingLength);
+        TraceBridgeF("  Context: %u", g_runtime.ggufMetadata.contextLength);
+        TraceBridgeF("  TensorCount: %llu", (unsigned long long)g_runtime.ggufMetadata.tensorCount);
     } else {
-        strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "UNKNOWN");
-    }
-    
-    // TODO: Parse actual GGUF metadata for layers, context length, etc.
-    // For now, use defaults based on model name patterns
-    if (strstr(filename, "8b") || strstr(filename, "8B")) {
-        g_runtime.numLayers = 33;
-        g_runtime.contextLength = 8192;
-        g_runtime.modelSizeBytes = 5ULL * 1024 * 1024 * 1024; // ~5GB
-    } else if (strstr(filename, "70b") || strstr(filename, "70B")) {
-        g_runtime.numLayers = 80;
-        g_runtime.contextLength = 8192;
-        g_runtime.modelSizeBytes = 40ULL * 1024 * 1024 * 1024; // ~40GB
-    } else {
-        g_runtime.numLayers = 32;
-        g_runtime.contextLength = 4096;
-        g_runtime.modelSizeBytes = 4ULL * 1024 * 1024 * 1024; // ~4GB
+        // Fallback: Filename-based detection
+        TraceBridge("[ModelMetadata] Source: Filename (fallback)");
+        
+        // Detect quantization from filename
+        if (strstr(filename, "Q4_K_M")) {
+            strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q4_K_M");
+        } else if (strstr(filename, "Q4_0")) {
+            strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q4_0");
+        } else if (strstr(filename, "Q8_0")) {
+            strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q8_0");
+        } else if (strstr(filename, "Q5_K_M")) {
+            strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q5_K_M");
+        } else if (strstr(filename, "Q6_K")) {
+            strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "Q6_K");
+        } else {
+            strcpy_s(g_runtime.quantization, sizeof(g_runtime.quantization), "UNKNOWN");
+        }
+        
+        // Estimate from filename patterns
+        if (strstr(filename, "8b") || strstr(filename, "8B")) {
+            g_runtime.numLayers = 33;
+            g_runtime.contextLength = 8192;
+            g_runtime.modelSizeBytes = 5ULL * 1024 * 1024 * 1024;
+        } else if (strstr(filename, "70b") || strstr(filename, "70B")) {
+            g_runtime.numLayers = 80;
+            g_runtime.contextLength = 8192;
+            g_runtime.modelSizeBytes = 40ULL * 1024 * 1024 * 1024;
+        } else {
+            g_runtime.numLayers = 32;
+            g_runtime.contextLength = 4096;
+            g_runtime.modelSizeBytes = 4ULL * 1024 * 1024 * 1024;
+        }
     }
     
     g_runtime.modelLoaded = true;
     g_runtime.initTime = GetTickCount();
     
-    // Set kernel name based on quantization
+    // Set kernel name based on quantization and ISA
     if (strcmp(g_runtime.quantization, "Q4_K_M") == 0) {
         strcpy_s(g_runtime.kernelName, sizeof(g_runtime.kernelName), 
                 g_runtime.hasAVX512 ? "Sovereign_Q4KM_AVX512" : "Sovereign_Q4KM_AVX2");
+    } else if (strcmp(g_runtime.quantization, "Q5_K_M") == 0) {
+        strcpy_s(g_runtime.kernelName, sizeof(g_runtime.kernelName), 
+                g_runtime.hasAVX512 ? "Sovereign_Q5KM_AVX512" : "Sovereign_Q5KM_AVX2");
     } else {
         strcpy_s(g_runtime.kernelName, sizeof(g_runtime.kernelName), "Sovereign_Generic");
     }
@@ -376,6 +485,7 @@ extern "C" __declspec(dllexport) BOOL SovereignBridge_LoadModel(const char* mode
     TraceBridgeF("Quantization: %s", g_runtime.quantization);
     TraceBridgeF("Layers: %d", g_runtime.numLayers);
     TraceBridgeF("Context: %d", g_runtime.contextLength);
+    TraceBridgeF("Kernel: %s", g_runtime.kernelName);
     
     return TRUE;
 }
@@ -610,44 +720,70 @@ extern "C" __declspec(dllexport) void SovereignBridge_OutputBenchmarkSummary(voi
     // Update memory telemetry before output
     UpdateMemoryTelemetry();
     
-    TraceBridge("[BenchmarkSummary]");
-    TraceBridgeF("  Model: %s", g_runtime.modelLoaded ? g_runtime.modelName : "NOT_LOADED");
-    TraceBridgeF("  Quantization: %s", g_runtime.quantization);
-    TraceBridgeF("  Backend: %s", g_runtime.backendName);
-    TraceBridgeF("  Kernel: %s", g_runtime.kernelName);
+    // Generate unique evidence package
+    BenchmarkRun run;
+    GenerateRunId(run.runId, sizeof(run.runId));
+    GetISOTimestamp(run.timestamp, sizeof(run.timestamp));
+    strcpy_s(run.runtimeVersion, sizeof(run.runtimeVersion), "RawrXD-14.7.3");
     
-    uint64_t totalReqs = g_bridge.totalRequests.load();
-    uint64_t totalToks = g_bridge.totalTokens.load();
-    float avgLat = g_bridge.avgLatencyMs.load();
+    // Model evidence (from GGUF metadata)
+    strncpy_s(run.modelPath, sizeof(run.modelPath), g_runtime.modelFile, _TRUNCATE);
+    strncpy_s(run.modelHash, sizeof(run.modelHash), g_runtime.modelHash, _TRUNCATE);
+    strncpy_s(run.architecture, sizeof(run.architecture), 
+              g_runtime.ggufMetadata.architecture, _TRUNCATE);
+    strncpy_s(run.quantization, sizeof(run.quantization), g_runtime.quantization, _TRUNCATE);
+    run.layers = g_runtime.numLayers;
+    run.contextLength = g_runtime.contextLength;
     
-    TraceBridgeF("  TotalRequests: %llu", (unsigned long long)totalReqs);
-    TraceBridgeF("  TotalTokens: %llu", (unsigned long long)totalToks);
-    TraceBridgeF("  AvgLatencyMs: %.2f", avgLat);
+    // Hardware evidence (from live detection)
+    strncpy_s(run.cpuName, sizeof(run.cpuName), g_runtime.cpuName, _TRUNCATE);
+    strncpy_s(run.kernelName, sizeof(run.kernelName), g_runtime.kernelName, _TRUNCATE);
+    run.hasAVX2 = g_runtime.hasAVX2;
+    run.hasAVX512 = g_runtime.hasAVX512;
+    run.totalRAM = g_runtime.totalRAM;
     
-    if (totalReqs > 0) {
-        float avgTokens = (float)totalToks / (float)totalReqs;
-        TraceBridgeF("  AvgTokensPerRequest: %.1f", avgTokens);
+    // Telemetry (from actual execution)
+    run.totalRequests = g_bridge.totalRequests.load();
+    run.totalTokens = g_bridge.totalTokens.load();
+    run.avgLatencyMs = g_bridge.avgLatencyMs.load();
+    if (run.totalRequests > 0) {
+        run.avgTokensPerRequest = (float)run.totalTokens / (float)run.totalRequests;
     }
+    run.peakWorkingSetMB = g_runtime.peakWorkingSet / (1024*1024);
+    run.currentWorkingSetMB = g_runtime.currentWorkingSet / (1024*1024);
     
-    // Hardware from live detection
-    TraceBridgeF("  CPU: %s", g_runtime.cpuName);
-    TraceBridgeF("  Cores: %d", g_runtime.cpuCores);
-    TraceBridgeF("  Threads: %d", g_runtime.cpuThreads);
-    TraceBridgeF("  AVX2: %s", g_runtime.hasAVX2 ? "YES" : "NO");
-    TraceBridgeF("  AVX512: %s", g_runtime.hasAVX512 ? "YES" : "NO");
-    TraceBridgeF("  TotalRAM: %llu MB", (unsigned long long)(g_runtime.totalRAM / (1024*1024)));
+    // Output evidence package
+    TraceBridge("[BenchmarkEvidencePackage]");
+    TraceBridgeF("  RunId: %s", run.runId);
+    TraceBridgeF("  Timestamp: %s", run.timestamp);
+    TraceBridgeF("  RuntimeVersion: %s", run.runtimeVersion);
     
-    // Memory telemetry
-    TraceBridge("[Memory]");
-    TraceBridgeF("  ModelMB: %llu", (unsigned long long)(g_runtime.modelSizeBytes / (1024*1024)));
-    TraceBridgeF("  PeakWorkingSetMB: %llu", (unsigned long long)(g_runtime.peakWorkingSet / (1024*1024)));
-    TraceBridgeF("  CurrentWorkingSetMB: %llu", (unsigned long long)(g_runtime.currentWorkingSet / (1024*1024)));
+    TraceBridge("  [ModelEvidence]");
+    TraceBridgeF("    Source: %s", g_runtime.ggufMetadata.valid ? "GGUF Header" : "Filename Fallback");
+    TraceBridgeF("    ModelPath: %s", run.modelPath);
+    TraceBridgeF("    ModelHash: %s", run.modelHash);
+    TraceBridgeF("    Architecture: %s", run.architecture[0] ? run.architecture : "unknown");
+    TraceBridgeF("    Quantization: %s", run.quantization);
+    TraceBridgeF("    Layers: %u", run.layers);
+    TraceBridgeF("    ContextLength: %u", run.contextLength);
     
-    // Configuration
-    TraceBridgeF("  ContextLength: %d", g_runtime.contextLength);
-    TraceBridgeF("  MaxTokens: %d", MAX_COMPLETION_TOKENS);
-    TraceBridgeF("  Temperature: %.2f", DEFAULT_TEMPERATURE);
-    TraceBridge("[EndBenchmarkSummary]");
+    TraceBridge("  [HardwareEvidence]");
+    TraceBridgeF("    Source: CPUID + Registry");
+    TraceBridgeF("    CPU: %s", run.cpuName);
+    TraceBridgeF("    Kernel: %s", run.kernelName);
+    TraceBridgeF("    AVX2: %s", run.hasAVX2 ? "YES" : "NO");
+    TraceBridgeF("    AVX512: %s", run.hasAVX512 ? "YES" : "NO");
+    TraceBridgeF("    TotalRAM: %llu MB", (unsigned long long)(run.totalRAM / (1024*1024)));
+    
+    TraceBridge("  [MeasuredTelemetry]");
+    TraceBridgeF("    TotalRequests: %llu", (unsigned long long)run.totalRequests);
+    TraceBridgeF("    TotalTokens: %llu", (unsigned long long)run.totalTokens);
+    TraceBridgeF("    AvgLatencyMs: %.2f", run.avgLatencyMs);
+    TraceBridgeF("    AvgTokensPerRequest: %.1f", run.avgTokensPerRequest);
+    TraceBridgeF("    PeakWorkingSetMB: %llu", (unsigned long long)run.peakWorkingSetMB);
+    TraceBridgeF("    CurrentWorkingSetMB: %llu", (unsigned long long)run.currentWorkingSetMB);
+    
+    TraceBridge("[EndBenchmarkEvidencePackage]");
 }
 
 /*=============================================================================

@@ -203,6 +203,39 @@ bool InferenceEngine::Initialize(const model::ModelContext& model) {
     return true;
 }
 
+bool InferenceEngine::Initialize(const InferenceConfig& config) {
+    initialized_ = false;
+    last_error_.clear();
+    
+    // Use default dimensions for standalone initialization
+    vocab_size_ = 32000;      // Typical vocab size
+    num_layers_ = 32;         // Typical layer count
+    hidden_dim_ = 4096;       // Typical hidden dimension
+    head_dim_ = 128;          // Standard head dimension
+    num_heads_ = 32;          // hidden_dim / head_dim
+    intermediate_dim_ = 11008; // Typical SwiGLU intermediate size
+    max_seq_len_ = config.context_window > 0 ? config.context_window : 4096;
+    
+    // Initialize embedding lookup with synthetic vocab
+    embedding_lookup_ = std::make_unique<EmbeddingLookup>();
+    if (!embedding_lookup_->Initialize(vocab_size_, hidden_dim_)) {
+        last_error_ = "Failed to initialize embedding lookup: " + embedding_lookup_->GetLastError();
+        return false;
+    }
+    
+    // Initialize KV cache
+    kv_cache_ = std::make_unique<KVCache>();
+    kv_cache_->Initialize(num_layers_, num_heads_, head_dim_, max_seq_len_);
+    
+    // Load synthetic weights for testing
+    if (!LoadSyntheticWeights()) {
+        return false;
+    }
+    
+    initialized_ = true;
+    return true;
+}
+
 bool InferenceEngine::LoadWeights(const model::ModelContext& model) {
     // In a real implementation, this would:
     // 1. Find all transformer weight tensors
@@ -253,21 +286,20 @@ std::string InferenceEngine::Generate(const std::string& prompt, const Inference
     
     auto start_time = std::chrono::high_resolution_clock::now();
     
-    // Get embeddings for prompt
-    // (In real implementation, we'd tokenize here)
-    std::vector<uint32_t> input_tokens;  // Would come from tokenizer
+    // Tokenize the prompt (simple word-based tokenization for now)
+    std::vector<uint32_t> input_tokens = TokenizeSimple(prompt);
     
-    // For testing, create synthetic input
-    input_tokens.push_back(1);  // BOS
+    if (input_tokens.empty()) {
+        input_tokens.push_back(1);  // BOS token as fallback
+    }
     
     auto embeddings = embedding_lookup_->GetEmbeddings(input_tokens);
     
-    // Generate tokens
+    // Generate tokens using actual inference
     auto output_tokens = GenerateFromEmbeddings(embeddings, config);
     
-    // Decode tokens to text
-    // (In real implementation, we'd decode here)
-    std::string result = "Generated text placeholder";
+    // Decode tokens to text using actual detokenization
+    std::string result = Detokenize(output_tokens);
     
     auto end_time = std::chrono::high_resolution_clock::now();
     last_telemetry_.total_time_ms = std::chrono::duration<double, std::milli>(

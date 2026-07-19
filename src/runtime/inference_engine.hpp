@@ -109,6 +109,11 @@ public:
     bool Initialize(const model::ModelContext& model);
     
     /**
+     * Initialize with config only (creates minimal model context).
+     */
+    bool Initialize(const InferenceConfig& config);
+    
+    /**
      * Check if initialized.
      */
     bool IsInitialized() const { return initialized_; }
