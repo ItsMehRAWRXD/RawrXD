@@ -13,11 +13,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Ensure Windows SDK is in include path
-if "%WindowsSdkDir%"=="" (
-    set WindowsSdkDir=C:\Program Files (x86)\Windows Kits\10\
-)
-set INCLUDE=%WindowsSdkDir%Include\10.0.26100.0\um;%WindowsSdkDir%Include\10.0.26100.0\shared;%INCLUDE%
+REM Windows SDK paths - add um directory for windows.h
+set "INCLUDE=%INCLUDE%;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um"
 
 echo ============================================================================
 echo Fix 5A: KV Cache Layout Rewrite Build
@@ -27,7 +24,9 @@ echo.
 echo Compiler:
 where cl
 echo.
-echo Windows SDK:
+echo INCLUDE path:
+echo %INCLUDE%
+echo.
 echo %WindowsSdkDir%
 echo.
 

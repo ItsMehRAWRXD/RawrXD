@@ -71,25 +71,26 @@ WeightLoop:
     ; Load byte containing 2 weights
     movzx   r11d, byte ptr [r8 + r10]
     
-    ; Process lower nibble (weight 0)
-    mov     r12d, r11d
-    and     r12d, 0Fh             ; Lower 4 bits
-    sub     r12d, 8               ; Center: 0-15 -> -8 to +7
-    cvtsi2ss xmm2, r12d           ; Convert to float
+    ; Process lower nibble (weight 0) - use r15d as temp (r15 is preserved but we can use lower 32 bits)
+    mov     r15d, r11d
+    and     r15d, 0Fh             ; Lower 4 bits
+    sub     r15d, 8               ; Center: 0-15 -> -8 to +7
+    cvtsi2ss xmm2, r15d           ; Convert to float
     mulss   xmm2, xmm1            ; Scale
-    movss   xmm3, dword ptr [rbp] ; Load activation
+    movss   xmm3, dword ptr [rbp] ; Load activation[0]
     mulss   xmm2, xmm3            ; Multiply
     addss   xmm0, xmm2            ; Accumulate
     
     ; Process upper nibble (weight 1)
-    shr     r11d, 4               ; Upper 4 bits
-    and     r11d, 0Fh
-    sub     r11d, 8               ; Center
-    cvtsi2ss xmm2, r11d
+    mov     r15d, r11d
+    shr     r15d, 4               ; Upper 4 bits
+    and     r15d, 0Fh
+    sub     r15d, 8               ; Center
+    cvtsi2ss xmm2, r15d           ; Convert to float
     mulss   xmm2, xmm1            ; Scale
-    movss   xmm3, dword ptr [rbp + 4] ; Next activation
-    mulss   xmm2, xmm3
-    addss   xmm0, xmm2
+    movss   xmm3, dword ptr [rbp + 4] ; Load activation[1]
+    mulss   xmm2, xmm3            ; Multiply
+    addss   xmm0, xmm2            ; Accumulate
     
     add     rbp, 8                ; 2 activations * 4 bytes
     inc     r10
@@ -163,18 +164,19 @@ WeightLoop_5K:
     cmp     r10, r9
     jge     WeightDone_5K
     movzx   r11d, byte ptr [r8 + r10]
-    mov     r12d, r11d
-    and     r12d, 0Fh
-    sub     r12d, 8
-    cvtsi2ss xmm2, r12d
+    mov     eax, r11d
+    and     eax, 0Fh
+    sub     eax, 8
+    cvtsi2ss xmm2, eax
     mulss   xmm2, xmm1
     movss   xmm3, dword ptr [rbp]
     mulss   xmm2, xmm3
     addss   xmm0, xmm2
-    shr     r11d, 4
-    and     r11d, 0Fh
-    sub     r11d, 8
-    cvtsi2ss xmm2, r11d
+    mov     eax, r11d
+    shr     eax, 4
+    and     eax, 0Fh
+    sub     eax, 8
+    cvtsi2ss xmm2, eax
     mulss   xmm2, xmm1
     movss   xmm3, dword ptr [rbp + 4]
     mulss   xmm2, xmm3
@@ -267,10 +269,11 @@ WeightLoop_Dyn:
     movss   xmm3, dword ptr [rbp]
     mulss   xmm2, xmm3
     addss   xmm0, xmm2
-    shr     r11d, 4
-    and     r11d, 0Fh
-    sub     r11d, 8
-    cvtsi2ss xmm2, r11d
+    mov     eax, r11d
+    shr     eax, 4
+    and     eax, 0Fh
+    sub     eax, 8
+    cvtsi2ss xmm2, eax
     mulss   xmm2, xmm1
     movss   xmm3, dword ptr [rbp + 4]
     mulss   xmm2, xmm3

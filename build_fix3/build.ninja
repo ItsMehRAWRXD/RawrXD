@@ -7967,6 +7967,49 @@ build bin\Fix4_FlashAttention_Benchmark.exe: CXX_EXECUTABLE_LINKER__Fix4_FlashAt
   TARGET_SUPPORT_DIR = CMakeFiles\Fix4_FlashAttention_Benchmark.dir
 
 # =============================================================================
+# Object build statements for EXECUTABLE target Fix5_FusedQuantized_Benchmark
+
+
+#############################################
+# Order-only phony target for Fix5_FusedQuantized_Benchmark
+
+build cmake_object_order_depends_target_Fix5_FusedQuantized_Benchmark: phony || .
+
+build CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\src\benchmark\Fix5_FusedQuantized_Benchmark.cpp.obj: CXX_COMPILER__Fix5_FusedQuantized_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\Fix5_FusedQuantized_Benchmark.cpp || cmake_object_order_depends_target_Fix5_FusedQuantized_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\
+  TARGET_PDB = bin\Fix5_FusedQuantized_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target Fix5_FusedQuantized_Benchmark
+
+
+#############################################
+# Link the executable bin\Fix5_FusedQuantized_Benchmark.exe
+
+build bin\Fix5_FusedQuantized_Benchmark.exe: CXX_EXECUTABLE_LINKER__Fix5_FusedQuantized_Benchmark_Release CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\src\benchmark\Fix5_FusedQuantized_Benchmark.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\
+  TARGET_FILE = bin\Fix5_FusedQuantized_Benchmark.exe
+  TARGET_IMPLIB = Fix5_FusedQuantized_Benchmark.lib
+  TARGET_PDB = bin\Fix5_FusedQuantized_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+
+# =============================================================================
 # Object build statements for EXECUTABLE target RawrXD-TpsSmoke
 
 
@@ -12661,6 +12704,10 @@ build Fix3_NHWC_Benchmark.exe: phony bin\Fix3_NHWC_Benchmark.exe
 build Fix4_FlashAttention_Benchmark: phony bin\Fix4_FlashAttention_Benchmark.exe
 
 build Fix4_FlashAttention_Benchmark.exe: phony bin\Fix4_FlashAttention_Benchmark.exe
+
+build Fix5_FusedQuantized_Benchmark: phony bin\Fix5_FusedQuantized_Benchmark.exe
+
+build Fix5_FusedQuantized_Benchmark.exe: phony bin\Fix5_FusedQuantized_Benchmark.exe
 
 build InferenceEngine: phony InferenceEngine.lib
 
