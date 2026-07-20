@@ -49,10 +49,10 @@ QuantizedMatMul_Fused_4K PROC FRAME
     xor     rbx, rbx              ; RBX = row index
 
 RowLoop:
-    ; Calculate weights pointer for this row: weights + row * blocks_per_row * block_size
+    ; Calculate weights pointer for this row: weights + row * bytes_per_row
+    ; bytes_per_row = blocks_per_row * block_size = 128 * 18 = 2304
     mov     rax, rbx
-    imul    rax, r13              ; RAX = row * blocks_per_row
-    imul    rax, Q4_0_BLOCK_SIZE  ; RAX = row * blocks_per_row * block_size
+    imul    rax, 2304             ; RAX = row * bytes_per_row
     mov     r15, rsi
     add     r15, rax              ; R15 = weights pointer for this row
     

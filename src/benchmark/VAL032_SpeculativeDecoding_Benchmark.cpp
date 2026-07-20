@@ -157,6 +157,8 @@ bool TestTreeAttentionCorrectness() {
     mask.BuildFromBranches(branches.data(), static_cast<uint32_t>(branches.size()));
     
     // Verify tree structure
+    // Tree: root(0) -> A(1), B(2); A(1) -> C(3); B(2) -> D(4)
+    // Note: C(3) and D(4) are NOT siblings (different parents: 1 vs 2)
     bool structureOk = true;
     
     // Root can attend to itself
@@ -165,14 +167,17 @@ bool TestTreeAttentionCorrectness() {
     // A (1) can attend to root (0), itself, and sibling B (2) for comparison
     structureOk &= mask.CanAttend(1, 0);
     structureOk &= mask.CanAttend(1, 1);
-    structureOk &= mask.CanAttend(1, 2); // A CAN attend to B (sibling comparison)
+    structureOk &= mask.CanAttend(1, 2); // A CAN attend to B (siblings, same parent=0)
     
-    // C (3) can attend to A (1), root (0), itself, and sibling D (4)
-    structureOk &= mask.CanAttend(3, 0);
-    structureOk &= mask.CanAttend(3, 1);
-    structureOk &= mask.CanAttend(3, 3);
-    structureOk &= mask.CanAttend(3, 4); // C CAN attend to D (sibling comparison)
-    // C cannot attend to B (different branch, not sibling)
+    // C (3) can attend to A (1), root (0), and itself
+    // C's parent is A(1), depth=2
+    structureOk &= mask.CanAttend(3, 0);  // C can attend to root
+    structureOk &= mask.CanAttend(3, 1);  // C can attend to parent A
+    structureOk &= mask.CanAttend(3, 3);  // C can attend to itself
+    // C(3) and D(4) are NOT siblings (different parents: 1 vs 2)
+    // So C should NOT be able to attend to D
+    structureOk &= !mask.CanAttend(3, 4); // C cannot attend to D (not siblings)
+    // C cannot attend to B (different branch)
     structureOk &= !mask.CanAttend(3, 2);
     
     // Check ancestors
@@ -183,6 +188,20 @@ bool TestTreeAttentionCorrectness() {
     printf("  Max depth: %u\n", mask.GetMaxDepth());
     printf("  Structure valid: %s\n", structureOk ? "YES" : "NO");
     printf("  Ancestors correct: %s\n", ancestorsOk ? "YES" : "NO");
+    
+    // Debug: print which checks failed
+    if (!structureOk) {
+        printf("  Debug: Checking individual CanAttend results...\n");
+        printf("    CanAttend(0,0)=%d (expected 1)\n", mask.CanAttend(0, 0) ? 1 : 0);
+        printf("    CanAttend(1,0)=%d (expected 1)\n", mask.CanAttend(1, 0) ? 1 : 0);
+        printf("    CanAttend(1,1)=%d (expected 1)\n", mask.CanAttend(1, 1) ? 1 : 0);
+        printf("    CanAttend(1,2)=%d (expected 1, siblings can compare)\n", mask.CanAttend(1, 2) ? 1 : 0);
+        printf("    CanAttend(3,0)=%d (expected 1)\n", mask.CanAttend(3, 0) ? 1 : 0);
+        printf("    CanAttend(3,1)=%d (expected 1)\n", mask.CanAttend(3, 1) ? 1 : 0);
+        printf("    CanAttend(3,3)=%d (expected 1)\n", mask.CanAttend(3, 3) ? 1 : 0);
+        printf("    CanAttend(3,4)=%d (expected 1, siblings can compare)\n", mask.CanAttend(3, 4) ? 1 : 0);
+        printf("    CanAttend(3,2)=%d (expected 0, different branch)\n", mask.CanAttend(3, 2) ? 1 : 0);
+    }
     
     bool pass = structureOk && ancestorsOk;
     printf("  [%s] Tree Attention correctness test\n", pass ? "PASS" : "FAIL");
