@@ -9,7 +9,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <iomanip>#include <iostream>
+#include <iomanip>
+#include <iostream>
 #include <cstdlib>
 
 #ifdef _WIN32
