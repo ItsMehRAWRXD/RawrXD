@@ -28,12 +28,120 @@
 #include "SovereignRPC_Scheduler.hpp"
 #include "SovereignRPC_AdmissionController.hpp"
 #include <vector>
+#include <atomic>
+#include <cstdint>
 #include <string>
 #include <memory>
 #include <random>
 
 namespace RawrXD {
 namespace RPC {
+
+/*===========================================================================
+ * Cycle-Accurate Telemetry (RDTSC-based)
+ * Zero-dependency timing for lease handshake latency measurement
+ *===========================================================================*/
+
+// RDTSC intrinsic - single instruction, zero syscall overhead
+#ifdef _MSC_VER
+#include <intrin.h>
+inline uint64_t GetTscTimestamp() { return __rdtsc(); }
+#else
+inline uint64_t GetTscTimestamp() {
+    uint64_t tsc;
+    __asm__ volatile ("rdtsc" : "=A"(tsc));
+    return tsc;
+}
+#endif
+
+// Convert TSC to microseconds (calibrated at startup)
+struct TscCalibration {
+    uint64_t tscFrequency;  // TSC ticks per second
+    double tscToUs;         // Multiplier to convert TSC delta to microseconds
+
+    static TscCalibration& Instance() {
+        static TscCalibration cal;
+        return cal;
+    }
+
+    void Calibrate() {
+        // Calibrate using std::chrono as reference
+        auto t1 = std::chrono::high_resolution_clock::now();
+        uint64_t tsc1 = GetTscTimestamp();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        uint64_t tsc2 = GetTscTimestamp();
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        uint64_t tscDelta = tsc2 - tsc1;
+        auto usDelta = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+
+        tscFrequency = (tscDelta * 1000000ULL) / usDelta;
+        tscToUs = 1000000.0 / static_cast<double>(tscFrequency);
+    }
+
+    double ToMicroseconds(uint64_t tscDelta) const {
+        return static_cast<double>(tscDelta) * tscToUs;
+    }
+};
+
+// Telemetry captured per lease lifecycle
+struct LeaseTelemetry {
+    uint64_t leaseId;
+    std::string nodeId;
+
+    // Key timing points (TSC cycles)
+    uint64_t t_requestSent;      // Before RequestLease()
+    uint64_t t_grantReceived;    // After RequestLease() returns
+    uint64_t t_execStart;        // Before ExecuteWithLease()
+    uint64_t t_execComplete;     // After ExecuteWithLease() returns
+
+    // Derived metrics (computed at completion)
+    double handshakeLatencyUs;   // grant - request
+    double execLatencyUs;        // complete - start
+    double totalLatencyUs;         // complete - request
+
+    bool success;
+    bool wasFallback;
+    uint64_t reservedVRAM_MB;
+};
+
+/*===========================================================================
+ * Lock-Free Telemetry Ring Buffer
+ * Single-producer (lease thread), single-consumer (telemetry thread)
+ *===========================================================================*/
+#ifndef TELEMETRY_BUFFER_SIZE
+#define TELEMETRY_BUFFER_SIZE 1024  // Must be power of 2
+#endif
+
+class TelemetryRingBuffer {
+public:
+    static TelemetryRingBuffer& Instance();
+
+    void Initialize();
+
+    // Producer: Push telemetry record
+    // Returns false if buffer full (record dropped)
+    bool Push(const LeaseTelemetry& record);
+
+    // Consumer: Pop telemetry record
+    // Returns false if buffer empty
+    bool Pop(LeaseTelemetry& record);
+
+    // Get current occupancy
+    size_t GetCount() const;
+    size_t GetDroppedCount() const { return droppedCount_; }
+
+    // Drain all records to callback
+    void Drain(void (*callback)(const LeaseTelemetry&));
+
+private:
+    TelemetryRingBuffer() = default;
+
+    LeaseTelemetry buffer_[TELEMETRY_BUFFER_SIZE];
+    std::atomic<size_t> writeIdx_{0};
+    std::atomic<size_t> readIdx_{0};
+    std::atomic<size_t> droppedCount_{0};
+};
 
 /*===========================================================================
  * Lease-Based Reservation System
@@ -50,6 +158,9 @@ struct Lease {
     Deep2::QuantType format;
     bool isActive;
     std::chrono::steady_clock::time_point grantedTime;
+
+    // Telemetry for this lease
+    LeaseTelemetry telemetry;
 };
 
 /*===========================================================================
@@ -76,14 +187,19 @@ struct SimulatedNode {
     bool LoadModel(const std::string& modelHash, Deep2::QuantType format);
     bool UnloadModel(const std::string& modelHash);
 
-    // Lease-based reservation (NEW)
+    // Lease-based reservation with telemetry
     // Returns lease ID (0 = denied)
+    // telemetryOut is populated with timing data
     uint64_t RequestLease(const std::string& modelHash,
                           Deep2::QuantType format,
-                          uint64_t requiredVRAM_MB);
+                          uint64_t requiredVRAM_MB,
+                          LeaseTelemetry* telemetryOut = nullptr);
     bool ExecuteWithLease(uint64_t leaseId, const InferenceRequest& request);
     void ReleaseLease(uint64_t leaseId);
     void CleanupExpiredLeases(uint32_t maxAgeSeconds = 30);
+
+    // Get telemetry for completed leases
+    void GetLeaseTelemetry(std::vector<LeaseTelemetry>& out) const;
 
     // Simulate inference (legacy - for comparison)
     struct SimulatedResult {
@@ -177,6 +293,20 @@ public:
     };
     LeaseExecutionResult ExecuteWithLease(const std::string& nodeId,
                                           const InferenceRequest& request);
+
+    // Telemetry reporting
+    struct TelemetrySummary {
+        double avgHandshakeLatencyUs;
+        double p95HandshakeLatencyUs;
+        double avgExecLatencyUs;
+        double avgTotalLatencyUs;
+        uint64_t totalLeases;
+        uint64_t deniedLeases;
+        uint64_t fallbackLeases;
+    };
+    TelemetrySummary GetTelemetrySummary() const;
+    void PrintTelemetryReport() const;
+    void ExportTelemetryCSV(const std::string& filename) const;
 
 private:
     RPCSimulator() = default;

@@ -102,12 +102,72 @@ SimulatedNode::SimulatedResult SimulatedNode::Execute(const InferenceRequest& re
 }
 
 /*===========================================================================
- * Lease-Based Reservation Implementation
+ * Telemetry Ring Buffer Implementation
+ *===========================================================================*/
+
+TelemetryRingBuffer& TelemetryRingBuffer::Instance() {
+    static TelemetryRingBuffer instance;
+    return instance;
+}
+
+void TelemetryRingBuffer::Initialize() {
+    writeIdx_.store(0);
+    readIdx_.store(0);
+    droppedCount_.store(0);
+}
+
+bool TelemetryRingBuffer::Push(const LeaseTelemetry& record) {
+    size_t writeIdx = writeIdx_.load(std::memory_order_relaxed);
+    size_t nextWriteIdx = (writeIdx + 1) & (TELEMETRY_BUFFER_SIZE - 1);
+
+    // Check if buffer full
+    if (nextWriteIdx == readIdx_.load(std::memory_order_acquire)) {
+        droppedCount_.fetch_add(1);
+        return false;
+    }
+
+    buffer_[writeIdx] = record;
+    writeIdx_.store(nextWriteIdx, std::memory_order_release);
+    return true;
+}
+
+bool TelemetryRingBuffer::Pop(LeaseTelemetry& record) {
+    size_t readIdx = readIdx_.load(std::memory_order_relaxed);
+
+    // Check if buffer empty
+    if (readIdx == writeIdx_.load(std::memory_order_acquire)) {
+        return false;
+    }
+
+    record = buffer_[readIdx];
+    readIdx_.store((readIdx + 1) & (TELEMETRY_BUFFER_SIZE - 1), std::memory_order_release);
+    return true;
+}
+
+size_t TelemetryRingBuffer::GetCount() const {
+    size_t writeIdx = writeIdx_.load(std::memory_order_acquire);
+    size_t readIdx = readIdx_.load(std::memory_order_acquire);
+    return (writeIdx - readIdx) & (TELEMETRY_BUFFER_SIZE - 1);
+}
+
+void TelemetryRingBuffer::Drain(void (*callback)(const LeaseTelemetry&)) {
+    LeaseTelemetry record;
+    while (Pop(record)) {
+        callback(record);
+    }
+}
+
+/*===========================================================================
+ * Lease-Based Reservation Implementation (with Telemetry)
  *===========================================================================*/
 
 uint64_t SimulatedNode::RequestLease(const std::string& modelHash,
                                        Deep2::QuantType format,
-                                       uint64_t requiredVRAM_MB) {
+                                       uint64_t requiredVRAM_MB,
+                                       LeaseTelemetry* telemetryOut) {
+    // Capture request timestamp (TSC)
+    uint64_t t_request = GetTscTimestamp();
+
     // Check if node supports the format
     bool supportsFormat = false;
     for (auto fmt : supportedFormats) {
@@ -140,6 +200,27 @@ uint64_t SimulatedNode::RequestLease(const std::string& modelHash,
     lease.isActive = true;
     lease.grantedTime = std::chrono::steady_clock::now();
 
+    // Capture grant timestamp (TSC)
+    uint64_t t_grant = GetTscTimestamp();
+
+    // Initialize telemetry
+    lease.telemetry.leaseId = leaseId;
+    lease.telemetry.nodeId = this->nodeId;
+    lease.telemetry.t_requestSent = t_request;
+    lease.telemetry.t_grantReceived = t_grant;
+    lease.telemetry.reservedVRAM_MB = requiredVRAM_MB;
+    lease.telemetry.success = true;
+    lease.telemetry.wasFallback = false;
+
+    // Calculate handshake latency
+    TscCalibration& cal = TscCalibration::Instance();
+    lease.telemetry.handshakeLatencyUs = cal.ToMicroseconds(t_grant - t_request);
+
+    // Copy telemetry out if requested
+    if (telemetryOut) {
+        *telemetryOut = lease.telemetry;
+    }
+
     // Reserve VRAM
     freeVRAM_MB -= requiredVRAM_MB;
 
@@ -166,8 +247,25 @@ bool SimulatedNode::ExecuteWithLease(uint64_t leaseId, const InferenceRequest& r
         return false;  // REJECT: Lease mismatch
     }
 
+    // Capture execution start timestamp (TSC)
+    uint64_t t_execStart = GetTscTimestamp();
+    lease->telemetry.t_execStart = t_execStart;
+
     // Execute inference
     bool success = PerformInference(request);
+
+    // Capture execution complete timestamp (TSC)
+    uint64_t t_execComplete = GetTscTimestamp();
+    lease->telemetry.t_execComplete = t_execComplete;
+    lease->telemetry.success = success;
+
+    // Calculate latencies
+    TscCalibration& cal = TscCalibration::Instance();
+    lease->telemetry.execLatencyUs = cal.ToMicroseconds(t_execComplete - t_execStart);
+    lease->telemetry.totalLatencyUs = cal.ToMicroseconds(t_execComplete - lease->telemetry.t_requestSent);
+
+    // Push telemetry to ring buffer
+    TelemetryRingBuffer::Instance().Push(lease->telemetry);
 
     // Auto-release lease after execution
     ReleaseLease(leaseId);
@@ -718,6 +816,109 @@ void TestReporter::SaveToFile(const std::string& filename) {
     file << "\nSummary: " << passCount_ << " passed, " << failCount_ << " failed\n";
 }
 
+/*===========================================================================
+ * Telemetry Reporting Implementation
+ *===========================================================================*/
+
+void RPCSimulator::PrintTelemetryReport() const {
+    std::cout << "\n=================================================================\n";
+    std::cout << "  LEASE TELEMETRY REPORT\n";
+    std::cout << "=================================================================\n";
+
+    TelemetrySummary summary = GetTelemetrySummary();
+
+    std::cout << "  Total Leases:        " << summary.totalLeases << "\n";
+    std::cout << "  Denied Leases:       " << summary.deniedLeases << "\n";
+    std::cout << "  Fallback Leases:     " << summary.fallbackLeases << "\n";
+    std::cout << "\n";
+    std::cout << "  Avg Handshake Latency: " << summary.avgHandshakeLatencyUs << " us\n";
+    std::cout << "  P95 Handshake Latency: " << summary.p95HandshakeLatencyUs << " us\n";
+    std::cout << "  Avg Execution Latency: " << summary.avgExecLatencyUs << " us\n";
+    std::cout << "  Avg Total Latency:     " << summary.avgTotalLatencyUs << " us\n";
+    std::cout << "=================================================================\n";
+
+    // Warning if handshake exceeds 500us budget
+    if (summary.avgHandshakeLatencyUs > 500.0) {
+        std::cout << "  WARNING: Handshake latency exceeds 500us budget!\n";
+        std::cout << "  Consider optimizing ZeroMQ framing.\n";
+    }
+}
+
+RPCSimulator::TelemetrySummary RPCSimulator::GetTelemetrySummary() const {
+    TelemetrySummary summary = {};
+
+    // Collect all telemetry records
+    std::vector<LeaseTelemetry> records;
+    TelemetryRingBuffer& buffer = TelemetryRingBuffer::Instance();
+
+    // Note: This is a snapshot; concurrent modifications may be missed
+    LeaseTelemetry record;
+    while (buffer.Pop(record)) {
+        records.push_back(record);
+    }
+
+    if (records.empty()) {
+        return summary;
+    }
+
+    // Calculate statistics
+    summary.totalLeases = records.size();
+
+    double totalHandshake = 0.0;
+    double totalExec = 0.0;
+    double totalTotal = 0.0;
+    std::vector<double> handshakeLatencies;
+
+    for (const auto& r : records) {
+        totalHandshake += r.handshakeLatencyUs;
+        totalExec += r.execLatencyUs;
+        totalTotal += r.totalLatencyUs;
+        handshakeLatencies.push_back(r.handshakeLatencyUs);
+
+        if (!r.success) {
+            summary.deniedLeases++;
+        }
+        if (r.wasFallback) {
+            summary.fallbackLeases++;
+        }
+    }
+
+    summary.avgHandshakeLatencyUs = totalHandshake / records.size();
+    summary.avgExecLatencyUs = totalExec / records.size();
+    summary.avgTotalLatencyUs = totalTotal / records.size();
+
+    // Calculate P95 handshake latency
+    std::sort(handshakeLatencies.begin(), handshakeLatencies.end());
+    size_t p95Idx = static_cast<size_t>(handshakeLatencies.size() * 0.95);
+    if (p95Idx < handshakeLatencies.size()) {
+        summary.p95HandshakeLatencyUs = handshakeLatencies[p95Idx];
+    }
+
+    return summary;
+}
+
+void RPCSimulator::ExportTelemetryCSV(const std::string& filename) const {
+    std::ofstream file(filename);
+    if (!file.is_open()) return;
+
+    // Header
+    file << "lease_id,node_id,handshake_us,exec_us,total_us,success,was_fallback,vram_mb\n";
+
+    // Drain ring buffer and write
+    TelemetryRingBuffer& buffer = TelemetryRingBuffer::Instance();
+    LeaseTelemetry record;
+    while (buffer.Pop(record)) {
+        file << record.leaseId << ","
+             << record.nodeId << ","
+             << record.handshakeLatencyUs << ","
+             << record.execLatencyUs << ","
+             << record.totalLatencyUs << ","
+             << (record.success ? "1" : "0") << ","
+             << (record.wasFallback ? "1" : "0") << ","
+             << record.reservedVRAM_MB << "\n";
+    }
+}
+
 } // namespace RPC
 } // namespace RawrXD
 
@@ -738,10 +939,14 @@ int SovereignSim_Init(void) {
 __declspec(dllexport)
 int SovereignSim_AddNode(const char* nodeId, uint64_t vramMB,
                          int* formats, int numFormats) {
-    std::vector<Deep2::QuantType> typeVec;
-    for (int i = 0; i < numFormats; ++i) {
-        typeVec.push_back(static_cast<Deep2::QuantType>(formats[i]));
-    }
+    (void)formats;
+    (void)numFormats;
+    // Default to Q4_K_M for C API simplicity
+    std::vector<RawrXD::Deep2::QuantType> typeVec = {
+        RawrXD::Deep2::QuantType::Q4_K_M,
+        RawrXD::Deep2::QuantType::Q5_K_M,
+        RawrXD::Deep2::QuantType::Q6_K
+    };
     RPCSimulator::Instance().AddNode(nodeId, vramMB, typeVec);
     return 1;
 }

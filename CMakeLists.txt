@@ -5404,6 +5404,27 @@ set_target_properties(stress_memory PROPERTIES
 
 message(STATUS "[Test] Debugger stress tests: stress_target, stress_memory")
 
+# ============================================================================
+# SovereignRPC Simulator Test
+# ============================================================================
+add_executable(test_simulator EXCLUDE_FROM_ALL
+    src/rpc/test_simulator.cpp
+    src/rpc/SovereignRPC_Simulator.cpp
+    src/rpc/SovereignRPC_Scheduler.cpp
+)
+target_compile_features(test_simulator PRIVATE cxx_std_17)
+target_include_directories(test_simulator PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/rpc
+    ${CMAKE_SOURCE_DIR}/src/bridge
+    ${CMAKE_SOURCE_DIR}/src/scheduler
+)
+set_target_properties(test_simulator PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+message(STATUS "[Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)")
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/tools/CMakeLists.txt")
     add_subdirectory(src/tools)
 endif()

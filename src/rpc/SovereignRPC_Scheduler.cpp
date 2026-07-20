@@ -12,6 +12,7 @@
  *===========================================================================*/
 
 #include "SovereignRPC_Scheduler.hpp"
+#include "../bridge/Deep2_Quantized.hpp"
 #include <algorithm>
 #include <cmath>
 #include <mutex>
@@ -269,7 +270,7 @@ int SovereignRPC_RegisterNode(const char* nodeId, const char* address,
     caps.lastHeartbeat = std::chrono::steady_clock::now();
 
     for (int i = 0; i < numFormats; ++i) {
-        caps.supportedFormats.push_back(static_cast<Deep2::QuantType>(supportedFormats[i]));
+        caps.supportedFormats.push_back(static_cast<RawrXD::Deep2::QuantType>(supportedFormats[i]));
     }
 
     RPCScheduler::Instance().RegisterNode(caps);
@@ -284,8 +285,8 @@ int SovereignRPC_Schedule(const char* modelHash, uint64_t modelParams,
     InferenceRequest request;
     request.modelHash = modelHash;
     request.modelParams = modelParams;
-    request.preferredFormat = static_cast<Deep2::QuantType>(preferredFormat);
-    request.minimumFormat = static_cast<Deep2::QuantType>(minFormat);
+    request.preferredFormat = static_cast<RawrXD::Deep2::QuantType>(preferredFormat);
+    request.minimumFormat = static_cast<RawrXD::Deep2::QuantType>(minFormat);
 
     auto decision = RPCScheduler::Instance().Schedule(request);
 

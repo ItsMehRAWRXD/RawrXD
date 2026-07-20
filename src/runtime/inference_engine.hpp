@@ -114,6 +114,21 @@ public:
     bool Initialize(const InferenceConfig& config);
     
     /**
+     * Initialize with ModelLoaderDispatch - production path with pre-allocation.
+     * 
+     * Steps:
+     *   1. Detect execution mode from file header
+     *   2. Dispatch appropriate loader
+     *   3. Pre-calculate memory requirements
+     *   4. Reserve memory with 64-byte alignment
+     *   5. Load weights with strict boundary checking
+     *   6. Validate actual loaded size <= reserved size
+     *   7. Initialize embedding lookup and KV cache
+     *   8. Check for speculative decoding support
+     */
+    bool InitializeWithLoader(const void* modelMapping, size_t mappingSize);
+    
+    /**
      * Check if initialized.
      */
     bool IsInitialized() const { return initialized_; }

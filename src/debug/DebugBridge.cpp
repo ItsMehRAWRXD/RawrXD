@@ -5,6 +5,7 @@
 #include "DebugBridge.hpp"
 #include "DebugBackend.h"
 #include "DebugUI.hpp"
+#include "TelemetryRingBuffer.hpp"
 
 namespace RawrXD {
 namespace DebugUI {
@@ -125,28 +126,56 @@ void DebugBridge::ProcessEvent(DebugBridgeEvent* event) {
 void DebugBridge::LogTelemetrySummary() {
     uint64_t submitted = m_telemetry.submittedSequence.load();
     uint64_t rendered = m_telemetry.renderedSequence.load();
-    uint64_t gaps = m_telemetry.GetSequenceGaps();
     uint64_t dropped = m_telemetry.droppedEvents.load();
     uint64_t total = m_telemetry.totalEvents.load();
     uint64_t lastAge = m_telemetry.lastStateAgeMs.load();
     uint64_t maxAge = m_telemetry.maxStateAgeMs.load();
     uint64_t arena = m_telemetry.arenaHighWater.load();
     
-    char buffer[512];
-    snprintf(buffer, sizeof(buffer),
-        "[DebugTelemetry] Submitted: %llu | Rendered: %llu | Gaps: %llu | "
-        "Dropped: %llu | Total: %llu | LastAge: %llums | MaxAge: %llums | Arena: %llu",
-        (unsigned long long)submitted,
-        (unsigned long long)rendered,
-        (unsigned long long)gaps,
-        (unsigned long long)dropped,
-        (unsigned long long)total,
-        (unsigned long long)lastAge,
-        (unsigned long long)maxAge,
-        (unsigned long long)arena);
+    // VAL-025: Use lock-free ring buffer instead of OutputDebugString
+    // to eliminate debugger attach observer effect
+    static SharedMemoryTelemetry sharedTelemetry;
+    static bool initialized = false;
     
-    OutputDebugStringA(buffer);
-    OutputDebugStringA("\n");
+    if (!initialized) {
+        initialized = sharedTelemetry.InitializeProducer();
+    }
+    
+    if (initialized) {
+        TelemetryEntry entry;
+        entry.timestampUs = GetTimestampUs();
+        entry.submittedSequence = submitted;
+        entry.renderedSequence = rendered;
+        entry.droppedEvents = dropped;
+        entry.totalEvents = total;
+        entry.lastStateAgeMs = lastAge;
+        entry.maxStateAgeMs = maxAge;
+        entry.arenaHighWater = arena;
+        entry.MarkValid();
+        
+        // Non-blocking push - if buffer full, entry is dropped
+        sharedTelemetry.TryPush(entry);
+    }
+    
+    // Fallback: Also output to debugger if no debugger attached
+    // This preserves backward compatibility for development
+    if (!IsDebuggerPresent()) {
+        char buffer[512];
+        snprintf(buffer, sizeof(buffer),
+            "[DebugTelemetry] Submitted: %llu | Rendered: %llu | Gaps: %llu | "
+            "Dropped: %llu | Total: %llu | LastAge: %llums | MaxAge: %llums | Arena: %llu",
+            (unsigned long long)submitted,
+            (unsigned long long)rendered,
+            (unsigned long long)(submitted - rendered),
+            (unsigned long long)dropped,
+            (unsigned long long)total,
+            (unsigned long long)lastAge,
+            (unsigned long long)maxAge,
+            (unsigned long long)arena);
+        
+        OutputDebugStringA(buffer);
+        OutputDebugStringA("\n");
+    }
 }
 
 void DebugBridge::SetEventCallback(EventCallback callback) {

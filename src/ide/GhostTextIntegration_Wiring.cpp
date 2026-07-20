@@ -10,7 +10,10 @@
 #include "RawrXD_IDE_Win32.h"
 #include "SovereignInferenceBridge.h"
 #include "SovereignTelemetryIntegration.h"
+#include "SovereignAwsBridge.h"
 #include <atomic>
+#include <thread>
+#include <chrono>
 
 namespace RawrXD {
 namespace IDE {
@@ -35,6 +38,29 @@ static std::atomic<DWORD> g_LastGhostTextRequest{0};
 #define WM_GHOST_SUGGESTION       (WM_USER + 0x1000)
 #define WM_GHOST_DISMISS          (WM_USER + 0x1001)
 #define WM_GHOST_ACCEPT           (WM_USER + 0x1002)
+
+// AWS Bridge completion message
+#define WM_AWS_COMPLETION_READY    (WM_USER + 0x1100)
+
+/*===========================================================================
+ * AWS BEDROCK BRIDGE STATE
+ *===========================================================================*/
+
+// AWS Bridge instance - remote backend for GhostText
+static SovereignAwsBridge* g_AwsBridge = nullptr;
+static std::atomic<bool> g_AwsBridgeInitialized{false};
+static std::atomic<bool> g_AwsBridgeEnabled{false};
+
+// AWS credentials (loaded from environment variables - NEVER hardcode in production)
+// Set these environment variables before running:
+//   RAWRXD_AWS_ACCESS_KEY_ID
+//   RAWRXD_AWS_SECRET_ACCESS_KEY
+//   RAWRXD_AWS_REGION (defaults to us-east-1)
+//   RAWRXD_AWS_MODEL_ID (defaults to anthropic.claude-3-5-sonnet)
+static const char* AWS_ACCESS_KEY_ID     = nullptr;  // Loaded from env
+static const char* AWS_SECRET_ACCESS_KEY = nullptr;  // Loaded from env
+static const char* AWS_REGION            = "us-east-1";
+static const char* AWS_MODEL_ID          = "anthropic.claude-3-5-sonnet-20241022-v2:0";
 
 /*===========================================================================
  * FORWARD DECLARATIONS
@@ -94,6 +120,42 @@ bool GhostTextIntegration_Initialize(RawrXD_IDE* ide)
     // Initialize telemetry
     STEL_InitializeForIDE(ide->hWndMain);
 
+    // Load AWS credentials from environment (NEVER hardcode secrets)
+    AWS_ACCESS_KEY_ID = getenv("RAWRXD_AWS_ACCESS_KEY_ID");
+    AWS_SECRET_ACCESS_KEY = getenv("RAWRXD_AWS_SECRET_ACCESS_KEY");
+    const char* envRegion = getenv("RAWRXD_AWS_REGION");
+    const char* envModel = getenv("RAWRXD_AWS_MODEL_ID");
+    if (envRegion) AWS_REGION = envRegion;
+    if (envModel) AWS_MODEL_ID = envModel;
+
+    // Initialize AWS Bedrock Bridge (remote backend) - only if credentials available
+    if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
+        OutputDebugStringA("[GhostTextIntegration] AWS credentials not set (set RAWRXD_AWS_ACCESS_KEY_ID and RAWRXD_AWS_SECRET_ACCESS_KEY env vars)\n");
+    } else {
+        g_AwsBridge = new (std::nothrow) SovereignAwsBridge();
+    if (g_AwsBridge) {
+        if (SovereignAwsBridge_Initialize(
+                g_AwsBridge,
+                AWS_ACCESS_KEY_ID,
+                AWS_SECRET_ACCESS_KEY,
+                AWS_REGION,
+                AWS_MODEL_ID,
+                ide->hWndMain,
+                WM_AWS_COMPLETION_READY)) {
+            g_AwsBridgeInitialized.store(true);
+            g_AwsBridgeEnabled.store(true);
+            OutputDebugStringA("[GhostTextIntegration] AWS Bedrock bridge initialized\n");
+            
+            if (ide->hWndOutput) {
+                RawrXD_IDE_OutputAppend(ide, L"[GhostText] AWS Bedrock remote backend ready\r\n");
+            }
+        } else {
+            OutputDebugStringA("[GhostTextIntegration] AWS Bedrock bridge init failed (continuing with local only)\n");
+            delete g_AwsBridge;
+            g_AwsBridge = nullptr;
+        }
+    }
+
     g_GhostTextInitialized.store(true);
     g_GhostTextActive.store(true);
 
@@ -128,6 +190,16 @@ void GhostTextIntegration_Shutdown(RawrXD_IDE* ide)
         g_GhostTextEngine->Shutdown();
         delete g_GhostTextEngine;
         g_GhostTextEngine = nullptr;
+    }
+
+    // Shutdown AWS Bedrock bridge
+    if (g_AwsBridgeInitialized.load() && g_AwsBridge) {
+        SovereignAwsBridge_Shutdown(g_AwsBridge);
+        delete g_AwsBridge;
+        g_AwsBridge = nullptr;
+        g_AwsBridgeInitialized.store(false);
+        g_AwsBridgeEnabled.store(false);
+        OutputDebugStringA("[GhostTextIntegration] AWS Bedrock bridge shut down\n");
     }
 
     if (ide) {
@@ -187,6 +259,36 @@ LRESULT GhostTextIntegration_OnCustomMessage(RawrXD_IDE* ide, UINT msg, WPARAM w
                     
                     // Telemetry
                     STEL_GhostTextAccepted(acceptedText.length());
+                }
+            }
+            return 0;
+
+        case WM_AWS_COMPLETION_READY:
+            // Handle AWS Bedrock completion
+            if (g_AwsBridge && g_AwsBridgeInitialized.load()) {
+                AwsBridgeCompletion* awsResult = SovereignAwsBridge_GetCompletion(g_AwsBridge);
+                if (awsResult && awsResult->success) {
+                    // Convert to GhostResult and pass to engine
+                    GhostResult* ghostResult = new GhostResult();
+                    if (ghostResult) {
+                        // Convert UTF-8 to wide for the engine
+                        int wideLen = MultiByteToWideChar(CP_UTF8, 0, awsResult->text, -1, nullptr, 0);
+                        if (wideLen > 0) {
+                            ghostResult->text.resize(wideLen - 1);
+                            MultiByteToWideChar(CP_UTF8, 0, awsResult->text, -1,
+                                               &ghostResult->text[0], wideLen);
+                        }
+                        ghostResult->line = 0;  // Will be set by engine
+                        ghostResult->col = 0;
+                        ghostResult->confidence = awsResult->confidence;
+                        
+                        // Post to engine
+                        PostMessage(ide->hWndMain, WM_GHOST_SUGGESTION, 0, (LPARAM)ghostResult);
+                        
+                        // Telemetry
+                        STEL_GhostTextReceived(awsResult->text ? strlen(awsResult->text) : 0);
+                    }
+                    SovereignAwsBridge_FreeCompletion(awsResult);
                 }
             }
             return 0;
@@ -400,6 +502,7 @@ static bool GhostText_HandleKeyNavigation(RawrXD_IDE* ide, WPARAM key)
 
 /**
  * Trigger async inference request
+ * Routes to AWS Bedrock bridge when enabled, otherwise uses local engine
  */
 static void GhostText_TriggerInference(RawrXD_IDE* ide)
 {
@@ -421,7 +524,29 @@ static void GhostText_TriggerInference(RawrXD_IDE* ide)
     // Telemetry
     STEL_BeginInference(nullptr);
 
-    // Trigger engine
+    // Route to AWS Bedrock bridge if enabled
+    if (g_AwsBridgeEnabled.load() && g_AwsBridge && g_AwsBridgeInitialized.load()) {
+        uint32_t version = (uint32_t)InterlockedIncrement(&ide->editorVersion);
+        
+        // Build context from editor content
+        char context[8192];
+        int contextLen = snprintf(context, sizeof(context),
+            "Line %d, Col %d\n```\n%s\n```\nComplete the code at the cursor position.",
+            cursorLine, cursorCol, buffer);
+        
+        if (contextLen > 0) {
+            SovereignAwsBridge_RequestCompletion(
+                g_AwsBridge,
+                version,
+                context,
+                (size_t)contextLen);
+            
+            OutputDebugStringA("[GhostTextIntegration] Request sent to AWS Bedrock\n");
+        }
+        return;
+    }
+
+    // Fall back to local engine
     g_GhostTextEngine->OnTextChanged(buffer, cursorLine, cursorCol);
 }
 

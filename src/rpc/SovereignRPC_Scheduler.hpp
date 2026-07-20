@@ -32,6 +32,11 @@
 #include <functional>
 #include <unordered_map>
 #include <chrono>
+#include <mutex>
+#include <memory>
+#include <functional>
+#include <unordered_map>
+#include <chrono>
 
 namespace RawrXD {
 namespace RPC {
@@ -102,6 +107,18 @@ struct InferenceRequest {
     uint32_t topK;
     std::chrono::steady_clock::time_point deadline;  // Latency SLO
     uint32_t priority;  // 0 = highest (user-facing), 10 = lowest (batch)
+};
+
+/*===========================================================================
+ * Inference Result
+ *===========================================================================*/
+struct InferenceResult {
+    bool success;
+    std::string errorMessage;
+    std::vector<uint8_t> outputTokens;
+    uint32_t tokensGenerated;
+    uint64_t inferenceTimeUs;
+    Deep2::QuantType executedFormat;
 };
 
 /*===========================================================================

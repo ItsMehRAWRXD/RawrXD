@@ -153,7 +153,9 @@ function Test-ModelLoading {
         $readStart = Get-Date
         
         while ($bytesRead -lt $gbToRead -and $fs.Position -lt $fs.Length) {
-            $read = $fs.Read($buffer, 0, [Math]::Min($buffer.Length, $gbToRead - $bytesRead))
+            # Explicit Int64 cast to prevent overflow with large file operations
+            $remaining = [Math]::Min([int64]$buffer.Length, [int64]($gbToRead - $bytesRead))
+            $read = $fs.Read($buffer, 0, $remaining)
             if ($read -eq 0) { break }
             $bytesRead += $read
         }
